@@ -565,6 +565,8 @@ class InstallationService:
         self._store.guard_no_active_replacement_in_transaction(
             conn, locked=locked
         )
+        if self._runtime_uninstall_guard is not None:
+            self._runtime_uninstall_guard.before_rollback(conn, lock=lock)
         checked_at = self._store.read_control_clock_in_transaction(conn)
         return self._store.append_rollback_in_transaction(
             conn,

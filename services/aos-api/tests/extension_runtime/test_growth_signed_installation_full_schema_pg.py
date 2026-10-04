@@ -20,12 +20,13 @@ from psycopg.conninfo import conninfo_to_dict
 from psycopg.rows import dict_row
 
 from aos_api.asset_registry.manifest_loader import ManifestLoader
+from aos_api.asset_registry.composition_contracts import RollbackInstallationRequest
 from aos_api.asset_registry.composition_store import PostgresCompositionStore
 from aos_api.asset_registry.installation_revalidation import _record_from_row
 from aos_api.asset_registry.installation_revalidation import InstallationRevalidator
 from aos_api.asset_registry.installation_service import InstallationService
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
-from aos_api.asset_registry.errors import RevisionConflictError
+from aos_api.asset_registry.errors import RevisionConflictError, RuntimeOperationRequiredError
 from aos_api.asset_registry.registry_service import RegistryService
 from aos_api.asset_registry.registry_snapshot import _SNAPSHOT_QUERY
 from aos_api.asset_registry.registry_store import PostgresRegistryStore
@@ -56,6 +57,7 @@ from aos_api.ecommerce_business_investigation_aip_authority import (
 from aos_api.ecommerce_growth_registration_qualification import require_growth_registration_claims
 from aos_api.extension_runtime.admission import admit_runtime_artifact
 from aos_api.extension_runtime.oci_driver import OciDriver
+from aos_api.extension_runtime.runtime_uninstall import RuntimeUninstallGuard
 from aos_api.extension_runtime.current_permission import CurrentControlPermission
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 from aos_api.extension_runtime.current_installation_release_evidence import (
@@ -129,11 +131,12 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     committed_revoke_case = os.getenv('AOS_B48_COMMITTED_REVOKE') == '1'
     concurrent_revoke_case = os.getenv('AOS_B49_CONCURRENT_REVOKE') == '1'
     evaluate_first_case = os.getenv('AOS_B50_EVALUATE_FIRST') == '1'
+    runtime_rollback_case = os.getenv('AOS_B51_RUNTIME_ROLLBACK') == '1'
     assert sum((committed_revoke_case, concurrent_revoke_case, evaluate_first_case)) <= 1
     database = conninfo_to_dict(os.environ['AOS_DATABASE_URL'])['dbname']
     assert database.startswith('aos_test_') and database.endswith('_ti4_test')
     signed, growth_version = _signed_release()
-    if (committed_revoke_case or concurrent_revoke_case or evaluate_first_case) and growth_version != '1.13.0':
+    if (committed_revoke_case or concurrent_revoke_case or evaluate_first_case or runtime_rollback_case) and growth_version != '1.13.0':
         pytest.skip('committed revoke case uses the signed Growth 1.13 release')
     trust = FileTrustRootProvider(signed['trust_path']).snapshot()
     loader = ManifestLoader({signed['source_alias']: signed['signed_tree']}, trust_roots=trust)
@@ -341,6 +344,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     legacy = InstallationService(
         store=store, composition_store=PostgresCompositionStore(connect),
         revalidator=InstallationRevalidator(release_policy=policy), planning_revalidator=revalidator,
+        runtime_uninstall_guard=RuntimeUninstallGuard() if runtime_rollback_case else None,
     )
     lifecycle = RuntimeLifecycleService(installation_store=store,
                                         installation_reader=legacy, revalidator=revalidator)
@@ -733,6 +737,37 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                 )
                 assert selected_view.authorization == 'EVIDENCE_ONLY_NO_START'
                 assert selected_view.installation_id == view.installation_id
+                if runtime_rollback_case:
+                    rollback_key = 'b51-test-only-runtime-rollback'
+                    with pytest.raises(RuntimeOperationRequiredError) as blocked:
+                        legacy.rollback(
+                            installation_id=installed['installationId'],
+                            request=RollbackInstallationRequest(
+                                reason='runtime rollback bypass probe'),
+                            org_id=SCOPE.org_id, project_id=SCOPE.project_id,
+                            actor='test-author', roles={'asset-installer'},
+                            markings=set(), idempotency_key=rollback_key,
+                            if_match=f'"{view.etag_version}"',
+                        )
+                    assert blocked.value.http_status == 409
+                    assert blocked.value.code.value == 'RUNTIME_OPERATION_REQUIRED'
+                    with psycopg.connect(get_dsn(), row_factory=dict_row) as audit:
+                        state = audit.execute("""SELECT i.current_revision,i.active_revision,
+                            i.etag_version,r.state FROM bundle_installation i
+                            JOIN bundle_installation_revision r
+                              ON r.org_id=i.org_id AND r.project_id=i.project_id
+                             AND r.installation_pk=i.installation_pk
+                             AND r.revision=i.current_revision
+                            WHERE i.org_id=%s AND i.project_id=%s AND i.installation_id=%s""",
+                            (*SCOPE.key, installed['installationId'])).fetchone()
+                        assert state == dict(current_revision=view.current_revision,
+                            active_revision=view.active_revision,
+                            etag_version=view.etag_version, state='active')
+                        assert audit.execute("""SELECT count(*) AS n
+                            FROM bundle_installation_command WHERE org_id=%s
+                              AND project_id=%s AND operation='bundle_installations.rollback'
+                              AND idempotency_key=%s""",
+                            (*SCOPE.key, rollback_key)).fetchone()['n'] == 0
                 assert selected_view.lock_hash == view.lock_hash
                 with psycopg.connect(get_dsn(), row_factory=dict_row) as evidence_conn:
                     evidence_conn.read_only = True

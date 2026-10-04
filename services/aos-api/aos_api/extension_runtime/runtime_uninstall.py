@@ -6,7 +6,11 @@ import json
 from uuid import UUID
 
 from psycopg.pq import TransactionStatus
+from psycopg.types.json import Jsonb
 
+from aos_api.asset_registry.composition_contracts import StoredCompositionLock
+from aos_api.asset_registry.errors import RuntimeOperationRequiredError
+from aos_api.asset_registry.legacy_runtime_boundary import legacy_content_predicate
 from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
 from aos_api.tenant_scope import TenantScope
 from .lifecycle_store import RuntimeConflict,_values
@@ -108,6 +112,21 @@ class RuntimeUninstallCleanupExecutor:
 
 class RuntimeUninstallGuard:
     """Invoke the only application-role command allowed to terminalize a runtime."""
+
+    @staticmethod
+    def before_rollback(conn, *, lock: StoredCompositionLock) -> None:
+        """Keep the legacy rollback route limited to exact pure-content locks."""
+        if conn.info.transaction_status != TransactionStatus.INTRANS:
+            raise RuntimeError('runtime rollback guard requires an explicit transaction')
+        if not isinstance(lock, StoredCompositionLock):
+            raise RuntimeOperationRequiredError('当前安装来源不可确认为纯内容')
+        row = conn.execute(
+            f"SELECT {legacy_content_predicate('l')} AS eligible "
+            "FROM (SELECT %s::jsonb AS lock_payload) l",
+            (Jsonb(lock.payload.model_dump(mode='json', by_alias=True)),),
+        ).fetchone()
+        if row is None or _values(row, ('eligible',))[0] is not True:
+            raise RuntimeOperationRequiredError('运行安装须通过运行停用和卸载流程')
 
     @staticmethod
     def before_uninstall(conn,*,org_id,project_id,installation_id,

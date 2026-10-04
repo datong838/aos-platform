@@ -18,7 +18,9 @@ from aos_api.asset_registry.composition_contracts import (
 from aos_api.asset_registry.errors import RegistrySnapshotStaleError
 from aos_api.asset_registry.installation_evidence import verify_event_evidence
 from aos_api.asset_registry.installation_revalidation import InstallationRevalidator
+from aos_api.asset_registry.installation_service import InstallationService
 from aos_api.asset_registry.release_policy import ReleasePolicy
+from aos_api.extension_runtime.runtime_uninstall import RuntimeUninstallGuard
 from tests.asset_registry.m5_control_support import (
     M5ControlRuntime,
     m5_control_runtime,
@@ -37,6 +39,47 @@ LEAF_IDS = (
 REVOKED_ID = "platform.ecommerce.niushop"
 MAKER = "maker:m5-w3"
 CHECKER = "checker:m5-w3"
+
+
+def test_guarded_pure_content_rollback_remains_available(tmp_path: Path) -> None:
+    with m5_control_runtime(tmp_path / "content-only") as runtime:
+        snapshot = runtime.snapshot_reader.read()
+        core = next(item for item in snapshot.candidates
+                    if item.id == "domain.ecommerce.core")
+        resolved = runtime.resolve(CompositionRequest.model_validate({
+            "requested": [{"publisher": "aos", "id": core.id,
+                           "version": core.version}],
+            "platformApiVersion": "1.7.0",
+            "platformRelease": "aos-platform/1.7.0",
+            "environment": "dev",
+            "registrySnapshotHash": snapshot.snapshot_hash,
+            "currentInstallationRef": None,
+        }), actor=MAKER, idempotency_key="b51-content-resolve")
+        lock = StoredCompositionLock.model_validate_json(
+            json.dumps(resolved.response_json))
+        assert [item.id for item in lock.payload.resolved] == [core.id]
+        overlay_revision = canonical_sha256(json.loads(
+            OVERLAY_FIXTURE.read_text(encoding="utf-8")))
+        active = _response(runtime.install_to_active(
+            lock=lock, overlay_revision=overlay_revision,
+            maker=MAKER, checker=CHECKER,
+            idempotency_prefix="b51-content-install")[-1])
+        guarded = InstallationService(
+            store=runtime.installation_store,
+            composition_store=runtime.composition_store,
+            revalidator=InstallationRevalidator(release_policy=ReleasePolicy(
+                trust_roots=runtime.prepared.trust_roots)),
+            runtime_uninstall_guard=RuntimeUninstallGuard(),
+        )
+        rolled = _response(guarded.rollback(
+            installation_id=active.installation_id,
+            request=RollbackInstallationRequest(reason="pure content rollback"),
+            org_id=runtime.org_id, project_id=runtime.project_id,
+            actor=MAKER, roles={"asset-installer"}, markings=set(),
+            idempotency_key="b51-content-rollback", if_match='"5"',
+        ))
+        assert rolled.state == "rolled_back"
+        assert rolled.etag_version == 6
 
 
 def _request(snapshot) -> CompositionRequest:
