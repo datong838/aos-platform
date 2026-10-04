@@ -104,6 +104,43 @@ class ReviewBaselineIntegrationTest(unittest.TestCase):
             (m/'leases.json').write_text(json.dumps({'leases':[receipt]}))
             with self.assertRaisesRegex(ValueError,'excluded scope'):validate_request(repo,req)
 
+class ConsumptionTest(unittest.TestCase):
+    def request(self):
+        return ReviewContractTest().request()
+
+    def result(self):
+        return ReviewContractTest().result()
+
+    def envelope(self):
+        return {'schema':'aos-material-review-result/v1','mode':'tools-disabled-material-only',
+                'execution_authorized':False,'runner_sha256':'current','result':self.result()}
+
+    def transport(self):
+        return {'returncode':0,'stdout':json.dumps({'type':'message_end',
+                'message':{'role':'assistant','content':[{'type':'text','text':json.dumps(self.result())}]}})}
+
+    def test_current_review_can_be_consumed_without_execution_permission(self):
+        from aos_review import consumption_record
+        record=consumption_record(self.request(),self.envelope(),self.transport(),'current')
+        self.assertEqual(record['status'],'CONSUMED_MATERIAL_REVIEW')
+        self.assertIs(record['execution_authorized'],False)
+
+    def test_old_runner_or_privilege_flag_rejected(self):
+        from aos_review import consumption_record
+        for patch in ({'runner_sha256':'old'},{'execution_authorized':True}):
+            with self.subTest(patch=patch),self.assertRaises(ValueError):
+                consumption_record(self.request(),dict(self.envelope(),**patch),self.transport(),'current')
+
+    def test_envelope_cannot_replace_transport_verdict(self):
+        from aos_review import consumption_record
+        envelope=self.envelope();envelope['result']=dict(self.result(),next_safe_step='fabricated suggestion')
+        with self.assertRaisesRegex(ValueError,'differs from actual transport'):
+            consumption_record(self.request(),envelope,self.transport(),'current')
+
+    def test_result_must_match_real_transport(self):
+        from aos_review import consumption_record
+        t=self.transport();t['stdout']=json.dumps({'type':'message_end','message':{'role':'assistant','stopReason':'error','errorMessage':'401','content':[]}})
+        with self.assertRaisesRegex(ValueError,'REVIEW_AUTH_REQUIRED'):
+            consumption_record(self.request(),self.envelope(),t,'current')
+
 if __name__=='__main__':unittest.main()
-
-

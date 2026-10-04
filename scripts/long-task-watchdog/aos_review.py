@@ -123,10 +123,31 @@ def parse_response(stdout):
     return json.loads(text)
 
 
+def consumption_record(request, envelope, transport, runner_hash):
+    if (envelope.get('schema') != 'aos-material-review-result/v1'
+            or envelope.get('mode') != 'tools-disabled-material-only'
+            or envelope.get('execution_authorized') is not False
+            or envelope.get('runner_sha256') != runner_hash):
+        raise ValueError('invalid or stale review envelope')
+    if transport.get('returncode') != 0:
+        raise ValueError('failed review process cannot be consumed')
+    result = parse_response(transport['stdout'])
+    validate_result(request, result)
+    if result != envelope['result']:
+        raise ValueError('review envelope differs from actual transport')
+    return {'schema': 'aos-material-review-consumption/v1', 'request_id': request['request_id'],
+            'task_id': request['task_id'], 'owner': request['owner'], 'baseline': request['baseline'],
+            'status': 'CONSUMED_MATERIAL_REVIEW' if result['verdict'] == 'PASS' else result['verdict'],
+            'execution_authorized': False,
+            'result_sha256': hashlib.sha256(json.dumps(envelope, sort_keys=True).encode()).hexdigest(),
+            'transport_sha256': hashlib.sha256(json.dumps(transport, sort_keys=True).encode()).hexdigest()}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--request', required=True, help='exact .evidence request path')
     parser.add_argument('--output', required=True, help='new exact .evidence result path')
+    parser.add_argument('--consume', help='existing exact result path; consumes without model invocation')
     parser.add_argument('--timeout', type=int, default=120)
     args = parser.parse_args()
     repo = Path(__file__).resolve().parents[2]
@@ -149,6 +170,27 @@ def main():
         raise ValueError('existing result: reconcile, never resend')
     if not 1 <= args.timeout <= 180:
         raise ValueError('timeout outside bounded review budget')
+    if args.consume:
+        if not args.consume.startswith('.evidence/' + request['task_id'] + '/'):
+            raise ValueError('consume path outside task directory')
+        existing = exact_file(repo, args.consume, ('.evidence',))
+        transport_path = str(Path(args.consume).with_suffix('.transport.json'))
+        transport = json.loads(exact_file(repo, transport_path, ('.evidence',)).read_text())
+        record = consumption_record(request, json.loads(existing.read_text()), transport,
+                                    hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
+        validate_request(repo, request)
+        key = hashlib.sha256(request['request_id'].encode()).hexdigest()
+        marker = parent / (key + '.consumed.json')
+        with open(marker, 'x') as file:
+            os.chmod(marker, 0o600)
+            json.dump(record, file, ensure_ascii=False, indent=2)
+            file.flush(); os.fsync(file.fileno())
+        with open(target, 'x') as file:
+            os.chmod(target, 0o600)
+            json.dump(record, file, ensure_ascii=False, indent=2)
+            file.flush(); os.fsync(file.fileno())
+        print(json.dumps({'consumption': str(target), 'status': record['status'], 'execution_authorized': False}))
+        return
     # The attempt marker survives timeouts/crashes: rerunning the same request is refused.
     for previous_attempt in parent.glob('*.attempt.json'):
         saved = json.loads(previous_attempt.read_text())
