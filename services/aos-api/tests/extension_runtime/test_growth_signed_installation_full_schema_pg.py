@@ -74,6 +74,7 @@ from aos_api.tenant_scope import TenantScope
 from plan_restricted_issuer_case import (
     assert_original_plan_store_with_restricted_login, cleanup_restricted_issuer_case,
 )
+from plan_restricted_evaluate_case import assert_restricted_blocked_evaluate_composes_lock
 
 
 pytestmark = pytest.mark.skipif(
@@ -952,6 +953,11 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                             WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE''',
                             (*SCOPE.key, installed['installationId'])).fetchone() is not None
                         contender.execute('SELECT pg_advisory_xact_lock(228, 1)')
+                    assert_restricted_blocked_evaluate_composes_lock(
+                        scope=SCOPE, role=role, restricted_parts=restricted_parts,
+                        lock_function=lock_function, installation=installed['installationId'],
+                        etag=selected_view.etag_version, growth=growth,
+                    )
                 finally:
                     with psycopg.connect(get_dsn()) as admin:
                         admin.execute(sql.SQL('''DROP FUNCTION IF EXISTS public.{}(
