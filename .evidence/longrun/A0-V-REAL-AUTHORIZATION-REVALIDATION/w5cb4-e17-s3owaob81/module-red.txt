@@ -1,0 +1,16 @@
+
+==================================== ERRORS ====================================
+____ ERROR collecting tests/aip/test_aip_binding_evaluator_connection_pg.py ____
+ImportError while importing test module '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_aip_binding_evaluator_connection_pg.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/tests/aip/test_aip_binding_evaluator_connection_pg.py:13: in <module>
+    from aos_api import aip_binding_evaluator_connection as evaluator
+E   ImportError: cannot import name 'aip_binding_evaluator_connection' from 'aos_api' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/__init__.py)
+=========================== short test summary info ============================
+ERROR services/aos-api/tests/aip/test_aip_binding_evaluator_connection_pg.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+7 warnings, 1 error in 0.40s

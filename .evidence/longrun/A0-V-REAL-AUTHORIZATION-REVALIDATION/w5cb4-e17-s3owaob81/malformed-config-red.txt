@@ -1,0 +1,52 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+__________ test_malformed_private_config_fails_with_safe_error[None] ___________
+services/aos-api/tests/aip/test_aip_binding_evaluator_connection_pg.py:86: in test_malformed_private_config_fails_with_safe_error
+    evaluator.BindingEvaluatorDatabaseConfig('127.0.0.1', 5433, 'aos_test_safe_ti4_test', passfile)
+<string>:7: in __init__
+    ???
+services/aos-api/aos_api/aip_binding_evaluator_connection.py:39: in __post_init__
+    validated = RegistryIssuerDatabaseConfig(self.host, self.port, self.database, self.passfile)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:7: in __init__
+    ???
+services/aos-api/aos_api/aip_registry_issuer_connection.py:52: in __post_init__
+    path = Path(self.passfile)
+           ^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py:871: in __new__
+    self = cls._from_parts(args)
+           ^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py:509: in _from_parts
+    drv, root, parts = self._parse_args(args)
+                       ^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py:493: in _parse_args
+    a = os.fspath(a)
+        ^^^^^^^^^^^^
+E   TypeError: expected str, bytes or os.PathLike object, not NoneType
+___________ test_malformed_private_config_fails_with_safe_error[42] ____________
+services/aos-api/tests/aip/test_aip_binding_evaluator_connection_pg.py:86: in test_malformed_private_config_fails_with_safe_error
+    evaluator.BindingEvaluatorDatabaseConfig('127.0.0.1', 5433, 'aos_test_safe_ti4_test', passfile)
+<string>:7: in __init__
+    ???
+services/aos-api/aos_api/aip_binding_evaluator_connection.py:39: in __post_init__
+    validated = RegistryIssuerDatabaseConfig(self.host, self.port, self.database, self.passfile)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:7: in __init__
+    ???
+services/aos-api/aos_api/aip_registry_issuer_connection.py:52: in __post_init__
+    path = Path(self.passfile)
+           ^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py:871: in __new__
+    self = cls._from_parts(args)
+           ^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py:509: in _from_parts
+    drv, root, parts = self._parse_args(args)
+                       ^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py:493: in _parse_args
+    a = os.fspath(a)
+        ^^^^^^^^^^^^
+E   TypeError: expected str, bytes or os.PathLike object, not int
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_binding_evaluator_connection_pg.py::test_malformed_private_config_fails_with_safe_error[None]
+FAILED services/aos-api/tests/aip/test_aip_binding_evaluator_connection_pg.py::test_malformed_private_config_fails_with_safe_error[42]
+2 failed, 7 deselected, 7 warnings in 4.53s
