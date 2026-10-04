@@ -44,6 +44,16 @@ class ReviewContractTest(unittest.TestCase):
         self.assertNotIn('--api-key',cmd)
 
 class ReviewTransportTest(unittest.TestCase):
+    def test_isolated_settings_prevent_internal_retry_and_background_work(self):
+        import aos_review
+        with tempfile.TemporaryDirectory() as cwd:
+            aos_review.prepare_review_directory(cwd)
+            settings=json.loads((Path(cwd)/'.prime/agent/settings.json').read_text())
+            self.assertEqual(settings['retry'], {'enabled':False,'maxRetries':0,
+                             'provider':{'maxRetries':0,'timeoutMs':110000}})
+            for key in ('compaction','autoRefine','telemetry'):
+                self.assertIs(settings[key]['enabled'],False)
+
     def test_zero_process_exit_cannot_hide_auth_failure(self):
         stream=json.dumps({'type':'message_end','message':{'role':'assistant','stopReason':'error',
                                                          'errorMessage':'401 invalid identity','content':[]}})

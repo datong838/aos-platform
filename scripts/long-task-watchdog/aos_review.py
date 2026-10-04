@@ -37,6 +37,19 @@ def prime_command(cwd):
             '--cwd', cwd, '--system-prompt', SYSTEM]
 
 
+def prepare_review_directory(cwd):
+    """Override background work and both retry layers only in the temporary project."""
+    directory = Path(cwd) / '.prime' / 'agent'
+    directory.mkdir(parents=True, mode=0o700)
+    settings = {'retry': {'enabled': False, 'maxRetries': 0,
+                         'provider': {'maxRetries': 0, 'timeoutMs': 110000}},
+                'compaction': {'enabled': False}, 'autoRefine': {'enabled': False},
+                'telemetry': {'enabled': False}}
+    with open(directory / 'settings.json', 'x') as file:
+        os.chmod(file.name, 0o600)
+        json.dump(settings, file)
+
+
 def validate_result(request, result):
     for field in ('request_id', 'task_id', 'owner', 'kind', 'baseline'):
         if result.get(field) != request[field]:
@@ -205,6 +218,7 @@ def main():
         file.flush(); os.fsync(file.fileno())
     env = {'HOME': str(Path.home()), 'PATH': str(Path(NODE).parent) + ':/usr/bin:/bin'}
     with tempfile.TemporaryDirectory(prefix='aos-review-') as cwd:
+        prepare_review_directory(cwd)
         proc = subprocess.run(prime_command(cwd), input=json.dumps(request, ensure_ascii=False),
                               env=env, capture_output=True, text=True, timeout=args.timeout)
     scan_secrets(proc.stdout)
