@@ -84,6 +84,7 @@ def database():
     root = Path(__file__).resolve().parents[2]
     schema = "ar2_signed_" + uuid.uuid4().hex
     role = "ar2_signed_" + uuid.uuid4().hex[:16]
+    command_role = "ar2_command_" + uuid.uuid4().hex[:16]
     owner = psycopg.connect(**PG, autocommit=True, row_factory=dict_row)
     created_roles = []
     for required in ("aos_app", "aos_runtime", "aos_extension_maintainer"):
@@ -91,6 +92,8 @@ def database():
             owner.execute(sql.SQL("CREATE ROLE {} NOSUPERUSER NOBYPASSRLS NOLOGIN").format(sql.Identifier(required)))
             created_roles.append(required)
     owner.execute(sql.SQL("CREATE ROLE {} LOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT").format(sql.Identifier(role)))
+    owner.execute(sql.SQL("CREATE ROLE {} LOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT").format(sql.Identifier(command_role)))
+    owner.execute(sql.SQL("GRANT aos_app TO {} WITH INHERIT FALSE, SET FALSE").format(sql.Identifier(command_role)))
     for granted in ("aos_app", "aos_runtime", "aos_extension_maintainer"):
         owner.execute(sql.SQL("GRANT {} TO {}").format(sql.Identifier(granted), sql.Identifier(role)))
     owner.execute(sql.SQL("CREATE SCHEMA {}").format(sql.Identifier(schema)))
@@ -129,7 +132,7 @@ def database():
         for table, privileges in (
             ("bundle_composition", "SELECT"),
             ("bundle_composition_lock", "SELECT"),
-            ("bundle_installation", "SELECT,UPDATE"),
+            ("bundle_installation", "SELECT"),
             ("bundle_installation_command", "SELECT,INSERT"),
             ("bundle_installation_decision", "SELECT"),
             ("bundle_installation_event", "SELECT,INSERT"),
@@ -145,6 +148,36 @@ def database():
         owner.execute("INSERT INTO meta_membership VALUES('org-org','dev-project','test-author','admin')")
         for table in ("asset_bundle", "asset_bundle_version", "asset_bundle_artifact", "asset_bundle_evidence"):
             owner.execute(sql.SQL("GRANT SELECT ON {} TO aos_runtime").format(sql.Identifier(schema, table)))
+        for table in ("asset_bundle", "asset_bundle_version"):
+            owner.execute(sql.SQL("GRANT SELECT ON {} TO aos_app").format(sql.Identifier(schema, table)))
+        owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO {}").format(
+            sql.Identifier(schema), sql.Identifier(command_role)))
+        for table, privileges in (
+            ("bundle_composition", "SELECT"),
+            ("bundle_composition_lock", "SELECT"),
+            ("bundle_installation", "SELECT,UPDATE"),
+            ("bundle_installation_command", "SELECT,INSERT"),
+            ("bundle_installation_decision", "SELECT"),
+            ("bundle_installation_event", "SELECT,INSERT"),
+            ("bundle_installation_revision", "SELECT,INSERT"),
+            ("asset_bundle", "SELECT"), ("asset_bundle_version", "SELECT"),
+            ("asset_bundle_artifact", "SELECT"), ("asset_bundle_evidence", "SELECT"),
+        ):
+            owner.execute(sql.SQL("GRANT {} ON {} TO {}").format(
+                sql.SQL(privileges), sql.Identifier(schema, table), sql.Identifier(command_role)))
+        owner.execute(sql.SQL(
+            "GRANT UPDATE (current_revision,etag_version,updated_at,active_revision) ON {} TO {}"
+        ).format(sql.Identifier(schema, "bundle_installation"), sql.Identifier(command_role)))
+        for table in ("bundle_composition", "bundle_composition_lock", "bundle_installation",
+                      "bundle_installation_command", "bundle_installation_decision",
+                      "bundle_installation_event", "bundle_installation_revision"):
+            owner.execute(sql.SQL("CREATE POLICY {} ON {} TO {} USING "
+                "(org_id=current_setting('aos.org_id',true) AND "
+                "project_id=current_setting('aos.project_id',true)) WITH CHECK "
+                "(org_id=current_setting('aos.org_id',true) AND "
+                "project_id=current_setting('aos.project_id',true))").format(
+                    sql.Identifier("tenant_scope_command_" + table),
+                    sql.Identifier(schema, table), sql.Identifier(command_role)))
         owner.execute("""CREATE TABLE aip_action_proposal(
             org_id text NOT NULL,project_id text NOT NULL,proposal_id text NOT NULL,
             action_type_id text NOT NULL,action_type_snapshot jsonb NOT NULL,task_id text,run_id text,
@@ -172,17 +205,26 @@ def database():
                 WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))""")
         for migration in (
             "ar2_013_ecommerce_growth_cutover.py", "ar2_014_ecommerce_growth_cutover_commit.py",
+            "a0v_051_cutover_approval_version.py", "a0v_052_cutover_optional_source_ref.py",
+            "a0v_053_cutover_approval_refresh.py",
             "ar2_015_ecommerce_growth_cutover_finalize.py", "ar2_016_ecommerce_growth_cutover_rollback.py",
             "ar2_017_ecommerce_growth_disable_detach.py", "ar2_018_runtime_uninstall_authority.py",
-            "a0v_028_dispatch_read_lock.py",
+            "a0v_028_dispatch_read_lock.py", "a0v_092_retired_dispatch_read_lock.py",
         ):
             _migration(root, migration, owner, schema=schema)
+        owner.execute(sql.SQL("GRANT SELECT ON {} TO {}").format(
+            sql.Identifier(schema, "extension_runtime_uninstall_receipt"),
+            sql.Identifier(command_role)))
+        owner.execute(sql.SQL("GRANT EXECUTE ON FUNCTION {}(uuid,bigint,text) TO {}").format(
+            sql.Identifier(schema, "extension_runtime_uninstall_commit_ar2_018"),
+            sql.Identifier(command_role)))
         for granted in ("aos_app", "aos_runtime", "aos_extension_maintainer"):
             owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO {}")
                           .format(sql.Identifier(schema), sql.Identifier(granted)))
         assert owner.execute("SELECT has_table_privilege('aos_app',%s,'UPDATE') AS allowed",
             (schema+'.bundle_installation_revision',)).fetchone()['allowed'] is False
-        yield SimpleNamespace(owner=owner, schema=schema, role=role, root=root, helper=helper)
+        yield SimpleNamespace(owner=owner, schema=schema, role=role,
+                              command_role=command_role, root=root, helper=helper)
     finally:
         engine.dispose()
         owner.execute("RESET ROLE")
@@ -190,6 +232,8 @@ def database():
         for granted in ("aos_app", "aos_runtime", "aos_extension_maintainer"):
             owner.execute(sql.SQL("REVOKE {} FROM {}").format(sql.Identifier(granted), sql.Identifier(role)))
         owner.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(role)))
+        owner.execute(sql.SQL("REVOKE aos_app FROM {}").format(sql.Identifier(command_role)))
+        owner.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(command_role)))
         for created in reversed(created_roles):
             owner.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(created)))
         owner.close()
@@ -221,9 +265,21 @@ def _runtime_connect(database):
 def _app_connect(database):
     @contextmanager
     def connect():
-        conn = psycopg.connect(**{**PG, "user": database.role}, row_factory=dict_row)
+        conn = psycopg.connect(**{**PG, "user": database.command_role}, row_factory=dict_row)
         try:
-            conn.execute("SET ROLE aos_app")
+            rights = conn.execute("""SELECT session_user AS login,current_user AS role,
+                pg_has_role(session_user,'aos_app','MEMBER') AS member,
+                pg_has_role(session_user,'aos_app','USAGE') AS usage,
+                pg_has_role(session_user,'aos_app','SET') AS can_set,
+                pg_has_role(session_user,'aos_runtime','MEMBER') AS runtime_member,
+                r.rolsuper AS superuser,r.rolbypassrls AS bypassrls,
+                has_table_privilege(session_user,%s,'UPDATE') AS binding_update
+                FROM pg_roles r WHERE r.rolname=session_user""",
+                (database.schema + ".extension_runtime_binding",)).fetchone()
+            assert rights == dict(login=database.command_role, role=database.command_role,
+                                  member=True, usage=False, can_set=False,
+                                  runtime_member=False, superuser=False,
+                                  bypassrls=False, binding_update=False)
             conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
             conn.commit()
             yield conn
@@ -486,6 +542,9 @@ def test_signed_disable_uninstall_reinstall_routes_exact_ecommerce_group(databas
                 "cutover_group_revision": old_dispatch["cutover_group_revision"],
             })
             await disable_and_release(first)
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with psycopg.connect(**{**PG, "user": database.command_role}) as probe:
+                    probe.execute("SET ROLE aos_app")
             app_store = PostgresInstallationStore(_app_connect(database))
             guarded = InstallationService(store=app_store, composition_store=package["composition_store"],
                 revalidator=InstallationRevalidator(release_policy=policy), planning_revalidator=revalidator,
@@ -493,6 +552,14 @@ def test_signed_disable_uninstall_reinstall_routes_exact_ecommerce_group(databas
             current = store.get_installation(**scope_dict, installation_id=first["draft"].installation_id)
             guarded.uninstall(**first["action"], request=UninstallInstallationRequest(reason="D6D2 first generation retired"),
                 idempotency_key="d6d2-uninstall", if_match=f'"{current.etag_version}"')
+            with connect() as audit:
+                assert audit.execute("""SELECT count(*) AS n FROM bundle_installation_command
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation='bundle_installations.uninstall'
+                      AND idempotency_key='d6d2-uninstall'""", scope.key).fetchone()["n"] == 1
+                assert audit.execute("""SELECT count(*) AS n FROM extension_runtime_uninstall_receipt
+                    WHERE org_id=%s AND project_id=%s AND installation_id=%s""",
+                    (*scope.key, first["draft"].installation_id)).fetchone()["n"] == 1
             assert store.get_installation(**scope_dict,
                 installation_id=first["draft"].installation_id).state == "uninstalled"
 
