@@ -1,0 +1,22 @@
+[
+  {
+    "name": "candidate-revoke-first",
+    "returncode": 0,
+    "seconds": 24.49
+  },
+  {
+    "name": "candidate-evaluate-first",
+    "returncode": 0,
+    "seconds": 25.01
+  },
+  {
+    "name": "b72-revoke-first",
+    "returncode": 0,
+    "seconds": 24.37
+  },
+  {
+    "name": "default",
+    "returncode": 0,
+    "seconds": 28.78
+  }
+]

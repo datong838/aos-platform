@@ -24,6 +24,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
     forged_available=False, paired_receipt=False, license_authority=False,
     license_revoke_first=False, license_evaluate_first=False,
     license_epoch_fence=False, license_replay_probe=False,
+    license_transaction_probe=False, license_receipt_guard=False,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -376,6 +377,12 @@ def assert_restricted_blocked_evaluate_composes_lock(
                     scope=scope, binding=binding, key=key,
                 )
             if license_authority:
+                if license_transaction_probe:
+                    _assert_license_transaction_contract(
+                        admin=admin, scope=scope, fence_table=fence_table,
+                        template_license=license_id, license_hash=license_hash,
+                        receipt_guard=license_receipt_guard,
+                    )
                 if license_revoke_first or license_evaluate_first:
                     _assert_license_race(
                         admin=admin, restricted_parts=restricted_parts, call=call,
@@ -995,3 +1002,123 @@ def _assert_license_race(
         assert snapshot() == before
         assert admin.execute('SELECT count(*) AS n FROM aip_production_contract_receipt '
             'WHERE idempotency_key=%s', (revoke_key + '-forced-error',)).fetchone()['n'] == 0
+
+
+def _assert_license_transaction_contract(
+    *, admin, scope, fence_table, template_license, license_hash, receipt_guard,
+):
+    """Fresh source, independent writer closures, real Store and bounded PID waits."""
+    from aos_api.aip_production_contract_store import ProductionContractIdempotencyConflict
+
+    bundle = 'b73-license-' + secrets.token_hex(6)
+    key = bundle + '-revoke'
+    pids = Queue()
+    admin.execute("""INSERT INTO aip_evidence_bundle_revision
+        (org_id,project_id,bundle_id,revision,brief_ref,subject_refs,cutoff_at,
+         item_refs,coverage,missing,conflicts,uncertainties,freshness,marking,
+         license_summary,content_hash,lifecycle,created_by)
+        SELECT org_id,project_id,%s,revision,brief_ref,subject_refs,cutoff_at,
+         item_refs,coverage,missing,conflicts,uncertainties,freshness,marking,
+         license_summary,content_hash,lifecycle,created_by
+        FROM aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s
+          AND bundle_id=%s AND revision=1""", (bundle, *scope.key, template_license))
+    admin.execute(sql.SQL('INSERT INTO {} VALUES(%s,%s,%s,1,%s,0)').format(
+        sql.Identifier(fence_table)), (*scope.key, bundle, license_hash))
+
+    def snapshot():
+        epoch = admin.execute(sql.SQL('SELECT epoch FROM {} WHERE org_id=%s '
+            'AND project_id=%s AND bundle_id=%s AND revision=1 AND content_hash=%s').format(
+            sql.Identifier(fence_table)), (*scope.key, bundle, license_hash)).fetchone()['epoch']
+        event = admin.execute('SELECT count(*) AS n FROM aip_evidence_bundle_revoke_event '
+            'WHERE org_id=%s AND project_id=%s AND bundle_id=%s',
+            (*scope.key, bundle)).fetchone()['n']
+        receipts = admin.execute('SELECT count(*) AS n FROM aip_production_contract_receipt '
+            "WHERE org_id=%s AND project_id=%s AND operation='evidence_bundle.revoke' "
+            "AND result_ref->>'resourceId'=%s", (*scope.key, bundle)).fetchone()['n']
+        return epoch, event, receipts
+
+    def invoke(request_key, *, reason='b73 concurrent same body', fail_commit=False):
+        @contextmanager
+        def connection(selected_scope):
+            with connect(selected_scope) as conn:
+                conn.execute("SET LOCAL statement_timeout='10s'")
+                conn.execute("SET LOCAL lock_timeout='8s'")
+                pids.put(conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'])
+                if receipt_guard:
+                    assert conn.execute(sql.SQL('SELECT epoch FROM {} WHERE org_id=%s '
+                        'AND project_id=%s AND bundle_id=%s AND revision=1 AND content_hash=%s '
+                        'FOR UPDATE').format(sql.Identifier(fence_table)),
+                        (*selected_scope.key, bundle, license_hash)).fetchone() is not None
+                    replay = conn.execute('SELECT 1 FROM aip_production_contract_receipt '
+                        "WHERE org_id=%s AND project_id=%s AND operation='evidence_bundle.revoke' "
+                        'AND idempotency_key=%s', (*selected_scope.key, request_key)).fetchone()
+                else:
+                    replay = None
+                if not replay:
+                    assert conn.execute(sql.SQL('UPDATE {} SET epoch=epoch+1 WHERE org_id=%s '
+                        'AND project_id=%s AND bundle_id=%s AND revision=1 AND content_hash=%s').format(
+                        sql.Identifier(fence_table)),
+                        (*selected_scope.key, bundle, license_hash)).rowcount == 1
+                if fail_commit:
+                    class CommitFailure:
+                        def __getattr__(self, name):
+                            return getattr(conn, name)
+                        def commit(self):
+                            # Real writer has inserted its event and receipt in this transaction.
+                            assert conn.execute('SELECT count(*) AS n FROM aip_evidence_bundle_revoke_event '
+                                'WHERE org_id=%s AND project_id=%s AND bundle_id=%s',
+                                (*selected_scope.key, bundle)).fetchone()['n'] == 1
+                            assert conn.execute('SELECT count(*) AS n FROM aip_production_contract_receipt '
+                                "WHERE org_id=%s AND project_id=%s AND operation='evidence_bundle.revoke' "
+                                'AND idempotency_key=%s',
+                                (*selected_scope.key, request_key)).fetchone()['n'] == 1
+                            raise RuntimeError('b73 forced first-event precommit rollback')
+                    yield CommitFailure()
+                else:
+                    yield conn
+        return AipProductionContractStore(connect_factory=connection).revoke_evidence_bundle(
+            scope, 'b73-test-only', bundle, request_key,
+            RevokeEvidenceBundleRequest(expected_revision=1,
+                expected_content_hash=license_hash, reason=reason))
+
+    assert snapshot() == (0, 0, 0)
+    with pytest.raises(RuntimeError, match='b73 forced first-event precommit rollback'):
+        invoke(key + '-failure', fail_commit=True)
+    assert snapshot() == (0, 0, 0), 'B73_FIRST_EVENT_ROLLBACK_LEAK'
+    pids.get(timeout=1)  # Discard completed failure PID before the two concurrent writers.
+    with psycopg.connect(get_dsn(), autocommit=True) as blocker:
+        blocker.execute('BEGIN')
+        blocker_pid = blocker.execute('SELECT pg_backend_pid()').fetchone()[0]
+        blocker.execute(sql.SQL('SELECT epoch FROM {} WHERE org_id=%s AND project_id=%s '
+            'AND bundle_id=%s AND revision=1 AND content_hash=%s FOR UPDATE').format(
+            sql.Identifier(fence_table)), (*scope.key, bundle, license_hash))
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            futures = [pool.submit(invoke, key) for _ in range(2)]
+            try:
+                writer_pids = [pids.get(timeout=8) for _ in range(2)]
+                assert len(set(writer_pids)) == 2
+                deadline = time.monotonic() + 6
+                while time.monotonic() < deadline:
+                    graph = {pid: admin.execute('SELECT pg_blocking_pids(%s) AS blockers',
+                        (pid,)).fetchone()['blockers'] for pid in writer_pids}
+                    def reaches_blocker(pid, seen=None):
+                        seen = set() if seen is None else seen
+                        if pid == blocker_pid:
+                            return True
+                        if pid in seen:
+                            return False
+                        return any(reaches_blocker(parent, seen | {pid})
+                                   for parent in graph.get(pid, []))
+                    if all(reaches_blocker(pid) for pid in writer_pids):
+                        break
+                    assert not any(f.done() for f in futures), 'writer escaped exact epoch blocker'
+                    time.sleep(0.025)
+                else:
+                    raise AssertionError(('two exact writer PIDs did not wait on epoch blocker', graph))
+            finally:
+                blocker.execute('ROLLBACK')
+            assert all(f.result(timeout=12).revoked for f in futures)
+    assert snapshot() == (1, 1, 1), ('B73_DUPLICATE_KEY_EPOCH_DRIFT', snapshot())
+    with pytest.raises(ProductionContractIdempotencyConflict):
+        invoke(key, reason='b73 conflicting body')
+    assert snapshot() == (1, 1, 1), 'B73_CONFLICT_CHANGED_AUTHORITY'
