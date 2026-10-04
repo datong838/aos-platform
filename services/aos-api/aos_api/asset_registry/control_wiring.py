@@ -343,6 +343,18 @@ def build_composition_service() -> CompositionControl:
     )
 
 
+def _configured_uninstall_command_store():
+    """Opt in only with a protected command identity reference; validate on use."""
+    from aos_api.asset_registry.uninstall_command_connection import (
+        CREDENTIAL_FILE, connect_uninstall_command,
+    )
+    from aos_api.asset_registry.installation_store import PostgresInstallationStore
+
+    if not os.getenv(CREDENTIAL_FILE, "").strip():
+        return None
+    return PostgresInstallationStore(connect_factory=connect_uninstall_command)
+
+
 def build_installation_service() -> InstallationControl:
     """Lazily assemble the M2-B Installation service after B1 is installed."""
 
@@ -355,6 +367,7 @@ def build_installation_service() -> InstallationControl:
     from aos_api.asset_registry.release_policy import ReleasePolicy
     from aos_api.extension_runtime.runtime_uninstall import RuntimeUninstallGuard
 
+    command_store = _configured_uninstall_command_store()
     return InstallationService(
         store=PostgresInstallationStore(),
         composition_store=PostgresCompositionStore(),
@@ -362,6 +375,7 @@ def build_installation_service() -> InstallationControl:
             release_policy=ReleasePolicy(trust_roots=_configured_trust_roots())
         ),
         runtime_uninstall_guard=RuntimeUninstallGuard(),
+        **({"uninstall_command_store": command_store} if command_store is not None else {}),
     )
 
 
@@ -464,6 +478,7 @@ def build_runtime_control_plane(*, disable_dependent: Any = None, registration_c
     from aos_api.pipeline_control_service import PipelineControlServiceFactory
 
     store = PostgresInstallationStore()
+    command_store = _configured_uninstall_command_store()
     policy = ReleasePolicy(trust_roots=_configured_trust_roots())
     planning = RuntimeReleaseRevalidator(release_policy=policy)
     installation = InstallationService(
@@ -472,6 +487,7 @@ def build_runtime_control_plane(*, disable_dependent: Any = None, registration_c
         revalidator=InstallationRevalidator(release_policy=policy),
         planning_revalidator=planning,
         runtime_uninstall_guard=RuntimeUninstallGuard(),
+        **({"uninstall_command_store": command_store} if command_store is not None else {}),
     )
 
     # A control plane that owns ecommerce registration must also own the

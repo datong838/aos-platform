@@ -376,6 +376,24 @@ def test_runtime_control_plane_uses_one_store_and_formal_configuration_sources()
     }
 
 
+def test_formal_uninstall_command_store_is_opt_in_and_separate(monkeypatch) -> None:
+    from aos_api.asset_registry.uninstall_command_connection import (
+        CREDENTIAL_FILE, connect_uninstall_command,
+    )
+
+    monkeypatch.delenv(CREDENTIAL_FILE, raising=False)
+    original = control_wiring.build_runtime_control_plane().installation_reader
+    assert original._uninstall_command_store is original._store
+
+    monkeypatch.setenv(CREDENTIAL_FILE, "/private/formal-uninstall-identity.json")
+    plane = control_wiring.build_runtime_control_plane()
+    canonical = control_wiring.build_installation_service()
+    for installation in (plane.installation_reader, canonical):
+        assert installation._uninstall_command_store is not installation._store
+        assert installation._uninstall_command_store._connect_factory is connect_uninstall_command
+    assert plane.installation_store is plane.installation_reader._store
+
+
 def test_runtime_control_plane_permission_locks_the_current_installation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

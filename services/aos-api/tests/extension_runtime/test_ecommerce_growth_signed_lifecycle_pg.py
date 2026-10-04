@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import hashlib
 import importlib.util
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -17,6 +18,7 @@ from alembic.migration import MigrationContext
 from alembic.operations import Operations
 import psycopg
 from psycopg import IsolationLevel, sql
+from psycopg.conninfo import make_conninfo
 from psycopg.rows import dict_row
 import pytest
 from sqlalchemy import create_engine, text
@@ -37,6 +39,9 @@ from aos_api.asset_registry.control_policy import (
 from aos_api.asset_registry.installation_service import InstallationService
 from aos_api.asset_registry.installation_revalidation import InstallationRevalidator
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
+from aos_api.asset_registry.uninstall_command_connection import (
+    CREDENTIAL_FILE, connect_uninstall_command,
+)
 from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
 from aos_api.ecommerce_growth_cutover import (
     EcommerceGrowthCutoverBlocked,
@@ -93,6 +98,8 @@ def database():
             created_roles.append(required)
     owner.execute(sql.SQL("CREATE ROLE {} LOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT").format(sql.Identifier(role)))
     owner.execute(sql.SQL("CREATE ROLE {} LOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT").format(sql.Identifier(command_role)))
+    owner.execute(sql.SQL("ALTER ROLE {} SET search_path TO {}").format(
+        sql.Identifier(command_role), sql.Identifier(schema)))
     owner.execute(sql.SQL("GRANT aos_app TO {} WITH INHERIT FALSE, SET FALSE").format(sql.Identifier(command_role)))
     for granted in ("aos_app", "aos_runtime", "aos_extension_maintainer"):
         owner.execute(sql.SQL("GRANT {} TO {}").format(sql.Identifier(granted), sql.Identifier(role)))
@@ -262,30 +269,50 @@ def _runtime_connect(database):
     return connect
 
 
-def _app_connect(database):
+def _app_connect(database, tmp_path, monkeypatch):
+    identity = tmp_path / "uninstall-command-identity.json"
+    identity.write_text(json.dumps({
+        "schemaVersion": "aos.installation-uninstall-command-identity/v1",
+        "role": database.command_role,
+        "dsn": make_conninfo(**{**PG, "user": database.command_role}),
+    }))
+    identity.chmod(0o600)
+    monkeypatch.setenv(CREDENTIAL_FILE, str(identity))
+    monkeypatch.setenv("AOS_DATABASE_URL", make_conninfo(**PG))
     @contextmanager
     def connect():
-        conn = psycopg.connect(**{**PG, "user": database.command_role}, row_factory=dict_row)
-        try:
-            rights = conn.execute("""SELECT session_user AS login,current_user AS role,
-                pg_has_role(session_user,'aos_app','MEMBER') AS member,
-                pg_has_role(session_user,'aos_app','USAGE') AS usage,
-                pg_has_role(session_user,'aos_app','SET') AS can_set,
-                pg_has_role(session_user,'aos_runtime','MEMBER') AS runtime_member,
-                r.rolsuper AS superuser,r.rolbypassrls AS bypassrls,
-                has_table_privilege(session_user,%s,'UPDATE') AS binding_update
-                FROM pg_roles r WHERE r.rolname=session_user""",
-                (database.schema + ".extension_runtime_binding",)).fetchone()
-            assert rights == dict(login=database.command_role, role=database.command_role,
-                                  member=True, usage=False, can_set=False,
-                                  runtime_member=False, superuser=False,
-                                  bypassrls=False, binding_update=False)
-            conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
-            conn.commit()
+        with connect_uninstall_command(_protected_schema=database.schema) as conn:
             yield conn
-        finally:
-            conn.close()
     return connect
+
+
+def test_formal_uninstall_login_rejects_elevation(database, tmp_path, monkeypatch):
+    connect = _app_connect(database, tmp_path, monkeypatch)
+    with connect() as conn:
+        assert conn.execute("SELECT session_user AS role").fetchone()["role"] == database.command_role
+    owner = database.owner
+    role = sql.Identifier(database.command_role)
+    for elevate, restore in (
+        (sql.SQL("ALTER ROLE {} SUPERUSER"), sql.SQL("ALTER ROLE {} NOSUPERUSER")),
+        (sql.SQL("ALTER ROLE {} INHERIT"), sql.SQL("ALTER ROLE {} NOINHERIT")),
+        (sql.SQL("GRANT aos_runtime TO {}"), sql.SQL("REVOKE aos_runtime FROM {}")),
+        (sql.SQL("GRANT pg_read_all_data TO {}"), sql.SQL("REVOKE pg_read_all_data FROM {}")),
+        (sql.SQL("GRANT UPDATE ON {} TO {}"), sql.SQL("REVOKE UPDATE ON {} FROM {}")),
+    ):
+        if elevate.as_string(owner).startswith("GRANT UPDATE"):
+            target = sql.Identifier(database.schema, "extension_runtime_binding")
+            elevate = elevate.format(target, role)
+            restore = restore.format(target, role)
+        else:
+            elevate = elevate.format(role)
+            restore = restore.format(role)
+        owner.execute(elevate)
+        try:
+            with pytest.raises(RuntimeError, match="uninstall command identity is not permitted"):
+                with connect():
+                    pytest.fail("elevated command login was admitted")
+        finally:
+            owner.execute(restore)
 
 
 def _cutover_connect(database):
@@ -307,7 +334,7 @@ def _cutover_connect(database):
     return connect
 
 
-def test_signed_disable_uninstall_reinstall_routes_exact_ecommerce_group(database, tmp_path):
+def test_signed_disable_uninstall_reinstall_routes_exact_ecommerce_group(database, tmp_path, monkeypatch):
     connect = _scoped_connect(database)
     scope = TenantScope("org-org", "dev-project")
     scope_dict = dict(org_id=scope.org_id, project_id=scope.project_id)
@@ -545,7 +572,7 @@ def test_signed_disable_uninstall_reinstall_routes_exact_ecommerce_group(databas
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 with psycopg.connect(**{**PG, "user": database.command_role}) as probe:
                     probe.execute("SET ROLE aos_app")
-            app_store = PostgresInstallationStore(_app_connect(database))
+            app_store = PostgresInstallationStore(_app_connect(database, tmp_path, monkeypatch))
             guarded = InstallationService(store=runtime_store, uninstall_command_store=app_store,
                 composition_store=package["composition_store"],
                 revalidator=InstallationRevalidator(release_policy=policy), planning_revalidator=revalidator,
