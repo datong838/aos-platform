@@ -57,7 +57,14 @@ def test_capability_receipt_requires_real_issuer_and_binding_pair():
             owner.execute(sql.SQL("DROP ROLE IF EXISTS {}") .format(sql.Identifier(runtime)))
 
 
-def test_clone_only_capability_operation_guard_preserves_normal_receipts():
+@pytest.mark.parametrize("require_trusted_evaluate", [
+    False,
+    pytest.param(True, marks=pytest.mark.xfail(
+        strict=True, reason="valid-looking evaluate has no trusted current dependency origin")),
+])
+def test_clone_only_capability_operation_guard_preserves_normal_receipts(
+    require_trusted_evaluate,
+):
     dsn = get_dsn()
     dbname = conninfo_to_dict(dsn)["dbname"]
     assert dbname.startswith("aos_test_") and dbname.endswith("_ti4_test")
@@ -424,13 +431,20 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                 conn.execute("""UPDATE aip_capability_binding SET status='suspended',
                     version=version+1 WHERE binding_id='b22-binding'""")
                 receipt(conn, "capability_binding.update", "b22-updated", revision="2")
-            with login(issuer) as conn:
-                set_scope(conn)
-                conn.execute("""UPDATE aip_capability_binding SET version=version+1,
-                    operational_readiness='blocked',dependency_snapshot_hash=%s,
-                    last_evaluated_at=now(),readiness_expires_at=now()+interval '15 minutes'
-                    WHERE binding_id='b22-binding'""", ("b" * 64,))
-                receipt(conn, "capability_binding.evaluate", "b22-evaluated", revision="3")
+            def write_untrusted_evaluate():
+                with login(issuer) as conn:
+                    set_scope(conn)
+                    conn.execute("""UPDATE aip_capability_binding SET version=version+1,
+                        operational_readiness='blocked',dependency_snapshot_hash=%s,
+                        last_evaluated_at=now(),readiness_expires_at=now()+interval '15 minutes'
+                        WHERE binding_id='b22-binding'""", ("b" * 64,))
+                    receipt(conn, "capability_binding.evaluate", "b22-evaluated", revision="3")
+
+            if require_trusted_evaluate:
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    write_untrusted_evaluate()
+                return
+            write_untrusted_evaluate()
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 with login(issuer) as conn:
                     set_scope(conn)
