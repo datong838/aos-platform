@@ -753,6 +753,10 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                 )
                 scoped_tables = source_tables[:4]
                 policy_name = 's3owaob39_' + role.rsplit('_', 1)[-1]
+                lock_function = 'aos_e17_install_lock_' + role.rsplit('_', 1)[-1]
+                lock_query = sql.SQL('''SELECT public.{}(
+                    %s::text,%s::text,%s::uuid,%s::bigint) AS installation_pk''').format(
+                    sql.Identifier(lock_function))
                 with psycopg.connect(get_dsn()) as admin:
                     admin.execute(sql.SQL('''CREATE ROLE {} LOGIN NOINHERIT NOSUPERUSER
                         NOBYPASSRLS PASSWORD {}''').format(
@@ -846,8 +850,112 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                                     assert limited.execute(
                                         'SELECT count(*) AS n FROM bundle_installation'
                                     ).fetchone()['n'] == 0
+                    with psycopg.connect(get_dsn()) as admin:
+                        admin.execute(sql.SQL('''CREATE FUNCTION public.{}(
+                            p_org text,p_project text,p_installation uuid,p_etag bigint)
+                            RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER
+                            SET search_path=pg_catalog AS $$
+                            DECLARE found_pk uuid; found_etag bigint;
+                                    active_rev bigint; current_rev bigint; revision_state text;
+                            BEGIN
+                              IF session_user IS DISTINCT FROM {}
+                                 OR current_setting('aos.org_id',true) IS DISTINCT FROM p_org
+                                 OR current_setting('aos.project_id',true) IS DISTINCT FROM p_project
+                                 OR current_setting('transaction_isolation') <> 'serializable'
+                                 OR current_setting('transaction_read_only') <> 'off' THEN
+                                RAISE EXCEPTION 'installation unavailable' USING ERRCODE='42501';
+                              END IF;
+                              SELECT i.installation_pk,i.etag_version,i.active_revision,
+                                     i.current_revision,r.state
+                                INTO found_pk,found_etag,active_rev,current_rev,revision_state
+                                FROM public.bundle_installation i
+                                JOIN public.bundle_installation_revision r
+                                  ON r.org_id=i.org_id AND r.project_id=i.project_id
+                                 AND r.installation_pk=i.installation_pk
+                                 AND r.revision=i.current_revision
+                               WHERE i.org_id=p_org AND i.project_id=p_project
+                                 AND i.installation_id=p_installation
+                               FOR SHARE OF i;
+                              IF found_pk IS NULL OR found_etag IS DISTINCT FROM p_etag
+                                 OR active_rev IS NULL OR active_rev IS DISTINCT FROM current_rev
+                                 OR revision_state IS DISTINCT FROM 'active' THEN
+                                RAISE EXCEPTION 'installation unavailable' USING ERRCODE='42501';
+                              END IF;
+                              RETURN found_pk;
+                            END $$''').format(sql.Identifier(lock_function), sql.Literal(role)))
+                        admin.execute(sql.SQL('''REVOKE ALL ON FUNCTION public.{}(
+                            text,text,uuid,bigint) FROM PUBLIC''').format(
+                            sql.Identifier(lock_function)))
+                    with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                            with limited.transaction():
+                                limited.execute(lock_query, (*SCOPE.key,
+                                    installed['installationId'], selected_view.etag_version))
+                    with psycopg.connect(get_dsn()) as admin:
+                        admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION public.{}(
+                            text,text,uuid,bigint) TO {}''').format(
+                            sql.Identifier(lock_function), sql.Identifier(role)))
+                    for selected_scope, installation_id, etag in (
+                        (None, installed['installationId'], selected_view.etag_version),
+                        (TenantScope('dev-org', 'dev-project'),
+                         installed['installationId'], selected_view.etag_version),
+                        (SCOPE, str(uuid4()), selected_view.etag_version),
+                        (SCOPE, installed['installationId'], selected_view.etag_version + 1),
+                    ):
+                        with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                            with limited.transaction():
+                                limited.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+                                if selected_scope is not None:
+                                    limited.execute('''SELECT
+                                        set_config('aos.org_id',%s,true),
+                                        set_config('aos.project_id',%s,true)''',
+                                        selected_scope.key)
+                                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                                    with limited.transaction():
+                                        limited.execute(lock_query, (
+                                            *(selected_scope or SCOPE).key,
+                                            installation_id, etag,
+                                        ))
+                    with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                        with limited.transaction():
+                            limited.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+                            _read_unique_active_in_transaction(
+                                limited, scope=SCOPE, publisher=growth.publisher,
+                                bundle_id=growth.bundle_id, version=growth.version,
+                                content_hash=growth.content_hash,
+                                release_policy=policy, loader=loader,
+                            )
+                            locked_pk = limited.execute(
+                                lock_query, (*SCOPE.key, installed['installationId'],
+                                             selected_view.etag_version),
+                            ).fetchone()['installation_pk']
+                            assert locked_pk is not None
+                            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                                with limited.transaction():
+                                    limited.execute('''UPDATE bundle_installation
+                                        SET etag_version=etag_version
+                                        WHERE org_id=%s AND project_id=%s
+                                          AND installation_id=%s''',
+                                        (*SCOPE.key, installed['installationId']))
+                            with psycopg.connect(get_dsn(), autocommit=True) as contender:
+                                contender.execute("SET lock_timeout='250ms'")
+                                with pytest.raises(psycopg.errors.LockNotAvailable):
+                                    contender.execute('''SELECT 1 FROM bundle_installation
+                                        WHERE org_id=%s AND project_id=%s
+                                          AND installation_id=%s FOR UPDATE''',
+                                        (*SCOPE.key, installed['installationId']))
+                                with pytest.raises(psycopg.errors.LockNotAvailable):
+                                    contender.execute('SELECT pg_advisory_xact_lock(228, 1)')
+                    with psycopg.connect(get_dsn(), autocommit=True) as contender:
+                        contender.execute("SET lock_timeout='250ms'")
+                        assert contender.execute('''SELECT 1 FROM bundle_installation
+                            WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE''',
+                            (*SCOPE.key, installed['installationId'])).fetchone() is not None
+                        contender.execute('SELECT pg_advisory_xact_lock(228, 1)')
                 finally:
                     with psycopg.connect(get_dsn()) as admin:
+                        admin.execute(sql.SQL('''DROP FUNCTION IF EXISTS public.{}(
+                            text,text,uuid,bigint)''').format(sql.Identifier(lock_function)))
                         for table in scoped_tables:
                             admin.execute(sql.SQL('DROP POLICY IF EXISTS {} ON {}').format(
                                 sql.Identifier(policy_name), sql.Identifier(table)))
@@ -856,6 +964,9 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                     with psycopg.connect(get_dsn()) as admin:
                         assert admin.execute('SELECT 1 FROM pg_roles WHERE rolname=%s',
                                              (role,)).fetchone() is None
+                        assert admin.execute('SELECT to_regprocedure(%s)', (
+                            f'public.{lock_function}(text,text,uuid,bigint)',
+                        )).fetchone()[0] is None
                 with pytest.raises(CurrentReleaseEvidenceBlocked, match='ACTIVE_INSTALLATION_MISSING'):
                     read_unique_active_installation_release_evidence(
                         connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
