@@ -1,0 +1,18 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_stale_first_initialization_cannot_commit_after_read_committed_raw_revoke _
+services/aos-api/tests/aip/test_aip_license_source_initialization_pg.py:61: in test_stale_first_initialization_cannot_commit_after_read_committed_raw_revoke
+    with pytest.raises(psycopg.errors.SerializationFailure):
+E   Failed: DID NOT RAISE SerializationFailure
+________ test_initialization_before_any_issuance_blocks_raw_revoke_pid _________
+services/aos-api/tests/aip/test_aip_license_source_initialization_pg.py:88: in test_initialization_before_any_issuance_blocks_raw_revoke_pid
+    wait_blocked(admin,[pids.get(timeout=6)],pid,[future])
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:314: in wait_blocked
+    assert not any(f.done() for f in futures), 'writer escaped shared source head'
+E   AssertionError: writer escaped shared source head
+E   assert not True
+E    +  where True = any(<generator object wait_blocked.<locals>.<genexpr> at 0x11ba8c1e0>)
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_initialization_pg.py::test_stale_first_initialization_cannot_commit_after_read_committed_raw_revoke
+FAILED services/aos-api/tests/aip/test_aip_license_source_initialization_pg.py::test_initialization_before_any_issuance_blocks_raw_revoke_pid
+2 failed, 7 warnings in 4.93s

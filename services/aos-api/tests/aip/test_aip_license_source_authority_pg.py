@@ -49,6 +49,7 @@ def test_strict_login_returns_first_revoke_response_without_postcommit_scope_los
         for table in ('aip_evidence_bundle_revoke_event','aip_production_contract_receipt'):
             owner.execute(sql.SQL('GRANT INSERT ON public.{} TO {}').format(sql.Identifier(table),sql.Identifier(role)))
         owner.execute(sql.SQL('GRANT EXECUTE ON FUNCTION public.aos_license_source_lock(text,text,text,bigint,text,boolean) TO {}').format(sql.Identifier(role)))
+        owner.execute(sql.SQL('GRANT EXECUTE ON FUNCTION public.aos_license_source_initialization_lock(text,text,text,bigint,text,boolean) TO {}').format(sql.Identifier(role)))
         factory=BindingEvaluatorConnectionFactory(config)
         try:
             response=invoke(bundle,'b84.'+bundle,factory=factory)

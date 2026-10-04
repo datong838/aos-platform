@@ -37,10 +37,39 @@ def _require_scope(conn: Any, scope: TenantScope) -> None:
         raise LicenseSourceUnavailable('LICENSE_SOURCE_SCOPE_MISMATCH')
 
 
+
+def lock_license_source_initialization(conn: Any, scope: TenantScope, ref: ExactRevisionRef, *, shared: bool = True) -> int:
+    # Neutral coordination only. Frozen/current/licensed eligibility must be
+    # checked by the formal caller; generic historical revocation stays valid.
+    _require_scope(conn,scope)
+    if not isinstance(ref,ExactRevisionRef) or ref.resource_type != 'EvidenceBundleRevision' or type(shared) is not bool:
+        raise LicenseSourceUnavailable('LICENSE_SOURCE_EXACT_REF_REQUIRED')
+    try:
+        row=conn.execute('SELECT public.aos_license_source_initialization_lock(%s,%s,%s,%s,%s,%s) AS epoch',
+            (*scope.key,ref.resource_id,ref.revision,ref.content_hash,shared)).fetchone()
+    except psycopg.errors.InsufficientPrivilege as exc:
+        reason=exc.diag.message_primary
+        if reason not in {'LICENSE_SOURCE_SCOPE_MISMATCH','LICENSE_SOURCE_EXACT_FROZEN_MISSING',
+                          'LICENSE_SOURCE_INITIALIZATION_FENCE_MISSING'}:
+            reason='LICENSE_SOURCE_FENCE_DENIED'
+        raise LicenseSourceUnavailable(reason) from exc
+    except psycopg.errors.UndefinedFunction as exc:
+        raise LicenseSourceUnavailable('LICENSE_SOURCE_INITIALIZATION_FENCE_UNAVAILABLE') from exc
+    if row is None or row['epoch'] is None:
+        raise LicenseSourceUnavailable('LICENSE_SOURCE_INITIALIZATION_FENCE_MISSING')
+    return int(row['epoch'])
+
+
+def _lock_initialization_if_migrated(conn: Any, scope: TenantScope, ref: ExactRevisionRef, *, shared: bool) -> None:
+    table=conn.execute("SELECT to_regclass('public.aip_license_source_initialization_fence') AS fence").fetchone()
+    if table is not None and table['fence'] is not None:
+        lock_license_source_initialization(conn,scope,ref,shared=shared)
+
 def lock_license_source_head(conn: Any, scope: TenantScope, ref: ExactRevisionRef, *, shared: bool = True) -> int:
     _require_scope(conn,scope)
-    if ref.resource_type != 'EvidenceBundleRevision' or type(shared) is not bool:
+    if not isinstance(ref,ExactRevisionRef) or ref.resource_type != 'EvidenceBundleRevision' or type(shared) is not bool:
         raise LicenseSourceUnavailable('LICENSE_SOURCE_EXACT_REF_REQUIRED')
+    _lock_initialization_if_migrated(conn,scope,ref,shared=shared)
     try:
         row = conn.execute('SELECT public.aos_license_source_lock(%s,%s,%s,%s,%s,%s) AS epoch',
                            (*scope.key,ref.resource_id,ref.revision,ref.content_hash,shared)).fetchone()
@@ -64,6 +93,14 @@ def lock_existing_license_source_for_revoke(conn: Any, scope: TenantScope, bundl
     table = conn.execute("SELECT to_regclass('public.aip_license_source_issuance') AS source_table").fetchone()
     if table is None or table['source_table'] is None:
         return
+    actual=conn.execute('SELECT content_hash FROM public.aip_evidence_bundle_revision '
+        'WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s',
+        (*scope.key,bundle_id,revision)).fetchone()
+    if actual is not None:
+        # Request hash does not choose the source lock; preserve the original
+        # Store's later hash/replay conflict classification.
+        _lock_initialization_if_migrated(conn,scope,ExactRevisionRef(resource_type='EvidenceBundleRevision',
+            resource_id=bundle_id,revision=revision,content_hash=actual['content_hash']),shared=False)
     issued = conn.execute('SELECT content_hash FROM public.aip_license_source_issuance WHERE '
         'org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s LIMIT 1',
         (*scope.key,bundle_id,revision)).fetchone()
