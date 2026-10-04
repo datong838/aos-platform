@@ -2,7 +2,9 @@ import tempfile
 import unittest
 from pathlib import Path
 from subprocess import run
-from aos_wake_progress import observe, snapshot
+from aos_wake_progress import observe, snapshot, checkpoint_snapshot, exact_file, recovery_guidance
+import json
+from datetime import datetime, timezone, timedelta
 
 class ProgressTest(unittest.TestCase):
     def snap(self, commit='a', at=100):
@@ -50,5 +52,112 @@ class ProgressTest(unittest.TestCase):
             s=snapshot(Path(d),'thread')
             self.assertEqual(s['code_commit'],original)
             self.assertNotEqual(s['head'],original)
+
+class AttributedProgressTest(unittest.TestCase):
+    def attributed(self, fingerprint='one', task='task'):
+        return dict(repo='/repo',thread='thread',branch='m1',head='a',code_commit='a',code_time=100,
+                    checkpoint=dict(task_id=task,owner='owner',authority_revision='AOS-001329',
+                                    step='RED',fingerprint=fingerprint))
+
+    def test_task_file_change_is_reviewable_progress_despite_old_code(self):
+        a=observe({},self.attributed(),'001',3000)
+        b=observe(a,self.attributed('two'),'002',3010)
+        self.assertEqual(b['action'],'TASK_PROGRESS_OBSERVED')
+        self.assertEqual(b['unchanged_wakes'],0)
+
+    def test_other_commit_does_not_clear_task_stall(self):
+        a=observe({},self.attributed(),'001',3000)
+        current=self.attributed();current.update(code_commit='other',code_time=3010)
+        b=observe(a,current,'002',3020)
+        self.assertEqual(b['action'],'REVIEW_REQUIRED')
+
+    def test_task_switch_does_not_count_as_progress(self):
+        a=observe({},self.attributed(),'001',3000)
+        b=observe(a,self.attributed('two','different'),'002',3010)
+        self.assertEqual(b['action'],'REVIEW_REQUIRED')
+
+    def test_duplicate_file_change_does_not_refresh_state(self):
+        a=observe({},self.attributed(),'002',3000)
+        self.assertEqual(observe(a,self.attributed('two'),'002',3010),a)
+
+class CheckpointSafetyTest(unittest.TestCase):
+    def setup_context(self, root):
+        repo=root/'repo';repo.mkdir();task='task'
+        (repo/'scripts').mkdir();(repo/'scripts/a.py').write_text('value=1')
+        evidence=repo/'.evidence'/task;evidence.mkdir(parents=True)
+        context=root/'context';m=context/'memory';(m/'receipts/tasks').mkdir(parents=True)
+        receipt={'task_id':task,'owner':'owner','base_revision':'AOS-001329',
+                 'lease_expires_at':(datetime.now(timezone.utc)+timedelta(hours=1)).isoformat(),
+                 'scope':['aos-platform/scripts'],'excluded_scope':[]}
+        (m/'authority.json').write_text(json.dumps({'project_revision':'AOS-001329'}))
+        (m/'leases.json').write_text(json.dumps({'leases':[receipt]}))
+        (m/'receipts/tasks/task.json').write_text(json.dumps(receipt))
+        cp={'schema':'aos-engineering-checkpoint/v1','repo':str(repo),'thread':'thread',
+            'task_id':task,'owner':'owner','authority_revision':'AOS-001329',
+            'step':'RED','code_files':['scripts/a.py'],'evidence_files':[]}
+        file=evidence/'checkpoint.json';file.write_text(json.dumps(cp))
+        return repo,context,cp,file
+
+    def test_live_lease_and_file_changes_are_read_only(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo,context,cp,file=self.setup_context(Path(d))
+            a=checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
+            (repo/'scripts/a.py').write_text('value=2')
+            b=checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
+            self.assertNotEqual(a['fingerprint'],b['fingerprint'])
+            self.assertEqual(json.loads(file.read_text()),cp)
+
+    def test_bad_owner_and_missing_lease_fail_closed(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo,context,cp,file=self.setup_context(Path(d))
+            cp['owner']='other';file.write_text(json.dumps(cp))
+            with self.assertRaises(ValueError):checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
+            cp['owner']='owner';file.write_text(json.dumps(cp))
+            (context/'memory/leases.json').write_text('{"leases":[]}')
+            with self.assertRaises(ValueError):checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
+
+    def test_other_task_evidence_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo,context,cp,file=self.setup_context(Path(d))
+            cp['evidence_files']=['.evidence/other/output.txt'];file.write_text(json.dumps(cp))
+            with self.assertRaises(ValueError):checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
+
+    def test_traversal_secret_and_symlink_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);(root/'scripts').mkdir();(root/'scripts/a.py').write_text('x')
+            (root/'scripts/link.py').symlink_to(root/'scripts/a.py')
+            for name in ('scripts/../scripts/a.py','scripts/credential.py','scripts/link.py'):
+                with self.subTest(name=name),self.assertRaises(ValueError):exact_file(root,name,('scripts',))
+
+class RecoveryGuidanceTest(unittest.TestCase):
+    def decide(self, **kwargs):
+        values=dict(user_paused=False,mechanism_authorized=False,active_tool=False,ownership_known=True,
+                    outcome='read_only',risk='local',review_available=True,independent_candidate=True)
+        values.update(kwargs);return recovery_guidance(**values)
+
+    def test_latest_pause_wins(self):
+        self.assertEqual(self.decide(user_paused=True),'RESPECT_USER_PAUSE')
+        self.assertEqual(self.decide(user_paused=True,mechanism_authorized=True),'REVIEW_NEXT_SAFE_STEP')
+
+    def test_existing_tool_and_ambiguous_owner_prevent_takeover(self):
+        self.assertEqual(self.decide(active_tool=True),'WAIT_EXISTING_TOOL')
+        self.assertEqual(self.decide(ownership_known=False),'RECONCILE_OWNERSHIP')
+
+    def test_unknown_effect_never_resends(self):
+        self.assertEqual(self.decide(outcome='unknown_external'),'RECONCILE_RECEIPT_ONLY')
+
+    def test_unavailable_review_gates_only_formal_action(self):
+        self.assertEqual(self.decide(risk='formal',review_available=False),'CONTINUE_INDEPENDENT_CANDIDATE')
+        self.assertEqual(self.decide(risk='formal',review_available=False,independent_candidate=False),'FORMAL_ACTION_GATED')
+        self.assertEqual(self.decide(review_available=False),'REVIEW_NEXT_SAFE_STEP')
+
+class FixedRecoveryCasesTest(unittest.TestCase):
+    def test_registered_incident_cases(self):
+        data=json.loads((Path(__file__).parent/'fixtures/recovery_cases.json').read_text())
+        self.assertEqual(data['schema'],'aos-recovery-cases/v1')
+        self.assertEqual(len({c['id'] for c in data['cases']}),12)
+        for case in data['cases']:
+            with self.subTest(case=case['id'],partition=case['partition']):
+                self.assertEqual(recovery_guidance(**case['input']),case['expected'])
 
 if __name__=='__main__': unittest.main()

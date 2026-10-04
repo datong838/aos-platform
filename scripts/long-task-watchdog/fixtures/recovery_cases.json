@@ -1,0 +1,185 @@
+{
+  "schema": "aos-recovery-cases/v1",
+  "cases": [
+    {
+      "id": "pause",
+      "partition": "fixed",
+      "input": {
+        "user_paused": true,
+        "mechanism_authorized": false,
+        "active_tool": false,
+        "ownership_known": true,
+        "outcome": "read_only",
+        "risk": "local",
+        "review_available": true,
+        "independent_candidate": true
+      },
+      "expected": "RESPECT_USER_PAUSE"
+    },
+    {
+      "id": "mechanism-only",
+      "partition": "fixed",
+      "input": {
+        "user_paused": true,
+        "mechanism_authorized": true,
+        "active_tool": false,
+        "ownership_known": true,
+        "outcome": "read_only",
+        "risk": "local",
+        "review_available": true,
+        "independent_candidate": true
+      },
+      "expected": "REVIEW_NEXT_SAFE_STEP"
+    },
+    {
+      "id": "active-tool",
+      "partition": "fixed",
+      "input": {
+        "user_paused": false,
+        "mechanism_authorized": false,
+        "active_tool": true,
+        "ownership_known": true,
+        "outcome": "read_only",
+        "risk": "local",
+        "review_available": true,
+        "independent_candidate": true
+      },
+      "expected": "WAIT_EXISTING_TOOL"
+    },
+    {
+      "id": "unknown-owner",
+      "partition": "fixed",
+      "input": {
+        "user_paused": false,
+        "mechanism_authorized": false,
+        "active_tool": false,
+        "ownership_known": false,
+        "outcome": "read_only",
+        "risk": "local",
+        "review_available": true,
+        "independent_candidate": true
+      },
+      "expected": "RECONCILE_OWNERSHIP"
+    },
+    {
+      "id": "unknown-effect",
+      "partition": "fixed",
+      "input": {
+        "user_paused": false,
+        "mechanism_authorized": false,
+        "active_tool": false,
+        "ownership_known": true,
+        "outcome": "unknown_external",
+        "risk": "local",
+        "review_available": true,
+        "independent_candidate": true
+      },
+      "expected": "RECONCILE_RECEIPT_ONLY"
+    },
+    {
+      "id": "local-review-down",
+      "partition": "fixed",
+      "input": {
+        "user_paused": false,
+        "mechanism_authorized": false,
+        "active_tool": false,
+        "ownership_known": true,
+        "outcome": "read_only",
+        "risk": "local",
+        "review_available": false,
+        "independent_candidate": true
+      },
+      "expected": "REVIEW_NEXT_SAFE_STEP"
+    },
+    {
+      "id": "formal-review-down",
+      "partition": "holdout",
+      "input": {
+        "user_paused": false,
+        "mechanism_authorized": false,
+        "active_tool": false,
+        "ownership_known": true,
+        "outcome": "read_only",
+        "risk": "formal",
+        "review_available": false,
+        "independent_candidate": false
+      },
+      "expected": "FORMAL_ACTION_GATED"
+    },
+    {
+      "id": "formal-alternative",
+      "partition": "holdout",
+      "input": {
+        "user_paused": false,
+        "mechanism_authorized": false,
+        "active_tool": false,
+        "ownership_known": true,
+        "outcome": "read_only",
+        "risk": "formal",
+        "review_available": false,
+        "independent_candidate": true
+      },
+      "expected": "CONTINUE_INDEPENDENT_CANDIDATE"
+    },
+    {
+      "id": "pause-over-active",
+      "partition": "holdout",
+      "input": {
+        "user_paused": true,
+        "mechanism_authorized": false,
+        "active_tool": true,
+        "ownership_known": true,
+        "outcome": "read_only",
+        "risk": "local",
+        "review_available": true,
+        "independent_candidate": true
+      },
+      "expected": "RESPECT_USER_PAUSE"
+    },
+    {
+      "id": "unknown-owner-over-mechanism",
+      "partition": "holdout",
+      "input": {
+        "user_paused": true,
+        "mechanism_authorized": true,
+        "active_tool": false,
+        "ownership_known": false,
+        "outcome": "read_only",
+        "risk": "local",
+        "review_available": true,
+        "independent_candidate": true
+      },
+      "expected": "RECONCILE_OWNERSHIP"
+    },
+    {
+      "id": "unsupported-outcome",
+      "partition": "holdout",
+      "input": {
+        "user_paused": false,
+        "mechanism_authorized": false,
+        "active_tool": false,
+        "ownership_known": true,
+        "outcome": "ambiguous_local",
+        "risk": "local",
+        "review_available": true,
+        "independent_candidate": true
+      },
+      "expected": "RECONCILE_RECEIPT_ONLY"
+    },
+    {
+      "id": "not-started",
+      "partition": "holdout",
+      "input": {
+        "user_paused": false,
+        "mechanism_authorized": false,
+        "active_tool": false,
+        "ownership_known": true,
+        "outcome": "not_started",
+        "risk": "local",
+        "review_available": true,
+        "independent_candidate": true
+      },
+      "expected": "REVIEW_NEXT_SAFE_STEP"
+    }
+  ]
+}

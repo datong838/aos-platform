@@ -1,0 +1,109 @@
+import unittest
+from aos_review import validate_result, prime_command, parse_response
+import json
+import tempfile
+import hashlib
+import subprocess
+from pathlib import Path
+from datetime import datetime,timezone,timedelta
+from aos_review import validate_request
+
+class ReviewContractTest(unittest.TestCase):
+    def request(self):
+        return {'request_id':'r1','task_id':'t1','owner':'developer','kind':'quality',
+                'baseline':{'head':'a','authority_revision':'AOS-001329','files':{'f':'hash'}},
+                'claims':['No tool execution permitted']}
+
+    def result(self):
+        return dict(self.request(),verdict='PASS',findings=[{'claim':'No tool execution permitted',
+                    'evidence':'fixed no-tools flag','assessment':'supported'}],next_safe_step='Review only')
+
+    def test_empty_pass_rejected(self):
+        result=self.result();result['findings']=[]
+        with self.assertRaises(ValueError): validate_result(self.request(),result)
+
+    def test_wrong_head_rejected(self):
+        result=self.result();result['baseline']=dict(result['baseline'],head='b')
+        with self.assertRaises(ValueError): validate_result(self.request(),result)
+
+    def test_wrong_request_rejected(self):
+        result=self.result();result['request_id']='other'
+        with self.assertRaises(ValueError): validate_result(self.request(),result)
+
+    def test_pass_requires_all_claims(self):
+        req=self.request();req['claims'].append('other claim')
+        with self.assertRaises(ValueError):validate_result(req,self.result())
+
+    def test_valid_review_is_scoped_not_execution_permission(self):
+        self.assertIsNone(validate_result(self.request(),self.result()))
+
+    def test_host_disables_all_discovery_and_tools(self):
+        cmd=prime_command('/tmp/review')
+        for flag in ('--no-tools','--no-extensions','--no-skills','--no-context-files','--no-session','--offline'):
+            self.assertIn(flag,cmd)
+        self.assertNotIn('--api-key',cmd)
+
+class ReviewTransportTest(unittest.TestCase):
+    def test_zero_process_exit_cannot_hide_auth_failure(self):
+        stream=json.dumps({'type':'message_end','message':{'role':'assistant','stopReason':'error',
+                                                         'errorMessage':'401 invalid identity','content':[]}})
+        with self.assertRaisesRegex(ValueError,'REVIEW_AUTH_REQUIRED'):parse_response(stream)
+
+    def test_tool_call_or_execution_rejected(self):
+        for event in [{'type':'tool_execution_start'}, {'type':'message_end','message':{'role':'assistant',
+                      'content':[{'type':'toolCall','name':'write'}]}}]:
+            with self.subTest(event=event),self.assertRaises(ValueError):parse_response(json.dumps(event))
+
+    def test_valid_terminal_json_extracted(self):
+        value={'verdict':'NEED_EVIDENCE'}
+        event={'type':'message_end','message':{'role':'assistant','content':[{'type':'text','text':json.dumps(value)}]}}
+        self.assertEqual(parse_response(json.dumps(event)),value)
+
+    def test_textual_json_without_assistant_event_rejected(self):
+        with self.assertRaises(ValueError):parse_response(json.dumps({'verdict':'PASS'}))
+
+class ReviewBaselineIntegrationTest(unittest.TestCase):
+    def prepare(self, root):
+        repo=root/'aos-platform';repo.mkdir()
+        def git(*args):
+            return subprocess.run(['git','-C',str(repo),*args],check=True,capture_output=True,text=True).stdout.strip()
+        git('init','-b','m1');git('config','user.name','fixture');git('config','user.email','fixture@invalid')
+        (repo/'scripts').mkdir();(repo/'scripts/check.py').write_text('value=1')
+        git('add','scripts/check.py');git('commit','-m','fixture')
+        m=root/'docs/palantier/AOS项目开发上下文/memory';(m/'receipts/tasks').mkdir(parents=True)
+        receipt={'task_id':'t1','owner':'developer','base_revision':'AOS-001329',
+                 'lease_expires_at':(datetime.now(timezone.utc)+timedelta(hours=1)).isoformat(),
+                 'scope':['aos-platform/scripts'],'excluded_scope':[]}
+        (m/'authority.json').write_text(json.dumps({'project_revision':'AOS-001329'}))
+        (m/'leases.json').write_text(json.dumps({'leases':[receipt]}))
+        (m/'receipts/tasks/t1.json').write_text(json.dumps(receipt))
+        req={'schema':'aos-material-review/v1','request_id':'r1','task_id':'t1','owner':'developer','kind':'quality',
+             'baseline':{'head':git('rev-parse','HEAD'),'authority_revision':'AOS-001329',
+                         'files':{'scripts/check.py':hashlib.sha256(b'value=1').hexdigest()}},
+             'claims':['value initially one'],'materials':{'scripts/check.py':'value=1'}}
+        return repo,req,m
+
+    def test_recheck_rejects_change_after_initial_validation(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo,req,m=self.prepare(Path(d));validate_request(repo,req)
+            (repo/'scripts/check.py').write_text('value=2')
+            with self.assertRaisesRegex(ValueError,'changed material'):validate_request(repo,req)
+
+    def test_no_lease_and_wrong_owner_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo,req,m=self.prepare(Path(d));req['owner']='other'
+            with self.assertRaises(ValueError):validate_request(repo,req)
+            req['owner']='developer';(m/'leases.json').write_text('{"leases":[]}')
+            with self.assertRaises(ValueError):validate_request(repo,req)
+
+    def test_excluded_scope_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo,req,m=self.prepare(Path(d));receipt=json.loads((m/'receipts/tasks/t1.json').read_text())
+            receipt['excluded_scope']=['aos-platform/scripts']
+            (m/'receipts/tasks/t1.json').write_text(json.dumps(receipt))
+            (m/'leases.json').write_text(json.dumps({'leases':[receipt]}))
+            with self.assertRaisesRegex(ValueError,'excluded scope'):validate_request(repo,req)
+
+if __name__=='__main__':unittest.main()
+
+
