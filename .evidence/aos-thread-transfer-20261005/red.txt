@@ -1,0 +1,27 @@
+.................................FF.
+======================================================================
+FAIL: test_current_binding_and_old_or_missing_caller_rejected_without_write (test_aos_wake_progress.ThreadTransferTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/test_aos_wake_progress.py", line 265, in test_current_binding_and_old_or_missing_caller_rejected_without_write
+    self.assertEqual(THREAD, self.NEW)
+AssertionError: '01a0e5ff-d1a0-70f2-828f-9fc997519d04' != '01a107a2-e9e4-7670-bc44-1144fa9b27e2'
+- 01a0e5ff-d1a0-70f2-828f-9fc997519d04
++ 01a107a2-e9e4-7670-bc44-1144fa9b27e2
+
+
+======================================================================
+FAIL: test_new_progress_isolated_preserves_old_bytes_and_duplicate_state (test_aos_wake_progress.ThreadTransferTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/test_aos_wake_progress.py", line 279, in test_new_progress_isolated_preserves_old_bytes_and_duplicate_state
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 2 != 0 : usage: aos_wake_progress.py [-h] --event EVENT [--checkpoint CHECKPOINT]
+                            [--shadow]
+aos_wake_progress.py: error: unrecognized arguments: --thread 01a107a2-e9e4-7670-bc44-1144fa9b27e2
+
+
+----------------------------------------------------------------------
+Ran 36 tests in 0.270s
+
+FAILED (failures=2)

@@ -1,0 +1,16 @@
+{
+  "schema": "aos-engineering-checkpoint/v1",
+  "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "task_id": "aos-thread-transfer-20261005",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001329",
+  "step": "official-reminder-transfer",
+  "code_files": [
+    "scripts/long-task-watchdog/aos_wake_progress.py",
+    "scripts/long-task-watchdog/test_aos_wake_progress.py"
+  ],
+  "evidence_files": [
+    ".evidence/aos-thread-transfer-20261005/green.txt"
+  ]
+}
