@@ -4,13 +4,16 @@ import importlib.util
 import hashlib
 import json
 import os
+import secrets
 import subprocess
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
+from uuid import uuid4
 
 import psycopg
 import pytest
+from psycopg import sql
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from psycopg.conninfo import conninfo_to_dict
@@ -738,6 +741,101 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                         assert in_transaction.lock_hash == selected_view.lock_hash
                         assert in_transaction.authorization == 'EVIDENCE_ONLY_NO_START'
                         assert evidence_conn.execute('SELECT 1 AS alive').fetchone()['alive'] == 1
+                restricted_parts = conninfo_to_dict(get_dsn())
+                role = 'aos_e17_source_' + uuid4().hex[:12]
+                password = secrets.token_urlsafe(32)
+                restricted_parts.update(user=role, password=password)
+                source_tables = (
+                    'bundle_installation', 'bundle_installation_revision',
+                    'bundle_composition', 'bundle_composition_lock',
+                    'asset_bundle', 'asset_bundle_version',
+                    'asset_bundle_artifact', 'asset_bundle_evidence',
+                )
+                scoped_tables = source_tables[:4]
+                policy_name = 's3owaob39_' + role.rsplit('_', 1)[-1]
+                with psycopg.connect(get_dsn()) as admin:
+                    admin.execute(sql.SQL('''CREATE ROLE {} LOGIN NOINHERIT NOSUPERUSER
+                        NOBYPASSRLS PASSWORD {}''').format(
+                        sql.Identifier(role), sql.Literal(password)))
+                    admin.execute(sql.SQL('GRANT USAGE ON SCHEMA public TO {}').format(
+                        sql.Identifier(role)))
+                try:
+                    with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                            with limited.transaction():
+                                _read_unique_active_in_transaction(
+                                    limited, scope=SCOPE, publisher=growth.publisher,
+                                    bundle_id=growth.bundle_id, version=growth.version,
+                                    content_hash=growth.content_hash,
+                                    release_policy=policy, loader=loader,
+                                )
+                    with psycopg.connect(get_dsn()) as admin:
+                        for table in source_tables:
+                            admin.execute(sql.SQL('GRANT SELECT ON {} TO {}').format(
+                                sql.Identifier(table), sql.Identifier(role)))
+                        for table in scoped_tables:
+                            admin.execute(sql.SQL('''CREATE POLICY {} ON {} TO {}
+                                USING (org_id=NULLIF(current_setting('aos.org_id',true),'')
+                                   AND project_id=NULLIF(current_setting('aos.project_id',true),''))''').format(
+                                sql.Identifier(policy_name), sql.Identifier(table),
+                                sql.Identifier(role)))
+                    with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                        with limited.transaction():
+                            limited.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+                            identity = limited.execute('''SELECT current_user AS login,
+                                pg_has_role(current_user,'aos_runtime','member') AS runtime_member,
+                                current_setting('transaction_read_only') AS readonly''').fetchone()
+                            assert identity == {'login': role, 'runtime_member': False,
+                                                'readonly': 'off'}
+                            for table in source_tables:
+                                privileges = limited.execute('''SELECT
+                                    has_table_privilege(current_user,%s,'INSERT') AS insert_ok,
+                                    has_table_privilege(current_user,%s,'UPDATE') AS update_ok,
+                                    has_table_privilege(current_user,%s,'DELETE') AS delete_ok''',
+                                    (table, table, table)).fetchone()
+                                assert privileges == {'insert_ok': False,
+                                                      'update_ok': False, 'delete_ok': False}
+                            restricted_view = _read_unique_active_in_transaction(
+                                limited, scope=SCOPE, publisher=growth.publisher,
+                                bundle_id=growth.bundle_id, version=growth.version,
+                                content_hash=growth.content_hash,
+                                release_policy=policy, loader=loader,
+                            )
+                            assert restricted_view.installation_id == selected_view.installation_id
+                            assert restricted_view.authorization == 'EVIDENCE_ONLY_NO_START'
+                            assert limited.execute('SELECT count(*) AS n FROM bundle_installation'
+                                                   ).fetchone()['n'] == 1
+                            assert limited.execute('SELECT 1 AS alive').fetchone()['alive'] == 1
+                    for wrong_scope, wrong_hash in (
+                        (TenantScope('dev-org', 'dev-project'), growth.content_hash),
+                        (SCOPE, 'sha256:' + '0' * 64),
+                    ):
+                        with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                            with limited.transaction():
+                                limited.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+                                with pytest.raises(CurrentReleaseEvidenceBlocked,
+                                                   match='ACTIVE_INSTALLATION_MISSING'):
+                                    _read_unique_active_in_transaction(
+                                        limited, scope=wrong_scope,
+                                        publisher=growth.publisher,
+                                        bundle_id=growth.bundle_id, version=growth.version,
+                                        content_hash=wrong_hash,
+                                        release_policy=policy, loader=loader,
+                                    )
+                                if wrong_scope != SCOPE:
+                                    assert limited.execute(
+                                        'SELECT count(*) AS n FROM bundle_installation'
+                                    ).fetchone()['n'] == 0
+                finally:
+                    with psycopg.connect(get_dsn()) as admin:
+                        for table in scoped_tables:
+                            admin.execute(sql.SQL('DROP POLICY IF EXISTS {} ON {}').format(
+                                sql.Identifier(policy_name), sql.Identifier(table)))
+                        admin.execute(sql.SQL('DROP OWNED BY {}').format(sql.Identifier(role)))
+                        admin.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(role)))
+                    with psycopg.connect(get_dsn()) as admin:
+                        assert admin.execute('SELECT 1 FROM pg_roles WHERE rolname=%s',
+                                             (role,)).fetchone() is None
                 with pytest.raises(CurrentReleaseEvidenceBlocked, match='ACTIVE_INSTALLATION_MISSING'):
                     read_unique_active_installation_release_evidence(
                         connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
