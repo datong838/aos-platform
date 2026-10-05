@@ -1,0 +1,15 @@
+# 正式容量发行数据库边界方案门
+
+基线 m1 7c24f983 / AOS-001352；Task gt-provider-capacity-formal-boundary-20261005，与ACTIVE fullSource issuer Task串行协作、仍唯一m1写者。
+
+新增a150/additive，只disposable5433，不改已交付a147/a149原迁移。独立NOLOGIN/NOINHERIT无额外membership/flags issuer边界与private immutable发行registry；正式物理账户按supplier+fingerprint全域唯一，Provider双向唯一，不按revision/secret拆账户；跨tenant无法全域合计时拒绝第二分配。global归一索引只有窄私有函数/角色可见，不给runtime跨tenant读权限。Source revision保持nonexecuting，原审批和候选不当supplier verified。
+
+精确文件：a0v_150_provider_capacity_issuance_boundary.py、aip_provider_capacity_formal_boundary.py、新test_provider_capacity_formal_boundary_pg.py；现epoch helper及epoch tests适配private身份而保持runtime路径；SourceAction与ProviderCapacityAction仅提取原依赖读核共用内核，防止复制审批Hash/Owner/policy逻辑或SET ROLE runtime借身份。原fullSource Task另负责issuer/connection及正式契约。任何共用入口都须先证明原caller身份/DBtarget/SERIAL/原TenantScope，不能靠参数expectedRole任意切换。
+
+a149 helper现只允许runtime、epoch Owner审计只允许三函数。a150须有明确单独私有issuer reader权限并同步审计白名单及实际policy/函数hash/trigger，不能新增grant后导致原Source审批拒绝或放宽所有角色。保持原License→neutral锁序、所有Evidence排序、原caller的写前重验与真实COMMIT两方向竞争。
+
+原审批shape是唯一Source proposal v2/event v1；privateissuer核原专用Action/draft/status/policy/binding/event/currentOwner/所有exact Provider与旧allocation来源，再核可信supplierAttestation/SourcePolicy/计量适用性时效。细化DDL字段、所有权/ACL/私有函数、签名provenance及完整锁图并复审后才写RED/编码；本方案门未冻结这些SQL细节，登记不等于可以直接创建宽权限表。
+
+实际测试要求：正式Source发行actualCOMMIT并原rollback/replay、非私有身份/ACLdrift/candidate注入拒绝；同账号不同clientID/多Provider/轮换/跨tenant竞争不拆额；reader-first真实blocking-pids及writer-first/旧SERsnapshot拒绝；原Source审批/License/候选相邻。只表存在或role存在不完成Task，须与fullSource发行事实共同验收。fixture supplier事实明确test-only，真实Source缺来源继续禁止发行执行。
+
+当前142库/Host/worker/真实Provider/Secret/商城源/旧Run/manual/230L0/未知重发/外部效果不碰，m1/no push。完整经营首链、共享occupation/Intent、b90八facts/八工作台/观察发布仍待后继。
