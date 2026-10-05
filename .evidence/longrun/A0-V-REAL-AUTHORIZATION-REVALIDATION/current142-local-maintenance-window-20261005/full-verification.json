@@ -1,0 +1,21 @@
+{
+  "containers": [
+    "aos-windowfull-947482cf9502",
+    "aos-windowfull-d6b835501d51"
+  ],
+  "context": "colima-aos-a0v-test-only",
+  "private_state": "/Users/ddt/work/projects/ai_agent/aos-recovery/.aos-windowfull-mj19qn5b",
+  "current_source_touched": false,
+  "outcome": "ISOLATED_MAINTENANCE_BACKUP_RESTORE_AND_CONFIG_ROUNDTRIP_GREEN",
+  "tables": 592,
+  "restored_schema": "a0v_135",
+  "tcp_baseline": true,
+  "tcp_fenced": true,
+  "local_socket_dump_and_second_full_restore_exact": true,
+  "tcp_config_restored": true,
+  "network_none_no_ports": true,
+  "backup_bytes": 4218721,
+  "backup_sha256": "4cd31f7df5419bc64b2c72e2eeb09e495367fa84a26539823c02311c6ebb7020",
+  "elapsed_seconds": 17.52,
+  "current_zero_execution_window": false
+}

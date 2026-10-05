@@ -7,3 +7,7 @@
 本轮仅证实隔离机制可行性，不执行源库listen修改或停止源服务。RED：关闭TCP后TCP应失败、socket应成功、外部端口为空；若未配置封锁而误报告窗口必须拒绝。使用实际进程/PG证据而非mock，失败保留容器/卷/日志；known terminal后新nonce继续，unknown先读对账不重启。所有目标保留，不删除卷；无页面代码，无浏览器验收。新增代码前另登记精确脚本/测试scope并完善维护时序与恢复合同。
 
 实际probe terminal0：新容器aos-window-059e60cb41b0/新卷保留，无网络/端口，listen_addresses空；同容器TCP连接exit2而socket SELECT exit0，client backend仅本维护连接1。仅证明TCP-off+socket可用切面，没有默认TCP baseline/停写全备恢复/当前正式服务窗口；Task保持ACTIVE，不宣称完整窗口门。下一在同隔离测试状态补备份完整恢复和配置恢复时序，验收范围明确后才Delivery。
+
+本轮具体验证：新nonce容器bootstrap aos_app/无端口无网络，默认同容器TCP baseline；只在本轮新目标ALTER SYSTEM listen_addresses=''并重启，实际TCP拒绝后经socket恢复私有r4完整globals及135 archive，沿用5183ed2d snapshot精确比较592原表及数据库/角色权限。维护态经socket再生成完整新dump，在同本轮容器中新建restored database不可保持原名故采用另一全新nonce容器，恢复--create保持原名并精确比较。最后仅本轮新目标恢复listen_addresses='*'并重启，实测同容器TCP恢复可达、外部仍无端口/网络；旧probe/clone、源库及源服务均不动。记录实际配置往返，不以test-only socket登录代替正式身份。所有目标、卷及私有备份保留。
+
+实际完整演练terminal0/17.52s：新两个容器aos-windowfull-947482cf9502/aos-windowfull-d6b835501d51，从默认TCP正向→ALTER SYSTEM监听空+实际重启→TCP拒绝/socket成立→r4完整原globals及135archive恢复精确592表/原权限→socket维护dump4218721bytes SHA4cd31f7df5419bc64b2c72e2eeb09e495367fa84a26539823c02311c6ebb7020→第二目标完整--create恢复精确→两个目标恢复监听*并实际重启/TCP正向→全状态摘要仍一致。所有卷/私有资料保留，旧目标和当前源未碰。full-verification.json记录范围，current_zero_execution_window=false。不是正式身份/自然首链验收，也不防持有容器管理权的第二管理员；当前门仍须唯一维护执行者与对可达恢复器/外部角色的控制归属闭合。
