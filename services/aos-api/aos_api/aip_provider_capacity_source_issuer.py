@@ -80,3 +80,74 @@ def check_signed_capacity_documents(command,maker,policy_document,attestation_do
             command.supplier_attestation_ref.content_hash)
     except Exception:
         raise ProviderCapacityIssuanceBlocked('CAPACITY_SIGNED_SUPPLIER_DOCUMENTS_REQUIRED') from None
+
+
+def check_native_capacity_supplier_inputs(conn,command,policy_document,attestation_document,*,trust_roots):
+    """Match authentic signed material to original approved rows in one caller.
+
+    This is a nonexecuting pre-publication check, not a formal Source. Database
+    deployment identity, root/policy COMMIT coordination and global mapping
+    remain mandatory for the publication transaction; never consume this
+    return value as authority instead of rechecking the original inputs.
+    """
+    from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+    from aos_api.aip_provider_capacity_source_contracts import (
+        ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate,
+        SignedCapacitySourcePolicy,SignedSupplierCapacityAttestation)
+    try:
+        if (type(command) is not ProviderCapacityIssuanceCommand
+            or type(policy_document) is not SignedCapacitySourcePolicy
+            or type(attestation_document) is not SignedSupplierCapacityAttestation):
+            raise ValueError('exact original command and signed documents required')
+        command=ProviderCapacityIssuanceCommand.model_validate(command.model_dump(mode='python',by_alias=True))
+        policy_document=SignedCapacitySourcePolicy.model_validate(policy_document.model_dump(mode='python',by_alias=True))
+        attestation_document=SignedSupplierCapacityAttestation.model_validate(attestation_document.model_dump(mode='python',by_alias=True))
+        approved=read_capacity_approved_claims(conn,command)
+        scope=TenantScope(command.tenant.org_id,command.tenant.project_id)
+        source=approved.source
+        account=ProviderCapacitySourceActionGuard._candidate(conn,scope,source.physical_account_ref,'account',
+            ProviderPhysicalAccountCandidate,approved.maker)
+        basis=ProviderCapacitySourceActionGuard._candidate(conn,scope,source.basis_ref,'basis',
+            ProviderCapacityBasisCandidate,approved.maker)
+        now=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+        check_signed_capacity_documents(command,approved.maker,policy_document,attestation_document,
+            trust_roots=trust_roots,checked_at=now)
+        policy,attestation=policy_document.payload,attestation_document.payload
+        def exact_providers(refs):
+            return sorted((ref.asset_type,ref.asset_id,ref.revision,ref.content_hash) for ref in refs)
+        if ((attestation.supplier_id,attestation.supplier_account_fingerprint)
+            !=(account.supplier_id,account.supplier_account_fingerprint)
+            or exact_providers(attestation.provider_refs)!=exact_providers(account.provider_refs)
+            or attestation.evidence_ref!=basis.evidence_ref
+            or attestation.max_concurrency<basis.max_concurrency
+            or attestation.token_limit.mode!=basis.token_limit.mode
+            or attestation.token_limit.unit!=basis.token_limit.unit
+            or attestation.token_limit.max_tokens<basis.token_limit.max_tokens
+            or not attestation.valid_from<=source.valid_from<source.valid_until<=attestation.valid_until
+            or not policy.valid_from<=source.valid_from<source.valid_until<=policy.valid_until
+            or not basis.valid_from<=source.valid_from<source.valid_until<=basis.valid_until
+            or (basis.basis_kind=='supplier_limit_claim' and attestation.observed_at!=basis.observed_at)):
+            raise ValueError('signed supplier source must cover exact approved terms')
+        if basis.token_limit.mode=='fixed_window_rate' and (
+            attestation.token_limit.window_seconds!=basis.token_limit.window_seconds
+            or attestation.token_limit.window_anchor!=basis.token_limit.window_anchor):
+            raise ValueError('same rate window required; no implicit conversion')
+        principal=authenticate_capacity_issuance_command(command)
+        if principal.subject!=approved.maker:raise ValueError('authenticated maker changed')
+        now=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+        events=conn.execute('SELECT e.approval_event_id,e.expires_at AS event_expiry,p.expires_at AS proposal_expiry '
+            'FROM public.aip_action_approval_event e JOIN public.aip_action_proposal p '
+            'ON (p.org_id,p.project_id,p.proposal_id)=(e.org_id,e.project_id,e.proposal_id) '
+            'WHERE e.org_id=%s AND e.project_id=%s AND e.approval_event_id=ANY(%s)',
+            (*scope.key,[command.approval_event.asset_id,source.allocation_approval_ref.asset_id])).fetchall()
+        if (len(events)!=2 or {row['approval_event_id'] for row in events}
+            !={command.approval_event.asset_id,source.allocation_approval_ref.asset_id}
+            or any(row['event_expiry'] is None or row['proposal_expiry'] is None
+                or row['event_expiry']<=now or row['proposal_expiry']<=now for row in events)
+            or not source.valid_from<=now<source.valid_until):
+            raise ValueError('original approvals and terms expired')
+        return check_signed_capacity_documents(command,approved.maker,policy_document,attestation_document,
+            trust_roots=trust_roots,checked_at=now)
+    except Exception:
+        raise ProviderCapacityIssuanceBlocked('CAPACITY_NATIVE_SIGNED_SUPPLIER_INPUTS_REQUIRED') from None

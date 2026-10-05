@@ -1,0 +1,45 @@
+# 完整非执行容量Source publication施工方案门
+
+基线m1 a96a4bc0 / AOS-001354；Task gt-provider-capacity-publication-schema-20261005 ACTIVE，唯一m1 writer/no push。原fullSource和formalBoundary Tasks串行负责现issuer/read-boundary范围，b90持续ACTIVE。没有当前库迁移/部署权限。
+
+## 文件级范围
+
+- services/aos-api/alembic/versions/a0v_151_provider_capacity_publication.py：新additive owner/issuer-policy publisher、私有原出处/root-policy epoch、稳定全域账户及Provider双向mapping、immutable Source/provenance/attempt与窄函数。禁止回改a147/a150。
+- services/aos-api/aos_api/aip_provider_capacity_publication_contracts.py：正式nonexecuting signed Source/provenance/exactrefs，候选和check结果不是可接受Source。
+- services/aos-api/aos_api/aip_provider_capacity_publication_store.py：同caller实际原审批/签名输入链、可信origin/DB、global锁与一次原子publicationCOMMIT，unknown只原对账。
+- services/aos-api/aos_api/aip_provider_capacity_source_consumer.py：正式exact Source/签名/private原出处/当前root-policy/原审批Owner与Provider/Evidence，拒绝候选与runtime伪造。不是Start/occupation授权。
+- services/aos-api/tests/aip/test_provider_capacity_publication_pg.py：真实nativeCOMMIT/rollback/replay/原unknown reconcile、全域并发/轮换/tenant拒绝/当前性撤回/原caller锁竞争及相邻；test-only signature/facts，不是真实supplier。
+
+## 不可偷换的退出
+
+原Source批准+双签名文档及private read matching已经是依赖，不是本Task退出。必须证明稳定账号归一与独立原出处，在真实同private SERIAL caller一次COMMIT形成正式signed nonexecuting Source，consumer实际读取并拒绝伪造/失效，rollback不留正式输出/replay原exact结果/unknown不重发。表或功能存在不收口；最终与fullSource/formalBoundary原退出对账后才Delivery。
+
+## 需先冻结的数据库责任
+
+独立NOLOGIN private policy publisher作为root/policy/supplier attestation原出处的受控写者，与aos_provider_capacity_issuer及runtime分开；Source issuer不能自登记可信root/policy，不能以FileProvider参数或自己的verified字段替代authority。所有角色NOINHERIT/no-members/no-extra-flags；生产Provision/外部授权另门，fixture只disposable临时SCRAM并finally清LOGIN/password。
+
+专用NOLOGIN owner持有私有schema/root原出处/epoch/global mapping/Source表及窄SECD函数，全部body固定search_path与schema-qualified引用、ACL/owner/hash/trigger/policy审计。Source issuer只通过窄函数访问新private信息，不增加任意跨tenantSELECT/INSERT/UPDATE或旧License权限；原a15015表/5锁列权限保持，新增函数白名单适配由原formalBoundary Task处理，必须真实漂移与旧审批相邻。
+
+Root/policy注册原出处与current epoch由独立publisher路径管理，签名原始body/rootrev/有效期/发布者session和可信部署信息冻结，Source issuer不能bootstrap它们。FileTrustRootProvider快照只用于密码学验签；正式COMMIT当前性以受控原出处及epoch锁协调，不把任意FileProvider当生产trust。Root/policy撤回须与publication同epoch行锁排序，提交前原body/版本/currentness重验；consumer每次读取重新核，不能无限缓存。独立policy publisher的原外部身份/审批及bootstrap协议须明确，不以测试owner插行证明生产来源。
+
+可信cluster读取不得给Source issuer系统读角色或超级权限。新窄private函数由owner读取pg_control_system()系统identifier及当前DBname/OID，固定session角色/scope/SERIAL且ACL/函数体受审计；builtin权限只窄owner持有。signed target与实际conn host/port（容器内部server端口不等于客户连接端口）、DBname/OID/cluster/privateRole逐项matching。克隆/换集群/错DB/错误policy目标拒绝，不由客户端expectedDB自证。
+
+## 稳定账户及写图
+
+global账户按supplier+fingerprint唯一，稳定物理ID由受控数据库生成；candidate.physicalAccountId仅Owner别名，不能按Providerrevision/Secret/version拆账。Provider映射不可同时归两物理账户，同账号多Provider共享账户。跨tenant无法全域合账则第二归属拒绝，不返回另tenant信息。newAccount/ProviderMap/Source/provenance/attempt在一次caller COMMIT；immutable引用不允许覆盖，unique冲突与SERIAL40001 fail-closed原对账。
+
+正式Source包含完整approvedProposal/event、supplierAttestation/sourcePolicy四refs/requestHash、account stable identity、Provider exact集合、原Evidence集合与Source计量适用性、issuedAt/validity、private origin与签名provenance，executionAllowed=false。签名公钥/合法发布purpose从可信policy/root原出处取得，绝不从Source DTO自己的publicKey取。runtime写入或私有role携带无有效签名的记录不可被consumer接受；SQL窄写入口也须核原审批/映射/原出处，不可任意claim插入或不可逆mapping污染。
+
+publication Store复用check_native_capacity_supplier_inputs与原guard，不复制Owner/审批/hash/候选逻辑；基于原Source payload取得稳定账户key，所有锁顺序先写完整图，后编码。原Capacity→Budget不可反转；有License锁时必须在neutral之前。全局mapping/root-policy锁与已存在Source proposal/Owner/Provider/neutral链的组合须真实双向竞争/pg_blocking_pids与旧流程验证，不能拿read-only epoch测试推断新COMMIT锁图完整。
+
+## 首个RED与实施顺序
+
+先补完SQL函数签名/body、独立publisher入口与root撤回协议、signedSource契约及完整锁图，并受邀只读复审。首RED用已存在原独立批准+双Ed25519签名+真实privateSCRAM原caller，尝试完整publication实际COMMIT并consumer读取，缺正式入口必须失败；之后最小实现positive，再逐项补global unique/rollback/replay/跨tenant/withdrawal drift反例及原Source/License/b90相邻。不得先做一个便利DTO再把Task关掉。
+
+当前全部真实supplier/root部署来源和正式运行启用仍缺门；可以用明确test-only独立签名与原出处验证代码，但不能启用真实Source/Host/Provider。真实首链/八工作台/观察发布以及共享occupation/Intent仍后继必达目标。
+
+## 受邀路线复核补门：Source signer与bootstrap不能推导
+
+当前v1 SourcePolicy只允许Attestation signer，不能据此授权Source signer。正式Source publication另需独立purpose的SourceSigningPermit原出处，明确允许publisher/key/rootrevision、private issuer、ParentSourcePolicy exactref、有效期/撤回epoch及可信DB目标；该permit须由正式外部root/policy authority批准/签发并独立publisher登记，SourceIssuer/Owner候选不能自登记或通过session名自证。permit是server从受控原出处读取的额外provenance exactref，不是客户端新传一个可信key；其签名purpose与supplier_attestation/policy发布分开。私钥由受控Source签发组件持有，只从已正式授权的private配置加载，绝不进入DTO/DB/日志/Receipt/共享记忆；consumer仅用正式permit的允许公钥和当前root记录，不能从Source自身key字段建立trust。缺permit或bootstrap外部授权时正式publication必须拒绝，包括隔离positive前需有明确test-only授权原出处。
+
+完整SQL/body/锁图冻结前还须把独立publisher bootstrap的实际外部身份/审批/可信anchor绑定、permit/root-policy撤回与publication的epoch锁、global mapping与原批准/Provider/neutral链的顺序逐项确定。本方案门登记不代表这些缺口已实现或可省略；两次native核对不能替代COMMIT协调。

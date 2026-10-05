@@ -107,3 +107,139 @@ def test_candidate_sql_cannot_promote_or_mutate_and_canary_is_empty(account_inpu
     canary=TenantScope('dev-org','dev-project')
     with pytest.raises(ProviderCapacityCandidateBlocked):store.create_account(canary,maker,'canary-'+uuid4().hex,candidate)
     with connect(canary) as conn:assert conn.execute('SELECT count(*) AS n FROM aip_provider_capacity_candidate').fetchone()['n']==0
+
+
+from tests.aip.test_provider_capacity_formal_boundary_pg import (
+    approved_command,private_database,source_proposal,source_inputs,drafted)
+from tests.aip.test_provider_capacity_source_contracts import signed_capacity_documents
+
+
+@pytest.fixture
+def native_signed_source(approved_command,private_database,signed_capacity_documents):
+    from aos_api.db import connect
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+    from aos_api import aip_provider_capacity_source_contracts as c
+    from aos_api.aip_action_store import canonical_hash
+    f=signed_capacity_documents;maker,_,source,_,command=approved_command
+    with connect(SCOPE) as conn:
+        account=ProviderCapacitySourceActionGuard._candidate(conn,SCOPE,source.physical_account_ref,'account',c.ProviderPhysicalAccountCandidate,maker.subject)
+        basis=ProviderCapacitySourceActionGuard._candidate(conn,SCOPE,source.basis_ref,'basis',c.ProviderCapacityBasisCandidate,maker.subject)
+    f['attestation'].update(supplierId=account.supplier_id,supplierAccountFingerprint=account.supplier_account_fingerprint,
+        providerRefs=[v.model_dump(mode='json',by_alias=True) for v in account.provider_refs],
+        evidenceRef=basis.evidence_ref.model_dump(mode='json',by_alias=True),maxConcurrency=basis.max_concurrency,
+        tokenLimit=basis.token_limit.model_dump(mode='json',by_alias=True))
+    f['policy']['supplierId']=account.supplier_id
+    f['maker']=maker.subject
+    def actual_command():
+        policy,attestation=f['documents']()
+        return command.model_copy(update={
+            'source_policy_ref':command.source_policy_ref.model_copy(update=dict(asset_id=policy.payload.asset_id,revision=policy.payload.revision,
+                content_hash=canonical_hash(policy.payload.model_dump(mode='json',by_alias=True)))),
+            'supplier_attestation_ref':command.supplier_attestation_ref.model_copy(update=dict(asset_id=attestation.payload.asset_id,revision=attestation.payload.revision,
+                content_hash=canonical_hash(attestation.payload.model_dump(mode='json',by_alias=True))))}),policy,attestation
+    return f,actual_command,basis,source,private_database
+
+
+def test_actual_private_source_matches_original_approved_inputs_and_real_signed_documents(native_signed_source):
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_contracts import capacity_issuance_binding
+    f,actual_command,_,_,config=native_signed_source;command,policy,attestation=actual_command()
+    with connect_capacity_issuer(config,SCOPE) as conn:
+        before=conn.execute('SELECT count(*) AS n FROM aip_action_approval_event').fetchone()['n']
+        result=check_native_capacity_supplier_inputs(conn,command,policy,attestation,trust_roots=f['provider'])
+        assert result.authorization=='SUPPLIER_DOCUMENT_SIGNATURES_ONLY_NO_CAPACITY_NO_START'
+        assert result.execution_allowed is False
+        assert result.request_hash==capacity_issuance_binding(SCOPE,f['maker'],command).content_hash
+        assert result.source_policy_hash==command.source_policy_ref.content_hash
+        assert result.supplier_attestation_hash==command.supplier_attestation_ref.content_hash
+        assert conn.execute('SELECT count(*) AS n FROM aip_action_approval_event').fetchone()['n']==before
+        assert conn.execute('SELECT session_user AS login,current_user AS role').fetchone()==dict(login='aos_provider_capacity_issuer',role='aos_provider_capacity_issuer')
+
+
+@pytest.mark.parametrize('fault',['fingerprint','supplier','provider_id','provider_revision','provider_hash','extra_provider',
+    'evidence','low_concurrency','low_tokens','other_mode','short_validity','runtime'])
+def test_actual_private_source_rejects_resigned_documents_mismatching_approved_terms(native_signed_source,fault):
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs,ProviderCapacityIssuanceBlocked
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.db import connect
+    f,actual_command,basis,source,config=native_signed_source
+    if fault=='fingerprint':f['attestation']['supplierAccountFingerprint']='e'*64
+    elif fault=='supplier':f['attestation']['supplierId']=f['policy']['supplierId']='other-supplier'
+    elif fault.startswith('provider_'):
+        key={'provider_id':'assetId','provider_revision':'revision','provider_hash':'contentHash'}[fault]
+        f['attestation']['providerRefs'][0][key]={'provider_id':'other-provider','provider_revision':99,'provider_hash':'e'*64}[fault]
+    elif fault=='extra_provider':f['attestation']['providerRefs'].append(dict(assetType='ProviderInstanceRevision',assetId='extra-provider',revision=1,contentHash='d'*64))
+    elif fault=='evidence':f['attestation']['evidenceRef']['assetId']='other-evidence'
+    elif fault=='low_concurrency':f['attestation']['maxConcurrency']=basis.max_concurrency-1
+    elif fault=='low_tokens':f['attestation']['tokenLimit']['maxTokens']=basis.token_limit.max_tokens-1
+    elif fault=='other_mode':
+        f['policy']['allowedTokenModes']=['inflight_upper_bound','fixed_window_rate']
+        f['attestation']['tokenLimit']=dict(mode='fixed_window_rate',unit='token',maxTokens=basis.token_limit.max_tokens,windowSeconds=60,windowAnchor=f['now'])
+    elif fault=='short_validity':f['attestation']['validUntil']=source.valid_until-timedelta(seconds=1)
+    command,policy,attestation=actual_command()
+    # Both signatures and new exact hashes are valid. The native original-row
+    # comparison must refuse the mismatch, rather than a stale document hash.
+    context=connect(SCOPE) if fault=='runtime' else connect_capacity_issuer(config,SCOPE)
+    with context as conn:
+        with pytest.raises(ProviderCapacityIssuanceBlocked):
+            check_native_capacity_supplier_inputs(conn,command,policy,attestation,trust_roots=f['provider'])
+        conn.rollback()
+
+
+@pytest.mark.parametrize('fault',[None,'window_seconds','window_anchor'])
+def test_native_signed_source_fixed_window_requires_exact_approved_window(native_signed_source,approved_command,fault):
+    from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+    from aos_api import aip_provider_capacity_source_contracts as c
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+    from aos_api.aip_action_models import DecideActionProposalRequest
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs,ProviderCapacityIssuanceBlocked
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    f,actual_command,basis,source,config=native_signed_source;maker,checker=approved_command[:2]
+    rate=dict(mode='fixed_window_rate',unit='token',maxTokens=basis.token_limit.max_tokens,windowSeconds=60,windowAnchor=f['now'])
+    raw=basis.model_dump(mode='python',by_alias=True);raw['tokenLimit']=rate
+    rate_basis=c.ProviderCapacityBasisCandidate.model_validate(raw)
+    stored=ProviderCapacityCandidateStore().create_basis(SCOPE,maker,'rate-basis-'+uuid4().hex,rate_basis)
+    rate_source=source.model_copy(update={'basis_ref':FormalExactRef(assetType='ProviderCapacityBasisCandidateRevision',
+        assetId=stored['candidate_id'],revision=1,contentHash=stored['content_hash'])})
+    proposal=propose_provider_capacity_source(maker,rate_source,'rate-source-proposal-'+uuid4().hex,source.valid_until)
+    result=decide_provider_capacity_source(checker,proposal.proposal.id,'rate-source-approved-'+uuid4().hex,
+        DecideActionProposalRequest.model_validate(dict(expectedProposalVersion=proposal.proposal.version,
+            expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',reason='isolated fixed-window Source approval',approvalExpiresAt=source.valid_until)))
+    f['policy']['allowedTokenModes']=['fixed_window_rate'];f['attestation']['tokenLimit']=dict(rate)
+    if fault=='window_seconds':f['attestation']['tokenLimit']['windowSeconds']=120
+    elif fault=='window_anchor':f['attestation']['tokenLimit']['windowAnchor']=f['now']+timedelta(seconds=1)
+    command,policy,attestation=actual_command()
+    command=command.model_copy(update={'approved_proposal':FormalExactRef(assetType='ActionProposal',assetId=result.proposal.id,
+        revision=2,contentHash=result.proposal.proposal_hash),'approval_event':FormalExactRef(assetType='ActionApprovalEvent',
+        assetId=result.approvals[0].id,revision=1,contentHash=canonical_hash(result.approvals[0].model_dump(mode='json',by_alias=True)))})
+    with connect_capacity_issuer(config,SCOPE) as conn:
+        if fault is None:
+            checked=check_native_capacity_supplier_inputs(conn,command,policy,attestation,trust_roots=f['provider'])
+            assert checked.execution_allowed is False
+        else:
+            with pytest.raises(ProviderCapacityIssuanceBlocked):check_native_capacity_supplier_inputs(conn,command,policy,attestation,trust_roots=f['provider'])
+            conn.rollback()
+
+
+def test_native_signed_source_rereads_real_root_after_matching(native_signed_source,monkeypatch):
+    import json
+    from aos_api.asset_registry.signature import FileTrustRootProvider
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs,ProviderCapacityIssuanceBlocked
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    f,actual_command,_,_,config=native_signed_source;command,policy,attestation=actual_command()
+    original=FileTrustRootProvider.snapshot;calls=[]
+    def snapshot_and_withdraw(self):
+        frozen=original(self);calls.append(1)
+        if len(calls)==1:
+            f['roots'][1]['revokedAt']=(datetime.now(UTC)-timedelta(seconds=1)).isoformat()
+            f['rootfile'].write_text(json.dumps(dict(trustRoots=f['roots'])))
+        return frozen
+    monkeypatch.setattr(FileTrustRootProvider,'snapshot',snapshot_and_withdraw)
+    with connect_capacity_issuer(config,SCOPE) as conn:
+        with pytest.raises(ProviderCapacityIssuanceBlocked):
+            check_native_capacity_supplier_inputs(conn,command,policy,attestation,trust_roots=f['provider'])
+        conn.rollback()
+    assert len(calls)==2
