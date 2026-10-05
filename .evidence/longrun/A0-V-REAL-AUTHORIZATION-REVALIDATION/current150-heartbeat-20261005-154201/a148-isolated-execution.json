@@ -1,0 +1,8 @@
+{
+  "outcome": "A148_ISOLATED_METADATA_ADDITIONS_OLD_ROWS_PRESERVED",
+  "version": "a0v_148",
+  "old_metadata_preserved": true,
+  "source_mutations": 0,
+  "runtime_negative_tests_pending": true,
+  "full_rehearsal_complete": false
+}

@@ -1,0 +1,9 @@
+{
+  "outcome": "A149_ISOLATED_EXECUTION_OLD_ROWS_PRESERVED",
+  "version": "a0v_149",
+  "epoch_rows": 0,
+  "new_owner_no_login_or_membership": true,
+  "source_mutations": 0,
+  "full_acl_and_runtime_competition_review_pending": true,
+  "full_rehearsal_complete": false
+}

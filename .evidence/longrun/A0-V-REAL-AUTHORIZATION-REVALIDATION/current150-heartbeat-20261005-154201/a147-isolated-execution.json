@@ -1,0 +1,16 @@
+{
+  "outcome": "A147_EXECUTED_VALIDATION_INDEX_NAME_ASSUMPTION_FAILED",
+  "version": "a0v_147",
+  "terminal_exit": 0,
+  "old_table_changes": [
+    "alembic_version"
+  ],
+  "source_mutations": 0,
+  "replay_forbidden": true,
+  "catalog_review_pending": true,
+  "added_relation_names": [
+    "aip_provider_capacity_candida_org_id_project_id_idempotency_key",
+    "aip_provider_capacity_candidate",
+    "aip_provider_capacity_candidate_pkey"
+  ]
+}

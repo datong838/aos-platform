@@ -1,0 +1,11 @@
+{
+  "outcome": "ISSUER_EXACT_TABLE_COLUMN_ACL_AND_NONEMPTY_CANARY_RLS_GREEN",
+  "select_tables": 15,
+  "update_columns": 5,
+  "canary_zero_tables": 13,
+  "admin_reference_rows": 1,
+  "role_level_only": true,
+  "native_session_and_commit_tests_pending": true,
+  "source_mutations": 0,
+  "full_rehearsal_complete": false
+}

@@ -1,0 +1,36 @@
+{
+  "outcome": "A143_ADDITIVE_CATALOG_AND_ROLE_DELTA_RECONCILED",
+  "database_permission_addition": [
+    {
+      "role": "aos_provider_health_fence_owner",
+      "connect": false,
+      "create": false,
+      "temp": true,
+      "schema_create": false,
+      "schema_usage": true
+    }
+  ],
+  "temp_source": "pre-existing PUBLIC TEMPORARY confirmed by live database ACL",
+  "old_role_permission_rows_exact": true,
+  "new_role_no_login_or_membership": true,
+  "old_catalog_rows_preserved": true,
+  "catalog_addition_counts": {
+    "columns": 7,
+    "constraints": 3,
+    "indexes": 1,
+    "triggers": 3,
+    "column_acl": 0,
+    "relation_acl": 14,
+    "schema_acl": 1,
+    "function_acl": 4,
+    "views": 0,
+    "types": 0,
+    "extensions": 0,
+    "default_acl": 0,
+    "event_triggers": 0
+  },
+  "new_owner_inherits_public_function_execute": true,
+  "public_function_surface_review_pending": true,
+  "source_mutations": 0,
+  "full_rehearsal_complete": false
+}

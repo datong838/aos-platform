@@ -1,0 +1,18 @@
+{
+  "outcome": "A150_ISOLATED_EXECUTION_OLD_ROWS_PRESERVED_SEVEN_REVOKES_MATCH",
+  "version": "a0v_150",
+  "old_tables": 602,
+  "old_function_acl_changed_rows": 210,
+  "old_function_acl_changed_functions": [
+    "extension_dispatch_cutover_history_guard_ar2_014()",
+    "extension_dispatch_lifecycle_history_guard_ar2_017()",
+    "extension_event_control_dispatch_history_guard_a0v_054()",
+    "extension_runtime_uninstall_consistency_ar2_018()",
+    "snapshot_stalled_group_terminal_guard_a0v_091()",
+    "snapshot_unaccepted_group_terminal_guard_a0v_083()",
+    "unaccepted_analysis_terminal_guard_a0v_060()"
+  ],
+  "source_mutations": 0,
+  "full_issuer_acl_and_runtime_tests_pending": true,
+  "full_rehearsal_complete": false
+}

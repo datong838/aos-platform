@@ -1,0 +1,18 @@
+{
+  "outcome": "A144_ORIGINAL_ACL_PRESERVED_RLS_ROLE_DELTA_CHECKED",
+  "new_roles": [
+    "aos_aip_binding_evaluator",
+    "aos_publication_epoch_owner"
+  ],
+  "new_roles_no_login_or_membership": true,
+  "original_acl_functions_policies_preserved": true,
+  "forced_rls_checked_tables": 56,
+  "changed_rls_tables": [
+    "meta_membership"
+  ],
+  "scoped_restrictive_and_positive_policies_checked": 53,
+  "new_column_acl_rows": 38,
+  "new_column_acl_only_evaluator": true,
+  "full_boundary_runtime_negative_tests_pending": true,
+  "source_mutations": 0
+}

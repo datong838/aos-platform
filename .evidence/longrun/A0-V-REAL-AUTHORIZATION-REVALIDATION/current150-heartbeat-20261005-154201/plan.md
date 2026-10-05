@@ -49,3 +49,39 @@ Host/worker/Provider仍关闭；签名安装/禁入预览200不等于正式首�
 
 ### 八步离线演练材料
 首安全候选恢复Task的143..150离线SQL生成；第二publication原Task方案冻结（独立授权/SQL签名门未冻结）。本轮先读原迁移文件并用Alembic offline生成每步SQL到私有0700/0600目录，不使用在线连接，不执行DDL。拒绝ambient AOS_DATABASE_URL；非秘密占位DSN仅选择postgresql dialect。每步记录原migration SHA、SQL SHA/字节和from/to，确认8条连续路径，供后续精确delta审阅。离线成功不等于数据库演练成功。
+
+### a143第一步真实隔离演练
+仅same-image已比较目标current150-same-77f8f834ea15，none network/无端口/独立volume，执行已摘要a143 SQL一次。源保持只读。O_EXCL intent先于DDL，terminal结果/前后快照私有落盘；失败或未知仅对账不重发。a143预期新增Health epoch表、独立NOLOGIN owner、租户RLS及Health触发/函数，不修改旧表数据，除alembic_version142→143；新epoch初始空。先验证全部旧596表数据、metadata、sequence、旧roles/membership/db属性保持，详细catalog delta另门审阅，不以执行exit0报该步全绿。第二候选publication冻结依赖独立授权/签名门仍暂不编码。
+
+### a143权限与目录只读对账
+已执行a143 terminal0、目标143，不重发。全部旧role/db权限/目录记录保持；新增owner NOLOGIN/NOINHERIT无membership，TEMP来自原PUBLIC TEMPORARY不是新增数据库GRANT；owner schema usage是原迁移授权。实际目录增量计数及证据a143-role-catalog-reconciliation.json。新owner仍继承既有PUBLIC函数EXECUTE，需沿a150七旧trigger revoke与owner函数表面继续审查，不称NOLOGIN即无风险。a143源未变，整体演练pending。
+
+### a144单步隔离执行合同
+原迁移已复读：独立evaluator与publication epoch owner均NOLOGIN；新增publication epoch空表/unique proof索引；原scoped读表FORCE RLS与legacy/restrict/scope政策，窄SELECT/列UPDATE/两receipt INSERT，原trigger原子三元组门。旧表数据除alembic版本不应变；旧role属性/membership/db设置保持，新增角色db权限单独审计，不能沿用a143目录全不变门。本次只执行已hasha144一次到固定none-network独立目标，O_EXCL意图/terminal/快照，若失败只读对账。权限/RLS语义审阅另门；当前源只读且不重启。
+
+### a144只读差异复核
+两新角色均NOLOGIN/NOINHERIT无membership；原ACL/function/policy/db权限行保持。原关系变化仅登记scoped及三Action表ENABLE/FORCE RLS，全部目标逐项回读；scoped PUBLIC restrictive/专用positive政策带固定tenant，新增column ACL均evaluator。证据a144-role-rls-reconciliation.json。实际运行负门与完整权限表面另门pending，不以政策存在宣布正式可用。
+
+### a145单步隔离执行
+复读原migration：仅新增不可变request表、strict application约束/FK/租户FORCE RLS、append-only/truncate guard；runtime仅SELECT/INSERT，无容量激活。预计新表空，旧数据/metadata/role/membership/db设置保持；新增表ACL只新表，源未改。本次已hash SQL在固定none-network目标执行一次，O_EXCL intent/terminal/前后全快照，失败未知不重发。候选二仍publication签名边界冻结，先选恢复Task145。
+
+### a146单步隔离执行合同
+原migration已复读：无新表/role；保护元数据函数与两trigger、新增ProviderCapacityRequest及aip_request_provider_capacity各1行，原同ID若存在事务拒绝。旧两meta表全行分别读取JSON，只允许新增固定ID，原行逐字保持；其它旧表数据仅alembic版本变，roles/membership/db ACL/sequence保持。固定隔离目标一次执行hash SQL，O_EXCL意图/终结/快照，失败未知不重发；源仍只读。第二候选publication授权与签名门冻结待。
+
+### a147单步隔离执行
+复读原迁移，仅candidate不可变表/固定org-org租户/未验证不可执行字段约束、两kind envelope、FORCE RLS及append-only/truncate；runtime仅SELECT/INSERT。新表应空，全部旧数据/元数据/role/db权限保持。固定target一次hashSQL、O_EXCL意图终结快照；未知不重发。第二publication候选仍签名与独立bootstrap待冻结。源只读、不重启。
+
+### a147索引归属与a148单步合同
+只读pg_index证明截短唯一索引确属candidate表、valid/ready、列org/project/idempotency_key，原失败是startswith假设，不改索引/重发DDL。a148原migration已复读：仅固定ProviderCapacitySourceReview与aip_review_provider_capacity_source各1条、新函数两保护trigger，旧metadata全行保持，旧table除两meta/alembic不变、roles/db ACL保持。一次固定目标hashSQL/O_EXCL意图、结果未知只对账。第二publication候选签名门待；源只读，不重启。
+
+### a149单步隔离合同
+已复读原迁移，无历史回填INSERT：新增独立NOLOGIN Evidence epoch owner/空表、FORCE RLS、3个definer/撤回INSERT的touch+bump trigger；runtime只可EXECUTE lock，无epoch表直接权限。旧表数据/metadata/sequence/membership/db设置保持；旧role保持，新owner权限独立差异审阅。一次fixedtarget hashSQL/O_EXCL意图终结，不重发未知。候选二publication独立签名边界冻结待；当前源只读，不重启。
+
+### a150单步隔离执行合同
+完整原migration复读：新增NOLOGIN issuer，不新增表/事实；15表SELECT、5窄列UPDATE/read-lock trigger、tenant positive+restrictive policies、私有Evidence lock wrapper。7明确旧trigger function PUBLIC EXECUTE撤销，但函数体/原trigger/其它named grants保持。旧数据仅alembic变；旧role/membership/db设置保持，旧effective function ACL只这7由true→false；新issuer权限详审另门。固定隔离目标一次hashSQL，O_EXCL意图/结果/快照，未知不重发；源只读。候选二publication独立授权签名门待冻结。
+
+### a150权限与只读canary运行检查
+候选一原restore Task的issuer完整表/列ACL与RLS；候选二publication独立签名方案冻结。前者已有150快照：严格15表SELECT且无表级DML、仅原5 UPDATE列；只读事务SET LOCAL ROLE issuer、dev-org/dev-project读13scoped+Action表count应全0，管理员实际原org行count须非0避免空库假绿。不改变LOGIN/auth，不冒充native issuer session；role-level RLS检查无法证明session_user私有入口。源只读，不重启。
+
+### 原生与并发原测试复验
+候选一原formal-boundary与Evidence epoch已登记PG测试，候选二publication独立授权签名冻结。首项找到真实test_provider_capacity_formal_boundary_pg.py及test_provider_capacity_evidence_epoch_pg.py，先前issuance_epoch文件不存在是定位失败、已纠正；fixture创建独立aos_test_*数据库并迁移到head，仅test-only cluster5433临时LOGIN/passfile，finally NOLOGIN/清理私有passfile；原恢复clone/current源不改。串行两文件一次、终端回读、结果只证明隔离原功能，不自动完成真实恢复库权限/业务首链。

@@ -1,0 +1,10 @@
+{
+  "outcome": "A144_ISOLATED_TERMINAL_READBACK",
+  "exit_code": 0,
+  "version": "a0v_144",
+  "source_mutations": 0,
+  "catalog_review_pending": true,
+  "old_table_data_changes": [
+    "alembic_version"
+  ]
+}

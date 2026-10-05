@@ -1,0 +1,12 @@
+{
+  "outcome": "A146_ISOLATED_METADATA_ADDITIONS_OLD_ROWS_PRESERVED",
+  "version": "a0v_146",
+  "added_ids": [
+    "ProviderCapacityRequest",
+    "aip_request_provider_capacity"
+  ],
+  "all_old_metadata_rows_preserved": true,
+  "source_mutations": 0,
+  "runtime_guard_negative_tests_pending": true,
+  "full_rehearsal_complete": false
+}

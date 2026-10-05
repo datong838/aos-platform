@@ -1,0 +1,12 @@
+{
+  "outcome": "A145_ISOLATED_EXECUTION_OLD_DATA_AND_ACL_PRESERVED",
+  "version": "a0v_145",
+  "new_request_rows": 0,
+  "runtime_new_privileges": [
+    "SELECT",
+    "INSERT"
+  ],
+  "source_mutations": 0,
+  "application_runtime_negative_tests_pending": true,
+  "full_rehearsal_complete": false
+}

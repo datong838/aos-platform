@@ -1,0 +1,23 @@
+{
+  "outcome": "A143_EXECUTED_VERIFICATION_REQUIRES_NEW_ROLE_PERMISSION_DELTA",
+  "terminal_exit": 0,
+  "target_version": "a0v_143",
+  "old_tables_changed": [
+    "alembic_version"
+  ],
+  "epoch_rows": 0,
+  "database_permission_removed": [],
+  "database_permission_added": [
+    {
+      "role": "aos_provider_health_fence_owner",
+      "connect": false,
+      "create": false,
+      "temp": true,
+      "schema_create": false,
+      "schema_usage": true
+    }
+  ],
+  "source_mutations": 0,
+  "replay_forbidden": true,
+  "catalog_review_pending": true
+}

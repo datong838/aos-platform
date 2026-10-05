@@ -1,0 +1,13 @@
+{
+  "outcome": "A147_INDEX_OWNERSHIP_RECONCILED",
+  "index": "aip_provider_capacity_candida_org_id_project_id_idempotency_key",
+  "table": "aip_provider_capacity_candidate",
+  "valid": true,
+  "ready": true,
+  "columns": [
+    "org_id",
+    "project_id",
+    "idempotency_key"
+  ],
+  "source_mutations": 0
+}
