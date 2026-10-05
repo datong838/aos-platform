@@ -1,0 +1,10 @@
+{
+  "baseCommit": "99f3a118",
+  "task": "w5cb4-e17-b90-full-evaluator-implementation-20261005",
+  "taskStatus": "ACTIVE",
+  "sha256": {
+    "services/aos-api/alembic/versions/a0v_144_binding_evaluator_boundary.py": "997f385f1c2cab84d102e573c4e25b33da13d7b736335a41332a8a81a0688df3",
+    "services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py": "d56a74c62071e4c4fb259287886c9e94fc00e4e443ade3b851f62de92f044471",
+    "services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py": "9d57604ba2b696b825188dd4cfd4eade7d37fdb8059b5c0f62e6c110fbb23c45"
+  }
+}

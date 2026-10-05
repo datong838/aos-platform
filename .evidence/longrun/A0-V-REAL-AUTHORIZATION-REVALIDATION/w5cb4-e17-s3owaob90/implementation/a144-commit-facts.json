@@ -1,0 +1,105 @@
+{
+  "database": "aos_test_dd80fb557974_ti4_test",
+  "host": "127.0.0.1",
+  "port": 5433,
+  "cases": [
+    {
+      "fault": "control_rollback",
+      "pid": 218975,
+      "phase": "rollback",
+      "sqlstate": null,
+      "error": null,
+      "bindingVersionAfter": 1,
+      "newReceiptAfter": 0,
+      "proofAfter": 0,
+      "usedScram": true
+    },
+    {
+      "fault": "binding_only",
+      "pid": 218976,
+      "phase": "commit",
+      "sqlstate": "23514",
+      "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
+      "bindingVersionAfter": 1,
+      "newReceiptAfter": 0,
+      "proofAfter": 0,
+      "usedScram": true
+    },
+    {
+      "fault": "receipt_only",
+      "pid": 218977,
+      "phase": "commit",
+      "sqlstate": "23514",
+      "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
+      "bindingVersionAfter": 1,
+      "newReceiptAfter": 0,
+      "proofAfter": 0,
+      "usedScram": true
+    },
+    {
+      "fault": "proof_only",
+      "pid": 218978,
+      "phase": "commit",
+      "sqlstate": "23514",
+      "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
+      "bindingVersionAfter": 1,
+      "newReceiptAfter": 0,
+      "proofAfter": 0,
+      "usedScram": true
+    },
+    {
+      "fault": "hash",
+      "pid": 218979,
+      "phase": "commit",
+      "sqlstate": "23514",
+      "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
+      "bindingVersionAfter": 1,
+      "newReceiptAfter": 0,
+      "proofAfter": 0,
+      "usedScram": true
+    },
+    {
+      "fault": "result_version",
+      "pid": 218980,
+      "phase": "commit",
+      "sqlstate": "23514",
+      "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
+      "bindingVersionAfter": 1,
+      "newReceiptAfter": 0,
+      "proofAfter": 0,
+      "usedScram": true
+    },
+    {
+      "fault": "expiry",
+      "pid": 218981,
+      "phase": "commit",
+      "sqlstate": "23514",
+      "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
+      "bindingVersionAfter": 1,
+      "newReceiptAfter": 0,
+      "proofAfter": 0,
+      "usedScram": true
+    },
+    {
+      "fault": "historical_receipt",
+      "pid": 218982,
+      "phase": "commit",
+      "sqlstate": "23514",
+      "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
+      "bindingVersionAfter": 1,
+      "newReceiptAfter": 0,
+      "proofAfter": 0,
+      "usedScram": true
+    }
+  ],
+  "restoredRoleAttributes": {
+    "rolcanlogin": false,
+    "rolinherit": false,
+    "rolsuper": false,
+    "rolcreatedb": false,
+    "rolcreaterole": false,
+    "rolreplication": false,
+    "rolbypassrls": false
+  },
+  "authorization": "MECHANISM_FAULTS_ONLY_NO_BUSINESS_READY"
+}

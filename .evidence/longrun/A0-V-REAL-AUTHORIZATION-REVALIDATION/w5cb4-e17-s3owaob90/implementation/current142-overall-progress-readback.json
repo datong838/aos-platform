@@ -1,0 +1,14 @@
+{
+  "readbackAt": "2026-10-05",
+  "dockerContext": "colima-aos-extension",
+  "container": "aos-a0v-recovery-pg",
+  "namedVolume": "aos-a0v-recovery-pg-data",
+  "transaction": "BEGIN READ ONLY; local tenant org-org/dev-project; SELECT; ROLLBACK",
+  "database": "aos_current_preview_20260927",
+  "schema": "a0v_142",
+  "activeInstallations": 0,
+  "capabilityBindings": 0,
+  "sourceIssuances": 0,
+  "formalEvaluationProofs": 0,
+  "conclusion": "REAL_FIRST_CHAIN_NOT_ESTABLISHED; isolated code verification does not certify actual business completion"
+}
