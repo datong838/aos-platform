@@ -145,7 +145,7 @@ class AipActionStore:
                  network_activation_guard=None, network_approval_guard=None,
                  first_content_guard=None, guard_activation_guard=None, guard_approval_guard=None,
                  model_eval_guard=None, source_license_guard=None, source_license_approval_guard=None,
-                 provider_capacity_guard=None) -> None:
+                 provider_capacity_guard=None, provider_capacity_source_guard=None) -> None:
         if source_license_approval_guard is not None:
             from aos_api.aip_license_source_approval import SourceLicenseApprovalGuard
             if type(source_license_approval_guard) is not SourceLicenseApprovalGuard:
@@ -166,6 +166,11 @@ class AipActionStore:
             if type(provider_capacity_guard) is not ProviderCapacityActionGuard:
                 raise TypeError('exact Provider capacity Action guard required')
         self._provider_capacity_guard = provider_capacity_guard
+        if provider_capacity_source_guard is not None:
+            from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+            if type(provider_capacity_source_guard) is not ProviderCapacitySourceActionGuard:
+                raise TypeError('exact Provider capacity Source Action guard required')
+        self._provider_capacity_source_guard = provider_capacity_source_guard
         if guard_approval_guard is not None:
             from aos_api.aip_guard_policy_activation import GuardPolicyApprovalGuard
             if type(guard_approval_guard) is not GuardPolicyApprovalGuard:
@@ -228,6 +233,10 @@ class AipActionStore:
             raise AipActionTransitionBlocked('INTERNAL_CONTROL_CURRENT_AUTHORITY_REQUIRED') from exc
 
     def _internal_request_binding(self, conn, scope, actor_id, body, action_snapshot, risk):
+        if "aip_review_provider_capacity_source" in {body.action_type_id, action_snapshot.get("id")}:
+            if self._provider_capacity_source_guard is None:
+                raise AipActionTransitionBlocked('PROVIDER_CAPACITY_SOURCE_GUARD_REQUIRED')
+            return self._provider_capacity_source_guard.check_request(conn,scope,actor_id,body,action_snapshot,risk)
         if is_source_license_action(body.action_type_id, action_snapshot):
             if self._source_license_guard is None:
                 raise AipActionTransitionBlocked("SOURCE_LICENSE_PRODUCER_REQUIRED")
@@ -287,6 +296,10 @@ class AipActionStore:
             impact_preview=body.impact_preview_ref)[0]
 
     def _internal_proposal_guard(self, conn, scope, actor_id, row, *, checker):
+        if "aip_review_provider_capacity_source" in {row['action_type_id'],row['action_type_snapshot'].get('id')}:
+            if self._provider_capacity_source_guard is None:
+                raise AipActionTransitionBlocked('PROVIDER_CAPACITY_SOURCE_GUARD_REQUIRED')
+            return self._provider_capacity_source_guard.check_proposal(conn,scope,actor_id,row,checker=checker)
         if is_source_license_action(row["action_type_id"], row["action_type_snapshot"]):
             if checker and self._source_license_approval_guard is not None:
                 return self._source_license_approval_guard.check_proposal(conn,scope,actor_id,row)
@@ -1203,7 +1216,7 @@ class AipActionStore:
                 (*scope.key, idempotency_key),
             ).fetchone()
             if replay is not None:
-                if row['action_type_id'] == 'aip_request_provider_capacity' and replay['actor_id'] != actor_id:
+                if row['action_type_id'] in {'aip_request_provider_capacity','aip_review_provider_capacity_source'} and replay['actor_id'] != actor_id:
                     raise AipActionTransitionBlocked('PROVIDER_CAPACITY_CHECKER_REPLAY_DRIFTED')
                 if replay["request_hash"] != request_hash or replay["proposal_id"] != proposal_id:
                     raise AipActionIdempotencyConflict("idempotency key reused for different approval")

@@ -47,6 +47,9 @@ def classify_action_risk(
     elif action_type_id in POLICY_ACTIVATION_ACTION_RISK:
         floor = POLICY_ACTIVATION_ACTION_RISK[action_type_id]
         reasons.append("formal_policy_activation")
+    elif action_type_id == 'aip_review_provider_capacity_source':
+        floor = ActionRiskLevel.R2
+        reasons.append('formal_provider_capacity_source_review')
     elif action_type_id == 'aip_request_provider_capacity':
         floor = ActionRiskLevel.R2
         reasons.append('formal_provider_allocation_application')
@@ -101,7 +104,7 @@ def classify_action_risk(
     }
     if action_type_id == 'ecommerce_analysis_bootstrap' and level is ActionRiskLevel.R1:
         approval_policy.update(makerChecker=True, draftOnly=False, controlledSourceInitialization=True)
-    if action_type_id in {"aip_request_model_eval", "aip_request_provider_capacity"}:
+    if action_type_id in {"aip_request_model_eval", "aip_request_provider_capacity", "aip_review_provider_capacity_source"}:
         approval_policy["executionAllowed"] = False
     if action_type_id == SOURCE_LICENSE_ISSUANCE_ACTION:
         approval_policy.update(executionAllowed=False, sourceLicenseIssuanceOnly=True)

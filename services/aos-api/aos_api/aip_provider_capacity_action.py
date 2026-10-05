@@ -38,22 +38,27 @@ class ProviderCapacityActionBlocked(AipActionTransitionBlocked):
 class ProviderCapacityActionGuard:
     """Recheck the immutable application and current dependencies in Action's transaction."""
 
-    @staticmethod
-    def read_metadata(conn: Any) -> dict[str, Any]:
+    action_id = ACTION_ID
+    object_id = OBJECT_ID
+    object_snapshot = _OBJECT
+    action_snapshot = _ACTION
+
+    @classmethod
+    def read_metadata(cls, conn: Any) -> dict[str, Any]:
         obj = conn.execute("""SELECT id,name,description,published,properties,required_markings
-            FROM meta_object_type WHERE id=%s FOR SHARE""", (OBJECT_ID,)).fetchone()
-        if obj is None or dict(obj) != _OBJECT:
+            FROM meta_object_type WHERE id=%s FOR SHARE""", (cls.object_id,)).fetchone()
+        if obj is None or dict(obj) != cls.object_snapshot:
             raise ProviderCapacityActionBlocked("PROVIDER_CAPACITY_OBJECT_TYPE_DRIFTED")
         row = conn.execute("""SELECT id,name,object_type,parameters,required_markings,
             submission_criteria FROM meta_action_type WHERE id=%s FOR SHARE""",
-            (ACTION_ID,)).fetchone()
+            (cls.action_id,)).fetchone()
         if row is None:
             raise ProviderCapacityActionBlocked("PROVIDER_CAPACITY_ACTION_TYPE_MISSING")
         snapshot = {"id": row["id"], "name": row["name"],
                     "objectType": row["object_type"], "parameters": row["parameters"],
                     "requiredMarkings": row["required_markings"],
                     "submissionCriteria": row["submission_criteria"]}
-        if snapshot != _ACTION:
+        if snapshot != cls.action_snapshot:
             raise ProviderCapacityActionBlocked("PROVIDER_CAPACITY_ACTION_TYPE_DRIFTED")
         return {**snapshot, "revisionHash": canonical_hash(snapshot)}
 
@@ -136,18 +141,18 @@ class ProviderCapacityActionGuard:
 
     def check_proposal(self, conn: Any, scope: TenantScope, actor: str,
                        row: dict[str, Any], *, checker: bool) -> tuple[str, ...] | None:
-        if (row["action_type_id"] != ACTION_ID
-            or row["action_type_snapshot"].get("id") != ACTION_ID
+        if (row["action_type_id"] != self.action_id
+            or row["action_type_snapshot"].get("id") != self.action_id
             or row["task_id"] is not None or row["run_id"] is not None
             or row["object_ref"] is not None or row["impact_preview_id"] is not None
             or row["diff"] != {} or row["evidence_refs"] != []
             or row["client_risk_hint"] is not None):
             raise ProviderCapacityActionBlocked("PROVIDER_CAPACITY_PROPOSAL_DRIFTED")
         body = CreateActionProposalRequest(
-            actionTypeId=ACTION_ID, purpose=row["purpose"], payload=row["payload"],
+            actionTypeId=self.action_id, purpose=row["purpose"], payload=row["payload"],
             expiresAt=row["expires_at"],
         )
-        risk = classify_action_risk(ACTION_ID, row["action_type_snapshot"], row["payload"], None)
+        risk = classify_action_risk(self.action_id, row["action_type_snapshot"], row["payload"], None)
         policy = {"floor": risk.floor.value, "reasons": list(risk.reasons),
                   **risk.approval_policy}
         binding = self.check_request(conn, scope, row["created_by"], body,
