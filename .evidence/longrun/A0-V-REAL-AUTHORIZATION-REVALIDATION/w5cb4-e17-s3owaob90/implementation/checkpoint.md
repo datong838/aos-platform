@@ -25,3 +25,7 @@
 ## 剩余必要工作与风险
 
 完整native evaluator尚未实现；已有Health helper仍不能当正式完整命令使用。a144默认NOLOGIN最小ACL/RLS/锁列DML拒绝及binding/Receipt/proof三延迟约束、原签名身份接线、八facts与Source/两Owner/安装/Budget全锁序、幂等重核验、实际COMMIT与并发/到期回滚、产品service/router均待本Task继续实施。私有核验复用必须由严格固定evaluator身份及实际原锁保护后调用，不能暴露为通用用户入口。当前数据库仍142，Host/worker/Provider关闭；本检查点不授权当前迁移、正式LOGIN或自然首链。Authority保持1331，不把施工检查点改写为全验收。
+
+## 2026-10-05 12:35 完整Task内部Health消费修正
+
+真实SCRAM/dict-row精确最新观测、DB时间、native身份及canary零epoch；真实并发writer阻塞和原40001实测。最终94passed/1strictxfail/7warnings/9.90s，详health-consumer-verification.md和tested-hashes。完整native命令仍缺失，整体Task ACTIVE，无当前142写入/LOGIN/业务启动。下一步原Source完整审批纯内容复用，不能伪造maker Principal。

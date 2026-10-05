@@ -1,0 +1,9 @@
+{
+  "base": "704fb444",
+  "authority": "AOS-001332",
+  "tests": "94 passed, 1 xfailed, 7 warnings in 9.90s",
+  "files": {
+    "services/aos-api/aos_api/aip_binding_formal_evaluator.py": "eaac95efa78d4f48aa19deea0e678196393a9cd087e6786a1702dbd5c304e87a",
+    "services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py": "766dde64e12a7cdbe052918a47aa37ab8b31554c28705750e4bb56e5a0c387df"
+  }
+}

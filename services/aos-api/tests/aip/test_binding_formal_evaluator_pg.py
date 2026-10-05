@@ -395,3 +395,121 @@ def test_evaluator_actual_scram_admission_and_live_outgoing_membership_rejection
             restored = owner.execute('SELECT rolcanlogin,rolinherit,rolsuper,rolcreatedb,rolcreaterole,'
                 'rolreplication,rolbypassrls FROM pg_roles WHERE rolname=%s', (EVALUATOR_LOGIN,)).fetchone()
             assert restored == original
+
+
+@pytest.mark.parametrize('fault', ['none', 'missing', 'revision', 'hash', 'ambiguous', 'future', 'expired'])
+def test_formal_health_consumer_exact_latest_db_clock_over_real_scram(fault):
+    from datetime import timedelta
+    from uuid import uuid4
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_binding_formal_evaluator import (
+        read_current_provider_health_fact, ProviderHealthFactUnavailable,
+    )
+    provider = dict(assetType='ProviderInstanceRevision', assetId='health-consumer-' + uuid4().hex,
+                    revision=1, contentHash='a' * 64)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)", SCOPE.key)
+        now = owner.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+        observed, expires = now - timedelta(seconds=30), now + timedelta(minutes=5)
+        if fault == 'future':
+            observed, expires = now + timedelta(minutes=2), now + timedelta(minutes=5)
+        if fault == 'expired':
+            expires = now - timedelta(seconds=1)
+        def insert(ref, at, until):
+            owner.execute('INSERT INTO aip_provider_health_observation '
+                '(org_id,project_id,observation_id,provider_ref,status,observed_at,expires_at) '
+                "VALUES(%s,%s,%s,%s,'healthy',%s,%s)",
+                (*SCOPE.key, uuid4().hex, Jsonb(ref), at, until))
+        if fault != 'missing':
+            insert(provider, observed, expires)
+        if fault in {'revision', 'hash'}:
+            newer = dict(provider)
+            newer['revision' if fault == 'revision' else 'contentHash'] = 2 if fault == 'revision' else 'b' * 64
+            insert(newer, now - timedelta(seconds=5), expires)
+        if fault == 'ambiguous':
+            insert(provider, observed, expires)
+        owner.commit()
+        with _temporary_fixed_evaluator_login(owner) as factory:
+            with factory(SCOPE) as conn:
+                if fault == 'none':
+                    fact = read_current_provider_health_fact(conn, SCOPE, provider)
+                    assert fact.provider_ref == provider and fact.status == 'healthy'
+                    assert fact.epoch == 1
+                    assert observed <= fact.checked_at < fact.expires_at
+                    assert fact.checked_at <= conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+                else:
+                    with pytest.raises(ProviderHealthFactUnavailable):
+                        read_current_provider_health_fact(conn, SCOPE, provider)
+
+
+def test_formal_health_consumer_rejects_owner_connection_and_inexact_ref():
+    from aos_api.aip_binding_formal_evaluator import (
+        read_current_provider_health_fact, ProviderHealthFactUnavailable,
+    )
+    with isolated_owner() as owner:
+        with pytest.raises(ProviderHealthFactUnavailable):
+            read_current_provider_health_fact(owner, SCOPE, dict(assetType='ProviderInstanceRevision', assetId='inexact'))
+        with pytest.raises(ProviderHealthFactUnavailable):
+            read_current_provider_health_fact(owner, SCOPE, dict(assetType='ProviderInstanceRevision',
+                assetId='exact', revision=1, contentHash='a' * 64))
+
+
+@pytest.mark.parametrize('fault', ['missing_revision', 'bool_revision', 'unknown_field', 'canary'])
+def test_formal_health_consumer_admission_rejects_before_epoch_side_effect(fault):
+    from uuid import uuid4
+    from aos_api.aip_binding_formal_evaluator import (
+        read_current_provider_health_fact, ProviderHealthFactUnavailable,
+    )
+    provider = dict(assetType='ProviderInstanceRevision', assetId='health-rejected-' + uuid4().hex,
+                    revision=1, contentHash='a' * 64)
+    with isolated_owner() as owner:
+        with _temporary_fixed_evaluator_login(owner) as factory:
+            with factory(SCOPE) as conn:
+                if fault == 'missing_revision':
+                    provider.pop('revision')
+                elif fault == 'bool_revision':
+                    provider['revision'] = True
+                elif fault == 'unknown_field':
+                    provider['ready'] = True
+                else:
+                    conn.execute("SELECT set_config('aos.org_id','dev-org',true)")
+                with pytest.raises(ProviderHealthFactUnavailable):
+                    read_current_provider_health_fact(conn, SCOPE, provider)
+        assert owner.execute('SELECT count(*) AS n FROM aip_provider_health_epoch WHERE provider_id=%s',
+                             (provider['assetId'],)).fetchone()['n'] == 0
+
+
+@pytest.mark.parametrize('mode', ['shared_blocks_writer', 'snapshot_conflict'])
+def test_formal_health_consumer_preserves_original_concurrent_fence(mode):
+    from uuid import uuid4
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_binding_formal_evaluator import read_current_provider_health_fact
+    provider = dict(assetType='ProviderInstanceRevision', assetId='health-concurrent-' + uuid4().hex,
+                    revision=1, contentHash='a' * 64)
+    with isolated_owner() as owner:
+        def append():
+            owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)", SCOPE.key)
+            owner.execute('INSERT INTO aip_provider_health_observation '
+                '(org_id,project_id,observation_id,provider_ref,status,observed_at,expires_at) '
+                "VALUES(%s,%s,%s,%s,'healthy',clock_timestamp(),clock_timestamp()+interval '5 minutes')",
+                (*SCOPE.key, uuid4().hex, Jsonb(provider)))
+        append()
+        owner.commit()
+        with _temporary_fixed_evaluator_login(owner) as factory:
+            with factory(SCOPE) as conn:
+                if mode == 'shared_blocks_writer':
+                    assert read_current_provider_health_fact(conn, SCOPE, provider).epoch == 1
+                    owner.execute("SET LOCAL lock_timeout='100ms'")
+                    with pytest.raises(psycopg.errors.LockNotAvailable):
+                        append()
+                    owner.rollback()
+                else:
+                    # Factory identity check has established the original SERIAL snapshot.
+                    append()
+                    owner.commit()
+                    with pytest.raises(psycopg.errors.SerializationFailure) as error:
+                        read_current_provider_health_fact(conn, SCOPE, provider)
+                    assert error.value.sqlstate == '40001'
+            if mode == 'shared_blocks_writer':
+                append()
+                owner.commit()
