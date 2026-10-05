@@ -1,5 +1,9 @@
 # b90在真实当前142之后的完整方案复核
 
+## 2026-10-05 本复核 Task 收口范围
+
+当前 code ea110644 / Authority1339；当前真实基线142，未访问当前数据库。本有限复核已确认旧事务分裂、Source审批/Owner逆序、原五类Model head、Health epoch、Budget原fence及最小ACL要求，并交接至 ACTIVE 的完整 evaluator 实施 Task（18:00）。本次又核实 ContentBudgetCommandOwner 同一 HostTransaction 先 Capacity SHARE 后 Budget fence UPDATE；因此历史段落的 Budget→Capacity 顺序不能照搬。完整 implementation/composition-plan.md 已列原写者兼容修正与真实隔离两事务反例要求。尚未证明全锁图闭合、完整八facts、实际三写COMMIT或自然首链；本复核完成只表示发现及方案需求已交接，不表示完整方案/业务验收通过。
+
 Task w5cb4-e17-b90-current142-plan-revalidation-20261005，Authority1330，current真实142/代码20bb251d与5d1f67e5，实际维护a51039e4已交付；不再以135迁移未完成阻断此代码波。原current库恢复只读边界，Host/worker/Provider关闭，CapabilityBinding0/runtimeBinding0。后续a143只允许登记后的隔离实现，不直接迁移当前。
 
 复核原service.evaluate：原有角色分流已拒capability_lifecycle issuer作正式evaluator，但普通store仍先self.get/外部readiness评估，再另写事务；它不是b90同事务八事实正式命令。当前网页skill发布37修订显示缺正式Gate/Logic/Route/Policy，binding入口待接线，数据库没有Source实际发行/正式evaluator LOGIN；不能靠重启升级业务准备。

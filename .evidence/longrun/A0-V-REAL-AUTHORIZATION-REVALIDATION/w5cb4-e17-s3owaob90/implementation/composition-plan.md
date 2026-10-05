@@ -31,3 +31,21 @@
 ## Budget联合预锁复用
 
 沿完整Task提取_private _prepare_formal_budget_approval：native事务门及strict BudgetRevision，原unique activation/advisory/重核/Proposal/view/DevelopmentRisk原块保持，返回receipt/row/p，不取得成员/fence/head锁。原正式读取再核成员及全部内容；完整command可先Source Proposal/Approval再Budget advisory、合并成员锁后读取全部facts。本提取不能完成整体任务。
+
+## 15:55 Capacity / Budget 实际写者逆序补正
+
+当前 code ea110644 / Authority1339。原 ContentBudgetCommandOwner._prepare_sources 在同一 HostTransaction 中锁原 Capacity pool head/revision FOR SHARE（before_capacity 分支亦然），随后 _build_command → _approved_bound → require_cost_risk 锁 Budget cost fence FOR UPDATE 并保持原 version 写语义。因此第5/6项中隐含的 Budget fence → Capacity head FOR UPDATE 顺序撤销，不能作为完整命令施工序。原业务 writer 不修改。
+
+完整命令先原 Source Proposal/Approval → Budget advisory → 合并成员共享锁 → Installation/Source/Registry，再取得请求精确 Capacity pool head FOR UPDATE，随后 Budget fence/head、ModelRuntime/治理共享 heads、Eval/Health 和容量实际占用核验。Capacity 预锁仅协调原 pool；不得 reserve/expire/consume，也不能以取得 head 宣称池内容、八配置或业务权利合格。锁后必须以原 CapacityAuthorityStore.get 核验 immutable revision/hash/lifecycle/route-model-provider exact refs；占用沿原 reserved/consumed 且 expires_at>DBtime COUNT/SUM，保留一个原量子。多个资源必须稳定排序，锁序仍须与全部原 writer 逐一复审。
+
+必要隔离反例：使用原 HTTPS 成本批准/激活/配置链取得真实 Budget 输入；另由一次性隔离 owner 创建仅用于协调探针的 Capacity head，不提供 fake READY/revision/proof。原预算 require_cost_risk 作为 writer 后半段；测试先持 Capacity SHARE，再调用它。旧顺序 evaluator 先真实 read_formal_budget_fact 持 Budget SHARE 再 Capacity UPDATE，读回双方 pg_blocking_pids 并由原 PostgreSQL 检出死锁；新顺序通过 evaluator 私有 Capacity head 预锁，让原 writer 在 Capacity 处等待，evaluator 能继续原 Budget 验证。两端 rollback，前后 Budget fence、六业务表计数与探针 head 不变。探针只证明锁图及 native ACL，不是实际正式 Capacity 正向或完整命令通过。
+
+文件：services/aos-api/aos_api/aip_binding_formal_evaluator.py 的私有 native Capacity head 预锁；services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py 的真实预算/容量两事务反例；本方案及 implementation 下日志。完整 Task 继续 ACTIVE；后续全命令必须调用该预锁并用实际正式 Capacity Store fixture 验证，不能把本反例独立交付为 b90 完成。
+
+### 实际互斥边复核及本段验证
+
+原 CapabilityBinding writer 搜索到 service.create/update/evaluate；update 在自身原命令 advisory 后读取旧 Binding 和重新评估，再原 UPDATE 取得 Binding 排他锁；内建 readiness 的治理 head 是共享锁，Source摘要读取不是原Source发行事务。完整命令明确：同 key 原 advisory → 原Receipt校验 → 原Binding行 FOR UPDATE 和版本/生命周期检查 → 原资源预锁 → 同行 CAS；现有内建 writer 的共享治理锁与新共享治理锁兼容，未发现其持 Capacity 排他锁后再更新 Binding 的原入口。自定义 connect/readiness 注入不视作正式原业务路径；完整命令不可接受可替换权威回调。仍须实际竞争验收，源码不存在匹配文本不是锁图完备证明。
+
+ModelEval预算原入口为 ActionProposal UPDATE → 治理Budget head SHARE → Budget head SHARE → buckets排他 → cost fence UPDATE；evaluator不取得 buckets，治理/Budget head SHARE互相兼容，当前没有这条环的依据。原Budget配置/消费为 advisory → 成员 SHARE → Budget head UPDATE/SHARE → Provider/Price SHARE，不取得 Capacity；原Budget issuer为 reviewer SHARE → advisory → 成员 SHARE → fence相关撤回写。成员维护未见同事务请求此budget advisory；不能仅凭成员/advisory文字顺序称死锁。原Capacity reserve为 head UPDATE → reservation UPDATE；terminal只改单reservation，评估不锁reservation行。原Capacity publish只持自身head UPDATE，依赖验证另连接退出后才进入发布事务；原ModelRuntime publish只持自身head UPDATE，依赖普通读取。原Health append经epoch排他协调，无Capacity/Budget/Binding锁。完整评估保留这些共享/排他模式，不擅自扩大为EX。
+
+本段 actual PG RED 10.02秒：旧逆序反例通过、新序缺私有预锁入口失败（ImportError），不是业务正向RED。最小实现后两个并发参数2通过9.40秒；扩展身份、canary、strict model_copy、缺失/旧head六负例，连原正式预算/来源/Health/ACL/连接与合同相邻累计111通过36.59秒。两参 actual pg_blocking_pids、DeadlockDetected及前后六表/fence/head在capacity-budget-lock-*.json。py_compile和精确diff whitespace检查通过。完整Source签名安装联合波此前证据不被本段替代。实际正式Capacity内容/全命令/三写COMMIT/API仍待实施；本段不完成完整Task、不提升last GREEN gate。

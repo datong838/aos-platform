@@ -1,0 +1,54 @@
+{
+  "scope": "isolated original signed Budget / Capacity-head coordination probe only",
+  "database": "aos_test_76e9ee5a12cd_ti4_test",
+  "port": 5433,
+  "order": "budget_first",
+  "writer_pid": 242335,
+  "evaluator_pid": 242334,
+  "native_scram": true,
+  "observed": {
+    "two_sided_wait": {
+      "evaluator": [
+        242335
+      ],
+      "writer": [
+        242334
+      ]
+    },
+    "deadlock_detected": true
+  },
+  "before": [
+    {
+      "aip_capability_binding": 0,
+      "aip_agent_registry_receipt": 0,
+      "aip_binding_evaluation_proof": 0,
+      "aip_budget_reservation": 0,
+      "aip_model_eval_budget_reservation": 0,
+      "aip_model_capacity_reservation": 0
+    },
+    1,
+    {
+      "current_revision": 1,
+      "version": 1
+    }
+  ],
+  "after": [
+    {
+      "aip_capability_binding": 0,
+      "aip_agent_registry_receipt": 0,
+      "aip_binding_evaluation_proof": 0,
+      "aip_budget_reservation": 0,
+      "aip_model_eval_budget_reservation": 0,
+      "aip_model_capacity_reservation": 0
+    },
+    1,
+    {
+      "current_revision": 1,
+      "version": 1
+    }
+  ],
+  "capacity_fact_proven": false,
+  "complete_evaluator_passed": false,
+  "business_first_chain_passed": false,
+  "current_database_accessed": false
+}

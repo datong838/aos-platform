@@ -1,0 +1,118 @@
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_formal_evaluator_capacity_budget_original_writer_lock_order[capacity_first] _
+
+caller = <function caller.<locals>.factory at 0x11e492480>
+issuer_factory = <function issuer_factory.<locals>.factory at 0x11e492340>
+https_signer = (<function https_signer.<locals>.sign at 0x11e492b60>, ['/jwks', '/jwks', '/jwks', '/jwks', '/jwks', '/jwks', ...])
+order = 'capacity_first'
+
+    @pytest.mark.parametrize('order', ['budget_first', 'capacity_first'])
+    def test_formal_evaluator_capacity_budget_original_writer_lock_order(
+            caller, issuer_factory, https_signer, order):
+        """Actual mutual waits versus prelocking; the head is a coordination probe.
+    
+        The cost chain is original and signed. The isolated head has no revision or
+        fake READY and cannot supply a Capacity fact or a formal evaluation proof.
+        Every runtime writer rolls back, including its original fence increment.
+        """
+        from concurrent.futures import ThreadPoolExecutor
+        from queue import Queue
+        from uuid import uuid4
+        import time
+        from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+        from aos_api.aip_budget_cost_runtime import read_formal_budget_fact, require_cost_risk
+        from aos_api.aip_budget_reservation_contracts import BudgetExactRef
+        from aos_api.db import connect_serializable
+        from tests.aip.test_budget_cost_consumer_pg import approved, consume
+        from tests.aip.test_budget_cost_configuration_pg import derive
+        from tests.aip.test_aip_license_source_authority_pg import wait_blocked
+    
+        _, _, proposal, saved, decision = approved(issuer_factory, https_signer)
+        with caller() as consumer:
+            activated = consume(consumer, saved, decision)
+            configured = derive(consumer, saved, decision)
+        budget = FormalExactRef(assetType='BudgetRevision', assetId=activated['resourceId'],
+            revision=activated['revision'], contentHash=activated['contentHash'])
+        price = FormalExactRef.model_validate(configured['receipt']['priceRef'])
+        provider = FormalExactRef.model_validate(proposal.basis.provider.model_dump(by_alias=True))
+        capacity = FormalExactRef(assetType='ModelCapacityPoolRevision',
+            assetId='b90-lock-probe-' + uuid4().hex, revision=1, contentHash='a' * 64)
+        head_sql = ('SELECT current_revision FROM public.aip_model_capacity_pool_head '
+            'WHERE org_id=%s AND project_id=%s AND pool_id=%s')
+        head_params = (*SCOPE.key, capacity.asset_id)
+        pids = Queue()
+    
+        def writer():
+            with connect_serializable(SCOPE) as conn:
+                pids.put(conn.info.backend_pid)
+                try:
+                    assert conn.execute(head_sql + ' FOR SHARE', head_params).fetchone()
+                    def old(ref):
+                        return BudgetExactRef(resourceType=ref.asset_type, resourceId=ref.asset_id,
+                            revision=ref.revision, contentHash='sha256:' + ref.content_hash)
+                    require_cost_risk(conn, SCOPE, old(budget), old(price),
+                        proposal.basis.per_request_risk_minor, provider_ref=old(provider))
+                    return 'validated'
+                except Exception as exc:
+                    return exc
+                finally:
+                    conn.rollback()
+    
+        with isolated_owner() as owner:
+            owner.execute('INSERT INTO public.aip_model_capacity_pool_head '
+                '(org_id,project_id,pool_id,current_revision,version) VALUES(%s,%s,%s,1,1)', head_params)
+            owner.commit()
+            def snapshot():
+                counts = {table: owner.execute(f'SELECT count(*) AS n FROM public.{table}').fetchone()['n']
+                    for table in ('aip_capability_binding', 'aip_agent_registry_receipt',
+                        'aip_binding_evaluation_proof', 'aip_budget_reservation',
+                        'aip_model_eval_budget_reservation', 'aip_model_capacity_reservation')}
+                fence = owner.execute('SELECT version FROM public.aip_budget_cost_runtime_fence '
+                    'WHERE org_id=%s AND project_id=%s AND budget_id=%s',
+                    (*SCOPE.key, budget.asset_id)).fetchone()['version']
+                head = owner.execute(head_sql, head_params).fetchone()
+                owner.rollback()
+                return counts, fence, head
+            before = snapshot()
+            with _temporary_fixed_evaluator_login(owner) as factory:
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    with factory(SCOPE) as conn:
+                        if order == 'capacity_first':
+>                           from aos_api.aip_binding_formal_evaluator import _prepare_formal_capacity_head
+E                           ImportError: cannot import name '_prepare_formal_capacity_head' from 'aos_api.aip_binding_formal_evaluator' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_binding_formal_evaluator.py)
+
+tests/aip/test_binding_formal_evaluator_pg.py:1003: ImportError
+=============================== warnings summary ===============================
+aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/aip/test_binding_formal_evaluator_pg.py::test_formal_evaluator_capacity_budget_original_writer_lock_order[capacity_first]
+1 failed, 1 passed, 38 deselected, 7 warnings in 10.02s

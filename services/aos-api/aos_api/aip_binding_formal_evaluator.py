@@ -25,6 +25,38 @@ class ProviderHealthFactUnavailable(RuntimeError):
     """Raised when current health cannot be established fail-closed."""
 
 
+class FormalCapacityUnavailable(RuntimeError):
+    """The original pool cannot be protected for formal evaluation."""
+
+
+def _prepare_formal_capacity_head(conn: Any, scope: TenantScope,
+                                 capacity_ref: FormalExactRef) -> None:
+    """Prelock the original pool before the Budget fence, without granting rights.
+
+    Original content commands hold this head before require_cost_risk. Reversing
+    their order creates a real two-transaction deadlock. Revision content and
+    occupancy still require the full command's original authority verification.
+    This function neither creates a pool nor reserves or expires capacity.
+    """
+    require_binding_evaluator_transaction(conn, scope)
+    try:
+        if type(capacity_ref) is not FormalExactRef:
+            raise ValueError('exact capacity reference required')
+        exact = FormalExactRef.model_validate(capacity_ref.model_dump(by_alias=True))
+        if exact.asset_type != 'ModelCapacityPoolRevision':
+            raise ValueError('exact capacity kind required')
+    except (ValidationError, TypeError, ValueError):
+        raise FormalCapacityUnavailable('CAPACITY_EXACT_REF_REQUIRED') from None
+    head = conn.execute(
+        'SELECT current_revision,version FROM public.aip_model_capacity_pool_head '
+        'WHERE org_id=%s AND project_id=%s AND pool_id=%s FOR UPDATE',
+        (*scope.key, exact.asset_id),
+    ).fetchone()
+    if (head is None or head['current_revision'] != exact.revision
+            or type(head['version']) is not int or head['version'] < 1):
+        raise FormalCapacityUnavailable('CAPACITY_CURRENT_HEAD_REQUIRED')
+
+
 @dataclass(frozen=True)
 class ProviderHealthFact:
     epoch: int

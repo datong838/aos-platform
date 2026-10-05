@@ -926,3 +926,170 @@ def test_formal_budget_shared_authority_blocks_original_writer(caller, issuer_fa
         after = owner.execute('SELECT version FROM aip_budget_cost_runtime_fence WHERE budget_id=%s',
             (proposal.target.budget_id,)).fetchone()['version']
         assert after == before + (1 if writer_kind == 'revoke' else 0)
+
+
+@pytest.mark.parametrize('order', ['budget_first', 'capacity_first'])
+def test_formal_evaluator_capacity_budget_original_writer_lock_order(
+        caller, issuer_factory, https_signer, order):
+    """Actual mutual waits versus prelocking; the head is a coordination probe.
+
+    The cost chain is original and signed. The isolated head has no revision or
+    fake READY and cannot supply a Capacity fact or a formal evaluation proof.
+    Every runtime writer rolls back, including its original fence increment.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    from queue import Queue
+    from uuid import uuid4
+    from threading import Event
+    from pathlib import Path
+    import json
+    import time
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from aos_api.aip_budget_cost_runtime import read_formal_budget_fact, require_cost_risk
+    from aos_api.aip_budget_reservation_contracts import BudgetExactRef
+    from aos_api.db import connect_serializable
+    from tests.aip.test_budget_cost_consumer_pg import approved, consume
+    from tests.aip.test_budget_cost_configuration_pg import derive
+    from tests.aip.test_aip_license_source_authority_pg import wait_blocked
+
+    _, _, proposal, saved, decision = approved(issuer_factory, https_signer)
+    with caller() as consumer:
+        activated = consume(consumer, saved, decision)
+        configured = derive(consumer, saved, decision)
+    budget = FormalExactRef(assetType='BudgetRevision', assetId=activated['resourceId'],
+        revision=activated['revision'], contentHash=activated['contentHash'])
+    price = FormalExactRef.model_validate(configured['receipt']['priceRef'])
+    provider = FormalExactRef.model_validate(proposal.basis.provider.model_dump(by_alias=True))
+    capacity = FormalExactRef(assetType='ModelCapacityPoolRevision',
+        assetId='b90-lock-probe-' + uuid4().hex, revision=1, contentHash='a' * 64)
+    head_sql = ('SELECT current_revision,version FROM public.aip_model_capacity_pool_head '
+        'WHERE org_id=%s AND project_id=%s AND pool_id=%s')
+    head_params = (*SCOPE.key, capacity.asset_id)
+    pids = Queue()
+    capacity_acquired = Event()
+
+    def writer():
+        with connect_serializable(SCOPE) as conn:
+            pids.put(conn.info.backend_pid)
+            try:
+                assert conn.execute(head_sql + ' FOR SHARE', head_params).fetchone()
+                capacity_acquired.set()
+                def old(ref):
+                    return BudgetExactRef(resourceType=ref.asset_type, resourceId=ref.asset_id,
+                        revision=ref.revision, contentHash='sha256:' + ref.content_hash)
+                require_cost_risk(conn, SCOPE, old(budget), old(price),
+                    proposal.basis.per_request_risk_minor, provider_ref=old(provider))
+                return 'validated'
+            except Exception as exc:
+                return exc
+            finally:
+                conn.rollback()
+
+    with isolated_owner() as owner:
+        owner.execute('INSERT INTO public.aip_model_capacity_pool_head '
+            '(org_id,project_id,pool_id,current_revision,version) VALUES(%s,%s,%s,1,1)', head_params)
+        owner.commit()
+        def snapshot():
+            counts = {table: owner.execute(f'SELECT count(*) AS n FROM public.{table}').fetchone()['n']
+                for table in ('aip_capability_binding', 'aip_agent_registry_receipt',
+                    'aip_binding_evaluation_proof', 'aip_budget_reservation',
+                    'aip_model_eval_budget_reservation', 'aip_model_capacity_reservation')}
+            fence = owner.execute('SELECT version FROM public.aip_budget_cost_runtime_fence '
+                'WHERE org_id=%s AND project_id=%s AND budget_id=%s',
+                (*SCOPE.key, budget.asset_id)).fetchone()['version']
+            head = owner.execute(head_sql, head_params).fetchone()
+            owner.rollback()
+            return counts, fence, head
+        before = snapshot()
+        with _temporary_fixed_evaluator_login(owner) as factory:
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                with factory(SCOPE) as conn:
+                    evaluator_pid = conn.info.backend_pid
+                    native_scram = conn.pgconn.used_password
+                    if order == 'capacity_first':
+                        from aos_api.aip_binding_formal_evaluator import _prepare_formal_capacity_head
+                        _prepare_formal_capacity_head(conn, SCOPE, capacity)
+                    read_formal_budget_fact(conn=conn, scope=SCOPE, budget_ref=budget,
+                        price_ref=price, provider_ref=provider)
+                    other = pool.submit(writer)
+                    writer_pid = pids.get(timeout=5)
+                    wait_blocked(owner, [writer_pid], conn.info.backend_pid, [other])
+                    owner.rollback()
+                    if order == 'budget_first':
+                        assert capacity_acquired.is_set()
+                        def reverse_lock():
+                            try:
+                                conn.execute(head_sql + ' FOR UPDATE', head_params).fetchone()
+                                return 'locked'
+                            except Exception as exc:
+                                return exc
+                        reverse = pool.submit(reverse_lock)
+                        end = time.monotonic() + .8
+                        while time.monotonic() < end:
+                            graph = owner.execute('SELECT pg_blocking_pids(%s) AS evaluator, '
+                                'pg_blocking_pids(%s) AS writer',
+                                (conn.info.backend_pid, writer_pid)).fetchone()
+                            owner.rollback()
+                            if writer_pid in graph['evaluator'] and conn.info.backend_pid in graph['writer']:
+                                break
+                            assert not reverse.done() and not other.done(), 'cycle ended before graph readback'
+                            time.sleep(.01)
+                        else:
+                            pytest.fail('the expected two-sided original lock cycle was not observed')
+                        result = reverse.result(timeout=6)
+                        conn.rollback()
+                        outcome = other.result(timeout=6)
+                        errors = [value for value in (result, outcome) if isinstance(value, Exception)]
+                        assert any(isinstance(value, psycopg.errors.DeadlockDetected)
+                            or isinstance(value.__cause__, psycopg.errors.DeadlockDetected) for value in errors)
+                        checked = {'two_sided_wait': graph, 'deadlock_detected': True}
+                    else:
+                        assert not capacity_acquired.is_set(), 'writer must wait before acquiring Capacity'
+                        checked = {'writer_waits_on': owner.execute('SELECT pg_blocking_pids(%s) AS pids',
+                            (writer_pid,)).fetchone()['pids'], 'deadlock_detected': False}
+                        owner.rollback()
+                        assert not other.done()
+                        conn.rollback()
+                        assert other.result(timeout=6) == 'validated'
+        assert snapshot() == before
+        evidence = Path(__file__).resolve().parents[4] / '.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-e17-s3owaob90/implementation'
+        (evidence / f'capacity-budget-lock-{order}.json').write_text(json.dumps({
+            'scope': 'isolated original signed Budget / Capacity-head coordination probe only',
+            'database': owner.info.dbname, 'port': owner.info.port, 'order': order,
+            'writer_pid': writer_pid, 'evaluator_pid': evaluator_pid,
+            'native_scram': native_scram, 'observed': checked, 'before': before, 'after': snapshot(),
+            'capacity_fact_proven': False, 'complete_evaluator_passed': False,
+            'business_first_chain_passed': False, 'current_database_accessed': False}, indent=2) + '\n')
+
+
+@pytest.mark.parametrize('fault', ['missing', 'stale', 'kind', 'strict_revision', 'wrapper', 'canary'])
+def test_formal_capacity_prelock_rejects_scope_identity_and_current_head(fault):
+    from uuid import uuid4
+    from types import SimpleNamespace
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from aos_api.aip_binding_formal_evaluator import (
+        _prepare_formal_capacity_head, FormalCapacityUnavailable,
+    )
+    from aos_api.tenant_scope import TenantScope
+    capacity = FormalExactRef(assetType='ModelCapacityPoolRevision',
+        assetId='b90-lock-fault-' + uuid4().hex, revision=1, contentHash='a' * 64)
+    scope = TenantScope('dev-org', 'dev-project') if fault == 'canary' else SCOPE
+    with isolated_owner() as owner:
+        if fault != 'missing':
+            owner.execute('INSERT INTO public.aip_model_capacity_pool_head '
+                '(org_id,project_id,pool_id,current_revision,version) VALUES(%s,%s,%s,%s,1)',
+                (*SCOPE.key, capacity.asset_id, 2 if fault == 'stale' else 1))
+            owner.commit()
+        if fault == 'kind':
+            capacity = capacity.model_copy(update={'asset_type': 'ProviderInstanceRevision'})
+        elif fault == 'strict_revision':
+            capacity = capacity.model_copy(update={'revision': True})
+        error = BindingEvaluatorConnectionBlocked if fault in {'wrapper', 'canary'} else FormalCapacityUnavailable
+        with _temporary_fixed_evaluator_login(owner) as factory:
+            with factory(scope) as conn:
+                with pytest.raises(error):
+                    _prepare_formal_capacity_head(SimpleNamespace(native=conn) if fault == 'wrapper' else conn,
+                        scope, capacity)
+        row = owner.execute('SELECT current_revision,version FROM public.aip_model_capacity_pool_head '
+            'WHERE org_id=%s AND project_id=%s AND pool_id=%s', (*SCOPE.key, capacity.asset_id)).fetchone()
+        assert row == (None if fault == 'missing' else {'current_revision': 2 if fault == 'stale' else 1, 'version': 1})
