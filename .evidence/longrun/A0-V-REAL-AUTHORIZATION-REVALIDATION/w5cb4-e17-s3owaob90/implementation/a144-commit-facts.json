@@ -1,11 +1,11 @@
 {
-  "database": "aos_test_dd80fb557974_ti4_test",
+  "database": "aos_test_714ca8ad673c_ti4_test",
   "host": "127.0.0.1",
   "port": 5433,
   "cases": [
     {
       "fault": "control_rollback",
-      "pid": 218975,
+      "pid": 223302,
       "phase": "rollback",
       "sqlstate": null,
       "error": null,
@@ -16,7 +16,7 @@
     },
     {
       "fault": "binding_only",
-      "pid": 218976,
+      "pid": 223303,
       "phase": "commit",
       "sqlstate": "23514",
       "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
@@ -27,7 +27,7 @@
     },
     {
       "fault": "receipt_only",
-      "pid": 218977,
+      "pid": 223304,
       "phase": "commit",
       "sqlstate": "23514",
       "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
@@ -38,7 +38,7 @@
     },
     {
       "fault": "proof_only",
-      "pid": 218978,
+      "pid": 223305,
       "phase": "commit",
       "sqlstate": "23514",
       "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
@@ -49,7 +49,7 @@
     },
     {
       "fault": "hash",
-      "pid": 218979,
+      "pid": 223306,
       "phase": "commit",
       "sqlstate": "23514",
       "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
@@ -60,7 +60,7 @@
     },
     {
       "fault": "result_version",
-      "pid": 218980,
+      "pid": 223307,
       "phase": "commit",
       "sqlstate": "23514",
       "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
@@ -71,7 +71,7 @@
     },
     {
       "fault": "expiry",
-      "pid": 218981,
+      "pid": 223308,
       "phase": "commit",
       "sqlstate": "23514",
       "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
@@ -82,7 +82,7 @@
     },
     {
       "fault": "historical_receipt",
-      "pid": 218982,
+      "pid": 223309,
       "phase": "commit",
       "sqlstate": "23514",
       "error": "BINDING_EVALUATOR_ATOMIC_TRIPLE_REQUIRED",
