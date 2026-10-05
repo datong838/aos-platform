@@ -1,0 +1,65 @@
+{
+  "scope": "isolated original legal content freeze; not complete eight-fact binding command",
+  "protection": [
+    {
+      "mode": "reader_first",
+      "readerPid": 253975,
+      "writerPid": 253976,
+      "blockers": [
+        253975
+      ],
+      "publicationFact": {
+        "publicationId": "publication-d91b5c33a1e0870ea9b27e98ae352867",
+        "epoch": 1,
+        "eventRef": {
+          "resourceType": "PublicationEvent",
+          "resourceId": "published-3ff67a23a81bc621055d2ccb7cc673b1",
+          "revision": 1,
+          "contentHash": "bbaca3571b9bfb51544f3169bbe52e24b81439643d27d557c13c2b4f9f7d9b04"
+        },
+        "gateRef": {
+          "resourceType": "ReleaseGateDecision",
+          "resourceId": "gate-7b65ee00c5cf861ff3d70113c6828038",
+          "revision": 1,
+          "contentHash": "202782ff00deef5df443605764aef59ba67c08a0f0bfd51690d2b420a9a4296e"
+        }
+      }
+    },
+    {
+      "mode": "writer_first",
+      "readerPid": 253981,
+      "writerPid": 253982,
+      "sqlstate": "40001"
+    },
+    {
+      "mode": "reader_first_commit",
+      "readerPid": 253987,
+      "writerPid": 253988,
+      "blockers": [
+        253987
+      ],
+      "publicationFact": {
+        "publicationId": "publication-5acb3b4af4b0b793b6e6aafb92759ea3",
+        "epoch": 1,
+        "eventRef": {
+          "resourceType": "PublicationEvent",
+          "resourceId": "published-9563a1d4ffd3f73b4bf4d7e9fc2dd9cf",
+          "revision": 1,
+          "contentHash": "42d8dab939137676e1ba48aecaad4ef5024e1f6d9d4e05f7fe897f6206ca85aa"
+        },
+        "gateRef": {
+          "resourceType": "ReleaseGateDecision",
+          "resourceId": "gate-7b65ee00c5cf861ff3d70113c6828038",
+          "revision": 1,
+          "contentHash": "202782ff00deef5df443605764aef59ba67c08a0f0bfd51690d2b420a9a4296e"
+        }
+      }
+    }
+  ],
+  "originalAuthorityAppendAdvancedEpoch": true,
+  "originalAuthorityReplayKeptEpoch": true,
+  "rawInsertRollbackKeptEpoch": true,
+  "authorityPermissionProbeRole": "aos_runtime; session authorization only, not LOGIN proof",
+  "bindingReceiptProofCompleteSnapshotsUnchanged": true,
+  "completeBindingCommitVerified": false
+}

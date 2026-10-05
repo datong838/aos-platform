@@ -87,3 +87,7 @@ Source proof 必须保存原正式读者返回的 epoch、installation_id/etag�
 原事件表 BEFORE INSERT 精确tenant/pub-id初始化及排他协调；AFTER INSERT 才推进代际，实际 ON CONFLICT DO NOTHING 不推进、失败/rollback 不遗留推进。原 UPDATE/DELETE/TRUNCATE append-only 拒绝保留。触发器覆盖原 publish/revoke/Authority.append/raw INSERT，不要求复制或改写原消费者选择逻辑；既有 scoped 原写者不新增业务授权。读者保持原合同 head SHARE，先无权发现原 publication_id，再共享 epoch、原 get_eval_contract 同native重读和 READY/blockers校验；epoch、原精确事件/门引用纳入 Eval facts/hash并持锁至原三写 COMMIT。禁止新增 published 行 SHARE，避免 reader fence→published 与 revoke published UPDATE→fence 的反向等待。
 
 必验：合法原内容 freeze持续可读；读者先持共享fence时原 revoke真实阻塞，读者rollback/commit释放后原撤销提交且fresh拒绝；native SERIAL snapshot建立后原撤销先提交，随后消费者拒绝/40001而非旧READY；原Authority/raw INSERT/ON CONFLICT/rollback、wrongscope/canary、Owner保留身份漂移、最小ACL/RLS与普通原角色相邻。资源锁图及Source/Budget/Capacity/Binding组合仍须核验。此是完整命令内实质时效修复，不创建孤立 helper 完成Task、不提升整体业务GREEN；真正八事实正向/COMMIT/API仍是同完整Task退出。
+
+独立复审要求 Owner 预存在身份门同时拒绝当前目标数据库的业务对象所有权与显式 table/column/schema/function ACL，不能只看角色属性/成员。在另一个5433一次性空测试库分别注入低属性同名Owner的五种授权/所有权，用实际原 migration 子步骤证明其拒绝且原权限保留，finally只DROP该精确测试库、不DROP OWNED/撤权或修改现有对象。迁移前允许跨测试库同名安全角色，但本目标库不得预有身份对象或ACL；不声称全服务器其他数据库授权已审计。
+
+Publication gate 的期限沿原产品语义：原 publish 在发行时校验 gate 当前有效，原 EvalContract 动态读者此后校验不可变历史 gate 的 exact/status/hash及发布 latest 状态，不把 gate 到期自动转换为已发布事件撤销。本 epoch 修订保留该语义，Publication gateRef 是历史发布证据，不授当前执行权；当前运行模型/路线的两项正式 Eval 准入仍由原 require_exact_passed(DB now)和最终 expires min独立强制。当前正式 Source、预算、Price、Health等期限不能借该历史引用放宽。未来若产品要求发布自动到期，须作为独立可审阅生命周期方案，不在本修复隐性改变已有发布功能。

@@ -48,6 +48,16 @@ RED 缺消费者 ImportError 1 failed/5.84s；最小移动既有读取段后 1 p
 
 独立只读督导确认原revoke published FOR UPDATE不更新该旧行，Authority.append也可直达INSERT；仅锁旧行无法保证writer先提交后的旧快照被拒绝。已将全 INSERT 中性 epoch、共享消费者、facts/hash、双向竞争、ONCONFLICT/rollback/ACL/canary与锁图验证登记在composition方案，尚未实施，不宣称已关闭。原合法 freeze链现在可复用到完整组合，但仍不是目标 Model/Route 八事实正向。
 
+## Publication epoch 并发协调验证（2026-10-05）
+
+按 composition 方案实施中性 epoch 表、专用 NOLOGIN Owner、原事件 INSERT 前锁与实际 INSERT 后递增；正式消费者持 SHARE、重读原合同，并将原 publication ref/gate ref/epoch 纳入完整 facts。原 append-only、历史发布 gate 语义不变；当前 Model/Route 执行期限仍独立检查。
+
+修正测试 Queue 使用错误后，真实 RED 为写者逃逸读者共享锁；最小实现后专项通过。最终相邻 125 passed/39.31s，原 signed 安装/Source/Budget 联合回归 1 passed/33.97s；补齐 JSON 明确边界后专项 2 passed/6.39s。reader-first rollback、reader-first read-only COMMIT 均以实际 PID/blocking pids 证明原 revoke 等待；writer-first 已建立 SERIAL 快照，原 revoke 提交后消费者以 40001 拒绝。原三写表 jsonb 内容均未改变；read-only COMMIT 不证明完整 Binding 三写 COMMIT。
+
+普通写者用实际 aos_runtime session/current 身份，无 superuser/bypassRLS；原 append 重放不递增，实际新 INSERT 递增，rollback 不留 epoch。canary 和非法 ID 在初始化前拒绝；evaluator 无 epoch 表读写权限。Owner 目标库 table/column/schema/function ACL 与对象所有权五种漂移均拒绝且原权限内容不变。初期两次五项失败由测试连接缺密码导致，不算有效 RED；修正驱动后临时关闭新增漂移检查复现五项 DID NOT RAISE，立即恢复检查，5 passed/5.96s，最终累计覆盖原权限快照。未宣称跨数据库 ACL 审计。
+
+独立只读督导复审确认本段边界与方案一致，未发现阻止下一完整组合的新具体缺口。本段仅关闭隔离 Publication 协调切面；完整 signed 八事实、真正三写 COMMIT、Service/API/ToolBinding 与自然首链仍未验收。全部 PG 运行在一次性隔离测试库，当前真库未查询、迁移或重启；不启用 Host/worker/Provider，不触发外部效果。
+
 ## 下一实质退出（保持完整范围）
 
 继续同一完整 Task：原 signed 八事实完整正向及原 EvalContract reader ACL 实测；同调用方真实 COMMIT、所有异常完整回滚、同 key 原事实重验及实际撤销/安装/Owner/Policy 漂移拒绝；然后接正式 Service/API 与实例 ToolBinding。不能将此 Source 修订作为整波退出，也不再扩大 helper 准备替代完整命令。

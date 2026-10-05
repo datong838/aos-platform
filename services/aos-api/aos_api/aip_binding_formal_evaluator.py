@@ -56,7 +56,7 @@ def _source_proof_fact(ref, fact):
     })
 
 
-def _read_formal_eval_contract(conn, scope, ref):
+def _read_formal_eval_contract(conn, scope, ref, *, return_fact=False):
     """Reuse original dynamic blockers under the original current-head lock."""
     from aos_api.aip_production_contract_store import AipProductionContractStore
     require_binding_evaluator_transaction(conn, scope)
@@ -72,7 +72,22 @@ def _read_formal_eval_contract(conn, scope, ref):
             or contract.content_hash != exact.content_hash or contract.lifecycle.value != 'frozen'
             or contract.readiness.value != 'ready' or contract.blockers):
         raise FormalBindingEvaluationBlocked('CURRENT_READY_FROZEN_EVAL_CONTRACT_REQUIRED')
-    return contract
+    publication = conn.execute('SELECT publication_id FROM public.aip_publication_event '
+        'WHERE org_id=%s AND project_id=%s AND event_id=%s',
+        (*scope.key, contract.publication_ref.resource_id)).fetchone()
+    if publication is None:
+        raise FormalBindingEvaluationBlocked('CURRENT_READY_FROZEN_EVAL_CONTRACT_REQUIRED')
+    epoch = conn.execute('SELECT public.aos_publication_epoch_lock(%s,%s,%s) AS epoch',
+        (*scope.key, publication['publication_id'])).fetchone()['epoch']
+    # Protection must precede the authoritative read; discovery granted nothing.
+    contract = AipProductionContractStore().get_eval_contract(scope,
+        exact.asset_id, exact.revision, conn=conn)
+    if contract.readiness.value != 'ready' or contract.blockers:
+        raise FormalBindingEvaluationBlocked('CURRENT_READY_FROZEN_EVAL_CONTRACT_REQUIRED')
+    fact = {'publicationId': publication['publication_id'], 'epoch': epoch,
+            'eventRef': contract.publication_ref.model_dump(mode='json', by_alias=True),
+            'gateRef': contract.release_gate_ref.model_dump(mode='json', by_alias=True)}
+    return (contract, fact) if return_fact else contract
 
 
 def _protect_runtime_graph(conn, scope, request, store, bound, now):
@@ -310,7 +325,7 @@ def evaluate_binding_in_transaction(conn, scope, binding_id, request, principal,
         expected_target=evaluation_candidate_ref(model), now=now)
     route_gate = evals.require_exact_passed(scope, _versioned(request.route_eval_gate_ref),
         expected_target=evaluation_candidate_ref(route), now=now)
-    contract = _read_formal_eval_contract(conn, scope, request.eval_contract_ref)
+    contract, publication_fact = _read_formal_eval_contract(conn, scope, request.eval_contract_ref, return_fact=True)
     pool = AipModelCapacityAuthorityStore(bound, model_store=store).get(scope,
         request.capacity_ref.asset_id, request.capacity_ref.revision, conn=conn)
     pool_body = CapacityPoolRevisionCreate.model_validate(pool.model_dump(mode='python', by_alias=True,
@@ -366,7 +381,8 @@ def evaluate_binding_in_transaction(conn, scope, binding_id, request, principal,
         'Route': {'ref': request.route_ref.model_dump(by_alias=True)},
         'Eval': {'model': request.model_eval_gate_ref.model_dump(by_alias=True),
                  'route': request.route_eval_gate_ref.model_dump(by_alias=True),
-                 'contract': request.eval_contract_ref.model_dump(by_alias=True)},
+                 'contract': request.eval_contract_ref.model_dump(by_alias=True),
+                 'publication': publication_fact},
         'Health': health_fact,
         'Capacity': {'ref': request.capacity_ref.model_dump(by_alias=True), 'usedRequests': used['requests'],
             'usedTokens': used['tokens'], 'quantum': pool.token_unit_per_reservation},

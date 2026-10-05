@@ -677,14 +677,16 @@ def test_formal_eval_contract_rejects_frozen_maintenance_fault_without_business_
 
 
 def test_legitimate_frozen_contract_original_revoke_exposes_serial_snapshot_gap():
-    """Original EvalRunner/freeze; counterexample, never commit-safe readiness."""
+    """Original gap plus protected two-way publication fence; not full command."""
     from concurrent.futures import ThreadPoolExecutor
     from uuid import uuid4
     from aos_api.aip_binding_formal_evaluator import (
         _read_formal_eval_contract, FormalBindingEvaluationBlocked)
     from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
     from aos_api.aip_release_publication_service import AipReleasePublicationService
-    from aos_api.aip_release_publication_models import RevokePublicationRequest
+    from aos_api.aip_release_publication_models import RevokePublicationRequest, PublishReleaseRequest
+    from aos_api.aip_production_contract_store import AipProductionContractStore, canonical_hash
+    from aos_api.aip_production_contracts import CreateEvalContractRequest, ExactRevisionRef
     from tests.extension_runtime.test_ecommerce_content_review_pending_pg import (
         _register_current_content_eval_gate)
     @contextmanager
@@ -714,7 +716,11 @@ def test_legitimate_frozen_contract_original_revoke_exposes_serial_snapshot_gap(
         owner.commit()
         with _temporary_fixed_evaluator_login(owner) as factory:
             with factory(SCOPE) as conn:
-                current = _read_formal_eval_contract(conn, SCOPE, exact)
+                conn.execute('SELECT current_revision FROM aip_eval_contract_head '
+                    'WHERE org_id=%s AND project_id=%s AND contract_id=%s FOR SHARE',
+                    (*SCOPE.key, exact.asset_id))
+                current = AipProductionContractStore().get_eval_contract(SCOPE,
+                    exact.asset_id, exact.revision, conn=conn)
                 assert current.lifecycle.value == 'frozen' and current.readiness.value == 'ready'
                 evaluator_pid = conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
                 def revoke():
@@ -727,13 +733,115 @@ def test_legitimate_frozen_contract_original_revoke_exposes_serial_snapshot_gap(
                 assert revoked.event_type.value == 'revoked'
                 # Original head SHARE does not protect a publication append;
                 # SERIAL snapshot still sees the earlier effective event.
-                stale = _read_formal_eval_contract(conn, SCOPE, exact)
+                stale = AipProductionContractStore().get_eval_contract(SCOPE,
+                    exact.asset_id, exact.revision, conn=conn)
                 assert stale.readiness.value == 'ready'
                 conn.rollback()
             with factory(SCOPE) as conn:
                 with pytest.raises(FormalBindingEvaluationBlocked,
                         match='CURRENT_READY_FROZEN_EVAL_CONTRACT_REQUIRED'):
                     _read_formal_eval_contract(conn, SCOPE, exact)
+            protection = []
+            for mode in ('reader_first', 'writer_first', 'reader_first_commit'):
+                token = uuid4().hex
+                published = AipReleasePublicationService(original_connect).publish(SCOPE,
+                    actor='original-publication-test', request=PublishReleaseRequest(
+                        release_gate_decision_id=current.release_gate_ref.resource_id,
+                        reason_hash='d' * 64, idempotency_key='b90-pub-' + token))
+                event = owner.execute('SELECT * FROM aip_publication_event '
+                    'WHERE org_id=%s AND project_id=%s AND event_id=%s',
+                    (*SCOPE.key, published.event_id)).fetchone()
+                owner.commit()
+                body = CreateEvalContractRequest(**{
+                    name: getattr(current, name) for name in CreateEvalContractRequest.model_fields})
+                body.publication_ref = ExactRevisionRef(resourceType='PublicationEvent',
+                    resourceId=published.event_id, revision=1,
+                    contentHash=canonical_hash(AipProductionContractStore._publication_snapshot(event)))
+                contracts = AipProductionContractStore(original_connect)
+                draft = contracts.create_eval_contract(SCOPE, 'original-publication-test', 'b90-contract-' + token, body)
+                frozen = contracts.freeze_eval_contract(SCOPE, 'original-publication-test', draft.contract_id,
+                    draft.version, 'b90-freeze-' + token)
+                ref = FormalExactRef(assetType='EvalContractRevision', assetId=frozen.contract_id,
+                    revision=frozen.revision, contentHash=frozen.content_hash)
+                from queue import Queue
+                pids = Queue()
+                @contextmanager
+                def writer_connect(scope):
+                    with original_connect(scope) as writer:
+                        pids.put(writer.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'])
+                        yield writer
+                def protected_revoke():
+                    return AipReleasePublicationService(writer_connect).revoke(SCOPE,
+                        publication_id=published.publication_id, actor='original-revoke-test',
+                        request=RevokePublicationRequest(reason_hash='e' * 64,
+                            idempotency_key='b90-protected-revoke-' + token))
+                with factory(SCOPE) as conn:
+                    reader_pid = conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+                    if mode == 'writer_first':
+                        protected_revoke()
+                        with pytest.raises(psycopg.errors.SerializationFailure) as error:
+                            _read_formal_eval_contract(conn, SCOPE, ref)
+                        assert error.value.sqlstate == '40001'
+                        protection.append({'mode': mode, 'readerPid': reader_pid,
+                            'writerPid': pids.get(timeout=5), 'sqlstate': error.value.sqlstate})
+                    else:
+                        protected, publication_fact = _read_formal_eval_contract(conn, SCOPE, ref, return_fact=True)
+                        assert protected.readiness.value == 'ready' and publication_fact['epoch'] == 1
+                        from tests.aip.test_aip_license_source_authority_pg import wait_blocked
+                        with ThreadPoolExecutor(max_workers=1) as pool:
+                            future = pool.submit(protected_revoke)
+                            writer_pid = pids.get(timeout=5)
+                            try:
+                                wait_blocked(owner, [writer_pid], reader_pid, [future])
+                                blockers = owner.execute('SELECT pg_blocking_pids(%s) AS blockers',
+                                    (writer_pid,)).fetchone()['blockers']
+                                assert reader_pid in blockers
+                                protection.append({'mode': mode, 'readerPid': reader_pid,
+                                    'writerPid': writer_pid, 'blockers': blockers,
+                                    'publicationFact': publication_fact})
+                            finally:
+                                if mode == 'reader_first_commit':
+                                    conn.commit()  # Read-only consumer commit, not three-write acceptance.
+                                else:
+                                    conn.rollback()
+                            assert future.result(timeout=5).event_type.value == 'revoked'
+                with factory(SCOPE) as conn:
+                    with pytest.raises(FormalBindingEvaluationBlocked):
+                        _read_formal_eval_contract(conn, SCOPE, ref)
+        def epoch():
+            value = owner.execute('SELECT epoch FROM aip_publication_epoch '
+                'WHERE org_id=%s AND project_id=%s AND publication_id=%s',
+                (*SCOPE.key, publication)).fetchone()['epoch']
+            owner.commit()
+            return value
+        baseline_epoch = epoch()
+        from aos_api.aip_eval_authority_store import AipEvalAuthorityStore
+        @contextmanager
+        def runtime_authority_connect(scope):
+            with original_connect(scope) as writer:
+                writer.execute('SET SESSION AUTHORIZATION aos_runtime')
+                writer.execute('SET ROLE aos_runtime')
+                identity = writer.execute('SELECT session_user,current_user,'
+                    '(SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname=current_user) AS elevated').fetchone()
+                assert identity == {'session_user': 'aos_runtime', 'current_user': 'aos_runtime', 'elevated': False}
+                yield writer
+        authority = AipEvalAuthorityStore(runtime_authority_connect)
+        assert authority.append_publication_event(SCOPE, revoked) == revoked
+        assert epoch() == baseline_epoch  # Actual ON CONFLICT must not bump.
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)", SCOPE.key)
+        owner.execute('INSERT INTO aip_publication_event(org_id,project_id,event_id,publication_id,target_ref,'
+            'event_type,release_gate_decision_id,reason_hash,actor,occurred_at) '
+            'SELECT org_id,project_id,%s,publication_id,target_ref,event_type,release_gate_decision_id,'
+            'reason_hash,actor,occurred_at FROM aip_publication_event '
+            'WHERE org_id=%s AND project_id=%s AND event_id=%s',
+            ('rollback-' + uuid4().hex, *SCOPE.key, revoked.event_id))
+        assert owner.execute('SELECT epoch FROM aip_publication_epoch WHERE org_id=%s AND project_id=%s '
+            'AND publication_id=%s', (*SCOPE.key, publication)).fetchone()['epoch'] == baseline_epoch + 1
+        owner.rollback()
+        assert epoch() == baseline_epoch
+        appended = revoked.model_copy(update={'event_id': 'authority-' + uuid4().hex})
+        assert authority.append_publication_event(SCOPE, appended) == appended
+        assert epoch() == baseline_epoch + 1
         assert snapshots() == before
         assert evaluator_pid > 0
         from pathlib import Path
@@ -747,7 +855,93 @@ def test_legitimate_frozen_contract_original_revoke_exposes_serial_snapshot_gap(
             'oldSerializableSnapshotStillReady': True, 'freshNativeRejected': True,
             'bindingReceiptProofCompleteSnapshotsUnchanged': True,
             'businessReadinessCommitSafe': False,
+            'counterexampleReaderUsesEpoch': False,
         }, ensure_ascii=False, indent=2) + '\n')
+        (evidence / 'publication-coordination-facts.json').write_text(json.dumps({
+            'scope': 'isolated original legal content freeze; not complete eight-fact binding command',
+            'protection': protection, 'originalAuthorityAppendAdvancedEpoch': True,
+            'originalAuthorityReplayKeptEpoch': True, 'rawInsertRollbackKeptEpoch': True,
+            'authorityPermissionProbeRole': 'aos_runtime; session authorization only, not LOGIN proof',
+            'bindingReceiptProofCompleteSnapshotsUnchanged': True,
+            'completeBindingCommitVerified': False,
+        }, ensure_ascii=False, indent=2) + '\n')
+
+
+def test_publication_epoch_reserved_owner_acl_and_canary_no_initialization():
+    from uuid import uuid4
+    from aos_api.tenant_scope import TenantScope
+    with isolated_owner() as owner:
+        role = owner.execute('SELECT rolcanlogin,rolinherit,rolsuper,rolcreatedb,rolcreaterole,'
+            "rolreplication,rolbypassrls FROM pg_roles WHERE rolname='aos_publication_epoch_owner'").fetchone()
+        assert role is not None and not any(role.values())
+        assert owner.execute("SELECT count(*) AS n FROM pg_auth_members WHERE roleid='aos_publication_epoch_owner'::regrole "
+            "OR member='aos_publication_epoch_owner'::regrole").fetchone()['n'] == 0
+        rls = owner.execute("SELECT relrowsecurity,relforcerowsecurity FROM pg_class WHERE oid='public.aip_publication_epoch'::regclass").fetchone()
+        assert rls == {'relrowsecurity': True, 'relforcerowsecurity': True}
+        for privilege in ('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE'):
+            assert not owner.execute('SELECT has_table_privilege(%s,%s,%s) AS allowed',
+                (EVALUATOR_LOGIN, 'public.aip_publication_epoch', privilege)).fetchone()['allowed']
+        identity = 'canary-publication-' + uuid4().hex
+        before = owner.execute('SELECT count(*) AS n FROM aip_publication_epoch').fetchone()['n']
+        owner.commit()
+        with _temporary_fixed_evaluator_login(owner) as factory:
+            with factory(TenantScope('dev-org', 'dev-project')) as conn:
+                with pytest.raises(psycopg.errors.InsufficientPrivilege, match='PUBLICATION_EPOCH_READER_SCOPE_REQUIRED'):
+                    conn.execute('SELECT public.aos_publication_epoch_lock(%s,%s,%s)',
+                        ('dev-org', 'dev-project', identity))
+            with factory(SCOPE) as conn:
+                with pytest.raises(psycopg.errors.InsufficientPrivilege, match='PUBLICATION_EPOCH_READER_SCOPE_REQUIRED'):
+                    conn.execute('SELECT public.aos_publication_epoch_lock(%s,%s,%s)',
+                        (*SCOPE.key, ' ' + identity))
+        assert owner.execute('SELECT count(*) AS n FROM aip_publication_epoch').fetchone()['n'] == before
+
+
+@pytest.mark.parametrize('fault', ['table_acl', 'column_acl', 'schema_acl', 'function_acl', 'owned_table'])
+def test_publication_epoch_migration_rejects_existing_business_owner_without_repair(monkeypatch, fault):
+    """New disposable DB; retain role/privilege, never revoke or DROP OWNED."""
+    from types import SimpleNamespace
+    from uuid import uuid4
+    database = 'aos_test_pub_owner_' + uuid4().hex + '_ti4_test'
+    role = 'aos_publication_epoch_owner'
+    with isolated_owner() as root:
+        assert root.info.port == 5433
+        root.autocommit = True
+        root.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(database)))
+        try:
+            parameters = root.info.get_parameters()
+            parameters['dbname'] = database
+            parameters['password'] = root.info.password  # Reuse this isolated test connection only.
+            with psycopg.connect(**parameters, row_factory=psycopg.rows.dict_row) as conn:
+                conn.execute('CREATE TABLE public.aip_publication_event(org_id text,project_id text,publication_id text)')
+                conn.execute('CREATE TABLE public.business_probe(id text)')
+                conn.execute('CREATE FUNCTION public.business_probe_fn() RETURNS integer LANGUAGE sql AS $$ SELECT 1 $$')
+                commands = {
+                    'table_acl': f'GRANT SELECT ON public.business_probe TO {role}',
+                    'column_acl': f'GRANT SELECT(id) ON public.business_probe TO {role}',
+                    'schema_acl': f'GRANT CREATE ON SCHEMA public TO {role}',
+                    'function_acl': f'GRANT EXECUTE ON FUNCTION public.business_probe_fn() TO {role}',
+                    'owned_table': f'ALTER TABLE public.business_probe OWNER TO {role}',
+                }
+                conn.execute(commands[fault])
+                conn.commit()
+                queries = (
+                    "SELECT relowner,relacl FROM pg_class WHERE oid='public.business_probe'::regclass",
+                    "SELECT attacl FROM pg_attribute WHERE attrelid='public.business_probe'::regclass AND attname='id'",
+                    "SELECT nspowner,nspacl FROM pg_namespace WHERE nspname='public'",
+                    "SELECT proowner,proacl FROM pg_proc WHERE oid='public.business_probe_fn()'::regprocedure",
+                )
+                before = [conn.execute(query).fetchone() for query in queries]
+                migration = _migration()
+                monkeypatch.setattr(migration, 'op', SimpleNamespace(execute=conn.execute))
+                with pytest.raises(psycopg.errors.InsufficientPrivilege, match='PUBLICATION_EPOCH_OWNER_DRIFT'):
+                    migration._publication_epoch_boundary()
+                conn.rollback()
+                assert conn.execute("SELECT to_regclass('public.aip_publication_epoch') AS object").fetchone()['object'] is None
+                assert [conn.execute(query).fetchone() for query in queries] == before
+                assert conn.execute('SELECT rolcanlogin,rolinherit,rolsuper FROM pg_roles WHERE rolname=%s',
+                    (role,)).fetchone() == {'rolcanlogin': False, 'rolinherit': False, 'rolsuper': False}
+        finally:
+            root.execute(sql.SQL('DROP DATABASE {} WITH (FORCE)').format(sql.Identifier(database)))
 
 
 def assert_formal_signed_source_consumer(request, loader, release_policy):

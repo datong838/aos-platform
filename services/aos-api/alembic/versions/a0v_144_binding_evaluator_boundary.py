@@ -56,6 +56,93 @@ BINDING_UPDATE_COLUMNS = (
 )
 
 
+def _publication_epoch_boundary() -> None:
+    owner = 'aos_publication_epoch_owner'
+    op.execute(f"""DO $$ DECLARE r record; BEGIN
+      SELECT * INTO r FROM pg_roles WHERE rolname='{owner}';
+      IF NOT FOUND THEN
+        CREATE ROLE {owner} NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+      ELSIF r.rolcanlogin OR r.rolinherit OR r.rolsuper OR r.rolcreatedb OR r.rolcreaterole
+        OR r.rolreplication OR r.rolbypassrls THEN
+        RAISE EXCEPTION 'PUBLICATION_EPOCH_OWNER_DRIFT' USING ERRCODE='42501';
+      END IF;
+      IF EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid='{owner}'::regrole OR member='{owner}'::regrole) THEN
+        RAISE EXCEPTION 'PUBLICATION_EPOCH_OWNER_DRIFT' USING ERRCODE='42501';
+      END IF;
+      IF EXISTS(SELECT 1 FROM pg_class WHERE relowner='{owner}'::regrole)
+        OR EXISTS(SELECT 1 FROM pg_proc WHERE proowner='{owner}'::regrole)
+        OR EXISTS(SELECT 1 FROM pg_namespace WHERE nspowner='{owner}'::regrole)
+        OR EXISTS(SELECT 1 FROM pg_database WHERE datname=current_database() AND datdba='{owner}'::regrole)
+        OR EXISTS(SELECT 1 FROM pg_class c,LATERAL aclexplode(c.relacl) a WHERE a.grantee='{owner}'::regrole)
+        OR EXISTS(SELECT 1 FROM pg_attribute c,LATERAL aclexplode(c.attacl) a WHERE a.grantee='{owner}'::regrole)
+        OR EXISTS(SELECT 1 FROM pg_proc p,LATERAL aclexplode(p.proacl) a WHERE a.grantee='{owner}'::regrole)
+        OR EXISTS(SELECT 1 FROM pg_namespace n,LATERAL aclexplode(n.nspacl) a WHERE a.grantee='{owner}'::regrole) THEN
+        RAISE EXCEPTION 'PUBLICATION_EPOCH_OWNER_DRIFT' USING ERRCODE='42501';
+      END IF;
+    END $$""")
+    op.execute(f'GRANT USAGE ON SCHEMA public TO {owner}')
+    op.execute("""CREATE TABLE public.aip_publication_epoch (
+      org_id text NOT NULL,project_id text NOT NULL,
+      publication_id text NOT NULL CHECK(publication_id<>'' AND publication_id=btrim(publication_id)),
+      epoch bigint NOT NULL DEFAULT 0 CHECK(epoch>=0),PRIMARY KEY(org_id,project_id,publication_id))""")
+    op.execute(f'ALTER TABLE public.aip_publication_epoch OWNER TO {owner}')
+    op.execute(f'REVOKE ALL ON public.aip_publication_epoch FROM PUBLIC,aos_runtime,{EVALUATOR}')
+    op.execute('ALTER TABLE public.aip_publication_epoch ENABLE ROW LEVEL SECURITY')
+    op.execute('ALTER TABLE public.aip_publication_epoch FORCE ROW LEVEL SECURITY')
+    op.execute(f"""CREATE POLICY publication_epoch_scope_a0v144 ON public.aip_publication_epoch TO {owner}
+      USING(org_id=NULLIF(current_setting('aos.org_id',true),'')
+        AND project_id=NULLIF(current_setting('aos.project_id',true),''))
+      WITH CHECK(org_id=NULLIF(current_setting('aos.org_id',true),'')
+        AND project_id=NULLIF(current_setting('aos.project_id',true),''))""")
+    op.execute(f"""CREATE FUNCTION public.aos_publication_epoch_lock(p_org text,p_project text,p_id text)
+      RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
+      DECLARE result bigint; BEGIN
+      IF session_user<>'{EVALUATOR}' OR p_org IS DISTINCT FROM 'org-org' OR p_project IS DISTINCT FROM 'dev-project'
+        OR p_org IS DISTINCT FROM NULLIF(current_setting('aos.org_id',true),'')
+        OR p_project IS DISTINCT FROM NULLIF(current_setting('aos.project_id',true),'')
+        OR p_id IS NULL OR p_id='' OR p_id<>btrim(p_id) OR length(p_id)>200 THEN
+        RAISE EXCEPTION 'PUBLICATION_EPOCH_READER_SCOPE_REQUIRED' USING ERRCODE='42501';
+      END IF;
+      SELECT epoch INTO result FROM public.aip_publication_epoch
+        WHERE org_id=p_org AND project_id=p_project AND publication_id=p_id FOR SHARE;
+      IF NOT FOUND THEN
+        INSERT INTO public.aip_publication_epoch(org_id,project_id,publication_id)
+          VALUES(p_org,p_project,p_id) ON CONFLICT DO NOTHING;
+        SELECT epoch INTO result FROM public.aip_publication_epoch
+          WHERE org_id=p_org AND project_id=p_project AND publication_id=p_id FOR SHARE;
+      END IF;
+      IF NOT FOUND THEN RAISE EXCEPTION 'PUBLICATION_EPOCH_MISSING' USING ERRCODE='42501'; END IF;
+      RETURN result;
+    END $$""")
+    signature = 'public.aos_publication_epoch_lock(text,text,text)'
+    op.execute(f'ALTER FUNCTION {signature} OWNER TO {owner}')
+    op.execute(f'REVOKE ALL ON FUNCTION {signature} FROM PUBLIC,aos_runtime')
+    op.execute(f'GRANT EXECUTE ON FUNCTION {signature} TO {EVALUATOR}')
+    for name, phase in (('touch', 'BEFORE'), ('bump', 'AFTER')):
+        action = """INSERT INTO public.aip_publication_epoch(org_id,project_id,publication_id)
+          VALUES(NEW.org_id,NEW.project_id,NEW.publication_id) ON CONFLICT DO NOTHING;
+          PERFORM epoch FROM public.aip_publication_epoch WHERE org_id=NEW.org_id
+            AND project_id=NEW.project_id AND publication_id=NEW.publication_id FOR UPDATE;""" if phase == 'BEFORE' else """
+          UPDATE public.aip_publication_epoch SET epoch=epoch+1 WHERE org_id=NEW.org_id
+            AND project_id=NEW.project_id AND publication_id=NEW.publication_id;
+          IF NOT FOUND THEN RAISE EXCEPTION 'PUBLICATION_EPOCH_MISSING' USING ERRCODE='42501'; END IF;"""
+        op.execute(f"""CREATE FUNCTION public.aos_publication_epoch_{name}() RETURNS trigger
+          LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$ BEGIN
+          IF NEW.org_id IS DISTINCT FROM NULLIF(current_setting('aos.org_id',true),'')
+            OR NEW.project_id IS DISTINCT FROM NULLIF(current_setting('aos.project_id',true),'')
+            OR NEW.publication_id IS NULL OR NEW.publication_id='' OR NEW.publication_id<>btrim(NEW.publication_id) THEN
+            RAISE EXCEPTION 'PUBLICATION_EPOCH_WRITER_SCOPE_REQUIRED' USING ERRCODE='42501';
+          END IF;
+          {action}
+          RETURN NEW;
+        END $$""")
+        function = f'public.aos_publication_epoch_{name}()'
+        op.execute(f'ALTER FUNCTION {function} OWNER TO {owner}')
+        op.execute(f'REVOKE ALL ON FUNCTION {function} FROM PUBLIC,aos_runtime,{EVALUATOR}')
+        op.execute(f'CREATE TRIGGER publication_epoch_{name}_a0v144 {phase} INSERT ON public.aip_publication_event '
+                   f'FOR EACH ROW EXECUTE FUNCTION {function}')
+
+
 def upgrade() -> None:
     op.execute(f"""DO $$ DECLARE r record; BEGIN
       SELECT * INTO r FROM pg_catalog.pg_roles WHERE rolname='{EVALUATOR}';
@@ -80,6 +167,7 @@ def upgrade() -> None:
       END IF;
     END $$""")
     op.execute(f'GRANT USAGE ON SCHEMA public TO {EVALUATOR}')
+    _publication_epoch_boundary()
     op.execute('CREATE UNIQUE INDEX uq_binding_evaluation_proof_version_a0v144 '
                'ON public.aip_binding_evaluation_proof(org_id,project_id,binding_id,binding_version)')
     tenant = ("org_id='org-org' AND project_id='dev-project' AND "

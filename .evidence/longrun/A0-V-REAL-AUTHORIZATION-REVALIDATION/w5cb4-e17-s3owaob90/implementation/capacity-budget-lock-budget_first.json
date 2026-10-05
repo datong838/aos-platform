@@ -1,18 +1,18 @@
 {
   "scope": "isolated original signed Budget / Capacity-head coordination probe only",
-  "database": "aos_test_0cb21ade4b26_ti4_test",
+  "database": "aos_test_7fd9970ebd4e_ti4_test",
   "port": 5433,
   "order": "budget_first",
-  "writer_pid": 249469,
-  "evaluator_pid": 249468,
+  "writer_pid": 253460,
+  "evaluator_pid": 253459,
   "native_scram": true,
   "observed": {
     "two_sided_wait": {
       "evaluator": [
-        249469
+        253460
       ],
       "writer": [
-        249468
+        253459
       ]
     },
     "deadlock_detected": true
