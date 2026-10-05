@@ -1,0 +1,42 @@
+{
+  "test_only_port": 5433,
+  "retained_old_test_databases": 49,
+  "roles_retained_no_drop": [
+    {
+      "rolname": "aos_provider_health_fence_owner",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false,
+      "memberships": 0,
+      "dependencies": 0
+    },
+    {
+      "rolname": "aos_source_license_approval_issuer",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false,
+      "memberships": 0,
+      "dependencies": 0
+    },
+    {
+      "rolname": "aos_source_license_issuer",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false,
+      "memberships": 0,
+      "dependencies": 0
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "b90-health-current-counterexample/v1",
+  "fault_data_only": true,
+  "reader_pid": 205684,
+  "writer_pid": 205685,
+  "writer_committed_without_waiting_on_old_row": true,
+  "fresh_current": {
+    "observation_id": "b90-health-fault-06011d83593e454f8568445982f92952-unavailable",
+    "status": "unavailable"
+  },
+  "serial_snapshot": {
+    "observation_id": "b90-health-fault-06011d83593e454f8568445982f92952-healthy",
+    "status": "healthy"
+  },
+  "serial_commit_succeeded": true
+}

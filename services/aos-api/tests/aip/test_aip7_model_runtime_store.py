@@ -89,6 +89,8 @@ def rehashed(item, **updates):
 
 def cleanup() -> None:
     with psycopg.connect(get_dsn()) as conn:
+        conn.execute("SELECT set_config('aos.org_id',%s,true),"
+                     "set_config('aos.project_id',%s,true)", SCOPE.key)
         conn.execute("DELETE FROM aip_model_runtime_receipt WHERE org_id=%s AND project_id=%s AND created_by=%s", (*SCOPE.key, SUFFIX))
         conn.execute("DELETE FROM aip_provider_health_observation WHERE org_id=%s AND project_id=%s AND observation_id LIKE %s", (*SCOPE.key, f"{SUFFIX}%"))
         for kind in ("model_route", "registered_model", "runtime_policy", "provider_instance"):

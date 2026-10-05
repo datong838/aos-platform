@@ -1,0 +1,15 @@
+{
+  "schema": "b90-health-tested-pending-fix/v1",
+  "head": "15a6a0190e7e68107cbd64ac59b192195d80144f",
+  "code_sha256": {
+    "services/aos-api/alembic/versions/a0v_143_provider_health_epoch_fence.py": "40b823638a4bea4e107eed39fa0cbb6b6a8f5947a75abf0d45ea0cc7c5e69c4d",
+    "services/aos-api/tests/aip/test_binding_formal_evaluator_health_current_pg.py": "6c532e5e2f4e1be0678f16c618b641294fcf192465b9bd2e8f204433c96dfab6",
+    "services/aos-api/tests/aip/test_aip7_model_runtime_store.py": "c1cc85f5ac047c0a63674cdc26f27c03047d952bf971b6e77aa801feb04f26d1"
+  },
+  "test_terminal_exit": 0,
+  "test_result": "13 passed, 1 xfailed, 7 warnings in 7.72s",
+  "full_evaluator_pending": true,
+  "unexpected_commit": "253505765392948dbd583dd57d4cafdd130f7ce8",
+  "writer_ownership_pending": true,
+  "pid7351_is_app_server_not_proven_code_writer": true
+}

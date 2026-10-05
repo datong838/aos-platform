@@ -1,0 +1,9 @@
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+_______ test_complete_evaluator_has_current_health_transaction_consumer ________
+services/aos-api/tests/aip/test_binding_formal_evaluator_health_current_pg.py:56: in test_complete_evaluator_has_current_health_transaction_consumer
+    from aos_api.aip_binding_formal_evaluator import read_current_provider_health_fact
+E   ModuleNotFoundError: No module named 'aos_api.aip_binding_formal_evaluator'
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_binding_formal_evaluator_health_current_pg.py::test_complete_evaluator_has_current_health_transaction_consumer
+1 failed, 1 passed, 7 warnings in 4.66s
