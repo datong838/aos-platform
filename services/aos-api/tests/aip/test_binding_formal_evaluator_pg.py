@@ -673,13 +673,19 @@ from tests.aip.test_network_consumer_connection_pg import private_passfile
 from tests.aip.test_network_consumer_signed_https_pg import https_signer
 
 
-@pytest.mark.parametrize('fault', ['none', 'hash', 'provider', 'budget_head', 'member', 'revoked', 'canary', 'snapshot_revoke'])
+@pytest.mark.parametrize('fault', ['none', 'hash', 'provider', 'budget_head', 'member', 'revoked', 'canary', 'snapshot_revoke', 'no_activation', 'exhausted', 'expired'])
 def test_formal_budget_consumer_original_signed_configuration_no_fence_write(
         caller, issuer_factory, https_signer, fault):
     from tests.aip.test_budget_cost_consumer_pg import approved, consume
     from tests.aip.test_budget_cost_configuration_pg import derive
     from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
-    maker, checker, proposal, saved, decision = approved(issuer_factory, https_signer)
+    if fault == 'expired':
+        from tests.aip.test_budget_cost_issuer_pg import prepared, command
+        from aos_api.aip_budget_cost_issuer import BudgetCostIssuer
+        maker, checker, _, proposal, saved = prepared(window=8)
+        decision = BudgetCostIssuer(issuer_factory).execute(command(https_signer[0], checker, saved))
+    else:
+        maker, checker, proposal, saved, decision = approved(issuer_factory, https_signer)
     with caller() as conn:
         activated = consume(conn, saved, decision)
         configured = derive(conn, saved, decision)
@@ -689,6 +695,23 @@ def test_formal_budget_consumer_original_signed_configuration_no_fence_write(
             revision=value['revision'], contentHash=value['contentHash'])
     budget = FormalExactRef(assetType='BudgetRevision', assetId=activated['resourceId'],
         revision=activated['revision'], contentHash=activated['contentHash'])
+    if fault == 'no_activation':
+        budget = budget.model_copy(update={'asset_id': 'missing-' + proposal.target.budget_id})
+    if fault == 'exhausted':
+        from aos_api.db import connect_serializable
+        from aos_api.aip_budget_cost_runtime import require_cost_risk
+        from aos_api.aip_budget_reservation_contracts import BudgetExactRef
+        from tests.aip.test_budget_cost_consumer_pg import ledger_hold
+        policy = BudgetExactRef(resourceType='BudgetRevision', resourceId=activated['resourceId'],
+            revision=activated['revision'], contentHash='sha256:' + activated['contentHash'])
+        price_value = configured['receipt']['priceRef']
+        pricing = BudgetExactRef(resourceType='ModelPriceSnapshotRevision', resourceId=price_value['assetId'],
+            revision=price_value['revision'], contentHash='sha256:' + price_value['contentHash'])
+        with connect_serializable(SCOPE) as conn:
+            for _ in range(proposal.basis.max_requests):
+                require_cost_risk(conn, SCOPE, policy, pricing, proposal.basis.per_request_risk_minor)
+                ledger_hold(conn, proposal, policy, pricing)
+            conn.commit()
     if fault == 'revoked':
         from aos_api.aip_budget_cost_issuer import BudgetCostIssuer
         from tests.aip.test_budget_cost_issuer_pg import command
@@ -720,6 +743,14 @@ def test_formal_budget_consumer_original_signed_configuration_no_fence_write(
                     from tests.aip.test_budget_cost_issuer_pg import command
                     BudgetCostIssuer(issuer_factory).execute(command(https_signer[0], maker, saved,
                         operation='revoke', decision=None, reason='snapshot-test-withdrawal'))
+                if fault == 'expired':
+                    from time import sleep
+                    args = dict(conn=conn, scope=SCOPE, budget_ref=budget,
+                        price_ref=exact('ModelPriceSnapshotRevision', configured['receipt']['priceRef']),
+                        provider_ref=provider)
+                    fact = read_formal_budget_fact(**args)
+                    now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+                    sleep(max(0, (fact.valid_until - now).total_seconds()) + .03)
                 expected_error = (psycopg.errors.SerializationFailure if fault == 'snapshot_revoke' else
                     BindingEvaluatorConnectionBlocked if fault == 'canary' else ValueError)
                 with pytest.raises(expected_error) if fault != 'none' else nullcontext():

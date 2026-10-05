@@ -1,0 +1,15 @@
+# 完整评估命令的原消费者接线清单
+
+2026-10-05，基线code461a84f8/Authority1334。沿完整Task ACTIVE；本清单补充主plan，不改变退出定义或授权当前142写入。
+
+1. native evaluator实际SCRAM/SERIAL同caller事务，严格schema1与原signed Principal；Body不供给actor/roles/clock/facts。原幂等锁、原Receipt、Binding expectedVersion和实际scope先校验，不内部commit或retry。
+2. 无效力发现Source原Proposal/Approval及Budget原activation/Proposal、全部Owner集合和Route全部候选；SourceProposal/Approval按ID排序预锁，原Budget advisory先预取，再合并Owner排序锁；Installation及Source init/head、Registry协调及signed request读取按原序，发现值须重核验。
+3. 原TransactionBoundConnectFactory(HostTransaction(native),scope)只给原读者复用，不能以该wrapper代替native身份门；commit为noop、rollback拒绝，完整命令异常须向外传播让caller rollback。原ModelRuntime._get只返回payload，不证明row/hash/current head；须先排序共享锁全部provider_instance/registered_model/runtime_policy/model_route/model_price_snapshot heads并核验原行/hash/tenant/current/active。
+4. 原Resolver AipModelRuntimeResolver.resolve保留候选阻塞累积语义；所有候选的实际Model/Provider/Price/Governance/Health依赖必须保护，选中结果与请求model/provider/price/route/policy exact refs逐项相同。禁止替换为自造选择器或仅锁最终Provider。Health用原provider-id fence；最新观测严格exact/ref/DBtime，无旧healthy回退。
+5. 原BudgetPolicyRevision先原治理head共享锁/current active/hash/window，再取其BudgetRevision ref调用已验read_formal_budget_fact；model及runtime policy的Budget/Quota引用一致，实际原风险批准/Receipt/Price/Provider必须吻合。联合锁序尚须与所有治理激活writer继续对照。
+6. Route/Model Eval各沿AipEvalAuthorityStore.require_exact_passed(expected_target=evaluation_candidate_ref(original DTO),now=DBtime)；不发明Evalhead、不把单status当通过。EvalContract原aip_eval_contract_revision必须frozen/exact。Capacity沿原pool head FOR UPDATE及原有效占用算法只判余一个原量子，不reserve/expire/consume。
+7. 发布Capability及原required Data/Tool exact refs由实际Registry/EvalDataset/Evidence原authority核验；Source消费已签名安装和当前两Owner、原用途、来源签发Receipt及grant/批准/证据的最小期限。完整facts含八键及Source/Budget/Installation/Owners，实际DB最后时间与全部期限最小值。
+8. 原Binding CAS version+1、原capability_binding.evaluate Receipt、原evaluation proof在同caller顶层事务直接写三行，不分SAVEPOINT。沿a144三个DEFERRABLE guard由actual COMMIT核验xmin/hash/时效/安装；禁止把SET CONSTRAINTS或rollback control当正向。原legacy snapshot hash与facts SQLcanonical hash用途不同，不复制hash权威。
+9. 同key replay仍要重核当前依赖与proof期限，不能返回过期available；错误/并发/到期/commit失败三写全回滚。产品Service/router正式分支必须使用原signed身份和独立private evaluator配置，原preview兼容边界保留。
+
+整体验收：原正式Store全signed安装与Source+HTTPS预算配置、真实非空八facts、实际native同事务三写COMMIT、samekey replay/冲突、各依赖缺失/撤回/漂移/竞争/到期/canary、产品API真实入口；不能用helper通过替代。当前已验Health/Source/Budget只降低组合实现风险，完整entry仍缺失。无Provider调用、商城源、旧Run或当前142迁移授权。

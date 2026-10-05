@@ -11,3 +11,7 @@ Formal transport BudgetPolicyRevision仍为治理策略，组合命令须先从�
 RED先用原prepared +实际HTTPS JWT独立Budget issuer +原consumer +原configure SQL产生active Price/BudgetPolicy/Budget；禁止旧price_for测试夹具中的DISABLE TRIGGER作为正向。真实evaluator SCRAM/SERIAL读取，原version/ledger/Receipt不变；错误type/hash/provider/缺Receipt/current头/两成员撤权拒绝、canary零副作用。并发原新hold和原revoke受共享fence/advisory阻挡，释放后rollback；旧snapshot在已提交revoke后保持40001，不包装或自动重试。原Budget/Source/模型相邻串行测试，新一次性5433，不动当前142。总体仍要求八facts/Source/签名安装/预算/原三写同caller及产品API；本段不能完成整体Task或升GREEN。
 
 本轮并发证据细化：原hold入口require_cost_risk实际fence UPDATE阻塞后rollback；原HTTPS JWT revoke通过原issuer提交，释放reader后实际version+1。此提交仅在一次性5433测试库，不能称reader写入；旧snapshot测试同样由原issuer独立提交撤回，reader原40001必须不包装。
+
+13:30继续完整Task内补两个拒绝专项：无activation使用strict但不存在的Budget ID，必须在唯一原activation查询即拒绝；风险耗尽采用原require_cost_risk逐个批准风险量子后创建原结构ledger，在5433事务提交原maxRequests个既有hold，正式reader必须拒绝第一个新增量子。ledger仅用于隔离测试风险输入，不是假Provider执行/外部效果，也不能作为业务READY正向。
+
+独立到期专项采用原prepared(window=8)、原HTTPS签名批准及原consume/configure，先读取正向，再按数据库clock_timestamp计算至原有效期截止后等待，第二次native事务必须拒绝；不注入客户端时间，不修改immutable期限字段。
