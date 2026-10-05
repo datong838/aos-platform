@@ -1,0 +1,241 @@
+FFFFFFFFF                                                                [100%]
+=================================== FAILURES ===================================
+_ test_current150_restore_target_cannot_alias_or_expose_current_source[source_volume] _
+
+fault = 'source_volume'
+
+    @pytest.mark.parametrize('fault',['source_volume','network','port','bind','privileged','image','name'])
+    def test_current150_restore_target_cannot_alias_or_expose_current_source(fault):
+>       g=gate()
+          ^^^^^^
+
+scripts/tests/test_a0v_current_150_restore_gate.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_150_restore_gate.py:12: in gate
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b8b5b10>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+_ test_current150_restore_target_cannot_alias_or_expose_current_source[network] _
+
+fault = 'network'
+
+    @pytest.mark.parametrize('fault',['source_volume','network','port','bind','privileged','image','name'])
+    def test_current150_restore_target_cannot_alias_or_expose_current_source(fault):
+>       g=gate()
+          ^^^^^^
+
+scripts/tests/test_a0v_current_150_restore_gate.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_150_restore_gate.py:12: in gate
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b8b5d50>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+__ test_current150_restore_target_cannot_alias_or_expose_current_source[port] __
+
+fault = 'port'
+
+    @pytest.mark.parametrize('fault',['source_volume','network','port','bind','privileged','image','name'])
+    def test_current150_restore_target_cannot_alias_or_expose_current_source(fault):
+>       g=gate()
+          ^^^^^^
+
+scripts/tests/test_a0v_current_150_restore_gate.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_150_restore_gate.py:12: in gate
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b8a2f10>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+__ test_current150_restore_target_cannot_alias_or_expose_current_source[bind] __
+
+fault = 'bind'
+
+    @pytest.mark.parametrize('fault',['source_volume','network','port','bind','privileged','image','name'])
+    def test_current150_restore_target_cannot_alias_or_expose_current_source(fault):
+>       g=gate()
+          ^^^^^^
+
+scripts/tests/test_a0v_current_150_restore_gate.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_150_restore_gate.py:12: in gate
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b8d09d0>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+_ test_current150_restore_target_cannot_alias_or_expose_current_source[privileged] _
+
+fault = 'privileged'
+
+    @pytest.mark.parametrize('fault',['source_volume','network','port','bind','privileged','image','name'])
+    def test_current150_restore_target_cannot_alias_or_expose_current_source(fault):
+>       g=gate()
+          ^^^^^^
+
+scripts/tests/test_a0v_current_150_restore_gate.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_150_restore_gate.py:12: in gate
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b8d3e10>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+_ test_current150_restore_target_cannot_alias_or_expose_current_source[image] __
+
+fault = 'image'
+
+    @pytest.mark.parametrize('fault',['source_volume','network','port','bind','privileged','image','name'])
+    def test_current150_restore_target_cannot_alias_or_expose_current_source(fault):
+>       g=gate()
+          ^^^^^^
+
+scripts/tests/test_a0v_current_150_restore_gate.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_150_restore_gate.py:12: in gate
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b8b63d0>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+__ test_current150_restore_target_cannot_alias_or_expose_current_source[name] __
+
+fault = 'name'
+
+    @pytest.mark.parametrize('fault',['source_volume','network','port','bind','privileged','image','name'])
+    def test_current150_restore_target_cannot_alias_or_expose_current_source(fault):
+>       g=gate()
+          ^^^^^^
+
+scripts/tests/test_a0v_current_150_restore_gate.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_150_restore_gate.py:12: in gate
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b8c8150>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+_______ test_current150_exact_restore_rejects_same_count_changed_history _______
+
+    def test_current150_exact_restore_rejects_same_count_changed_history():
+>       g=gate()
+          ^^^^^^
+
+scripts/tests/test_a0v_current_150_restore_gate.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_150_restore_gate.py:12: in gate
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b8bf590>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+_______ test_current150_exact_restore_rejects_database_permission_change _______
+
+    def test_current150_exact_restore_rejects_database_permission_change():
+>       g=gate()
+          ^^^^^^
+
+scripts/tests/test_a0v_current_150_restore_gate.py:43: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_150_restore_gate.py:12: in gate
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b8bc2d0>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_150_restore_gate.py::test_current150_restore_target_cannot_alias_or_expose_current_source[source_volume]
+FAILED scripts/tests/test_a0v_current_150_restore_gate.py::test_current150_restore_target_cannot_alias_or_expose_current_source[network]
+FAILED scripts/tests/test_a0v_current_150_restore_gate.py::test_current150_restore_target_cannot_alias_or_expose_current_source[port]
+FAILED scripts/tests/test_a0v_current_150_restore_gate.py::test_current150_restore_target_cannot_alias_or_expose_current_source[bind]
+FAILED scripts/tests/test_a0v_current_150_restore_gate.py::test_current150_restore_target_cannot_alias_or_expose_current_source[privileged]
+FAILED scripts/tests/test_a0v_current_150_restore_gate.py::test_current150_restore_target_cannot_alias_or_expose_current_source[image]
+FAILED scripts/tests/test_a0v_current_150_restore_gate.py::test_current150_restore_target_cannot_alias_or_expose_current_source[name]
+FAILED scripts/tests/test_a0v_current_150_restore_gate.py::test_current150_exact_restore_rejects_same_count_changed_history
+FAILED scripts/tests/test_a0v_current_150_restore_gate.py::test_current150_exact_restore_rejects_database_permission_change
+9 failed in 0.09s
