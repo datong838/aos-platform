@@ -43,6 +43,17 @@ class ProviderCapacityActionGuard:
     object_snapshot = _OBJECT
     action_snapshot = _ACTION
 
+    @staticmethod
+    def require_caller_identity(conn,scope):
+        identity=conn.execute("SELECT current_user AS role,current_setting('aos.org_id',true) AS org_id,"
+            "current_setting('aos.project_id',true) AS project_id").fetchone()
+        if identity and identity['role']=='aos_provider_capacity_issuer':
+            from aos_api.aip_provider_capacity_formal_boundary import require_capacity_issuer_identity
+            try:require_capacity_issuer_identity(conn,scope)
+            except ValueError as exc:raise ProviderCapacityActionBlocked('PROVIDER_CAPACITY_PRIVATE_IDENTITY_REQUIRED') from exc
+        elif not identity or (identity['role'],identity['org_id'],identity['project_id'])!=('aos_runtime',*scope.key):
+            raise ProviderCapacityActionBlocked('PROVIDER_CAPACITY_TENANT_ROLE_REQUIRED')
+
     @classmethod
     def read_metadata(cls, conn: Any) -> dict[str, Any]:
         obj = conn.execute("""SELECT id,name,description,published,properties,required_markings
@@ -124,12 +135,7 @@ class ProviderCapacityActionGuard:
             or risk.approval_policy.get("executionAllowed") is not False
             or risk.approval_policy.get("draftOnly") is not False):
             raise ProviderCapacityActionBlocked("PROVIDER_CAPACITY_APPROVAL_POLICY_REQUIRED")
-        identity = conn.execute("SELECT current_user AS role,current_setting('aos.org_id',true) AS org_id,"
-                                "current_setting('aos.project_id',true) AS project_id").fetchone()
-        if (identity["role"], identity["org_id"], identity["project_id"]) != (
-            "aos_runtime", *scope.key,
-        ):
-            raise ProviderCapacityActionBlocked("PROVIDER_CAPACITY_TENANT_ROLE_REQUIRED")
+        self.require_caller_identity(conn,scope)
         request, maker = self._request(conn, scope, body.payload["requestId"],
                                        body.payload["requestHash"])
         if actor != maker or body.effective_expiry() > request.proposal_expires_at:

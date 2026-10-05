@@ -89,9 +89,7 @@ class ProviderCapacitySourceActionGuard(ProviderCapacityActionGuard):
             or risk.approval_policy.get('makerChecker') is not True
             or risk.approval_policy.get('executionAllowed') is not False or risk.approval_policy.get('draftOnly') is not False):
             raise ProviderCapacitySourceActionBlocked('SOURCE_REVIEW_POLICY_REQUIRED')
-        identity=conn.execute("SELECT current_user AS role,current_setting('aos.org_id',true) AS org_id,current_setting('aos.project_id',true) AS project_id").fetchone()
-        if (identity['role'],identity['org_id'],identity['project_id'])!=('aos_runtime',*scope.key):
-            raise ProviderCapacitySourceActionBlocked('SOURCE_TENANT_ROLE_REQUIRED')
+        self.require_caller_identity(conn,scope)
         self._role(conn,scope,actor)
         try:
             source=ProviderCapacitySourceCandidate.model_validate(body.payload['sourceCandidate'])

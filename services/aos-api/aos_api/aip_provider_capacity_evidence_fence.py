@@ -13,6 +13,7 @@ FUNCTIONS={
     'lock':'b9e0dfa8cd25d0570e61c14fc9d9cb86652891fc3845e8e153935dafa53d42ce',
     'touch':'4d8d80c5f22143cb22ccf9a769c3878c4382a9f8cff4b5bde52cc47a46c5fd0e',
     'bump':'74ac1434ed7069a03ce4c9d90a459527d5a18cc974ba98c55c67b9b5ae12ecef',
+    'issuer_lock':'763f808a880573c3f6cd372beb76347b68e93fa864f3a620b6a0c7764bb13c58',
 }
 
 
@@ -43,22 +44,24 @@ def _require_boundary(conn):
         raise CapacityEvidenceFenceBlocked('CAPACITY_EVIDENCE_RLS_POLICY_DRIFTED')
     ids=[]
     for name,digest in FUNCTIONS.items():
-        signature=f"public.aos_capacity_evidence_epoch_{name}({'text,text,text' if name=='lock' else ''})"
+        reader=name in ('lock','issuer_lock')
+        signature=f"public.aos_capacity_evidence_epoch_{name}({'text,text,text' if reader else ''})"
         row=conn.execute('SELECT oid,proowner=%s::regrole AS owner,prosecdef,proconfig,prosrc,prorettype,proargtypes::text AS args '
             'FROM pg_proc WHERE oid=to_regprocedure(%s)',(OWNER,signature)).fetchone()
         if (not row or not row['owner'] or not row['prosecdef'] or row['proconfig']!=['search_path=pg_catalog']
-            or row['prorettype']!=(20 if name=='lock' else 2279) or row['args']!=('25 25 25' if name=='lock' else '')
+            or row['prorettype']!=(20 if reader else 2279) or row['args']!=('25 25 25' if reader else '')
             or hashlib.sha256(row['prosrc'].encode()).hexdigest()!=digest):
             raise CapacityEvidenceFenceBlocked('CAPACITY_EVIDENCE_FUNCTION_DRIFTED')
         ids.append(row['oid'])
-        allowed=[OWNER]+(['aos_runtime'] if name=='lock' else [])
+        caller='aos_runtime' if name=='lock' else 'aos_provider_capacity_issuer'
+        allowed=[OWNER]+([caller] if reader else [])
         grants=conn.execute('SELECT a.grantee,a.privilege_type,a.is_grantable FROM pg_proc p,'
             "LATERAL aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE p.oid=%s",(row['oid'],)).fetchall()
         allowed_oids=conn.execute('SELECT oid,rolname FROM pg_roles WHERE rolname=ANY(%s)',(allowed,)).fetchall()
         by_oid={r['oid']:r['rolname'] for r in allowed_oids}
         if (any(g['grantee'] not in by_oid or g['privilege_type']!='EXECUTE'
                 or (by_oid.get(g['grantee'])!='aos_capacity_evidence_epoch_owner' and g['is_grantable']) for g in grants)
-            or (name=='lock' and not any(by_oid.get(g['grantee'])=='aos_runtime' for g in grants))):
+            or (reader and not any(by_oid.get(g['grantee'])==caller for g in grants))):
             raise CapacityEvidenceFenceBlocked('CAPACITY_EVIDENCE_FUNCTION_ACL_DRIFTED')
     triggers=conn.execute("SELECT tgname,tgfoid,tgenabled,tgtype,tgattr::text AS attrs,tgqual,tgargs FROM pg_trigger "
         "WHERE tgrelid='public.aip_evidence_bundle_revoke_event'::regclass AND tgname=ANY(%s)",
@@ -96,13 +99,19 @@ def lock_capacity_evidence_refs(conn,scope,refs):
         identity=conn.execute("SELECT current_user AS role,current_setting('aos.org_id',true) AS org_id,"
             "current_setting('aos.project_id',true) AS project_id,current_setting('session_replication_role') AS replication,"
             "current_setting('transaction_read_only') AS read_only,current_setting('transaction_isolation') AS isolation").fetchone()
-        if ((identity['role'],identity['org_id'],identity['project_id'],identity['replication'])!=('aos_runtime',*scope.key,'origin')
+        if ((identity['org_id'],identity['project_id'],identity['replication'])!=(*scope.key,'origin')
             or identity['read_only']!='off' or identity['isolation'] not in {'read committed','serializable'}):
             raise ValueError('native tenant runtime required')
+        if identity['role']=='aos_provider_capacity_issuer':
+            from aos_api.aip_provider_capacity_formal_boundary import require_capacity_issuer_identity
+            require_capacity_issuer_identity(conn,scope)
+            function='public.aos_capacity_evidence_epoch_issuer_lock'
+        elif identity['role']=='aos_runtime':function='public.aos_capacity_evidence_epoch_lock'
+        else:raise ValueError('native tenant caller required')
         _require_boundary(conn)
         epochs={}
         for bundle_id in sorted({r.asset_id for r in refs}):
-            epochs[bundle_id]=conn.execute('SELECT public.aos_capacity_evidence_epoch_lock(%s,%s,%s) AS epoch',
+            epochs[bundle_id]=conn.execute(f'SELECT {function}(%s,%s,%s) AS epoch',
                 (*scope.key,bundle_id)).fetchone()['epoch']
         store=AipProductionContractStore()
         for ref in refs:

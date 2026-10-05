@@ -1,0 +1,163 @@
+...F...                                                                  [100%]
+=================================== FAILURES ===================================
+_ test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[extension_runtime_uninstall_consistency_ar2_018-extension_runtime_binding-desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence boolean DEFAULT false,revision bigint DEFAULT 1,installation_revision bigint DEFAULT 1,installation_id uuid DEFAULT gen_random_uuid(),generation uuid DEFAULT gen_random_uuid(),package_lock_ref jsonb DEFAULT '{}',profile_ref text DEFAULT 'internal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'-UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'-UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'-23514] _
+
+function_name = 'extension_runtime_uninstall_consistency_ar2_018'
+table = 'extension_runtime_binding'
+fields = "desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence...ernal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'"
+normal = "UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'"
+invalid = "UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'"
+error = '23514'
+
+    @pytest.mark.parametrize('function_name,table,fields,normal,invalid,error', [
+        ('extension_dispatch_cutover_history_guard_ar2_014','extension_dispatch_cutover_operation',
+         "kind text DEFAULT 'activate',status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',cutover_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='draining'",'23514'),
+        ('extension_dispatch_lifecycle_history_guard_ar2_017','extension_dispatch_lifecycle_operation',
+         "status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',runtime_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='fenced'",'23514'),
+        ('extension_event_control_dispatch_history_guard_a0v_054','extension_event_control_dispatch_receipt',
+         'id integer DEFAULT 1',None,"UPDATE pg_temp.extension_event_control_dispatch_receipt SET id=2",'55000'),
+        ('extension_runtime_uninstall_consistency_ar2_018','extension_runtime_binding',
+         "desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence boolean DEFAULT false,revision bigint DEFAULT 1,installation_revision bigint DEFAULT 1,installation_id uuid DEFAULT gen_random_uuid(),generation uuid DEFAULT gen_random_uuid(),package_lock_ref jsonb DEFAULT '{}',profile_ref text DEFAULT 'internal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'",'23514'),
+        ('snapshot_unaccepted_group_terminal_guard_a0v_083','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='SOURCE_BUDGET_REJECTED_BEFORE_GROUP_CLAIM'",'55000'),
+        ('snapshot_stalled_group_terminal_guard_a0v_091','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='STALLED_EXECUTOR_ABANDONED_WITH_EFFECTS'",'55000'),
+        ('unaccepted_analysis_terminal_guard_a0v_060','automation_occurrence',
+         "status text DEFAULT 'needs_attention',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',occurrence_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.automation_occurrence SET status='needs_attention'",
+         "UPDATE pg_temp.automation_occurrence SET status='cancelled'",'55000'),
+    ])
+    def test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal(function_name,table,fields,normal,invalid,error):
+        with isolated_owner() as conn:
+            assert conn.execute('SELECT version_num FROM alembic_version').fetchone()['version_num']=='a0v_150'
+            original=conn.execute("SELECT pg_get_triggerdef(t.oid) AS definition FROM pg_trigger t "
+                "WHERE t.tgrelid=%s::regclass AND t.tgfoid=%s::regprocedure ORDER BY t.oid LIMIT 1",
+                ('public.'+table,'public.'+function_name+'()')).fetchone()
+            assert original is not None
+            # The current migration's actual registered definition is preserved:
+            # event kind, column list, timing and deferral; only target is a probe.
+            definition=original['definition']
+            old_target=' ON public.'+table+' '
+            if old_target not in definition:old_target=' ON '+table+' '
+            assert old_target in definition
+>           conn.execute(sql.SQL('CREATE TEMP TABLE {} ('+fields+')').format(sql.Identifier(table)))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_formal_boundary_pg.py:378: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = SQL("CREATE TEMP TABLE {} (desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DE...nal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}')")
+args = (Identifier('extension_runtime_binding'),), kwargs = {}
+
+    def format(self, *args: Any, **kwargs: Any) -> Composed:
+        """
+        Merge `Composable` objects into a template.
+    
+        :param args: parameters to replace to numbered (``{0}``, ``{1}``) or
+            auto-numbered (``{}``) placeholders
+        :param kwargs: parameters to replace to named (``{name}``) placeholders
+        :return: the union of the `!SQL` string with placeholders replaced
+        :rtype: `Composed`
+    
+        The method is similar to the Python `str.format()` method: the string
+        template supports auto-numbered (``{}``), numbered (``{0}``,
+        ``{1}``...), and named placeholders (``{name}``), with positional
+        arguments replacing the numbered placeholders and keywords replacing
+        the named ones. However placeholder modifiers (``{0!r}``, ``{0:<10}``)
+        are not supported.
+    
+        If a `!Composable` objects is passed to the template it will be merged
+        according to its `as_string()` method. If any other Python object is
+        passed, it will be wrapped in a `Literal` object and so escaped
+        according to SQL rules.
+    
+        Example::
+    
+            >>> print(sql.SQL("SELECT * FROM {} WHERE {} = %s")
+            ...     .format(sql.Identifier('people'), sql.Identifier('id'))
+            ...     .as_string(conn))
+            SELECT * FROM "people" WHERE "id" = %s
+    
+            >>> print(sql.SQL("SELECT * FROM {tbl} WHERE name = {name}")
+            ...     .format(tbl=sql.Identifier('people'), name="O'Rourke"))
+            ...     .as_string(conn))
+            SELECT * FROM "people" WHERE name = 'O''Rourke'
+    
+        """
+        rv: list[Composable] = []
+        autonum: int | None = 0
+        # TODO: this is probably not the right way to whitelist pre
+        # pyre complains. Will wait for mypy to complain too to fix.
+        pre: LiteralString
+        for pre, name, spec, conv in self._formatter.parse(self._obj):
+            if spec:
+                raise ValueError("no format specification supported by SQL")
+            if conv:
+                raise ValueError("no format conversion supported by SQL")
+            if pre:
+                rv.append(SQL(pre))
+    
+            if name is None:
+                continue
+    
+            if name.isdigit():
+                if autonum:
+                    raise ValueError(
+                        "cannot switch from automatic field numbering to manual"
+                    )
+                rv.append(args[int(name)])
+                autonum = None
+    
+            elif not name:
+                if autonum is None:
+                    raise ValueError(
+                        "cannot switch from manual field numbering to automatic"
+                    )
+>               rv.append(args[autonum])
+                          ^^^^^^^^^^^^^
+E               IndexError: tuple index out of range
+
+.venv/lib/python3.11/site-packages/psycopg/sql.py:284: IndexError
+=============================== warnings summary ===============================
+aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/aip/test_provider_capacity_formal_boundary_pg.py::test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[extension_runtime_uninstall_consistency_ar2_018-extension_runtime_binding-desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence boolean DEFAULT false,revision bigint DEFAULT 1,installation_revision bigint DEFAULT 1,installation_id uuid DEFAULT gen_random_uuid(),generation uuid DEFAULT gen_random_uuid(),package_lock_ref jsonb DEFAULT '{}',profile_ref text DEFAULT 'internal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'-UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'-UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'-23514]
+1 failed, 6 passed, 42 deselected, 7 warnings in 6.67s
