@@ -905,13 +905,14 @@ def _start_task_locked(
         raise MemoryErrorBase("lease_expires_at must be an ISO-8601 date-time") from error
     if requested_expiry <= now:
         raise MemoryErrorBase("lease_expires_at must be in the future")
-    active = []
-    for lease in leases["leases"]:
-        expiry = datetime.fromisoformat(lease["lease_expires_at"])
-        if expiry.astimezone(timezone.utc) > now:
-            active.append(lease)
-            if scopes_overlap(scope, lease["scope"]):
-                raise LeaseConflict(f"scope conflicts with active task {lease['task_id']}")
+    # Expiry removes execution authority, not ownership or reconciliation duty.
+    # Unreleased leases must be explicitly reconciled; never reclaim by TTL.
+    active = list(leases["leases"])
+    for lease in active:
+        if scopes_overlap(scope, lease["scope"]):
+            raise LeaseConflict(f"scope conflicts with unresolved task {lease['task_id']}")
+    if (paths.receipts_path / "tasks" / f"{task_id}.json").exists():
+        raise LeaseConflict(f"task receipt already exists: {task_id}")
     receipt = {
         "schema": "aos-memory-task-receipt/v1",
         "task_id": task_id,

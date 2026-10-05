@@ -1,0 +1,1 @@
+RED3failed15passed0.17秒：新任务登记丢过期Lease/允许过期重叠与重复ID。最小改动保留全部未释放Lease，全部重叠拒绝，原Task Receipt不覆盖。GREEN全memoryctl18passed0.12秒、diff通过。真实bootstrap登记仅追加修复Task、原6 Lease完整保留；不续租旧任务，不变更Goal/真库/重启。此交付仅TTL保留缺陷，续租归属和不可变历史合同仍pending。

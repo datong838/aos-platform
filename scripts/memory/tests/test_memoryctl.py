@@ -572,3 +572,20 @@ def test_cli_parser_accepts_wrapper_argument_order() -> None:
 def test_builtin_schema_validator_rejects_wrong_type() -> None:
     with pytest.raises(memoryctl.MemoryErrorBase):
         memoryctl.validate_json_schema("not-an-array", {"type": "array"}, source="unit")
+
+
+@pytest.mark.parametrize('case',['retain','overlap','duplicate'])
+def test_expired_unreleased_lease_is_not_implicitly_reclaimed(tmp_path,case):
+    p=paths(tmp_path,[])
+    old=memoryctl.start_task(p,task_id='old',owner='codex',expected_revision='AOS-000001',scope=['scripts/old'],excluded_scope=[],expected_outputs=[],lease_expires_at='2099-01-01T00:00:00+08:00')
+    old={**old,'lease_expires_at':'2000-01-01T00:00:00+08:00'}
+    write_json(p.leases_path,{'schema':'aos-memory-leases/v1','leases':[old]})
+    write_json(p.receipts_path/'tasks/old.json',old)
+    kwargs=dict(task_id='old' if case=='duplicate' else 'new',owner='codex',expected_revision='AOS-000001',scope=['scripts/old'] if case=='overlap' else ['scripts/new'],excluded_scope=[],expected_outputs=[],lease_expires_at='2099-01-01T00:00:00+08:00')
+    if case=='retain':
+        memoryctl.start_task(p,**kwargs)
+        assert old in memoryctl.load_leases(p)['leases']
+    else:
+        with pytest.raises(memoryctl.LeaseConflict):memoryctl.start_task(p,**kwargs)
+        assert memoryctl.load_leases(p)['leases']==[old]
+    assert json.loads((p.receipts_path/'tasks/old.json').read_text())==old

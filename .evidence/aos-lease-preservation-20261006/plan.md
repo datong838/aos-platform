@@ -1,0 +1,1 @@
+方案：新任务登记保留全部未释放Lease，不按TTL删除；过期且重叠仍拒绝，重复Task ID拒绝并保留原Receipt。新Task仅memoryctl.py/test/本证据目录，续租另门核归属，不改旧任务状态。登记bootstrap在既有memory_lock内，预检所有Lease scope及Task ID不重叠；临时atomic_write仅对leases路径合并原完整条目+新条目，拒绝旧条目变化，随后恢复原写函数。不操作业务库/Goal/模型，不删除任何Lease。RED保留/过期重叠/重复ID；GREEN全memoryctl回归/真实登记旧Lease逐条保持。
