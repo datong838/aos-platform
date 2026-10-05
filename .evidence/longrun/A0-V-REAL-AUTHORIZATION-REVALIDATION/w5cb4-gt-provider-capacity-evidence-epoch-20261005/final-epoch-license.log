@@ -1,0 +1,78 @@
+.................FF.............................                         [100%]
+=================================== FAILURES ===================================
+____ test_native_unsupported_caller_transaction_is_denied[repeatable_read] _____
+
+source_inputs = (Principal(subject='capacity-maker-b53fd1b4c19945fa82114f0633ce38da', org_id='org-org', project_id='dev-project', role..., slot_id='checker.1', eligibility_snapshot_hash='f4bd670879322130da46f654313ed6b7f10201be9792e04d385ea4e76b653ab3')]))
+mode = 'repeatable_read'
+
+    @pytest.mark.parametrize('mode',['idle','repeatable_read','read_only'])
+    def test_native_unsupported_caller_transaction_is_denied(source_inputs,mode):
+        from psycopg import IsolationLevel
+        from aos_api.db import connect
+        from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
+        from aos_api.aip_provider_capacity_evidence_fence import lock_capacity_evidence_refs,CapacityEvidenceFenceBlocked
+        ref=evidence_ref(source_inputs[2])
+        with connect(SCOPE) as conn:
+            conn.rollback()
+            if mode=='repeatable_read':conn.isolation_level=IsolationLevel.REPEATABLE_READ
+            elif mode=='read_only':conn.read_only=True
+>           if mode!='idle':apply_asset_transaction_scope(conn,SCOPE)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: apply_asset_transaction_scope() takes 1 positional argument but 2 were given
+
+tests/aip/test_provider_capacity_evidence_epoch_pg.py:304: TypeError
+_______ test_native_unsupported_caller_transaction_is_denied[read_only] ________
+
+source_inputs = (Principal(subject='capacity-maker-e9eafa8fb1b148519cc907e9cfebeb1f', org_id='org-org', project_id='dev-project', role..., slot_id='checker.1', eligibility_snapshot_hash='4d9c913d263ac1122f5366d8deb29bccd349244716ae15efcd329cdb993d8f70')]))
+mode = 'read_only'
+
+    @pytest.mark.parametrize('mode',['idle','repeatable_read','read_only'])
+    def test_native_unsupported_caller_transaction_is_denied(source_inputs,mode):
+        from psycopg import IsolationLevel
+        from aos_api.db import connect
+        from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
+        from aos_api.aip_provider_capacity_evidence_fence import lock_capacity_evidence_refs,CapacityEvidenceFenceBlocked
+        ref=evidence_ref(source_inputs[2])
+        with connect(SCOPE) as conn:
+            conn.rollback()
+            if mode=='repeatable_read':conn.isolation_level=IsolationLevel.REPEATABLE_READ
+            elif mode=='read_only':conn.read_only=True
+>           if mode!='idle':apply_asset_transaction_scope(conn,SCOPE)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: apply_asset_transaction_scope() takes 1 positional argument but 2 were given
+
+tests/aip/test_provider_capacity_evidence_epoch_pg.py:304: TypeError
+=============================== warnings summary ===============================
+aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/aip/test_provider_capacity_evidence_epoch_pg.py::test_native_unsupported_caller_transaction_is_denied[repeatable_read]
+FAILED tests/aip/test_provider_capacity_evidence_epoch_pg.py::test_native_unsupported_caller_transaction_is_denied[read_only]
+2 failed, 46 passed, 7 warnings in 38.58s

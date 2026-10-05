@@ -9,6 +9,7 @@ from aos_api.aip_provider_capacity_action import ProviderCapacityActionGuard,Pro
 from aos_api.aip_provider_capacity_source_contracts import (
     ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate,ProviderCapacitySourceCandidate)
 from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore,ProviderCapacityCandidateBlocked
+from aos_api.aip_provider_capacity_evidence_fence import lock_capacity_evidence_refs,CapacityEvidenceFenceBlocked
 from aos_api.aip_model_eval_request_store import ModelEvalRequestBlocked
 from aos_api.aip_production_contract_store import ProductionContractError
 from aos_api.auth import Principal
@@ -103,6 +104,7 @@ class ProviderCapacitySourceActionGuard(ProviderCapacityActionGuard):
                 or account.physical_account_id!=request.physical_account_id
                 or request.provider_ref not in account.provider_refs or basis.max_concurrency>request.requested_max_concurrency):
                 raise ProviderCapacitySourceActionBlocked('SOURCE_ACCOUNT_OR_CONCURRENCY_DRIFTED')
+            lock_capacity_evidence_refs(conn,scope,[request.basis_evidence_ref,account.evidence_ref,basis.evidence_ref])
             ProviderCapacityCandidateStore._account_dependencies(conn,scope,account)
             ProviderCapacityCandidateStore._evidence(conn,scope,basis.evidence_ref)
             now=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
@@ -110,7 +112,7 @@ class ProviderCapacitySourceActionGuard(ProviderCapacityActionGuard):
                 or source.valid_until>min(request.valid_until,request.proposal_expires_at,basis.valid_until,expiry)
                 or body.effective_expiry()>source.valid_until):
                 raise ProviderCapacitySourceActionBlocked('SOURCE_REVIEW_WINDOW_DRIFTED')
-        except (TypeError,ValueError,ProviderCapacityCandidateBlocked,ModelEvalRequestBlocked,ProductionContractError) as exc:
+        except (TypeError,ValueError,ProviderCapacityCandidateBlocked,CapacityEvidenceFenceBlocked,ModelEvalRequestBlocked,ProductionContractError) as exc:
             raise ProviderCapacitySourceActionBlocked('SOURCE_STRICT_DEPENDENCIES_REQUIRED') from exc
         return canonical_hash(dict(sourceCandidate=source.model_dump(mode='json',by_alias=True),
             actionTypeRevisionHash=action_snapshot['revisionHash']))
