@@ -1,0 +1,19 @@
+{
+  "checked_at": "2026-10-05T04:59:29.036168+00:00",
+  "context": "colima-aos-extension",
+  "container": "aos-a0v-recovery-pg",
+  "database": "aos_current_preview_20260927",
+  "schema": "a0v_142",
+  "transaction": "BEGIN READ ONLY/ROLLBACK",
+  "activeInstallations": 0,
+  "capabilityBindings": 0,
+  "sourceIssuances": 0,
+  "formalEvaluationProofs": 0,
+  "test_role_readback": {
+    "evaluator": "NOLOGIN/NOINHERIT/no high powers/members 0",
+    "sourceIssuer": "NOLOGIN/NOINHERIT/no high powers/members 0",
+    "approvalIssuer": "NOLOGIN/NOINHERIT/no high powers/members 0"
+  },
+  "prime_job_readback": "running/PID1844/never exited",
+  "model_calls": "None initiated by this construction turn"
+}
