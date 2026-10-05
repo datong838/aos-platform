@@ -1,0 +1,5 @@
+{
+  "services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py": "d33e01f49c55f84262a1dde68525f7d2ae080271d0f2815f98964eb581b132ae",
+  "services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py": "e8ab26fc6154182fe1b300ace57817c528d2215ecbd28aea390af21d9ff50dbb",
+  "services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py": "cb6020fde21037c5e1ff37050354c05c13006afbf0f1be5119f976bd1bac6dad"
+}

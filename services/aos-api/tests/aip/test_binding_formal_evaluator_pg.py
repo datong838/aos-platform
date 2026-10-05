@@ -176,6 +176,96 @@ def _temporary_fixed_evaluator_login(owner):
         owner.commit()
 
 
+def assert_signed_source_budget_joint_transaction(source_request, loader, release_policy,
+                                                  caller, issuer_factory, https_signer):
+    """Real signed inputs in one native transaction; no full-command completion claim."""
+    import json
+    from pathlib import Path
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from aos_api.aip_license_source_authority import (
+        _prepare_formal_source_approvals, read_formal_license_source_facts,
+    )
+    from aos_api.aip_budget_cost_runtime import (
+        _prepare_formal_budget_approval, read_formal_budget_fact,
+    )
+    from tests.aip.test_budget_cost_consumer_pg import approved, consume
+    from tests.aip.test_budget_cost_configuration_pg import derive
+
+    maker, checker, proposal, saved, decision = approved(issuer_factory, https_signer)
+    with caller() as consumer:
+        activated = consume(consumer, saved, decision)
+        configured = derive(consumer, saved, decision)
+    source = FormalExactRef(assetType='EvidenceBundleRevision',
+        assetId=source_request.source.resource_id, revision=source_request.source.revision,
+        contentHash=source_request.source.content_hash)
+    budget = FormalExactRef(assetType='BudgetRevision', assetId=activated['resourceId'],
+        revision=activated['revision'], contentHash=activated['contentHash'])
+    price = FormalExactRef.model_validate(configured['receipt']['priceRef'])
+    provider = FormalExactRef.model_validate(proposal.basis.provider.model_dump(by_alias=True))
+    tables = ('aip_capability_binding', 'aip_agent_registry_receipt',
+              'aip_binding_evaluation_proof', 'aip_budget_reservation',
+              'aip_model_eval_budget_reservation', 'aip_model_capacity_reservation')
+    with isolated_owner() as owner:
+        def snapshot():
+            owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)", SCOPE.key)
+            counts = {table: owner.execute(f'SELECT count(*) AS n FROM public.{table}').fetchone()['n']
+                      for table in tables}
+            fence = owner.execute('SELECT version FROM public.aip_budget_cost_runtime_fence '
+                'WHERE org_id=%s AND project_id=%s AND budget_id=%s',
+                (*SCOPE.key, budget.asset_id)).fetchone()['version']
+            owner.rollback()
+            return {'counts': counts, 'budget_fence': fence}
+        before = snapshot()
+        with _temporary_fixed_evaluator_login(owner) as factory:
+            with factory(SCOPE) as conn:
+                transaction = conn.execute('SELECT pg_current_xact_id()::text AS id').fetchone()['id']
+                discovered, approvals = _prepare_formal_source_approvals(conn, SCOPE, [source])
+                receipt, row, original = _prepare_formal_budget_approval(conn, SCOPE, budget)
+                source_subjects = {subject for _, _, approved_ref, source_maker in discovered
+                    for subject in (source_maker, approvals[approved_ref.resource_id][1]['actor_id'])}
+                budget_subjects = {original.maker_subject, original.checker_subject}
+                subjects = sorted(source_subjects | budget_subjects)
+                members = conn.execute('SELECT subject,role FROM public.meta_membership '
+                    'WHERE org_id=%s AND project_id=%s AND subject=ANY(%s) ORDER BY subject FOR SHARE',
+                    (*SCOPE.key, subjects)).fetchall()
+                assert [member['subject'] for member in members] == subjects
+                assert all(member['role'].lower() == 'owner' for member in members
+                           if member['subject'] in source_subjects)
+                assert all(member['role'].lower() in {'owner', 'admin'} for member in members
+                           if member['subject'] in budget_subjects)
+                sources = read_formal_license_source_facts(conn=conn, scope=SCOPE,
+                    source_refs=[source], installation_id=source_request.installation_id,
+                    installation_revision=source_request.installation_revision,
+                    installation_etag=source_request.installation_etag,
+                    loader=loader, release_policy=release_policy)
+                cost = read_formal_budget_fact(conn=conn, scope=SCOPE, budget_ref=budget,
+                    price_ref=price, provider_ref=provider)
+                assert len(sources) == 1 and sources[0].request == source_request
+                assert {member['subject'] for member in sources[0].owners} == source_subjects
+                assert budget_subjects == {maker.subject, checker.subject}
+                assert cost.decision_id == decision['decisionId']
+                assert receipt['result_ref']['proposalId'] == row['proposal_id'] == saved['proposalId']
+                assert sources[0].checked_at < sources[0].valid_until
+                assert cost.checked_at < cost.valid_until
+                assert conn.execute('SELECT pg_current_xact_id()::text AS id').fetchone()['id'] == transaction
+                proof = {'database': conn.info.dbname, 'port': conn.info.port,
+                    'backend_pid': conn.info.backend_pid, 'transaction_id': transaction,
+                    'real_scram': conn.pgconn.used_password,
+                    'source_receipt': sources[0].source.receipt_id,
+                    'budget_activation_receipt': cost.activation_receipt_id,
+                    'budget_decision': cost.decision_id, 'members': subjects,
+                    'source_owner_count': len(source_subjects),
+                    'source_valid_until': sources[0].valid_until.isoformat(),
+                    'budget_valid_until': cost.valid_until.isoformat()}
+        after = snapshot()
+        assert before == after
+        proof.update(before=before, after=after,
+            scope='Signed Growth 1.13 Source/Budget joint inputs only; full eight-fact command pending',
+            business_first_chain_passed=False)
+        evidence = Path(__file__).resolve().parents[4] / '.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-e17-s3owaob90/implementation/joint-input-facts.json'
+        evidence.write_text(json.dumps(proof, indent=2) + '\n')
+
+
 def assert_binding_evaluator_atomic_boundary(installation_id):
     """Signed-installation mechanism faults only; no synthetic READY is committed.
 

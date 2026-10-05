@@ -18,6 +18,16 @@
 
 原read_formal_license_source_facts把发现和Proposal/Approval预锁、Owner锁连在一起；完整command若先调用该函数再首次Budget advisory会逆序。最小提取_private _prepare_formal_source_approvals，native admission+strict exact unique refs，原discovery/authorization/approvedRef/maker及全部Proposal→Approval/withdrawal校验逐语句保持，返回discovered+approvals，不取得Owner/Installation/Source锁，不产生权利。原Source reader保留私有安装/loader/release context校验，调用此helper后沿原Owner后续逻辑。完整command可先调用它，再原Budget advisory及合并Owner锁，后调用原正式Source reader重核。禁止fake Maker/回调/客户端锁开关；不完成整波。实际signed Source hook先调用新prelock helper核对原Owner集合/Approval证据，再原Source正向/负例/真实writer阻塞全复验。
 
+## 实际签名来源与预算联合输入验收准备
+
+2026-10-05，Authority1337/code a2f63331；沿完整实施Task及其18:00 Lease。路线独立审阅已消费，完整命令和自然首链仍未完成。本段不是新的helper交付，不改运行时逻辑。
+
+文件仅三个既登记测试文件：tests/aip/test_binding_formal_evaluator_pg.py、tests/aip/test_aip_license_source_proposal_pg.py、tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py。签名安装原测试增加显式AOS_B90_JOINT_INPUT_TEST入口；原来源验收返回其实际原请求，默认原断言不变；按需获取原预算consumer/issuer/HTTPS签名fixture，在原Store完成预算批准、激活及价格/治理配置。禁止price_for触发器关闭路径、假Principal、伪造回执或callback权威。
+
+先缺联合断言入口形成RED，再在测试函数中按原Source预锁→Budget advisory→两侧成员去重排序FOR SHARE→原正式Source读取→原Budget事实读取组合。同一真实SCRAM evaluator连接、同一顶层事务；核对来源与预算原审批身份、Receipt/Decision及DB时钟；前后三项业务行数、预算fence版本及占用不变。成功后仍只证明联合输入准备，不代表八facts或三写正向COMMIT。该数据必须在后续完整命令实测复用，不允许将此结果改名为整体GREEN。
+
+风险：pytest fixture须在全schema隔离库设置后才按需启动；Source隔离OIDC上下文退出后再启动预算HTTPS fixture；临时LOGIN无论测试失败都恢复NOLOGIN。完整签名fixture独立测试会话，不能与新增安装的其他测试混跑。没有UI变化，浏览器不适用。
+
 ## Budget联合预锁复用
 
 沿完整Task提取_private _prepare_formal_budget_approval：native事务门及strict BudgetRevision，原unique activation/advisory/重核/Proposal/view/DevelopmentRisk原块保持，返回receipt/row/p，不取得成员/fence/head锁。原正式读取再核成员及全部内容；完整command可先Source Proposal/Approval再Budget advisory、合并成员锁后读取全部facts。本提取不能完成整体任务。

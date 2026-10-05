@@ -218,6 +218,7 @@ def assert_active_signed_source_request(installation_id,loader,release_policy):
         assert expected == 1
         from tests.aip.test_binding_formal_evaluator_pg import assert_formal_signed_source_consumer
         assert_formal_signed_source_consumer(request, loader, release_policy)
+    return request
 
 @pytest.mark.parametrize('path,value',[
     (('source','resourceId'),'another-source'),(('source','revision'),2),

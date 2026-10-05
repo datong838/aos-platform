@@ -1,0 +1,43 @@
+{
+  "database": "aos_test_62a77ac96417_ti4_test",
+  "port": 5433,
+  "backend_pid": 237263,
+  "transaction_id": "237788",
+  "real_scram": true,
+  "source_receipt": "aip6r-1a86402070ae4aea927d540c5c0e94da",
+  "budget_activation_receipt": "budget-cost-consume-214b4a7b538603e9073c2837c7510e12a09b7069c89ab7d92b226790cf6602ae",
+  "budget_decision": "budget-cost-decision-75e9e65c38044d738f1f1523bf8ce307",
+  "members": [
+    "b88-checker-96b183c7b8724960b84aa720df4d2b59",
+    "b88-owner-ba6eec3b1448480db11ed27c06e53414",
+    "test-checker-5527a983a37a4d448913f790c918903f",
+    "test-maker-5527a983a37a4d448913f790c918903f"
+  ],
+  "source_owner_count": 2,
+  "source_valid_until": "2026-10-05T06:19:23.808737+00:00",
+  "budget_valid_until": "2026-10-05T06:44:40.338162+00:00",
+  "before": {
+    "counts": {
+      "aip_capability_binding": 1,
+      "aip_agent_registry_receipt": 2,
+      "aip_binding_evaluation_proof": 0,
+      "aip_budget_reservation": 0,
+      "aip_model_eval_budget_reservation": 0,
+      "aip_model_capacity_reservation": 0
+    },
+    "budget_fence": 1
+  },
+  "after": {
+    "counts": {
+      "aip_capability_binding": 1,
+      "aip_agent_registry_receipt": 2,
+      "aip_binding_evaluation_proof": 0,
+      "aip_budget_reservation": 0,
+      "aip_model_eval_budget_reservation": 0,
+      "aip_model_capacity_reservation": 0
+    },
+    "budget_fence": 1
+  },
+  "scope": "Signed Growth 1.13 Source/Budget joint inputs only; full eight-fact command pending",
+  "business_first_chain_passed": false
+}

@@ -77,6 +77,8 @@ from plan_restricted_issuer_case import (
     assert_original_plan_store_with_restricted_login, cleanup_restricted_issuer_case,
 )
 from plan_restricted_evaluate_case import assert_restricted_blocked_evaluate_composes_lock
+from tests.aip.test_budget_cost_consumer_pg import caller as budget_caller
+from tests.aip.test_budget_cost_issuer_pg import issuer_factory as budget_issuer_factory
 
 
 pytestmark = pytest.mark.skipif(
@@ -171,6 +173,9 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     database = conninfo_to_dict(os.environ['AOS_DATABASE_URL'])['dbname']
     assert database.startswith('aos_test_') and database.endswith('_ti4_test')
     signed, growth_version = _signed_release()
+    if os.getenv('AOS_B90_JOINT_INPUT_TEST') == '1':
+        assert growth_version == '1.13.0', 'joint formal inputs require the signed Growth 1.13 path'
+        assert os.getenv('AOS_B89_SOURCE_ISSUER_TEST') == '1', 'joint inputs require original signed Source issuance'
     if (committed_revoke_case or concurrent_revoke_case or evaluate_first_case or runtime_rollback_case or missing_runtime_binding_case or forged_available_case or paired_receipt_case or license_authority_case) and growth_version != '1.13.0':
         pytest.skip('committed revoke case uses the signed Growth 1.13 release')
     trust = FileTrustRootProvider(signed['trust_path']).snapshot()
@@ -1112,9 +1117,17 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                 if os.getenv('AOS_B86_POLICY_TEST') == '1':
                     from tests.aip.test_aip_license_source_policy_pg import assert_active_signed_license_policy
                     assert_active_signed_license_policy(installed['installationId'],loader,policy)
-                if os.getenv('AOS_B88_SOURCE_REQUEST_TEST') == '1':
+                if (os.getenv('AOS_B88_SOURCE_REQUEST_TEST') == '1'
+                        or os.getenv('AOS_B90_JOINT_INPUT_TEST') == '1'):
                     from tests.aip.test_aip_license_source_proposal_pg import assert_active_signed_source_request
-                    assert_active_signed_source_request(installed['installationId'],loader,policy)
+                    source_request = assert_active_signed_source_request(installed['installationId'],loader,policy)
+                    if os.getenv('AOS_B90_JOINT_INPUT_TEST') == '1':
+                        from tests.aip.test_binding_formal_evaluator_pg import assert_signed_source_budget_joint_transaction
+                        assert_signed_source_budget_joint_transaction(
+                            source_request, loader, policy,
+                            request.getfixturevalue('budget_caller'),
+                            request.getfixturevalue('budget_issuer_factory'),
+                            request.getfixturevalue('https_signer'))
                 if os.getenv('AOS_B90_BOUNDARY_TEST') == '1':
                     from tests.aip.test_binding_formal_evaluator_pg import assert_binding_evaluator_atomic_boundary
                     assert_binding_evaluator_atomic_boundary(installed['installationId'])
