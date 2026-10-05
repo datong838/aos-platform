@@ -73,3 +73,17 @@ Source proof 必须保存原正式读者返回的 epoch、installation_id/etag�
 独立复审新增业务合同：current/hash/frozen 只保护合同版本，不能替代原动态 readiness。完整命令须同时要求原 ContractReadiness.READY 且 blockers 为空，任何 missing/revoked/drifted 均在三写前拒绝。原 Publication latest append 的并发撤销尚缺保护闭环：必须回到原权威设计可保留至 COMMIT 的协调机制，不能用一次提前查询代替提交时当前性；此项保留完整 Task 风险，不接正式 Service/API。须原 frozen 合同缺依赖/撤销负例和完整命令三写零增量、撤销竞争证明后验收。
 
 本轮先把既有 EvalContract 读取和拒绝条件原样集中为私有同事务消费者，由完整命令直接调用，禁止可替换判断回调。实际一次性 PG 维护故障夹具使用原 _insert_eval 写 frozen 但不存在 Suite/Publication/Gate；它是负向损坏注入，绝不作为合法 freeze 或 READY 正向。原动态 reader 必须 BLOCKED，正式消费者须拒绝且 Binding/Receipt/proof 无变化。先缺消费者 RED 再最小移动既有读取与拒绝逻辑。此负例不替代完整八事实调用、合法原 freeze、发布撤销竞争或真正 COMMIT 验收。
+
+### 合法 freeze 与 Publication 撤销实测入口
+
+复用原内容预审 Graph、实际确定性 EvalRunner、derive_gate/publish、create/freeze 原合同链（test_ecommerce_content_review_pending_pg._register_current_content_eval_gate），不使用 ReadyStore、不直接写 PASSED 或 frozen。合法内容合同只证明原 EvalContract 依赖生产链，不替代目标 Model/Route 八事实。先 native 消费读取 READY，再持原合同 head SHARE 期间从第二连接调用原 revoke，记录是否可以提交、旧 SERIAL 读者是否仍 READY，最后 fresh native 必须拒绝。三评估业务表全内容不得变化。若发现旧 snapshot 可继续读 READY，则仅作为实际协调缺口反证，不将读者锁宣称提交安全；后续设计覆盖原 publish/revoke/append 路径的最小代际协调。
+
+### Publication 提交当前性修订方案（待实际 RED/实施）
+
+实际原合法 freeze/revoke 反证已成立，不能仅追加 published 行 SHARE：原 revoke 只锁旧 published 行，再插新 revoked 行，旧行版本不变；写者先提交后的旧 SERIAL snapshot 不会因锁旧行自动看到新撤销，Authority append 与直接 INSERT 也可绕过这种锁。
+
+在已登记 a0v_144/evaluator/PG tests 范围内拟加入按 org/project/publication_id 的中性 epoch。它只记录协调代际，原 PublicationEvent 仍是唯一发布状态来源，不 backfill、不复制状态、不授业务启动。独立默认 NOLOGIN/NOINHERIT/无高权/成员0 fence owner，仅管理该中性表和固定 SECURITY DEFINER 函数；固定 evaluator 只可执行共享读锁接口，无 epoch 表读写权、无 published 行 UPDATE 权。函数必须在任何中性初始化前核对固定正向scope/调用身份，canary不得产生中性行。
+
+原事件表 BEFORE INSERT 精确tenant/pub-id初始化及排他协调；AFTER INSERT 才推进代际，实际 ON CONFLICT DO NOTHING 不推进、失败/rollback 不遗留推进。原 UPDATE/DELETE/TRUNCATE append-only 拒绝保留。触发器覆盖原 publish/revoke/Authority.append/raw INSERT，不要求复制或改写原消费者选择逻辑；既有 scoped 原写者不新增业务授权。读者保持原合同 head SHARE，先无权发现原 publication_id，再共享 epoch、原 get_eval_contract 同native重读和 READY/blockers校验；epoch、原精确事件/门引用纳入 Eval facts/hash并持锁至原三写 COMMIT。禁止新增 published 行 SHARE，避免 reader fence→published 与 revoke published UPDATE→fence 的反向等待。
+
+必验：合法原内容 freeze持续可读；读者先持共享fence时原 revoke真实阻塞，读者rollback/commit释放后原撤销提交且fresh拒绝；native SERIAL snapshot建立后原撤销先提交，随后消费者拒绝/40001而非旧READY；原Authority/raw INSERT/ON CONFLICT/rollback、wrongscope/canary、Owner保留身份漂移、最小ACL/RLS与普通原角色相邻。资源锁图及Source/Budget/Capacity/Binding组合仍须核验。此是完整命令内实质时效修复，不创建孤立 helper 完成Task、不提升整体业务GREEN；真正八事实正向/COMMIT/API仍是同完整Task退出。

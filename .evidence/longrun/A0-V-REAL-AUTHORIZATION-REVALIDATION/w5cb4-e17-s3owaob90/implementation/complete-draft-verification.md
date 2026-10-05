@@ -40,6 +40,14 @@ RED 缺消费者 ImportError 1 failed/5.84s；最小移动既有读取段后 1 p
 
 独立只读督导实读确认同 native、无可替换回调、完整命令实际消费；动态 BLOCKED 拒绝可标 implemented/consumer verified，完整命令负例和 Publication 竞争仍 OPEN。最终三个 Python 文件编译、精确源码/方案 diff --check 通过。原始失败日志保留，日志行内原源码的空白不按源码 whitespace GREEN 覆盖。
 
+## 合法原 freeze 与实际撤销竞争反证
+
+本次复用原内容 Graph/EvalRunner 执行确定性内容预审和实际 Judge 比较，经原 derive_gate/publish/create/freeze 建立原 READY frozen 合同。没有 ReadyStore 重写，没有直接写 PASSED/frozen。资料/工件为隔离夹具、原执行有确定性测试适配器，不能当模型/路线目标评测或自然经营首链。
+
+实际 native SCRAM/SERIAL 消费者读取合法 READY 后，保留原合同 head SHARE；第二连接原 ReleasePublicationService.revoke 在5秒内真正提交，旧 SERIAL 再次正式读取仍 READY，fresh native 则拒绝。Binding/Receipt/proof 全内容相等；读者最终rollback，不产生available/proof。初次1passed6.13s，改为绑定合同原 publication_ref 的精确event查询并记录JSON后1passed6.24s；相邻119passed39.20s。JSON记录原contract/revoke event/pubID/native PID及三表不变和commitSafe=false。这是安全缺口反证，pass表示复现缺口，不是修复通过。
+
+独立只读督导确认原revoke published FOR UPDATE不更新该旧行，Authority.append也可直达INSERT；仅锁旧行无法保证writer先提交后的旧快照被拒绝。已将全 INSERT 中性 epoch、共享消费者、facts/hash、双向竞争、ONCONFLICT/rollback/ACL/canary与锁图验证登记在composition方案，尚未实施，不宣称已关闭。原合法 freeze链现在可复用到完整组合，但仍不是目标 Model/Route 八事实正向。
+
 ## 下一实质退出（保持完整范围）
 
 继续同一完整 Task：原 signed 八事实完整正向及原 EvalContract reader ACL 实测；同调用方真实 COMMIT、所有异常完整回滚、同 key 原事实重验及实际撤销/安装/Owner/Policy 漂移拒绝；然后接正式 Service/API 与实例 ToolBinding。不能将此 Source 修订作为整波退出，也不再扩大 helper 准备替代完整命令。

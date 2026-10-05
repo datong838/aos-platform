@@ -1,0 +1,17 @@
+{
+  "scope": "isolated original content EvalRunner/gate/publication/freeze; not full binding command",
+  "contract": {
+    "assetType": "EvalContractRevision",
+    "assetId": "eval-contract-7bf59697dd2742c09940",
+    "revision": 2,
+    "contentHash": "c9efcd6256fbfdff20e85661ef2285dca81aff0f83c15e5c56f2a6850f3b65af"
+  },
+  "publicationId": "publication-a9e994da3c598420574138a5bc3b1fd3",
+  "originalRevokeEventId": "revoked-c752a96cba4b5b3dcb99bcfd6a10a815",
+  "evaluatorPid": 248929,
+  "revokeCommittedWhileContractHeadShareHeld": true,
+  "oldSerializableSnapshotStillReady": true,
+  "freshNativeRejected": true,
+  "bindingReceiptProofCompleteSnapshotsUnchanged": true,
+  "businessReadinessCommitSafe": false
+}

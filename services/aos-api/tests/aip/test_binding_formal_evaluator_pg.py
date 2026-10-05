@@ -676,6 +676,80 @@ def test_formal_eval_contract_rejects_frozen_maintenance_fault_without_business_
         assert snapshots() == before
 
 
+def test_legitimate_frozen_contract_original_revoke_exposes_serial_snapshot_gap():
+    """Original EvalRunner/freeze; counterexample, never commit-safe readiness."""
+    from concurrent.futures import ThreadPoolExecutor
+    from uuid import uuid4
+    from aos_api.aip_binding_formal_evaluator import (
+        _read_formal_eval_contract, FormalBindingEvaluationBlocked)
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from aos_api.aip_release_publication_service import AipReleasePublicationService
+    from aos_api.aip_release_publication_models import RevokePublicationRequest
+    from tests.extension_runtime.test_ecommerce_content_review_pending_pg import (
+        _register_current_content_eval_gate)
+    @contextmanager
+    def original_connect(scope):
+        assert scope == SCOPE
+        with isolated_owner() as conn:
+            conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)", scope.key)
+            yield conn
+    with isolated_owner() as owner:
+        owner.execute("INSERT INTO twa_org(id,name) VALUES('org-org','original-eval-test') ON CONFLICT DO NOTHING")
+        owner.execute("INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','original-eval-test') ON CONFLICT DO NOTHING")
+        owner.commit()
+        original_ref, _, _ = _register_current_content_eval_gate(original_connect)
+        exact = FormalExactRef(assetType='EvalContractRevision', assetId=original_ref.resource_id,
+            revision=original_ref.revision, contentHash=original_ref.content_hash)
+        contract_row = owner.execute('SELECT publication_ref FROM public.aip_eval_contract_revision '
+            'WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s',
+            (*SCOPE.key, exact.asset_id, exact.revision)).fetchone()
+        publication = owner.execute('SELECT publication_id FROM public.aip_publication_event '
+            'WHERE org_id=%s AND project_id=%s AND event_id=%s',
+            (*SCOPE.key, contract_row['publication_ref']['resourceId'])).fetchone()['publication_id']
+        tables = ('aip_capability_binding', 'aip_agent_registry_receipt', 'aip_binding_evaluation_proof')
+        def snapshots():
+            return [owner.execute(f"SELECT coalesce(jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text),"
+                f"'[]'::jsonb) AS value FROM public.{table} t").fetchone()['value'] for table in tables]
+        before = snapshots()
+        owner.commit()
+        with _temporary_fixed_evaluator_login(owner) as factory:
+            with factory(SCOPE) as conn:
+                current = _read_formal_eval_contract(conn, SCOPE, exact)
+                assert current.lifecycle.value == 'frozen' and current.readiness.value == 'ready'
+                evaluator_pid = conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+                def revoke():
+                    return AipReleasePublicationService(original_connect).revoke(SCOPE,
+                        publication_id=publication, actor='original-revoke-test',
+                        request=RevokePublicationRequest(reason_hash='e' * 64,
+                            idempotency_key='b90-original-revoke-' + uuid4().hex))
+                with ThreadPoolExecutor(max_workers=1) as pool:
+                    revoked = pool.submit(revoke).result(timeout=5)
+                assert revoked.event_type.value == 'revoked'
+                # Original head SHARE does not protect a publication append;
+                # SERIAL snapshot still sees the earlier effective event.
+                stale = _read_formal_eval_contract(conn, SCOPE, exact)
+                assert stale.readiness.value == 'ready'
+                conn.rollback()
+            with factory(SCOPE) as conn:
+                with pytest.raises(FormalBindingEvaluationBlocked,
+                        match='CURRENT_READY_FROZEN_EVAL_CONTRACT_REQUIRED'):
+                    _read_formal_eval_contract(conn, SCOPE, exact)
+        assert snapshots() == before
+        assert evaluator_pid > 0
+        from pathlib import Path
+        import json
+        evidence = Path(__file__).resolve().parents[4] / '.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-e17-s3owaob90/implementation'
+        (evidence / 'legitimate-freeze-revoke-probe.json').write_text(json.dumps({
+            'scope': 'isolated original content EvalRunner/gate/publication/freeze; not full binding command',
+            'contract': exact.model_dump(by_alias=True), 'publicationId': publication,
+            'originalRevokeEventId': revoked.event_id, 'evaluatorPid': evaluator_pid,
+            'revokeCommittedWhileContractHeadShareHeld': True,
+            'oldSerializableSnapshotStillReady': True, 'freshNativeRejected': True,
+            'bindingReceiptProofCompleteSnapshotsUnchanged': True,
+            'businessReadinessCommitSafe': False,
+        }, ensure_ascii=False, indent=2) + '\n')
+
+
 def assert_formal_signed_source_consumer(request, loader, release_policy):
     """Original signed Source/Proposal/OIDC approval/issuer, actual evaluator SCRAM."""
     from uuid import uuid4
