@@ -1,0 +1,37 @@
+...........FFF                                                           [100%]
+=================================== FAILURES ===================================
+_______ test_window_rejects_missing_or_terminated_tcp_observation[None] ________
+
+exit_code = None
+
+    @pytest.mark.parametrize('exit_code', [None, -9, True])
+    def test_window_rejects_missing_or_terminated_tcp_observation(exit_code):
+>       with pytest.raises(m.MaintenanceBlocked):
+E       Failed: DID NOT RAISE MaintenanceBlocked
+
+scripts/tests/test_a0v_current_142_maintenance.py:55: Failed
+________ test_window_rejects_missing_or_terminated_tcp_observation[-9] _________
+
+exit_code = -9
+
+    @pytest.mark.parametrize('exit_code', [None, -9, True])
+    def test_window_rejects_missing_or_terminated_tcp_observation(exit_code):
+>       with pytest.raises(m.MaintenanceBlocked):
+E       Failed: DID NOT RAISE MaintenanceBlocked
+
+scripts/tests/test_a0v_current_142_maintenance.py:55: Failed
+_______ test_window_rejects_missing_or_terminated_tcp_observation[True] ________
+
+exit_code = True
+
+    @pytest.mark.parametrize('exit_code', [None, -9, True])
+    def test_window_rejects_missing_or_terminated_tcp_observation(exit_code):
+>       with pytest.raises(m.MaintenanceBlocked):
+E       Failed: DID NOT RAISE MaintenanceBlocked
+
+scripts/tests/test_a0v_current_142_maintenance.py:55: Failed
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_window_rejects_missing_or_terminated_tcp_observation[None]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_window_rejects_missing_or_terminated_tcp_observation[-9]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_window_rejects_missing_or_terminated_tcp_observation[True]
+3 failed, 11 passed in 0.09s
