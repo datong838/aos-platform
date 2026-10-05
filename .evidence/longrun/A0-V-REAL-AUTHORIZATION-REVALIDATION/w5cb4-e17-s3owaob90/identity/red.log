@@ -1,0 +1,19 @@
+F.FF                                                                     [100%]
+=================================== FAILURES ===================================
+___ test_evaluator_rejects_identity_drift_in_actual_pg[outgoing_membership] ____
+services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py:53: in test_evaluator_rejects_identity_drift_in_actual_pg
+    with pytest.raises(BindingEvaluatorConnectionBlocked, match='EVALUATOR_DATABASE_IDENTITY_REQUIRED'):
+E   Failed: DID NOT RAISE BindingEvaluatorConnectionBlocked
+_______ test_evaluator_rejects_identity_drift_in_actual_pg[search_path] ________
+services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py:53: in test_evaluator_rejects_identity_drift_in_actual_pg
+    with pytest.raises(BindingEvaluatorConnectionBlocked, match='EVALUATOR_DATABASE_IDENTITY_REQUIRED'):
+E   Failed: DID NOT RAISE BindingEvaluatorConnectionBlocked
+_______________ test_evaluator_private_passfile_rejects_hardlink _______________
+services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py:63: in test_evaluator_private_passfile_rejects_hardlink
+    with pytest.raises(BindingEvaluatorConnectionBlocked, match='EVALUATOR_EXACT_PRIVATE_CONFIGURATION_REQUIRED'):
+E   Failed: DID NOT RAISE BindingEvaluatorConnectionBlocked
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py::test_evaluator_rejects_identity_drift_in_actual_pg[outgoing_membership]
+FAILED services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py::test_evaluator_rejects_identity_drift_in_actual_pg[search_path]
+FAILED services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py::test_evaluator_private_passfile_rejects_hardlink
+3 failed, 1 passed, 7 warnings in 4.78s

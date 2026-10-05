@@ -19,7 +19,7 @@ from aos_api.tenant_scope import TenantScope
 EVALUATOR_LOGIN = 'aos_aip_binding_evaluator'
 _FORBIDDEN_ENV = ('PGPASSWORD', 'PGPASSFILE', 'PGSERVICE', 'PGSERVICEFILE', 'PGOPTIONS')
 _OPTIONS = ('-c statement_timeout=10000 -c lock_timeout=5000 '
-            '-c idle_in_transaction_session_timeout=10000 -c search_path=pg_catalog,public')
+            '-c idle_in_transaction_session_timeout=10000 -c search_path=pg_catalog,public,pg_temp')
 
 
 class BindingEvaluatorConnectionBlocked(RuntimeError):
@@ -37,6 +37,8 @@ class BindingEvaluatorDatabaseConfig:
         # Reuse existing private-file validation without borrowing its login or privileges.
         try:
             validated = RegistryIssuerDatabaseConfig(self.host, self.port, self.database, self.passfile)
+            if validated.passfile.lstat().st_nlink != 1:
+                raise ValueError('single private passfile required')
         except (RegistryIssuerConnectionBlocked, TypeError, ValueError, OSError):
             raise BindingEvaluatorConnectionBlocked('EVALUATOR_EXACT_PRIVATE_CONFIGURATION_REQUIRED') from None
         object.__setattr__(self, 'passfile', validated.passfile)
@@ -45,15 +47,17 @@ class BindingEvaluatorDatabaseConfig:
 def _require_identity(conn, config: BindingEvaluatorDatabaseConfig, scope: TenantScope) -> None:
     row = conn.execute("""SELECT current_database() AS db,session_user AS login,current_user AS role,
         current_setting('aos.org_id',true) AS org,current_setting('aos.project_id',true) AS project,
+        current_setting('search_path') AS search_path,
         (SELECT setting::int FROM pg_settings WHERE name='statement_timeout') AS statement_ms,
         (SELECT setting::int FROM pg_settings WHERE name='lock_timeout') AS lock_ms,
         (SELECT setting::int FROM pg_settings WHERE name='idle_in_transaction_session_timeout') AS idle_ms,
         r.rolcanlogin,r.rolsuper,r.rolbypassrls,r.rolinherit,r.rolcreatedb,r.rolcreaterole,r.rolreplication,
-        EXISTS(SELECT 1 FROM pg_auth_members m WHERE m.member=r.oid) AS membership
+        EXISTS(SELECT 1 FROM pg_auth_members m WHERE m.member=r.oid OR m.roleid=r.oid) AS membership
         FROM pg_roles r WHERE r.rolname=session_user""").fetchone()
     if (row is None or (row['db'], row['login'], row['role']) != (
             config.database, EVALUATOR_LOGIN, EVALUATOR_LOGIN)
             or (row['org'], row['project']) != scope.key
+            or row['search_path'].replace(' ', '') != 'pg_catalog,public,pg_temp'
             or not row['rolcanlogin']
             or any(row[name] for name in ('rolsuper', 'rolbypassrls', 'rolinherit',
                                          'rolcreatedb', 'rolcreaterole', 'rolreplication', 'membership'))
@@ -78,11 +82,13 @@ class BindingEvaluatorConnectionFactory:
         try:
             conn = connect(host=self.config.host, port=self.config.port, dbname=self.config.database,
                 user=EVALUATOR_LOGIN, passfile=str(self.config.passfile), connect_timeout=5,
-                options=_OPTIONS, row_factory=dict_row)
+                options=_OPTIONS, row_factory=dict_row, require_auth='scram-sha-256')
         except Exception:
             raise BindingEvaluatorConnectionBlocked('EVALUATOR_CONNECTION_FAILED') from None
         with conn:
             try:
+                if not conn.pgconn.used_password:
+                    raise BindingEvaluatorConnectionBlocked('EVALUATOR_PASSWORD_AUTHENTICATION_REQUIRED')
                 conn.isolation_level = IsolationLevel.SERIALIZABLE
                 conn.read_only = False
                 conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)", scope.key)

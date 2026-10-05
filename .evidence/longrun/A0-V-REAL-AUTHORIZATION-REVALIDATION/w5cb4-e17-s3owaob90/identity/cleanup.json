@@ -1,0 +1,51 @@
+{
+  "checked_at": "2026-10-05T00:53:12.280354+00:00",
+  "test_databases_before": 49,
+  "test_databases_after": 49,
+  "source_roles": [
+    {
+      "role": "aos_license_source_fence_owner",
+      "attributes": {
+        "rolcanlogin": false,
+        "rolinherit": false,
+        "rolsuper": false,
+        "rolcreatedb": false,
+        "rolcreaterole": false,
+        "rolreplication": false,
+        "rolbypassrls": false
+      },
+      "members": 0,
+      "dependencies": 0
+    },
+    {
+      "role": "aos_source_license_approval_issuer",
+      "attributes": {
+        "rolcanlogin": false,
+        "rolinherit": false,
+        "rolsuper": false,
+        "rolcreatedb": false,
+        "rolcreaterole": false,
+        "rolreplication": false,
+        "rolbypassrls": false
+      },
+      "members": 0,
+      "dependencies": 0
+    },
+    {
+      "role": "aos_source_license_issuer",
+      "attributes": {
+        "rolcanlogin": false,
+        "rolinherit": false,
+        "rolsuper": false,
+        "rolcreatedb": false,
+        "rolcreaterole": false,
+        "rolreplication": false,
+        "rolbypassrls": false
+      },
+      "members": 0,
+      "dependencies": 0
+    }
+  ],
+  "evaluator_remaining": 0,
+  "current_135_untouched": true
+}
