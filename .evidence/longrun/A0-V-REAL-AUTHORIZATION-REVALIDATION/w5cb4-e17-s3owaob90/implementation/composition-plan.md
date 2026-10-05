@@ -78,7 +78,7 @@ Source proof 必须保存原正式读者返回的 epoch、installation_id/etag�
 
 复用原内容预审 Graph、实际确定性 EvalRunner、derive_gate/publish、create/freeze 原合同链（test_ecommerce_content_review_pending_pg._register_current_content_eval_gate），不使用 ReadyStore、不直接写 PASSED 或 frozen。合法内容合同只证明原 EvalContract 依赖生产链，不替代目标 Model/Route 八事实。先 native 消费读取 READY，再持原合同 head SHARE 期间从第二连接调用原 revoke，记录是否可以提交、旧 SERIAL 读者是否仍 READY，最后 fresh native 必须拒绝。三评估业务表全内容不得变化。若发现旧 snapshot 可继续读 READY，则仅作为实际协调缺口反证，不将读者锁宣称提交安全；后续设计覆盖原 publish/revoke/append 路径的最小代际协调。
 
-### Publication 提交当前性修订方案（待实际 RED/实施）
+### Publication 提交当前性修订方案（1578d75a 隔离实施验证，完整三写待验）
 
 实际原合法 freeze/revoke 反证已成立，不能仅追加 published 行 SHARE：原 revoke 只锁旧 published 行，再插新 revoked 行，旧行版本不变；写者先提交后的旧 SERIAL snapshot 不会因锁旧行自动看到新撤销，Authority append 与直接 INSERT 也可绕过这种锁。
 
@@ -91,3 +91,14 @@ Source proof 必须保存原正式读者返回的 epoch、installation_id/etag�
 独立复审要求 Owner 预存在身份门同时拒绝当前目标数据库的业务对象所有权与显式 table/column/schema/function ACL，不能只看角色属性/成员。在另一个5433一次性空测试库分别注入低属性同名Owner的五种授权/所有权，用实际原 migration 子步骤证明其拒绝且原权限保留，finally只DROP该精确测试库、不DROP OWNED/撤权或修改现有对象。迁移前允许跨测试库同名安全角色，但本目标库不得预有身份对象或ACL；不声称全服务器其他数据库授权已审计。
 
 Publication gate 的期限沿原产品语义：原 publish 在发行时校验 gate 当前有效，原 EvalContract 动态读者此后校验不可变历史 gate 的 exact/status/hash及发布 latest 状态，不把 gate 到期自动转换为已发布事件撤销。本 epoch 修订保留该语义，Publication gateRef 是历史发布证据，不授当前执行权；当前运行模型/路线的两项正式 Eval 准入仍由原 require_exact_passed(DB now)和最终 expires min独立强制。当前正式 Source、预算、Price、Health等期限不能借该历史引用放宽。未来若产品要求发布自动到期，须作为独立可审阅生命周期方案，不在本修复隐性改变已有发布功能。
+
+
+### 完整八事实输入来源复核与施工顺序修订（2026-10-05）
+
+接续 Task `w5cb4-e17-b90-full-evaluator-continuation-20261005`，base AOS-001343，沿原未完成范围至2026-10-06 06:00+08；旧任务到期不是完成，不生成全命令 Delivery。
+
+实际源码表明原 AipEvalRunner.run/run_by_contract 在 REGISTERED_MODEL/MODEL_ROUTE 目标处拒绝 formal Model Eval executor authority unavailable，且在 callback 与 Run/Report/Gate 持久化前退出。原 require_exact_passed 明确要求门目标为相应模型/路线 candidate，不能借内容 LogicGraph gate。原内容 pack 又明确校验 exact Graph 身份，不能改 target 后复用原内容评测结论。历史 seeded_approved_model_eval_request 原 fixture 在 Suite/Contract 表直接写固定哈希和 frozen，因此不可当完整正向输入生产链。
+
+下一文件级施工仍优先 `services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py` 与 `tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py`，沿原 signed 安装/Source/Budget 入口保存上下文。完整评估组合要求真实当前 Model/Route 门；在补齐正式 Model Eval executor 方案与文件范围登记前，不删除 Runner 拒绝、不注入 PASSED、不将审批当执行许可，不用普通回调模拟正式执行权威。先复习现有 ModelEvalRequest/审批/预算保留/执行拒绝的产品技术契约，形成使用原事务、Identity/Owner/Policy/Health/预算/Capacity 与实际 EvalRun/Report/门生产闭环的可审阅文件清单；范围超出原 Task 时另登记精确方案/Task 后实施。外部 Provider 执行仍需独立授权，隔离机械验证不代替真实质量。
+
+本次复用原 Runner 四项实测4 passed/5.90s。两个直接 suite 模式有原 PG 注册 Suite，无 Contract 替代；另两个 by_contract 用测试 Contracts 对象，只证明拒绝入口而非合法 freeze。全部 callback 计数0、Run/Report/Gate计数0。此结果验证结构性缺口，不能标完整 evaluator GREEN；详细来源与限制见 model-route-input-authority-audit.md。
