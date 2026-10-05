@@ -1,0 +1,9 @@
+{
+  "scope": "full Task remains ACTIVE; code content during final test must remain fixed",
+  "sha256": {
+    "services/aos-api/aos_api/aip_binding_formal_evaluator_contracts.py": "fe39e98d935f97727358f09bc0493d4bdc88e96a512cdb263c864d92bf3e8cb6",
+    "services/aos-api/aos_api/aip_license_source_proposal.py": "0c776afe0cf7739958d77962f3d7d199002ed7dc250421b318fc5edc226b7ea7",
+    "services/aos-api/aos_api/aip_budget_cost_runtime.py": "42b3ab8b477203d06099eb4a1b77b74589e053953a6a7bf419bdd1e96c411f1b",
+    "services/aos-api/tests/aip/test_binding_formal_evaluator_contracts.py": "096faf5870d33ed4482e87eb027c4b81e42bff8fc126f9127bf1a7888cfd06cd"
+  }
+}

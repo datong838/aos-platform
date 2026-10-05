@@ -98,6 +98,16 @@ Health机制已5239e7b5独立Delivery、Authority1331，当前真库仍142。完
 
 补证原a126/`aip_budget_cost_runtime.require_cost_risk`：已有Budget撤销fence版本，由原revocation AFTER INSERT递增；原运行准入读者先fence FOR UPDATE并执行version+1，再budget head/两Owner/Provider/current Price共享锁。它不是无写getter，且无cost receipt时返回None代表legacy分支，不能被完整evaluator拿来默认赋予development waiver许可。正式评估应共享锁同一原runtime fence后读其version并复用原内容/Receipt/decision/撤销/两Owner/Provider/Price/时效及risk数量验证，不能复制第二费用真源或产生hold/version写入。post-snapshot原撤销版本变化须实测40001，fence持有期间新hold/revoke受原锁阻挡。抽取纯核验时新增精确改动文件`services/aos-api/aos_api/aip_budget_cost_runtime.py`及相邻原cost-runtime实际PG测试；原require_cost_risk的原排他锁/version更新/hold语义保持。完整fact保存原decision/receipt/fence version及actual checked risk，不把零价或legacy缺receipt当正式审批。预算锁顺序因此为原approval/advisory→Owner等选定上游→Budget原fence→Budget head→Provider/Price heads；不能在Provider独占锁后倒序请求Budget fence，也不调用成本consumer激活预算。
 
+### 完整实现Task的分段执行合同（整体退出不变）
+
+后继统一登记完整代码Task，覆盖contracts、完整native evaluator、Source原proposal/authority、Budget原runtime、connection、a144、capability service/router、实际PG/API/contracts测试及signed原fixture；该Task整体保持ACTIVE直到完整八facts/来源/安装/预算/原三写和实际COMMIT全部验证。内部依赖顺序为严格request→原内容验证复用→固定身份/ACL→完整读者/原三写→产品入口→完整正负/竞争验收，不能把任一段Task结果包装成b90完成。
+
+HTTP正式request冻结schemaVersion=1、tenant、expectedVersion、installationId/Revision/Etag、provider/model/policy/route/price/capacity exact引用、route/model各exact EvalGate、frozen EvalContract、非空exact Source refs、required Data/Tool refs及原BudgetPolicy引用。bindingId取精确路径、key取原Idempotency-Key header；原签名require_principal提供actor/tenant，body不允许bearer/actor/roles/ready/facts/clock/health状态。Health由server取当前原观测，客户端不供给结果。所有revision/version/etag严格整数拒bool/float/字符串，UUID必须canonical，类型/hash严格，数组重复/未知kind拒，reparse防model_copy绕过；DTO本身不代表权威。
+
+选中Model/Price/Provider必须与原Resolver结果及请求exact refs一致；先无效力发现Route全部候选的原head/ref和选中额外治理依赖，按上述总序保护所有影响候选选择的Model/Provider/Price/Health资源，锁后重验发现值，不能只锁最终Provider而遗漏fallback选择漂移。用户必须的八facts逐一server获取，缺任何实际配置拒且三写零。Eval由当前Route/Model绑定各exactgate并核验原candidate hash，不新造head；Capacity仅检查原一量子占用，不reserve。签名安装/Source共同核验两当前Owner/原用途、DB时效及原Receipt，不伪造maker Principal。
+
+Source第一段仅把原reader中内容/provenance/policy/time核验提取内部函数，旧入口原角色身份门保持；内部函数仍读caller tenant及真实current_user决定原init共享/发行独占，不接收可伪造identity/flags/callback。正式reader后继在本Task复用该内部核验且先独立evaluator身份校验；提取不是正式授许可入口，不开新API、不新增LOGIN/ACL。Source旧完整signed PG正负继续验证原语义；Budget纯核验同理，原hold排他/version更新保留，formal fact仅共享原fence不改它。
+
 先实际PG证明现有事务分裂/缺Source及Capacity不产生正式proof；新增入口缺模块仅收集RED，不能称业务拒绝实证。专项必须覆盖：八项逐一缺失/旧head/错hash、Source撤销/到期/Owner失权/错用途、canary零写、installation漂移、Capacity不足/竞争、同key原回放及参数冲突、多事务writer阻塞图/SSI、响应失败与真实COMMIT失败/到期三写全回滚。完整正向必须由原正式Store在一次性隔离库建立可追溯事实，不直接INSERT假READY冒充通过。
 
 PG测试串行避免集群共享role DDL竞争；保留旧49测试库。角色清理只在安全属性/双向成员/共享依赖均0后精确drop，无DROP OWNED。专项后做相邻累计、编译、精确diff与方案代码复审；无UI更改浏览器不适用。证据/Delivery、m1精确提交和AOS/Prime上下文收口之后立即下一安全波。正式权限、135迁移独立门、自然首链和发布仍pending；每日09重启验收职责独立，不以隔离测试代替。

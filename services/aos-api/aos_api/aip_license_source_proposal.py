@@ -84,6 +84,26 @@ def read_source_license_request_facts(*, conn: Any, scope: TenantScope, maker: s
             require_source_issuer_identity(conn,scope)
         else:
             raise SourceLicenseProposalBlocked('SOURCE_LICENSE_RUNTIME_SERIALIZABLE_REQUIRED')
+    return _read_source_request_content_facts(conn=conn, scope=scope, maker=maker,
+        request=request, loader=loader, release_policy=release_policy)
+
+
+def _read_source_request_content_facts(*, conn: Any, scope: TenantScope, maker: str,
+    request: SourceLicenseProposalRequest, loader: ManifestLoader,
+    release_policy: ReleasePolicy) -> SourceLicenseRequestFacts:
+    """Internal content verification; the admitting caller owns identity checks.
+
+    This function supplies neither an issuance nor a start permission. Actual
+    database identity, rather than a caller flag, chooses the original lock mode.
+    """
+    try:
+        _require_scope(conn, scope)
+    except LicenseSourceUnavailable as exc:
+        reason='SCOPE_MISMATCH' if str(exc)=='LICENSE_SOURCE_SCOPE_MISMATCH' else 'CALLER_TRANSACTION_REQUIRED'
+        raise SourceLicenseProposalBlocked('SOURCE_LICENSE_'+reason) from None
+    identity=conn.execute('SELECT current_user AS role').fetchone()
+    if not identity or not identity.get('role'):
+        raise SourceLicenseProposalBlocked('SOURCE_LICENSE_RUNTIME_SERIALIZABLE_REQUIRED')
     try:
         binding=source_license_request_binding(scope, maker, request)
         checked=SourceLicenseProposalRequest.model_validate(request.model_dump(mode='python', by_alias=True))
