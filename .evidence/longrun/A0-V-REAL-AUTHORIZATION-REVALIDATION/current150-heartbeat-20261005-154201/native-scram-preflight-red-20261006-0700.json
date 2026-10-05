@@ -1,0 +1,23 @@
+{
+  "authority": "AOS-001359",
+  "container": "current150-same-77f8f834ea15",
+  "hba": {
+    "host_auth_methods": [
+      "trust"
+    ],
+    "parse_errors": false
+  },
+  "head": "56456758254373d0a6d5ccd5b51deb083c0c3b5b",
+  "login_password_created": false,
+  "mutations": [],
+  "native_positive": "pending",
+  "next": "freeze narrowly scoped isolated HBA repair/restore with exact original bytes, issuer loopback SCRAM rule, negative wrong password and cleanup; no current DB or network port change",
+  "observed_role": {
+    "login": false,
+    "password_null": true,
+    "role": "aos_provider_capacity_issuer"
+  },
+  "outcome": "NATIVE_SCRAM_GATE_RED_BEFORE_MUTATION",
+  "reason": "restored isolated container uses host trust, cannot evidence SCRAM password identity",
+  "task": "w5cb4-current150-restore-gate-20261005-154201"
+}
