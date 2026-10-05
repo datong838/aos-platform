@@ -589,3 +589,44 @@ def test_expired_unreleased_lease_is_not_implicitly_reclaimed(tmp_path,case):
         with pytest.raises(memoryctl.LeaseConflict):memoryctl.start_task(p,**kwargs)
         assert memoryctl.load_leases(p)['leases']==[old]
     assert json.loads((p.receipts_path/'tasks/old.json').read_text())==old
+
+
+@pytest.mark.parametrize('case', ['success', 'owner', 'revision', 'prior', 'delivery', 'overlap', 'naive', 'past', 'shorter', 'partial'])
+def test_explicit_task_renewal_preserves_history_and_fails_closed(tmp_path, monkeypatch, case):
+    p = paths(tmp_path, [])
+    old = memoryctl.start_task(p, task_id='renew', owner='codex', expected_revision='AOS-000001', scope=['scripts/renew'], excluded_scope=[], expected_outputs=['proof'], lease_expires_at='2098-01-01T00:00:00+08:00')
+    kwargs = dict(task_id='renew', owner='codex', expected_revision='AOS-000001', expected_task=old, lease_expires_at='2099-01-01T00:00:00+08:00', reconciliation='same owner, terminal tools reconciled')
+    if case == 'owner': kwargs['owner'] = 'foreign'
+    if case == 'revision': kwargs['expected_revision'] = 'AOS-000002'
+    if case == 'prior': kwargs['expected_task'] = {**old, 'scope': ['other']}
+    if case == 'delivery': write_json(p.receipts_path/'deliveries/renew.json', {'schema': 'aos-memory-delivery-receipt/v1'})
+    if case == 'overlap': write_json(p.leases_path, {'schema': 'aos-memory-leases/v1', 'leases': [old, {**old, 'task_id': 'other'}]})
+    if case == 'naive': kwargs['lease_expires_at'] = '2099-01-01T00:00:00'
+    if case == 'past': kwargs['lease_expires_at'] = '2000-01-01T00:00:00+08:00'
+    if case == 'shorter': kwargs['lease_expires_at'] = '2097-01-01T00:00:00+08:00'
+    before_leases = memoryctl.load_leases(p)
+    if case == 'partial':
+        original = memoryctl.atomic_write_json
+        def fail_lease(path, payload, **options):
+            if path == p.leases_path: raise OSError('injected lease write failure')
+            return original(path, payload, **options)
+        monkeypatch.setattr(memoryctl, 'atomic_write_json', fail_lease)
+        with pytest.raises(OSError): memoryctl.renew_task(p, **kwargs)
+        monkeypatch.setattr(memoryctl, 'atomic_write_json', original)
+        with pytest.raises(memoryctl.LeaseConflict): memoryctl.renew_task(p, **kwargs)
+        assert memoryctl.load_leases(p) == before_leases
+        assert len(list((p.receipts_path/'renewals/renew').glob('*.json'))) == 1
+    elif case == 'success':
+        new = memoryctl.renew_task(p, **kwargs)
+        assert new == {**old, 'lease_expires_at': kwargs['lease_expires_at']}
+        assert memoryctl.load_leases(p)['leases'] == [new]
+        history = list((p.receipts_path/'renewals/renew').glob('*.json'))
+        assert len(history) == 1
+        saved = json.loads(history[0].read_text())
+        assert saved['before'] == old and saved['after'] == new
+        assert json.loads((p.receipts_path/'tasks/renew.json').read_text()) == new
+    else:
+        with pytest.raises(memoryctl.MemoryErrorBase): memoryctl.renew_task(p, **kwargs)
+        assert memoryctl.load_leases(p) == before_leases
+        assert json.loads((p.receipts_path/'tasks/renew.json').read_text()) == old
+        assert not (p.receipts_path/'renewals/renew').exists()

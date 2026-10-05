@@ -935,6 +935,68 @@ def _start_task_locked(
     return receipt
 
 
+def renew_task(
+    paths: MemoryPaths,
+    *,
+    task_id: str,
+    owner: str,
+    expected_revision: str,
+    expected_task: dict[str, Any],
+    lease_expires_at: str,
+    reconciliation: str,
+) -> dict[str, Any]:
+    """Explicit same-owner renewal; incomplete writes require read-only reconciliation."""
+    if not TASK_ID_PATTERN.fullmatch(task_id) or not owner.strip() or not reconciliation.strip():
+        raise MemoryErrorBase("safe task id, owner and reconciliation are required")
+    with memory_lock(paths, exclusive=True):
+        _validate_installation_locked(paths)
+        authority = load_authority(paths)
+        if authority["project_revision"] != expected_revision:
+            raise RevisionConflict("renewal authority revision changed")
+        task_path = paths.receipts_path / "tasks" / f"{task_id}.json"
+        task = read_json(task_path)
+        leases = load_leases(paths)
+        matching = [item for item in leases["leases"] if item.get("task_id") == task_id]
+        if task != expected_task or matching != [task]:
+            raise LeaseConflict("renewal Task/Lease or expected record changed")
+        if task.get("task_id") != task_id or task.get("owner") != owner or task.get("status") != "ACTIVE":
+            raise LeaseConflict("renewal requires original active owner")
+        if (paths.receipts_path / "deliveries" / f"{task_id}.json").exists():
+            raise LeaseConflict("delivered task cannot be renewed")
+        for other in leases["leases"]:
+            if other.get("task_id") != task_id and scopes_overlap(task["scope"], other["scope"]):
+                raise LeaseConflict("renewal has an unresolved overlapping task")
+        try:
+            expiry = datetime.fromisoformat(lease_expires_at)
+            previous = datetime.fromisoformat(task["lease_expires_at"])
+            if expiry.tzinfo is None or previous.tzinfo is None:
+                raise ValueError("timezone required")
+            if expiry <= datetime.now(timezone.utc) or expiry <= previous:
+                raise ValueError("future extension required")
+        except (ValueError, TypeError) as error:
+            raise MemoryErrorBase("renewal expiry must be aware, future and later") from error
+        renewed = {**task, "lease_expires_at": lease_expires_at}
+        digest = hashlib.sha256(canonical_json(task).encode()).hexdigest()
+        history_path = paths.receipts_path / "renewals" / task_id / f"{digest}.json"
+        if history_path.exists():
+            raise LeaseConflict("renewal history exists; reconcile before retry")
+        history = {
+            "schema": "aos-memory-task-renewal/v1", "before": task, "after": renewed,
+            "authority_revision": expected_revision, "reconciliation": reconciliation,
+            "renewed_at": utc_now(),
+        }
+        # Persist audit before current views. A crash leaves a fail-closed mismatch.
+        atomic_write_json(history_path, history)
+        atomic_write_json(task_path, renewed)
+        atomic_write_json(paths.leases_path, {
+            "schema": "aos-memory-leases/v1",
+            "leases": [renewed if item.get("task_id") == task_id else item for item in leases["leases"]],
+        })
+        append_event(paths, {"type": "TASK_LEASE_RENEWED", "task_id": task_id,
+                            "authority_revision": expected_revision, "history_hash": digest})
+        return renewed
+
+
 def complete_task(
     paths: MemoryPaths,
     *,
