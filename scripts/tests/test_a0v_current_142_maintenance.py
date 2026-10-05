@@ -153,3 +153,48 @@ def test_sequencer_does_not_accept_symlink_done_evidence(tmp_path):
     (tmp_path / 'stop_clients-done.json').symlink_to(external)
     with pytest.raises(m.MaintenanceBlocked):
         m.MaintenanceJournal(tmp_path).perform('fence_tcp', lambda: {'unsafe': True})
+
+
+def test_current_entry_refuses_code_task_before_any_source_command():
+    with pytest.raises(m.MaintenanceBlocked, match='MAINTENANCE_RESOURCE_SCOPE_MISSING'):
+        m.run_current(task_id='w5cb4-current142-maintenance-runner-20261005',
+                      backup_state='/irrelevant', evidence_directory='/irrelevant')
+
+
+def test_owned_service_stop_uses_one_normal_root_signal(monkeypatch):
+    import os
+    import signal
+    import socket
+    import subprocess
+    import sys
+    import time
+    with socket.socket() as sock:
+        sock.bind(('127.0.0.1', 0)); port = sock.getsockname()[1]
+    argv = [sys.executable, '-m', 'http.server', str(port), '--bind', '127.0.0.1']
+    cwd = str(Path.cwd())
+    proc = subprocess.Popen(argv, cwd=cwd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        for _ in range(50):
+            try:
+                fingerprint = m.read_service_candidate(pid=proc.pid, expected_argv=argv, expected_cwd=cwd, expected_port=port)
+                break
+            except m.MaintenanceBlocked:
+                if proc.poll() is not None: pytest.fail('owned test service terminated early')
+                time.sleep(.1)
+        else: pytest.fail('owned test service never became ready')
+        monkeypatch.setattr(m, 'read_maintenance_task', lambda task_id: {'test_only_authority': True})
+        calls = []
+        real_kill = os.kill
+        def checked_kill(pid, sig):
+            assert pid == proc.pid and sig == signal.SIGTERM
+            calls.append((pid, sig)); real_kill(pid, sig)
+        monkeypatch.setattr(m.os, 'kill', checked_kill)
+        service = {'fingerprint': fingerprint, 'argv': argv, 'cwd': cwd, 'port': port, 'helper_argv': None}
+        result = m.stop_current_services([service], 'owned-test-only')
+        proc.wait(timeout=10)
+        assert len(calls) == 1 and result['forced_signals'] == 0
+        with pytest.raises(m.MaintenanceBlocked): m.stop_current_services([service], 'owned-test-only')
+        assert len(calls) == 1
+    finally:
+        if proc.poll() is None:
+            proc.terminate(); proc.wait(timeout=10)

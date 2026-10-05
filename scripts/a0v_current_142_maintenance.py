@@ -100,6 +100,15 @@ class MaintenanceJournal:
 
 def run_isolated(*, backup_state, evidence_directory):
     """Real full sequencer acceptance. Cannot select the current Docker context."""
+    return _run_sequence(backup_state=backup_state, evidence_directory=evidence_directory)
+
+
+def run_current(*, task_id, backup_state, evidence_directory):
+    read_maintenance_task(task_id)
+    return _run_sequence(backup_state=backup_state, evidence_directory=evidence_directory, current_task_id=task_id)
+
+
+def _run_sequence(*, backup_state, evidence_directory, current_task_id=None):
     import importlib.util
     import io
     import secrets
@@ -111,6 +120,13 @@ def run_isolated(*, backup_state, evidence_directory):
     from alembic.script import ScriptDirectory
 
     root = Path(__file__).resolve().parents[1]
+    code_head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
+    require(subprocess.check_output(['git', 'branch', '--show-current'], cwd=root, text=True).strip() == 'm1', 'M1_REQUIRED')
+    if current_task_id is not None:
+        clean = subprocess.run(['git', 'diff', '--quiet', 'HEAD', '--', 'scripts/a0v_current_142_maintenance.py',
+                                'scripts/a0v_current_142_restore_gate.py', 'scripts/a0v_current_preview_http.py',
+                                'services/aos-api/aos_api', 'services/aos-api/alembic'], cwd=root)
+        require(clean.returncode == 0, 'CURRENT_EXECUTABLE_CODE_NOT_COMMITTED')
     spec = importlib.util.spec_from_file_location('restore142_maintenance', root / 'scripts/a0v_current_142_restore_gate.py')
     g = importlib.util.module_from_spec(spec); spec.loader.exec_module(g)
     backup_state = Path(backup_state).resolve(strict=True)
@@ -123,22 +139,44 @@ def run_isolated(*, backup_state, evidence_directory):
     config = Config(str(root / 'services/aos-api/alembic.ini'))
     config.set_main_option('script_location', str(root / 'services/aos-api/alembic'))
     require(ScriptDirectory.from_config(config).get_heads() == ['a0v_142'], 'EXACT_CODE_142_REQUIRED')
-    state = Path(tempfile.mkdtemp(prefix='.aos-maintenance142-', dir=root.parent / 'aos-recovery'))
+    if current_task_id is not None:
+        state = root.parent / 'aos-recovery' / ('.aos-current142-' + current_task_id)
+        try:
+            state.mkdir(mode=0o700)
+        except FileExistsError:
+            raise MaintenanceBlocked('CURRENT_TASK_ATTEMPT_EXISTS_RECONCILE_ONLY') from None
+    else:
+        state = Path(tempfile.mkdtemp(prefix='.aos-maintenance142-', dir=root.parent / 'aos-recovery'))
     os.chmod(state, 0o700)
     journal = MaintenanceJournal(state)
     ctx = 'colima-aos-a0v-test-only'
     base = ['docker', '--context', ctx]
     names = ['aos-sequence142-' + secrets.token_hex(6) for _ in range(2)]
+    if current_task_id is not None:
+        read_maintenance_task(current_task_id)
+        names[0] = g.SOURCE_CONTAINER
     tick = time.monotonic()
 
     def execute(args, data=None, check=True):
-        result = subprocess.run(base + args, input=data, capture_output=True, timeout=180)
+        current_source = current_task_id is not None and g.SOURCE_CONTAINER in args
+        if current_source:
+            read_maintenance_task(current_task_id)
+            require(subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip() == code_head,
+                    'CURRENT_CODE_HEAD_DRIFT')
+            require(args[0] in ('exec', 'restart', 'inspect'), 'CURRENT_SOURCE_COMMAND_FORBIDDEN')
+        command_base = ['docker', '--context', g.SOURCE_CONTEXT] if current_source else base
+        result = subprocess.run(command_base + args, input=data, capture_output=True, timeout=180)
         require(not check or result.returncode == 0, 'ISOLATED_COMMAND_FAILED')
         return result
 
     image = json.loads(execute(['inspect', 'aos-e17-b17-acl-pg']).stdout)[0]['Image']
     g.save(state / 'intent.json', {'context': ctx, 'containers': names, 'image': image,
-                                 'source_touched': False})
+                                 'source_touched': current_task_id is not None, 'resource_task': current_task_id})
+    services = None
+    if current_task_id is not None:
+        require_source(json.loads(execute(['inspect', g.SOURCE_CONTAINER]).stdout)[0])
+        services = current_services()
+        g.save(state / 'services-original.json', services)
 
     def ready(name):
         for _ in range(30):
@@ -148,6 +186,22 @@ def run_isolated(*, backup_state, evidence_directory):
         raise MaintenanceBlocked('ISOLATED_SERVER_NOT_READY')
 
     def pg(name, statement, database='postgres', tcp=False, check=True):
+        if current_task_id is not None and name == g.SOURCE_CONTAINER and tcp:
+            import psycopg
+            from types import SimpleNamespace
+            read_maintenance_task(current_task_id)
+            require(database == g.SOURCE and statement in ('SELECT 1', 'SELECT version_num FROM alembic_version'),
+                    'CURRENT_TCP_PROBE_NOT_READ_ONLY')
+            spec_boot = importlib.util.spec_from_file_location('maintenance_current_bootstrap', root / 'scripts/a0v_current_preview_bootstrap.py')
+            bootstrap = importlib.util.module_from_spec(spec_boot); spec_boot.loader.exec_module(bootstrap)
+            try:
+                with psycopg.connect(**bootstrap._connection_parameters(), connect_timeout=3) as conn:
+                    conn.read_only = True
+                    value = conn.execute(statement).fetchone()[0]
+                return SimpleNamespace(returncode=0, stdout=(str(value) + '\n').encode())
+            except psycopg.OperationalError:
+                require(not check, 'CURRENT_TCP_PROBE_FAILED')
+                return SimpleNamespace(returncode=2, stdout=b'')
         return execute(['exec', name, 'psql', '-U', 'aos_app', '-d', database, '-Atq', '-v', 'ON_ERROR_STOP=1']
                        + (['-h', '127.0.0.1'] if tcp else []) + ['-c', statement], check=check)
 
@@ -159,6 +213,8 @@ def run_isolated(*, backup_state, evidence_directory):
 
     globals_data = g.prepare_globals((backup_state / 'globals-no-password.sql').read_bytes(), bootstrap='aos_app')
     for name in names:
+        if current_task_id is not None and name == g.SOURCE_CONTAINER:
+            continue
         execute(['run', '-d', '--pull', 'never', '--name', name, '--network', 'none',
                  '--label', 'aos.restore-gate=' + g.LABEL, '--mount',
                  'type=volume,source=' + name + '-data,target=/var/lib/postgresql/data',
@@ -166,8 +222,9 @@ def run_isolated(*, backup_state, evidence_directory):
         ready(name)
         execute(['exec', '-i', name, 'psql', '-U', 'aos_app', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', '-'], globals_data)
     source, target = names
-    execute(['exec', '-i', source, 'pg_restore', '-U', 'aos_app', '-d', 'postgres', '--create', '--exit-on-error'],
-            (backup_state / 'current-full.dump').read_bytes())
+    if current_task_id is None:
+        execute(['exec', '-i', source, 'pg_restore', '-U', 'aos_app', '-d', 'postgres', '--create', '--exit-on-error'],
+                (backup_state / 'current-full.dump').read_bytes())
     require(snapshot(source) == expected, 'ISOLATED_INITIAL_RESTORE_MISMATCH')
     require(pg(source, 'SELECT 1', g.SOURCE, tcp=True).stdout.strip() == b'1', 'TCP_BASELINE_MISSING')
     listen_query = "SELECT json_agg(x) FROM (SELECT sourcefile,setting,applied,error FROM pg_file_settings WHERE name='listen_addresses') x"
@@ -176,7 +233,8 @@ def run_isolated(*, backup_state, evidence_directory):
     restore_statement = listen_restore_statement(original_listen_rows, effective=original_listen)
     g.save(state / 'listen-original.json', {'rows': original_listen_rows, 'effective': original_listen,
                                          'restore_statement': restore_statement})
-    journal.perform('stop_clients', lambda: {'scope': 'ISOLATED_NO_APPLICATION_CLIENTS'})
+    journal.perform('stop_clients', lambda: stop_current_services(services, current_task_id)
+                    if current_task_id is not None else {'scope': 'ISOLATED_NO_APPLICATION_CLIENTS'})
 
     def fence():
         pg(source, "ALTER SYSTEM SET listen_addresses=''")
@@ -191,6 +249,14 @@ def run_isolated(*, backup_state, evidence_directory):
 
     def dump():
         require(snapshot(source) == expected, 'SOURCE_CHANGED_BEFORE_DUMP')
+        if current_task_id is not None:
+            fresh_globals = execute(['exec', source, 'pg_dumpall', '-U', 'aos_app', '--globals-only', '--no-role-passwords']).stdout
+            path_globals = state / 'maintenance-globals.sql'
+            with os.fdopen(os.open(path_globals, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'wb') as handle:
+                handle.write(fresh_globals); handle.flush(); os.fsync(handle.fileno())
+            # The clone roles were restored before fencing; require the original
+            # catalog to stay unchanged rather than silently accepting new roles.
+            require(snapshot(source) == expected, 'SOURCE_GLOBALS_CHANGED')
         data = execute(['exec', source, 'pg_dump', '-U', 'aos_app', '-d', g.SOURCE, '-Fc']).stdout
         path = state / 'maintenance.dump'
         with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'wb') as handle:
@@ -241,19 +307,27 @@ def run_isolated(*, backup_state, evidence_directory):
         require(json.loads(pg(source, listen_query).stdout) == original_listen_rows, 'LISTEN_CONFIGURATION_SOURCE_DRIFT')
         return {'tcp_available': True, 'original_configuration_source_restored': True}
     journal.perform('restore_tcp', restore_tcp)
-    journal.perform('restart_clients', lambda: {'scope': 'ISOLATED_NO_APPLICATION_CLIENTS'})
+    journal.perform('restart_clients', lambda: restart_current_services(services, current_task_id, state)
+                    if current_task_id is not None else {'scope': 'ISOLATED_NO_APPLICATION_CLIENTS'})
 
     def acceptance():
         require(pg(source, 'SELECT version_num FROM alembic_version', g.SOURCE, tcp=True).stdout.strip() == b'a0v_142', 'FINAL_VERSION_DRIFT')
+        after_restart = snapshot(source)
+        g.require_old_rows(expected, after_restart); g.require_catalog_preserved(expected, after_restart)
         for name in names:
             item = json.loads(execute(['inspect', name]).stdout)[0]
+            if current_task_id is not None and name == g.SOURCE_CONTAINER:
+                require_source(item)
+                continue
             require(item['HostConfig']['NetworkMode'] == 'none' and not any(item['NetworkSettings']['Ports'].values()), 'ISOLATION_DRIFT')
         return {'schema': 'a0v_142', 'isolated': True}
     journal.perform('acceptance', acceptance)
-    result = {'outcome': 'ISOLATED_COMPLETE_MAINTENANCE_SEQUENCE_GREEN', 'state': str(state),
+    result = {'outcome': ('CURRENT_135_TO_142_MAINTENANCE_GREEN' if current_task_id is not None
+                          else 'ISOLATED_COMPLETE_MAINTENANCE_SEQUENCE_GREEN'), 'state': str(state),
               'containers': names, 'tables': len(expected['tables']), 'elapsed_seconds': round(time.monotonic()-tick, 3),
-              'current_source_touched': False, 'formal_current_window_proven': False}
-    g.save(Path(evidence_directory) / 'isolated-sequence.json', result)
+              'current_source_touched': current_task_id is not None,
+              'formal_current_window_proven': current_task_id is not None}
+    g.save(Path(evidence_directory) / ('current-sequence.json' if current_task_id else 'isolated-sequence.json'), result)
     return result
 
 
@@ -372,3 +446,102 @@ def listen_restore_statement(rows, *, effective):
         require(len(auto) == 1 and auto[0].get('applied'), 'LISTEN_AUTO_OVERRIDE_AMBIGUOUS')
         return "ALTER SYSTEM SET listen_addresses = '*'"
     return 'ALTER SYSTEM RESET listen_addresses'
+
+
+def current_services():
+    import plistlib
+    import subprocess
+    root = Path(__file__).resolve().parents[1]
+    services = []
+    helper = [str(root / 'node_modules/.pnpm/@esbuild+darwin-arm64@0.21.5/node_modules/@esbuild/darwin-arm64/bin/esbuild'),
+              '--service=0.21.5', '--ping']
+    for label, port in [('com.aos.a0v-api-daily0900', 8080), ('com.aos.a0v-web-8434', 8434)]:
+        agent = Path('/Users/ddt/Library/LaunchAgents') / (label + '.plist')
+        data = plistlib.loads(agent.read_bytes())
+        require(data['Label'] == label, 'SERVICE_LABEL_DRIFT')
+        registered = subprocess.run(['launchctl', 'list', label], capture_output=True)
+        require(registered.returncode != 0, 'REGISTERED_SERVICE_REQUIRES_DIFFERENT_CONTROL_PATH')
+        result = subprocess.run(['lsof', '-nP', f'-iTCP:{port}', '-sTCP:LISTEN', '-t'], capture_output=True, text=True)
+        pids = set(result.stdout.split())
+        require(result.returncode == 0 and len(pids) == 1, 'SERVICE_LISTENER_NOT_UNIQUE')
+        child_argv = helper if port == 8434 else None
+        fingerprint = read_service_candidate(pid=int(next(iter(pids))), expected_argv=data['ProgramArguments'],
+            expected_cwd=data['WorkingDirectory'], expected_port=port, expected_child_argv=child_argv)
+        require(fingerprint['uid'] == os.getuid(), 'SERVICE_OWNER_DRIFT')
+        environment = data.get('EnvironmentVariables', {})
+        require(set(environment) <= {'PATH', 'PYTHONUNBUFFERED', 'VITE_AOS_API_PROXY_TARGET'}, 'SERVICE_ENVIRONMENT_REQUIRES_REVIEW')
+        if port == 8080:
+            require(data['ProgramArguments'][:2] == [str(root / 'services/aos-api/.venv/bin/python'),
+                    str(root / 'scripts/a0v_current_preview_http.py')]
+                    and data['ProgramArguments'][2] == '--signed-receipt'
+                    and data['ProgramArguments'][4:] == ['--serve'], 'API_LAUNCH_COMMAND_DRIFT')
+        else:
+            require(data['ProgramArguments'][1:] == [str(root / 'node_modules/.pnpm/vite@5.4.21/node_modules/vite/bin/vite.js'),
+                    '--host', '127.0.0.1', '--port', '8434'], 'WEB_LAUNCH_COMMAND_DRIFT')
+        services.append({'label': label, 'port': port, 'argv': data['ProgramArguments'], 'cwd': data['WorkingDirectory'],
+                         'environment': environment, 'helper_argv': child_argv, 'fingerprint': fingerprint})
+    return services
+
+
+def stop_current_services(services, task_id):
+    import signal
+    import subprocess
+    import time
+    for service in services:
+        read_maintenance_task(task_id)
+        original = service['fingerprint']
+        observed = read_service_candidate(pid=original['pid'], expected_argv=service['argv'], expected_cwd=service['cwd'],
+            expected_port=service['port'], expected_child_argv=service['helper_argv'])
+        require_process(original, observed, executor_pid=os.getpid())
+        os.kill(original['pid'], signal.SIGTERM)
+        for _ in range(100):
+            probe = subprocess.run(['ps', '-p', str(original['pid']), '-o', 'stat='], capture_output=True, text=True)
+            listener = subprocess.run(['lsof', '-nP', f"-iTCP:{service['port']}", '-sTCP:LISTEN', '-t'], capture_output=True)
+            if (probe.returncode != 0 or probe.stdout.strip().startswith('Z')) and not listener.stdout.strip():
+                break
+            time.sleep(.1)
+        else:
+            raise MaintenanceBlocked('SERVICE_STOP_UNKNOWN_RECONCILE_ONLY')
+        for child in original['children']:
+            probe = subprocess.run(['ps', '-p', str(child['pid']), '-o', 'stat='], capture_output=True, text=True)
+            require(probe.returncode != 0 or probe.stdout.strip().startswith('Z'), 'WEB_HELPER_DID_NOT_EXIT')
+    return {'services_stopped': [service['port'] for service in services], 'forced_signals': 0}
+
+
+def restart_current_services(services, task_id, state):
+    import subprocess
+    import time
+    import urllib.request
+    restarted = []
+    for service in services:
+        read_maintenance_task(task_id)
+        port = service['port']
+        listener = subprocess.run(['lsof', '-nP', f'-iTCP:{port}', '-sTCP:LISTEN', '-t'], capture_output=True)
+        require(not listener.stdout.strip(), 'RESTART_PORT_OCCUPIED_NO_DUPLICATE')
+        if port == 8080:
+            result = subprocess.run(service['argv'][:-1], cwd=service['cwd'], capture_output=True, timeout=90)
+            require(result.returncode == 0, 'CURRENT_SIGNED_STARTUP_PREFLIGHT_FAILED')
+            report = json.loads(result.stdout.strip().splitlines()[-1])
+            require(report['outcome'] == 'CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN' and report['version'] == 'a0v_142',
+                    'CURRENT_SIGNED_STARTUP_SCHEMA_DRIFT')
+        environment = {k: os.environ[k] for k in ('PATH', 'HOME', 'TMPDIR', 'LANG') if k in os.environ}
+        environment.update(service['environment'])
+        log = state / f'service-{port}.log'
+        with os.fdopen(os.open(log, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'wb') as handle:
+            process = subprocess.Popen(service['argv'], cwd=service['cwd'], env=environment,
+                                       stdout=handle, stderr=handle, start_new_session=True)
+        for _ in range(100):
+            require(process.poll() is None, 'RESTARTED_SERVICE_TERMINAL')
+            try:
+                with urllib.request.urlopen(f'http://127.0.0.1:{port}/' + ('v1/ready' if port == 8080 else ''), timeout=2) as response:
+                    if response.status == 200:
+                        break
+            except (OSError, urllib.error.URLError):
+                pass
+            time.sleep(.2)
+        else:
+            raise MaintenanceBlocked('RESTARTED_SERVICE_UNVERIFIED')
+        read_service_candidate(pid=process.pid, expected_argv=service['argv'], expected_cwd=service['cwd'],
+                               expected_port=port, expected_child_argv=service['helper_argv'])
+        restarted.append({'port': port, 'pid': process.pid})
+    return {'restarted': restarted, 'http_read_only_smoke': True, 'business_first_chain': False}
