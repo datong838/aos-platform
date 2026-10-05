@@ -30,6 +30,14 @@ class ProviderCapacitySourceActionGuard(ProviderCapacityActionGuard):
     action_snapshot=dict(id=ACTION_ID,name='审查Provider容量来源',objectType=OBJECT_ID,
         parameters=[],requiredMarkings=[],submissionCriteria=[])
 
+    def check_proposal(self,conn,scope,actor,row,*,checker):
+        roles=super().check_proposal(conn,scope,actor,row,checker=checker)
+        if conn.execute('SELECT 1 FROM public.aip_action_withdrawal_event '
+            'WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+            (*scope.key,row['proposal_id'])).fetchone():
+            raise ProviderCapacitySourceActionBlocked('SOURCE_REVIEW_APPROVAL_WITHDRAWN')
+        return roles
+
     @staticmethod
     def _candidate(conn,scope,ref,kind,model,maker):
         row=conn.execute("SELECT *,encode(public.digest(convert_to(public.canonical_asset_registry_jsonb(request_json),'UTF8'),'sha256'),'hex') AS actual_hash "
@@ -68,6 +76,13 @@ class ProviderCapacitySourceActionGuard(ProviderCapacityActionGuard):
             or event['approval_policy_hash']!=row['approval_policy_hash'] or event['slot_id']!='checker.1'
             or event['expires_at'] is None or event['expires_at']<=now):
             raise ProviderCapacitySourceActionBlocked('SOURCE_ALLOCATION_APPROVAL_DRIFTED')
+        # The granted runtime INSERT path can commit a withdrawal event
+        # without updating the proposal's status. An approved status alone
+        # therefore does not establish a current allocation approval.
+        if conn.execute('SELECT 1 FROM public.aip_action_withdrawal_event '
+            'WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+            (*scope.key,row['proposal_id'])).fetchone():
+            raise ProviderCapacitySourceActionBlocked('SOURCE_ALLOCATION_APPROVAL_WITHDRAWN')
         guard=ProviderCapacityActionGuard()
         guard.check_proposal(conn,scope,event['actor_id'],row,checker=True)
         eligibility=canonical_hash(dict(tenant=dict(orgId=scope.org_id,projectId=scope.project_id),

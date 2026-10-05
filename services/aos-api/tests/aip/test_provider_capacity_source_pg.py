@@ -157,6 +157,55 @@ def test_actual_private_source_matches_original_approved_inputs_and_real_signed_
         assert conn.execute('SELECT session_user AS login,current_user AS role').fetchone()==dict(login='aos_provider_capacity_issuer',role='aos_provider_capacity_issuer')
 
 
+@pytest.mark.parametrize('target,entry',[('source','native'),('allocation','native'),('allocation','review'),('source','review')])
+def test_committed_direct_withdrawal_event_denies_both_original_capacity_approvals(native_signed_source,target,entry):
+    from aos_api.db import connect
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs,ProviderCapacityIssuanceBlocked
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard,ProviderCapacitySourceActionBlocked
+    f,actual_command,_,source,config=native_signed_source
+    command,policy,attestation=actual_command()
+    # First prove the original two approvals and authentic signed inputs match.
+    with connect_capacity_issuer(config,SCOPE) as conn:
+        assert check_native_capacity_supplier_inputs(conn,command,policy,attestation,
+            trust_roots=f['provider']).execution_allowed is False
+    with connect(SCOPE) as conn:
+        assert conn.execute('SELECT current_user AS role').fetchone()['role']=='aos_runtime'
+        if target=='source':proposal_id=command.approved_proposal.asset_id
+        else:
+            proposal_id=conn.execute('SELECT proposal_id FROM aip_action_approval_event '
+                'WHERE org_id=%s AND project_id=%s AND approval_event_id=%s',
+                (*SCOPE.key,source.allocation_approval_ref.asset_id)).fetchone()['proposal_id']
+        row=conn.execute('SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+            (*SCOPE.key,proposal_id)).fetchone()
+        assert row['status']=='approved' and row['version']==2
+        # Use the actual granted INSERT path, without the Store's proposal UPDATE.
+        conn.execute('INSERT INTO aip_action_withdrawal_event '
+            '(org_id,project_id,withdrawal_event_id,proposal_id,proposal_version,proposal_hash,actor_id,reason,idempotency_key,request_hash) '
+            'VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+            (*SCOPE.key,'direct-withdraw-'+uuid4().hex,proposal_id,row['version']+1,row['proposal_hash'],
+                row['created_by'],'isolated direct withdrawal authority','direct-key-'+uuid4().hex,'c'*64))
+        conn.commit()
+        unchanged=conn.execute('SELECT status,version FROM aip_action_proposal '
+            'WHERE org_id=%s AND project_id=%s AND proposal_id=%s',(*SCOPE.key,proposal_id)).fetchone()
+        assert unchanged==dict(status='approved',version=2)
+        assert conn.execute('SELECT count(*) AS n FROM aip_action_withdrawal_event '
+            'WHERE org_id=%s AND project_id=%s AND proposal_id=%s',(*SCOPE.key,proposal_id)).fetchone()['n']==1
+    if entry=='native':
+        with connect_capacity_issuer(config,SCOPE) as conn:
+            with pytest.raises(ProviderCapacityIssuanceBlocked):
+                check_native_capacity_supplier_inputs(conn,command,policy,attestation,trust_roots=f['provider'])
+    else:
+        with connect(SCOPE) as conn:
+            row=conn.execute('SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+                (*SCOPE.key,command.approved_proposal.asset_id)).fetchone()
+            checker=conn.execute('SELECT actor_id FROM aip_action_approval_event '
+                'WHERE org_id=%s AND project_id=%s AND approval_event_id=%s',
+                (*SCOPE.key,command.approval_event.asset_id)).fetchone()['actor_id']
+            with pytest.raises(ProviderCapacitySourceActionBlocked):
+                ProviderCapacitySourceActionGuard().check_proposal(conn,SCOPE,checker,row,checker=True)
+
+
 @pytest.mark.parametrize('fault',['fingerprint','supplier','provider_id','provider_revision','provider_hash','extra_provider',
     'evidence','low_concurrency','low_tokens','other_mode','short_validity','runtime'])
 def test_actual_private_source_rejects_resigned_documents_mismatching_approved_terms(native_signed_source,fault):

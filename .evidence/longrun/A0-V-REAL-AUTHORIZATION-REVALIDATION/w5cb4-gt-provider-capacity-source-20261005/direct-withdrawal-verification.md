@@ -1,0 +1,19 @@
+# 两原批准直接撤回可见性修复检查点
+
+基线m1 031c57d9/AOS-001355；fullSource/formalBoundary/publication/b90 Task持续ACTIVE。受邀只读复核指出原aip_p5_001允许runtime直接INSERT撤回事件；正常Store withdraw的proposal UPDATE不是唯一撤回路径。
+
+## 实际反例与最小修复
+
+使用原独立Source与allocation批准、真实HTTPS OIDC、双Ed25519文件签名及native私有SCRAM。先核无撤回时native原签名输入匹配通过/noGrant，再以真实aos_runtime INSERT withdrawal_event并COMMIT，回读proposal仍approved/version2、实际事件1条。没有通过修改proposal制造拒绝。
+
+首三项RED：allocation/native与allocation/review未抛错，source/native已拒绝；2failed1passed26deselected/11.77秒/exit1。修复_allocation同tenant/proposal撤回存在性：3passed/10.51秒/exit0；该三项版四文件相邻194passed8warnings143.35秒/exit0。
+
+第二次独立复核指出source/review仍漏查自身撤回；补第四项、以原实际独立checker调用guard，RED1failed3passed26deselected12.19秒/exit1。专用SourceGuard覆盖check_proposal：先原父guard核身份/原绑定/当前makerChecker及依赖，再自身Source撤回事件拒绝；保留原roles返回，不改普通Action或旧allocation审批guard。最终4passed26deselected7warnings12.29秒/exit0。原code AST两文件通过；最终四文件相邻195passed8warnings145.16秒/exit0；两文件AST与精确whitespace通过，受邀只读最终复核无新阻断。
+
+## 明确保留的风险和下一门
+
+SELECT仅证明当前事务可见的已提交撤回被拒绝，不提供旧SERsnapshot或并发直接INSERT的COMMIT协调；没有正式Source publication实际COMMIT、consumer、全域mapping或执行权。a151方案须冻结两原proposal撤回epoch/直接INSERT trigger、writer-first旧snapshot拒绝和reader-first真实pg_blocking_pids等待、普通withdraw兼容；不能用本GREEN关闭完整Source。
+
+独立publisher的正式bootstrap外部anchor/签名purpose/OIDC原身份与permit，以及SQL任意issuer EXECUTE防映射污染仍未冻结；通用Ed25519验签不证明用途或SQL入库自动受限。方案已记录原SourceProposal→Source metadata/maker→原Provider→allocationProposal/metadata/Owner→neutral→完整Provider→Source checker结构；新域锁不得反转原链。
+
+未操作当前真库、Host/worker、真实Provider/Secret、商城源、旧12Run、manual run_definition、230L0、未知重发或外部效果。test-only原始签名/事实不冒充供应商真实授权；自然经营首链/八工作台/连续观察与发布仍pending。受邀只读复核不是独立daemon自主值班。
