@@ -1,0 +1,13 @@
+{
+  "effective": "*",
+  "rows": [
+    {
+      "sourcefile": "/var/lib/postgresql/data/postgresql.conf",
+      "setting": "*",
+      "applied": true,
+      "error": null
+    }
+  ],
+  "restore_statement": "ALTER SYSTEM RESET listen_addresses",
+  "executed": false
+}

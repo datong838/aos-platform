@@ -1,0 +1,27 @@
+....................................FF                                   [100%]
+=================================== FAILURES ===================================
+____________ test_sequencer_does_not_accept_truncated_done_evidence ____________
+
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-402/test_sequencer_does_not_accept0')
+
+    def test_sequencer_does_not_accept_truncated_done_evidence(tmp_path):
+        (tmp_path / 'stop_clients-done.json').write_text('{')
+>       with pytest.raises(m.MaintenanceBlocked):
+E       Failed: DID NOT RAISE MaintenanceBlocked
+
+scripts/tests/test_a0v_current_142_maintenance.py:147: Failed
+_____________ test_sequencer_does_not_accept_symlink_done_evidence _____________
+
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-402/test_sequencer_does_not_accept1')
+
+    def test_sequencer_does_not_accept_symlink_done_evidence(tmp_path):
+        external = tmp_path / 'unrelated.json'; external.write_text('{"observed": true}')
+        (tmp_path / 'stop_clients-done.json').symlink_to(external)
+>       with pytest.raises(m.MaintenanceBlocked):
+E       Failed: DID NOT RAISE MaintenanceBlocked
+
+scripts/tests/test_a0v_current_142_maintenance.py:154: Failed
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_sequencer_does_not_accept_truncated_done_evidence
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_sequencer_does_not_accept_symlink_done_evidence
+2 failed, 36 passed in 0.08s

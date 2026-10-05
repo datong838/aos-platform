@@ -1,0 +1,155 @@
+..........................FFFFFFF                                        [100%]
+=================================== FAILURES ===================================
+_______ test_formal_task_refuses_stale_or_code_only_permission[expired] ________
+
+drift = 'expired'
+
+    @pytest.mark.parametrize('drift', ['expired', 'wrong_owner', 'missing_database', 'no_live_lease', 'delivered', 'authority_changed'])
+    def test_formal_task_refuses_stale_or_code_only_permission(drift):
+        from datetime import datetime, timezone
+>       task = maintenance_task(); live = [task.copy()]; delivered = False; revision = 'AOS-001329'
+               ^^^^^^^^^^^^^^^^^^
+
+scripts/tests/test_a0v_current_142_maintenance.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def maintenance_task():
+>       return {'task_id': 'current142-formal-resource', 'owner': m.OWNER,
+                                                                  ^^^^^^^
+                'base_revision': 'AOS-001329', 'status': 'ACTIVE',
+                'lease_expires_at': '2026-10-05T16:00:00+08:00', 'scope': list(m.MAINTENANCE_SCOPES)}
+E       AttributeError: module 'maintenance142' has no attribute 'OWNER'
+
+scripts/tests/test_a0v_current_142_maintenance.py:104: AttributeError
+_____ test_formal_task_refuses_stale_or_code_only_permission[wrong_owner] ______
+
+drift = 'wrong_owner'
+
+    @pytest.mark.parametrize('drift', ['expired', 'wrong_owner', 'missing_database', 'no_live_lease', 'delivered', 'authority_changed'])
+    def test_formal_task_refuses_stale_or_code_only_permission(drift):
+        from datetime import datetime, timezone
+>       task = maintenance_task(); live = [task.copy()]; delivered = False; revision = 'AOS-001329'
+               ^^^^^^^^^^^^^^^^^^
+
+scripts/tests/test_a0v_current_142_maintenance.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def maintenance_task():
+>       return {'task_id': 'current142-formal-resource', 'owner': m.OWNER,
+                                                                  ^^^^^^^
+                'base_revision': 'AOS-001329', 'status': 'ACTIVE',
+                'lease_expires_at': '2026-10-05T16:00:00+08:00', 'scope': list(m.MAINTENANCE_SCOPES)}
+E       AttributeError: module 'maintenance142' has no attribute 'OWNER'
+
+scripts/tests/test_a0v_current_142_maintenance.py:104: AttributeError
+___ test_formal_task_refuses_stale_or_code_only_permission[missing_database] ___
+
+drift = 'missing_database'
+
+    @pytest.mark.parametrize('drift', ['expired', 'wrong_owner', 'missing_database', 'no_live_lease', 'delivered', 'authority_changed'])
+    def test_formal_task_refuses_stale_or_code_only_permission(drift):
+        from datetime import datetime, timezone
+>       task = maintenance_task(); live = [task.copy()]; delivered = False; revision = 'AOS-001329'
+               ^^^^^^^^^^^^^^^^^^
+
+scripts/tests/test_a0v_current_142_maintenance.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def maintenance_task():
+>       return {'task_id': 'current142-formal-resource', 'owner': m.OWNER,
+                                                                  ^^^^^^^
+                'base_revision': 'AOS-001329', 'status': 'ACTIVE',
+                'lease_expires_at': '2026-10-05T16:00:00+08:00', 'scope': list(m.MAINTENANCE_SCOPES)}
+E       AttributeError: module 'maintenance142' has no attribute 'OWNER'
+
+scripts/tests/test_a0v_current_142_maintenance.py:104: AttributeError
+____ test_formal_task_refuses_stale_or_code_only_permission[no_live_lease] _____
+
+drift = 'no_live_lease'
+
+    @pytest.mark.parametrize('drift', ['expired', 'wrong_owner', 'missing_database', 'no_live_lease', 'delivered', 'authority_changed'])
+    def test_formal_task_refuses_stale_or_code_only_permission(drift):
+        from datetime import datetime, timezone
+>       task = maintenance_task(); live = [task.copy()]; delivered = False; revision = 'AOS-001329'
+               ^^^^^^^^^^^^^^^^^^
+
+scripts/tests/test_a0v_current_142_maintenance.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def maintenance_task():
+>       return {'task_id': 'current142-formal-resource', 'owner': m.OWNER,
+                                                                  ^^^^^^^
+                'base_revision': 'AOS-001329', 'status': 'ACTIVE',
+                'lease_expires_at': '2026-10-05T16:00:00+08:00', 'scope': list(m.MAINTENANCE_SCOPES)}
+E       AttributeError: module 'maintenance142' has no attribute 'OWNER'
+
+scripts/tests/test_a0v_current_142_maintenance.py:104: AttributeError
+______ test_formal_task_refuses_stale_or_code_only_permission[delivered] _______
+
+drift = 'delivered'
+
+    @pytest.mark.parametrize('drift', ['expired', 'wrong_owner', 'missing_database', 'no_live_lease', 'delivered', 'authority_changed'])
+    def test_formal_task_refuses_stale_or_code_only_permission(drift):
+        from datetime import datetime, timezone
+>       task = maintenance_task(); live = [task.copy()]; delivered = False; revision = 'AOS-001329'
+               ^^^^^^^^^^^^^^^^^^
+
+scripts/tests/test_a0v_current_142_maintenance.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def maintenance_task():
+>       return {'task_id': 'current142-formal-resource', 'owner': m.OWNER,
+                                                                  ^^^^^^^
+                'base_revision': 'AOS-001329', 'status': 'ACTIVE',
+                'lease_expires_at': '2026-10-05T16:00:00+08:00', 'scope': list(m.MAINTENANCE_SCOPES)}
+E       AttributeError: module 'maintenance142' has no attribute 'OWNER'
+
+scripts/tests/test_a0v_current_142_maintenance.py:104: AttributeError
+__ test_formal_task_refuses_stale_or_code_only_permission[authority_changed] ___
+
+drift = 'authority_changed'
+
+    @pytest.mark.parametrize('drift', ['expired', 'wrong_owner', 'missing_database', 'no_live_lease', 'delivered', 'authority_changed'])
+    def test_formal_task_refuses_stale_or_code_only_permission(drift):
+        from datetime import datetime, timezone
+>       task = maintenance_task(); live = [task.copy()]; delivered = False; revision = 'AOS-001329'
+               ^^^^^^^^^^^^^^^^^^
+
+scripts/tests/test_a0v_current_142_maintenance.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def maintenance_task():
+>       return {'task_id': 'current142-formal-resource', 'owner': m.OWNER,
+                                                                  ^^^^^^^
+                'base_revision': 'AOS-001329', 'status': 'ACTIVE',
+                'lease_expires_at': '2026-10-05T16:00:00+08:00', 'scope': list(m.MAINTENANCE_SCOPES)}
+E       AttributeError: module 'maintenance142' has no attribute 'OWNER'
+
+scripts/tests/test_a0v_current_142_maintenance.py:104: AttributeError
+______________ test_formal_task_accepts_exact_live_resource_lease ______________
+
+    def test_formal_task_accepts_exact_live_resource_lease():
+        from datetime import datetime, timezone
+>       task = maintenance_task()
+               ^^^^^^^^^^^^^^^^^^
+
+scripts/tests/test_a0v_current_142_maintenance.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def maintenance_task():
+>       return {'task_id': 'current142-formal-resource', 'owner': m.OWNER,
+                                                                  ^^^^^^^
+                'base_revision': 'AOS-001329', 'status': 'ACTIVE',
+                'lease_expires_at': '2026-10-05T16:00:00+08:00', 'scope': list(m.MAINTENANCE_SCOPES)}
+E       AttributeError: module 'maintenance142' has no attribute 'OWNER'
+
+scripts/tests/test_a0v_current_142_maintenance.py:104: AttributeError
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_formal_task_refuses_stale_or_code_only_permission[expired]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_formal_task_refuses_stale_or_code_only_permission[wrong_owner]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_formal_task_refuses_stale_or_code_only_permission[missing_database]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_formal_task_refuses_stale_or_code_only_permission[no_live_lease]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_formal_task_refuses_stale_or_code_only_permission[delivered]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_formal_task_refuses_stale_or_code_only_permission[authority_changed]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_formal_task_accepts_exact_live_resource_lease
+7 failed, 26 passed in 0.09s

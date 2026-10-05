@@ -1,0 +1,33 @@
+.................................FFF                                     [100%]
+=================================== FAILURES ===================================
+_______ test_listen_restore_resets_added_override_when_original_has_none _______
+
+    def test_listen_restore_resets_added_override_when_original_has_none():
+        rows = [{'sourcefile': '/var/lib/postgresql/data/postgresql.conf', 'setting': '*', 'applied': True, 'error': None}]
+>       assert m.listen_restore_statement(rows, effective='*') == 'ALTER SYSTEM RESET listen_addresses'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance142' has no attribute 'listen_restore_statement'
+
+scripts/tests/test_a0v_current_142_maintenance.py:133: AttributeError
+_______________ test_listen_restore_keeps_original_auto_override _______________
+
+    def test_listen_restore_keeps_original_auto_override():
+        rows = [{'sourcefile': '/var/lib/postgresql/data/postgresql.auto.conf', 'setting': '*', 'applied': True, 'error': None}]
+>       assert m.listen_restore_statement(rows, effective='*') == "ALTER SYSTEM SET listen_addresses = '*'"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance142' has no attribute 'listen_restore_statement'
+
+scripts/tests/test_a0v_current_142_maintenance.py:138: AttributeError
+________ test_listen_restore_rejects_unexpected_effective_configuration ________
+
+    def test_listen_restore_rejects_unexpected_effective_configuration():
+>       with pytest.raises(m.MaintenanceBlocked): m.listen_restore_statement([], effective='localhost')
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance142' has no attribute 'listen_restore_statement'
+
+scripts/tests/test_a0v_current_142_maintenance.py:142: AttributeError
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_listen_restore_resets_added_override_when_original_has_none
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_listen_restore_keeps_original_auto_override
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_listen_restore_rejects_unexpected_effective_configuration
+3 failed, 33 passed in 0.07s

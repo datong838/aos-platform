@@ -1,0 +1,12 @@
+{
+  "outcome": "ISOLATED_COMPLETE_MAINTENANCE_SEQUENCE_GREEN",
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/.aos-maintenance142-dmubhn4_",
+  "containers": [
+    "aos-sequence142-e1d24d899116",
+    "aos-sequence142-0fdb874fc598"
+  ],
+  "tables": 592,
+  "elapsed_seconds": 16.749,
+  "current_source_touched": false,
+  "formal_current_window_proven": false
+}

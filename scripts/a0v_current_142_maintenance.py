@@ -70,7 +70,19 @@ class MaintenanceJournal:
     def perform(self, step, operation):
         require(step in STEPS, 'UNKNOWN_STEP')
         for prior in STEPS[:STEPS.index(step)]:
-            require((self.directory / (prior + '-done.json')).is_file(), 'PRIOR_STEP_UNVERIFIED')
+            path = self.directory / (prior + '-done.json')
+            require(path.is_file() and not path.is_symlink(), 'PRIOR_STEP_UNVERIFIED')
+            try:
+                with os.fdopen(os.open(path, os.O_RDONLY | os.O_NOFOLLOW), 'r') as handle:
+                    require(os.fstat(handle.fileno()).st_size <= 65536, 'PRIOR_EVIDENCE_TOO_LARGE')
+                    evidence = json.load(handle)
+                require(isinstance(evidence, dict) and bool(evidence), 'PRIOR_EVIDENCE_INVALID')
+                attempt_path = self.directory / (prior + '-attempt.json')
+                require(attempt_path.is_file() and not attempt_path.is_symlink(), 'PRIOR_ATTEMPT_MISSING')
+                attempt = json.loads(attempt_path.read_text())
+                require(attempt.get('step') == prior, 'PRIOR_ATTEMPT_STEP_DRIFT')
+            except (OSError, ValueError, TypeError, AttributeError):
+                raise MaintenanceBlocked('PRIOR_EVIDENCE_UNREADABLE') from None
         record_attempt(self.directory, step, {'step': step})
         result = operation()
         require(isinstance(result, dict), 'POSTCONDITION_MISSING')
@@ -158,6 +170,12 @@ def run_isolated(*, backup_state, evidence_directory):
             (backup_state / 'current-full.dump').read_bytes())
     require(snapshot(source) == expected, 'ISOLATED_INITIAL_RESTORE_MISMATCH')
     require(pg(source, 'SELECT 1', g.SOURCE, tcp=True).stdout.strip() == b'1', 'TCP_BASELINE_MISSING')
+    listen_query = "SELECT json_agg(x) FROM (SELECT sourcefile,setting,applied,error FROM pg_file_settings WHERE name='listen_addresses') x"
+    original_listen_rows = json.loads(pg(source, listen_query).stdout)
+    original_listen = pg(source, 'SHOW listen_addresses').stdout.decode().strip()
+    restore_statement = listen_restore_statement(original_listen_rows, effective=original_listen)
+    g.save(state / 'listen-original.json', {'rows': original_listen_rows, 'effective': original_listen,
+                                         'restore_statement': restore_statement})
     journal.perform('stop_clients', lambda: {'scope': 'ISOLATED_NO_APPLICATION_CLIENTS'})
 
     def fence():
@@ -217,10 +235,11 @@ def run_isolated(*, backup_state, evidence_directory):
     journal.perform('verify', verify)
 
     def restore_tcp():
-        pg(source, "ALTER SYSTEM SET listen_addresses='*'")
+        pg(source, restore_statement)
         execute(['restart', source]); ready(source)
         require(pg(source, 'SELECT 1', g.SOURCE, tcp=True).stdout.strip() == b'1', 'TCP_RESTORE_FAILED')
-        return {'tcp_available': True}
+        require(json.loads(pg(source, listen_query).stdout) == original_listen_rows, 'LISTEN_CONFIGURATION_SOURCE_DRIFT')
+        return {'tcp_available': True, 'original_configuration_source_restored': True}
     journal.perform('restore_tcp', restore_tcp)
     journal.perform('restart_clients', lambda: {'scope': 'ISOLATED_NO_APPLICATION_CLIENTS'})
 
@@ -298,3 +317,58 @@ def read_service_candidate(*, pid, expected_argv, expected_cwd, expected_port, e
                 'cwd': directories[0], 'children': children, 'listener_ports': [expected_port]}
     require_process(observed, observed, executor_pid=os.getpid())
     return observed
+
+
+OWNER = 'codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2'
+MAINTENANCE_SCOPES = tuple('aos-platform/maintenance/current-preview-' + resource
+                           for resource in ('database', 'api', 'web'))
+
+
+def require_maintenance_task(task, live_leases, *, revision, delivered, now):
+    from datetime import datetime, timezone
+    require(revision == 'AOS-001329' and task.get('base_revision') == revision, 'MAINTENANCE_AUTHORITY_DRIFT')
+    require(task.get('owner') == OWNER and task.get('status') == 'ACTIVE' and not delivered, 'MAINTENANCE_TASK_NOT_ACTIVE')
+    require(set(MAINTENANCE_SCOPES) <= set(task.get('scope', [])), 'MAINTENANCE_RESOURCE_SCOPE_MISSING')
+    matches = [lease for lease in live_leases if lease.get('task_id') == task.get('task_id')]
+    require(len(matches) == 1 and matches[0] == task, 'MAINTENANCE_LIVE_LEASE_MISSING_OR_DRIFTED')
+    try:
+        expiry = datetime.fromisoformat(task['lease_expires_at'])
+        require(expiry.tzinfo is not None and now.tzinfo is not None, 'MAINTENANCE_TIMEZONE_REQUIRED')
+        require(expiry.astimezone(timezone.utc) > now.astimezone(timezone.utc), 'MAINTENANCE_LEASE_EXPIRED')
+    except (KeyError, TypeError, ValueError):
+        raise MaintenanceBlocked('MAINTENANCE_LEASE_INVALID') from None
+
+
+def read_maintenance_task(task_id):
+    """Read original authority/Receipt/live lease before each future mutation."""
+    import re
+    from datetime import datetime, timezone
+    require(isinstance(task_id, str) and re.fullmatch(r'[A-Za-z0-9_.-]+', task_id), 'MAINTENANCE_TASK_ID_INVALID')
+    root = Path(__file__).resolve().parents[1]
+    memory = root.parent / 'docs/palantier/AOS项目开发上下文/memory'
+    authority = json.loads((memory / 'authority.json').read_text())
+    task_path = memory / 'receipts/tasks' / (task_id + '.json')
+    require(task_path.is_file(), 'MAINTENANCE_TASK_RECEIPT_MISSING')
+    task = json.loads(task_path.read_text())
+    require(task.get('task_id') == task_id, 'MAINTENANCE_TASK_ID_DRIFT')
+    leases = json.loads((memory / 'leases.json').read_text())['leases']
+    delivered = (memory / 'receipts/deliveries' / (task_id + '.json')).exists()
+    require_maintenance_task(task, leases, revision=authority['project_revision'], delivered=delivered,
+                             now=datetime.now(timezone.utc))
+    return task
+
+
+def listen_restore_statement(rows, *, effective):
+    """Restore original override presence, not merely the effective value."""
+    require(effective == '*' and rows, 'LISTEN_ORIGINAL_CONFIGURATION_DRIFT')
+    require(all(row.get('error') is None for row in rows), 'LISTEN_CONFIGURATION_ERROR')
+    active = [row for row in rows if row.get('applied')]
+    require(len(active) == 1 and active[0].get('setting') == effective, 'LISTEN_SOURCE_AMBIGUOUS')
+    files = {row.get('sourcefile') for row in rows}
+    require(files <= {'/var/lib/postgresql/data/postgresql.conf',
+                      '/var/lib/postgresql/data/postgresql.auto.conf'}, 'LISTEN_SOURCE_FILE_DRIFT')
+    auto = [row for row in rows if row.get('sourcefile') == '/var/lib/postgresql/data/postgresql.auto.conf']
+    if auto:
+        require(len(auto) == 1 and auto[0].get('applied'), 'LISTEN_AUTO_OVERRIDE_AMBIGUOUS')
+        return "ALTER SYSTEM SET listen_addresses = '*'"
+    return 'ALTER SYSTEM RESET listen_addresses'

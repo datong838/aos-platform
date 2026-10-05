@@ -98,3 +98,58 @@ def test_process_guard_cannot_target_executor():
 
 def test_verified_original_leaf_is_read_only_candidate():
     m.require_process(process(), process(), executor_pid=20001)
+
+
+def maintenance_task():
+    return {'task_id': 'current142-formal-resource', 'owner': m.OWNER,
+            'base_revision': 'AOS-001329', 'status': 'ACTIVE',
+            'lease_expires_at': '2026-10-05T16:00:00+08:00', 'scope': list(m.MAINTENANCE_SCOPES)}
+
+
+@pytest.mark.parametrize('drift', ['expired', 'wrong_owner', 'missing_database', 'no_live_lease', 'delivered', 'authority_changed'])
+def test_formal_task_refuses_stale_or_code_only_permission(drift):
+    from datetime import datetime, timezone
+    task = maintenance_task(); live = [task.copy()]; delivered = False; revision = 'AOS-001329'
+    if drift == 'expired': task['lease_expires_at'] = '2026-10-05T09:00:00+08:00'; live = [task.copy()]
+    if drift == 'wrong_owner': task['owner'] = 'old-thread'; live = [task.copy()]
+    if drift == 'missing_database': task['scope'] = ['aos-platform/scripts/a0v_current_142_maintenance.py']; live = [task.copy()]
+    if drift == 'no_live_lease': live = []
+    if drift == 'delivered': delivered = True
+    if drift == 'authority_changed': revision = 'AOS-001330'
+    with pytest.raises(m.MaintenanceBlocked):
+        m.require_maintenance_task(task, live, revision=revision, delivered=delivered,
+                                   now=datetime(2026, 10, 5, 2, 5, tzinfo=timezone.utc))
+
+
+def test_formal_task_accepts_exact_live_resource_lease():
+    from datetime import datetime, timezone
+    task = maintenance_task()
+    m.require_maintenance_task(task, [task.copy()], revision='AOS-001329', delivered=False,
+                               now=datetime(2026, 10, 5, 2, 5, tzinfo=timezone.utc))
+
+
+def test_listen_restore_resets_added_override_when_original_has_none():
+    rows = [{'sourcefile': '/var/lib/postgresql/data/postgresql.conf', 'setting': '*', 'applied': True, 'error': None}]
+    assert m.listen_restore_statement(rows, effective='*') == 'ALTER SYSTEM RESET listen_addresses'
+
+
+def test_listen_restore_keeps_original_auto_override():
+    rows = [{'sourcefile': '/var/lib/postgresql/data/postgresql.auto.conf', 'setting': '*', 'applied': True, 'error': None}]
+    assert m.listen_restore_statement(rows, effective='*') == "ALTER SYSTEM SET listen_addresses = '*'"
+
+
+def test_listen_restore_rejects_unexpected_effective_configuration():
+    with pytest.raises(m.MaintenanceBlocked): m.listen_restore_statement([], effective='localhost')
+
+
+def test_sequencer_does_not_accept_truncated_done_evidence(tmp_path):
+    (tmp_path / 'stop_clients-done.json').write_text('{')
+    with pytest.raises(m.MaintenanceBlocked):
+        m.MaintenanceJournal(tmp_path).perform('fence_tcp', lambda: {'unsafe': True})
+
+
+def test_sequencer_does_not_accept_symlink_done_evidence(tmp_path):
+    external = tmp_path / 'unrelated.json'; external.write_text('{"observed": true}')
+    (tmp_path / 'stop_clients-done.json').symlink_to(external)
+    with pytest.raises(m.MaintenanceBlocked):
+        m.MaintenanceJournal(tmp_path).perform('fence_tcp', lambda: {'unsafe': True})
