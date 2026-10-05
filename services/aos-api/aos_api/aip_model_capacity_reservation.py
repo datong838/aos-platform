@@ -10,7 +10,7 @@ from aos_api.aip_agent_registry_store import (
     AipAgentRegistryConflict,
     AipAgentRegistryTransitionBlocked,
 )
-from aos_api.aip_model_runtime_contracts import ModelRouteResolution
+from aos_api.aip_model_runtime_contracts import ModelRouteResolution, ModelRuntimeReadiness
 from aos_api.db import connect as db_connect
 from aos_api.tenant_scope import TenantScope
 
@@ -27,7 +27,11 @@ class AipModelCapacityReservationGate:
         resolution: ModelRouteResolution,
         agent_run_id: str,
     ) -> str:
-        exact = self._exact_resolution(resolution)
+        if (type(scope) is not TenantScope or type(agent_run_id) is not str
+            or not 1 <= len(agent_run_id) <= 200
+            or agent_run_id != agent_run_id.strip()):
+            raise AipAgentRegistryTransitionBlocked("capacity_exact_resolution_required")
+        exact = self._exact_resolution(resolution, scope=scope)
         with self._connect_factory(scope) as conn:
             pool = conn.execute(
                 """SELECT h.pool_id,h.current_revision,r.max_concurrency,
@@ -197,8 +201,19 @@ class AipModelCapacityReservationGate:
         return hashlib.sha256(raw).hexdigest()
 
     @staticmethod
-    def _exact_resolution(resolution: ModelRouteResolution) -> tuple[object, ...]:
-        if resolution.selected_model is None or resolution.selected_provider is None:
+    def _exact_resolution(resolution: ModelRouteResolution, *, scope: TenantScope | None = None) -> tuple[object, ...]:
+        if type(resolution) is not ModelRouteResolution:
+            raise AipAgentRegistryTransitionBlocked("capacity_exact_resolution_required")
+        try:
+            resolution = ModelRouteResolution.model_validate(
+                resolution.model_dump(mode="python", by_alias=True))
+        except (TypeError, ValueError) as exc:
+            raise AipAgentRegistryTransitionBlocked("capacity_exact_resolution_required") from exc
+        if (resolution.readiness is not ModelRuntimeReadiness.READY
+            or resolution.blocker_codes or resolution.selected_model is None
+            or resolution.selected_provider is None or resolution.selected_price_snapshot is None
+            or (scope is not None and (type(scope) is not TenantScope
+                or (resolution.tenant.org_id, resolution.tenant.project_id) != scope.key))):
             raise AipAgentRegistryTransitionBlocked("capacity_exact_resolution_required")
         refs = (resolution.route, resolution.selected_model, resolution.selected_provider)
         return tuple(value for ref in refs for value in (ref.asset_id, ref.revision, ref.content_hash))

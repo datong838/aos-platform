@@ -81,3 +81,43 @@ def test_two_route_pools_for_one_provider_cannot_each_take_full_physical_slot() 
     gate.reserve(SCOPE, first, "test:gtb4:ordinary:first")
     with pytest.raises(AipAgentRegistryTransitionBlocked, match="physical_capacity"):
         gate.reserve(SCOPE, second, "test:gtb4:ordinary:second")
+
+
+@pytest.mark.parametrize("fault", ["tenant", "blocked_mutation", "ref_kind", "empty_run", "spaced_run", "missing_scope"])
+def test_capacity_entry_rejects_invalid_source_before_original_pg_occupation(fault):
+    """Maintenance pool negative; this is no legitimate model quality positive."""
+    from uuid import uuid4
+    resolution = _seed_route_pool_without_physical_account("entry-" + uuid4().hex)
+    run_id = "capacity-entry-" + uuid4().hex
+    if fault == "tenant":
+        resolution = resolution.model_copy(update={"tenant": TenantContext(
+            orgId="dev-org", projectId="dev-project")})
+    elif fault == "blocked_mutation":
+        resolution = resolution.model_copy(update={"readiness": ModelRuntimeReadiness.BLOCKED,
+                                                   "blocker_codes": ["unavailable"]})
+    elif fault == "ref_kind":
+        resolution = resolution.model_copy(update={"selected_provider":
+            resolution.selected_provider.model_copy(update={"asset_type": "RegisteredModelRevision"})})
+    elif fault == "empty_run":
+        run_id = ""
+    elif fault == "spaced_run":
+        run_id = " " + run_id
+    def snapshot(scope):
+        with connect(scope) as conn:
+            return [conn.execute(f"SELECT coalesce(jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text),"
+                f"'[]'::jsonb) AS value FROM {table} t").fetchone()['value']
+                for table in ('aip_model_capacity_reservation', 'aip_model_capacity_event')]
+    canary = TenantScope('dev-org', 'dev-project')
+    before, isolated = snapshot(SCOPE), snapshot(canary)
+    from contextlib import contextmanager
+    opened = []
+    @contextmanager
+    def traced_caller(scope):
+        opened.append(scope)
+        with connect(scope) as conn:
+            yield conn
+    with pytest.raises(AipAgentRegistryTransitionBlocked, match="capacity_exact_resolution_required"):
+        AipModelCapacityReservationGate(traced_caller).reserve(
+            None if fault == "missing_scope" else SCOPE, resolution, run_id)
+    assert opened == []
+    assert snapshot(SCOPE) == before and snapshot(canary) == isolated

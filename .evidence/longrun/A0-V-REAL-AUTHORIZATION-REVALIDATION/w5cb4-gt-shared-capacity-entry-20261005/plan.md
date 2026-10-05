@@ -1,0 +1,19 @@
+# GT共享容量正式切换与原入口修订
+
+基线215e03d7/AOS-001345。上位GT-b4 shared-ledger方案约束不变，普通/Eval最终共用Provider物理账户；额度来源缺失不得启动Eval，普通新物理门切换须独立批准与旧占用盘点，不能静默清零或假定Route池上限=Provider上限。
+
+## 本波文件与实际RED
+
+文件aos_api/aip_model_capacity_reservation.py、tests/aip/test_model_eval_shared_capacity_pg.py及本证据目录。原reserve按caller scope查池，但_exact_resolution不核resolution.tenant，不重parse被修改DTO，也不核runID，可能错误输入实际占额。用5433一次性PG、隔离维护负例池，测试错tenant/被改blocked/错refkind/空run/带空白run拒绝且预留与事件不变。池是故障探针，不是合法Model/Route正向。先实际RED，再原DTO重新解析与scope/READY/canonical run检查，全部在连接前；共享static helper兼容原ContentBudget使用方式，正常同scope原READY原池行为保持。专项/原容量累计、编译、方案与独立复审；两原物理cap strictxfail保留，不宣称此修复关闭它们。
+
+## 共享物理权威、账本与Intent整体实现要求
+
+1. 物理上限单独由精确Provider容量配置申请和原独立Owner审批产生，冻结Provider exact/稳定物理账户ID、原许可证据ref/来源hash、并发/token限额、计量单位、期限、maker/checker。Quota和Route池不是该来源；缺来源保留拒绝。供应商可用上限尚不能从现存Provider字段推导，不补常数。
+2. 新additive迁移要独立不可变申请/批准Receipt、Provider账户head/revision、共享occupation/event及一次Intent；FORCE RLS，固定NOLOGIN发行/消费角色，原业务runtime不得伪造批准或激活额度。迁移仅隔离库，实际启用另有当前正式身份/备份恢复/零执行门。
+3. 普通AgentRun与ModelEvalRequest按明确purpose/ref分别占同provider账户，不用假的AgentRun。原普通Route池限制保留；唯一共享账户锁不能按Route或Provider revision分裂，限额降低/新revision不能逃逸旧占用。正式变更先盘点全部普通/Eval占用，未结unknown阻止不安全缩额。
+4. 同caller SERIAL事务预算→Provider账户→普通Route池及共同reservation/Intent写入；锁图须与原ContentCapacity→Budget及ModelEval head锁协调，不能只照抄顺序。事务内无网络，不把自提交reserve拼接成原子双预留。
+5. prepared零发送取消可释放；claimed/submitted/unknown在读对账证明前不得按TTL释放或重发。现有普通consumed会按expires过期，不能直接拿这套TTL计数代表unknown物理占用。新的共享记录须与原状态对账，保留历史Receipt。
+6. 切换须明确租户级正式协议/Receipt与全部旧活跃占用完整映射，原调用期间有原子切换保护；不得用兼容fallback让已切换普通路径绕过新门。未切换不能允许Eval共享发送。协议完成前只保留旧业务行为，不能声称已满足共享物理验收。
+7. 后继精确文件：新aip_provider_capacity_authorization.py、aip_provider_capacity_store.py、aip_model_eval_intent.py、必要a0v_145迁移，原aip_model_capacity_reservation.py/ModelEvalBudgetReservation/ContentCapacityBudget接线及对应PG测试。新增精确Task/Lease和发行来源/切换方案完成后编码，不以本清单隐性批量更改。
+
+本波退出仅原输入隔离缺口；完整GT-b4b/c与b90三写/API保持pending。没有真库/Host/Provider/Secret/外部效果。
