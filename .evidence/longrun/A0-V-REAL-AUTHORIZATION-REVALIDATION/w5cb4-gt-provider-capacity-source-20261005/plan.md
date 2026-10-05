@@ -1,0 +1,42 @@
+# Provider正式容量来源与稳定账户映射
+
+基线 m1 745b6741/AOS-001348，Task gt-provider-capacity-source-20261005。承接原独立 no-execution 条款批准，目标仍是正式来源→共同物理账本→旧占用正式切换→同caller预算容量一次Intent→实际执行证据，不把DTO/测试当整体完成。
+
+## 源码及督导复核
+
+原 ProviderInstanceRevision 69–82 行只有 plugin/endpoint/opaque secret 引用和版本、egress/data/lifecycle，没有供应商账户或物理上限。原 LicenseSource 的内部分析/可追溯派生用途不支持容量权威，不能扩大旧许可证语义。原 GuardIssuer 提供外部 OIDC、私有数据库身份、一次尝试与未知对账模式，但不能复用旧角色权限。获批申请仍 owner_requested_allocation/basisVerified=false，客户端账户名和数量不能当 verified_supplier_limit。
+
+文件清单：新增 services/aos-api/aos_api/aip_provider_capacity_source_contracts.py、aip_provider_capacity_source_authority.py、aip_provider_capacity_source_issuer.py、aip_provider_capacity_issuer_connection.py；新 a0v_147_provider_capacity_source.py；tests/aip/test_provider_capacity_source_contracts.py、test_provider_capacity_source_pg.py；本证据目录。先严格契约RED，再事务内来源核验与正式issuer/非执行Revision；签发设计细节先补本方案，不扩大为共享账本启用。
+
+## 不变量与实现顺序
+
+1. 严格区分 Owner 已批配置分配条款与供应商已核限额。Source candidate 不能自行填 basisVerified=true 获得供应商权威；必须消费独立来源生产/审批/签名及账户归属，完整exact引用/hash/tenant/期限。缺真实来源仅禁实际发行/执行，通用契约与隔离代码继续开发。
+2. Provider exact→受控稳定物理账户有独立映射权威，不从endpoint/secret字符串或client accountId推导。同账户多个Provider实例、Route及secret轮换必须共账；账户身份不得包含Provider revision。旧GT-b4按provider instance账户粒度应在共同账本方案中修订，不能在新表偷偷拆额。
+3. 明确并发请求、同时占用token上界、供应商TPM/窗口限额等计量维度。token单位本身不证明窗口；供应商速率不能直接替换inflight token占额或Owner请求20000之类测试值。计量模式/窗口未知或不适用必须拒绝。
+4. 原申请/提案/独立ApprovalEvent exact绑定、当前maker/checker Owner、原Provider head和Source epoch同caller重验；来源撤回与签发提交需两方向实际竞争测试，不以仅一次metadata读取证明commit当前性。直接runtime行及构造Principal不是正式签发来源。
+5. 新最小NOLOGIN签发/消费Owner、受限私有数据库身份、固定schema/角色/GUC/事务/目标库及ACL/所有权漂移拒绝；FORCE RLS、append-only Source revision、signed provenance/atmostonce attempt，未知不换key重试。复用原canonical/hash和审批权威，不复制第二批准表。
+6. 首步契约与负例、随后隔离来源生产/核验/受限签发，最后消费器签名和依赖重验。原ModelEval/普通Action/Source/容量相邻。fixture可验证协议，但其供应商事实必须标test-only，不能成为当前实例的来源声明。
+
+## 后续退出边界
+
+### 候选与正式引用类型分离
+
+督导发现 producer 读取 account candidate，但契约使用正式 ProviderPhysicalAccountRevision，存在权威层级歧义。本次先加反例：候选输入必须拒绝正式账户和正式 basis 类型。BasisCandidate 与 SourceCandidate 的账户引用改为 ProviderPhysicalAccountCandidateRevision；SourceCandidate 的 basis 引用改为 ProviderCapacityBasisCandidateRevision。精确 ID/hash 不改变候选性质。正式 issuer 后续输出独立正式 Revision，消费器不得凭候选类型授予容量；当前修改不实现或声称正式发行。修改范围仅上述契约和两个专项测试文件，实际相邻回归后复审。
+
+### 契约施工补充
+
+本步输入全部为candidate/claim而非verified权威：PhysicalAccountCandidate绑定稳定account ID、supplier账户fingerprint及非空唯一exact Provider集合；CapacityBasisCandidate严格分owner_allocation与supplier_limit_claim，引用独立account revision和原evidence；token计量为inflight_upper_bound或fixed_window_rate判别联合，后者必须windowSeconds和aware windowAnchor，禁止缺窗/跨维偷换。SourceCandidate引用exact account/basis、原request及独立ApprovalEvent，validity与false executionAllowed均显式约束。未知字段（含basisVerified/active/凭据/providerRevision账户拆分）拒绝。DTO不能证明供应商来源或账户归属，签发器/消费器必须读正式持久签名与当前性，不接受candidate为已核authority。
+
+原申请没有token计量模式；不能单凭旧条款批准决定新window/inflight语义。后续Source专用批准必须绑定计量模式、账户映射与来源适用性，原allocation批准仅作为前置来源。此补充先写方案再写RED和代码；完整Task不因契约验证而收口。
+
+### 独立复审及下一producer入口
+
+候选仅做集合内去重；正式持久映射必须双向唯一：同supplier/fingerprint不能另起account拆额，同Provider当前映射不能并属两个account，supplier fingerprint不能随secret轮换变化，跨tenant共享同真实账号须明确全域防超订或拒绝分配。不能把未批准候选的客户端fingerprint当已核归属。
+
+observedAt仅结构性aware/validUntil检查；正式issuer须按DBnow拒未来、按来源特定政策拒陈旧，并校验固定窗口anchor与供应商实际计量适用性。未知政策不能用默认时长“验证”。Source专用批准exact绑定account/basis/request/旧批准/模式/限额/有效期；最终签发不得从后来head推导未经批准模式，也不得对不同维度数字直接取小。
+
+下一实现顺序：a147不可变account/basis候选生产（保持claim，非正式当前映射或供应商已核来源）→完整Source专用原Action独立审批→受限issuer原事务依赖epoch/身份重验→非执行签名Revision→消费器。新增Source Action接入原ActionStore/Policy之前须补精确文件Task；本Task现有scope不允许隐性修改原ActionStore。正式全域账户归一和当前head发布是后继批准/发行门，不能因候选入库即抢占或重置现有额度。
+
+候选producer最小设计：a147新增单一不可变候选表，仅account/basis、revision=1、正向tenant、server maker/完整candidateKind+candidate JSON SQL hash、根字段白名单与必填、外层mode固定CANDIDATE_ONLY_NO_CAPACITY_NO_START且verified/execution=false；RLS/append-only/runtime SELECT INSERT。候选记录ID与正式稳定物理账户ID明确分开，不能按候选ID计额。原SERIAL Store核OIDC/currentOwner、Provider exact current sorted head SHARE、原frozen非撤回evidence；basis指向本tenant exact account候选并再次parse/hash/provider重验。只写候选，不建立正式当前映射/Source/占额。runtime直接行仍为不可信候选，后继Source专用guard/issuer完整reparse并核正式来源，不能凭表存在或候选Hash给verified。实际PG先原Provider/Bundle+Owner后缺producer RED，再最小实现/不可执行与正常replay；完整Task保持ACTIVE。
+
+签发Revision仍不可执行，不自动激活capacity。共同occupation须合计普通与Eval、未知不TTL释放、旧活跃占用全量明确映射与原子零执行切换；完整锁图须对账原Capacity→Budget及旧方案Budget→Provider→Route，禁止锁序自相矛盾。后接一次Intent/transport/Usage/Report/Gate，再b90 signed八事实实际COMMIT/API/ToolBinding。当前142库、Host/worker/现实Provider/Secret/商城源/旧Run/manual/230L0/未知重发/外部效果不触碰，m1单写/no push。
