@@ -1,7 +1,7 @@
 """Current-142 maintenance executor under construction.
 
-Only mandatory guards and private journal are implemented. No production mutation
-entry point is exposed until the complete sequencer has isolated acceptance.
+Mandatory guards, a private journal and full isolated sequencing are implemented.
+No production mutation entry point is exposed; source service control is pending.
 """
 import json
 import os
@@ -57,3 +57,182 @@ def record_attempt(directory: Path, step: str, evidence: dict):
 def require_window(*, listen_addresses, tcp_exit, other_clients, prepared):
     require(listen_addresses == '' and type(tcp_exit) is int and tcp_exit > 0, 'TCP_EXECUTION_NOT_FENCED')
     require(other_clients == 0 and prepared == 0, 'EXISTING_EXECUTION_NOT_DRAINED')
+
+
+STEPS = ('stop_clients', 'fence_tcp', 'snapshot_dump', 'independent_restore',
+         'migrate_steps', 'verify', 'restore_tcp', 'restart_clients', 'acceptance')
+
+
+class MaintenanceJournal:
+    def __init__(self, directory):
+        self.directory = Path(directory)
+
+    def perform(self, step, operation):
+        require(step in STEPS, 'UNKNOWN_STEP')
+        for prior in STEPS[:STEPS.index(step)]:
+            require((self.directory / (prior + '-done.json')).is_file(), 'PRIOR_STEP_UNVERIFIED')
+        record_attempt(self.directory, step, {'step': step})
+        result = operation()
+        require(isinstance(result, dict), 'POSTCONDITION_MISSING')
+        path = self.directory / (step + '-done.json')
+        with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'w') as handle:
+            json.dump(result, handle, ensure_ascii=False, indent=2)
+            handle.flush(); os.fsync(handle.fileno())
+        fd = os.open(self.directory, os.O_RDONLY)
+        try:
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        return result
+
+
+def run_isolated(*, backup_state, evidence_directory):
+    """Real full sequencer acceptance. Cannot select the current Docker context."""
+    import importlib.util
+    import io
+    import secrets
+    import subprocess
+    import tempfile
+    import time
+    from alembic import command
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    root = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location('restore142_maintenance', root / 'scripts/a0v_current_142_restore_gate.py')
+    g = importlib.util.module_from_spec(spec); spec.loader.exec_module(g)
+    backup_state = Path(backup_state).resolve(strict=True)
+    require(backup_state.parent == root.parent / 'aos-recovery', 'PRIVATE_BACKUP_PARENT_REQUIRED')
+    expected = json.loads((backup_state / 'source.json').read_text())
+    require(expected['version'] == 'a0v_135', 'EXACT_RESTORED_135_REQUIRED')
+    backup_info = json.loads((backup_state / 'backup.json').read_text())
+    require(g.sha(backup_state / 'current-full.dump') == backup_info['sha256'], 'BACKUP_HASH_DRIFT')
+    require(g.sha(backup_state / 'globals-no-password.sql') == backup_info['globals_sha256'], 'GLOBALS_HASH_DRIFT')
+    config = Config(str(root / 'services/aos-api/alembic.ini'))
+    config.set_main_option('script_location', str(root / 'services/aos-api/alembic'))
+    require(ScriptDirectory.from_config(config).get_heads() == ['a0v_142'], 'EXACT_CODE_142_REQUIRED')
+    state = Path(tempfile.mkdtemp(prefix='.aos-maintenance142-', dir=root.parent / 'aos-recovery'))
+    os.chmod(state, 0o700)
+    journal = MaintenanceJournal(state)
+    ctx = 'colima-aos-a0v-test-only'
+    base = ['docker', '--context', ctx]
+    names = ['aos-sequence142-' + secrets.token_hex(6) for _ in range(2)]
+    tick = time.monotonic()
+
+    def execute(args, data=None, check=True):
+        result = subprocess.run(base + args, input=data, capture_output=True, timeout=180)
+        require(not check or result.returncode == 0, 'ISOLATED_COMMAND_FAILED')
+        return result
+
+    image = json.loads(execute(['inspect', 'aos-e17-b17-acl-pg']).stdout)[0]['Image']
+    g.save(state / 'intent.json', {'context': ctx, 'containers': names, 'image': image,
+                                 'source_touched': False})
+
+    def ready(name):
+        for _ in range(30):
+            if execute(['exec', name, 'pg_isready', '-U', 'aos_app', '-d', 'postgres'], check=False).returncode == 0:
+                return
+            time.sleep(1)
+        raise MaintenanceBlocked('ISOLATED_SERVER_NOT_READY')
+
+    def pg(name, statement, database='postgres', tcp=False, check=True):
+        return execute(['exec', name, 'psql', '-U', 'aos_app', '-d', database, '-Atq', '-v', 'ON_ERROR_STOP=1']
+                       + (['-h', '127.0.0.1'] if tcp else []) + ['-c', statement], check=check)
+
+    def snapshot(name):
+        def query(statement):
+            return json.loads(pg(name, "BEGIN READ ONLY;SET LOCAL timezone='UTC';SET LOCAL search_path=pg_catalog,public;"
+                                 + statement + ';COMMIT', g.SOURCE).stdout)
+        return g.snapshot(query, expected['role_names'])
+
+    globals_data = g.prepare_globals((backup_state / 'globals-no-password.sql').read_bytes(), bootstrap='aos_app')
+    for name in names:
+        execute(['run', '-d', '--pull', 'never', '--name', name, '--network', 'none',
+                 '--label', 'aos.restore-gate=' + g.LABEL, '--mount',
+                 'type=volume,source=' + name + '-data,target=/var/lib/postgresql/data',
+                 '-e', 'POSTGRES_USER=aos_app', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', image])
+        ready(name)
+        execute(['exec', '-i', name, 'psql', '-U', 'aos_app', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', '-'], globals_data)
+    source, target = names
+    execute(['exec', '-i', source, 'pg_restore', '-U', 'aos_app', '-d', 'postgres', '--create', '--exit-on-error'],
+            (backup_state / 'current-full.dump').read_bytes())
+    require(snapshot(source) == expected, 'ISOLATED_INITIAL_RESTORE_MISMATCH')
+    require(pg(source, 'SELECT 1', g.SOURCE, tcp=True).stdout.strip() == b'1', 'TCP_BASELINE_MISSING')
+    journal.perform('stop_clients', lambda: {'scope': 'ISOLATED_NO_APPLICATION_CLIENTS'})
+
+    def fence():
+        pg(source, "ALTER SYSTEM SET listen_addresses=''")
+        execute(['restart', source]); ready(source)
+        listen = pg(source, 'SHOW listen_addresses').stdout.decode().strip()
+        tcp_exit = pg(source, 'SELECT 1', g.SOURCE, tcp=True, check=False).returncode
+        clients = int(pg(source, "SELECT count(*) FROM pg_stat_activity WHERE backend_type='client backend' AND pid<>pg_backend_pid()").stdout)
+        prepared = int(pg(source, 'SELECT count(*) FROM pg_prepared_xacts').stdout)
+        require_window(listen_addresses=listen, tcp_exit=tcp_exit, other_clients=clients, prepared=prepared)
+        return {'listen': listen, 'tcp_exit': tcp_exit, 'other_clients': clients, 'prepared': prepared}
+    journal.perform('fence_tcp', fence)
+
+    def dump():
+        require(snapshot(source) == expected, 'SOURCE_CHANGED_BEFORE_DUMP')
+        data = execute(['exec', source, 'pg_dump', '-U', 'aos_app', '-d', g.SOURCE, '-Fc']).stdout
+        path = state / 'maintenance.dump'
+        with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'wb') as handle:
+            handle.write(data); handle.flush(); os.fsync(handle.fileno())
+        return {'sha256': g.sha(path), 'bytes': len(data)}
+    journal.perform('snapshot_dump', dump)
+
+    def restore():
+        execute(['exec', '-i', target, 'pg_restore', '-U', 'aos_app', '-d', 'postgres', '--create', '--exit-on-error'],
+                (state / 'maintenance.dump').read_bytes())
+        require(snapshot(target) == expected, 'INDEPENDENT_FULL_RESTORE_MISMATCH')
+        return {'tables': len(expected['tables']), 'exact': True}
+    journal.perform('independent_restore', restore)
+
+    def migrate():
+        config.set_main_option('sqlalchemy.url', 'postgresql://offline/offline')
+        for number in range(136, 143):
+            config.output_buffer = io.StringIO()
+            command.upgrade(config, f'a0v_{number-1}:a0v_{number}', sql=True)
+            g.save(state / f'migration-{number}-attempt.json', {'from': number-1, 'to': number})
+            execute(['exec', '-i', source, 'psql', '-U', 'aos_app', '-d', g.SOURCE, '-v', 'ON_ERROR_STOP=1', '-q', '-f', '-'],
+                    config.output_buffer.getvalue().encode())
+            require(pg(source, 'SELECT version_num FROM alembic_version', g.SOURCE).stdout.strip() == f'a0v_{number}'.encode(), 'STEP_VERSION_DRIFT')
+            g.save(state / f'migration-{number}-done.json', {'version': number})
+        return {'version': 'a0v_142', 'steps': 7}
+    journal.perform('migrate_steps', migrate)
+
+    def verify():
+        after = snapshot(source)
+        g.require_old_rows(expected, after); g.require_catalog_preserved(expected, after)
+        for table, additions in g.ADDITIONS.items():
+            require(set(after['metadata'][table]) - set(expected['metadata'][table]) == additions, 'METADATA_ADDITION_DRIFT')
+        require(all(after['tables'][t]['count'] == 0 for t in set(after['tables']) - set(expected['tables'])), 'NEW_TABLE_BACKFILL')
+        added_roles = json.loads(pg(source, "SELECT json_agg(x ORDER BY rolname) FROM (SELECT rolname,rolcanlogin,rolinherit,"
+            "rolsuper,rolcreatedb,rolcreaterole,rolreplication,rolbypassrls,EXISTS(SELECT 1 FROM pg_auth_members m "
+            "WHERE m.roleid=r.oid OR m.member=r.oid) AS members FROM pg_roles r WHERE rolname IN "
+            "('aos_license_source_fence_owner','aos_source_license_approval_issuer','aos_source_license_issuer')) x").stdout)
+        require(len(added_roles) == 3 and all(not value for row in added_roles for key, value in row.items()
+                                           if key != 'rolname'), 'NEW_ROLE_PRIVILEGE_DRIFT')
+        g.save(state / 'after.json', after)
+        return {'old_tables': len(expected['tables']), 'rows_and_permissions_exact': True}
+    journal.perform('verify', verify)
+
+    def restore_tcp():
+        pg(source, "ALTER SYSTEM SET listen_addresses='*'")
+        execute(['restart', source]); ready(source)
+        require(pg(source, 'SELECT 1', g.SOURCE, tcp=True).stdout.strip() == b'1', 'TCP_RESTORE_FAILED')
+        return {'tcp_available': True}
+    journal.perform('restore_tcp', restore_tcp)
+    journal.perform('restart_clients', lambda: {'scope': 'ISOLATED_NO_APPLICATION_CLIENTS'})
+
+    def acceptance():
+        require(pg(source, 'SELECT version_num FROM alembic_version', g.SOURCE, tcp=True).stdout.strip() == b'a0v_142', 'FINAL_VERSION_DRIFT')
+        for name in names:
+            item = json.loads(execute(['inspect', name]).stdout)[0]
+            require(item['HostConfig']['NetworkMode'] == 'none' and not any(item['NetworkSettings']['Ports'].values()), 'ISOLATION_DRIFT')
+        return {'schema': 'a0v_142', 'isolated': True}
+    journal.perform('acceptance', acceptance)
+    result = {'outcome': 'ISOLATED_COMPLETE_MAINTENANCE_SEQUENCE_GREEN', 'state': str(state),
+              'containers': names, 'tables': len(expected['tables']), 'elapsed_seconds': round(time.monotonic()-tick, 3),
+              'current_source_touched': False, 'formal_current_window_proven': False}
+    g.save(Path(evidence_directory) / 'isolated-sequence.json', result)
+    return result

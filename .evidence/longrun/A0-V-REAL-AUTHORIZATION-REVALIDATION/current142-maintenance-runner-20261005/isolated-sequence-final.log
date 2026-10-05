@@ -1,0 +1,29 @@
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_135 -> a0v_136, Add isolated source issuance/head and formal evaluation proof storage.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_136 -> a0v_137, Fence trusted-source revocation without granting runtime head writes.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_137 -> a0v_138, Preserve original build input without changing legacy evidence hashes.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_138 -> a0v_139, Coordinate first source issuance with revoke before any license head exists.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_139 -> a0v_140, Reserved original Action metadata and independent source approval writer.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_140 -> a0v_141, Narrow original source approval ACL; login provisioning stays closed.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_141 -> a0v_142, Dedicated source issuance identity; original approval and receipt remain authority.
+{"outcome": "ISOLATED_COMPLETE_MAINTENANCE_SEQUENCE_GREEN", "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/.aos-maintenance142-77b39l3h", "containers": ["aos-sequence142-36adcfb08e9f", "aos-sequence142-faabd8c3fad7"], "tables": 592, "elapsed_seconds": 16.123, "current_source_touched": false, "formal_current_window_proven": false}

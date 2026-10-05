@@ -54,3 +54,23 @@ def test_window_rejects_existing_execution(clients, prepared):
 def test_window_rejects_missing_or_terminated_tcp_observation(exit_code):
     with pytest.raises(m.MaintenanceBlocked):
         m.require_window(listen_addresses='', tcp_exit=exit_code, other_clients=0, prepared=0)
+
+
+def test_sequencer_never_advances_or_reissues_failed_migration(tmp_path):
+    journal = m.MaintenanceJournal(tmp_path)
+    calls = []
+    for step in m.STEPS[:4]:
+        journal.perform(step, lambda: {'observed': True})
+    def failed():
+        calls.append('migration')
+        raise RuntimeError('actual migration failed')
+    with pytest.raises(RuntimeError): journal.perform('migrate_steps', failed)
+    with pytest.raises(m.MaintenanceBlocked): journal.perform('restore_tcp', lambda: calls.append('unsafe restore'))
+    with pytest.raises(m.MaintenanceBlocked): journal.perform('migrate_steps', failed)
+    assert calls == ['migration']
+
+
+def test_sequencer_rejects_skipping_independent_restore(tmp_path):
+    journal = m.MaintenanceJournal(tmp_path)
+    for step in m.STEPS[:3]: journal.perform(step, lambda: {'observed': True})
+    with pytest.raises(m.MaintenanceBlocked): journal.perform('migrate_steps', lambda: {'version': 'a0v_142'})
