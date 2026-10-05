@@ -606,6 +606,76 @@ def test_formal_health_consumer_preserves_original_concurrent_fence(mode):
 
 
 
+def test_original_eval_contract_missing_dependencies_are_business_blockers():
+    """Actual SCRAM original reader; absent references never imply READY."""
+    from uuid import uuid4
+    from aos_api.aip_production_contract_store import AipProductionContractStore
+    from aos_api.tenant_scope import TenantScope
+    identity = 'b90-missing-eval-' + uuid4().hex
+    def ref(kind):
+        return {'resourceType': kind, 'resourceId': identity, 'revision': 1, 'contentHash': 'a' * 64}
+    row = {'suite_ref': ref('EvalSuiteRevision'), 'publication_ref': ref('PublicationEvent'),
+           'release_gate_ref': None}
+    with isolated_owner() as owner:
+        with _temporary_fixed_evaluator_login(owner) as factory:
+            with factory(SCOPE) as conn:
+                blockers = AipProductionContractStore()._eval_blockers(conn, SCOPE, row)
+                assert {item.code for item in blockers} == {
+                    'EVAL_SUITE_MISSING', 'EVAL_PUBLICATION_MISSING', 'EVAL_GATE_MISSING'}
+                for table in ('aip_eval_suite_revision', 'aip_publication_event'):
+                    assert conn.execute('SELECT has_table_privilege(current_user,%s,\'SELECT\') AS allowed',
+                        ('public.' + table,)).fetchone()['allowed']
+                    assert not conn.execute('SELECT has_table_privilege(current_user,%s,\'UPDATE\') AS allowed',
+                        ('public.' + table,)).fetchone()['allowed']
+            with factory(TenantScope('dev-org', 'dev-project')) as conn:
+                for table in ('aip_eval_suite_revision', 'aip_publication_event'):
+                    assert conn.execute(f'SELECT count(*) AS n FROM public.{table}').fetchone()['n'] == 0
+
+
+def test_formal_eval_contract_rejects_frozen_maintenance_fault_without_business_writes():
+    """Corrupt frozen fixture, never a legitimate freeze or readiness positive."""
+    from uuid import uuid4
+    from aos_api.aip_production_contract_store import AipProductionContractStore, canonical_hash
+    from aos_api.aip_production_contracts import CreateEvalContractRequest, BriefLifecycle
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    identity = 'b90-corrupt-frozen-' + uuid4().hex
+    body = CreateEvalContractRequest(
+        suiteRef={'resourceType': 'EvalSuiteRevision', 'resourceId': identity,
+                  'revision': 1, 'contentHash': 'a' * 64},
+        artifactSchemaRef={'resourceType': 'Schema', 'resourceId': identity,
+                           'revision': '1', 'authority': 'aip'},
+        severityThresholds={'critical': 1.0}, gatePolicy={'mode': 'all'},
+        returnMapping={'critical': 'draft'}, overridePolicy={'allowed': False})
+    content_hash = canonical_hash(body.model_dump(mode='json', by_alias=True))
+    exact = FormalExactRef(assetType='EvalContractRevision', assetId=identity,
+        revision=1, contentHash=content_hash)
+    tables = ('aip_capability_binding', 'aip_agent_registry_receipt', 'aip_binding_evaluation_proof')
+    with isolated_owner() as owner:
+        owner.execute("INSERT INTO twa_org(id,name) VALUES('org-org','maintenance-negative') ON CONFLICT DO NOTHING")
+        owner.execute("INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','maintenance-negative') ON CONFLICT DO NOTHING")
+        owner.execute('INSERT INTO aip_eval_contract_head(org_id,project_id,contract_id,current_revision,version) '
+            'VALUES(%s,%s,%s,1,1)', (*SCOPE.key, identity))
+        AipProductionContractStore()._insert_eval(owner, SCOPE, identity, 1,
+            'maintenance-negative', body, content_hash, BriefLifecycle.FROZEN)
+        owner.commit()
+        def snapshots():
+            return [owner.execute(f"SELECT coalesce(jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text),"
+                f"'[]'::jsonb) AS value FROM public.{table} t").fetchone()['value'] for table in tables]
+        before = snapshots()
+        owner.commit()
+        with _temporary_fixed_evaluator_login(owner) as factory:
+            with factory(SCOPE) as conn:
+                original = AipProductionContractStore().get_eval_contract(SCOPE, identity, 1, conn=conn)
+                assert original.lifecycle.value == 'frozen'
+                assert original.readiness.value == 'blocked' and original.blockers
+                from aos_api.aip_binding_formal_evaluator import (
+                    _read_formal_eval_contract, FormalBindingEvaluationBlocked)
+                with pytest.raises(FormalBindingEvaluationBlocked,
+                        match='CURRENT_READY_FROZEN_EVAL_CONTRACT_REQUIRED'):
+                    _read_formal_eval_contract(conn, SCOPE, exact)
+        assert snapshots() == before
+
+
 def assert_formal_signed_source_consumer(request, loader, release_policy):
     """Original signed Source/Proposal/OIDC approval/issuer, actual evaluator SCRAM."""
     from uuid import uuid4
@@ -645,6 +715,28 @@ def assert_formal_signed_source_consumer(request, loader, release_policy):
                 assert fact.source.owner_authorization_ref['approvalEventId'] == fact.approval_event_id
                 assert fact.valid_until <= fact.source.expires_at
                 assert fact.authorization == 'FORMAL_SOURCE_FACT_ONLY_NO_START'
+                from dataclasses import replace
+                from aos_api.aip_binding_formal_evaluator import _source_proof_fact
+                payload = _source_proof_fact(source_ref, fact)
+                assert payload['epoch'] == fact.source.epoch
+                assert payload['installationId'] == fact.source.installation_id
+                assert payload['installationEtag'] == fact.source.installation_etag
+                assert payload['ownerAuthorizationRef'] == fact.source.owner_authorization_ref
+                assert payload['policyRef'] == fact.source.policy_ref
+                assert payload['sourceRequestHash'] == fact.source_request_hash
+                def proof_hash(value):
+                    return conn.execute("SELECT encode(public.digest(convert_to("
+                        "public.canonical_asset_registry_jsonb(%s::jsonb),'UTF8'),'sha256'),'hex') AS hash",
+                        (Jsonb(value),)).fetchone()['hash']
+                baseline_hash = proof_hash(payload)
+                # Actual signed fact, synthetic copies: hash sensitivity only.
+                for changed in (
+                    replace(fact.source, epoch=fact.source.epoch + 1),
+                    replace(fact.source, installation_etag=fact.source.installation_etag + 1),
+                    replace(fact.source, owner_authorization_ref={'changed': True}),
+                    replace(fact.source, policy_ref={'changed': True}),
+                ):
+                    assert proof_hash(_source_proof_fact(source_ref, replace(fact, source=changed))) != baseline_hash
             assert counts() == before
             owner.commit()
             for changes in (
@@ -1093,3 +1185,60 @@ def test_formal_capacity_prelock_rejects_scope_identity_and_current_head(fault):
         row = owner.execute('SELECT current_revision,version FROM public.aip_model_capacity_pool_head '
             'WHERE org_id=%s AND project_id=%s AND pool_id=%s', (*SCOPE.key, capacity.asset_id)).fetchone()
         assert row == (None if fault == 'missing' else {'current_revision': 2 if fault == 'stale' else 1, 'version': 1})
+
+
+@pytest.mark.parametrize('fault', ['missing_binding', 'dev_actor', 'wrapper', 'canary', 'strict_body'])
+def test_complete_formal_command_rejects_before_any_business_write(https_signer, tmp_path, fault):
+    """Original TLS/OIDC and native admission, never eight-fact positive proof."""
+    from types import SimpleNamespace
+    from uuid import uuid4
+    from pydantic import ValidationError
+    from aos_api.auth import resolve_principal, Principal
+    from aos_api.tenant_scope import TenantScope
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalBindingEvaluationRequest
+    from aos_api.aip_agent_registry_store import AipAgentRegistryNotFound
+    from aos_api.asset_registry.manifest_loader import ManifestLoader
+    from aos_api.asset_registry.release_policy import ReleasePolicy
+    from tests.aip.test_binding_formal_evaluator_contracts import request_body
+    subject = 'b90-command-actor-' + uuid4().hex
+    principal = resolve_principal(token=https_signer[0](subject))
+    assert principal.token_kind == 'oidc'
+    request = FormalBindingEvaluationRequest.model_validate(request_body())
+    scope = TenantScope('dev-org', 'dev-project') if fault == 'canary' else SCOPE
+    root = tmp_path / 'empty-allowlisted-material'
+    root.mkdir(mode=0o700)
+    # No trust or Source positive is claimed: failure precedes material access.
+    loader = ManifestLoader({'test-only': root})
+    policy = ReleasePolicy(trust_roots=None)
+    tables = ('aip_capability_binding', 'aip_agent_registry_receipt', 'aip_binding_evaluation_proof',
+        'aip_budget_cost_runtime_fence', 'aip_model_capacity_reservation', 'aip_license_source_issuance',
+        'aip_provider_health_epoch')
+    with isolated_owner() as owner:
+        def counts():
+            result = {table: owner.execute(f'SELECT count(*) AS n FROM public.{table}').fetchone()['n']
+                for table in tables}
+            owner.rollback()
+            return result
+        before = counts()
+        with _temporary_fixed_evaluator_login(owner) as factory:
+            with factory(scope) as conn:
+                from aos_api.aip_binding_formal_evaluator import (
+                    evaluate_binding_in_transaction, FormalBindingEvaluationBlocked,
+                )
+                if fault == 'dev_actor':
+                    principal = Principal(subject, *SCOPE.key, token_kind='dev')
+                if fault == 'strict_body':
+                    request = request.model_copy(update={'expected_version': True})
+                expected = (AipAgentRegistryNotFound if fault == 'missing_binding' else
+                    ValidationError if fault == 'strict_body' else
+                    BindingEvaluatorConnectionBlocked if fault in {'wrapper', 'canary'} else
+                    FormalBindingEvaluationBlocked)
+                with pytest.raises(expected):
+                    evaluate_binding_in_transaction(
+                        SimpleNamespace(native=conn) if fault == 'wrapper' else conn,
+                        scope, 'b90-never-existing-' + uuid4().hex, request, principal,
+                        idempotency_key='b90-full-' + uuid4().hex,
+                        loader=loader, release_policy=policy)
+                conn.rollback()
+        assert counts() == before
+        assert https_signer[1], 'OIDC must actually fetch the isolated HTTPS JWKS'

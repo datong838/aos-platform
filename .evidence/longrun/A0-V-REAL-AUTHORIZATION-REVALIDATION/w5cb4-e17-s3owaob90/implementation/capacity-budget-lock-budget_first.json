@@ -1,18 +1,18 @@
 {
   "scope": "isolated original signed Budget / Capacity-head coordination probe only",
-  "database": "aos_test_76e9ee5a12cd_ti4_test",
+  "database": "aos_test_460af286ae3d_ti4_test",
   "port": 5433,
   "order": "budget_first",
-  "writer_pid": 242335,
-  "evaluator_pid": 242334,
+  "writer_pid": 248324,
+  "evaluator_pid": 248323,
   "native_scram": true,
   "observed": {
     "two_sided_wait": {
       "evaluator": [
-        242335
+        248324
       ],
       "writer": [
-        242334
+        248323
       ]
     },
     "deadlock_detected": true
@@ -22,7 +22,7 @@
       "aip_capability_binding": 0,
       "aip_agent_registry_receipt": 0,
       "aip_binding_evaluation_proof": 0,
-      "aip_budget_reservation": 0,
+      "aip_budget_reservation": 10,
       "aip_model_eval_budget_reservation": 0,
       "aip_model_capacity_reservation": 0
     },
@@ -37,7 +37,7 @@
       "aip_capability_binding": 0,
       "aip_agent_registry_receipt": 0,
       "aip_binding_evaluation_proof": 0,
-      "aip_budget_reservation": 0,
+      "aip_budget_reservation": 10,
       "aip_model_eval_budget_reservation": 0,
       "aip_model_capacity_reservation": 0
     },

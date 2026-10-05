@@ -49,3 +49,27 @@
 ModelEval预算原入口为 ActionProposal UPDATE → 治理Budget head SHARE → Budget head SHARE → buckets排他 → cost fence UPDATE；evaluator不取得 buckets，治理/Budget head SHARE互相兼容，当前没有这条环的依据。原Budget配置/消费为 advisory → 成员 SHARE → Budget head UPDATE/SHARE → Provider/Price SHARE，不取得 Capacity；原Budget issuer为 reviewer SHARE → advisory → 成员 SHARE → fence相关撤回写。成员维护未见同事务请求此budget advisory；不能仅凭成员/advisory文字顺序称死锁。原Capacity reserve为 head UPDATE → reservation UPDATE；terminal只改单reservation，评估不锁reservation行。原Capacity publish只持自身head UPDATE，依赖验证另连接退出后才进入发布事务；原ModelRuntime publish只持自身head UPDATE，依赖普通读取。原Health append经epoch排他协调，无Capacity/Budget/Binding锁。完整评估保留这些共享/排他模式，不擅自扩大为EX。
 
 本段 actual PG RED 10.02秒：旧逆序反例通过、新序缺私有预锁入口失败（ImportError），不是业务正向RED。最小实现后两个并发参数2通过9.40秒；扩展身份、canary、strict model_copy、缺失/旧head六负例，连原正式预算/来源/Health/ACL/连接与合同相邻累计111通过36.59秒。两参 actual pg_blocking_pids、DeadlockDetected及前后六表/fence/head在capacity-budget-lock-*.json。py_compile和精确diff whitespace检查通过。完整Source签名安装联合波此前证据不被本段替代。实际正式Capacity内容/全命令/三写COMMIT/API仍待实施；本段不完成完整Task、不提升last GREEN gate。
+
+## 完整命令实施合同（code b1d64cc8 / Authority1340）
+
+入口固定为 evaluate_binding_in_transaction(conn,scope,binding_id,request,principal,*,idempotency_key,loader,release_policy)。loader/ReleasePolicy只由server私有配置提供，原类型检查不能被回调代替；API body没有这些字段。先重新解析完整strict request，要求实际native evaluator/SCRAM/SERIAL、原resolve_principal得到OIDC主体同tenant、canonical binding/key/subject；原aip6 advisory和Receipt校验，Binding原行FOR UPDATE，缺行/撤回/版本冲突拒绝。请求hash复用原Registry canonical hash并绑定bindingId、actor和domain，禁止跨binding同key重放。原CapabilityCatalog经aip6_004 append-only UPDATE/DELETE/TRUNCATE触发器保护，原publish只INSERT，不扩大锁列UPDATE权；使用原AipCapabilityRegistry exact读者及原required Data/Tool覆盖验证。
+
+无权发现请求BudgetPolicy的原BudgetRevision；原Source Proposal/Approval prep→原Budget advisory prep→Source两Owner、Budget两成员和API actor合并排序共享锁，所有当前角色由DB核验。原signed Source与安装消费后先Capacity预锁，再原Budget fact，再按类型/id排序保护五类ModelRuntime heads和全部候选原治理/Guard/Network heads。发现的DTO在锁后由原Store重读并与current head/tenant/hash/lifecycle核验，不将无锁getter当权威。原Resolver保留原选择语义；每个Provider原Health epoch保护，最新exact/time由已验reader核验，选中Healthy与请求一致。Route/Model分别原require_exact_passed及original candidate ref；原EvalContract Store读取frozen/current exact，在其head共享锁下保护。Capacity由原Store/materialize核验hash、active、route/model/provider和原COUNT/SUM有效占用，不reserve。
+
+事实包含八键+Source/Budget/Installation/Owners及实际引用/原Receipt/decision/fence；不写Secret字段、不写任意raw业务payload。最终DB时钟和全部Source/Budget/Eval/Health/Guard/Network/Governance期限最小值，TTL最大15分钟。旧snapshot hash由原AipBindingReadinessService.snapshot_hash计算，facts hash仅调用原SQL canonical_asset_registry_jsonb+digest。新命令原Binding CAS+原Registry Receipt+proof同native顶层事务三写；函数不commit、不savepoint、不retry，所有异常由caller完整rollback，实际COMMIT仍执行a144三约束。返回原Binding/Readiness/Receipt类型，产品Service/router仅在实际正向/负向/COMMIT验证后接入。
+
+同key回放先校验hash/target/result version/oldproof，重新验证全部当前原资源与期限；fresh事实内容hash必须与旧proof相等，旧有效期仍未到期、Binding当前版本和snapshot匹配才返回原记录，绝不补写、续期或回放过期available。因为此路径不消费费用/容量且事实不包含变化的checked_at，未变资源能回放；预算fence、占用、Owner、安装或Health等变化需要新评估key。actual原库缺完整配置时只能形成拒绝，不能造Gate/Health/READY来凑正向。
+
+本实现先完整entry缺失RED及实际HTTPS OIDC/native事务拒绝矩阵；完整signed八facts正向与真实COMMIT不能由这些拒绝或ImportError代替。新增/修改仍为原登记evaluator/contracts/PG tests/API tests/Service/router/a144及implementation文档；发现额外权限需求先以实际PG失败证明，不盲增ACL。本波无当前库/Provider/自然首链动作，整体Task保持ACTIVE。
+
+### 独立审查修订：Source 代际与授权哈希
+
+Source proof 必须保存原正式读者返回的 epoch、installation_id/etag、owner_authorization_ref、policy_ref 和 source_request_hash，连同既有发行、Receipt、Approval、期限字段由原 SQL canonical/hash 统一计算。只做原事实序列化，不另造许可权威。先在实际 signed Source PG 测试增加原事实字段断言及逐字段变化后的 SQL 哈希差异验证；人工变更副本仅证明哈希敏感性，不代表正式 epoch 更新或完整命令回放验收。完整命令真实回放拒绝、八事实正向及 COMMIT 仍待验证。
+
+### 原 EvalContract 读依赖 ACL 验证
+
+原 get_eval_contract 经 _eval_blockers 读取 aip_eval_suite_revision 与 aip_publication_event；现 a144 清单未含这两表。先实际 native SCRAM 调用原 blocker 读者（不存在的套件/发布引用仅为拒绝夹具，不伪造 frozen/READY），预期原业务 missing blockers，确认是否被权限错误中断。实际确认后，仅将两原 scoped 表加入 SELECT/RLS 清单，复用同租户 restrictive 策略与锁列 DML 拒绝，不授写/锁/启动权；正向缺依赖仍 BLOCKED，canary 空结果和 UPDATE 拒绝须实测。这不证明完整 EvalContract 正向或完整命令验收。
+
+独立复审新增业务合同：current/hash/frozen 只保护合同版本，不能替代原动态 readiness。完整命令须同时要求原 ContractReadiness.READY 且 blockers 为空，任何 missing/revoked/drifted 均在三写前拒绝。原 Publication latest append 的并发撤销尚缺保护闭环：必须回到原权威设计可保留至 COMMIT 的协调机制，不能用一次提前查询代替提交时当前性；此项保留完整 Task 风险，不接正式 Service/API。须原 frozen 合同缺依赖/撤销负例和完整命令三写零增量、撤销竞争证明后验收。
+
+本轮先把既有 EvalContract 读取和拒绝条件原样集中为私有同事务消费者，由完整命令直接调用，禁止可替换判断回调。实际一次性 PG 维护故障夹具使用原 _insert_eval 写 frozen 但不存在 Suite/Publication/Gate；它是负向损坏注入，绝不作为合法 freeze 或 READY 正向。原动态 reader 必须 BLOCKED，正式消费者须拒绝且 Binding/Receipt/proof 无变化。先缺消费者 RED 再最小移动既有读取与拒绝逻辑。此负例不替代完整八事实调用、合法原 freeze、发布撤销竞争或真正 COMMIT 验收。

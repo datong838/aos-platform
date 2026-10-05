@@ -1,21 +1,21 @@
 {
-  "database": "aos_test_62a77ac96417_ti4_test",
+  "database": "aos_test_a45a726bec54_ti4_test",
   "port": 5433,
-  "backend_pid": 237263,
-  "transaction_id": "237788",
+  "backend_pid": 247428,
+  "transaction_id": "242042",
   "real_scram": true,
-  "source_receipt": "aip6r-1a86402070ae4aea927d540c5c0e94da",
-  "budget_activation_receipt": "budget-cost-consume-214b4a7b538603e9073c2837c7510e12a09b7069c89ab7d92b226790cf6602ae",
-  "budget_decision": "budget-cost-decision-75e9e65c38044d738f1f1523bf8ce307",
+  "source_receipt": "aip6r-071ce15323de4698a00aa14c8365ef06",
+  "budget_activation_receipt": "budget-cost-consume-94dbdc011b94bbfbba772187a736a69036a53d0eb5767cdcaae3394375dc412e",
+  "budget_decision": "budget-cost-decision-d2e2e7ed1b0e4e3ebbdd35a6435128c2",
   "members": [
-    "b88-checker-96b183c7b8724960b84aa720df4d2b59",
-    "b88-owner-ba6eec3b1448480db11ed27c06e53414",
-    "test-checker-5527a983a37a4d448913f790c918903f",
-    "test-maker-5527a983a37a4d448913f790c918903f"
+    "b88-checker-44d9998f4ce248cea42f219ceb1266e1",
+    "b88-owner-8f6dc2ded65d40bcb01b3ff026e8b59b",
+    "test-checker-46c15ddda36445c083a306e86ad4af86",
+    "test-maker-46c15ddda36445c083a306e86ad4af86"
   ],
   "source_owner_count": 2,
-  "source_valid_until": "2026-10-05T06:19:23.808737+00:00",
-  "budget_valid_until": "2026-10-05T06:44:40.338162+00:00",
+  "source_valid_until": "2026-10-05T09:00:28.042211+00:00",
+  "budget_valid_until": "2026-10-05T09:25:46.784080+00:00",
   "before": {
     "counts": {
       "aip_capability_binding": 1,

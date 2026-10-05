@@ -26,6 +26,7 @@ SCOPED_READ = (
     'aip_network_policy_head', 'aip_network_policy_revision',
     'aip_model_governance_policy_head', 'aip_model_governance_policy_revision',
     'aip_eval_contract_head', 'aip_eval_contract_revision',
+    'aip_eval_suite_revision', 'aip_publication_event',
     'aip_release_gate_decision', 'aip_eval_dataset_revision',
     'aip_provider_health_observation', 'aip_model_capacity_pool_head',
     'aip_model_capacity_pool_revision', 'aip_model_capacity_reservation',
