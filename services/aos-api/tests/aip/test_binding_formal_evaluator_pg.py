@@ -742,6 +742,12 @@ def test_formal_budget_consumer_original_signed_configuration_no_fence_write(
                 provider = exact('ProviderInstanceRevision', proposal.basis.provider.model_dump(by_alias=True))
                 if fault == 'provider':
                     provider = provider.model_copy(update={'content_hash': '0' * 64})
+                if fault == 'none':
+                    from aos_api.aip_budget_cost_runtime import _prepare_formal_budget_approval
+                    receipt, proposal_row, original = _prepare_formal_budget_approval(conn, SCOPE, budget)
+                    assert original.maker_subject == maker.subject
+                    assert original.checker_subject == checker.subject
+                    assert receipt['result_ref']['proposalId'] == proposal_row['proposal_id']
                 if fault == 'canary':
                     conn.execute("SELECT set_config('aos.org_id','dev-org',true)")
                 if fault == 'snapshot_revoke':

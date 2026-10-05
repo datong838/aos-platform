@@ -17,3 +17,7 @@
 ## 联合预锁复用实施
 
 原read_formal_license_source_facts把发现和Proposal/Approval预锁、Owner锁连在一起；完整command若先调用该函数再首次Budget advisory会逆序。最小提取_private _prepare_formal_source_approvals，native admission+strict exact unique refs，原discovery/authorization/approvedRef/maker及全部Proposal→Approval/withdrawal校验逐语句保持，返回discovered+approvals，不取得Owner/Installation/Source锁，不产生权利。原Source reader保留私有安装/loader/release context校验，调用此helper后沿原Owner后续逻辑。完整command可先调用它，再原Budget advisory及合并Owner锁，后调用原正式Source reader重核。禁止fake Maker/回调/客户端锁开关；不完成整波。实际signed Source hook先调用新prelock helper核对原Owner集合/Approval证据，再原Source正向/负例/真实writer阻塞全复验。
+
+## Budget联合预锁复用
+
+沿完整Task提取_private _prepare_formal_budget_approval：native事务门及strict BudgetRevision，原unique activation/advisory/重核/Proposal/view/DevelopmentRisk原块保持，返回receipt/row/p，不取得成员/fence/head锁。原正式读取再核成员及全部内容；完整command可先Source Proposal/Approval再Budget advisory、合并成员锁后读取全部facts。本提取不能完成整体任务。

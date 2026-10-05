@@ -158,6 +158,46 @@ class FormalBudgetFact:
     valid_until: datetime
 
 
+def _prepare_formal_budget_approval(conn, scope, budget_ref):
+    """Native original activation/advisory/proposal prelock, no member or hold.
+
+    Discovery is not budget authority; the formal reader must revalidate all
+    current members, exact heads, approval/receipt, risk and deadlines.
+    """
+    from aos_api.aip_binding_evaluator_connection import require_binding_evaluator_transaction
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    require_binding_evaluator_transaction(conn, scope)
+    exact = FormalExactRef.model_validate(budget_ref)
+    if exact.asset_type != 'BudgetRevision':
+        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_EXACT_REFERENCE_REQUIRED')
+    from aos_api.aip_budget_reservation_contracts import BudgetExactRef
+    budget = BudgetExactRef(resourceType=exact.asset_type, resourceId=exact.asset_id,
+        revision=exact.revision, contentHash='sha256:' + exact.content_hash)
+    def activation():
+        rows = conn.execute("SELECT * FROM public.aip_budget_receipt WHERE org_id=%s AND project_id=%s "
+            "AND operation='budget_revision.activate_cost' AND result_ref->>'resourceId'=%s",
+            (*scope.key, budget.resource_id)).fetchall()
+        if len(rows) != 1:
+            raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_UNIQUE_ACTIVATION_REQUIRED')
+        return rows[0]
+    receipt = activation()
+    proposal_id = receipt['result_ref'].get('proposalId')
+    if not isinstance(proposal_id, str) or not proposal_id:
+        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_PROPOSAL_REQUIRED')
+    conn.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))',
+        (f'budget-cost-review:{scope.org_id}:{scope.project_id}:{proposal_id}',))
+    if activation() != receipt:
+        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_ACTIVATION_DRIFT')
+    row = conn.execute('SELECT * FROM public.aip_budget_cost_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+        (*scope.key, proposal_id)).fetchone()
+    if row is None:
+        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_PROPOSAL_REQUIRED')
+    p = BudgetCostBasisProposal.from_canonical_payload(_view(row, scope)['proposal'])
+    if not isinstance(p.basis, DevelopmentRiskProposal):
+        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_BOUNDED_RISK_REQUIRED')
+    return receipt, row, p
+
+
 def read_formal_budget_fact(*, conn, scope, budget_ref, price_ref, provider_ref):
     """Read original bounded cost authority under native caller-owned locks.
 
@@ -181,28 +221,8 @@ def read_formal_budget_fact(*, conn, scope, budget_ref, price_ref, provider_ref)
         refs.append(BudgetExactRef(resourceType=kind, resourceId=exact.asset_id,
             revision=exact.revision, contentHash='sha256:' + exact.content_hash))
     budget, pricing, provider = refs
-    def activation():
-        rows = conn.execute("SELECT * FROM public.aip_budget_receipt WHERE org_id=%s AND project_id=%s "
-            "AND operation='budget_revision.activate_cost' AND result_ref->>'resourceId'=%s",
-            (*scope.key, budget.resource_id)).fetchall()
-        if len(rows) != 1:
-            raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_UNIQUE_ACTIVATION_REQUIRED')
-        return rows[0]
-    receipt = activation()
-    proposal_id = receipt['result_ref'].get('proposalId')
-    if not isinstance(proposal_id, str) or not proposal_id:
-        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_PROPOSAL_REQUIRED')
-    conn.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))',
-        (f'budget-cost-review:{scope.org_id}:{scope.project_id}:{proposal_id}',))
-    if activation() != receipt:
-        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_ACTIVATION_DRIFT')
-    row = conn.execute('SELECT * FROM public.aip_budget_cost_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
-        (*scope.key, proposal_id)).fetchone()
-    if row is None:
-        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_PROPOSAL_REQUIRED')
-    p = BudgetCostBasisProposal.from_canonical_payload(_view(row, scope)['proposal'])
-    if not isinstance(p.basis, DevelopmentRiskProposal):
-        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_BOUNDED_RISK_REQUIRED')
+    receipt, row, p = _prepare_formal_budget_approval(conn, scope, exact_refs[0])
+    proposal_id = row['proposal_id']
     for subject in sorted({p.maker_subject, p.checker_subject}):
         _member(conn, scope, subject, label='FORMAL_COST_REVIEWER')
     fence = conn.execute('SELECT * FROM public.aip_budget_cost_runtime_fence WHERE org_id=%s AND project_id=%s '
