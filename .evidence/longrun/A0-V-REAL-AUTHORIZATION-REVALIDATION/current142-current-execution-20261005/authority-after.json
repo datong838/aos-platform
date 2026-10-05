@@ -1,0 +1,56 @@
+{
+  "content_hash": "sha256:9392770f40c98ecfd173aec91a66a7b0fb6c576cd2b5fe996330494a5ffa0af9",
+  "delivery_status": "W5CB4_E16_RUNTIME_HOST_ADMISSION_GATED_FIRST_CHAIN_PENDING",
+  "overall": "GREEN_WITH_WARNINGS",
+  "project_revision": "AOS-001330",
+  "projections": [
+    {
+      "consistency": "strong",
+      "id": "context-current-status",
+      "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/01-当前项目状态.md",
+      "status": "CURRENT"
+    },
+    {
+      "consistency": "strong",
+      "id": "context-checkpoint",
+      "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/06-当前执行检查点.md",
+      "status": "CURRENT"
+    },
+    {
+      "consistency": "strong",
+      "id": "project-shared",
+      "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/projections/aos-project.json",
+      "status": "CURRENT"
+    },
+    {
+      "consistency": "strong",
+      "id": "workbuddy-project",
+      "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json",
+      "status": "CURRENT"
+    },
+    {
+      "consistency": "strong",
+      "id": "prime-milestones",
+      "location": "aos-milestones",
+      "status": "CURRENT"
+    },
+    {
+      "consistency": "strong",
+      "id": "prime-current-delivery",
+      "location": "aos-current-delivery",
+      "status": "CURRENT"
+    },
+    {
+      "consistency": "strong",
+      "id": "prime-aip-checklists",
+      "location": "aos-aip-full-checklists",
+      "status": "CURRENT"
+    },
+    {
+      "consistency": "eventual",
+      "id": "codex-project-note",
+      "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001329-aos-memory-projection.md",
+      "status": "STALE"
+    }
+  ]
+}

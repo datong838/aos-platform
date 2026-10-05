@@ -1,0 +1,11 @@
+# b90在真实当前142之后的完整方案复核
+
+Task w5cb4-e17-b90-current142-plan-revalidation-20261005，Authority1330，current真实142/代码20bb251d与5d1f67e5，实际维护a51039e4已交付；不再以135迁移未完成阻断此代码波。原current库恢复只读边界，Host/worker/Provider关闭，CapabilityBinding0/runtimeBinding0。后续a143只允许登记后的隔离实现，不直接迁移当前。
+
+复核原service.evaluate：原有角色分流已拒capability_lifecycle issuer作正式evaluator，但普通store仍先self.get/外部readiness评估，再另写事务；它不是b90同事务八事实正式命令。当前网页skill发布37修订显示缺正式Gate/Logic/Route/Policy，binding入口待接线，数据库没有Source实际发行/正式evaluator LOGIN；不能靠重启升级业务准备。
+
+完整原八facts/Source/Owner/安装/预算/原Receipt-CAS-proof必须共同实现。当前计划锁序发现需在开码前闭合的具体潜在循环：原Source issuer先Proposal→Approval→两Owner→Installation→init→Registry/draft；evaluator若先Owner/Installation后再锁原Approval，与issuer等待Owner可成环。先无效力发现exact Source IDs，再按稳定ID取得原Proposal/Approval共享锁，再两Owner/Installation/Source init/head；所有无锁发现字段在受保护事务内重新核验，不用无锁发现授许可。不得简单给reader追加锁而逆转Owner顺序。ModelRuntime writer/Health epoch/Capacity锁同样逐个原路径核对，完整无反向序后登记代码Task。
+
+Health必须协调所有可达原DML而不建立第二真源：旧healthy行FOR SHARE不能阻止new unavailable append提交，已actualPG反证。拟a143中性epoch只用于原观测并发协调，reader锁住当前epoch后核验原最新observation；writer需沿原DML触发更新epoch，post-snapshot原40001按真实机制验证，不以同快照再读自证。不能对旧健康事实backfill或承诺最新healthy缓存。
+
+下一本Task补完整逐表/列/RLS/SELECT-for-lock ACL清单、Source原核验纯函数提取边界、六类Model head与Health/Capacity实际writer顺序、原绑定命令与同调用方事务hash/expiry/原三记录延迟COMMIT约束。然后登记完整a143/formal evaluator/service consumer及实际PG tests范围；不能先交付较小DTO/reader并称b90完成。原Health RED Task与未实现完整消费者事实继续有效，Goal active。
