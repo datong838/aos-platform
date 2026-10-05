@@ -1,0 +1,9 @@
+# GT 正式 ModelEval 输入合同生产与动态读者修订
+
+基线7188e62b/AOS-001344。原权限方案GT只授权实现/隔离验证，不授权现实Provider；通用Runner Model/Route拒绝及审批executionAllowed=false保持。此是原request输入检查修复，不授执行许可。
+
+文件：aos_api/aip_model_eval_request_store.py、tests/aip/test_model_eval_request_pg.py及本证据目录。Task gt-model-eval-ready-contract-20261005。先用原Model申请上下文和真实PG维护故障frozen合同复现Store.create接受动态BLOCKED，申请行数不应增加；故障注入仅为负例。最小消费原ProductionContractStore.get_eval_contract(conn=同caller)要求exact current/hash/frozen/READY/no blockers。申请不发送/不生成门，其状态不是提交时执行授权；正式executor后续仍须epoch/Owner/Policy等完整保护。
+
+测试fixture去除固定Suite哈希和raw frozen写入：原内容治理Graph EvalRunner/Judge→原derive_gate/publish，仅用于发布评测治理背景；Model目标Suite使用原注册与canonical hash，不执行该目标、不生成Model PASSED；原create/freeze形成当前合同。内容门不是Model准入门，模型Suite仍待真正executor执行。模型/Provider历史配置不在本波伪装成完全生产链，已有fixture来源边界逐项保留。先RED、实现、相邻request/approval/budget，复审并记录真实风险；保持完整b90三写/API目标pending。
+
+独立复审补充：Model Suite fixture从内容Suite复制dataset/judge/cases，仅证明exact注册和申请协议，不证明Model专属质量标准适用。真正executor必须另有适配的Model质量合同。原治理Graph实际生产Run/Report/Gate，所以原全表0断言须改为治理生产后基线全表增量0并保留Model目标Gate0；不是删除无执行判据。

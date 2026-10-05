@@ -142,6 +142,13 @@ class AipModelEvalRequestStore:
             or contract["lifecycle"] != "frozen"
             or contract["suite_ref"] != exact_suite):
             raise ModelEvalRequestBlocked("current frozen Eval Contract required")
+        from aos_api.aip_production_contract_store import AipProductionContractStore
+        original = AipProductionContractStore().get_eval_contract(
+            scope, request.eval_contract_ref.asset_id, request.eval_contract_ref.revision, conn=conn)
+        if (original.content_hash != request.eval_contract_ref.content_hash
+            or original.lifecycle.value != "frozen" or original.readiness.value != "ready"
+            or original.blockers):
+            raise ModelEvalRequestBlocked("current ready frozen Eval Contract required")
 
     def require_current(self, conn: Any, scope: TenantScope,
                         request: ModelEvalRequestCreate) -> None:

@@ -1,0 +1,225 @@
+.............F...................................................        [100%]
+=================================== FAILURES ===================================
+__ test_model_eval_request_is_exact_immutable_and_idempotent_on_disposable_pg __
+
+    def test_model_eval_request_is_exact_immutable_and_idempotent_on_disposable_pg():
+>       seeded_approved_model_eval_request()
+
+tests/aip/test_model_eval_request_pg.py:390: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stop_after_approval = False, formal_sources = None, upper_bound_minor = 200
+provider_model_id = 'm', expiry_after = datetime.timedelta(seconds=1800)
+
+    def seeded_approved_model_eval_request(*, stop_after_approval: bool = False,
+                                          formal_sources=None, upper_bound_minor: int = 200,
+                                          provider_model_id: str = "m",
+                                          expiry_after: timedelta = timedelta(minutes=30)):
+        suffix = uuid.uuid4().hex[:10]
+        expiry = datetime.now(UTC) + expiry_after
+        since = datetime.now(UTC) - timedelta(hours=1)
+        until = datetime.now(UTC) + timedelta(days=2)
+        with psycopg.connect(get_dsn()) as owner:
+            owner.execute("INSERT INTO twa_org(id,name) VALUES('org-org','test org') ON CONFLICT DO NOTHING")
+            owner.execute("INSERT INTO meta_org(id,name) VALUES('org-org','test org') ON CONFLICT DO NOTHING")
+            owner.execute("""INSERT INTO twa_workspace(org_id,project_id,name)
+                VALUES('org-org','dev-project','test workspace') ON CONFLICT DO NOTHING""")
+            owner.execute("""INSERT INTO meta_workspace(org_id,project_id,name)
+                VALUES('org-org','dev-project','test workspace') ON CONFLICT DO NOTHING""")
+            owner.execute("""INSERT INTO meta_membership(org_id,project_id,subject,role)
+                VALUES('org-org','dev-project','test-maker','owner') ON CONFLICT DO NOTHING""")
+            owner.execute("""INSERT INTO meta_membership(org_id,project_id,subject,role)
+                VALUES('org-org','dev-project','test-checker','admin') ON CONFLICT DO NOTHING""")
+        scope = TenantScope("org-org", "dev-project")
+        if formal_sources is None:
+            budget = seed_isolated_active_budget(scope, "test-maker", BudgetRevisionCreate(
+                budgetId=f"budget-{suffix}", revision=1, environment="development",
+                currency="CNY", dailyLimitMinor=500, monthlyLimitMinor=5000,
+                alertThresholdPct=80, hardStop=True, unknownUsageBehavior="block",
+                effectiveFrom=since, effectiveUntil=until, owner="test-maker",
+                overBudgetApprover="test-maker", lifecycle="active",
+            ))
+        else:
+            budget, budget_policy, provider, price = formal_sources
+            expiry = min(expiry, budget_policy.effective_until, price.effective_until)
+            assert expiry > datetime.now(UTC) + timedelta(minutes=1)
+        quota = seed_historical_model_policy(scope, "test-maker", QuotaPolicyRevisionCreate(
+            policyId=f"quota-{suffix}", revision=1, environment="development",
+            effectiveFrom=since, effectiveUntil=until, owner="test-maker",
+            approvalRef=f"approval-{suffix}", lifecycle="active", maxConcurrency=2,
+            maxInputTokens=8000, maxOutputTokens=2000, hourlyRequestLimit=50,
+            dailyRequestLimit=200, reservationLeaseSeconds=60,
+            overflowBehavior="queue", allowPublicProviderFallback=False, allowAutoScale=False,
+        ))
+        if formal_sources is None:
+            budget_policy = seed_historical_model_policy(scope, "test-maker", BudgetPolicyRevisionCreate(
+                policyId=f"budget-policy-{suffix}", revision=1, environment="development",
+                effectiveFrom=since, effectiveUntil=until, owner="test-maker",
+                approvalRef=f"approval-{suffix}", lifecycle="active",
+                budgetRevisionRef=VersionedAssetRef(
+                    assetType="BudgetRevision", assetId=budget.budget_id,
+                    revision=budget.revision, contentHash=budget.content_hash),
+                currency="CNY", hardStop=True, unknownUsageBehavior="block",
+                unknownPriceBehavior="block", allowZeroPrice=False,
+            ))
+            provider = rehashed(CurrentCandidateStore().provider,
+                                providerInstanceId=f"provider-{suffix}")
+            price = rehashed(CurrentCandidateStore().price,
+                             priceSnapshotId=f"price-{suffix}", effectiveFrom=since)
+        model = rehashed(CurrentCandidateStore().model,
+            registeredModelId=f"model-{suffix}",
+            providerModelId=provider_model_id,
+            provider={"assetType": "ProviderInstanceRevision",
+                      "assetId": provider.provider_instance_id, "revision": provider.revision,
+                      "contentHash": provider.content_hash},
+            priceSnapshotRef={"assetType": "ModelPriceSnapshotRevision",
+                              "assetId": price.price_snapshot_id, "revision": price.revision,
+                              "contentHash": price.content_hash},
+            quotaPolicyRef={"assetType": "QuotaPolicyRevision", "assetId": quota.policy_id,
+                            "revision": quota.revision, "contentHash": quota.content_hash},
+            budgetPolicyRef={"assetType": "BudgetPolicyRevision", "assetId": budget_policy.policy_id,
+                             "revision": budget_policy.revision, "contentHash": budget_policy.content_hash})
+        source = VersionedAssetRef(assetType="RegisteredModelRevision",
+            assetId=model.registered_model_id, revision=model.revision,
+            contentHash=model.content_hash)
+        target = evaluation_candidate_ref(model.model_copy(update={
+            "revision": model.revision + 1, "lifecycle": type(model.lifecycle).ACTIVE,
+            "eval_gate_ref": None,
+        }))
+        with psycopg.connect(get_dsn()) as owner:
+            owner.execute("""INSERT INTO aip_registered_model_head
+                (org_id,project_id,registered_model_id,current_revision,version)
+                VALUES('org-org','dev-project',%s,1,7)""", (source.asset_id,))
+            owner.execute("""INSERT INTO aip_registered_model_revision
+                (org_id,project_id,registered_model_id,revision,content_hash,lifecycle,payload,created_by)
+                VALUES('org-org','dev-project',%s,1,%s,'validated',%s::jsonb,'test-maker')""",
+                (source.asset_id, source.content_hash,
+                 json.dumps(model.model_dump(mode="json", by_alias=True))))
+            for prefix, column, ref, payload in (() if formal_sources is not None else (
+                ("aip_provider_instance", "provider_instance_id", model.provider,
+                 provider.model_dump(mode="json", by_alias=True)),
+                ("aip_model_price_snapshot", "model_price_snapshot_id", model.price_snapshot_ref,
+                 price.model_dump(mode="json", by_alias=True)),
+            )):
+                owner.execute(f"""INSERT INTO {prefix}_head
+                    (org_id,project_id,{column},current_revision,version)
+                    VALUES('org-org','dev-project',%s,1,1)""", (ref.asset_id,))
+                owner.execute(f"""INSERT INTO {prefix}_revision
+                    (org_id,project_id,{column},revision,content_hash,lifecycle,payload,created_by)
+                    VALUES('org-org','dev-project',%s,1,%s,'active',%s::jsonb,'test-maker')""",
+                    (ref.asset_id, ref.content_hash, json.dumps(payload)))
+        suite, contract = _register_original_model_eval_contract(scope, target, suffix)
+        request = ModelEvalRequestCreate.model_validate(_request(
+            sourceRef=source, targetRef=target, expectedHeadVersion=7,
+            evalContractRef=VersionedAssetRef(assetType="EvalContractRevision", assetId=contract.contract_id,
+                revision=contract.revision, contentHash=contract.content_hash),
+            suiteRef=VersionedAssetRef(assetType="EvalSuiteRevision", assetId=suite.suite_id,
+                revision=suite.revision, contentHash=suite.content_hash),
+            providerRef=model.provider, priceRef=model.price_snapshot_ref,
+            quotaPolicyRef=model.quota_policy_ref, budgetPolicyRef=model.budget_policy_ref,
+            expiresAt=expiry, upperBoundMinor=upper_bound_minor,
+        ))
+        store = AipModelEvalRequestStore()
+        first = store.create(scope, "test-maker", f"eval-{suffix}", request)
+        replay = store.create(scope, "test-maker", f"eval-{suffix}", request)
+        assert replay["request_id"] == first["request_id"]
+        with pytest.raises(ModelEvalRequestConflict):
+            store.create(scope, "test-maker", f"eval-{suffix}",
+                         request.model_copy(update={"upper_bound_minor": 201}))
+        with pytest.raises(ModelEvalRequestBlocked):
+            store.create(TenantScope("dev-org", "dev-project"), "test-maker",
+                         f"canary-{suffix}", request)
+        maker = Principal(subject="test-maker", org_id=scope.org_id,
+                          project_id=scope.project_id, roles=["owner"], token_kind="oidc")
+        checker = Principal(subject="test-checker", org_id=scope.org_id,
+                            project_id=scope.project_id, roles=["admin"], token_kind="oidc")
+        proposal = propose_model_eval_request(maker, first["request_id"],
+                                              f"proposal-{suffix}", expiry)
+        assert proposal.proposal.status.value == "drafted"
+        with pytest.raises(AipActionTransitionBlocked, match="MODEL_EVAL_ACTION_GUARD_REQUIRED"):
+            AipActionStore()._internal_proposal_guard(None, scope, "test-checker",
+                {"action_type_id": "aip_request_model_eval",
+                 "action_type_snapshot": {"id": "aip_request_model_eval"}}, checker=True)
+        approve = DecideActionProposalRequest.model_validate({
+            "expectedProposalVersion": proposal.proposal.version,
+            "expectedProposalHash": proposal.proposal.proposal_hash,
+            "decision": "approved", "reason": "isolated formal application",
+            "approvalExpiresAt": expiry,
+        })
+        with pytest.raises(ModelEvalActionBlocked, match="INDEPENDENT_CHECKER"):
+            decide_model_eval_request(maker, proposal.proposal.id, f"self-{suffix}", approve)
+        approved = decide_model_eval_request(
+            checker, proposal.proposal.id, f"approve-{suffix}", approve)
+        assert approved.proposal.status.value == "approved"
+        assert approved.proposal.policy_snapshot["executionAllowed"] is False
+        assert len(approved.approvals) == 1
+        if stop_after_approval:
+            return scope, first, request, proposal, approved, budget, budget_policy, price
+        with pytest.raises(ModelEvalActionBlocked, match="MAKER_OR_EXPIRY_DRIFTED"):
+            propose_model_eval_request(checker, first["request_id"],
+                                       f"wrong-maker-{suffix}", expiry)
+        with psycopg.connect(get_dsn()) as owner:
+            owner.execute("""UPDATE meta_action_type SET name='tampered'
+                WHERE id='aip_request_model_eval'""")
+        with pytest.raises(ModelEvalActionBlocked, match="ACTION_TYPE_DRIFTED"):
+            propose_model_eval_request(maker, first["request_id"],
+                                       f"metadata-drift-{suffix}", expiry)
+        with psycopg.connect(get_dsn()) as owner:
+            owner.execute("""UPDATE meta_action_type SET name='申请模型首次评测'
+                WHERE id='aip_request_model_eval'""")
+        executor = Principal(subject="test-executor", org_id=scope.org_id,
+                             project_id=scope.project_id, roles=["executor"], token_kind="oidc")
+        with pytest.raises(AipActionTransitionBlocked, match="MODEL_EVAL_APPLICATION_NOT_EXECUTABLE"):
+            AipActionExecutionService(AipActionStore(), ActionAdapterRegistry()).acquire_lease(
+                executor, proposal.proposal.id, f"lease-{suffix}",
+                AcquireExecutionLeaseRequest.model_validate({
+                    "expectedProposalVersion": approved.proposal.version,
+                    "expectedProposalHash": approved.proposal.proposal_hash,
+                }),
+            )
+        with connect(scope) as conn:
+            row = conn.execute("""SELECT request_hash,request_json FROM aip_model_eval_request
+                WHERE request_id=%s""", (first["request_id"],)).fetchone()
+            assert row["request_hash"] == first["request_hash"]
+            assert row["request_json"]["purpose"] == "quality-eval"
+            assert conn.execute("SELECT count(*) AS n FROM aip_model_eval_request WHERE request_id=%s",
+                                (first["request_id"],)).fetchone()["n"] == 1
+            assert conn.execute("SELECT count(*) AS n FROM aip_action_execution_lease").fetchone()["n"] == 0
+            for table in ("aip_eval_run", "aip_eval_report_revision", "aip_release_gate_decision"):
+>               assert conn.execute(f"SELECT count(*) AS n FROM {table}").fetchone()["n"] == 0
+E               assert 1 == 0
+
+tests/aip/test_model_eval_request_pg.py:375: AssertionError
+=============================== warnings summary ===============================
+aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/aip/test_model_eval_request_pg.py::test_model_eval_request_is_exact_immutable_and_idempotent_on_disposable_pg
+1 failed, 64 passed, 7 warnings in 44.56s

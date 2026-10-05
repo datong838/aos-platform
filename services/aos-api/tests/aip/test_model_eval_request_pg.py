@@ -144,6 +144,59 @@ def test_model_eval_request_rejects_missing_current_model_without_writing():
         assert conn.execute("SELECT count(*) AS n FROM aip_model_eval_request").fetchone()["n"] == previous
 
 
+def _register_original_model_eval_contract(scope, target, suffix):
+    """Original governance publication plus unexecuted model Suite and legal freeze.
+
+    The content gate certifies only the governance fixture Graph. This produces
+    request inputs, never a model quality result, model gate or execution grant.
+    """
+    from aos_api.aip_eval_pack_registry import AipEvalPackRegistry, compute_eval_suite_hash
+    from aos_api.aip_eval_contracts import AssetRevisionRef, AssetType
+    from aos_api.aip_production_contract_store import AipProductionContractStore
+    from aos_api.aip_production_contracts import CreateEvalContractRequest
+    from tests.extension_runtime.test_ecommerce_content_review_pending_pg import _register_current_content_eval_gate
+    contracts = AipProductionContractStore()
+    with connect(scope) as conn:
+        row = conn.execute("SELECT h.contract_id,h.current_revision FROM aip_eval_contract_head h "
+            "JOIN aip_eval_contract_revision r ON r.org_id=h.org_id AND r.project_id=h.project_id "
+            "AND r.contract_id=h.contract_id AND r.revision=h.current_revision "
+            "WHERE h.org_id=%s AND h.project_id=%s AND r.gate_policy->>'subjectKind'='ecommerce_content' "
+            "ORDER BY h.contract_id LIMIT 1", scope.key).fetchone()
+    if row is None:
+        exact, _, _ = _register_current_content_eval_gate(connect)
+        governance = contracts.get_eval_contract(scope, exact.resource_id, exact.revision)
+    else:
+        governance = contracts.get_eval_contract(scope, row['contract_id'], row['current_revision'])
+    assert governance.readiness.value == 'ready' and not governance.blockers
+    registry = AipEvalPackRegistry()
+    base = registry.get_suite_revision(scope, governance.suite_ref.resource_id,
+                                       governance.suite_ref.revision)
+    suite = base.model_copy(update={'suite_id': 'model-suite-' + suffix,
+        'target': AssetRevisionRef(asset_type=AssetType.REGISTERED_MODEL, asset_id=target.asset_id,
+            revision=str(target.revision), content_hash=target.content_hash)})
+    suite = suite.model_copy(update={'content_hash': compute_eval_suite_hash(suite)})
+    registry.register_suite_revision(scope, suite, actor='test-maker')
+    body = CreateEvalContractRequest(
+        suiteRef={'resourceType': 'EvalSuiteRevision', 'resourceId': suite.suite_id,
+                  'revision': suite.revision, 'contentHash': suite.content_hash},
+        publicationRef=governance.publication_ref, releaseGateRef=governance.release_gate_ref,
+        artifactSchemaRef=governance.artifact_schema_ref,
+        severityThresholds={'critical': 1.0},
+        gatePolicy={'subjectKind': 'model_eval', 'executionAllowed': False},
+        returnMapping={'critical': 'blocked'}, overridePolicy={'allowed': False})
+    draft = contracts.create_eval_contract(scope, 'test-maker', 'model-contract-' + suffix, body)
+    frozen = contracts.freeze_eval_contract(scope, 'test-maker', draft.contract_id,
+                                            draft.version, 'model-freeze-' + suffix)
+    original = contracts.get_eval_contract(scope, frozen.contract_id, frozen.revision)
+    assert original.lifecycle.value == 'frozen' and original.readiness.value == 'ready'
+    assert not original.blockers
+    with connect(scope) as conn:
+        assert conn.execute("SELECT count(*) AS n FROM aip_release_gate_decision "
+            "WHERE org_id=%s AND project_id=%s AND target_ref->>'assetId'=%s",
+            (*scope.key, target.asset_id)).fetchone()['n'] == 0
+    return suite, frozen
+
+
 def seeded_approved_model_eval_request(*, stop_after_approval: bool = False,
                                       formal_sources=None, upper_bound_minor: int = 200,
                                       provider_model_id: str = "m",
@@ -152,8 +205,6 @@ def seeded_approved_model_eval_request(*, stop_after_approval: bool = False,
     expiry = datetime.now(UTC) + expiry_after
     since = datetime.now(UTC) - timedelta(hours=1)
     until = datetime.now(UTC) + timedelta(days=2)
-    suite_id, contract_id = f"suite-{suffix}", f"contract-{suffix}"
-    suite_hash, contract_hash = "a" * 64, "b" * 64
     with psycopg.connect(get_dsn()) as owner:
         owner.execute("INSERT INTO twa_org(id,name) VALUES('org-org','test org') ON CONFLICT DO NOTHING")
         owner.execute("INSERT INTO meta_org(id,name) VALUES('org-org','test org') ON CONFLICT DO NOTHING")
@@ -243,28 +294,17 @@ def seeded_approved_model_eval_request(*, stop_after_approval: bool = False,
                 (org_id,project_id,{column},revision,content_hash,lifecycle,payload,created_by)
                 VALUES('org-org','dev-project',%s,1,%s,'active',%s::jsonb,'test-maker')""",
                 (ref.asset_id, ref.content_hash, json.dumps(payload)))
-        owner.execute("""INSERT INTO aip_eval_suite_revision
-            (org_id,project_id,suite_id,revision,content_hash,target_ref,dataset_ref,
-             judge_ref,cases,gate_threshold,actor)
-            VALUES('org-org','dev-project',%s,1,%s,%s::jsonb,'{}','{}','[{}]',0.8,'test-maker')""",
-            (suite_id, suite_hash, json.dumps({"assetType": "registered_model",
-                "assetId": target.asset_id, "revision": str(target.revision),
-                "contentHash": target.content_hash})))
-        owner.execute("""INSERT INTO aip_eval_contract_head
-            (org_id,project_id,contract_id,current_revision,version)
-            VALUES('org-org','dev-project',%s,1,1)""", (contract_id,))
-        owner.execute("""INSERT INTO aip_eval_contract_revision
-            (org_id,project_id,contract_id,revision,suite_ref,artifact_schema_ref,
-             severity_thresholds,gate_policy,return_mapping,override_policy,
-             content_hash,lifecycle,created_by)
-            VALUES('org-org','dev-project',%s,1,%s::jsonb,'{}','{}','{}','{}','{}',
-                   %s,'frozen','test-maker')""",
-            (contract_id, json.dumps({"resourceType": "EvalSuiteRevision",
-                "resourceId": suite_id, "revision": 1, "contentHash": suite_hash}), contract_hash))
+    suite, contract = _register_original_model_eval_contract(scope, target, suffix)
+    eval_tables = ("aip_eval_run", "aip_eval_report_revision", "aip_release_gate_decision")
+    with connect(scope) as conn:
+        governance_baseline = {table: conn.execute(f"SELECT count(*) AS n FROM {table}").fetchone()["n"]
+                               for table in eval_tables}
     request = ModelEvalRequestCreate.model_validate(_request(
         sourceRef=source, targetRef=target, expectedHeadVersion=7,
-        evalContractRef=_ref("EvalContractRevision", contract_id, 1, "b"),
-        suiteRef=_ref("EvalSuiteRevision", suite_id, 1, "a"),
+        evalContractRef=VersionedAssetRef(assetType="EvalContractRevision", assetId=contract.contract_id,
+            revision=contract.revision, contentHash=contract.content_hash),
+        suiteRef=VersionedAssetRef(assetType="EvalSuiteRevision", assetId=suite.suite_id,
+            revision=suite.revision, contentHash=suite.content_hash),
         providerRef=model.provider, priceRef=model.price_snapshot_ref,
         quotaPolicyRef=model.quota_policy_ref, budgetPolicyRef=model.budget_policy_ref,
         expiresAt=expiry, upperBoundMinor=upper_bound_minor,
@@ -335,8 +375,11 @@ def seeded_approved_model_eval_request(*, stop_after_approval: bool = False,
         assert conn.execute("SELECT count(*) AS n FROM aip_model_eval_request WHERE request_id=%s",
                             (first["request_id"],)).fetchone()["n"] == 1
         assert conn.execute("SELECT count(*) AS n FROM aip_action_execution_lease").fetchone()["n"] == 0
-        for table in ("aip_eval_run", "aip_eval_report_revision", "aip_release_gate_decision"):
-            assert conn.execute(f"SELECT count(*) AS n FROM {table}").fetchone()["n"] == 0
+        for table in eval_tables:
+            assert conn.execute(f"SELECT count(*) AS n FROM {table}").fetchone()["n"] == governance_baseline[table]
+        assert conn.execute("SELECT count(*) AS n FROM aip_release_gate_decision "
+            "WHERE org_id=%s AND project_id=%s AND target_ref->>'assetId'=%s",
+            (*scope.key, target.asset_id)).fetchone()["n"] == 0
     with psycopg.connect(get_dsn()) as owner:
         with pytest.raises(psycopg.errors.ObjectNotInPrerequisiteState, match="AIP4_APPEND_ONLY"):
             owner.execute("""UPDATE aip_model_eval_request SET upper_bound_minor=1
@@ -352,3 +395,36 @@ def seeded_approved_model_eval_request(*, stop_after_approval: bool = False,
 
 def test_model_eval_request_is_exact_immutable_and_idempotent_on_disposable_pg():
     seeded_approved_model_eval_request()
+
+
+def test_model_eval_request_rejects_original_dynamic_blocked_frozen_contract():
+    """Maintenance negative; frozen flag alone is not an authoritative source."""
+    from aos_api.aip_production_contract_store import AipProductionContractStore, canonical_hash
+    from aos_api.aip_production_contracts import CreateEvalContractRequest, BriefLifecycle
+    scope, _, request, _, _, _, _, _ = seeded_approved_model_eval_request(stop_after_approval=True)
+    identity = "broken-model-contract-" + uuid.uuid4().hex
+    body = CreateEvalContractRequest(
+        suiteRef={"resourceType": "EvalSuiteRevision", "resourceId": request.suite_ref.asset_id,
+                  "revision": request.suite_ref.revision, "contentHash": request.suite_ref.content_hash},
+        artifactSchemaRef={"resourceType": "Schema", "resourceId": "maintenance-negative",
+                           "revision": "1", "authority": "aip"},
+        severityThresholds={"critical": 1.0}, gatePolicy={"mode": "all"},
+        returnMapping={"critical": "blocked"}, overridePolicy={"allowed": False})
+    digest = canonical_hash(body.model_dump(mode="json", by_alias=True))
+    contracts = AipProductionContractStore()
+    with psycopg.connect(get_dsn()) as owner:
+        owner.execute("INSERT INTO aip_eval_contract_head(org_id,project_id,contract_id,current_revision,version) "
+                      "VALUES(%s,%s,%s,1,1)", (*scope.key, identity))
+        contracts._insert_eval(owner, scope, identity, 1, "maintenance-negative", body,
+                               digest, BriefLifecycle.FROZEN)
+    broken = request.model_copy(update={"eval_contract_ref": VersionedAssetRef(
+        assetType="EvalContractRevision", assetId=identity, revision=1, contentHash=digest)})
+    original = contracts.get_eval_contract(scope, identity, 1)
+    assert original.lifecycle.value == "frozen" and original.readiness.value == "blocked"
+    assert original.blockers
+    with connect(scope) as conn:
+        before = conn.execute("SELECT count(*) AS n FROM aip_model_eval_request").fetchone()["n"]
+    with pytest.raises(ModelEvalRequestBlocked, match="ready frozen Eval Contract"):
+        AipModelEvalRequestStore().create(scope, "test-maker", "broken-" + uuid.uuid4().hex, broken)
+    with connect(scope) as conn:
+        assert conn.execute("SELECT count(*) AS n FROM aip_model_eval_request").fetchone()["n"] == before
