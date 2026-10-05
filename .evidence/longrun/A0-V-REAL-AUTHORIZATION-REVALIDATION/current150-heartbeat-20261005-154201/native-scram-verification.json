@@ -1,0 +1,21 @@
+{
+  "outcome": "NATIVE_SCRAM_READ_AND_RESTORE_GREEN",
+  "authority": "AOS-001360",
+  "container": "current150-same-77f8f834ea15",
+  "wrong_password_rejected": true,
+  "observations": [
+    {
+      "session_user": "aos_provider_capacity_issuer",
+      "current_user": "aos_provider_capacity_issuer",
+      "database": "aos_current_preview_20260927",
+      "positive_memberships": 1
+    },
+    {
+      "canary_memberships": 0
+    }
+  ],
+  "cleanup": "original HBA bytes and role restored; private passfile removed",
+  "full_snapshot_unchanged": true,
+  "complete_formal_issuance": "pending",
+  "source_migration_restart": "pending"
+}
