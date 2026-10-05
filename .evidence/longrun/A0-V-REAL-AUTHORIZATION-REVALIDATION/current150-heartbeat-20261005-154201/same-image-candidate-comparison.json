@@ -1,0 +1,31 @@
+{
+  "outcome": "SAME_IMAGE_READONLY_CANDIDATE_COMPARISON",
+  "authority": "AOS-001356",
+  "head": "817963e3e25c7953c2821c1c5ff583a6b61d00c9",
+  "target": "current150-same-77f8f834ea15",
+  "source_version": "a0v_142",
+  "old_tables": 597,
+  "constraints": 4268,
+  "different_definitions": [
+    "extension_dispatch_configuration_refresh__idempotency_key_check",
+    "extension_dispatch_configuration_refresh_receipt_actor_check",
+    "extension_dispatch_registration_receipt_idempotency_key_check",
+    "extension_dispatch_successor_registration_idempotency_key_check",
+    "extension_dispatch_withdrawal_receipt_idempotency_key_check",
+    "extension_operation_dispatch_binding_operation_id_check",
+    "extension_runtime_configuration_stage_req_idempotency_key_check",
+    "extension_runtime_configuration_stage_request_subject_check",
+    "extension_runtime_ui_read_request_subject_check",
+    "pipeline_controlled_source_claim_actor_check",
+    "pipeline_schedule_control_binding_actor_check",
+    "pipeline_snapshot_group_claim_actor_check",
+    "pipeline_snapshot_group_recovery_receipt_actor_check",
+    "pipeline_snapshot_group_recovery_receipt_executor_check",
+    "pipeline_snapshot_schedule_claim_actor_check"
+  ],
+  "other_12_catalogs_exact": true,
+  "old_snapshot_exact": true,
+  "candidate_comparison_only": true,
+  "restore_gate_passed": false,
+  "source_mutations": 0
+}

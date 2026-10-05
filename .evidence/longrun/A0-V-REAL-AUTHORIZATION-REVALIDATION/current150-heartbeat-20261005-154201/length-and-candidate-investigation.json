@@ -1,0 +1,68 @@
+{
+  "basis": "preserved first restore diagnostic; same-image one exemplar independently checked",
+  "candidate_only": true,
+  "exact_gate_unchanged": true,
+  "tests": "45 passed in 0.24s",
+  "constraints": [
+    {
+      "constraint": "extension_dispatch_configuration_refresh__idempotency_key_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "extension_dispatch_configuration_refresh_receipt_actor_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "extension_dispatch_registration_receipt_idempotency_key_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "extension_dispatch_successor_registration_idempotency_key_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "extension_dispatch_withdrawal_receipt_idempotency_key_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "extension_operation_dispatch_binding_operation_id_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "extension_runtime_configuration_stage_req_idempotency_key_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "extension_runtime_configuration_stage_request_subject_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "extension_runtime_ui_read_request_subject_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "pipeline_controlled_source_claim_actor_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "pipeline_schedule_control_binding_actor_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "pipeline_snapshot_group_claim_actor_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "pipeline_snapshot_group_recovery_receipt_actor_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "pipeline_snapshot_group_recovery_receipt_executor_check",
+      "all_fields_equal_after_candidate": true
+    },
+    {
+      "constraint": "pipeline_snapshot_schedule_claim_actor_check",
+      "all_fields_equal_after_candidate": true
+    }
+  ]
+}

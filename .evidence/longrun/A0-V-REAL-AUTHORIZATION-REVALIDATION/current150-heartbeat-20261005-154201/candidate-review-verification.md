@@ -1,0 +1,1 @@
+窄候选复审：未登记尾部四反例RED 4failed/28passed；仅允许同列btrim、可选cntrl和operation_id固定正则后，相邻49passed0.29秒。保留15真实差异仍15/15吻合。候选未接入require_exact_restore，不能报恢复GREEN或迁移授权。当前库只读，无服务重启。

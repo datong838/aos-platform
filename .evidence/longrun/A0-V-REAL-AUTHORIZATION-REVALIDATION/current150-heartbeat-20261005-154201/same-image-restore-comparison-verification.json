@@ -1,0 +1,29 @@
+{
+  "outcome": "SAME_IMAGE_RESTORE_COMPARISON_GREEN_REHEARSAL_PENDING",
+  "authority": "AOS-001356",
+  "head": "817963e3e25c7953c2821c1c5ff583a6b61d00c9",
+  "script_sha256": "17e7eca4b361bce25af19702a904ba9dc430b2490708f6f1207573c1b16977da",
+  "source_version": "a0v_142",
+  "target": "current150-same-77f8f834ea15",
+  "old_tables": 597,
+  "check_reassociation": [
+    "extension_dispatch_configuration_refresh_receipt.extension_dispatch_configuration_refresh__idempotency_key_check",
+    "extension_dispatch_configuration_refresh_receipt.extension_dispatch_configuration_refresh_receipt_actor_check",
+    "extension_dispatch_registration_receipt.extension_dispatch_registration_receipt_idempotency_key_check",
+    "extension_dispatch_successor_registration_receipt.extension_dispatch_successor_registration_idempotency_key_check",
+    "extension_dispatch_withdrawal_receipt.extension_dispatch_withdrawal_receipt_idempotency_key_check",
+    "extension_operation_dispatch_binding.extension_operation_dispatch_binding_operation_id_check",
+    "extension_runtime_configuration_stage_request.extension_runtime_configuration_stage_req_idempotency_key_check",
+    "extension_runtime_configuration_stage_request.extension_runtime_configuration_stage_request_subject_check",
+    "extension_runtime_ui_read_request.extension_runtime_ui_read_request_subject_check",
+    "pipeline_controlled_source_claim.pipeline_controlled_source_claim_actor_check",
+    "pipeline_schedule_control_binding.pipeline_schedule_control_binding_actor_check",
+    "pipeline_snapshot_group_claim.pipeline_snapshot_group_claim_actor_check",
+    "pipeline_snapshot_group_recovery_receipt.pipeline_snapshot_group_recovery_receipt_actor_check",
+    "pipeline_snapshot_group_recovery_receipt.pipeline_snapshot_group_recovery_receipt_executor_check",
+    "pipeline_snapshot_schedule_claim.pipeline_snapshot_schedule_claim_actor_check"
+  ],
+  "source_mutations": 0,
+  "migration_rehearsed": false,
+  "tests": "61passed0.24s"
+}

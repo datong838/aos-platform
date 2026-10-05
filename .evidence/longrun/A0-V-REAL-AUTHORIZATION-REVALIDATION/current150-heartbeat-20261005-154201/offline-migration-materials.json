@@ -1,0 +1,71 @@
+{
+  "outcome": "EIGHT_OFFLINE_STEPS_GENERATED",
+  "authority": "AOS-001356",
+  "steps": [
+    {
+      "from": "a0v_142",
+      "to": "a0v_143",
+      "migration": "a0v_143_provider_health_epoch_fence.py",
+      "migration_sha256": "40b823638a4bea4e107eed39fa0cbb6b6a8f5947a75abf0d45ea0cc7c5e69c4d",
+      "sql_sha256": "44595959209f7e334fa39f4c62727c514f027129339d5fad56935f233b1eb7d0",
+      "bytes": 9909
+    },
+    {
+      "from": "a0v_143",
+      "to": "a0v_144",
+      "migration": "a0v_144_binding_evaluator_boundary.py",
+      "migration_sha256": "c426eb11ce86bda01a7cb37fed738814ec4fadff10061891471a08f56f9fb61e",
+      "sql_sha256": "0ca9a9f5039c202525dfbc09fc35a2b7e3b3c1059e10f3dfd22e086f4ec24a7f",
+      "bytes": 130287
+    },
+    {
+      "from": "a0v_144",
+      "to": "a0v_145",
+      "migration": "a0v_145_provider_capacity_request.py",
+      "migration_sha256": "3aba059d54a3c65a4e90712d507017c8250d572ae7db12b599ef0ec33e4219d3",
+      "sql_sha256": "8a417cf04c4bf61a0364a1ce1858a9e86a8c155a0bbdf4375f3cd0d28a9b9d96",
+      "bytes": 9946
+    },
+    {
+      "from": "a0v_145",
+      "to": "a0v_146",
+      "migration": "a0v_146_provider_capacity_action.py",
+      "migration_sha256": "dad16389f49a76375cc9da554ba59287f8e6428b90af94352628bb764d3f7bad",
+      "sql_sha256": "d7c2525c72bed15b15489fe8c95ca420fefb02c9cb5fa75702f4429df7d705ce",
+      "bytes": 2354
+    },
+    {
+      "from": "a0v_146",
+      "to": "a0v_147",
+      "migration": "a0v_147_provider_capacity_source.py",
+      "migration_sha256": "ecef954374deabaad0739bdd00ec8e139be5179cb4556635703a9e9024ee13c4",
+      "sql_sha256": "3c9fc837cb029cb973e034534acc984eefeb2fa85a6947805497f5cf3a03121c",
+      "bytes": 3910
+    },
+    {
+      "from": "a0v_147",
+      "to": "a0v_148",
+      "migration": "a0v_148_provider_capacity_source_action.py",
+      "migration_sha256": "a161ab74de871465d995cd094f7c148c64d4bc98ff7dfdc146250146b6b8a042",
+      "sql_sha256": "d786a100f67ef5fe7653d98a90445d6df7f44bae56d7c94100a580e339382446",
+      "bytes": 2398
+    },
+    {
+      "from": "a0v_148",
+      "to": "a0v_149",
+      "migration": "a0v_149_capacity_evidence_epoch.py",
+      "migration_sha256": "1354858a8271644a50724c3573dd935dea07a191ea7057b3ebc66a83e584ab3f",
+      "sql_sha256": "ef135326420afebed6af7343f0c7f7cdb1f9883f1cbff19799ab9b84b48e445f",
+      "bytes": 6631
+    },
+    {
+      "from": "a0v_149",
+      "to": "a0v_150",
+      "migration": "a0v_150_provider_capacity_issuance_boundary.py",
+      "migration_sha256": "42c5447bb89c20561ead962699d1c6734cd7a53b0d6b99c8321941ce913474b8",
+      "sql_sha256": "af64fc423853cc786d7f8e16ef0a006013202d0976a0faec0c98f8381bc503f8",
+      "bytes": 21245
+    }
+  ],
+  "database_executed": false
+}

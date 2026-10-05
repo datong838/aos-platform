@@ -1,0 +1,21 @@
+{
+  "kind": "readonly investigation only",
+  "constraint": "extension_dispatch_configuration_refresh__idempotency_key_check",
+  "values": {
+    "source": {
+      "definition": "CHECK ((((length(idempotency_key) >= 1) AND (length(idempotency_key) <= 160)) AND (idempotency_key = btrim(idempotency_key))))",
+      "expression": "(((length(idempotency_key) >= 1) AND (length(idempotency_key) <= 160)) AND (idempotency_key = btrim(idempotency_key)))",
+      "validated": true,
+      "type": "c"
+    },
+    "restored": {
+      "definition": "CHECK (((length(idempotency_key) >= 1) AND (length(idempotency_key) <= 160) AND (idempotency_key = btrim(idempotency_key))))",
+      "expression": "((length(idempotency_key) >= 1) AND (length(idempotency_key) <= 160) AND (idempotency_key = btrim(idempotency_key)))",
+      "validated": true,
+      "type": "c"
+    }
+  },
+  "source_bool_and_nodes": 2,
+  "restored_bool_and_nodes": 1,
+  "semantic_gate_passed": false
+}

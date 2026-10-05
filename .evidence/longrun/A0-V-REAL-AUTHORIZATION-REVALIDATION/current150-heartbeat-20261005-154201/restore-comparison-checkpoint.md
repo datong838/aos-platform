@@ -1,0 +1,1 @@
+恢复比较检查点：源142、m1迁移头150。同镜像独立恢复已知终结后只读对账，通过窄CHECK结合律比较；597表旧快照及其它目录严格保持。61专项/相邻通过，源只读快照通过关系类型覆盖门。8步offline SQL完整生成并摘要，无在线数据库执行。保留首次16.15目标、same-image目标、全部backup/失败记录。当前完整restore Task仍ACTIVE：143..150实际演练、精确数据/权限delta、维护零执行窗口/新第二备份/恢复、当前迁移及PG/API/Web重启尚未完成。严格exact comparator未替换；另加显式dump-equivalence comparator。独立review/上下文Delivery尚待，不能宣称整体Goal或首链完成。
