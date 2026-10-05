@@ -1,0 +1,15 @@
+{
+  "status": "FORMAT_REJECTED_NOT_CONSUMED",
+  "process_exit": 0,
+  "assistant_terminal_count": 1,
+  "stop_reason": "stop",
+  "model": "agnes-2.5-flash",
+  "markdown_json_fence": true,
+  "tool_event_count": 0,
+  "auto_retry_event_count": 0,
+  "code_inputs_unchanged": true,
+  "transport_sha256": "1d528b93799e17461156ac277c28be8f44ef2e1742810f8896a1067e04193b8b",
+  "request_id": "w5cb4-e17-b90-source-prelock-review-20261005-r1",
+  "execution_authorized": false,
+  "automatic_resend": false
+}

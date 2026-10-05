@@ -1,0 +1,4 @@
+{
+  "services/aos-api/aos_api/aip_license_source_authority.py": "23105bbf7231f3dbf7e790cc3af2fa8b62ebdcc0346216d8d85a67378d5069f0",
+  "services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py": "cb59c983c8a0f1f6a85f6034255b1db83ea8f53bfe16711a2d20c483ecd95200"
+}
