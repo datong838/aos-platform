@@ -1,0 +1,27 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_signed_growth_release_reaches_approved_installation_in_full_schema ____
+services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py:1175: in test_signed_growth_release_reaches_approved_installation_in_full_schema
+    verified_generation = asyncio.run(prepare_and_verify())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py:190: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py:1117: in prepare_and_verify
+    assert_active_signed_source_request(installed['installationId'],loader,policy)
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:211: in assert_active_signed_source_request
+    assert_independent_signed_source_approval(proposal,maker,loader,release_policy)
+services/aos-api/tests/aip/test_source_license_approval_pg.py:192: in assert_independent_signed_source_approval
+    assert_signed_original_source_issuance(approved,maker,loader,release_policy)
+services/aos-api/tests/aip/test_source_license_issuer_pg.py:305: in assert_signed_original_source_issuance
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='EXACT_HEAD_REQUIRED'):
+E   Failed: DID NOT RAISE InsufficientPrivilege
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py::test_signed_growth_release_reaches_approved_installation_in_full_schema
+1 failed, 7 warnings in 23.97s

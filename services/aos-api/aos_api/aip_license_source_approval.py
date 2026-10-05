@@ -117,7 +117,8 @@ def authenticate_source_license_command(command):
     from aos_api.auth import resolve_principal
     from aos_api.aip_network_issuer_auth import _require_external_oidc_config
     from aos_api.aip_license_source_proposal_contracts import SourceLicenseMakerCommand,SourceLicenseApprovalCommand
-    if type(command) not in (SourceLicenseMakerCommand,SourceLicenseApprovalCommand):
+    from aos_api.aip_license_source_issuer_contracts import SourceLicenseIssuanceCommand
+    if type(command) not in (SourceLicenseMakerCommand,SourceLicenseApprovalCommand,SourceLicenseIssuanceCommand):
         raise SourceLicenseAuthBlocked('SOURCE_LICENSE_AUTH_COMMAND_REQUIRED')
     try:
         command=type(command).model_validate(command.model_dump(mode='python',by_alias=True))

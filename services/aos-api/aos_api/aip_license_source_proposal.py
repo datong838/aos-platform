@@ -28,6 +28,16 @@ class SourceLicenseProposalBlocked(ValueError):
 
 def require_source_approval_identity(conn, scope):
     """Dedicated login keeps its own ACL/RLS identity, never SET ROLE runtime."""
+    _require_source_dedicated_identity(conn, scope, 'aos_source_license_approval_issuer')
+
+
+def require_source_issuer_identity(conn, scope):
+    _require_source_dedicated_identity(conn, scope, 'aos_source_license_issuer')
+
+
+def _require_source_dedicated_identity(conn, scope, expected_role):
+    if expected_role not in {'aos_source_license_approval_issuer', 'aos_source_license_issuer'}:
+        raise SourceLicenseProposalBlocked('SOURCE_LICENSE_INDEPENDENT_APPROVAL_IDENTITY_REQUIRED')
     _require_scope(conn,scope)
     row=conn.execute("""SELECT session_user AS login,current_user AS role,
       pg_catalog.current_setting('transaction_isolation') AS isolation,
@@ -37,8 +47,8 @@ def require_source_approval_identity(conn, scope):
       r.rolcanlogin,r.rolinherit,r.rolsuper,r.rolcreatedb,r.rolcreaterole,r.rolreplication,r.rolbypassrls,
       EXISTS(SELECT 1 FROM pg_catalog.pg_auth_members m WHERE m.roleid=r.oid OR m.member=r.oid) AS has_members
       FROM pg_catalog.pg_roles r WHERE r.rolname=current_user""").fetchone()
-    if (not row or row['login']!='aos_source_license_approval_issuer'
-        or row['role']!='aos_source_license_approval_issuer' or row['isolation']!='serializable'
+    if (not row or row['login']!=expected_role
+        or row['role']!=expected_role or row['isolation']!='serializable'
         or row['path']!='pg_catalog, public, pg_temp'
         or (row['org_id'],row['project_id'])!=scope.key
         or row['rolcanlogin'] is not True
@@ -70,6 +80,8 @@ def read_source_license_request_facts(*, conn: Any, scope: TenantScope, maker: s
     if identity != {'role':'aos_runtime','isolation':'serializable'}:
         if identity and identity['role']=='aos_source_license_approval_issuer':
             require_source_approval_identity(conn,scope)
+        elif identity and identity['role']=='aos_source_license_issuer':
+            require_source_issuer_identity(conn,scope)
         else:
             raise SourceLicenseProposalBlocked('SOURCE_LICENSE_RUNTIME_SERIALIZABLE_REQUIRED')
     try:
@@ -94,7 +106,8 @@ def read_source_license_request_facts(*, conn: Any, scope: TenantScope, maker: s
         raise SourceLicenseProposalBlocked('SOURCE_LICENSE_INSTALLATION_DRIFT')
     ref=ExactRevisionRef.model_validate(checked.source.model_dump(mode='python', by_alias=True))
     try:
-        epoch=lock_license_source_initialization(conn,scope,ref,shared=True)
+        epoch=lock_license_source_initialization(conn,scope,ref,
+            shared=identity['role']!='aos_source_license_issuer')
         provenance=read_build_provenance(conn,scope,ref)
     except (LicenseSourceUnavailable,BuildProvenanceUnavailable) as exc:
         raise SourceLicenseProposalBlocked('SOURCE_LICENSE_SOURCE_PROVENANCE_UNAVAILABLE') from exc

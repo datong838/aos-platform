@@ -1,0 +1,16 @@
+..................FF                                                     [100%]
+=================================== FAILURES ===================================
+_________ test_source_license_issuer_acl_is_separate_and_login_closed __________
+services/aos-api/tests/aip/test_source_license_issuer_pg.py:107: in test_source_license_issuer_acl_is_separate_and_login_closed
+    assert row is not None
+E   assert None is not None
+___________ test_issuer_read_lock_grants_do_not_allow_owner_mutation ___________
+services/aos-api/tests/aip/test_source_license_issuer_pg.py:130: in test_issuer_read_lock_grants_do_not_allow_owner_mutation
+    conn.execute(sql.SQL('SET SESSION AUTHORIZATION {}').format(sql.Identifier(ISSUER)))
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InvalidParameterValue: role "aos_source_license_issuer" does not exist
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_source_license_issuer_pg.py::test_source_license_issuer_acl_is_separate_and_login_closed
+FAILED services/aos-api/tests/aip/test_source_license_issuer_pg.py::test_issuer_read_lock_grants_do_not_allow_owner_mutation
+2 failed, 18 passed, 7 warnings in 4.87s

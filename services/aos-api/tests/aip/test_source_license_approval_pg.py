@@ -185,9 +185,15 @@ def assert_independent_signed_source_approval(proposal,maker,loader,release_poli
             reconciled=execute_source_license_approval(command,database=config,loader=loader,release_policy=release_policy)
             assert reconciled.approvals==approved.approvals and reconciled.proposal.version==approved.proposal.version
         assert_signed_source_withdrawal_and_expiry(proposal,maker,password,principal,loader,release_policy)
+        import os
+        issuance_expected=0
+        if os.environ.get('AOS_B89_SOURCE_ISSUER_TEST')=='1':
+            from tests.aip.test_source_license_issuer_pg import assert_signed_original_source_issuance
+            assert_signed_original_source_issuance(approved,maker,loader,release_policy,approval_password=password)
+            issuance_expected=1
         with isolated_owner() as observer:
             assert observer.execute('SELECT count(*) AS n FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s AND proposal_id=%s',(*SCOPE.key,proposal.proposal.id)).fetchone()['n']==1
-            assert observer.execute('SELECT count(*) AS n FROM aip_license_source_issuance').fetchone()['n']==0
+            assert observer.execute('SELECT count(*) AS n FROM aip_license_source_issuance').fetchone()['n']==issuance_expected
     finally:
         try:
             for future in futures: future.result(timeout=8)

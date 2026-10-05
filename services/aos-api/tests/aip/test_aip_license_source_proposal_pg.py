@@ -211,7 +211,9 @@ def assert_active_signed_source_request(installation_id,loader,release_policy):
     assert_independent_signed_source_approval(proposal,maker,loader,release_policy)
     with isolated_owner() as observer:
         assert observer.execute('SELECT count(*) AS n FROM aip_evidence_bundle_revoke_event WHERE org_id=%s AND project_id=%s AND bundle_id=%s',(*SCOPE.key,source.bundle_id)).fetchone()['n']==0
-        assert observer.execute('SELECT count(*) AS n FROM aip_license_source_issuance WHERE org_id=%s AND project_id=%s AND bundle_id=%s',(*SCOPE.key,source.bundle_id)).fetchone()['n']==0
+        import os
+        expected=1 if os.environ.get('AOS_B89_SOURCE_ISSUER_TEST')=='1' else 0
+        assert observer.execute('SELECT count(*) AS n FROM aip_license_source_issuance WHERE org_id=%s AND project_id=%s AND bundle_id=%s',(*SCOPE.key,source.bundle_id)).fetchone()['n']==expected
 
 @pytest.mark.parametrize('path,value',[
     (('source','resourceId'),'another-source'),(('source','revision'),2),

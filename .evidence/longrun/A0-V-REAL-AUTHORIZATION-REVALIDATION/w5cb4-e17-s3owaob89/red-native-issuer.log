@@ -1,0 +1,9 @@
+....................F                                                    [100%]
+=================================== FAILURES ===================================
+_____ test_private_source_issuer_rejects_unverified_context_before_queries _____
+services/aos-api/tests/aip/test_source_license_issuer_pg.py:138: in test_private_source_issuer_rejects_unverified_context_before_queries
+    from aos_api.aip_license_source_issuer import issue_source_license_in_transaction, SourceLicenseIssuanceBlocked
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_issuer'
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_source_license_issuer_pg.py::test_private_source_issuer_rejects_unverified_context_before_queries
+1 failed, 20 passed, 7 warnings in 4.57s

@@ -1,0 +1,45 @@
+{
+  "observed_at": "2026-10-05T00:26:08.802790+00:00",
+  "database_count_before": 49,
+  "database_count_after": 49,
+  "temporary_roles_before": [
+    {
+      "rolname": "aos_license_source_fence_owner",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false,
+      "has_members": false,
+      "dependencies": 0
+    },
+    {
+      "rolname": "aos_source_license_approval_issuer",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false,
+      "has_members": false,
+      "dependencies": 0
+    },
+    {
+      "rolname": "aos_source_license_issuer",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false,
+      "has_members": false,
+      "dependencies": 0
+    }
+  ],
+  "temporary_roles_after": 0,
+  "cleanup_scope": "exact three dependency-free test-created NOLOGIN roles only; no DROP OWNED or historical database removal"
+}

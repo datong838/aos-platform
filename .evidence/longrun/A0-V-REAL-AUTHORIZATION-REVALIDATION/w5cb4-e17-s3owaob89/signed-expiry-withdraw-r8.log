@@ -1,0 +1,91 @@
+E                                                                        [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_signed_growth_release_reaches_approved_installation_in_full_schema _
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1969: in _exec_single_context
+    self.dialect.do_execute(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/cursor.py:117: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InternalError_: tuple concurrently updated
+E   CONTEXT:  SQL statement "ALTER ROLE aos_runtime NOLOGIN NOSUPERUSER NOCREATEDB
+E               NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS"
+E   PL/pgSQL function inline_code_block line 7 at SQL statement
+
+The above exception was the direct cause of the following exception:
+services/aos-api/tests/conftest.py:112: in _isolated_postgres_database
+    command.upgrade(config, "head")
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/command.py:487: in upgrade
+    script.run_env()
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/script/base.py:550: in run_env
+    util.load_python_file(self.dir, "env.py")
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/util/pyfiles.py:114: in load_python_file
+    module = load_module_py(module_id, path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/util/pyfiles.py:132: in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/alembic/env.py:71: in <module>
+    run_migrations_online()
+services/aos-api/alembic/env.py:65: in run_migrations_online
+    context.run_migrations()
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/runtime/environment.py:967: in run_migrations
+    self.get_context().run_migrations(**kw)
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/runtime/migration.py:621: in run_migrations
+    step.migration_fn(**kw)
+services/aos-api/alembic/versions/228ti2e6_module_rls.py:41: in upgrade
+    op.execute(
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/operations/ops.py:2645: in execute
+    return operations.invoke(op)
+           ^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/operations/base.py:448: in invoke
+    return fn(self, operation)
+           ^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/operations/toimpl.py:259: in execute_sql
+    operations.migration_context.impl.execute(
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/ddl/impl.py:259: in execute
+    self._exec(sql, execution_options)
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/ddl/impl.py:252: in _exec
+    return conn.execute(construct, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1421: in execute
+    return meth(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1643: in _execute_clauseelement
+    ret = self._execute_context(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1848: in _execute_context
+    return self._exec_single_context(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1988: in _exec_single_context
+    self._handle_dbapi_exception(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2365: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1969: in _exec_single_context
+    self.dialect.do_execute(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/cursor.py:117: in execute
+    raise ex.with_traceback(None)
+E   sqlalchemy.exc.InternalError: (psycopg.errors.InternalError_) tuple concurrently updated
+E   CONTEXT:  SQL statement "ALTER ROLE aos_runtime NOLOGIN NOSUPERUSER NOCREATEDB
+E               NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS"
+E   PL/pgSQL function inline_code_block line 7 at SQL statement
+E   [SQL: 
+E           DO $role$
+E           BEGIN
+E             IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='aos_runtime') THEN
+E               CREATE ROLE aos_runtime NOLOGIN NOSUPERUSER NOCREATEDB
+E                 NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
+E             END IF;
+E             ALTER ROLE aos_runtime NOLOGIN NOSUPERUSER NOCREATEDB
+E               NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
+E             IF NOT pg_has_role(current_user, 'aos_runtime', 'MEMBER') THEN
+E               EXECUTE format('GRANT aos_runtime TO %%I', current_user);
+E             END IF;
+E           END
+E           $role$;
+E           ]
+E   (Background on this error at: https://sqlalche.me/e/20/2j85)
+=========================== short test summary info ============================
+ERROR services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py::test_signed_growth_release_reaches_approved_installation_in_full_schema
+7 warnings, 1 error in 4.53s
