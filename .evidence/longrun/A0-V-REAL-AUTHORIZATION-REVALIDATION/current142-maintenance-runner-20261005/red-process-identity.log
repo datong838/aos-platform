@@ -1,0 +1,152 @@
+................FFFFFFFFFF                                               [100%]
+=================================== FAILURES ===================================
+___________ test_process_identity_drift_refuses_candidate[pid-10002] ___________
+
+field = 'pid', value = 10002
+
+    @pytest.mark.parametrize('field,value', [('pid', 10002), ('ppid', 1), ('uid', 0),
+        ('started', 'new-process'), ('argv_sha256', 'b'*64), ('cwd', '/tmp'),
+        ('children', [101]), ('listener_ports', [8080, 18181])])
+    def test_process_identity_drift_refuses_candidate(field, value):
+        observed = {**process(), field: value}
+        with pytest.raises(m.MaintenanceBlocked):
+>           m.require_process(process(), observed, executor_pid=20001)
+            ^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'maintenance142' has no attribute 'require_process'
+
+scripts/tests/test_a0v_current_142_maintenance.py:91: AttributeError
+____________ test_process_identity_drift_refuses_candidate[ppid-1] _____________
+
+field = 'ppid', value = 1
+
+    @pytest.mark.parametrize('field,value', [('pid', 10002), ('ppid', 1), ('uid', 0),
+        ('started', 'new-process'), ('argv_sha256', 'b'*64), ('cwd', '/tmp'),
+        ('children', [101]), ('listener_ports', [8080, 18181])])
+    def test_process_identity_drift_refuses_candidate(field, value):
+        observed = {**process(), field: value}
+        with pytest.raises(m.MaintenanceBlocked):
+>           m.require_process(process(), observed, executor_pid=20001)
+            ^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'maintenance142' has no attribute 'require_process'
+
+scripts/tests/test_a0v_current_142_maintenance.py:91: AttributeError
+_____________ test_process_identity_drift_refuses_candidate[uid-0] _____________
+
+field = 'uid', value = 0
+
+    @pytest.mark.parametrize('field,value', [('pid', 10002), ('ppid', 1), ('uid', 0),
+        ('started', 'new-process'), ('argv_sha256', 'b'*64), ('cwd', '/tmp'),
+        ('children', [101]), ('listener_ports', [8080, 18181])])
+    def test_process_identity_drift_refuses_candidate(field, value):
+        observed = {**process(), field: value}
+        with pytest.raises(m.MaintenanceBlocked):
+>           m.require_process(process(), observed, executor_pid=20001)
+            ^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'maintenance142' has no attribute 'require_process'
+
+scripts/tests/test_a0v_current_142_maintenance.py:91: AttributeError
+______ test_process_identity_drift_refuses_candidate[started-new-process] ______
+
+field = 'started', value = 'new-process'
+
+    @pytest.mark.parametrize('field,value', [('pid', 10002), ('ppid', 1), ('uid', 0),
+        ('started', 'new-process'), ('argv_sha256', 'b'*64), ('cwd', '/tmp'),
+        ('children', [101]), ('listener_ports', [8080, 18181])])
+    def test_process_identity_drift_refuses_candidate(field, value):
+        observed = {**process(), field: value}
+        with pytest.raises(m.MaintenanceBlocked):
+>           m.require_process(process(), observed, executor_pid=20001)
+            ^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'maintenance142' has no attribute 'require_process'
+
+scripts/tests/test_a0v_current_142_maintenance.py:91: AttributeError
+_ test_process_identity_drift_refuses_candidate[argv_sha256-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb] _
+
+field = 'argv_sha256'
+value = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+    @pytest.mark.parametrize('field,value', [('pid', 10002), ('ppid', 1), ('uid', 0),
+        ('started', 'new-process'), ('argv_sha256', 'b'*64), ('cwd', '/tmp'),
+        ('children', [101]), ('listener_ports', [8080, 18181])])
+    def test_process_identity_drift_refuses_candidate(field, value):
+        observed = {**process(), field: value}
+        with pytest.raises(m.MaintenanceBlocked):
+>           m.require_process(process(), observed, executor_pid=20001)
+            ^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'maintenance142' has no attribute 'require_process'
+
+scripts/tests/test_a0v_current_142_maintenance.py:91: AttributeError
+___________ test_process_identity_drift_refuses_candidate[cwd-/tmp] ____________
+
+field = 'cwd', value = '/tmp'
+
+    @pytest.mark.parametrize('field,value', [('pid', 10002), ('ppid', 1), ('uid', 0),
+        ('started', 'new-process'), ('argv_sha256', 'b'*64), ('cwd', '/tmp'),
+        ('children', [101]), ('listener_ports', [8080, 18181])])
+    def test_process_identity_drift_refuses_candidate(field, value):
+        observed = {**process(), field: value}
+        with pytest.raises(m.MaintenanceBlocked):
+>           m.require_process(process(), observed, executor_pid=20001)
+            ^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'maintenance142' has no attribute 'require_process'
+
+scripts/tests/test_a0v_current_142_maintenance.py:91: AttributeError
+________ test_process_identity_drift_refuses_candidate[children-value6] ________
+
+field = 'children', value = [101]
+
+    @pytest.mark.parametrize('field,value', [('pid', 10002), ('ppid', 1), ('uid', 0),
+        ('started', 'new-process'), ('argv_sha256', 'b'*64), ('cwd', '/tmp'),
+        ('children', [101]), ('listener_ports', [8080, 18181])])
+    def test_process_identity_drift_refuses_candidate(field, value):
+        observed = {**process(), field: value}
+        with pytest.raises(m.MaintenanceBlocked):
+>           m.require_process(process(), observed, executor_pid=20001)
+            ^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'maintenance142' has no attribute 'require_process'
+
+scripts/tests/test_a0v_current_142_maintenance.py:91: AttributeError
+_____ test_process_identity_drift_refuses_candidate[listener_ports-value7] _____
+
+field = 'listener_ports', value = [8080, 18181]
+
+    @pytest.mark.parametrize('field,value', [('pid', 10002), ('ppid', 1), ('uid', 0),
+        ('started', 'new-process'), ('argv_sha256', 'b'*64), ('cwd', '/tmp'),
+        ('children', [101]), ('listener_ports', [8080, 18181])])
+    def test_process_identity_drift_refuses_candidate(field, value):
+        observed = {**process(), field: value}
+        with pytest.raises(m.MaintenanceBlocked):
+>           m.require_process(process(), observed, executor_pid=20001)
+            ^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'maintenance142' has no attribute 'require_process'
+
+scripts/tests/test_a0v_current_142_maintenance.py:91: AttributeError
+__________________ test_process_guard_cannot_target_executor ___________________
+
+    def test_process_guard_cannot_target_executor():
+        with pytest.raises(m.MaintenanceBlocked):
+>           m.require_process(process(), process(), executor_pid=10001)
+            ^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'maintenance142' has no attribute 'require_process'
+
+scripts/tests/test_a0v_current_142_maintenance.py:96: AttributeError
+______________ test_verified_original_leaf_is_read_only_candidate ______________
+
+    def test_verified_original_leaf_is_read_only_candidate():
+>       m.require_process(process(), process(), executor_pid=20001)
+        ^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance142' has no attribute 'require_process'
+
+scripts/tests/test_a0v_current_142_maintenance.py:100: AttributeError
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_process_identity_drift_refuses_candidate[pid-10002]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_process_identity_drift_refuses_candidate[ppid-1]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_process_identity_drift_refuses_candidate[uid-0]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_process_identity_drift_refuses_candidate[started-new-process]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_process_identity_drift_refuses_candidate[argv_sha256-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_process_identity_drift_refuses_candidate[cwd-/tmp]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_process_identity_drift_refuses_candidate[children-value6]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_process_identity_drift_refuses_candidate[listener_ports-value7]
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_process_guard_cannot_target_executor
+FAILED scripts/tests/test_a0v_current_142_maintenance.py::test_verified_original_leaf_is_read_only_candidate
+10 failed, 16 passed in 0.09s

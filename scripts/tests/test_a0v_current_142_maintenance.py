@@ -74,3 +74,27 @@ def test_sequencer_rejects_skipping_independent_restore(tmp_path):
     journal = m.MaintenanceJournal(tmp_path)
     for step in m.STEPS[:3]: journal.perform(step, lambda: {'observed': True})
     with pytest.raises(m.MaintenanceBlocked): journal.perform('migrate_steps', lambda: {'version': 'a0v_142'})
+
+
+def process():
+    return {'pid': 10001, 'ppid': 9001, 'uid': 501, 'started': '2026-10-05T00:49:12',
+            'argv_sha256': 'a'*64, 'cwd': '/Users/ddt/work/projects/ai_agent/aos-platform',
+            'children': [], 'listener_ports': [8080]}
+
+
+@pytest.mark.parametrize('field,value', [('pid', 10002), ('ppid', 1), ('uid', 0),
+    ('started', 'new-process'), ('argv_sha256', 'b'*64), ('cwd', '/tmp'),
+    ('children', [101]), ('listener_ports', [8080, 18181])])
+def test_process_identity_drift_refuses_candidate(field, value):
+    observed = {**process(), field: value}
+    with pytest.raises(m.MaintenanceBlocked):
+        m.require_process(process(), observed, executor_pid=20001)
+
+
+def test_process_guard_cannot_target_executor():
+    with pytest.raises(m.MaintenanceBlocked):
+        m.require_process(process(), process(), executor_pid=10001)
+
+
+def test_verified_original_leaf_is_read_only_candidate():
+    m.require_process(process(), process(), executor_pid=20001)

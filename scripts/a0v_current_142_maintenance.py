@@ -236,3 +236,65 @@ def run_isolated(*, backup_state, evidence_directory):
               'current_source_touched': False, 'formal_current_window_proven': False}
     g.save(Path(evidence_directory) / 'isolated-sequence.json', result)
     return result
+
+
+PROCESS_FIELDS = ('pid', 'ppid', 'uid', 'started', 'argv_sha256', 'cwd', 'children', 'listener_ports')
+
+
+def require_process(expected, observed, *, executor_pid):
+    require(all(key in expected and key in observed for key in PROCESS_FIELDS), 'PROCESS_FINGERPRINT_INCOMPLETE')
+    require(type(observed['pid']) is int and observed['pid'] > 1
+            and observed['pid'] != executor_pid, 'PROCESS_TARGET_INVALID')
+    require(len(observed['listener_ports']) == 1, 'PROCESS_LISTENER_DRIFT')
+    require(observed['children'] == expected['children'], 'PROCESS_CHILDREN_DRIFT')
+    require(all(expected[key] == observed[key] for key in PROCESS_FIELDS), 'PROCESS_IDENTITY_DRIFT')
+
+
+def read_service_candidate(*, pid, expected_argv, expected_cwd, expected_port, expected_child_argv=None):
+    """Read-only exact original process candidate; does not authorize a signal."""
+    import hashlib
+    import shlex
+    import subprocess
+
+    def ps(columns):
+        result = subprocess.run(['ps', '-p', str(pid), '-o', columns], capture_output=True, text=True, timeout=10)
+        require(result.returncode == 0, 'PROCESS_MISSING_RECONCILE_ONLY')
+        return result.stdout.strip()
+
+    identity = ps('pid=,ppid=,uid=,lstart=')
+    words = identity.split(maxsplit=3)
+    require(len(words) == 4, 'PROCESS_METADATA_INVALID')
+    argv = shlex.split(ps('args='))
+    require(argv == expected_argv, 'PROCESS_ARGUMENTS_DRIFT')
+    cwd_result = subprocess.run(['lsof', '-a', '-p', str(pid), '-d', 'cwd', '-Fn'],
+                                capture_output=True, text=True, timeout=10)
+    directories = [line[1:] for line in cwd_result.stdout.splitlines() if line.startswith('n')]
+    require(cwd_result.returncode == 0 and directories == [str(expected_cwd)], 'PROCESS_CWD_DRIFT')
+    listeners = subprocess.run(['lsof', '-a', '-p', str(pid), '-nP', '-iTCP', '-sTCP:LISTEN', '-Fn'],
+                              capture_output=True, text=True, timeout=10)
+    endpoints = [line[1:] for line in listeners.stdout.splitlines() if line.startswith('n')]
+    require(listeners.returncode == 0 and endpoints == [f'127.0.0.1:{expected_port}'], 'PROCESS_LISTENER_DRIFT')
+    tree = subprocess.run(['ps', '-axo', 'pid=,ppid='], capture_output=True, text=True, timeout=10)
+    require(tree.returncode == 0, 'PROCESS_TREE_UNAVAILABLE')
+    children = sorted(int(row.split()[0]) for row in tree.stdout.splitlines() if int(row.split()[1]) == pid)
+    if expected_child_argv is None:
+        require(children == [], 'UNEXPECTED_SERVICE_CHILDREN')
+    else:
+        require(expected_port == 8434 and len(children) == 1, 'WEB_HELPER_COUNT_DRIFT')
+        child_pid = children[0]
+        child_args = subprocess.run(['ps', '-p', str(child_pid), '-o', 'args='], capture_output=True, text=True, timeout=10)
+        require(child_args.returncode == 0 and shlex.split(child_args.stdout) == expected_child_argv, 'WEB_HELPER_ARGUMENTS_DRIFT')
+        child_meta = subprocess.run(['ps', '-p', str(child_pid), '-o', 'pid=,ppid=,uid=,lstart='], capture_output=True, text=True, timeout=10)
+        child_words = child_meta.stdout.strip().split(maxsplit=3)
+        require(child_meta.returncode == 0 and len(child_words) == 4 and int(child_words[1]) == pid
+                and int(child_words[2]) == int(words[2]), 'WEB_HELPER_IDENTITY_DRIFT')
+        require(not any(int(row.split()[1]) == child_pid for row in tree.stdout.splitlines()), 'WEB_HELPER_DESCENDANTS_FORBIDDEN')
+        children = [{'pid': child_pid, 'ppid': pid, 'uid': int(child_words[2]), 'started': child_words[3],
+                     'argv_sha256': hashlib.sha256(json.dumps(expected_child_argv, separators=(',', ':')).encode()).hexdigest()}]
+    require(ps('pid=,ppid=,uid=,lstart=') == identity and shlex.split(ps('args=')) == argv,
+            'PROCESS_CHANGED_DURING_OBSERVATION')
+    observed = {'pid': int(words[0]), 'ppid': int(words[1]), 'uid': int(words[2]), 'started': words[3],
+                'argv_sha256': hashlib.sha256(json.dumps(argv, separators=(',', ':')).encode()).hexdigest(),
+                'cwd': directories[0], 'children': children, 'listener_ports': [expected_port]}
+    require_process(observed, observed, executor_pid=os.getpid())
+    return observed

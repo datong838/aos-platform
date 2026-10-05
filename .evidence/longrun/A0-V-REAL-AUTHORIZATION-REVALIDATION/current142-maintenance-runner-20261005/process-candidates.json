@@ -1,0 +1,38 @@
+{
+  "read_only_candidates": [
+    {
+      "pid": 67821,
+      "ppid": 67819,
+      "uid": 501,
+      "started": "Mon Oct  5 00:49:12 2026",
+      "argv_sha256": "c81c2cb67f52827a36cc8d815b5d9a4a92efd93ff07cf204a3e0d2d3b3efa2ca",
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+      "children": [],
+      "listener_ports": [
+        8080
+      ]
+    },
+    {
+      "pid": 67820,
+      "ppid": 67817,
+      "uid": 501,
+      "started": "Mon Oct  5 00:49:12 2026",
+      "argv_sha256": "4cd8ae42f94933c4fa6fceeb4cda83e16c8940a1509321db6ef2f849bd771270",
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform/apps/web",
+      "children": [
+        {
+          "pid": 67827,
+          "ppid": 67820,
+          "uid": 501,
+          "started": "Mon Oct  5 00:49:14 2026",
+          "argv_sha256": "d76592cffd7f6b7d2e96cda9fcb2b8bd908f96f5181122e60faa399aabea545e"
+        }
+      ],
+      "listener_ports": [
+        8434
+      ]
+    }
+  ],
+  "signals_sent": 0,
+  "safe_stop_proven": false
+}

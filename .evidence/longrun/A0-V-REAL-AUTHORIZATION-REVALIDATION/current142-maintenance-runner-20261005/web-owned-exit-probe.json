@@ -1,0 +1,10 @@
+{
+  "owned_probe_pid": 4681,
+  "port": 59939,
+  "exit_code": 0,
+  "helper_pid": 4684,
+  "helper_missing": true,
+  "helper_zombie": false,
+  "current_services_touched": false,
+  "child_signals_sent": 0
+}
