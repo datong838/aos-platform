@@ -135,3 +135,114 @@ def _verify_cost_risk_contents(conn, scope, policy_ref, pricing_ref, upper_bound
     if used_count+extra>p.basis.max_requests or used_risk+upper_bound_minor*extra>p.basis.total_risk_minor:
         raise ValueError('risk allowance exhausted')
     return price
+
+
+from dataclasses import dataclass
+from datetime import datetime
+
+
+@dataclass(frozen=True)
+class FormalBudgetFact:
+    budget_ref: dict
+    price_ref: dict
+    provider_ref: dict
+    activation_receipt_id: str
+    issuer_request_hash: str
+    proposal_id: str
+    decision_id: str
+    fence_version: int
+    per_request_risk_minor: int
+    used_count: int
+    used_risk_minor: int
+    checked_at: datetime
+    valid_until: datetime
+
+
+def read_formal_budget_fact(*, conn, scope, budget_ref, price_ref, provider_ref):
+    """Read original bounded cost authority under native caller-owned locks.
+
+    No hold, fence increment, commit, or retry. Serialization failures propagate.
+    Full composition must pre-acquire its combined approval/member lock graph.
+    """
+    from aos_api.aip_binding_evaluator_connection import require_binding_evaluator_transaction
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from aos_api.aip_budget_reservation_contracts import BudgetExactRef
+    from aos_api.aip_budget_contracts import BudgetRevision
+    from aos_api.aip_budget_cost_issuer import _budget_cost_issuer_request_hash
+    require_binding_evaluator_transaction(conn, scope)
+    refs = []
+    exact_refs = []
+    for ref, kind in zip((budget_ref, price_ref, provider_ref),
+                         ('BudgetRevision', 'ModelPriceSnapshotRevision', 'ProviderInstanceRevision')):
+        exact = FormalExactRef.model_validate(ref)
+        if exact.asset_type != kind:
+            raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_EXACT_REFERENCE_REQUIRED')
+        exact_refs.append(exact)
+        refs.append(BudgetExactRef(resourceType=kind, resourceId=exact.asset_id,
+            revision=exact.revision, contentHash='sha256:' + exact.content_hash))
+    budget, pricing, provider = refs
+    def activation():
+        rows = conn.execute("SELECT * FROM public.aip_budget_receipt WHERE org_id=%s AND project_id=%s "
+            "AND operation='budget_revision.activate_cost' AND result_ref->>'resourceId'=%s",
+            (*scope.key, budget.resource_id)).fetchall()
+        if len(rows) != 1:
+            raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_UNIQUE_ACTIVATION_REQUIRED')
+        return rows[0]
+    receipt = activation()
+    proposal_id = receipt['result_ref'].get('proposalId')
+    if not isinstance(proposal_id, str) or not proposal_id:
+        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_PROPOSAL_REQUIRED')
+    conn.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))',
+        (f'budget-cost-review:{scope.org_id}:{scope.project_id}:{proposal_id}',))
+    if activation() != receipt:
+        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_ACTIVATION_DRIFT')
+    row = conn.execute('SELECT * FROM public.aip_budget_cost_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+        (*scope.key, proposal_id)).fetchone()
+    if row is None:
+        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_PROPOSAL_REQUIRED')
+    p = BudgetCostBasisProposal.from_canonical_payload(_view(row, scope)['proposal'])
+    if not isinstance(p.basis, DevelopmentRiskProposal):
+        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_BOUNDED_RISK_REQUIRED')
+    for subject in sorted({p.maker_subject, p.checker_subject}):
+        _member(conn, scope, subject, label='FORMAL_COST_REVIEWER')
+    fence = conn.execute('SELECT * FROM public.aip_budget_cost_runtime_fence WHERE org_id=%s AND project_id=%s '
+        'AND budget_id=%s AND revision=%s FOR SHARE', (*scope.key, budget.resource_id, budget.revision)).fetchone()
+    if (fence is None or fence['decision_id'] != receipt['result_ref'].get('decisionId')
+            or receipt['result_ref'].get('revision') != budget.revision
+            or receipt['result_ref'].get('contentHash') != budget.content_hash.removeprefix('sha256:')):
+        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_FENCE_OR_TARGET_DRIFT')
+    price = _verify_cost_risk_contents(conn, scope, budget, pricing, p.basis.per_request_risk_minor,
+        receipt=receipt, fence=fence, provider_ref=provider, new_hold=True)
+    actual = conn.execute('SELECT payload,content_hash,lifecycle FROM public.aip_budget_revision '
+        'WHERE org_id=%s AND project_id=%s AND budget_id=%s AND revision=%s',
+        (*scope.key, budget.resource_id, budget.revision)).fetchone()
+    revision = BudgetRevision.model_validate(actual['payload'] if actual else None)
+    target = p.target.model_dump(mode='json', by_alias=True)
+    body = revision.model_dump(mode='json', by_alias=True)
+    content = {k:v for k,v in body.items() if k not in {'tenant','contentHash','createdBy','createdAt'}}
+    if (content != target or revision.content_hash != canonical_hash(target)
+            or actual['content_hash'] != revision.content_hash or actual['lifecycle'] != 'active'
+            or (revision.tenant.org_id, revision.tenant.project_id) != scope.key):
+        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_REVISION_DRIFT')
+    decision = conn.execute('SELECT * FROM public.aip_budget_cost_decision WHERE org_id=%s AND project_id=%s AND decision_id=%s',
+        (*scope.key, fence['decision_id'])).fetchone()
+    issuer = conn.execute("SELECT * FROM public.aip_budget_cost_issuer_receipt WHERE org_id=%s AND project_id=%s "
+        "AND actor_subject=%s AND operation='decide' AND result->>'decisionId'=%s",
+        (*scope.key, p.checker_subject, fence['decision_id'])).fetchall()
+    expected_hash = _budget_cost_issuer_request_hash(dict(operation='decide', orgId=scope.org_id,
+        projectId=scope.project_id, proposalId=proposal_id, proposalHash=p.proposal_hash,
+        decision='approved', reason=None))
+    expected_result = dict(decisionId=fence['decision_id'], decision='approved',
+        proposalHash=p.proposal_hash, activationEligible=False)
+    if len(issuer) != 1 or issuer[0]['request_hash'] != expected_hash or issuer[0]['result'] != expected_result:
+        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_ISSUER_RECEIPT_REQUIRED')
+    now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+    until = min(row['expires_at'], decision['expires_at'], p.target.effective_until,
+        price.effective_until, price.development_cost_authorization.effective_until)
+    if now >= until:
+        raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_AUTHORIZATION_EXPIRED')
+    count, risk = shared_risk_totals(conn, scope, budget.resource_id)
+    return FormalBudgetFact(exact_refs[0].model_dump(mode='json', by_alias=True),
+        exact_refs[1].model_dump(mode='json', by_alias=True), exact_refs[2].model_dump(mode='json', by_alias=True),
+        receipt['receipt_id'], issuer[0]['request_hash'], proposal_id, fence['decision_id'],
+        fence['version'], p.basis.per_request_risk_minor, count, risk, now, until)

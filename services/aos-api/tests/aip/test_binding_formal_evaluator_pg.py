@@ -664,3 +664,131 @@ def assert_formal_signed_source_consumer(request, loader, release_policy):
                             'legacy_schema','wrong_original_receipt'],
                 'scope':'Isolated original signed Source consumer only; complete evaluator pending',
             },indent=2)+'\n')
+
+
+# Original HTTPS budget approval and SQL configuration producers, never price_for.
+from tests.aip.test_budget_cost_consumer_pg import caller
+from tests.aip.test_budget_cost_issuer_pg import issuer_factory
+from tests.aip.test_network_consumer_connection_pg import private_passfile
+from tests.aip.test_network_consumer_signed_https_pg import https_signer
+
+
+@pytest.mark.parametrize('fault', ['none', 'hash', 'provider', 'budget_head', 'member', 'revoked', 'canary', 'snapshot_revoke'])
+def test_formal_budget_consumer_original_signed_configuration_no_fence_write(
+        caller, issuer_factory, https_signer, fault):
+    from tests.aip.test_budget_cost_consumer_pg import approved, consume
+    from tests.aip.test_budget_cost_configuration_pg import derive
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    maker, checker, proposal, saved, decision = approved(issuer_factory, https_signer)
+    with caller() as conn:
+        activated = consume(conn, saved, decision)
+        configured = derive(conn, saved, decision)
+    from aos_api.aip_budget_cost_runtime import read_formal_budget_fact
+    def exact(kind, value):
+        return FormalExactRef(assetType=kind, assetId=value['assetId'],
+            revision=value['revision'], contentHash=value['contentHash'])
+    budget = FormalExactRef(assetType='BudgetRevision', assetId=activated['resourceId'],
+        revision=activated['revision'], contentHash=activated['contentHash'])
+    if fault == 'revoked':
+        from aos_api.aip_budget_cost_issuer import BudgetCostIssuer
+        from tests.aip.test_budget_cost_issuer_pg import command
+        BudgetCostIssuer(issuer_factory).execute(command(https_signer[0], maker, saved,
+            operation='revoke', decision=None, reason='formal-test-withdrawal'))
+    with isolated_owner() as owner:
+        if fault == 'member':
+            owner.execute('DELETE FROM meta_membership WHERE org_id=%s AND project_id=%s AND subject=%s',
+                (*SCOPE.key, checker.subject))
+        elif fault == 'budget_head':
+            owner.execute('UPDATE aip_budget_head SET version=version+1 WHERE budget_id=%s',
+                (proposal.target.budget_id,))
+        owner.commit()
+        if fault == 'hash':
+            budget = budget.model_copy(update={'content_hash': '0' * 64})
+        before = owner.execute('SELECT version FROM aip_budget_cost_runtime_fence WHERE budget_id=%s',
+            (proposal.target.budget_id,)).fetchone()
+        owner.rollback()
+        with _temporary_fixed_evaluator_login(owner) as factory:
+            with factory(SCOPE) as conn:
+                provider = exact('ProviderInstanceRevision', proposal.basis.provider.model_dump(by_alias=True))
+                if fault == 'provider':
+                    provider = provider.model_copy(update={'content_hash': '0' * 64})
+                if fault == 'canary':
+                    conn.execute("SELECT set_config('aos.org_id','dev-org',true)")
+                if fault == 'snapshot_revoke':
+                    conn.execute('SELECT count(*) FROM public.aip_budget_cost_runtime_fence')
+                    from aos_api.aip_budget_cost_issuer import BudgetCostIssuer
+                    from tests.aip.test_budget_cost_issuer_pg import command
+                    BudgetCostIssuer(issuer_factory).execute(command(https_signer[0], maker, saved,
+                        operation='revoke', decision=None, reason='snapshot-test-withdrawal'))
+                expected_error = (psycopg.errors.SerializationFailure if fault == 'snapshot_revoke' else
+                    BindingEvaluatorConnectionBlocked if fault == 'canary' else ValueError)
+                with pytest.raises(expected_error) if fault != 'none' else nullcontext():
+                    fact = read_formal_budget_fact(conn=conn, scope=SCOPE, budget_ref=budget,
+                        price_ref=exact('ModelPriceSnapshotRevision', configured['receipt']['priceRef']),
+                        provider_ref=provider)
+                    assert fact.decision_id == decision['decisionId']
+                    assert fact.per_request_risk_minor == proposal.basis.per_request_risk_minor
+                    assert fact.checked_at < fact.valid_until
+        after = owner.execute('SELECT version FROM aip_budget_cost_runtime_fence WHERE budget_id=%s',
+            (proposal.target.budget_id,)).fetchone()
+        assert after == ({'version': before['version'] + 1} if fault == 'snapshot_revoke' else before)
+
+
+@pytest.mark.parametrize('writer_kind', ['hold', 'revoke'])
+def test_formal_budget_shared_authority_blocks_original_writer(caller, issuer_factory, https_signer, writer_kind):
+    from concurrent.futures import ThreadPoolExecutor
+    from queue import Queue
+    from tests.aip.test_budget_cost_consumer_pg import approved, consume
+    from tests.aip.test_budget_cost_configuration_pg import derive
+    from tests.aip.test_aip_license_source_authority_pg import wait_blocked
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from aos_api.aip_budget_cost_runtime import read_formal_budget_fact, require_cost_risk
+    from aos_api.aip_budget_reservation_contracts import BudgetExactRef
+    from aos_api.db import connect_serializable
+    from aos_api.aip_budget_cost_issuer import BudgetCostIssuer
+    from tests.aip.test_budget_cost_issuer_pg import command
+    maker, _, proposal, saved, decision = approved(issuer_factory, https_signer)
+    with caller() as conn:
+        activated = consume(conn, saved, decision)
+        configured = derive(conn, saved, decision)
+    budget = FormalExactRef(assetType='BudgetRevision', assetId=activated['resourceId'],
+        revision=activated['revision'], contentHash=activated['contentHash'])
+    price = FormalExactRef.model_validate(configured['receipt']['priceRef'])
+    provider = FormalExactRef.model_validate(proposal.basis.provider.model_dump(by_alias=True))
+    pids = Queue()
+    def writer():
+        if writer_kind == 'hold':
+            with connect_serializable(SCOPE) as conn:
+                pids.put(conn.info.backend_pid)
+                def old(ref):
+                    return BudgetExactRef(resourceType=ref.asset_type, resourceId=ref.asset_id,
+                        revision=ref.revision, contentHash='sha256:' + ref.content_hash)
+                try:
+                    require_cost_risk(conn, SCOPE, old(budget), old(price), proposal.basis.per_request_risk_minor)
+                finally:
+                    conn.rollback()
+        else:
+            @contextmanager
+            def observed_factory(scope, read_only):
+                with issuer_factory(scope, read_only) as conn:
+                    pids.put(conn.info.backend_pid)
+                    yield conn
+            return BudgetCostIssuer(observed_factory).execute(command(https_signer[0], maker, saved,
+                operation='revoke', decision=None, reason='blocked-issuer-withdrawal'))
+    with isolated_owner() as owner:
+        before = owner.execute('SELECT version FROM aip_budget_cost_runtime_fence WHERE budget_id=%s',
+            (proposal.target.budget_id,)).fetchone()['version']
+        owner.rollback()
+        with _temporary_fixed_evaluator_login(owner) as factory:
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                with factory(SCOPE) as conn:
+                    read_formal_budget_fact(conn=conn, scope=SCOPE, budget_ref=budget, price_ref=price, provider_ref=provider)
+                    future = pool.submit(writer)
+                    pid = pids.get(timeout=5)
+                    owner.commit()
+                    wait_blocked(owner, [pid], conn.info.backend_pid, [future])
+                    owner.rollback()
+                future.result(timeout=10)
+        after = owner.execute('SELECT version FROM aip_budget_cost_runtime_fence WHERE budget_id=%s',
+            (proposal.target.budget_id,)).fetchone()['version']
+        assert after == before + (1 if writer_kind == 'revoke' else 0)

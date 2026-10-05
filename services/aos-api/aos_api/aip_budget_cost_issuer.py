@@ -53,8 +53,12 @@ class BudgetCostIssuerCommand(AipContractModel):
 
     @property
     def request_hash(self):
-        return canonical_hash({'domain':'aos.budget-cost-issuer/v1',
-            **self.model_dump(mode='json',by_alias=True,exclude={'bearer_token','idempotency_key'})})
+        return _budget_cost_issuer_request_hash(self.model_dump(
+            mode='json',by_alias=True,exclude={'bearer_token','idempotency_key'}))
+
+
+def _budget_cost_issuer_request_hash(nonsecret_body):
+    return canonical_hash({'domain':'aos.budget-cost-issuer/v1', **nonsecret_body})
 
 
 def _authenticate(command):

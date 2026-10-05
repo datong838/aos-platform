@@ -1,0 +1,13 @@
+# 完整 native 组合：原Budget消费
+
+基线58a049cc/Authority1333，完整Task ACTIVE至18:00。精确原BudgetRuntime/formal PG/implementation沿完整Task；新增原issuer aip_budget_cost_issuer.py独立Task w5cb4-e17-b90-original-budget-issuer-hash-reuse-20261005，仅提取原非秘密request hash函数，旧command本身的认证/字段/完整签发及幂等语义不变。无fake token/Principal或callback。
+
+Formal transport BudgetPolicyRevision仍为治理策略，组合命令须先从原策略解析其BudgetRevision exact ref，再消费实际预算批准；本reader接内部严格FormalExactRef(BudgetRevision/ModelPriceSnapshotRevision/ProviderInstanceRevision)，按原类型/hash语义构造原BudgetExactRef供原pure核验函数。预算开发风险事实不接受caller风险数值：从原 canonical Proposal取得perRequestRiskMinor，再调用原_verify_cost_risk_contents(new_hold=True)，仅校验剩一个原风险量子，不hold。
+
+先无效力发现唯一原activate_cost Receipt/Proposal/members，按原budget-cost-review:org:project:proposal advisory取得同域协调；锁后重读发现值，原canonical Proposal/hash检查；排序两成员共享锁（仍沿原owner/admin规则，不用客户端roles），原runtime fence FOR SHARE并记录version，不UPDATE；Budget head/Provider及Price heads沿原pure函数。真正Model组合调用前须已预锁全部Source Proposal/Approval以及合并Owner集合，并预取Budget advisory，不能Source Owner之后首次倒序请求Budget approval/advisory；独立reader正向只证明此预算子图，不能替代完整组合锁序。
+
+正式读取不接受legacy None waiver。校验原Receipt canonical result/request hash、decision批准/未撤回、当前Owner/Provider/Price及窗口/范围、原风险累计；再核验原签发者immutable receipt（原hash函数复用，无凭据伪造），实际BudgetRevision payload/hash/current active/head原精确target，decision及Proposal自身有限截止窗。facts返回原Receipt/decision/issuer receipt、fence version、原perRequest风险、共享累计及actual DB checked_at/最小expiry，不扣费、不写新ledger、hold、reserve或许可，也不提供执行权。
+
+RED先用原prepared +实际HTTPS JWT独立Budget issuer +原consumer +原configure SQL产生active Price/BudgetPolicy/Budget；禁止旧price_for测试夹具中的DISABLE TRIGGER作为正向。真实evaluator SCRAM/SERIAL读取，原version/ledger/Receipt不变；错误type/hash/provider/缺Receipt/current头/两成员撤权拒绝、canary零副作用。并发原新hold和原revoke受共享fence/advisory阻挡，释放后rollback；旧snapshot在已提交revoke后保持40001，不包装或自动重试。原Budget/Source/模型相邻串行测试，新一次性5433，不动当前142。总体仍要求八facts/Source/签名安装/预算/原三写同caller及产品API；本段不能完成整体Task或升GREEN。
+
+本轮并发证据细化：原hold入口require_cost_risk实际fence UPDATE阻塞后rollback；原HTTPS JWT revoke通过原issuer提交，释放reader后实际version+1。此提交仅在一次性5433测试库，不能称reader写入；旧snapshot测试同样由原issuer独立提交撤回，reader原40001必须不包装。
