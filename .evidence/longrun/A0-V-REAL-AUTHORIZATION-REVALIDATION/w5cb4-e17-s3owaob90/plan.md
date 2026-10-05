@@ -78,7 +78,7 @@ Health机制已5239e7b5独立Delivery、Authority1331，当前真库仍142。完
 
 | 原权威组 | 固定读表 | 锁列所需最小UPDATE（实际DML须拒绝） |
 |---|---|---|
-| 原审批/身份 | meta_membership；aip_action_proposal/draft/approval_event/withdrawal_event；aip_budget_cost_proposal/decision/revocation/receipt与runtime fence实际合同需逐名确认 | meta_membership.subject；aip_action_proposal.proposal_id；aip_action_draft.draft_id；aip_action_approval_event.approval_event_id；不授status/role或审批INSERT |
+| 原审批/身份 | meta_membership；aip_action_proposal/draft/approval_event/withdrawal_event；aip_budget_cost_proposal/decision/revocation/proposal_receipt/issuer_receipt；aip_budget_receipt及aip_budget_cost_runtime_fence | meta_membership.subject；aip_action_proposal.proposal_id；aip_action_draft.draft_id；aip_action_approval_event.approval_event_id；aip_budget_cost_runtime_fence.version只用于共享锁，实际DML拒绝；不授status/role或审批INSERT |
 | 安装/签名Registry | bundle_installation/revision、bundle_composition/lock、asset_bundle/version/artifact/evidence、meta_object_type/action_type | bundle_installation.installation_id；asset_bundle_version.version_pk；asset_bundle_evidence.version_pk；meta_object_type.id；meta_action_type.id |
 | Source | aip_evidence_bundle_revision/build_provenance/revoke_event、aip_production_contract_receipt、aip_license_source_issuance/head/initialization_fence | 无直接Source UPDATE/INSERT；只复用原初始化/head函数共享调用并对exact发行及原许可schema重新核验 |
 | 八facts五ModelRuntime heads及revisions | aip_provider_instance、registered_model、runtime_policy、model_route、model_price_snapshot各_head/_revision | 各_head上的`{kind}_id`单列；不授revision payload/lifecycle UPDATE |
@@ -95,6 +95,8 @@ Health机制已5239e7b5独立Delivery、Authority1331，当前真库仍142。完
 新增三个相互校验的DEFERRABLE INITIALLY DEFERRED约束：评估binding UPDATE、原Receipt INSERT、proof INSERT。实际COMMIT时查同tenant/binding/version/receipt、原operation/status/target/result_revision、legacy_dependency_hash/readiness timestamps与proof一致、facts_hash覆盖八facts+Source/安装/预算、checked_at<=live clock<valid_until且当前installation etag/active指针仍精确；缺少任一记录或不匹配全回滚，禁止只在Receipt触发而允许孤立binding UPDATE/proof。普通历史preview没有这些正式记录，不能产生正式proof。constraint仅针对正式evaluator命令，原生命周期/历史fixture保持既有门禁，不赋予table-owner业务正向身份。并发当前性靠前述原行/fence/advisory持有，不在COMMIT重新发明锁序。
 
 本矩阵为待实现设计，尚非已授ACL。预算批准表精确命名与实际原费用源分支、请求/响应DTO、API产品接线及完整signed fixture仍须下一个有限审查闭合；这是完整命令必要内容，不能通过删Budget/Tool/Source分支简化退出。后继代码Task包含原Source纯核验复用/固定身份reader、完整evaluator/contracts、连接、a144、Capability service/router、完整PG/API测试与signed安装fixture，登记精确文件后才开码；Health独立代码不扩张为完整命令授权。
+
+补证原a126/`aip_budget_cost_runtime.require_cost_risk`：已有Budget撤销fence版本，由原revocation AFTER INSERT递增；原运行准入读者先fence FOR UPDATE并执行version+1，再budget head/两Owner/Provider/current Price共享锁。它不是无写getter，且无cost receipt时返回None代表legacy分支，不能被完整evaluator拿来默认赋予development waiver许可。正式评估应共享锁同一原runtime fence后读其version并复用原内容/Receipt/decision/撤销/两Owner/Provider/Price/时效及risk数量验证，不能复制第二费用真源或产生hold/version写入。post-snapshot原撤销版本变化须实测40001，fence持有期间新hold/revoke受原锁阻挡。抽取纯核验时新增精确改动文件`services/aos-api/aos_api/aip_budget_cost_runtime.py`及相邻原cost-runtime实际PG测试；原require_cost_risk的原排他锁/version更新/hold语义保持。完整fact保存原decision/receipt/fence version及actual checked risk，不把零价或legacy缺receipt当正式审批。预算锁顺序因此为原approval/advisory→Owner等选定上游→Budget原fence→Budget head→Provider/Price heads；不能在Provider独占锁后倒序请求Budget fence，也不调用成本consumer激活预算。
 
 先实际PG证明现有事务分裂/缺Source及Capacity不产生正式proof；新增入口缺模块仅收集RED，不能称业务拒绝实证。专项必须覆盖：八项逐一缺失/旧head/错hash、Source撤销/到期/Owner失权/错用途、canary零写、installation漂移、Capacity不足/竞争、同key原回放及参数冲突、多事务writer阻塞图/SSI、响应失败与真实COMMIT失败/到期三写全回滚。完整正向必须由原正式Store在一次性隔离库建立可追溯事实，不直接INSERT假READY冒充通过。
 
