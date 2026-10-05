@@ -1,0 +1,181 @@
+{
+  "observed_at": "2026-10-05T01:40:51.209004+00:00",
+  "source_version": "a0v_135",
+  "settings": {
+    "default_transaction_read_only": "off",
+    "max_prepared_transactions": "0",
+    "transaction_read_only": "on"
+  },
+  "roles": [
+    [
+      "aos_a0v_directory_20260912",
+      false,
+      true,
+      false
+    ],
+    [
+      "aos_a0v_installation_20260912",
+      false,
+      true,
+      false
+    ],
+    [
+      "aos_a0v_runtime_20260912",
+      false,
+      true,
+      false
+    ],
+    [
+      "aos_a0v_web_20260912",
+      false,
+      true,
+      false
+    ],
+    [
+      "aos_app",
+      true,
+      true,
+      true
+    ],
+    [
+      "aos_budget_consumer_call",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_budget_consumer_owner",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_budget_cost_issuer",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_configuration_stage_api",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_configuration_stage_transport_20260914",
+      false,
+      true,
+      false
+    ],
+    [
+      "aos_ecommerce_registration_control",
+      false,
+      true,
+      false
+    ],
+    [
+      "aos_extension_directory",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_extension_maintainer",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_guard_approval_issuer",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_guard_policy_consumer_call",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_guard_policy_consumer_owner",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_network_approval_issuer",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_network_consumer_call",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_network_consumer_owner",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_runtime",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_snapshot_witness_backfill",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_snapshot_witness_operator",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_ui_read_api",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_ui_read_transport_20260913",
+      false,
+      true,
+      false
+    ]
+  ],
+  "other_sessions": [],
+  "prepared_transactions": 0,
+  "processes": "  PID  PPID STARTED                      COMM\n67817 64915 Mon Oct  5 00:49:12 2026     /Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/cli/vendor/zsh-macos/bin/zsh\n67820 67817 Mon Oct  5 00:49:12 2026     /Users/ddt/.codex-runtimes/codex-primary-runtime/dependencies/node/bin/node\n64915 64844 Mon Oct  5 00:31:34 2026     /Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/cli/vendor/sandbox/5.4.7/sandbox-cli\n67819 64915 Mon Oct  5 00:49:12 2026     /Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/cli/vendor/zsh-macos/bin/zsh\n67821 67819 Mon Oct  5 00:49:12 2026     /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python\n",
+  "launch_agents": [
+    {
+      "label": "com.aos.a0v-api-8080",
+      "valid_plist": false,
+      "registered": false
+    },
+    {
+      "label": "com.aos.a0v-api-daily0900",
+      "valid_plist": true,
+      "registered": false,
+      "keepalive": true,
+      "run_at_load": true
+    },
+    {
+      "label": "com.aos.a0v-web-8434",
+      "valid_plist": true,
+      "registered": false,
+      "keepalive": true,
+      "run_at_load": true
+    }
+  ],
+  "scope": "READ_ONLY_AUDIT_NO_SERVICE_CONTROL",
+  "zero_window_proven": false
+}
