@@ -1,0 +1,28 @@
+...........FFFF                                                          [100%]
+=================================== FAILURES ===================================
+_ test_globals_preserves_original_grantor_and_only_skips_existing_bootstrap_create _
+scripts/tests/test_a0v_current_142_restore_gate.py:77: in test_globals_preserves_original_grantor_and_only_skips_existing_bootstrap_create
+    restored = gate.prepare_globals(data, bootstrap='aos_app')
+               ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'restore142' has no attribute 'prepare_globals'
+____ test_globals_rejects_unproven_bootstrap[CREATE ROLE worker;\n-aos_app] ____
+scripts/tests/test_a0v_current_142_restore_gate.py:88: in test_globals_rejects_unproven_bootstrap
+    gate.prepare_globals(data, bootstrap=bootstrap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'restore142' has no attribute 'prepare_globals'
+_ test_globals_rejects_unproven_bootstrap[CREATE ROLE aos_app;\nCREATE ROLE aos_app;\n-aos_app] _
+scripts/tests/test_a0v_current_142_restore_gate.py:88: in test_globals_rejects_unproven_bootstrap
+    gate.prepare_globals(data, bootstrap=bootstrap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'restore142' has no attribute 'prepare_globals'
+___ test_globals_rejects_unproven_bootstrap[CREATE ROLE aos_app;\n-postgres] ___
+scripts/tests/test_a0v_current_142_restore_gate.py:88: in test_globals_rejects_unproven_bootstrap
+    gate.prepare_globals(data, bootstrap=bootstrap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'restore142' has no attribute 'prepare_globals'
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_142_restore_gate.py::test_globals_preserves_original_grantor_and_only_skips_existing_bootstrap_create
+FAILED scripts/tests/test_a0v_current_142_restore_gate.py::test_globals_rejects_unproven_bootstrap[CREATE ROLE worker;\n-aos_app]
+FAILED scripts/tests/test_a0v_current_142_restore_gate.py::test_globals_rejects_unproven_bootstrap[CREATE ROLE aos_app;\nCREATE ROLE aos_app;\n-aos_app]
+FAILED scripts/tests/test_a0v_current_142_restore_gate.py::test_globals_rejects_unproven_bootstrap[CREATE ROLE aos_app;\n-postgres]
+4 failed, 11 passed in 0.23s

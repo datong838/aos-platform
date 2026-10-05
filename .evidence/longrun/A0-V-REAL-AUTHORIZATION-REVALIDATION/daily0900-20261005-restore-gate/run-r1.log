@@ -1,0 +1,1 @@
+{"outcome": "FAILED_RETAINED", "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/.aos-current-backup-20261005-142-gate-8qu1ycc0", "stage": "restore_globals_and_database", "error_type": "RestoreGateBlocked"}

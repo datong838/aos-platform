@@ -1,0 +1,30 @@
+{"stage": "FULL_RESTORE_EXACT", "tables": 592, "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/.aos-current-backup-20261005-142-gate-fomckvs1"}
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_135 -> a0v_136, Add isolated source issuance/head and formal evaluation proof storage.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_136 -> a0v_137, Fence trusted-source revocation without granting runtime head writes.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_137 -> a0v_138, Preserve original build input without changing legacy evidence hashes.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_138 -> a0v_139, Coordinate first source issuance with revoke before any license head exists.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_139 -> a0v_140, Reserved original Action metadata and independent source approval writer.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_140 -> a0v_141, Narrow original source approval ACL; login provisioning stays closed.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_141 -> a0v_142, Dedicated source issuance identity; original approval and receipt remain authority.
+{"outcome": "FULL_RESTORE_135_TO_142_REHEARSAL_GREEN", "source": "aos_current_preview_20260927", "source_version": "a0v_135", "clone_version": "a0v_142", "head": "6b76d4d394a89ce35be57aacbaea106dd5bda110", "backup": {"state": "/Users/ddt/work/projects/ai_agent/aos-recovery/.aos-current-backup-20261005-142-gate-fomckvs1", "bytes": 4228767, "sha256": "c1a646d79ac91299565398746d68ace3e3af8f57ee3a4e5339c15351872c36fc", "globals_sha256": "414de590498a1d8a23d0491048eb1723efef8f4e1f754f9e95fbf87f86c01b16", "toc_lines": 5905}, "container": "aos-daily142-82e9642b41e8", "volume": "aos-daily142-82e9642b41e8-data", "clone": "aos_daily142_82e9642b41e8", "old_tables": 592, "new_tables": ["aip_binding_evaluation_proof", "aip_evidence_bundle_build_provenance", "aip_license_source_head", "aip_license_source_initialization_fence", "aip_license_source_issuance"], "added_roles": [{"rolname": "aos_license_source_fence_owner", "rolcanlogin": false, "rolinherit": false, "rolsuper": false, "rolcreatedb": false, "rolcreaterole": false, "rolreplication": false, "rolbypassrls": false, "members": false}, {"rolname": "aos_source_license_approval_issuer", "rolcanlogin": false, "rolinherit": false, "rolsuper": false, "rolcreatedb": false, "rolcreaterole": false, "rolreplication": false, "rolbypassrls": false, "members": false}, {"rolname": "aos_source_license_issuer", "rolcanlogin": false, "rolinherit": false, "rolsuper": false, "rolcreatedb": false, "rolcreaterole": false, "rolreplication": false, "rolbypassrls": false, "members": false}], "old_rows_acl_rls_functions_sequences_unchanged": true, "source_unchanged": true, "elapsed_seconds": 9.503, "current_migration_performed": false}

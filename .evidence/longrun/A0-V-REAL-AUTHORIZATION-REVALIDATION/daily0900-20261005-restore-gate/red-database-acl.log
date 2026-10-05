@@ -1,0 +1,9 @@
+...............F                                                         [100%]
+=================================== FAILURES ===================================
+___________ test_catalog_rejects_database_connect_privilege_widening ___________
+scripts/tests/test_a0v_current_142_restore_gate.py:96: in test_catalog_rejects_database_connect_privilege_widening
+    with pytest.raises(gate.RestoreGateBlocked):
+E   Failed: DID NOT RAISE RestoreGateBlocked
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_142_restore_gate.py::test_catalog_rejects_database_connect_privilege_widening
+1 failed, 15 passed in 0.25s
