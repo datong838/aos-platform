@@ -1,0 +1,39 @@
+{
+  "authority": "AOS-001358",
+  "authorization": "same thread original restore-only authorization; no source mutations",
+  "file_sha256": {
+    "scripts/a0v_current_150_restore_gate.py": "17e7eca4b361bce25af19702a904ba9dc430b2490708f6f1207573c1b16977da",
+    "scripts/tests/test_a0v_current_150_restore_gate.py": "5a683622c87ae41074c4b0047f7663a280ded8e242f21708c298a75a94a76739"
+  },
+  "head": "e9f1da411c3c327e6221656f9dae271f80701ecf",
+  "next": "readonly restored full snapshot against saved a150 final state",
+  "process_audit": "ps list shows no pytest/restore/docker exec/pg_restore process, except current audit command",
+  "task": {
+    "base_revision": "AOS-001356",
+    "created_at": "2026-10-05T23:48:24+08:00",
+    "excluded_scope": [
+      "current source DB writes/migration/restart in this restore-only Task",
+      "Host/worker/real Provider/商城源/oldRun/manual/230L0/external effects",
+      "old142 executor modifications",
+      "backup/volume deletion"
+    ],
+    "expected_outputs": [
+      "fresh source142 repeatable snapshot full backup and exact independent full restore",
+      "stepwise actual143..150 rehearsal old rows preserved and exact permission delta/new noLOGIN roles/backfill",
+      "separate current maintenance Task remains required after rehearsal"
+    ],
+    "lease_expires_at": "2026-10-06T06:00:00+08:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/scripts/a0v_current_150_restore_gate.py",
+      "aos-platform/scripts/tests/test_a0v_current_150_restore_gate.py",
+      "aos-platform/.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/current150-heartbeat-20261005-154201",
+      "aos-recovery/current150-*",
+      "isolatedDocker:colima-aos-a0v-test-only/current150-*"
+    ],
+    "status": "ACTIVE",
+    "task_id": "w5cb4-current150-restore-gate-20261005-154201"
+  },
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
+}

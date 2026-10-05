@@ -1,0 +1,10 @@
+{
+  "outcome": "RESTORED_150_FULL_SNAPSHOT_UNCHANGED",
+  "authority": "AOS-001358",
+  "task": "w5cb4-current150-restore-gate-20261005-154201",
+  "head": "e9f1da411c3c327e6221656f9dae271f80701ecf",
+  "catalogs": 13,
+  "container": "current150-same-77f8f834ea15",
+  "native_runtime_positive": "pending",
+  "current_source_migration_restart": "pending"
+}
