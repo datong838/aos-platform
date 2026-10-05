@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Iterator
 
-from psycopg import connect, IsolationLevel
+from psycopg import Connection, connect, IsolationLevel
 from psycopg.pq import TransactionStatus
 from psycopg.rows import dict_row
 
@@ -45,6 +45,10 @@ class BindingEvaluatorDatabaseConfig:
 
 
 def _require_identity(conn, config: BindingEvaluatorDatabaseConfig, scope: TenantScope) -> None:
+    _require_database_identity(conn, config.database, scope)
+
+
+def _require_database_identity(conn, database: str, scope: TenantScope) -> None:
     row = conn.execute("""SELECT current_database() AS db,session_user AS login,current_user AS role,
         current_setting('aos.org_id',true) AS org,current_setting('aos.project_id',true) AS project,
         current_setting('search_path') AS search_path,
@@ -55,7 +59,7 @@ def _require_identity(conn, config: BindingEvaluatorDatabaseConfig, scope: Tenan
         EXISTS(SELECT 1 FROM pg_auth_members m WHERE m.member=r.oid OR m.roleid=r.oid) AS membership
         FROM pg_roles r WHERE r.rolname=session_user""").fetchone()
     if (row is None or (row['db'], row['login'], row['role']) != (
-            config.database, EVALUATOR_LOGIN, EVALUATOR_LOGIN)
+            database, EVALUATOR_LOGIN, EVALUATOR_LOGIN)
             or (row['org'], row['project']) != scope.key
             or row['search_path'].replace(' ', '') != 'pg_catalog,public,pg_temp'
             or not row['rolcanlogin']
@@ -66,6 +70,18 @@ def _require_identity(conn, config: BindingEvaluatorDatabaseConfig, scope: Tenan
             or conn.isolation_level != IsolationLevel.SERIALIZABLE
             or conn.info.transaction_status != TransactionStatus.INTRANS):
         raise BindingEvaluatorConnectionBlocked('EVALUATOR_DATABASE_IDENTITY_REQUIRED')
+
+
+def require_binding_evaluator_transaction(conn, scope: TenantScope) -> None:
+    """Revalidate the actual native caller, not a supplied identity or callback."""
+    if (type(conn) is not Connection or type(scope) is not TenantScope
+            or scope.key != ('org-org', 'dev-project') or conn.row_factory is not dict_row
+            or conn.autocommit or conn.read_only
+            or conn.isolation_level != IsolationLevel.SERIALIZABLE
+            or conn.info.transaction_status != TransactionStatus.INTRANS
+            or not conn.pgconn.used_password):
+        raise BindingEvaluatorConnectionBlocked('EVALUATOR_NATIVE_TRANSACTION_REQUIRED')
+    _require_database_identity(conn, conn.info.dbname, scope)
 
 
 @dataclass(frozen=True)

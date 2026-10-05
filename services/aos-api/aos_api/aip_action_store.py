@@ -94,6 +94,52 @@ def proposal_request_hash(body: CreateActionProposalRequest, action_revision_has
     })
 
 
+def _proposal_stable_envelope(scope, actor_id, body, action_snapshot, risk, *,
+                              action_binding_hash, source_draft_ref, expires_at):
+    """Original immutable envelope expression, no validation or authority grant."""
+    policy = {
+        "floor": risk.floor.value,
+        "reasons": list(risk.reasons),
+        **risk.approval_policy,
+    }
+    return (
+        {
+            "tenantScope": {
+                "orgId": scope.org_id,
+                "projectId": scope.project_id,
+            },
+            "createdBy": actor_id,
+            "actionType": action_snapshot,
+            "taskId": body.task_id,
+            "runId": body.run_id,
+            "objectRef": (
+                body.object_ref.model_dump(mode="json", by_alias=True)
+                if body.object_ref
+                else None
+            ),
+            "purpose": body.purpose,
+            "riskLevel": risk.level.value,
+            "policy": policy,
+            "approvalPolicyHash": canonical_hash(policy),
+            "payload": body.payload,
+            "diff": body.diff,
+            "evidenceRefs": [
+                item.model_dump(mode="json", by_alias=True)
+                for item in body.evidence_refs
+            ],
+            "impactPreviewRef": (
+                body.impact_preview_ref.model_dump(mode="json", by_alias=True)
+                if body.impact_preview_ref
+                else None
+            ),
+            "actionBindingHash": action_binding_hash,
+            "sourceDraftRef": source_draft_ref,
+            "expiresAt": expires_at.isoformat(),
+        },
+        action_binding_hash,
+    )
+
+
 class AipActionStore:
     def __init__(self, connect_factory: ConnectFactory | None = None, *, bootstrap_guard=None,
                  network_activation_guard=None, network_approval_guard=None,
@@ -911,47 +957,9 @@ class AipActionStore:
                 external_action_binding=external,
                 expires_at=preview_row["expires_at"],
             )
-        policy = {
-            "floor": risk.floor.value,
-            "reasons": list(risk.reasons),
-            **risk.approval_policy,
-        }
-        return (
-            {
-                "tenantScope": {
-                    "orgId": scope.org_id,
-                    "projectId": scope.project_id,
-                },
-                "createdBy": actor_id,
-                "actionType": action_snapshot,
-                "taskId": body.task_id,
-                "runId": body.run_id,
-                "objectRef": (
-                    body.object_ref.model_dump(mode="json", by_alias=True)
-                    if body.object_ref
-                    else None
-                ),
-                "purpose": body.purpose,
-                "riskLevel": risk.level.value,
-                "policy": policy,
-                "approvalPolicyHash": canonical_hash(policy),
-                "payload": body.payload,
-                "diff": body.diff,
-                "evidenceRefs": [
-                    item.model_dump(mode="json", by_alias=True)
-                    for item in body.evidence_refs
-                ],
-                "impactPreviewRef": (
-                    body.impact_preview_ref.model_dump(mode="json", by_alias=True)
-                    if body.impact_preview_ref
-                    else None
-                ),
-                "actionBindingHash": action_binding_hash,
-                "sourceDraftRef": source_draft_ref,
-                "expiresAt": expires_at.isoformat(),
-            },
-            action_binding_hash,
-        )
+        return _proposal_stable_envelope(scope, actor_id, body, action_snapshot, risk,
+            action_binding_hash=action_binding_hash, source_draft_ref=source_draft_ref,
+            expires_at=expires_at)
 
     def _insert_proposal_rows(
         self,

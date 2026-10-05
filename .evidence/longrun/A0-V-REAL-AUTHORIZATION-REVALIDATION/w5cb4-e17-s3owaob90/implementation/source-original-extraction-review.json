@@ -1,0 +1,7 @@
+{
+  "baseline": "e6bf24d0",
+  "original_envelope_ast_equal": true,
+  "original_locked_metadata_ast_equal": true,
+  "original_approved_proposal_event_ast_equal": true,
+  "scope": "Pure extraction equivalence only, not business completion"
+}

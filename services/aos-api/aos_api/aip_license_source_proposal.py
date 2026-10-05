@@ -157,6 +157,83 @@ def _read_source_request_content_facts(*, conn: Any, scope: TenantScope, maker: 
     return SourceLicenseRequestFacts(binding.content_hash,provenance.request_hash,epoch,policy,now)
 
 
+def _read_source_action_metadata(conn):
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_license_source_action import SOURCE_LICENSE_ISSUANCE_ACTION
+    obj=conn.execute('SELECT id,name,description,published,properties,required_markings '
+        'FROM meta_object_type WHERE id=%s FOR SHARE',('SourceLicenseRequest',)).fetchone()
+    if obj!={'id':'SourceLicenseRequest','name':'来源许可请求',
+             'description':'原Proposal内的精确来源许可声明','published':True,
+             'properties':[],'required_markings':[]}:
+        raise SourceLicenseProposalBlocked('SOURCE_LICENSE_OBJECT_METADATA_DRIFT')
+    action=conn.execute('SELECT id,name,object_type,parameters,required_markings,submission_criteria '
+        'FROM meta_action_type WHERE id=%s FOR SHARE',(SOURCE_LICENSE_ISSUANCE_ACTION,)).fetchone()
+    if action!={'id':SOURCE_LICENSE_ISSUANCE_ACTION,'name':'申请精确来源许可',
+                'object_type':'SourceLicenseRequest','parameters':[],
+                'required_markings':[],'submission_criteria':[]}:
+        raise SourceLicenseProposalBlocked('SOURCE_LICENSE_ACTION_METADATA_DRIFT')
+    snapshot={'id':SOURCE_LICENSE_ISSUANCE_ACTION,'name':action['name'],
+              'objectType':action['object_type'],'parameters':[],
+              'requiredMarkings':[],'submissionCriteria':[]}
+    return {**snapshot,'revisionHash':canonical_hash(snapshot)}
+
+
+def _source_proposal_request(request, binding_hash):
+    from aos_api.aip_action_models import CreateActionProposalRequest
+    from aos_api.aip_license_source_action import SOURCE_LICENSE_ISSUANCE_ACTION
+    return CreateActionProposalRequest(actionTypeId=SOURCE_LICENSE_ISSUANCE_ACTION,
+        purpose='申请精确来源许可，等待独立Owner批准',
+        payload={'requestedGrant':request.model_dump(mode='json',by_alias=True),
+                 'bindingHash':binding_hash},expiresAt=request.proposal_expires_at)
+
+
+def _require_original_source_proposal_shape(row, actor):
+    if (row['created_by']!=actor or row['status'] not in {'drafted','approved'}
+        or row['task_id'] is not None or row['run_id'] is not None
+        or row['object_ref'] is not None or row['impact_preview_id'] is not None
+        or row['source_draft_id'] is not None or row['client_risk_hint'] is not None
+        or row['diff']!={} or row['evidence_refs']!=[]):
+        raise SourceLicenseProposalBlocked('SOURCE_LICENSE_ORIGINAL_PROPOSAL_DRIFT')
+
+
+def _verify_original_source_proposal_rows(conn, scope, actor, row, expected, snapshot, risk, binding, stable):
+    from aos_api.aip_action_store import canonical_hash, proposal_request_hash
+    _require_original_source_proposal_shape(row, actor)
+    policy={'floor':risk.floor.value,'reasons':list(risk.reasons),**risk.approval_policy}
+    if (row['payload']!=expected.payload or row['purpose']!=expected.purpose
+        or row['expires_at']!=expected.expires_at or row['action_type_id']!=expected.action_type_id
+        or row['action_type_snapshot']!=snapshot or row['action_type_revision_hash']!=snapshot['revisionHash']
+        or row['risk_level']!=risk.level.value
+        or row['policy_snapshot']!=policy or row['approval_policy_hash']!=canonical_hash(policy)
+        or row['action_binding_hash']!=binding
+        or row['request_hash']!=proposal_request_hash(expected,snapshot['revisionHash'],risk.level.value,policy)):
+        raise SourceLicenseProposalBlocked('SOURCE_LICENSE_ORIGINAL_PROPOSAL_DRIFT')
+    draft=conn.execute('SELECT snapshot,proposal_hash,proposal_version,created_by,diff,evidence_refs,approval_policy FROM aip_action_draft '
+        'WHERE org_id=%s AND project_id=%s AND proposal_id=%s FOR SHARE',
+        (*scope.key,row['proposal_id'])).fetchone()
+    if (not draft or draft['proposal_version']!=1 or draft['created_by']!=actor
+        or draft['proposal_hash']!=row['proposal_hash']
+        or canonical_hash(draft['snapshot'])!=row['proposal_hash']
+        or draft['snapshot']!=stable or draft['diff']!={} or draft['evidence_refs']!=[]
+        or draft['approval_policy']!=policy):
+        raise SourceLicenseProposalBlocked('SOURCE_LICENSE_ORIGINAL_DRAFT_DRIFT')
+    return None
+
+
+def _verify_formal_source_proposal_contents(conn, scope, maker, row, request, facts):
+    """Admitted caller's original content verification, no Principal fabrication."""
+    from aos_api.aip_action_policy import classify_action_risk
+    from aos_api.aip_action_store import _proposal_stable_envelope
+    snapshot = _read_source_action_metadata(conn)
+    expected = _source_proposal_request(request, facts.binding_hash)
+    risk = classify_action_risk(expected.action_type_id, snapshot, expected.payload, None)
+    stable, _ = _proposal_stable_envelope(scope, maker, expected, snapshot, risk,
+        action_binding_hash=facts.binding_hash, source_draft_ref=None, expires_at=expected.expires_at)
+    stable.pop('sourceDraftRef')
+    _verify_original_source_proposal_rows(conn, scope, maker, row, expected,
+        snapshot, risk, facts.binding_hash, stable)
+
+
 class SourceLicenseProposalGuard:
     """Exact maker guard bound to one native/Store transaction pair."""
 
@@ -185,34 +262,14 @@ class SourceLicenseProposalGuard:
         self.loader,self.release_policy=loader,release_policy
 
     def read_metadata(self):
-        from aos_api.aip_action_store import canonical_hash
-        from aos_api.aip_license_source_action import SOURCE_LICENSE_ISSUANCE_ACTION
-        obj=self.native.execute('SELECT id,name,description,published,properties,required_markings '
-            'FROM meta_object_type WHERE id=%s FOR SHARE',('SourceLicenseRequest',)).fetchone()
-        if obj!={'id':'SourceLicenseRequest','name':'来源许可请求',
-                 'description':'原Proposal内的精确来源许可声明','published':True,
-                 'properties':[],'required_markings':[]}:
-            raise SourceLicenseProposalBlocked('SOURCE_LICENSE_OBJECT_METADATA_DRIFT')
-        action=self.native.execute('SELECT id,name,object_type,parameters,required_markings,submission_criteria '
-            'FROM meta_action_type WHERE id=%s FOR SHARE',(SOURCE_LICENSE_ISSUANCE_ACTION,)).fetchone()
-        if action!={'id':SOURCE_LICENSE_ISSUANCE_ACTION,'name':'申请精确来源许可',
-                    'object_type':'SourceLicenseRequest','parameters':[],
-                    'required_markings':[],'submission_criteria':[]}:
-            raise SourceLicenseProposalBlocked('SOURCE_LICENSE_ACTION_METADATA_DRIFT')
-        snapshot={'id':SOURCE_LICENSE_ISSUANCE_ACTION,'name':action['name'],
-                  'objectType':action['object_type'],'parameters':[],
-                  'requiredMarkings':[],'submissionCriteria':[]}
-        return {**snapshot,'revisionHash':canonical_hash(snapshot)}
+        return _read_source_action_metadata(self.native)
 
     def request(self):
         from aos_api.aip_action_models import CreateActionProposalRequest
         from aos_api.aip_license_source_action import SOURCE_LICENSE_ISSUANCE_ACTION
         facts=read_source_license_request_facts(conn=self.native,scope=self.scope,maker=self.actor,
             request=self.requested,loader=self.loader,release_policy=self.release_policy)
-        return CreateActionProposalRequest(actionTypeId=SOURCE_LICENSE_ISSUANCE_ACTION,
-            purpose='申请精确来源许可，等待独立Owner批准',
-            payload={'requestedGrant':self.requested.model_dump(mode='json',by_alias=True),
-                     'bindingHash':facts.binding_hash},expiresAt=self.requested.proposal_expires_at)
+        return _source_proposal_request(self.requested, facts.binding_hash)
 
     def check_request(self,conn,scope,actor,body,snapshot,risk):
         from aos_api.aip_action_policy import classify_action_risk
@@ -227,41 +284,19 @@ class SourceLicenseProposalGuard:
 
     def check_replay(self,conn,scope,actor,row):
         from aos_api.aip_action_policy import classify_action_risk
-        from aos_api.aip_action_store import canonical_hash, AipActionStore, proposal_request_hash
-        if (row['created_by']!=actor or row['status'] not in {'drafted','approved'}
-            or row['task_id'] is not None or row['run_id'] is not None
-            or row['object_ref'] is not None or row['impact_preview_id'] is not None
-            or row['source_draft_id'] is not None or row['client_risk_hint'] is not None
-            or row['diff']!={} or row['evidence_refs']!=[]):
-            raise SourceLicenseProposalBlocked('SOURCE_LICENSE_ORIGINAL_PROPOSAL_DRIFT')
+        from aos_api.aip_action_store import AipActionStore
+        _require_original_source_proposal_shape(row, actor)
         expected=self.request()
         snapshot=self.read_metadata()
         risk=classify_action_risk(expected.action_type_id,snapshot,expected.payload,None)
         binding=self.check_request(conn,scope,actor,expected,snapshot,risk)
-        policy={'floor':risk.floor.value,'reasons':list(risk.reasons),**risk.approval_policy}
-        if (row['payload']!=expected.payload or row['purpose']!=expected.purpose
-            or row['expires_at']!=expected.expires_at or row['action_type_id']!=expected.action_type_id
-            or row['action_type_snapshot']!=snapshot or row['action_type_revision_hash']!=snapshot['revisionHash']
-            or row['risk_level']!=risk.level.value
-            or row['policy_snapshot']!=policy or row['approval_policy_hash']!=canonical_hash(policy)
-            or row['action_binding_hash']!=binding
-            or row['request_hash']!=proposal_request_hash(expected,snapshot['revisionHash'],risk.level.value,policy)):
-            raise SourceLicenseProposalBlocked('SOURCE_LICENSE_ORIGINAL_PROPOSAL_DRIFT')
         stable,_=AipActionStore(source_license_guard=self)._proposal_stable(
             conn,scope,actor,expected,snapshot,risk,source_draft_ref=None)
         # The original direct-creation envelope predates draft submission's
         # explicit null sourceDraftRef. Reuse its builder and preserve that form.
         stable.pop('sourceDraftRef')
-        draft=self.native.execute('SELECT snapshot,proposal_hash,proposal_version,created_by,diff,evidence_refs,approval_policy FROM aip_action_draft '
-            'WHERE org_id=%s AND project_id=%s AND proposal_id=%s FOR SHARE',
-            (*scope.key,row['proposal_id'])).fetchone()
-        if (not draft or draft['proposal_version']!=1 or draft['created_by']!=actor
-            or draft['proposal_hash']!=row['proposal_hash']
-            or canonical_hash(draft['snapshot'])!=row['proposal_hash']
-            or draft['snapshot']!=stable or draft['diff']!={} or draft['evidence_refs']!=[]
-            or draft['approval_policy']!=policy):
-            raise SourceLicenseProposalBlocked('SOURCE_LICENSE_ORIGINAL_DRAFT_DRIFT')
-        return None
+        return _verify_original_source_proposal_rows(self.native, scope, actor, row,
+            expected, snapshot, risk, binding, stable)
 
 
 def propose_source_license_in_transaction(*,conn,principal,request,idempotency_key,loader,release_policy):

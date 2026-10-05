@@ -12,13 +12,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-import psycopg
-from psycopg import IsolationLevel
-from psycopg.pq import TransactionStatus
-from psycopg.rows import dict_row
 from pydantic import ValidationError
 
-from aos_api.aip_binding_evaluator_connection import EVALUATOR_LOGIN
+from aos_api.aip_binding_evaluator_connection import (
+    BindingEvaluatorConnectionBlocked, require_binding_evaluator_transaction,
+)
 from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
 from aos_api.tenant_scope import TenantScope
 
@@ -41,22 +39,10 @@ class ProviderHealthFact:
 
 
 def _require_health_consumer_transaction(conn: Any, scope: TenantScope) -> None:
-    if (not isinstance(conn, psycopg.Connection) or type(scope) is not TenantScope
-            or scope.key != ('org-org', 'dev-project') or conn.autocommit or conn.read_only
-            or conn.isolation_level != IsolationLevel.SERIALIZABLE
-            or conn.row_factory is not dict_row
-            or conn.info.transaction_status != TransactionStatus.INTRANS):
-        raise ProviderHealthFactUnavailable('PROVIDER_HEALTH_NATIVE_EVALUATOR_TRANSACTION_REQUIRED')
-    row = conn.execute("""SELECT session_user AS login,current_user AS role,
-        current_setting('aos.org_id',true) AS org,current_setting('aos.project_id',true) AS project,
-        r.rolcanlogin,r.rolinherit,r.rolsuper,r.rolbypassrls,r.rolcreatedb,r.rolcreaterole,r.rolreplication,
-        EXISTS(SELECT 1 FROM pg_auth_members m WHERE m.member=r.oid OR m.roleid=r.oid) AS membership
-        FROM pg_roles r WHERE r.rolname=session_user""").fetchone()
-    if (row is None or (row['login'], row['role']) != (EVALUATOR_LOGIN, EVALUATOR_LOGIN)
-            or (row['org'], row['project']) != scope.key or not row['rolcanlogin']
-            or any(row[name] for name in ('rolinherit', 'rolsuper', 'rolbypassrls',
-                        'rolcreatedb', 'rolcreaterole', 'rolreplication', 'membership'))):
-        raise ProviderHealthFactUnavailable('PROVIDER_HEALTH_EVALUATOR_IDENTITY_REQUIRED')
+    try:
+        require_binding_evaluator_transaction(conn, scope)
+    except BindingEvaluatorConnectionBlocked as exc:
+        raise ProviderHealthFactUnavailable('PROVIDER_HEALTH_NATIVE_EVALUATOR_TRANSACTION_REQUIRED') from exc
 
 
 def read_current_provider_health_fact(

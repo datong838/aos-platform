@@ -92,6 +92,40 @@ def _lock_selected_registry(conn, scope, request):
     return tuple(expiry)
 
 
+def _read_original_approved_source_proposal(conn, scope, ref, maker):
+    """Original exact Proposal/Approval verification, no issuer identity waiver."""
+    row = conn.execute('SELECT * FROM public.aip_action_proposal WHERE org_id=%s AND project_id=%s '
+        'AND proposal_id=%s FOR SHARE', (*scope.key, ref.resource_id)).fetchone()
+    if (not row or row['status'] != 'approved' or row['version'] != ref.revision
+        or row['proposal_hash'] != ref.content_hash or row['created_by'] != maker
+        or row['action_type_id'] != 'aip_issue_source_license'
+        or row['action_type_snapshot'].get('id') != 'aip_issue_source_license'):
+        raise SourceLicenseIssuanceBlocked('SOURCE_LICENSE_EXACT_APPROVED_MAKER_REQUIRED')
+    events = conn.execute("SELECT * FROM public.aip_action_approval_event WHERE org_id=%s AND project_id=%s "
+        "AND proposal_id=%s AND decision='approved' FOR SHARE", (*scope.key, ref.resource_id)).fetchall()
+    if len(events) != 1:
+        raise SourceLicenseIssuanceBlocked('SOURCE_LICENSE_UNIQUE_ORIGINAL_APPROVAL_REQUIRED')
+    event = events[0]
+    eligibility = canonical_hash({'tenant': {'orgId': scope.org_id, 'projectId': scope.project_id},
+        'actorId': event['actor_id'], 'roles': ['owner'], 'slotId': 'checker.1',
+        'approvalPolicyHash': row['approval_policy_hash']})
+    if (event['actor_id'] == maker or event['slot_id'] != 'checker.1'
+        or event['proposal_version'] != row['version'] - 1 or event['proposal_hash'] != ref.content_hash
+        or event['action_binding_hash'] != row['action_binding_hash']
+        or event['approval_policy_hash'] != row['approval_policy_hash']
+        or event['eligibility_snapshot_hash'] != eligibility or event['expires_at'] is None):
+        raise SourceLicenseIssuanceBlocked('SOURCE_LICENSE_ORIGINAL_APPROVAL_BINDING_DRIFT')
+    return row, event
+
+
+def _source_license_authorization(ref, maker, event, row, request):
+    """Original issued authorization envelope, no grant creation."""
+    return {'schema': 'aos-source-license-authorization/v1',
+        'approvedProposal': ref.model_dump(mode='json', by_alias=True),
+        'maker': maker, 'checker': event['actor_id'], 'approvalEventId': event['approval_event_id'],
+        'grantBindingHash': row['action_binding_hash'], 'requestedGrant': request.model_dump(mode='json', by_alias=True)}
+
+
 def issue_source_license_in_transaction(*, conn, principal, command, loader, release_policy):
     if (type(conn) is not psycopg.Connection or type(principal) is not Principal
         or principal.token_kind != 'oidc' or type(command) is not SourceLicenseIssuanceCommand
@@ -108,27 +142,7 @@ def issue_source_license_in_transaction(*, conn, principal, command, loader, rel
     if existing and existing['request_hash'] != binding.content_hash:
         raise SourceLicenseIssuanceConflict('SOURCE_LICENSE_IDEMPOTENCY_CONFLICT')
     ref = command.approved_proposal
-    row = conn.execute('SELECT * FROM public.aip_action_proposal WHERE org_id=%s AND project_id=%s '
-        'AND proposal_id=%s FOR SHARE', (*scope.key, ref.resource_id)).fetchone()
-    if (not row or row['status'] != 'approved' or row['version'] != ref.revision
-        or row['proposal_hash'] != ref.content_hash or row['created_by'] != principal.subject
-        or row['action_type_id'] != 'aip_issue_source_license'
-        or row['action_type_snapshot'].get('id') != 'aip_issue_source_license'):
-        raise SourceLicenseIssuanceBlocked('SOURCE_LICENSE_EXACT_APPROVED_MAKER_REQUIRED')
-    events = conn.execute("SELECT * FROM public.aip_action_approval_event WHERE org_id=%s AND project_id=%s "
-        "AND proposal_id=%s AND decision='approved' FOR SHARE", (*scope.key, ref.resource_id)).fetchall()
-    if len(events) != 1:
-        raise SourceLicenseIssuanceBlocked('SOURCE_LICENSE_UNIQUE_ORIGINAL_APPROVAL_REQUIRED')
-    event = events[0]
-    eligibility = canonical_hash({'tenant': {'orgId': scope.org_id, 'projectId': scope.project_id},
-        'actorId': event['actor_id'], 'roles': ['owner'], 'slotId': 'checker.1',
-        'approvalPolicyHash': row['approval_policy_hash']})
-    if (event['actor_id'] == principal.subject or event['slot_id'] != 'checker.1'
-        or event['proposal_version'] != row['version'] - 1 or event['proposal_hash'] != ref.content_hash
-        or event['action_binding_hash'] != row['action_binding_hash']
-        or event['approval_policy_hash'] != row['approval_policy_hash']
-        or event['eligibility_snapshot_hash'] != eligibility or event['expires_at'] is None):
-        raise SourceLicenseIssuanceBlocked('SOURCE_LICENSE_ORIGINAL_APPROVAL_BINDING_DRIFT')
+    row, event = _read_original_approved_source_proposal(conn, scope, ref, principal.subject)
     members = conn.execute('SELECT subject,role FROM public.meta_membership WHERE org_id=%s AND project_id=%s '
         'AND subject=ANY(%s) ORDER BY subject FOR SHARE',
         (*scope.key, [principal.subject, event['actor_id']])).fetchall()
@@ -159,10 +173,7 @@ def issue_source_license_in_transaction(*, conn, principal, command, loader, rel
     expires_at = min(row['expires_at'], event['expires_at'], request.valid_until, *evidence_expiry)
     if not request.valid_from <= checked_at < expires_at:
         raise SourceLicenseIssuanceBlocked('SOURCE_LICENSE_APPROVAL_OR_EVIDENCE_EXPIRED')
-    authorization = {'schema': 'aos-source-license-authorization/v1',
-        'approvedProposal': ref.model_dump(mode='json', by_alias=True),
-        'maker': principal.subject, 'checker': event['actor_id'], 'approvalEventId': event['approval_event_id'],
-        'grantBindingHash': row['action_binding_hash'], 'requestedGrant': request.model_dump(mode='json', by_alias=True)}
+    authorization = _source_license_authorization(ref, principal.subject, event, row, request)
     policy = request.policy_ref.model_dump(mode='json', by_alias=True)
     head = conn.execute('SELECT * FROM public.aip_license_source_head WHERE org_id=%s AND project_id=%s '
         'AND bundle_id=%s AND revision=%s AND content_hash=%s',

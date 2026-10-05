@@ -34,6 +34,15 @@ class SourceLicenseIssuanceBinding:
         default='ISSUANCE_REQUEST_ONLY_NO_START', init=False)
 
 
+def _source_issuance_request_hash(scope, maker, approved_proposal):
+    """Original nonsecret request hash; supplies no authenticated command."""
+    return canonical_hash({
+        'schema': 'aos-source-license-issuance/v1',
+        'tenant': {'orgId': scope.org_id, 'projectId': scope.project_id},
+        'maker': maker,
+        'approvedProposal': approved_proposal.model_dump(mode='json', by_alias=True),
+    })
+
 def source_license_issuance_binding(scope: TenantScope, maker: str,
                                    command: SourceLicenseIssuanceCommand) -> SourceLicenseIssuanceBinding:
     try:
@@ -46,11 +55,7 @@ def source_license_issuance_binding(scope: TenantScope, maker: str,
             command.model_dump(mode='python', by_alias=True))
         if scope.key != (checked.org_id, checked.project_id):
             raise ValueError('command tenant mismatch')
-        return SourceLicenseIssuanceBinding(canonical_hash({
-            'schema': 'aos-source-license-issuance/v1',
-            'tenant': {'orgId': scope.org_id, 'projectId': scope.project_id},
-            'maker': maker,
-            'approvedProposal': checked.approved_proposal.model_dump(mode='json', by_alias=True),
-        }))
+        return SourceLicenseIssuanceBinding(_source_issuance_request_hash(
+            scope, maker, checked.approved_proposal))
     except (ValidationError, ValueError, TypeError, AttributeError):
         raise ValueError('SOURCE_LICENSE_ISSUANCE_REQUEST_INVALID') from None

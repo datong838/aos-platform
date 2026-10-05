@@ -1,0 +1,46 @@
+{
+  "database": "aos_test_714ca8ad673c_ti4_test",
+  "port": 5433,
+  "original_source_issuance": "source-license-cb40d69d89d844729b63d0559f78ec12",
+  "original_approval_event": "approval-a5b9dbfcf13842f7bebb",
+  "original_receipt": "aip6r-e46d711f4d8b4e96849c86c03cce7e82",
+  "owner_count": 2,
+  "source_epoch": 0,
+  "checked_at": "2026-10-05T04:53:36.699089+00:00",
+  "valid_until": "2026-10-05T04:58:21.274164+00:00",
+  "positive_counts_before": [
+    1,
+    2,
+    0
+  ],
+  "positive_counts_after": [
+    1,
+    2,
+    0
+  ],
+  "fault_injected_immutable_rows": 2,
+  "final_counts": [
+    3,
+    2,
+    0
+  ],
+  "real_scram": true,
+  "writer_fences": [
+    "owner",
+    "installation",
+    "source_revoke"
+  ],
+  "rejected": [
+    "wrong_hash",
+    "installation_etag",
+    "installation_revision",
+    "bool_etag",
+    "duplicate_ref",
+    "canary_guc",
+    "maker_demoted",
+    "checker_demoted",
+    "legacy_schema",
+    "wrong_original_receipt"
+  ],
+  "scope": "Isolated original signed Source consumer only; complete evaluator pending"
+}

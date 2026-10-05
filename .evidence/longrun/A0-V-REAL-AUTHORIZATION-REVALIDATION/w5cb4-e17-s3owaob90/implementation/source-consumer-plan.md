@@ -1,0 +1,15 @@
+# 完整 evaluator 原来源许可消费施工
+
+基线e6bf24d0/Authority1332，完整Task ACTIVE至18:00；额外原envelope复用Task w5cb4-e17-b90-original-proposal-envelope-reuse-20261005 精确登记 aip_action_store.py。其余文件沿完整Task：aip_license_source_proposal.py、aip_license_source_authority.py、aip_binding_evaluator_connection.py、formal evaluator、test_binding_formal_evaluator_pg.py、test_aip_license_source_proposal_pg.py、implementation证据。
+
+原Guard必须实际OIDC Maker Principal，不能为evaluator伪造maker对象或提供callback。从原AipActionStore._proposal_stable仅提取已有返回envelope表达式为私有纯函数；原expiry/task/preview/guard校验及调用顺序不改，仍调用同表达式。Source metadata与原Proposal/draft内容一致性核验提取private共享函数，原Guard继续先做identity/绑定/current内容核验。正式来源消费者真实固定evaluator连接前置检查，再调用原内部request内容、metadata、envelope/哈希验证；数据内maker只重算历史绑定，不作为当前认证主体。
+
+批量Source必须先无效力发现原head/issuance/schema/Proposal及批准IDs，稳定排序锁全部原Proposal→Approval→所有Owner→安装→全部Source init/head共享→原Registry228,1/version/evidence→原metadata/draft内容。锁后重新核验发现字段，防并发替换；不先持有Owner再倒序锁第二个Proposal。不写Source/head/approve/Budget/Capacity，不增加grant。完整事实包含原批准、Receipt、两Owner、用途、provenance/requestHash、签名policy和期限；要求每个许可绑定请求同安装版本/etag、exact Source refs，用途来自原许可且明确含internal_business_analysis和traceable_derivation。本消费用于分析/可追溯派生，不授权执行发布或商城读取。
+
+原license_source_fact仅head/期限读法不作为正式Source消费者：必须校验v1授权schema、原批准唯一event及eligibility/hash/slot、approved draft、无withdrawal、当前两Owner、精确原issuer Receipt/operation/result/source ref/request hash及签名Policy；期限取原全部期限最小值并最终DB clock重验。严格禁止legacy fixture/缺原批准/错tenant/安装漂移/用途不足，原40001保持。无第二许可真源。
+
+测试：在现有B88/B89完整签名安装+原Store Proposal+实际OIDC Approval/issuer完成后，B90 Source consumer hook以真实evaluator SCRAM调用。先RED缺正式reader；正向核验所有原facts和无额外三表写入；Owner撤权/安装etag变更/许可legacy schema/错hash/用途不足/过期/withdrawal等真实事务故障与rollback，canary零效果；并发Owner/安装/Source revoke锁证据。原ActionStore与Source相邻累计验证。完整evaluate_binding_in_transaction、八事实、三写、API仍为Task整体退出，不把本段独立reader当GREEN。
+
+补充精确原issuer文件 aip_license_source_issuer.py，独立Task w5cb4-e17-b90-original-source-approval-reuse-20261005 至18:00。从原issuer提取原批准Proposal/event核验函数，仍由原issuer完成自身身份/命令校验，再委托相同函数；正式消费先预锁全部Proposal后调用此原函数，保持Proposal→Approval总序。不复制eligibility/批准算法，原签发/幂等/Source独占协调和三写完全不变。
+
+原签发Receipt的request_hash须复算，不能为了调用原命令DTO伪造bearerToken。精确追加 aip_license_source_issuer_contracts.py，Task w5cb4-e17-b90-original-source-request-hash-reuse-20261005 至18:00：只提取原非秘密hash表达式为private函数，由旧binding保持原Strict command/tenant/maker校验后委托；消费者在完整原批准验证后复用。审批、认证及hash算法不改。

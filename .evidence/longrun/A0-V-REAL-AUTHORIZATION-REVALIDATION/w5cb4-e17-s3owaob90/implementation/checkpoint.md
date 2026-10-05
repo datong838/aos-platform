@@ -29,3 +29,7 @@
 ## 2026-10-05 12:35 完整Task内部Health消费修正
 
 真实SCRAM/dict-row精确最新观测、DB时间、native身份及canary零epoch；真实并发writer阻塞和原40001实测。最终94passed/1strictxfail/7warnings/9.90s，详health-consumer-verification.md和tested-hashes。完整native命令仍缺失，整体Task ACTIVE，无当前142写入/LOGIN/业务启动。下一步原Source完整审批纯内容复用，不能伪造maker Principal。
+
+## 2026-10-05 12:58 原来源正式消费施工
+
+当前code本轮待提交，原信封/metadata/Proposal-event/request hash复用，正式native Source consumer实际签名Store/JWT/SCRAM正向及十项拒绝、三writer真实阻塞，最终相邻178passed1strictxfail/23.09s + signed1passed/32.60s。详source-consumer-verification/facts/tested-hashes。整体完整Task仍ACTIVE；native八facts、Budget、原三写/API与多Source/独立过期withdrawal仍pending，当前142不写入。下一沿完整Task组合原模型Resolver所有候选与Budget shared内容，不能跳实例Tool或b91。

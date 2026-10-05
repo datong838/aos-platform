@@ -214,6 +214,10 @@ def assert_active_signed_source_request(installation_id,loader,release_policy):
         import os
         expected=1 if os.environ.get('AOS_B89_SOURCE_ISSUER_TEST')=='1' else 0
         assert observer.execute('SELECT count(*) AS n FROM aip_license_source_issuance WHERE org_id=%s AND project_id=%s AND bundle_id=%s',(*SCOPE.key,source.bundle_id)).fetchone()['n']==expected
+    if os.environ.get('AOS_B90_SOURCE_CONSUMER_TEST') == '1':
+        assert expected == 1
+        from tests.aip.test_binding_formal_evaluator_pg import assert_formal_signed_source_consumer
+        assert_formal_signed_source_consumer(request, loader, release_policy)
 
 @pytest.mark.parametrize('path,value',[
     (('source','resourceId'),'another-source'),(('source','revision'),2),

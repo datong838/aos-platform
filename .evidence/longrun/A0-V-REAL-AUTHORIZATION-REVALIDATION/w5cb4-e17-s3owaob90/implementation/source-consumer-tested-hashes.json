@@ -1,0 +1,17 @@
+{
+  "baseline": "e6bf24d0",
+  "authority": "AOS-001332",
+  "adjacent": "178 passed, 1 xfailed, 7 warnings in 23.09s",
+  "signed": "1 passed, 7 warnings in 32.60s",
+  "files": {
+    "services/aos-api/aos_api/aip_action_store.py": "fc8a87d72cade670ffaab6e939be812217224b23058cc534c633886db08bda9b",
+    "services/aos-api/aos_api/aip_binding_evaluator_connection.py": "70c78a3cdec5d00cccfb7b7f81e132e5723508da6e657554f6070ca4e1362d80",
+    "services/aos-api/aos_api/aip_binding_formal_evaluator.py": "d39cdecbab7bc1d3902422bb2854354be81acf01a4b30cdacffcf9b48a5d24cd",
+    "services/aos-api/aos_api/aip_license_source_authority.py": "c97488935088c42b9a73dc4d8c914e93c7575192fb499dda6c1680d0ad92fdab",
+    "services/aos-api/aos_api/aip_license_source_issuer.py": "3b8404e82c47fe609b27d7dc42b91a89c3017b40de5d31a763d39187c3935cd9",
+    "services/aos-api/aos_api/aip_license_source_issuer_contracts.py": "cd80a2af72dc362ac0588fd722dc309c255b6e7f725ba6556eb4c8e3bb8b26b2",
+    "services/aos-api/aos_api/aip_license_source_proposal.py": "91a7403a3622273aa81b8e94798bcb5e94604070a1fc7db1fafa4fdc8e4cc81b",
+    "services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py": "c4c0791f09da46f04f7a1eb5d813dadb190ef89be74b972e1244ce4613699357",
+    "services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py": "66a072ada6da064b949267251bc862a8c6e365628aa3f9f3b4373d4f651be243"
+  }
+}
