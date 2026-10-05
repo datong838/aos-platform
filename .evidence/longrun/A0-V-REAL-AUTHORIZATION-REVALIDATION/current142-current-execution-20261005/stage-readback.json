@@ -1,0 +1,65 @@
+{
+  "stop_clients": {
+    "services_stopped": [
+      8080,
+      8434
+    ],
+    "forced_signals": 0
+  },
+  "fence_tcp": {
+    "listen": "",
+    "tcp_exit": 2,
+    "other_clients": 0,
+    "prepared": 0
+  },
+  "snapshot_dump": {
+    "sha256": "1478838bd46fd4bd34a43e3790f13bb0a74d1bed5c9ef9e69d362c5997901eea",
+    "bytes": 4228767
+  },
+  "independent_restore": {
+    "tables": 592,
+    "exact": true
+  },
+  "migrate_steps": {
+    "version": "a0v_142",
+    "steps": 7
+  },
+  "verify": {
+    "old_tables": 592,
+    "rows_and_permissions_exact": true
+  },
+  "restore_tcp": {
+    "tcp_available": true,
+    "original_configuration_source_restored": true
+  },
+  "restart_clients": {
+    "restarted": [
+      {
+        "port": 8080,
+        "pid": 7130
+      },
+      {
+        "port": 8434,
+        "pid": 7155
+      }
+    ],
+    "http_read_only_smoke": true,
+    "business_first_chain": false
+  },
+  "acceptance": {
+    "schema": "a0v_142",
+    "isolated": true
+  },
+  "v1/health": {
+    "status": 200,
+    "body": {
+      "status": "ok"
+    }
+  },
+  "v1/ready": {
+    "status": 200,
+    "body": {
+      "status": "ready"
+    }
+  }
+}

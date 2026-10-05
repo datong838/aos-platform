@@ -1,0 +1,207 @@
+Browser tab: 1, Title: "FDE 资产包 · AOS", URL: "http://127.0.0.1:8434/apollo/assets".
+0 AXWebArea FDE 资产包 · AOS, URL: 127.0.0.1:8434/apollo/assets
+	1 container root
+		2 container 全局导航
+			3 button 菜单
+			4 button 首页
+			5 button 搜索
+			6 button 通知
+			7 button 历史
+			8 button 项目
+			9 button 应用
+			10 button 数据
+			11 button 帮助
+			12 button (collapsed) Description: 用户, Secondary Actions: Expand
+		13 container
+			14 container 面包屑
+				183 text 运维交付 / 资产包
+			16 search text field (settable)
+			17 pop up button (collapsed) Description: 组织, Help: 组织（多 Org；与 Marking 无关）, Secondary Actions: Expand
+			18 button (collapsed) Description: 工作区, Secondary Actions: Expand
+			19 button Description: 切换主题, Help: 切换到深色主题
+		20 container
+			21 button (expanded) Description: 折叠侧栏, Help: 折叠/展开侧栏, Secondary Actions: Collapse
+			22 text AI操作系统
+			23 text AOS 企业AI转型方案
+			24 container 主导航
+				25 link Description: 概览, Value: 127.0.0.1:8434/
+				26 button (expanded) 工作台, Secondary Actions: Collapse
+				27 container aos-nav-section-0
+					28 link Description: 应用列表, Value: 127.0.0.1:8434/workshop
+					29 link Description: 风险告警管理, Value: 127.0.0.1:8434/workshop/inbox
+					30 link Description: 态势大屏, Value: 127.0.0.1:8434/workshop/cop
+					31 link Description: Buddy · 智能助手, Value: 127.0.0.1:8434/workshop/buddy
+					32 link Description: 分析建模, Value: 127.0.0.1:8434/analytics
+					33 container 电商工作台
+						34 container
+							35 text 暂无可见工作台入口
+							36 button 重新读取目录
+				37 button (expanded) 应用程序构建工具, Secondary Actions: Collapse
+				38 container aos-nav-section-1
+					39 link Description: 画布编辑, Value: 127.0.0.1:8434/workshop/canvas
+					40 link Description: 组件注册表, Value: 127.0.0.1:8434/workshop/widget-registry
+					41 link Description: 变量管理器, Value: 127.0.0.1:8434/workshop/variables
+					42 link Description: 主题与样式, Value: 127.0.0.1:8434/workshop/styles
+					43 link Description: 模块接口, Value: 127.0.0.1:8434/workshop/module-interface
+					44 link Description: 事件配置, Value: 127.0.0.1:8434/workshop/events
+					45 link Description: 发布入口, Value: 127.0.0.1:8434/workshop/publish
+				46 button (expanded) AIP 决策引擎, Secondary Actions: Collapse
+				47 container aos-nav-section-2
+					48 text 应用层
+					49 link Description: 任务协作助手, Value: 127.0.0.1:8434/aip/assist
+					50 link Description: 智能体配置, Value: 127.0.0.1:8434/aip/studio
+					51 link Description: AIP 分析师, Value: 127.0.0.1:8434/aip/analyst
+					52 text 逻辑编排层
+					53 link Description: 业务逻辑编排, Value: 127.0.0.1:8434/aip/logic
+					54 link Description: 智能体工具配置, Value: 127.0.0.1:8434/aip/tools
+					55 link Description: 成熟度楼梯, Value: 127.0.0.1:8434/aip/maturity
+					56 text 智能体
+					57 link Description: 上线执行审批, Value: 127.0.0.1:8434/aip/production-contracts
+					58 link Description: 智能体插件, Value: 127.0.0.1:8434/aip/capabilities
+					59 link Description: 智能体目录, Value: 127.0.0.1:8434/aip/agent-registry
+					60 link Description: 智能体市场, Value: 127.0.0.1:8434/aip/agent-marketplace
+					61 link Description: 智能体列表, Value: 127.0.0.1:8434/aip/agents
+					62 link Description: 技能发布, Value: 127.0.0.1:8434/aip/skill-publish
+					63 link Description: 智能体导入, Value: 127.0.0.1:8434/aip/agent-import
+					64 link Description: 能力导入, Value: 127.0.0.1:8434/aip/capability-import
+					65 text 评测与治理
+					66 link Description: 评测门控, Value: 127.0.0.1:8434/aip/evals
+					67 link Description: 草稿审批台, Value: 127.0.0.1:8434/aip/drafts
+					68 link Description: 决策谱系, Value: 127.0.0.1:8434/aip/lineage
+					69 link Description: 可观测性, Value: 127.0.0.1:8434/aip/observability
+					70 link Description: 记忆与知识治理, Value: 127.0.0.1:8434/aip/memory-governance
+				71 button (expanded) 模型管理, Secondary Actions: Collapse
+				72 container aos-nav-section-3
+					73 link Description: 模型目录, Value: 127.0.0.1:8434/aip/model-catalog
+					74 link Description: 模型供应商, Value: 127.0.0.1:8434/aip/model-providers
+					75 link Description: 模型路由, Value: 127.0.0.1:8434/aip/model-router
+					76 link Description: 容量管理, Value: 127.0.0.1:8434/aip/capacity
+					77 link Description: 运行就绪, Value: 127.0.0.1:8434/aip/model-runtime
+				78 button (expanded) 本体 · 数字孪生, Secondary Actions: Collapse
+				79 container aos-nav-section-4
+					80 link Description: 本体管理, Value: 127.0.0.1:8434/ontology
+					81 link Description: 对象探索, Value: 127.0.0.1:8434/workshop/graph
+					82 link Description: Funnel 管道, Value: 127.0.0.1:8434/ontology/funnel
+					83 link Description: OKF funnel, Value: 127.0.0.1:8434/ontology/okf-funnel
+					84 link Description: OKF 概览, Value: 127.0.0.1:8434/ontology/okf-overview
+					85 link Description: 图谱健康度, Value: 127.0.0.1:8434/ontology/graph-health
+					86 link Description: 活知识 Wiki, Value: 127.0.0.1:8434/ontology/wiki
+					87 link Description: Wiki 索引, Value: 127.0.0.1:8434/ontology/wiki-index
+					88 link Description: 分支与 Overlay, Value: 127.0.0.1:8434/ontology/branches
+				89 button (expanded) 管道与数据治理, Secondary Actions: Collapse
+				90 container aos-nav-section-5
+					91 link Description: 管道构建, Value: 127.0.0.1:8434/data/pipelines
+					92 link Description: 管道提案, Value: 127.0.0.1:8434/data/pipeline-proposals
+					93 link Description: 计划编辑器, Value: 127.0.0.1:8434/data/schedules
+					94 link Description: 搭建, Value: 127.0.0.1:8434/data/builds
+					95 link Description: 数据集预览, Value: 127.0.0.1:8434/data/datasets
+					96 link Description: 代码库, Value: 127.0.0.1:8434/data/code-repos
+					97 link Description: 数据沿袭, Value: 127.0.0.1:8434/data/lineage
+					98 link Description: 数据健康, Value: 127.0.0.1:8434/data/health
+				99 button (expanded) 数据源与同步, Secondary Actions: Collapse
+				100 container aos-nav-section-6
+					101 link Description: 数据源管理, Value: 127.0.0.1:8434/data
+					102 link Description: 连接器目录, Value: 127.0.0.1:8434/data/connections
+					103 link Description: 边缘代理, Value: 127.0.0.1:8434/data/agents
+					104 link Description: 同步配置, Value: 127.0.0.1:8434/data/sync-config
+					105 link Description: 同步路由, Value: 127.0.0.1:8434/data/sync-routes
+					106 link Description: 媒体集, Value: 127.0.0.1:8434/data/media-sets
+					107 link Description: 文档智能, Value: 127.0.0.1:8434/aip/doc-intelligence
+				108 button (expanded) 运维交付, Secondary Actions: Collapse
+				171 container aos-nav-section-7
+					172 link Description: 本机探活, Value: 127.0.0.1:8434/settings/local-platform
+					173 link Description: 启停说明, Value: 127.0.0.1:8434/settings/ops-start-guide
+					174 link Description: Hub 舰队, Value: 127.0.0.1:8434/apollo
+					175 link Description: Release 通道, Value: 127.0.0.1:8434/apollo/release
+					176 link Description: Spoke 详情, Value: 127.0.0.1:8434/apollo/spoke
+					177 link Description: Ferry 摆渡, Value: 127.0.0.1:8434/apollo/ferry
+					178 link Description: FDE 资产包, Value: 127.0.0.1:8434/apollo/assets
+					179 link Description: 变更审批, Value: 127.0.0.1:8434/apollo/change
+					180 link Description: 配置与密钥, Value: 127.0.0.1:8434/apollo/config
+					181 link Description: 接入案例, Value: 127.0.0.1:8434/apollo/cases
+					182 link Description: 租户开通, Value: 127.0.0.1:8434/apollo/provisioning
+			109 container
+				110 text AOS ·  v1.6.5
+			111 container
+				184 heading FDE 资产包, Value: 1
+					192 text FDE 资产包
+				193 text 读取 Canonical Registry，执行组合预检，并受控管理 Installation 生命周期
+				194 text 当前页面不使用 Mock 兜底。Resolve、Lock/Diff、draft 创建和安装状态动作均映射现有 Canonical API；服务端仍做最终授权和状态裁决。
+				185 tab group
+					186 tab (selectable, settable, boolean) 资产 Registry, Value: 0
+					187 tab (selectable, settable, boolean) 组合预检与创建, Value: 0
+					188 tab (selected, settable, boolean) 安装管理, Value: 1
+				195 container 安装列表
+					196 container
+						197 heading 安装列表, Value: 3
+							198 text 安装列表
+						199 text 列表数量与翻页均采用服务端 total、limit、offset。
+						200 button 刷新安装状态
+						201 button 新建安装
+					202 container
+						203 text 状态筛选
+						204 pop up button (collapsed, settable) Description: 安装状态筛选, Value: 全部状态, Secondary Actions: Expand
+							205 menu
+								206 (selected) 全部状态
+								207 draft
+								208 submitted
+								209 approved
+								210 rejected
+								211 applied
+								212 active
+								213 rolled_back
+					214 table
+						215 row
+							216 cell
+								217 text 名称
+							218 cell
+								219 text 状态
+							220 cell
+								221 text 当前 revision
+							222 cell
+								223 text 活跃指针
+							224 cell
+								225 text 更新时间
+							226 cell
+								227 text 选择
+						228 row
+							229 cell
+								230 text 栖月汇当前源码电商八工作台隔离首装
+								231 text ccdcb0f0-1040-4bc6-aa0c-d045f5689813
+							232 cell
+								233 text approved
+							234 cell
+								235 text 3
+							236 cell
+								237 text —  /  —
+							238 cell
+								239 text 2026-09-27T05:06:48.299844Z
+							240 cell
+								241 checkbox 查看事件, Value: 0
+					242 container 安装列表分页
+						243 button (disabled) 上一页
+						244 text 第  1 – 1  条 / 共  1  条 · limit  20  · offset  0
+						245 button (disabled) 下一页
+				246 container 安装详情
+					247 container
+						248 heading 安装详情与事件时间线, Value: 3
+							249 text 安装详情与事件时间线
+						250 text 这里只展示当前 revision、当前 decision 与完整事件时间线；事件不等同于每个历史 revision 的完整快照。
+					251 text 请选择一条安装记录。
+				252 container 安装动作
+					253 heading 安装动作, Value: 3
+						254 text 安装动作
+					255 text 请选择并加载一条安装详情。
+				256 container 恢复与替换计划
+					257 heading 恢复与替换计划, Value: 3
+						258 text 恢复与替换计划
+					259 text 从当前安装准备后继计划，保留现有实例；预检和审批完成后再安排切换。
+					260 button (disabled) 准备恢复/替换计划
+				261 container 运行实例控制
+					262 container
+						263 heading 运行实例, Value: 3
+							264 text 运行实例
+						265 text 安装生命周期与运行实例分别展示；按钮来自服务端允许动作，操作先形成可审计回执，再由运行工作进程执行。
+					266 text 请选择一条安装记录。
+
+The focused UI element is 188 tab (selected, settable, boolean) 安装管理, Value: 1

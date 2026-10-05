@@ -1,0 +1,335 @@
+Browser tab: 1, Title: "技能发布 · AOS", URL: "http://127.0.0.1:8434/aip/skill-publish".
+0 AXWebArea 技能发布 · AOS, URL: 127.0.0.1:8434/aip/skill-publish
+	1 container root
+		2 container 全局导航
+			3 button 菜单
+			4 button 首页
+			5 button 搜索
+			6 button 通知
+			7 button 历史
+			8 button 项目
+			9 button 应用
+			10 button 数据
+			11 button 帮助
+			12 button (collapsed) Description: 用户, Secondary Actions: Expand
+		13 container
+			14 container 面包屑
+				183 text AIP / 技能发布
+			16 search text field (settable)
+			17 pop up button (collapsed) Description: 组织, Help: 组织（多 Org；与 Marking 无关）, Secondary Actions: Expand
+			18 button (collapsed) Description: 工作区, Secondary Actions: Expand
+			19 button Description: 切换主题, Help: 切换到深色主题
+		20 container
+			21 button (expanded) Description: 折叠侧栏, Help: 折叠/展开侧栏, Secondary Actions: Collapse
+			22 text AI操作系统
+			23 text AOS 企业AI转型方案
+			24 container 主导航
+				25 link Description: 概览, Value: 127.0.0.1:8434/
+				26 button (expanded) 工作台, Secondary Actions: Collapse
+				27 container aos-nav-section-0
+					28 link Description: 应用列表, Value: 127.0.0.1:8434/workshop
+					29 link Description: 风险告警管理, Value: 127.0.0.1:8434/workshop/inbox
+					30 link Description: 态势大屏, Value: 127.0.0.1:8434/workshop/cop
+					31 link Description: Buddy · 智能助手, Value: 127.0.0.1:8434/workshop/buddy
+					32 link Description: 分析建模, Value: 127.0.0.1:8434/analytics
+					33 container 电商工作台
+						34 container
+							35 text 暂无可见工作台入口
+							36 button 重新读取目录
+				37 button (expanded) 应用程序构建工具, Secondary Actions: Collapse
+				38 container aos-nav-section-1
+					39 link Description: 画布编辑, Value: 127.0.0.1:8434/workshop/canvas
+					40 link Description: 组件注册表, Value: 127.0.0.1:8434/workshop/widget-registry
+					41 link Description: 变量管理器, Value: 127.0.0.1:8434/workshop/variables
+					42 link Description: 主题与样式, Value: 127.0.0.1:8434/workshop/styles
+					43 link Description: 模块接口, Value: 127.0.0.1:8434/workshop/module-interface
+					44 link Description: 事件配置, Value: 127.0.0.1:8434/workshop/events
+					45 link Description: 发布入口, Value: 127.0.0.1:8434/workshop/publish
+				46 button (expanded) AIP 决策引擎, Secondary Actions: Collapse
+				47 container aos-nav-section-2
+					48 text 应用层
+					49 link Description: 任务协作助手, Value: 127.0.0.1:8434/aip/assist
+					50 link Description: 智能体配置, Value: 127.0.0.1:8434/aip/studio
+					51 link Description: AIP 分析师, Value: 127.0.0.1:8434/aip/analyst
+					52 text 逻辑编排层
+					53 link Description: 业务逻辑编排, Value: 127.0.0.1:8434/aip/logic
+					54 link Description: 智能体工具配置, Value: 127.0.0.1:8434/aip/tools
+					55 link Description: 成熟度楼梯, Value: 127.0.0.1:8434/aip/maturity
+					56 text 智能体
+					57 link Description: 上线执行审批, Value: 127.0.0.1:8434/aip/production-contracts
+					58 link Description: 智能体插件, Value: 127.0.0.1:8434/aip/capabilities
+					59 link Description: 智能体目录, Value: 127.0.0.1:8434/aip/agent-registry
+					60 link Description: 智能体市场, Value: 127.0.0.1:8434/aip/agent-marketplace
+					61 link Description: 智能体列表, Value: 127.0.0.1:8434/aip/agents
+					62 link Description: 技能发布, Value: 127.0.0.1:8434/aip/skill-publish
+					63 link Description: 智能体导入, Value: 127.0.0.1:8434/aip/agent-import
+					64 link Description: 能力导入, Value: 127.0.0.1:8434/aip/capability-import
+					65 text 评测与治理
+					66 link Description: 评测门控, Value: 127.0.0.1:8434/aip/evals
+					67 link Description: 草稿审批台, Value: 127.0.0.1:8434/aip/drafts
+					68 link Description: 决策谱系, Value: 127.0.0.1:8434/aip/lineage
+					69 link Description: 可观测性, Value: 127.0.0.1:8434/aip/observability
+					70 link Description: 记忆与知识治理, Value: 127.0.0.1:8434/aip/memory-governance
+				71 button (expanded) 模型管理, Secondary Actions: Collapse
+				72 container aos-nav-section-3
+					73 link Description: 模型目录, Value: 127.0.0.1:8434/aip/model-catalog
+					74 link Description: 模型供应商, Value: 127.0.0.1:8434/aip/model-providers
+					75 link Description: 模型路由, Value: 127.0.0.1:8434/aip/model-router
+					76 link Description: 容量管理, Value: 127.0.0.1:8434/aip/capacity
+					77 link Description: 运行就绪, Value: 127.0.0.1:8434/aip/model-runtime
+				78 button (expanded) 本体 · 数字孪生, Secondary Actions: Collapse
+				79 container aos-nav-section-4
+					80 link Description: 本体管理, Value: 127.0.0.1:8434/ontology
+					81 link Description: 对象探索, Value: 127.0.0.1:8434/workshop/graph
+					82 link Description: Funnel 管道, Value: 127.0.0.1:8434/ontology/funnel
+					83 link Description: OKF funnel, Value: 127.0.0.1:8434/ontology/okf-funnel
+					84 link Description: OKF 概览, Value: 127.0.0.1:8434/ontology/okf-overview
+					85 link Description: 图谱健康度, Value: 127.0.0.1:8434/ontology/graph-health
+					86 link Description: 活知识 Wiki, Value: 127.0.0.1:8434/ontology/wiki
+					87 link Description: Wiki 索引, Value: 127.0.0.1:8434/ontology/wiki-index
+					88 link Description: 分支与 Overlay, Value: 127.0.0.1:8434/ontology/branches
+				89 button (expanded) 管道与数据治理, Secondary Actions: Collapse
+				90 container aos-nav-section-5
+					91 link Description: 管道构建, Value: 127.0.0.1:8434/data/pipelines
+					92 link Description: 管道提案, Value: 127.0.0.1:8434/data/pipeline-proposals
+					93 link Description: 计划编辑器, Value: 127.0.0.1:8434/data/schedules
+					94 link Description: 搭建, Value: 127.0.0.1:8434/data/builds
+					95 link Description: 数据集预览, Value: 127.0.0.1:8434/data/datasets
+					96 link Description: 代码库, Value: 127.0.0.1:8434/data/code-repos
+					97 link Description: 数据沿袭, Value: 127.0.0.1:8434/data/lineage
+					98 link Description: 数据健康, Value: 127.0.0.1:8434/data/health
+				99 button (expanded) 数据源与同步, Secondary Actions: Collapse
+				100 container aos-nav-section-6
+					101 link Description: 数据源管理, Value: 127.0.0.1:8434/data
+					102 link Description: 连接器目录, Value: 127.0.0.1:8434/data/connections
+					103 link Description: 边缘代理, Value: 127.0.0.1:8434/data/agents
+					104 link Description: 同步配置, Value: 127.0.0.1:8434/data/sync-config
+					105 link Description: 同步路由, Value: 127.0.0.1:8434/data/sync-routes
+					106 link Description: 媒体集, Value: 127.0.0.1:8434/data/media-sets
+					107 link Description: 文档智能, Value: 127.0.0.1:8434/aip/doc-intelligence
+				108 button (expanded) 运维交付, Secondary Actions: Collapse
+				171 container aos-nav-section-7
+					172 link Description: 本机探活, Value: 127.0.0.1:8434/settings/local-platform
+					173 link Description: 启停说明, Value: 127.0.0.1:8434/settings/ops-start-guide
+					174 link Description: Hub 舰队, Value: 127.0.0.1:8434/apollo
+					175 link Description: Release 通道, Value: 127.0.0.1:8434/apollo/release
+					176 link Description: Spoke 详情, Value: 127.0.0.1:8434/apollo/spoke
+					177 link Description: Ferry 摆渡, Value: 127.0.0.1:8434/apollo/ferry
+					178 link Description: FDE 资产包, Value: 127.0.0.1:8434/apollo/assets
+					179 link Description: 变更审批, Value: 127.0.0.1:8434/apollo/change
+					180 link Description: 配置与密钥, Value: 127.0.0.1:8434/apollo/config
+					181 link Description: 接入案例, Value: 127.0.0.1:8434/apollo/cases
+					182 link Description: 租户开通, Value: 127.0.0.1:8434/apollo/provisioning
+			109 container
+				110 text AOS ·  v1.6.5
+			111 container
+				184 heading 技能发布, Value: 1
+					185 text 技能发布
+				186 text 把已通过评测的技能提交发布，并继续完成智能体绑定；缺少证据时失败关闭。
+				187 button 刷新
+				188 text 筛选
+				189 pop up button (collapsed, settable) 筛选, Value: 仅已评测, Secondary Actions: Expand
+					190 menu
+						191 (selected) 仅已评测
+						192 已发布
+						193 全部
+				194 link Description: Logic 兼容评测, Value: 127.0.0.1:8434/aip/evals
+				195 link Description: 智能体目录, Value: 127.0.0.1:8434/aip/agent-registry
+				196 link Description: 成熟度, Value: 127.0.0.1:8434/aip/maturity
+				197 text 共  37  条 首批发布对账：已发布技能 
+				242 text 0
+				243 text  个 · 需核验业务逻辑权威 
+				244 text 37
+				245 text  个 · 列表共  37  条修订。发布必须引用当前评测、路由、策略和 Logic 精确版本。
+				198 container 技能列表
+					199 button 活动机会与目标 修订 1 · 仅已评测
+						246 text 活动机会与目标
+						247 container
+							248 text 修订  1  ·  仅已评测
+					200 button 人群商品与机制设计 修订 1 · 仅已评测
+						249 text 人群商品与机制设计
+						250 container
+							251 text 修订  1  ·  仅已评测
+					201 button 预算与毛利模拟 修订 1 · 仅已评测
+						252 text 预算与毛利模拟
+						253 container
+							254 text 修订  1  ·  仅已评测
+					202 button 跨同事任务编排 修订 1 · 仅已评测
+						255 text 跨同事任务编排
+						256 container
+							257 text 修订  1  ·  仅已评测
+					203 button 执行监控与止损 修订 1 · 仅已评测
+						258 text 执行监控与止损
+						259 container
+							260 text 修订  1  ·  仅已评测
+					204 button 活动复盘 修订 1 · 仅已评测
+						261 text 活动复盘
+						262 container
+							263 text 修订  1  ·  仅已评测
+					205 button 热点竞品与获客机会研究 修订 1 · 仅已评测
+						264 text 热点竞品与获客机会研究
+						265 container
+							266 text 修订  1  ·  仅已评测
+					206 button 人群与内容策略 修订 1 · 仅已评测
+						267 text 人群与内容策略
+						268 container
+							269 text 修订  1  ·  仅已评测
+					207 button 文案与种草内容生产 修订 1 · 仅已评测
+						270 text 文案与种草内容生产
+						271 container
+							272 text 修订  1  ·  仅已评测
+					208 button 短视频策划 修订 1 · 仅已评测
+						273 text 短视频策划
+						274 container
+							275 text 修订  1  ·  仅已评测
+					209 button 多平台适配 修订 1 · 仅已评测
+						276 text 多平台适配
+						277 container
+							278 text 修订  1  ·  仅已评测
+					210 button 事实品牌与合规审核 修订 1 · 仅已评测
+						279 text 事实品牌与合规审核
+						280 container
+							281 text 修订  1  ·  仅已评测
+					211 button 互动线索识别与交接 修订 1 · 仅已评测
+						282 text 互动线索识别与交接
+						283 container
+							284 text 修订  1  ·  仅已评测
+					212 button 内容到成交归因与优化 修订 1 · 仅已评测
+						285 text 内容到成交归因与优化
+						286 container
+							287 text 修订  1  ·  仅已评测
+					213 button 数据与经营健康巡检 修订 1 · 仅已评测
+						288 text 数据与经营健康巡检
+						289 container
+							290 text 修订  1  ·  仅已评测
+					214 button 内外机会研究 修订 1 · 仅已评测
+						291 text 内外机会研究
+						292 container
+							293 text 修订  1  ·  仅已评测
+					215 button 增长方案生成 修订 1 · 仅已评测
+						294 text 增长方案生成
+						295 container
+							296 text 修订  1  ·  仅已评测
+					216 button 审批后任务拆解 修订 1 · 仅已评测
+						297 text 审批后任务拆解
+						298 container
+							299 text 修订  1  ·  仅已评测
+					217 button 执行监控与调整建议 修订 1 · 仅已评测
+						300 text 执行监控与调整建议
+						301 container
+							302 text 修订  1  ·  仅已评测
+					218 button 效果归因与复盘 修订 1 · 仅已评测
+						303 text 效果归因与复盘
+						304 container
+							305 text 修订  1  ·  仅已评测
+					219 button 需求诊断 修订 1 · 仅已评测
+						306 text 需求诊断
+						307 container
+							308 text 修订  1  ·  仅已评测
+					220 button 产品检索与推荐 修订 1 · 仅已评测
+						309 text 产品检索与推荐
+						310 container
+							311 text 修订  1  ·  仅已评测
+					221 button 成分分析 修订 1 · 仅已评测
+						312 text 成分分析
+						313 container
+							314 text 修订  1  ·  仅已评测
+					222 button 产品对比 修订 1 · 仅已评测
+						315 text 产品对比
+						316 container
+							317 text 修订  1  ·  仅已评测
+					223 button 异议识别与处理 修订 1 · 仅已评测
+						318 text 异议识别与处理
+						319 container
+							320 text 修订  1  ·  仅已评测
+					224 button 促单与成交交接 修订 1 · 仅已评测
+						321 text 促单与成交交接
+						322 container
+							323 text 修订  1  ·  仅已评测
+					225 button 客户身份沉淀 修订 1 · 仅已评测
+						324 text 客户身份沉淀
+						325 container
+							326 text 修订  1  ·  仅已评测
+					226 button 客户标签与分层 修订 1 · 仅已评测
+						327 text 客户标签与分层
+						328 container
+							329 text 修订  1  ·  仅已评测
+					227 button 跟进与触达排期 修订 1 · 仅已评测
+						330 text 跟进与触达排期
+						331 container
+							332 text 修订  1  ·  仅已评测
+					228 button 沉默客户与复购机会 修订 1 · 仅已评测
+						333 text 沉默客户与复购机会
+						334 container
+							335 text 修订  1  ·  仅已评测
+					229 button 关系反馈 修订 1 · 仅已评测
+						336 text 关系反馈
+						337 container
+							338 text 修订  1  ·  仅已评测
+					230 button 意图与情绪识别 修订 1 · 仅已评测
+						339 text 意图与情绪识别
+						340 container
+							341 text 修订  1  ·  仅已评测
+					231 button 身份与订单安全查询 修订 1 · 仅已评测
+						342 text 身份与订单安全查询
+						343 container
+							344 text 修订  1  ·  仅已评测
+					232 button 物流查询与异常分诊 修订 1 · 仅已评测
+						345 text 物流查询与异常分诊
+						346 container
+							347 text 修订  1  ·  仅已评测
+					233 button 售后资格与工单草拟 修订 1 · 仅已评测
+						348 text 售后资格与工单草拟
+						349 container
+							350 text 修订  1  ·  仅已评测
+					234 button 投诉与人工升级 修订 1 · 仅已评测
+						351 text 投诉与人工升级
+						352 container
+							353 text 修订  1  ·  仅已评测
+					235 button 满意度与问题反哺 修订 1 · 仅已评测
+						354 text 满意度与问题反哺
+						355 container
+							356 text 修订  1  ·  仅已评测
+				236 heading 活动机会与目标, Value: 2
+					357 text 活动机会与目标
+				358 container
+					359 text 生命周期： 仅已评测  · 修订  1
+				237 container
+					238 button (expanded) 当前精确发布候选, Secondary Actions: Collapse
+						360 text 当前精确发布候选
+					361 text 当前无可发布候选；须由各权威负责人补齐以下精确来源，再刷新核验。
+					362 content list
+						363 container
+							364 AXListMarker • 
+							365 text 缺少正式技能发布放行决定与发布事件
+						366 container
+							367 AXListMarker • 
+							368 text 缺少当前业务逻辑发布版本  · 
+							369 link Description: 查看业务逻辑, Value: 127.0.0.1:8434/aip/logic
+						370 container
+							371 AXListMarker • 
+							372 text 缺少可用的当前模型路由与运行策略  · 
+							373 link Description: 查看模型路由, Value: 127.0.0.1:8434/aip/model-router
+					374 button (collapsed) 阻断代码（审计用）, Secondary Actions: Expand
+						375 text 阻断代码（审计用）
+				376 button (disabled) 发布此修订, Help: 准备发布（须齐备精确权威引用）
+				377 text 技能放行须由正式 EvalSuite、EvalReport、ReleaseGate 与发布事件组成；当前 Logic 兼容评测页不能生成技能放行证据。
+				239 heading 组织消费与绑定, Value: 3
+					378 text 组织消费与绑定
+				379 content list
+					380 container
+						381 AXListMarker 1. 
+						382 text 确认技能修订已经发布
+					383 container
+						384 AXListMarker 2. 
+						385 text 由目录权威命令创建、评估并激活技能绑定
+					386 container
+						387 AXListMarker 3. 
+						388 text 回读绑定 Receipt 与当前运行准备快照
+				389 text 当前消费方
+				390 text 活动策划师
+				240 link Description: 查看组织绑定状态, Value: 127.0.0.1:8434/aip/agent-registry
+				241 link Description: 查看业务逻辑, Value: 127.0.0.1:8434/aip/logic?logicId=ecommerce.logic.A01
+				391 text 正式绑定创建入口待接线；当前目录页只展示已有绑定与就绪状态。
+
+The focused UI element is 62 link Description: 技能发布, URL: 127.0.0.1:8434/aip/skill-publish

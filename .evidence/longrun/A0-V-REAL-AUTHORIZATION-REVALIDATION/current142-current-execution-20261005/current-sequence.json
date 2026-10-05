@@ -1,0 +1,12 @@
+{
+  "outcome": "CURRENT_135_TO_142_MAINTENANCE_GREEN",
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/.aos-current142-w5cb4-current142-current-execution-20261005",
+  "containers": [
+    "aos-a0v-recovery-pg",
+    "aos-sequence142-432d8abc48e2"
+  ],
+  "tables": 592,
+  "elapsed_seconds": 32.301,
+  "current_source_touched": true,
+  "formal_current_window_proven": true
+}
