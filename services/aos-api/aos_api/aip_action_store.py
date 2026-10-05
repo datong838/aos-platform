@@ -144,7 +144,8 @@ class AipActionStore:
     def __init__(self, connect_factory: ConnectFactory | None = None, *, bootstrap_guard=None,
                  network_activation_guard=None, network_approval_guard=None,
                  first_content_guard=None, guard_activation_guard=None, guard_approval_guard=None,
-                 model_eval_guard=None, source_license_guard=None, source_license_approval_guard=None) -> None:
+                 model_eval_guard=None, source_license_guard=None, source_license_approval_guard=None,
+                 provider_capacity_guard=None) -> None:
         if source_license_approval_guard is not None:
             from aos_api.aip_license_source_approval import SourceLicenseApprovalGuard
             if type(source_license_approval_guard) is not SourceLicenseApprovalGuard:
@@ -160,6 +161,11 @@ class AipActionStore:
             if type(model_eval_guard) is not ModelEvalActionGuard:
                 raise TypeError('exact Model Eval Action guard required')
         self._model_eval_guard = model_eval_guard
+        if provider_capacity_guard is not None:
+            from aos_api.aip_provider_capacity_action import ProviderCapacityActionGuard
+            if type(provider_capacity_guard) is not ProviderCapacityActionGuard:
+                raise TypeError('exact Provider capacity Action guard required')
+        self._provider_capacity_guard = provider_capacity_guard
         if guard_approval_guard is not None:
             from aos_api.aip_guard_policy_activation import GuardPolicyApprovalGuard
             if type(guard_approval_guard) is not GuardPolicyApprovalGuard:
@@ -226,6 +232,10 @@ class AipActionStore:
             if self._source_license_guard is None:
                 raise AipActionTransitionBlocked("SOURCE_LICENSE_PRODUCER_REQUIRED")
             return self._source_license_guard.check_request(conn, scope, actor_id, body, action_snapshot, risk)
+        if "aip_request_provider_capacity" in {body.action_type_id, action_snapshot.get("id")}:
+            if self._provider_capacity_guard is None:
+                raise AipActionTransitionBlocked('PROVIDER_CAPACITY_ACTION_GUARD_REQUIRED')
+            return self._provider_capacity_guard.check_request(conn,scope,actor_id,body,action_snapshot,risk)
         if "aip_request_model_eval" in {body.action_type_id, action_snapshot.get("id")}:
             if self._model_eval_guard is None:
                 raise AipActionTransitionBlocked("MODEL_EVAL_ACTION_GUARD_REQUIRED")
@@ -285,6 +295,10 @@ class AipActionStore:
             if checker:
                 raise AipActionTransitionBlocked("SOURCE_LICENSE_INDEPENDENT_CHECKER_REQUIRED")
             return self._source_license_guard.check_replay(conn, scope, actor_id, row)
+        if "aip_request_provider_capacity" in {row['action_type_id'],row['action_type_snapshot'].get('id')}:
+            if self._provider_capacity_guard is None:
+                raise AipActionTransitionBlocked('PROVIDER_CAPACITY_ACTION_GUARD_REQUIRED')
+            return self._provider_capacity_guard.check_proposal(conn,scope,actor_id,row,checker=checker)
         if "aip_request_model_eval" in {row['action_type_id'], row['action_type_snapshot'].get('id')}:
             if self._model_eval_guard is None:
                 raise AipActionTransitionBlocked("MODEL_EVAL_ACTION_GUARD_REQUIRED")
@@ -1185,10 +1199,12 @@ class AipActionStore:
             if current_roles is not None:
                 actor_roles = current_roles
             replay = conn.execute(
-                "SELECT proposal_id,request_hash FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s AND idempotency_key=%s",
+                "SELECT proposal_id,request_hash,actor_id FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s AND idempotency_key=%s",
                 (*scope.key, idempotency_key),
             ).fetchone()
             if replay is not None:
+                if row['action_type_id'] == 'aip_request_provider_capacity' and replay['actor_id'] != actor_id:
+                    raise AipActionTransitionBlocked('PROVIDER_CAPACITY_CHECKER_REPLAY_DRIFTED')
                 if replay["request_hash"] != request_hash or replay["proposal_id"] != proposal_id:
                     raise AipActionIdempotencyConflict("idempotency key reused for different approval")
                 return self._bundle(conn, scope, proposal_id)
