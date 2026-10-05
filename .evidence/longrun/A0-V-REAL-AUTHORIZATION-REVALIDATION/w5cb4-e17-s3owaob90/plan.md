@@ -72,6 +72,30 @@ RED必须覆盖：SERIAL旧snapshot在concurrent epoch更新后共享锁原40001
 
 10:52相邻实际验证13passed/1failed/7.46s；唯一失败发生在原test_aip7_model_runtime_store.cleanup的table-owner DELETE未设置tenant GUC，业务Store.record_health与原回放路径已通过。追加精确测试文件Task，只在该fixture原连接设置SCOPE两GUC，不降低trigger租户校验、不绕过协调或改原产品实现。修改文件services/aos-api/tests/aip/test_aip7_model_runtime_store.py；再串行相邻验证。该fixture适配不作为正式Owner/业务批准正向。
 
+### Health交付后的a144完整消费者权限设计
+
+Health机制已5239e7b5独立Delivery、Authority1331，当前真库仍142。完整边界改用`services/aos-api/alembic/versions/a0v_144_binding_evaluator_boundary.py`，down_revision为a0v_143；不得再新增另一个a0v_143 revision。默认创建aos_aip_binding_evaluator NOLOGIN/NOINHERIT/无高权/双向成员0；既有危险角色拒绝，不自动修复。除本合同精确白名单外无grant；真实LOGIN/IdP/Owner配置和当前迁移仍独立授权。
+
+| 原权威组 | 固定读表 | 锁列所需最小UPDATE（实际DML须拒绝） |
+|---|---|---|
+| 原审批/身份 | meta_membership；aip_action_proposal/draft/approval_event/withdrawal_event；aip_budget_cost_proposal/decision/revocation/receipt与runtime fence实际合同需逐名确认 | meta_membership.subject；aip_action_proposal.proposal_id；aip_action_draft.draft_id；aip_action_approval_event.approval_event_id；不授status/role或审批INSERT |
+| 安装/签名Registry | bundle_installation/revision、bundle_composition/lock、asset_bundle/version/artifact/evidence、meta_object_type/action_type | bundle_installation.installation_id；asset_bundle_version.version_pk；asset_bundle_evidence.version_pk；meta_object_type.id；meta_action_type.id |
+| Source | aip_evidence_bundle_revision/build_provenance/revoke_event、aip_production_contract_receipt、aip_license_source_issuance/head/initialization_fence | 无直接Source UPDATE/INSERT；只复用原初始化/head函数共享调用并对exact发行及原许可schema重新核验 |
+| 八facts五ModelRuntime heads及revisions | aip_provider_instance、registered_model、runtime_policy、model_route、model_price_snapshot各_head/_revision | 各_head上的`{kind}_id`单列；不授revision payload/lifecycle UPDATE |
+| 治理/费用 | aip_runtime_guard_policy_head/revision、aip_network_policy_head/revision、aip_model_governance_policy_head/revision、aip_budget_head/revision；所选批准原Receipt/fence | 前三head.policy_id；aip_budget_head.budget_id；无消费/批准/账本写权 |
+| Eval/原required refs | aip_release_gate_decision、aip_eval_contract_head/revision、aip_eval_dataset_revision；原required Evidence refs走Source共享协调 | aip_eval_contract_head.contract_id；Eval decision及Dataset原immutable表仅SELECT，无新Eval head |
+| Health/Capacity | aip_provider_health_observation；aip_model_capacity_pool_head/revision/reservation | pool_head.pool_id（与reserve原FOR UPDATE一致）；Health无直接UPDATE，shared epoch函数EXEC，无观测/预留写权 |
+
+所有表的读权不是许可正向：scoped表必须固定tenant RLS；Source Proposal/draft/Approval还要限定原source action或实际选中治理action，不授全量审批修改。Registry/metadata为原跨租户签名目录，只读；不把它们伪造租户表，不读任何Secret明文。ProviderPlugin原authority为代码目录且不写库，固定ref校验依原函数，不能通过客户端pluginReady替代。
+
+锁列UPDATE仅为PostgreSQL FOR SHARE/FOR UPDATE所需最小权限，沿a142 invoker read-lock-only trigger模式，匹配session_user或current_user=evaluator的实际INSERT/UPDATE/DELETE一律拒绝；trigger函数PUBLIC EXECUTE撤销。不得在原表授UPDATE_ALL、CREATE、TRUNCATE、References或其他角色成员。角色实际所有table/column/function权限与membership/owned object要在PG逐项读回，任意漂移拒绝，不以测试SET ROLE冒充SCRAM正式主体。
+
+真正评估写权只有：原aip_capability_binding的provider_ref/model_route_ref/runtime_policy_ref/eval_gate_ref/eval_contract_ref/license_evidence_refs/data_dependency_refs/tool_dependency_refs/budget_policy_ref/allow_degraded/dependency_snapshot_hash/operational_readiness/readiness_reasons/last_evaluated_at/readiness_expires_at/version/updated_at，另原aip_agent_registry_receipt与aip_binding_evaluation_proof INSERT及SELECT。不授binding.status/health/secret_ref/capability_ref、create/delete、Skill/Tool binding或任何启动写权。原Receipt操作只允许capability_binding.evaluate，target必须同binding及实际result_version；已存在key先校验原hash并重验当前权威，不更新/回放过期proof。原a136 immutable guard保持；proof不可补造/更新。
+
+新增三个相互校验的DEFERRABLE INITIALLY DEFERRED约束：评估binding UPDATE、原Receipt INSERT、proof INSERT。实际COMMIT时查同tenant/binding/version/receipt、原operation/status/target/result_revision、legacy_dependency_hash/readiness timestamps与proof一致、facts_hash覆盖八facts+Source/安装/预算、checked_at<=live clock<valid_until且当前installation etag/active指针仍精确；缺少任一记录或不匹配全回滚，禁止只在Receipt触发而允许孤立binding UPDATE/proof。普通历史preview没有这些正式记录，不能产生正式proof。constraint仅针对正式evaluator命令，原生命周期/历史fixture保持既有门禁，不赋予table-owner业务正向身份。并发当前性靠前述原行/fence/advisory持有，不在COMMIT重新发明锁序。
+
+本矩阵为待实现设计，尚非已授ACL。预算批准表精确命名与实际原费用源分支、请求/响应DTO、API产品接线及完整signed fixture仍须下一个有限审查闭合；这是完整命令必要内容，不能通过删Budget/Tool/Source分支简化退出。后继代码Task包含原Source纯核验复用/固定身份reader、完整evaluator/contracts、连接、a144、Capability service/router、完整PG/API测试与signed安装fixture，登记精确文件后才开码；Health独立代码不扩张为完整命令授权。
+
 先实际PG证明现有事务分裂/缺Source及Capacity不产生正式proof；新增入口缺模块仅收集RED，不能称业务拒绝实证。专项必须覆盖：八项逐一缺失/旧head/错hash、Source撤销/到期/Owner失权/错用途、canary零写、installation漂移、Capacity不足/竞争、同key原回放及参数冲突、多事务writer阻塞图/SSI、响应失败与真实COMMIT失败/到期三写全回滚。完整正向必须由原正式Store在一次性隔离库建立可追溯事实，不直接INSERT假READY冒充通过。
 
 PG测试串行避免集群共享role DDL竞争；保留旧49测试库。角色清理只在安全属性/双向成员/共享依赖均0后精确drop，无DROP OWNED。专项后做相邻累计、编译、精确diff与方案代码复审；无UI更改浏览器不适用。证据/Delivery、m1精确提交和AOS/Prime上下文收口之后立即下一安全波。正式权限、135迁移独立门、自然首链和发布仍pending；每日09重启验收职责独立，不以隔离测试代替。
