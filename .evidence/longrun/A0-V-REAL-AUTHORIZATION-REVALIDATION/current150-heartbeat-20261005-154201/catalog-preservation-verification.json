@@ -1,0 +1,496 @@
+{
+  "outcome": "EIGHT_STEP_ORIGINAL_CATALOG_PRESERVATION_GREEN",
+  "authority": "AOS-001362",
+  "steps": 8,
+  "catalogs_per_step": 13,
+  "step_snapshots_contiguous": true,
+  "all_original_catalog_records_retained_except_fixed_a150_revokes": true,
+  "revoked_public_execute": [
+    "extension_dispatch_cutover_history_guard_ar2_014()",
+    "extension_dispatch_lifecycle_history_guard_ar2_017()",
+    "extension_event_control_dispatch_history_guard_a0v_054()",
+    "extension_runtime_uninstall_consistency_ar2_018()",
+    "snapshot_stalled_group_terminal_guard_a0v_091()",
+    "snapshot_unaccepted_group_terminal_guard_a0v_083()",
+    "unaccepted_analysis_terminal_guard_a0v_060()"
+  ],
+  "private_delta_sha256": "0b1c36cabd39fc7949f330e35aacddd2e0a46f3603746453ca8d28b8a7736033",
+  "per_step": [
+    {
+      "migration": 143,
+      "before_sha256": "cdf18c895af4cfb56eaa329e694934db563a7c96c8d8c3e72fb30159732a9996",
+      "after_sha256": "706c086bbc3f675c74df209b6ef83624351e0eb5f3af186e33e5b09e0f90485f",
+      "delta_counts": {
+        "columns": {
+          "added": 7,
+          "removed": 0
+        },
+        "constraints": {
+          "added": 3,
+          "removed": 0
+        },
+        "indexes": {
+          "added": 1,
+          "removed": 0
+        },
+        "triggers": {
+          "added": 3,
+          "removed": 0
+        },
+        "column_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "relation_acl": {
+          "added": 14,
+          "removed": 0
+        },
+        "schema_acl": {
+          "added": 1,
+          "removed": 0
+        },
+        "function_acl": {
+          "added": 4,
+          "removed": 0
+        },
+        "views": {
+          "added": 0,
+          "removed": 0
+        },
+        "types": {
+          "added": 0,
+          "removed": 0
+        },
+        "extensions": {
+          "added": 0,
+          "removed": 0
+        },
+        "default_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "event_triggers": {
+          "added": 0,
+          "removed": 0
+        }
+      }
+    },
+    {
+      "migration": 144,
+      "before_sha256": "706c086bbc3f675c74df209b6ef83624351e0eb5f3af186e33e5b09e0f90485f",
+      "after_sha256": "b0edbe165ec20e8adb89548c725a12e9ba0ebac7cdf257dbeb310ade56169958",
+      "delta_counts": {
+        "columns": {
+          "added": 11,
+          "removed": 0
+        },
+        "constraints": {
+          "added": 6,
+          "removed": 0
+        },
+        "indexes": {
+          "added": 2,
+          "removed": 0
+        },
+        "triggers": {
+          "added": 29,
+          "removed": 0
+        },
+        "column_acl": {
+          "added": 38,
+          "removed": 0
+        },
+        "relation_acl": {
+          "added": 86,
+          "removed": 0
+        },
+        "schema_acl": {
+          "added": 2,
+          "removed": 0
+        },
+        "function_acl": {
+          "added": 11,
+          "removed": 0
+        },
+        "views": {
+          "added": 0,
+          "removed": 0
+        },
+        "types": {
+          "added": 0,
+          "removed": 0
+        },
+        "extensions": {
+          "added": 0,
+          "removed": 0
+        },
+        "default_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "event_triggers": {
+          "added": 0,
+          "removed": 0
+        }
+      }
+    },
+    {
+      "migration": 145,
+      "before_sha256": "b0edbe165ec20e8adb89548c725a12e9ba0ebac7cdf257dbeb310ade56169958",
+      "after_sha256": "7f0d85cd00d5c58a2eeeaecc3df2cc3be51c1a91c2a815ceff4133dbd8a90e07",
+      "delta_counts": {
+        "columns": {
+          "added": 18,
+          "removed": 0
+        },
+        "constraints": {
+          "added": 11,
+          "removed": 0
+        },
+        "indexes": {
+          "added": 2,
+          "removed": 0
+        },
+        "triggers": {
+          "added": 2,
+          "removed": 0
+        },
+        "column_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "relation_acl": {
+          "added": 23,
+          "removed": 0
+        },
+        "schema_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "function_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "views": {
+          "added": 0,
+          "removed": 0
+        },
+        "types": {
+          "added": 0,
+          "removed": 0
+        },
+        "extensions": {
+          "added": 0,
+          "removed": 0
+        },
+        "default_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "event_triggers": {
+          "added": 0,
+          "removed": 0
+        }
+      }
+    },
+    {
+      "migration": 146,
+      "before_sha256": "7f0d85cd00d5c58a2eeeaecc3df2cc3be51c1a91c2a815ceff4133dbd8a90e07",
+      "after_sha256": "9b801e77cdb2cac6c323b537aa42ab6dfa24aa61c8c4ec90bc0c12173fe803df",
+      "delta_counts": {
+        "columns": {
+          "added": 0,
+          "removed": 0
+        },
+        "constraints": {
+          "added": 0,
+          "removed": 0
+        },
+        "indexes": {
+          "added": 0,
+          "removed": 0
+        },
+        "triggers": {
+          "added": 2,
+          "removed": 0
+        },
+        "column_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "relation_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "schema_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "function_acl": {
+          "added": 1,
+          "removed": 0
+        },
+        "views": {
+          "added": 0,
+          "removed": 0
+        },
+        "types": {
+          "added": 0,
+          "removed": 0
+        },
+        "extensions": {
+          "added": 0,
+          "removed": 0
+        },
+        "default_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "event_triggers": {
+          "added": 0,
+          "removed": 0
+        }
+      }
+    },
+    {
+      "migration": 147,
+      "before_sha256": "9b801e77cdb2cac6c323b537aa42ab6dfa24aa61c8c4ec90bc0c12173fe803df",
+      "after_sha256": "8a5605d96ebbae0f73c73b0766cb1399c6f7ab1a9945e329935591bc74669771",
+      "delta_counts": {
+        "columns": {
+          "added": 20,
+          "removed": 0
+        },
+        "constraints": {
+          "added": 10,
+          "removed": 0
+        },
+        "indexes": {
+          "added": 2,
+          "removed": 0
+        },
+        "triggers": {
+          "added": 2,
+          "removed": 0
+        },
+        "column_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "relation_acl": {
+          "added": 23,
+          "removed": 0
+        },
+        "schema_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "function_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "views": {
+          "added": 0,
+          "removed": 0
+        },
+        "types": {
+          "added": 0,
+          "removed": 0
+        },
+        "extensions": {
+          "added": 0,
+          "removed": 0
+        },
+        "default_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "event_triggers": {
+          "added": 0,
+          "removed": 0
+        }
+      }
+    },
+    {
+      "migration": 148,
+      "before_sha256": "8a5605d96ebbae0f73c73b0766cb1399c6f7ab1a9945e329935591bc74669771",
+      "after_sha256": "04d60e9de294cadad76dfbd71698c02a75b48c6048966fa183b5e3f102df8abd",
+      "delta_counts": {
+        "columns": {
+          "added": 0,
+          "removed": 0
+        },
+        "constraints": {
+          "added": 0,
+          "removed": 0
+        },
+        "indexes": {
+          "added": 0,
+          "removed": 0
+        },
+        "triggers": {
+          "added": 2,
+          "removed": 0
+        },
+        "column_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "relation_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "schema_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "function_acl": {
+          "added": 1,
+          "removed": 0
+        },
+        "views": {
+          "added": 0,
+          "removed": 0
+        },
+        "types": {
+          "added": 0,
+          "removed": 0
+        },
+        "extensions": {
+          "added": 0,
+          "removed": 0
+        },
+        "default_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "event_triggers": {
+          "added": 0,
+          "removed": 0
+        }
+      }
+    },
+    {
+      "migration": 149,
+      "before_sha256": "04d60e9de294cadad76dfbd71698c02a75b48c6048966fa183b5e3f102df8abd",
+      "after_sha256": "5f95447d88fcf77e12c5b27681ea3ba01f560ee709abee2c272bfc116598be6f",
+      "delta_counts": {
+        "columns": {
+          "added": 7,
+          "removed": 0
+        },
+        "constraints": {
+          "added": 2,
+          "removed": 0
+        },
+        "indexes": {
+          "added": 1,
+          "removed": 0
+        },
+        "triggers": {
+          "added": 2,
+          "removed": 0
+        },
+        "column_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "relation_acl": {
+          "added": 14,
+          "removed": 0
+        },
+        "schema_acl": {
+          "added": 1,
+          "removed": 0
+        },
+        "function_acl": {
+          "added": 4,
+          "removed": 0
+        },
+        "views": {
+          "added": 0,
+          "removed": 0
+        },
+        "types": {
+          "added": 0,
+          "removed": 0
+        },
+        "extensions": {
+          "added": 0,
+          "removed": 0
+        },
+        "default_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "event_triggers": {
+          "added": 0,
+          "removed": 0
+        }
+      }
+    },
+    {
+      "migration": 150,
+      "before_sha256": "5f95447d88fcf77e12c5b27681ea3ba01f560ee709abee2c272bfc116598be6f",
+      "after_sha256": "5df38dbf6a288900d4ce513f46f8338d7adfc193b6161a085365399122da968a",
+      "delta_counts": {
+        "columns": {
+          "added": 0,
+          "removed": 0
+        },
+        "constraints": {
+          "added": 0,
+          "removed": 0
+        },
+        "indexes": {
+          "added": 0,
+          "removed": 0
+        },
+        "triggers": {
+          "added": 5,
+          "removed": 0
+        },
+        "column_acl": {
+          "added": 5,
+          "removed": 0
+        },
+        "relation_acl": {
+          "added": 15,
+          "removed": 0
+        },
+        "schema_acl": {
+          "added": 1,
+          "removed": 0
+        },
+        "function_acl": {
+          "added": 3,
+          "removed": 7
+        },
+        "views": {
+          "added": 0,
+          "removed": 0
+        },
+        "types": {
+          "added": 0,
+          "removed": 0
+        },
+        "extensions": {
+          "added": 0,
+          "removed": 0
+        },
+        "default_acl": {
+          "added": 0,
+          "removed": 0
+        },
+        "event_triggers": {
+          "added": 0,
+          "removed": 0
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "added catalog authorization/runtime still separate",
+    "current source migration/restart pending"
+  ]
+}
