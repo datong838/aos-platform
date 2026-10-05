@@ -34,3 +34,22 @@ binding使用原canonical_hash，绑定协议版本、tenant、authenticated mak
 外部认证每次先严格重解析，再复用原_external_oidc_config与resolve_principal真实JWT签名、issuer/audience/expiry/tenant，禁止Principal替代命令/dev fallback/非positive；错误固定文本不携token。不会在这个入口创建DB/attempt/发行/网络Provider。真实HTTPS JWKS+RSA夹具验证成功与wrongkey/expired/audience/scope拒绝（只本机隔离JWKS，不是正式供应商来源）；配置门反例可用monkeypatch但与实际JWT验签证据分开。
 
 验证真实缺类/入口RED后最小实现、原候选契约/producer/SourceAction相邻与身份边界专项；DB仅disposable5433。完整SourceTask保持ACTIVE，独立DDL/issuer-private epoch/账户注册/正式签名/consumer仍须原退出条件，不因入口GREEN收口。
+
+## AOS-001353接续：可信目标与四引用发布闭合（下一实际发行阶段）
+
+基线m1 2ad94a45：a150/private native claims/epoch已实现且noGrant。不能修改已提交a150加入后继正式registry。现Source Task先冻结严格签发事实契约与verify入口；正式DDL/consumer另登记additive后继范围，不把新文件隐性放进旧Task。
+
+### 信任与原子绑定
+
+1. 已认证OIDC maker和原严格command为唯一输入；不接收approvedClaims事实替代原command。每次重新认证，固定requestBinding=protocol+positiveTenant+maker+全部四exactrefs，token/key不进hash。attempt首次占用key/hash，same key不同binding拒绝，unknown仅原对账。原proposal/event及supplierAttestation/sourcePolicy均在同SERIALcaller读取验真，发布provenance保存完整四ref/requestHash，consumer逐项比对，不只proposal id。
+2. 数据库配置是连接输入，不是可信目标权威。可信SourcePolicy须由独立允许签发者签名、固定用途provider_capacity_source，绑定部署目标：host/port、database name及实际database OID、固定privateissuer role；为防同端口替换集群，还须有当前server cluster标识及受限可信读取证明。目标匹配不能由caller再传expectedDB值自证。a150 read核不提供这个正式部署证明，不当生产签发入口。精确cluster读取所需新SQL函数/owner/ACL/body/hash必须另additive方案和Task；不得直接给issuer超级权限或PG读取角色。真正目标policy未提供时真实发行保持关闭。
+3. supplierAttestation包含固定issuer/supplier、稳定accountfingerprint、exact Provider集合、原Evidence exact、计量判别union、supplier上界、observedAt/validFrom/validUntil；SourcePolicy固定允许的attestation签发者/公钥、用途、supplier、观察时效上界/时钟容差、允许计量mode与单位、目标部署及撤回规则。可信policy来源不由DTO自己的key/verified属性决定，重解析和canonical hash+签名都须验证。不同scope/未来观测/过期/反向窗口/issuer错位/供应商错位/不允许mode拒绝；无统一默认TTL补未知来源。
+4. supplier账户事实必须与当前原批准candidate对应supplier/fingerprint/evidence/完整Provider集合，供应商同维度上界覆盖批准分配；fixed_window_rate与inflight_upper_bound不相互折算。Source唯一绑定已批准条款，不能修改批准的token模式/并发/validity。当前native Owner/Providerheads/旧allocation/Evidence epoch与有效期在写前再核，期限由DB clock_timestamp重读。签发的nonexecuting Revision不是Start授权。
+
+### 完整发行锁图与退出
+
+先对齐原Capacity→Budget顺序；涉及License时License在neutral前。Source proposal/share与maker/checker/Providerhead、稳定全域supplier/fingerprint及Provider双向mapping、neutral Evidence按稳定集合排序；任何后继新增锁须真实reader-first/writer-first与相邻旧锁图验，不因本次read-only锁竞争通过推断publication锁图完整。
+
+新additive全域归一registry只给窄private函数；supplier/fingerprint不按Secret/Providerrevision拆账户，Provider不可同时属于两物理账户；跨tenant无法全域合账时第二归属拒绝且不泄露另一tenant资料。正式Account/SourceRevision/provenance/attempt在原caller一次COMMIT，rollback不得留正式输出，重放原成功只能返回原signed Revision，unknown不重发。consumer拒绝candidate/runtime伪造/无provenance/错误key/过期或当前依赖漂移，在调用位置重验Source，不只签名一次。
+
+下一RED应端到端构建原专用approved Source+隔离trusted policy/attestation签名+实际private caller+完整四refbinding，正式发行actualCOMMIT并由consumer读取；同时注册全域mapping真实并发/同账户多Provider/轮换/跨tenant拒绝、rollback/replay/unknown对账与原Source相邻。契约helper专项只是实现前门，不能收口fullSource。真实supplier事实与目标policy缺失不妨碍上述隔离代码验证，但不能启用真实发行、Host或Provider。
