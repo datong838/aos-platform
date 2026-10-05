@@ -39,3 +39,23 @@ Health必须协调所有可达原DML而不建立第二真源：旧healthy行FOR 
 7. 现有“complete_evaluator_has_current_health_transaction_consumer”只检查callable。模块存在会令该旧缺模块RED消失，却仍没有完整八依赖命令。须追加实际完整命令行为RED，缺Source/Capacity/当前Owner及安装必须零proof/零binding版本变化/零Receipt，而不是以模块可导入称GREEN。
 
 下一有限审查清单：签名安装原_reader内部锁；治理approved activation/预算消费及Eval当前decision写者锁图；原binding/proof/Receipt逐列ACL与延迟约束；Source纯验证原函数边界。完成并统一主plan后，按精确新增/修改文件另登记完整代码Task。上述草稿风险均为源码审查结论，尚未跑实际PG验证，不标为实测失败或业务拒绝。
+
+## 原治理消费、Eval与产品入口补证（Health修复已测，提交归属待核）
+
+上一Health步骤的实际证据独立见health/fence-verification.md。当前HEAD15a6a019、三个已测代码hash再读完全相同，没有新增提交。这里继续只读源码审查及已登记方案补证；未借单写归属待核修改共享代码、清理进程或启动新CLI。
+
+### 进一步核实的原锁与权限边界
+
+- `aip_quota_policy_consumer.sql`正式写者：原Proposal FOR UPDATE → maker共享锁 → Approval和draft共享锁 → checker及metadata共享锁 → quota治理head FOR UPDATE。消费者先锁全部相关原Proposal，不能持有治理head后倒序核查原审批；maker/checker不是可伪造JWT字段。现有原reader要求active/exact/hash/effective，并不替消费者自动补全全部锁。
+- `aip_budget_cost_consumer.sql`：原`budget-cost-review:org:project:proposal` advisory → 两membership ORDER BY subject FOR SHARE → Budget head FOR UPDATE → exact Provider head FOR SHARE。其封装actor消费者要求READ COMMITTED，不能调用进SERIAL evaluator并冒充读取复用，也不能以评估动作消费批准或激活预算。完整评估若核验可撤销decision，先沿原advisory读原批准，再Owner/budget/Provider，禁止创建替代撤销协调域。
+- Budget writer对Provider是共享锁，evaluator同Provider共享锁与之兼容；不能仅看表出现先后就声称已经实证死锁。更稳的完整读序为原approval/advisory → Owner → Installation/Source/Registry → Budget及治理head → ModelRuntime heads → Health → Capacity；原ModelRuntime `_publish`只锁自己的head并普通读revision依赖，无跨head FOR UPDATE链。还须确认本序所消费的预算批准确实是选中原receipt对应的授权，不能把两种Budget activation API混为同一真源。
+- `aip_eval_authority_store.require_exact_passed`按exact decision/hash读取且检查passed/target/decided_at/expiry；`append_release_gate`只INSERT并由原_append_contract内部commit，不可作为调用方命令中的写接口。aip4_001把该表列入_APPEND_ONLY_TABLES，原UPDATE/DELETE/TRUNCATE均由guard拒绝。Eval决策不是head对象；因此当前性取决于选中Route/Model当前head绑定的exactgate和实际效期，不应凭空新增第二Eval head。相邻实际PG仍需覆盖过期/错target/原追加不改变既有exactgate语义。
+- ModelRuntime `_SPECS`实际为五类：provider_instance、registered_model、runtime_policy、model_route、model_price_snapshot。先前“六类Model head”文字不准确，Capacity是独立原authority。ProviderPlugin/RuntimeGuard/治理Quota/Budget属于额外selected依赖，须读其原head，不能遗漏或混入五类枚举。
+
+### 完整命令的产品落点与尚未完成项
+
+现有router `/v1/aip/capability-bindings/{binding_id}/evaluate`依赖旧EvaluateOperationalBindingRequest与capability service.evaluate；该Service先外部readiness再另写事务，原签名require_principal和private write门不能把它升级为正式八facts。同router Skill evaluate同样是旧合同，不纳入本Capability完整命令权限。正式JWT产品入口须复用require_principal并拒dev token/未知scope，以固定独立evaluator私有配置建native连接；request严格收exactrefs/installation-etag/version/key，不允许actor/roles/ready/facts/clock。响应构造在caller commit之前完成，异常rollback；SQLSTATE40001不转成功、不自动重试。
+
+完整实现文件包须追加精确`services/aos-api/aos_api/routers/aip_bindings.py`及其实际API tests，以及Source原request事实读取/authority模块。Source复用应把`read_source_license_request_facts`中的原内容/provenance/policy/time核验抽取为同事务内部复用函数；旧reader先做原角色身份校验后委托，新formal reader先做固定evaluator身份校验再委托，禁止放宽所有角色或伪造maker Principal。存储的原maker只用于重算原授权binding，实际认证主体仍是evaluator/API principal，maker/checker当前Owner需原锁后再读。最终函数/DDL权限白名单单列，旧Source发行/审批身份行为不改变。
+
+原a136 proof只有JSON八键结构/外键/immutable，尚无原Receipt-CAS-proof三写关联及live提交期限约束；不能声称原schema已提供完整提交保护。后继完整boundary迁移不能和已测a143同revision重复，待Health收口后明确使用a144，默认NOLOGIN、不供给当前身份/当前真库迁移授权。原proposal/approval/membership/installation/五model heads/治理heads/budgethead/capacityhead的SELECT-for-lock所需最小UPDATE列及拒DML trigger，Source函数EXEC与其RLS、binding评估列UPDATE、proof/原Receipt INSERT和三记录约束必须逐项实际PG核验。此逐列白名单和产品严格request/同key当前重验合同仍未闭合，完整代码Task未登记；不能把本补证当方案全通过。
