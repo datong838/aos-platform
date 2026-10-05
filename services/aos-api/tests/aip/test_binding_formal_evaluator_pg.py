@@ -540,7 +540,14 @@ def assert_formal_signed_source_consumer(request, loader, release_policy):
                 installation_revision=request.installation_revision, installation_etag=request.installation_etag,
                 loader=loader, release_policy=release_policy)
             with factory(SCOPE) as conn:
+                from aos_api.aip_license_source_authority import _prepare_formal_source_approvals
+                discovered, approvals = _prepare_formal_source_approvals(conn, SCOPE, args['source_refs'])
+                assert len(discovered) == 1 and len(approvals) == 1
+                assert all('actor_id' in event for _, event in approvals.values())
                 facts = read_formal_license_source_facts(conn=conn, **args)
+                assert {owner['subject'] for owner in facts[0].owners} == {
+                    subject for _, _, approved, maker in discovered
+                    for subject in (maker, approvals[approved.resource_id][1]['actor_id'])}
                 assert len(facts) == 1
                 fact = facts[0]
                 assert fact.source.source.resource_id == request.source.resource_id

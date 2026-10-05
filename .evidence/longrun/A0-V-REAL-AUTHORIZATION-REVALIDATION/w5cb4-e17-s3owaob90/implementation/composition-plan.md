@@ -13,3 +13,7 @@
 9. 同key replay仍要重核当前依赖与proof期限，不能返回过期available；错误/并发/到期/commit失败三写全回滚。产品Service/router正式分支必须使用原signed身份和独立private evaluator配置，原preview兼容边界保留。
 
 整体验收：原正式Store全signed安装与Source+HTTPS预算配置、真实非空八facts、实际native同事务三写COMMIT、samekey replay/冲突、各依赖缺失/撤回/漂移/竞争/到期/canary、产品API真实入口；不能用helper通过替代。当前已验Health/Source/Budget只降低组合实现风险，完整entry仍缺失。无Provider调用、商城源、旧Run或当前142迁移授权。
+
+## 联合预锁复用实施
+
+原read_formal_license_source_facts把发现和Proposal/Approval预锁、Owner锁连在一起；完整command若先调用该函数再首次Budget advisory会逆序。最小提取_private _prepare_formal_source_approvals，native admission+strict exact unique refs，原discovery/authorization/approvedRef/maker及全部Proposal→Approval/withdrawal校验逐语句保持，返回discovered+approvals，不取得Owner/Installation/Source锁，不产生权利。原Source reader保留私有安装/loader/release context校验，调用此helper后沿原Owner后续逻辑。完整command可先调用它，再原Budget advisory及合并Owner锁，后调用原正式Source reader重核。禁止fake Maker/回调/客户端锁开关；不完成整波。实际signed Source hook先调用新prelock helper核对原Owner集合/Approval证据，再原Source正向/负例/真实writer阻塞全复验。

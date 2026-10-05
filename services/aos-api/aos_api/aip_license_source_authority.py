@@ -164,38 +164,21 @@ def _formal_source_issuance_row(conn, scope, ref):
         (*scope.key, ref.resource_id, ref.revision, ref.content_hash)).fetchone()
 
 
-def read_formal_license_source_facts(*, conn, scope, source_refs, installation_id,
-                                    installation_revision, installation_etag, loader, release_policy):
-    """Batch original approvals and current signed grants in the native caller.
+def _prepare_formal_source_approvals(conn, scope, source_refs):
+    """Original native discovery/Proposal/Approval locks, before any Owner lock.
 
-    Discovery confers no authority. All Proposal/Approval locks precede Owners,
-    installation and Source fences. No writes, fake maker Principal, or callback.
+    Returned rows confer no grant. Full reader must independently revalidate
+    them under its installation/Source/Registry locks before using any facts.
     """
-    from uuid import UUID
     from pydantic import ValidationError
     from aos_api.aip_binding_evaluator_connection import require_binding_evaluator_transaction
     from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
-    from aos_api.aip_agent_registry_store import AipAgentRegistryStore
-    from aos_api.aip_license_source_issuer_contracts import (
-        ApprovedSourceLicenseProposalRef, _source_issuance_request_hash,
-    )
-    from aos_api.aip_license_source_issuer import (
-        _read_original_approved_source_proposal, _lock_selected_registry, _source_license_authorization,
-    )
-    from aos_api.aip_license_source_proposal import (
-        _read_source_request_content_facts, _verify_formal_source_proposal_contents,
-    )
-    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
-    from aos_api.asset_registry.manifest_loader import ManifestLoader
-    from aos_api.asset_registry.release_policy import ReleasePolicy
+    from aos_api.aip_license_source_issuer_contracts import ApprovedSourceLicenseProposalRef
+    from aos_api.aip_license_source_issuer import _read_original_approved_source_proposal
     require_binding_evaluator_transaction(conn, scope)
     try:
-        if (type(source_refs) is not list or not 1 <= len(source_refs) <= 128
-                or type(installation_id) is not str or str(UUID(installation_id)) != installation_id
-                or type(installation_revision) is not int or installation_revision < 1
-                or type(installation_etag) is not int or installation_etag < 1
-                or type(loader) is not ManifestLoader or type(release_policy) is not ReleasePolicy):
-            raise ValueError('exact private context required')
+        if type(source_refs) is not list or not 1 <= len(source_refs) <= 128:
+            raise ValueError('exact sources required')
         refs = [FormalExactRef.model_validate(ref) for ref in source_refs]
         if (any(ref.asset_type != 'EvidenceBundleRevision' for ref in refs)
                 or len({ref.asset_id for ref in refs}) != len(refs)):
@@ -233,6 +216,44 @@ def read_formal_license_source_facts(*, conn, scope, source_refs, installation_i
             'AND proposal_id=%s', (*scope.key, approved.resource_id)).fetchone():
             raise LicenseSourceUnavailable('FORMAL_SOURCE_PROPOSAL_WITHDRAWN')
         approvals[approved.resource_id] = (row, event)
+    return discovered, approvals
+
+
+def read_formal_license_source_facts(*, conn, scope, source_refs, installation_id,
+                                    installation_revision, installation_etag, loader, release_policy):
+    """Batch original approvals and current signed grants in the native caller.
+
+    Discovery confers no authority. All Proposal/Approval locks precede Owners,
+    installation and Source fences. No writes, fake maker Principal, or callback.
+    """
+    from uuid import UUID
+    from pydantic import ValidationError
+    from aos_api.aip_binding_evaluator_connection import require_binding_evaluator_transaction
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from aos_api.aip_agent_registry_store import AipAgentRegistryStore
+    from aos_api.aip_license_source_issuer_contracts import (
+        ApprovedSourceLicenseProposalRef, _source_issuance_request_hash,
+    )
+    from aos_api.aip_license_source_issuer import (
+        _read_original_approved_source_proposal, _lock_selected_registry, _source_license_authorization,
+    )
+    from aos_api.aip_license_source_proposal import (
+        _read_source_request_content_facts, _verify_formal_source_proposal_contents,
+    )
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+    from aos_api.asset_registry.manifest_loader import ManifestLoader
+    from aos_api.asset_registry.release_policy import ReleasePolicy
+    require_binding_evaluator_transaction(conn, scope)
+    try:
+        if (type(source_refs) is not list or not 1 <= len(source_refs) <= 128
+                or type(installation_id) is not str or str(UUID(installation_id)) != installation_id
+                or type(installation_revision) is not int or installation_revision < 1
+                or type(installation_etag) is not int or installation_etag < 1
+                or type(loader) is not ManifestLoader or type(release_policy) is not ReleasePolicy):
+            raise ValueError('exact private context required')
+    except (ValidationError, ValueError, TypeError, KeyError, AttributeError):
+        raise LicenseSourceUnavailable('FORMAL_SOURCE_EXACT_CONTENT_REQUIRED') from None
+    discovered, approvals = _prepare_formal_source_approvals(conn, scope, source_refs)
     subjects = sorted({subject for _, _, approved, maker in discovered
         for subject in (maker, approvals[approved.resource_id][1]['actor_id'])})
     owners = conn.execute('SELECT subject,role FROM public.meta_membership WHERE org_id=%s AND project_id=%s '
