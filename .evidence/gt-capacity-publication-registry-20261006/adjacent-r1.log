@@ -1,0 +1,385 @@
+.........CAPACITY_WITHDRAWAL_COMMIT_PROOF {"authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START", "current_database_accessed": false, "epoch": 1, "execution_allowed": false, "fresh_reader_rejected": true, "holding_pid": 507602, "order": "reader_first", "pg_blocking_pids": [507602], "proposal_status": "approved", "reader_committed": true, "reader_pid": 507602, "reader_rejected": false, "supplier_verified": false, "target": "source", "waiting_pid": 507603, "withdrawal_count": 1, "writer_committed": true, "writer_pid": 507603}
+.CAPACITY_WITHDRAWAL_COMMIT_PROOF {"authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START", "current_database_accessed": false, "epoch": 1, "execution_allowed": false, "fresh_reader_rejected": true, "holding_pid": 507655, "order": "reader_first", "pg_blocking_pids": [507655], "proposal_status": "approved", "reader_committed": true, "reader_pid": 507655, "reader_rejected": false, "supplier_verified": false, "target": "allocation", "waiting_pid": 507656, "withdrawal_count": 1, "writer_committed": true, "writer_pid": 507656}
+.CAPACITY_WITHDRAWAL_COMMIT_PROOF {"authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START", "current_database_accessed": false, "epoch": 1, "execution_allowed": false, "fresh_reader_rejected": true, "holding_pid": 507707, "order": "writer_first", "pg_blocking_pids": [507707], "proposal_status": "approved", "reader_committed": false, "reader_pid": 507708, "reader_rejected": true, "supplier_verified": false, "target": "source", "waiting_pid": 507708, "withdrawal_count": 1, "writer_committed": true, "writer_pid": 507707}
+.CAPACITY_WITHDRAWAL_COMMIT_PROOF {"authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START", "current_database_accessed": false, "epoch": 1, "execution_allowed": false, "fresh_reader_rejected": true, "holding_pid": 507772, "order": "writer_first", "pg_blocking_pids": [507772], "proposal_status": "approved", "reader_committed": false, "reader_pid": 507773, "reader_rejected": true, "supplier_verified": false, "target": "allocation", "waiting_pid": 507773, "withdrawal_count": 1, "writer_committed": true, "writer_pid": 507772}
+..............CAPACITY_PRIVATE_ALIAS_PROOF {"account_raw_hash": "937763e40c452d87b8f1fa71c013be54f87b8248c5b554bde85538bb5475176a", "alternate": "basis_account", "basis_raw_hash": "d463953899d2c635a5bda363ef7c57639bd645eb9f397fa46ed732e5ddc777dc", "current_database_accessed": false, "exact_claims_match": true, "execution_allowed": false, "issuer_role": "aos_provider_capacity_issuer", "proposal_status": "approved", "scram_used": true, "supplier_verified": false}
+.CAPACITY_PRIVATE_ALIAS_PROOF {"account_raw_hash": "b84b52cb7fc98d3d3780c6bdeb9fd3bd01f183d9b26384774276d9627749e160", "alternate": "account_provider", "basis_raw_hash": "9f1d166e08231e257f612b13e36089385b7248f6a45d30b8821ffde5f6fd24dc", "current_database_accessed": false, "exact_claims_match": true, "execution_allowed": false, "issuer_role": "aos_provider_capacity_issuer", "proposal_status": "approved", "scram_used": true, "supplier_verified": false}
+.CAPACITY_PRIVATE_ALIAS_PROOF {"account_raw_hash": "d8828f151cc3407a1520a90c42baa5cb78a1f50099fbb8dfbf6930dcb716035f", "alternate": "basis_mixed", "basis_raw_hash": "6310ee40de3259be8f2fd0899dc1bd8466f7c5c4f625510b469037d681b14a77", "current_database_accessed": false, "exact_claims_match": true, "execution_allowed": false, "issuer_role": "aos_provider_capacity_issuer", "proposal_status": "approved", "scram_used": true, "supplier_verified": false}
+.CAPACITY_PRIVATE_ALIAS_PROOF {"account_raw_hash": "e6f8b23fa28bc66ec928b891997565c8efccbe8120c76eec16124898b9fb3268", "alternate": "provider_mixed", "basis_raw_hash": "277ed6d634ccaa53b7434ae1cf43ea5b5fbd077f80c9aba2aaa3339fdf98c337", "current_database_accessed": false, "exact_claims_match": true, "execution_allowed": false, "issuer_role": "aos_provider_capacity_issuer", "proposal_status": "approved", "scram_used": true, "supplier_verified": false}
+........................................... [ 68%]
+........FFFFFFF..................                                        [100%]
+=================================== FAILURES ===================================
+_ test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[extension_dispatch_cutover_history_guard_ar2_014-extension_dispatch_cutover_operation-kind text DEFAULT 'activate',status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',cutover_operation_id uuid DEFAULT gen_random_uuid()-UPDATE pg_temp.extension_dispatch_cutover_operation SET status='prepared'-UPDATE pg_temp.extension_dispatch_cutover_operation SET status='draining'-23514] _
+
+function_name = 'extension_dispatch_cutover_history_guard_ar2_014'
+table = 'extension_dispatch_cutover_operation'
+fields = "kind text DEFAULT 'activate',status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',cutover_operation_id uuid DEFAULT gen_random_uuid()"
+normal = "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='prepared'"
+invalid = "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='draining'"
+error = '23514'
+
+    @pytest.mark.parametrize('function_name,table,fields,normal,invalid,error', [
+        ('extension_dispatch_cutover_history_guard_ar2_014','extension_dispatch_cutover_operation',
+         "kind text DEFAULT 'activate',status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',cutover_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='draining'",'23514'),
+        ('extension_dispatch_lifecycle_history_guard_ar2_017','extension_dispatch_lifecycle_operation',
+         "status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',runtime_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='fenced'",'23514'),
+        ('extension_event_control_dispatch_history_guard_a0v_054','extension_event_control_dispatch_receipt',
+         'id integer DEFAULT 1',None,"UPDATE pg_temp.extension_event_control_dispatch_receipt SET id=2",'55000'),
+        ('extension_runtime_uninstall_consistency_ar2_018','extension_runtime_binding',
+         "desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence boolean DEFAULT false,revision bigint DEFAULT 1,installation_revision bigint DEFAULT 1,installation_id uuid DEFAULT gen_random_uuid(),generation uuid DEFAULT gen_random_uuid(),package_lock_ref jsonb DEFAULT '{}',profile_ref text DEFAULT 'internal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'",'23514'),
+        ('snapshot_unaccepted_group_terminal_guard_a0v_083','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='SOURCE_BUDGET_REJECTED_BEFORE_GROUP_CLAIM'",'55000'),
+        ('snapshot_stalled_group_terminal_guard_a0v_091','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='STALLED_EXECUTOR_ABANDONED_WITH_EFFECTS'",'55000'),
+        ('unaccepted_analysis_terminal_guard_a0v_060','automation_occurrence',
+         "status text DEFAULT 'needs_attention',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',occurrence_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.automation_occurrence SET status='needs_attention'",
+         "UPDATE pg_temp.automation_occurrence SET status='cancelled'",'55000'),
+    ])
+    def test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal(function_name,table,fields,normal,invalid,error):
+        with isolated_owner() as conn:
+>           assert conn.execute('SELECT version_num FROM alembic_version').fetchone()['version_num']=='a0v_151'
+E           AssertionError: assert 'a0v_152' == 'a0v_151'
+E             
+E             - a0v_151
+E             ?       ^
+E             + a0v_152
+E             ?       ^
+
+services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py:805: AssertionError
+_ test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[extension_dispatch_lifecycle_history_guard_ar2_017-extension_dispatch_lifecycle_operation-status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',runtime_operation_id uuid DEFAULT gen_random_uuid()-UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='prepared'-UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='fenced'-23514] _
+
+function_name = 'extension_dispatch_lifecycle_history_guard_ar2_017'
+table = 'extension_dispatch_lifecycle_operation'
+fields = "status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',runtime_operation_id uuid DEFAULT gen_random_uuid()"
+normal = "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='prepared'"
+invalid = "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='fenced'"
+error = '23514'
+
+    @pytest.mark.parametrize('function_name,table,fields,normal,invalid,error', [
+        ('extension_dispatch_cutover_history_guard_ar2_014','extension_dispatch_cutover_operation',
+         "kind text DEFAULT 'activate',status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',cutover_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='draining'",'23514'),
+        ('extension_dispatch_lifecycle_history_guard_ar2_017','extension_dispatch_lifecycle_operation',
+         "status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',runtime_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='fenced'",'23514'),
+        ('extension_event_control_dispatch_history_guard_a0v_054','extension_event_control_dispatch_receipt',
+         'id integer DEFAULT 1',None,"UPDATE pg_temp.extension_event_control_dispatch_receipt SET id=2",'55000'),
+        ('extension_runtime_uninstall_consistency_ar2_018','extension_runtime_binding',
+         "desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence boolean DEFAULT false,revision bigint DEFAULT 1,installation_revision bigint DEFAULT 1,installation_id uuid DEFAULT gen_random_uuid(),generation uuid DEFAULT gen_random_uuid(),package_lock_ref jsonb DEFAULT '{}',profile_ref text DEFAULT 'internal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'",'23514'),
+        ('snapshot_unaccepted_group_terminal_guard_a0v_083','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='SOURCE_BUDGET_REJECTED_BEFORE_GROUP_CLAIM'",'55000'),
+        ('snapshot_stalled_group_terminal_guard_a0v_091','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='STALLED_EXECUTOR_ABANDONED_WITH_EFFECTS'",'55000'),
+        ('unaccepted_analysis_terminal_guard_a0v_060','automation_occurrence',
+         "status text DEFAULT 'needs_attention',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',occurrence_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.automation_occurrence SET status='needs_attention'",
+         "UPDATE pg_temp.automation_occurrence SET status='cancelled'",'55000'),
+    ])
+    def test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal(function_name,table,fields,normal,invalid,error):
+        with isolated_owner() as conn:
+>           assert conn.execute('SELECT version_num FROM alembic_version').fetchone()['version_num']=='a0v_151'
+E           AssertionError: assert 'a0v_152' == 'a0v_151'
+E             
+E             - a0v_151
+E             ?       ^
+E             + a0v_152
+E             ?       ^
+
+services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py:805: AssertionError
+_ test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[extension_event_control_dispatch_history_guard_a0v_054-extension_event_control_dispatch_receipt-id integer DEFAULT 1-None-UPDATE pg_temp.extension_event_control_dispatch_receipt SET id=2-55000] _
+
+function_name = 'extension_event_control_dispatch_history_guard_a0v_054'
+table = 'extension_event_control_dispatch_receipt'
+fields = 'id integer DEFAULT 1', normal = None
+invalid = 'UPDATE pg_temp.extension_event_control_dispatch_receipt SET id=2'
+error = '55000'
+
+    @pytest.mark.parametrize('function_name,table,fields,normal,invalid,error', [
+        ('extension_dispatch_cutover_history_guard_ar2_014','extension_dispatch_cutover_operation',
+         "kind text DEFAULT 'activate',status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',cutover_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='draining'",'23514'),
+        ('extension_dispatch_lifecycle_history_guard_ar2_017','extension_dispatch_lifecycle_operation',
+         "status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',runtime_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='fenced'",'23514'),
+        ('extension_event_control_dispatch_history_guard_a0v_054','extension_event_control_dispatch_receipt',
+         'id integer DEFAULT 1',None,"UPDATE pg_temp.extension_event_control_dispatch_receipt SET id=2",'55000'),
+        ('extension_runtime_uninstall_consistency_ar2_018','extension_runtime_binding',
+         "desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence boolean DEFAULT false,revision bigint DEFAULT 1,installation_revision bigint DEFAULT 1,installation_id uuid DEFAULT gen_random_uuid(),generation uuid DEFAULT gen_random_uuid(),package_lock_ref jsonb DEFAULT '{}',profile_ref text DEFAULT 'internal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'",'23514'),
+        ('snapshot_unaccepted_group_terminal_guard_a0v_083','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='SOURCE_BUDGET_REJECTED_BEFORE_GROUP_CLAIM'",'55000'),
+        ('snapshot_stalled_group_terminal_guard_a0v_091','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='STALLED_EXECUTOR_ABANDONED_WITH_EFFECTS'",'55000'),
+        ('unaccepted_analysis_terminal_guard_a0v_060','automation_occurrence',
+         "status text DEFAULT 'needs_attention',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',occurrence_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.automation_occurrence SET status='needs_attention'",
+         "UPDATE pg_temp.automation_occurrence SET status='cancelled'",'55000'),
+    ])
+    def test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal(function_name,table,fields,normal,invalid,error):
+        with isolated_owner() as conn:
+>           assert conn.execute('SELECT version_num FROM alembic_version').fetchone()['version_num']=='a0v_151'
+E           AssertionError: assert 'a0v_152' == 'a0v_151'
+E             
+E             - a0v_151
+E             ?       ^
+E             + a0v_152
+E             ?       ^
+
+services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py:805: AssertionError
+_ test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[extension_runtime_uninstall_consistency_ar2_018-extension_runtime_binding-desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence boolean DEFAULT false,revision bigint DEFAULT 1,installation_revision bigint DEFAULT 1,installation_id uuid DEFAULT gen_random_uuid(),generation uuid DEFAULT gen_random_uuid(),package_lock_ref jsonb DEFAULT '{}',profile_ref text DEFAULT 'internal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'-UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'-UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'-23514] _
+
+function_name = 'extension_runtime_uninstall_consistency_ar2_018'
+table = 'extension_runtime_binding'
+fields = "desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence...ernal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'"
+normal = "UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'"
+invalid = "UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'"
+error = '23514'
+
+    @pytest.mark.parametrize('function_name,table,fields,normal,invalid,error', [
+        ('extension_dispatch_cutover_history_guard_ar2_014','extension_dispatch_cutover_operation',
+         "kind text DEFAULT 'activate',status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',cutover_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='draining'",'23514'),
+        ('extension_dispatch_lifecycle_history_guard_ar2_017','extension_dispatch_lifecycle_operation',
+         "status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',runtime_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='fenced'",'23514'),
+        ('extension_event_control_dispatch_history_guard_a0v_054','extension_event_control_dispatch_receipt',
+         'id integer DEFAULT 1',None,"UPDATE pg_temp.extension_event_control_dispatch_receipt SET id=2",'55000'),
+        ('extension_runtime_uninstall_consistency_ar2_018','extension_runtime_binding',
+         "desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence boolean DEFAULT false,revision bigint DEFAULT 1,installation_revision bigint DEFAULT 1,installation_id uuid DEFAULT gen_random_uuid(),generation uuid DEFAULT gen_random_uuid(),package_lock_ref jsonb DEFAULT '{}',profile_ref text DEFAULT 'internal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'",'23514'),
+        ('snapshot_unaccepted_group_terminal_guard_a0v_083','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='SOURCE_BUDGET_REJECTED_BEFORE_GROUP_CLAIM'",'55000'),
+        ('snapshot_stalled_group_terminal_guard_a0v_091','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='STALLED_EXECUTOR_ABANDONED_WITH_EFFECTS'",'55000'),
+        ('unaccepted_analysis_terminal_guard_a0v_060','automation_occurrence',
+         "status text DEFAULT 'needs_attention',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',occurrence_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.automation_occurrence SET status='needs_attention'",
+         "UPDATE pg_temp.automation_occurrence SET status='cancelled'",'55000'),
+    ])
+    def test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal(function_name,table,fields,normal,invalid,error):
+        with isolated_owner() as conn:
+>           assert conn.execute('SELECT version_num FROM alembic_version').fetchone()['version_num']=='a0v_151'
+E           AssertionError: assert 'a0v_152' == 'a0v_151'
+E             
+E             - a0v_151
+E             ?       ^
+E             + a0v_152
+E             ?       ^
+
+services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py:805: AssertionError
+_ test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[snapshot_unaccepted_group_terminal_guard_a0v_083-meta_schedule_run-status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'-UPDATE pg_temp.meta_schedule_run SET status='running'-UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='SOURCE_BUDGET_REJECTED_BEFORE_GROUP_CLAIM'-55000] _
+
+function_name = 'snapshot_unaccepted_group_terminal_guard_a0v_083'
+table = 'meta_schedule_run'
+fields = "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'"
+normal = "UPDATE pg_temp.meta_schedule_run SET status='running'"
+invalid = "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='SOURCE_BUDGET_REJECTED_BEFORE_GROUP_CLAIM'"
+error = '55000'
+
+    @pytest.mark.parametrize('function_name,table,fields,normal,invalid,error', [
+        ('extension_dispatch_cutover_history_guard_ar2_014','extension_dispatch_cutover_operation',
+         "kind text DEFAULT 'activate',status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',cutover_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='draining'",'23514'),
+        ('extension_dispatch_lifecycle_history_guard_ar2_017','extension_dispatch_lifecycle_operation',
+         "status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',runtime_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='fenced'",'23514'),
+        ('extension_event_control_dispatch_history_guard_a0v_054','extension_event_control_dispatch_receipt',
+         'id integer DEFAULT 1',None,"UPDATE pg_temp.extension_event_control_dispatch_receipt SET id=2",'55000'),
+        ('extension_runtime_uninstall_consistency_ar2_018','extension_runtime_binding',
+         "desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence boolean DEFAULT false,revision bigint DEFAULT 1,installation_revision bigint DEFAULT 1,installation_id uuid DEFAULT gen_random_uuid(),generation uuid DEFAULT gen_random_uuid(),package_lock_ref jsonb DEFAULT '{}',profile_ref text DEFAULT 'internal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'",'23514'),
+        ('snapshot_unaccepted_group_terminal_guard_a0v_083','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='SOURCE_BUDGET_REJECTED_BEFORE_GROUP_CLAIM'",'55000'),
+        ('snapshot_stalled_group_terminal_guard_a0v_091','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='STALLED_EXECUTOR_ABANDONED_WITH_EFFECTS'",'55000'),
+        ('unaccepted_analysis_terminal_guard_a0v_060','automation_occurrence',
+         "status text DEFAULT 'needs_attention',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',occurrence_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.automation_occurrence SET status='needs_attention'",
+         "UPDATE pg_temp.automation_occurrence SET status='cancelled'",'55000'),
+    ])
+    def test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal(function_name,table,fields,normal,invalid,error):
+        with isolated_owner() as conn:
+>           assert conn.execute('SELECT version_num FROM alembic_version').fetchone()['version_num']=='a0v_151'
+E           AssertionError: assert 'a0v_152' == 'a0v_151'
+E             
+E             - a0v_151
+E             ?       ^
+E             + a0v_152
+E             ?       ^
+
+services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py:805: AssertionError
+_ test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[snapshot_stalled_group_terminal_guard_a0v_091-meta_schedule_run-status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'-UPDATE pg_temp.meta_schedule_run SET status='running'-UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='STALLED_EXECUTOR_ABANDONED_WITH_EFFECTS'-55000] _
+
+function_name = 'snapshot_stalled_group_terminal_guard_a0v_091'
+table = 'meta_schedule_run'
+fields = "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'"
+normal = "UPDATE pg_temp.meta_schedule_run SET status='running'"
+invalid = "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='STALLED_EXECUTOR_ABANDONED_WITH_EFFECTS'"
+error = '55000'
+
+    @pytest.mark.parametrize('function_name,table,fields,normal,invalid,error', [
+        ('extension_dispatch_cutover_history_guard_ar2_014','extension_dispatch_cutover_operation',
+         "kind text DEFAULT 'activate',status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',cutover_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='draining'",'23514'),
+        ('extension_dispatch_lifecycle_history_guard_ar2_017','extension_dispatch_lifecycle_operation',
+         "status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',runtime_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='fenced'",'23514'),
+        ('extension_event_control_dispatch_history_guard_a0v_054','extension_event_control_dispatch_receipt',
+         'id integer DEFAULT 1',None,"UPDATE pg_temp.extension_event_control_dispatch_receipt SET id=2",'55000'),
+        ('extension_runtime_uninstall_consistency_ar2_018','extension_runtime_binding',
+         "desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence boolean DEFAULT false,revision bigint DEFAULT 1,installation_revision bigint DEFAULT 1,installation_id uuid DEFAULT gen_random_uuid(),generation uuid DEFAULT gen_random_uuid(),package_lock_ref jsonb DEFAULT '{}',profile_ref text DEFAULT 'internal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'",'23514'),
+        ('snapshot_unaccepted_group_terminal_guard_a0v_083','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='SOURCE_BUDGET_REJECTED_BEFORE_GROUP_CLAIM'",'55000'),
+        ('snapshot_stalled_group_terminal_guard_a0v_091','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='STALLED_EXECUTOR_ABANDONED_WITH_EFFECTS'",'55000'),
+        ('unaccepted_analysis_terminal_guard_a0v_060','automation_occurrence',
+         "status text DEFAULT 'needs_attention',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',occurrence_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.automation_occurrence SET status='needs_attention'",
+         "UPDATE pg_temp.automation_occurrence SET status='cancelled'",'55000'),
+    ])
+    def test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal(function_name,table,fields,normal,invalid,error):
+        with isolated_owner() as conn:
+>           assert conn.execute('SELECT version_num FROM alembic_version').fetchone()['version_num']=='a0v_151'
+E           AssertionError: assert 'a0v_152' == 'a0v_151'
+E             
+E             - a0v_151
+E             ?       ^
+E             + a0v_152
+E             ?       ^
+
+services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py:805: AssertionError
+_ test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[unaccepted_analysis_terminal_guard_a0v_060-automation_occurrence-status text DEFAULT 'needs_attention',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',occurrence_id uuid DEFAULT gen_random_uuid()-UPDATE pg_temp.automation_occurrence SET status='needs_attention'-UPDATE pg_temp.automation_occurrence SET status='cancelled'-55000] _
+
+function_name = 'unaccepted_analysis_terminal_guard_a0v_060'
+table = 'automation_occurrence'
+fields = "status text DEFAULT 'needs_attention',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',occurrence_id uuid DEFAULT gen_random_uuid()"
+normal = "UPDATE pg_temp.automation_occurrence SET status='needs_attention'"
+invalid = "UPDATE pg_temp.automation_occurrence SET status='cancelled'"
+error = '55000'
+
+    @pytest.mark.parametrize('function_name,table,fields,normal,invalid,error', [
+        ('extension_dispatch_cutover_history_guard_ar2_014','extension_dispatch_cutover_operation',
+         "kind text DEFAULT 'activate',status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',cutover_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_cutover_operation SET status='draining'",'23514'),
+        ('extension_dispatch_lifecycle_history_guard_ar2_017','extension_dispatch_lifecycle_operation',
+         "status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',runtime_operation_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='prepared'",
+         "UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='fenced'",'23514'),
+        ('extension_event_control_dispatch_history_guard_a0v_054','extension_event_control_dispatch_receipt',
+         'id integer DEFAULT 1',None,"UPDATE pg_temp.extension_event_control_dispatch_receipt SET id=2",'55000'),
+        ('extension_runtime_uninstall_consistency_ar2_018','extension_runtime_binding',
+         "desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence boolean DEFAULT false,revision bigint DEFAULT 1,installation_revision bigint DEFAULT 1,installation_id uuid DEFAULT gen_random_uuid(),generation uuid DEFAULT gen_random_uuid(),package_lock_ref jsonb DEFAULT '{}',profile_ref text DEFAULT 'internal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'",
+         "UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'",'23514'),
+        ('snapshot_unaccepted_group_terminal_guard_a0v_083','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='SOURCE_BUDGET_REJECTED_BEFORE_GROUP_CLAIM'",'55000'),
+        ('snapshot_stalled_group_terminal_guard_a0v_091','meta_schedule_run',
+         "status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'",
+         "UPDATE pg_temp.meta_schedule_run SET status='running'",
+         "UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='STALLED_EXECUTOR_ABANDONED_WITH_EFFECTS'",'55000'),
+        ('unaccepted_analysis_terminal_guard_a0v_060','automation_occurrence',
+         "status text DEFAULT 'needs_attention',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',occurrence_id uuid DEFAULT gen_random_uuid()",
+         "UPDATE pg_temp.automation_occurrence SET status='needs_attention'",
+         "UPDATE pg_temp.automation_occurrence SET status='cancelled'",'55000'),
+    ])
+    def test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal(function_name,table,fields,normal,invalid,error):
+        with isolated_owner() as conn:
+>           assert conn.execute('SELECT version_num FROM alembic_version').fetchone()['version_num']=='a0v_151'
+E           AssertionError: assert 'a0v_152' == 'a0v_151'
+E             
+E             - a0v_151
+E             ?       ^
+E             + a0v_152
+E             ?       ^
+
+services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py:805: AssertionError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py::test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[extension_dispatch_cutover_history_guard_ar2_014-extension_dispatch_cutover_operation-kind text DEFAULT 'activate',status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',cutover_operation_id uuid DEFAULT gen_random_uuid()-UPDATE pg_temp.extension_dispatch_cutover_operation SET status='prepared'-UPDATE pg_temp.extension_dispatch_cutover_operation SET status='draining'-23514]
+FAILED services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py::test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[extension_dispatch_lifecycle_history_guard_ar2_017-extension_dispatch_lifecycle_operation-status text DEFAULT 'prepared',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',runtime_operation_id uuid DEFAULT gen_random_uuid()-UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='prepared'-UPDATE pg_temp.extension_dispatch_lifecycle_operation SET status='fenced'-23514]
+FAILED services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py::test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[extension_event_control_dispatch_history_guard_a0v_054-extension_event_control_dispatch_receipt-id integer DEFAULT 1-None-UPDATE pg_temp.extension_event_control_dispatch_receipt SET id=2-55000]
+FAILED services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py::test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[extension_runtime_uninstall_consistency_ar2_018-extension_runtime_binding-desired_state text DEFAULT 'enabled',observed_state text DEFAULT 'ready',enabled boolean DEFAULT true,operation_fence boolean DEFAULT false,revision bigint DEFAULT 1,installation_revision bigint DEFAULT 1,installation_id uuid DEFAULT gen_random_uuid(),generation uuid DEFAULT gen_random_uuid(),package_lock_ref jsonb DEFAULT '{}',profile_ref text DEFAULT 'internal-python-v1',config_ref jsonb DEFAULT '{}',execution_epoch bigint DEFAULT 1,resource_handle_ref jsonb DEFAULT '{}'-UPDATE pg_temp.extension_runtime_binding SET desired_state='enabled'-UPDATE pg_temp.extension_runtime_binding SET desired_state='uninstalled'-23514]
+FAILED services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py::test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[snapshot_unaccepted_group_terminal_guard_a0v_083-meta_schedule_run-status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'-UPDATE pg_temp.meta_schedule_run SET status='running'-UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='SOURCE_BUDGET_REJECTED_BEFORE_GROUP_CLAIM'-55000]
+FAILED services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py::test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[snapshot_stalled_group_terminal_guard_a0v_091-meta_schedule_run-status text DEFAULT 'running',error_code text,org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',id text DEFAULT 'isolated-trigger-no-run'-UPDATE pg_temp.meta_schedule_run SET status='running'-UPDATE pg_temp.meta_schedule_run SET status='failed',error_code='STALLED_EXECUTOR_ABANDONED_WITH_EFFECTS'-55000]
+FAILED services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py::test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal[unaccepted_analysis_terminal_guard_a0v_060-automation_occurrence-status text DEFAULT 'needs_attention',org_id text DEFAULT 'org-org',project_id text DEFAULT 'dev-project',occurrence_id uuid DEFAULT gen_random_uuid()-UPDATE pg_temp.automation_occurrence SET status='needs_attention'-UPDATE pg_temp.automation_occurrence SET status='cancelled'-55000]
+7 failed, 98 passed, 7 warnings in 154.99s (0:02:34)

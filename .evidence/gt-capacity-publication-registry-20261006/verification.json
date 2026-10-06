@@ -1,0 +1,39 @@
+{
+  "stage": "R0_PRIVATE_EMPTY_FOUNDATION_ONLY",
+  "task_status": "ACTIVE",
+  "full_registration_passed": false,
+  "current_database_accessed": false,
+  "provider_enabled": false,
+  "results": [
+    {
+      "log": "red.log",
+      "result": "missing module expected RED; 1 failed/7.04s"
+    },
+    {
+      "log": "green-r2.log",
+      "result": "9 passed/8.86s"
+    },
+    {
+      "log": "adjacent-r1.log",
+      "result": "98 passed/7 failed/154.99s; obsolete fixed migration-head precondition"
+    },
+    {
+      "log": "adjacent-r2.log",
+      "result": "106 passed/148.19s; 7 existing warnings"
+    }
+  ],
+  "code_sha256": {
+    "services/aos-api/alembic/versions/a0v_152_provider_capacity_publication_registry.py": "9897585dc067416cceb1e1f2b34180a5c53fc19a88c316be5e5e322ed7478b93",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_registry.py": "3b73e046fe364b1e7e9a5ccb7b67a91603e697d4d32aaab63cc2533779d7b0cd",
+    "services/aos-api/tests/aip/test_capacity_publication_registry_pg.py": "6d715b1ff14148fdec248fbc8d6a2e8c31241848c5f5177b473dec02421056e7",
+    "services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py": "ea3bd456d317e9db8378fcf62a977710669e348692ee5faf20de41e2a2449fb2"
+  },
+  "log_sha256": {
+    "red.log": "42956ed130eea52bbe9727b674d426d4dd82560e4c16f6fc2f5f13d5877eb22f",
+    "adjacent-r1.log": "47c08a6af1a731de9f52f2c949e6143423c5e3417fe10c132d069ffe650c6757",
+    "adjacent-r2.log": "17d9b8124a5ba03f8c320c6f7dbb9938b5f7ed655e7132bb5d169c9fa2a99337",
+    "green-r2.log": "8f179b6ec85a3fb4058004d64163c140b02a12f7a69858c8e1c463e399509a45",
+    "green-r1.log": "1f151d6cc7333e72e458abd551bf94e2b7c21b2dcb37d0d7ed87d5d55b7137b2"
+  },
+  "review": "schema/roles additive; existing business guard bodies unchanged; actual original trigger and private caller regression passed. No configured trusted anchor, signed registration, Source final COMMIT, current DB migration or browser changes."
+}

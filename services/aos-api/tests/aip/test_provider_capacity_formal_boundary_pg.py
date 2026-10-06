@@ -802,7 +802,10 @@ def test_private_boundary_rejects_guard_moved_to_foreign_same_name_table(approve
 ])
 def test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal(function_name,table,fields,normal,invalid,error):
     with isolated_owner() as conn:
-        assert conn.execute('SELECT version_num FROM alembic_version').fetchone()['version_num']=='a0v_151'
+        from pathlib import Path
+        from alembic.script import ScriptDirectory
+        expected_head=ScriptDirectory(str(Path(__file__).resolve().parents[2]/'alembic')).get_current_head()
+        assert conn.execute('SELECT version_num FROM alembic_version').fetchone()['version_num']==expected_head
         original=conn.execute("SELECT pg_get_triggerdef(t.oid) AS definition FROM pg_trigger t "
             "WHERE t.tgrelid=%s::regclass AND t.tgfoid=%s::regprocedure ORDER BY t.oid LIMIT 1",
             ('public.'+table,'public.'+function_name+'()')).fetchone()

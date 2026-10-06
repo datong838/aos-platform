@@ -1,0 +1,3 @@
+# 原触发器回归迁移头随仓库推进
+
+原formalBoundary Task原Lease scope含test_provider_capacity_formal_boundary_pg.py，当前同owner未释放且20:00未到期。新增152导致原7参数测试在151写死断言处失败，尚未执行触发器；98其余通过。最小更改仅把该测试版本前提换为仓库Alembic单一当前head的精确值，保留原实际trigger catalog、正常/非法DML和errorcode断言。不放宽业务结果，不改已有迁移/函数/授权，不访问当前库。复验7原trigger+新registry后再最终相邻全文件。父Task完整签发COMMIT未完成，不能Delivery。
