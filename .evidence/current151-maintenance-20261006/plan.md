@@ -37,3 +37,8 @@ Maintenance151Journal绑定冻结head/thread/Task/base，不仅step名称。原�
 只修复三既有meta表updated_at：先验证各表原恢复副本与当前恰好一行，org-org/dev-project双边界、整行键相等且只updated_at变化，两时间均带时区且当前时间不早于原值；任何其他字段/行数/租户变化拒绝。生成事务SQL仅允许三固定public表，固定UPDATE一列，WHERE整行jsonb精确CAS，每表ROW_COUNT必须1，否则整事务回滚。已经恢复（时间相等）拒绝重放。不能normalize隐藏旧timestamp，原字段原值必须恢复。
 
 执行门另设新journal：只读核原失败+当前151完整快照（与失败后快照一致）/固定容器卷+最新真实process→新受控停止+TCP零执行→新的完整一致备份并独立恢复→隔离副本演练精确CAS及完整变化限定三字段→当前CAS一次→完整旧数据/151fence验证→原配置PG重启/修复API/Web启动→浏览器及最终完整快照。失败/未知保留attempt，不能重发；本阶段先实现历史/字段/CAS纯门和反例，未接实际副作用入口。原备份全部保留；禁止旧migration、全表UPDATE、角色/ACL/目录放宽、Host/worker/Provider与商城源读。
+
+## 修复阶段执行入口
+继续在scripts/a0v_current_151_maintenance.py与原专项测试内实现run_current151_repair(thread)，不提供可选源容器/原失败目录。Repair151Journal使用独立步骤序列，复用原intent-before-effect/精确Task与HEAD复核，不包含迁移步骤；原Journal默认序列保持不变。新phase关联原八已验证步骤/九终端/失败attempt哈希；原进程只有父进程已实际消失可重新登记PPID，其他PID/启动时间/argv/cwd/children/listen全部必须等于原启动记录。新阶段必须代码已提交。
+
+固定原源Id/image/volume及原window restore身份；停止原进程后封TCP，窗口内完整dump/globals、fresh none-network命名卷独立151恢复、完整目录窄等价通过，再在此恢复上精确CAS并要求全snapshot仅三表恢复旧hash；实际源CAS SQL hash与演练相同且一次终端记录。源完成后full snapshot与修复预期精确相等，151withdrawal fence与原模板完整151门通过才恢复原listen、PG重启、修复API/Web启动。最终完整快照不可有启动读取写回；浏览器仍是单独未完成门。未知attempt不得恢复重发；新实例都保留且不push。

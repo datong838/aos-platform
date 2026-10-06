@@ -196,6 +196,7 @@ def require_resource_identity(expected,observed):
 STEPS=('stop_clients','fence_tcp','snapshot_dump','independent_restore','migrate_steps','verify','restore_tcp','restart_clients','acceptance')
 
 class Maintenance151Journal:
+    steps=STEPS
     """Persist intent before effects; unknown or failed attempts never auto-replay."""
     def __init__(self,directory,*,head):
         import re
@@ -223,8 +224,8 @@ class Maintenance151Journal:
         finally:os.close(fd)
 
     def perform(self,step,operation):
-        if step not in STEPS:raise Maintenance151Blocked('UNKNOWN_STEP')
-        for prior in STEPS[:STEPS.index(step)]:
+        if step not in self.steps:raise Maintenance151Blocked('UNKNOWN_STEP')
+        for prior in self.steps[:self.steps.index(step)]:
             for suffix in ('attempt','done'):
                 p=self.directory/(prior+'-'+suffix+'.json')
                 if not p.is_file() or p.is_symlink() or p.stat().st_size>65536:
@@ -558,3 +559,198 @@ def build_tenant_timestamp_repair151(original,observed):
     body='DECLARE affected integer; BEGIN '+' '.join(updates)+' END;'
     locks=sql.SQL(', ').join(sql.SQL('public.{}').format(sql.Identifier(t)) for t in sorted(TENANT_TIMESTAMP_TABLES151))
     return sql.SQL("BEGIN; SET LOCAL timezone='UTC'; SET LOCAL search_path=pg_catalog,public; LOCK TABLE {} IN SHARE ROW EXCLUSIVE MODE; DO {}; COMMIT;").format(locks,sql.Literal(body))
+
+
+class Repair151Journal(Maintenance151Journal):
+    steps=('reconcile','stop_clients','fence_tcp','snapshot_dump','independent_restore','rehearse_repair','repair_timestamps','verify','restore_tcp','restart_clients','acceptance')
+
+
+def require_failed_window151(records):
+    import re
+    binding=dict(head='ebac8fd094a8202b0e08f436cd9c09e8a0207d75',thread=THREAD,task=TASK,authority=BASE)
+    try:
+        intent=records['intent.json']
+        valid=(intent['binding']==binding and intent['source']=='aos-a0v-recovery-pg' and intent['source_touched'] is True and intent['target']=='current151-restore-da8531053c83' and 'acceptance-done.json' not in records)
+        for step in STEPS:
+            attempt=records[step+'-attempt.json']
+            valid=valid and attempt['binding']==binding and attempt['step']==step
+            if step!='acceptance':
+                done=records[step+'-done.json']
+                valid=valid and done['binding']==binding and done['step']==step and done['result']['status']=='verified'
+        for n in range(143,152):
+            attempt=records[f'migration-{n}-attempt.json']
+            valid=valid and attempt['binding']==binding and bool(re.fullmatch('[0-9a-f]{64}',attempt['sha256'])) and records[f'migration-{n}-terminal.json']['exit_code']==0
+    except (KeyError,TypeError):valid=False
+    if not valid:raise Maintenance151Blocked('EXACT_FAILED151_WINDOW_HISTORY_REQUIRED')
+    return binding
+
+
+def run_current151_repair(*,thread):
+    """One claimed, backed-up repair phase for the known terminal startup drift."""
+    import copy,hashlib,os,secrets,subprocess,time
+    task=read_task(thread=thread)
+    from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence
+    head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
+    subprocess.run(['git','diff','--exit-code','HEAD','--','scripts/a0v_current_151_maintenance.py','services/aos-api/aos_api','services/aos-api/alembic'],cwd=ROOT,check=True,capture_output=True)
+    subprocess.run(['git','merge-base','--is-ancestor','d7b5ad809df1778c29b2f849019204c68c6f8433',head],cwd=ROOT,check=True,capture_output=True)
+    original=ROOT.parent/'aos-recovery/current151-window-da8531053c83'
+    historic=ROOT.parent/'aos-recovery/current150-w5cb4-current150-restore-gate-20261005-154201'
+    if not original.is_dir() or original.is_symlink():raise Maintenance151Blocked('ORIGINAL_WINDOW_REQUIRED')
+    if any(p.is_symlink() for p in original.glob('*.json')):raise Maintenance151Blocked('ORIGINAL_WINDOW_SYMLINK_REFUSED')
+    records={p.name:json.loads(p.read_text()) for p in original.glob('*.json') if p.name.endswith(('-attempt.json','-done.json','-terminal.json')) or p.name=='intent.json'}
+    require_failed_window151(records)
+    source_identity=json.loads((historic/'second-consistent-142-20261006/intent.json').read_text())
+    expected=json.loads((original/'post-start-readonly-snapshot.json').read_text())
+    old_expected=json.loads((historic/'second-consistent-142-20261006/source.json').read_text())
+    final_expected=json.loads((historic/'rehearsal-a151/after.json').read_text())
+    if expected['version']!='a0v_151':raise Maintenance151Blocked('REPAIR_ALREADY_MIGRATED151_REQUIRED')
+    restore=_load('repair151_restore',ROOT/'scripts/a0v_current_150_restore_gate.py')
+    primitive=_load('repair151_snapshot',ROOT/'scripts/a0v_current_142_restore_gate.py')
+    maintenance=_load('repair151_process',ROOT/'scripts/a0v_current_142_maintenance.py')
+    image=json.loads((historic/'second-consistent-142-20261006/restore-phase/intent.json').read_text())['image']
+    state=ROOT.parent/('aos-recovery/current151-repair-'+secrets.token_hex(6));state.mkdir(mode=0o700)
+    journal=Repair151Journal(state,head=head);journal._require_live_binding()
+    source=restore.SOURCE_CONTAINER;target='current151-restore-'+secrets.token_hex(6)
+    def inspect_source():
+        journal._require_live_binding()
+        item=json.loads(subprocess.check_output(['docker','--context',restore.SOURCE_CONTEXT,'inspect',source],timeout=30))[0]
+        maintenance.require_source(item)
+        if item['Id']!=source_identity['source_id'] or item['Image']!=source_identity['image']:raise Maintenance151Blocked('REPAIR_SOURCE_IDENTITY_DRIFT')
+        return item
+    def execute(name,args,data=None,check=True):
+        journal._require_live_binding()
+        context=restore.SOURCE_CONTEXT if name==source else restore.DEST_CONTEXT
+        if name==source:
+            require_current151_action(args);inspect_source()
+        result=subprocess.run(['docker','--context',context]+args,input=data,capture_output=True,timeout=180)
+        if check and result.returncode:raise Maintenance151Blocked('REPAIR_COMMAND_TERMINAL_'+str(result.returncode))
+        return result
+    def pg(name,statement,check=True):
+        return execute(name,['exec','-i',name,'psql','-U','aos_app','-d',restore.SOURCE,'-Atq','-v','ON_ERROR_STOP=1','-f','-'],statement.encode(),check)
+    def query(name,statement):
+        return json.loads(pg(name,"BEGIN READ ONLY;SET LOCAL timezone='UTC';SET LOCAL search_path=pg_catalog,public;"+statement+';COMMIT;').stdout)
+    def snapshot(name):return restore.full_snapshot(primitive,lambda q:query(name,q),expected['role_names'])
+    def tenant_rows(name):
+        return {t:query(name,"SELECT COALESCE(json_agg(row_to_json(t)),'[]'::json) AS value FROM public."+t+' t') for t in TENANT_TIMESTAMP_TABLES151}
+    def metadata_rows(name):
+        from psycopg import sql
+        return {t:query(name,'SELECT json_agg(row_to_json(t) ORDER BY id) AS value FROM (SELECT * FROM public.'+t+' WHERE id IN ('+','.join(sql.Literal(x).as_string() for x in names)+')) t') for t,names in METADATA151_ADDITIONS.items()}
+    def tcp_probe():
+        import psycopg
+        bootstrap=_load('repair151_connect',ROOT/'scripts/a0v_current_preview_bootstrap.py')
+        params=bootstrap._connection_parameters()
+        if (params['host'],params['port'],params['dbname'])!=('127.0.0.1',18435,restore.SOURCE):raise Maintenance151Blocked('REPAIR_TCP_IDENTITY_DRIFT')
+        try:
+            with psycopg.connect(**params,connect_timeout=3) as conn:
+                conn.read_only=True;v=conn.execute('SELECT version_num FROM alembic_version').fetchone()[0]
+            if v!='a0v_151':raise Maintenance151Blocked('REPAIR_TCP_VERSION_DRIFT')
+            return 0
+        except psycopg.OperationalError:return 2
+    def window():
+        values=dict(listen_addresses=pg(source,'SHOW listen_addresses').stdout.decode().strip(),tcp_exit=tcp_probe(),other_clients=int(pg(source,"SELECT count(*) FROM pg_stat_activity WHERE backend_type='client backend' AND pid<>pg_backend_pid()").stdout),prepared=int(pg(source,'SELECT count(*) FROM pg_prepared_xacts').stdout))
+        maintenance.require_window(**values);return values
+    old_target=records['intent.json']['target']
+    old_item=json.loads(subprocess.check_output(['docker','--context',restore.DEST_CONTEXT,'inspect',old_target]))[0]
+    require_isolated151(old_item,name=old_target,image=image)
+    if snapshot(old_target)['version']!='a0v_142':raise Maintenance151Blocked('ORIGINAL_WINDOW_RESTORE_VERSION_DRIFT')
+    restore.require_dump_restore_equivalence(old_expected,snapshot(old_target))
+    old_rows=tenant_rows(old_target);live_rows=tenant_rows(source)
+    repair_sql=build_tenant_timestamp_repair151(old_rows,live_rows).as_string();repair_hash=hashlib.sha256(repair_sql.encode()).hexdigest()
+    if snapshot(source)!=expected:raise Maintenance151Blocked('REPAIR_SOURCE_CHANGED_SINCE_FAILURE')
+    corrected=copy.deepcopy(expected)
+    for t in TENANT_TIMESTAMP_TABLES151:corrected['tables'][t]=old_expected['tables'][t]
+    services=maintenance.current_services();previous=records['restart_clients-done.json']['result']['restarted']
+    saved_services=json.loads((original/'services-original.json').read_text())
+    for service in services:
+        saved=next(x for x in saved_services if x['port']==service['port'])
+        if any(service[k]!=saved[k] for k in ('argv','cwd','environment','helper_argv')):raise Maintenance151Blocked('REPAIR_SERVICE_COMMAND_DRIFT')
+        prior=next(x['fingerprint'] for x in previous if x['port']==service['port']);now=service['fingerprint']
+        if any(prior[k]!=now[k] for k in maintenance.PROCESS_FIELDS if k!='ppid'):raise Maintenance151Blocked('REPAIR_STARTED_PROCESS_DRIFT')
+        if prior['ppid']!=now['ppid']:
+            parent=subprocess.run(['ps','-p',str(prior['ppid']),'-o','stat='],capture_output=True,text=True)
+            if parent.returncode==0 and not parent.stdout.strip().startswith('Z'):raise Maintenance151Blocked('ORIGINAL_WINDOW_PROCESS_STILL_ACTIVE')
+    audit_restored151(base=historic,restore=restore,primitive=primitive)
+    listen_query="SELECT json_agg(x) FROM (SELECT sourcefile,setting,applied,error FROM pg_file_settings WHERE name='listen_addresses') x"
+    listen_rows=query(source,listen_query);listen=pg(source,'SHOW listen_addresses').stdout.decode().strip()
+    restore_statement=maintenance.listen_restore_statement(listen_rows,effective=listen)
+    if tcp_probe()!=0:raise Maintenance151Blocked('REPAIR_TCP_BASELINE_REQUIRED')
+    if read_task(thread=thread)!=task:raise Maintenance151Blocked('REPAIR_TASK_DRIFT')
+    hashes={p.name:primitive.sha(p) for p in original.glob('*.json') if p.is_file()}
+    journal._write('intent.json',dict(binding=journal.binding,original_window=str(original),original_hashes=hashes,source_id=source_identity['source_id'],source_image=source_identity['image'],source=source,target=target,image=image,repair_sql_sha256=repair_hash))
+    journal._write('services-original.json',services)
+    journal._write('listen-original.json',dict(rows=listen_rows,effective=listen,restore_statement=restore_statement))
+    claim=ROOT.parent/'aos-recovery/current151-repair-claim-da8531053c83.json'
+    try:fd=os.open(claim,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+    except FileExistsError:raise Maintenance151Blocked('REPAIR_PHASE_EXISTS_RECONCILE_ONLY') from None
+    with os.fdopen(fd,'w') as f:json.dump(dict(binding=journal.binding,state=str(state)),f);f.flush();os.fsync(f.fileno())
+    fd=os.open(claim.parent,os.O_RDONLY)
+    try:os.fsync(fd)
+    finally:os.close(fd)
+    journal.perform('reconcile',lambda:dict(status='verified',source_version='a0v_151',original_failed_window_bound=True))
+    journal.perform('stop_clients',lambda:stop_services151(services,journal=journal,maintenance=maintenance))
+    def fence():
+        pg(source,"ALTER SYSTEM SET listen_addresses=''");execute(source,['restart',source])
+        for _ in range(30):
+            if execute(source,['exec',source,'pg_isready','-U','aos_app'],check=False).returncode==0:break
+            time.sleep(1)
+        return dict(status='verified',**window())
+    journal.perform('fence_tcp',fence)
+    def dump():
+        window()
+        if snapshot(source)!=expected:raise Maintenance151Blocked('REPAIR_WINDOW_SNAPSHOT_DRIFT')
+        for filename,args in [('window.dump',['pg_dump','-U','aos_app','-d',restore.SOURCE,'-Fc']),('window-globals.sql',['pg_dumpall','-U','aos_app','--globals-only','--no-role-passwords'])]:
+            data=execute(source,['exec',source]+args).stdout
+            with os.fdopen(os.open(state/filename,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600),'wb') as f:f.write(data);f.flush();os.fsync(f.fileno())
+        return dict(status='verified',dump_sha256=primitive.sha(state/'window.dump'),globals_sha256=primitive.sha(state/'window-globals.sql'))
+    journal.perform('snapshot_dump',dump)
+    def independent_restore():
+        window()
+        execute(target,['run','-d','--pull','never','--name',target,'--network','none','--cpus','1','--memory','768m','--mount','type=volume,source='+target+'-data,target=/var/lib/postgresql/data','-e','POSTGRES_USER=aos_app','-e','POSTGRES_HOST_AUTH_METHOD=trust',image])
+        for _ in range(30):
+            if execute(target,['exec',target,'pg_isready','-U','aos_app'],check=False).returncode==0:break
+            time.sleep(1)
+        item=json.loads(execute(target,['inspect',target]).stdout)[0];require_isolated151(item,name=target,image=image)
+        globals_data=primitive.prepare_globals((state/'window-globals.sql').read_bytes(),bootstrap='aos_app')
+        execute(target,['exec','-i',target,'psql','-U','aos_app','-d','postgres','-q','-v','ON_ERROR_STOP=1','-f','-'],globals_data)
+        execute(target,['exec','-i',target,'pg_restore','-U','aos_app','-d','postgres','--create','--exit-on-error'],(state/'window.dump').read_bytes())
+        restore.require_dump_restore_equivalence(expected,snapshot(target))
+        return dict(status='verified',tables=len(expected['tables']),schema='a0v_151')
+    journal.perform('independent_restore',independent_restore)
+    def rehearse():
+        window()
+        data=build_tenant_timestamp_repair151(old_rows,tenant_rows(target)).as_string()
+        if data!=repair_sql:raise Maintenance151Blocked('REPAIR_SQL_REHEARSAL_DRIFT')
+        r=pg(target,data,check=False);journal._write('rehearsal-terminal.json',dict(exit_code=r.returncode,sql_sha256=repair_hash))
+        if r.returncode:raise Maintenance151Blocked('REPAIR_REHEARSAL_TERMINAL_FAILURE')
+        restore.require_dump_restore_equivalence(corrected,snapshot(target))
+        return dict(status='verified',sql_sha256=repair_hash,full_snapshot=True)
+    journal.perform('rehearse_repair',rehearse)
+    def repair():
+        window()
+        if snapshot(source)!=expected or tenant_rows(source)!=live_rows:raise Maintenance151Blocked('REPAIR_PRE_CAS_DRIFT')
+        r=pg(source,repair_sql,check=False);journal._write('repair-terminal.json',dict(exit_code=r.returncode,sql_sha256=repair_hash))
+        if r.returncode:raise Maintenance151Blocked('REPAIR_CAS_TERMINAL_FAILURE_RECONCILE_ONLY')
+        return dict(status='verified',sql_sha256=repair_hash)
+    journal.perform('repair_timestamps',repair)
+    template_rows=metadata_rows(json.loads((historic/'same-image-phase/intent.json').read_text())['container'])
+    def verify():
+        observed=snapshot(source)
+        if observed!=corrected:raise Maintenance151Blocked('REPAIRED_CURRENT_FULL_SNAPSHOT_DRIFT')
+        normalized=normalize_metadata151(old_expected,final_expected,observed,template_rows,metadata_rows(source))
+        restore.require_dump_restore_equivalence(final_expected,normalized)
+        require_withdrawal_fence(ReadOnlyCatalogConnection(lambda q:query(source,q)))
+        return dict(status='verified',all_old_rows_preserved=True,withdrawal_fence='exact')
+    journal.perform('verify',lambda:(window(),verify())[1])
+    def restore_tcp():
+        pg(source,restore_statement);execute(source,['restart',source])
+        for _ in range(30):
+            if execute(source,['exec',source,'pg_isready','-U','aos_app'],check=False).returncode==0:break
+            time.sleep(1)
+        if tcp_probe()!=0 or query(source,listen_query)!=listen_rows:raise Maintenance151Blocked('REPAIR_LISTEN_RESTORE_DRIFT')
+        return dict(status='verified',original_config_restored=True)
+    journal.perform('restore_tcp',restore_tcp)
+    journal.perform('restart_clients',lambda:restart_services151(services,journal=journal,maintenance=maintenance))
+    journal.perform('acceptance',verify)
+    report=dict(outcome='CURRENT151_REPAIR_SERVICES_GREEN_BROWSER_PENDING',state=str(state),head=head,schema='a0v_151',old_timestamps_restored=True,business_first_chain=False)
+    journal._write('result.json',report)
+    return report

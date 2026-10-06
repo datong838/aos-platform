@@ -220,3 +220,47 @@ def test_timestamp_repair_sql_has_exact_cas_and_atomic_row_count_guard():
     assert sql.count('ROW_COUNT')==3
     assert 'RAISE EXCEPTION' in sql
     assert 'alembic_version' not in sql and 'ALTER' not in sql and 'DELETE' not in sql
+
+
+def history151(m):
+    binding=dict(head='ebac8fd094a8202b0e08f436cd9c09e8a0207d75',thread=m.THREAD,task=m.TASK,authority=m.BASE)
+    records={'intent.json':dict(binding=binding,source='aos-a0v-recovery-pg',source_touched=True,target='current151-restore-da8531053c83')}
+    for step in m.STEPS:
+        records[step+'-attempt.json']=dict(binding=binding,step=step)
+        if step!='acceptance':records[step+'-done.json']=dict(binding=binding,step=step,result=dict(status='verified'))
+    for n in range(143,152):
+        records[f'migration-{n}-attempt.json']=dict(binding=binding,sha256='a'*64)
+        records[f'migration-{n}-terminal.json']=dict(exit_code=0)
+    return records
+
+
+@pytest.mark.parametrize('fault',['missing','binding','failed','unknown_migration','accepted','wrong_source'])
+def test_repair_requires_exact_terminal_failed_window_history(fault):
+    m=module();records=history151(m)
+    if fault=='missing':records.pop('verify-done.json')
+    elif fault=='binding':records['restart_clients-done.json']['binding']=dict(head='b'*40)
+    elif fault=='failed':records['migration-151-terminal.json']['exit_code']=1
+    elif fault=='unknown_migration':records.pop('migration-150-terminal.json')
+    elif fault=='accepted':records['acceptance-done.json']=dict(status='verified')
+    elif fault=='wrong_source':records['intent.json']['source']='replacement'
+    with pytest.raises(m.Maintenance151Blocked):m.require_failed_window151(records)
+
+
+def test_repair_journal_has_no_migration_and_refuses_replay(tmp_path,monkeypatch):
+    m=module();assert m.require_failed_window151(history151(m))['head'].startswith('ebac')
+    j=m.Repair151Journal(tmp_path,head='a'*40);monkeypatch.setattr(j,'_require_live_binding',lambda:None)
+    j.perform('reconcile',lambda:dict(status='verified'))
+    with pytest.raises(m.Maintenance151Blocked):j.perform('migrate_steps',lambda:dict(status='verified'))
+    with pytest.raises(m.Maintenance151Blocked):j.perform('reconcile',lambda:dict(status='verified'))
+
+
+def test_current_repair_wrong_thread_never_touches_resources(monkeypatch):
+    m=module();calls=[]
+    def denied(*,thread):
+        assert thread=='old-thread'
+        raise m.Maintenance151Blocked('wrong thread')
+    monkeypatch.setattr(m,'read_task',denied)
+    import subprocess
+    monkeypatch.setattr(subprocess,'run',lambda *a,**k:calls.append(a))
+    with pytest.raises(m.Maintenance151Blocked):m.run_current151_repair(thread='old-thread')
+    assert calls==[]

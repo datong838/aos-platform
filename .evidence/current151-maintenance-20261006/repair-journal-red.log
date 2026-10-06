@@ -1,0 +1,130 @@
+FFFFFFF                                                                  [100%]
+=================================== FAILURES ===================================
+______ test_repair_requires_exact_terminal_failed_window_history[missing] ______
+
+fault = 'missing'
+
+    @pytest.mark.parametrize('fault',['missing','binding','failed','unknown_migration','accepted','wrong_source'])
+    def test_repair_requires_exact_terminal_failed_window_history(fault):
+        m=module();records=history151(m)
+        if fault=='missing':records.pop('verify-done.json')
+        elif fault=='binding':records['restart_clients-done.json']['binding']=dict(head='b'*40)
+        elif fault=='failed':records['migration-151-terminal.json']['exit_code']=1
+        elif fault=='unknown_migration':records.pop('migration-150-terminal.json')
+        elif fault=='accepted':records['acceptance-done.json']=dict(status='verified')
+        elif fault=='wrong_source':records['intent.json']['source']='replacement'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_failed_window151(records)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_failed_window151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:246: AttributeError
+______ test_repair_requires_exact_terminal_failed_window_history[binding] ______
+
+fault = 'binding'
+
+    @pytest.mark.parametrize('fault',['missing','binding','failed','unknown_migration','accepted','wrong_source'])
+    def test_repair_requires_exact_terminal_failed_window_history(fault):
+        m=module();records=history151(m)
+        if fault=='missing':records.pop('verify-done.json')
+        elif fault=='binding':records['restart_clients-done.json']['binding']=dict(head='b'*40)
+        elif fault=='failed':records['migration-151-terminal.json']['exit_code']=1
+        elif fault=='unknown_migration':records.pop('migration-150-terminal.json')
+        elif fault=='accepted':records['acceptance-done.json']=dict(status='verified')
+        elif fault=='wrong_source':records['intent.json']['source']='replacement'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_failed_window151(records)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_failed_window151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:246: AttributeError
+______ test_repair_requires_exact_terminal_failed_window_history[failed] _______
+
+fault = 'failed'
+
+    @pytest.mark.parametrize('fault',['missing','binding','failed','unknown_migration','accepted','wrong_source'])
+    def test_repair_requires_exact_terminal_failed_window_history(fault):
+        m=module();records=history151(m)
+        if fault=='missing':records.pop('verify-done.json')
+        elif fault=='binding':records['restart_clients-done.json']['binding']=dict(head='b'*40)
+        elif fault=='failed':records['migration-151-terminal.json']['exit_code']=1
+        elif fault=='unknown_migration':records.pop('migration-150-terminal.json')
+        elif fault=='accepted':records['acceptance-done.json']=dict(status='verified')
+        elif fault=='wrong_source':records['intent.json']['source']='replacement'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_failed_window151(records)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_failed_window151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:246: AttributeError
+_ test_repair_requires_exact_terminal_failed_window_history[unknown_migration] _
+
+fault = 'unknown_migration'
+
+    @pytest.mark.parametrize('fault',['missing','binding','failed','unknown_migration','accepted','wrong_source'])
+    def test_repair_requires_exact_terminal_failed_window_history(fault):
+        m=module();records=history151(m)
+        if fault=='missing':records.pop('verify-done.json')
+        elif fault=='binding':records['restart_clients-done.json']['binding']=dict(head='b'*40)
+        elif fault=='failed':records['migration-151-terminal.json']['exit_code']=1
+        elif fault=='unknown_migration':records.pop('migration-150-terminal.json')
+        elif fault=='accepted':records['acceptance-done.json']=dict(status='verified')
+        elif fault=='wrong_source':records['intent.json']['source']='replacement'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_failed_window151(records)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_failed_window151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:246: AttributeError
+_____ test_repair_requires_exact_terminal_failed_window_history[accepted] ______
+
+fault = 'accepted'
+
+    @pytest.mark.parametrize('fault',['missing','binding','failed','unknown_migration','accepted','wrong_source'])
+    def test_repair_requires_exact_terminal_failed_window_history(fault):
+        m=module();records=history151(m)
+        if fault=='missing':records.pop('verify-done.json')
+        elif fault=='binding':records['restart_clients-done.json']['binding']=dict(head='b'*40)
+        elif fault=='failed':records['migration-151-terminal.json']['exit_code']=1
+        elif fault=='unknown_migration':records.pop('migration-150-terminal.json')
+        elif fault=='accepted':records['acceptance-done.json']=dict(status='verified')
+        elif fault=='wrong_source':records['intent.json']['source']='replacement'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_failed_window151(records)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_failed_window151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:246: AttributeError
+___ test_repair_requires_exact_terminal_failed_window_history[wrong_source] ____
+
+fault = 'wrong_source'
+
+    @pytest.mark.parametrize('fault',['missing','binding','failed','unknown_migration','accepted','wrong_source'])
+    def test_repair_requires_exact_terminal_failed_window_history(fault):
+        m=module();records=history151(m)
+        if fault=='missing':records.pop('verify-done.json')
+        elif fault=='binding':records['restart_clients-done.json']['binding']=dict(head='b'*40)
+        elif fault=='failed':records['migration-151-terminal.json']['exit_code']=1
+        elif fault=='unknown_migration':records.pop('migration-150-terminal.json')
+        elif fault=='accepted':records['acceptance-done.json']=dict(status='verified')
+        elif fault=='wrong_source':records['intent.json']['source']='replacement'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_failed_window151(records)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_failed_window151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:246: AttributeError
+___________ test_repair_journal_has_no_migration_and_refuses_replay ____________
+
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-609/test_repair_journal_has_no_mig0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x107d1b250>
+
+    def test_repair_journal_has_no_migration_and_refuses_replay(tmp_path,monkeypatch):
+>       m=module();assert m.require_failed_window151(history151(m))['head'].startswith('ebac')
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_failed_window151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:250: AttributeError
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_repair_requires_exact_terminal_failed_window_history[missing]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_repair_requires_exact_terminal_failed_window_history[binding]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_repair_requires_exact_terminal_failed_window_history[failed]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_repair_requires_exact_terminal_failed_window_history[unknown_migration]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_repair_requires_exact_terminal_failed_window_history[accepted]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_repair_requires_exact_terminal_failed_window_history[wrong_source]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_repair_journal_has_no_migration_and_refuses_replay
+7 failed, 52 deselected in 0.11s

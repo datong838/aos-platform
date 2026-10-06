@@ -42,3 +42,11 @@
 timestamp-cas-current-readonly.json使用原window独立142恢复的三既有行和当前151实际三行通过纯门，仅保存行/SQL hash，不暴露实际身份字段、不执行SQL。原数据时间戳仍未恢复；服务未加载最新代码。后续必须新绑定阶段、当前HEAD/Task/原失败证据与精确资源、零执行窗口、新一致备份+全恢复、真实schema副本演练后才精确执行当前CAS；不得用本专项替代该门。
 
 当前完整维护Task保持ACTIVE，未Delivery；权威/Prime当前1369需在维护阶段收口后同步实际151状态，不能沿旧原HEAD重放journal。未操作当前源数据库、原服务、Host/worker/Provider、商城源、旧12Run、manual、230L0或push。
+
+## 独立当前151修复入口
+
+run_current151_repair仅固定原源/原failed window，先精确八done/九migration terminal0/acceptance-only attempt、原142恢复full snapshot、当前失败后full snapshot、原资源与签名启动来源、现有真实PID/argv/启动时间/children/listener校验；原父进程消失才重新登记PPID。当前HEAD与源码已提交门、d7b5ad80祖先、Task/authority/未来Lease复核，独占且fsync claim拒绝第二次入口；不会补写原acceptance done或重放migration。
+
+Repair151Journal独立11步默认原Journal不变；新历史门RED7项失败，最终99passed1deselected0.38秒；wrong-thread入口无资源调用、历史缺记录/非零terminal/换源/已acceptance拒绝，原未知intent保护相邻保持。代码whitespace检查通过。精确三字段CAS已独立原生回滚专项通过；完整当前资源序列需下一实际运行证据，不把单测算完整维护通过。
+
+入口复审：source每次操作核原容器Id/image/卷/端口，窗口PG本机Unix读操作不开放TCP；新dump/globals/fullrestore只在新none-network卷，原全部备份保留。restore演练SQL与当前SQL逐字hash相同，当前只有一次CAS终端，后续严格全snapshot与原151fence/模板通过才恢复配置、PG/API/Web。源码commit后运行，任一失败保留封闭窗口/attempt供只读对账。
