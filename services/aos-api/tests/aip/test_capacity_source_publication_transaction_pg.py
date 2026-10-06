@@ -3108,3 +3108,463 @@ def test_original_full_publication_prefix_trace_records_real_guard_order(native_
         report=dict(schema='aos-original-full-prefix-trace/v1',layout=layout,native_identity=identity,original_source_refs=refs,trace=trace,source_metadata=ProviderCapacitySourceActionGuard.action_id,allocation_metadata=ProviderCapacityActionGuard.action_id,source_delivery=False,full157=False,distinct_observed_evidence=len({e['target_id'] for e in trace if e['category']=='original_evidence_read'}),distinct_neutral_targets=len({e['target_id'] for e in trace if e['category']=='neutral_evidence_epoch'}))
         print('ORIGINAL_FULL_PREFIX_TRACE='+json.dumps(report,sort_keys=True))
         caller.rollback()
+
+
+def test_native_original_fact_prefix_requires_complete_originals(native_signed_source):
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    f,actual_command,_,_,config=native_signed_source
+    command,policy,attestation=actual_command()
+    with connect_capacity_issuer(config,SCOPE) as caller:
+        assert caller.pgconn.used_password
+        assert check_native_capacity_supplier_inputs(caller,command,policy,attestation,trust_roots=f['provider']).execution_allowed is False
+    statement=getattr(transaction,'CAPACITY_ORIGINAL_SOURCE_FACTS_SQL',None)
+    assert statement is not None,'Complete157 requires the actual original fact/lock prefix in native SQL'
+
+
+@pytest.fixture
+def native_original_fact_reader(request,native_signed_source,approved_command):
+    """Real authenticated caller, temporary Owner harness, exact cleanup."""
+    from uuid import uuid4
+    from psycopg import sql
+    from aos_api import aip_provider_capacity_publication_store as original
+    from aos_api.aip_provider_capacity_publication_transaction import CAPACITY_ORIGINAL_SOURCE_FACTS_SQL
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    if getattr(request,'param','shared')=='distinct':
+        native_signed_source=_distinct_native_fact_material(native_signed_source,approved_command)
+    f,actual_command,basis,source,config=native_signed_source
+    command,policy,attestation=actual_command()
+    args=(f['maker'],command.approved_proposal.model_dump(mode='json',by_alias=True),
+        command.approval_event.model_dump(mode='json',by_alias=True))
+    name='publication_facts_harness_'+uuid4().hex
+    ident=sql.Identifier('public',name)
+    catalog="""SELECT p.oid,p.oid::regprocedure::text AS signature
+        FROM pg_proc p WHERE p.pronamespace='aos_capacity_publication_private'::regnamespace"""
+    with connect_capacity_issuer(config,SCOPE) as caller:
+        assert caller.pgconn.used_password is True
+        assert check_native_capacity_supplier_inputs(caller,command,policy,attestation,
+            trust_roots=f['provider']).execution_allowed is False
+        with isolated_owner() as owner:
+            before={r['oid'] for r in owner.execute(catalog).fetchall()}
+            for profile in ('CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL','CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL',
+                'CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL','CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL',
+                'CAPACITY_ORIGINAL_BUILD_PROFILE_SQL','CAPACITY_ORIGINAL_BUILD_JSON_SQL',
+                'CAPACITY_ORIGINAL_EVIDENCE_PROFILE_SQL','CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL'):
+                owner.execute(getattr(original,profile))
+            owner.execute(CAPACITY_ORIGINAL_SOURCE_FACTS_SQL)
+            installed=[r['signature'] for r in owner.execute(catalog).fetchall() if r['oid'] not in before]
+            owner.execute(sql.SQL("""CREATE FUNCTION {}(m text,s jsonb,e jsonb) RETURNS jsonb
+                LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog AS $body$
+                SELECT aos_capacity_publication_private.read_original_source_facts(m,s,e) $body$""").format(ident))
+            owner.execute(sql.SQL('ALTER FUNCTION {}(text,jsonb,jsonb) OWNER TO aos_capacity_publication_owner').format(ident))
+            owner.execute(sql.SQL('REVOKE ALL ON FUNCTION {}(text,jsonb,jsonb) FROM PUBLIC').format(ident))
+            owner.execute(sql.SQL('GRANT EXECUTE ON FUNCTION {}(text,jsonb,jsonb) TO aos_provider_capacity_issuer').format(ident))
+        caller.rollback()
+        caller.execute('SET LOCAL search_path=pg_catalog,public,pg_temp')
+        caller.execute("SET LOCAL TimeZone='UTC'")
+        caller.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        try:
+            yield caller,ident,args,native_signed_source
+        finally:
+            caller.rollback()
+            with isolated_owner() as owner:
+                owner.execute(sql.SQL('DROP FUNCTION {}(text,jsonb,jsonb)').format(ident))
+                for signature in reversed(installed):
+                    owner.execute(sql.SQL('DROP FUNCTION ')+sql.SQL(signature))
+                assert {r['oid'] for r in owner.execute(catalog).fetchall()}==before
+    with connect_capacity_issuer(config,SCOPE) as restored:
+        assert check_native_capacity_supplier_inputs(restored,command,policy,attestation,
+            trust_roots=f['provider']).execution_allowed is False
+
+
+def _call_native_original_facts(caller,ident,args):
+    from psycopg import sql
+    from psycopg.types.json import Jsonb
+    return caller.execute(sql.SQL('SELECT {}(%s,%s::jsonb,%s::jsonb) AS result').format(ident),
+        (args[0],Jsonb(args[1]),Jsonb(args[2]))).fetchone()['result']
+
+
+@pytest.mark.parametrize('native_original_fact_reader',['shared','distinct'],indirect=True)
+def test_native_original_fact_prefix_reads_originals_in_actual_private_transaction(native_original_fact_reader):
+    from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate
+    caller,ident,args,material=native_original_fact_reader
+    f,_,basis,source,_=material
+    before=caller.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+    result=_call_native_original_facts(caller,ident,args)
+    assert result['source']==source.model_dump(mode='json',by_alias=True)
+    assert result['basis']==basis.model_dump(mode='json',by_alias=True)
+    account=ProviderPhysicalAccountCandidate.model_validate(result['account'])
+    assert account.supplier_id==f['attestation']['supplierId']
+    assert result['application']['providerRef'] in result['account']['providerRefs']
+    assert result['application']['physicalAccountId']==result['account']['physicalAccountId']
+    assert result['owner']=='aos_capacity_publication_owner'
+    assert result['session']=='aos_provider_capacity_issuer'
+    assert (result['xid'],result['pid'])==(before['xid'],before['pid'])
+    assert set(result['evidenceEpochs'])=={result['application']['basisEvidenceRef']['assetId'],
+        result['account']['evidenceRef']['assetId'],basis.evidence_ref.asset_id}
+    assert set(result['evidenceEpochs'].values())=={0}
+    assert len(result['withdrawalEpochs'])==2 and set(result['withdrawalEpochs'].values())=={0}
+    assert result['sourceProposal']==args[1]['assetId']
+    assert caller.pgconn.used_password is True
+    import json
+    print('NATIVE_ORIGINAL_FACTS '+json.dumps(dict(owner=result['owner'],session=result['session'],
+        xid=result['xid'],pid=result['pid'],evidence_targets=sorted(result['evidenceEpochs']),
+        provider_targets=[r['assetId'] for r in result['account']['providerRefs']],
+        withdrawal_targets=sorted(result['withdrawalEpochs']),source_delivery=False),sort_keys=True))
+
+
+@pytest.mark.parametrize('fault',['source_id','source_hash','source_revision','event_id','event_hash',
+    'event_revision','extra_source_field','missing_event_field','null_source','maker','canary','timezone'])
+def test_native_original_fact_prefix_rejects_selectors_and_context(native_original_fact_reader,fault):
+    from copy import deepcopy
+    caller,ident,original_args,_=native_original_fact_reader
+    args=list(deepcopy(original_args))
+    if fault=='source_id':args[1]['assetId']='other-source'
+    elif fault=='source_hash':args[1]['contentHash']='f'*64
+    elif fault=='source_revision':args[1]['revision']=1
+    elif fault=='event_id':args[2]['assetId']='other-event'
+    elif fault=='event_hash':args[2]['contentHash']='f'*64
+    elif fault=='event_revision':args[2]['revision']=2
+    elif fault=='extra_source_field':args[1]['unchecked']=True
+    elif fault=='missing_event_field':del args[2]['contentHash']
+    elif fault=='null_source':args[1]=None
+    elif fault=='maker':args[0]='other-maker'
+    with pytest.raises(psycopg.Error) as failed:
+        with caller.transaction():
+            if fault=='canary':caller.execute("SELECT set_config('aos.org_id','dev-org',true)")
+            elif fault=='timezone':caller.execute("SET LOCAL TimeZone='Asia/Shanghai'")
+            _call_native_original_facts(caller,ident,args)
+    assert failed.value.sqlstate in {'22023','42501','P0002'}
+    restored=_call_native_original_facts(caller,ident,original_args)
+    assert restored['sourceProposal']==original_args[1]['assetId']
+
+
+@pytest.mark.parametrize('role',['aos_runtime','aos_provider_capacity_issuer'])
+def test_native_original_fact_functions_private_acl_denies_ordinary_roles(native_original_fact_reader,role):
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    _,_,args,_=native_original_fact_reader
+    with isolated_owner() as owner:
+        rows=owner.execute("""SELECT p.proname,p.prosecdef,p.provolatile,p.proconfig,r.rolname,
+            EXISTS(SELECT 1 FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
+                WHERE a.grantee<>p.proowner) AS extra
+            FROM pg_proc p JOIN pg_roles r ON r.oid=p.proowner
+            WHERE p.pronamespace='aos_capacity_publication_private'::regnamespace
+              AND p.proname=ANY(%s)""",(['require_original_owner','read_original_fact_provider',
+                'require_original_fact_evidence','read_original_fact_request','read_original_source_facts',
+                'require_original_evidence_boundary'],)).fetchall()
+        assert len(rows)==6 and all(not r['prosecdef'] and r['provolatile']=='v'
+            and r['proconfig']==['search_path=pg_catalog'] and not r['extra']
+            and r['rolname']=='aos_capacity_publication_owner' for r in rows)
+        owner.execute('SET LOCAL ROLE '+role)
+        for query,params in [
+            ('SELECT aos_capacity_publication_private.require_original_evidence_boundary()',None),
+            ('SELECT aos_capacity_publication_private.require_original_owner(%s)',(args[0],)),
+            ('SELECT aos_capacity_publication_private.read_original_fact_provider(%s::jsonb)',(Jsonb(args[1]),)),
+            ('SELECT aos_capacity_publication_private.require_original_fact_evidence(%s::jsonb,true)',(Jsonb(args[1]),)),
+            ('SELECT aos_capacity_publication_private.read_original_fact_request(%s::jsonb,%s)',(Jsonb({}),args[0])),
+            ('SELECT aos_capacity_publication_private.read_original_source_facts(%s,%s::jsonb,%s::jsonb)',
+                (args[0],Jsonb(args[1]),Jsonb(args[2])))]:
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with owner.transaction():
+                    owner.execute(query,params)
+        owner.rollback()
+
+
+@pytest.mark.parametrize('target',['maker','provider','source','allocation','evidence_epoch','withdrawal_epoch','allocation_epoch'])
+def test_native_original_fact_prefix_holds_real_locks_until_caller_commit(native_original_fact_reader,target):
+    from threading import Event,Thread
+    import time
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,ident,args,_=native_original_fact_reader
+    result=_call_native_original_facts(caller,ident,args)
+    table,column,value={
+        'maker':('meta_membership','subject',args[0]),
+        'provider':('aip_provider_instance_head','provider_instance_id',result['application']['providerRef']['assetId']),
+        'source':('aip_action_proposal','proposal_id',result['sourceProposal']),
+        'allocation':('aip_action_proposal','proposal_id',result['allocationProposal']),
+        'evidence_epoch':('aip_capacity_evidence_epoch','bundle_id',next(iter(result['evidenceEpochs']))),
+        'withdrawal_epoch':('aip_capacity_withdrawal_epoch','proposal_id',result['sourceProposal']),
+        'allocation_epoch':('aip_capacity_withdrawal_epoch','proposal_id',result['allocationProposal']),
+    }[target]
+    waiting=Event();acquired=Event();release=Event();pids=[];errors=[]
+    def competitor():
+        try:
+            with isolated_owner() as owner:
+                pids.append(owner.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'])
+                owner.execute("SET LOCAL lock_timeout='8s'")
+                waiting.set()
+                row=owner.execute(f"SELECT {column} FROM public.{table} WHERE org_id=%s AND project_id=%s AND {column}=%s FOR UPDATE",
+                    (*SCOPE.key,value)).fetchone()
+                assert row is not None
+                acquired.set()
+                assert release.wait(8)
+                owner.rollback()
+        except BaseException as error:errors.append(error);waiting.set()
+    thread=Thread(target=competitor,daemon=True);thread.start()
+    try:
+        assert waiting.wait(3) and pids
+        deadline=time.monotonic()+3
+        with isolated_owner() as observer:
+            while time.monotonic()<deadline:
+                blockers=observer.execute('SELECT pg_blocking_pids(%s) AS blockers',(pids[0],)).fetchone()['blockers']
+                if result['pid'] in blockers:break
+                time.sleep(.03)
+            else:pytest.fail('Actual native fact lock did not block its competing row lock')
+        assert not acquired.is_set()
+        caller.commit()
+        assert acquired.wait(3),errors
+    finally:
+        caller.rollback();release.set();thread.join(5)
+    assert not thread.is_alive() and not errors
+    print('NATIVE_FACT_LOCK target='+target+' actual_blocking_pid=true caller_commit_release=true source_issued=false')
+
+
+def _distinct_native_fact_material(material,approved_command):
+    """Create distinct original dependencies through their real producer APIs."""
+    from uuid import uuid4
+    from aos_api.db import connect
+    from aos_api.aip_provider_capacity_source_action import (
+        ProviderCapacitySourceActionGuard,propose_provider_capacity_source,decide_provider_capacity_source)
+    from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+    from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate
+    from aos_api.aip_action_models import DecideActionProposalRequest
+    from aos_api.aip_action_store import canonical_hash
+    from tests.aip.test_evidence_bundle_provenance_pg import build_inputs,ACTOR
+    from tests.aip._runtime_guard_history_fixture import produce_formal_provider
+    f,old_command,basis,source,config=material
+    maker,checker=approved_command[:2]
+    with connect(SCOPE) as current:
+        account=ProviderCapacitySourceActionGuard._candidate(current,SCOPE,source.physical_account_ref,
+            'account',ProviderPhysicalAccountCandidate,maker.subject)
+    produced=[]
+    for _ in range(2):
+        store,key,request=build_inputs.__wrapped__()
+        produced.append(store.build_evidence_bundle(SCOPE,ACTOR,key,request))
+    providers=[produce_formal_provider(SCOPE,maker.subject,'facts-provider-'+uuid4().hex) for _ in range(2)]
+    refs=[*account.provider_refs,*[account.provider_refs[0].model_copy(update=dict(
+        asset_id=p.provider_instance_id,revision=p.revision,content_hash=p.content_hash)) for p in providers]]
+    refs=sorted(refs,key=lambda r:r.asset_id,reverse=True)
+    account=account.model_copy(update=dict(provider_refs=refs,evidence_ref=account.evidence_ref.model_copy(
+        update=dict(asset_id=produced[0].bundle_id,revision=produced[0].revision,content_hash=produced[0].content_hash))))
+    store=ProviderCapacityCandidateStore()
+    account_row=store.create_account(SCOPE,maker,'facts-account-'+uuid4().hex,account)
+    account_ref=source.physical_account_ref.model_copy(update=dict(
+        asset_id=account_row['candidate_id'],content_hash=account_row['content_hash']))
+    basis=basis.model_copy(update=dict(physical_account_ref=account_ref,evidence_ref=basis.evidence_ref.model_copy(
+        update=dict(asset_id=produced[1].bundle_id,revision=produced[1].revision,content_hash=produced[1].content_hash))))
+    basis_row=store.create_basis(SCOPE,maker,'facts-basis-'+uuid4().hex,basis)
+    source=source.model_copy(update=dict(physical_account_ref=account_ref,basis_ref=source.basis_ref.model_copy(
+        update=dict(asset_id=basis_row['candidate_id'],content_hash=basis_row['content_hash']))))
+    proposed=propose_provider_capacity_source(maker,source,'facts-source-'+uuid4().hex,source.valid_until)
+    approved=decide_provider_capacity_source(checker,proposed.proposal.id,'facts-approved-'+uuid4().hex,
+        DecideActionProposalRequest(expectedProposalVersion=proposed.proposal.version,
+            expectedProposalHash=proposed.proposal.proposal_hash,decision='approved',
+            reason='isolated distinct native facts',approvalExpiresAt=source.valid_until))
+    f['attestation'].update(providerRefs=[r.model_dump(mode='json',by_alias=True) for r in refs],
+        evidenceRef=basis.evidence_ref.model_dump(mode='json',by_alias=True))
+    def actual_command():
+        command,policy,attestation=old_command()
+        return command.model_copy(update=dict(
+            approved_proposal=command.approved_proposal.model_copy(update=dict(asset_id=approved.proposal.id,
+                content_hash=approved.proposal.proposal_hash)),
+            approval_event=command.approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+                content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True)))))),policy,attestation
+    return f,actual_command,basis,source,config
+
+
+def _refresh_native_facts_transaction(caller):
+    caller.rollback()
+    caller.execute('SET LOCAL search_path=pg_catalog,public,pg_temp')
+    caller.execute("SET LOCAL TimeZone='UTC'")
+    caller.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+
+
+@pytest.mark.parametrize('fault',['source_metadata','allocation_metadata','maker_owner','checker_owner',
+    'request_hash','account_hash','basis_hash','provider_head','evidence_lifecycle','build_hash','receipt_result','allocation_status'])
+def test_native_original_fact_prefix_rejects_committed_original_fact_drift(native_original_fact_reader,fault):
+    """Commit one lab-only fault; fresh native snapshot must reject, then restore."""
+    from psycopg import sql
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,ident,args,_=native_original_fact_reader
+    result=_call_native_original_facts(caller,ident,args)
+    caller.rollback()  # Release original locks before the lab-only fault.
+    with isolated_owner() as owner:
+        event=owner.execute('SELECT actor_id FROM public.aip_action_approval_event WHERE org_id=%s AND project_id=%s AND approval_event_id=%s',
+            (*SCOPE.key,args[2]['assetId'])).fetchone()
+        evidence=result['application']['basisEvidenceRef']
+        build=owner.execute('SELECT idempotency_key FROM public.aip_evidence_bundle_build_provenance WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s',
+            (*SCOPE.key,evidence['assetId'],evidence['revision'])).fetchone()
+    table,column,key,target,bad={
+        'source_metadata':('meta_object_type','name','id','ProviderCapacitySourceReview','faulted native Source'),
+        'allocation_metadata':('meta_action_type','name','id','aip_request_provider_capacity','faulted native allocation'),
+        'maker_owner':('meta_membership','role','subject',args[0],'viewer'),
+        'checker_owner':('meta_membership','role','subject',event['actor_id'],'viewer'),
+        'request_hash':('aip_provider_capacity_request','request_hash','request_id',result['source']['allocationRequestRef']['assetId'],'f'*64),
+        'account_hash':('aip_provider_capacity_candidate','content_hash','candidate_id',result['source']['physicalAccountRef']['assetId'],'f'*64),
+        'basis_hash':('aip_provider_capacity_candidate','content_hash','candidate_id',result['source']['basisRef']['assetId'],'f'*64),
+        'provider_head':('aip_provider_instance_head','current_revision','provider_instance_id',result['application']['providerRef']['assetId'],999999),
+        'evidence_lifecycle':('aip_evidence_bundle_revision','lifecycle','bundle_id',evidence['assetId'],'withdrawn'),
+        'build_hash':('aip_evidence_bundle_build_provenance','request_hash','bundle_id',evidence['assetId'],'f'*64),
+        'receipt_result':('aip_production_contract_receipt','result_ref','idempotency_key',build['idempotency_key'],{}),
+        'allocation_status':('aip_action_proposal','status','proposal_id',result['allocationProposal'],'rejected'),
+    }[fault]
+    where=sql.SQL('{}=%s').format(sql.Identifier(key))
+    params=(target,)
+    if not fault.endswith('metadata'):
+        where=sql.SQL('org_id=%s AND project_id=%s AND ')+where
+        params=(*SCOPE.key,target)
+    if fault=='receipt_result':
+        where=where+sql.SQL(" AND operation='evidence_bundle.build'")
+    selection=sql.SQL('SELECT {} AS value FROM public.{} WHERE ').format(sql.Identifier(column),sql.Identifier(table))+where
+    update=sql.SQL('UPDATE public.{} SET {}=%s WHERE ').format(sql.Identifier(table),sql.Identifier(column))+where
+    from psycopg.types.json import Jsonb
+    if fault=='receipt_result':bad=Jsonb(bad)
+    coherent=fault in {'request_hash','account_hash','basis_hash'}
+    with isolated_owner() as owner:
+        values=owner.execute(selection,params).fetchall()
+        assert len(values)==1
+        saved=values[0]['value']
+        if coherent:
+            from copy import deepcopy
+            payload=owner.execute(sql.SQL('SELECT request_json FROM public.{} WHERE ').format(sql.Identifier(table))+where,params).fetchone()['request_json']
+            changed=deepcopy(payload)
+            if fault=='request_hash':changed['application']['requestedMaxConcurrency']+=1
+            elif fault=='account_hash':changed['candidate']['supplierId']='faulted-native-supplier'
+            else:changed['candidate']['maxConcurrency']+=1
+            update=sql.SQL('UPDATE public.{} SET request_json=%s,{}=encode(public.digest(convert_to(public.canonical_asset_registry_jsonb(%s::jsonb),\'UTF8\'),\'sha256\'),\'hex\') WHERE ').format(sql.Identifier(table),sql.Identifier(column))+where
+        owner.execute("SET LOCAL session_replication_role='replica'")
+        changed_params=(Jsonb(changed),Jsonb(changed),*params) if coherent else (bad,*params)
+        assert owner.execute(update,changed_params).rowcount==1
+    try:
+        if fault=='build_hash':
+            # Prove the original two stages independently. This lab Owner call
+            # tests the primitive only; the real SCRAM full caller follows below.
+            with isolated_owner() as owner:
+                owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+                owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                owner.execute('SELECT aos_capacity_publication_private.require_original_fact_evidence(%s::jsonb,false)',(Jsonb(evidence),))
+                with pytest.raises(psycopg.errors.NoDataFound):
+                    with owner.transaction():
+                        owner.execute('SELECT aos_capacity_publication_private.require_original_fact_evidence(%s::jsonb,true)',(Jsonb(evidence),))
+                owner.rollback()
+        _refresh_native_facts_transaction(caller)
+        with pytest.raises(psycopg.Error) as failed:
+            with caller.transaction():
+                _call_native_original_facts(caller,ident,args)
+        assert failed.value.sqlstate in {'P0002','22023'}
+    finally:
+        caller.rollback()
+        with isolated_owner() as owner:
+            owner.execute("SET LOCAL session_replication_role='replica'")
+            value=Jsonb(saved) if fault=='receipt_result' else saved
+            restored_params=(Jsonb(payload),Jsonb(payload),*params) if coherent else (value,*params)
+            assert owner.execute(update,restored_params).rowcount==1
+            assert owner.execute(selection,params).fetchone()['value']==saved
+            if coherent:
+                assert owner.execute(sql.SQL('SELECT request_json FROM public.{} WHERE ').format(sql.Identifier(table))+where,params).fetchone()['request_json']==payload
+    _refresh_native_facts_transaction(caller)
+    assert _call_native_original_facts(caller,ident,args)['sourceProposal']==args[1]['assetId']
+
+
+def test_native_original_fact_prefix_refuses_role_impersonation(native_original_fact_reader):
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    _,_,args,_=native_original_fact_reader
+    with isolated_owner() as owner:
+        owner.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+        owner.execute("SET LOCAL TimeZone='UTC'")
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        with pytest.raises(psycopg.errors.InsufficientPrivilege) as refused:
+            with owner.transaction():
+                owner.execute('SELECT aos_capacity_publication_private.read_original_source_facts(%s,%s::jsonb,%s::jsonb)',
+                    (args[0],Jsonb(args[1]),Jsonb(args[2])))
+        assert str(refused.value).startswith('CAPACITY_ORIGINAL_FACT_CONTEXT_REQUIRED')
+        owner.rollback()
+
+
+def test_native_original_fact_prefix_requires_original_evidence_catalog(native_original_fact_reader):
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,ident,args,_=native_original_fact_reader
+    caller.rollback()
+    with isolated_owner() as owner:
+        owner.execute('ALTER TABLE public.aip_evidence_bundle_revoke_event DISABLE TRIGGER capacity_evidence_epoch_bump_a0v149')
+    try:
+        _refresh_native_facts_transaction(caller)
+        with pytest.raises(psycopg.Error) as failed:
+            with caller.transaction():
+                _call_native_original_facts(caller,ident,args)
+        assert failed.value.sqlstate=='22023'
+        assert str(failed.value).startswith('CAPACITY_EVIDENCE_TRIGGER_DRIFTED')
+    finally:
+        caller.rollback()
+        with isolated_owner() as owner:
+            owner.execute('ALTER TABLE public.aip_evidence_bundle_revoke_event ENABLE TRIGGER capacity_evidence_epoch_bump_a0v149')
+    _refresh_native_facts_transaction(caller)
+    assert _call_native_original_facts(caller,ident,args)['sourceProposal']==args[1]['assetId']
+
+
+@pytest.mark.parametrize('fault',['table_acl','column_acl','table_rls','policy','function_body','function_acl',
+    'function_path','missing_reader_acl','touch_trigger','bump_trigger','owner_flags','owner_extra_acl'])
+def test_native_original_evidence_catalog_matches_original_drift_reason(native_original_fact_reader,fault):
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_evidence_fence import _require_boundary,CapacityEvidenceFenceBlocked
+    caller,ident,args,_=native_original_fact_reader
+    caller.rollback()
+    function='public.aos_capacity_evidence_epoch_lock(text,text,text)'
+    with isolated_owner() as owner:
+        original=owner.execute('SELECT pg_get_functiondef(to_regprocedure(%s)) AS body',(function,)).fetchone()['body']
+    policy="((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
+    change,restore={
+        'table_acl':('GRANT SELECT ON public.aip_capacity_evidence_epoch TO aos_runtime',
+            'REVOKE SELECT ON public.aip_capacity_evidence_epoch FROM aos_runtime'),
+        'column_acl':('GRANT UPDATE(epoch) ON public.aip_capacity_evidence_epoch TO aos_runtime',
+            'REVOKE UPDATE(epoch) ON public.aip_capacity_evidence_epoch FROM aos_runtime'),
+        'table_rls':('ALTER TABLE public.aip_capacity_evidence_epoch DISABLE ROW LEVEL SECURITY',
+            'ALTER TABLE public.aip_capacity_evidence_epoch ENABLE ROW LEVEL SECURITY'),
+        'policy':('ALTER POLICY capacity_evidence_epoch_scope ON public.aip_capacity_evidence_epoch USING(true)',
+            'ALTER POLICY capacity_evidence_epoch_scope ON public.aip_capacity_evidence_epoch USING('+policy+')'),
+        'function_body':(original.replace('RETURN result;', 'RETURN result+1;'),original),
+        'function_acl':('GRANT EXECUTE ON FUNCTION '+function+' TO PUBLIC',
+            'REVOKE EXECUTE ON FUNCTION '+function+' FROM PUBLIC'),
+        'function_path':('ALTER FUNCTION '+function+' SET search_path=public',
+            'ALTER FUNCTION '+function+' SET search_path=pg_catalog'),
+        'missing_reader_acl':('REVOKE EXECUTE ON FUNCTION '+function+' FROM aos_runtime',
+            'GRANT EXECUTE ON FUNCTION '+function+' TO aos_runtime'),
+        'touch_trigger':('ALTER TABLE public.aip_evidence_bundle_revoke_event DISABLE TRIGGER capacity_evidence_epoch_touch_a0v149',
+            'ALTER TABLE public.aip_evidence_bundle_revoke_event ENABLE TRIGGER capacity_evidence_epoch_touch_a0v149'),
+        'bump_trigger':('ALTER TABLE public.aip_evidence_bundle_revoke_event DISABLE TRIGGER capacity_evidence_epoch_bump_a0v149',
+            'ALTER TABLE public.aip_evidence_bundle_revoke_event ENABLE TRIGGER capacity_evidence_epoch_bump_a0v149'),
+        'owner_flags':('ALTER ROLE aos_capacity_evidence_epoch_owner INHERIT','ALTER ROLE aos_capacity_evidence_epoch_owner NOINHERIT'),
+        'owner_extra_acl':('GRANT SELECT ON public.meta_object_type TO aos_capacity_evidence_epoch_owner',
+            'REVOKE SELECT ON public.meta_object_type FROM aos_capacity_evidence_epoch_owner'),
+    }[fault]
+    if fault == 'function_body':
+        assert change != original, 'fault must change the original function body'
+    with isolated_owner() as owner:owner.execute(change)
+    try:
+        with isolated_owner() as observer:
+            with pytest.raises(CapacityEvidenceFenceBlocked) as oracle:
+                _require_boundary(observer)
+            observer.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+            observer.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            with pytest.raises(psycopg.Error) as native:
+                with observer.transaction():
+                    observer.execute('SELECT aos_capacity_publication_private.require_original_evidence_boundary()')
+            assert native.value.sqlstate=='22023'
+            assert str(native.value).splitlines()[0]==str(oracle.value)
+            observer.rollback()
+        _refresh_native_facts_transaction(caller)
+        with pytest.raises(psycopg.Error) as full:
+            with caller.transaction():_call_native_original_facts(caller,ident,args)
+        assert full.value.sqlstate=='22023'
+    finally:
+        caller.rollback()
+        with isolated_owner() as owner:owner.execute(restore)
+    with isolated_owner() as observer:_require_boundary(observer)
+    _refresh_native_facts_transaction(caller)
+    assert _call_native_original_facts(caller,ident,args)['sourceProposal']==args[1]['assetId']

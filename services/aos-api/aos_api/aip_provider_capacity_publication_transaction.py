@@ -106,3 +106,328 @@ def require_original_fact_boundary(conn):
         or any(r['tgfoid']!=guard['oid'] or r['tgenabled']!='O' or r['tgtype']!=31 or r['tgqual'] is not None
             or bytes(r['tgargs'])!=b'' or r['tgnargs']!=0 or r['column_count']!=0 for r in triggers)):
         deny()
+
+
+def _original_evidence_boundary_sql():
+    """The original Evidence catalog audit, without giving Owner table access."""
+    from aos_api.aip_provider_capacity_evidence_fence import FUNCTIONS
+    definitions=','.join("('"+name+"','"+digest+"')" for name,digest in FUNCTIONS.items())
+    return r"""
+CREATE FUNCTION aos_capacity_publication_private.require_original_evidence_boundary()
+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE
+ owner_oid oid; table_oid oid; role_row record; table_row record; r record; expected record;
+ reader boolean; signature text; caller text; allowed text[]; ids oid[]:=ARRAY[]::oid[];
+ policy_expr text:='((org_id = NULLIF(current_setting(''aos.org_id''::text, true), ''''::text)) AND (project_id = NULLIF(current_setting(''aos.project_id''::text, true), ''''::text)))';
+BEGIN
+ BEGIN
+  PERFORM aos_capacity_publication_private.require_original_epoch_pair_boundary();
+ EXCEPTION WHEN SQLSTATE '22023' THEN
+  RAISE EXCEPTION 'CAPACITY_EVIDENCE_PUBLICATION_CALLER_DRIFTED' USING ERRCODE='22023';
+ END;
+ SELECT * INTO role_row FROM pg_roles WHERE rolname='aos_capacity_evidence_epoch_owner';
+ IF NOT FOUND OR role_row.rolcanlogin OR role_row.rolinherit OR role_row.rolsuper
+  OR role_row.rolcreatedb OR role_row.rolcreaterole OR role_row.rolreplication OR role_row.rolbypassrls
+  OR EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid=role_row.oid OR member=role_row.oid) THEN
+  RAISE EXCEPTION 'CAPACITY_EVIDENCE_OWNER_DRIFTED' USING ERRCODE='22023'; END IF;
+ owner_oid:=role_row.oid;
+ SELECT * INTO table_row FROM pg_class WHERE oid=to_regclass('public.aip_capacity_evidence_epoch');
+ IF NOT FOUND OR table_row.relowner<>owner_oid OR table_row.relkind<>'r'
+  OR NOT table_row.relrowsecurity OR NOT table_row.relforcerowsecurity THEN
+  RAISE EXCEPTION 'CAPACITY_EVIDENCE_TABLE_DRIFTED' USING ERRCODE='22023'; END IF;
+ table_oid:=table_row.oid;
+ IF EXISTS(SELECT 1 FROM aclexplode(coalesce(table_row.relacl,acldefault('r',owner_oid))) a WHERE a.grantee<>owner_oid)
+  OR EXISTS(SELECT 1 FROM pg_attribute c,LATERAL aclexplode(c.attacl) a
+    WHERE c.attrelid=table_oid AND a.grantee<>owner_oid) THEN
+  RAISE EXCEPTION 'CAPACITY_EVIDENCE_TABLE_DRIFTED' USING ERRCODE='22023'; END IF;
+ SELECT * INTO r FROM pg_policy WHERE polrelid=table_oid;
+ IF (SELECT count(*) FROM pg_policy WHERE polrelid=table_oid)<>1 OR NOT FOUND
+  OR r.polname<>'capacity_evidence_epoch_scope' OR r.polcmd<>'*' OR NOT r.polpermissive
+  OR r.polroles IS DISTINCT FROM ARRAY[owner_oid]
+  OR pg_get_expr(r.polqual,r.polrelid) IS DISTINCT FROM policy_expr
+  OR pg_get_expr(r.polwithcheck,r.polrelid) IS DISTINCT FROM policy_expr THEN
+  RAISE EXCEPTION 'CAPACITY_EVIDENCE_RLS_POLICY_DRIFTED' USING ERRCODE='22023'; END IF;
+ FOR expected IN SELECT * FROM (VALUES
+"""+definitions+r""") v(name,digest) LOOP
+  reader:=expected.name IN ('lock','issuer_lock');
+  signature:='public.aos_capacity_evidence_epoch_'||expected.name||
+   CASE WHEN reader THEN '(text,text,text)' ELSE '()' END;
+  SELECT * INTO r FROM pg_proc WHERE oid=to_regprocedure(signature);
+  IF NOT FOUND OR r.proowner<>owner_oid OR NOT r.prosecdef
+   OR r.proconfig IS DISTINCT FROM ARRAY['search_path=pg_catalog']
+   OR r.prorettype<>(CASE WHEN reader THEN 20 ELSE 2279 END)
+   OR r.proargtypes::text<>(CASE WHEN reader THEN '25 25 25' ELSE '' END)
+   OR encode(sha256(convert_to(r.prosrc,'UTF8')),'hex')<>expected.digest THEN
+   RAISE EXCEPTION 'CAPACITY_EVIDENCE_FUNCTION_DRIFTED' USING ERRCODE='22023'; END IF;
+  ids:=array_append(ids,r.oid);
+  caller:=CASE WHEN expected.name='lock' THEN 'aos_runtime' ELSE 'aos_provider_capacity_issuer' END;
+  allowed:=ARRAY['aos_capacity_evidence_epoch_owner'];
+  IF reader THEN allowed:=array_append(allowed,caller); END IF;
+  IF expected.name='issuer_lock' THEN allowed:=array_append(allowed,'aos_capacity_publication_owner'); END IF;
+  IF EXISTS(SELECT 1 FROM aclexplode(coalesce(r.proacl,acldefault('f',r.proowner))) a
+    LEFT JOIN pg_roles roles ON roles.oid=a.grantee
+    WHERE roles.rolname IS NULL OR NOT roles.rolname=ANY(allowed) OR a.privilege_type<>'EXECUTE'
+     OR (roles.rolname<>'aos_capacity_evidence_epoch_owner' AND a.is_grantable))
+   OR (reader AND NOT EXISTS(SELECT 1 FROM aclexplode(coalesce(r.proacl,acldefault('f',r.proowner))) a
+    JOIN pg_roles roles ON roles.oid=a.grantee WHERE roles.rolname=caller)) THEN
+   RAISE EXCEPTION 'CAPACITY_EVIDENCE_FUNCTION_ACL_DRIFTED' USING ERRCODE='22023'; END IF;
+ END LOOP;
+ IF (SELECT count(*) FROM pg_trigger WHERE tgrelid='public.aip_evidence_bundle_revoke_event'::regclass
+   AND tgname=ANY(ARRAY['capacity_evidence_epoch_touch_a0v149','capacity_evidence_epoch_bump_a0v149']))<>2
+  OR EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='public.aip_evidence_bundle_revoke_event'::regclass
+   AND tgname=ANY(ARRAY['capacity_evidence_epoch_touch_a0v149','capacity_evidence_epoch_bump_a0v149'])
+   AND (tgfoid<>(CASE WHEN tgname='capacity_evidence_epoch_touch_a0v149'
+       THEN to_regprocedure('public.aos_capacity_evidence_epoch_touch()')::oid
+       ELSE to_regprocedure('public.aos_capacity_evidence_epoch_bump()')::oid END)
+    OR tgtype<>(CASE WHEN tgname='capacity_evidence_epoch_touch_a0v149' THEN 7 ELSE 5 END)
+    OR tgenabled<>'O' OR tgattr::text<>'' OR tgqual IS NOT NULL OR tgargs<>''::bytea)) THEN
+  RAISE EXCEPTION 'CAPACITY_EVIDENCE_TRIGGER_DRIFTED' USING ERRCODE='22023'; END IF;
+ IF EXISTS(SELECT 1 FROM pg_class c WHERE c.relowner=owner_oid AND c.oid<>table_oid AND c.oid<>table_row.reltoastrelid
+   AND NOT EXISTS(SELECT 1 FROM pg_index i WHERE i.indexrelid=c.oid AND i.indrelid IN(table_oid,table_row.reltoastrelid)))
+  OR EXISTS(SELECT 1 FROM pg_proc WHERE proowner=owner_oid AND NOT oid=ANY(ids))
+  OR EXISTS(SELECT 1 FROM pg_namespace WHERE nspowner=owner_oid)
+  OR EXISTS(SELECT 1 FROM pg_database WHERE datdba=owner_oid)
+  OR EXISTS(SELECT 1 FROM pg_class c,LATERAL aclexplode(c.relacl) a WHERE a.grantee=owner_oid AND c.oid<>table_oid)
+  OR EXISTS(SELECT 1 FROM pg_attribute c,LATERAL aclexplode(c.attacl) a WHERE a.grantee=owner_oid AND c.attrelid<>table_oid)
+  OR EXISTS(SELECT 1 FROM pg_proc p,LATERAL aclexplode(p.proacl) a WHERE a.grantee=owner_oid AND NOT p.oid=ANY(ids))
+  OR EXISTS(SELECT 1 FROM pg_namespace n,LATERAL aclexplode(n.nspacl) a WHERE a.grantee=owner_oid
+    AND (n.nspname<>'public' OR a.privilege_type<>'USAGE' OR a.is_grantable)) THEN
+  RAISE EXCEPTION 'CAPACITY_EVIDENCE_OWNER_EXTRA_PRIVILEGE' USING ERRCODE='22023'; END IF;
+END $body$;
+ALTER FUNCTION aos_capacity_publication_private.require_original_evidence_boundary() OWNER TO aos_capacity_publication_owner;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.require_original_evidence_boundary() FROM PUBLIC;
+"""
+
+
+def _original_facts_sql():
+    """Installation SQL using fixed original readers and sequential lock calls.
+
+    No runtime SQL or caller expression is compiled here. Complete157 must still
+    authenticate, verify signed provenance, sign and commit in the native caller.
+    """
+    import re
+    from aos_api import aip_provider_capacity_publication_store as original
+    from aos_api.aip_provider_capacity_action import ProviderCapacityActionGuard
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+    from aos_api.asset_registry.canonical_json import canonical_json
+
+    fixed = dict(org_id="'org-org'", project_id="'dev-project'", maker='p_maker',
+        proposal_id="source_ref->>'assetId'", proposal_revision="(source_ref->>'revision')::numeric",
+        proposal_hash="source_ref->>'contentHash'", approval_event_id="event_ref->>'assetId'",
+        approval_event_hash="event_ref->>'contentHash'",
+        request_id="source_value->'allocationRequestRef'->>'assetId'",
+        request_hash="source_value->'allocationRequestRef'->>'contentHash'")
+    for kind, field in (('account', 'physicalAccountRef'), ('basis', 'basisRef')):
+        fixed.update({kind+'_id':f"source_value->'{field}'->>'assetId'",
+            kind+'_revision':f"(source_value->'{field}'->>'revision')::numeric",
+            kind+'_hash':f"source_value->'{field}'->>'contentHash'"})
+    ref_params = dict(provider_id="p_ref->>'assetId'", bundle_id="p_ref->>'assetId'",
+        revision="(p_ref->>'revision')::numeric", content_hash="p_ref->>'contentHash'")
+
+    def compile_query(statement, **overrides):
+        parameters = {**fixed, **overrides}
+        result = re.sub(r'%\((\w+)\)s', lambda m: '('+parameters[m.group(1)]+')', statement)
+        if '%(' in result:
+            raise ValueError('Uncompiled original Source SQL parameter')
+        return result
+
+    def metadata(guard):
+        def literal(value):
+            return "'"+canonical_json(value).decode().replace("'", "''")+"'::jsonb"
+        return f"""
+ SELECT to_jsonb(m) INTO STRICT metadata_value FROM (
+  SELECT id,name,description,published,properties,required_markings
+  FROM public.meta_object_type WHERE id='{guard.object_id}' FOR SHARE) m;
+ IF metadata_value IS DISTINCT FROM {literal(guard.object_snapshot)} THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_METADATA_DRIFTED' USING ERRCODE='22023'; END IF;
+ SELECT jsonb_build_object('id',m.id,'name',m.name,'objectType',m.object_type,
+  'parameters',m.parameters,'requiredMarkings',m.required_markings,
+  'submissionCriteria',m.submission_criteria) INTO STRICT metadata_value FROM (
+  SELECT id,name,object_type,parameters,required_markings,submission_criteria
+  FROM public.meta_action_type WHERE id='{guard.action_id}' FOR SHARE) m;
+ IF metadata_value IS DISTINCT FROM {literal(guard.action_snapshot)} THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_METADATA_DRIFTED' USING ERRCODE='22023'; END IF;
+"""
+
+    source_query = compile_query(original.CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL)
+    request_query = compile_query(original.CAPACITY_NATIVE_REQUEST_ROW_SQL)
+    allocation_query = compile_query(original.CAPACITY_APPROVED_ALLOCATION_ROW_SQL,
+        approval_event_id="source_value->'allocationApprovalRef'->>'assetId'",
+        approval_event_hash="source_value->'allocationApprovalRef'->>'contentHash'")
+    candidate_queries = {}
+    for kind, field in (('account','physicalAccountRef'), ('basis','basisRef')):
+        candidate_queries[kind] = compile_query(original.CAPACITY_NATIVE_CANDIDATE_ROW_SQL,
+            candidate_id=f"source_value->'{field}'->>'assetId'", candidate_kind=f"'{kind}'",
+            revision=f"(source_value->'{field}'->>'revision')::numeric",
+            content_hash=f"source_value->'{field}'->>'contentHash'")
+
+    sql = _original_evidence_boundary_sql()+r"""
+CREATE FUNCTION aos_capacity_publication_private.require_original_owner(p_actor text)
+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE roles text[];
+BEGIN
+ SELECT array_agg(m.role) INTO roles FROM (
+  SELECT role FROM public.meta_membership
+  WHERE org_id='org-org' AND project_id='dev-project' AND subject=p_actor FOR SHARE) m;
+ IF cardinality(roles) IS DISTINCT FROM 1 OR lower(roles[1]) IS DISTINCT FROM 'owner' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_OWNER_REQUIRED' USING ERRCODE='22023'; END IF;
+END $body$;
+
+CREATE FUNCTION aos_capacity_publication_private.read_original_fact_provider(p_ref jsonb)
+RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE result jsonb;
+BEGIN
+ SELECT q.normalized_provider INTO STRICT result FROM (
+""" + compile_query(original.CAPACITY_NATIVE_PROVIDER_ROW_SQL, **ref_params) + r"""
+ ) q;
+ RETURN result;
+END $body$;
+
+CREATE FUNCTION aos_capacity_publication_private.require_original_fact_evidence(p_ref jsonb,p_build boolean)
+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE item record;
+BEGIN
+ -- Initial request read deliberately has no Build provenance predicate.
+ SELECT e.* INTO STRICT item FROM public.aip_evidence_bundle_revision e
+ WHERE e.org_id='org-org' AND e.project_id='dev-project'
+  AND e.bundle_id=p_ref->>'assetId' AND e.revision=(p_ref->>'revision')::numeric
+  AND e.content_hash=p_ref->>'contentHash' AND e.lifecycle='frozen'
+  AND NOT EXISTS(SELECT 1 FROM public.aip_evidence_bundle_revoke_event r
+   WHERE (r.org_id,r.project_id,r.bundle_id,r.revision,r.content_hash)=
+         (e.org_id,e.project_id,e.bundle_id,e.revision,e.content_hash))
+  AND e.coverage IN ('complete','partial','blocked','unknown')
+  AND e.freshness IN ('fresh','stale','blocked','unknown')
+  AND isfinite(e.created_at) AND isfinite(e.cutoff_at)
+  AND extract(year FROM e.created_at AT TIME ZONE 'UTC') BETWEEN 1 AND 9999
+  AND extract(year FROM e.cutoff_at AT TIME ZONE 'UTC') BETWEEN 1 AND 9999
+  AND aos_capacity_publication_private.original_evidence_fields(e.brief_ref,e.subject_refs,e.item_refs,
+      e.missing,e.conflicts,e.uncertainties,e.marking,e.license_summary);
+ IF p_build THEN
+  SELECT q.* INTO STRICT item FROM (
+""" + compile_query(original.CAPACITY_NATIVE_EVIDENCE_ROW_SQL, **ref_params) + r"""
+  ) q;
+ END IF;
+END $body$;
+
+CREATE FUNCTION aos_capacity_publication_private.read_original_fact_request(source_value jsonb,p_maker text)
+RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE application jsonb;
+BEGIN
+ SELECT q.normalized_application INTO STRICT application FROM (
+""" + request_query + r"""
+ ) q;
+ PERFORM aos_capacity_publication_private.read_original_fact_provider(application->'providerRef');
+ PERFORM aos_capacity_publication_private.require_original_fact_evidence(application->'basisEvidenceRef',false);
+ RETURN application;
+END $body$;
+
+CREATE FUNCTION aos_capacity_publication_private.read_original_source_facts(p_maker text,p_source_ref jsonb,p_event_ref jsonb)
+RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE
+ source_ref jsonb; event_ref jsonb; source_row jsonb; allocation_row jsonb;
+ source_value jsonb; facts_application jsonb; account_value jsonb; basis_value jsonb;
+ metadata_value jsonb; allocation_event record; source_event record; matched integer;
+ target text; ref jsonb; evidence_refs jsonb[]; epochs jsonb:='{}'::jsonb;
+ withdrawal_epochs jsonb:='{}'::jsonb; window_value record;
+BEGIN
+ IF current_user IS DISTINCT FROM 'aos_capacity_publication_owner'
+  OR session_user IS DISTINCT FROM 'aos_provider_capacity_issuer'
+  OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+  OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project'
+  OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'
+  OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'
+  OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'
+  OR current_setting('TimeZone') IS DISTINCT FROM 'UTC' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_FACT_CONTEXT_REQUIRED' USING ERRCODE='42501'; END IF;
+ IF p_maker IS NULL OR p_source_ref IS NULL OR p_event_ref IS NULL THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_FACT_INPUT_REQUIRED' USING ERRCODE='22023'; END IF;
+ PERFORM aos_capacity_publication_private.read_identifier(to_jsonb(p_maker));
+ source_ref:=aos_capacity_publication_private.original_source_ref(p_source_ref,'ActionProposal');
+ event_ref:=aos_capacity_publication_private.original_source_ref(p_event_ref,'ActionApprovalEvent');
+ IF source_ref->'revision' IS DISTINCT FROM '2'::jsonb OR event_ref->'revision' IS DISTINCT FROM '1'::jsonb THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_FACT_INPUT_REQUIRED' USING ERRCODE='22023'; END IF;
+ PERFORM aos_capacity_publication_private.require_original_withdrawal_boundary();
+ SELECT to_jsonb(q) INTO STRICT source_row FROM (
+""" + source_query + r"""
+ ) q;
+ source_value:=aos_capacity_publication_private.read_original_source_candidate(source_row->'payload'->'sourceCandidate');
+ SELECT actor_id,expires_at INTO STRICT source_event FROM public.aip_action_approval_event
+ WHERE org_id='org-org' AND project_id='dev-project' AND approval_event_id=event_ref->>'assetId';
+""" + metadata(ProviderCapacitySourceActionGuard) + r"""
+ PERFORM aos_capacity_publication_private.require_original_owner(p_maker);
+ facts_application:=aos_capacity_publication_private.read_original_fact_request(source_value,p_maker);
+ SELECT proposal_id,actor_id,expires_at INTO STRICT allocation_event FROM public.aip_action_approval_event
+ WHERE org_id='org-org' AND project_id='dev-project'
+  AND approval_event_id=source_value->'allocationApprovalRef'->>'assetId';
+ SELECT to_jsonb(p) INTO STRICT allocation_row FROM public.aip_action_proposal p
+ WHERE p.org_id='org-org' AND p.project_id='dev-project' AND p.proposal_id=allocation_event.proposal_id FOR SHARE;
+ IF EXISTS(SELECT 1 FROM public.aip_action_withdrawal_event w
+  WHERE w.org_id='org-org' AND w.project_id='dev-project' AND w.proposal_id=allocation_event.proposal_id) THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_APPROVAL_WITHDRAWN' USING ERRCODE='22023'; END IF;
+""" + metadata(ProviderCapacityActionGuard) + r"""
+ facts_application:=aos_capacity_publication_private.read_original_fact_request(source_value,p_maker);
+ IF (allocation_row->>'expires_at')::timestamptz>
+    (SELECT instant FROM aos_capacity_publication_private.original_source_time(facts_application->'proposalExpiresAt')) THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_ALLOCATION_EXPIRY_DRIFTED' USING ERRCODE='22023'; END IF;
+ PERFORM aos_capacity_publication_private.require_original_owner(p_maker);
+ PERFORM aos_capacity_publication_private.require_original_owner(allocation_event.actor_id);
+ SELECT to_jsonb(q) INTO STRICT allocation_row FROM (
+""" + allocation_query + r"""
+ ) q;
+ SELECT q.normalized_candidate INTO STRICT account_value FROM (
+""" + candidate_queries['account'] + r"""
+ ) q;
+ SELECT q.normalized_candidate INTO STRICT basis_value FROM (
+""" + candidate_queries['basis'] + r"""
+ ) q;
+ SELECT q.matched INTO STRICT matched FROM (
+""" + compile_query(original.CAPACITY_NATIVE_SOURCE_COMBINATION_SQL) + r"""
+ ) q;
+ evidence_refs:=ARRAY[facts_application->'basisEvidenceRef',account_value->'evidenceRef',basis_value->'evidenceRef'];
+ PERFORM aos_capacity_publication_private.require_original_evidence_boundary();
+ -- All neutral locks first; then every original ref, without deduplication.
+ FOR target IN SELECT DISTINCT e->>'assetId' COLLATE "C" FROM unnest(evidence_refs) e
+  ORDER BY 1 LOOP
+  epochs:=epochs||jsonb_build_object(target,public.aos_capacity_evidence_epoch_issuer_lock('org-org','dev-project',target));
+ END LOOP;
+ FOREACH ref IN ARRAY evidence_refs LOOP
+  PERFORM aos_capacity_publication_private.require_original_fact_evidence(ref,true);
+ END LOOP;
+ FOR ref IN SELECT value FROM jsonb_array_elements(account_value->'providerRefs')
+  ORDER BY value->>'assetId' COLLATE "C" LOOP
+  PERFORM aos_capacity_publication_private.read_original_fact_provider(ref);
+ END LOOP;
+ PERFORM aos_capacity_publication_private.require_original_fact_evidence(account_value->'evidenceRef',true);
+ PERFORM aos_capacity_publication_private.require_original_fact_evidence(basis_value->'evidenceRef',true);
+ SELECT q.* INTO STRICT window_value FROM (
+""" + compile_query(original.CAPACITY_NATIVE_SOURCE_WINDOW_SQL) + r"""
+ ) q;
+ PERFORM aos_capacity_publication_private.require_original_owner(source_event.actor_id);
+ FOR target IN SELECT DISTINCT id COLLATE "C" FROM unnest(ARRAY[source_row->>'proposal_id',allocation_event.proposal_id]) id
+  ORDER BY 1 LOOP
+  withdrawal_epochs:=withdrawal_epochs||jsonb_build_object(target,public.aos_capacity_withdrawal_epoch_lock('org-org','dev-project',target));
+ END LOOP;
+ IF EXISTS(SELECT 1 FROM public.aip_action_withdrawal_event w WHERE w.org_id='org-org'
+  AND w.project_id='dev-project' AND w.proposal_id=ANY(ARRAY[source_row->>'proposal_id',allocation_event.proposal_id])) THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_APPROVAL_WITHDRAWN' USING ERRCODE='22023'; END IF;
+ IF clock_timestamp()>=least((source_row->>'expires_at')::timestamptz,
+    (allocation_row->>'expires_at')::timestamptz,source_event.expires_at,allocation_event.expires_at,
+    (SELECT instant FROM aos_capacity_publication_private.original_source_time(source_value->'validUntil'))) THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_APPROVAL_EXPIRED' USING ERRCODE='22023'; END IF;
+ RETURN jsonb_build_object('source',source_value,'account',account_value,'basis',basis_value,
+  'application',facts_application,'evidenceEpochs',epochs,'withdrawalEpochs',withdrawal_epochs,
+  'sourceProposal',source_row->>'proposal_id','allocationProposal',allocation_event.proposal_id,
+  'sourceApprovalExpiresAt',source_event.expires_at,'allocationApprovalExpiresAt',allocation_event.expires_at,
+  'owner',current_user,'session',session_user,'xid',pg_current_xact_id()::text,'pid',pg_backend_pid());
+END $body$;
+"""
+    for signature in ('require_original_owner(text)', 'read_original_fact_provider(jsonb)',
+        'require_original_fact_evidence(jsonb,boolean)', 'read_original_fact_request(jsonb,text)',
+        'read_original_source_facts(text,jsonb,jsonb)'):
+        sql += f'\nALTER FUNCTION aos_capacity_publication_private.{signature} OWNER TO {OWNER};'
+        sql += f'\nREVOKE ALL ON FUNCTION aos_capacity_publication_private.{signature} FROM PUBLIC;'
+    return sql
+
+
+# Reserved for complete157 installation; existing migrations remain unchanged.
+CAPACITY_ORIGINAL_SOURCE_FACTS_SQL = _original_facts_sql()

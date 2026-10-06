@@ -1,0 +1,15 @@
+# 完整157原事实与Evidence审计装配检查点
+
+基线 fbf16e8e / AOS-001438。本段仅私有函数追加，未安装157公共入口，不是SourceDelivery。
+
+新Owner实际SCRAM caller两个原批准布局通过；三独立Evidence/反序三Provider由原API生产、Source独立批准并真正重签供应商材料。原事实12类已提交变异均拒绝且精确恢复；普通角色逐函数禁入，SET ROLE冒用保留原session仍拒绝；七类实际锁竞争由pg_blocking_pids证明至callerCOMMIT才释放。这不是完整native内部每次取锁序列证明。
+
+复审发现完整原Evidence目录审计缺失，实际停用bump触发器RED未拒绝。追加原四函数hash/ACL、Owner、表/列ACL、RLS策略、两个触发器及额外权限审计，按原neutral锁前位置调用。12类真实已提交catalog变异与原Python审计拒绝原因一致；全事实真实SCRAM拒绝。最后16专项PASS64.68s；三文件最终累计124PASS156deselected7既有warnings/noSKIP334.47s/exit0。
+
+全部失败记录保留：新函数缺失RED；application列/变量冲突；故障构造触发原CHECK及Receipt selector多行；Evidence audit缺失RED；PL CASE语法初始化错误；函数体故障遗漏原参数名；累计r2文件名错误exit4未执行。每项有后续修复和真实复验，不能把构造或初始化失败当业务拒绝。
+
+原transaction模块8001bytes SHA256 445e40c7bd8cc6a06f004faf016209b5859a6743014739f2664a478674629815整段不变；只追加SQL编译器和六私有invoker函数，无runtime动态SQL/公开grant。原query/模型/权限及Guard不修改。实际上下文为publicationOwner、原issuer session、正向tenant/SERIALIZABLE/UTC/origin，返回实际xid/PID；这不独立证明libpq密码认证或JWT真伪，完整接入仍须原身份检查。
+
+所有故障仅测试保留库；临时函数/harness按本次创建OID清理并复核原检查器，不删除数据库/卷/备份。正式库、服务、Host/worker/Provider、商城源及外部效果未操作。纯未安装SQL无浏览器入口，浏览器N/A。AST及diff--check通过。
+
+保持原完整S01-S20合同与父Task ACTIVE。下一装配secret-free command/authentication binding和新域锁/签名后缀，再完整prepare→受控签名→commit→实际callerCOMMIT→当前consumer。最终COMMIT TTL未解决，不能开放正式入口或宣称首链/八工作台/发布完成。

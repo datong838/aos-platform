@@ -1,0 +1,76 @@
+{
+  "baseline": "fbf16e8ec353662add84a69eda6294775b83d585",
+  "authority": "AOS-001438",
+  "status": "PRIVATE_NATIVE_ORIGINAL_FACTS_PARTIAL_GREEN",
+  "fullSourceDelivery": false,
+  "final_caller_commit_ttl_resolved": false,
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "85f10f29ddefac1a7868cbeda2d31649038c7b6427e7e7f66750b377017b9a0e",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "82340326bed58db75946f3e7bb1a8ee1c8a75ed9d70476bf7785c6a53fa4b5c9"
+  },
+  "logs": {
+    ".evidence/gt-capacity-source-publication-20261006/full157-evidence-catalog-expanded-r1.log": {
+      "sha256": "30b2a58114ae7b0d4664dc1884cf4e0dacc82687e7f450a49a49f5421760b617",
+      "terminal_summary": "1 failed, 15 passed, 206 deselected, 7 warnings in 64.81s (0:01:04)"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-evidence-catalog-expanded-r2.log": {
+      "sha256": "8823f2d7c2e2d7d8821611bf52f472fcc90cf5e08f4768f6de9f4016111cde8d",
+      "terminal_summary": "16 passed, 206 deselected, 7 warnings in 64.68s (0:01:04)"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-evidence-catalog-green-r1.log": {
+      "sha256": "7d4aef23ea590cfe62dfadcd52636b3177bdd3c703f6e6e268d51be850c8a762",
+      "terminal_summary": "207 deselected, 7 warnings, 3 errors in 13.80s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-evidence-catalog-green-r2.log": {
+      "sha256": "facb0b0e97985b59c80e612e04e966fa6aa5d3b1bd2da80e0b757fb3e6bcf357",
+      "terminal_summary": "3 passed, 207 deselected, 7 warnings in 16.93s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-evidence-catalog-red-r1.log": {
+      "sha256": "17240ab05e1dc1714920f8d529917e1f57cb314746499b8aacd7261ffa4c1687",
+      "terminal_summary": "1 failed, 209 deselected, 7 warnings in 8.56s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-facts-adjacent-r1.log": {
+      "sha256": "fe9de99fd0120036fc76278731c94958ff32c632792b09a5637c86c243df6367",
+      "terminal_summary": "111 passed, 156 deselected, 7 warnings in 285.04s (0:04:45)"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-facts-adjacent-r2.log": {
+      "sha256": "284aa1079e00500e35d1cd23d73a61d33a865fc3fc890c21a2d64afda42f8e6e",
+      "terminal_summary": "7 warnings in 0.03s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-facts-adjacent-r3.log": {
+      "sha256": "97a4df6550b25b5c2041d3e055ee8193c2e2a027942d2655a3da575ed064edb6",
+      "terminal_summary": "124 passed, 156 deselected, 7 warnings in 334.47s (0:05:34)"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-facts-expanded-r1.log": {
+      "sha256": "9666d5ac272ef7c8c0459895ed94532836f1ef0e12b7a6b625a904e0b5cd7317",
+      "terminal_summary": "21 passed, 172 deselected, 7 warnings in 78.19s (0:01:18)"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-facts-green-r1.log": {
+      "sha256": "6cba0b55defca71926ab5c9212620b000e27291a15a871a515ea946de5ee5866",
+      "terminal_summary": "1 failed, 1 passed, 172 deselected, 7 warnings in 11.31s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-facts-green-r2.log": {
+      "sha256": "48203f8f97d50675ea974ddcdb2d030956e4d269a632ddd9a50a1b8b7f210cb6",
+      "terminal_summary": "2 passed, 172 deselected, 7 warnings in 11.39s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-facts-original-drift-r1.log": {
+      "sha256": "bb36de768e3ad19353b084206b86fd931a0ff10b8642cbe742ae90bc387143dc",
+      "terminal_summary": "5 failed, 9 passed, 192 deselected, 7 warnings in 56.70s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-facts-original-drift-r2.log": {
+      "sha256": "25485a5dce9cdde9f13cf657072003067483ee6f4a935bf5ba6ee32ed96c8ab6",
+      "terminal_summary": "14 passed, 192 deselected, 7 warnings in 56.74s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-facts-red-r1.log": {
+      "sha256": "b87a24f1e216213a511bace6f16aef4d14837a01c363caf47564960b6a97c13b",
+      "terminal_summary": "1 failed, 172 deselected, 7 warnings in 7.84s"
+    }
+  },
+  "remaining": [
+    "Complete native157 authentication and all S01-S20 installation/audit",
+    "Native full internal lock-order proof and signed/new-domain suffix",
+    "prepare/control signer/commit/actual caller COMMIT/current consumer",
+    "Final caller COMMIT TTL",
+    "Natural first chain/eight workbenches/observation/release"
+  ]
+}
