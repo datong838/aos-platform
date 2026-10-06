@@ -1,0 +1,33 @@
+{
+  "schema": "aos-capacity-owner-facts-checkpoint/v1",
+  "baseline": "AOS-001415/fdbaabfe8f7a3ecc4f5a817e57ccdd9c46a5ad21",
+  "task_id": "gt-capacity-source-publication-20261006",
+  "task_status": "ACTIVE",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "445e40c7bd8cc6a06f004faf016209b5859a6743014739f2664a478674629815",
+    "services/aos-api/alembic/versions/a0v_155_capacity_source_publication.py": "5c0b06c78b76c9c65079b400be92f8dfadcc25915dc23d5aa0669114f46b9b9d",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "c0ea73573195ceeee5b1dacd789dcfd0905d2943f248ac4c83e0f8558e4913f3"
+  },
+  "plan_sha256": "f55ec5bbe25027ac31a76fd63def58065b01f19cf191ae792cecdf212d7e3190",
+  "log_hashes": {
+    "owner-facts-green-r5.log": "63f356fa6f26d003b343fc2985949c230b422fe3f1c08bb409f61383345e031d",
+    "owner-facts-adjacent-r1.log": "42271f067c2a550c123307eeee8920c18b78724b0e7264457464669bebf648cb",
+    "owner-facts-adjacent-r2.log": "f7a6b224b11369821a875d7018e2fd8d94b60e849fa1218b93b7c8124d952b8c",
+    "entry-red-after155.log": "53a796978772c3c0a74c650ab763e246f7a510106b3e291b9e02f9a68fd629dc"
+  },
+  "verified": [
+    "original15table fact read and five lock-column mutation denial under NOLOGIN publication Owner",
+    "all13 scoped/related original tenant restrictive policies and canary zero",
+    "effective grants/defaultACL/create/role/trigger drift rejection",
+    "147 adjacent passed/1 known incomplete entry deselected/8 pre-existing warnings"
+  ],
+  "incomplete": [
+    "prepare/controlled signing/commit/actual callerCOMMIT/currentconsumer complete S01-S20",
+    "formal signing installation and current DB migration/restart",
+    "final callerCOMMIT wall-clock contract decision",
+    "natural business first chain/eight scenarios/continuous observation/release"
+  ],
+  "review": "syntax/source/plan consistency PASS within original-fact permission scope only; not Source delivery",
+  "formal_database_touched": false,
+  "goal_complete": false
+}

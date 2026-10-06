@@ -1,0 +1,32 @@
+{
+  "baseline": "AOS-001414/d787f20d47427362dc083371ac14a4a664ed9ba8",
+  "task_id": "gt-capacity-source-publication-20261006",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "test_file": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+  "test_sha256": "912772410504faee9a4743ea82a0fef056c504e4ad337d8578cfcf817fb7e427",
+  "first_red": {
+    "log": ".evidence/gt-capacity-source-publication-20261006/entry-red.log",
+    "sha256": "320445f56c393bf9d0bc5cae2e5d9478cdd35b63b43f30c010a7f0f3b1d9d5ea",
+    "database": "aos_test_9396882c6125_ti4_test",
+    "private_scram_and_original_signed_guard": "passed before entry",
+    "sqlstate": "42883",
+    "required_invalid_original_rejection": "22023",
+    "result": "missing prepare entrypoint, not full-positive proof"
+  },
+  "new_fixture": {
+    "task_id": "gt-capacity-native-scram-fixture-20261006",
+    "same_database_native_crypto_private_scram": "1PASS6.92s; direct issuer helper denied",
+    "full_adjacent": "131PASS186.50s"
+  },
+  "code_permission_audit": "original issuer still exact two original public lock functions; future complete SQL requires narrowly audited parent adaptation, no blanket SECDEF waiver",
+  "next": "Complete original facts/transaction command and same-DB registered five signed inputs; prepare/commit/actual caller COMMIT/current consumer positive and direct bypass matrix. No permissive stub or table-only Delivery.",
+  "formal_database_accessed": false,
+  "goal_complete": false,
+  "full_source_complete": false,
+  "integrated_entry_red": {
+    "log": ".evidence/gt-capacity-native-scram-fixture-20261006/integrated-entry-red.log",
+    "sha256": "e1b93fb72933276a186599e47e6edb3196957d8173d20b365270100fb1b34d35",
+    "sqlstate": "42883",
+    "native_crypto_and_original_scram_same_database": true
+  }
+}

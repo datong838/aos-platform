@@ -1,0 +1,30 @@
+{
+  "baseline": "AOS-001415/fdbaabfe",
+  "task_id": "gt-capacity-source-publication-20261006",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "445e40c7bd8cc6a06f004faf016209b5859a6743014739f2664a478674629815",
+    "services/aos-api/alembic/versions/a0v_155_capacity_source_publication.py": "5c0b06c78b76c9c65079b400be92f8dfadcc25915dc23d5aa0669114f46b9b9d",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "c0ea73573195ceeee5b1dacd789dcfd0905d2943f248ac4c83e0f8558e4913f3"
+  },
+  "syntax": "PASS",
+  "targeted": "16PASS25.04s",
+  "scope": "original fact reads and native read-only lock columns only; full Source entry/consumer remains unimplemented",
+  "review": [
+    "Reuse original fifteen-table/five-lock/policy expressions, no second approval state machine or accepted client PASS",
+    "Controlled Owner remains NOLOGIN/no membership/elevated flags; no additional original neutral epoch EXECUTE",
+    "Exact named and effective PUBLIC table/column ACL plus default ACL/schema/database CREATE audits",
+    "All13 original scoped/related tables role restrictive+permissive exact double tenant; metadata globals unchanged",
+    "Every5 lock-column actual same-value UPDATE denied by native INVOKER trigger; original runtime/issuer guard untouched",
+    "Original approved Source and allocation rows/account/basis typed original input accessible under Owner with explicit UTC/positive tenant, canary all13zero",
+    "No prepare stub, no Source grant, no current DB/service/Provider or browser changes"
+  ],
+  "failures": [
+    "initial module absence RED7.02s",
+    "green-r1 unset scoped admin GUCs legitimately yields zero",
+    "green-r4 nonexistent Basis.supplier_id corrected to original physical_account_ref; production gates unchanged",
+    "adjacent-r1 cumulative tenant count used instead of exact two proposal IDs; fixed only test query, retained historical rows"
+  ],
+  "cumulative": "147 passed, 1 deselected, 8 warnings in 210.32s; owner-facts-adjacent-r2.log",
+  "goal_complete": false,
+  "entry_red": "1 failed, 7 warnings in 7.47s; missing prepare SQLSTATE42883 after a155; entry-red-after155.log"
+}

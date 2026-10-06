@@ -1,0 +1,13 @@
+{
+  "database": "aos_test_ddc71fce5e0b_ti4_test",
+  "read_only": true,
+  "observed": {
+    "source_approved_rows_select": false,
+    "original_evidence_lock_execute": false,
+    "original_withdrawal_lock_execute": false,
+    "prepare_present": false,
+    "commit_present": false
+  },
+  "finding": "Nested Source definer Owner must independently reach complete original facts and epoch locks. Caller issuer privileges do not transfer to definer. Freeze minimal exact owner grants/tenant RLS and original lock/body audits in additive155; do not grant generic runtime membership or loosen original issuer guards. All inherited effective rights must be audited, not assumed from named grants.",
+  "full_source_complete": false
+}
