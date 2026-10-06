@@ -114,6 +114,65 @@ def test_original_private_claims_and_runtime_withdrawal_share_commit_fence(appro
             execution_allowed=False,current_database_accessed=False),sort_keys=True))
 
 
+@pytest.mark.parametrize('target',['request','account','basis'])
+def test_private_claims_recheck_three_distinct_evidence_origins(source_inputs,approved_command,private_database,target):
+    from aos_api.db import connect_serializable
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_action_models import DecideActionProposalRequest
+    from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+    from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+    from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims,ProviderCapacityFormalBoundaryBlocked
+    from aos_api.aip_production_contracts import RevokeEvidenceBundleRequest
+    from tests.aip.test_evidence_bundle_provenance_pg import build_inputs,ACTOR
+    maker,checker,source,_=source_inputs
+    with connect_serializable(SCOPE) as conn:
+        account=ProviderPhysicalAccountCandidate.model_validate(conn.execute(
+            'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+            (source.physical_account_ref.asset_id,)).fetchone()['request_json']['candidate'])
+        basis=ProviderCapacityBasisCandidate.model_validate(conn.execute(
+            'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+            (source.basis_ref.asset_id,)).fetchone()['request_json']['candidate'])
+    refs={'request':account.evidence_ref}
+    for kind in ['account','basis']:
+        producer,key,body=build_inputs.__wrapped__()
+        bundle=producer.build_evidence_bundle(SCOPE,ACTOR,key,body)
+        refs[kind]=account.evidence_ref.model_copy(update=dict(asset_id=bundle.bundle_id,
+            revision=bundle.revision,content_hash=bundle.content_hash))
+    assert len({ref.asset_id for ref in refs.values()})==3
+    store=ProviderCapacityCandidateStore()
+    saved=store.create_account(SCOPE,maker,'distinct-account-'+uuid4().hex,
+        account.model_copy(update=dict(evidence_ref=refs['account'])))
+    ar=source.physical_account_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))
+    saved=store.create_basis(SCOPE,maker,'distinct-basis-'+uuid4().hex,
+        basis.model_copy(update=dict(physical_account_ref=ar,evidence_ref=refs['basis'])))
+    changed=source.model_copy(update=dict(physical_account_ref=ar,
+        basis_ref=source.basis_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))))
+    proposal=propose_provider_capacity_source(maker,changed,'distinct-proposal-'+uuid4().hex,changed.valid_until)
+    approved=decide_provider_capacity_source(checker,proposal.proposal.id,'distinct-approval-'+uuid4().hex,
+        DecideActionProposalRequest(expectedProposalVersion=proposal.proposal.version,
+            expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',
+            reason='isolated distinct Evidence origins',approvalExpiresAt=changed.valid_until))
+    command=approved_command[-1].model_copy(update=dict(idempotency_key='distinct-private-'+uuid4().hex,
+        approved_proposal=approved_command[-1].approved_proposal.model_copy(update=dict(
+            asset_id=approved.proposal.id,revision=approved.proposal.version,content_hash=approved.proposal.proposal_hash)),
+        approval_event=approved_command[-1].approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+            content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+    with connect_capacity_issuer(private_database,SCOPE) as conn:
+        fact=read_capacity_approved_claims(conn,command)
+        assert conn.pgconn.used_password is True
+        assert fact.source==changed
+        assert fact.supplier_verified is False and fact.execution_allowed is False
+    ref=refs[target]
+    producer.revoke_evidence_bundle(SCOPE,ACTOR,ref.asset_id,'distinct-revoke-'+uuid4().hex,
+        RevokeEvidenceBundleRequest(expectedRevision=ref.revision,expectedContentHash=ref.content_hash,
+            reason='isolated three-origin withdrawal'))
+    with connect_capacity_issuer(private_database,SCOPE) as conn:
+        with pytest.raises(ProviderCapacityFormalBoundaryBlocked):read_capacity_approved_claims(conn,command)
+        conn.rollback()
+
+
 @pytest.mark.parametrize('fault',[None,'second_head','second_payload','second_payload_revision'])
 def test_original_source_checks_every_account_provider(source_inputs,fault):
     from psycopg.types.json import Jsonb

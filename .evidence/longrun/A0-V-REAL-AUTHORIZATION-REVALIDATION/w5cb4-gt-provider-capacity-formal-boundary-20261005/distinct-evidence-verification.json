@@ -1,0 +1,19 @@
+{
+  "authority_cutoff": "AOS-001394",
+  "task": "gt-provider-capacity-formal-boundary-20261005",
+  "target": "3 passed / 14.23s",
+  "adjacent": "114 passed / 164.46s",
+  "warnings": 7,
+  "scope": "Original request/account/basis distinct built Evidence; native checker approval; actual private SCRAM approved-claim consumer rejects each origin revocation",
+  "business_code_changed": false,
+  "current_database_accessed": false,
+  "source_operational_complete": false,
+  "task_delivery": false,
+  "review": "Plan/code consistent; no grants, signed publication, mapping or runtime change; original provenance/receipt validation next actual RED, not proved by revocation cases",
+  "sources": {
+    "services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py": "04713ed6707024a2ee62615c7b6256c03f38a4370e26e865b49bba7070fa7e9c",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/distinct-evidence-plan.md": "282ad9a59b3d05313483d4ca124375e93209c0857a62172dc4a8ee166ed4bd12",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/distinct-evidence-r1.log": "2bf01022508d9c36f377edee49b54904a16e03bf78e85be2e689c9bda1f646a4",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/distinct-evidence-adjacent.log": "11320d489d1e53c5ac76c7bf6760decc8a47ab94a3ca6039043bdcbb20012d24"
+  }
+}
