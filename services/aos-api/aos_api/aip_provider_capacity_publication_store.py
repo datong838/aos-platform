@@ -448,3 +448,82 @@ END
 $body$;
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_identifier(jsonb) FROM PUBLIC;
 """
+
+# Structure only. Trusted deployment, anchor, signature and epochs are checked
+# by the independent registration transaction, never by this parser's result.
+CAPACITY_ORIGIN_BOOTSTRAP_PROFILE_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.read_origin_bootstrap(p_raw bytea)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER
+SET search_path = pg_catalog AS $body$
+DECLARE
+  document jsonb;
+  field text;
+  ref jsonb;
+  refs jsonb;
+  starts_at timestamptz;
+  ends_at timestamptz;
+BEGIN
+  document := aos_capacity_publication_private.read_signed_body(p_raw);
+  IF document IS NULL OR pg_catalog.jsonb_typeof(document) IS DISTINCT FROM 'object'
+      OR NOT (document ?& ARRAY['schemaVersion','tenant','assetId','revision','publisher',
+        'keyId','validFrom','validUntil','deploymentTarget','purpose','bootstrapId',
+        'publisherSubject','policyPublisherRole','anchorRevision','rootSnapshotHash','allowedDocumentRefs'])
+      OR (SELECT count(*) FROM pg_catalog.jsonb_object_keys(document)) <> 16 THEN
+    RAISE EXCEPTION 'CAPACITY_ORIGIN_BOOTSTRAP_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  IF document->'tenant' IS DISTINCT FROM '{"orgId":"org-org","projectId":"dev-project"}'::jsonb
+      OR document->'schemaVersion' IS DISTINCT FROM '1'::jsonb
+      OR pg_catalog.jsonb_typeof(document->'revision') IS DISTINCT FROM 'number'
+      OR (document->>'revision') COLLATE "C" !~ '^[1-9][0-9]*$'
+      OR pg_catalog.length(document->>'revision') > 4300
+      OR document->'purpose' IS DISTINCT FROM '"provider_capacity_origin_bootstrap"'::jsonb
+      OR document->'policyPublisherRole' IS DISTINCT FROM '"aos_provider_capacity_policy_publisher"'::jsonb THEN
+    RAISE EXCEPTION 'CAPACITY_ORIGIN_BOOTSTRAP_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  FOREACH field IN ARRAY ARRAY['assetId','publisher','keyId','bootstrapId','publisherSubject'] LOOP
+    PERFORM aos_capacity_publication_private.read_identifier(document->field);
+  END LOOP;
+  FOREACH field IN ARRAY ARRAY['anchorRevision','rootSnapshotHash'] LOOP
+    IF pg_catalog.jsonb_typeof(document->field) IS DISTINCT FROM 'string'
+        OR (document->>field) COLLATE "C" !~ '^sha256:[0-9a-f]{64}$' THEN
+      RAISE EXCEPTION 'CAPACITY_ORIGIN_BOOTSTRAP_REQUIRED' USING ERRCODE='22023';
+    END IF;
+  END LOOP;
+  PERFORM aos_capacity_publication_private.read_deployment_target(pg_catalog.convert_to(
+      aos_capacity_publication_private.canonical_signed_json((document->'deploymentTarget')::json,1),'UTF8'));
+  refs := document->'allowedDocumentRefs';
+  IF pg_catalog.jsonb_typeof(refs) IS DISTINCT FROM 'array'
+      OR pg_catalog.jsonb_array_length(refs) NOT BETWEEN 1 AND 1000 THEN
+    RAISE EXCEPTION 'CAPACITY_ORIGIN_BOOTSTRAP_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  FOR ref IN SELECT value FROM pg_catalog.jsonb_array_elements(refs) LOOP
+    IF pg_catalog.jsonb_typeof(ref) IS DISTINCT FROM 'object'
+        OR NOT (ref ?& ARRAY['assetType','assetId','revision','contentHash'])
+        OR (SELECT count(*) FROM pg_catalog.jsonb_object_keys(ref)) <> 4
+        OR ref->'assetType' NOT IN ('"ProviderCapacitySourcePolicyRevision"'::jsonb,
+          '"SupplierCapacityAttestationRevision"'::jsonb,'"ProviderCapacitySigningPermitRevision"'::jsonb)
+        OR pg_catalog.jsonb_typeof(ref->'revision') IS DISTINCT FROM 'number'
+        OR (ref->>'revision') COLLATE "C" !~ '^[1-9][0-9]*$'
+        OR pg_catalog.length(ref->>'revision') > 4300
+        OR pg_catalog.jsonb_typeof(ref->'contentHash') IS DISTINCT FROM 'string'
+        OR (ref->>'contentHash') COLLATE "C" !~ '^[0-9a-f]{64}$' THEN
+      RAISE EXCEPTION 'CAPACITY_ORIGIN_BOOTSTRAP_REQUIRED' USING ERRCODE='22023';
+    END IF;
+    PERFORM aos_capacity_publication_private.read_identifier(ref->'assetId');
+  END LOOP;
+  IF (SELECT count(*) FROM (SELECT DISTINCT value->'assetType',value->'assetId'
+      FROM pg_catalog.jsonb_array_elements(refs)) unique_refs) <> pg_catalog.jsonb_array_length(refs) THEN
+    RAISE EXCEPTION 'CAPACITY_ORIGIN_BOOTSTRAP_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  starts_at := aos_capacity_publication_private.read_signed_time(document->'validFrom');
+  ends_at := aos_capacity_publication_private.read_signed_time(document->'validUntil');
+  IF ends_at <= starts_at OR extract(epoch FROM ends_at-starts_at) > 31622400 THEN
+    RAISE EXCEPTION 'CAPACITY_ORIGIN_BOOTSTRAP_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  RETURN document;
+EXCEPTION WHEN OTHERS THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGIN_BOOTSTRAP_REQUIRED' USING ERRCODE='22023';
+END
+$body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_origin_bootstrap(bytea) FROM PUBLIC;
+"""

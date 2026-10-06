@@ -732,3 +732,68 @@ def test_native_signing_permit_integer_parse_limit(native_profile_runner, field,
         with pytest.raises(ValueError):
             parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
         assert 'CAPACITY_SIGNING_PERMIT_REQUIRED' in _native_permit(native_profile_runner,raw,success=False)
+
+
+@pytest.mark.parametrize("fault",[None,"purpose","role","canary","anchor","snapshot","empty","duplicate","kind","ref_extra","ref_hash","ref_bool","unknown","subject","ref_null","refs_scalar","ref_alias","same_identity_new_revision","expiry","schema_bool"])
+def test_native_origin_bootstrap_original_complete_contract(native_profile_runner,fault):
+    from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacityOriginBootstrap,parse_signed_capacity_body
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL,CAPACITY_SIGNING_PERMIT_PROFILE_SQL,CAPACITY_ORIGIN_BOOTSTRAP_PROFILE_SQL)
+    model=ProviderCapacityOriginBootstrap.model_validate(bootstrap())
+    payload=model.model_dump(mode="json",by_alias=True)
+    if fault=="purpose":payload['purpose']='provider_capacity_source_signing_permit'
+    elif fault=="role":payload['policyPublisherRole']='aos_provider_capacity_issuer'
+    elif fault=="canary":payload['tenant']['orgId']='dev-org'
+    elif fault=="anchor":payload['anchorRevision']='sha256:'+"A"*64
+    elif fault=="snapshot":payload['rootSnapshotHash']='0'*64
+    elif fault=="empty":payload['allowedDocumentRefs']=[]
+    elif fault=="duplicate":payload['allowedDocumentRefs']*=2
+    elif fault=="kind":payload['allowedDocumentRefs'][0]['assetType']='EvidenceBundleRevision'
+    elif fault=="ref_extra":payload['allowedDocumentRefs'][0]['verified']=True
+    elif fault=="ref_hash":payload['allowedDocumentRefs'][0]['contentHash']='wrong'
+    elif fault=="ref_bool":payload['allowedDocumentRefs'][0]['revision']=True
+    elif fault=="unknown":payload['verified']=True
+    elif fault=="subject":payload['publisherSubject']=' original-subject'
+    elif fault=="ref_null":payload['allowedDocumentRefs'][0]=None
+    elif fault=="refs_scalar":payload['allowedDocumentRefs']={}
+    elif fault=="ref_alias":payload['allowedDocumentRefs'][0]['asset_id']=payload['allowedDocumentRefs'][0].pop('assetId')
+    elif fault=="same_identity_new_revision":payload['allowedDocumentRefs'].append({**payload['allowedDocumentRefs'][0],'revision':2})
+    elif fault=="expiry":payload['validUntil']=payload['validFrom']
+    elif fault=="schema_bool":payload['schemaVersion']=True
+    raw=canonical_json(payload)
+    if fault is not None:
+        with pytest.raises(ValueError):parse_signed_capacity_body(raw,ProviderCapacityOriginBootstrap)
+    else:assert parse_signed_capacity_body(raw,ProviderCapacityOriginBootstrap)==model
+    statement=CAPACITY_IDENTIFIER_PROFILE_SQL+CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL+CAPACITY_SIGNING_PERMIT_PROFILE_SQL+CAPACITY_ORIGIN_BOOTSTRAP_PROFILE_SQL
+    result=native_profile_runner(statement+"\nSELECT aos_capacity_publication_private.read_origin_bootstrap(decode('%s','hex'))::text;"%raw.hex(),success=fault is None)
+    if fault is None:assert json.loads(result)==payload
+
+
+def test_native_origin_bootstrap_null_and_function_boundary(native_profile_runner):
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL,CAPACITY_SIGNING_PERMIT_PROFILE_SQL,CAPACITY_ORIGIN_BOOTSTRAP_PROFILE_SQL)
+    ddl=CAPACITY_IDENTIFIER_PROFILE_SQL+CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL+CAPACITY_SIGNING_PERMIT_PROFILE_SQL+CAPACITY_ORIGIN_BOOTSTRAP_PROFILE_SQL
+    failure=native_profile_runner(ddl+"SELECT aos_capacity_publication_private.read_origin_bootstrap(NULL);",success=False)
+    assert 'CAPACITY_ORIGIN_BOOTSTRAP_REQUIRED' in failure
+    result=native_profile_runner(ddl+"""
+SELECT prosecdef,provolatile,proisstrict,proconfig,
+  NOT EXISTS(SELECT 1 FROM aclexplode(proacl) a WHERE a.grantee=0) AS no_public
+FROM pg_proc WHERE oid='aos_capacity_publication_private.read_origin_bootstrap(bytea)'::regprocedure;
+""")
+    assert result=='f|i|f|{search_path=pg_catalog}|t'
+
+
+@pytest.mark.parametrize("count,offset",[(1,0),(1000,14)])
+def test_native_origin_bootstrap_refs_and_original_time_boundaries(native_profile_runner,count,offset):
+    from datetime import timezone
+    from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacityOriginBootstrap,parse_signed_capacity_body
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL,CAPACITY_SIGNING_PERMIT_PROFILE_SQL,CAPACITY_ORIGIN_BOOTSTRAP_PROFILE_SQL)
+    payload=bootstrap();payload['publisherSubject']='发布者中文'
+    payload['allowedDocumentRefs']=[ref('ProviderCapacitySourcePolicyRevision',str(i)) for i in range(count)]
+    for key in ['validFrom','validUntil']:payload[key]=payload[key].astimezone(timezone(timedelta(hours=offset)))
+    model=ProviderCapacityOriginBootstrap.model_validate(payload);body=model.model_dump(mode='json',by_alias=True)
+    raw=canonical_json(body);assert parse_signed_capacity_body(raw,ProviderCapacityOriginBootstrap)==model
+    result=native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL+CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL+CAPACITY_SIGNING_PERMIT_PROFILE_SQL+CAPACITY_ORIGIN_BOOTSTRAP_PROFILE_SQL+
+        "SELECT aos_capacity_publication_private.read_origin_bootstrap(decode('%s','hex'))::text;"%raw.hex())
+    assert json.loads(result)==body

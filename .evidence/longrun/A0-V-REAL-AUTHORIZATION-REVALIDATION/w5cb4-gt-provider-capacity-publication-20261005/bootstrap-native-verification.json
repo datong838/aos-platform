@@ -1,0 +1,24 @@
+{
+  "authority_cutoff": "AOS-001396",
+  "code_base": "d62274723f06f9f65ca608664777e69bca1cafcc",
+  "task": "gt-provider-capacity-publication-schema-20261005",
+  "red": "missing native bootstrap constant: 1 failed / 6.41s",
+  "target": "23 passed / 8.00s",
+  "adjacent": "318 passed / 24.46s",
+  "warnings": 7,
+  "implementation": "Complete bootstrap typed/canonical document profile, private immutable invoker, PUBLIC revoked; reuses existing byte/identifier/deployment/time readers",
+  "limits": [
+    "Profile only, not signature/anchor/actual deployment authentication",
+    "No persistent DDL, formal registration/publication, new role/grant or current database access",
+    "Original v1 and Permit unaffected; full Source COMMIT/consumer pending; no Task Delivery"
+  ],
+  "sources": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "e08fa13141ef5cefafc961df8c01b152c16c9e429385d3840fc47ba542de1aa1",
+    "services/aos-api/tests/aip/test_provider_capacity_publication_pg.py": "34c16107ce10f1055f70ad35627a40120e3664f11ae52e2912b835f8db21bdf4",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/bootstrap-native-plan.md": "afaa56875a8648e4dfb141a9850a8dcd1791dd3bef2708e6d5129fd3e6230269",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/bootstrap-native-red.log": "50736494daa8cd6d2cbdcf4e90e39ead978d4113c03ec551277457353b28314a",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/bootstrap-native-green.log": "7801c9d283d2539eee0a217d7dc67808a793b177822e1c4f5d19bea12578f76b",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/bootstrap-native-final.log": "77d111e23153cd1e1394541cd4414402108852364e9529b6ca5293b5bb009b7c",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/bootstrap-native-adjacent.log": "b3894559d2b5c6fb9241bbcf739c773f87eb0c84a8035f5888ae7c0297a7f165"
+  }
+}
