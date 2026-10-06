@@ -1,0 +1,31 @@
+{
+  "schema": "aos-signing-permit-checkpoint/v1",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_base": "AOS-001436",
+  "base_head": "4e02ffc28586edc340f4f087f1a69a2f5222216c",
+  "source_delivery": false,
+  "status": "native_permit_separate_signer_prerequisite_verified_full157_pending",
+  "final_test_result": {
+    "passed": 72,
+    "deselected": 122,
+    "warnings": 7,
+    "skipped": 0,
+    "seconds": 351.67
+  },
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "13682034eaae269ea6e63f34805548b63e0484e5368169882e9c8249aec0ce77",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "c56102f6cc050612401ed0f1f273232f657e152ec79f71c5002aa30b2a3f6e71",
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "e4161675d3a2b09c59282d2af598638993586d31a396efdf095de2d06996f3b4",
+    ".evidence/gt-capacity-source-entry-20261007/signing-permit-verification.md": "97714e4c80b9fc97f4b6b665a2365722f0acdc2c8996093ab246642947318694",
+    ".evidence/gt-capacity-source-entry-20261007/signing-permit-next-investigation.json": "720d865181622203d76b1c543c86e3e01d2a43a6d723771447c68b1cd8ca584c",
+    ".evidence/gt-capacity-source-entry-20261007/signing-permit-shm-before.json": "fb7f94daffba8fbf3a3026dbec50f5ce32229ba19542a667e7a6f36b1a99a892",
+    ".evidence/gt-capacity-source-entry-20261007/signing-permit-shm-after.json": "a55617a7e9f39be44f41c4822ac21b967665efac126357b7677f1ee851f81202",
+    ".evidence/gt-capacity-source-publication-20261006/signing-permit-red-r1.log": "dbfda2010d8875a53fcee510f77e878ac078359d2b7a3a9a3f23ec3a4f0db4b6",
+    ".evidence/gt-capacity-source-publication-20261006/signing-permit-green-r1.log": "4f4634c432b0e7e03604664757b797d879180ccfff635de64f270d360c8bf165",
+    ".evidence/gt-capacity-source-publication-20261006/signing-permit-green-r2.log": "b4e8211e61a737477346de0314cbf2e2adb1f2d08ebe1bb7a5786722c7adf4b1",
+    ".evidence/gt-capacity-source-publication-20261006/signing-permit-green-r3.log": "d48d167330be9c786f6edd8d6dbda44bf8422e3d4ded959168e0b1774ec87762",
+    ".evidence/gt-capacity-source-publication-20261006/signing-permit-root-r1.log": "6cb840c0ce53ef3558f54c1b7d030ec0755e1cd97d90266882f2c3e7b7da49a3",
+    ".evidence/gt-capacity-source-publication-20261006/signing-permit-adjacent-r1.log": "5f4ab958b23a512ac0292a3c797312ad9d2afeb33f5b1b1cd5b5c8a1eea81f75",
+    ".evidence/gt-capacity-source-publication-20261006/signing-permit-shm-failure.log": "e6685586d53e68cd8d3b2eea78686f36ec4588d7d2d486f160e91d529fa0fd55"
+  }
+}

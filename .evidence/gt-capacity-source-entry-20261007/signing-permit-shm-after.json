@@ -1,0 +1,31 @@
+{
+  "schema": "aos-s20-lab-recovery-reconciliation/v1",
+  "same_container": true,
+  "same_mounts": true,
+  "same_started_at": true,
+  "cluster": "7693564235776004128",
+  "migration": "a0v_156",
+  "preserved_signed_case": "aos_test_7dd91a1512de_ti4_test",
+  "actual_documents": [
+    {
+      "kind": "ProviderCapacitySourcePolicyRevision",
+      "content_hash": "6142e9768c715e7e32c21674c77fc5084780d7cfe868576e620ff1a77e79cae3",
+      "actual_signature": true
+    },
+    {
+      "kind": "SupplierCapacityAttestationRevision",
+      "content_hash": "d72c53d04d23bf728d4737c68e5f1373d7b4182224d6808a613db3cab965888d",
+      "actual_signature": true
+    },
+    {
+      "kind": "ProviderCapacitySigningPermitRevision",
+      "content_hash": "f46b7ec120967995ab6ce27d23cb9412a1a4c22eae7f57288862992eb51cde79",
+      "actual_signature": true
+    }
+  ],
+  "shm_actual": "Filesystem                Size      Used Available Use% Mounted on\nshm                     256.0M     13.0M    243.0M   5% /dev/shm\n",
+  "host_config_shm_size": 67108864,
+  "temporary_remount_only": true,
+  "full_prepare_missing": true,
+  "source_delivery": false
+}

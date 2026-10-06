@@ -1,0 +1,60 @@
+2026-10-06 21:37:09.032 UTC [38110] CONTEXT:  PL/pgSQL function public.aos_capacity_withdrawal_epoch_lock(text,text,text) line 11 at RAISE
+	SQL function "publication_epoch_harness_8259980990094079b116588b61b6e809" statement 1
+2026-10-06 21:37:09.032 UTC [38110] STATEMENT:  SELECT "public"."publication_epoch_harness_8259980990094079b116588b61b6e809"($1::text,$2::text,$3::text)
+2026-10-06 21:37:12.522 UTC [38171] ERROR:  CAPACITY_APPROVAL_WITHDRAWN
+2026-10-06 21:37:12.522 UTC [38171] CONTEXT:  PL/pgSQL function public.aos_capacity_withdrawal_epoch_lock(text,text,text) line 12 at RAISE
+	SQL function "publication_epoch_harness_d70a31c0d8714e1e87579578714bcf9f" statement 1
+2026-10-06 21:37:12.522 UTC [38171] STATEMENT:  SELECT "public"."publication_epoch_harness_d70a31c0d8714e1e87579578714bcf9f"($1::text,$2::text,$3::text)
+2026-10-06 21:40:00.369 UTC [26] LOG:  checkpoint complete: wrote 701 buffers (4.3%); 0 WAL file(s) added, 0 removed, 33 recycled; write=269.325 s, sync=0.263 s, total=269.630 s; sync files=9026, longest=0.001 s, average=0.001 s; distance=540241 kB, estimate=540241 kB; lsn=2/8350C4E8, redo lsn=2/7E07C750
+2026-10-06 21:44:53.329 UTC [39288] ERROR:  operator does not exist: integer[] = smallint[] at character 138
+2026-10-06 21:44:53.329 UTC [39288] HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
+2026-10-06 21:44:53.329 UTC [39288] STATEMENT:  SELECT * FROM aos_capacity_publication_private.root_entry WHERE org_id=$1 AND project_id=$2 AND snapshot_hash=$3 AND publisher_codepoints=$4 AND key_id_codepoints=$5
+2026-10-06 21:50:23.230 UTC [40049] ERROR:  permission denied for table twa_org
+2026-10-06 21:50:23.230 UTC [40049] STATEMENT:  SELECT COUNT(*) AS c FROM twa_org
+2026-10-06 21:50:27.984 UTC [40087] ERROR:  permission denied for table twa_org
+2026-10-06 21:50:27.984 UTC [40087] STATEMENT:  SELECT COUNT(*) AS c FROM twa_org
+2026-10-06 21:50:30.904 UTC [26] LOG:  checkpoint starting: time
+2026-10-06 21:51:08.554 UTC [40259] ERROR:  permission denied for table twa_org
+2026-10-06 21:51:08.554 UTC [40259] STATEMENT:  SELECT COUNT(*) AS c FROM twa_org
+2026-10-06 21:51:13.254 UTC [40297] ERROR:  permission denied for table twa_org
+2026-10-06 21:51:13.254 UTC [40297] STATEMENT:  SELECT COUNT(*) AS c FROM twa_org
+2026-10-06 21:51:15.036 UTC [40317] ERROR:  could not resize shared memory segment "/PostgreSQL.1659892972" to 33554432 bytes: No space left on device
+2026-10-06 21:51:15.036 UTC [40317] STATEMENT:  CREATE TABLE ecommerce_analyst_insight_revision (
+	          org_id TEXT NOT NULL, project_id TEXT NOT NULL, insight_id TEXT NOT NULL,
+	          revision BIGINT NOT NULL, parent_revision BIGINT, content_hash CHAR(64) NOT NULL,
+	          receipt_id TEXT NOT NULL, payload JSONB NOT NULL, created_by TEXT NOT NULL,
+	          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	          PRIMARY KEY(org_id,project_id,insight_id,revision), UNIQUE(org_id,project_id,receipt_id),
+	          CHECK(revision>=1), CHECK((revision=1 AND parent_revision IS NULL) OR (revision>1 AND parent_revision=revision-1)),
+	          CHECK(content_hash ~ '^[0-9a-f]{64}$'), CHECK(jsonb_typeof(payload)='object'))
+2026-10-06 21:51:15.348 UTC [1] LOG:  server process (PID 40317) was terminated by signal 11: Segmentation fault
+2026-10-06 21:51:15.348 UTC [1] DETAIL:  Failed process was running: CREATE TABLE ecommerce_analyst_insight_revision (
+	          org_id TEXT NOT NULL, project_id TEXT NOT NULL, insight_id TEXT NOT NULL,
+	          revision BIGINT NOT NULL, parent_revision BIGINT, content_hash CHAR(64) NOT NULL,
+	          receipt_id TEXT NOT NULL, payload JSONB NOT NULL, created_by TEXT NOT NULL,
+	          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	          PRIMARY KEY(org_id,project_id,insight_id,revision), UNIQUE(org_id,project_id,receipt_id),
+	          CHECK(revision>=1), CHECK((revision=1 AND parent_revision IS NULL) OR (revision>1 AND parent_revision=revision-1)),
+	          CHECK(content_hash ~ '^[0-9a-f]{64}$'), CHECK(jsonb_typeof(payload)='object'))
+2026-10-06 21:51:15.348 UTC [1] LOG:  terminating any other active server processes
+2026-10-06 21:51:15.373 UTC [1] LOG:  all server processes terminated; reinitializing
+2026-10-06 21:51:15.956 UTC [40323] LOG:  database system was interrupted; last known up at 2026-10-06 21:40:00 UTC
+2026-10-06 21:51:15.958 UTC [40326] FATAL:  the database system is in recovery mode
+2026-10-06 21:51:16.271 UTC [40327] FATAL:  the database system is in recovery mode
+2026-10-06 21:51:16.305 UTC [40328] FATAL:  the database system is in recovery mode
+2026-10-06 21:51:16.342 UTC [40329] FATAL:  the database system is in recovery mode
+2026-10-06 21:51:16.378 UTC [40330] FATAL:  the database system is in recovery mode
+2026-10-06 21:51:16.416 UTC [40331] FATAL:  the database system is in recovery mode
+2026-10-06 21:51:32.397 UTC [40323] LOG:  syncing data directory (fsync), elapsed time: 10.00 s, current path: ./base/471298/480041
+2026-10-06 21:51:36.049 UTC [40344] FATAL:  the database system is in recovery mode
+2026-10-06 21:51:42.397 UTC [40323] LOG:  syncing data directory (fsync), elapsed time: 20.00 s, current path: ./base/3209273/3211513
+2026-10-06 21:51:52.397 UTC [40323] LOG:  syncing data directory (fsync), elapsed time: 30.00 s, current path: ./base/3356986/3359354
+2026-10-06 21:51:54.027 UTC [40323] LOG:  database system was not properly shut down; automatic recovery in progress
+2026-10-06 21:51:54.349 UTC [40323] LOG:  redo starts at 2/7E07C750
+2026-10-06 21:51:55.547 UTC [40323] LOG:  unexpected pageaddr 2/580CE000 in WAL segment 00000001000000020000008B, LSN 2/8B0CE000, offset 843776
+2026-10-06 21:51:55.549 UTC [40323] LOG:  redo done at 2/8B0C6788 system usage: CPU: user: 0.45 s, system: 0.48 s, elapsed: 1.19 s
+2026-10-06 21:51:55.862 UTC [40350] FATAL:  the database system is not yet accepting connections
+2026-10-06 21:51:55.862 UTC [40350] DETAIL:  Consistent recovery state has not been yet reached.
+2026-10-06 21:51:55.993 UTC [40324] LOG:  checkpoint starting: end-of-recovery immediate wait
+2026-10-06 21:51:56.508 UTC [40324] LOG:  checkpoint complete: wrote 16039 buffers (97.9%); 0 WAL file(s) added, 13 removed, 0 recycled; write=0.103 s, sync=0.399 s, total=0.517 s; sync files=15588, longest=0.043 s, average=0.001 s; distance=213318 kB, estimate=213318 kB; lsn=2/8B0CE048, redo lsn=2/8B0CE048
+2026-10-06 21:51:56.513 UTC [1] LOG:  database system is ready to accept connections

@@ -21,6 +21,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_complete_native_publication_requires_actual_caller_commit',
         'test_native_registered_signed_document_current_rows_require_exact_originals',
         'test_native_signed_supplier_combination_keeps_original_approved_terms',
+        'test_native_signing_permit_binds_exact_policy_and_controlled_source_root',
         'test_native_current_signed_document_single_field_faults_restore_exact_originals',
         'test_native_current_signed_exact_scope_matrix_and_ordinary_role_denial',
         'test_native_current_signed_actual_withdrawal_commit_rollback_and_replay',
@@ -255,7 +256,7 @@ def test_registered_origin_documents_and_original_private_approval_share_databas
     print('CAPACITY_COMBINED_ORIGINAL_INPUT_PROOF same_database=true native_scram=true original_approvals=true signed_origin=true registered_exact_documents=3 source_published=false')
 
 
-def _registered_publication_inputs(native_signed_source,tmp_path,*,signed_fault=None):
+def _registered_publication_inputs(native_signed_source,tmp_path,*,signed_fault=None,permit_fault=None,source_root_fault=None):
     """Real original inputs plus controlled test bootstrap; never formal authority."""
     import base64
     import hashlib
@@ -283,6 +284,8 @@ def _registered_publication_inputs(native_signed_source,tmp_path,*,signed_fault=
     source_public=source_key.public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)
     source_root=dict(f['roots'][0],publisher='isolated-source-signer',keyId='isolated-source-key',
         publicKey=base64.b64encode(source_public).decode())
+    if source_root_fault is not None:
+        source_root_fault(source_root)  # Separate controlled signing root, before snapshot.
     f['roots'].append(source_root)
     f['rootfile'].write_text(json.dumps(dict(trustRoots=f['roots'])))
     transport=freeze_capacity_trust_root_snapshot(f['provider'])
@@ -293,6 +296,8 @@ def _registered_publication_inputs(native_signed_source,tmp_path,*,signed_fault=
         sourcePolicyRef=command.source_policy_ref.model_dump(mode='json',by_alias=True),
         signerPublisher=source_root['publisher'],signerKeyId=source_root['keyId'],
         signerRootRevision=source_root['revision'],signerPublicKey=source_root['publicKey'])
+    if permit_fault is not None:
+        permit_fault(raw_permit)  # Own permit, before genuine signing/registration.
     parsed_permit=ProviderCapacitySigningPermit.model_validate(raw_permit)
     permit_bytes=canonical_json(parsed_permit.model_dump(mode='json',by_alias=True))
     permit_signature=f['keys'][policy.payload.publisher].sign(permit_bytes)
@@ -2941,3 +2946,55 @@ def test_original_request_large_offset_storage_boundary_is_not_source_authority(
         assert decoded==application.valid_from
         owner.rollback()
     print('ORIGINAL_REQUEST_MODEL_OFFSET_ACCEPTED_STORAGE22009_NO_REQUEST_NO_SOURCE native_decoder_only')
+
+
+@pytest.mark.parametrize('fault',['valid','policy_hash','signer_publisher','signer_key','signer_revision','signer_public_key','short_window','root_expired','root_future','root_revoked'])
+def test_native_signing_permit_binds_exact_policy_and_controlled_source_root(native_signed_source,tmp_path,fault):
+    import base64
+    from datetime import timedelta
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api import aip_provider_capacity_publication_store as native
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims
+    from aos_api.aip_provider_capacity_source_issuer import authenticate_capacity_issuance_command
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+    source=native_signed_source[3]
+    def change(p):
+        if fault=='policy_hash':p['sourcePolicyRef']['contentHash']='d'*64
+        elif fault=='signer_publisher':p['signerPublisher']='different-source-signer'
+        elif fault=='signer_key':p['signerKeyId']='different-source-key'
+        elif fault=='signer_revision':p['signerRootRevision']='sha256:'+'d'*64
+        elif fault=='signer_public_key':p['signerPublicKey']=base64.b64encode(bytes([7])*32).decode()
+        elif fault=='short_window':p['validUntil']=source.valid_until-timedelta(seconds=1)
+    def root_change(root):
+        now=native_signed_source[0]['now']
+        if fault=='root_expired':root['notAfter']=(now-timedelta(seconds=1)).isoformat()
+        elif fault=='root_future':root['notBefore']=(now+timedelta(minutes=1)).isoformat()
+        elif fault=='root_revoked':root['revokedAt']=(now-timedelta(seconds=1)).isoformat()
+    material=_registered_publication_inputs(native_signed_source,tmp_path,permit_fault=change,source_root_fault=root_change)
+    command,_,_=material['actual_command']();maker=authenticate_capacity_issuance_command(command).subject
+    with connect_capacity_issuer(material['config'],SCOPE) as issuer:
+        assert issuer.pgconn.used_password
+        assert read_capacity_approved_claims(issuer,command).source==source
+    params=ProviderCapacitySourceActionGuard._combination_params(SCOPE,source,maker)
+    params.update(proposal_id=command.approved_proposal.asset_id,proposal_revision=command.approved_proposal.revision,
+        proposal_hash=command.approved_proposal.content_hash,approval_event_id=command.approval_event.asset_id,
+        approval_event_hash=command.approval_event.content_hash)
+    for name,ref in (('policy',material['refs'][0]),('permit',material['refs'][2])):
+        params.update({name+'_id':ref['assetId'],name+'_revision':str(ref['revision']),name+'_hash':ref['contentHash']})
+    statement=getattr(native,'CAPACITY_NATIVE_SIGNING_PERMIT_COMBINATION_SQL',None)
+    assert statement is not None,'S20 needs actual permit / separate controlled signer-root combination'
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute(native.CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        for ref in (material['refs'][0],material['refs'][2]):
+            assert owner.execute(native.CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL,_current_signed_params(ref)).fetchone() is not None
+        row=owner.execute(statement,params).fetchone()
+        assert (row is not None)==(fault=='valid')
+        if row:
+            from cryptography.hazmat.primitives.serialization import Encoding,PublicFormat
+            assert row['source']==source.model_dump(mode='json',by_alias=True)
+            assert bytes(row['source_signer_public_key'])==material['source_key'].public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)
+        owner.rollback()
+    print('S20_REAL_PERMIT_AND_SEPARATE_SOURCE_SIGNER',fault,'no_source_delivery')

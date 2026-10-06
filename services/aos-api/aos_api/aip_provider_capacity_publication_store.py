@@ -2336,3 +2336,58 @@ WHERE source IS NOT NULL
  AND source_proposal_expiry>checked_at AND allocation_proposal_expiry>checked_at
  AND allocation_event_expiry>checked_at AND request_expiry>checked_at
 """)
+
+# S20 prerequisite after the original Source dependency lock prefix. A permit's
+# signature root is distinct from the Source signer root authorized by its body.
+CAPACITY_NATIVE_SIGNING_PERMIT_COMBINATION_SQL = (
+    'WITH approved AS MATERIALIZED ('+CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL+'), policy_row AS MATERIALIZED ('+
+    _supplier_registered_document_sql('policy','ProviderCapacitySourcePolicyRevision')+'), permit_row AS MATERIALIZED ('+
+    _supplier_registered_document_sql('permit','ProviderCapacitySigningPermitRevision')+r"""), bound AS MATERIALIZED (
+ SELECT aos_capacity_publication_private.read_original_source_candidate(a.payload->'sourceCandidate') AS source,
+  p.payload AS policy,q.payload AS permit,q.snapshot_raw,
+  p.not_before AS policy_root_start,p.not_after AS policy_root_end,p.revoked_at AS policy_root_revoked,
+  q.not_before AS permit_root_start,q.not_after AS permit_root_end,q.revoked_at AS permit_root_revoked,
+  p.bootstrap AS policy_bootstrap,q.bootstrap AS permit_bootstrap,
+  r.*,clock_timestamp() AS checked_at
+ FROM approved a CROSS JOIN policy_row p CROSS JOIN permit_row q
+ JOIN aos_capacity_publication_private.root_entry r
+ ON (r.org_id,r.project_id,r.snapshot_hash)=(q.org_id,q.project_id,q.snapshot_hash)
+ AND r.publisher_codepoints=ARRAY(SELECT ascii(substr(q.payload->>'signerPublisher',i,1))
+   FROM generate_series(1,length(q.payload->>'signerPublisher')) i)
+ AND r.key_id_codepoints=ARRAY(SELECT ascii(substr(q.payload->>'signerKeyId',i,1))
+   FROM generate_series(1,length(q.payload->>'signerKeyId')) i)
+ WHERE q.payload->'sourcePolicyRef'=jsonb_build_object('assetType','ProviderCapacitySourcePolicyRevision',
+   'assetId',p.asset_id,'revision',p.payload->'revision','contentHash',p.content_hash)
+ AND (q.origin_hash,q.snapshot_hash,q.registry_current_epoch)=(p.origin_hash,p.snapshot_hash,p.registry_current_epoch)
+ AND q.payload->'publisher'=p.payload->'publisher' AND q.payload->'keyId'=p.payload->'keyId'
+), checked AS MATERIALIZED (
+ SELECT b.* FROM bound b
+ WHERE b.permit->>'signerRootRevision'=b.root_revision
+ AND decode(b.permit->>'signerPublicKey','base64')=b.public_key
+ AND EXISTS(SELECT 1 FROM aos_capacity_publication_private.read_root_snapshot(b.snapshot_raw) actual
+  WHERE actual.root_ordinal=b.root_ordinal AND actual.publisher_literal=b.publisher_literal
+   AND actual.key_id_literal=b.key_id_literal AND actual.publisher_codepoints=b.publisher_codepoints
+   AND actual.key_id_codepoints=b.key_id_codepoints AND actual.public_key=b.public_key
+   AND actual.root_revision=b.root_revision AND actual.not_before=b.not_before AND actual.not_after=b.not_after
+   AND actual.revoked_at IS NOT DISTINCT FROM b.revoked_at AND actual.canonical_root=b.canonical_root)
+ AND b.checked_at>=b.not_before AND b.checked_at<b.not_after
+ AND (b.revoked_at IS NULL OR b.checked_at<b.revoked_at)
+ AND b.checked_at>=b.policy_root_start AND b.checked_at<b.policy_root_end
+ AND (b.policy_root_revoked IS NULL OR b.checked_at<b.policy_root_revoked)
+ AND b.checked_at>=b.permit_root_start AND b.checked_at<b.permit_root_end
+ AND (b.permit_root_revoked IS NULL OR b.checked_at<b.permit_root_revoked)
+ AND b.checked_at>=aos_capacity_publication_private.read_signed_time(b.policy->'validFrom')
+ AND b.checked_at<aos_capacity_publication_private.read_signed_time(b.policy->'validUntil')
+ AND b.checked_at>=aos_capacity_publication_private.read_signed_time(b.permit->'validFrom')
+ AND b.checked_at<aos_capacity_publication_private.read_signed_time(b.permit->'validUntil')
+ AND b.checked_at>=aos_capacity_publication_private.read_signed_time(b.policy_bootstrap->'validFrom')
+ AND b.checked_at<aos_capacity_publication_private.read_signed_time(b.policy_bootstrap->'validUntil')
+ AND b.checked_at>=aos_capacity_publication_private.read_signed_time(b.permit_bootstrap->'validFrom')
+ AND b.checked_at<aos_capacity_publication_private.read_signed_time(b.permit_bootstrap->'validUntil')
+ AND (SELECT instant FROM aos_capacity_publication_private.original_source_time(b.source->'validFrom'))>=
+   aos_capacity_publication_private.read_signed_time(b.permit->'validFrom')
+ AND (SELECT instant FROM aos_capacity_publication_private.original_source_time(b.source->'validUntil'))<=
+   aos_capacity_publication_private.read_signed_time(b.permit->'validUntil')
+)
+SELECT source,permit,public_key AS source_signer_public_key,root_revision AS source_signer_root_revision FROM checked
+""")

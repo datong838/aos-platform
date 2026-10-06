@@ -1,0 +1,19 @@
+{
+  "container": "aos-capacity-publication-scram-20261006",
+  "id": "4a2af01a0f1c1bb64592f42de4805b80fa210764f15769f718a2ae640ab8fc85",
+  "pid": 1569,
+  "startedAt": "2026-10-06T20:31:59.834177389Z",
+  "shmSize": 67108864,
+  "mounts": [
+    {
+      "Type": "volume",
+      "Name": "aos-capacity-publication-scram-20261006-data",
+      "Source": "/var/lib/docker/volumes/aos-capacity-publication-scram-20261006-data/_data",
+      "Destination": "/var/lib/postgresql/data",
+      "Driver": "local",
+      "Mode": "z",
+      "RW": true,
+      "Propagation": ""
+    }
+  ]
+}

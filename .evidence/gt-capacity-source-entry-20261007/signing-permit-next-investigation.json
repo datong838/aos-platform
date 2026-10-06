@@ -1,0 +1,25 @@
+{
+  "schema": "aos-native-signing-permit-next-investigation/v1",
+  "database": "aos_test_7dd91a1512de_ti4_test",
+  "authority": "AOS-001436",
+  "head": "4e02ffc28586edc340f4f087f1a69a2f5222216c",
+  "read_only": true,
+  "checks": {
+    "permit_actual_signature": true,
+    "policy_exact": true,
+    "same_policy_origin": true,
+    "same_policy_snapshot": true,
+    "signer_root_revision": true,
+    "signer_public_key": true,
+    "signer_root_current": true,
+    "permit_current": true
+  },
+  "root_identity_binding": "exact_unicode_codepoints; stored literal is JSON string token, not plain publisher",
+  "native_combination_query_implemented": false,
+  "source_delivery": false,
+  "read_only_investigation_corrections": [
+    "Selected actual registered S18/S19 case rather than later nested-epoch database without documents.",
+    "Root literal columns contain canonical JSON string tokens; exact Unicode codepoints bind the separate signer.",
+    "Read-only Python probe requires explicit integer[] casts for low codepoint lists."
+  ]
+}
