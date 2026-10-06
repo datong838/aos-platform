@@ -132,3 +132,5 @@ S14载荷版本实际RED：provider-payload-identity-red.log原完整Source prop
 已读reports/ais005-recheck-20261006.md：督导自主保留RESOLUTION_PROPOSED，缺四种snake/mixed原row别名在真实private批准消费者的组合正向。当前S14回归同handle终结后，先冻结其代码/日志快照，再仅扩展formal-boundary原alias测试：原runtime候选INSERT/hash/147 CHECK真实COMMIT→原Source proposal→独立原checker批准→新exact proposal/event native command（原JWT，同maker）→真实private SCRAM read_capacity_approved_claims，与changed Source exactrefs及alias原raw hash逐字一致。supplier_verified与execution_allowed必须False，无签名Source注册/容量激活。不能拼接原runtime alias正向与另一条private canonical正向；不修改督导finding状态，等其自主复核新证据。完整Task仍未交付。
 
 S14版本身份最终八模块相邻520 passed/316.04s，8 warnings（7既有启动＋本轮扩充覆盖原source_pg故意bool序列化warning）。自复审/风险与原始日志hash见formal-boundary provider-payload-identity-verification.md/sources.json；Source局部身份缺口修复，未证明通用ModelEval所有资产或完整发行/consumer。
+
+AIS-005新增四种原行别名→原独立checker批准→同maker原JWT→真实private SCRAM claims组合正向，专项4/12.37s，整文件85/116.80s；proof.json逐项绑定原raw hash/代码sha/日志sha。既有negative证据仍单独标级；finding关闭由督导自主核证据，施工者不改其状态；claims无供应商认证/无执行权。

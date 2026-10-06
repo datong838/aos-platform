@@ -1,0 +1,7 @@
+# AIS-005 四种原行别名的真实私有批准消费
+
+依据独立督导自主ais005-recheck报告明确缺项扩展原alias测试：真实147候选行INSERT并COMMIT/raw hash→原Source proposal→原独立checker批准→同maker原JWT的新exact proposal/event command→真实SCRAM connect_capacity_issuer/read_capacity_approved_claims，明确原同一组alias输入的完整组合消费，不拼接其他正向。四类为basis蛇形、Provider蛇形、basis混合、Provider混合。proof.json记录原raw account/basis hash与事实匹配；原metadata/原当前依赖保持。
+
+专项4 passed/12.37s；整formal-boundary文件85 passed/116.80s，7既有warnings，exit0。只改原测试和证据，新增消费者证明继续使用已提交Source版本身份修复。返回仍APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START、supplier_verified=False、execution_allowed=False，无正式Source签发、供应商来源注册、容量激活、当前库或外部效果。
+
+独立督导finding不会由施工者改状态；此新精确快照供其主动复查。原TEMP独立重hash负例、私有规范wrong ref/hash/maker/tenant以及实际runtime alias正向仍各自保留；本新增不冒充所有异常均通过真实private完整签名发行入口。完整Task/Goal仍未完成。

@@ -165,12 +165,12 @@ def test_original_source_checks_every_account_provider(source_inputs,fault):
 
 
 @pytest.mark.parametrize('alternate',['basis_account','account_provider','basis_mixed','provider_mixed'])
-def test_original_nested_ref_aliases_reach_source_review(source_inputs,alternate):
+def test_original_nested_ref_aliases_reach_source_review(source_inputs,alternate,approved_command,private_database,capsys):
     from psycopg.types.json import Jsonb
     from aos_api.db import connect_serializable
     from aos_api.aip_action_store import canonical_hash
     from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source
-    maker,_,source,_=source_inputs
+    maker,checker,source,_=source_inputs
     with connect_serializable(SCOPE) as conn:
         account=conn.execute('SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
                              (source.physical_account_ref.asset_id,)).fetchone()['request_json']
@@ -194,6 +194,32 @@ def test_original_nested_ref_aliases_reach_source_review(source_inputs,alternate
         basis_ref=source.basis_ref.model_copy(update=dict(asset_id=basis_id,content_hash=bh))))
     proposal=propose_provider_capacity_source(maker,changed,'alias-review-'+uuid4().hex,changed.valid_until)
     assert proposal.proposal.status.value=='drafted'
+    from aos_api.aip_action_models import DecideActionProposalRequest
+    from aos_api.aip_provider_capacity_source_action import decide_provider_capacity_source
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims
+    approved=decide_provider_capacity_source(checker,proposal.proposal.id,'alias-checker-'+uuid4().hex,
+        DecideActionProposalRequest(expectedProposalVersion=proposal.proposal.version,
+            expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',
+            reason='isolated alias private acceptance',approvalExpiresAt=changed.valid_until))
+    command=approved_command[-1].model_copy(update=dict(idempotency_key='alias-private-'+uuid4().hex,
+        approved_proposal=approved_command[-1].approved_proposal.model_copy(update=dict(
+            asset_id=approved.proposal.id,revision=approved.proposal.version,content_hash=approved.proposal.proposal_hash)),
+        approval_event=approved_command[-1].approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+            content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+    with connect_capacity_issuer(private_database,SCOPE) as conn:
+        fact=read_capacity_approved_claims(conn,command)
+        assert conn.pgconn.used_password is True
+        assert fact.source==changed and fact.maker==maker.subject
+        assert fact.approved_proposal==command.approved_proposal and fact.approval_event==command.approval_event
+        assert fact.source.physical_account_ref.content_hash==ah and fact.source.basis_ref.content_hash==bh
+        assert fact.supplier_verified is False and fact.execution_allowed is False
+    import json
+    with capsys.disabled():
+        print('CAPACITY_PRIVATE_ALIAS_PROOF '+json.dumps(dict(alternate=alternate,
+            issuer_role=ISSUER,scram_used=True,proposal_status=approved.proposal.status.value,
+            account_raw_hash=ah,basis_raw_hash=bh,exact_claims_match=True,
+            supplier_verified=False,execution_allowed=False,current_database_accessed=False),sort_keys=True))
 
 
 def test_source_combination_sql_original_private_rows(approved_command,private_database):
