@@ -1,0 +1,152 @@
+{
+  "authority": "AOS-001427",
+  "database": "aos_test_f57c04b61274_ti4_test",
+  "scope": "READONLY_ORIGINAL_PROVIDER_MODEL_DOMAIN_INVESTIGATION_NOT_NATIVE_ENTRY_ACCEPTANCE",
+  "source_files": {
+    "services/aos-api/aos_api/aip_model_eval_request_store.py": "f18777ae5cd22b8de3db52d5daa3679fe06ee6ae8888e846fd21ec4768187830",
+    "services/aos-api/aos_api/aip_model_runtime_contracts.py": "4684c8bfb0e2a7102279db52229d6b2a02e5f8443696cabc1f54ae025810bdfa",
+    "services/aos-api/aos_api/aip_model_runtime_store.py": "ebd1e1ffa38032a069048a5e8c53b3fe3e01f19a6a38fc42f7597d391b3b4c26",
+    "services/aos-api/aos_api/aip_provider_capacity_source_authority.py": "7c25c116243c3e2583de55aa91e48873ebc2185d2779dcb95199c4d81a2720ed",
+    "services/aos-api/aos_api/evidence_bundle_provenance.py": "6bafe3d6b95b4458b3f768d52f147c7d2b63fc1bc6026e8033b9429a375fa899"
+  },
+  "original_business_hash": "1fb1e064f4ff2d298e4ce29a6720989ee65b3b95e447a8a583f141169b14d234",
+  "excluded_hash_fields": [
+    "contentHash",
+    "createdAt",
+    "createdBy",
+    "revision",
+    "tenant"
+  ],
+  "cases": [
+    {
+      "case": "original",
+      "original_model_accepts": true,
+      "business_hash_matches_original": true,
+      "revision_matches_original": true,
+      "tenant_matches_positive": true,
+      "normalized_revision_type": "int",
+      "normalized_timeout_type": "int",
+      "created_at_aware": true
+    },
+    {
+      "case": "all_snake",
+      "original_model_accepts": true,
+      "business_hash_matches_original": true,
+      "revision_matches_original": true,
+      "tenant_matches_positive": true,
+      "normalized_revision_type": "int",
+      "normalized_timeout_type": "int",
+      "created_at_aware": true
+    },
+    {
+      "case": "revision_string",
+      "original_model_accepts": true,
+      "business_hash_matches_original": true,
+      "revision_matches_original": true,
+      "tenant_matches_positive": true,
+      "normalized_revision_type": "int",
+      "normalized_timeout_type": "int",
+      "created_at_aware": true
+    },
+    {
+      "case": "revision_float",
+      "original_model_accepts": true,
+      "business_hash_matches_original": true,
+      "revision_matches_original": true,
+      "tenant_matches_positive": true,
+      "normalized_revision_type": "int",
+      "normalized_timeout_type": "int",
+      "created_at_aware": true
+    },
+    {
+      "case": "revision_bool",
+      "original_model_accepts": true,
+      "business_hash_matches_original": true,
+      "revision_matches_original": true,
+      "tenant_matches_positive": true,
+      "normalized_revision_type": "int",
+      "normalized_timeout_type": "int",
+      "created_at_aware": true
+    },
+    {
+      "case": "created_naive",
+      "original_model_accepts": true,
+      "business_hash_matches_original": true,
+      "revision_matches_original": true,
+      "tenant_matches_positive": true,
+      "normalized_revision_type": "int",
+      "normalized_timeout_type": "int",
+      "created_at_aware": false
+    },
+    {
+      "case": "secret_ref_trim",
+      "original_model_accepts": true,
+      "business_hash_matches_original": true,
+      "revision_matches_original": true,
+      "tenant_matches_positive": true,
+      "normalized_revision_type": "int",
+      "normalized_timeout_type": "int",
+      "created_at_aware": true
+    },
+    {
+      "case": "created_by_spaces",
+      "original_model_accepts": true,
+      "business_hash_matches_original": true,
+      "revision_matches_original": true,
+      "tenant_matches_positive": true,
+      "normalized_revision_type": "int",
+      "normalized_timeout_type": "int",
+      "created_at_aware": true
+    },
+    {
+      "case": "canary_tenant",
+      "original_model_accepts": true,
+      "business_hash_matches_original": true,
+      "revision_matches_original": true,
+      "tenant_matches_positive": false,
+      "normalized_revision_type": "int",
+      "normalized_timeout_type": "int",
+      "created_at_aware": true
+    },
+    {
+      "case": "timeout_string",
+      "original_model_accepts": true,
+      "business_hash_matches_original": true,
+      "revision_matches_original": true,
+      "tenant_matches_positive": true,
+      "normalized_revision_type": "int",
+      "normalized_timeout_type": "int",
+      "created_at_aware": true
+    },
+    {
+      "case": "timeout_float",
+      "original_model_accepts": true,
+      "business_hash_matches_original": true,
+      "revision_matches_original": true,
+      "tenant_matches_positive": true,
+      "normalized_revision_type": "int",
+      "normalized_timeout_type": "int",
+      "created_at_aware": true
+    },
+    {
+      "case": "timeout_bool",
+      "original_model_accepts": false
+    },
+    {
+      "case": "endpoint_missing_default_metadata",
+      "original_model_accepts": true,
+      "business_hash_matches_original": true,
+      "revision_matches_original": true,
+      "tenant_matches_positive": true,
+      "normalized_revision_type": "int",
+      "normalized_timeout_type": "int",
+      "created_at_aware": true
+    }
+  ],
+  "limitations": [
+    "Pydantic oracle using retained actual row; mutated cases not committed to DB",
+    "No native Provider profile or prepare/commit implementation",
+    "Canonical hash equality cannot replace positive tenant/head/id/lifecycle checks",
+    "No secret material or opaque reference text stored"
+  ]
+}
