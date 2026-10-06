@@ -30,3 +30,15 @@
 独立新卷current151-window-e322c5b61a71实际完整序列47.49秒、进程exit0：九个journal done全verified，九步migration exit0，每步预期版本及原冻结SQL hash验证；窗口备份/独立全恢复、完整151旧数据和目录（仅四新增created_at归一及已审15CHECK结合律）、原严格withdrawal fence、恢复原listen配置来源并restart/TCP schema151、最终资源/完整snapshot/Task/HEAD通过。原dump、globals、两新恢复卷均保留。证据isolated-window-r2.json/log及journal-summary.json精确hash绑定。两无应用阶段仅isolated_no_application_clients，不当真实API/Web重启。
 
 本Task仍ACTIVE，没有Delivery；当前权威源142及现有API/Web未改，source_touched=false。完整当前维护入口/真实零执行窗口/源迁移/最新服务启动/八工作台浏览器仍未通过；Host/worker/Provider关闭，正式业务首链保持pending。方案与本阶段一致，不把隔离47.49秒当当前维护通过。下一立即将相同已验收步骤接入固定当前资源与精确原进程控制。
+
+## 151启动后修复准备检查点
+
+2026-10-06 HEAD d7b5ad80只读复核：源151完整snapshot与原失败后保存快照精确相等；8080 PID28946/8434 PID28993仍原11:45启动服务。三meta表各一行，字段差异仅updated_at。原acceptance失败不覆盖、不补写done，不重发九迁移/启动。
+
+新增build_tenant_timestamp_repair151仅生成SQL，无执行入口/不授权限：精确三表/原org-org+dev-project/每表一既有行/只updated_at/带时区且向前漂移；全事务、固定一列UPDATE、整行JSONB CAS与每表ROW_COUNT1否则RAISE回滚，已恢复相等值拒绝重放。RED9failed，专项及原维护相邻91passed1deselected0.36秒。排除的是原维护1329固定Task反例与当前1369冲突，未宣称旧全套通过。
+
+原生PG独立none-network新卷证明：timestamp-cas-native-proof-r3.log/json exit0，第二行在CAS冻结后实际变化令SQL异常并首行变动原子回滚；恢复测试准备后正向精确三原值恢复；重复已恢复请求被生成门拒绝。只是假数据三表事务专项，不等于当前151真实schema/目录触发器全恢复演练。首轮因测试容器名不符合原隔离门拒绝、未执行DDL；二轮因错误反例直接篡改生成输入被纯门提前拒绝、未发修复SQL；失败日志/独立卷均保留，没有放宽门或重放未知结果。
+
+timestamp-cas-current-readonly.json使用原window独立142恢复的三既有行和当前151实际三行通过纯门，仅保存行/SQL hash，不暴露实际身份字段、不执行SQL。原数据时间戳仍未恢复；服务未加载最新代码。后续必须新绑定阶段、当前HEAD/Task/原失败证据与精确资源、零执行窗口、新一致备份+全恢复、真实schema副本演练后才精确执行当前CAS；不得用本专项替代该门。
+
+当前完整维护Task保持ACTIVE，未Delivery；权威/Prime当前1369需在维护阶段收口后同步实际151状态，不能沿旧原HEAD重放journal。未操作当前源数据库、原服务、Host/worker/Provider、商城源、旧12Run、manual、230L0或push。

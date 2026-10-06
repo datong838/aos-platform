@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/current151-maintenance-20261006/prove-timestamp-cas.py", line 21, in <module>
+    item=json.loads(run(['inspect',name]).stdout)[0];m.require_isolated151(item,name=name,image=image)
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py", line 255, in require_isolated151
+    raise Maintenance151Blocked('ISOLATED151_RESOURCE_REQUIRED')
+repair151.Maintenance151Blocked: ISOLATED151_RESOURCE_REQUIRED

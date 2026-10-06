@@ -30,3 +30,10 @@ Maintenance151Journal绑定冻结head/thread/Task/base，不仅step名称。原�
 
 ## 当前资源接入
 在原两文件内抽出同一个序列，isolated/current两个入口均强制新Task/未来Lease/预检和committed executable源码。current入口没有可选容器参数，固定原SOURCE_CONTEXT/SOURCE_CONTAINER/原Id+image+卷；仅允许原容器exec/restart/inspect，禁run/rm/volume等。当前调用TCP只读探针走原host18435且只允许SELECT1/version，连接失败才计拒绝。原服务身份复核后各一次SIGTERM正常退出，等待原root/helper消失与端口释放，不强杀；迁移成功后用原argv/签名Receipt预检schema151与空端口启动新root，记新PID/原argv/cwd/端口回读，不凭health200当首链。窗口globals实备后再初始化独立restore目标的roles，使用窗口globals与dump恢复，而非预先旧roles。所有旧备份保留，失败不自动开放窗口/启动不兼容旧API；每次当前操作前复核精确容器和Task/HEAD。运行修订后隔离全路径，再执行一次当前维护；浏览器/上下文/Delivery待实际完成。
+
+## 已迁移151后的独立修复阶段
+原window-da8531053c83已迁移151/恢复监听/启动成功，原acceptance失败；不能重跑142预检或原journal。新阶段绑定当前HEAD、同一ACTIVE维护Task/Lease和原失败目录的全部hash；核九步terminal0、之前八done绑定原ebac8fd0、原acceptance仅attempt。租户只读启动代码d7b5ad80已单独Delivery；源码更改需新阶段实际部署，不能把旧服务当新代码。
+
+只修复三既有meta表updated_at：先验证各表原恢复副本与当前恰好一行，org-org/dev-project双边界、整行键相等且只updated_at变化，两时间均带时区且当前时间不早于原值；任何其他字段/行数/租户变化拒绝。生成事务SQL仅允许三固定public表，固定UPDATE一列，WHERE整行jsonb精确CAS，每表ROW_COUNT必须1，否则整事务回滚。已经恢复（时间相等）拒绝重放。不能normalize隐藏旧timestamp，原字段原值必须恢复。
+
+执行门另设新journal：只读核原失败+当前151完整快照（与失败后快照一致）/固定容器卷+最新真实process→新受控停止+TCP零执行→新的完整一致备份并独立恢复→隔离副本演练精确CAS及完整变化限定三字段→当前CAS一次→完整旧数据/151fence验证→原配置PG重启/修复API/Web启动→浏览器及最终完整快照。失败/未知保留attempt，不能重发；本阶段先实现历史/字段/CAS纯门和反例，未接实际副作用入口。原备份全部保留；禁止旧migration、全表UPDATE、角色/ACL/目录放宽、Host/worker/Provider与商城源读。

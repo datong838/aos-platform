@@ -523,3 +523,38 @@ def _run_sequence151(*,thread,current):
     result=dict(outcome='CURRENT142_TO151_MAINTENANCE_API_WEB_GREEN_BROWSER_PENDING' if current else 'ISOLATED142_TO151_WINDOW_SEQUENCE_GREEN',state=str(state),source=source,target=target,head=report['head'],elapsed_seconds=round(time.monotonic()-tick,3),current_source_touched=current)
     save('result.json',result)
     return result
+
+
+TENANT_TIMESTAMP_TABLES151=('meta_org','meta_workspace','meta_membership')
+
+
+def build_tenant_timestamp_repair151(original,observed):
+    """Build a narrowly scoped atomic CAS repair; this never executes SQL.
+
+    Values must come from the verified original window restore and a freshly
+    reconciled current snapshot. The separate zero-execution/backup/journal
+    gates remain mandatory before applying this statement to any resource.
+    """
+    from psycopg import sql
+    if not isinstance(original,dict) or not isinstance(observed,dict) or set(original)!=set(TENANT_TIMESTAMP_TABLES151) or set(observed)!=set(original):
+        raise Maintenance151Blocked('TIMESTAMP_REPAIR_EXACT_TABLES_REQUIRED')
+    updates=[]
+    for table in TENANT_TIMESTAMP_TABLES151:
+        before,after=original[table],observed[table]
+        if not isinstance(before,list) or not isinstance(after,list) or len(before)!=1 or len(after)!=1:
+            raise Maintenance151Blocked('TIMESTAMP_REPAIR_EXACT_EXISTING_ROWS_REQUIRED')
+        a,b=before[0],after[0]
+        if not isinstance(a,dict) or not isinstance(b,dict) or set(a)!=set(b) or {k for k in a if a[k]!=b[k]}!={'updated_at'}:
+            raise Maintenance151Blocked('TIMESTAMP_REPAIR_ONLY_TIMESTAMP_DRIFT_ALLOWED')
+        if (a.get('id') if table=='meta_org' else a.get('org_id'))!='org-org' or (table!='meta_org' and a.get('project_id')!='dev-project'):
+            raise Maintenance151Blocked('TIMESTAMP_REPAIR_TENANT_SCOPE_REQUIRED')
+        try:
+            old_time=datetime.fromisoformat(a['updated_at']);new_time=datetime.fromisoformat(b['updated_at'])
+            valid=old_time.tzinfo is not None and new_time.tzinfo is not None and new_time>old_time
+        except (KeyError,ValueError,TypeError):valid=False
+        if not valid:raise Maintenance151Blocked('TIMESTAMP_REPAIR_AWARE_FORWARD_DRIFT_REQUIRED')
+        updates.append(sql.SQL('UPDATE public.{} AS t SET updated_at={}::timestamptz WHERE row_to_json(t)::jsonb = {}::jsonb; GET DIAGNOSTICS affected = ROW_COUNT; IF affected <> 1 THEN RAISE EXCEPTION \'TENANT_TIMESTAMP_CAS_MISMATCH\'; END IF;').format(
+            sql.Identifier(table),sql.Literal(a['updated_at']),sql.Literal(json.dumps(b,sort_keys=True))).as_string())
+    body='DECLARE affected integer; BEGIN '+' '.join(updates)+' END;'
+    locks=sql.SQL(', ').join(sql.SQL('public.{}').format(sql.Identifier(t)) for t in sorted(TENANT_TIMESTAMP_TABLES151))
+    return sql.SQL("BEGIN; SET LOCAL timezone='UTC'; SET LOCAL search_path=pg_catalog,public; LOCK TABLE {} IN SHARE ROW EXCLUSIVE MODE; DO {}; COMMIT;").format(locks,sql.Literal(body))

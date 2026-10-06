@@ -1,0 +1,51 @@
+{
+  "head": "d7b5ad809df1778c29b2f849019204c68c6f8433",
+  "source_snapshot_unchanged_since_failure": true,
+  "version": "a0v_151",
+  "tenant_diff": {
+    "meta_org": {
+      "before_count": 1,
+      "after_count": 1,
+      "changed_fields": [
+        [
+          "updated_at"
+        ]
+      ]
+    },
+    "meta_workspace": {
+      "before_count": 1,
+      "after_count": 1,
+      "changed_fields": [
+        [
+          "updated_at"
+        ]
+      ]
+    },
+    "meta_membership": {
+      "before_count": 1,
+      "after_count": 1,
+      "changed_fields": [
+        [
+          "updated_at"
+        ]
+      ]
+    }
+  },
+  "services": [
+    {
+      "pid": 28946,
+      "started": "Tue Oct  6 11:45:40 2026",
+      "listener_ports": [
+        8080
+      ]
+    },
+    {
+      "pid": 28993,
+      "started": "Tue Oct  6 11:45:48 2026",
+      "listener_ports": [
+        8434
+      ]
+    }
+  ],
+  "no_source_mutation": true
+}

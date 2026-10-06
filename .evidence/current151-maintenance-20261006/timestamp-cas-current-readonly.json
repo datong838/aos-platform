@@ -1,0 +1,13 @@
+{
+  "outcome": "CURRENT151_TIMESTAMP_CAS_INPUT_READONLY_VALIDATED",
+  "actual_source_touched": false,
+  "sql_sha256": "d6487fa33ed1afa6bdc1d3aef3f1fe85cd221c2bcfe84122399e9640c2972a65",
+  "source_rows_sha256": "205d8bd92fba022e62e46153de7143ca0801e108cac6f905fc5ef4abb960adc0",
+  "original_rows_sha256": "8495532833e68026640387cbd98620a612bf0e895d4b1a19f6857deba3fb9ac8",
+  "exact_tables": [
+    "meta_org",
+    "meta_workspace",
+    "meta_membership"
+  ],
+  "mutation_permission": false
+}

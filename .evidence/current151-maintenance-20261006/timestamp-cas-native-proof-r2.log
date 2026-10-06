@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/current151-maintenance-20261006/prove-timestamp-cas.py", line 41, in <module>
+    save('negative-attempt.json',{'head':head});bad=pg(m.build_tenant_timestamp_repair151(original,wrong).as_string());save('negative-terminal.json',{'exit_code':bad.returncode,'expected_failure':'TENANT_TIMESTAMP_CAS_MISMATCH' in bad.stderr.decode()})
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py", line 548, in build_tenant_timestamp_repair151
+    raise Maintenance151Blocked('TIMESTAMP_REPAIR_ONLY_TIMESTAMP_DRIFT_ALLOWED')
+repair151.Maintenance151Blocked: TIMESTAMP_REPAIR_ONLY_TIMESTAMP_DRIFT_ALLOWED

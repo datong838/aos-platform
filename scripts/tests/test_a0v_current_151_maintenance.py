@@ -183,3 +183,40 @@ def test_schema_mismatch_prevents_start(monkeypatch):
     service=dict(port=8080,argv=['python','api','--serve'],cwd='original')
     with pytest.raises(m.Maintenance151Blocked):m.restart_services151([service],journal=journal,maintenance=None)
     assert started==[]
+
+
+def tenant_rows151():
+    return {
+        'meta_org':[dict(id='org-org',name='preserved',updated_at='2026-10-01T00:00:00+00:00')],
+        'meta_workspace':[dict(org_id='org-org',project_id='dev-project',name='preserved',updated_at='2026-10-01T00:00:00+00:00')],
+        'meta_membership':[dict(org_id='org-org',project_id='dev-project',subject='existing',role='viewer',updated_at='2026-10-01T00:00:00+00:00')],
+    }
+
+
+@pytest.mark.parametrize('fault',['field','rows','table','tenant','workspace','same','naive','backwards'])
+def test_timestamp_repair_rejects_other_changes_or_replay(fault):
+    import copy
+    m=module();old=tenant_rows151();live=copy.deepcopy(old)
+    for rows in live.values():rows[0]['updated_at']='2026-10-06T00:00:00+00:00'
+    if fault=='field':live['meta_membership'][0]['role']='owner'
+    elif fault=='rows':live['meta_org'].append(dict(live['meta_org'][0]))
+    elif fault=='table':live['unexpected']=[]
+    elif fault=='tenant':old['meta_org'][0]['id']=live['meta_org'][0]['id']='dev-org'
+    elif fault=='workspace':old['meta_workspace'][0]['project_id']=live['meta_workspace'][0]['project_id']='other'
+    elif fault=='same':live['meta_org'][0]['updated_at']=old['meta_org'][0]['updated_at']
+    elif fault=='naive':live['meta_org'][0]['updated_at']='2026-10-06T00:00:00'
+    elif fault=='backwards':live['meta_org'][0]['updated_at']='2026-09-01T00:00:00+00:00'
+    with pytest.raises(m.Maintenance151Blocked):m.build_tenant_timestamp_repair151(old,live)
+
+
+def test_timestamp_repair_sql_has_exact_cas_and_atomic_row_count_guard():
+    import copy
+    m=module();old=tenant_rows151();live=copy.deepcopy(old)
+    for rows in live.values():rows[0]['updated_at']='2026-10-06T00:00:00+00:00'
+    sql=m.build_tenant_timestamp_repair151(old,live).as_string()
+    assert sql.startswith('BEGIN;') and sql.endswith('COMMIT;')
+    assert sql.count('SET updated_at=')==3
+    assert sql.count('row_to_json(t)::jsonb =')==3
+    assert sql.count('ROW_COUNT')==3
+    assert 'RAISE EXCEPTION' in sql
+    assert 'alembic_version' not in sql and 'ALTER' not in sql and 'DELETE' not in sql
