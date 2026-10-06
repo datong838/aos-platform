@@ -1031,3 +1031,53 @@ def test_native_supplier_attestation_original_integer_limit(native_profile_runne
         old=('"'+field+'":'+str(value)).encode();raw=raw.replace(old,('"'+field+'":').encode()+digits)
     with pytest.raises(ValueError):parse_signed_capacity_body(raw,SupplierCapacityAttestation)
     assert 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' in _native_attestation(native_profile_runner,raw,False)
+
+
+@pytest.mark.parametrize('kind',['policy','attestation','permit','bootstrap'])
+@pytest.mark.parametrize('fault',['valid','raw-change','signature-change','key-change',
+    'signed-duplicate','signed-schema','signed-purpose'])
+def test_native_complete_profiles_real_signature_composition(native_profile_runner,kind,fault):
+    import hashlib
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding,PublicFormat
+    from aos_api.aip_provider_capacity_source_contracts import ProviderCapacitySourcePolicy,SupplierCapacityAttestation
+    from aos_api.aip_provider_capacity_publication_contracts import (
+        ProviderCapacitySigningPermit,ProviderCapacityOriginBootstrap,parse_signed_capacity_body)
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_IDENTIFIER_PROFILE_SQL,CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL,CAPACITY_SIGNING_PERMIT_PROFILE_SQL,
+        CAPACITY_ORIGIN_BOOTSTRAP_PROFILE_SQL,CAPACITY_SOURCE_POLICY_PROFILE_SQL,CAPACITY_SUPPLIER_ATTESTATION_PROFILE_SQL)
+    types={'policy':(ProviderCapacitySourcePolicy,source_policy,'read_source_policy'),
+        'attestation':(SupplierCapacityAttestation,supplier_attestation,'read_supplier_attestation'),
+        'permit':(ProviderCapacitySigningPermit,permit,'read_signing_permit'),
+        'bootstrap':(ProviderCapacityOriginBootstrap,bootstrap,'read_origin_bootstrap')}
+    model_type,make_body,function=types[kind]
+    body=model_type.model_validate(make_body());payload=body.model_dump(mode='json',by_alias=True)
+    raw=canonical_json(payload);assert parse_signed_capacity_body(raw,model_type)==body
+    key=Ed25519PrivateKey.generate();public=key.public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)
+    signature=key.sign(raw)
+    if fault=='raw-change':raw=canonical_json({**payload,'keyId':payload['keyId']+'-changed'})
+    elif fault=='signature-change':signature=bytes([signature[0]^1])+signature[1:]
+    elif fault=='key-change':public=Ed25519PrivateKey.generate().public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)
+    elif fault=='signed-duplicate':
+        purpose=json.dumps(payload['purpose']).encode()
+        raw=raw.replace(b'"purpose":'+purpose,b'"purpose":'+purpose+b',"purpose":'+purpose)
+        signature=key.sign(raw)
+    elif fault=='signed-schema':raw=canonical_json({**payload,'schemaVersion':2});signature=key.sign(raw)
+    elif fault=='signed-purpose':raw=canonical_json({**payload,'purpose':'wrong-document-domain'});signature=key.sign(raw)
+    ddl=(CAPACITY_IDENTIFIER_PROFILE_SQL+CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL+CAPACITY_SIGNING_PERMIT_PROFILE_SQL+
+        CAPACITY_ORIGIN_BOOTSTRAP_PROFILE_SQL+CAPACITY_SOURCE_POLICY_PROFILE_SQL+CAPACITY_SUPPLIER_ATTESTATION_PROFILE_SQL)
+    verify="SELECT aos_ed25519.verify(decode('%s','hex'),decode('%s','hex'),decode('%s','hex'));"%(signature.hex(),raw.hex(),public.hex())
+    read="SELECT aos_capacity_publication_private.%s(decode('%s','hex'));"%(function,raw.hex())
+    if fault in ['raw-change','signature-change','key-change']:
+        parse_signed_capacity_body(raw,model_type)
+        assert native_profile_runner(ddl+verify)=='f'
+    elif fault.startswith('signed-'):
+        # Identical signed bytes really verify. Shape failure is independent.
+        assert native_profile_runner(ddl+verify)=='t'
+        with pytest.raises(ValueError):parse_signed_capacity_body(raw,model_type)
+        assert 'CAPACITY_' in native_profile_runner(ddl+verify+read,False)
+    else:
+        result=native_profile_runner(ddl+verify+read+
+            "SELECT encode(pg_catalog.sha256(decode('%s','hex')),'hex');"%raw.hex()).splitlines()
+        assert result[0]=='t' and json.loads(result[1])==payload
+        assert result[2]==hashlib.sha256(raw).hexdigest()

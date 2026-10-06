@@ -1,0 +1,23 @@
+{
+  "authority_cutoff": "AOS-001402",
+  "code_base": "3d535f1d7a100cf7f58101f127439375625cd57f",
+  "task": "gt-provider-capacity-publication-schema-20261005",
+  "initial": "4 failed / 24 passed / 9.16s: isolated crypto DB lacks public.digest; diagnostic retained",
+  "green": "28 passed / 8.64s",
+  "adjacent": "427 passed, 7 warnings in 33.60s",
+  "review": "All four full canonical documents use real Ed25519 private-key signatures and actual native C verifier. Valid cases verify, parse and SHA256-match in same test transaction; raw/signature/public-key changes fail crypto. Re-signed duplicate/schema/purpose faults verify crypto but native typed parser rejects. No production implementation changes or persistent schema/DDL.",
+  "limits": [
+    "Public keys supplied by test caller: no independent trusted root or publisher authorization proven",
+    "Reject cases verify crypto and separately execute full parser on identical bytes; not a persisted production authorization entrypoint",
+    "Native verifier present in fixed isolated crypto image only, no installation onto authoritative database",
+    "Full native registration/Source prepare/sign/finalize COMMIT/current consumer and business chain remain pending",
+    "Original Task ACTIVE; no full Delivery"
+  ],
+  "sources": {
+    "services/aos-api/tests/aip/test_provider_capacity_publication_pg.py": "0d472a82f7370e0ecac1dbdb32d417a54340495d8887eeab68719c5247d9f024",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/signed-profiles-combination-plan.md": "6bafc6c77bf158cb3674d24e0b39c72c8f05f994dab5a11f6dce922a6b8b5ecc",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/signed-profiles-combination-green.log": "b998154ac68698ae6f97d90c75512b42f8a8c35e3fec3c41532d05cf39fb2e1a",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/signed-profiles-combination-green-r2.log": "fff41a93c85d47655bf6c29155797a06805b58cae2a54170cdceea11fdb42b0e",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/signed-profiles-combination-adjacent.log": "b220c15d4c5e12e4453ef1503cabd6d639a590729d4611c083e4af5a75cb5799"
+  }
+}
