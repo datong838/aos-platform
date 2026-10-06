@@ -1043,3 +1043,131 @@ END
 $body$;
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_root_snapshot(bytea) FROM PUBLIC;
 """
+
+
+# Untrusted original-model normalization for the future complete Source entry.
+# Not installed by existing migrations, and never an approval or signature gate.
+CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.original_source_field(p jsonb,camel text,snake text)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+BEGIN
+ IF jsonb_typeof(p)<>'object' OR (camel=snake AND NOT p ? camel)
+   OR (camel<>snake AND (p ? camel)=(p ? snake)) THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_FIELD' USING ERRCODE='22023';
+ END IF;
+ RETURN COALESCE(p->camel,p->snake);
+END $body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.original_source_field(jsonb,text,text) FROM PUBLIC;
+ALTER FUNCTION aos_capacity_publication_private.original_source_field(jsonb,text,text) OWNER TO aos_capacity_publication_owner;
+
+CREATE FUNCTION aos_capacity_publication_private.original_source_ref(p jsonb,kind text)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE t jsonb; i jsonb; r jsonb; h jsonb; trims text;
+BEGIN
+ IF jsonb_typeof(p)<>'object' OR (SELECT count(*) FROM jsonb_object_keys(p))<>4
+   OR p-ARRAY['assetType','asset_type','assetId','asset_id','revision','contentHash','content_hash']<>'{}'::jsonb THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_REF' USING ERRCODE='22023';
+ END IF;
+ t:=aos_capacity_publication_private.original_source_field(p,'assetType','asset_type');
+ i:=aos_capacity_publication_private.original_source_field(p,'assetId','asset_id');
+ r:=aos_capacity_publication_private.original_source_field(p,'revision','revision');
+ h:=aos_capacity_publication_private.original_source_field(p,'contentHash','content_hash');
+ SELECT string_agg(chr(point),'') INTO trims FROM unnest(ARRAY[9,10,11,12,13,28,29,30,31,32,133,160,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288]) point;
+ IF jsonb_typeof(t)<>'string' OR t#>>'{}'<>kind OR length(t#>>'{}') NOT BETWEEN 1 AND 80
+   OR jsonb_typeof(i)<>'string' OR length(i#>>'{}') NOT BETWEEN 1 AND 200
+   OR i#>>'{}'<>btrim(i#>>'{}',trims)
+   OR jsonb_typeof(r)<>'number' OR (r#>>'{}') COLLATE "C" !~ '^[1-9][0-9]*$'
+   OR jsonb_typeof(h)<>'string' OR (h#>>'{}') COLLATE "C" !~ '^[0-9a-f]{64}$' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_REF' USING ERRCODE='22023';
+ END IF;
+ RETURN jsonb_build_object('assetType',t,'assetId',i,'revision',r,'contentHash',h);
+END $body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.original_source_ref(jsonb,text) FROM PUBLIC;
+ALTER FUNCTION aos_capacity_publication_private.original_source_ref(jsonb,text) OWNER TO aos_capacity_publication_owner;
+
+CREATE FUNCTION aos_capacity_publication_private.original_source_time(p jsonb)
+RETURNS TABLE(instant timestamptz,canonical text) LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER
+SET search_path=pg_catalog AS $body$
+DECLARE s text; parts text[]; local_time timestamp; offset_minutes integer; suffix text; n double precision;
+BEGIN
+ IF jsonb_typeof(p) NOT IN('string','number') THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_TIME' USING ERRCODE='22023';
+ END IF;
+ s:=p#>>'{}';
+ IF s COLLATE "C" ~ '^[+-]?([0-9]+(\.[0-9]*)?|\.[0-9]+)([eE][+-]?[0-9]+)?$' THEN
+  n:=s::double precision;
+  -- Original datetime parser distinguishes fractional JSON numbers at this
+  -- positive threshold from numeric strings; preserve that accepted domain.
+  IF jsonb_typeof(p)='number' AND n>20000000000 AND floor(n)=20000000000 THEN
+   instant:=to_timestamp(floor(n))+(round((n-floor(n))*1000)*interval '1 microsecond');
+  ELSE
+   IF abs(n)>20000000000 THEN n:=n/1000; END IF;
+   instant:=to_timestamp(n);
+  END IF;
+  local_time:=instant AT TIME ZONE 'UTC';
+  IF extract(year FROM local_time) NOT BETWEEN 1 AND 9999 THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_TIME' USING ERRCODE='22023';
+  END IF;
+  suffix:='Z';
+ ELSE
+  IF jsonb_typeof(p)<>'string' THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_TIME' USING ERRCODE='22023'; END IF;
+  parts:=regexp_match(s COLLATE "C",'^([0-9]{4}-[0-9]{2}-[0-9]{2})[Tt ]([0-9]{2}):([0-9]{2})(:([0-9]{2})([.,]([0-9]+))?)?([Zz]|([+-])([0-9]{2}):?([0-9]{2}))$');
+  IF parts IS NULL OR parts[2]::integer>23 OR parts[3]::integer>59 OR COALESCE(parts[5],'0')::integer>59 THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_TIME' USING ERRCODE='22023';
+  END IF;
+  local_time:=(parts[1]||' '||parts[2]||':'||parts[3]||':'||COALESCE(parts[5],'00')||
+    CASE WHEN parts[7] IS NULL THEN '' ELSE '.'||left(parts[7],6) END)::timestamp;
+  IF lower(parts[8])='z' THEN offset_minutes:=0;
+  ELSE
+   IF parts[10]::integer>23 OR parts[11]::integer>59 THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_TIME' USING ERRCODE='22023'; END IF;
+   offset_minutes:=(parts[10]::integer*60+parts[11]::integer)*CASE WHEN parts[9]='-' THEN -1 ELSE 1 END;
+  END IF;
+  instant:=(local_time-offset_minutes*interval '1 minute') AT TIME ZONE 'UTC';
+  suffix:=CASE WHEN offset_minutes=0 THEN 'Z' ELSE parts[9]||parts[10]||':'||parts[11] END;
+ END IF;
+ canonical:=to_char(local_time,'YYYY-MM-DD"T"HH24:MI:SS')||
+   CASE WHEN to_char(local_time,'US')='000000' THEN '' ELSE '.'||to_char(local_time,'US') END||suffix;
+ RETURN NEXT;
+EXCEPTION WHEN OTHERS THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_TIME' USING ERRCODE='22023';
+END $body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.original_source_time(jsonb) FROM PUBLIC;
+ALTER FUNCTION aos_capacity_publication_private.original_source_time(jsonb) OWNER TO aos_capacity_publication_owner;
+
+CREATE FUNCTION aos_capacity_publication_private.read_original_source_candidate(p jsonb)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE tenant jsonb; version jsonb; account jsonb; basis jsonb; request jsonb; approval jsonb;
+ allowed jsonb; start_time timestamptz; end_time timestamptz; start_text text; end_text text;
+BEGIN
+ IF jsonb_typeof(p)<>'object' OR (SELECT count(*) FROM jsonb_object_keys(p))<>9 OR p-ARRAY[
+   'schemaVersion','schema_version','tenant','physicalAccountRef','physical_account_ref','basisRef','basis_ref',
+   'allocationRequestRef','allocation_request_ref','allocationApprovalRef','allocation_approval_ref',
+   'validFrom','valid_from','validUntil','valid_until','executionAllowed','execution_allowed']<>'{}'::jsonb THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_CANDIDATE' USING ERRCODE='22023';
+ END IF;
+ version:=aos_capacity_publication_private.original_source_field(p,'schemaVersion','schema_version');
+ tenant:=aos_capacity_publication_private.original_source_field(p,'tenant','tenant');
+ allowed:=aos_capacity_publication_private.original_source_field(p,'executionAllowed','execution_allowed');
+ IF jsonb_typeof(version)<>'number' OR version#>>'{}'<>'1' OR allowed<>'false'::jsonb
+   OR jsonb_typeof(tenant)<>'object' OR (SELECT count(*) FROM jsonb_object_keys(tenant))<>2
+   OR tenant-ARRAY['orgId','org_id','projectId','project_id']<>'{}'::jsonb THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_CANDIDATE' USING ERRCODE='22023';
+ END IF;
+ tenant:=jsonb_build_object('orgId',aos_capacity_publication_private.original_source_field(tenant,'orgId','org_id'),
+   'projectId',aos_capacity_publication_private.original_source_field(tenant,'projectId','project_id'));
+ IF tenant<>jsonb_build_object('orgId','org-org','projectId','dev-project') THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_CANDIDATE' USING ERRCODE='22023';
+ END IF;
+ account:=aos_capacity_publication_private.original_source_ref(aos_capacity_publication_private.original_source_field(p,'physicalAccountRef','physical_account_ref'),'ProviderPhysicalAccountCandidateRevision');
+ basis:=aos_capacity_publication_private.original_source_ref(aos_capacity_publication_private.original_source_field(p,'basisRef','basis_ref'),'ProviderCapacityBasisCandidateRevision');
+ request:=aos_capacity_publication_private.original_source_ref(aos_capacity_publication_private.original_source_field(p,'allocationRequestRef','allocation_request_ref'),'ProviderCapacityRequest');
+ approval:=aos_capacity_publication_private.original_source_ref(aos_capacity_publication_private.original_source_field(p,'allocationApprovalRef','allocation_approval_ref'),'ActionApprovalEvent');
+ IF request->>'revision'<>'1' OR approval->>'revision'<>'1' THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_CANDIDATE' USING ERRCODE='22023'; END IF;
+ SELECT instant,canonical INTO start_time,start_text FROM aos_capacity_publication_private.original_source_time(aos_capacity_publication_private.original_source_field(p,'validFrom','valid_from'));
+ SELECT instant,canonical INTO end_time,end_text FROM aos_capacity_publication_private.original_source_time(aos_capacity_publication_private.original_source_field(p,'validUntil','valid_until'));
+ IF start_time>=end_time OR end_time-start_time>interval '366 days' THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_SOURCE_CANDIDATE' USING ERRCODE='22023'; END IF;
+ RETURN jsonb_build_object('schemaVersion',version,'tenant',tenant,'physicalAccountRef',account,'basisRef',basis,
+  'allocationRequestRef',request,'allocationApprovalRef',approval,'validFrom',start_text,'validUntil',end_text,'executionAllowed',false);
+END $body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_original_source_candidate(jsonb) FROM PUBLIC;
+ALTER FUNCTION aos_capacity_publication_private.read_original_source_candidate(jsonb) OWNER TO aos_capacity_publication_owner;
+"""

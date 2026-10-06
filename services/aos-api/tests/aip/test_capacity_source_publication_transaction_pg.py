@@ -605,6 +605,7 @@ def test_original_source_binding_uses_typed_normalization_in_private_reader(nati
     from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
     from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims
     from aos_api.aip_provider_capacity_publication_store import CAPACITY_APPROVED_SOURCE_ROW_SQL
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL
     from tests.aip._runtime_guard_history_fixture import isolated_owner
     maker,checker=approved_command[:2]
     source=native_signed_source[3]
@@ -669,12 +670,18 @@ def test_original_source_binding_uses_typed_normalization_in_private_reader(nati
     with isolated_owner() as owner:
         owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
         owner.execute("SET LOCAL TimeZone='UTC'")
+        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        import json
+        from psycopg.types.json import Jsonb
+        assert owner.execute('SELECT aos_capacity_publication_private.read_original_source_candidate(%s) AS value',
+            (Jsonb(raw),)).fetchone()['value']==normalized.model_dump(mode='json',by_alias=True)
         current=owner.execute(CAPACITY_APPROVED_SOURCE_ROW_SQL,params).fetchone()
         assert current is not None and current['action_binding_hash']==typed_binding
         # Counterfactual only: installing this raw hash predicate would reject
         # the legitimate original approval proven by the private reader above.
         assert owner.execute(naive_statement,params).fetchone() is None
+        owner.rollback()  # isolated_owner otherwise commits successful DDL.
     import json
     with capsys.disabled():
         print('CAPACITY_SOURCE_TYPED_BINDING_PROOF '+json.dumps(dict(
@@ -685,3 +692,125 @@ def test_original_source_binding_uses_typed_normalization_in_private_reader(nati
             typed_binding_hash=typed_binding,private_normalized_claim=True,native_snapshot_positive=True,
             naive_raw_binding_rejected=True,current_database_accessed=False,
             supplier_verified=False,execution_allowed=False),sort_keys=True))
+
+
+def test_original_source_time_profile_matches_original_datetime_oracle(native_signed_source):
+    """Real SQL profile must preserve original accepted values, never broaden them."""
+    from datetime import datetime
+    from pydantic import TypeAdapter, ValidationError
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL
+
+    oracle = TypeAdapter(datetime)
+    values = [
+        '2026-10-07T00:01:02Z', '2026-10-07t00:01:02z',
+        '2026-10-07 00:01:02+0800', '2026-10-07T00:01Z',
+        '2026-10-07T00:01:02.123456789Z', '2026-10-07T00:01:02,5Z',
+        '2026-10-07T00:01:02.1+00:00', '2026-10-07T00:01:02-05:30',
+        '1791302400', '1791302400000', '1791302400.123456',
+        '1791302400000.5', '1.7913024e9', '+1791302400', '-0.000001',
+        '20000000000.5', 20000000000.5, -20000000000.5,
+        20000000000, 20000000001, -20000000000, -20000000001,
+        1791302400.123457, '1791302400.999999',
+        None, True, {}, [], 'NaN', 'Infinity', ' 1791302400 ',
+        '2026-10-07', '2026-10-07T00:01:02', '2026-10-07T00:01.5Z',
+        '2026-10-07T00:01:02+08', '2026-10-07T00:01:02+08:00:01',
+        '2026-10-07T24:01:02Z', '2026-10-07T00:01:60Z',
+        '2026-02-30T00:01:02Z', '0000-10-07T00:01:02Z',
+        '2026-10-07T00:01:02+24:00', '2026-10-07T00:01:02+08:60',
+    ]
+    mismatches = []
+    with isolated_owner() as owner:
+        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+        rows = owner.execute("""SELECT p.provolatile,p.prosecdef,p.proisstrict,
+            r.rolname,p.proconfig FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+            JOIN pg_roles r ON r.oid=p.proowner
+            WHERE n.nspname='aos_capacity_publication_private'
+            AND p.proname IN ('original_source_field','original_source_ref',
+                'original_source_time','read_original_source_candidate')""").fetchall()
+        assert len(rows) == 4
+        assert all(r['provolatile']=='i' and not r['prosecdef'] and r['proisstrict']
+            and r['rolname']=='aos_capacity_publication_owner'
+            and r['proconfig']==['search_path=pg_catalog'] for r in rows)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        for value in values:
+            try:
+                parsed = oracle.validate_python(value)
+                expected = oracle.dump_python(parsed, mode='json') if parsed.utcoffset() is not None else None
+            except ValidationError:
+                expected = None
+            try:
+                with owner.transaction():
+                    actual = owner.execute('SELECT canonical FROM aos_capacity_publication_private.original_source_time(%s)',
+                        (Jsonb(value),)).fetchone()['canonical']
+            except psycopg.Error as error:
+                assert error.sqlstate == '22023'
+                actual = None
+            if actual != expected:
+                mismatches.append((value, expected, actual))
+        owner.rollback()
+        assert owner.execute("""SELECT count(*) AS n FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+            WHERE n.nspname='aos_capacity_publication_private'
+            AND p.proname IN ('original_source_field','original_source_ref',
+                'original_source_time','read_original_source_candidate')""").fetchone()['n'] == 0
+        owner.rollback()
+    assert not mismatches, f'Original datetime/native SQL incompatibilities: {mismatches!r}'
+
+
+def test_original_source_candidate_profile_matches_original_shape_oracle(native_signed_source):
+    from copy import deepcopy
+    from pydantic import ValidationError
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_source_contracts import ProviderCapacitySourceCandidate
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL
+
+    baseline = native_signed_source[3].model_dump(mode='json', by_alias=True)
+    cases = [('baseline', baseline)]
+    for label, field, value in [
+        ('unknown', 'extra', 1), ('schema_float', 'schemaVersion', 1.0),
+        ('schema_bool', 'schemaVersion', True), ('execution_int', 'executionAllowed', 0),
+        ('execution_true', 'executionAllowed', True), ('naive', 'validFrom', '2026-10-07T00:00:00'),
+        ('equal_window', 'validUntil', baseline['validFrom']), ('null_ref', 'basisRef', None),
+    ]:
+        candidate = deepcopy(baseline)
+        candidate[field] = value
+        cases.append((label, candidate))
+    for label, field, value in [
+        ('ref_revision_string', 'revision', '1'), ('ref_revision_float', 'revision', 1.0),
+        ('ref_revision_bool', 'revision', True), ('ref_hash_upper', 'contentHash', 'A'*64),
+        ('ref_kind', 'assetType', 'EvidenceBundleRevision'), ('ref_trim', 'assetId', ' padded '),
+        ('ref_internal_space', 'assetId', 'internal space'), ('ref_unicode', 'assetId', '账户😀'),
+        ('ref_extra', 'unknown', 1),
+    ]:
+        candidate = deepcopy(baseline)
+        candidate['physicalAccountRef'][field] = value
+        cases.append((label, candidate))
+    mismatches = []
+    with isolated_owner() as owner:
+        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+        assert owner.execute("""SELECT count(*) AS n FROM pg_proc p
+            JOIN pg_namespace n ON n.oid=p.pronamespace,
+            LATERAL aclexplode(COALESCE(p.proacl,acldefault('f',p.proowner))) a
+            WHERE n.nspname='aos_capacity_publication_private'
+            AND p.proname IN ('original_source_field','original_source_ref',
+                'original_source_time','read_original_source_candidate')
+            AND a.grantee=0 AND a.privilege_type='EXECUTE'""").fetchone()['n'] == 0
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        for label, candidate in cases:
+            try:
+                expected = ProviderCapacitySourceCandidate.model_validate(candidate).model_dump(mode='json', by_alias=True)
+            except ValidationError:
+                expected = None
+            try:
+                with owner.transaction():
+                    actual = owner.execute('SELECT aos_capacity_publication_private.read_original_source_candidate(%s) AS value',
+                        (Jsonb(candidate),)).fetchone()['value']
+            except psycopg.Error as error:
+                assert error.sqlstate == '22023'
+                actual = None
+            if actual != expected:
+                mismatches.append((label, expected is not None, actual is not None))
+        owner.rollback()
+    assert not mismatches, f'Original candidate/native SQL incompatibilities: {mismatches!r}'

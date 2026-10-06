@@ -1,0 +1,108 @@
+{
+  "baseline": "ad7ce6fe",
+  "authority": "AOS-001423",
+  "scope": "UNINSTALLED_PRIVATE_TYPED_PROFILE_CHECKPOINT_NOT_COMPLETE_SOURCE",
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "839dd0383be3e67d2bde256c1f9c8cadab6caceb3c461387accd31ba100089f8",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "798a962598d1c1098c7eac01a9c78aaf3c5e01d2043c01216c330cbb0198fb75",
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "387f24305cdf98fe00b0a6da53a00a5697782e331a73d11b886142f18e27c683"
+  },
+  "logs": [
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-candidate-profile-red-r1.log",
+      "sha256": "21c4d70cbeb1ae74237cfd84d9a7b04d6280a24e98f3390337e34954ab07c375",
+      "summary": [
+        "3 failed, 45 deselected, 7 warnings in 9.74s"
+      ],
+      "retained_databases": [
+        "aos_test_4d56d24038d7_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-candidate-profile-green-r1.log",
+      "sha256": "5ea8b90b208bd00504619f0cc79b9613c09d578b425dbcbc08d103f89e5a42b2",
+      "summary": [
+        "2 failed, 1 passed, 45 deselected, 7 warnings in 13.52s"
+      ],
+      "retained_databases": [
+        "aos_test_35884d74354b_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-candidate-profile-green-r2.log",
+      "sha256": "2ace3d473daf473c7f5f928f9112d2c29a8ae206dd54b70084642258de115573",
+      "summary": [
+        "3 passed, 45 deselected, 7 warnings in 13.46s"
+      ],
+      "retained_databases": [
+        "aos_test_0265da8e4694_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-time-oracle-red-r1.log",
+      "sha256": "471e3efe2e8b9a74477137e7511341b5433dd013104f90264fd535da0950a689",
+      "summary": [
+        "1 failed, 48 deselected, 7 warnings in 7.33s"
+      ],
+      "retained_databases": [
+        "aos_test_febfc64150f4_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-time-oracle-green-r1.log",
+      "sha256": "cac2303be91e0f5f3bdfd8a060fc647760b4be36150c704d2e39d0f441c92fa3",
+      "summary": [
+        "4 passed, 45 deselected, 7 warnings in 15.07s"
+      ],
+      "retained_databases": [
+        "aos_test_0b89456cd6d9_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-candidate-shape-r1.log",
+      "sha256": "fd1dbf2247741d7e0bd9d5a1026d0ca38f9e88b855e0ab234b4817602c436a47",
+      "summary": [
+        "1 passed, 49 deselected, 7 warnings in 6.87s"
+      ],
+      "retained_databases": [
+        "aos_test_fca79fc85d84_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-candidate-profile-adjacent-r1.log",
+      "sha256": "d18c216e7d0c495b11f88ca2b42954d569821ab08acc3d43aafbb7eac0b32ab2",
+      "summary": [
+        "45 passed, 5 deselected, 7 warnings in 84.16s (0:01:24)"
+      ],
+      "retained_databases": [
+        "aos_test_d81b95ca5c59_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-candidate-profile-complete-entry-red-r1.log",
+      "sha256": "625b7658bba9d1551e4fef0da36982a71ad43405eed5381b9c046e5773bf550d",
+      "summary": [
+        "5 failed, 45 deselected, 7 warnings in 14.40s"
+      ],
+      "retained_databases": [
+        "aos_test_157d099ba6a5_ti4_test"
+      ]
+    }
+  ],
+  "completed": [
+    "original datetime oracle42 sampled cases",
+    "candidate shape18 sampled cases",
+    "PUBLIC EXECUTE absent",
+    "IMMUTABLE STRICT SECURITY INVOKER owner/fixed search_path",
+    "temporary functions rollback proof",
+    "45 existing transaction cases passed"
+  ],
+  "pending": [
+    "complete native typed Source binding S07",
+    "full prepare/controlled signer/commit/actual caller COMMIT/current consumer",
+    "final caller COMMIT TTL"
+  ],
+  "source_published": false,
+  "current_database_accessed": false,
+  "parent_tasks_active": true
+}
