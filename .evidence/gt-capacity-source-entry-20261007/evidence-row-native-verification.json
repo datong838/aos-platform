@@ -1,0 +1,147 @@
+{
+  "baseline": "2ed0c1d0d3dfe7c557e9df4e0eb3b2709694ae9c",
+  "authority": "AOS-001430",
+  "scope": "ORIGINAL_S15_NATIVE_EVIDENCE_BUILD_RECEIPT_QUERY_NOT_COMPLETE_SIGNED_SOURCE",
+  "files": {
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "00a1ca5b1c7bb46ab3d57cdef0a3ba77c4bd3f4692600bde5e5365528daf631d",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "e161fd173e28d3f7774271f40b211f206957073b9a403ef205b4c8ab339d4bbb",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "2279c4db5669ca13b042c85fce733360064a2f02244510d7b9b6cee7def3f845",
+    ".evidence/gt-capacity-source-entry-20261007/evidence-row-native-catalog.json": "f6dc8e93aa40b7693241f8f3b2c66cde2ee261442d21afbf673d8c0cf1adb8fe",
+    ".evidence/gt-capacity-source-entry-20261007/evidence-row-original-columns.json": "00e78c20215aa10365ec16f96315606d7a06e1afcc74bef292e98c9e61f7be6a"
+  },
+  "logs": [
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/evidence-native-coherent-domain-r1.log",
+      "sha256": "db385a9a565d3f88952a580f8c1c98235cfeacd77b327462818417eb3054883b",
+      "summary": [
+        "3 passed, 81 deselected, 7 warnings in 10.12s"
+      ],
+      "retained_databases": [
+        "aos_test_6d65500d22ec_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/evidence-native-equality-extreme-green-r1.log",
+      "sha256": "9d3f6895c9a9e71b894a6132996753f21bbc623c9a92bf2705bee4caaec9bde6",
+      "summary": [
+        "1 failed, 83 deselected, 7 warnings in 6.94s"
+      ],
+      "retained_databases": [
+        "aos_test_316e8f8446dd_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/evidence-native-equality-extreme-green-r2.log",
+      "sha256": "0d1e92808c13b32ae89ee83479e425c9c60862b15e4e3f29f8a7d4e21474b1ae",
+      "summary": [
+        "1 passed, 83 deselected, 7 warnings in 6.32s"
+      ],
+      "retained_databases": [
+        "aos_test_cd4db32a328c_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/evidence-native-equality-red-r1.log",
+      "sha256": "1228cfd820e2ed6ea89756e756cf6cb3c908125b52efe60505f16eae83cb3adb",
+      "summary": [
+        "1 failed, 76 deselected, 7 warnings in 6.94s"
+      ],
+      "retained_databases": [
+        "aos_test_a31dab78ca52_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/evidence-native-row-adjacent-r1.log",
+      "sha256": "6712c2901b90d3531ab9c8d81ebcc7d31c60d41c809f988598bfd2b9729b5c30",
+      "summary": [
+        "52 passed, 86 deselected, 7 warnings in 92.64s (0:01:32)"
+      ],
+      "retained_databases": [
+        "aos_test_a3a4e6d41275_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/evidence-native-row-cumulative-r1.log",
+      "sha256": "49da2eec6d9b16ce9ae6d61ba71de31f357714d4ef3d087d43b7a77958787c78",
+      "summary": [
+        "5 failed, 79 passed, 7 warnings in 161.81s (0:02:41)"
+      ],
+      "retained_databases": [
+        "aos_test_52463ea57a3d_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/evidence-native-row-domain-r1.log",
+      "sha256": "2213625404417d7f4232306cfa632bd2cea187d30f31afe2ab4010b0b8d3a006",
+      "summary": [
+        "3 passed, 75 deselected, 7 warnings in 9.94s"
+      ],
+      "retained_databases": [
+        "aos_test_fcbe983941a6_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/evidence-native-row-green-r1.log",
+      "sha256": "4dd6497677fa15b57889667c0ab5afffb629d8609a4e9613566846d21880abd4",
+      "summary": [
+        "2 passed, 75 deselected, 7 warnings in 7.65s"
+      ],
+      "retained_databases": [
+        "aos_test_40f509a451eb_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/evidence-native-row-red-r1.log",
+      "sha256": "1b8e44280c59b51dcecb8064033219a89ecfd2fa89ade33449c14ea7d5f42a09",
+      "summary": [
+        "1 failed, 75 deselected, 7 warnings in 6.85s"
+      ],
+      "retained_databases": [
+        "aos_test_b8e1ed2ded21_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/evidence-native-row-red-r2.log",
+      "sha256": "9469f0e9208eb6e748597fc062c4b5c467b6b3a1186f94da3d686fbc1968ecd6",
+      "summary": [
+        "1 failed, 75 deselected, 7 warnings in 6.84s"
+      ],
+      "retained_databases": [
+        "aos_test_f8d9951df478_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/evidence-native-three-origin-r1.log",
+      "sha256": "bd5810ede07e1e6ccae91ad14d19b7b4f8c7685cea6fb019e3bd05b9914aa817",
+      "summary": [
+        "3 passed, 78 deselected, 7 warnings in 15.82s"
+      ],
+      "retained_databases": [
+        "aos_test_b365173c8ba9_ti4_test"
+      ]
+    }
+  ],
+  "proof": {
+    "original_store_prefix_unchanged": true,
+    "original_store_sha256": "9a0ff52de60e06153bd71f05a28644c04945ec4154aa7debef7afb6458b4e0fa",
+    "decoded_equality_samples": 22,
+    "row_fault_cases": 19,
+    "coherent_model_faults": 3,
+    "genuine_cutoff_variants": 2,
+    "genuine_three_origin_source_approvals": 3,
+    "cumulative_pass": 79,
+    "known_missing_entry_fail": 5,
+    "adjacent_pass": 52,
+    "temporary_functions_remaining": 0,
+    "formal_database_accessed": false,
+    "source_published": false,
+    "source_delivery": false
+  },
+  "pending": [
+    "156 original epoch/prefix locks wired into complete157",
+    "S16-S20 native complete signed document/currentness/binding",
+    "prepare/controlledsign/commit/actualcallerCOMMIT/currentconsumer",
+    "finalcallerCOMMITTTL",
+    "formal natural first chain"
+  ]
+}

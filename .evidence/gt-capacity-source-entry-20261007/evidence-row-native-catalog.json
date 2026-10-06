@@ -1,0 +1,158 @@
+{
+  "scope": "READONLY_ISOLATED_CUMULATIVE_DATABASE",
+  "database": "aos_test_52463ea57a3d_ti4_test",
+  "versions": [
+    {
+      "version_num": "a0v_156"
+    }
+  ],
+  "functions_remaining": [],
+  "roles": [
+    {
+      "rolname": "aos_capacity_publication_owner",
+      "rolcanlogin": false
+    },
+    {
+      "rolname": "aos_provider_capacity_issuer",
+      "rolcanlogin": false
+    }
+  ],
+  "prepare_function": null,
+  "distinct_original_source_records": [
+    {
+      "proposal_id": "proposal-2d6f3f6f71ab4420abb5",
+      "proposal_hash": "662d4d6384191d69ffbbd5fde6f82581235d0638f4555d44cc7d88afa3223130",
+      "origins": {
+        "account": {
+          "reference": {
+            "assetType": "EvidenceBundleRevision",
+            "assetId": "evidence-bundle-0319119450734b8e9bb9",
+            "revision": 1,
+            "contentHash": "388fb8c5b4ea657d332363d2fc3fe09b7b60a6e4258bddd9d875fee2d9bbdf69"
+          },
+          "original_build": {
+            "request_hash": "f0b424a2be26c0ecd078abc57eb60ba090450c732c40e84f75c450daf142fa9c",
+            "idempotency_key": "e9ed5306d8b744e292dd830f0066a65a"
+          },
+          "original_revoke_count": 0
+        },
+        "basis": {
+          "reference": {
+            "assetType": "EvidenceBundleRevision",
+            "assetId": "evidence-bundle-848f0f9e55594751a17c",
+            "revision": 1,
+            "contentHash": "d4b39ef68bc47f439c075197753b0078e193fb6c26e69747f097cd3d290373ef"
+          },
+          "original_build": {
+            "request_hash": "e37d027ee2a66c59e888b49a5fbb6fc1edb48c87ab921e1205e9fdb09a69d563",
+            "idempotency_key": "69ee814318af4333ab7494605f8f940b"
+          },
+          "original_revoke_count": 0
+        },
+        "request": {
+          "reference": {
+            "assetType": "EvidenceBundleRevision",
+            "assetId": "evidence-bundle-46ccc5e58565485a9750",
+            "revision": 1,
+            "contentHash": "def62faacfd7ae99d6870c9e6bfee7873a8fdcecc84de537a547073aa7198ac3"
+          },
+          "original_build": {
+            "request_hash": "5659236c3d4ba2e0e4c39e8840f7ffddc5d44aaf10b49bbba3a43d5772edea5c",
+            "idempotency_key": "33d7a2d70ea2499d968f88920b867f3b"
+          },
+          "original_revoke_count": 1
+        }
+      }
+    },
+    {
+      "proposal_id": "proposal-11be748ea1be44ec97fd",
+      "proposal_hash": "1b74e6cee7eede658ecafe8ced03fa1a57a712c5b299c2f81e25e9d69f6a529b",
+      "origins": {
+        "account": {
+          "reference": {
+            "assetType": "EvidenceBundleRevision",
+            "assetId": "evidence-bundle-c8297c14c0064a8db8b7",
+            "revision": 1,
+            "contentHash": "870c3bcccb7ff465ca2cb7fe07e693b9a32164c203383faf4391163a16386cc9"
+          },
+          "original_build": {
+            "request_hash": "cb08b3b884aa7104d7cdf20c7a29fd181ab06b3773733585d0aa188b8b609f05",
+            "idempotency_key": "e804b7f4ecea40748fb76106cd17ee81"
+          },
+          "original_revoke_count": 1
+        },
+        "basis": {
+          "reference": {
+            "assetType": "EvidenceBundleRevision",
+            "assetId": "evidence-bundle-6e03514da19c47788efb",
+            "revision": 1,
+            "contentHash": "c5911f51c7431dae80410c465ec4baf70c023c5b1ea72c400fb3f7cc6a459c48"
+          },
+          "original_build": {
+            "request_hash": "111bffe9259c81fd02523f01667cb7241ba7dd13b4981cc129a2b953337b95e2",
+            "idempotency_key": "f4b8342a69514de28623146ef227a55b"
+          },
+          "original_revoke_count": 0
+        },
+        "request": {
+          "reference": {
+            "assetType": "EvidenceBundleRevision",
+            "assetId": "evidence-bundle-f75c6db90c484602b91f",
+            "revision": 1,
+            "contentHash": "3c2ff0c58cec4d5cf6eabb040a12f834b93c317f5d66821e0b9757974c781e6c"
+          },
+          "original_build": {
+            "request_hash": "3878db16797f6ef0a363f1dc77e86547d95d01ac4bc609c265b64958c3a77704",
+            "idempotency_key": "afffd90f14b844f58403e1c5c967cea0"
+          },
+          "original_revoke_count": 0
+        }
+      }
+    },
+    {
+      "proposal_id": "proposal-bf2dd9d50ca345c6a215",
+      "proposal_hash": "6b2d56c519dd83c2f441b037cb29f008a2d19f7c2190842fc396309a666c57e7",
+      "origins": {
+        "account": {
+          "reference": {
+            "assetType": "EvidenceBundleRevision",
+            "assetId": "evidence-bundle-c71f99ec0c8142d680e5",
+            "revision": 1,
+            "contentHash": "3a63af4cb4d7cac7632d2b175dfe8cdfec67c8e3866a1b5afcc633a841a80e76"
+          },
+          "original_build": {
+            "request_hash": "407fd627a66d9cb51ab8b57da513d2be66a6812a1f12b5f0552a4eeb4ba4b22d",
+            "idempotency_key": "ce9e29bfd6ee481b88f5ca3001befba6"
+          },
+          "original_revoke_count": 0
+        },
+        "basis": {
+          "reference": {
+            "assetType": "EvidenceBundleRevision",
+            "assetId": "evidence-bundle-b36c6b23558e4bfab95a",
+            "revision": 1,
+            "contentHash": "e304454db2a9553f4639378381a356088e927477579426535a45011448a9a998"
+          },
+          "original_build": {
+            "request_hash": "b780e6fd32adbed03e8df03819bd20a41033bdef7c61df976ca0ea43dd1832f9",
+            "idempotency_key": "d5aea323ac5a421a98595945043484b6"
+          },
+          "original_revoke_count": 1
+        },
+        "request": {
+          "reference": {
+            "assetType": "EvidenceBundleRevision",
+            "assetId": "evidence-bundle-b0d1749057b44a538bfc",
+            "revision": 1,
+            "contentHash": "88e9d9cad485fb6f52c8b8125fe8f6bfa606a771c41e45a2af44d8265badc3ff"
+          },
+          "original_build": {
+            "request_hash": "049a72061466a6e6ae240532ee3f47f3e11b43084cd1c0cfc68b848b3cb00094",
+            "idempotency_key": "50ea9d3788474ddb81ff1e2d63f20132"
+          },
+          "original_revoke_count": 0
+        }
+      }
+    }
+  ]
+}

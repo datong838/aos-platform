@@ -1738,3 +1738,296 @@ def test_native_original_build_json_matches_original_decoded_hash_input(native_s
         owner.rollback()
         assert owner.execute("SELECT to_regprocedure('aos_capacity_publication_private.original_build_json(jsonb)') AS fn").fetchone()['fn'] is None
         owner.rollback()
+
+
+def test_native_original_evidence_row_reads_real_verified_build(native_signed_source):
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_production_contracts import ExactRevisionRef
+    from aos_api.evidence_bundle_provenance import read_build_provenance
+    from aos_api import aip_provider_capacity_publication_store as publication
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        row=owner.execute('SELECT bundle_id,revision,content_hash FROM public.aip_evidence_bundle_build_provenance WHERE org_id=%s AND project_id=%s LIMIT 1',SCOPE.key).fetchone()
+        ref=ExactRevisionRef(resource_type='EvidenceBundleRevision',resource_id=row['bundle_id'],revision=row['revision'],content_hash=row['content_hash'])
+        verified=read_build_provenance(owner,SCOPE,ref)
+        assert verified.source==ref
+        # The full native query must rederive all original facts, not consume
+        # this Python verification result or accept a caller-provided flag.
+        query=publication.CAPACITY_NATIVE_EVIDENCE_ROW_SQL
+        _install_original_evidence_profile(owner)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        actual=owner.execute(query,{'org_id':SCOPE.org_id,'project_id':SCOPE.project_id,
+            'bundle_id':ref.resource_id,'revision':ref.revision,'content_hash':ref.content_hash}).fetchone()
+        assert actual is not None
+        assert actual['bundle_id']==ref.resource_id and actual['content_hash']==ref.content_hash
+        owner.rollback()
+
+
+def test_native_original_build_equality_matches_original_decoder(native_signed_source):
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    pairs=[(1,1.0),(True,1),(False,0.0),(1,2),(1.1,1),(True,'true'),
+           ({'n':[1,True]}, {'n':[1.0,1]}),([1,2],[2,1]),(None,False),
+           (None,None),('中文','中文'),({'a':1},{'b':1}),([],[]),({},{}),
+           (9007199254740993,9007199254740992.0),(9007199254740992,9007199254740992.0)]
+    with isolated_owner() as owner:
+        _install_original_evidence_profile(owner)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        for left,right in pairs:
+            row=owner.execute('SELECT %s::jsonb AS lhs,%s::jsonb AS rhs,aos_capacity_publication_private.original_build_equal(%s,%s) AS equal',(Jsonb(left),Jsonb(right),Jsonb(left),Jsonb(right))).fetchone()
+            assert row['equal']==(row['lhs']==row['rhs']),(left,right)
+        huge='1'+('0'*310)+'.0'
+        raw_pairs=[('1e-4000','0.0'),('-1e-4000','false'),(huge,huge),(huge,huge[:-2]),
+                   ('1.00000000000000001','true'),('9007199254740993.0','9007199254740993')]
+        for left,right in raw_pairs:
+            row=owner.execute('SELECT %s::jsonb AS lhs,%s::jsonb AS rhs,aos_capacity_publication_private.original_build_equal(%s::jsonb,%s::jsonb) AS equal',(left,right,left,right)).fetchone()
+            assert row['equal']==(row['lhs']==row['rhs']),(left[:40],right[:40])
+        print('ORIGINAL_DECODED_EQUALITY_DOMAIN',len(pairs)+len(raw_pairs))
+        owner.rollback()
+
+
+def _install_original_evidence_profile(owner):
+    from aos_api import aip_provider_capacity_publication_store as publication
+    for name in ('CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL','CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL',
+                 'CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL','CAPACITY_ORIGINAL_BUILD_PROFILE_SQL',
+                 'CAPACITY_ORIGINAL_BUILD_JSON_SQL','CAPACITY_ORIGINAL_EVIDENCE_PROFILE_SQL'):
+        owner.execute(getattr(publication,name))
+
+
+def _native_evidence_read(owner,ref):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_NATIVE_EVIDENCE_ROW_SQL
+    try:
+        with owner.transaction():
+            return owner.execute(CAPACITY_NATIVE_EVIDENCE_ROW_SQL,dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,
+                bundle_id=ref.resource_id,revision=ref.revision,content_hash=ref.content_hash)).fetchone()
+    except psycopg.Error as error:
+        assert error.sqlstate=='22023'
+        return None
+
+
+def _original_evidence_read(owner,ref):
+    from pydantic import ValidationError
+    from aos_api.aip_production_contract_store import AipProductionContractStore,ProductionContractError
+    from aos_api.evidence_bundle_provenance import read_build_provenance,BuildProvenanceUnavailable
+    try:
+        evidence=AipProductionContractStore().get_evidence_bundle(SCOPE,ref.resource_id,ref.revision,conn=owner)
+        if evidence.content_hash!=ref.content_hash or evidence.lifecycle.value!='frozen' or evidence.revoked:return False
+        return read_build_provenance(owner,SCOPE,ref).source==ref
+    except (ValidationError,ProductionContractError,BuildProvenanceUnavailable):return False
+
+
+def test_native_evidence_query_preserves_original_row_domains_and_faults(native_signed_source):
+    import copy
+    from datetime import timedelta,timezone
+    from psycopg.types.json import Jsonb
+    from psycopg import sql
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from tests.aip.test_evidence_bundle_provenance_pg import build_inputs,ACTOR,exact
+    producer,key,body=build_inputs.__wrapped__()
+    bundle=producer.build_evidence_bundle(SCOPE,ACTOR,key,body.model_copy(update=dict(license_summary={'amount':1})))
+    ref=exact(bundle)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        before=owner.execute('SELECT * FROM public.aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s',(*SCOPE.key,ref.resource_id,ref.revision)).fetchone()
+        original=owner.execute('SELECT * FROM public.aip_evidence_bundle_build_provenance WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s',(*SCOPE.key,ref.resource_id,ref.revision)).fetchone()
+        receipt=owner.execute("SELECT * FROM public.aip_production_contract_receipt WHERE org_id=%s AND project_id=%s AND operation='evidence_bundle.build' AND idempotency_key=%s",(*SCOPE.key,original['idempotency_key'])).fetchone()
+        _install_original_evidence_profile(owner)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        assert _original_evidence_read(owner,ref) and _native_evidence_read(owner,ref)
+        items=copy.deepcopy(before['item_refs']);items[0]['revision']=True
+        faults=[('license-float','evidence','license_summary',{'amount':1.0},True),
+                ('license-boolean','evidence','license_summary',{'amount':True},True),
+                ('coercive-item-revision','evidence','item_refs',items,True),
+                ('receipt-coercive-revision','receipt','result_ref',{**receipt['result_ref'],'revision':True},True),
+                ('license-change','evidence','license_summary',{'amount':2},False),
+                ('items-change','evidence','item_refs',[],False),
+                ('subject-change','evidence','subject_refs',[{'resourceType':'Subject','resourceId':'x','revision':None,'authority':'test'}],False),
+                ('marking-change','evidence','marking',['changed'],False),
+                ('cutoff-change','evidence','cutoff_at',before['cutoff_at']+timedelta(seconds=1),False),
+                ('coverage-change','evidence','coverage','blocked' if before['coverage']!='blocked' else 'unknown',False),
+                ('freshness-change','evidence','freshness','unknown' if before['freshness']!='unknown' else 'fresh',False),
+                ('missing-shape','evidence','missing',['invalid'],False),
+                ('request-hash','provenance','request_hash','d'*64,False),
+                ('noncanonical-build','provenance','request_payload',{**original['request_payload'],'extra':True},False),
+                ('source-field-drift','provenance','request_payload',{**original['request_payload'],'marking':['different']},False),
+                ('authority-payload','provenance','authority_payload',{},False),
+                ('idempotency-parent','provenance','idempotency_key','no-receipt-'+key,False),
+                ('receipt-hash','receipt','request_hash','e'*64,False),
+                ('receipt-result','receipt','result_ref',{**receipt['result_ref'],'resourceId':'other'},False)]
+        tables={'evidence':'aip_evidence_bundle_revision','provenance':'aip_evidence_bundle_build_provenance','receipt':'aip_production_contract_receipt'}
+        for label,target,column,value,expected in faults:
+            owner.execute('RESET ROLE');owner.execute('SAVEPOINT exact_build_row_fault')
+            try:
+                owner.execute("SET LOCAL session_replication_role='replica'")
+                predicate='receipt_id=%s' if target=='receipt' else 'bundle_id=%s AND revision=%s'
+                args=(receipt['receipt_id'],) if target=='receipt' else (ref.resource_id,ref.revision)
+                value=Jsonb(value) if isinstance(value,(dict,list)) else value
+                rows=owner.execute(sql.SQL('UPDATE public.{} SET {}=%s WHERE org_id=%s AND project_id=%s AND '+predicate+' RETURNING 1').format(sql.Identifier(tables[target]),sql.Identifier(column)),(value,*SCOPE.key,*args)).fetchall()
+                assert len(rows)==1,label
+                owner.execute("SET LOCAL session_replication_role='origin'")
+                owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                assert _original_evidence_read(owner,ref)==expected,label
+                assert bool(_native_evidence_read(owner,ref))==expected,label
+            finally:owner.execute('ROLLBACK TO SAVEPOINT exact_build_row_fault')
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            assert _original_evidence_read(owner,ref) and _native_evidence_read(owner,ref),label
+        wrong=ref.model_copy(update={'content_hash':'f'*64})
+        assert not _original_evidence_read(owner,wrong) and _native_evidence_read(owner,wrong) is None
+        assert owner.execute('SELECT 1 FROM public.aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s AND bundle_id=%s',('dev-org',SCOPE.project_id,ref.resource_id)).fetchone() is None
+        print('NATIVE_EVIDENCE_ROW_DOMAIN',len(faults),'single-field cases; original hash preserved for numeric positives')
+        owner.rollback()
+
+
+@pytest.mark.parametrize('target',['request','account','basis'])
+def test_native_evidence_query_checks_three_distinct_original_source_origins(source_inputs,approved_command,private_database,target):
+    from uuid import uuid4
+    from psycopg.types.json import Jsonb
+    from aos_api.db import connect_serializable
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_action_models import DecideActionProposalRequest
+    from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+    from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+    from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims,ProviderCapacityFormalBoundaryBlocked
+    from aos_api.aip_production_contracts import ExactRevisionRef,RevokeEvidenceBundleRequest
+    from tests.aip.test_evidence_bundle_provenance_pg import build_inputs,ACTOR
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    maker,checker,source,_=source_inputs
+    with connect_serializable(SCOPE) as conn:
+        account=ProviderPhysicalAccountCandidate.model_validate(conn.execute('SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',(source.physical_account_ref.asset_id,)).fetchone()['request_json']['candidate'])
+        basis=ProviderCapacityBasisCandidate.model_validate(conn.execute('SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',(source.basis_ref.asset_id,)).fetchone()['request_json']['candidate'])
+    refs={'request':account.evidence_ref}
+    for kind in ('account','basis'):
+        producer,key,body=build_inputs.__wrapped__()
+        bundle=producer.build_evidence_bundle(SCOPE,ACTOR,key,body)
+        refs[kind]=account.evidence_ref.model_copy(update=dict(asset_id=bundle.bundle_id,revision=bundle.revision,content_hash=bundle.content_hash))
+    assert len({ref.asset_id for ref in refs.values()})==3
+    store=ProviderCapacityCandidateStore()
+    saved=store.create_account(SCOPE,maker,'native-three-account-'+uuid4().hex,account.model_copy(update=dict(evidence_ref=refs['account'])))
+    account_ref=source.physical_account_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))
+    saved=store.create_basis(SCOPE,maker,'native-three-basis-'+uuid4().hex,basis.model_copy(update=dict(physical_account_ref=account_ref,evidence_ref=refs['basis'])))
+    changed=source.model_copy(update=dict(physical_account_ref=account_ref,basis_ref=source.basis_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))))
+    proposal=propose_provider_capacity_source(maker,changed,'native-three-proposal-'+uuid4().hex,changed.valid_until)
+    approved=decide_provider_capacity_source(checker,proposal.proposal.id,'native-three-approval-'+uuid4().hex,DecideActionProposalRequest(
+        expectedProposalVersion=proposal.proposal.version,expectedProposalHash=proposal.proposal.proposal_hash,
+        decision='approved',reason='isolated native original three Evidence origins',approvalExpiresAt=changed.valid_until))
+    command=approved_command[-1].model_copy(update=dict(idempotency_key='native-three-private-'+uuid4().hex,
+        approved_proposal=approved_command[-1].approved_proposal.model_copy(update=dict(asset_id=approved.proposal.id,
+            revision=approved.proposal.version,content_hash=approved.proposal.proposal_hash)),
+        approval_event=approved_command[-1].approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+            content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+    with connect_capacity_issuer(private_database,SCOPE) as conn:
+        fact=read_capacity_approved_claims(conn,command)
+        assert conn.pgconn.used_password is True
+        assert fact.source==changed and not fact.execution_allowed and not fact.supplier_verified
+    exacts={key:ExactRevisionRef(resource_type='EvidenceBundleRevision',resource_id=ref.asset_id,
+        revision=ref.revision,content_hash=ref.content_hash) for key,ref in refs.items()}
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        _install_original_evidence_profile(owner)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        assert all(_native_evidence_read(owner,ref) and _original_evidence_read(owner,ref) for ref in exacts.values())
+        ref=exacts[target]
+        parent=owner.execute('SELECT idempotency_key FROM public.aip_evidence_bundle_build_provenance WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s',(*SCOPE.key,ref.resource_id,ref.revision)).fetchone()
+        for table in ('aip_production_contract_receipt','aip_evidence_bundle_build_provenance'):
+            owner.execute('RESET ROLE');owner.execute('SAVEPOINT three_origin_hash_fault')
+            try:
+                owner.execute("SET LOCAL session_replication_role='replica'")
+                predicate="operation='evidence_bundle.build' AND idempotency_key=%s" if table.endswith('receipt') else 'bundle_id=%s AND revision=%s'
+                args=(parent['idempotency_key'],) if table.endswith('receipt') else (ref.resource_id,ref.revision)
+                rows=owner.execute(psycopg.sql.SQL('UPDATE public.{} SET request_hash=%s WHERE org_id=%s AND project_id=%s AND '+predicate+' RETURNING 1').format(psycopg.sql.Identifier(table)),('d'*64,*SCOPE.key,*args)).fetchall()
+                assert len(rows)==1
+                owner.execute("SET LOCAL session_replication_role='origin'");owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                for key,item in exacts.items():
+                    assert bool(_native_evidence_read(owner,item))==(key!=target),(key,table)
+                    assert _original_evidence_read(owner,item)==(key!=target),(key,table)
+            finally:owner.execute('ROLLBACK TO SAVEPOINT three_origin_hash_fault')
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            assert all(_native_evidence_read(owner,item) for item in exacts.values())
+        owner.rollback()
+    # A genuine committed revoke runs the original runtime and epoch triggers;
+    # its outcome is observed independently through actual SCRAM claims.
+    producer.revoke_evidence_bundle(SCOPE,ACTOR,ref.resource_id,'native-three-revoke-'+uuid4().hex,
+        RevokeEvidenceBundleRequest(expectedRevision=ref.revision,expectedContentHash=ref.content_hash,reason='isolated genuine original origin revoke'))
+    with connect_capacity_issuer(private_database,SCOPE) as conn:
+        assert conn.pgconn.used_password is True
+        with pytest.raises(ProviderCapacityFormalBoundaryBlocked):read_capacity_approved_claims(conn,command)
+        conn.rollback()
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        _install_original_evidence_profile(owner);owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        for key,item in exacts.items():
+            assert bool(_native_evidence_read(owner,item))==(key!=target)
+            assert _original_evidence_read(owner,item)==(key!=target)
+        print('NATIVE_THREE_DISTINCT_EVIDENCE',target,'database',owner.info.dbname,'distinct',len(exacts),'original_scram_positive_then_genuine_revoke_refused')
+        owner.rollback()
+
+
+def test_native_evidence_contract_rejects_coherently_rehashed_bad_metadata(native_signed_source):
+    from psycopg.types.json import Jsonb
+    from psycopg import sql
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_production_contract_store import canonical_hash
+    from aos_api.aip_production_contracts import ExactRevisionRef
+    from aos_api.evidence_bundle_provenance import read_build_provenance
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        row=owner.execute('SELECT e.*,p.request_payload,p.idempotency_key FROM public.aip_evidence_bundle_revision e JOIN public.aip_evidence_bundle_build_provenance p USING(org_id,project_id,bundle_id,revision,content_hash) WHERE e.org_id=%s AND e.project_id=%s LIMIT 1',SCOPE.key).fetchone()
+        _install_original_evidence_profile(owner)
+        names=['original_build_float','original_build_equal','original_evidence_fields']
+        flags=owner.execute("""SELECT p.provolatile,p.proisstrict,p.prosecdef,p.proconfig,pg_get_userbyid(p.proowner) AS owner,
+            has_function_privilege('aos_runtime',p.oid,'EXECUTE') AS runtime_execute,
+            has_function_privilege('aos_provider_capacity_issuer',p.oid,'EXECUTE') AS issuer_execute,
+            EXISTS(SELECT 1 FROM aclexplode(p.proacl) WHERE grantee=0 AND privilege_type='EXECUTE') AS public_execute
+            FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+            WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)""",(names,)).fetchall()
+        assert len(flags)==3
+        assert all(f['provolatile']=='i' and f['proisstrict'] and not f['prosecdef'] and f['proconfig']==['search_path=pg_catalog']
+            and f['owner']=='aos_capacity_publication_owner' and not f['runtime_execute'] and not f['issuer_execute'] and not f['public_execute'] for f in flags)
+        for field in ('missing','conflicts','uncertainties'):
+            owner.execute('SAVEPOINT coherent_evidence_model_fault')
+            try:
+                payload={**row['request_payload'],**{name:row[name] for name in ('coverage','missing','conflicts','uncertainties','freshness')}}
+                payload[field]=['invalid-dictionary']
+                hash_value=canonical_hash(payload)
+                ref=ExactRevisionRef(resource_type='EvidenceBundleRevision',resource_id=row['bundle_id'],revision=row['revision'],content_hash=hash_value)
+                owner.execute("SET LOCAL session_replication_role='replica'")
+                owner.execute(sql.SQL('UPDATE public.aip_evidence_bundle_revision SET {}=%s,content_hash=%s WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s').format(sql.Identifier(field)),(Jsonb(payload[field]),hash_value,*SCOPE.key,ref.resource_id,ref.revision))
+                owner.execute('UPDATE public.aip_evidence_bundle_build_provenance SET content_hash=%s,authority_payload=%s WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s',(hash_value,Jsonb(payload),*SCOPE.key,ref.resource_id,ref.revision))
+                owner.execute("UPDATE public.aip_production_contract_receipt SET result_ref=%s WHERE org_id=%s AND project_id=%s AND operation='evidence_bundle.build' AND idempotency_key=%s",(Jsonb(ref.model_dump(mode='json',by_alias=True)),*SCOPE.key,row['idempotency_key']))
+                owner.execute("SET LOCAL session_replication_role='origin'")
+                owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                assert read_build_provenance(owner,SCOPE,ref).source==ref
+                assert not _original_evidence_read(owner,ref),field
+                assert _native_evidence_read(owner,ref) is None,field
+            finally:owner.execute('ROLLBACK TO SAVEPOINT coherent_evidence_model_fault')
+        owner.rollback()
+        assert owner.execute("SELECT count(*) AS count FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)",(names,)).fetchone()['count']==0
+        owner.rollback()
+
+
+@pytest.mark.parametrize('offset',[None,1439])
+def test_native_evidence_query_preserves_genuine_build_cutoff_and_numeric_hash(native_signed_source,offset):
+    from datetime import timedelta,timezone
+    from tests.aip.test_evidence_bundle_provenance_pg import build_inputs,ACTOR,exact
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_NATIVE_EVIDENCE_ROW_SQL
+    producer,key,body=build_inputs.__wrapped__()
+    cutoff=body.cutoff_at.replace(tzinfo=None) if offset is None else body.cutoff_at.astimezone(timezone(timedelta(minutes=offset)))
+    bundle=producer.build_evidence_bundle(SCOPE,ACTOR,key,body.model_copy(update=dict(cutoff_at=cutoff,
+        license_summary={'nested':[1e15,1e-5,1.2345678901234567,True,None]})))
+    ref=exact(bundle)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        _install_original_evidence_profile(owner);owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        assert _original_evidence_read(owner,ref) and _native_evidence_read(owner,ref)
+        params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,bundle_id=ref.resource_id,revision=ref.revision,content_hash=ref.content_hash)
+        for field,value in [('org_id','dev-org'),('project_id','other'),('bundle_id','missing'),('revision',ref.revision+1),('content_hash','f'*64)]:
+            assert owner.execute(CAPACITY_NATIVE_EVIDENCE_ROW_SQL,{**params,field:value}).fetchone() is None
+        owner.execute("SELECT set_config('aos.org_id','dev-org',true)")
+        assert owner.execute(CAPACITY_NATIVE_EVIDENCE_ROW_SQL,params).fetchone() is None
+        owner.execute("SELECT set_config('aos.org_id',%s,true)",(SCOPE.org_id,))
+        assert _native_evidence_read(owner,ref)
+        print('NATIVE_EVIDENCE_CUTOFF',offset,'actual_original_build_hash_and_utc_match')
+        owner.rollback()

@@ -1,0 +1,296 @@
+{
+  "scope": "READONLY_RETAINED_ISOLATED_ORIGINAL_TABLE_CONTRACT",
+  "baseline": "2ed0c1d0",
+  "authority": "AOS-001430",
+  "database": "aos_test_7097a3e285d5_ti4_test",
+  "columns": [
+    {
+      "table_name": "aip_evidence_bundle_build_provenance",
+      "column_name": "org_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_build_provenance",
+      "column_name": "project_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_build_provenance",
+      "column_name": "bundle_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_build_provenance",
+      "column_name": "revision",
+      "data_type": "bigint",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_build_provenance",
+      "column_name": "content_hash",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_build_provenance",
+      "column_name": "operation",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_build_provenance",
+      "column_name": "idempotency_key",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_build_provenance",
+      "column_name": "request_hash",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_build_provenance",
+      "column_name": "request_payload",
+      "data_type": "jsonb",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_build_provenance",
+      "column_name": "authority_payload",
+      "data_type": "jsonb",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_build_provenance",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "org_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "project_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "bundle_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "revision",
+      "data_type": "bigint",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "brief_ref",
+      "data_type": "jsonb",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "subject_refs",
+      "data_type": "jsonb",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "cutoff_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "item_refs",
+      "data_type": "jsonb",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "coverage",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "missing",
+      "data_type": "jsonb",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "conflicts",
+      "data_type": "jsonb",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "uncertainties",
+      "data_type": "jsonb",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "freshness",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "marking",
+      "data_type": "jsonb",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "license_summary",
+      "data_type": "jsonb",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "content_hash",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "lifecycle",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revision",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revoke_event",
+      "column_name": "org_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revoke_event",
+      "column_name": "project_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revoke_event",
+      "column_name": "event_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revoke_event",
+      "column_name": "bundle_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revoke_event",
+      "column_name": "revision",
+      "data_type": "bigint",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revoke_event",
+      "column_name": "content_hash",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revoke_event",
+      "column_name": "reason",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revoke_event",
+      "column_name": "actor",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_evidence_bundle_revoke_event",
+      "column_name": "occurred_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_production_contract_receipt",
+      "column_name": "org_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_production_contract_receipt",
+      "column_name": "project_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_production_contract_receipt",
+      "column_name": "receipt_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_production_contract_receipt",
+      "column_name": "operation",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_production_contract_receipt",
+      "column_name": "idempotency_key",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_production_contract_receipt",
+      "column_name": "request_hash",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_production_contract_receipt",
+      "column_name": "result_ref",
+      "data_type": "jsonb",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_production_contract_receipt",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "aip_production_contract_receipt",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    }
+  ]
+}

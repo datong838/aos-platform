@@ -1701,3 +1701,141 @@ END $body$;
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.original_build_json(jsonb) FROM PUBLIC;
 ALTER FUNCTION aos_capacity_publication_private.original_build_json(jsonb) OWNER TO aos_capacity_publication_owner;
 """
+
+CAPACITY_ORIGINAL_EVIDENCE_PROFILE_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.original_build_float(p jsonb)
+RETURNS double precision LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE value text:=p#>>'{}';
+BEGIN
+ RETURN value::double precision;
+EXCEPTION WHEN numeric_value_out_of_range THEN
+ IF abs(value::numeric)<1 THEN RETURN 0::double precision; END IF;
+ RETURN CASE WHEN left(value,1)='-' THEN '-Infinity'::double precision ELSE 'Infinity'::double precision END;
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.original_build_equal(lhs jsonb,rhs jsonb)
+RETURNS boolean LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE lt text:=jsonb_typeof(lhs); rt text:=jsonb_typeof(rhs); item record;
+ ld boolean; rd boolean; li jsonb; ri jsonb;
+BEGIN
+ IF lt IN ('number','boolean') AND rt IN ('number','boolean') THEN
+  ld:=lt='number' AND position('.' IN lhs::text)>0;
+  rd:=rt='number' AND position('.' IN rhs::text)>0;
+  IF ld AND rd THEN
+   RETURN aos_capacity_publication_private.original_build_float(lhs)=
+          aos_capacity_publication_private.original_build_float(rhs);
+  END IF;
+  -- Python compares arbitrary precision integers to the exact binary64
+  -- integer value, never to a rounded decimal rendering of that float.
+  BEGIN
+   IF ld THEN
+    IF aos_capacity_publication_private.original_build_float(lhs)=0 THEN li:='0'::jsonb;
+    ELSE li:=aos_capacity_publication_private.original_provider_integer(lhs); END IF;
+   ELSE li:=aos_capacity_publication_private.original_provider_integer(lhs); END IF;
+   IF rd THEN
+    IF aos_capacity_publication_private.original_build_float(rhs)=0 THEN ri:='0'::jsonb;
+    ELSE ri:=aos_capacity_publication_private.original_provider_integer(rhs); END IF;
+   ELSE ri:=aos_capacity_publication_private.original_provider_integer(rhs); END IF;
+  EXCEPTION WHEN OTHERS THEN RETURN false;
+  END;
+  RETURN li=ri;
+ END IF;
+ IF lt<>rt THEN RETURN false; END IF;
+ IF lt='object' THEN
+  IF (SELECT count(*) FROM jsonb_object_keys(lhs))<>(SELECT count(*) FROM jsonb_object_keys(rhs)) THEN RETURN false; END IF;
+  FOR item IN SELECT element.key,element.value FROM jsonb_each(lhs) AS element(key,value) LOOP
+   IF NOT rhs?item.key OR NOT aos_capacity_publication_private.original_build_equal(item.value,rhs->item.key) THEN RETURN false; END IF;
+  END LOOP;
+  RETURN true;
+ ELSIF lt='array' THEN
+  IF jsonb_array_length(lhs)<>jsonb_array_length(rhs) THEN RETURN false; END IF;
+  FOR item IN SELECT element.value,element.ordinality FROM jsonb_array_elements(lhs) WITH ORDINALITY AS element(value,ordinality) LOOP
+   IF NOT aos_capacity_publication_private.original_build_equal(item.value,rhs->(item.ordinality::integer-1)) THEN RETURN false; END IF;
+  END LOOP;
+  RETURN true;
+ END IF;
+ RETURN lhs=rhs;
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.original_evidence_fields(
+ brief jsonb,subjects jsonb,items jsonb,missing jsonb,conflicts jsonb,uncertainties jsonb,marking jsonb,license jsonb)
+RETURNS boolean LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE item jsonb; list jsonb;
+BEGIN
+ PERFORM aos_capacity_publication_private.original_build_exact_ref(brief||jsonb_build_object(
+  'revision',aos_capacity_publication_private.original_provider_integer(brief->'revision')));
+ FOREACH list IN ARRAY ARRAY[subjects,items,missing,conflicts,uncertainties,marking] LOOP
+  IF jsonb_typeof(list)<>'array' THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_EVIDENCE_ARRAY' USING ERRCODE='22023'; END IF;
+ END LOOP;
+ FOR item IN SELECT element.value FROM jsonb_array_elements(items) AS element(value) LOOP
+  PERFORM aos_capacity_publication_private.original_build_exact_ref(item||jsonb_build_object(
+   'revision',aos_capacity_publication_private.original_provider_integer(item->'revision')));
+ END LOOP;
+ FOR item IN SELECT element.value FROM jsonb_array_elements(subjects) AS element(value) LOOP
+  PERFORM aos_capacity_publication_private.original_build_resource_ref(item);
+ END LOOP;
+ FOREACH list IN ARRAY ARRAY[missing,conflicts,uncertainties] LOOP
+  IF EXISTS(SELECT 1 FROM jsonb_array_elements(list) AS element(value) WHERE jsonb_typeof(element.value)<>'object') THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGINAL_EVIDENCE_DICTIONARIES' USING ERRCODE='22023';
+  END IF;
+ END LOOP;
+ IF EXISTS(SELECT 1 FROM jsonb_array_elements(marking) AS element(value) WHERE jsonb_typeof(element.value)<>'string')
+  OR jsonb_typeof(license)<>'object' THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_EVIDENCE' USING ERRCODE='22023'; END IF;
+ RETURN true;
+END $body$;
+""" + '\n'.join(
+    f'REVOKE ALL ON FUNCTION aos_capacity_publication_private.{signature} FROM PUBLIC;\n'
+    f'ALTER FUNCTION aos_capacity_publication_private.{signature} OWNER TO aos_capacity_publication_owner;'
+    for signature in ('original_build_float(jsonb)','original_build_equal(jsonb,jsonb)',
+        'original_evidence_fields(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)'))
+
+# Original S15 Evidence/build facts only. The complete entry must separately
+# acquire and audit the original neutral epoch locks before consuming this row.
+CAPACITY_NATIVE_EVIDENCE_ROW_SQL = r"""
+WITH exact AS MATERIALIZED (
+ SELECT e.*,p.idempotency_key,p.request_hash,p.request_payload,p.authority_payload,
+        c.request_hash AS receipt_request_hash,c.result_ref AS receipt_result
+ FROM public.aip_evidence_bundle_revision e
+ JOIN public.aip_evidence_bundle_build_provenance p
+  ON (p.org_id,p.project_id,p.bundle_id,p.revision,p.content_hash)=
+     (e.org_id,e.project_id,e.bundle_id,e.revision,e.content_hash)
+ JOIN public.aip_production_contract_receipt c
+  ON c.org_id=p.org_id AND c.project_id=p.project_id
+  AND c.operation='evidence_bundle.build' AND c.idempotency_key=p.idempotency_key
+ WHERE (e.org_id,e.project_id,e.bundle_id,e.revision,e.content_hash)=
+  (%(org_id)s,%(project_id)s,%(bundle_id)s,%(revision)s,%(content_hash)s)
+ AND e.org_id='org-org' AND e.project_id='dev-project'
+ AND e.org_id=current_setting('aos.org_id',true) AND e.project_id=current_setting('aos.project_id',true)
+ AND e.lifecycle='frozen'
+ AND NOT EXISTS(SELECT 1 FROM public.aip_evidence_bundle_revoke_event r
+  WHERE (r.org_id,r.project_id,r.bundle_id,r.revision,r.content_hash)=
+        (e.org_id,e.project_id,e.bundle_id,e.revision,e.content_hash))
+), typed AS MATERIALIZED (
+ SELECT e.*,aos_capacity_publication_private.read_original_build_request(e.request_payload) AS canonical_input
+ FROM exact e
+)
+SELECT e.* FROM typed e
+CROSS JOIN LATERAL aos_capacity_publication_private.original_source_time(to_jsonb(
+ CASE WHEN (e.canonical_input->>'cutoffAt') COLLATE "C" ~ '(Z|[+-][0-9]{2}:[0-9]{2})$'
+ THEN e.canonical_input->>'cutoffAt' ELSE (e.canonical_input->>'cutoffAt')||'Z' END)) cutoff
+WHERE e.coverage IN ('complete','partial','blocked','unknown')
+ AND e.freshness IN ('fresh','stale','blocked','unknown')
+ AND isfinite(e.created_at) AND isfinite(e.cutoff_at)
+ AND extract(year FROM e.created_at AT TIME ZONE 'UTC') BETWEEN 1 AND 9999
+ AND extract(year FROM e.cutoff_at AT TIME ZONE 'UTC') BETWEEN 1 AND 9999
+ AND aos_capacity_publication_private.original_evidence_fields(e.brief_ref,e.subject_refs,e.item_refs,
+       e.missing,e.conflicts,e.uncertainties,e.marking,e.license_summary)
+ AND aos_capacity_publication_private.original_build_equal(e.canonical_input->'briefRef',e.brief_ref)
+ AND aos_capacity_publication_private.original_build_equal(e.canonical_input->'subjectRefs',e.subject_refs)
+ AND aos_capacity_publication_private.original_build_equal(e.canonical_input->'itemRefs',e.item_refs)
+ AND aos_capacity_publication_private.original_build_equal(e.canonical_input->'marking',e.marking)
+ AND aos_capacity_publication_private.original_build_equal(e.canonical_input->'licenseSummary',e.license_summary)
+ AND cutoff.instant=e.cutoff_at
+ AND encode(sha256(convert_to(aos_capacity_publication_private.original_build_json(e.request_payload),'UTF8')),'hex')=e.request_hash
+ AND encode(sha256(convert_to(aos_capacity_publication_private.original_build_json(
+     e.request_payload||jsonb_build_object('coverage',e.coverage,'missing',e.missing,'conflicts',e.conflicts,
+       'uncertainties',e.uncertainties,'freshness',e.freshness)),'UTF8')),'hex')=e.content_hash
+ AND encode(sha256(convert_to(aos_capacity_publication_private.original_build_json(e.authority_payload),'UTF8')),'hex')=e.content_hash
+ AND e.receipt_request_hash=e.request_hash
+ AND aos_capacity_publication_private.original_build_equal(e.receipt_result,
+  jsonb_build_object('resourceType','EvidenceBundleRevision','resourceId',e.bundle_id,
+       'revision',e.revision,'contentHash',e.content_hash))
+"""
