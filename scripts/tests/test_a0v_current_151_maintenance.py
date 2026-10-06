@@ -90,3 +90,22 @@ def test_drift_after_intent_preserves_unknown_attempt_without_effect(tmp_path,mo
     assert calls==[]
     assert (tmp_path/'stop_clients-attempt.json').exists()
     assert not (tmp_path/'stop_clients-done.json').exists()
+
+
+@pytest.mark.parametrize('select',['SELECT ','SELECT\n'])
+def test_readonly_catalog_adapter_preserves_native_types_and_literal_parameters(select):
+    m=module();queries=[]
+    def query(s):
+        queries.append(s)
+        return [dict(oid='12',atttypid='25',polroles=['12'],tgargs='\\x',prosrc='12')]
+    c=m.ReadOnlyCatalogConnection(query)
+    row=c.execute(select+'%s AS value',("a'quoted",)).fetchone()
+    assert row==dict(oid=12,atttypid=25,polroles=[12],tgargs=b'',prosrc='12')
+    assert "'a''quoted'" in queries[0]
+
+
+@pytest.mark.parametrize('statement',['UPDATE x SET y=1','SELECT 1; SELECT 2'])
+def test_readonly_catalog_adapter_rejects_effects_or_multiple_statements(statement):
+    m=module();calls=[];c=m.ReadOnlyCatalogConnection(lambda s: calls.append(s))
+    with pytest.raises(m.Maintenance151Blocked):c.execute(statement)
+    assert calls==[]

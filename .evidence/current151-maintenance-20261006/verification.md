@@ -16,3 +16,8 @@
 创建journal后的HEAD/branch/Task漂移反例真实RED：三例均已调用operation（调用数1，期望0）；另外三例因新复核入口缺失失败，18passed/6failed。最小增加每步写attempt前与写后两次实时Task/Lease/authority和m1/HEAD复核。专项24passed；专项与旧维护保护累计63passed/1deselected。唯一排除为既有旧执行器硬编码1329、测试依赖当前1369权威的错误消息断言，原失败仍保留，不宣称旧整套全绿。
 
 真实只读`_require_live_binding`通过：Task/Lease/AOS-001369/m1@465fa10f一致，证据live-journal-binding.json；没有调用journal operation，没有服务或数据库副作用。方案与实现均明确两次采样不是原子锁，真实operation仍须自身资源复核。完整当前迁移/重启/八工作台与自然首链未通过，Task保持ACTIVE。
+
+## 恢复151现场原审计器接入
+适配器缺失RED3failed/24passed；首次真实preflight在原审计器多行SELECT被适配器错误拒绝（SELECT后换行），原失败log保留。补一个换行RED1failed/27passed后最小修正为SELECT后允许空白，仍拒绝多语句。专项与旧维护保护67passed/1deselected，旧1329消息断言排除原因同上。
+
+真实第二次preflight退出0：同原source142与第二份备份/独立142恢复均完整回读；固定same-image恢复库151完整snapshot精确匹配a151保存after；原require_withdrawal_fence逐项检查列/约束/RLS/owner/function body hash/ACL/额外权限/trigger/立即外键顺序通过；结束Task/HEAD再读一致。证据live-restored151-preflight-r2.json及对应log。没有修改业务审计器，没有开放LOGIN，没有迁移源或停止服务，mutation_permission仍false。管理员只读审计不代替原生issuer身份或完整业务授权；下一步按原合同接零执行窗口与受控维护操作。

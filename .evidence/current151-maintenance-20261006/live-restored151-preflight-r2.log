@@ -1,0 +1,37 @@
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_142 -> a0v_143, Fence original Health DML by tenant/provider; never replicate health facts.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_143 -> a0v_144, Bound formal evaluation to original authorities and one atomic transaction.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_144 -> a0v_145, Immutable nonexecuting Provider allocation requests, no capacity activation.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_145 -> a0v_146, Reserved Provider allocation approval metadata; no execution grant.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_146 -> a0v_147, Unverified physical capacity candidates only; no account or capacity publication.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_147 -> a0v_148, Reserved Provider allocation approval metadata; no execution grant.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_148 -> a0v_149, Neutral Evidence epoch for capacity review and future issuer commit ordering.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_149 -> a0v_150, Dedicated read/lock identity for capacity issuance, with no publication grants yet.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_150 -> a0v_151, Independent proposal withdrawal ordering, without granting capacity.
+{"outcome": "CURRENT151_READ_ONLY_PREFLIGHT_GREEN", "source_version": "a0v_142", "restored151": {"container": "current150-same-77f8f834ea15", "version": "a0v_151", "full_snapshot": "exact", "withdrawal_fence": "exact", "source_mutations": 0}, "mutation_permission": false}

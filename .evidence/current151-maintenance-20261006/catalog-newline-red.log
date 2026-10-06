@@ -1,0 +1,32 @@
+.........................F..                                             [100%]
+=================================== FAILURES ===================================
+_ test_readonly_catalog_adapter_preserves_native_types_and_literal_parameters[SELECT\n] _
+
+select = 'SELECT\n'
+
+    @pytest.mark.parametrize('select',['SELECT ','SELECT\n'])
+    def test_readonly_catalog_adapter_preserves_native_types_and_literal_parameters(select):
+        m=module();queries=[]
+        def query(s):
+            queries.append(s)
+            return [dict(oid='12',atttypid='25',polroles=['12'],tgargs='\\x',prosrc='12')]
+        c=m.ReadOnlyCatalogConnection(query)
+>       row=c.execute(select+'%s AS value',("a'quoted",)).fetchone()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <maintenance151.ReadOnlyCatalogConnection object at 0x10c7ca0d0>
+statement = 'SELECT\n%s AS value', parameters = ("a'quoted",)
+
+    def execute(self,statement,parameters=()):
+        from psycopg import sql
+        if not statement.lstrip().upper().startswith('SELECT ') or ';' in statement:
+>           raise Maintenance151Blocked('CATALOG_SELECT_REQUIRED')
+E           maintenance151.Maintenance151Blocked: CATALOG_SELECT_REQUIRED
+
+scripts/a0v_current_151_maintenance.py:143: Maintenance151Blocked
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_readonly_catalog_adapter_preserves_native_types_and_literal_parameters[SELECT\n]
+1 failed, 27 passed in 0.14s

@@ -125,10 +125,66 @@ def preflight(*,thread):
         current=restore.full_snapshot(primitive,lambda q:conn.execute(q).fetchone()['value'],saved['role_names'])
     if current!=saved:
         raise Maintenance151Blocked('SOURCE_CHANGED_SINCE_SECOND_BACKUP')
+    restored151=audit_restored151(base=base,restore=restore,primitive=primitive)
     services=maintenance.current_services()
     if read_task(thread=thread)!=task or subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()!=head:
         raise Maintenance151Blocked('PREFLIGHT_BASELINE_CHANGED')
-    return dict(outcome='CURRENT151_READ_ONLY_PREFLIGHT_GREEN',head=head,authority=BASE,source_version=current['version'],code_version='a0v_151',sql_hashes=sql_hashes,source_id=item['Id'],source_image=item['Image'],services=services,mutation_permission=False)
+    return dict(outcome='CURRENT151_READ_ONLY_PREFLIGHT_GREEN',head=head,authority=BASE,source_version=current['version'],code_version='a0v_151',sql_hashes=sql_hashes,source_id=item['Id'],source_image=item['Image'],services=services,restored151=restored151,mutation_permission=False)
+
+
+class ReadOnlyCatalogConnection:
+    """Adapt fixed catalog SELECTs to original driver types, without granting login."""
+    def __init__(self,query):
+        self.query=query
+
+    def execute(self,statement,parameters=()):
+        import re
+        from psycopg import sql
+        if not re.match(r'^\s*SELECT\s',statement,re.IGNORECASE) or ';' in statement:
+            raise Maintenance151Blocked('CATALOG_SELECT_REQUIRED')
+        parts=statement.split('%s')
+        if len(parts)!=len(parameters)+1:
+            raise Maintenance151Blocked('CATALOG_PARAMETER_BINDING_REQUIRED')
+        rendered=parts[0]
+        for value,part in zip(parameters,parts[1:]):
+            rendered+=sql.Literal(value).as_string()+part
+        rows=self.query("SELECT coalesce(json_agg(row_to_json(audit_row)), '[]') AS value FROM ("+rendered+') audit_row')
+        converted=[]
+        for original in rows:
+            row=dict(original)
+            for key in ('oid','relowner','atttypid','proowner','prorettype','tgfoid'):
+                if key in row:row[key]=int(row[key])
+            if 'polroles' in row:row['polroles']=[int(x) for x in row['polroles']]
+            if 'tgargs' in row:
+                if not isinstance(row['tgargs'],str) or not row['tgargs'].startswith('\\x'):
+                    raise Maintenance151Blocked('CATALOG_BYTEA_FORMAT_REQUIRED')
+                row['tgargs']=bytes.fromhex(row['tgargs'][2:])
+            converted.append(row)
+        class Result:
+            def fetchone(self):return converted[0] if converted else None
+            def fetchall(self):return converted
+        return Result()
+
+
+def audit_restored151(*,base,restore,primitive):
+    import subprocess
+    from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence
+    intent=json.loads((base/'same-image-phase/intent.json').read_text())
+    container=intent['container']
+    def inspect():
+        return json.loads(subprocess.check_output(['docker','--context',restore.DEST_CONTEXT,'inspect',container]))[0]
+    item=inspect()
+    restore.require_target(item,container=container,image=intent['image'])
+    def query(statement):
+        return json.loads(subprocess.check_output(['docker','--context',restore.DEST_CONTEXT,'exec',container,
+            'psql','-U','aos_app','-d',restore.SOURCE,'-v','ON_ERROR_STOP=1','-Atq','-c',
+            "BEGIN READ ONLY;SET LOCAL timezone='UTC';SET LOCAL search_path=pg_catalog,public;"+statement+';COMMIT'],timeout=300))
+    expected=json.loads((base/'rehearsal-a151/after.json').read_text())
+    if expected['version']!='a0v_151':raise Maintenance151Blocked('RESTORED_151_REQUIRED')
+    restore.require_exact_restore(expected,restore.full_snapshot(primitive,query,expected['role_names']))
+    require_withdrawal_fence(ReadOnlyCatalogConnection(query))
+    restore.require_source_identity(item,inspect())
+    return dict(container=container,version='a0v_151',full_snapshot='exact',withdrawal_fence='exact',source_mutations=0)
 
 
 def require_resource_identity(expected,observed):

@@ -1,0 +1,41 @@
+........................FFF                                              [100%]
+=================================== FAILURES ===================================
+_ test_readonly_catalog_adapter_preserves_native_types_and_literal_parameters __
+
+    def test_readonly_catalog_adapter_preserves_native_types_and_literal_parameters():
+        m=module();queries=[]
+        def query(s):
+            queries.append(s)
+            return [dict(oid='12',atttypid='25',polroles=['12'],tgargs='\\x',prosrc='12')]
+>       c=m.ReadOnlyCatalogConnection(query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'ReadOnlyCatalogConnection'
+
+scripts/tests/test_a0v_current_151_maintenance.py:100: AttributeError
+_ test_readonly_catalog_adapter_rejects_effects_or_multiple_statements[UPDATE x SET y=1] _
+
+statement = 'UPDATE x SET y=1'
+
+    @pytest.mark.parametrize('statement',['UPDATE x SET y=1','SELECT 1; SELECT 2'])
+    def test_readonly_catalog_adapter_rejects_effects_or_multiple_statements(statement):
+>       m=module();calls=[];c=m.ReadOnlyCatalogConnection(lambda s: calls.append(s))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'ReadOnlyCatalogConnection'
+
+scripts/tests/test_a0v_current_151_maintenance.py:108: AttributeError
+_ test_readonly_catalog_adapter_rejects_effects_or_multiple_statements[SELECT 1; SELECT 2] _
+
+statement = 'SELECT 1; SELECT 2'
+
+    @pytest.mark.parametrize('statement',['UPDATE x SET y=1','SELECT 1; SELECT 2'])
+    def test_readonly_catalog_adapter_rejects_effects_or_multiple_statements(statement):
+>       m=module();calls=[];c=m.ReadOnlyCatalogConnection(lambda s: calls.append(s))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'ReadOnlyCatalogConnection'
+
+scripts/tests/test_a0v_current_151_maintenance.py:108: AttributeError
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_readonly_catalog_adapter_preserves_native_types_and_literal_parameters
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_readonly_catalog_adapter_rejects_effects_or_multiple_statements[UPDATE x SET y=1]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_readonly_catalog_adapter_rejects_effects_or_multiple_statements[SELECT 1; SELECT 2]
+3 failed, 24 passed in 0.10s

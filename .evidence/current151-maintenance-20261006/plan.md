@@ -19,3 +19,6 @@ Maintenance151Journal绑定冻结head/thread/Task/base，不仅step名称。原�
 
 ## 执行时身份复核
 每一步在检查历史证据后、写attempt之前，重新读取当前Task/Lease/authority与Git HEAD和m1分支；身份或租约失效不得调用operation，也不产生attempt。写attempt后、调用operation前再次复核，捕获该间隔内漂移；此时保留attempt并只读对账，不重发。真实受控操作仍须自身精确资源复核，这个复核不提供原子Git/租约锁，也不授予迁移权限。RED验证创建journal后的HEAD漂移、Task失效和attempt写入后的漂移均令操作调用数为零。
+
+## 恢复151现场审计
+仍只改原maintenance script/test：只读JSON连接适配器使用psycopg Literal绑定参数、仅接SELECT且拒绝多语句，严格把已知OID列/数组与tgargs转换成原驱动类型。调用原require_withdrawal_fence，不改其校验标准；固定原same-image恢复容器/镜像/卷，完整snapshot与a151已保存after精确比较，末尾重验容器身份。将该现场门接入preflight，不能用旧PASS标签放行。该管理员只读目录审计不替代原生issuer身份测试或当前源操作门。
