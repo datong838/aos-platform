@@ -1181,3 +1181,83 @@ CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL = CAPACITY_APPROVED_SOURCE_ROW_SQL.repla
       'actionTypeRevisionHash',p.action_type_snapshot->'revisionHash')),'UTF8')),'hex')
 FOR SHARE OF p
 """)
+
+# S11 untrusted original application model; not Provider/Evidence authority.
+CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.read_original_capacity_application(p jsonb)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE v jsonb; tenant jsonb; provider jsonb; evidence jsonb; identity text; trims text;
+ starts timestamptz; ends timestamptz; expires timestamptz; start_text text; end_text text; expiry_text text;
+BEGIN
+ IF jsonb_typeof(p)<>'object' OR (SELECT count(*) FROM jsonb_object_keys(p))<>12
+  OR p-ARRAY['schemaVersion','schema_version','tenant','providerRef','provider_ref',
+   'physicalAccountId','physical_account_id','requestedMaxConcurrency','requested_max_concurrency',
+   'requestedMaxTokenUnits','requested_max_token_units','tokenUnit','token_unit','basisKind','basis_kind',
+   'basisEvidenceRef','basis_evidence_ref','validFrom','valid_from','validUntil','valid_until',
+   'proposalExpiresAt','proposal_expires_at']<>'{}'::jsonb THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_APPLICATION' USING ERRCODE='22023';
+ END IF;
+ v:=jsonb_build_object(
+  'schemaVersion',aos_capacity_publication_private.original_source_field(p,'schemaVersion','schema_version'),
+  'tenant',aos_capacity_publication_private.original_source_field(p,'tenant','tenant'),
+  'providerRef',aos_capacity_publication_private.original_source_field(p,'providerRef','provider_ref'),
+  'physicalAccountId',aos_capacity_publication_private.original_source_field(p,'physicalAccountId','physical_account_id'),
+  'requestedMaxConcurrency',aos_capacity_publication_private.original_source_field(p,'requestedMaxConcurrency','requested_max_concurrency'),
+  'requestedMaxTokenUnits',aos_capacity_publication_private.original_source_field(p,'requestedMaxTokenUnits','requested_max_token_units'),
+  'tokenUnit',aos_capacity_publication_private.original_source_field(p,'tokenUnit','token_unit'),
+  'basisKind',aos_capacity_publication_private.original_source_field(p,'basisKind','basis_kind'),
+  'basisEvidenceRef',aos_capacity_publication_private.original_source_field(p,'basisEvidenceRef','basis_evidence_ref'),
+  'validFrom',aos_capacity_publication_private.original_source_field(p,'validFrom','valid_from'),
+  'validUntil',aos_capacity_publication_private.original_source_field(p,'validUntil','valid_until'),
+  'proposalExpiresAt',aos_capacity_publication_private.original_source_field(p,'proposalExpiresAt','proposal_expires_at'));
+ tenant:=v->'tenant';
+ IF jsonb_typeof(v->'schemaVersion')<>'number' OR v->>'schemaVersion'<>'1'
+  OR v->'tokenUnit'<>'"token"'::jsonb OR v->'basisKind'<>'"owner_requested_allocation"'::jsonb
+  OR jsonb_typeof(tenant)<>'object' OR (SELECT count(*) FROM jsonb_object_keys(tenant))<>2
+  OR tenant-ARRAY['orgId','org_id','projectId','project_id']<>'{}'::jsonb THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_APPLICATION' USING ERRCODE='22023';
+ END IF;
+ tenant:=jsonb_build_object('orgId',aos_capacity_publication_private.original_source_field(tenant,'orgId','org_id'),
+   'projectId',aos_capacity_publication_private.original_source_field(tenant,'projectId','project_id'));
+ IF tenant<>jsonb_build_object('orgId','org-org','projectId','dev-project') THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_APPLICATION' USING ERRCODE='22023';
+ END IF;
+ identity:=v->>'physicalAccountId';
+ SELECT string_agg(chr(point),'') INTO trims FROM unnest(ARRAY[9,10,11,12,13,28,29,30,31,32,133,160,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288]) point;
+ IF jsonb_typeof(v->'physicalAccountId')<>'string' OR length(identity) NOT BETWEEN 1 AND 200
+  OR identity<>btrim(identity,trims)
+  OR jsonb_typeof(v->'requestedMaxConcurrency')<>'number'
+  OR (v->>'requestedMaxConcurrency') COLLATE "C" !~ '^[1-9][0-9]*$'
+  OR jsonb_typeof(v->'requestedMaxTokenUnits')<>'number'
+  OR (v->>'requestedMaxTokenUnits') COLLATE "C" !~ '^[1-9][0-9]*$' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_APPLICATION' USING ERRCODE='22023';
+ END IF;
+ IF (v->>'requestedMaxConcurrency')::numeric NOT BETWEEN 1 AND 1000000
+  OR (v->>'requestedMaxTokenUnits')::numeric NOT BETWEEN 1 AND 1000000000000 THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_APPLICATION' USING ERRCODE='22023';
+ END IF;
+ provider:=aos_capacity_publication_private.original_source_ref(v->'providerRef','ProviderInstanceRevision');
+ evidence:=aos_capacity_publication_private.original_source_ref(v->'basisEvidenceRef','EvidenceBundleRevision');
+ SELECT instant,canonical INTO starts,start_text FROM aos_capacity_publication_private.original_source_time(v->'validFrom');
+ SELECT instant,canonical INTO ends,end_text FROM aos_capacity_publication_private.original_source_time(v->'validUntil');
+ SELECT instant,canonical INTO expires,expiry_text FROM aos_capacity_publication_private.original_source_time(v->'proposalExpiresAt');
+ IF NOT starts<expires OR expires>ends OR ends-starts>interval '366 days' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_APPLICATION' USING ERRCODE='22023';
+ END IF;
+ RETURN v||jsonb_build_object('tenant',tenant,'providerRef',provider,'basisEvidenceRef',evidence,
+   'validFrom',start_text,'validUntil',end_text,'proposalExpiresAt',expiry_text);
+EXCEPTION WHEN OTHERS THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_APPLICATION' USING ERRCODE='22023';
+END $body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_original_capacity_application(jsonb) FROM PUBLIC;
+ALTER FUNCTION aos_capacity_publication_private.read_original_capacity_application(jsonb) OWNER TO aos_capacity_publication_owner;
+"""
+
+# Full native publication only: original raw hash stays authoritative.
+CAPACITY_NATIVE_REQUEST_ROW_SQL = 'WITH original AS ('+CAPACITY_REQUEST_ROW_SQL+r"""), typed AS (
+ SELECT r.*,aos_capacity_publication_private.read_original_capacity_application(r.request_json->'application') AS normalized_application
+ FROM original r WHERE r.created_by=%(maker)s
+) SELECT * FROM typed
+WHERE expires_at=(normalized_application->>'proposalExpiresAt')::timestamptz
+  AND (normalized_application->>'validFrom')::timestamptz<=pg_catalog.clock_timestamp()
+  AND pg_catalog.clock_timestamp()<(normalized_application->>'proposalExpiresAt')::timestamptz
+"""

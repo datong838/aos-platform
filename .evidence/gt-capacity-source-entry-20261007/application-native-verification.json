@@ -1,0 +1,129 @@
+{
+  "baseline": "2502c9c6",
+  "authority": "AOS-001425",
+  "scope": "ORIGINAL_APPLICATION_PROFILE_AND_NATIVE_ROW_WINDOW_NOT_COMPLETE_SOURCE",
+  "files": {
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "2ab18a667cabf48d23794760f9e541fa483ed3ffb0a8457225518c4943efcdb5",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "f84f4fa957e27d34a6d1acd5f718261f27229444bdff7d8ae9b404c3dd8929e7",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "54e773881656627079e8e9f7dda91e9415d8c6b15f8a413848e6e81ab6f19373"
+  },
+  "logs": [
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/application-native-profile-red-r1.log",
+      "sha256": "98b2d418c16b0599aadfc23b22119aa1aaa1101e26dfe6db1bb9a3f788c26315",
+      "summary": [
+        "1 failed, 51 deselected, 7 warnings in 6.93s"
+      ],
+      "retained_databases": [
+        "aos_test_842a593a562e_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/application-native-profile-green-r1.log",
+      "sha256": "467a2a282141e6ee9348a6a913d27a63b7511bde5e9575539e90e21715645bad",
+      "summary": [
+        "51 deselected, 7 warnings, 1 error in 4.52s"
+      ],
+      "retained_databases": [
+        "aos_test_30d14cd77771_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/application-native-profile-green-r2.log",
+      "sha256": "e266f4678d7ce137c37d0c845046466286a15e72a831035890fb2fa086d14421",
+      "summary": [
+        "1 passed, 51 deselected, 7 warnings in 6.79s"
+      ],
+      "retained_databases": [
+        "aos_test_4d0a32b401ab_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/application-native-matrix-green-r1.log",
+      "sha256": "f9c88b49efd9332cdac6e793f5adb9d263d793351f52e4c375d434b5e8b2864c",
+      "summary": [
+        "1 failed, 1 passed, 51 deselected, 7 warnings in 8.64s"
+      ],
+      "retained_databases": [
+        "aos_test_54ee416f23bd_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/application-native-matrix-green-r2.log",
+      "sha256": "106f45d9c326b4ad95e27f2a7617dd95849599e9967d5e97c3e8366eb364b2ab",
+      "summary": [
+        "1 failed, 1 passed, 51 deselected, 7 warnings in 8.94s"
+      ],
+      "retained_databases": [
+        "aos_test_28f3b6be68e7_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/application-native-matrix-green-r3.log",
+      "sha256": "edd513061cf2cef921d8175da5c857a7a58ec7d9d1d1a3d9539103449e27f6d2",
+      "summary": [
+        "2 passed, 51 deselected, 7 warnings in 8.64s"
+      ],
+      "retained_databases": [
+        "aos_test_fcf7cc621341_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/application-native-adjacent-r1.log",
+      "sha256": "d21a5c815ceae9fdf87705c5b1e8cb5e8cfc25e90ea69da222bc7cbc05623420",
+      "summary": [
+        "48 passed, 5 deselected, 7 warnings in 90.60s (0:01:30)"
+      ],
+      "retained_databases": [
+        "aos_test_88588169a368_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/application-native-final-r1.log",
+      "sha256": "37638edd1a2147bdab532e5a104a2a62cd6b20ea5fd8b4df83c5a67f21fba503",
+      "summary": [
+        "2 passed, 51 deselected, 7 warnings in 8.72s"
+      ],
+      "retained_databases": [
+        "aos_test_9b0f18e5da0c_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/application-native-complete-entry-red-r1.log",
+      "sha256": "2c2c2f720b8ba66afa43bc97e859763a1e7ddf99e093cb63b0a6869b203197d8",
+      "summary": [
+        "5 failed, 48 deselected, 7 warnings in 13.25s"
+      ],
+      "retained_databases": [
+        "aos_test_7dc239650b84_ti4_test"
+      ]
+    }
+  ],
+  "test_resource_repair": {
+    "container": "/aos-capacity-publication-scram-20261006",
+    "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+    "task": "gt-capacity-native-scram-fixture-20261006",
+    "memory_before": 268435456,
+    "memory_after": 402653184,
+    "memory_swap": 536870912,
+    "volumes": [
+      "aos-capacity-publication-scram-20261006-data"
+    ],
+    "running": true,
+    "historical_oom_recorded": true,
+    "cgroup_events": "low 0\nhigh 0\nmax 42571\noom 1\noom_kill 1\noom_group_kill 0\n"
+  },
+  "model_oracle_samples": 33,
+  "model_positive_not_raw_145_insert_domain": true,
+  "expiry_negative": "isolated schema+data corruption; original145CHECK already prevents runtime mismatch",
+  "existing_guard_path_unchanged": true,
+  "current_database_accessed": false,
+  "source_published": false,
+  "parent_tasks_active": true,
+  "pending": [
+    "S11 original Provider/Evidence dependency locks in fullentry",
+    "S12-S20 native composition",
+    "prepare/sign/commit/actualcallerCOMMIT/currentconsumer",
+    "final caller COMMIT TTL"
+  ]
+}

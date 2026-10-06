@@ -883,3 +883,129 @@ def test_native_source_binding_rejects_coherent_wrong_hash(native_signed_source)
         assert owner.execute(CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL,params).fetchone() is not None
 
         owner.rollback()  # Never persist temporary private profile functions.
+
+
+def test_native_original_capacity_application_profile_matches_original_model(native_signed_source):
+    from copy import deepcopy
+    from datetime import timedelta, timezone
+    from pydantic import ValidationError
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_authorization import ProviderCapacityRequest
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL)
+
+    source = native_signed_source[3]
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)", SCOPE.key)
+        baseline = owner.execute('SELECT request_json FROM public.aip_provider_capacity_request WHERE org_id=%s AND project_id=%s AND request_id=%s',
+            (*SCOPE.key,source.allocation_request_ref.asset_id)).fetchone()['request_json']['application']
+        model = ProviderCapacityRequest.model_validate(baseline)
+        cases = [('baseline',baseline)]
+        for label,field,value in [
+            ('extra','unknown',1),('schema_float','schemaVersion',1.0),('schema_bool','schemaVersion',True),
+            ('concurrency_string','requestedMaxConcurrency','2'),('concurrency_float','requestedMaxConcurrency',2.0),
+            ('concurrency_bool','requestedMaxConcurrency',True),('concurrency_zero','requestedMaxConcurrency',0),
+            ('concurrency_over','requestedMaxConcurrency',1000001),('token_over','requestedMaxTokenUnits',1000000000001),
+            ('token_float','requestedMaxTokenUnits',1.0),('unit','tokenUnit','tokens'),('basis','basisKind','owner_allocation'),
+            ('account_trim','physicalAccountId',' padded '),('account_nbsp','physicalAccountId','\u00a0alias'),
+            ('account_space','physicalAccountId','internal space'),('account_unicode','physicalAccountId','账户😀'),
+            ('account_zero_width','physicalAccountId','a\u200bb'),('account_bool','physicalAccountId',True),
+            ('account_empty','physicalAccountId',''),('account_long','physicalAccountId','a'*201),
+            ('naive','validFrom','2026-10-07T00:00:00'),('equal_start','validFrom',baseline['proposalExpiresAt']),
+            ('expiry_after_until','proposalExpiresAt',(model.valid_until+timedelta(seconds=1)).isoformat()),
+            ('window_over','validUntil',(model.valid_from+timedelta(days=367)).isoformat()),('null_time','validUntil',None),
+            ('canary','tenant',dict(orgId='dev-org',projectId='dev-project')),
+        ]:
+            value_body=deepcopy(baseline);value_body[field]=value;cases.append((label,value_body))
+        value_body=deepcopy(baseline);del value_body['tokenUnit'];cases.append(('missing',value_body))
+        value_body=deepcopy(baseline);value_body['schema_version']=1;cases.append(('duplicate_alias',value_body))
+        value_body=deepcopy(baseline)
+        value_body['providerRef']={dict(assetType='asset_type',assetId='asset_id',contentHash='content_hash').get(k,k):v
+            for k,v in value_body['providerRef'].items()}
+        cases.append(('nested_alias',value_body))
+        value_body=model.model_dump(mode='json',by_alias=False);cases.append(('top_alias',value_body))
+        value_body=deepcopy(baseline)
+        for field,attribute in [('validFrom','valid_from'),('validUntil','valid_until'),('proposalExpiresAt','proposal_expires_at')]:
+            value_body[field]=getattr(model,attribute).astimezone(timezone(timedelta(hours=8))).isoformat(sep=' ')
+        cases.append(('offset_space',value_body))
+        value_body=deepcopy(baseline)
+        for field,attribute in [('validFrom','valid_from'),('validUntil','valid_until'),('proposalExpiresAt','proposal_expires_at')]:
+            value_body[field]=str(int(getattr(model,attribute).timestamp()))
+        cases.append(('epoch_strings',value_body))
+        value_body=deepcopy(baseline);value_body['providerRef']['assetType']='EvidenceBundleRevision';cases.append(('ref_kind',value_body))
+        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+        owner.execute(CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL)
+        flags=owner.execute("""SELECT p.provolatile,p.proisstrict,p.prosecdef,p.proconfig,r.rolname,
+            has_function_privilege('aos_runtime',p.oid,'EXECUTE') AS runtime_exec,
+            has_function_privilege('aos_provider_capacity_issuer',p.oid,'EXECUTE') AS issuer_exec,
+            EXISTS(SELECT 1 FROM aclexplode(COALESCE(p.proacl,acldefault('f',p.proowner))) a
+                WHERE a.grantee=0 AND a.privilege_type='EXECUTE') AS public_exec
+            FROM pg_proc p JOIN pg_roles r ON r.oid=p.proowner
+            WHERE p.oid=to_regprocedure('aos_capacity_publication_private.read_original_capacity_application(jsonb)')""").fetchone()
+        assert flags['provolatile']=='i' and flags['proisstrict'] and not flags['prosecdef']
+        assert flags['proconfig']==['search_path=pg_catalog'] and flags['rolname']=='aos_capacity_publication_owner'
+        assert not flags['runtime_exec'] and not flags['issuer_exec'] and not flags['public_exec']
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        mismatches=[]
+        for label,value_body in cases:
+            try:
+                expected=ProviderCapacityRequest.model_validate(value_body).model_dump(mode='json',by_alias=True)
+            except ValidationError:
+                expected=None
+            try:
+                with owner.transaction():
+                    actual=owner.execute('SELECT aos_capacity_publication_private.read_original_capacity_application(%s) AS value',
+                        (Jsonb(value_body),)).fetchone()['value']
+            except psycopg.Error as error:
+                assert error.sqlstate=='22023'
+                actual=None
+            if expected!=actual:mismatches.append((label,expected is not None,actual is not None))
+        owner.rollback()
+        assert owner.execute("SELECT to_regprocedure('aos_capacity_publication_private.read_original_capacity_application(jsonb)') AS fn").fetchone()['fn'] is None
+        owner.rollback()
+    assert not mismatches, f'Original application/native incompatibilities: {mismatches!r}'
+
+
+def test_native_original_capacity_request_rechecks_exact_row_expiry(native_signed_source):
+    from datetime import timedelta
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_source_issuer import authenticate_capacity_issuance_command
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL,
+        CAPACITY_REQUEST_ROW_SQL,CAPACITY_NATIVE_REQUEST_ROW_SQL)
+    _,actual_command,_,source,_=native_signed_source
+    command,_,_=actual_command()
+    params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,
+        request_id=source.allocation_request_ref.asset_id,request_hash=source.allocation_request_ref.content_hash,
+        maker=authenticate_capacity_issuance_command(command).subject)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+        owner.execute(CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        original=owner.execute(CAPACITY_NATIVE_REQUEST_ROW_SQL,params).fetchone()
+        assert original is not None
+        assert owner.execute(CAPACITY_NATIVE_REQUEST_ROW_SQL,{**params,'maker':'wrong-native-maker'}).fetchone() is None
+        owner.execute('RESET ROLE')
+        owner.execute('SAVEPOINT exact_expiry_fault')
+        try:
+            # Original145 CHECK already prevents this mismatch on runtime INSERT.
+            # Simulate isolated schema+data corruption solely inside this savepoint.
+            checks=owner.execute("SELECT conname FROM pg_constraint WHERE conrelid='public.aip_provider_capacity_request'::regclass AND contype='c' AND pg_get_constraintdef(oid) LIKE '%proposalExpiresAt%' AND pg_get_constraintdef(oid) LIKE '%timestamp with time zone = expires_at%'").fetchall()
+            assert len(checks)==1
+            from psycopg import sql
+            owner.execute(sql.SQL('ALTER TABLE public.aip_provider_capacity_request DROP CONSTRAINT {}').format(sql.Identifier(checks[0]['conname'])))
+            owner.execute("SET LOCAL session_replication_role='replica'")
+            owner.execute('UPDATE public.aip_provider_capacity_request SET expires_at=%s WHERE org_id=%s AND project_id=%s AND request_id=%s',
+                (original['expires_at']+timedelta(seconds=1),*SCOPE.key,params['request_id']))
+            owner.execute("SET LOCAL session_replication_role='origin'")
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            assert owner.execute(CAPACITY_REQUEST_ROW_SQL,params).fetchone() is not None
+            assert owner.execute(CAPACITY_NATIVE_REQUEST_ROW_SQL,params).fetchone() is None
+        finally:
+            owner.execute('ROLLBACK TO SAVEPOINT exact_expiry_fault')
+        assert owner.execute("SELECT count(*) AS n FROM pg_constraint WHERE conrelid='public.aip_provider_capacity_request'::regclass AND contype='c' AND pg_get_constraintdef(oid) LIKE '%proposalExpiresAt%' AND pg_get_constraintdef(oid) LIKE '%timestamp with time zone = expires_at%'").fetchone()['n']==1
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        assert owner.execute(CAPACITY_NATIVE_REQUEST_ROW_SQL,params).fetchone() is not None
+        owner.rollback()
