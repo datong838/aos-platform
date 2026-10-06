@@ -36,3 +36,5 @@
 - 本轮累计首次123passed/1failed177.21s；唯一function_body故障注入遗漏原参数名，被PG在注入处提前拒绝，未进入fence，是测试设置错误不是生产RED。保留原参数名后21passed33.10s，再补逐项审计发现的3项缺行/参数反例，最终完整epoch文件24passed7warnings38.21s exit0。此前累计已通过相邻123项未因纯测试补强重复执行，不宣称有一条124/127全量exit0运行。
 
 本轮只改原测试及本Task证据；strict fence/迁移/Source生产代码不变，diff --check通过；无UI更改，无新浏览器动作。原所有隔离库/备份/失败日志保留。Task退出为WITHDRAWAL_EPOCH_ISOLATED_NATIVE_MIGRATION_RESTORE_AND_CONCURRENCY_VERIFIED，可以独立Delivery；正式Source签发/稳定账户global mapping/共享占额/Intent/Model执行、b90三写/API及自然首链仍未完成，不能由本Task授权。下一项回原publication Task冻结SQL验签/签发隔离边界和152迁移范围，保持整体Goal active。
+
+最终收口回读：3f8b8339精确提交；authority原CAS推进AOS-001372，原complete_task写上述独立Delivery并释放本Task Lease，1858 Delivery/1864 Task、memory-validate GREEN。全部7强一致投影含Prime CURRENT；可选Codex记忆未更新，旧1370 note仅STALE，不影响强一致门，不声称摄入。publication原Task同Owner续至20:00并已实测完整151副本的签名能力目录，未新建152或发布。总体业务交付仍FIRST_CHAIN_PENDING，无Goal终止操作或push。
