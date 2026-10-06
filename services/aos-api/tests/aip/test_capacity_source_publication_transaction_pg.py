@@ -313,6 +313,76 @@ def test_registered_original_inputs_prepare_native_v2_before_signing(native_sign
         conn.rollback()  # Pending prepare is never committed as a Source.
 
 
+@pytest.mark.parametrize('outcome',['committed','invalid_signature','unfinished'])
+def test_complete_native_publication_requires_actual_caller_commit(native_signed_source,tmp_path,outcome):
+    """Real transaction contract; fixture signing alone is not signer acceptance."""
+    import hashlib,json
+    from uuid import uuid4
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_source_issuer import (
+        authenticate_capacity_issuance_command,capacity_source_preparation_bytes)
+    from aos_api.aip_provider_capacity_source_contracts import capacity_issuance_binding
+    from aos_api.aip_provider_capacity_publication_contracts import (
+        PublishedProviderCapacitySourceV2,parse_signed_capacity_body)
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+
+    material=_registered_publication_inputs(native_signed_source,tmp_path)
+    command,_,_=material['actual_command']()
+    principal=authenticate_capacity_issuance_command(command)
+    request_hash=capacity_issuance_binding(SCOPE,principal.subject,command).content_hash
+    command_raw=capacity_source_preparation_bytes(command)
+    assert command.bearer_token.get_secret_value().encode() not in command_raw
+    asset_id='native-commit-'+uuid4().hex
+    with connect_capacity_issuer(material['config'],SCOPE) as conn:
+        assert conn.pgconn.used_password is True
+        native=conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+        prepared_row=conn.execute('SELECT * FROM public.prepare_capacity_source(%s::bytea,%s::text,%s::text,%s::jsonb)',
+            (command_raw,command.idempotency_key,asset_id,json.dumps(material['refs'][-1]))).fetchone()
+        raw=bytes(prepared_row['source_raw'])
+        parsed=parse_signed_capacity_body(raw,PublishedProviderCapacitySourceV2)
+        assert parsed.asset_id==asset_id and parsed.request_hash==request_hash
+        assert parsed.issuance_context.maker_subject==principal.subject
+        assert parsed.issuance_context.transaction_id==native['xid']
+        assert parsed.issuance_context.backend_pid==native['pid']
+        assert parsed.execution_allowed is False
+        signature=material['source_key'].sign(raw)
+        if outcome=='unfinished':
+            # Invoke real caller COMMIT, not SET CONSTRAINTS or a fake trigger.
+            with pytest.raises(psycopg.errors.CheckViolation):
+                conn.commit()
+            conn.rollback()
+        elif outcome=='invalid_signature':
+            changed=bytes([signature[0]^1])+signature[1:]
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                conn.execute('SELECT * FROM public.commit_capacity_source(%s::text,%s::bytea,%s::bytea)',
+                    (command.idempotency_key,raw,changed))
+            conn.rollback()
+        else:
+            committed=conn.execute('SELECT * FROM public.commit_capacity_source(%s::text,%s::bytea,%s::bytea)',
+                (command.idempotency_key,raw,signature)).fetchone()
+            assert committed['asset_id']==asset_id and committed['revision']==1
+            assert committed['content_hash']==hashlib.sha256(raw).hexdigest()
+            assert bytes(committed['source_raw'])==raw
+            assert bytes(committed['signature'])==signature
+            conn.commit()
+    # A distinct actual connection observes durable outcome. Test admin reads
+    # evidence only; issuer never gets a private table grant or direct insert.
+    with isolated_owner() as owner:
+        owner.read_only=True
+        row=owner.execute('SELECT asset_id,revision,content_hash,source_raw,signature FROM '
+            'aos_capacity_publication_private.source_publication WHERE org_id=%s AND project_id=%s AND asset_id=%s',
+            (*SCOPE.key,asset_id)).fetchone()
+        if outcome=='committed':
+            assert row is not None and row['revision']==1
+            assert row['content_hash']==hashlib.sha256(raw).hexdigest()
+            assert bytes(row['source_raw'])==raw and bytes(row['signature'])==signature
+            durable=parse_signed_capacity_body(bytes(row['source_raw']),PublishedProviderCapacitySourceV2)
+            assert durable.issuance_context==parsed.issuance_context
+            assert durable.execution_allowed is False
+        else:
+            assert row is None
+
+
 def test_preparation_transport_uses_verified_authentication_without_sql_secret(native_signed_source):
     from datetime import UTC,datetime
     import json,os

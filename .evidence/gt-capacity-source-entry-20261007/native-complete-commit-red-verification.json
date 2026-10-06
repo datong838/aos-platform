@@ -1,0 +1,27 @@
+{
+  "baseline": "AOS-001420/m1@5a54cc86",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "task": "gt-capacity-source-entry-20261007",
+  "status": "FULL_NATIVE_COMMIT_CONTRACT_RED",
+  "failed": 3,
+  "seconds": 9.31,
+  "sqlstate": "42883",
+  "observed": "All cases reached original approvals/registered signed documents/private SCRAM then missing prepare; later commit/persistence outcomes were not exercised.",
+  "cases": [
+    "native valid signature actual COMMIT and distinct connection persistence",
+    "native invalid signature rejection caller rollback without Source",
+    "unfinished prepare actual caller COMMIT rejection without Source"
+  ],
+  "unverified": [
+    "Complete native prepare/commit",
+    "Controlled production signer authentication",
+    "Actual Source persistence and global mapping",
+    "Current consumer",
+    "Final wall-clock COMMIT TTL"
+  ],
+  "scope": "isolated test only; no Source issuance, formal database access, role activation or parent Delivery",
+  "sha256": {
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "3cf0896a60a35d6e69fe14b0493a3cbf25e45f2286524b3e5e15ddd6493d5015",
+    ".evidence/gt-capacity-source-publication-20261006/native-complete-commit-red-r1.log": "7a58908fd4bb600754c01dbcaf989ba9aae351164a998862f96cbb38b3c51c9f"
+  }
+}
