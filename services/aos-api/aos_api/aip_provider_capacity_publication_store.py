@@ -66,6 +66,32 @@ WHERE request_hash=%(request_hash)s AND actual_hash=%(request_hash)s
   AND request_json->>'makerSubject'=created_by
 """
 
+# S12 original candidate storage fence. Returned data remains an unverified
+# claim; original typed models and Provider/Evidence dependencies follow.
+CAPACITY_CANDIDATE_ROW_SQL = r"""
+WITH actual AS (
+  SELECT c.*,pg_catalog.encode(public.digest(pg_catalog.convert_to(
+    public.canonical_asset_registry_jsonb(request_json),'UTF8'),'sha256'),'hex') AS actual_hash
+  FROM public.aip_provider_capacity_candidate c
+  WHERE org_id=%(org_id)s AND project_id=%(project_id)s AND candidate_id=%(candidate_id)s
+    AND revision=%(revision)s AND candidate_kind=%(candidate_kind)s
+    AND org_id='org-org' AND project_id='dev-project'
+)
+SELECT * FROM actual
+WHERE content_hash=%(content_hash)s AND actual_hash=%(content_hash)s
+  AND authorization_mode='CANDIDATE_ONLY_NO_CAPACITY_NO_START'
+  AND basis_verified IS FALSE AND execution_allowed IS FALSE
+  AND created_by=%(maker)s
+  AND CASE WHEN pg_catalog.jsonb_typeof(request_json)='object' THEN
+    request_json ?& ARRAY['candidateKind','candidate','makerSubject']
+    AND (SELECT count(*) FROM pg_catalog.jsonb_object_keys(request_json))=3
+    ELSE FALSE END
+  AND pg_catalog.jsonb_typeof(request_json->'candidateKind')='string'
+  AND request_json->>'candidateKind'=candidate_kind
+  AND pg_catalog.jsonb_typeof(request_json->'makerSubject')='string'
+  AND request_json->>'makerSubject'=created_by
+"""
+
 CAPACITY_SIGNED_BODY_PROFILE_SQL = r"""
 CREATE FUNCTION aos_capacity_publication_private.canonical_signed_json(p_value json, p_depth integer)
 RETURNS text LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER

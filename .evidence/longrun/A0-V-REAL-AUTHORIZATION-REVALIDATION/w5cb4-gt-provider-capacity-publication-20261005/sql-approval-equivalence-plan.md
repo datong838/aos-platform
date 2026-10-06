@@ -72,3 +72,14 @@ S08整份事件原生计算新增证据位于formal-boundary Task的approval-eve
 2026-10-06 S08只读边界续查：approval-time-invalid-native.sql/log在固定隔离r4 READ ONLY验证非有限±infinity、10000年及公元前1年。纯to_char对infinity返回NULL，公元前1年投影为0001-01-01T00:00:00，与公元1年的字串相同，不能省略有限/年份域检查。isfinite(value)且UTC extract(year) BETWEEN 1 AND 9999分别拒绝四错误样本，保留Python首/末年；这只是完整批准SQL所需拒绝条件的真实反例，不是批准函数或业务发行通过。后继原完整S08事件函数必须先拒NULL/非有限/UTC年域，再使用完整微秒规范格式及13字段原hash，不凭日期字符串重构更正历史批准。
 
 S11下一合同调查已由原Python模型真实验证：request-account-shape-probe.json中的内部空格、零宽字符账户别名被原ProviderCapacityRequest接受，但_identifier拒绝；边缘空格和NBSP被原request拒绝。原physicalAccountId仅1..200/strip-only，不是公开签名publisher的printable/nonwhitespace；后继SQL必须冻结Python strip边界而保留原内部字符，不偷换已完成Unicode identifier门。原request存储makerSubject亦只1..200/strip-only。整份JSON哈希、strict application、proposalExpiresAt原行相等/current窗口与原Provider/Evidence锁仍须组合，不由本地模型probe授Source权限。
+
+2026-10-06 S11存储门已于ac0399db接入原_request，444项真实隔离相邻通过；原模型/clock/Provider/Evidence检查全部保留，非全原生typed application完成。S12续查原a0v_147：candidate_kind仅account/basis且revision=1，固定mode/false flags与wrapper原CHECK存在；后继读取仍须独立核整份actual/stored/expected hash、三键、wrapper candidateKind=row kind、maker=row created_by=原Source maker，不能用CHECK存在代替当前精确行/引用。候选模型physicalAccountId/supplierId同为strip-only；唯一Provider mapping以asset_id唯一，并保留原exact Evidence及Source guard依赖锁序。此调查没有改历史147、创建SQL candidate入口或授供应商来源权。
+
+
+## S12 文件级实施计划（2026-10-06）
+
+在 publication_store 新增 CAPACITY_CANDIDATE_ROW_SQL，由原 source_action._candidate 直接调用。固定 public 原表与 pg_catalog 内建，按正向双租户、candidate ID/revision/kind、expected content hash 精确匹配；actual/stored/expected 三 hash 相等；原 mode、IS FALSE 两标记；request_json 恰三键、kind 与 maker 为 JSON string 且分别等于原行 kind/created_by 与原 Source maker。CASE 防止非 object object_keys 异常。不新增锁或调整原 lock-order，不改变原模型验证、租户错误语义、Provider/Evidence/currentness。
+
+formal_boundary_pg 新增实际私有 SCRAM 账户/basis 双正向及 wrong ref/maker/kind/revision/tenant 负向；隔离 TEMP 原行形状单字段故障，JSON 故障重算 stored 与 expected hash 独立验证 structure 门，两类真实原模型重解析。专项 RED→GREEN 后运行原 Source/runtime/formal/publication 相邻。仅本 Task 文件和证据精确提交；此存储读取不证明供应商事实、完整 SQL typed candidate、签名发行 COMMIT 或自然首链，原 Task 不收口。
+
+S12本轮验收：专项4 passed/10.00s，六模块相邻448 passed/196.91s，既有7warnings。实际原 Source consumer 已接入存储门；独立督导无新增重大问题。证据见 formal-boundary/candidate-storage-verification.md。完整typed candidate与组合发行未证明，下一步按S13–S19向完整入口收敛，原Task保留ACTIVE。

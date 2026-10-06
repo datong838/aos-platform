@@ -51,9 +51,10 @@ class ProviderCapacitySourceActionGuard(ProviderCapacityActionGuard):
 
     @staticmethod
     def _candidate(conn,scope,ref,kind,model,maker):
-        row=conn.execute("SELECT *,encode(public.digest(convert_to(public.canonical_asset_registry_jsonb(request_json),'UTF8'),'sha256'),'hex') AS actual_hash "
-            "FROM aip_provider_capacity_candidate WHERE org_id=%s AND project_id=%s AND candidate_id=%s AND revision=%s AND candidate_kind=%s",
-            (*scope.key,ref.asset_id,ref.revision,kind)).fetchone()
+        from aos_api.aip_provider_capacity_publication_store import CAPACITY_CANDIDATE_ROW_SQL
+        row=conn.execute(CAPACITY_CANDIDATE_ROW_SQL,
+            dict(org_id=scope.org_id,project_id=scope.project_id,candidate_id=ref.asset_id,
+                 revision=ref.revision,candidate_kind=kind,content_hash=ref.content_hash,maker=maker)).fetchone()
         if (row is None or row['content_hash']!=ref.content_hash or row['actual_hash']!=ref.content_hash
             or row['authorization_mode']!='CANDIDATE_ONLY_NO_CAPACITY_NO_START'
             or row['basis_verified'] is not False or row['execution_allowed'] is not False

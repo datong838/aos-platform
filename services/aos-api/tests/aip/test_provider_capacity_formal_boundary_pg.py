@@ -133,6 +133,63 @@ def test_private_row_lock_column_grant_never_allows_actual_noop_mutation(approve
         conn.rollback()
 
 
+@pytest.mark.parametrize('kind',['account','basis'])
+def test_original_candidate_sql_storage_fence_private_reads(approved_command,private_database,kind):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_CANDIDATE_ROW_SQL
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+    from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+    source=approved_command[2]
+    ref=source.physical_account_ref if kind=='account' else source.basis_ref
+    model=ProviderPhysicalAccountCandidate if kind=='account' else ProviderCapacityBasisCandidate
+    maker=approved_command[0].subject
+    params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,candidate_id=ref.asset_id,
+                revision=ref.revision,candidate_kind=kind,content_hash=ref.content_hash,maker=maker)
+    with connect_capacity_issuer(private_database,SCOPE) as conn:
+        row=conn.execute(CAPACITY_CANDIDATE_ROW_SQL,params).fetchone()
+        assert row is not None and row['actual_hash']==row['content_hash']==ref.content_hash
+        assert ProviderCapacitySourceActionGuard._candidate(conn,SCOPE,ref,kind,model,maker)==model.model_validate(row['request_json']['candidate'])
+        for changed in [dict(content_hash='f'*64),dict(org_id='dev-org'),dict(candidate_id=uuid4().hex),
+                        dict(revision=ref.revision+1),dict(candidate_kind='basis' if kind=='account' else 'account'),dict(maker='other')]:
+            assert conn.execute(CAPACITY_CANDIDATE_ROW_SQL,{**params,**changed}).fetchone() is None
+
+
+@pytest.mark.parametrize('kind',['account','basis'])
+def test_original_candidate_sql_storage_fence_detached_faults(approved_command,kind):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_CANDIDATE_ROW_SQL
+    ref=approved_command[2].physical_account_ref if kind=='account' else approved_command[2].basis_ref
+    params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,candidate_id=ref.asset_id,
+                revision=ref.revision,candidate_kind=kind,content_hash=ref.content_hash,maker=approved_command[0].subject)
+    with isolated_owner() as conn:
+        conn.execute('CREATE TEMP TABLE candidate_storage_probe AS SELECT * FROM public.aip_provider_capacity_candidate WITH NO DATA')
+        conn.execute('INSERT INTO pg_temp.candidate_storage_probe SELECT * FROM public.aip_provider_capacity_candidate '
+                     'WHERE org_id=%(org_id)s AND project_id=%(project_id)s AND candidate_id=%(candidate_id)s',params)
+        statement=CAPACITY_CANDIDATE_ROW_SQL.replace('FROM public.aip_provider_capacity_candidate c','FROM pg_temp.candidate_storage_probe c')
+        assert conn.execute(statement,params).fetchone() is not None
+        faults=["basis_verified=TRUE","basis_verified=NULL","execution_allowed=TRUE","execution_allowed=NULL",
+                "authorization_mode='other'","created_by='other'","content_hash='other'",
+                "request_json=request_json || '{\"extra\":true}'::jsonb",
+                "request_json=request_json-'candidate'",
+                "request_json=jsonb_set(request_json,'{candidateKind}','123'::jsonb)",
+                "request_json=jsonb_set(request_json,'{candidateKind}','\"other\"'::jsonb)",
+                "request_json=jsonb_set(request_json,'{makerSubject}','123'::jsonb)",
+                "request_json=jsonb_set(request_json,'{makerSubject}','\"other\"'::jsonb)",
+                "request_json='[]'::jsonb","request_json='null'::jsonb"]
+        for assignment in faults:
+            conn.execute('SAVEPOINT candidate_fault')
+            conn.execute('UPDATE pg_temp.candidate_storage_probe SET '+assignment)
+            current_params=params
+            if assignment.startswith('request_json='):
+                # Recompute both hashes so each shape/maker rejection is independent.
+                row=conn.execute("UPDATE pg_temp.candidate_storage_probe SET content_hash=encode(public.digest(convert_to("
+                    "public.canonical_asset_registry_jsonb(request_json),'UTF8'),'sha256'),'hex') RETURNING content_hash").fetchone()
+                current_params={**params,'content_hash':row['content_hash']}
+            assert conn.execute(statement,current_params).fetchone() is None,assignment
+            conn.execute('ROLLBACK TO SAVEPOINT candidate_fault')
+            conn.execute('RELEASE SAVEPOINT candidate_fault')
+        conn.rollback()
+
+
 @pytest.mark.parametrize('fault',['extra_table_grant','column_grant','function_grant','trigger_disabled','role_membership','policy'])
 def test_actual_private_boundary_drift_denies_claim_read(approved_command,private_database,fault):
     from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer,ProviderCapacityIssuerConnectionBlocked
