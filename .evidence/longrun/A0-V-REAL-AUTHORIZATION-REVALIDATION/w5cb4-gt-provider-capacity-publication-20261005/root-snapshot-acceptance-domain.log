@@ -1,0 +1,403 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_original_full_root_snapshot_exceeds_signed_document_array_scope _____
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x11c4b4540>
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-688/test_original_full_root_snapsh0')
+
+    def test_original_full_root_snapshot_exceeds_signed_document_array_scope(native_profile_runner,tmp_path):
+        import base64
+        from aos_api.asset_registry.signature import FileTrustRootProvider
+        public=base64.b64encode(bytes(range(32))).decode('ascii')
+        roots=[dict(publisher='independent-authority',keyId='key-'+str(i),algorithm='Ed25519',
+            publicKey=public,notBefore='2020-01-01T00:00:00Z',notAfter='2030-01-01T00:00:00Z',
+            revokedAt=None,revision='sha256:'+'a'*64) for i in range(1001)]
+        raw=canonical_json(dict(trustRoots=roots));assert len(raw)<1024*1024
+        path=tmp_path/'controlled-root-snapshot.json';path.write_bytes(raw);path.chmod(0o600)
+        snapshot=FileTrustRootProvider(path).snapshot()
+        for entry in roots:
+            root=snapshot.get_trust_root(publisher=entry['publisher'],key_id=entry['keyId'])
+            assert root is not None and root.public_key==bytes(range(32))
+            assert root.revision==entry['revision'] and root.revoked_at is None
+        failure=native_profile_runner("SELECT aos_capacity_publication_private.read_signed_body(decode('%s','hex'));"%raw.hex(),False)
+>       assert 'CAPACITY_SIGNED_BODY_ARRAY' in failure
+E       AssertionError: assert 'CAPACITY_SIGNED_BODY_ARRAY' in 'psql:<stdin>:82: ERROR:  CAPACITY_SIGNED_BODY_PROFILE_REQUIRED\nCONTEXT:  PL/pgSQL function aos_capacity_publication_private.read_signed_body(bytea) line 20 at RAISE\n'
+
+services/aos-api/tests/aip/test_provider_capacity_publication_pg.py:1101: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 6cd2ca0eff8f, Core-schema baseline migration asset for Wave 0.
+INFO  [alembic.runtime.migration] Running upgrade 6cd2ca0eff8f -> 228ec02oauth, Add tenant-scoped encrypted OAuth token store.
+INFO  [alembic.runtime.migration] Running upgrade 228ec02oauth -> b7e2c4a92283, Add tenant-safe ecommerce core objects, links and sync state.
+INFO  [alembic.runtime.migration] Running upgrade b7e2c4a92283 -> 228ec03linkguard, Add database guards for ecommerce Link tenant and endpoint shape.
+INFO  [alembic.runtime.migration] Running upgrade 228ec03linkguard -> 228logicgraph, Add tenant-scoped canonical AIP Logic graph snapshots and revisions.
+INFO  [alembic.runtime.migration] Running upgrade 228logicgraph -> 228logicrun, Add immutable tenant-scoped AIP Logic dry-run history.
+INFO  [alembic.runtime.migration] Running upgrade 228logicrun -> 228logiceval, Add tenant-scoped Evals suites and immutable Logic report evidence.
+INFO  [alembic.runtime.migration] Running upgrade 228logiceval -> 228logicpublish, Add immutable tenant-scoped AIP Logic publications.
+INFO  [alembic.runtime.migration] Running upgrade 228logicpublish -> a93c7e1b4f20, Add the canonical asset bundle registry.
+INFO  [alembic.runtime.migration] Running upgrade a93c7e1b4f20 -> 228assetsecurity, Add atomic asset bundle lifecycle audit events.
+INFO  [alembic.runtime.migration] Running upgrade 228assetsecurity -> 228assetinvariants, Seal asset registry status and projection invariants.
+INFO  [alembic.runtime.migration] Running upgrade 228assetinvariants -> 228assetevidence, Persist immutable evidence snapshots with lifecycle events.
+INFO  [alembic.runtime.migration] Running upgrade 228assetevidence -> 228assetinstall, Add immutable bundle composition and installation control-plane storage.
+INFO  [alembic.runtime.migration] Running upgrade 228assetinstall -> 228assetintegration, Add immutable Integration Case, Evidence, and projection storage.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 228assetintegration -> 228ti1e1expand, TI-1 E1 nullable tenant scope and NOT VALID relationship expansion.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e1expand -> 228ti1e2dual, TI-1 E2 authz dual-write evidence ledger.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e2dual -> 228ti1e3ledger, TI-1 E3 append-only ownership and quarantine ledger.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e3ledger -> 228ti1e3exec, TI-1 E3 append-only execution and role-separation events.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e3exec -> 228ti2e1expand, TI-2 E1 nullable Module instance and overlay expansion.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e1expand -> 228ti2e4validate, TI-2 E4 validate Module identity foreign keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e4validate -> 228ti2e6rls, TI-2 E6 enforce tenant RLS for the Module instance family.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e6rls -> 228ti2e7contract, TI-2 E7 contract Module identities and tenant-scoped primary keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e7contract -> 228ti3e1expand, TI-3 E1 expand TenantScope columns for object runtime resources.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e1expand -> 228ti3e4validate, TI-3 E4 validate Object runtime workspace foreign keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e4validate -> 228ti3e6rls, TI-3 E6 enforce tenant RLS for the Object Runtime family.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e6rls -> 228ti3e7contract, TI-3 E7 contract Object Runtime tenant identities and active rows.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e7contract -> 228ti4c1expand, TI-4 C1 add NOT VALID workspace alias foreign keys to e-commerce tables.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4c1expand -> 228ti4d1expand, TI-4 D1 expand TenantScope columns and workspace FKs for Data OS.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d1expand -> 228ti4d4validate, TI-4 D4 validate Data OS workspace foreign keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d4validate -> 228ti4d6rls, TI-4 D6 enforce tenant RLS for the Data OS family.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d6rls -> 228ti4d7contract, TI-4 D7 contract Data OS tenant identities and quarantine history.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d7contract -> 228ti4c3contract, TI-4 C3 validate and enforce e-commerce Connector tenant boundaries.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4c3contract -> 228ti4a1apollo, TI-4 A1 contract Apollo Spoke tenant instances.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4a1apollo -> 228ti5a1aip, TI-5 A1 contract tenant-scoped AIP runtime tables.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5a1aip -> 228ti5a2kv, TI-5 A2 contract legacy AIP KV into tenant-scoped storage.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5a2kv -> 228ti5a3lineage, TI-5 A3 contract decision lineage from its draft execution context.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5a3lineage -> 228ti5b1models, TI-5 B1 tenant contract for model-management tables.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5b1models -> 228ti6bcontract, TI-6 2B contract remaining Workshop and TWA scoped identities.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6bcontract -> 228ti6cassets, TI-6 2C enforce RLS for asset installation and Integration Case stores.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6cassets -> 228ti6drelations, TI-6 2D anchor asset-control roots to the canonical workspace.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6drelations -> 228ti6edirectory, TI-6 3A align the test and Qiyue control-plane directory.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6edirectory -> o1a0_001, O1-A0: Expand-only migration — DLQ + derived columns + projection outbox + alias sidecar + uninstalled fix.
+INFO  [alembic.runtime.migration] Running upgrade o1a0_001 -> d5e1_001, D5-E1: Expand ecom_object/ecom_link CHECK constraints for 12 OT + 14 Link types.
+INFO  [alembic.runtime.migration] Running upgrade d5e1_001 -> o1r1_001, O1-R1: distinguish legacy projection receipts from authoritative Outbox events.
+INFO  [alembic.runtime.migration] Running upgrade o1r1_001 -> o1r1_002, O1-R1: replace the empty O1-A0 DLQ shell with the reviewed PG contract.
+INFO  [alembic.runtime.migration] Running upgrade o1r1_002 -> o1r2_001, O1-R2: enforce the single-projector compatibility-write boundary.
+INFO  [alembic.runtime.migration] Running upgrade o1r2_001 -> o1r3_001, O1-R3: installation-bound organization ontology overlays.
+INFO  [alembic.runtime.migration] Running upgrade o1r3_001 -> o1p12_001, O1-A/P12 derived metric CAS, receipt and outbox contract.
+INFO  [alembic.runtime.migration] Running upgrade o1p12_001 -> o1d_001, O1-D versioned and reversible canonical alias migration contract.
+INFO  [alembic.runtime.migration] Running upgrade o1d_001 -> o1d_002, O1-D make the manifest run part of the immutable sidecar identity.
+INFO  [alembic.runtime.migration] Running upgrade o1d_002 -> o1ua2_001, O1-UA2 tenant-authoritative knowledge, action, task and evidence records.
+INFO  [alembic.runtime.migration] Running upgrade o1ua2_001 -> o1ua2_002, O1-UA2 explicit Plan/Checkpoint records and cleanup idempotency.
+INFO  [alembic.runtime.migration] Running upgrade o1ua2_002 -> o1ux2_001, O1-UX2 tenant-authoritative exploration assets.
+INFO  [alembic.runtime.migration] Running upgrade o1ux2_001 -> aip1_001, AIP-1 canonical Task/Plan/Run runtime.
+INFO  [alembic.runtime.migration] Running upgrade aip1_001 -> aip3_001, AIP-3 canonical Action Proposal, Approval, Lease and Receipt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip3_001 -> aip3b_001, AIP-3B execution guardrails and append-only receipt reconciliation.
+INFO  [alembic.runtime.migration] Running upgrade aip3b_001 -> aip3b_002, Make AIP Action Receipt chains database-immutable.
+INFO  [alembic.runtime.migration] Running upgrade aip3b_002 -> aip4_001, AIP-4 Eval, release, lineage, and usage authority contracts.
+INFO  [alembic.runtime.migration] Running upgrade aip4_001 -> aip4_002, AIP-4 E1A immutable EvalPack suite revisions.
+INFO  [alembic.runtime.migration] Running upgrade aip4_002 -> aip4_003, AIP-4 E1B immutable Eval report revisions.
+INFO  [alembic.runtime.migration] Running upgrade aip4_003 -> aip4_004, Bind AIP lineage facts to immutable authority source events.
+INFO  [alembic.runtime.migration] Running upgrade aip4_004 -> aip4_005, Persist tenant-scoped telemetry spans and honest usage quantities.
+INFO  [alembic.runtime.migration] Running upgrade aip4_005 -> aip4_006, Add append-only usage attribution and capability receipts.
+INFO  [alembic.runtime.migration] Running upgrade aip4_006 -> aip4_007, Add the append-only ResearchJob provider and receipt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip4_007 -> aip4_008, Bind every ResearchJob manifest to one exact immutable lineage event.
+INFO  [alembic.runtime.migration] Running upgrade aip4_008 -> aip5_001, Add the governed AIP memory authority tables.
+INFO  [alembic.runtime.migration] Running upgrade aip5_001 -> aip5_002, Add tenant-scoped AIP memory pipeline control authority.
+INFO  [alembic.runtime.migration] Running upgrade aip5_002 -> aip5_003, Add immutable schedule events for AIP memory pipelines.
+INFO  [alembic.runtime.migration] Running upgrade aip5_003 -> aip5_004, Add tenant-scoped rebuildable knowledge search projections.
+INFO  [alembic.runtime.migration] Running upgrade aip5_004 -> aip6_001, Add canonical AIP agent, skill and handoff authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_001 -> aip6_002, Add durable AIP-6 registry command receipts.
+INFO  [alembic.runtime.migration] Running upgrade aip6_002 -> aip6_003, Persist exact AgentInstance snapshots on AgentRun and Handoff.
+INFO  [alembic.runtime.migration] Running upgrade aip6_003 -> aip6_004, Add immutable AIP capability catalog authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_004 -> w2_001, Add W2-A task brief and evidence bundle authority.
+INFO  [alembic.runtime.migration] Running upgrade w2_001 -> aip7_001, Add AIP-7 immutable model runtime authority.
+INFO  [alembic.runtime.migration] Running upgrade aip7_001 -> w2_002, Add W2-B eval contract and responsibility plan authority.
+INFO  [alembic.runtime.migration] Running upgrade w2_002 -> aip7_002, Add AIP-7 exact model capacity pool and reservation authority.
+INFO  [alembic.runtime.migration] Running upgrade aip7_002 -> w2_003, Add W2-C stage template, artifact relation and review return authority.
+INFO  [alembic.runtime.migration] Running upgrade w2_003 -> w1e_001, Make bundle installation uninstall a complete immutable transition.
+INFO  [alembic.runtime.migration] Running upgrade w1e_001 -> w2_004, Add W2-D impact preview and production start decision authority.
+INFO  [alembic.runtime.migration] Running upgrade w2_004 -> aip5_005, Add AIP-5 E7 agent memory projection and improvement authorities.
+INFO  [alembic.runtime.migration] Running upgrade aip5_005 -> bind1_001, Add BIND-1 operational dependency snapshots to existing bindings.
+INFO  [alembic.runtime.migration] Running upgrade bind1_001 -> bind1_002, Align BIND provider refs with the AIP-7 ProviderInstance authority.
+INFO  [alembic.runtime.migration] Running upgrade bind1_002 -> bind1_003, Add exact provenance for governed published Skill revisions.
+INFO  [alembic.runtime.migration] Running upgrade bind1_003 -> aip8_001, Add governed Analyst QueryJob and Result authority.
+INFO  [alembic.runtime.migration] Running upgrade aip8_001 -> aip8_002, Add append-only Assist thread, turn, event and receipt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip8_002 -> aip9_001, Add tenant-scoped MediaJob and AvatarSession runtime authority.
+INFO  [alembic.runtime.migration] Running upgrade aip9_001 -> aip9_002, Run AIP-9 event sequence locking through a fixed-path definer guard.
+INFO  [alembic.runtime.migration] Running upgrade aip9_002 -> aip10_001, Add canonical tenant-scoped AIP BudgetRevision authority.
+INFO  [alembic.runtime.migration] Running upgrade aip10_001 -> aip10_002, Add canonical tenant runtime guard policy authority.
+INFO  [alembic.runtime.migration] Running upgrade aip10_002 -> aip10_003, Add immutable model quota and budget-policy authority.
+INFO  [alembic.runtime.migration] Running upgrade aip10_003 -> aip10_004, Add NetworkPolicy authority and fixed EvalGate expiry.
+INFO  [alembic.runtime.migration] Running upgrade aip10_004 -> aip10_005, Bind governed published Skills to an exact published LogicRevision.
+INFO  [alembic.runtime.migration] Running upgrade aip10_005 -> aip10_006, Add durable AgentRun execution-attempt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip10_006 -> aip6_007, Add versioned AgentInstance prompt/tools overlay authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_007 -> aip6_008, Add guardrails_json to AgentInstance overlay revision authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_008 -> w2_005, Add EvidenceBundle revoke events and disclosure decision authority (W-L10).
+INFO  [alembic.runtime.migration] Running upgrade w2_005 -> w2_006, Add ProductionContextRevision four-contract freeze authority (W-L11).
+INFO  [alembic.runtime.migration] Running upgrade w2_006 -> w2_007, Add HandoffDecisionRevision authority separate from Envelope transport (W-L12).
+INFO  [alembic.runtime.migration] Running upgrade w2_007 -> o1ux2_002, O1-UX2 SavedExploration share grant authority (W-L16).
+INFO  [alembic.runtime.migration] Running upgrade o1ux2_002 -> aip11_001, ResearchJob cancel/retry command receipts (W-L17).
+INFO  [alembic.runtime.migration] Running upgrade aip11_001 -> aip12_001, Add EffectReviewRevision and EffectMaturityDecision authority (W-L19).
+INFO  [alembic.runtime.migration] Running upgrade aip12_001 -> aip13_001, ToolBinding table + AssigneeResolutionReceipt (W-L20).
+INFO  [alembic.runtime.migration] Running upgrade aip13_001 -> w3_012, Add tenant-safe append-only OperationCase authority (W3-12A1).
+INFO  [alembic.runtime.migration] Running upgrade w3_012 -> d0_after_001, Add tenant-safe canonical aftersales original events.
+INFO  [alembic.runtime.migration] Running upgrade d0_after_001 -> w3_011, Add tenant-safe content and campaign canonical authorities.
+INFO  [alembic.runtime.migration] Running upgrade w3_011 -> w3_013, Add tenant-safe Workshop preparation intent and immutable result authority.
+INFO  [alembic.runtime.migration] Running upgrade w3_013 -> w4_001, Make base Evidence append-only and add exact revoke authority.
+INFO  [alembic.runtime.migration] Running upgrade w4_001 -> w3_014, Retain exact ProductionProfile provenance on ProductionContext (W3-04).
+INFO  [alembic.runtime.migration] Running upgrade w3_014 -> w3_015, Retain ProductionContext provenance across preview and start decision (W3-05).
+INFO  [alembic.runtime.migration] Running upgrade w3_015 -> w3_016, Add responsibility successor and takeover assignment authority (W3-07).
+INFO  [alembic.runtime.migration] Running upgrade w3_016 -> w3_017, Add dispatch intent, confirmation and Task priority authority (W3-08).
+INFO  [alembic.runtime.migration] Running upgrade w3_017 -> w3_018, Add W3-13 ecommerce analyst canonical authorities.
+INFO  [alembic.runtime.migration] Running upgrade w3_018 -> w4_002, Bind Eval runs and reports to exact EvalContract revisions.
+INFO  [alembic.runtime.migration] Running upgrade w4_002 -> w4_003, Close ReviewIssue rule, event payload and return impact lineage.
+INFO  [alembic.runtime.migration] Running upgrade w4_003 -> w5_001, Persist exact external-Action Preview and Proposal binding lineage.
+INFO  [alembic.runtime.migration] Running upgrade w5_001 -> w5_002, Add explicit Action Draft revisions and exact approval/lease lineage.
+INFO  [alembic.runtime.migration] Running upgrade w5_002 -> w5_003, Add durable Action execution intent and exact delivery bridge facts.
+INFO  [alembic.runtime.migration] Running upgrade w5_003 -> w5_004, Add durable Action reconciliation and exact compensation policy facts.
+INFO  [alembic.runtime.migration] Running upgrade w5_004 -> w5_005, W5-06 canonical Action webhook inbox, replay and ordering authority.
+INFO  [alembic.runtime.migration] Running upgrade w5_005 -> w5_006, Add canonical Action Kill policy, Canary plan and drill authorities.
+INFO  [alembic.runtime.migration] Running upgrade w5_006 -> w6_001, Exact assignee candidate and readiness snapshots (W6-01).
+INFO  [alembic.runtime.migration] Running upgrade w6_001 -> w6_002, Responsibility profile recommendation, confirmation and merge authority (W6-02).
+INFO  [alembic.runtime.migration] Running upgrade w6_002 -> w6_003, Creator discovery, matching and side-effect-free batch preparation (W6-03).
+INFO  [alembic.runtime.migration] Running upgrade w6_003 -> w6_004, Creator explicit start, partial and collaboration lifecycle (W6-04).
+INFO  [alembic.runtime.migration] Running upgrade w6_004 -> w6_005, Price research, match, policy and side-effect-free batch authority (W6-05).
+INFO  [alembic.runtime.migration] Running upgrade w6_005 -> w6_006, Typed price case and disposition authority without external effects (W6-06).
+INFO  [alembic.runtime.migration] Running upgrade w6_006 -> w6_007, Customer consent, segment, journey, dialogue and zero-send batch authority (W6-07).
+INFO  [alembic.runtime.migration] Running upgrade w6_007 -> w6_008, Customer contact governance without contact resolution or dispatch (W6-08).
+INFO  [alembic.runtime.migration] Running upgrade w6_008 -> w6_009, Three-module partial, usage, effect and handoff closure bridge (W6-09).
+INFO  [alembic.runtime.migration] Running upgrade w6_009 -> w7_001, Profile projected cost and governed confirmation envelope (W7-02).
+INFO  [alembic.runtime.migration] Running upgrade w7_001 -> w7_002, Close canonical executor fence, checkpoint and resume contracts (W7-04).
+INFO  [alembic.runtime.migration] Running upgrade w7_002 -> w7_003, Close immutable Artifact family, Variant and selection contracts (W7-05).
+INFO  [alembic.runtime.migration] Running upgrade w7_003 -> w7_004, Bind media Eval subjects and close the immutable four-gate review set (W7-06).
+INFO  [alembic.runtime.migration] Running upgrade w7_004 -> w7_005, Add tenant-scoped media Provider Job and quarantine authority (W7-07).
+INFO  [alembic.runtime.migration] Running upgrade w7_005 -> w7_006, Add media attempt Capacity/Budget/Usage/Settlement authority (W7-08).
+INFO  [alembic.runtime.migration] Running upgrade w7_006 -> biw2_001, Add tenant-bound DataRequirement and Fulfillment authorities.
+INFO  [alembic.runtime.migration] Running upgrade biw2_001 -> biw2_002, Add the controlled DataRequirement CAS entrypoint.
+INFO  [alembic.runtime.migration] Running upgrade biw2_002 -> biw2_003, Add controlled exact FulfillmentReceipt binding. Revision ID: biw2_003.
+INFO  [alembic.runtime.migration] Running upgrade biw2_003 -> biw2_004, Add fenced delivery control for the immutable DataRequirement Outbox.
+INFO  [alembic.runtime.migration] Running upgrade biw2_004 -> biw3_001, Add tenant-bound read-only observation session and plan authority.
+INFO  [alembic.runtime.migration] Running upgrade biw3_001 -> biw3_002, Add append-only exact ObservationReceipt authority.
+INFO  [alembic.runtime.migration] Running upgrade biw3_002 -> biw3_003, Add governed aggregate schema profiling authority.
+INFO  [alembic.runtime.migration] Running upgrade biw3_003 -> biw3_004, Add confirmed SourceField to canonical ontology mapping authority.
+INFO  [alembic.runtime.migration] Running upgrade biw3_004 -> biw3_005, Add receipt-first semantic hydration authority. Revision ID: biw3_005.
+INFO  [alembic.runtime.migration] Running upgrade biw3_005 -> biw3_006, Add investigation data-handling bindings and receipts. Revision ID: biw3_006.
+INFO  [alembic.runtime.migration] Running upgrade biw3_006 -> biw4_001, Add ecommerce BusinessInvestigationCase draft authority. Revision ID: biw4_001.
+INFO  [alembic.runtime.migration] Running upgrade biw4_001 -> biw4_002, Add BusinessInvestigationRun, Event and local Outbox. Revision ID: biw4_002.
+INFO  [alembic.runtime.migration] Running upgrade biw4_002 -> biw4_003, Add active Run slot and trigger idempotency. Revision ID: biw4_003.
+INFO  [alembic.runtime.migration] Running upgrade biw4_003 -> biw4_004, Add governed investigation artifact revision schema. Revision ID: biw4_004.
+INFO  [alembic.runtime.migration] Running upgrade biw4_004 -> biw4_005, Add artifact cutoff and atomic selection binding. Revision ID: biw4_005.
+INFO  [alembic.runtime.migration] Running upgrade biw4_005 -> biw4_006, Add canonical Case lifecycle and Run control state. Revision ID: biw4_006.
+INFO  [alembic.runtime.migration] Running upgrade biw4_006 -> biw4_007, Extend canonical Run state with waiting and reconciliation. Revision ID: biw4_007.
+INFO  [alembic.runtime.migration] Running upgrade biw4_007 -> biw6_001, Add immutable cross-layer compilation receipts. Revision ID: biw6_001.
+INFO  [alembic.runtime.migration] Running upgrade biw6_001 -> biw6_002, Add controlled investigation Artifact publication. Revision ID: biw6_002.
+INFO  [alembic.runtime.migration] Running upgrade biw6_002 -> biw8_001, Add versioned investigation SchedulePolicy authority. Revision ID: biw8_001.
+INFO  [alembic.runtime.migration] Running upgrade biw8_001 -> wcat_001, Add tenant-bound AIP feature activation authority. Revision ID: wcat_001.
+INFO  [alembic.runtime.migration] Running upgrade wcat_001 -> wcat_002, Add tenant-bound, non-runtime model route draft authority.
+INFO  [alembic.runtime.migration] Running upgrade wcat_002 -> wcat_003, Repair tenant GUC names in model route draft RLS.
+INFO  [alembic.runtime.migration] Running upgrade wcat_003 -> aip_p3_001, Add tenant-scoped Logic automation policy and run authority.
+INFO  [alembic.runtime.migration] Running upgrade aip_p3_001 -> aip_p3_002, Grant tenant runtime access to Logic automation authority.
+INFO  [alembic.runtime.migration] Running upgrade aip_p3_002 -> aip_p4_001, Add governed AIP import job and reversible candidate authority.
+INFO  [alembic.runtime.migration] Running upgrade aip_p4_001 -> aip_p5_001, Add fail-closed Action Proposal withdrawal authority.
+INFO  [alembic.runtime.migration] Running upgrade aip_p5_001 -> r5_d02_001, Bind creator outreach and lifecycle authorities to persistent read receipts.
+INFO  [alembic.runtime.migration] Running upgrade r5_d02_001 -> ar1_001, Subordinate runtime authority; additive, never executed by registration.
+INFO  [alembic.runtime.migration] Running upgrade ar1_001 -> ar1_002, Immutable subordinate configuration revisions; maintenance-only migration.
+INFO  [alembic.runtime.migration] Running upgrade ar1_002 -> ar1_003, Trusted runtime-host directory; no default assignments or worker startup.
+INFO  [alembic.runtime.migration] Running upgrade ar1_003 -> ar1_004, Persistent generation execution attempts; additive and empty by default.
+INFO  [alembic.runtime.migration] Running upgrade ar1_004 -> ar2_001, Tenant-scoped ecommerce operation dispatch authority; empty by default.
+INFO  [alembic.runtime.migration] Running upgrade ar2_001 -> ar2_002, Persistent schedule binding, occurrence and atomic delivery authority.
+INFO  [alembic.runtime.migration] Running upgrade ar2_002 -> ar2_003, Receipt-first ecommerce capability and three-bucket budget authority.
+INFO  [alembic.runtime.migration] Running upgrade ar2_003 -> ar2_004, Durable receipt-first ecommerce growth result feedback and recovery.
+INFO  [alembic.runtime.migration] Running upgrade ar2_004 -> ar2_005, Exact ecommerce growth host invocation Receipts and cutover authority.
+INFO  [alembic.runtime.migration] Running upgrade ar2_005 -> ar2_006, Persist exact read-only investigation description receipts.
+INFO  [alembic.runtime.migration] Running upgrade ar2_006 -> ar2_007, Reject absent description identity fields, including direct SQL callers.
+INFO  [alembic.runtime.migration] Running upgrade ar2_007 -> ar2_008, Retain complete fulfillment authority, including original timezone and blockers.
+INFO  [alembic.runtime.migration] Running upgrade ar2_008 -> ar2_009, Retain content-addressed snapshots of existing source readiness evaluations.
+INFO  [alembic.runtime.migration] Running upgrade ar2_009 -> ar2_010, Record opaque source configuration identities without copying secrets.
+INFO  [alembic.runtime.migration] Running upgrade ar2_010 -> ar2_011, Add atomic ecommerce analysis data-resume Run transition.
+INFO  [alembic.runtime.migration] Running upgrade ar2_011 -> ar2_012, Pin analysis reconcile transition authority ahead of temporary schemas.
+INFO  [alembic.runtime.migration] Running upgrade ar2_012 -> ar2_013, Persistent ecommerce growth group-cutover preparation authority.
+INFO  [alembic.runtime.migration] Running upgrade ar2_013 -> ar2_014, Atomic ecommerce growth cutover claim gate and commit authority.
+INFO  [alembic.runtime.migration] Running upgrade ar2_014 -> ar2_015, Validated activation resume authority; additive and closed by default.
+INFO  [alembic.runtime.migration] Running upgrade ar2_015 -> ar2_016, Validation-window rollback authority for ecommerce growth cutover.
+INFO  [alembic.runtime.migration] Running upgrade ar2_016 -> ar2_017, Bind runtime disable to exact ecommerce growth dispatch detachment.
+INFO  [alembic.runtime.migration] Running upgrade ar2_017 -> ar2_018, Bind runtime uninstall terminal state to exact released authority.
+INFO  [alembic.runtime.migration] Running upgrade ar2_018 -> a0v_001, Adopt meta_schedule_run into the managed tenant schema.
+INFO  [alembic.runtime.migration] Running upgrade a0v_001 -> a0v_002, Add cost_pending without conflating completed execution and settled money.
+INFO  [alembic.runtime.migration] Running upgrade a0v_002 -> a0v_003, Immutable content execution input/result journal; budget owns invocation state.
+INFO  [alembic.runtime.migration] Running upgrade a0v_003 -> a0v_004, Declare capability invocation lineage without impersonating a TaskRun.
+INFO  [alembic.runtime.migration] Running upgrade a0v_004 -> a0v_005, Persist immutable original canonical ingress commands for exact recovery.
+INFO  [alembic.runtime.migration] Running upgrade a0v_005 -> a0v_006, Immutable derived preparation attached to the original ingress command.
+INFO  [alembic.runtime.migration] Running upgrade a0v_006 -> a0v_007, Immutable Dataset result attached to the original ingress command.
+INFO  [alembic.runtime.migration] Running upgrade a0v_007 -> a0v_008, Record proven local executor termination; old runs remain unknown.
+INFO  [alembic.runtime.migration] Running upgrade a0v_008 -> a0v_009, Preserve the failed-run fact atomically with recovery claim.
+INFO  [alembic.runtime.migration] Running upgrade a0v_009 -> a0v_010, Protect both old and new classifications during compatibility updates.
+INFO  [alembic.runtime.migration] Running upgrade a0v_010 -> a0v_011, Make canonical JSON hashing independent of the caller's search path.
+INFO  [alembic.runtime.migration] Running upgrade a0v_011 -> a0v_012, Private, tenant-bound retained AgentRun text outputs.
+INFO  [alembic.runtime.migration] Running upgrade a0v_012 -> a0v_013, Scoped immutable descriptive analysis method revisions.
+INFO  [alembic.runtime.migration] Running upgrade a0v_013 -> a0v_014, Scoped immutable human stage decision revisions.
+INFO  [alembic.runtime.migration] Running upgrade a0v_014 -> a0v_015, Private, tenant-bound retained AgentRun query inputs.
+INFO  [alembic.runtime.migration] Running upgrade a0v_015 -> a0v_016, Allow only clean never-active approved installations to retire.
+INFO  [alembic.runtime.migration] Running upgrade a0v_016 -> a0v_017, Clean applied preparation may append recovery without rewriting history.
+INFO  [alembic.runtime.migration] Running upgrade a0v_017 -> a0v_018, Inherit the exact original approval on clean preparation recovery.
+INFO  [alembic.runtime.migration] Running upgrade a0v_018 -> a0v_019, Retire verified but never configured/enabled instances with honest receipts.
+INFO  [alembic.runtime.migration] Running upgrade a0v_019 -> a0v_020, Retire configured, disabled generations which never entered execution.
+INFO  [alembic.runtime.migration] Running upgrade a0v_020 -> a0v_021, Retire enabled but never dispatched, exactly disabled released generations.
+INFO  [alembic.runtime.migration] Running upgrade a0v_021 -> a0v_022, Immutable source selection history; no runtime activation or business writes.
+INFO  [alembic.runtime.migration] Running upgrade a0v_022 -> a0v_023, Immutable pipeline controls pinned to exact source selections.
+INFO  [alembic.runtime.migration] Running upgrade a0v_023 -> a0v_024, Bind each controlled source attempt to its existing run and exact approval.
+INFO  [alembic.runtime.migration] Running upgrade a0v_024 -> a0v_025, Immutable schedule bindings to exact approved runtime controls.
+INFO  [alembic.runtime.migration] Running upgrade a0v_025 -> a0v_026, Immutable first-registration receipt; no registration write capability.
+INFO  [alembic.runtime.migration] Running upgrade a0v_026 -> a0v_027, Restricted control-service entrypoint for fenced first registration.
+INFO  [alembic.runtime.migration] Running upgrade a0v_027 -> a0v_028, Bounded tenant dispatch row locks without direct runtime DML privileges.
+INFO  [alembic.runtime.migration] Running upgrade a0v_028 -> a0v_029, Immutable withdrawal receipt storage only; no withdrawal execution grant.
+INFO  [alembic.runtime.migration] Running upgrade a0v_029 -> a0v_030, Atomic withdrawal of unused first-registration occupancy, preserving history.
+INFO  [alembic.runtime.migration] Running upgrade a0v_030 -> a0v_031, Add empty UI read transport, without granting enqueue or worker mutation rights.
+INFO  [alembic.runtime.migration] Running upgrade a0v_031 -> a0v_032, Restricted UI delivery role and fixed entry points; no execution privileges.
+INFO  [alembic.runtime.migration] Running upgrade a0v_032 -> a0v_033, Runtime-owned UI read locks and bounded delivery column updates.
+INFO  [alembic.runtime.migration] Running upgrade a0v_033 -> a0v_034, Seal UI read ACLs against inherited public-schema default privileges.
+INFO  [alembic.runtime.migration] Running upgrade a0v_034 -> a0v_035, Original-subject UI delivery queries without direct table access.
+INFO  [alembic.runtime.migration] Running upgrade a0v_035 -> a0v_036, Empty configuration staging transport; no API submission authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_036 -> a0v_037, Fixed configuration receipt admission and original-subject query functions.
+INFO  [alembic.runtime.migration] Running upgrade a0v_037 -> a0v_038, Recover a lost receipt by original subject and key, without resubmitting.
+INFO  [alembic.runtime.migration] Running upgrade a0v_038 -> a0v_039, Event schema storage vocabulary only; no write authority or activation.
+INFO  [alembic.runtime.migration] Running upgrade a0v_039 -> a0v_040, Atomically store disabled product event policy and its exact Case successor.
+INFO  [alembic.runtime.migration] Running upgrade a0v_040 -> a0v_041, Lock exact event-save authorities without granting direct table UPDATE.
+INFO  [alembic.runtime.migration] Running upgrade a0v_041 -> a0v_042, Immutable event-control receipts; no new executable state or enable function.
+INFO  [alembic.runtime.migration] Running upgrade a0v_042 -> a0v_043, Immutable original batch routing for product event occurrences.
+INFO  [alembic.runtime.migration] Running upgrade a0v_043 -> a0v_044, Allow the complete event-control group while preserving the original nine.
+INFO  [alembic.runtime.migration] Running upgrade a0v_044 -> a0v_045, Bind complete snapshot groups to immutable source claims and original inputs.
+INFO  [alembic.runtime.migration] Running upgrade a0v_045 -> a0v_046, Immutable relationship preparation bound to an exact original snapshot group.
+INFO  [alembic.runtime.migration] Running upgrade a0v_046 -> a0v_047, Persist exact link-only command before any independently committed application.
+INFO  [alembic.runtime.migration] Running upgrade a0v_047 -> a0v_048, Immutable conditional retirement preparation bound to original group link command.
+INFO  [alembic.runtime.migration] Running upgrade a0v_048 -> a0v_049, Lock an exact current Requirement without granting runtime table updates.
+INFO  [alembic.runtime.migration] Running upgrade a0v_049 -> a0v_050, Require fulfillment and running analysis Receipts before Outbox completion.
+INFO  [alembic.runtime.migration] Running upgrade a0v_050 -> a0v_051, Align cutover SQL approval version with committed AIP approval events.
+INFO  [alembic.runtime.migration] Running upgrade a0v_051 -> a0v_052, Accept the canonical absent source-draft ref in cutover SQL validation.
+INFO  [alembic.runtime.migration] Running upgrade a0v_052 -> a0v_053, Add immutable approval refresh authority for an in-flight cutover.
+INFO  [alembic.runtime.migration] Running upgrade a0v_053 -> a0v_054, Receipt-first lifecycle for the one optional ecommerce event-control dispatch.
+INFO  [alembic.runtime.migration] Running upgrade a0v_054 -> a0v_055, Retire the same generation after a host stop advances its fence epoch.
+INFO  [alembic.runtime.migration] Running upgrade a0v_055 -> a0v_056, Register a successor against retained, exactly detached dispatch history.
+INFO  [alembic.runtime.migration] Running upgrade a0v_056 -> a0v_057, Lock Case/Policy before an approval event exists, without table write grants.
+INFO  [alembic.runtime.migration] Running upgrade a0v_057 -> a0v_058, Include optional event control in the exact host Receipt journal.
+INFO  [alembic.runtime.migration] Running upgrade a0v_058 -> a0v_059, Historical Receipts must survive removal of optional current dispatch rows.
+INFO  [alembic.runtime.migration] Running upgrade a0v_059 -> a0v_060, Audited terminal closure of fenced, unaccepted product-event initialization.
+INFO  [alembic.runtime.migration] Running upgrade a0v_060 -> a0v_061, Tenant/installation scoped internal bootstrap definition, admitted by event enable.
+INFO  [alembic.runtime.migration] Running upgrade a0v_061 -> a0v_062, Immutable atomic schedule-group claims, separate from source-call claims.
+INFO  [alembic.runtime.migration] Running upgrade a0v_062 -> a0v_063, Versioned installed snapshot schedule configuration and exclusive membership.
+INFO  [alembic.runtime.migration] Running upgrade a0v_063 -> a0v_064, Bind new schedule claims to exact enabled configuration; retain v1 history.
+INFO  [alembic.runtime.migration] Running upgrade a0v_064 -> a0v_065, Immutable saved-input renewal history; no execution or source-call grant.
+INFO  [alembic.runtime.migration] Running upgrade a0v_065 -> a0v_066, A saved-input renewal definition is never an ordinary schedule read grant.
+INFO  [alembic.runtime.migration] Running upgrade a0v_066 -> a0v_067, Read-only application ledger for future exact configuration continuation.
+INFO  [alembic.runtime.migration] Running upgrade a0v_067 -> a0v_068, Atomic owner for an approved same-generation dispatch configuration refresh.
+INFO  [alembic.runtime.migration] Running upgrade a0v_068 -> a0v_069, Limit configuration refresh mutation to the nine requested business operations.
+INFO  [alembic.runtime.migration] Running upgrade a0v_069 -> a0v_070, Permit event-control retirement after an exact dispatch configuration refresh.
+INFO  [alembic.runtime.migration] Running upgrade a0v_070 -> a0v_071, Permit formal unaccepted closure after a proven dispatch configuration refresh.
+INFO  [alembic.runtime.migration] Running upgrade a0v_071 -> a0v_072, Recover an omitted ecommerce dispatch fence after runtime disable succeeded.
+INFO  [alembic.runtime.migration] Running upgrade a0v_072 -> a0v_073, Allow successor registration after a fully proven predecessor uninstall.
+INFO  [alembic.runtime.migration] Running upgrade a0v_073 -> a0v_074, Permit negative event retirement after an exact runtime lease release.
+INFO  [alembic.runtime.migration] Running upgrade a0v_074 -> a0v_075, Keep Run head physical fields aligned when control returns to PREPARING.
+INFO  [alembic.runtime.migration] Running upgrade a0v_075 -> a0v_076, Close unaccepted analysis occurrences after an exact released-runtime fence.
+INFO  [alembic.runtime.migration] Running upgrade a0v_076 -> a0v_077, Repair one stale schedule cursor from its authoritative terminal run.
+INFO  [alembic.runtime.migration] Running upgrade a0v_077 -> a0v_078, Bind approved SchedulePolicy writes to immutable runtime authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_078 -> a0v_079, Repair schedule-control Case hash lookup without changing stored authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_079 -> a0v_080, Repair schedule-control approval hash datetime serialization.
+INFO  [alembic.runtime.migration] Running upgrade a0v_080 -> a0v_081, Repair schedule-control approval policy request hash binding.
+INFO  [alembic.runtime.migration] Running upgrade a0v_081 -> a0v_082, Audited terminal closure of an unaccepted schedule analysis initialization.
+INFO  [alembic.runtime.migration] Running upgrade a0v_082 -> a0v_083, Audited terminal closure for a snapshot group rejected before any source call.
+INFO  [alembic.runtime.migration] Running upgrade a0v_083 -> a0v_084, Permit one audited disabled definition advance to an exact replacement.
+INFO  [alembic.runtime.migration] Running upgrade a0v_084 -> a0v_085, Allow an audited replacement to renew one immutable saved snapshot group.
+INFO  [alembic.runtime.migration] Running upgrade a0v_085 -> a0v_086, Allow an audited chain of replacements to renew one immutable saved snapshot group.
+INFO  [alembic.runtime.migration] Running upgrade a0v_086 -> a0v_087, Anchor replacement renewal to the prior recovery current definition.
+INFO  [alembic.runtime.migration] Running upgrade a0v_087 -> a0v_088, Allow recoverable authoritative Store work to participate in runtime drain.
+INFO  [alembic.runtime.migration] Running upgrade a0v_088 -> a0v_089, Persist bounded runtime-attempt terminal reasons without raw errors.
+INFO  [alembic.runtime.migration] Running upgrade a0v_089 -> a0v_090, Allow digest-identical canonical aliases in replacement saved recovery.
+INFO  [alembic.runtime.migration] Running upgrade a0v_090 -> a0v_091, Audited terminal closure for a stalled snapshot group abandoned with effects.
+INFO  [alembic.runtime.migration] Running upgrade a0v_091 -> a0v_092, Lock exact retired-dispatch evidence without broad runtime table UPDATE grants.
+INFO  [alembic.runtime.migration] Running upgrade a0v_092 -> a0v_093, Add an empty, opt-in, database-clock Host lease foundation; no worker wiring.
+INFO  [alembic.runtime.migration] Running upgrade a0v_093 -> a0v_094, Add a restricted in-transaction Host lease guard; no worker is wired yet.
+INFO  [alembic.runtime.migration] Running upgrade a0v_094 -> a0v_095, Analysis-only pending Outbox claim; ambiguous attempts need separate review.
+INFO  [alembic.runtime.migration] Running upgrade a0v_095 -> a0v_096, Close the unfenced unknown-reconciliation entry before adding a new one.
+INFO  [alembic.runtime.migration] Running upgrade a0v_096 -> a0v_097, Add an empty immutable canonical witness sidecar; no writer is granted.
+INFO  [alembic.runtime.migration] Running upgrade a0v_097 -> a0v_098, Inert, isolated historical witness writer; no application principal is granted.
+INFO  [alembic.runtime.migration] Running upgrade a0v_098 -> a0v_099, Receipt-first internal daily review target for accepted content feedback.
+INFO  [alembic.runtime.migration] Running upgrade a0v_099 -> a0v_100, Fail-closed terminal TaskRun gate for the daily review target.
+INFO  [alembic.runtime.migration] Running upgrade a0v_100 -> a0v_101, Durable one-attempt content TaskRun intent after an exact v2 Review Handoff.
+INFO  [alembic.runtime.migration] Running upgrade a0v_101 -> a0v_102, One-attempt AgentRun handoff after the accepted content TaskRun.
+INFO  [alembic.runtime.migration] Running upgrade a0v_102 -> a0v_103, One-attempt capacity start after the accepted content AgentRun.
+INFO  [alembic.runtime.migration] Running upgrade a0v_103 -> a0v_104, One-attempt content budget command after an accepted capacity start.
+INFO  [alembic.runtime.migration] Running upgrade a0v_104 -> a0v_105, Allow an exact EvalContract revision to carry its embedded content gate policy.
+INFO  [alembic.runtime.migration] Running upgrade a0v_105 -> a0v_106, Receipt-first pending improvement target; no observed effect is asserted.
+INFO  [alembic.runtime.migration] Running upgrade a0v_106 -> a0v_107, Append-only D01 decisions; runtime writes only through checked functions.
+INFO  [alembic.runtime.migration] Running upgrade a0v_107 -> a0v_108, Immutable tenant-scoped source registration outcome, without connection secrets.
+INFO  [alembic.runtime.migration] Running upgrade a0v_108 -> a0v_109, Immutable tenant-scoped first-pipeline registration outcome.
+INFO  [alembic.runtime.migration] Running upgrade a0v_109 -> a0v_110, Immutable tenant-scoped budget activation preview and decision evidence.
+INFO  [alembic.runtime.migration] Running upgrade a0v_110 -> a0v_111, Reject direct active BudgetRevision inserts until formal DB consumption exists.
+INFO  [alembic.runtime.migration] Running upgrade a0v_111 -> a0v_112, Default-empty, tenant-scoped Eval issuer, identity, revocation and receipt authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_112 -> a0v_113, Remove inherited default table writes from the four Eval authority tables.
+INFO  [alembic.runtime.migration] Running upgrade a0v_113 -> a0v_114, Bind one Skill Eval report case to exact Target and Judge persisted receipts.
+INFO  [alembic.runtime.migration] Running upgrade a0v_114 -> a0v_115, Reserve future system policy ActionType identities at the database boundary.
+INFO  [alembic.runtime.migration] Running upgrade a0v_115 -> a0v_116, Reject direct active NetworkPolicy inserts until atomic approval consumption exists.
+INFO  [alembic.runtime.migration] Running upgrade a0v_116 -> a0v_117, Register exact global network activation metadata and reserve its ObjectType.
+INFO  [alembic.runtime.migration] Running upgrade a0v_117 -> a0v_118, Require a separate database login to issue network approval evidence.
+INFO  [alembic.runtime.migration] Running upgrade a0v_118 -> a0v_119, Seal consumer identities and activation receipts before enabling consumption.
+INFO  [alembic.runtime.migration] Running upgrade a0v_119 -> a0v_120, Consume an exact network approval through a nonprivileged atomic function.
+INFO  [alembic.runtime.migration] Running upgrade a0v_120 -> a0v_121, Expose exact read-only network consumption receipts without table grants.
+INFO  [alembic.runtime.migration] Running upgrade a0v_121 -> a0v_122, Bind trusted consumer-service subjects to exact original-maker authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_122 -> a0v_123, Persist new network approval delivery without enabling a worker or replay.
+INFO  [alembic.runtime.migration] Running upgrade a0v_123 -> a0v_124, Persist unapproved first-budget cost proposals, never activation authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_124 -> a0v_125, Separate budget risk issuer identity and immutable review history.
+INFO  [alembic.runtime.migration] Running upgrade a0v_125 -> a0v_126, Independent atomic consumer for cost-approved initial BudgetRevision.
+INFO  [alembic.runtime.migration] Running upgrade a0v_126 -> a0v_127, Original maker boundary and genuinely read-only budget receipt recovery.
+INFO  [alembic.runtime.migration] Running upgrade a0v_127 -> a0v_128, Derive paired development configuration from a consumed cost decision.
+INFO  [alembic.runtime.migration] Running upgrade a0v_128 -> a0v_129, Formal guard policy metadata and isolated activation boundary.
+INFO  [alembic.runtime.migration] Running upgrade a0v_129 -> a0v_130, Formal quota metadata and isolated activation boundary.
+INFO  [alembic.runtime.migration] Running upgrade a0v_130 -> a0v_131, Add subject-review signing identities and immutable receipts, default closed.
+INFO  [alembic.runtime.migration] Running upgrade a0v_131 -> a0v_132, Bind each subject-review case to one exact persisted Eval Report.
+INFO  [alembic.runtime.migration] Running upgrade a0v_132 -> a0v_133, Immutable, tenant-scoped first Model Eval application; no execution grant.
+INFO  [alembic.runtime.migration] Running upgrade a0v_133 -> a0v_134, Add a separate, tenant-scoped first Model Eval budget hold ledger.
+INFO  [alembic.runtime.migration] Running upgrade a0v_134 -> a0v_135, Keep shared schema receipts writable only by the maintenance owner.
+INFO  [alembic.runtime.migration] Running upgrade a0v_135 -> a0v_136, Add isolated source issuance/head and formal evaluation proof storage.
+INFO  [alembic.runtime.migration] Running upgrade a0v_136 -> a0v_137, Fence trusted-source revocation without granting runtime head writes.
+INFO  [alembic.runtime.migration] Running upgrade a0v_137 -> a0v_138, Preserve original build input without changing legacy evidence hashes.
+INFO  [alembic.runtime.migration] Running upgrade a0v_138 -> a0v_139, Coordinate first source issuance with revoke before any license head exists.
+INFO  [alembic.runtime.migration] Running upgrade a0v_139 -> a0v_140, Reserved original Action metadata and independent source approval writer.
+INFO  [alembic.runtime.migration] Running upgrade a0v_140 -> a0v_141, Narrow original source approval ACL; login provisioning stays closed.
+INFO  [alembic.runtime.migration] Running upgrade a0v_141 -> a0v_142, Dedicated source issuance identity; original approval and receipt remain authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_142 -> a0v_143, Fence original Health DML by tenant/provider; never replicate health facts.
+INFO  [alembic.runtime.migration] Running upgrade a0v_143 -> a0v_144, Bound formal evaluation to original authorities and one atomic transaction.
+INFO  [alembic.runtime.migration] Running upgrade a0v_144 -> a0v_145, Immutable nonexecuting Provider allocation requests, no capacity activation.
+INFO  [alembic.runtime.migration] Running upgrade a0v_145 -> a0v_146, Reserved Provider allocation approval metadata; no execution grant.
+INFO  [alembic.runtime.migration] Running upgrade a0v_146 -> a0v_147, Unverified physical capacity candidates only; no account or capacity publication.
+INFO  [alembic.runtime.migration] Running upgrade a0v_147 -> a0v_148, Reserved Provider allocation approval metadata; no execution grant.
+INFO  [alembic.runtime.migration] Running upgrade a0v_148 -> a0v_149, Neutral Evidence epoch for capacity review and future issuer commit ordering.
+INFO  [alembic.runtime.migration] Running upgrade a0v_149 -> a0v_150, Dedicated read/lock identity for capacity issuance, with no publication grants yet.
+INFO  [alembic.runtime.migration] Running upgrade a0v_150 -> a0v_151, Independent proposal withdrawal ordering, without granting capacity.
+--------------------------- Captured stderr teardown ---------------------------
+Retained isolated test database: aos_test_79117aa8e7ca_ti4_test
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_provider_capacity_publication_pg.py::test_original_full_root_snapshot_exceeds_signed_document_array_scope
+1 failed, 337 deselected, 7 warnings in 6.03s

@@ -1081,3 +1081,25 @@ def test_native_complete_profiles_real_signature_composition(native_profile_runn
             "SELECT encode(pg_catalog.sha256(decode('%s','hex')),'hex');"%raw.hex()).splitlines()
         assert result[0]=='t' and json.loads(result[1])==payload
         assert result[2]==hashlib.sha256(raw).hexdigest()
+
+
+def test_original_full_root_snapshot_exceeds_signed_document_array_scope(native_profile_runner,tmp_path):
+    import base64
+    from aos_api.asset_registry.signature import FileTrustRootProvider
+    public=base64.b64encode(bytes(range(32))).decode('ascii')
+    roots=[dict(publisher='independent-authority',keyId='key-'+str(i),algorithm='Ed25519',
+        publicKey=public,notBefore='2020-01-01T00:00:00Z',notAfter='2030-01-01T00:00:00Z',
+        revokedAt=None,revision='sha256:'+'a'*64) for i in range(1001)]
+    roots[0]['keyId']='key with internal space'
+    roots[-1]['keyId']='k'*240
+    raw=canonical_json(dict(trustRoots=roots));assert len(raw)<1024*1024
+    path=tmp_path/'controlled-root-snapshot.json';path.write_bytes(raw);path.chmod(0o600)
+    snapshot=FileTrustRootProvider(path).snapshot()
+    for entry in roots:
+        root=snapshot.get_trust_root(publisher=entry['publisher'],key_id=entry['keyId'])
+        assert root is not None and root.public_key==bytes(range(32))
+        assert root.revision==entry['revision'] and root.revoked_at is None
+    failure=native_profile_runner("SELECT aos_capacity_publication_private.read_signed_body(decode('%s','hex'));"%raw.hex(),False)
+    assert 'CAPACITY_SIGNED_BODY_PROFILE_REQUIRED' in failure
+    exact=native_profile_runner("SELECT aos_capacity_publication_private.canonical_signed_json(convert_from(decode('%s','hex'),'UTF8')::json,1);"%raw.hex(),False)
+    assert 'CAPACITY_SIGNED_BODY_ARRAY' in exact

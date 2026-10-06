@@ -1,0 +1,24 @@
+{
+  "authority_cutoff": "AOS-001403",
+  "code_base": "5610ea7514aac4a63a16c4824130e5cfa62fec60",
+  "task": "gt-provider-capacity-publication-schema-20261005",
+  "initial": "1 failed / 6.03s: incorrect expectation of public wrapper error, not original root read failure",
+  "target": "1 passed / 6.17s before expanded root identifier cases",
+  "adjacent": "355 passed, 7 existing warnings / 25.53s final with 1001 roots, internal-space and 240-character key IDs",
+  "review": "Actual safe FileTrustRootProvider snapshot reads every 1001 original entry; native public signed-body rejects through PROFILE_REQUIRED and original canonical function independently yields ARRAY. Preserve full root acceptance, original signature API and signed document array/identifier bounds. No production logic changed.",
+  "next": "Implement distinct complete root snapshot canonical transport and binder under independently authenticated registration; prove normalization/size/origin hash without subset/truncation. New a152 scope still required.",
+  "limits": [
+    "Snapshot fixture public keys untrusted; no root/permit registered or Source issued",
+    "Root file acceptance differs from signed documents; cannot reuse broad identifier/array profile silently",
+    "Normalization/output-size/native registry/currentness/permission boundaries not fully frozen or implemented",
+    "No current database/service/external effects; original Task ACTIVE"
+  ],
+  "sources": {
+    "services/aos-api/tests/aip/test_provider_capacity_publication_pg.py": "580acc06a9a202e07c7ddf9f8e958f556a9bdc56ba9188d1bbdfbf4bb2a7d30b",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-snapshot-registration-contract.md": "eea4027bc8c320aa972598b94815f4ec06b5e31f8babe17c91edfd600c6cbda0",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-snapshot-acceptance-domain.log": "58265b169fac83e7ecf1e4a34948a8b3fa8ca6826a64865b92bc20f9b6e90336",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-snapshot-acceptance-domain-r2.log": "545394f9f761f396eddcb31f0be0153861714c1a145a3fc1670229c2faf2bb72",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-snapshot-adjacent.log": "9ce01c0054551703f000162ac3d962f2d424bd0d9bc462b516e4f4bd742a7004",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-snapshot-adjacent-r2.log": "89566a38913c8b34d2b4ecbb9f433813beb8e3b917f4506f6313353b1ec1dea9"
+  }
+}
