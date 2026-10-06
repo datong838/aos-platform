@@ -1,0 +1,365 @@
+FFFFFFFFFFFFF                                                            [100%]
+=================================== FAILURES ===================================
+___________ test_maintenance_rejects_unbound_or_stale_receipt[owner] ___________
+
+fault = 'owner'
+
+    @pytest.mark.parametrize('fault',['owner','thread','status','base','lease_missing','lease_duplicate','lease_drift','expired','naive','delivered','scope','authority'])
+    def test_maintenance_rejects_unbound_or_stale_receipt(fault):
+>       m=module();now=datetime(2026,10,6,11,tzinfo=timezone.utc)
+          ^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_151_maintenance.py:10: in module
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b82ba50>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+__________ test_maintenance_rejects_unbound_or_stale_receipt[thread] ___________
+
+fault = 'thread'
+
+    @pytest.mark.parametrize('fault',['owner','thread','status','base','lease_missing','lease_duplicate','lease_drift','expired','naive','delivered','scope','authority'])
+    def test_maintenance_rejects_unbound_or_stale_receipt(fault):
+>       m=module();now=datetime(2026,10,6,11,tzinfo=timezone.utc)
+          ^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_151_maintenance.py:10: in module
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b8287d0>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+__________ test_maintenance_rejects_unbound_or_stale_receipt[status] ___________
+
+fault = 'status'
+
+    @pytest.mark.parametrize('fault',['owner','thread','status','base','lease_missing','lease_duplicate','lease_drift','expired','naive','delivered','scope','authority'])
+    def test_maintenance_rejects_unbound_or_stale_receipt(fault):
+>       m=module();now=datetime(2026,10,6,11,tzinfo=timezone.utc)
+          ^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_151_maintenance.py:10: in module
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b829950>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+___________ test_maintenance_rejects_unbound_or_stale_receipt[base] ____________
+
+fault = 'base'
+
+    @pytest.mark.parametrize('fault',['owner','thread','status','base','lease_missing','lease_duplicate','lease_drift','expired','naive','delivered','scope','authority'])
+    def test_maintenance_rejects_unbound_or_stale_receipt(fault):
+>       m=module();now=datetime(2026,10,6,11,tzinfo=timezone.utc)
+          ^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_151_maintenance.py:10: in module
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b827910>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+_______ test_maintenance_rejects_unbound_or_stale_receipt[lease_missing] _______
+
+fault = 'lease_missing'
+
+    @pytest.mark.parametrize('fault',['owner','thread','status','base','lease_missing','lease_duplicate','lease_drift','expired','naive','delivered','scope','authority'])
+    def test_maintenance_rejects_unbound_or_stale_receipt(fault):
+>       m=module();now=datetime(2026,10,6,11,tzinfo=timezone.utc)
+          ^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_151_maintenance.py:10: in module
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b84dfd0>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+______ test_maintenance_rejects_unbound_or_stale_receipt[lease_duplicate] ______
+
+fault = 'lease_duplicate'
+
+    @pytest.mark.parametrize('fault',['owner','thread','status','base','lease_missing','lease_duplicate','lease_drift','expired','naive','delivered','scope','authority'])
+    def test_maintenance_rejects_unbound_or_stale_receipt(fault):
+>       m=module();now=datetime(2026,10,6,11,tzinfo=timezone.utc)
+          ^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_151_maintenance.py:10: in module
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b815510>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+________ test_maintenance_rejects_unbound_or_stale_receipt[lease_drift] ________
+
+fault = 'lease_drift'
+
+    @pytest.mark.parametrize('fault',['owner','thread','status','base','lease_missing','lease_duplicate','lease_drift','expired','naive','delivered','scope','authority'])
+    def test_maintenance_rejects_unbound_or_stale_receipt(fault):
+>       m=module();now=datetime(2026,10,6,11,tzinfo=timezone.utc)
+          ^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_151_maintenance.py:10: in module
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b826f90>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+__________ test_maintenance_rejects_unbound_or_stale_receipt[expired] __________
+
+fault = 'expired'
+
+    @pytest.mark.parametrize('fault',['owner','thread','status','base','lease_missing','lease_duplicate','lease_drift','expired','naive','delivered','scope','authority'])
+    def test_maintenance_rejects_unbound_or_stale_receipt(fault):
+>       m=module();now=datetime(2026,10,6,11,tzinfo=timezone.utc)
+          ^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_151_maintenance.py:10: in module
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b827c10>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+___________ test_maintenance_rejects_unbound_or_stale_receipt[naive] ___________
+
+fault = 'naive'
+
+    @pytest.mark.parametrize('fault',['owner','thread','status','base','lease_missing','lease_duplicate','lease_drift','expired','naive','delivered','scope','authority'])
+    def test_maintenance_rejects_unbound_or_stale_receipt(fault):
+>       m=module();now=datetime(2026,10,6,11,tzinfo=timezone.utc)
+          ^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_151_maintenance.py:10: in module
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b845450>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+_________ test_maintenance_rejects_unbound_or_stale_receipt[delivered] _________
+
+fault = 'delivered'
+
+    @pytest.mark.parametrize('fault',['owner','thread','status','base','lease_missing','lease_duplicate','lease_drift','expired','naive','delivered','scope','authority'])
+    def test_maintenance_rejects_unbound_or_stale_receipt(fault):
+>       m=module();now=datetime(2026,10,6,11,tzinfo=timezone.utc)
+          ^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_151_maintenance.py:10: in module
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b854650>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+___________ test_maintenance_rejects_unbound_or_stale_receipt[scope] ___________
+
+fault = 'scope'
+
+    @pytest.mark.parametrize('fault',['owner','thread','status','base','lease_missing','lease_duplicate','lease_drift','expired','naive','delivered','scope','authority'])
+    def test_maintenance_rejects_unbound_or_stale_receipt(fault):
+>       m=module();now=datetime(2026,10,6,11,tzinfo=timezone.utc)
+          ^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_151_maintenance.py:10: in module
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b875250>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+_________ test_maintenance_rejects_unbound_or_stale_receipt[authority] _________
+
+fault = 'authority'
+
+    @pytest.mark.parametrize('fault',['owner','thread','status','base','lease_missing','lease_duplicate','lease_drift','expired','naive','delivered','scope','authority'])
+    def test_maintenance_rejects_unbound_or_stale_receipt(fault):
+>       m=module();now=datetime(2026,10,6,11,tzinfo=timezone.utc)
+          ^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_151_maintenance.py:10: in module
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b86ddd0>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+____________ test_bound_active_receipt_is_only_preflight_permission ____________
+
+    def test_bound_active_receipt_is_only_preflight_permission():
+>       m=module();task=dict(task_id=m.TASK,owner=m.OWNER,status='ACTIVE',base_revision='AOS-001369',scope=list(m.SCOPES),lease_expires_at='2026-10-07T00:00:00+00:00')
+          ^^^^^^^^
+
+scripts/tests/test_a0v_current_151_maintenance.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/tests/test_a0v_current_151_maintenance.py:10: in module
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b88e2d0>
+path = '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py'
+
+<frozen importlib._bootstrap_external>:1130: FileNotFoundError
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_maintenance_rejects_unbound_or_stale_receipt[owner]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_maintenance_rejects_unbound_or_stale_receipt[thread]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_maintenance_rejects_unbound_or_stale_receipt[status]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_maintenance_rejects_unbound_or_stale_receipt[base]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_maintenance_rejects_unbound_or_stale_receipt[lease_missing]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_maintenance_rejects_unbound_or_stale_receipt[lease_duplicate]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_maintenance_rejects_unbound_or_stale_receipt[lease_drift]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_maintenance_rejects_unbound_or_stale_receipt[expired]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_maintenance_rejects_unbound_or_stale_receipt[naive]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_maintenance_rejects_unbound_or_stale_receipt[delivered]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_maintenance_rejects_unbound_or_stale_receipt[scope]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_maintenance_rejects_unbound_or_stale_receipt[authority]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_bound_active_receipt_is_only_preflight_permission
+13 failed in 0.11s
