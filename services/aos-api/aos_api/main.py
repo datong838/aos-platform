@@ -818,6 +818,13 @@ async def _lifespan_body(_app: FastAPI):
         "legacy-bootstrap",
         "legacy_bootstrap",
     }
+    if not legacy_bootstrap:
+        # Existing tenant catalogs are runtime state, not legacy schema/seed.
+        # Fail startup on unavailable catalogs instead of letting GET bootstrap
+        # an empty cache and overwrite persisted tenant metadata.
+        from aos_api.tenant_catalog import boot_tenant_catalogs
+
+        boot_tenant_catalogs(read_only=True)
     if legacy_bootstrap:
         try:
             # Isolated on purpose: a DDL permission error here ("permission

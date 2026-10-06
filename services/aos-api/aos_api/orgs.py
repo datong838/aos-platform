@@ -6,7 +6,7 @@ from typing import Any
 
 from aos_api import membership as mem
 from aos_api import workspaces_catalog as ws_cat
-from aos_api.db import connect, connect_platform
+from aos_api.db import connect, connect_platform, connect_read_only
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.orgs")
@@ -114,14 +114,20 @@ def _delete_org_db(org_id: str) -> bool:
     return deleted
 
 
-def load_orgs_from_db() -> int:
+def load_orgs_from_db(*, strict: bool = False) -> int:
     _ORGS.clear()
     try:
-        with connect_platform() as conn:
+        connection = (
+            connect_read_only(inherit_scope=False, platform_role=True)
+            if strict else connect_platform()
+        )
+        with connection as conn:
             rows = conn.execute(
                 "SELECT id, name, kind, join_policy, discoverable FROM meta_org ORDER BY id"
             ).fetchall()
     except Exception:  # noqa: BLE001
+        if strict:
+            raise
         log.warning("org_load_fail", exc_info=True)
         return 0
     for r in rows:
@@ -194,7 +200,8 @@ def list_orgs_for_subject(subject: str) -> list[dict[str, Any]]:
     """Orgs where subject has ≥1 workspace membership."""
     out: list[dict[str, Any]] = []
     for oid in sorted(mem.member_org_ids(subject)):
-        ensure_org(oid)
+        if oid not in _ORGS:
+            ensure_org(oid)
         out.append(dict(_ORGS[oid]))
     return out
 
@@ -294,7 +301,8 @@ def default_project_for_org(org_id: str, subject: str) -> str | None:
 
 
 def org_name(org_id: str) -> str:
-    ensure_org(org_id)
+    if org_id not in _ORGS:
+        ensure_org(org_id)
     return str(_ORGS[org_id].get("name") or org_id)
 
 

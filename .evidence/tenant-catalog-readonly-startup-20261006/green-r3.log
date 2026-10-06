@@ -1,0 +1,26 @@
+.......................................F                               [100%]
+=================================== FAILURES ===================================
+__ RouterManifestRuntimeTests.test_runtime_routes_match_pre_manifest_baseline __
+
+self = <test_domain_router_manifest.RouterManifestRuntimeTests testMethod=test_runtime_routes_match_pre_manifest_baseline>
+
+    def test_runtime_routes_match_pre_manifest_baseline(self) -> None:
+        result = self._probe("inventory")
+    
+        # Runtime inventory includes FastAPI's four framework routes and the
+        # DataRequirement and Business Investigation canonical routes delivered
+        # through BI-W2/4/6/8; the exported business-route inventory
+        # intentionally filters framework routes out.
+        # The current seal includes the reviewed routes added after the prior
+        # baseline for action withdrawal, memory rejection, model-runtime
+        # revisions/readiness, Workshop operations and document extraction.
+        # Keep both the exact inventory and duplicate set pinned so later drift
+        # cannot be hidden by updating only a count.
+        # E07-E10 add exact receipts and read-only product admission status.
+>       self.assertEqual(4523, result["count"])
+E       AssertionError: 4523 != 4560
+
+services/aos-api/tests/test_domain_router_manifest.py:434: AssertionError
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_domain_router_manifest.py::RouterManifestRuntimeTests::test_runtime_routes_match_pre_manifest_baseline
+1 failed, 39 passed, 2 subtests passed in 33.81s

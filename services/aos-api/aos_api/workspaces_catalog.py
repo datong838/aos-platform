@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from aos_api.db import connect, connect_platform
+from aos_api.db import connect, connect_platform, connect_read_only
 from aos_api.logging_facade import get_logger
 from aos_api.tenant_scope import TenantScope
 
@@ -117,10 +117,14 @@ def _delete_ws_db(org_id: str, project_id: str) -> bool:
     return deleted
 
 
-def load_workspaces_from_db() -> int:
+def load_workspaces_from_db(*, strict: bool = False) -> int:
     _WS.clear()
     try:
-        with connect_platform() as conn:
+        connection = (
+            connect_read_only(inherit_scope=False, platform_role=True)
+            if strict else connect_platform()
+        )
+        with connection as conn:
             rows = conn.execute(
                 """
                 SELECT org_id, project_id, name, deletable, kind
@@ -128,6 +132,8 @@ def load_workspaces_from_db() -> int:
                 """
             ).fetchall()
     except Exception:  # noqa: BLE001
+        if strict:
+            raise
         log.warning("workspace_load_fail", exc_info=True)
         return 0
     for r in rows:

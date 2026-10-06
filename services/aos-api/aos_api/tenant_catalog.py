@@ -101,8 +101,12 @@ def ensure_tenant_catalog_schema() -> None:
     log.info("tenant_catalog_schema_ready")
 
 
-def boot_tenant_catalogs() -> None:
+def boot_tenant_catalogs(*, read_only: bool = False) -> None:
     """Load PG → memory only; do **not** auto-seed dev-org.
+
+    Non-legacy startup uses read_only=True: require migrated tables, load in
+    read-only transactions and propagate failures instead of starting with empty
+    caches that could trigger request-time bootstrap writes.
 
     dev-org / dev-project / 默认人员等测试数据已迁移到 ``aos_api.demo.seed_test_org``。
     企业上线后由管理员自建组织；开发/测试显式执行 ``seed_test_org()``。
@@ -110,14 +114,23 @@ def boot_tenant_catalogs() -> None:
     if not persistence_enabled():
         log.info("tenant_catalog_boot_skipped store=memory")
         return
-    ensure_tenant_catalog_schema()
+    if read_only:
+        if not _catalog_tables_present():
+            raise RuntimeError("TENANT_CATALOG_SCHEMA_UNAVAILABLE")
+    else:
+        ensure_tenant_catalog_schema()
     from aos_api import membership as mem
     from aos_api import orgs as org_store
     from aos_api import workspaces_catalog as ws_cat
 
-    org_store.load_orgs_from_db()
-    ws_cat.load_workspaces_from_db()
-    mem.load_memberships_from_db()
+    if read_only:
+        org_store.load_orgs_from_db(strict=True)
+        ws_cat.load_workspaces_from_db(strict=True)
+        mem.load_memberships_from_db(strict=True)
+    else:
+        org_store.load_orgs_from_db()
+        ws_cat.load_workspaces_from_db()
+        mem.load_memberships_from_db()
     log.info(
         "tenant_catalog_booted orgs=%s workspaces=%s members=%s",
         org_store.org_count(),

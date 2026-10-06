@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from aos_api.db import connect, connect_platform
+from aos_api.db import connect, connect_platform, connect_read_only
 from aos_api.logging_facade import get_logger
 from aos_api.tenant_scope import TenantScope
 
@@ -126,13 +126,17 @@ def _delete_member_db(org_id: str, project_id: str, subject: str) -> bool:
     return deleted
 
 
-def load_memberships_from_db() -> int:
+def load_memberships_from_db(*, strict: bool = False) -> int:
     _MEMBERS.clear()
     try:
         # Cross-tenant catalog load: platform role, no tenant GUC. meta_membership
         # carries no tenant RLS today, and a scoped read here would only ever
         # return one tenant's rows.
-        with connect_platform() as conn:
+        connection = (
+            connect_read_only(inherit_scope=False, platform_role=True)
+            if strict else connect_platform()
+        )
+        with connection as conn:
             rows = conn.execute(
                 """
                 SELECT org_id, project_id, subject, role
@@ -141,6 +145,8 @@ def load_memberships_from_db() -> int:
                 """
             ).fetchall()
     except Exception:  # noqa: BLE001
+        if strict:
+            raise
         log.warning("membership_load_fail", exc_info=True)
         return 0
     for r in rows:

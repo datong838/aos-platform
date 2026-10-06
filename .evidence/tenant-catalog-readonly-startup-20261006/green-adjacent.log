@@ -1,0 +1,158 @@
+...........................F...........FFFFFF....                      [100%]
+=================================== FAILURES ===================================
+___________ test_managed_failure_is_propagated_and_dsn_is_not_logged ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11cc0a5d0>
+caplog = <_pytest.logging.LogCaptureFixture object at 0x11c4b5150>
+
+    def test_managed_failure_is_propagated_and_dsn_is_not_logged(
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        secret = "do-not-log-this-password"
+    
+        def fail() -> None:
+            raise RuntimeError(f"postgresql://user:{secret}@db/aos")
+    
+        monkeypatch.setattr(migrations, "_run_managed_migrations", fail)
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(RuntimeError):
+                migrations.run_migrations(migrations.MigrationMode.MANAGED)
+    
+        assert secret not in caplog.text
+>       assert "RuntimeError" in caplog.text
+E       AssertionError: assert 'RuntimeError' in ''
+E        +  where '' = <_pytest.logging.LogCaptureFixture object at 0x11c4b5150>.text
+
+services/aos-api/tests/test_migrations.py:188: AssertionError
+__ RouterManifestRuntimeTests.test_runtime_routes_match_pre_manifest_baseline __
+
+self = <test_domain_router_manifest.RouterManifestRuntimeTests testMethod=test_runtime_routes_match_pre_manifest_baseline>
+
+    def test_runtime_routes_match_pre_manifest_baseline(self) -> None:
+        result = self._probe("inventory")
+    
+        # Runtime inventory includes FastAPI's four framework routes and the
+        # DataRequirement and Business Investigation canonical routes delivered
+        # through BI-W2/4/6/8; the exported business-route inventory
+        # intentionally filters framework routes out.
+        # The current seal includes the reviewed routes added after the prior
+        # baseline for action withdrawal, memory rejection, model-runtime
+        # revisions/readiness, Workshop operations and document extraction.
+        # Keep both the exact inventory and duplicate set pinned so later drift
+        # cannot be hidden by updating only a count.
+        # E07-E10 add exact receipts and read-only product admission status.
+>       self.assertEqual(4523, result["count"])
+E       AssertionError: 4523 != 4560
+
+services/aos-api/tests/test_domain_router_manifest.py:434: AssertionError
+_____________________ test_bob_only_sees_member_workspaces _____________________
+
+api_client = <starlette.testclient.TestClient object at 0x120a4a6d0>
+
+    def test_bob_only_sees_member_workspaces(api_client):
+        r = api_client.get("/v1/workspaces", headers=_auth("dev-org", "prj-ops", "bob"))
+>       assert r.status_code == 200
+E       assert 403 == 200
+E        +  where 403 = <Response [403 Forbidden]>.status_code
+
+services/aos-api/tests/test_twa7_membership.py:37: AssertionError
+_____________________ test_bob_cannot_enter_test_workspace _____________________
+
+api_client = <starlette.testclient.TestClient object at 0x124c026d0>
+
+    def test_bob_cannot_enter_test_workspace(api_client):
+        r = api_client.post(
+            "/v1/workspaces/dev-project/enter",
+            headers=_auth("dev-org", "prj-ops", "bob"),
+        )
+        assert r.status_code == 403
+>       assert r.json()["code"] == "WORKSPACE_FORBIDDEN"
+E       AssertionError: assert 'AUTH_TENANT_UNKNOWN' == 'WORKSPACE_FORBIDDEN'
+E         
+E         - WORKSPACE_FORBIDDEN
+E         + AUTH_TENANT_UNKNOWN
+
+services/aos-api/tests/test_twa7_membership.py:48: AssertionError
+_______________________ test_alice_add_member_and_audit ________________________
+
+api_client = <starlette.testclient.TestClient object at 0x1204326d0>
+
+    def test_alice_add_member_and_audit(api_client):
+        h = _auth("dev-org", "dev-project", "alice")
+        added = api_client.post(
+            "/v1/workspaces/dev-project/members",
+            headers=h,
+            json={"subject": "carol", "role": "editor"},
+        )
+>       assert added.status_code == 200, added.text
+E       AssertionError: {"code":"AUTH_TENANT_DIRECTORY_UNAVAILABLE","message":"tenant directory is unavailable","details":null,"traceId":"b8587119-f4a5-4bb5-9111-d842d3d4fb42"}
+E       assert 503 == 200
+E        +  where 503 = <Response [503 Service Unavailable]>.status_code
+
+services/aos-api/tests/test_twa7_membership.py:58: AssertionError
+________________________ test_viewer_cannot_add_member _________________________
+
+api_client = <starlette.testclient.TestClient object at 0x128d626d0>
+
+    def test_viewer_cannot_add_member(api_client):
+        r = api_client.post(
+            "/v1/workspaces/prj-ops/members",
+            headers=_auth("dev-org", "prj-ops", "bob"),
+            json={"subject": "dave", "role": "viewer"},
+        )
+>       assert r.status_code == 403
+E       assert 503 == 403
+E        +  where 503 = <Response [503 Service Unavailable]>.status_code
+
+services/aos-api/tests/test_twa7_membership.py:82: AssertionError
+___________________________ test_list_orgs_for_alice ___________________________
+
+api_client = <starlette.testclient.TestClient object at 0x12914a6d0>
+
+    def test_list_orgs_for_alice(api_client):
+        r = api_client.get("/v1/orgs", headers=_auth("dev-org", "dev-project"))
+>       assert r.status_code == 200
+E       assert 503 == 200
+E        +  where 503 = <Response [503 Service Unavailable]>.status_code
+
+services/aos-api/tests/test_twa9_orgs.py:60: AssertionError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_migrations.py::test_managed_failure_is_propagated_and_dsn_is_not_logged
+FAILED services/aos-api/tests/test_domain_router_manifest.py::RouterManifestRuntimeTests::test_runtime_routes_match_pre_manifest_baseline
+FAILED services/aos-api/tests/test_twa7_membership.py::test_bob_only_sees_member_workspaces
+FAILED services/aos-api/tests/test_twa7_membership.py::test_bob_cannot_enter_test_workspace
+FAILED services/aos-api/tests/test_twa7_membership.py::test_alice_add_member_and_audit
+FAILED services/aos-api/tests/test_twa7_membership.py::test_viewer_cannot_add_member
+FAILED services/aos-api/tests/test_twa9_orgs.py::test_list_orgs_for_alice - a...
+7 failed, 42 passed, 7 warnings, 2 subtests passed in 62.60s (0:01:02)

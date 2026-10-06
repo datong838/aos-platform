@@ -1,0 +1,73 @@
+F.....                                                                   [100%]
+=================================== FAILURES ===================================
+_____ test_readonly_boot_preserves_existing_viewer_and_queries_never_write _____
+
+catalog = <_pytest.monkeypatch.MonkeyPatch object at 0x10aa9d650>
+
+    def test_readonly_boot_preserves_existing_viewer_and_queries_never_write(catalog):
+        rows = {
+            'meta_org': [dict(id='org-org', name='existing', kind='saas', join_policy='invite_only', discoverable=False)],
+            'meta_workspace': [dict(org_id='org-org', project_id='dev-project', name='existing workspace', deletable=False, kind='custom')],
+            'meta_membership': [dict(org_id='org-org', project_id='dev-project', subject='existing-user', role='viewer')],
+        }
+        class Connection:
+            readonly = False
+            def execute(self, sql):
+                if sql == 'SET TRANSACTION READ ONLY':
+                    self.readonly = True
+                    return self
+                assert self.readonly
+                assert sql.strip().startswith('SELECT')
+                self.rows = next(values for table, values in rows.items() if 'FROM '+table in sql)
+                return self
+            def fetchall(self):
+                return self.rows
+        @contextmanager
+        def connect():
+            yield Connection()
+        for module in (orgs, workspaces_catalog, membership):
+            catalog.setattr(module, 'connect_platform', connect)
+        # Execute the actual non-legacy startup branch, then the actual read routers.
+        tree = ast.parse((Path(__file__).parents[2] / 'aos_api' / 'main.py').read_text())
+        body = next(n for n in tree.body if isinstance(n, ast.AsyncFunctionDef) and n.name == '_lifespan_body')
+        branch = next(n for n in body.body if isinstance(n, ast.If) and isinstance(n.test, ast.UnaryOp) and isinstance(n.test.operand, ast.Name) and n.test.operand.id == 'legacy_bootstrap')
+        exec(compile(ast.Module(body=[branch], type_ignores=[]), '<actual startup branch>', 'exec'), {'legacy_bootstrap': False})
+        from aos_api.routers.me import me, person
+        from aos_api.routers.workspaces import list_workspaces
+        catalog.setattr(person, 'get_profile', lambda subject: {})
+        principal = SimpleNamespace(org_id='org-org', project_id='dev-project', subject='existing-user', roles=['viewer'], markings=[], token_kind='test')
+>       assert me(principal)['orgName'] == 'existing'
+               ^^^^^^^^^^^^^
+
+services/aos-api/tests/tenant_isolation/test_tenant_catalog_readonly_startup.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/aos_api/routers/me.py:37: in me
+    org_items = org_store.list_orgs_for_subject(principal.subject)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/aos_api/orgs.py:201: in list_orgs_for_subject
+    ensure_org(oid)
+services/aos-api/aos_api/orgs.py:188: in ensure_org
+    _persist_org(_ORGS[org_id])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ({'id': 'org-org', 'name': 'existing', 'kind': 'standard', 'joinPolicy': 'invite_or_apply', ...},)
+kwargs = {}
+
+    def forbidden(*args, **kwargs):
+>       raise AssertionError('read-only boot/query must not persist or run DDL')
+E       AssertionError: read-only boot/query must not persist or run DDL
+
+services/aos-api/tests/tenant_isolation/test_tenant_catalog_readonly_startup.py:18: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-06T03:56:18.233045+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.orgs", "msg": "org_load count=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T03:56:18.233349+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.workspaces-catalog", "msg": "workspace_load count=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T03:56:18.233400+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.membership", "msg": "membership_load count=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T03:56:18.233433+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.tenant-catalog", "msg": "tenant_catalog_booted orgs=1 workspaces=1 members=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+INFO     aos-api.orgs:orgs.py:139 org_load count=1
+INFO     aos-api.workspaces-catalog:workspaces_catalog.py:146 workspace_load count=1
+INFO     aos-api.membership:membership.py:152 membership_load count=1
+INFO     aos-api.tenant-catalog:tenant_catalog.py:134 tenant_catalog_booted orgs=1 workspaces=1 members=1
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/tenant_isolation/test_tenant_catalog_readonly_startup.py::test_readonly_boot_preserves_existing_viewer_and_queries_never_write
+1 failed, 5 passed in 0.35s
