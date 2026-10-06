@@ -431,3 +431,120 @@ END $body$;
 
 # Reserved for complete157 installation; existing migrations remain unchanged.
 CAPACITY_ORIGINAL_SOURCE_FACTS_SQL = _original_facts_sql()
+
+
+# Untrusted original producer transport. Only the complete signing/COMMIT
+# protocol can authenticate these hints and create a consumable Source.
+CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.read_source_issuer_url(p jsonb)
+RETURNS text LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE value text; authority text; host text; port text; suffix text; address text; i integer;
+BEGIN
+ IF p IS NULL OR jsonb_typeof(p) IS DISTINCT FROM 'string' THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+ value:=p#>>'{}';
+ IF length(value) NOT BETWEEN 1 AND 2000 OR left(value,8)<>'https://'
+  OR strpos(value,'?')>0 OR strpos(value,'#')>0 THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+ FOR i IN 1..length(value) LOOP
+  PERFORM aos_capacity_publication_private.read_identifier(to_jsonb(substr(value,i,1)));
+ END LOOP;
+ authority:=split_part(substr(value,9),'/',1);
+ IF authority='' OR strpos(authority,'@')>0
+  OR normalize(translate(authority,':@?#',''),NFKC) ~ '[/?#@:]' THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+ IF strpos(authority,'[')>0 OR strpos(authority,']')>0 THEN
+  IF left(authority,1)<>'[' OR strpos(authority,']')=0 THEN
+   RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+  host:=substr(authority,2,strpos(authority,']')-2);
+  suffix:=substr(authority,strpos(authority,']')+1);
+  IF suffix<>'' AND left(suffix,1)<>':' THEN
+   RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+  port:=substr(suffix,2);
+  IF left(host,1)='v' THEN
+   IF host COLLATE "C" !~ '^v[a-fA-F0-9]+\..+$' THEN
+    RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+  ELSE
+   address:=split_part(host,'%',1);
+   IF (strpos(host,'%')>0 AND (split_part(host,'%',2)='' OR length(host)-length(replace(host,'%',''))<>1))
+    OR family(address::inet)<>6 OR strpos(address,'/')>0 THEN
+    RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+  END IF;
+ ELSE
+  host:=split_part(authority,':',1);
+  port:=CASE WHEN strpos(authority,':')>0 THEN substr(authority,strpos(authority,':')+1) ELSE '' END;
+ END IF;
+ IF host='' OR (port<>'' AND (port COLLATE "C" !~ '^[0-9]+$' OR port::numeric NOT BETWEEN 1 AND 65535)) THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+ RETURN value;
+EXCEPTION WHEN OTHERS THEN
+ RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023';
+END $body$;
+
+CREATE FUNCTION aos_capacity_publication_private.read_source_command(p_raw bytea)
+RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE packet jsonb; command jsonb; authentication jsonb; maker text; expected_hash text; ref jsonb; field text; kind text;
+BEGIN
+ IF p_raw IS NULL THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+ packet:=aos_capacity_publication_private.read_signed_body(p_raw);
+ IF jsonb_typeof(packet) IS DISTINCT FROM 'object' OR (SELECT count(*) FROM jsonb_object_keys(packet))<>5
+  OR packet-ARRAY['protocol','makerSubject','requestHash','command','authentication']<>'{}'::jsonb
+  OR packet->'protocol' IS DISTINCT FROM '"aos-provider-capacity-source-command/v1"'::jsonb THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+ maker:=aos_capacity_publication_private.read_identifier(packet->'makerSubject');
+ IF maker='unknown' THEN RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+ command:=packet->'command'; authentication:=packet->'authentication';
+ IF jsonb_typeof(command) IS DISTINCT FROM 'object' OR (SELECT count(*) FROM jsonb_object_keys(command))<>6
+  OR command-ARRAY['schemaVersion','tenant','approvedProposal','approvalEvent','supplierAttestationRef','sourcePolicyRef']<>'{}'::jsonb
+  OR command->'schemaVersion' IS DISTINCT FROM '1'::jsonb
+  OR command->'tenant' IS DISTINCT FROM '{"orgId":"org-org","projectId":"dev-project"}'::jsonb THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+ FOR field,kind IN SELECT * FROM (VALUES
+  ('approvedProposal','ActionProposal'),('approvalEvent','ActionApprovalEvent'),
+  ('supplierAttestationRef','SupplierCapacityAttestationRevision'),
+  ('sourcePolicyRef','ProviderCapacitySourcePolicyRevision')) v(field,kind) LOOP
+  ref:=command->field;
+  IF jsonb_typeof(ref) IS DISTINCT FROM 'object'
+   OR ref-ARRAY['assetType','assetId','revision','contentHash']<>'{}'::jsonb THEN
+   RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+  PERFORM aos_capacity_publication_private.original_source_ref(ref,kind);
+  PERFORM aos_capacity_publication_private.read_identifier(ref->'assetId');
+  IF (field='approvedProposal' AND ref->'revision' IS DISTINCT FROM '2'::jsonb)
+   OR (field='approvalEvent' AND ref->'revision' IS DISTINCT FROM '1'::jsonb) THEN
+   RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+ END LOOP;
+ expected_hash:=encode(sha256(convert_to(aos_capacity_publication_private.canonical_signed_json(
+  jsonb_build_object('protocol','aos-provider-capacity-issuance-request/v1','maker',maker,'command',command)::json,1),'UTF8')),'hex');
+ IF packet->'requestHash' IS DISTINCT FROM to_jsonb(expected_hash)
+  OR jsonb_typeof(authentication) IS DISTINCT FROM 'object'
+  OR (SELECT count(*) FROM jsonb_object_keys(authentication))<>4
+  OR authentication-ARRAY['makerSubject','oidcIssuer','oidcAudience','authenticationExpiresAt']<>'{}'::jsonb
+  OR authentication->'makerSubject' IS DISTINCT FROM packet->'makerSubject' THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+ PERFORM aos_capacity_publication_private.read_source_issuer_url(authentication->'oidcIssuer');
+ IF aos_capacity_publication_private.read_identifier(authentication->'oidcAudience')='unknown'
+  OR aos_capacity_publication_private.read_signed_time(authentication->'authenticationExpiresAt')<=clock_timestamp() THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023'; END IF;
+ RETURN packet;
+EXCEPTION WHEN OTHERS THEN
+ RAISE EXCEPTION 'CAPACITY_SOURCE_COMMAND_REQUIRED' USING ERRCODE='22023';
+END $body$;
+
+CREATE FUNCTION aos_capacity_publication_private.read_source_command_facts(p_raw bytea)
+RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE packet jsonb; facts jsonb;
+BEGIN
+ packet:=aos_capacity_publication_private.read_source_command(p_raw);
+ facts:=aos_capacity_publication_private.read_original_source_facts(packet->>'makerSubject',
+  packet->'command'->'approvedProposal',packet->'command'->'approvalEvent');
+ RETURN jsonb_build_object('packet',packet,'facts',facts);
+END $body$;
+
+ALTER FUNCTION aos_capacity_publication_private.read_source_issuer_url(jsonb) OWNER TO aos_capacity_publication_owner;
+ALTER FUNCTION aos_capacity_publication_private.read_source_command(bytea) OWNER TO aos_capacity_publication_owner;
+ALTER FUNCTION aos_capacity_publication_private.read_source_command_facts(bytea) OWNER TO aos_capacity_publication_owner;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_source_issuer_url(jsonb) FROM PUBLIC;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_source_command(bytea) FROM PUBLIC;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_source_command_facts(bytea) FROM PUBLIC;
+"""

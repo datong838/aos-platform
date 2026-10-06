@@ -3568,3 +3568,173 @@ def test_native_original_evidence_catalog_matches_original_drift_reason(native_o
     with isolated_owner() as observer:_require_boundary(observer)
     _refresh_native_facts_transaction(caller)
     assert _call_native_original_facts(caller,ident,args)['sourceProposal']==args[1]['assetId']
+
+
+def test_native_original_source_command_requires_original_binding(native_signed_source):
+    from aos_api.aip_provider_capacity_source_issuer import capacity_source_preparation_bytes
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    _,actual_command,_,_,_=native_signed_source
+    raw=capacity_source_preparation_bytes(actual_command()[0])
+    assert raw and b'bearerToken' not in raw
+    assert getattr(transaction,'CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL',None) is not None, \
+        'Complete157 must recheck the original secret-free command binding in native SQL'
+
+
+@pytest.fixture
+def native_original_command_reader(native_original_fact_reader):
+    """Compose the real original producer and facts in the same native caller."""
+    from uuid import uuid4
+    from psycopg import sql
+    from aos_api.aip_provider_capacity_source_issuer import capacity_source_preparation_bytes
+    from aos_api.aip_provider_capacity_publication_transaction import CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,_,_,material=native_original_fact_reader
+    raw=capacity_source_preparation_bytes(material[1]()[0])
+    identifier=sql.Identifier('public','publication_command_harness_'+uuid4().hex)
+    signatures=['read_source_issuer_url(jsonb)','read_source_command(bytea)','read_source_command_facts(bytea)']
+    with isolated_owner() as owner:
+        owner.execute(CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL)
+        owner.execute(sql.SQL("""CREATE FUNCTION {}(raw bytea) RETURNS jsonb LANGUAGE sql
+            SECURITY DEFINER SET search_path=pg_catalog AS $body$
+            SELECT aos_capacity_publication_private.read_source_command_facts(raw) $body$""").format(identifier))
+        owner.execute(sql.SQL('ALTER FUNCTION {}(bytea) OWNER TO aos_capacity_publication_owner').format(identifier))
+        owner.execute(sql.SQL('REVOKE ALL ON FUNCTION {}(bytea) FROM PUBLIC').format(identifier))
+        owner.execute(sql.SQL('GRANT EXECUTE ON FUNCTION {}(bytea) TO aos_provider_capacity_issuer').format(identifier))
+    _refresh_native_facts_transaction(caller)
+    try:
+        yield caller,identifier,raw,material
+    finally:
+        caller.rollback()
+        with isolated_owner() as owner:
+            owner.execute(sql.SQL('DROP FUNCTION {}(bytea)').format(identifier))
+            for signature in reversed(signatures):
+                owner.execute(sql.SQL('DROP FUNCTION aos_capacity_publication_private.'+signature))
+
+
+def _call_native_original_command(caller,identifier,raw):
+    from psycopg import sql
+    return caller.execute(sql.SQL('SELECT {}(%s) AS result').format(identifier),(raw,)).fetchone()['result']
+
+
+@pytest.mark.parametrize('native_original_fact_reader',['shared','distinct'],indirect=True)
+def test_native_original_command_composes_original_binding_and_facts(native_original_command_reader):
+    import json
+    from aos_api.aip_provider_capacity_source_contracts import capacity_issuance_binding
+    caller,identifier,raw,material=native_original_command_reader
+    before=caller.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+    result=_call_native_original_command(caller,identifier,raw)
+    assert result['packet']==json.loads(raw)
+    assert result['packet']['requestHash']==capacity_issuance_binding(SCOPE,material[0]['maker'],material[1]()[0]).content_hash
+    assert result['facts']['source']==material[3].model_dump(mode='json',by_alias=True)
+    assert result['facts']['xid']==before['xid'] and result['facts']['pid']==before['pid']
+    assert result['facts']['session']=='aos_provider_capacity_issuer' and caller.pgconn.used_password is True
+    print('NATIVE_COMMAND_ORIGINAL_BINDING same_native_xid_pid=true untrusted_hints=true SourceDelivery=false')
+
+
+@pytest.mark.parametrize('fault',[
+    'protocol','maker','unknown_maker','request_hash','authentication_maker','audience_unknown',
+    'audience_space','audience_boolean','auth_expired','auth_naive','auth_extra','auth_missing',
+    'packet_extra','packet_missing','command_extra','command_missing','canary','tenant_extra',
+    'command_schema','command_schema_bool','command_schema_missing',
+    'source_revision','event_revision','ref_type','ref_id_space','ref_hash','ref_boolean_revision',
+    'ref_extra','ref_missing','source_factual_hash','event_factual_hash','maker_factual',
+    'duplicate_key','noncanonical','invalid_utf8','null_raw',
+])
+def test_native_original_command_rejects_exact_transport_and_original_drift(native_original_command_reader,fault):
+    import json
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.asset_registry.canonical_json import canonical_json
+    caller,identifier,raw,_=native_original_command_reader
+    packet=json.loads(raw);command=packet['command'];auth=packet['authentication']
+    ref=command['approvedProposal']
+    if fault=='protocol':packet['protocol']='aos-provider-capacity-source-command/v2'
+    elif fault=='maker':packet['makerSubject']='different-maker'
+    elif fault=='unknown_maker':packet['makerSubject']=auth['makerSubject']='unknown'
+    elif fault=='request_hash':packet['requestHash']='0'*64
+    elif fault=='authentication_maker':auth['makerSubject']='different-maker'
+    elif fault=='audience_unknown':auth['oidcAudience']='unknown'
+    elif fault=='audience_space':auth['oidcAudience']='two words'
+    elif fault=='audience_boolean':auth['oidcAudience']=True
+    elif fault=='auth_expired':auth['authenticationExpiresAt']='2000-01-01T00:00:00Z'
+    elif fault=='auth_naive':auth['authenticationExpiresAt']='2099-01-01T00:00:00'
+    elif fault=='auth_extra':auth['verified']=True
+    elif fault=='auth_missing':del auth['oidcIssuer']
+    elif fault=='packet_extra':packet['verified']=True
+    elif fault=='packet_missing':del packet['authentication']
+    elif fault=='command_extra':command['bearerToken']='forbidden-placeholder'
+    elif fault=='command_missing':del command['sourcePolicyRef']
+    elif fault=='command_schema':command['schemaVersion']=2
+    elif fault=='command_schema_bool':command['schemaVersion']=True
+    elif fault=='command_schema_missing':del command['schemaVersion']
+    elif fault=='canary':command['tenant']['orgId']='dev-org'
+    elif fault=='tenant_extra':command['tenant']['verified']=True
+    elif fault=='source_revision':ref['revision']=1
+    elif fault=='event_revision':command['approvalEvent']['revision']=2
+    elif fault=='ref_type':ref['assetType']='ActionApprovalEvent'
+    elif fault=='ref_id_space':ref['assetId']='two words'
+    elif fault=='ref_hash':ref['contentHash']='not-a-hash'
+    elif fault=='ref_boolean_revision':ref['revision']=True
+    elif fault=='ref_extra':ref['verified']=True
+    elif fault=='ref_missing':del ref['assetId']
+    elif fault=='source_factual_hash':ref['contentHash']='0'*64
+    elif fault=='event_factual_hash':command['approvalEvent']['contentHash']='0'*64
+    elif fault=='maker_factual':packet['makerSubject']=auth['makerSubject']='different-maker'
+    if fault not in ('maker','request_hash'):
+        packet['requestHash']=canonical_hash(dict(protocol='aos-provider-capacity-issuance-request/v1',
+            maker=packet['makerSubject'],command=command))
+    bad=canonical_json(packet)
+    if fault=='duplicate_key':bad=bad.replace(b'"protocol":',b'"protocol":"duplicate","protocol":',1)
+    elif fault=='noncanonical':bad=b' '+bad
+    elif fault=='invalid_utf8':bad=b'\xff'
+    elif fault=='null_raw':bad=None
+    with caller.transaction():
+        with pytest.raises(psycopg.Error) as denied:
+            with caller.transaction():_call_native_original_command(caller,identifier,bad)
+        assert denied.value.sqlstate in {'22023','P0002'}
+        if fault not in {'source_factual_hash','event_factual_hash','maker_factual'}:
+            assert str(denied.value).splitlines()[0]=='CAPACITY_SOURCE_COMMAND_REQUIRED'
+    assert _call_native_original_command(caller,identifier,raw)['packet']==json.loads(raw)
+
+
+def test_native_original_command_issuer_url_matches_original_claims(native_original_command_reader):
+    import json
+    from aos_api.asset_registry.canonical_json import canonical_json
+    from aos_api.aip_provider_capacity_publication_contracts import CapacitySourceAuthenticationClaims
+    caller,identifier,raw,_=native_original_command_reader
+    original=json.loads(raw)
+    cases=['https://idp.example/realm','https://例子.测试/租户','https://idp.example:65535/a',
+        'https://idp.example:00001/a','https://idp.example:/a','https://[::1]:443/a',
+        'https://[fe80::1%eth0]/a','https://[v1.future]/a','https://'+('x'*1992),
+        'http://idp.example','https:///empty','https://user@idp.example/a','https://idp.example?a',
+        'https://idp.example#a','https://two words','https://idp.example:0','https://idp.example:65536',
+        'https://idp.example:１２','https://[127.0.0.1]/a','https://[::1]extra/a',
+        'https://[::1','https://[v1.]/a','https://[fe80::1%]/a','https://idp\uff1aexample/a',
+        'https://idp\u2100example/a','https://idp\u200bexample/a','https://'+('x'*1993)]
+    for url in cases:
+        packet=json.loads(raw);packet['authentication']['oidcIssuer']=url
+        try:
+            claims=CapacitySourceAuthenticationClaims.model_validate(packet['authentication'])
+            accepted=True
+        except ValueError:accepted=False
+        if accepted:
+            result=_call_native_original_command(caller,identifier,canonical_json(packet))
+            assert result['packet']['authentication']==claims.model_dump(mode='json',by_alias=True)
+        else:
+            with pytest.raises(psycopg.Error) as denied:
+                with caller.transaction():_call_native_original_command(caller,identifier,canonical_json(packet))
+            assert denied.value.sqlstate=='22023'
+    assert _call_native_original_command(caller,identifier,raw)['packet']==original
+    print('NATIVE_COMMAND_URL original_claims_matrix=27 untrusted_hint_only=true')
+
+
+@pytest.mark.parametrize('role',['aos_runtime','aos_provider_capacity_issuer'])
+def test_native_original_command_private_functions_have_no_ordinary_entry(native_original_command_reader,role):
+    from psycopg import sql
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    with isolated_owner() as owner:
+        owner.execute(sql.SQL('SET LOCAL ROLE {}').format(sql.Identifier(role)))
+        for signature,arg in [('read_source_issuer_url(jsonb)',None),('read_source_command(bytea)',None),
+            ('read_source_command_facts(bytea)',None)]:
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with owner.transaction():
+                    owner.execute(sql.SQL('SELECT aos_capacity_publication_private.'+signature.split('(')[0]+'(%s)'),(arg,))

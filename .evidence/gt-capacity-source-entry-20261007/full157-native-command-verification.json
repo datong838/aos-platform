@@ -1,0 +1,50 @@
+{
+  "baseline": "377a79902bef9d4fdea96220eb314c2d5049780a",
+  "authority": "AOS-001439",
+  "status": "NATIVE_ORIGINAL_COMMAND_AND_FACTS_PARTIAL_GREEN",
+  "SourceDelivery": false,
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "de6b574718c9729b49d5314fa1a5f334dd08c8d33ef327872820bd531cd5637c",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "92639e315051fbe1f7f898f1cbd38581ff6be47be51882052104c73a4ec486be"
+  },
+  "preserved_module_prefix": {
+    "bytes": 29300,
+    "sha256": "85f10f29ddefac1a7868cbeda2d31649038c7b6427e7e7f66750b377017b9a0e"
+  },
+  "logs": {
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-command-adjacent-r1.log": {
+      "sha256": "e32d4ff06805889a3ee9529b4573291369e44818f8dbd9c022a55f317fb79a5e",
+      "result": "168 passed, 154 deselected, 7 warnings in 483.70s (0:08:03)"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-command-expanded-r1.log": {
+      "sha256": "ea9c313ad21c28dd3f4b9cf14a73e2e3cd989b2170e94bdc4fc294efd2d8074c",
+      "result": "42 passed, 222 deselected, 7 warnings in 151.09s (0:02:31)"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-command-green-r1.log": {
+      "sha256": "2a225307db8cde71d210512f1bdaee76e01bd1cca7b30b688cfc7997c7ea0d0c",
+      "result": "3 failed, 258 deselected, 7 warnings in 17.22s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-command-green-r2.log": {
+      "sha256": "eb1cbd6d2008f7bb2de49affe8f1e719e6defb93526965c62ed1efb5035b0f17",
+      "result": "3 passed, 261 deselected, 7 warnings in 18.32s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-command-red-r1.log": {
+      "sha256": "36db53363e92ddf9163dcc40780c4ed467a7397022e88bfb4b8125b900e5b943",
+      "result": "1 failed, 222 deselected, 7 warnings in 7.06s"
+    }
+  },
+  "verification": [
+    "42 native command cases including shared/distinct and 36 input/original fact faults",
+    "27 URL samples agree with original authentication claims model",
+    "ordinary runtime and issuer have no direct private helper entry",
+    "same actual SCRAM native caller xid/PID and complete original facts",
+    "final168 cumulative / noSKIP /7existingwarnings /483.70s"
+  ],
+  "remaining": [
+    "full157 S01 install/catalog and controlled JWT signing protocol",
+    "signed policy/attestation/permit refs remain untrusted until original current registry suffix",
+    "global mapping/attempt/pending prepare and exact Source signing",
+    "commit/actual callerCOMMIT/currentconsumer",
+    "final COMMIT TTL and complete business Goal"
+  ]
+}

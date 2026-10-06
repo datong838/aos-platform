@@ -1,0 +1,25 @@
+{
+  "baseline": "377a79902bef9d4fdea96220eb314c2d5049780a",
+  "authority": "AOS-001439",
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_source_issuer.py": "5b9b1e9e9c1a09d2a8a2bf142cd61af0e1325fe33f3102086cab48a79ce13e7e",
+    "services/aos-api/aos_api/aip_provider_capacity_source_contracts.py": "dc22d6e59535572cd98c79f514a5b79270989748161fc71a382416983d20bd72",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_registry.py": "a2a7773348d09c8fa2b8789f00d65510261408a5011ad98aca2ff44218526490",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "13682034eaae269ea6e63f34805548b63e0484e5368169882e9c8249aec0ce77"
+  },
+  "next_full_entry_order": [
+    "same caller full S01 context/catalog and source command binding",
+    "original full facts including all neutral Evidence and both original withdrawal epochs",
+    "registry_epoch + anchor/origin current identity",
+    "three original registered document rows in stable kind/id/revision SHARE order",
+    "original signed applicability, windows and controlled signer permit/root",
+    "sorted namespaced account/Provider advisory identity locks then current global mapping locks",
+    "DB generated stable account ID/attempt UUID; exact pending canonical SourceV2 bytes",
+    "controlled signer reauthenticate original JWT and native transcript; same session/xid/PID commit verification",
+    "actual caller COMMIT and current consumer; final TTL proof remains required"
+  ],
+  "remaining_native_public_entry": true,
+  "SourceDelivery": false,
+  "final_commit_ttl_solved": false,
+  "note": "Current native command facts does not verify policy/attestation/permit refs against signed registry. They are typed untrusted refs until the full suffix independently resolves them. No new public Source ACL/migration is installed."
+}

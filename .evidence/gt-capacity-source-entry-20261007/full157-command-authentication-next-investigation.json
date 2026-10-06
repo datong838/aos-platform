@@ -1,0 +1,12 @@
+{
+  "baseline": "377a7990",
+  "authority": "AOS-001439",
+  "purpose": "Next original OIDC preparation transport validation before native command translation",
+  "summary": "2 passed, 220 deselected, 7 warnings in 8.37s",
+  "log_sha256": "e3873783b9241e66d74ec8d546120fd218d5608b9f1411d36464eb190b2b424b",
+  "producer_file": "services/aos-api/aos_api/aip_provider_capacity_source_issuer.py",
+  "producer_sha256": "5b9b1e9e9c1a09d2a8a2bf142cd61af0e1325fe33f3102086cab48a79ce13e7e",
+  "native_command_translation_implemented": false,
+  "SourceDelivery": false,
+  "next": "Native command typed profile and exact original requestHash binding; hints do not grant JWT authority"
+}
