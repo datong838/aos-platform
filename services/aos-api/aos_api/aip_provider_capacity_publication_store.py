@@ -5,6 +5,44 @@ signature/key or grant capacity. Production installation and the
 full approval/currentness/mapping/signature/COMMIT boundary remain separate.
 """
 
+# S08 snapshot only. Full approval consumers must separately enforce original
+# proposal/Owner/withdrawal locks, exact references and current non-NULL expiry.
+CAPACITY_APPROVAL_EVENT_PROJECTION_SQL = r"""
+WITH original AS (
+  SELECT e.*,
+    CASE WHEN expires_at IS NULL THEN NULL ELSE
+      pg_catalog.to_char(expires_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS') ||
+      CASE WHEN pg_catalog.to_char(expires_at AT TIME ZONE 'UTC','US')='000000' THEN ''
+        ELSE '.' || pg_catalog.to_char(expires_at AT TIME ZONE 'UTC','US') END || 'Z' END AS expiry,
+    pg_catalog.to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS') ||
+      CASE WHEN pg_catalog.to_char(created_at AT TIME ZONE 'UTC','US')='000000' THEN ''
+        ELSE '.' || pg_catalog.to_char(created_at AT TIME ZONE 'UTC','US') END || 'Z' AS created
+  FROM public.aip_action_approval_event e
+  WHERE org_id=%(org_id)s AND project_id=%(project_id)s AND approval_event_id=%(approval_event_id)s
+    AND org_id='org-org' AND project_id='dev-project'
+    AND pg_catalog.current_setting('TimeZone')='UTC' AND proposal_version >= 1
+    AND pg_catalog.isfinite(created_at) AND extract(year FROM created_at AT TIME ZONE 'UTC') BETWEEN 1 AND 9999
+    AND (expires_at IS NULL OR (pg_catalog.isfinite(expires_at)
+      AND extract(year FROM expires_at AT TIME ZONE 'UTC') BETWEEN 1 AND 9999))
+    AND (action_binding_hash IS NULL OR action_binding_hash COLLATE pg_catalog."C" ~ '^[0-9a-f]{64}$')
+    AND (approval_policy_hash IS NULL OR approval_policy_hash COLLATE pg_catalog."C" ~ '^[0-9a-f]{64}$')
+    AND (eligibility_snapshot_hash IS NULL OR eligibility_snapshot_hash COLLATE pg_catalog."C" ~ '^[0-9a-f]{64}$')
+), body AS (
+  SELECT proposal_id,pg_catalog.jsonb_build_object(
+    'id',approval_event_id,'proposalId',proposal_id,'proposalVersion',proposal_version,
+    'proposalHash',proposal_hash,'decision',decision,
+    'actor',pg_catalog.jsonb_build_object('actorType','user','actorId',actor_id),'reason',reason,
+    'expiresAt',expiry,'createdAt',created,'actionBindingHash',action_binding_hash,
+    'approvalPolicyHash',approval_policy_hash,'slotId',slot_id,
+    'eligibilitySnapshotHash',eligibility_snapshot_hash) AS value
+  FROM original
+), encoded AS (
+  SELECT proposal_id,value,public.canonical_asset_registry_jsonb(value) AS canonical FROM body
+)
+SELECT proposal_id,value,canonical,
+  pg_catalog.encode(public.digest(pg_catalog.convert_to(canonical,'UTF8'),'sha256'),'hex') AS hash FROM encoded
+"""
+
 CAPACITY_SIGNED_BODY_PROFILE_SQL = r"""
 CREATE FUNCTION aos_capacity_publication_private.canonical_signed_json(p_value json, p_depth integer)
 RETURNS text LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER

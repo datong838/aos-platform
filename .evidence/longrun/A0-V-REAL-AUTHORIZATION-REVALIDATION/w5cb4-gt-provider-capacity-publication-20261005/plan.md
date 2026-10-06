@@ -176,3 +176,7 @@ RED新常量不存在；完整合法target单项变异同时用原Python部署�
 拒NULL、未知/缺/alias字段、合法签名但错误purpose/字段、bool冒int、key非canonical padding、naive/invalid date/zero小数/期限逆序或超界。未来完整签发仍要独立root/permit取钥、actual target、current epoch/原批准和签名校验；该函数只返回未认证结构，不注册许可。函数INVOCER/IMMUTABLE/nonSTRICT/pg_catalog/PUBLIC撤权，同fixedr4 transaction安装纯计算→原生positive/单项negative→ROLLBACK。RED常量缺失；原完整Permit Python parse oracle先确认每个canonical变异确实拒绝，合法Unicode/nonzero offset/边界与原模型一致。专项/原publication+Source auth相邻/独立复审后精确提交；不收口完整Task。
 
 独立复审要求补原Python3.11 json.loads十进制整数上限：先读取当前sys.get_int_max_str_digits并做完整Permit revision/sourcePolicyRef.revision 4300/4301/5000位双oracle原生测试；在当前4300冻结合同成立时两个revision字段SQL均限制4300位，不能放宽原parse拒绝的字节。未来实际安装必须核此Python运行配置，与Unicode版本一样显式兼容复审，不宣称已实现部署门。补新两函数SQL NULL和catalog invoker/immutable/nonSTRICT/PUBLIC ACL专项；纯计算DDL均回滚。
+
+字段门完成后回到已登记S08完整批准SQL：两个安全候选是S08原批准事件13字段投影及时间非法值，S11原capacity request整份JSON/原批准依赖。先选S08只读原生非有限/超Python年份/BC范围实验；现四微秒正向投影不能覆盖这些错误。仅固定隔离r4 READ ONLY VALUES/SELECT，不创建批准、不改真实行，结果决定后继完整批准函数的拒绝门；S11后继仍需原Model/数据库全部动态事实。
+
+S08转入实际发布模块：publication_store.py加入CAPACITY_APPROVAL_EVENT_PROJECTION_SQL，窄命名参数org_id/project_id/approval_event_id只读原public事件，UTC连接条件、positive tenant、版本>=1、原nullable扩展hash格式及finite/UTC Python年域成立后构造13字段含null，原canonical_asset_registry_jsonb/digest计算原字节/hash。无宽写函数/新表/grant/迁移；零行须由后继全guard拒绝，投影不是批准/当前性授权。测试沿formal-boundary已有真实Source/allocation批准fixtures及private SCRAM/RLS，双方完整模型/原refs/canonical字节匹配；dev-org/缺event/时区漂移拒绝。非法时间负例仅本会话TEMP LIKE原表型（无正式authority）承载，替换查询唯一FROM用于计算域测试，rollback，不改原不可变event，不据TEMP正负宣称权限成立。

@@ -469,3 +469,69 @@ def test_original_approved_event_sql_full_body_matches_native_refs(approved_comm
                     'UTF8'),'sha256'),'hex') AS hash""",
                     (row['canonical'], field)).fetchone()
                 assert changed['hash'] != ref.content_hash, field
+
+
+def test_publication_original_event_projection_matches_both_refs(approved_command, private_database):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_APPROVAL_EVENT_PROJECTION_SQL
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_action_store import AipActionStore
+    from aos_api.asset_registry.canonical_json import canonical_json
+    with connect_capacity_issuer(private_database,SCOPE) as conn:
+        for ref in [approved_command[-1].approval_event, approved_command[2].allocation_approval_ref]:
+            row = conn.execute(CAPACITY_APPROVAL_EVENT_PROJECTION_SQL,
+                dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,approval_event_id=ref.asset_id)).fetchone()
+            assert row is not None
+            expected = next(item for item in AipActionStore()._bundle(conn,SCOPE,row['proposal_id']).approvals
+                            if item.id==ref.asset_id).model_dump(mode='json',by_alias=True)
+            assert row['value']==expected and len(row['value'])==13
+            assert row['canonical'].encode()==canonical_json(expected)
+            assert row['hash']==ref.content_hash
+        params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,approval_event_id=approved_command[-1].approval_event.asset_id)
+        assert conn.execute(CAPACITY_APPROVAL_EVENT_PROJECTION_SQL,{**params,'org_id':'dev-org'}).fetchone() is None
+        assert conn.execute(CAPACITY_APPROVAL_EVENT_PROJECTION_SQL,{**params,'approval_event_id':uuid4().hex}).fetchone() is None
+        conn.execute("SET LOCAL TimeZone='Asia/Shanghai'")
+        assert conn.execute(CAPACITY_APPROVAL_EVENT_PROJECTION_SQL,params).fetchone() is None
+
+
+@pytest.mark.parametrize('timestamp_literal', ['infinity','-infinity','10000-01-01 00:00:00+00','0001-01-01 00:00:00+00 BC'])
+@pytest.mark.parametrize('field',['created_at','expires_at'])
+def test_publication_event_projection_rejects_python_time_domain(approved_command, timestamp_literal, field):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_APPROVAL_EVENT_PROJECTION_SQL
+    with isolated_owner() as conn:
+        conn.execute("SET LOCAL TimeZone='UTC'")
+        conn.execute('CREATE TEMP TABLE approval_projection_probe (LIKE public.aip_action_approval_event INCLUDING ALL)')
+        ref=approved_command[-1].approval_event
+        params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,approval_event_id=ref.asset_id)
+        conn.execute('INSERT INTO approval_projection_probe SELECT * FROM public.aip_action_approval_event '
+                     'WHERE org_id=%(org_id)s AND project_id=%(project_id)s AND approval_event_id=%(approval_event_id)s',params)
+        statement=CAPACITY_APPROVAL_EVENT_PROJECTION_SQL.replace('FROM public.aip_action_approval_event e','FROM pg_temp.approval_projection_probe e')
+        assert conn.execute(statement,params).fetchone() is not None
+        conn.execute(sql.SQL('UPDATE pg_temp.approval_projection_probe SET {}=%s::timestamptz').format(sql.Identifier(field)),(timestamp_literal,))
+        assert conn.execute(statement,params).fetchone() is None
+        conn.rollback()
+
+
+@pytest.mark.parametrize('microsecond',[0,1,100000,999999])
+def test_publication_event_projection_nullable_fields_original_model(approved_command,microsecond):
+    from datetime import datetime,UTC
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_APPROVAL_EVENT_PROJECTION_SQL
+    from aos_api.asset_registry.canonical_json import canonical_json
+    from aos_api.aip_action_store import canonical_hash
+    original=approved_command[3].approvals[0]
+    timestamp=datetime(2020,1,1,microsecond=microsecond,tzinfo=UTC)
+    expected=original.model_copy(update=dict(created_at=timestamp,expires_at=None,action_binding_hash=None,
+        approval_policy_hash=None,eligibility_snapshot_hash=None,slot_id=None,reason='')).model_dump(mode='json',by_alias=True)
+    with isolated_owner() as conn:
+        conn.execute("SET LOCAL TimeZone='UTC'")
+        conn.execute('CREATE TEMP TABLE approval_projection_probe (LIKE public.aip_action_approval_event INCLUDING ALL)')
+        params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,approval_event_id=original.id)
+        conn.execute('INSERT INTO approval_projection_probe SELECT * FROM public.aip_action_approval_event '
+                     'WHERE org_id=%(org_id)s AND project_id=%(project_id)s AND approval_event_id=%(approval_event_id)s',params)
+        conn.execute("UPDATE pg_temp.approval_projection_probe SET created_at=%s,expires_at=NULL,action_binding_hash=NULL,"
+                     "approval_policy_hash=NULL,eligibility_snapshot_hash=NULL,slot_id=NULL,reason=''",(timestamp,))
+        conn.execute('SET LOCAL search_path=pg_temp,pg_catalog')
+        statement=CAPACITY_APPROVAL_EVENT_PROJECTION_SQL.replace('FROM public.aip_action_approval_event e','FROM pg_temp.approval_projection_probe e')
+        row=conn.execute(statement,params).fetchone()
+        assert row is not None and row['value']==expected
+        assert row['canonical'].encode()==canonical_json(expected) and row['hash']==canonical_hash(expected)
+        conn.rollback()

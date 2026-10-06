@@ -1,0 +1,6 @@
+first-python-year|t|1|0001-01-01T00:00:00|t
+last-python-year|t|9999|9999-12-31T23:59:59|t
+negative-infinity|f|-Infinity||f
+positive-infinity|f|Infinity||f
+year-10000|t|10000|10000-01-01T00:00:00|f
+year-bc|t|-1|0001-01-01T00:00:00|f
