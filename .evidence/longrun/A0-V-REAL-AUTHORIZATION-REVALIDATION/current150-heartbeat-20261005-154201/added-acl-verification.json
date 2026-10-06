@@ -1,0 +1,16 @@
+{
+  "outcome": "EIGHT_STEP_EXPLICIT_ADDED_ACL_GREEN",
+  "authority": "AOS-001363",
+  "input_delta_sha256": "0b1c36cabd39fc7949f330e35aacddd2e0a46f3603746453ca8d28b8a7736033",
+  "steps": 8,
+  "no_added_public_grants": true,
+  "no_grant_option": true,
+  "no_default_acl_expansion": true,
+  "evaluator_relation_column_grants_exact": true,
+  "issuer_relation_column_grants_exact": true,
+  "runtime_new_table_select_insert_only": true,
+  "limitations": [
+    "explicit ACL delta only; effective inherited permissions and full runtime/COMMIT remain separate",
+    "source migration/restart pending"
+  ]
+}
