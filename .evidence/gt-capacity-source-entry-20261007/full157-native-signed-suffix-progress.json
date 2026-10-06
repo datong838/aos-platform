@@ -1,0 +1,66 @@
+{
+  "baseline": "f57d8b7685707fecf2883019666f2a5ed724de6a",
+  "authority": "AOS-001440",
+  "status": "NATIVE_ORIGINAL_SIGNED_FACTS_PARTIAL_GREEN",
+  "SourceDelivery": false,
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "10adb3562150f98552c8ff05dfbb315d9633f9a0c03628b9b80e21095855bad7",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "1c472c06642ef27796e7b5c12eaf57d1814b0df6234b20f329005d2af2acd23c"
+  },
+  "logs": {
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-signed-suffix-expanded-r1.log": {
+      "sha256": "b140e845bec7dcbae9366a1d513dc10c696dec2ef1dc140678dea2b974dfbc9f",
+      "result": "8 failed, 16 passed, 264 deselected, 7 warnings in 226.85s (0:03:46)"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-signed-suffix-expanded-r2.log": {
+      "sha256": "c32b8048e96cd6f71c412628ea6b4ee0b308104767f47e39c2f3fd7ccea4434b",
+      "result": "24 passed, 264 deselected, 7 warnings in 226.02s (0:03:46)"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-signed-suffix-green-r1.log": {
+      "sha256": "daf39487243a529ddc71b71ea37dd18c582622b3f09529f1c1b39ae7ae9cb9ad",
+      "result": "2 failed, 1 passed, 264 deselected, 7 warnings in 31.09s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-signed-suffix-green-r2.log": {
+      "sha256": "cd099e83c8edde5f5ea0d7b67432919e9304a71d83c4be74828183386ac1c8c0",
+      "result": "2 failed, 1 passed, 264 deselected, 7 warnings in 31.32s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-signed-suffix-green-r3.log": {
+      "sha256": "659fe866c08eadb44621f0bb76d53191d5bab06aaa837073839ca29237b4f271",
+      "result": "2 failed, 1 passed, 264 deselected, 7 warnings in 34.08s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-signed-suffix-green-r4.log": {
+      "sha256": "1d08fdd214ea5458e062b049cc3d6061fbfcab6657828b00233273fd33afa77c",
+      "result": "3 passed, 264 deselected, 7 warnings in 32.33s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-signed-suffix-red-r1.log": {
+      "sha256": "0332c185e198c4d438913adc56f375b599369f268ce9f4e5859af06bc078d437",
+      "result": "execution fault / no acceptance"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-signed-suffix-red-r2.log": {
+      "sha256": "9faf8749fac4684fc23d2a037c0dd59b2e6f98427c82b3c8f97cdfdda3d0194b",
+      "result": "1 failed, 264 deselected, 7 warnings in 12.96s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-signed-suffix-adjacent-r1.log": {
+      "sha256": "3ecd169e014bd1199b930c39d3143b9d73d890b72ccf0088b70c14c964c86018",
+      "result": "232 passed, 114 deselected, 7 warnings in 1030.91s (0:17:10)"
+    }
+  },
+  "remaining": [
+    "full157 install/catalog/global identity/attempt/pending prepare",
+    "controlled signer verified JWT and exact Source signing",
+    "commit/actual callerCOMMIT/currentconsumer",
+    "final COMMIT TTL/full business Goal"
+  ],
+  "preserved_module_prefix": {
+    "bytes": 36887,
+    "sha256": "de6b574718c9729b49d5314fa1a5f334dd08c8d33ef327872820bd531cd5637c"
+  },
+  "verification": [
+    "24 specialized passed / noSKIP /226.02s",
+    "232 cumulative passed / noSKIP /1030.91s /7existingwarnings",
+    "6 actual signed-domain row locks held until actual caller COMMIT",
+    "original module prefix and previous tests preserved except six new-case isolation registrations",
+    "AST and code/plan whitespace checks pass; raw failure log bytes retained",
+    "full install/catalog/prepare/sign/commit/current consumer/final COMMIT TTL remain pending"
+  ]
+}

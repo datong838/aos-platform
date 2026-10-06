@@ -548,3 +548,112 @@ REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_source_issuer_url(j
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_source_command(bytea) FROM PUBLIC;
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_source_command_facts(bytea) FROM PUBLIC;
 """
+
+
+def _original_signed_facts_sql():
+    """Compose original signed selectors after the complete original lock prefix."""
+    import re
+    from aos_api import aip_provider_capacity_publication_store as original
+
+    fixed = dict(org_id="'org-org'", project_id="'dev-project'", maker="packet->>'makerSubject'")
+    for prefix, ref in (
+        ('proposal', "packet->'command'->'approvedProposal'"),
+        ('approval_event', "packet->'command'->'approvalEvent'"),
+        ('policy', "packet->'command'->'sourcePolicyRef'"),
+        ('attestation', "packet->'command'->'supplierAttestationRef'"),
+        ('permit', 'permit_ref'),
+        ('account', "source_value->'physicalAccountRef'"),
+        ('basis', "source_value->'basisRef'"),
+    ):
+        fixed[prefix+'_id'] = ref+"->>'assetId'"
+        fixed[prefix+'_hash'] = ref+"->>'contentHash'"
+        fixed[prefix+'_revision'] = ("("+ref+"->>'revision')::bigint"
+            if prefix in ('proposal','approval_event','account','basis') else ref+"->>'revision'")
+
+    def compile_query(statement, **overrides):
+        parameters = {**fixed, **overrides}
+        result = re.sub(r'%\((\w+)\)s', lambda m: '('+parameters[m.group(1)]+')', statement)
+        if '%(' in result:
+            raise ValueError('Uncompiled original signed Source parameter')
+        return result
+
+    registered = compile_query(original.CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL,
+        kind="document_ref->>'assetType'", asset_id="document_ref->>'assetId'",
+        revision="document_ref->>'revision'", content_hash="document_ref->>'contentHash'")
+    supplier = compile_query(original.CAPACITY_NATIVE_SIGNED_SUPPLIER_COMBINATION_SQL)
+    permit = compile_query(original.CAPACITY_NATIVE_SIGNING_PERMIT_COMBINATION_SQL)
+    return r"""
+CREATE FUNCTION aos_capacity_publication_private.read_source_command_signed_facts(p_raw bytea,p_permit_ref jsonb)
+RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE
+ input jsonb; packet jsonb; facts jsonb; source_value jsonb; permit_ref jsonb;
+ fence jsonb; anchor jsonb; origin_value jsonb; document_ref jsonb; locked_document jsonb;
+ checked_document jsonb; documents jsonb:='{}'::jsonb; supplier_row record; permit_row record;
+ proposal_count integer; proposal_deadline timestamptz; final_checked_at timestamptz;
+BEGIN
+ IF p_permit_ref IS NULL THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_SIGNED_INPUT_REQUIRED' USING ERRCODE='22023'; END IF;
+ permit_ref:=aos_capacity_publication_private.original_source_ref(p_permit_ref,'ProviderCapacitySigningPermitRevision');
+ PERFORM aos_capacity_publication_private.read_identifier(permit_ref->'assetId');
+ input:=aos_capacity_publication_private.read_source_command_facts(p_raw);
+ packet:=input->'packet'; facts:=input->'facts'; source_value:=facts->'source';
+ -- New-domain locks follow both original withdrawal epochs, never precede them.
+ SELECT to_jsonb(f) INTO STRICT fence FROM aos_capacity_publication_private.registry_epoch f
+ WHERE f.org_id='org-org' AND f.project_id='dev-project' FOR SHARE;
+ SELECT to_jsonb(a) INTO STRICT anchor FROM aos_capacity_publication_private.deployment_anchor a
+ WHERE a.org_id='org-org' AND a.project_id='dev-project' AND a.anchor_revision=fence->>'anchor_revision' FOR SHARE;
+ SELECT to_jsonb(o) INTO STRICT origin_value FROM aos_capacity_publication_private.origin o
+ WHERE o.org_id='org-org' AND o.project_id='dev-project' AND o.content_hash=fence->>'head_origin_hash'
+  AND o.anchor_revision=anchor->>'anchor_revision' FOR SHARE;
+ FOR document_ref IN SELECT value FROM jsonb_array_elements(jsonb_build_array(
+   packet->'command'->'sourcePolicyRef',packet->'command'->'supplierAttestationRef',permit_ref))
+   ORDER BY value->>'assetType' COLLATE "C",value->>'assetId' COLLATE "C",(value->>'revision')::numeric LOOP
+  SELECT to_jsonb(d) INTO STRICT locked_document FROM aos_capacity_publication_private.document d
+  WHERE d.org_id='org-org' AND d.project_id='dev-project' AND d.kind=document_ref->>'assetType'
+   AND d.asset_id=document_ref->>'assetId' AND d.revision=document_ref->>'revision'
+   AND d.content_hash=document_ref->>'contentHash' FOR SHARE;
+  SELECT jsonb_build_object('payload',q.payload,'origin',q.origin_hash,'snapshot',q.snapshot_hash,
+    'epoch',q.registry_current_epoch) INTO STRICT checked_document FROM (
+""" + registered + r"""
+  ) q;
+  IF checked_document->'origin' IS DISTINCT FROM fence->'head_origin_hash'
+   OR checked_document->'snapshot' IS DISTINCT FROM origin_value->'snapshot_hash'
+   OR checked_document->'epoch' IS DISTINCT FROM fence->'epoch' THEN
+   RAISE EXCEPTION 'CAPACITY_SOURCE_SIGNED_ORIGIN_DRIFTED' USING ERRCODE='22023'; END IF;
+  documents:=documents||jsonb_build_object(document_ref->>'assetType',checked_document->'payload');
+ END LOOP;
+ SELECT q.* INTO STRICT supplier_row FROM (
+""" + supplier + r"""
+ ) q;
+ IF supplier_row.source IS DISTINCT FROM source_value OR supplier_row.account IS DISTINCT FROM facts->'account'
+  OR supplier_row.basis IS DISTINCT FROM facts->'basis' THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_SIGNED_ORIGINALS_DRIFTED' USING ERRCODE='22023'; END IF;
+ SELECT q.* INTO STRICT permit_row FROM (
+""" + permit + r"""
+ ) q;
+ IF permit_row.source IS DISTINCT FROM source_value
+  OR permit_row.permit IS DISTINCT FROM documents->'ProviderCapacitySigningPermitRevision' THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_SIGNED_PERMIT_DRIFTED' USING ERRCODE='22023'; END IF;
+ -- Re-read deadlines of already-held originals without taking any new original lock.
+ SELECT count(*),min(p.expires_at) INTO proposal_count,proposal_deadline FROM public.aip_action_proposal p
+ WHERE p.org_id='org-org' AND p.project_id='dev-project'
+  AND p.proposal_id=ANY(ARRAY[facts->>'sourceProposal',facts->>'allocationProposal']);
+ final_checked_at:=clock_timestamp();
+ IF proposal_count<>2 OR proposal_deadline IS NULL OR final_checked_at>=least(proposal_deadline,
+   (facts->>'sourceApprovalExpiresAt')::timestamptz,(facts->>'allocationApprovalExpiresAt')::timestamptz,
+   (SELECT instant FROM aos_capacity_publication_private.original_source_time(source_value->'validUntil')))
+  OR final_checked_at<(SELECT instant FROM aos_capacity_publication_private.original_source_time(source_value->'validFrom')) THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_APPROVAL_EXPIRED' USING ERRCODE='22023'; END IF;
+ PERFORM aos_capacity_publication_private.read_source_command(p_raw);
+ RETURN jsonb_build_object('packet',packet,'facts',facts,'signedDocuments',documents,'permitRef',permit_ref,
+  'sourceSignerPublicKey',encode(permit_row.source_signer_public_key,'base64'),
+  'sourceSignerRootRevision',permit_row.source_signer_root_revision,
+  'origin',jsonb_build_object('anchorRevision',fence->'anchor_revision','originHash',fence->'head_origin_hash',
+    'snapshotHash',origin_value->'snapshot_hash','epoch',fence->'epoch'));
+END $body$;
+ALTER FUNCTION aos_capacity_publication_private.read_source_command_signed_facts(bytea,jsonb) OWNER TO aos_capacity_publication_owner;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_source_command_signed_facts(bytea,jsonb) FROM PUBLIC;
+"""
+
+
+CAPACITY_ORIGINAL_SOURCE_SIGNED_FACTS_SQL = _original_signed_facts_sql()

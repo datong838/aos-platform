@@ -1,0 +1,26 @@
+{
+  "authority": "AOS-001440",
+  "baseline": "f57d8b7685707fecf2883019666f2a5ed724de6a",
+  "status": "FULL157_ASSEMBLY_INVESTIGATION_NOT_ACCEPTANCE",
+  "SourceDelivery": false,
+  "sources": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_contracts.py": "ec8206758fdf6d7a519a8cb639887e280bf65d2eed1d5a6fb9f6f78b3a90bf0c",
+    "services/aos-api/aos_api/aip_provider_capacity_source_issuer.py": "5b9b1e9e9c1a09d2a8a2bf142cd61af0e1325fe33f3102086cab48a79ce13e7e",
+    "services/aos-api/aos_api/aip_provider_capacity_formal_boundary.py": "cacf27b0281e330cb666e53d903336bafd6380336850f8bb0104e143c8857f92",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "10adb3562150f98552c8ff05dfbb315d9633f9a0c03628b9b80e21095855bad7"
+  },
+  "observed_gaps": [
+    "a0v_155 only installs original fact read/lock boundary; a0v_157 complete entry absent",
+    "original issuer boundary permits only two existing epoch definers; prepare/commit requires exact version/body/ACL audit rather than broad grant",
+    "original native signed result supplies packet/facts/three payloads/permit/signer key and registry identity; no stable global account/provider mapping or pending attempt tables",
+    "full Source v2 needs server account UUID and native xid/PID/attempt UUID before exact signing",
+    "original Source contains original allocation request/approval and candidate refs; preserve original Provider set and unique Evidence refs",
+    "final COMMIT TTL remains separately unresolved; deferred unfinished-attempt check alone cannot prove final-time expiry"
+  ],
+  "next_order": [
+    "recheck full S01 install/catalog contract and new-domain global identity/attempt plan",
+    "implement full157 private tables plus deterministic sorted advisory identity locks and same-caller pending Source bytes",
+    "controlled signer verifies original JWT and exact prepared Source; commit rechecks all originals/currentness/native transaction and signature",
+    "actual caller COMMIT/persistence/current consumer and direct issuer bypass/rollback/replay/concurrency tests"
+  ]
+}

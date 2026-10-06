@@ -16,6 +16,12 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
     from tests.conftest import _isolated_postgres_database as database_fixture
 
     registered_cases = {
+        'test_native_full_signed_suffix_requires_registered_originals',
+        'test_native_full_signed_suffix_composes_registered_originals',
+        'test_native_full_signed_suffix_rejects_changed_exact_document_refs',
+        'test_native_full_signed_suffix_holds_current_registry_and_documents',
+        'test_native_full_signed_suffix_rejects_committed_registry_drift',
+        'test_native_full_signed_suffix_private_role_denial',
         'test_registered_origin_documents_and_original_private_approval_share_database',
         'test_registered_original_inputs_prepare_native_v2_before_signing',
         'test_complete_native_publication_requires_actual_caller_commit',
@@ -3738,3 +3744,193 @@ def test_native_original_command_private_functions_have_no_ordinary_entry(native
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 with owner.transaction():
                     owner.execute(sql.SQL('SELECT aos_capacity_publication_private.'+signature.split('(')[0]+'(%s)'),(arg,))
+
+
+def test_native_full_signed_suffix_requires_registered_originals(native_signed_source,tmp_path):
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs
+    material=_registered_publication_inputs(native_signed_source,tmp_path)
+    command,policy,attestation=material['actual_command']()
+    with connect_capacity_issuer(material['config'],SCOPE) as caller:
+        assert caller.pgconn.used_password is True
+        assert check_native_capacity_supplier_inputs(caller,command,policy,attestation,
+            trust_roots=material['provider']).execution_allowed is False
+    assert getattr(transaction,'CAPACITY_ORIGINAL_SOURCE_SIGNED_FACTS_SQL',None) is not None, \
+        'Complete157 must compose original facts and registered signed suffix in the actual caller'
+
+
+@pytest.fixture
+def native_full_signed_reader(native_original_fact_reader,tmp_path):
+    """Actual registered originals in the original authenticated transaction."""
+    from uuid import uuid4
+    from psycopg import sql
+    from aos_api.aip_provider_capacity_source_issuer import capacity_source_preparation_bytes
+    from aos_api.aip_provider_capacity_publication_transaction import (
+        CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL,CAPACITY_ORIGINAL_SOURCE_SIGNED_FACTS_SQL)
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,_,_,original=native_original_fact_reader
+    caller.rollback()
+    material=_registered_publication_inputs(original,tmp_path)
+    raw=capacity_source_preparation_bytes(material['actual_command']()[0])
+    identifier=sql.Identifier('public','publication_signed_harness_'+uuid4().hex)
+    signatures=['read_source_issuer_url(jsonb)','read_source_command(bytea)',
+        'read_source_command_facts(bytea)','read_source_command_signed_facts(bytea,jsonb)']
+    with isolated_owner() as owner:
+        owner.execute(CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL)
+        owner.execute(CAPACITY_ORIGINAL_SOURCE_SIGNED_FACTS_SQL)
+        owner.execute(sql.SQL("""CREATE FUNCTION {}(raw bytea,permit jsonb) RETURNS jsonb LANGUAGE sql
+            SECURITY DEFINER SET search_path=pg_catalog AS $body$
+            SELECT aos_capacity_publication_private.read_source_command_signed_facts(raw,permit) $body$""").format(identifier))
+        owner.execute(sql.SQL('ALTER FUNCTION {}(bytea,jsonb) OWNER TO aos_capacity_publication_owner').format(identifier))
+        owner.execute(sql.SQL('REVOKE ALL ON FUNCTION {}(bytea,jsonb) FROM PUBLIC').format(identifier))
+        owner.execute(sql.SQL('GRANT EXECUTE ON FUNCTION {}(bytea,jsonb) TO aos_provider_capacity_issuer').format(identifier))
+    _refresh_native_facts_transaction(caller)
+    try:
+        yield caller,identifier,raw,material,original
+    finally:
+        caller.rollback()
+        with isolated_owner() as owner:
+            owner.execute(sql.SQL('DROP FUNCTION {}(bytea,jsonb)').format(identifier))
+            for signature in reversed(signatures):
+                owner.execute(sql.SQL('DROP FUNCTION aos_capacity_publication_private.'+signature))
+
+
+def _call_native_full_signed(caller,identifier,raw,permit):
+    from psycopg import sql
+    from psycopg.types.json import Jsonb
+    return caller.execute(sql.SQL('SELECT {}(%s,%s::jsonb) AS result').format(identifier),
+        (raw,Jsonb(permit))).fetchone()['result']
+
+
+@pytest.mark.parametrize('native_original_fact_reader',['shared','distinct'],indirect=True)
+def test_native_full_signed_suffix_composes_registered_originals(native_full_signed_reader):
+    import base64,json
+    from cryptography.hazmat.primitives.serialization import Encoding,PublicFormat
+    caller,identifier,raw,material,original=native_full_signed_reader
+    before=caller.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+    result=_call_native_full_signed(caller,identifier,raw,material['refs'][-1])
+    assert result['packet']==json.loads(raw)
+    assert result['facts']['source']==original[3].model_dump(mode='json',by_alias=True)
+    assert result['facts']['xid']==before['xid'] and result['facts']['pid']==before['pid']
+    assert result['facts']['session']=='aos_provider_capacity_issuer'
+    assert result['facts']['owner']=='aos_capacity_publication_owner'
+    assert result['signedDocuments']=={ref['assetType']:json.loads(doc[0])
+        for ref,doc in zip(material['refs'],material['documents'])}
+    public_key=material['source_key'].public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)
+    assert base64.b64decode(result['sourceSignerPublicKey'],validate=True)==public_key
+    assert result['permitRef']==material['refs'][-1]
+    assert result['origin']['originHash']==material['origin_hash']
+    assert result['origin']['snapshotHash']==material['snapshot_hash']
+
+
+@pytest.mark.parametrize('kind',['policy','attestation','permit'])
+@pytest.mark.parametrize('field',['assetId','revision','contentHash'])
+def test_native_full_signed_suffix_rejects_changed_exact_document_refs(native_full_signed_reader,kind,field):
+    from copy import deepcopy
+    import json
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.asset_registry.canonical_json import canonical_json
+    caller,identifier,raw,material,_=native_full_signed_reader
+    packet=json.loads(raw);permit=deepcopy(material['refs'][-1])
+    ref=permit if kind=='permit' else packet['command'][
+        'sourcePolicyRef' if kind=='policy' else 'supplierAttestationRef']
+    ref[field]={'assetId':'unregistered-original','revision':2,'contentHash':'0'*64}[field]
+    # Keep the genuine original binding shape; rejection must reach registry.
+    packet['requestHash']=canonical_hash(dict(protocol='aos-provider-capacity-issuance-request/v1',
+        maker=packet['makerSubject'],command=packet['command']))
+    with pytest.raises(psycopg.errors.NoDataFound):
+        with caller.transaction():
+            _call_native_full_signed(caller,identifier,canonical_json(packet),permit)
+    _refresh_native_facts_transaction(caller)
+    assert _call_native_full_signed(caller,identifier,raw,material['refs'][-1])['permitRef']==material['refs'][-1]
+
+
+@pytest.mark.parametrize('fault',['epoch','anchor_key','origin_signature'])
+def test_native_full_signed_suffix_rejects_committed_registry_drift(native_full_signed_reader,fault):
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,identifier,raw,material,_=native_full_signed_reader
+    caller.rollback()
+    table,column={
+        'epoch':('registry_epoch','epoch'),
+        'anchor_key':('deployment_anchor','signer_public_key'),
+        'origin_signature':('origin','signature'),
+    }[fault]
+    where=' WHERE org_id=%s AND project_id=%s'
+    params=SCOPE.key
+    if fault=='origin_signature':
+        where+=' AND content_hash=%s';params=(*params,material['origin_hash'])
+    with isolated_owner() as owner:
+        old=owner.execute(f'SELECT {column} AS value FROM aos_capacity_publication_private.{table}'+where,params).fetchone()['value']
+        bad=old+1 if fault=='epoch' else bytes(len(old))
+        assert bad!=old
+        owner.execute("SET LOCAL session_replication_role='replica'")
+        owner.execute(f'UPDATE aos_capacity_publication_private.{table} SET {column}=%s'+where,(bad,*params))
+    try:
+        _refresh_native_facts_transaction(caller)
+        with pytest.raises(psycopg.errors.NoDataFound):
+            with caller.transaction():_call_native_full_signed(caller,identifier,raw,material['refs'][-1])
+    finally:
+        caller.rollback()
+        with isolated_owner() as owner:
+            owner.execute("SET LOCAL session_replication_role='replica'")
+            owner.execute(f'UPDATE aos_capacity_publication_private.{table} SET {column}=%s'+where,(old,*params))
+    _refresh_native_facts_transaction(caller)
+    assert _call_native_full_signed(caller,identifier,raw,material['refs'][-1])['origin']['originHash']==material['origin_hash']
+
+
+@pytest.mark.parametrize('role',['aos_runtime','aos_provider_capacity_issuer','aos_provider_capacity_policy_publisher'])
+def test_native_full_signed_suffix_private_role_denial(native_full_signed_reader,role):
+    from psycopg import sql
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    _,_,raw,material,_=native_full_signed_reader
+    with isolated_owner() as owner:
+        owner.execute(sql.SQL('SET LOCAL ROLE {}').format(sql.Identifier(role)))
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            with owner.transaction():
+                owner.execute('SELECT aos_capacity_publication_private.read_source_command_signed_facts(%s,%s::jsonb)',
+                    (raw,Jsonb(material['refs'][-1])))
+        owner.rollback()
+
+
+@pytest.mark.parametrize('target',['epoch','anchor','origin','policy','attestation','permit'])
+def test_native_full_signed_suffix_holds_current_registry_and_documents(native_full_signed_reader,target):
+    from threading import Event,Thread
+    import time
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,identifier,raw,material,_=native_full_signed_reader
+    result=_call_native_full_signed(caller,identifier,raw,material['refs'][-1])
+    table={'epoch':'registry_epoch','anchor':'deployment_anchor','origin':'origin'}.get(target,'document')
+    where=' WHERE org_id=%s AND project_id=%s';params=SCOPE.key
+    if target=='origin':where+=' AND content_hash=%s';params=(*params,material['origin_hash'])
+    elif target in ('policy','attestation','permit'):
+        ref=material['refs'][{'policy':0,'attestation':1,'permit':2}[target]]
+        where+=' AND kind=%s AND asset_id=%s AND revision=%s::text AND content_hash=%s'
+        params=(*params,ref['assetType'],ref['assetId'],ref['revision'],ref['contentHash'])
+    waiting=Event();acquired=Event();release=Event();pids=[];errors=[]
+    def competitor():
+        try:
+            with isolated_owner() as owner:
+                pids.append(owner.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'])
+                owner.execute("SET LOCAL lock_timeout='8s'")
+                waiting.set()
+                assert owner.execute(f'SELECT 1 FROM aos_capacity_publication_private.{table}'+where+' FOR UPDATE',params).fetchone()
+                acquired.set();assert release.wait(8);owner.rollback()
+        except BaseException as error:errors.append(error);waiting.set()
+    thread=Thread(target=competitor,daemon=True);thread.start()
+    try:
+        assert waiting.wait(3) and pids
+        deadline=time.monotonic()+3
+        with isolated_owner() as observer:
+            while time.monotonic()<deadline:
+                blockers=observer.execute('SELECT pg_blocking_pids(%s) AS blockers',(pids[0],)).fetchone()['blockers']
+                if result['facts']['pid'] in blockers:break
+                time.sleep(.03)
+            else:pytest.fail(f'Registered original lock did not block the competing row lock: {errors!r}')
+        assert not acquired.is_set()
+        caller.commit();assert acquired.wait(3),errors
+    finally:
+        caller.rollback();release.set();thread.join(5)
+    assert not thread.is_alive() and not errors
+    print('NATIVE_SIGNED_LOCK target='+target+' actual_blocking_pid=true caller_commit_release=true source_issued=false')

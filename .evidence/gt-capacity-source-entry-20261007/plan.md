@@ -265,3 +265,41 @@ command_facts在同原SERIALIZABLE/SCRAM caller中调用本段read_original_sour
 command-green-r1三实际正向FAIL：复核原继承_Candidate，command还必含schemaVersion=1，所以原command实际六键（schemaVersion+tenant+四refs），前段五键描述遗漏继承字段。以实际模型model_fields和producer为准；native parser改六exactkeys并严格数值1，新增wrong/bool/missing schema负例；packet仍五键。原producer/模型不修改，保留失败证据。
 
 本段native command/facts：RED1FAIL7.06s；green-r1缺继承schemaVersion三FAIL，六键最小修正green-r2三PASS18.32s；专项42PASS151.09s。最终三文件累计168PASS154deselected7warnings/noSKIP483.70s/exit0。原29300bytes完整保留、AST/代码/方案whitespace通过；raw失败日志保留，临时函数清理后原checker复验。固化full157-native-command-verification.md/json及signed-suffix-next-investigation，父Tasks ACTIVE/noSourceDelivery；下一按全157原锁前缀→原registry签名后缀→DB稳定ID/pending→controlledsign→commit→actualCOMMIT→consumer继续，finalTTL未解决。
+
+## 完整157原命令/事实到登记签名后缀（f57d8b76 / AOS-001440）
+
+前轮168累计PASS已提交，三同owner Lease至12:00有效。候选一是原完整前缀与真实registry/S17–S20组合；候选二是稳定ID/advisory/attempt待签原文，依赖一。先一，保留原全157退出条件。
+
+文件限定transaction.py追加私有CAPACITY_ORIGINAL_SOURCE_SIGNED_FACTS_SQL和read_source_command_signed_facts(bytea,jsonb)，固定编译原registered_document、supplier组合、permit组合的参数。只用原packet四refs和DB facts及独立strict permit ref，无动态SQL、客户端文档、公钥或PASS。先原command/facts全部锁与两个withdrawal锁，再registry_epoch SHARE、anchor/origin SHARE、三原文按kind/id/revision稳定序SHARE；逐份原S17密码学、部署、allowlist、root、currentepoch检查，再S18/S19组合与S20真正Source签发根。比对返回Source/account/basis等于原facts；末检查当前authentication与已锁原proposal/event期限。返回原packet/facts、三typed signed payload与根key及registry身份，不写Source/mapping/attempt、不签名。最终root时点、全部安装审计与实际COMMIT TTL仍需完整prepare/commit证明。
+
+原transaction_pg先missing suffix RED：真实Origin与三签名原登记、完整原SCRAM checker先过，再缺常量失败。新增registered_cases每test独立保留DB。fixture复用原事实临时profiles；通过原publisher登记后更新原producer refs、刷新实际caller SERIALIZABLE快照，安装本波private函数与临时Owner harness。正向核同xid/PID、Source及三payload和根key；精确refs负例、已提交原registry故障与实际锁竞争、ordinary ACL后再累计。最后清理仅本次harness/functions、原checker恢复，不删除库卷备份，不动正式库/服务/角色/其他分支/push。父Task ACTIVE/noSourceDelivery。
+
+首次准备脚本stdin编码错误，计划和测试未写入；随后测试exit5/264deselected，无案例执行。此日志仅执行故障，不算业务RED。改用明确文件补丁完成计划及测试，再执行实际RED，原有文件不受影响。
+
+实际组合green-r1为1PASS/2FAIL31.09s：两个真实布局均在原批准查询version比较暴露bigint=text，不是签名拒绝。固定编译器须保留原参数类型：proposal/event revision为原整数，其他登记文档revision为字符串。只修本次固定替换，不改原store查询或模型；失败日志保留，修正后重跑。
+
+green-r2为1PASS/2FAIL31.32s：推进到原account候选revision后同一类型遗漏暴露。account/basis与批准版本同为bigint；policy/attestation/permit才为登记text。按原表类型逐项修正固定四类整数参数，保留原签名文档字符串版本。
+
+green-r3为1PASS/2FAIL34.08s：本次局部checked_at变量与原签名查询同名列产生42702。只重命名本次最终时点变量为final_checked_at，原SQL时钟与列不变；继续真实两布局复验。
+
+green-r4三个正向PASS32.33s。扩展r1为16PASS/8FAIL226.85s：三revision负例错误地使用字符串，原严格ref解析先22023拒绝；改为合法整数2以进入精确registry检查。两immutable registry行故障被原触发器拒绝，不作为查询负门；按既有ownlab故障方案仅管理事务SET LOCAL replica注入/恢复，当前caller始终origin。三个竞争查询registry.revision text与模型int比较错误，参数明确::text并在超时展示竞争者错误，不能把竞争者查询失败计为未锁。生产逻辑保持不变，修构造后重跑完整专项。
+
+扩展r2实际24PASS/264deselected/7既有warnings/noSKIP226.02s：两原实际Source布局、9精确引用变化（原canonical requestHash同步重算）、3已提交registry漂移并精确恢复、3普通角色无私有入口、6真实registry/anchor/origin/三原文锁以pg_blocking_pids证明持到actual callerCOMMIT。原生产module36887byte前缀SHA de6b574718c9729b49d5314fa1a5f334dd08c8d33ef327872820bd531cd5637c未变；测试原案例仅六个新登记名追加，其余原字节完整。AST/非日志diff whitespace过；首次错误测试prefix检查未排除新增登记名而失败，重新按具体修改范围复核通过，不声称测试整文件前缀未变。累计回归待本轮执行；无SourceDelivery/正式库效应/完整签发COMMIT/consumer/最终TTL通过声明。
+
+## 全157待签事务与稳定映射下一实施包
+
+累计测试进程存活时只复习和细化本计划，不修改运行中的代码/测试。两个已登记候选：一、全157原安装目录审计与prepare/commit待签事务；二、消费者原事实/current registry重新核验，依赖一产生真实Source。选择一，退出条件仍完整签名、actual callerCOMMIT和消费者，不按单表/锁helper完成父Task。
+
+目标文件：publication_transaction.py追加完整安装/事务SQL；新alembic/versions/a0v_157_capacity_source_publication_transaction.py只additive安装且禁止破坏性downgrade；原transaction_pg实际SCRAM全链及绕过负门。原Source issuer/formal_boundary的版本适配只有核原Task/Lease覆盖并补登记后才改，不能借本包越出现有文件授权。现行a155/a156、旧v1、真实库/服务不改。
+
+1. 新private域区分global account identity、Provider归属、pending attempt和immutable publication/provenance。supplier+fingerprint全域唯一；Provider身份排除revision，禁止改名/更Secret/revision拆物理账户。candidate的physicalAccountId只做原批准一致性匹配，不作为global UUID。全域唯一约束不得带tenant而失去全域性质；跨tenant第二归属统一拒绝，issuer没有global表读取权限，错误不泄露别tenant事实。
+2. 原完整锁前缀→registry epoch/anchor/origin→三签名文档→固定namespace的账户key和全部Provider identity advisory锁，signed bigint去重排序；碰撞仅增加串行。先锁再查现有account/provider映射；缺行由advisory和unique约束保护，不以空FOR UPDATE作证明。DB生成并保留稳定UUID；prepare只保留pending原文，不提前写可消费Source或全域映射。
+3. prepare原四参数与commit原三参数不缩减。pending保存精确requestHash/command、原refs、原epochs、registry/root/permit身份、same session/xid8/PID、DB attempt UUID、精确Source v2 raw及SHA；完整Source所有parents只来自已锁原事实，originRef来自已锁真实origin原文。provider全集合与Evidence去重不得由调用者裁剪；额度/时间/token合同按原批准生成。
+4. 受控signer核原JWT与正式配置及exact prepared bytes；私钥/JWT不入SQL/日志/Receipt。新SQL不接受maker/PASS布尔授权。commit同原caller重新查全部原事实/当前clock/registry/permit/root与native xid/PID，重算待签SHA、真实Ed25519核验，只一次写mapping/Source/provenance并finalize pending。
+5. 唯一attempt绑定tenant+subject+idempotency key和requestHash，差异请求拒绝。未知签名/COMMIT只只读对账；完成replay只能读原immutable结果，不重发。保存点恢复后最终pending仍须被延迟约束拒绝；回滚prepare保存点后允许无残留COMMIT。deferred unfinished门与final COMMIT TTL分别验证，前者不能替代后者。
+6. S01须原精确owner/issuer、ACL/RLS、函数body/search_path/安装manifest和原a155/a156/149/151审计。原Python issuer两definer白名单不能简单扩成任意调用；仅完整已安装版本、exact OID/body/权限证明可适配。当前临时harness不用于正式安装通过声明。
+7. 先真实全链missing prepare RED（既有5实际42883，不重复作新进展），直接推进最小完整实现；覆盖自由稳定ID/Source字节/签名篡改、原批准/Owner/撤回/registry竞争、全域同账号多Provider及同Provider第二账户、跨tenant、prepare-only COMMIT、错误commit保存点、回滚/replay/未知结果、actual callerCOMMIT后原行/签名/consumer回读。正式TTL unresolved保持显式，禁止SourceDelivery/业务放行。
+
+资源现场：2026-10-07累计执行中原容器/卷保持，/dev/shm256MiB可用163MiB；原50GiB盘剩4.5GiB。扩大下一实际演练前先只读核剩余和原保留库；不删除库/卷/备份，不在运行中重启VM或更改挂载。
+
+本波最终累计：232PASS/114deselected/7既有warnings/noSKIP1030.91s，exit0。同一retained lab cluster7693564235776004128，回读aos_test_83e3dd94f7e0_ti4_test仍a0v_156，public.prepare不存在，本次临时command/signed私有函数0；原fixtures各自精确清理并复验原checker。凭证扫描、AST、production前缀及原测试保留、非日志whitespace复核通过。代码/方案复审确认固定编译无动态SQL/调用者公钥或文档/PASS、先原锁再新域锁、actual caller身份与samexid/PID保留；新Source窗口/签名根时点只构成当前读取门，非完整COMMIT时效承诺。浏览器N/A（本次无UI/API部署），正式库/服务/Host/worker/Provider/原Run未动。冻结full157-native-signed-suffix-verification.md/json；父Tasks/Lease继续ACTIVE/noSourceDelivery。下一按全157实施包继续，不重复旧RED作为进展。

@@ -1,0 +1,64 @@
+{
+  "baseline": "f57d8b76",
+  "authority": "AOS-001440",
+  "status": "NEXT_FULL157_SUFFIX_PARAMETER_INVESTIGATION",
+  "SourceDelivery": false,
+  "queries": {
+    "CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL": {
+      "sha256": "70a25650499b5cd29a152279f544b99da734ceba8a7276c577a8c33b5541347a",
+      "actual_fixed_parameters": [
+        "asset_id",
+        "content_hash",
+        "kind",
+        "org_id",
+        "project_id",
+        "revision"
+      ]
+    },
+    "CAPACITY_NATIVE_SIGNED_SUPPLIER_COMBINATION_SQL": {
+      "sha256": "0b097153b997cfaf7ba3f39dc89bd6b97ea516ebb166aef8d845be61fa0b39b3",
+      "actual_fixed_parameters": [
+        "account_hash",
+        "account_id",
+        "account_revision",
+        "approval_event_hash",
+        "approval_event_id",
+        "attestation_hash",
+        "attestation_id",
+        "attestation_revision",
+        "basis_hash",
+        "basis_id",
+        "basis_revision",
+        "maker",
+        "org_id",
+        "policy_hash",
+        "policy_id",
+        "policy_revision",
+        "project_id",
+        "proposal_hash",
+        "proposal_id",
+        "proposal_revision"
+      ]
+    },
+    "CAPACITY_NATIVE_SIGNING_PERMIT_COMBINATION_SQL": {
+      "sha256": "edaafd327a41c9f635edb1bda5017f61ea1ff8cce02861cf830416d6e7b10c7e",
+      "actual_fixed_parameters": [
+        "approval_event_hash",
+        "approval_event_id",
+        "maker",
+        "org_id",
+        "permit_hash",
+        "permit_id",
+        "permit_revision",
+        "policy_hash",
+        "policy_id",
+        "policy_revision",
+        "project_id",
+        "proposal_hash",
+        "proposal_id",
+        "proposal_revision"
+      ]
+    }
+  },
+  "binding": "Selectors must derive from parsed original packet Source/policy/attestation exactrefs and separately strict original signing permit ref; no caller document JSON/key/PASS. Original facts complete before new epoch/doc lock suffix."
+}
