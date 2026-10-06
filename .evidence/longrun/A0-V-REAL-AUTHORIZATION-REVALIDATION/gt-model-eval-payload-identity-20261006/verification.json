@@ -1,0 +1,31 @@
+{
+  "authority_cutoff": "AOS-001397",
+  "base_head": "10708152a3a20d624509e5dcd3edfcf381ae5ff6",
+  "task": "gt-model-eval-payload-identity-20261006",
+  "red_provider": "original create DID NOT RAISE; initial 2failed included Price guard injection rejection",
+  "red_price": "original reader DID NOT RAISE after valid distinct-content appended row: 1failed/7.92s",
+  "adjacent": "126 passed / 167.90s",
+  "verification_scope": [
+    "Provider full original Model request rejects payload revision metadata drift and no new application",
+    "Price original append-only UPDATE rejects and original row unchanged",
+    "Price appended new-row exact reader rejects row/ref versus payload revision mismatch",
+    "Original Model request/independent approval/budget and capacity request/Source adjacent"
+  ],
+  "review": "Original typed parse and canonical hash retained; only exact ID/revision check added, no role/lock/connection/schema/Provider or cost authorization change",
+  "limits": [
+    "Price reader proof is not full Model create bypass",
+    "No model execution/PASSED Gate, no complete Source/b90 or business Goal completion",
+    "Prior failed injection/final-green kept as historical diagnostics; not latest green"
+  ],
+  "sources": {
+    "services/aos-api/aos_api/aip_model_eval_request_store.py": "f18777ae5cd22b8de3db52d5daa3679fe06ee6ae8888e846fd21ec4768187830",
+    "services/aos-api/tests/aip/test_model_eval_request_pg.py": "36435295f340346e74b1c83ab7bcf23111d6b5e0ad9add16378e682fc6ecaf14",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/gt-model-eval-payload-identity-20261006/plan.md": "fe759dbe962e88e240e4bd42051e3093d50c37522b831effa0c87ac35229cd12",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/gt-model-eval-payload-identity-20261006/adjacent.log": "cf44aeece04833cf9084076f82f6e835eedd9de082c877ba84708891a2f480a7",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/gt-model-eval-payload-identity-20261006/final-green.log": "ac748defe11c79699ac84bc3869d2c45a05e7fcfd939fe7d27f0a270eb82e5b3",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/gt-model-eval-payload-identity-20261006/green.log": "a382cab1af0acc12653159f1ced336e70309f0b4ec3f9a84e59a7471b42a0056",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/gt-model-eval-payload-identity-20261006/price-reader-red-r2.log": "edb6a9d5afe0862a235c3638b188fae4eff3fe4ba5abc10297c00a53a3586204",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/gt-model-eval-payload-identity-20261006/price-reader-red.log": "00764c527a1b3b0959f0d01d1c6a547e88871fd2f4ef32c922c75478b5620104",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/gt-model-eval-payload-identity-20261006/red.log": "85d31a3ff23b96d138be782d7fddb10c8ac9ec6c24bc5eb7f1ba4906a487ece4"
+  }
+}

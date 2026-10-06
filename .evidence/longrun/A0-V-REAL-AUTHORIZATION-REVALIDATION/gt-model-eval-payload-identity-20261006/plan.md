@@ -1,0 +1,25 @@
+# Model首评 Provider/Price 原载荷版本身份
+
+基线AOS-001397/m1@10708152；依231、GT首评批准/预算/完整执行链和原gt-model-eval-contract-producer计划。候选一：原Model首评读取器payload版本精确绑定（已发现Source同类缺口，但未在Model原入口证明）；候选二：完整Source bootstrap/root/S17–S19发行，依赖当前独立原出处/SQL审批/COMMIT合同。第一项不依赖后者，属于真实首评准备链，不能假装执行。
+
+文件 services/aos-api/aos_api/aip_model_eval_request_store.py 与 services/aos-api/tests/aip/test_model_eval_request_pg.py。独立TaskLease登记、无重叠。沿原seeded_approved_model_eval_request原合同/批准建立合法申请，以隔离维护owner仅改Provider或Price真实payload.revision，不改rowrevision/head/hash/ref；新Store.create须拒绝且无新增申请。先真实RED。最小在原_current_revision typed解析后比模型ID与revision至exactref，不新建Model解析器，不改META业务hash，保留别名/default/tenant/lifecycle语义。
+
+专项→Model request/action/budget与相关capacity Source读取累计；普通读取全域风险由实际相邻覆盖，不启用Provider/Model/Route、不改通用Runner拒绝、不授费用权/正式Gate。自复审、精确提交、局部Delivery及AuthorityPrime同步；完整业务Goal和原Source/b90Task仍ACTIVE。
+
+## 实际RED裁决与范围修正
+
+首轮2failed/7.94s：Provider原Store.create为DID NOT RAISE，证实载荷revision被META排除后漏比；Price故障注入在原数据库AIP4_APPEND_ONLY被拒，不能当消费者漏拒绝。保留日志不关闭guard。将Price案例改为确认原append-only拒绝及rollback后原payload未变。生产修复只限_current_revision原Provider typed对象ID/revision到exactref（已有row/ref/head比较仍保留），不因名字相似擅改Price行为。新代码不新增parser/hash/锁/权限，不调用Provider；原Source额外typed身份检查保留不作无关删改。Price创建时所有身份证明不在这次UPDATE负例范围，局部Delivery准确限定Provider漏拒绝修复和Price不可改写证据。
+
+## Price追加版本原读取器补证
+
+保留原Price UPDATE拒绝，不扩大为所有price接受域安全。隔离owner通过原允许INSERT追加同ID/revision2/hash相同的Price行，只使payload.revision为3，并更新head2；实际_current_revision原reader以exactref2读取。此反例定位读取器，不称完整Model申请绕过（旧Model仍引用price1，会先在Model dependency门拒绝新ref2）。首Price追加探针1failed/7.97s被原contentHash唯一约束拒绝，未达到reader，不是DID NOT RAISE；必须保留原约束并用不同合法内容重算业务hash及精确ref后再次RED。下一最小生产条件扩展为item.revision==ref.revision，两模型ID依各原属性比精确ref；不新增hash、不改变Price append-only与Model依赖ref门。必须复验原Model合法申请/批准/预算/容量Source相邻，保留差异化证据。
+
+Price第二探针修改tokenUnit为另一个合法正整数，以同原模型规范化、同原META排除重算业务hash，更新payload/row/ref三处digest一致，保留新row2/payload3唯一差异。此为实际原读取器exact元数据合同，不借新计量内容伪造权限；没有对旧行UPDATE或禁trigger。先暂时维持只有已证明Provider的生产条件，Price真实RED成立再扩展两模型条件。
+
+Price第二RED原reader DID NOT RAISE，1failed/7.92s；生产条件已扩展为两个原typed对象revision/ref一致及各ID属性/ref一致。原Model申请路径必须依旧保证Model dependency refs，不把Price direct reader反例扩张成完整申请或执行漏洞。
+
+## 最终验收与风险复审
+
+五模块相邻126 passed/167.90s，8warnings（7既有启动+Source旧malformed bool serializer）。包括Provider完整原create漏拒绝改为拒绝/申请零增量，Price原UPDATE受append-only拒绝/rollback原内容不变及追加新合法内容行的原_current_revision版本漏拒绝改为拒绝，原合法Model申请/独立批准/预算和原容量request/Source流程兼容。三专项均在本轮相邻中通过，不引用此前final-green失败作为当前成功。
+
+生产仅原_current_revision增加两条identity/revision比较，使用已解析的原ProviderInstanceRevision/ModelPriceSnapshotRevision。原head SHARE、row/ref/lifecycle/typed/canonical META hash/tenant异常不变。未修改首评批准executionAllowed=false、通用Runner拒绝、任何Provider调用或费用/容量/正式Source权威；没有真库访问/DDL/重启。Price反例仅原reader，不称完整Model申请成功绕过。局部Task交付仅本identity修复，完整Model/Route真实executor与Source/b90/自然首链仍未完成。新发现不据测试推定线上已发生；维护故障均在aos_test_*中。

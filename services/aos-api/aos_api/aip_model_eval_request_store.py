@@ -67,6 +67,8 @@ class AipModelEvalRequestStore:
             raise ModelEvalRequestBlocked(f"current {kind} payload required") from exc
         body = item.model_dump(mode="json", by_alias=True)
         if (item.content_hash != ref.content_hash
+            or item.revision != ref.revision
+            or (item.provider_instance_id if kind == "provider" else item.price_snapshot_id) != ref.asset_id
             or item.lifecycle.value != row["lifecycle"]
             or (item.tenant.org_id, item.tenant.project_id) != scope.key
             or canonical_hash({k: v for k, v in body.items()

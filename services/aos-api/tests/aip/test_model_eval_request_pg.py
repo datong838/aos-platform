@@ -428,3 +428,65 @@ def test_model_eval_request_rejects_original_dynamic_blocked_frozen_contract():
         AipModelEvalRequestStore().create(scope, "test-maker", "broken-" + uuid.uuid4().hex, broken)
     with connect(scope) as conn:
         assert conn.execute("SELECT count(*) AS n FROM aip_model_eval_request").fetchone()["n"] == before
+
+
+@pytest.mark.parametrize("kind",["provider","price"])
+def test_original_model_request_rejects_payload_revision_drift(kind):
+    from psycopg.types.json import Jsonb
+    from psycopg.rows import dict_row
+    scope,_,request,_,_,_,_,_=seeded_approved_model_eval_request(stop_after_approval=True)
+    ref=request.provider_ref if kind=='provider' else request.price_ref
+    table,column=('aip_provider_instance_revision','provider_instance_id') if kind=='provider' else ('aip_model_price_snapshot_revision','model_price_snapshot_id')
+    with psycopg.connect(get_dsn(),row_factory=dict_row) as owner:
+        assert owner.info.dbname.startswith('aos_test_')
+        row=owner.execute(f'SELECT payload FROM public.{table} WHERE org_id=%s AND project_id=%s AND {column}=%s AND revision=%s',
+            (*scope.key,ref.asset_id,ref.revision)).fetchone()
+        payload=row['payload'];payload['revision']=ref.revision+1
+        if kind=='price':
+            # Original Price is append-only: do not disable its guard to claim
+            # the same mutable-provider defect applies to this dependency.
+            with pytest.raises(psycopg.errors.ObjectNotInPrerequisiteState,match='AIP4_APPEND_ONLY'):
+                owner.execute(f'UPDATE public.{table} SET payload=%s WHERE org_id=%s AND project_id=%s AND {column}=%s AND revision=%s',
+                    (Jsonb(payload),*scope.key,ref.asset_id,ref.revision))
+            owner.rollback()
+            unchanged=owner.execute(f'SELECT payload FROM public.{table} WHERE org_id=%s AND project_id=%s AND {column}=%s AND revision=%s',
+                (*scope.key,ref.asset_id,ref.revision)).fetchone()
+            assert unchanged['payload']['revision']==ref.revision
+            return
+        owner.execute(f'UPDATE public.{table} SET payload=%s WHERE org_id=%s AND project_id=%s AND {column}=%s AND revision=%s',
+            (Jsonb(payload),*scope.key,ref.asset_id,ref.revision))
+    with connect(scope) as conn:before=conn.execute('SELECT count(*) AS n FROM public.aip_model_eval_request').fetchone()['n']
+    with pytest.raises(ModelEvalRequestBlocked):
+        AipModelEvalRequestStore().create(scope,'test-maker','metadata-revision-'+uuid.uuid4().hex,request)
+    with connect(scope) as conn:assert conn.execute('SELECT count(*) AS n FROM public.aip_model_eval_request').fetchone()['n']==before
+
+
+def test_original_price_reader_rejects_new_row_payload_revision_mismatch():
+    from psycopg.types.json import Jsonb
+    from psycopg.rows import dict_row
+    scope,_,request,_,_,_,_,_=seeded_approved_model_eval_request(stop_after_approval=True)
+    original=request.price_ref
+    ref=original.model_copy(update={'revision':original.revision+1})
+    with psycopg.connect(get_dsn(),row_factory=dict_row) as owner:
+        assert owner.info.dbname.startswith('aos_test_')
+        row=owner.execute('SELECT * FROM public.aip_model_price_snapshot_revision WHERE org_id=%s AND project_id=%s '
+            'AND model_price_snapshot_id=%s AND revision=%s',(*scope.key,original.asset_id,original.revision)).fetchone()
+        payload=row['payload'];payload['revision']=ref.revision+1
+        payload['tokenUnit']=payload['tokenUnit']+1
+        from aos_api.aip_model_runtime_contracts import ModelPriceSnapshotRevision
+        from aos_api.aip_model_runtime_store import AipModelRuntimeStore,canonical_hash
+        typed=ModelPriceSnapshotRevision.model_validate(payload)
+        normalized=typed.model_dump(mode='json',by_alias=True)
+        digest=canonical_hash({k:v for k,v in normalized.items() if k not in AipModelRuntimeStore._META_FIELDS})
+        payload['contentHash']=digest
+        ref=ref.model_copy(update={'content_hash':digest})
+        owner.execute('INSERT INTO public.aip_model_price_snapshot_revision '
+            '(org_id,project_id,model_price_snapshot_id,revision,content_hash,lifecycle,payload,created_by) '
+            'VALUES(%s,%s,%s,%s,%s,%s,%s,%s)',
+            (*scope.key,ref.asset_id,ref.revision,ref.content_hash,row['lifecycle'],Jsonb(payload),row['created_by']))
+        owner.execute('UPDATE public.aip_model_price_snapshot_head SET current_revision=%s '
+            'WHERE org_id=%s AND project_id=%s AND model_price_snapshot_id=%s',
+            (ref.revision,*scope.key,ref.asset_id))
+    with connect(scope) as conn:
+        with pytest.raises(ModelEvalRequestBlocked):
+            AipModelEvalRequestStore._current_revision(conn,scope,'price',ref)
