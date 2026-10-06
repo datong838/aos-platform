@@ -1,0 +1,23 @@
+{
+  "checkpoint": "RESTORED_150_TO_151_SINGLE_STEP_AND_STRICT_WITHDRAWAL_FENCE_PASS",
+  "head": "3e38c2be942943f28e493cc86c86880c7c8d7b3b",
+  "private_evidence": "/Users/ddt/work/projects/ai_agent/aos-recovery/current150-w5cb4-current150-restore-gate-20261005-154201/rehearsal-a151",
+  "evidence_sha256": {
+    "intent.json": "8202e96c1a1192cf51b0b8b8f72311b17f58d4d8aee4340334d5a63245918ec4",
+    "terminal.json": "81868a6e94ffc0178bf833deb1c9013d9fab4ee95ddb876a5e8ec4f1d26376d2",
+    "before.json": "5df38dbf6a288900d4ce513f46f8338d7adfc193b6161a085365399122da968a",
+    "after.json": "797172812aa1f21dab824dbf0c9b3da1e1db558c5b13cfd8206c34798a038cf0",
+    "preservation-verification.json": "d76ca2b5e662a696619f33fa0d57ca1f0928ba9f86ca1d0060153045dcb21463",
+    "strict-fence-audit.json": "9b019f0b22a0f289949942fd6d615cd7c3f0d5eaa503f680b0abe83f26a9f2ac",
+    "strict-fence-audit-r2.json": "596029c6abd77cb6af9f101ec8a5f9fae1eab83b60c1356096f2d13fbe05af56"
+  },
+  "source_mutations": 0,
+  "full_current_migration_gate_passed": false,
+  "pending": [
+    "cumulative 142-to151 restore acceptance and source currentness",
+    "second consistent backup and zero execution window before current migration",
+    "latest API/Web restart and browser acceptance",
+    "native issuer latest151 validation separate from readonly JSON catalog adapter"
+  ],
+  "initial_audit_failure": "JSON OID representation mismatch; preserved, normalized driver types only; no database change"
+}

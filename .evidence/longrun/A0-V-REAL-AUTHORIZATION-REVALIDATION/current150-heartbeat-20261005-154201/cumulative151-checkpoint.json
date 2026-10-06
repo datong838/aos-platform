@@ -1,0 +1,27 @@
+{
+  "authority": "AOS-001369",
+  "source_full_snapshot_unchanged": true,
+  "source_version": "a0v_142",
+  "nine_steps_contiguous": true,
+  "first_version": "a0v_142",
+  "last_version": "a0v_151",
+  "original_tables": 597,
+  "original_row_hash_changes": [
+    "meta_action_type",
+    "meta_object_type"
+  ],
+  "limits": [
+    "second consistent backup and zero execution window pending",
+    "newest native issuer validation pending",
+    "source not migrated; API/Web not restarted; business first chain unproven"
+  ],
+  "metadata_original_rows_preserved": true,
+  "metadata_additions_steps": [
+    146,
+    148
+  ],
+  "metadata_unchanged_after148": true,
+  "private_evidence": "/Users/ddt/work/projects/ai_agent/aos-recovery/current150-w5cb4-current150-restore-gate-20261005-154201/rehearsal-a151/cumulative-verification-final.json",
+  "sha256": "4bf81a96c0fcfbc9d3e5a994a0104757ad7d23b333568d51ebdfa46bcf85160c",
+  "full_current_migration_gate_passed": false
+}
