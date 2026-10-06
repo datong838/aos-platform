@@ -127,3 +127,141 @@ def install_registry_schema(execute):
         if table != 'registry_epoch':
             execute(f'CREATE TRIGGER immutable_registry_row BEFORE UPDATE OR DELETE ON {SCHEMA}.{table} '
                     f'FOR EACH ROW EXECUTE FUNCTION {SCHEMA}.immutable_registry_row()')
+
+
+ORIGIN_REGISTRATION_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.register_origin(
+ p_body bytea,p_signature bytea,p_roots bytea)
+RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $body$
+DECLARE
+ doc jsonb;
+ anchor aos_capacity_publication_private.deployment_anchor%ROWTYPE;
+ fence aos_capacity_publication_private.registry_epoch%ROWTYPE;
+ roots aos_capacity_publication_private.root_entry[];
+ snapshot_id text;
+ origin_id text;
+ observed_oid oid;
+ observed_cluster text;
+ root_total integer;
+BEGIN
+ IF session_user<>'aos_provider_capacity_policy_publisher'
+   OR current_user<>'aos_capacity_publication_owner'
+   OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+   OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project'
+   OR p_signature IS NULL OR octet_length(p_signature)<>64
+   OR p_roots IS NULL OR octet_length(p_roots)>8388608 THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
+ END IF;
+ IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname=session_user AND
+     (rolinherit OR rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls))
+   OR EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid=session_user::regrole OR member=session_user::regrole) THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
+ END IF;
+ SELECT * INTO fence FROM aos_capacity_publication_private.registry_epoch
+   WHERE org_id='org-org' AND project_id='dev-project' FOR UPDATE;
+ IF NOT FOUND THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
+ END IF;
+ SELECT * INTO anchor FROM aos_capacity_publication_private.deployment_anchor
+   WHERE org_id='org-org' AND project_id='dev-project' AND anchor_revision=fence.anchor_revision FOR SHARE;
+ IF NOT FOUND THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
+ END IF;
+ doc := aos_capacity_publication_private.read_origin_bootstrap(p_body);
+ SELECT oid INTO observed_oid FROM pg_database WHERE datname=current_database();
+ SELECT system_identifier::text INTO observed_cluster FROM pg_control_system();
+ snapshot_id := 'sha256:'||encode(sha256(p_roots),'hex');
+ origin_id := encode(sha256(p_body),'hex');
+ IF doc->>'anchorRevision' IS DISTINCT FROM anchor.anchor_revision
+   OR doc->>'publisher' IS DISTINCT FROM anchor.signer_publisher
+   OR doc->>'keyId' IS DISTINCT FROM anchor.signer_key_id
+   OR doc->>'publisherSubject' IS DISTINCT FROM anchor.publisher_subject
+   OR doc->'deploymentTarget' IS DISTINCT FROM anchor.deployment_target
+   OR doc->'deploymentTarget'->>'database' IS DISTINCT FROM current_database()
+   OR (doc->'deploymentTarget'->>'databaseOid')::numeric IS DISTINCT FROM observed_oid::text::numeric
+   OR doc->'deploymentTarget'->>'clusterIdentifier' IS DISTINCT FROM observed_cluster
+   OR doc->>'rootSnapshotHash' IS DISTINCT FROM snapshot_id
+   OR clock_timestamp()<aos_capacity_publication_private.read_signed_time(doc->'validFrom')
+   OR clock_timestamp()>=aos_capacity_publication_private.read_signed_time(doc->'validUntil') THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
+ END IF;
+ IF NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+   JOIN pg_language l ON l.oid=p.prolang JOIN pg_roles r ON r.oid=p.proowner
+   WHERE n.nspname='aos_ed25519' AND p.proname='verify'
+     AND p.proargtypes='17 17 17'::oidvector AND p.prorettype='boolean'::regtype
+     AND p.probin='$libdir/aos_ed25519' AND p.prosrc='aos_ed25519_verify'
+     AND l.lanname='c' AND NOT p.prosecdef AND p.provolatile='i' AND p.proisstrict
+     AND r.rolname='aos_ed25519_owner' AND n.nspowner=r.oid
+     AND NOT (r.rolcanlogin OR r.rolinherit OR r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls)
+     AND NOT EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid=r.oid OR member=r.oid)) THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGIN_VERIFIER_REQUIRED' USING ERRCODE='42501';
+ END IF;
+ IF aos_ed25519.verify(p_signature,p_body,anchor.signer_public_key) IS DISTINCT FROM true THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
+ END IF;
+ SELECT array_agg(ROW('org-org','dev-project',snapshot_id,
+   r.root_ordinal,r.publisher_literal,r.key_id_literal,r.publisher_codepoints,r.key_id_codepoints,
+   r.public_key,r.root_revision,r.not_before,r.not_after,r.revoked_at,r.canonical_root)
+     ::aos_capacity_publication_private.root_entry ORDER BY r.root_ordinal)
+ INTO roots FROM aos_capacity_publication_private.read_root_snapshot(p_roots) r;
+ root_total := coalesce(array_length(roots,1),0);
+ -- A fresh pre-write check is not a final-COMMIT TTL guarantee.
+ IF clock_timestamp()>=aos_capacity_publication_private.read_signed_time(doc->'validUntil') THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
+ END IF;
+ IF fence.head_origin_hash IS NOT NULL THEN
+   IF fence.epoch=1 AND fence.head_origin_hash=origin_id AND EXISTS(
+     SELECT 1 FROM aos_capacity_publication_private.origin o
+     JOIN aos_capacity_publication_private.root_snapshot s USING(org_id,project_id,snapshot_hash)
+     WHERE o.org_id='org-org' AND o.project_id='dev-project' AND o.content_hash=origin_id
+       AND o.raw_body=p_body AND o.signature=p_signature AND o.anchor_revision=anchor.anchor_revision
+       AND s.raw_body=p_roots AND s.root_count=root_total)
+     AND (SELECT count(*) FROM aos_capacity_publication_private.root_entry
+       WHERE org_id='org-org' AND project_id='dev-project' AND snapshot_hash=snapshot_id)=root_total
+     AND NOT EXISTS(SELECT * FROM aos_capacity_publication_private.root_entry
+       WHERE org_id='org-org' AND project_id='dev-project' AND snapshot_hash=snapshot_id
+       EXCEPT SELECT * FROM unnest(roots)) THEN
+     RETURN origin_id;
+   END IF;
+   RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
+ END IF;
+ IF fence.epoch<>0 THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
+ END IF;
+ INSERT INTO aos_capacity_publication_private.root_snapshot VALUES('org-org','dev-project',snapshot_id,p_roots,root_total);
+ INSERT INTO aos_capacity_publication_private.origin VALUES('org-org','dev-project',origin_id,p_body,p_signature,anchor.anchor_revision,snapshot_id);
+ INSERT INTO aos_capacity_publication_private.root_entry SELECT * FROM unnest(roots);
+ UPDATE aos_capacity_publication_private.registry_epoch SET epoch=1,head_origin_hash=origin_id
+   WHERE org_id='org-org' AND project_id='dev-project';
+ RETURN origin_id;
+END
+$body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.register_origin(bytea,bytea,bytea) FROM PUBLIC;
+"""
+
+
+def install_origin_registration(execute):
+    """No anchor, LOGIN or crypto installation; missing verifier stays closed."""
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_SIGNED_BODY_PROFILE_SQL, CAPACITY_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL, CAPACITY_SIGNING_PERMIT_PROFILE_SQL,
+        CAPACITY_ORIGIN_BOOTSTRAP_PROFILE_SQL,
+    )
+    for ddl in (CAPACITY_SIGNED_BODY_PROFILE_SQL,CAPACITY_IDENTIFIER_PROFILE_SQL,
+                CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL,CAPACITY_SIGNING_PERMIT_PROFILE_SQL,
+                CAPACITY_ORIGIN_BOOTSTRAP_PROFILE_SQL,ORIGIN_REGISTRATION_SQL):
+        execute(ddl)
+    execute(f"""DO $owner$ DECLARE f record; BEGIN
+      FOR f IN SELECT p.oid::regprocedure AS signature FROM pg_proc p
+        JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='{SCHEMA}' LOOP
+        EXECUTE format('ALTER FUNCTION %s OWNER TO {OWNER}',f.signature);
+        EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC,{PUBLISHER},aos_runtime,aos_provider_capacity_issuer',f.signature);
+      END LOOP;
+      IF to_regprocedure('aos_ed25519.verify(bytea,bytea,bytea)') IS NOT NULL THEN
+        GRANT USAGE ON SCHEMA aos_ed25519 TO {OWNER};
+        GRANT EXECUTE ON FUNCTION aos_ed25519.verify(bytea,bytea,bytea) TO {OWNER};
+      END IF;
+    END $owner$;""")
+    execute(f'GRANT EXECUTE ON FUNCTION pg_catalog.pg_control_system() TO {OWNER}')
+    execute(f'GRANT USAGE ON SCHEMA {SCHEMA} TO {PUBLISHER}')
+    execute(f'GRANT EXECUTE ON FUNCTION {SCHEMA}.register_origin(bytea,bytea,bytea) TO {PUBLISHER}')

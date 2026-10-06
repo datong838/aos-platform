@@ -27,3 +27,19 @@
 模块和迁移只增加新private schema/两个默认NOLOGIN角色；复用原root parser常量。默认所有五表无行，不配置可信anchor，普通runtime/issuer/publisher没有schema/helper/表访问入口；四原文表禁UPDATE/DELETE，epoch独立保留给后继受限协调函数。隔离PG测试的管理员插入只是回滚fixture，不能充当正式初始化授权；FK/hash约束和权限测试不证明签名来源。R0不调用受控bootstrap或生产Root发布，R1/R2及Source最终COMMIT仍pending，保持Task ACTIVE，不写完整Delivery。无页面改变，本轮无适用浏览器验收；不操作当前库/服务/Provider/其他分支。
 
 R0实测：缺模块RED1/7.04s；专项9/8.86s；首次相邻98pass+7旧151版本前提失败/154.99s；原formalBoundary计划先更新后最小改测试版本前提，最终新registry10+原formalBoundary96共106pass/148.19s，7既有warning。实际原trigger保护结果不放宽，Task仍ACTIVE。
+
+## R1a签名引导登记入口方案
+
+登记入口唯一三个参数（bootstrap rawbytes/signature/full root snapshot），不接caller key/verified/expectedDB/自由tenant。SECURITY DEFINER固定private OWNER，search_path pg_catalog；仅独立PUB角色EXECUTE+schema USAGE（非表/helper），默认仍NOLOGIN、无anchor和epoch行，源issuer无此入口。必须session_user=PUB、current_user=OWNER、双tenant GUC正向、PUB无inherit/super/createdb/createrole/repl/bypass及任何membership。角色名称不是外部OIDC证据：外部subject来自受控安装anchor及独立authority签署bootstrap的精确一致声明；正式安装主体核验/LOGIN配置另门，fixture只证明此签名与角色耦合协议。
+
+先锁受控预建唯一epoch行FOR UPDATE，再查immutable anchor（epoch绑定anchor revision）；安装受控anchor target完整匹配bootstrap，实际current_database/pg_database OID/pg_control_system cluster id independently匹配；host/port来自正式受控anchor配置，不从容器5432逆推客户端映射端口。pg_control_system仅给私有OWNER该单函数EXECUTE，不给普通role/文件/网络权限。Bootstrap原16字段完整profile、原publisher/key/subject/anchor/window与整root hash全核；真C Ed25519函数需固定schema/签名/probin/prosrc/语言/immutable/strict/nonSECDEF/超级用户owner，实际库缺依赖拒绝。若依赖在安装时存在，仅给OWNER这单verify函数与schema USAGE；不在正式库安装扩展，不动原crypto权限。
+
+验证全根完整原profile并一次派生全部root_entry行，整snapshot hash/数量由DB而非参数生成，原文与签名append-only保留。首登记epoch必须0/head NULL；受控初始化之外不懒建epoch，缺行不能伪锁。一次bootstrap hash引用若已为当前head，仅核验后对账返回；换body/旧head/篡改拒绝，不自行轮换或恢复撤回。Source策略/attestation/permit签发/最终COMMIT与当前消费者未开放。R1a不完整交付R1/R2；后继需受控安装anchor初始化证据、epoch撤回和真实COMMIT/rollback/replay/currentness竞争。
+
+测试在既有固定none-network原生C实例BEGIN中安装新schema/角色与受控test-only anchor/epoch，SET SESSION AUTHORIZATION作为测试会话（明确非正式SCRAM/OIDC安装证据），actual bootstrap signature正向、坏签名/自由key/deployment/hash/subject/错误role/缺epoch拒绝与逐项完整根保存；事务ROLLBACK不留角色/行。当前应用隔离PG migration缺C不授权，原权限/触发器相邻回归保持。
+
+R1a verifier owner前提纠正：原生catalog实测verify与schema均归既有独立aos_ed25519_owner（七flags全false、NOLOGIN），不是superuser。以该原安装身份+schema同owner+双方无membership为精确门；不为使测试过而更换原owner或开启superuser。保持固定C library/prosrc/strict/immutable/nonSECDEF检查。
+
+R1a复审补门：known-head重复登记必须对账全部保存root行（count与全列EXCEPT），不是仅body/snapshot hash；增加受控管理员在fixture中TRUNCATE根行后同签名重查的拒绝反例。PUB不能TRUNCATE，该fixture仅模拟外部存储漂移。整体协议不授Source执行权限；后续最大域资源/提交竞争仍需验收。
+
+R1a验收：原入口缺失RED1/5.91s；native首轮fixture未分号9fail保留，随后OID→numeric不可直接cast7fail改text::numeric；原crypto owner错误superuser前提2fail经实际catalog改为独立NOLOGIN aos_ed25519_owner。真实专项21/11.80s；相邻119/149.99s；复审补全已保存root rows对账、8MiB入口上界和pre-write时效后最终专项24/13.65s，7既有warning。两版专项及相邻验证范围分别记录；无finalCOMMIT时效保证。正式anchor安装/OIDC-SCRAM登录配置、最大域资源/实际提交与撤回竞争及Source完整发布仍pending，Task ACTIVE，无完整Delivery。

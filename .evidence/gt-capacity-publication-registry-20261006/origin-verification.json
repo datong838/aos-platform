@@ -1,0 +1,47 @@
+{
+  "stage": "R1a_SIGNED_ORIGIN_PROTOCOL_ISOLATED_ONLY",
+  "task_status": "ACTIVE",
+  "full_registration_delivery": false,
+  "current_database_accessed": false,
+  "formal_installation_identity_proved": false,
+  "final_commit_ttl_proved": false,
+  "tests": {
+    "red": "missing ORIGIN_REGISTRATION_SQL; 1 failed/5.91s",
+    "native_r1": "9 fixture statement-separator failures/11 passed; 9.45s",
+    "native_r2": "7 OID numeric cast failures/13 passed; 8.78s",
+    "native_r3": "2 incorrect verifier-owner assumption failures/18 passed; 8.97s",
+    "native_r4": "21 passed/11.80s",
+    "adjacent_r1": "119 passed/149.99s before replay-row and fresh pre-write refinements",
+    "final_target": "24 passed/13.65s after refinements; 7 existing warnings"
+  },
+  "verified": [
+    "actual C Ed25519 signature; trusted administrative test anchor bound to raw bootstrap subject/purpose/exact refs/deployment",
+    "actual server DB OID/cluster read independent of matching wrong declared target",
+    "1001 complete original File roots including lone surrogate identity, all derived rows compared",
+    "same-known registration returns same hash without epoch increment; missing stored roots fails recheck",
+    "bad signature/snapshot/subject/deployment/signer/session/epoch/missing fence/expired bootstrap/verifier-owner rejected",
+    "default production schema has no anchor/epoch/root rows and NOLOGIN publisher; no SourceIssuer root access"
+  ],
+  "pending": [
+    "formal approved installation anchor identity/configuration and login/OIDC/SCRAM binding",
+    "maximum-domain resource acceptance on registered row arrays",
+    "actual COMMIT/rollback/replay/currentness/revocation competing sessions",
+    "signed policy/attestation/permit registration and Source final COMMIT/current consumer"
+  ],
+  "code_sha256": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_registry.py": "5b06a696a1b845d01d753b4b63e2758d5ed9faa1e00ff66310cebfa1559c1483",
+    "services/aos-api/alembic/versions/a0v_152_provider_capacity_publication_registry.py": "d027589919fea2159f142dbac0f8f48decc337e64f2b6658d16496648edc9d9a",
+    "services/aos-api/tests/aip/test_capacity_publication_registry_pg.py": "0e889c74afd412ca21dceeeefb528637a56eceb9ef6bd41ca07016dd80bc4e66"
+  },
+  "log_sha256": {
+    "origin-adjacent-r1.log": "665553a802ea72e6a8df6a5bdf048d60b5fc86548401a26eaef63586e21634c4",
+    "origin-final-target-r2.log": "4cc96e88ea1f2e67bac3a267d20ff196052a54b817646ae0b9e71a85a73d1e15",
+    "origin-red.log": "deea9b7afba146cf4996ca80997b668016a18576e526e9819fd829cb9e31a552",
+    "origin-green-r1.log": "1a681b9442439db3bdd38981273207d5a4c93e5e08e5a97d1d33762dea6fb74b",
+    "origin-native-r4.log": "d9a152d68f09d72537efeee473330f619c88351376bcad70c2f4133bb85f62ad",
+    "origin-final-target.log": "16bf19b1e59bd32e076abfa44f636bd8140f2b0aa680d80819c3a9d0252c687b",
+    "origin-native-r1.log": "d86a38eb2bad85d68c6a22138e9bfb44d41061226931b158eec4cc6503083256",
+    "origin-native-r2.log": "413e80629d0ca5512d7a5fb2893bec64744122f614d340cca42dee2965a28716",
+    "origin-native-r3.log": "20855d35e0c178973b3dd125cd48310af9af50c477b915bf17f78bdef9db7195"
+  }
+}

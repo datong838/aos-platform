@@ -90,3 +90,73 @@ def test_snapshot_digest_and_origin_parent_links_are_enforced():
                 raw=b'test-only-untrusted-origin'
                 conn.execute(f'INSERT INTO {SCHEMA}.origin VALUES(%s,%s,%s,%s,%s,%s,%s)',
                     ('org-org','dev-project',hashlib.sha256(raw).hexdigest(),raw,b'x'*64,'sha256:'+'1'*64,'sha256:'+'2'*64))
+
+
+def test_registry_signature_entry_default_is_closed():
+    from aos_api.aip_provider_capacity_publication_registry import ORIGIN_REGISTRATION_SQL
+    assert 'register_origin' in ORIGIN_REGISTRATION_SQL
+    with isolated_owner() as conn:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            with conn.transaction():
+                conn.execute('SET LOCAL ROLE aos_provider_capacity_issuer')
+                conn.execute(f"SELECT {SCHEMA}.register_origin(NULL,NULL,NULL)")
+
+
+@pytest.mark.parametrize('fault',[None,'signature','snapshot','subject','database','cluster','signer','missing_epoch','wrong_session','verifier_owner','expiry','epoch','missing_root_replay'])
+def test_native_signed_origin_registration_derives_complete_roots(tmp_path,fault):
+    import base64,json,os,subprocess
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding,PublicFormat
+    from aos_api.asset_registry.signature import FileTrustRootProvider
+    from aos_api.aip_provider_capacity_publication_contracts import freeze_capacity_trust_root_snapshot,ProviderCapacityOriginBootstrap
+    from aos_api.asset_registry.canonical_json import canonical_json
+    from aos_api.aip_provider_capacity_publication_registry import install_registry_schema,install_origin_registration
+    from tests.aip.test_provider_capacity_publication_pg import bootstrap
+    target=os.environ.get('AOS_CRYPTO_TEST_CONTAINER')
+    if not target:pytest.skip('explicit isolated native crypto instance required')
+    prefix=['docker','--context','colima-aos-a0v-test-only']
+    state=json.loads(subprocess.check_output(prefix+['inspect',target],text=True))[0]
+    assert target.startswith('aos-ed25519-test-') and state['Image']==os.environ['AOS_CRYPTO_TEST_IMAGE']
+    assert state['HostConfig']['NetworkMode']=='none' and not state['HostConfig']['PortBindings'] and not state['HostConfig']['Privileged']
+    assert state['Config']['Labels']['aos.task']=='gt-capacity-sql-ed25519-20261006'
+    runner=prefix+['exec','-i',target,'psql','-U','aos_app','-d','aos_test_ed25519','-Atq','-v','ON_ERROR_STOP=1','-f','-']
+    probe=subprocess.run(runner,input="BEGIN READ ONLY; SELECT oid,(SELECT system_identifier FROM pg_control_system()) FROM pg_database WHERE datname=current_database(); COMMIT;",text=True,capture_output=True,check=True,timeout=20).stdout.strip().split('|')
+    deployment=dict(host='127.0.0.1',port=5432,database='aos_test_ed25519',databaseOid=int(probe[0]),clusterIdentifier=probe[1],issuerRole='aos_provider_capacity_issuer')
+    key=Ed25519PrivateKey.generate();public=key.public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)
+    roots=[dict(publisher='root-'+str(i).zfill(4),keyId='key-\ud800' if i==0 else 'key-'+str(i),algorithm='Ed25519',publicKey=base64.b64encode(public).decode(),notBefore='2020-01-01T00:00:00Z',notAfter='2030-01-01T00:00:00Z',revokedAt=None,revision='sha256:'+'a'*64) for i in range(1001 if fault is None else 2)]
+    path=tmp_path/'original-roots.json';path.write_text(json.dumps(dict(trustRoots=roots)));path.chmod(0o600)
+    transport=freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path))
+    raw=bootstrap();raw.update(publisher='anchor-authority',keyId='anchor-key',publisherSubject='controlled-test-subject',deploymentTarget=deployment,rootSnapshotHash=transport.content_hash)
+    if fault=='subject':raw['publisherSubject']='different-subject'
+    if fault=='database':raw['deploymentTarget']={**deployment,'databaseOid':deployment['databaseOid']+1}
+    if fault=='cluster':raw['deploymentTarget']={**deployment,'clusterIdentifier':'1234567890'}
+    if fault=='signer':raw['publisher']='caller-authority'
+    body=canonical_json(ProviderCapacityOriginBootstrap.model_validate(raw).model_dump(mode='json',by_alias=True));signature=key.sign(body)
+    if fault=='expiry':
+        from datetime import datetime,timedelta,timezone
+        raw['validFrom']=datetime.now(timezone.utc)-timedelta(hours=2)
+        raw['validUntil']=datetime.now(timezone.utc)-timedelta(hours=1)
+        body=canonical_json(ProviderCapacityOriginBootstrap.model_validate(raw).model_dump(mode='json',by_alias=True));signature=key.sign(body)
+    if fault=='signature':signature=bytes([signature[0]^1])+signature[1:]
+    root_bytes=transport.canonical_bytes if fault!='snapshot' else b'{"trustRoots":[]}'
+    ddl=[];install_registry_schema(ddl.append);install_origin_registration(ddl.append)
+    # Controlled administrative test fixture, transaction rolled back; not formal installation/OIDC/SCRAM proof.
+    seed="""INSERT INTO aos_capacity_publication_private.deployment_anchor VALUES('org-org','dev-project','sha256:%s','anchor-authority','anchor-key',decode('%s','hex'),'controlled-test-subject',convert_from(decode('%s','hex'),'UTF8')::jsonb);"""%('c'*64,public.hex(),canonical_json(raw['deploymentTarget'] if fault in ('database','cluster') else deployment).hex())
+    if fault!='missing_epoch':seed+="INSERT INTO aos_capacity_publication_private.registry_epoch VALUES('org-org','dev-project','sha256:"+'c'*64+"',0,NULL);"
+    call="SELECT aos_capacity_publication_private.register_origin(decode('%s','hex'),decode('%s','hex'),decode('%s','hex'));"%(body.hex(),signature.hex(),root_bytes.hex())
+    if fault=='epoch':seed+='UPDATE aos_capacity_publication_private.registry_epoch SET epoch=1;'
+    if fault=='verifier_owner':seed+='ALTER FUNCTION aos_ed25519.verify(bytea,bytea,bytea) OWNER TO '+PUBLISHER+';'
+    session=PUBLISHER if fault!='wrong_session' else 'aos_provider_capacity_issuer'
+    setup="BEGIN; DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='aos_runtime') THEN CREATE ROLE aos_runtime NOLOGIN; END IF; IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='aos_provider_capacity_issuer') THEN CREATE ROLE aos_provider_capacity_issuer NOLOGIN; END IF; END $$;\n"+'\n'.join(stmt.rstrip().rstrip(';')+';' for stmt in ddl)+'\n'+seed+"\nSELECT set_config('aos.org_id','org-org',true),set_config('aos.project_id','dev-project',true);\nSET SESSION AUTHORIZATION "+session+';\n'+call
+    if fault=='missing_root_replay':
+        setup+='RESET SESSION AUTHORIZATION; TRUNCATE aos_capacity_publication_private.root_entry; SET SESSION AUTHORIZATION '+PUBLISHER+';'+call
+    if fault is None:
+        setup+=call+"RESET SESSION AUTHORIZATION; SELECT count(*),min(root_ordinal),max(root_ordinal) FROM aos_capacity_publication_private.root_entry; SELECT epoch FROM aos_capacity_publication_private.registry_epoch; SELECT bool_and(e.canonical_root=r.canonical_root AND e.publisher_codepoints=r.publisher_codepoints AND e.key_id_codepoints=r.key_id_codepoints AND e.public_key=r.public_key) FROM aos_capacity_publication_private.root_entry e JOIN aos_capacity_publication_private.root_snapshot s USING(org_id,project_id,snapshot_hash) CROSS JOIN LATERAL aos_capacity_publication_private.read_root_snapshot(s.raw_body) r WHERE e.root_ordinal=r.root_ordinal;"
+    result=subprocess.run(runner,input=setup+'\nROLLBACK;',text=True,capture_output=True,timeout=60)
+    if fault is None:
+        assert result.returncode==0,result.stderr
+        output=result.stdout.strip().splitlines();digest=hashlib.sha256(body).hexdigest()
+        assert output[-5:]==[digest,digest,'1001|1|1001','1','t']
+    else:
+        assert result.returncode!=0,result.stdout
+        assert 'CAPACITY_ORIGIN_REGISTRATION_DENIED' in result.stderr or 'permission denied' in result.stderr or (fault=='verifier_owner' and 'CAPACITY_ORIGIN_VERIFIER_REQUIRED' in result.stderr)
