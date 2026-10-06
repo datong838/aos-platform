@@ -1,0 +1,75 @@
+{
+  "baseline": "d02cd2a6",
+  "authority": "AOS-001424",
+  "scope": "NATIVE_ORIGINAL_SOURCE_BINDING_CHECKPOINT_NOT_COMPLETE_ENTRY",
+  "files": {
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "b0b90ff0a237e0ac447ecfb46d39c70cb36012e3ebf4ff9a8b35fe09aed63737",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "161d92e64ec50906d7d371461fbf2f0b2a2a6b0976c081c5f7adab9f149e784d",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "259338992fef36bbc8232591e5b08da7f6ff3dd797f197689e2f5205163560b3"
+  },
+  "logs": [
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-native-binding-red-r1.log",
+      "sha256": "080c1891abd3207af2db66f41c2f702012d61c71f0421c1e53c3bdc96210ecf1",
+      "summary": [
+        "1 failed, 50 deselected, 7 warnings in 6.98s"
+      ],
+      "databases": [
+        "aos_test_62758957d770_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-native-binding-green-r1.log",
+      "sha256": "cee66e62985d53713b1968bc9dff88debc890250a498f82d5b33f7b132fd422c",
+      "summary": [
+        "4 passed, 47 deselected, 7 warnings in 14.94s"
+      ],
+      "databases": [
+        "aos_test_6934be74dec1_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-native-binding-adjacent-r1.log",
+      "sha256": "94dbe5e7921c1381845df3df1c943c2564fc3722f2f3d51a60ecbc3a0bc4fee7",
+      "summary": [
+        "46 passed, 5 deselected, 7 warnings in 86.44s (0:01:26)"
+      ],
+      "databases": [
+        "aos_test_cdc853b6691f_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-native-binding-final-r1.log",
+      "sha256": "d95909f43a089672389bb7950dddea48f04d217dbd6c5df1bba29a4b6415982c",
+      "summary": [
+        "4 passed, 47 deselected, 7 warnings in 15.20s"
+      ],
+      "databases": [
+        "aos_test_bb286f394e21_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-native-binding-entry-red-r1.log",
+      "sha256": "50478ac352012df572d5ca001eaed172d8c9d792e18455466c61d1be5ff7a236",
+      "summary": [
+        "5 failed, 46 deselected, 7 warnings in 13.68s"
+      ],
+      "databases": [
+        "aos_test_b58b121b9c22_ti4_test"
+      ]
+    }
+  ],
+  "existing_guard_path_unchanged": true,
+  "original_coherent_wrong_hash_rejected": true,
+  "actual_original_alias_time_positives": 3,
+  "complete_entry_available": false,
+  "current_database_accessed": false,
+  "source_published": false,
+  "parent_tasks_active": true,
+  "pending": [
+    "full native S01-S20",
+    "migration157",
+    "prepare/sign/commit/callerCOMMIT/currentconsumer",
+    "finalCOMMITTTL"
+  ]
+}

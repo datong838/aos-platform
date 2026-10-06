@@ -1171,3 +1171,13 @@ END $body$;
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_original_source_candidate(jsonb) FROM PUBLIC;
 ALTER FUNCTION aos_capacity_publication_private.read_original_source_candidate(jsonb) OWNER TO aos_capacity_publication_owner;
 """
+
+# Complete native entry query; original private Guard still owns the legacy path.
+CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL = CAPACITY_APPROVED_SOURCE_ROW_SQL.replace(
+    'FOR SHARE OF p', r"""
+  AND p.action_binding_hash=pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(
+    public.canonical_asset_registry_jsonb(pg_catalog.jsonb_build_object(
+      'sourceCandidate',aos_capacity_publication_private.read_original_source_candidate(p.payload->'sourceCandidate'),
+      'actionTypeRevisionHash',p.action_type_snapshot->'revisionHash')),'UTF8')),'hex')
+FOR SHARE OF p
+""")

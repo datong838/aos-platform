@@ -605,7 +605,7 @@ def test_original_source_binding_uses_typed_normalization_in_private_reader(nati
     from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
     from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims
     from aos_api.aip_provider_capacity_publication_store import CAPACITY_APPROVED_SOURCE_ROW_SQL
-    from aos_api.aip_provider_capacity_publication_store import CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL
     from tests.aip._runtime_guard_history_fixture import isolated_owner
     maker,checker=approved_command[:2]
     source=native_signed_source[3]
@@ -678,6 +678,8 @@ def test_original_source_binding_uses_typed_normalization_in_private_reader(nati
             (Jsonb(raw),)).fetchone()['value']==normalized.model_dump(mode='json',by_alias=True)
         current=owner.execute(CAPACITY_APPROVED_SOURCE_ROW_SQL,params).fetchone()
         assert current is not None and current['action_binding_hash']==typed_binding
+        native_current=owner.execute(CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL,params).fetchone()
+        assert native_current is not None and native_current['action_binding_hash']==typed_binding
         # Counterfactual only: installing this raw hash predicate would reject
         # the legitimate original approval proven by the private reader above.
         assert owner.execute(naive_statement,params).fetchone() is None
@@ -814,3 +816,70 @@ def test_original_source_candidate_profile_matches_original_shape_oracle(native_
                 mismatches.append((label, expected is not None, actual is not None))
         owner.rollback()
     assert not mismatches, f'Original candidate/native SQL incompatibilities: {mismatches!r}'
+
+
+def test_native_source_binding_rejects_coherent_wrong_hash(native_signed_source):
+    """Matching hashes do not replace the original typed candidate calculation."""
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_provider_capacity_source_issuer import authenticate_capacity_issuance_command
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL,CAPACITY_APPROVED_SOURCE_ROW_SQL,
+        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_APPROVAL_EVENT_PROJECTION_SQL)
+    _,actual_command,_,source,_=native_signed_source
+    command,_,_=actual_command()
+    params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,
+        maker=authenticate_capacity_issuance_command(command).subject,
+        proposal_id=command.approved_proposal.asset_id,proposal_revision=command.approved_proposal.revision,
+        proposal_hash=command.approved_proposal.content_hash,
+        approval_event_id=command.approval_event.asset_id,approval_event_hash=command.approval_event.content_hash)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute("SET LOCAL TimeZone='UTC'")
+        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        original=owner.execute(CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL,params).fetchone()
+        assert original is not None
+        expected=canonical_hash(dict(sourceCandidate=source.model_dump(mode='json',by_alias=True),
+            actionTypeRevisionHash=original['action_type_snapshot']['revisionHash']))
+        assert original['action_binding_hash']==expected
+        owner.execute('RESET ROLE')
+        original_event_hash=params['approval_event_hash']
+        original_proposal_hash=params['proposal_hash']
+        owner.execute('SAVEPOINT coherent_binding_fault')
+        try:
+            snapshot=owner.execute('SELECT snapshot FROM public.aip_action_draft WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+                (*SCOPE.key,original['proposal_id'])).fetchone()['snapshot']
+            wrong='a'*64 if expected!='a'*64 else 'b'*64
+            snapshot['actionBindingHash']=wrong
+            changed_proposal_hash=canonical_hash(snapshot)
+            # Isolated test-admin historical corruption only, rolled back.
+            # Every dependent stored hash is updated to stay coherent.
+            owner.execute("SET LOCAL session_replication_role='replica'")
+            owner.execute('UPDATE public.aip_action_draft SET snapshot=%s WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+                (Jsonb(snapshot),*SCOPE.key,original['proposal_id']))
+            owner.execute('UPDATE public.aip_action_proposal SET action_binding_hash=%s,proposal_hash=%s '
+                'WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+                (wrong,changed_proposal_hash,*SCOPE.key,original['proposal_id']))
+            owner.execute('UPDATE public.aip_action_approval_event SET action_binding_hash=%s,proposal_hash=%s '
+                'WHERE org_id=%s AND project_id=%s AND approval_event_id=%s',
+                (wrong,changed_proposal_hash,*SCOPE.key,params['approval_event_id']))
+            owner.execute("SET LOCAL session_replication_role='origin'")
+            params['proposal_hash']=changed_proposal_hash
+            params['approval_event_hash']=owner.execute(CAPACITY_APPROVAL_EVENT_PROJECTION_SQL,params).fetchone()['hash']
+            assert params['approval_event_hash']!=original_event_hash
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            # Same-version control proves snapshot/hash consistency alone still
+            # matches; only the added original typed calculation rejects it.
+            assert owner.execute(CAPACITY_APPROVED_SOURCE_ROW_SQL,params).fetchone() is not None
+            assert owner.execute(CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL,params).fetchone() is None, (
+                'Native Source must recompute original typed binding even when all stored hashes agree')
+        finally:
+            owner.execute('ROLLBACK TO SAVEPOINT coherent_binding_fault')
+            params['approval_event_hash']=original_event_hash
+            params['proposal_hash']=original_proposal_hash
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        assert owner.execute(CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL,params).fetchone() is not None
+
+        owner.rollback()  # Never persist temporary private profile functions.
