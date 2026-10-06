@@ -1,0 +1,47 @@
+{
+  "result": "GREEN_TEST_POOL_DISK_RECOVERED_NO_AUTHORITY_TOUCH",
+  "retained_containers": 42,
+  "container_ids_images_mounts_memory_unchanged": true,
+  "retained_volumes": 43,
+  "volume_set_unchanged": true,
+  "disk_gib_before": 15,
+  "disk_gib_after": 30,
+  "test_vm_memory_gib": 2,
+  "native_container_memory_bytes": 268435456,
+  "formal_profile_identity_ports_unchanged": true,
+  "default_context_unchanged": true,
+  "known_database_recovery": [
+    {
+      "database": "aos_test_rootcommit_3b5c77430722",
+      "epoch": 1,
+      "head_hash_body_signature_snapshot_valid": true,
+      "root_count": 2
+    },
+    {
+      "database": "aos_test_rootcommit_895ee4f410e0",
+      "epoch": 2,
+      "head_hash_body_signature_snapshot_valid": true,
+      "root_count": 2
+    },
+    {
+      "database": "aos_test_rootcommit_c6654eda52fe",
+      "epoch": 2,
+      "head_hash_body_signature_snapshot_valid": true,
+      "root_count": 2
+    }
+  ],
+  "template_root_schema_count": 0,
+  "files": {
+    "before.json": "9266f069fa6877efe7ed76008002e8695dd4786b4afa87f2b695336bab5d0096",
+    "start.log": "7abc84684d09d824fad34e66ecd4efc7c712fa2ef9f380844d1a8bea6437bada",
+    "after.json": "52f85efb0f63ccbdcb2406f671358a0c95348411ae5b41c7999d38cd7cb02367",
+    "containers-start.log": "11faed5cd2bfa095cd06e8b218d9813842a35c848204e2cf45cf616520526096",
+    "plan.md": "c4e2e90c3ddd7f3717f4b433d81a99e3a541a99478af792eb0381ae4ee12cf6b",
+    "stop.log": "4bc8a5698d33e53d140c5967755a4dcd40dd9554fb64b67108d8a5272a53f6c9"
+  },
+  "limits": [
+    "No authoritative DB/API/Web restart or migration",
+    "Resource recovery is not full root protocol or natural first-chain acceptance",
+    "No DB/volume/backup deletion"
+  ]
+}

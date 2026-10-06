@@ -1,0 +1,1515 @@
+{
+  "containers": [
+    {
+      "id": "63c7d47bac4232b032a827ccf26116aef03ce2e28ca587d9b94a84987c75afd7",
+      "name": "/aos-ed25519-test-31dccb3dc27e",
+      "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 1,
+        "FinishedAt": "2026-10-06T12:20:54.749106285Z",
+        "OOMKilled": true,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-10-06T05:24:29.002995788Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-ed25519-test-31dccb3dc27e-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-ed25519-test-31dccb3dc27e-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 268435456,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "0d54adfe62137a2358d7c847e89443cc488aa85ddcf6c7774474a69d0fa37b98",
+      "name": "/aos-ed25519-test-0603d8550a26",
+      "image": "sha256:1858a8ae08234dfc2fdc8e6002f24d35abc1a7326ee58cdc7a66dd8db3c7071f",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-06T05:47:04.925006768Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-10-06T05:23:06.350561832Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-ed25519-test-0603d8550a26-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-ed25519-test-0603d8550a26-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 268435456,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "ba519ae3139542d41149e11df98269d6c5420bd1a80bb17e8609a56df459d042",
+      "name": "/aos-ed25519-test-fa4713e9a335",
+      "image": "sha256:1858a8ae08234dfc2fdc8e6002f24d35abc1a7326ee58cdc7a66dd8db3c7071f",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-06T05:47:04.814506643Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-10-06T05:20:23.764632921Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-ed25519-test-fa4713e9a335-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-ed25519-test-fa4713e9a335-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 268435456,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "4641fe06a37ac78b9038103e54701480a979beeb8df9e08ac112ea62733631bb",
+      "name": "/reverent_gates",
+      "image": "sha256:40a039178b8cf7dacbd14307ffbe0d688cd7cd5263e93113cdaa3760f3862e1a",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 127,
+        "FinishedAt": "2026-10-06T05:19:11.687065011Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-10-06T05:19:11.455853886Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "Name": "a351d91930acc5012f94037e662fc678d90d00989ce69411ef2071cb46456533",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/a351d91930acc5012f94037e662fc678d90d00989ce69411ef2071cb46456533/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "bridge",
+      "privileged": false
+    },
+    {
+      "id": "6823e99ac11e877f7086f613454d32df414e4c5e2c13233dfcaf3fa893b54c44",
+      "name": "/optimistic_mahavira",
+      "image": "sha256:bdbb19a22bb31df00221ba5b233a16decb5e820b1d3eece77e446568140b87c3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 2,
+        "FinishedAt": "2026-10-06T05:17:52.288955557Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-10-06T05:17:52.147138765Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "Name": "c066b89b099c075c882b70497d0b6262edfda9f9a458a39462a577e4f107ba66",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/c066b89b099c075c882b70497d0b6262edfda9f9a458a39462a577e4f107ba66/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "bridge",
+      "privileged": false
+    },
+    {
+      "id": "dc28f61a03998b7813e16b167553c8a09e1ba8563436b926ff70868b91f840d4",
+      "name": "/current151-restore-01acf86d2126",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": true,
+        "Paused": false,
+        "Pid": 614362,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-06T04:24:49.512387039Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current151-restore-01acf86d2126-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current151-restore-01acf86d2126-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "0a227202ead62b05df34d4365cf25a25ebcff63e2ce71058116d617072ed23e8",
+      "name": "/current151-restore-05bb402299de",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": true,
+        "Paused": false,
+        "Pid": 609393,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-06T04:14:27.321140201Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current151-restore-05bb402299de-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current151-restore-05bb402299de-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "7ff9c22732a516f5bf2f424b1edf5fdc8032aa55fdc651b244d7d53ac810d9ec",
+      "name": "/current151-source-dc334d87cdee",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-06T04:17:31.870492664Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-10-06T04:06:28.512404139Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current151-source-dc334d87cdee-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current151-source-dc334d87cdee-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "20e8cebd2fbaa19d6b54023fc47139831e7c6ef2da3788d3414ba80d70d99c01",
+      "name": "/current151-source-b8b8c39df2df",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-06T04:17:31.772973664Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-10-06T04:05:49.057088245Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current151-source-b8b8c39df2df-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current151-source-b8b8c39df2df-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "4ad0988b7767ad6c6cb468923c04ee7b2d3fd2c83d3ceae1de9fb8e28c18967a",
+      "name": "/current151-cas-proof-f0ae33066236",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-06T04:17:31.62514683Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-10-06T04:04:58.143043596Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current151-cas-proof-f0ae33066236-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current151-cas-proof-f0ae33066236-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "9a8bc7bd5b46ff252ab5658ee3ee8f0e449c52c85e362f581eb3fadda442c6ea",
+      "name": "/current151-restore-da8531053c83",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 597265,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-06T03:44:57.128403148Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current151-restore-da8531053c83-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current151-restore-da8531053c83-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "0c2a680bd501f2643bafd0675cfe1899a7a81c00dbd6d823bb6821e53bd4b50c",
+      "name": "/current151-restore-420b2c7ae9c0",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-06T04:19:44.153542727Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-10-06T03:43:23.925967021Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current151-restore-420b2c7ae9c0-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current151-restore-420b2c7ae9c0-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "f905c043d3a593b9ad493a372d5270cdbda7926f684bb9151281dfd4d5466393",
+      "name": "/current151-source-420b2c7ae9c0",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-06T04:19:44.056168852Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-10-06T03:44:05.477502082Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current151-source-420b2c7ae9c0-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current151-source-420b2c7ae9c0-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "0af0d482931cd6e33234eec16b36c4b6d5f2928304d4e766c53ca43030d72dd2",
+      "name": "/current151-restore-e322c5b61a71",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-06T04:19:43.964847519Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-10-06T03:38:45.403257346Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current151-restore-e322c5b61a71-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current151-restore-e322c5b61a71-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "80c5c58b2ce0b78e83ce471f16864f7fce226e8e4a912e297d111ae2625d7abb",
+      "name": "/current151-source-e322c5b61a71",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-06T04:19:43.83465081Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-10-06T03:39:25.605246657Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current151-source-e322c5b61a71-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current151-source-e322c5b61a71-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "2501f236304e41b2bc52ed584a49f5afd61e242c3f74cdac78687c21580fb34d",
+      "name": "/current151-restore-942e6cab76d9",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 564584,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-06T03:35:00.292892114Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current151-restore-942e6cab76d9-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current151-restore-942e6cab76d9-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "36f3d21225c8ae51eab8c794d67b0612ce69cb4ccbae500db31c1709eb06902a",
+      "name": "/current151-source-942e6cab76d9",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-06T03:35:10.987027952Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 565977,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-06T03:35:11.050198036Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current151-source-942e6cab76d9-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current151-source-942e6cab76d9-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "aeaa655eafbc87dafc01445cd2f11dca5fb00fe827b49631191bdd03d0d0d7c5",
+      "name": "/current150-second-5ce287f4e670",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 552547,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-06T03:14:13.648647269Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current150-second-5ce287f4e670-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current150-second-5ce287f4e670-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "10b59045584056905ba284ace93b2661a714bad23f19a36eea739b2468ec4b2b",
+      "name": "/current150-same-77f8f834ea15",
+      "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": true,
+        "Paused": false,
+        "Pid": 440893,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T16:27:28.433250849Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current150-same-77f8f834ea15-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current150-same-77f8f834ea15-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "7e34e5e3156d1015d178fce93663113cef17a87589a034689233ef535fdc1cbf",
+      "name": "/current150-8d14a26df7b7",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 433806,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T15:55:40.822765981Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "current150-8d14a26df7b7-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/current150-8d14a26df7b7-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "f40898a480c1afbaf71cbd1f6a36b1cba48208c8d53c0d4bfb97c7a57b221c2f",
+      "name": "/aos-sequence142-432d8abc48e2",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 256657,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T02:20:09.398402399Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-sequence142-432d8abc48e2-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-sequence142-432d8abc48e2-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "a85a3c5280b0b8232e8199519e7a74f3225ca24780484ccb38e841d739a914e5",
+      "name": "/aos-sequence142-b43f6c25cea0",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 252171,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T02:16:31.346561586Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-sequence142-b43f6c25cea0-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-sequence142-b43f6c25cea0-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "1d345707c5647486a4ac620f041bc90ac0c392cfb622b19914f21962b9eb820e",
+      "name": "/aos-sequence142-3bc50404cb20",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-05T02:16:47.781820719Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 256232,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T02:16:47.806193678Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-sequence142-3bc50404cb20-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-sequence142-3bc50404cb20-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "ed1ed53cf410dadee846fe8879247e354a9d5ac63ab0d7f810448872c3a3def0",
+      "name": "/aos-sequence142-0fdb874fc598",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 247119,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T02:06:40.584268513Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-sequence142-0fdb874fc598-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-sequence142-0fdb874fc598-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "5f8d765ce7999a9a026cb6687808ead4edf5bed539f73a9f9e71cd1a12f4d8f6",
+      "name": "/aos-sequence142-e1d24d899116",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-05T02:06:55.726765395Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 251116,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T02:06:55.74344252Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-sequence142-e1d24d899116-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-sequence142-e1d24d899116-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "8ceba5ef3963cef6ec440184ff122387497975b991fcbbc0feac33ff538716fe",
+      "name": "/aos-sequence142-faabd8c3fad7",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 241968,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T01:53:52.747159189Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-sequence142-faabd8c3fad7-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-sequence142-faabd8c3fad7-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "683effd2b742eba54bd86d5ca35d34d78669309528f610314d1ac8a4df27fb23",
+      "name": "/aos-sequence142-36adcfb08e9f",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-05T01:54:07.312628862Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 245930,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T01:54:07.328419529Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-sequence142-36adcfb08e9f-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-sequence142-36adcfb08e9f-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "dec4bfe56b9e2a68447a30965f840ca83f9add13c5eb4f0962f64a43f340e028",
+      "name": "/aos-sequence142-e96842f21b01",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 237661,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T01:53:03.684522415Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-sequence142-e96842f21b01-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-sequence142-e96842f21b01-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "f8c93951f3bb971fe7ffea5d3d4ec5f01722367c8e16ac4660d5538151c170e7",
+      "name": "/aos-sequence142-80e57e9ce8e6",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-05T01:53:18.478188922Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 241647,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T01:53:18.495459672Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-sequence142-80e57e9ce8e6-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-sequence142-80e57e9ce8e6-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "34e8d0436da3de63c38859321bb20cf347e4fc5b7f27f98936fdb5b07264cb94",
+      "name": "/aos-windowfull-d6b835501d51",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-05T01:44:42.704983801Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 236117,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T01:44:42.718740468Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-windowfull-d6b835501d51-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-windowfull-d6b835501d51-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "76ba7ec8b9cee79f57737805ab46abfe219fbfee252daaf1756ba245bce9b62c",
+      "name": "/aos-windowfull-947482cf9502",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-05T01:44:39.637212091Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 235141,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T01:44:39.654883383Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-windowfull-947482cf9502-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-windowfull-947482cf9502-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "2a9ded55afcfb6d2ef22f1159c403e108cd1b492b884e85b56933e2b47d8bdf3",
+      "name": "/aos-window-059e60cb41b0",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 232488,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T01:42:35.109409865Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-window-059e60cb41b0-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-window-059e60cb41b0-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "8bdaf31199fc3af78c7e12057225b15c5d7ac8d5d5583ef6002690cd8cffebcd",
+      "name": "/aos-daily142-c07aa90b1958",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 230109,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T01:36:11.993308308Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-daily142-c07aa90b1958-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-daily142-c07aa90b1958-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "6a8686161431bbc509742d7b42a8cfcb77ced57c7bc4bacdd0c5338b8c7c12d6",
+      "name": "/aos-daily142-4c772a6fbcc6",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 228305,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T01:35:05.018275609Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-daily142-4c772a6fbcc6-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-daily142-4c772a6fbcc6-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "c9219a9a474f79a9fa9f054a5051830927c0c1b3d8ab5a58f752bf91b594f0af",
+      "name": "/aos-daily142-82e9642b41e8",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": true,
+        "Paused": false,
+        "Pid": 225784,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T01:23:37.975440948Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-daily142-82e9642b41e8-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-daily142-82e9642b41e8-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "75a288f957f657f21a7b7ffeea49dbf44d19cc6bd822a7768698e1365f0c3a16",
+      "name": "/aos-daily142-f8c8c1b6bae3",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 225409,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-05T01:19:07.897314111Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-daily142-f8c8c1b6bae3-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-daily142-f8c8c1b6bae3-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 805306368,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "667a966e70321705072d774ec159d148a45477320bafe92f9db08483c22eca9c",
+      "name": "/aos-b54-acl-pg",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 124166,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-04T07:23:27.442107836Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "Name": "2d0c0684b5f8f78e317e089fb2208dec4ec25c7d18006c5d36cc5326be92a4e9",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/2d0c0684b5f8f78e317e089fb2208dec4ec25c7d18006c5d36cc5326be92a4e9/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18434"
+          }
+        ]
+      },
+      "memory": 0,
+      "network": "bridge",
+      "privileged": false
+    },
+    {
+      "id": "d83cf692de5788dc0aa082008792c2355e0966974a91083e081e49500f5d2664",
+      "name": "/aos-e17-b17-acl-pg",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": true,
+        "Paused": false,
+        "Pid": 78085,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-03T20:27:07.154576516Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-e17-b17-acl-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-e17-b17-acl-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "none",
+      "privileged": false
+    },
+    {
+      "id": "fc2506d865163a744c4e15d204675e2fc5617901f54d4f72b7b0204fc6453202",
+      "name": "/aos-bg00dl-isolated-pg",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 255,
+        "FinishedAt": "2026-10-02T14:55:45.422166754Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-09-30T06:39:50.256826444Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-bg00dl-isolated-pg-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-bg00dl-isolated-pg-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "bridge",
+      "privileged": false
+    },
+    {
+      "id": "fa421142b6af57372cdc3d04c802f42fd90a9df3677b07278dc73fb34b7a680b",
+      "name": "/aos-bg00ck-isolated-pg",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 255,
+        "FinishedAt": "2026-10-02T14:55:45.421926754Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-09-30T02:46:34.158857312Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/run/secrets/admin",
+          "Mode": "ro",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/Users/ddt/work/projects/ai_agent/.aos-current-backup-20260930-bg00ck-9us25js3/isolated-admin-password",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-bg00ck-isolated-pg-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-bg00ck-isolated-pg-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "bridge",
+      "privileged": false
+    },
+    {
+      "id": "43b62da22342cdba3d291e0d2db4b8482db9c1941c62bf36324bf2fba0ad1c87",
+      "name": "/aos-bg00ce-isolated-pg",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 255,
+        "FinishedAt": "2026-10-02T14:55:45.421877545Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "2026-09-30T02:18:15.408684085Z",
+        "Status": "exited"
+      },
+      "mounts": [
+        {
+          "Destination": "/run/secrets/admin",
+          "Mode": "ro",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/Users/ddt/work/projects/ai_agent/.aos-current-backup-20260930-bg00ce-x0s2h8_x/isolated-admin-password",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "Name": "aos-bg00ce-isolated-pg-data",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/aos-bg00ce-isolated-pg-data/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {},
+      "memory": 0,
+      "network": "bridge",
+      "privileged": false
+    },
+    {
+      "id": "4e3e6fe3c0036b9eeb35ba16197fca369d5c9f7d537e212a4225e81d84b708d8",
+      "name": "/aos-a0v-test-pg",
+      "image": "sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+      "state": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "2026-10-02T14:55:45.422009004Z",
+        "OOMKilled": true,
+        "Paused": false,
+        "Pid": 1653,
+        "Restarting": false,
+        "Running": true,
+        "StartedAt": "2026-10-02T14:56:32.670482735Z",
+        "Status": "running"
+      },
+      "mounts": [
+        {
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "Name": "3fa61191c25330f46d4bb8acc67604d272d3b2d213378cf7c2bd38da3bb735e0",
+          "Propagation": "",
+          "RW": true,
+          "Source": "/var/lib/docker/volumes/3fa61191c25330f46d4bb8acc67604d272d3b2d213378cf7c2bd38da3bb735e0/_data",
+          "Type": "volume"
+        }
+      ],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "5433"
+          }
+        ]
+      },
+      "memory": 0,
+      "network": "bridge",
+      "privileged": false
+    }
+  ],
+  "volume_names": [
+    "2d0c0684b5f8f78e317e089fb2208dec4ec25c7d18006c5d36cc5326be92a4e9",
+    "3fa61191c25330f46d4bb8acc67604d272d3b2d213378cf7c2bd38da3bb735e0",
+    "a351d91930acc5012f94037e662fc678d90d00989ce69411ef2071cb46456533",
+    "aos-bg00ce-isolated-pg-data",
+    "aos-bg00ck-isolated-pg-data",
+    "aos-bg00dl-isolated-pg-data",
+    "aos-bg00o-eval-minio-data",
+    "aos-daily142-4c772a6fbcc6-data",
+    "aos-daily142-82e9642b41e8-data",
+    "aos-daily142-c07aa90b1958-data",
+    "aos-daily142-f8c8c1b6bae3-data",
+    "aos-e17-b17-acl-data",
+    "aos-ed25519-test-31dccb3dc27e-data",
+    "aos-ed25519-test-0603d8550a26-data",
+    "aos-ed25519-test-fa4713e9a335-data",
+    "aos-sequence142-0fdb874fc598-data",
+    "aos-sequence142-3bc50404cb20-data",
+    "aos-sequence142-36adcfb08e9f-data",
+    "aos-sequence142-80e57e9ce8e6-data",
+    "aos-sequence142-432d8abc48e2-data",
+    "aos-sequence142-b43f6c25cea0-data",
+    "aos-sequence142-e1d24d899116-data",
+    "aos-sequence142-e96842f21b01-data",
+    "aos-sequence142-faabd8c3fad7-data",
+    "aos-window-059e60cb41b0-data",
+    "aos-windowfull-947482cf9502-data",
+    "aos-windowfull-d6b835501d51-data",
+    "c066b89b099c075c882b70497d0b6262edfda9f9a458a39462a577e4f107ba66",
+    "current150-8d14a26df7b7-data",
+    "current150-same-77f8f834ea15-data",
+    "current150-second-5ce287f4e670-data",
+    "current151-cas-proof-f0ae33066236-data",
+    "current151-restore-01acf86d2126-data",
+    "current151-restore-05bb402299de-data",
+    "current151-restore-420b2c7ae9c0-data",
+    "current151-restore-942e6cab76d9-data",
+    "current151-restore-da8531053c83-data",
+    "current151-restore-e322c5b61a71-data",
+    "current151-source-420b2c7ae9c0-data",
+    "current151-source-942e6cab76d9-data",
+    "current151-source-b8b8c39df2df-data",
+    "current151-source-dc334d87cdee-data",
+    "current151-source-e322c5b61a71-data"
+  ],
+  "docker_default_context": "desktop-linux",
+  "profile_config_sha256": "bebc766667cfe354d3337a8c1eb631f2e6d139c21d4fc26cf47ba0472acc776e",
+  "formal_profile": "9cc6091c304b aos-a0v-recovery-pg 127.0.0.1:18435->5432/tcp\nb5baa23cd074 aos-ar1c-pg 127.0.0.1:18432->5432/tcp",
+  "known_root_databases": [
+    "aos_test_rootcommit_3b5c77430722",
+    "aos_test_rootcommit_895ee4f410e0",
+    "aos_test_rootcommit_c6654eda52fe"
+  ]
+}

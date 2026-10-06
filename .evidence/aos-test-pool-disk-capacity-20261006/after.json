@@ -1,0 +1,72 @@
+{
+  "root_recovery": [
+    {
+      "database": "aos_test_rootcommit_3b5c77430722",
+      "epoch": 1,
+      "head_hash_body_signature_snapshot_valid": true,
+      "root_count": 2
+    },
+    {
+      "database": "aos_test_rootcommit_895ee4f410e0",
+      "epoch": 2,
+      "head_hash_body_signature_snapshot_valid": true,
+      "root_count": 2
+    },
+    {
+      "database": "aos_test_rootcommit_c6654eda52fe",
+      "epoch": 2,
+      "head_hash_body_signature_snapshot_valid": true,
+      "root_count": 2
+    }
+  ],
+  "template_root_schema_count": 0,
+  "volume_names": [
+    "2d0c0684b5f8f78e317e089fb2208dec4ec25c7d18006c5d36cc5326be92a4e9",
+    "3fa61191c25330f46d4bb8acc67604d272d3b2d213378cf7c2bd38da3bb735e0",
+    "a351d91930acc5012f94037e662fc678d90d00989ce69411ef2071cb46456533",
+    "aos-bg00ce-isolated-pg-data",
+    "aos-bg00ck-isolated-pg-data",
+    "aos-bg00dl-isolated-pg-data",
+    "aos-bg00o-eval-minio-data",
+    "aos-daily142-4c772a6fbcc6-data",
+    "aos-daily142-82e9642b41e8-data",
+    "aos-daily142-c07aa90b1958-data",
+    "aos-daily142-f8c8c1b6bae3-data",
+    "aos-e17-b17-acl-data",
+    "aos-ed25519-test-31dccb3dc27e-data",
+    "aos-ed25519-test-0603d8550a26-data",
+    "aos-ed25519-test-fa4713e9a335-data",
+    "aos-sequence142-0fdb874fc598-data",
+    "aos-sequence142-3bc50404cb20-data",
+    "aos-sequence142-36adcfb08e9f-data",
+    "aos-sequence142-80e57e9ce8e6-data",
+    "aos-sequence142-432d8abc48e2-data",
+    "aos-sequence142-b43f6c25cea0-data",
+    "aos-sequence142-e1d24d899116-data",
+    "aos-sequence142-e96842f21b01-data",
+    "aos-sequence142-faabd8c3fad7-data",
+    "aos-window-059e60cb41b0-data",
+    "aos-windowfull-947482cf9502-data",
+    "aos-windowfull-d6b835501d51-data",
+    "c066b89b099c075c882b70497d0b6262edfda9f9a458a39462a577e4f107ba66",
+    "current150-8d14a26df7b7-data",
+    "current150-same-77f8f834ea15-data",
+    "current150-second-5ce287f4e670-data",
+    "current151-cas-proof-f0ae33066236-data",
+    "current151-restore-01acf86d2126-data",
+    "current151-restore-05bb402299de-data",
+    "current151-restore-420b2c7ae9c0-data",
+    "current151-restore-942e6cab76d9-data",
+    "current151-restore-da8531053c83-data",
+    "current151-restore-e322c5b61a71-data",
+    "current151-source-420b2c7ae9c0-data",
+    "current151-source-942e6cab76d9-data",
+    "current151-source-b8b8c39df2df-data",
+    "current151-source-dc334d87cdee-data",
+    "current151-source-e322c5b61a71-data"
+  ],
+  "docker_default_context": "desktop-linux",
+  "filesystem": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/vdb1        30G   14G   15G  50% /mnt/lima-colima-aos-a0v-test-only",
+  "c_verifier": "63c7d47bac4232b032a827ccf26116aef03ce2e28ca587d9b94a84987c75afd7 sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8 268435456 none",
+  "formal_profile": "9cc6091c304b aos-a0v-recovery-pg 127.0.0.1:18435->5432/tcp\nb5baa23cd074 aos-ar1c-pg 127.0.0.1:18432->5432/tcp"
+}
