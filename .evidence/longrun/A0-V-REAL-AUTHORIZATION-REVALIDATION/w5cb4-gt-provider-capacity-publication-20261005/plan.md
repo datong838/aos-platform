@@ -2,6 +2,12 @@
 
 ## 2026-10-06 验签依赖收口后的签名原文门
 
+本波先冻结并实现原登记aip_provider_capacity_publication_contracts.py与test_provider_capacity_publication_pg.py的文档边界，不改现issuer/旧contracts：OriginBootstrap含独立publisher subject/角色、actual deployment target、anchor/root snapshot hash、允许policy/attestation/permit exactrefs；SigningPermit含parent policy exactref、许可Source publisher/key/root/public key及target；PublishedSource含server UUID稳定账号、supplier/fingerprint、完整Provider/Evidence refs、Source/allocation原proposal/approval与candidate refs、policy/attestation/permit/origin exactrefs、epoch、原requestHash、观测/期限/计量及executionAllowed=false。共同schema/tenant/asset/revision/publisher/key/有效期严格校验；所有解析结果仅是未认证文档。
+
+统一parse_signed_capacity_body仅允许这三个类型及原policy/attestation，输入原bytes，2MiB/深度32/数组1000、UTF8严格、重复key与浮点/NaN/Infinity拒绝，再模型未知字段/类型/refs校验，要求原bytes等于canonical_json(model_dump(mode=json,by_alias=True))。这消除snakeCase/时间/整数等表示差异；私钥/verified字段禁止。解析不读库、不验签、不授权限，SQL对应严格profile仍须独立实现和原生COMMIT验收；本波无完整Task Delivery。
+
+独立复审指出不完整JSON负例可能被缺字段间接拒绝，专项验收改为完整合法文档单项变异，并返回不含原始输入的稳定ProfileError reason（SIZE/DEPTH/DUPLICATE_KEY/NON_INTEGER/NUL/ARRAY/NONCANONICAL/INVALID_DOCUMENT），区分预解析/文档profile与后续字段校验，不能仅凭任意ValueError算相应门通过。
+
 独立Task gt-capacity-sql-ed25519-20261006在m1@1b24ceca收口，仅PG原生验签依赖19项通过；固定隔离镜像/角色ACL/输入存储和来源证据见对应verification。没有生产扩展安装授权，完整publication退出仍沿本原Task。
 
 本轮只读canonical-sql-readonly.json实测：现canonical_json的UTF8紧凑排序bytes与PG jsonb::text字节及hash不同；jsonb接受重复purpose字段并保留后者。SQL不能先jsonb重序列化再验签，也不能把jsonb解析成功作为签名文档无歧义证明。

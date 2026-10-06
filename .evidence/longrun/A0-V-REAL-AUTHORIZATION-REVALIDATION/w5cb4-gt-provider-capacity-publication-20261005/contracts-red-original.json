@@ -1,0 +1,8 @@
+{
+  "raw_path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/contracts-red.log",
+  "raw_size": 4267876,
+  "raw_sha256": "bb966f7de2f8a837e09dc83266619d22bff033f12b3afcd6b5daa89e3de50947",
+  "compressed_size": 18118,
+  "compressed_sha256": "6067ffc12f703f64caac887058a264ac3a31f21fc38c9b00cc8e79bee2ac1ab0",
+  "note": "First missing-module RED included automatic huge parameter IDs; raw preserved locally and lossless compressed copy versioned. IDs made explicit for subsequent logs."
+}
