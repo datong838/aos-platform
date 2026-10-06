@@ -1,0 +1,50 @@
+{
+  "scope": "S16_ORIGINAL_WITHDRAWAL_ORACLE_AND_NATIVE_MISSING_AUDIT_RED_NOT_SOURCE_DELIVERY",
+  "baseline": "cb0e1ae2bb9f6bdfc49d3ed566d6ba2b8e077170",
+  "authority": "AOS-001431",
+  "target": {
+    "passed": 15,
+    "seconds": 30.3
+  },
+  "adjacent": {
+    "passed": 24,
+    "seconds": 58.12
+  },
+  "native_next_red": {
+    "failed": 1,
+    "sqlstate": "42883",
+    "seconds": 7.12
+  },
+  "files": {
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "4a667f7fe541a80db33f43bc94f023d35b2a4682e24e836dbccd0c2e10d32e2c",
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "43c329efab28d6985ac4a2a9836cb3aae3389ba8fc47b5c5a06c835198f7aa63",
+    ".evidence/gt-capacity-source-entry-20261007/withdrawal-original-native-investigation.json": "48b909c8bf8a48eff6413b67b078c4d1f7ef75ce2d6bf48bb64e3414291682f7",
+    ".evidence/gt-capacity-source-publication-20261006/withdrawal-catalog-oracle-r1.log": "970a9e81b5889653ed6ce634176f55b35afd01d9ea659a455375e71e7805ca78",
+    ".evidence/gt-capacity-source-publication-20261006/withdrawal-catalog-oracle-adjacent-r1.log": "659abe21fa8946bd368f6fcb8b08cb15ef3a9fdb37e1bed7f8716f36fa9b5562",
+    ".evidence/gt-capacity-source-publication-20261006/withdrawal-native-audit-red-r1.log": "9374b6ac2219dcd7a727c2f6365e574c6e329d5d0e4378abd5728f02ed28494c"
+  },
+  "retained_databases": {
+    "withdrawal-catalog-oracle-r1.log": [
+      "aos_test_84bc7dcd8c38_ti4_test"
+    ],
+    "withdrawal-catalog-oracle-adjacent-r1.log": [
+      "aos_test_c1758cda4672_ti4_test"
+    ],
+    "withdrawal-native-audit-red-r1.log": [
+      "aos_test_79aeb9ad4859_ti4_test"
+    ]
+  },
+  "review": {
+    "production_code_changed": false,
+    "transactional_original_fault_restore": true,
+    "same_original_boundary_checked_before_after": true,
+    "no_source_delivery": true,
+    "browser": "N/A catalog/test only"
+  },
+  "pending": [
+    "native full original catalog audit including original pair/ACL/trigger/FK/extra privileges",
+    "same native fault oracle then native Source original lock ordering",
+    "S17-S20 complete Source prepare/controlled signing/commit/actual callerCOMMIT/current consumer",
+    "final callerCOMMIT TTL and formal natural first chain"
+  ]
+}

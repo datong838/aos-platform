@@ -1,0 +1,57 @@
+{
+  "scope": "READONLY_ORIGINAL_S16_CATALOG_AUDIT_AND_LOCK_ORDER_INVESTIGATION_NOT_NATIVE_ENTRY",
+  "authority": "AOS-001431",
+  "baseline": "cb0e1ae2",
+  "database": "aos_test_52463ea57a3d_ti4_test",
+  "files": {
+    "services/aos-api/aos_api/aip_capacity_withdrawal_fence.py": "fff578453b5805006fae2ff5d9f890fef4cc840795f4631704f52ae9336f8f04",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_lock_boundary.py": "d1e49b67bcac153d4d85f34df70d696308185f002053abf8340d538cbac31980",
+    "services/aos-api/aos_api/aip_provider_capacity_source_action.py": "b4239fc835365560a17b5c9861ff4a35e4a8acc59e313b738eae6b1c278961d6",
+    "services/aos-api/aos_api/aip_provider_capacity_action.py": "d03de45f01d498d68ebeda0da99a0b35b7744ab4deda9a012511531f2dfe9048"
+  },
+  "actual_original_publication_pair_audit": true,
+  "actual_original_withdrawal_audit": true,
+  "functions": [
+    {
+      "signature": "public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)",
+      "owner": "aos_capacity_evidence_epoch_owner",
+      "security_definer": true,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "763f808a880573c3f6cd372beb76347b68e93fa864f3a620b6a0c7764bb13c58"
+    },
+    {
+      "signature": "public.aos_capacity_withdrawal_epoch_lock(text,text,text)",
+      "owner": "aos_capacity_withdrawal_epoch_owner",
+      "security_definer": true,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "bdea4da16d8d4af2897cde94d5c755bb36019a884cd5307d5bc3c2fbfe181bd7"
+    },
+    {
+      "signature": "public.aos_capacity_withdrawal_epoch_init()",
+      "owner": "aos_capacity_withdrawal_epoch_owner",
+      "security_definer": true,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "159967048b7e16fa777469e06605fb0c24652b00b4423d949a3ac170844fdf7d"
+    },
+    {
+      "signature": "public.aos_capacity_withdrawal_epoch_bump()",
+      "owner": "aos_capacity_withdrawal_epoch_owner",
+      "security_definer": true,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "666fb5350dab9121e46c2fb21a19a09f82c8165078968140b623757ae9557a38"
+    }
+  ],
+  "pending": [
+    "translate all original withdrawal catalog/ACL/structure/trigger/FK-order checks into native157 without weakening",
+    "preserve sorted distinct Source/allocation withdrawal IDs and original internal Provider/Evidence order",
+    "no actual Source prepare/commit or lock acquisition claimed by this readonly investigation"
+  ]
+}
