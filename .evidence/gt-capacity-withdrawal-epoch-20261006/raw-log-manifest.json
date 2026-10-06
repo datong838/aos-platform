@@ -1,0 +1,17 @@
+{
+  "red.log": {
+    "raw_sha256": "861f212a3e3a5e4c36a1e4ba2a419d769ef60f7763c9f0d89302a198e71ad77c",
+    "raw_gzip_sha256": "e3c253c6a4fd9365a280987fec185fa48e18cf2b7c7d3b6fe6c04c24f7b3e0e9",
+    "display_normalization": "trailing whitespace only; original raw preserved in gzip"
+  },
+  "integration.log": {
+    "raw_sha256": "22d5c5f85cc5834ebcc8b7e35ac00a49bb7215680a569c2e334834073f7871fd",
+    "raw_gzip_sha256": "fbb009d47ad8c271fc0bc112e828e4da0e0ae714c9336c06741e9e489208d917",
+    "display_normalization": "trailing whitespace only; original raw preserved in gzip"
+  },
+  "adjacent.log": {
+    "raw_sha256": "b3f23aec66d832d38bda94df0f9665d16d1c699777285247c4d667526f3c2bc9",
+    "raw_gzip_sha256": "2d3343c6767a7e765f85675394ad99812113d857a4a9887feef4e1c2ce4a7ea4",
+    "display_normalization": "trailing whitespace only; original raw preserved in gzip"
+  }
+}

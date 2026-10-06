@@ -68,11 +68,13 @@ def _require_read_boundary(conn):
         "OR has_column_privilege(%s,c.oid,x.attnum,'UPDATE'))",(ISSUER,ISSUER,ISSUER)).fetchall()
     if any(r['extra'] or (r['oid'],r['attname']) not in lock_columns for r in effective_columns):
         raise ProviderCapacityFormalBoundaryBlocked('CAPACITY_ISSUER_EFFECTIVE_COLUMN_PERMISSION_DRIFTED')
+    from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence
+    require_withdrawal_fence(conn)
     functions=conn.execute("SELECT p.oid FROM pg_proc p WHERE p.prosecdef AND has_function_privilege(%s,p.oid,'EXECUTE') "
-        "AND p.oid<>'public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)'::regprocedure LIMIT 1",(ISSUER,)).fetchone()
+        "AND p.oid NOT IN ('public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)'::regprocedure,'public.aos_capacity_withdrawal_epoch_lock(text,text,text)'::regprocedure) LIMIT 1",(ISSUER,)).fetchone()
     if functions:raise ProviderCapacityFormalBoundaryBlocked('CAPACITY_ISSUER_EFFECTIVE_DEFINER_PERMISSION_DRIFTED')
     explicit=conn.execute("SELECT p.oid,a.privilege_type,a.is_grantable FROM pg_proc p,LATERAL aclexplode(p.proacl) a "
-        "WHERE a.grantee=%s::regrole AND (p.oid<>'public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)'::regprocedure "
+        "WHERE a.grantee=%s::regrole AND (p.oid NOT IN ('public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)'::regprocedure,'public.aos_capacity_withdrawal_epoch_lock(text,text,text)'::regprocedure) "
         "OR a.privilege_type<>'EXECUTE' OR a.is_grantable)",(ISSUER,)).fetchone()
     schemas=conn.execute("SELECT n.nspname,a.privilege_type,a.is_grantable FROM pg_namespace n,LATERAL aclexplode(n.nspacl) a "
         "WHERE a.grantee=%s::regrole",(ISSUER,)).fetchall()

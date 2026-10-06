@@ -322,3 +322,49 @@ def test_direct_withdrawal_committed_after_native_serial_snapshot_is_rejected(na
                                   (*SCOPE.key, proposal_id)).fetchone()['n'] == 1
         with pytest.raises(ProviderCapacityIssuanceBlocked):
             check_native_capacity_supplier_inputs(reader, command, policy, attestation, trust_roots=f['provider'])
+
+
+@pytest.mark.parametrize('target', ['source', 'allocation'])
+def test_direct_withdrawal_waits_for_native_source_reader_commit(native_signed_source, target):
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+    from queue import Queue
+    from aos_api.db import connect
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs
+    from tests.aip.test_provider_capacity_formal_boundary_pg import isolated_owner
+    f, actual_command, _, source, config = native_signed_source
+    command, policy, attestation = actual_command()
+    with connect(SCOPE) as conn:
+        proposal_id = command.approved_proposal.asset_id if target == 'source' else conn.execute(
+            'SELECT proposal_id FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s AND approval_event_id=%s',
+            (*SCOPE.key, source.allocation_approval_ref.asset_id)).fetchone()['proposal_id']
+        row=conn.execute('SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s',(*SCOPE.key,proposal_id)).fetchone()
+    queue=Queue()
+    def withdraw():
+        with connect(SCOPE) as writer:
+            writer.execute("SET LOCAL lock_timeout='4000ms'")
+            queue.put(writer.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'])
+            writer.execute('INSERT INTO aip_action_withdrawal_event '
+                '(org_id,project_id,withdrawal_event_id,proposal_id,proposal_version,proposal_hash,actor_id,reason,idempotency_key,request_hash) '
+                'VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                (*SCOPE.key,'reader-withdraw-'+uuid4().hex,proposal_id,row['version']+1,row['proposal_hash'],row['created_by'],
+                 'isolated reader first epoch wait','reader-key-'+uuid4().hex,'e'*64))
+            writer.commit()
+            return True
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        with connect_capacity_issuer(config,SCOPE) as reader:
+            assert check_native_capacity_supplier_inputs(reader,command,policy,attestation,trust_roots=f['provider']).execution_allowed is False
+            pid=reader.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+            future=pool.submit(withdraw);writer_pid=queue.get(timeout=3)
+            with isolated_owner() as observer:
+                deadline=time.monotonic()+3
+                while time.monotonic()<deadline:
+                    blockers=observer.execute('SELECT pg_blocking_pids(%s) AS pids',(writer_pid,)).fetchone()['pids']
+                    if pid in blockers:break
+                    if future.done():raise AssertionError('withdrawal did not wait for original reader')
+                    time.sleep(.02)
+                else:raise AssertionError('no authoritative reader blocker observed')
+            assert not future.done()
+            reader.commit()
+        assert future.result(timeout=5) is True

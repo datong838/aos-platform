@@ -1,5 +1,6 @@
 """Independent review of exact Source claims; approval never verifies or grants capacity."""
 from datetime import UTC,datetime
+import psycopg
 
 from aos_api.aip_action_models import CreateActionProposalRequest,DecideActionProposalRequest
 from aos_api.aip_action_policy import classify_action_risk
@@ -32,6 +33,16 @@ class ProviderCapacitySourceActionGuard(ProviderCapacityActionGuard):
 
     def check_proposal(self,conn,scope,actor,row,*,checker):
         roles=super().check_proposal(conn,scope,actor,row,checker=checker)
+        from aos_api.aip_capacity_withdrawal_fence import lock_capacity_withdrawals,CapacityWithdrawalFenceBlocked
+        source=ProviderCapacitySourceCandidate.model_validate(row['payload']['sourceCandidate'])
+        allocation=conn.execute('SELECT proposal_id FROM public.aip_action_approval_event WHERE org_id=%s AND project_id=%s AND approval_event_id=%s',
+            (*scope.key,source.allocation_approval_ref.asset_id)).fetchone()
+        if allocation is None:
+            raise ProviderCapacitySourceActionBlocked('SOURCE_ALLOCATION_APPROVAL_REQUIRED')
+        try:
+            lock_capacity_withdrawals(conn,scope,[row['proposal_id'],allocation['proposal_id']])
+        except (CapacityWithdrawalFenceBlocked,psycopg.Error) as exc:
+            raise ProviderCapacitySourceActionBlocked('SOURCE_WITHDRAWAL_FENCE_REQUIRED') from exc
         if conn.execute('SELECT 1 FROM public.aip_action_withdrawal_event '
             'WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
             (*scope.key,row['proposal_id'])).fetchone():
