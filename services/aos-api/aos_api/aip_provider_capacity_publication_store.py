@@ -92,6 +92,50 @@ WHERE content_hash=%(content_hash)s AND actual_hash=%(content_hash)s
   AND request_json->>'makerSubject'=created_by
 """
 
+
+def _combination_candidate_sql(kind):
+    # Only the two fixed original kinds are used, never caller SQL or names.
+    statement=CAPACITY_CANDIDATE_ROW_SQL.replace('%(candidate_kind)s',"'"+kind+"'")
+    for field in ('candidate_id','revision','content_hash'):
+        target={'candidate_id':'id','revision':'revision','content_hash':'hash'}[field]
+        statement=statement.replace('%('+field+')s','%('+kind+'_'+target+')s')
+    return statement
+
+
+# Original S13 combination, reading all three authoritative stored claims.
+# This does not replace typed models, original approvals or dependency locks.
+CAPACITY_SOURCE_COMBINATION_SQL = (
+    'WITH request AS ('+CAPACITY_REQUEST_ROW_SQL+'), account AS ('+
+    _combination_candidate_sql('account')+'), basis AS ('+
+    _combination_candidate_sql('basis')+r"""), terms AS (
+      SELECT a.candidate_id,a.revision,a.content_hash,
+        a.request_json->'candidate' AS account,
+        b.request_json->'candidate' AS basis,
+        r.request_json->'application' AS application
+      FROM account a CROSS JOIN basis b CROSS JOIN request r
+      WHERE r.created_by=%(maker)s
+    ) SELECT 1 AS matched FROM terms
+    WHERE basis->'physicalAccountRef'=pg_catalog.jsonb_build_object(
+      'assetType','ProviderPhysicalAccountCandidateRevision','assetId',candidate_id,
+      'revision',revision,'contentHash',content_hash)
+      AND pg_catalog.jsonb_typeof(account->'physicalAccountId')='string'
+      AND pg_catalog.jsonb_typeof(application->'physicalAccountId')='string'
+      AND account->'physicalAccountId'=application->'physicalAccountId'
+      AND CASE WHEN pg_catalog.jsonb_typeof(account->'providerRefs')='array' THEN
+        EXISTS(SELECT 1 FROM pg_catalog.jsonb_array_elements(account->'providerRefs') AS refs(value)
+               WHERE value=application->'providerRef') ELSE FALSE END
+      AND CASE WHEN pg_catalog.jsonb_typeof(basis->'maxConcurrency')='number'
+        AND pg_catalog.jsonb_typeof(application->'requestedMaxConcurrency')='number'
+        AND pg_catalog.length(basis->>'maxConcurrency')<=7
+        AND pg_catalog.length(application->>'requestedMaxConcurrency')<=7
+        AND (basis->>'maxConcurrency') COLLATE pg_catalog."C" ~ '^[1-9][0-9]*$'
+        AND (application->>'requestedMaxConcurrency') COLLATE pg_catalog."C" ~ '^[1-9][0-9]*$'
+      THEN (basis->>'maxConcurrency')::integer BETWEEN 1 AND 1000000
+        AND (application->>'requestedMaxConcurrency')::integer BETWEEN 1 AND 1000000
+        AND (basis->>'maxConcurrency')::integer <= (application->>'requestedMaxConcurrency')::integer
+      ELSE FALSE END
+""")
+
 CAPACITY_SIGNED_BODY_PROFILE_SQL = r"""
 CREATE FUNCTION aos_capacity_publication_private.canonical_signed_json(p_value json, p_depth integer)
 RETURNS text LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER

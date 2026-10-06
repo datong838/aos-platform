@@ -31,6 +31,14 @@ class ProviderCapacitySourceActionGuard(ProviderCapacityActionGuard):
     action_snapshot=dict(id=ACTION_ID,name='审查Provider容量来源',objectType=OBJECT_ID,
         parameters=[],requiredMarkings=[],submissionCriteria=[])
 
+    @staticmethod
+    def _combination_params(scope,source,maker):
+        params=dict(org_id=scope.org_id,project_id=scope.project_id,maker=maker,
+            request_id=source.allocation_request_ref.asset_id,request_hash=source.allocation_request_ref.content_hash)
+        for kind,ref in [('account',source.physical_account_ref),('basis',source.basis_ref)]:
+            params.update({kind+'_id':ref.asset_id,kind+'_revision':ref.revision,kind+'_hash':ref.content_hash})
+        return params
+
     def check_proposal(self,conn,scope,actor,row,*,checker):
         roles=super().check_proposal(conn,scope,actor,row,checker=checker)
         from aos_api.aip_capacity_withdrawal_fence import lock_capacity_withdrawals,CapacityWithdrawalFenceBlocked
@@ -128,6 +136,9 @@ class ProviderCapacitySourceActionGuard(ProviderCapacityActionGuard):
             if (basis.physical_account_ref!=source.physical_account_ref
                 or account.physical_account_id!=request.physical_account_id
                 or request.provider_ref not in account.provider_refs or basis.max_concurrency>request.requested_max_concurrency):
+                raise ProviderCapacitySourceActionBlocked('SOURCE_ACCOUNT_OR_CONCURRENCY_DRIFTED')
+            from aos_api.aip_provider_capacity_publication_store import CAPACITY_SOURCE_COMBINATION_SQL
+            if conn.execute(CAPACITY_SOURCE_COMBINATION_SQL,self._combination_params(scope,source,actor)).fetchone() is None:
                 raise ProviderCapacitySourceActionBlocked('SOURCE_ACCOUNT_OR_CONCURRENCY_DRIFTED')
             lock_capacity_evidence_refs(conn,scope,[request.basis_evidence_ref,account.evidence_ref,basis.evidence_ref])
             ProviderCapacityCandidateStore._account_dependencies(conn,scope,account)

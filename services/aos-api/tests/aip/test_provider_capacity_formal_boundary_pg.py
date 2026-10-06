@@ -16,6 +16,77 @@ from tests.aip._runtime_guard_history_fixture import isolated_owner
 ISSUER='aos_provider_capacity_issuer'
 
 
+def test_source_combination_sql_original_private_rows(approved_command,private_database):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_SOURCE_COMBINATION_SQL
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims
+    maker,_,source,_,command=approved_command
+    params=ProviderCapacitySourceActionGuard._combination_params(SCOPE,source,maker.subject)
+    with connect_capacity_issuer(private_database,SCOPE) as conn:
+        assert conn.execute(CAPACITY_SOURCE_COMBINATION_SQL,params).fetchone() is not None
+        assert read_capacity_approved_claims(conn,command).source==source
+        for changed in [dict(maker='other'),dict(org_id='dev-org'),dict(account_hash='0'*64),
+                        dict(basis_hash='0'*64),dict(request_hash='0'*64)]:
+            assert conn.execute(CAPACITY_SOURCE_COMBINATION_SQL,{**params,**changed}).fetchone() is None
+
+
+def test_source_combination_sql_independently_rehashed_faults(approved_command):
+    from copy import deepcopy
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_SOURCE_COMBINATION_SQL
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+    source=approved_command[2]
+    params=ProviderCapacitySourceActionGuard._combination_params(SCOPE,source,approved_command[0].subject)
+    with isolated_owner() as conn:
+        conn.execute('CREATE TEMP TABLE combination_requests AS SELECT * FROM public.aip_provider_capacity_request WITH NO DATA')
+        conn.execute('CREATE TEMP TABLE combination_candidates AS SELECT * FROM public.aip_provider_capacity_candidate WITH NO DATA')
+        conn.execute('INSERT INTO pg_temp.combination_requests SELECT * FROM public.aip_provider_capacity_request WHERE request_id=%s',
+                     (source.allocation_request_ref.asset_id,))
+        conn.execute('INSERT INTO pg_temp.combination_candidates SELECT * FROM public.aip_provider_capacity_candidate WHERE candidate_id=ANY(%s)',
+                     ([source.physical_account_ref.asset_id,source.basis_ref.asset_id],))
+        statement=CAPACITY_SOURCE_COMBINATION_SQL.replace('FROM public.aip_provider_capacity_request r','FROM pg_temp.combination_requests r').replace(
+            'FROM public.aip_provider_capacity_candidate c','FROM pg_temp.combination_candidates c')
+        account=conn.execute("SELECT request_json FROM pg_temp.combination_candidates WHERE candidate_kind='account'").fetchone()['request_json']
+        basis=conn.execute("SELECT request_json FROM pg_temp.combination_candidates WHERE candidate_kind='basis'").fetchone()['request_json']
+        request=conn.execute('SELECT request_json FROM pg_temp.combination_requests').fetchone()['request_json']
+        assert conn.execute(statement,params).fetchone() is not None
+        for fault in ['alias','basis_ref','provider_missing','provider_hash','provider_extra','provider_array',
+                      'concurrency','basis_bool','basis_fraction','basis_null','request_string','request_maker',
+                      'basis_zero','basis_huge','request_huge','basis_negative']:
+            conn.execute('SAVEPOINT combination_fault')
+            a,b,r=deepcopy(account),deepcopy(basis),deepcopy(request)
+            if fault=='alias':a['candidate']['physicalAccountId']='different'
+            elif fault=='provider_missing':a['candidate']['providerRefs']=[]
+            elif fault=='provider_hash':a['candidate']['providerRefs'][0]['contentHash']='f'*64
+            elif fault=='provider_extra':a['candidate']['providerRefs'][0]['extra']=True
+            elif fault=='provider_array':a['candidate']['providerRefs']={}
+            elif fault=='concurrency':b['candidate']['maxConcurrency']=r['application']['requestedMaxConcurrency']+1
+            elif fault=='basis_bool':b['candidate']['maxConcurrency']=True
+            elif fault=='basis_fraction':b['candidate']['maxConcurrency']=1.5
+            elif fault=='basis_null':b['candidate']['maxConcurrency']=None
+            elif fault=='request_string':r['application']['requestedMaxConcurrency']='1'
+            elif fault=='request_maker':
+                r['makerSubject']='other'
+                conn.execute("UPDATE pg_temp.combination_requests SET created_by='other'")
+            elif fault=='basis_zero':b['candidate']['maxConcurrency']=0
+            elif fault=='basis_huge':b['candidate']['maxConcurrency']=10**50
+            elif fault=='request_huge':r['application']['requestedMaxConcurrency']=10**50
+            elif fault=='basis_negative':b['candidate']['maxConcurrency']=-1
+            ah=canonical_hash(a)
+            b['candidate']['physicalAccountRef']={**b['candidate']['physicalAccountRef'],'contentHash':ah}
+            if fault=='basis_ref':b['candidate']['physicalAccountRef']['assetId']='different'
+            bh,rh=canonical_hash(b),canonical_hash(r)
+            conn.execute("UPDATE pg_temp.combination_candidates SET request_json=%s,content_hash=%s WHERE candidate_kind='account'",(Jsonb(a),ah))
+            conn.execute("UPDATE pg_temp.combination_candidates SET request_json=%s,content_hash=%s WHERE candidate_kind='basis'",(Jsonb(b),bh))
+            conn.execute('UPDATE pg_temp.combination_requests SET request_json=%s,request_hash=%s',(Jsonb(r),rh))
+            assert conn.execute(statement,{**params,'account_hash':ah,'basis_hash':bh,'request_hash':rh}).fetchone() is None,fault
+            conn.execute('ROLLBACK TO SAVEPOINT combination_fault')
+            conn.execute('RELEASE SAVEPOINT combination_fault')
+        conn.rollback()
+
+
 @pytest.fixture
 def approved_command(source_proposal,https_signer):
     from aos_api.aip_provider_capacity_source_action import decide_provider_capacity_source

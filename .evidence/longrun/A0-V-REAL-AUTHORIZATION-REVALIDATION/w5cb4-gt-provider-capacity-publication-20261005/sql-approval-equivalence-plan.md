@@ -83,3 +83,15 @@ S11下一合同调查已由原Python模型真实验证：request-account-shape-p
 formal_boundary_pg 新增实际私有 SCRAM 账户/basis 双正向及 wrong ref/maker/kind/revision/tenant 负向；隔离 TEMP 原行形状单字段故障，JSON 故障重算 stored 与 expected hash 独立验证 structure 门，两类真实原模型重解析。专项 RED→GREEN 后运行原 Source/runtime/formal/publication 相邻。仅本 Task 文件和证据精确提交；此存储读取不证明供应商事实、完整 SQL typed candidate、签名发行 COMMIT 或自然首链，原 Task 不收口。
 
 S12本轮验收：专项4 passed/10.00s，六模块相邻448 passed/196.91s，既有7warnings。实际原 Source consumer 已接入存储门；独立督导无新增重大问题。证据见 formal-boundary/candidate-storage-verification.md。完整typed candidate与组合发行未证明，下一步按S13–S19向完整入口收敛，原Task保留ACTIVE。
+
+
+## S13 文件级组合读取计划（2026-10-06）
+
+publication_store 新增 CAPACITY_SOURCE_COMBINATION_SQL，复用原 S11 request 与 S12 account/basis 精确存储查询，所有参数仅引用/原maker/tenant，kind分别固定account/basis。SQL读取真实原表而非调用者自由DTO：basis physicalAccountRef精确等于从原account ID/revision/hash构建的四字段ref；两个alias为string逐字相等；providerRefs必须array并逐元素JSONB完整相等于原request.providerRef；两个并发字段必须整数1..1000000且basis<=request。CASE防非array和非整数转换，固定schema。无新锁，保持原审批→组合→neutral Evidence→account dependencies→时钟/withdrawal顺序。
+
+原 source_action 四条Python判断保留，并在其后/neutral锁前执行SQL组合门；拒绝仍SOURCE_ACCOUNT_OR_CONCURRENCY_DRIFTED。formal_boundary_pg覆盖真实私有完整Source读取以及detached三原表副本的单项反例；每次更改重算stored/expected hash，account变化同步basis账户ref，避免hash和ref错误遮蔽组合错误。原供应商验证、完整SQL typed模型、S14–S19发行及真正COMMIT TTL仍未完成；不创建发行权限或改历史迁移。
+
+
+S12后继typed basis时间合同真实本地probe见basis-time-original-contract-probe.json：原ProviderCapacityBasisCandidate接受epoch秒、数字epoch字符串、小写t/z、空格分隔和+08时区（输出为原模型规范形式），拒naive observation及float/bool并发。正常CandidateStore存model_dump JSON会规范化，但原_candidate对原raw canonical hash校验后仍用model_validate读取；因此不能在“严格等价”名义下将所有历史raw候选都强行要求与SigningPermit相同RFC3339字节。必须先复核原INSERT路径/既存行约束并明确接受域：原普通Store规范输出、原读取接受域和未来发行合同各自取证；尚未批准的硬化不能隐式改变正常功能。本probe纯模型，不证明DB发行或业务权限。
+
+S13最终验收：六模块450 passed/215.84s、7既有warnings，实际原consumer已接入三原行组合SQL，独立只读复审无重大问题；formal-boundary/combination-verification.md为证据入口。原typed模型/签名与完整prepare/commit均未收口。

@@ -1,0 +1,249 @@
+{
+  "scope": "Pure original model probe; no DB/issuer authority or supplier verification",
+  "cases": [
+    {
+      "case": "canonical",
+      "accepted": true,
+      "input": {},
+      "normalized": {
+        "schemaVersion": 1,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "basisKind": "owner_allocation",
+        "physicalAccountRef": {
+          "assetType": "ProviderPhysicalAccountCandidateRevision",
+          "assetId": "account-probe",
+          "revision": 1,
+          "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "evidenceRef": {
+          "assetType": "EvidenceBundleRevision",
+          "assetId": "evidence-probe",
+          "revision": 1,
+          "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "maxConcurrency": 1,
+        "tokenLimit": {
+          "mode": "inflight_upper_bound",
+          "unit": "token",
+          "maxTokens": 1
+        },
+        "observedAt": "2026-10-06T00:00:00Z",
+        "validFrom": "2026-10-06T00:00:00Z",
+        "validUntil": "2026-10-07T00:00:00Z"
+      },
+      "normalizedEqualsInput": true
+    },
+    {
+      "case": "epoch_seconds",
+      "accepted": true,
+      "input": {
+        "observedAt": 1791244800
+      },
+      "normalized": {
+        "schemaVersion": 1,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "basisKind": "owner_allocation",
+        "physicalAccountRef": {
+          "assetType": "ProviderPhysicalAccountCandidateRevision",
+          "assetId": "account-probe",
+          "revision": 1,
+          "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "evidenceRef": {
+          "assetType": "EvidenceBundleRevision",
+          "assetId": "evidence-probe",
+          "revision": 1,
+          "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "maxConcurrency": 1,
+        "tokenLimit": {
+          "mode": "inflight_upper_bound",
+          "unit": "token",
+          "maxTokens": 1
+        },
+        "observedAt": "2026-10-06T00:00:00Z",
+        "validFrom": "2026-10-06T00:00:00Z",
+        "validUntil": "2026-10-07T00:00:00Z"
+      },
+      "normalizedEqualsInput": false
+    },
+    {
+      "case": "numeric_epoch_string",
+      "accepted": true,
+      "input": {
+        "observedAt": "1791244800"
+      },
+      "normalized": {
+        "schemaVersion": 1,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "basisKind": "owner_allocation",
+        "physicalAccountRef": {
+          "assetType": "ProviderPhysicalAccountCandidateRevision",
+          "assetId": "account-probe",
+          "revision": 1,
+          "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "evidenceRef": {
+          "assetType": "EvidenceBundleRevision",
+          "assetId": "evidence-probe",
+          "revision": 1,
+          "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "maxConcurrency": 1,
+        "tokenLimit": {
+          "mode": "inflight_upper_bound",
+          "unit": "token",
+          "maxTokens": 1
+        },
+        "observedAt": "2026-10-06T00:00:00Z",
+        "validFrom": "2026-10-06T00:00:00Z",
+        "validUntil": "2026-10-07T00:00:00Z"
+      },
+      "normalizedEqualsInput": false
+    },
+    {
+      "case": "lowercase_rfc3339",
+      "accepted": true,
+      "input": {
+        "observedAt": "2026-10-06t00:00:00z"
+      },
+      "normalized": {
+        "schemaVersion": 1,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "basisKind": "owner_allocation",
+        "physicalAccountRef": {
+          "assetType": "ProviderPhysicalAccountCandidateRevision",
+          "assetId": "account-probe",
+          "revision": 1,
+          "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "evidenceRef": {
+          "assetType": "EvidenceBundleRevision",
+          "assetId": "evidence-probe",
+          "revision": 1,
+          "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "maxConcurrency": 1,
+        "tokenLimit": {
+          "mode": "inflight_upper_bound",
+          "unit": "token",
+          "maxTokens": 1
+        },
+        "observedAt": "2026-10-06T00:00:00Z",
+        "validFrom": "2026-10-06T00:00:00Z",
+        "validUntil": "2026-10-07T00:00:00Z"
+      },
+      "normalizedEqualsInput": false
+    },
+    {
+      "case": "space_separator",
+      "accepted": true,
+      "input": {
+        "observedAt": "2026-10-06 00:00:00Z"
+      },
+      "normalized": {
+        "schemaVersion": 1,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "basisKind": "owner_allocation",
+        "physicalAccountRef": {
+          "assetType": "ProviderPhysicalAccountCandidateRevision",
+          "assetId": "account-probe",
+          "revision": 1,
+          "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "evidenceRef": {
+          "assetType": "EvidenceBundleRevision",
+          "assetId": "evidence-probe",
+          "revision": 1,
+          "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "maxConcurrency": 1,
+        "tokenLimit": {
+          "mode": "inflight_upper_bound",
+          "unit": "token",
+          "maxTokens": 1
+        },
+        "observedAt": "2026-10-06T00:00:00Z",
+        "validFrom": "2026-10-06T00:00:00Z",
+        "validUntil": "2026-10-07T00:00:00Z"
+      },
+      "normalizedEqualsInput": false
+    },
+    {
+      "case": "naive",
+      "accepted": false,
+      "input": {
+        "observedAt": "2026-10-06T00:00:00"
+      },
+      "errorType": "ValidationError"
+    },
+    {
+      "case": "offset",
+      "accepted": true,
+      "input": {
+        "observedAt": "2026-10-06T08:00:00+08:00"
+      },
+      "normalized": {
+        "schemaVersion": 1,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "basisKind": "owner_allocation",
+        "physicalAccountRef": {
+          "assetType": "ProviderPhysicalAccountCandidateRevision",
+          "assetId": "account-probe",
+          "revision": 1,
+          "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "evidenceRef": {
+          "assetType": "EvidenceBundleRevision",
+          "assetId": "evidence-probe",
+          "revision": 1,
+          "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "maxConcurrency": 1,
+        "tokenLimit": {
+          "mode": "inflight_upper_bound",
+          "unit": "token",
+          "maxTokens": 1
+        },
+        "observedAt": "2026-10-06T08:00:00+08:00",
+        "validFrom": "2026-10-06T00:00:00Z",
+        "validUntil": "2026-10-07T00:00:00Z"
+      },
+      "normalizedEqualsInput": true
+    },
+    {
+      "case": "float_concurrency",
+      "accepted": false,
+      "input": {
+        "maxConcurrency": 1.0
+      },
+      "errorType": "ValidationError"
+    },
+    {
+      "case": "bool_concurrency",
+      "accepted": false,
+      "input": {
+        "maxConcurrency": true
+      },
+      "errorType": "ValidationError"
+    }
+  ]
+}
