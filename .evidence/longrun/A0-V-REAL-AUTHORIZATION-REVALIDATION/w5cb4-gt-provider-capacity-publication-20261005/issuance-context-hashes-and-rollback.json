@@ -1,0 +1,15 @@
+{
+  "task": "gt-provider-capacity-publication-schema-20261005",
+  "base": "b3fb071426b34b9da40e85e74e21a01010d2b54a",
+  "authority": "AOS-001376",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_contracts.py": "847de2ee5a02b93576b0c78ef26a69701304e2ddc47865c003891c2d38186d84",
+    "services/aos-api/tests/aip/test_provider_capacity_publication_pg.py": "12fc8da5c020242bad5114c1aee3a26f0a9beb18d820f757b86e93457159947e"
+  },
+  "posttest_native_counts": {
+    "private_schema": 0,
+    "test_role": 0,
+    "crypto_function": 1
+  },
+  "result": "195 passed, 7 existing warnings, 17.36s, exit0; same native crypto isolation"
+}

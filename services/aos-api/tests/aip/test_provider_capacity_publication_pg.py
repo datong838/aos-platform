@@ -105,6 +105,95 @@ def published():
     return raw
 
 
+def published_v2():
+    raw = published()
+    raw.update(schemaVersion=2, issuanceContext=dict(
+        makerSubject="original-maker", oidcIssuer="https://identity.example.test/issuer",
+        oidcAudience="capacity-source", authenticationExpiresAt=raw["issuedAt"]+timedelta(minutes=5),
+        issuerRole="aos_provider_capacity_issuer", transactionId="123456789012",
+        backendPid=123, attemptId="11223344-5566-4788-99aa-bbccddeeff00"))
+    return raw
+
+
+def test_issuance_context_v2_roundtrip_is_untrusted_and_v1_stays_distinct():
+    from aos_api.aip_provider_capacity_publication_contracts import (
+        PublishedProviderCapacitySource, PublishedProviderCapacitySourceV2, parse_signed_capacity_body)
+    model = PublishedProviderCapacitySourceV2.model_validate(published_v2())
+    raw = canonical_json(model.model_dump(mode="json", by_alias=True))
+    assert parse_signed_capacity_body(raw, PublishedProviderCapacitySourceV2) == model
+    assert not hasattr(model.issuance_context, "verified")
+    with pytest.raises(ValidationError): PublishedProviderCapacitySource.model_validate(published_v2())
+    with pytest.raises(ValidationError): PublishedProviderCapacitySourceV2.model_validate(published())
+
+
+@pytest.mark.parametrize("fault", ["version", "maker", "unknown-maker", "issuer-http", "issuer-userinfo", "issuer-query",
+    "issuer-fragment", "issuer-port", "issuer-host", "audience", "expired", "naive", "role",
+    "tx-zero", "tx-leading-zero", "tx-overflow", "tx-number", "tx-negative", "pid-bool",
+    "pid-zero", "pid-overflow", "attempt", "private", "verified", "extra"])
+def test_issuance_context_complete_v2_single_fault_rejected(fault):
+    from aos_api.aip_provider_capacity_publication_contracts import PublishedProviderCapacitySourceV2
+    raw = published_v2()
+    context = raw["issuanceContext"]
+    if fault == "version": raw["schemaVersion"] = 1
+    elif fault == "maker": context["makerSubject"] = " original-maker"
+    elif fault == "unknown-maker": context["makerSubject"] = "unknown"
+    elif fault == "issuer-http": context["oidcIssuer"] = "http://identity.example.test"
+    elif fault == "issuer-userinfo": context["oidcIssuer"] = "https://user:pass@identity.example.test"
+    elif fault == "issuer-query": context["oidcIssuer"] += "?token=forbidden"
+    elif fault == "issuer-fragment": context["oidcIssuer"] += "#forbidden"
+    elif fault == "issuer-port": context["oidcIssuer"] = "https://identity.example.test:65536"
+    elif fault == "issuer-host": context["oidcIssuer"] = "https:///issuer"
+    elif fault == "audience": context["oidcAudience"] = " "
+    elif fault == "expired": context["authenticationExpiresAt"] = raw["issuedAt"]
+    elif fault == "naive": context["authenticationExpiresAt"] = raw["issuedAt"].replace(tzinfo=None)
+    elif fault == "role": context["issuerRole"] = "aos_runtime"
+    elif fault == "tx-zero": context["transactionId"] = "0"
+    elif fault == "tx-leading-zero": context["transactionId"] = "0123"
+    elif fault == "tx-overflow": context["transactionId"] = str(2**64)
+    elif fault == "tx-number": context["transactionId"] = 123
+    elif fault == "tx-negative": context["transactionId"] = "-1"
+    elif fault == "pid-bool": context["backendPid"] = True
+    elif fault == "pid-zero": context["backendPid"] = 0
+    elif fault == "pid-overflow": context["backendPid"] = 2**31
+    elif fault == "attempt": context["attemptId"] = "11223344-5566-4788-99AA-BBCCDDEEFF00"
+    elif fault == "private": context["privateKey"] = "forbidden"
+    elif fault == "verified": context["verified"] = True
+    else: context["extra"] = "forbidden"
+    with pytest.raises(ValidationError): PublishedProviderCapacitySourceV2.model_validate(raw)
+
+
+def test_issuance_context_v2_exact_xid_and_pid_upper_bounds():
+    from aos_api.aip_provider_capacity_publication_contracts import PublishedProviderCapacitySourceV2
+    raw = published_v2()
+    raw["issuanceContext"].update(transactionId=str(2**64-1), backendPid=2**31-1)
+    assert PublishedProviderCapacitySourceV2.model_validate(raw).schema_version == 2
+
+
+def test_issuance_context_all_claims_are_bound_by_native_signature(native_profile_runner):
+    import copy
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+    from aos_api.aip_provider_capacity_publication_contracts import PublishedProviderCapacitySourceV2, parse_signed_capacity_body
+    payload = PublishedProviderCapacitySourceV2.model_validate(published_v2()).model_dump(mode="json", by_alias=True)
+    raw = canonical_json(payload)
+    key = Ed25519PrivateKey.generate()
+    public = key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+    signature = key.sign(raw)
+    statements = ["SELECT aos_ed25519.verify(decode('%s','hex'),decode('%s','hex'),decode('%s','hex'));" % (signature.hex(), raw.hex(), public.hex())]
+    for name, value in dict(makerSubject="different-maker", oidcIssuer="https://different.example.test",
+        oidcAudience="different-audience", authenticationExpiresAt=(payload["validUntil"]),
+        transactionId="123456789013", backendPid=124,
+        attemptId="11223344-5566-4788-99aa-bbccddeeff01").items():
+        changed = copy.deepcopy(payload)
+        changed["issuanceContext"][name] = value
+        model = PublishedProviderCapacitySourceV2.model_validate(changed)
+        altered = canonical_json(model.model_dump(mode="json", by_alias=True))
+        # Valid claim shapes remain unauthenticated; the old signature must fail.
+        assert parse_signed_capacity_body(altered, PublishedProviderCapacitySourceV2) == model
+        statements.append("SELECT aos_ed25519.verify(decode('%s','hex'),decode('%s','hex'),decode('%s','hex'));" % (signature.hex(), altered.hex(), public.hex()))
+    assert native_profile_runner("\n".join(statements)).splitlines() == ["t"]+["f"]*7
+
+
 @pytest.mark.parametrize("kind", ["bootstrap", "published"])
 def test_complete_document_profiles_preserve_exact_signed_bytes(kind):
     from aos_api.aip_provider_capacity_publication_contracts import (

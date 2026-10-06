@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
+from urllib.parse import urlsplit
 
 from pydantic import ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator, model_validator
 
@@ -164,6 +165,73 @@ class PublishedProviderCapacitySource(_PublicationDocument):
         return self
 
 
+class CapacitySourceIssuanceContext(AipContractModel):
+    """Signed claims only; authentic subject/native transaction must be rechecked."""
+    model_config = ConfigDict(revalidate_instances="always", hide_input_in_errors=True)
+    maker_subject: StrictStr
+    oidc_issuer: StrictStr = Field(min_length=1, max_length=2000)
+    oidc_audience: StrictStr
+    authentication_expires_at: datetime
+    issuer_role: Literal["aos_provider_capacity_issuer"]
+    transaction_id: StrictStr = Field(min_length=1, max_length=20, pattern=r"^[1-9][0-9]*$")
+    backend_pid: StrictInt = Field(ge=1, le=2147483647)
+    attempt_id: StrictStr
+
+    @field_validator("maker_subject", "oidc_audience")
+    @classmethod
+    def identity_claim(cls, value):
+        _identifier(value)
+        if value == "unknown":
+            raise ValueError("explicit issuance identity claim required")
+        return value
+
+    @field_validator("oidc_issuer")
+    @classmethod
+    def issuer_url(cls, value):
+        if (value != value.strip() or not value.isprintable()
+            or any(char.isspace() for char in value) or "?" in value or "#" in value):
+            raise ValueError("exact HTTPS issuer claim required")
+        parsed = urlsplit(value)
+        if (not value.startswith("https://") or not parsed.hostname
+            or parsed.username is not None or parsed.password is not None
+            or (parsed.port is not None and not 1 <= parsed.port <= 65535)):
+            raise ValueError("exact HTTPS issuer claim required")
+        return value
+
+    @field_validator("transaction_id")
+    @classmethod
+    def xid8_claim(cls, value):
+        if int(value) > 18446744073709551615:
+            raise ValueError("bounded native xid8 claim required")
+        return value
+
+    @field_validator("attempt_id")
+    @classmethod
+    def attempt_claim(cls, value):
+        if str(UUID(value)) != value:
+            raise ValueError("canonical server attempt UUID claim required")
+        return value
+
+    @field_validator("authentication_expires_at")
+    @classmethod
+    def aware_authentication_expiry(cls, value):
+        if value.utcoffset() is None:
+            raise ValueError("aware issuance authentication expiry required")
+        return value
+
+
+class PublishedProviderCapacitySourceV2(PublishedProviderCapacitySource):
+    """Explicit v2 signed transcript, without JWT/signature/native authorization."""
+    schema_version: StrictInt = Field(ge=2, le=2)
+    issuance_context: CapacitySourceIssuanceContext
+
+    @model_validator(mode="after")
+    def issuance_authentication_window(self):
+        if self.issuance_context.authentication_expires_at <= self.issued_at:
+            raise ValueError("issuance must precede authentication expiry")
+        return self
+
+
 class CapacitySignedBodyProfileError(ValueError):
     """Safe rejection category; never contains caller bytes or field values."""
     def __init__(self, reason):
@@ -174,7 +242,8 @@ class CapacitySignedBodyProfileError(ValueError):
 def parse_signed_capacity_body(raw: bytes, document_type):
     """Reject ambiguous encodings; returned model is still unauthenticated."""
     allowed = (ProviderCapacityOriginBootstrap, ProviderCapacitySigningPermit,
-               PublishedProviderCapacitySource, ProviderCapacitySourcePolicy, SupplierCapacityAttestation)
+               PublishedProviderCapacitySource, PublishedProviderCapacitySourceV2,
+               ProviderCapacitySourcePolicy, SupplierCapacityAttestation)
     if document_type not in allowed or type(raw) is not bytes:
         raise CapacitySignedBodyProfileError("TYPE")
     if not 0 < len(raw) <= 2 * 1024 * 1024:

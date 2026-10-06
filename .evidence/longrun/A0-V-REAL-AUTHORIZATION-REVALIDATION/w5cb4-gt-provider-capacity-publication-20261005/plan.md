@@ -136,3 +136,13 @@ public仅窄prepare/commit/reconcile接口；issuer不获private schema/helper/r
 原生反例已确认：deferred-commit-expiry-counterexample.sql/log/json，提前SET CONSTRAINTS后等待至expiry再COMMIT仍成功，读取EXPIRED_ROW_COMMITTED=true。禁止以延迟trigger宣称实际COMMIT时TTL门完成；未finalized gate与提交时钟gate分开验收。临时实验不安装正式publication表/函数。
 
 已生成sql-contract-field-manifest.json，捕获原十类模型的exact alias/required/nested字段用于S08/S11/S12/S17逐项SQL对照。模型自定义validator、canonical时区/整数/时间序列化语义不在JSONSchema内，禁止把字段清单当完整typed验收。提交时钟合同已向用户提出明确裁决，pending期间仅推进不依赖该裁决的SQL等价/主体签发设计；原Task与Goal继续ACTIVE。
+
+## AOS-001376 v2签名主体/事务原文契约实施范围
+
+仅原contracts.py与test_provider_capacity_publication_pg.py及本证据目录；不创建152、不改v1模型、不开放signer/SQL入口。新增CapacitySourceIssuanceContext和PublishedProviderCapacitySourceV2(schemaVersion严格2)；最终Source原所有字段/语义原样继承，必需issuanceContext包含makerSubject、oidcIssuer、oidcAudience、authenticationExpiresAt、固定issuerRole、native xid8十进制字符串、backendPid、server-generated attempt UUID。上下文无JWT/privateKey/verified字段；标识严格，无多余字段，OIDCissuer只接受无userinfo/query/fragment的绝对https URL（端口若有须合法）。原文结构不能证明issuer真实可信、JWT有效、txid/attempt由DB生成；正式SQL与受控signer必须分别核native值及正式配置。不引入context自身prepared hash形成签名自引用，DB保存sha256(raw)并核。
+
+authenticationExpiresAt必须aware且晚于Source issuedAt，非“整个Source期限都不得超过JWT期限”；它只表达签发认证截止，Source消费仍需自身current授权门。发布时间合同的真正COMMIT问题未解决/未裁决，不以此类型约束代替。native xid8限1..2^64-1、不前导0/非十进制；backendPid严格整数1..2^31-1；attemptId标准小写UUID；maker/audience符合原identifier边界。新v2类型可由parse_signed_capacity_body明确选择，v1函数不能暗中接受schema2或新字段。
+
+RED先新类型不存在的完整v2原文测试；完整合法文档单项变异包括schema/主体/issuer/audience/auth expiry/txid/pid/attempt/verified字段，检验严格拒绝；v1保持原roundtrip，v2原raw canonical精确roundtrip与原签名字节profile组合。按原request绑定协议，后继signer/SQL须用认证subject和tenant/四refs重算requestHash，不由任何自由context自证。此模块仍untrusted transport，不验JWT/签名、不给capacity，不将完整TaskDelivery。
+
+v2原文格式已按RED→最小→195项含原生签名相邻验证；无完整Source权限，独立督导只读复审无新重大问题。后继consumer核历史发行provenance与自己的当前授权/epochs/期限，不要求Source内历史xid8/PID等于消费事务；实际签发阶段必须匹配当前native xid8/session/attempt/raw。下一仍原完整SQL等价与入口，不再扩通用helper；提交时钟/归属裁决仍pending。

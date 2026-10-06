@@ -1,0 +1,512 @@
+{
+  "base": "b3fb071426b34b9da40e85e74e21a01010d2b54a",
+  "models": {
+    "CapacitySourceIssuanceContext": {
+      "additionalProperties": false,
+      "description": "Signed claims only; authentic subject/native transaction must be rechecked.",
+      "properties": {
+        "makerSubject": {
+          "title": "Makersubject",
+          "type": "string"
+        },
+        "oidcIssuer": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Oidcissuer",
+          "type": "string"
+        },
+        "oidcAudience": {
+          "title": "Oidcaudience",
+          "type": "string"
+        },
+        "authenticationExpiresAt": {
+          "format": "date-time",
+          "title": "Authenticationexpiresat",
+          "type": "string"
+        },
+        "issuerRole": {
+          "const": "aos_provider_capacity_issuer",
+          "title": "Issuerrole",
+          "type": "string"
+        },
+        "transactionId": {
+          "maxLength": 20,
+          "minLength": 1,
+          "pattern": "^[1-9][0-9]*$",
+          "title": "Transactionid",
+          "type": "string"
+        },
+        "backendPid": {
+          "maximum": 2147483647,
+          "minimum": 1,
+          "title": "Backendpid",
+          "type": "integer"
+        },
+        "attemptId": {
+          "title": "Attemptid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "makerSubject",
+        "oidcIssuer",
+        "oidcAudience",
+        "authenticationExpiresAt",
+        "issuerRole",
+        "transactionId",
+        "backendPid",
+        "attemptId"
+      ],
+      "title": "CapacitySourceIssuanceContext",
+      "type": "object"
+    },
+    "PublishedProviderCapacitySourceV2": {
+      "$defs": {
+        "CapacitySourceDeploymentTarget": {
+          "additionalProperties": false,
+          "properties": {
+            "host": {
+              "enum": [
+                "127.0.0.1",
+                "::1"
+              ],
+              "title": "Host",
+              "type": "string"
+            },
+            "port": {
+              "maximum": 65535,
+              "minimum": 1,
+              "title": "Port",
+              "type": "integer"
+            },
+            "database": {
+              "pattern": "^[a-z][a-z0-9_]{0,62}$",
+              "title": "Database",
+              "type": "string"
+            },
+            "databaseOid": {
+              "maximum": 4294967295,
+              "minimum": 1,
+              "title": "Databaseoid",
+              "type": "integer"
+            },
+            "clusterIdentifier": {
+              "pattern": "^[0-9]{10,20}$",
+              "title": "Clusteridentifier",
+              "type": "string"
+            },
+            "issuerRole": {
+              "const": "aos_provider_capacity_issuer",
+              "title": "Issuerrole",
+              "type": "string"
+            }
+          },
+          "required": [
+            "host",
+            "port",
+            "database",
+            "databaseOid",
+            "clusterIdentifier",
+            "issuerRole"
+          ],
+          "title": "CapacitySourceDeploymentTarget",
+          "type": "object"
+        },
+        "CapacitySourceIssuanceContext": {
+          "additionalProperties": false,
+          "description": "Signed claims only; authentic subject/native transaction must be rechecked.",
+          "properties": {
+            "makerSubject": {
+              "title": "Makersubject",
+              "type": "string"
+            },
+            "oidcIssuer": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "title": "Oidcissuer",
+              "type": "string"
+            },
+            "oidcAudience": {
+              "title": "Oidcaudience",
+              "type": "string"
+            },
+            "authenticationExpiresAt": {
+              "format": "date-time",
+              "title": "Authenticationexpiresat",
+              "type": "string"
+            },
+            "issuerRole": {
+              "const": "aos_provider_capacity_issuer",
+              "title": "Issuerrole",
+              "type": "string"
+            },
+            "transactionId": {
+              "maxLength": 20,
+              "minLength": 1,
+              "pattern": "^[1-9][0-9]*$",
+              "title": "Transactionid",
+              "type": "string"
+            },
+            "backendPid": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Backendpid",
+              "type": "integer"
+            },
+            "attemptId": {
+              "title": "Attemptid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "makerSubject",
+            "oidcIssuer",
+            "oidcAudience",
+            "authenticationExpiresAt",
+            "issuerRole",
+            "transactionId",
+            "backendPid",
+            "attemptId"
+          ],
+          "title": "CapacitySourceIssuanceContext",
+          "type": "object"
+        },
+        "FixedWindowTokenLimit": {
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "fixed_window_rate",
+              "title": "Mode",
+              "type": "string"
+            },
+            "unit": {
+              "const": "token",
+              "title": "Unit",
+              "type": "string"
+            },
+            "maxTokens": {
+              "maximum": 1000000000000,
+              "minimum": 1,
+              "title": "Maxtokens",
+              "type": "integer"
+            },
+            "windowSeconds": {
+              "maximum": 86400,
+              "minimum": 1,
+              "title": "Windowseconds",
+              "type": "integer"
+            },
+            "windowAnchor": {
+              "format": "date-time",
+              "title": "Windowanchor",
+              "type": "string"
+            }
+          },
+          "required": [
+            "mode",
+            "unit",
+            "maxTokens",
+            "windowSeconds",
+            "windowAnchor"
+          ],
+          "title": "FixedWindowTokenLimit",
+          "type": "object"
+        },
+        "FormalEvaluationTenant": {
+          "additionalProperties": false,
+          "properties": {
+            "orgId": {
+              "const": "org-org",
+              "title": "Orgid",
+              "type": "string"
+            },
+            "projectId": {
+              "const": "dev-project",
+              "title": "Projectid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "orgId",
+            "projectId"
+          ],
+          "title": "FormalEvaluationTenant",
+          "type": "object"
+        },
+        "FormalExactRef": {
+          "additionalProperties": false,
+          "properties": {
+            "assetType": {
+              "maxLength": 80,
+              "minLength": 1,
+              "title": "Assettype",
+              "type": "string"
+            },
+            "assetId": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Assetid",
+              "type": "string"
+            },
+            "revision": {
+              "minimum": 1,
+              "title": "Revision",
+              "type": "integer"
+            },
+            "contentHash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Contenthash",
+              "type": "string"
+            }
+          },
+          "required": [
+            "assetType",
+            "assetId",
+            "revision",
+            "contentHash"
+          ],
+          "title": "FormalExactRef",
+          "type": "object"
+        },
+        "InflightTokenLimit": {
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "inflight_upper_bound",
+              "title": "Mode",
+              "type": "string"
+            },
+            "unit": {
+              "const": "token",
+              "title": "Unit",
+              "type": "string"
+            },
+            "maxTokens": {
+              "maximum": 1000000000000,
+              "minimum": 1,
+              "title": "Maxtokens",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "mode",
+            "unit",
+            "maxTokens"
+          ],
+          "title": "InflightTokenLimit",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Explicit v2 signed transcript, without JWT/signature/native authorization.",
+      "properties": {
+        "schemaVersion": {
+          "maximum": 2,
+          "minimum": 2,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "tenant": {
+          "$ref": "#/$defs/FormalEvaluationTenant"
+        },
+        "assetId": {
+          "title": "Assetid",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "publisher": {
+          "title": "Publisher",
+          "type": "string"
+        },
+        "keyId": {
+          "title": "Keyid",
+          "type": "string"
+        },
+        "validFrom": {
+          "format": "date-time",
+          "title": "Validfrom",
+          "type": "string"
+        },
+        "validUntil": {
+          "format": "date-time",
+          "title": "Validuntil",
+          "type": "string"
+        },
+        "deploymentTarget": {
+          "$ref": "#/$defs/CapacitySourceDeploymentTarget"
+        },
+        "purpose": {
+          "const": "provider_capacity_published_source",
+          "title": "Purpose",
+          "type": "string"
+        },
+        "physicalAccountId": {
+          "title": "Physicalaccountid",
+          "type": "string"
+        },
+        "supplierId": {
+          "title": "Supplierid",
+          "type": "string"
+        },
+        "supplierAccountFingerprint": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Supplieraccountfingerprint",
+          "type": "string"
+        },
+        "providerRefs": {
+          "items": {
+            "$ref": "#/$defs/FormalExactRef"
+          },
+          "maxItems": 1000,
+          "minItems": 1,
+          "title": "Providerrefs",
+          "type": "array"
+        },
+        "evidenceRefs": {
+          "items": {
+            "$ref": "#/$defs/FormalExactRef"
+          },
+          "maxItems": 1000,
+          "minItems": 1,
+          "title": "Evidencerefs",
+          "type": "array"
+        },
+        "sourceProposalRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "sourceApprovalRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "allocationRequestRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "allocationApprovalRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "accountCandidateRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "basisCandidateRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "sourcePolicyRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "supplierAttestationRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "signingPermitRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "originRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "originEpoch": {
+          "minimum": 0,
+          "title": "Originepoch",
+          "type": "integer"
+        },
+        "sourceWithdrawalEpoch": {
+          "minimum": 0,
+          "title": "Sourcewithdrawalepoch",
+          "type": "integer"
+        },
+        "allocationWithdrawalEpoch": {
+          "minimum": 0,
+          "title": "Allocationwithdrawalepoch",
+          "type": "integer"
+        },
+        "requestHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Requesthash",
+          "type": "string"
+        },
+        "maxConcurrency": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "title": "Maxconcurrency",
+          "type": "integer"
+        },
+        "tokenLimit": {
+          "discriminator": {
+            "mapping": {
+              "fixed_window_rate": "#/$defs/FixedWindowTokenLimit",
+              "inflight_upper_bound": "#/$defs/InflightTokenLimit"
+            },
+            "propertyName": "mode"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/InflightTokenLimit"
+            },
+            {
+              "$ref": "#/$defs/FixedWindowTokenLimit"
+            }
+          ],
+          "title": "Tokenlimit"
+        },
+        "observedAt": {
+          "format": "date-time",
+          "title": "Observedat",
+          "type": "string"
+        },
+        "issuedAt": {
+          "format": "date-time",
+          "title": "Issuedat",
+          "type": "string"
+        },
+        "executionAllowed": {
+          "title": "Executionallowed",
+          "type": "boolean"
+        },
+        "issuanceContext": {
+          "$ref": "#/$defs/CapacitySourceIssuanceContext"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "tenant",
+        "assetId",
+        "revision",
+        "publisher",
+        "keyId",
+        "validFrom",
+        "validUntil",
+        "deploymentTarget",
+        "purpose",
+        "physicalAccountId",
+        "supplierId",
+        "supplierAccountFingerprint",
+        "providerRefs",
+        "evidenceRefs",
+        "sourceProposalRef",
+        "sourceApprovalRef",
+        "allocationRequestRef",
+        "allocationApprovalRef",
+        "accountCandidateRef",
+        "basisCandidateRef",
+        "sourcePolicyRef",
+        "supplierAttestationRef",
+        "signingPermitRef",
+        "originRef",
+        "originEpoch",
+        "sourceWithdrawalEpoch",
+        "allocationWithdrawalEpoch",
+        "requestHash",
+        "maxConcurrency",
+        "tokenLimit",
+        "observedAt",
+        "issuedAt",
+        "executionAllowed",
+        "issuanceContext"
+      ],
+      "title": "PublishedProviderCapacitySourceV2",
+      "type": "object"
+    }
+  },
+  "boundary": "Schema fields alone do not include all semantic validators, authenticate JWT, prove native transaction, or grant Source permissions."
+}
