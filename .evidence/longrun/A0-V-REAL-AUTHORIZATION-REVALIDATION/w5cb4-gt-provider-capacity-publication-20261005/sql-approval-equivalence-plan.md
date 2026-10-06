@@ -110,3 +110,11 @@ S13引用别名实际复现：ref-alias-red.log两项通过原runtime实际INSER
 候选一：S14–S15原完整Provider/Evidence当前性，有现formal-boundary Task/Lease授权，无真实Provider调用，先证明多Provider原实际入口。候选二：AIS-001的231摘要更新，需独立文档scope登记，先不越现租约写入。选择第一项。具体测试文件 services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py；证据同formal-boundary目录 provider-set-original*.log/md。用原Store真实建立两个Provider的account/basis，第二个不是request.providerRef；合法完整集合须原Source proposal成功。随后仅改变第二Provider head或payload，原入口须拒绝且proposal计数不增加；不改业务代码，不先复制Model解析进SQL。调查明确S14原模型、当前head和canonical payload的最低等价证据，后继原生SQL须核全部集合并保留原锁序；本调查不当完整发行通过。
 
 S14完整Provider集合原入口实测：3 passed/10.61s，整formal-boundary文件80 passed/106.22s；证据见provider-set-original-verification.md和精确sources.json。追加Provider独立漂移拒绝且无新proposal。业务代码未改；下一实现必须保留allocation先Provider、neutral Evidence、account全部Provider的真实前缀锁序和typed canonical内容校验，不能只做集合存在/count。已消费独立督导RQ-02具体对象/connection锁图约束；完整native发行/consumer及实际COMMIT仍未证明。
+
+## S16 两批准撤回的完整私有入口竞争验收
+
+两个已登记候选：S14 Provider typed全原生接受域需先解决非strict原模型归一合同，不能用raw JSON hash偷偷收窄；S16已安装151 epoch与完整原read_capacity_approved_claims可独立实际竞争验收。选择S16：现formal-boundary Task/Lease授权测试文件 services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py 和同目录 formal-boundary 证据；不改迁移151、原Guard或真库。
+
+目标是原Source批准和原allocation批准两项各覆盖reader-first/writer-first：原runtime直接INSERT withdrawal（不改proposal approved状态），实际private SCRAM reader运行完整原approved-claims入口并持有原conn到真正COMMIT。记录双方backend pid及pg_blocking_pids证明等待，不能用sleep成功代替互斥。reader-first允许先取得仅claims且writer等其COMMIT，之后新reader拒绝；writer-first持有原withdrawal epoch写锁，reader等待writer COMMIT后必须拒绝，不能让旧serializable快照漏看撤回。退出后核原status仍approved、原撤回真实持久及epoch=1；claims仍无supplier/execution授权。四项成功只证明此原生协调门，不是正式Source发行/实际COMMIT TTL/业务首链。专项后原formal-boundary+151 withdrawal suite相邻；保留自主督导复查与完整Task退出未完成。
+
+S16原两批准完整private入口与runtime直接withdrawal竞争：专项4/15.04s，相邻108/148.70s；实际四组阻塞PID与双方真实COMMIT/拒绝/新reader拒绝/approved状态未改见formal-boundary approval-withdrawal-commit-proof.json。原claims协调成立，完整签名Source最终COMMIT TTL/consumer仍未证明，原Task不Delivery。

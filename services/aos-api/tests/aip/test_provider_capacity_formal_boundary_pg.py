@@ -16,6 +16,104 @@ from tests.aip._runtime_guard_history_fixture import isolated_owner
 ISSUER='aos_provider_capacity_issuer'
 
 
+@pytest.mark.parametrize('target',['source','allocation'])
+@pytest.mark.parametrize('order',['reader_first','writer_first'])
+def test_original_private_claims_and_runtime_withdrawal_share_commit_fence(approved_command,private_database,target,order,capsys):
+    from threading import Event,Thread
+    import time
+    from aos_api.db import connect
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims,ProviderCapacityFormalBoundaryBlocked
+    command=approved_command[-1]
+    with isolated_owner() as conn:
+        if target=='source':proposal_id=command.approved_proposal.asset_id
+        else:
+            proposal_id=conn.execute('SELECT proposal_id FROM public.aip_action_approval_event '
+                'WHERE org_id=%s AND project_id=%s AND approval_event_id=%s',
+                (*SCOPE.key,approved_command[2].allocation_approval_ref.asset_id)).fetchone()['proposal_id']
+        original=conn.execute('SELECT * FROM public.aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+            (*SCOPE.key,proposal_id)).fetchone()
+        assert original['status']=='approved'
+    release=Event();reader_ready=Event();writer_ready=Event();reader_done=Event();writer_done=Event();results={}
+    event_id='native-withdrawal-'+uuid4().hex
+    def reader():
+        try:
+            with connect_capacity_issuer(private_database,SCOPE) as conn:
+                results['reader_pid']=conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+                if order=='writer_first':reader_ready.set()
+                results['claims']=read_capacity_approved_claims(conn,command)
+                if order=='reader_first':
+                    reader_ready.set()
+                    if not release.wait(12):raise RuntimeError('reader release timeout')
+            results['reader_committed']=True
+        except BaseException as exc:results['reader_error']=exc
+        finally:reader_done.set()
+    def writer():
+        try:
+            with connect(SCOPE) as conn:
+                results['writer_pid']=conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+                if order=='reader_first':writer_ready.set()
+                conn.execute('INSERT INTO public.aip_action_withdrawal_event '
+                    '(org_id,project_id,withdrawal_event_id,proposal_id,proposal_version,proposal_hash,actor_id,reason,idempotency_key,request_hash) '
+                    'VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                    (*SCOPE.key,event_id,proposal_id,original['version']+1,original['proposal_hash'],original['created_by'],
+                     'isolated native withdrawal commit fence','native-withdrawal-key-'+uuid4().hex,'f'*64))
+                if order=='writer_first':
+                    writer_ready.set()
+                    if not release.wait(12):raise RuntimeError('writer release timeout')
+            results['writer_committed']=True
+        except BaseException as exc:results['writer_error']=exc
+        finally:writer_done.set()
+    rt,wt=Thread(target=reader),Thread(target=writer)
+    first,first_ready,second,second_ready=(rt,reader_ready,wt,writer_ready) if order=='reader_first' else (wt,writer_ready,rt,reader_ready)
+    first.start();blocked=False
+    try:
+        assert first_ready.wait(10),results
+        second.start();assert second_ready.wait(10),results
+        waiting,holding=('writer_pid','reader_pid') if order=='reader_first' else ('reader_pid','writer_pid')
+        deadline=time.monotonic()+4
+        while time.monotonic()<deadline:
+            with isolated_owner() as conn:
+                blockers=conn.execute('SELECT pg_blocking_pids(%s) AS blockers',(results[waiting],)).fetchone()['blockers']
+            if results[holding] in blockers:blocked=True;break
+            if reader_done.is_set() or writer_done.is_set():break
+            time.sleep(.02)
+        assert blocked,'actual original reader/writer did not share a blocking fence'
+        assert not reader_done.is_set() and not writer_done.is_set()
+    finally:
+        release.set()
+        for thread in (rt,wt):
+            if thread.ident is not None:thread.join(15)
+    assert not rt.is_alive() and not wt.is_alive(),results
+    assert 'writer_error' not in results and results.get('writer_committed') is True,results
+    if order=='reader_first':
+        assert 'reader_error' not in results and results.get('reader_committed') is True,results
+        assert results['claims'].supplier_verified is False and results['claims'].execution_allowed is False
+    else:
+        assert isinstance(results.get('reader_error'),ProviderCapacityFormalBoundaryBlocked),results
+        assert 'claims' not in results and 'reader_committed' not in results
+    with isolated_owner() as conn:
+        assert conn.execute('SELECT status FROM public.aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+            (*SCOPE.key,proposal_id)).fetchone()['status']=='approved'
+        assert conn.execute('SELECT count(*) AS n FROM public.aip_action_withdrawal_event WHERE org_id=%s AND project_id=%s '
+            'AND withdrawal_event_id=%s',(*SCOPE.key,event_id)).fetchone()['n']==1
+        assert conn.execute('SELECT epoch FROM public.aip_capacity_withdrawal_epoch WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+            (*SCOPE.key,proposal_id)).fetchone()['epoch']==1
+    with connect_capacity_issuer(private_database,SCOPE) as conn:
+        with pytest.raises(ProviderCapacityFormalBoundaryBlocked):read_capacity_approved_claims(conn,command)
+        conn.rollback()
+    import json
+    with capsys.disabled():
+        print('CAPACITY_WITHDRAWAL_COMMIT_PROOF '+json.dumps(dict(
+            target=target,order=order,reader_pid=results['reader_pid'],writer_pid=results['writer_pid'],
+            waiting_pid=results[waiting],holding_pid=results[holding],pg_blocking_pids=blockers,
+            writer_committed=results['writer_committed'],reader_committed=results.get('reader_committed',False),
+            reader_rejected=isinstance(results.get('reader_error'),ProviderCapacityFormalBoundaryBlocked),
+            proposal_status='approved',withdrawal_count=1,epoch=1,fresh_reader_rejected=True,
+            authorization='APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START',supplier_verified=False,
+            execution_allowed=False,current_database_accessed=False),sort_keys=True))
+
+
 @pytest.mark.parametrize('fault',[None,'second_head','second_payload'])
 def test_original_source_checks_every_account_provider(source_inputs,fault):
     from psycopg.types.json import Jsonb

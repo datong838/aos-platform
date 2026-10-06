@@ -1,0 +1,104 @@
+{
+  "baseline_head": "6e9e6bf5028de261be0992aed20da0a4da4f615e",
+  "task": "gt-provider-capacity-formal-boundary-20261005",
+  "authority": "AOS-001390",
+  "sources": {
+    "services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py": "eeee6f8dc9f40b03dea4f85bc59152b82b0200f84cb03c5699230de506d8b2b8",
+    "services/aos-api/aos_api/aip_provider_capacity_formal_boundary.py": "79243722e92d540f8cabb587290648b3a2c50cb25dda8fe9a151e95bb8a7e612",
+    "services/aos-api/aos_api/aip_capacity_withdrawal_fence.py": "45b0e1d061a27fa49e33251761f71bda13446950f13e7dbafface9538c8eed64",
+    "services/aos-api/aos_api/aip_provider_capacity_source_action.py": "b4239fc835365560a17b5c9861ff4a35e4a8acc59e313b738eae6b1c278961d6",
+    "services/aos-api/alembic/versions/a0v_151_capacity_withdrawal_epoch.py": "9b7890d28cfd383defcb3f40b645dbd1ddbd368452bf3893a1b2c54e4a103f82"
+  },
+  "log_sha256": "f44f0a4c7b23e757ef19f9deb0293c3a8c1361a25a760e9b0ba0751633fa4f7a",
+  "cases": [
+    {
+      "authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START",
+      "current_database_accessed": false,
+      "epoch": 1,
+      "execution_allowed": false,
+      "fresh_reader_rejected": true,
+      "holding_pid": 444224,
+      "order": "reader_first",
+      "pg_blocking_pids": [
+        444224
+      ],
+      "proposal_status": "approved",
+      "reader_committed": true,
+      "reader_pid": 444224,
+      "reader_rejected": false,
+      "supplier_verified": false,
+      "target": "source",
+      "waiting_pid": 444225,
+      "withdrawal_count": 1,
+      "writer_committed": true,
+      "writer_pid": 444225
+    },
+    {
+      "authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START",
+      "current_database_accessed": false,
+      "epoch": 1,
+      "execution_allowed": false,
+      "fresh_reader_rejected": true,
+      "holding_pid": 444276,
+      "order": "reader_first",
+      "pg_blocking_pids": [
+        444276
+      ],
+      "proposal_status": "approved",
+      "reader_committed": true,
+      "reader_pid": 444276,
+      "reader_rejected": false,
+      "supplier_verified": false,
+      "target": "allocation",
+      "waiting_pid": 444278,
+      "withdrawal_count": 1,
+      "writer_committed": true,
+      "writer_pid": 444278
+    },
+    {
+      "authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START",
+      "current_database_accessed": false,
+      "epoch": 1,
+      "execution_allowed": false,
+      "fresh_reader_rejected": true,
+      "holding_pid": 444329,
+      "order": "writer_first",
+      "pg_blocking_pids": [
+        444329
+      ],
+      "proposal_status": "approved",
+      "reader_committed": false,
+      "reader_pid": 444330,
+      "reader_rejected": true,
+      "supplier_verified": false,
+      "target": "source",
+      "waiting_pid": 444330,
+      "withdrawal_count": 1,
+      "writer_committed": true,
+      "writer_pid": 444329
+    },
+    {
+      "authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START",
+      "current_database_accessed": false,
+      "epoch": 1,
+      "execution_allowed": false,
+      "fresh_reader_rejected": true,
+      "holding_pid": 444393,
+      "order": "writer_first",
+      "pg_blocking_pids": [
+        444393
+      ],
+      "proposal_status": "approved",
+      "reader_committed": false,
+      "reader_pid": 444394,
+      "reader_rejected": true,
+      "supplier_verified": false,
+      "target": "allocation",
+      "waiting_pid": 444394,
+      "withdrawal_count": 1,
+      "writer_committed": true,
+      "writer_pid": 444393
+    }
+  ],
+  "scope": "Original claims reader and withdrawal; not signed Source publication or COMMIT TTL acceptance"
+}

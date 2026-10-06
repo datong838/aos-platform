@@ -1,0 +1,7 @@
+# S16 原两批准撤回与完整私有读取竞争
+
+原runtime直连真实withdrawal INSERT，目标分别原Source批准与原allocation批准，不修改proposal状态。完整read_capacity_approved_claims通过原private SCRAM身份、JWT、批准事件、原Guard/依赖/epoch执行；没有把新helper或TEMP表当完整入口。四组实际backend PID和pg_blocking_pids及持久后读在proof.json。
+
+reader-first：claims仅无供应商事实/无执行权，原事务持锁到真正COMMIT，writer等待该reader后COMMIT。writer-first：writer已INSERT/持epoch写锁未COMMIT，原私有reader实际等待，writer COMMIT后reader拒绝（包括旧serializable快照更新冲突）；之后新的私有reader均拒绝。核原proposal仍approved、withdrawal存在一行、epoch为1。
+
+专项4 passed/15.04s；原formal-boundary和151 withdrawal完整相邻108 passed/148.70s，7既有warnings，exit0，无并行fixture。业务代码/迁移/权限与现权威库未改。边界：原claim读取协调不是完整signed Source的prepare/sign/finalize/COMMIT/consumer，不能宣称解决实际COMMIT时限裁决或自然首链；完整Task保持ACTIVE，自主督导关闭判据仍由其独立证据核定。
