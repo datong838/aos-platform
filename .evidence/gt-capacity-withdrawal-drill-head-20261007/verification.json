@@ -1,0 +1,12 @@
+{
+  "schema": "aos-historical-drill-verification/v1",
+  "task_id": "gt-capacity-withdrawal-drill-head-20261007",
+  "baseline": "AOS-001417/m1@859a283d3bf69d83c6f8433b52a3f9d5fb55567d",
+  "source_hash": "ee2a538d2f85311fa9a5a36833d464ff500acd9aee65f54a0d6904dec4cdeb0e",
+  "plan_hash": "9cd30811d52b0cd1491900e9087f9a6b2ff2f81006cdc885b996d453672b7fc1",
+  "targeted": "nested7PASS30.03s;originalcatalogbridge17PASS33.78s;historicalmigration6PASS12.19s",
+  "cumulative": "218PASS1knownmissingentrydeselected8warnings385.79s",
+  "evidence": "../gt-capacity-publication-epoch-locks-20261006/verification.json",
+  "source_authority": false,
+  "goal_complete": false
+}

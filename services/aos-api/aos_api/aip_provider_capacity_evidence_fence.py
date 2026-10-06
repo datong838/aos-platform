@@ -22,6 +22,11 @@ class CapacityEvidenceFenceBlocked(ValueError):
 
 
 def _require_boundary(conn):
+    from aos_api.aip_provider_capacity_publication_lock_boundary import audited_publication_epoch_caller
+    try:
+        publication_caller=audited_publication_epoch_caller(conn)
+    except ValueError as error:
+        raise CapacityEvidenceFenceBlocked('CAPACITY_EVIDENCE_PUBLICATION_CALLER_DRIFTED') from error
     role=conn.execute('SELECT * FROM pg_roles WHERE rolname=%s',(OWNER,)).fetchone()
     if (not role or any(role[k] for k in ('rolcanlogin','rolinherit','rolsuper','rolcreatedb',
         'rolcreaterole','rolreplication','rolbypassrls')) or conn.execute(
@@ -55,6 +60,8 @@ def _require_boundary(conn):
         ids.append(row['oid'])
         caller='aos_runtime' if name=='lock' else 'aos_provider_capacity_issuer'
         allowed=[OWNER]+([caller] if reader else [])
+        if name=='issuer_lock' and publication_caller:
+            allowed.append(publication_caller)
         grants=conn.execute('SELECT a.grantee,a.privilege_type,a.is_grantable FROM pg_proc p,'
             "LATERAL aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE p.oid=%s",(row['oid'],)).fetchall()
         allowed_oids=conn.execute('SELECT oid,rolname FROM pg_roles WHERE rolname=ANY(%s)',(allowed,)).fetchall()

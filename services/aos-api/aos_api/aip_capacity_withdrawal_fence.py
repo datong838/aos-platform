@@ -11,6 +11,11 @@ class CapacityWithdrawalFenceBlocked(ValueError):
 
 
 def require_withdrawal_fence(conn):
+    from aos_api.aip_provider_capacity_publication_lock_boundary import audited_publication_epoch_caller
+    try:
+        publication_caller=audited_publication_epoch_caller(conn)
+    except ValueError as error:
+        raise CapacityWithdrawalFenceBlocked('WITHDRAWAL_PUBLICATION_CALLER_DRIFT') from error
     role=conn.execute('SELECT oid,rolcanlogin,rolinherit,rolsuper,rolcreatedb,rolcreaterole,rolreplication,rolbypassrls FROM pg_roles WHERE rolname=%s',(OWNER,)).fetchone()
     if not role or any(v for k,v in role.items() if k!='oid') or conn.execute('SELECT 1 FROM pg_auth_members WHERE roleid=%s OR member=%s',(role['oid'],role['oid'])).fetchone():
         raise CapacityWithdrawalFenceBlocked('WITHDRAWAL_OWNER_DRIFT')
@@ -37,6 +42,8 @@ def require_withdrawal_fence(conn):
             raise CapacityWithdrawalFenceBlocked('WITHDRAWAL_FUNCTION_DRIFT')
         ids[name]=row['oid']
         allowed={OWNER}|({'aos_runtime','aos_provider_capacity_issuer'} if name=='lock' else set())
+        if name=='lock' and publication_caller:
+            allowed.add(publication_caller)
         acl=conn.execute("SELECT coalesce(r.rolname,'PUBLIC') AS role,a.privilege_type,a.is_grantable FROM pg_proc p,LATERAL aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a LEFT JOIN pg_roles r ON r.oid=a.grantee WHERE p.oid=%s",(row['oid'],)).fetchall()
         if {x['role'] for x in acl}!=allowed or any(x['privilege_type']!='EXECUTE' or x['is_grantable'] for x in acl):
             raise CapacityWithdrawalFenceBlocked('WITHDRAWAL_FUNCTION_ACL_DRIFT')

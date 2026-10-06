@@ -1,0 +1,56 @@
+{
+  "schema": "aos-capacity-epoch-lock-dependency-verification/v1",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": "AOS-001417/m1@859a283d3bf69d83c6f8433b52a3f9d5fb55567d",
+  "task_ids": [
+    "gt-capacity-publication-epoch-locks-20261006",
+    "gt-capacity-withdrawal-drill-head-20261007",
+    "gt-provider-capacity-formal-boundary-20261005"
+  ],
+  "task_status": "ACTIVE",
+  "lease_expires_at": "2026-10-07T12:00:00+08:00",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_lock_boundary.py": "d1e49b67bcac153d4d85f34df70d696308185f002053abf8340d538cbac31980",
+    "services/aos-api/alembic/versions/a0v_156_capacity_publication_epoch_locks.py": "7295c3dff81c8d90ea502b1bf02d02a936346a428b4fcc6b1b814b02a5f65b2f",
+    "services/aos-api/aos_api/aip_capacity_withdrawal_fence.py": "fff578453b5805006fae2ff5d9f890fef4cc840795f4631704f52ae9336f8f04",
+    "services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py": "81af51b7d08fea85406f450c4a377071faaac1f229e34dd75d43b8274920ae53",
+    "services/aos-api/tests/aip/test_capacity_publication_epoch_locks_pg.py": "182cacefbdeb301406b14d8082e1915ace2345574bbceb1faf357f190dca1dc9",
+    "services/aos-api/tests/aip/test_capacity_withdrawal_epoch_pg.py": "ee2a538d2f85311fa9a5a36833d464ff500acd9aee65f54a0d6904dec4cdeb0e"
+  },
+  "plan_hash": "afc0e084ddf59181088f37bbb18558d75c84a4d11d8f7213e5d8bbaf88611913",
+  "logs": {
+    "epoch-bridge-red.log": "067dd0f749b2d79f1ae10f74e96808af332d46b0644ded5128a4c30e2456a4ce",
+    "epoch-bridge-green-r2.log": "433a8ac965d77fe5ec179eb60a94e49ff8d84fc6b63a22fd83f6ff2b9effde35",
+    "epoch-bridge-green-r1.log": "9f2eb94b928eee90632d649e5fc5b5982c20281cf3c80722406ebc1838d1732b",
+    "epoch-nested-green-r1.log": "09d1bacc96b01fadf2e6143bf86d4e211abe6de76c745a0b7be129d6f6290297",
+    "epoch-nested-green-r2.log": "2d15b936e0220a0e7280d879bbb76b84299214dd437d5979f54cb1d0c518b45e",
+    "epoch-adjacent-r1.log": "250be55a00ff9bd03cccee84060dff957cd8674e8801cd6d7e5d60d16f6ebf3b",
+    "epoch-adjacent-r2.log": "cc84a7bb31008fa7852c68c7ba43d2226dfd783f07634222952f2cb2c61de892",
+    "entry-red-after156.log": "b239dc0322156977175c15eb68d694152fec3ce66539f797b11c09e2cbb4ba6e",
+    "withdrawal-drill-green-r1.log": "88c080ae23845249e21c8d24be62411b46a4b32c51fc11dbe88c998289dd2fef",
+    "epoch-public-acl-red.log": "9a9cefde2e35617552cd48b2d0c5d693d65300ee9f8391d2006d1ccce4afda04"
+  },
+  "targeted": "nested7PASS30.03s;originalcatalogbridge17PASS33.78s;historicalmigration6PASS12.19s",
+  "cumulative": "218PASS1knownmissingentrydeselected8warnings385.79s",
+  "entry_red": "1FAIL8.05s nativeSQLSTATE42883;prepare missing, never stub or xfail",
+  "native_audit_hash": "64c0a3154d42d55c318fef4a54fe8ec834d9f0036fe73596d38b6b3fb2863bb6",
+  "syntax": "PASS",
+  "review": [
+    "Original function bodies and migrations149/150/151/155 unchanged",
+    "Pair of original non-grantable EXECUTE only for controlled NOLOGIN Owner; full ACL/body/effectivePUBLIC drift rejects",
+    "Original issuer/session guards remain; temporary harness explicitly rejected by original formal entry",
+    "Actual same SCRAM session/xid/PID with three blocked writers and callerCOMMIT releases all; no business effect",
+    "Fixture fault nonzero epoch restored; no artificial Python authorization exception",
+    "Historical rollback-only predecessor drill retains exact Alembic150-to151 assertions and currenthead rollback",
+    "No parent Source Delivery or formal source/consumer/currentTTL completion"
+  ],
+  "incomplete": [
+    "Full prepare/controlledsigner/commit/actualnativecallerCOMMIT/currentconsumer S01-S20",
+    "Formal publisher/issuer deployment/bootstrap authority",
+    "Final caller COMMIT wallclockTTL decision",
+    "Natural first chain/eightworkbench/observation/release"
+  ],
+  "goal_complete": false,
+  "formal_database_accessed": false
+}

@@ -99,6 +99,7 @@ def test_nonempty_historical_withdrawal_backfill_preserves_original_rows(drafted
     try:
         with engine.connect() as conn:
             transaction = conn.begin()
+            original_head = conn.exec_driver_sql('SELECT version_num FROM alembic_version').scalar_one()
             try:
                 conn.exec_driver_sql("SELECT set_config('aos.org_id','org-org',true),set_config('aos.project_id','dev-project',true)")
                 proposal = conn.exec_driver_sql("SELECT * FROM public.aip_action_proposal WHERE org_id='org-org' AND project_id='dev-project' LIMIT 1").mappings().first()
@@ -112,8 +113,8 @@ def test_nonempty_historical_withdrawal_backfill_preserves_original_rows(drafted
                 if full_alembic:
                     # Only the disposable fixture's outer rollback transaction
                     # may reconstruct the predecessor; no production downgrade.
-                    conn.exec_driver_sql("UPDATE alembic_version SET version_num='a0v_150' WHERE version_num='a0v_151'")
-                expected_before = 'a0v_150' if full_alembic else 'a0v_151'
+                    conn.exec_driver_sql("UPDATE alembic_version SET version_num='a0v_150' WHERE version_num=%s", (original_head,))
+                expected_before = 'a0v_150' if full_alembic else original_head
                 assert conn.exec_driver_sql('SELECT version_num FROM alembic_version').scalar_one() == expected_before
 
                 def upgrade():
@@ -153,7 +154,7 @@ def test_nonempty_historical_withdrawal_backfill_preserves_original_rows(drafted
                     assert conn.exec_driver_sql('SELECT version_num FROM alembic_version').scalar_one() == expected_before
                     assert [conn.exec_driver_sql(q).all() for q in queries] == before
                 upgrade()
-                assert conn.exec_driver_sql('SELECT version_num FROM alembic_version').scalar_one() == 'a0v_151'
+                assert conn.exec_driver_sql('SELECT version_num FROM alembic_version').scalar_one() == ('a0v_151' if full_alembic else original_head)
                 assert [conn.exec_driver_sql(q).all() for q in queries] == before
                 assert conn.exec_driver_sql("SELECT count(*) FROM public.aip_action_proposal p FULL JOIN public.aip_capacity_withdrawal_epoch e USING(org_id,project_id,proposal_id) WHERE coalesce(p.org_id,e.org_id)='org-org' AND coalesce(p.project_id,e.project_id)='dev-project' AND (p.proposal_id IS NULL OR e.proposal_id IS NULL OR e.epoch<>(SELECT count(*) FROM public.aip_action_withdrawal_event w WHERE (w.org_id,w.project_id,w.proposal_id)=(p.org_id,p.project_id,p.proposal_id)))").scalar_one() == 0
                 assert conn.exec_driver_sql('SELECT count(*) FROM public.aip_capacity_withdrawal_epoch WHERE epoch>0').scalar_one() > 0
@@ -164,6 +165,6 @@ def test_nonempty_historical_withdrawal_backfill_preserves_original_rows(drafted
             finally:
                 transaction.rollback()
             assert conn.exec_driver_sql("SELECT to_regclass('public.aip_capacity_withdrawal_epoch') IS NOT NULL").scalar_one()
-            assert conn.exec_driver_sql('SELECT version_num FROM alembic_version').scalar_one() == 'a0v_151'
+            assert conn.exec_driver_sql('SELECT version_num FROM alembic_version').scalar_one() == original_head
     finally:
         engine.dispose()
