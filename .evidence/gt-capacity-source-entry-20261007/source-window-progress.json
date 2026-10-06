@@ -1,0 +1,30 @@
+{
+  "schema": "aos-source-window-checkpoint/v1",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_base": "AOS-001435",
+  "base_head": "affa15db01e5a096b7de6953ac66afd76d38cec0",
+  "status": "partial_native_source_window_verified_full157_pending",
+  "source_delivery": false,
+  "final_test_result": {
+    "passed": 205,
+    "failed": 5,
+    "warnings": 7,
+    "skipped": 0,
+    "seconds": 562.42,
+    "failures": "all5 actualmissingprepare42883"
+  },
+  "original_storage_limitation": "+23:59 model/privateDecoder accepts; actualoriginalstore22009/zero row, not fullSource positive",
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "03ac379d62f253b81459771ad78bde2464515976a7d5d29d96ff26a3ad4671a9",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "72eea966493e442100c029cb0131b7ea7f8f52d63fbcdf27461a3729b1349037",
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "549284027027904a00c95f210676224b284761cd3045b3019f17094a1b90cb80",
+    ".evidence/gt-capacity-source-entry-20261007/source-window-verification.md": "d77e5036b4806f109b625c901219b00ad4ed42de033197670dc805c57ec32c5e",
+    ".evidence/gt-capacity-source-entry-20261007/source-window-next-investigation.json": "1e3e45f41e11e7738c070960bc27e2455710b40b0715e3f9667c456ac119c055",
+    ".evidence/gt-capacity-source-entry-20261007/source-window-final-catalog.json": "dd419f9fab0752b187c032e711e2aa8b672ef8dc7881fa85f5c81a0733bb7fa4",
+    ".evidence/gt-capacity-source-publication-20261006/source-window-cumulative-r1.log": "65ac402ec6e21534f0bdfea86c6c4e476819c32f86c942aeddf5d20cd51f30dc",
+    ".evidence/gt-capacity-source-publication-20261006/source-window-domain-r1.log": "4edbe8eb60cedc08f6d213f7f797c0d9ed03b7b728d8f3763c7881445c5decf0",
+    ".evidence/gt-capacity-source-publication-20261006/source-window-domain-r2.log": "d05eca2c1d0792a875d2c8cfe27413be458b1ed767623bbc339eb801db35ab9a",
+    ".evidence/gt-capacity-source-publication-20261006/source-window-green-r1.log": "a024477b6537b408d65e0096562007b99f01bfd9201a692d8756c04090459ca2",
+    ".evidence/gt-capacity-source-publication-20261006/source-window-red-r1.log": "d3deb98ae76a87ecf496f869efa7187ba87b5f1e0878edfa00b0ffc7bc5add48"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "aos-source-window-final-catalog/v1",
+  "database": "aos_test_a308ef3ec4b4_ti4_test",
+  "read_only": true,
+  "head": "affa15db01e5a096b7de6953ac66afd76d38cec0",
+  "authority": "AOS-001435",
+  "catalog": {
+    "cluster": "7693564235776004128",
+    "prepare": null,
+    "version": "a0v_156"
+  },
+  "roles": [
+    {
+      "rolname": "aos_capacity_publication_owner",
+      "rolcanlogin": false
+    },
+    {
+      "rolname": "aos_provider_capacity_issuer",
+      "rolcanlogin": false
+    }
+  ],
+  "temporary_profiles": [],
+  "source_delivery": false
+}

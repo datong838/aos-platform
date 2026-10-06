@@ -1,0 +1,25 @@
+{
+  "schema": "aos-native-source-window-investigation/v1",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority": "AOS-001435",
+  "head": "affa15db01e5a096b7de6953ac66afd76d38cec0",
+  "database": "aos_test_20c152fd5526_ti4_test",
+  "read_only": true,
+  "checks": [
+    {
+      "proposal_id": "proposal-8cfeba479e2e483b9c4d",
+      "checks": {
+        "start_covers_request_and_basis": true,
+        "source_current": true,
+        "end_covered_by_request": true,
+        "end_covered_by_request_proposal": true,
+        "end_covered_by_basis": true,
+        "end_covered_by_allocation_event": true,
+        "source_proposal_expiry_covered": true,
+        "request_row_matches_typed_expiry": true
+      }
+    }
+  ],
+  "native_full_window_query_implemented": false,
+  "source_delivery": false
+}

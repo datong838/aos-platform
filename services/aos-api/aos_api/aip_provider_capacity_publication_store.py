@@ -2270,3 +2270,69 @@ WHERE source IS NOT NULL
    AND e.approval_event_id=ANY(ARRAY[%(approval_event_id)s,source->'allocationApprovalRef'->>'assetId'])
    AND e.expires_at>checked_at AND p.expires_at>checked_at)=2
 """)
+
+# Preserve the original Python datetime domain, including offsets above PG's
+# text-cast ceiling. Only the suffix's expressions change; original readers stay.
+_CAPACITY_SOURCE_WINDOW_REQUEST_SQL = CAPACITY_NATIVE_REQUEST_ROW_SQL
+for _window_time_field in ('validFrom','proposalExpiresAt'):
+    _CAPACITY_SOURCE_WINDOW_REQUEST_SQL = _CAPACITY_SOURCE_WINDOW_REQUEST_SQL.replace(
+        "(normalized_application->>'"+_window_time_field+"')::timestamptz",
+        "(SELECT instant FROM aos_capacity_publication_private.original_source_time(normalized_application->'"+_window_time_field+"'))")
+_CAPACITY_SOURCE_WINDOW_REQUEST_SQL = (
+    _CAPACITY_SOURCE_WINDOW_REQUEST_SQL
+    .replace('%(request_id)s', "s.source->'allocationRequestRef'->>'assetId'")
+    .replace('%(request_hash)s', "s.source->'allocationRequestRef'->>'contentHash'"))
+_CAPACITY_SOURCE_WINDOW_ALLOCATION_SQL = (
+    CAPACITY_APPROVED_ALLOCATION_ROW_SQL
+    .replace('%(request_id)s', "s.source->'allocationRequestRef'->>'assetId'")
+    .replace('%(request_hash)s', "s.source->'allocationRequestRef'->>'contentHash'")
+    .replace('%(approval_event_id)s', "s.source->'allocationApprovalRef'->>'assetId'")
+    .replace('%(approval_event_hash)s', "s.source->'allocationApprovalRef'->>'contentHash'"))
+
+# Original S19 Source-review window, read after the full original lock prefix.
+# Allocation selectors derive from the exact approved Source, never the caller.
+CAPACITY_NATIVE_SOURCE_WINDOW_SQL = (
+    'WITH approved_source AS MATERIALIZED ('+CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL+r"""), source_terms AS MATERIALIZED (
+ SELECT p.*,aos_capacity_publication_private.read_original_source_candidate(p.payload->'sourceCandidate') AS source
+ FROM approved_source p
+), request_terms AS MATERIALIZED (
+ SELECT s.source,s.expires_at AS source_proposal_expiry,r.normalized_application AS application
+ FROM source_terms s CROSS JOIN LATERAL (
+"""+_CAPACITY_SOURCE_WINDOW_REQUEST_SQL+r"""
+ ) r
+), allocation_terms AS MATERIALIZED (
+ SELECT s.*,a.expires_at AS allocation_proposal_expiry,e.expires_at AS allocation_event_expiry
+ FROM request_terms s CROSS JOIN LATERAL (
+"""+_CAPACITY_SOURCE_WINDOW_ALLOCATION_SQL+r"""
+ ) a JOIN public.aip_action_approval_event e
+ ON (e.org_id,e.project_id,e.proposal_id)=(a.org_id,a.project_id,a.proposal_id)
+ AND e.approval_event_id=s.source->'allocationApprovalRef'->>'assetId'
+), basis_row AS MATERIALIZED (
+"""+_combination_candidate_sql('basis',statement=CAPACITY_NATIVE_CANDIDATE_ROW_SQL)+r"""
+), terms AS MATERIALIZED (
+ SELECT a.*,b.normalized_candidate AS basis,b.candidate_id,b.revision,b.content_hash,
+  clock_timestamp() AS checked_at
+ FROM allocation_terms a CROSS JOIN basis_row b
+), timed AS MATERIALIZED (
+ SELECT t.*,
+  (SELECT instant FROM aos_capacity_publication_private.original_source_time(source->'validFrom')) AS source_start,
+  (SELECT instant FROM aos_capacity_publication_private.original_source_time(source->'validUntil')) AS source_end,
+  (SELECT instant FROM aos_capacity_publication_private.original_source_time(application->'validFrom')) AS request_start,
+  (SELECT instant FROM aos_capacity_publication_private.original_source_time(application->'validUntil')) AS request_end,
+  (SELECT instant FROM aos_capacity_publication_private.original_source_time(application->'proposalExpiresAt')) AS request_expiry,
+  (SELECT instant FROM aos_capacity_publication_private.original_source_time(basis->'validFrom')) AS basis_start,
+  (SELECT instant FROM aos_capacity_publication_private.original_source_time(basis->'validUntil')) AS basis_end
+ FROM terms t
+)
+SELECT source,basis,application FROM timed
+WHERE source IS NOT NULL
+ AND source->'basisRef'=jsonb_build_object('assetType','ProviderCapacityBasisCandidateRevision',
+  'assetId',candidate_id,'revision',revision,'contentHash',content_hash)
+ AND basis->'physicalAccountRef'=source->'physicalAccountRef'
+ AND greatest(request_start,basis_start)<=source_start
+ AND source_start<=checked_at AND checked_at<source_end
+ AND source_end<=least(request_end,request_expiry,basis_end,allocation_event_expiry)
+ AND source_proposal_expiry<=source_end
+ AND source_proposal_expiry>checked_at AND allocation_proposal_expiry>checked_at
+ AND allocation_event_expiry>checked_at AND request_expiry>checked_at
+""")

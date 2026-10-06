@@ -2774,3 +2774,170 @@ def test_native_signed_supplier_combination_keeps_original_approved_terms(native
 
         owner.rollback()
     print('S18_S19_SAME_ORIGINAL_SCRAM_AND_REGISTERED_SIGNATURES no_source_delivery')
+
+
+@pytest.mark.parametrize('representation',['utc','accepted_offset','allocation_shorter','basis_shorter'])
+def test_native_source_window_requires_original_request_allocation_and_basis(native_signed_source,approved_command,representation):
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+    from aos_api.aip_provider_capacity_source_issuer import authenticate_capacity_issuance_command
+    from aos_api import aip_provider_capacity_publication_store as native
+    _,actual_command,basis,source,config=native_signed_source
+    from datetime import timedelta,timezone
+    from uuid import uuid4
+    from copy import deepcopy
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_action_models import DecideActionProposalRequest
+    from aos_api.aip_provider_capacity_authorization import ProviderCapacityRequest
+    from aos_api.aip_provider_capacity_request_store import ProviderCapacityRequestStore
+    from aos_api.aip_provider_capacity_action import propose_provider_capacity_request,decide_provider_capacity_request
+    from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+    from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+    from aos_api.aip_provider_capacity_source_contracts import ProviderCapacitySourceCandidate
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    if representation!='utc':
+        maker_principal,checker=approved_command[:2]
+        if representation in ('accepted_offset','allocation_shorter'):
+            with isolated_owner() as owner:
+                raw_request=owner.execute('SELECT request_json FROM public.aip_provider_capacity_request WHERE request_id=%s',
+                    (source.allocation_request_ref.asset_id,)).fetchone()['request_json']['application']
+            application=ProviderCapacityRequest.model_validate(raw_request)
+            if representation=='accepted_offset':
+                offset=timezone(timedelta(hours=5,minutes=30))
+                application=application.model_copy(update={'valid_from':application.valid_from.astimezone(offset),
+                    'valid_until':application.valid_until.astimezone(offset)})
+            saved=ProviderCapacityRequestStore().create(SCOPE,maker_principal,'window-request-'+uuid4().hex,application)
+            proposal=propose_provider_capacity_request(maker_principal,saved['request_id'],'window-allocation-'+uuid4().hex,
+                application.proposal_expires_at)
+            deadline=source.valid_until-timedelta(seconds=30) if representation=='allocation_shorter' else source.valid_until
+            approved=decide_provider_capacity_request(checker,proposal.proposal.id,'window-allocation-approve-'+uuid4().hex,
+                DecideActionProposalRequest.model_validate(dict(expectedProposalVersion=proposal.proposal.version,
+                    expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',reason='isolated original window',
+                    approvalExpiresAt=deadline)))
+            source=source.model_copy(update={
+                'allocation_request_ref':FormalExactRef(assetType='ProviderCapacityRequest',assetId=saved['request_id'],
+                    revision=1,contentHash=saved['request_hash']),
+                'allocation_approval_ref':FormalExactRef(assetType='ActionApprovalEvent',assetId=approved.approvals[0].id,
+                    revision=1,contentHash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))),
+                'valid_until':deadline})
+        else:
+            basis=basis.model_copy(update={'valid_until':source.valid_until-timedelta(seconds=30)})
+            saved=ProviderCapacityCandidateStore().create_basis(SCOPE,maker_principal,'window-basis-'+uuid4().hex,basis)
+            source=source.model_copy(update={'basis_ref':FormalExactRef(assetType='ProviderCapacityBasisCandidateRevision',
+                assetId=saved['candidate_id'],revision=1,contentHash=saved['content_hash']),'valid_until':basis.valid_until})
+        proposal=propose_provider_capacity_source(maker_principal,source,'window-source-'+uuid4().hex,source.valid_until)
+        approved=decide_provider_capacity_source(checker,proposal.proposal.id,'window-source-approve-'+uuid4().hex,
+            DecideActionProposalRequest.model_validate(dict(expectedProposalVersion=proposal.proposal.version,
+                expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',reason='isolated original Source window',
+                approvalExpiresAt=source.valid_until)))
+        old_command=actual_command
+        def actual_command():
+            command,policy,attestation=old_command()
+            return command.model_copy(update={'approved_proposal':FormalExactRef(assetType='ActionProposal',
+                assetId=approved.proposal.id,revision=2,contentHash=approved.proposal.proposal_hash),
+                'approval_event':FormalExactRef(assetType='ActionApprovalEvent',assetId=approved.approvals[0].id,
+                revision=1,contentHash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True)))}),policy,attestation
+    command,_,_=actual_command();maker=authenticate_capacity_issuance_command(command).subject
+    with connect_capacity_issuer(config,SCOPE) as issuer:
+        assert issuer.pgconn.used_password
+        assert read_capacity_approved_claims(issuer,command).source==source
+    params=ProviderCapacitySourceActionGuard._combination_params(SCOPE,source,maker)
+    params.update(proposal_id=command.approved_proposal.asset_id,proposal_revision=command.approved_proposal.revision,
+        proposal_hash=command.approved_proposal.content_hash,approval_event_id=command.approval_event.asset_id,
+        approval_event_hash=command.approval_event.content_hash)
+    statement=getattr(native,'CAPACITY_NATIVE_SOURCE_WINDOW_SQL',None)
+    assert statement is not None, 'Full original request/allocation/Source window combination is required'
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute("SET LOCAL TimeZone='UTC'")
+        for profile in (native.CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,native.CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL,
+                        native.CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL):owner.execute(profile)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        row=owner.execute(statement,params).fetchone()
+        assert row is not None and row['source']==source.model_dump(mode='json',by_alias=True)
+        assert row['basis']==basis.model_dump(mode='json',by_alias=True)
+        # A caller's request selector cannot override the stored Source parent.
+        assert owner.execute(statement,{**params,'request_id':'different-request','request_hash':'d'*64}).fetchone() is not None
+        for fault in ('proposal_after_end','start_before_basis','end_after_minimum'):
+            owner.execute('RESET ROLE');owner.execute('SAVEPOINT source_window_fault')
+            modified=dict(params)
+            try:
+                original=owner.execute('SELECT * FROM public.aip_action_proposal WHERE proposal_id=%s',
+                    (params['proposal_id'],)).fetchone()
+                owner.execute("SET LOCAL session_replication_role='replica'")
+                if fault=='proposal_after_end':
+                    owner.execute('UPDATE public.aip_action_proposal SET expires_at=%s WHERE proposal_id=%s',
+                        (source.valid_until+timedelta(seconds=1),params['proposal_id']))
+                else:
+                    changed=source.model_copy(update={
+                        'valid_from':basis.valid_from-timedelta(microseconds=1)} if fault=='start_before_basis'
+                        else {'valid_until':source.valid_until+timedelta(seconds=1)})
+                    changed=ProviderCapacitySourceCandidate.model_validate(changed.model_dump(mode='python',by_alias=True))
+                    payload=deepcopy(original['payload']);payload['sourceCandidate']=changed.model_dump(mode='json',by_alias=True)
+                    binding=canonical_hash(dict(sourceCandidate=payload['sourceCandidate'],
+                        actionTypeRevisionHash=original['action_type_snapshot']['revisionHash']))
+                    snapshot=owner.execute('SELECT snapshot FROM public.aip_action_draft WHERE proposal_id=%s',
+                        (params['proposal_id'],)).fetchone()['snapshot']
+                    snapshot['payload']=payload;snapshot['actionBindingHash']=binding
+                    proposal_hash=canonical_hash(snapshot)
+                    owner.execute('UPDATE public.aip_action_draft SET snapshot=%s WHERE proposal_id=%s',
+                        (Jsonb(snapshot),params['proposal_id']))
+                    owner.execute('UPDATE public.aip_action_proposal SET payload=%s,action_binding_hash=%s,proposal_hash=%s WHERE proposal_id=%s',
+                        (Jsonb(payload),binding,proposal_hash,params['proposal_id']))
+                    owner.execute('UPDATE public.aip_action_approval_event SET action_binding_hash=%s,proposal_hash=%s WHERE approval_event_id=%s',
+                        (binding,proposal_hash,params['approval_event_id']))
+                    modified['proposal_hash']=proposal_hash
+                    modified['approval_event_hash']=owner.execute(native.CAPACITY_APPROVAL_EVENT_PROJECTION_SQL,modified).fetchone()['hash']
+                owner.execute("SET LOCAL session_replication_role='origin'")
+                owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                assert owner.execute(native.CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL,modified).fetchone() is not None,fault
+                assert owner.execute(statement,modified).fetchone() is None,fault
+            finally:owner.execute('ROLLBACK TO SAVEPOINT source_window_fault')
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            assert owner.execute(statement,params).fetchone() is not None
+        owner.rollback()
+    print('ORIGINAL_SOURCE_WINDOW_ACTUAL_SCRAM native_window_only_no_source_delivery')
+
+
+def test_original_request_large_offset_storage_boundary_is_not_source_authority(native_signed_source,approved_command):
+    """Model acceptance is weaker than the actual original storage boundary."""
+    from datetime import timedelta,timezone
+    from uuid import uuid4
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_authorization import ProviderCapacityRequest
+    from aos_api.aip_provider_capacity_request_store import ProviderCapacityRequestStore
+    from aos_api import aip_provider_capacity_publication_store as native
+    _,_,_,source,_=native_signed_source
+    with isolated_owner() as owner:
+        raw=owner.execute('SELECT request_json FROM public.aip_provider_capacity_request WHERE request_id=%s',
+            (source.allocation_request_ref.asset_id,)).fetchone()['request_json']['application']
+    application=ProviderCapacityRequest.model_validate(raw)
+    offset=timezone(timedelta(hours=23,minutes=59))
+    application=application.model_copy(update={'valid_from':application.valid_from.astimezone(offset),
+        'valid_until':application.valid_until.astimezone(offset)})
+    application=ProviderCapacityRequest.model_validate(application.model_dump(mode='python',by_alias=True))
+    key='original-offset-boundary-'+uuid4().hex
+    # Actual original producer fails before a request/approval/Source exists.
+    # This is a documented original boundary, not a native-window positive.
+    with pytest.raises(psycopg.errors.InvalidTimeZoneDisplacementValue):
+        ProviderCapacityRequestStore().create(SCOPE,approved_command[0],key,application)
+    with isolated_owner() as owner:
+        assert owner.execute('SELECT count(*) AS n FROM public.aip_provider_capacity_request WHERE idempotency_key=%s',(key,)).fetchone()['n']==0
+        owner.execute(native.CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+        owner.execute(native.CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        parsed=owner.execute('SELECT aos_capacity_publication_private.read_original_capacity_application(%s) AS value',
+            (Jsonb(application.model_dump(mode='json',by_alias=True)),)).fetchone()['value']
+        assert parsed==application.model_dump(mode='json',by_alias=True)
+        with pytest.raises(psycopg.errors.InvalidTimeZoneDisplacementValue):
+            with owner.transaction():
+                owner.execute('SELECT %s::timestamptz',(parsed['validFrom'],))
+        decoded=owner.execute('SELECT instant FROM aos_capacity_publication_private.original_source_time(%s)',
+            (Jsonb(parsed['validFrom']),)).fetchone()['instant']
+        assert decoded==application.valid_from
+        owner.rollback()
+    print('ORIGINAL_REQUEST_MODEL_OFFSET_ACCEPTED_STORAGE22009_NO_REQUEST_NO_SOURCE native_decoder_only')
