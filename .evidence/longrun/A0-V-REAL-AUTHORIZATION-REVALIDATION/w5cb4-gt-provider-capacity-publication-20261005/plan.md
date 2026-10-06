@@ -8,6 +8,8 @@
 
 独立复审指出不完整JSON负例可能被缺字段间接拒绝，专项验收改为完整合法文档单项变异，并返回不含原始输入的稳定ProfileError reason（SIZE/DEPTH/DUPLICATE_KEY/NON_INTEGER/NUL/ARRAY/NONCANONICAL/INVALID_DOCUMENT），区分预解析/文档profile与后续字段校验，不能仅凭任意ValueError算相应门通过。
 
+138项最终含原生验签组合相邻通过；原Task仍ACTIVE。SQL strict profile下一实现选型的只读证据sql-profile-feasibility-readonly.json确认原生json保留重复键，to_json支持UTF8非ASCII字符串，C排序与现Python关键字序一致，整数词法拒绝1.0/1e0/-0。计划用private受审计的PL/pgSQL递归json遍历，先duplicate/depth/array/strict integer检查并按C排序及to_json字符串再生成紧凑canonical bytes，逐字节对比原始message后才提供jsonb字段视图；先不能转jsonb丢重复字段。函数输入<=2MiB/递归<=32/数组<=1000，固定schema/search_path/nonPUBLIC/SECURITY INVOKER纯计算，密码学仍调用已证明的窄C verifier。该算法尚未编码/原生验收；必须覆盖完整原policy/attestation/permit/Source与Unicode/转义/数字/重复键正负矩阵，之后才能用于完整152受控publication门。
+
 独立Task gt-capacity-sql-ed25519-20261006在m1@1b24ceca收口，仅PG原生验签依赖19项通过；固定隔离镜像/角色ACL/输入存储和来源证据见对应verification。没有生产扩展安装授权，完整publication退出仍沿本原Task。
 
 本轮只读canonical-sql-readonly.json实测：现canonical_json的UTF8紧凑排序bytes与PG jsonb::text字节及hash不同；jsonb接受重复purpose字段并保留后者。SQL不能先jsonb重序列化再验签，也不能把jsonb解析成功作为签名文档无歧义证明。

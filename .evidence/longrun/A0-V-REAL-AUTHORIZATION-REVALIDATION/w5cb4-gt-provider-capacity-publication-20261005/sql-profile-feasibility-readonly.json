@@ -1,0 +1,8 @@
+{
+  "scope": "read-only native JSON profile feasibility, not SQL publication implementation",
+  "json_preserves_duplicate_keys_count": 2,
+  "native_unicode_string_render": "\"测试发布者\"",
+  "native_C_sorted_keys": "publisher,purpose,revision",
+  "integer_lexemes_validity": "t|f|f|f",
+  "decision": "Use native json traversal before jsonb; duplicate keys preserved; recursive depth/array limits and C ordering with integer-only canonical regeneration must be tested against existing Python raw bytes. No PL/Python or new crypto needed."
+}
