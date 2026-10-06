@@ -27,3 +27,6 @@ Maintenance151Journal绑定冻结head/thread/Task/base，不仅step名称。原�
 原两代码文件和本证据scope内增加run_isolated151(thread)：先真实preflight；在aos-recovery/current151-*独占0700目录绑定HEAD/Task，固定恢复镜像、colima-aos-a0v-test-only、current151-*新命名卷/none-network/noports。由第二份142已校验备份建立隔离源，再依九步journal执行：无应用客户端→ALTER SYSTEM空listen/restart及TCP拒绝/客户端0/prepared0→窗口内全备globals/dump→新独立恢复并全库窄等价→逐步重新生成已演练hash SQL，每步O_EXCL intent/terminal和版本回读→完整151快照与严格fence→原配置来源恢复/restart/TCP与版本→无应用客户端→最终snapshot、身份、租约/HEAD。任一失败保留所有卷/目录/attempt，禁止重发。此入口不能选择当前源容器，不提供current执行入口；完整当前维护Task仍ACTIVE。
 
 首次隔离九步成功但final snapshot比较RED，只读定位仅a146/a148四新metadata行created_at不同。修正验收：限定精确四ID/两表，旧metadata每行hash不变且count只增加2；原151模板和现场四新增整行去掉created_at后逐字一致，时间须为带时区datetime。只有这些已核行hash与两表总hash可在比较副本中归一，剩余table/count/role/full_catalog等仍原完整比对。首次失败保留，不重跑任何迁移；后续只读调和和未尝试配置恢复分别记录，不能覆盖原verify-attempt。
+
+## 当前资源接入
+在原两文件内抽出同一个序列，isolated/current两个入口均强制新Task/未来Lease/预检和committed executable源码。current入口没有可选容器参数，固定原SOURCE_CONTEXT/SOURCE_CONTAINER/原Id+image+卷；仅允许原容器exec/restart/inspect，禁run/rm/volume等。当前调用TCP只读探针走原host18435且只允许SELECT1/version，连接失败才计拒绝。原服务身份复核后各一次SIGTERM正常退出，等待原root/helper消失与端口释放，不强杀；迁移成功后用原argv/签名Receipt预检schema151与空端口启动新root，记新PID/原argv/cwd/端口回读，不凭health200当首链。窗口globals实备后再初始化独立restore目标的roles，使用窗口globals与dump恢复，而非预先旧roles。所有旧备份保留，失败不自动开放窗口/启动不兼容旧API；每次当前操作前复核精确容器和Task/HEAD。运行修订后隔离全路径，再执行一次当前维护；浏览器/上下文/Delivery待实际完成。

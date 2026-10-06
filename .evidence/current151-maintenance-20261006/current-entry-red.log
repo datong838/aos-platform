@@ -1,0 +1,73 @@
+....................................FFFFF                                [100%]
+=================================== FAILURES ===================================
+____________ test_current151_denies_unreviewed_docker_actions[run] _____________
+
+action = 'run'
+
+    @pytest.mark.parametrize('action',['run','rm','stop','volume'])
+    def test_current151_denies_unreviewed_docker_actions(action):
+        m=module()
+>       with pytest.raises(m.Maintenance151Blocked):m.require_current151_action([action,'aos-a0v-recovery-pg'])
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_current151_action'
+
+scripts/tests/test_a0v_current_151_maintenance.py:146: AttributeError
+_____________ test_current151_denies_unreviewed_docker_actions[rm] _____________
+
+action = 'rm'
+
+    @pytest.mark.parametrize('action',['run','rm','stop','volume'])
+    def test_current151_denies_unreviewed_docker_actions(action):
+        m=module()
+>       with pytest.raises(m.Maintenance151Blocked):m.require_current151_action([action,'aos-a0v-recovery-pg'])
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_current151_action'
+
+scripts/tests/test_a0v_current_151_maintenance.py:146: AttributeError
+____________ test_current151_denies_unreviewed_docker_actions[stop] ____________
+
+action = 'stop'
+
+    @pytest.mark.parametrize('action',['run','rm','stop','volume'])
+    def test_current151_denies_unreviewed_docker_actions(action):
+        m=module()
+>       with pytest.raises(m.Maintenance151Blocked):m.require_current151_action([action,'aos-a0v-recovery-pg'])
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_current151_action'
+
+scripts/tests/test_a0v_current_151_maintenance.py:146: AttributeError
+___________ test_current151_denies_unreviewed_docker_actions[volume] ___________
+
+action = 'volume'
+
+    @pytest.mark.parametrize('action',['run','rm','stop','volume'])
+    def test_current151_denies_unreviewed_docker_actions(action):
+        m=module()
+>       with pytest.raises(m.Maintenance151Blocked):m.require_current151_action([action,'aos-a0v-recovery-pg'])
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_current151_action'
+
+scripts/tests/test_a0v_current_151_maintenance.py:146: AttributeError
+______________ test_current151_wrong_thread_cannot_enter_sequence ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10a8afad0>
+
+    def test_current151_wrong_thread_cannot_enter_sequence(monkeypatch):
+        m=module();calls=[]
+        def task(**kwargs):
+            assert kwargs['thread']=='old-thread'
+            raise m.Maintenance151Blocked('MAINTENANCE_151_BASELINE_DRIFT')
+        monkeypatch.setattr(m,'read_task',task)
+        monkeypatch.setattr(m,'preflight',lambda **kwargs: calls.append(1))
+>       with pytest.raises(m.Maintenance151Blocked):m.run_current151(thread='old-thread')
+                                                    ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'run_current151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:156: AttributeError
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_current151_denies_unreviewed_docker_actions[run]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_current151_denies_unreviewed_docker_actions[rm]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_current151_denies_unreviewed_docker_actions[stop]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_current151_denies_unreviewed_docker_actions[volume]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_current151_wrong_thread_cannot_enter_sequence
+5 failed, 36 passed in 0.16s

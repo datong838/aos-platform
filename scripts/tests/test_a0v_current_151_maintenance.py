@@ -138,3 +138,48 @@ def test_metadata_timestamp_equivalence_rejects_other_changes(fault):
     elif fault=='old_row':next(iter(actual['metadata'].values()))['old']='changed'
     else:next(iter(live.values()))[0]['id']='other'
     with pytest.raises(m.Maintenance151Blocked):m.normalize_metadata151(before,expected,actual,rows,live)
+
+
+@pytest.mark.parametrize('action',['run','rm','stop','volume'])
+def test_current151_denies_unreviewed_docker_actions(action):
+    m=module()
+    with pytest.raises(m.Maintenance151Blocked):m.require_current151_action([action,'aos-a0v-recovery-pg'])
+
+
+def test_current151_wrong_thread_cannot_enter_sequence(monkeypatch):
+    m=module();calls=[]
+    def task(**kwargs):
+        assert kwargs['thread']=='old-thread'
+        raise m.Maintenance151Blocked('MAINTENANCE_151_BASELINE_DRIFT')
+    monkeypatch.setattr(m,'read_task',task)
+    monkeypatch.setattr(m,'preflight',lambda **kwargs: calls.append(1))
+    with pytest.raises(m.Maintenance151Blocked):m.run_current151(thread='old-thread')
+    assert calls==[]
+
+
+def test_service_identity_drift_prevents_signal(monkeypatch):
+    import os
+    from types import SimpleNamespace
+    m=module();signals=[]
+    monkeypatch.setattr(os,'kill',lambda *args: signals.append(args))
+    def refuse(*args,**kwargs):raise m.Maintenance151Blocked('PROCESS_IDENTITY_DRIFT')
+    maintenance=SimpleNamespace(read_service_candidate=lambda **kwargs:dict(pid=2),require_process=refuse)
+    journal=SimpleNamespace(_require_live_binding=lambda:None)
+    service=dict(fingerprint=dict(pid=123),argv=['original'],cwd='original',port=8080,helper_argv=None)
+    with pytest.raises(m.Maintenance151Blocked):m.stop_services151([service],journal=journal,maintenance=maintenance)
+    assert signals==[]
+
+
+def test_schema_mismatch_prevents_start(monkeypatch):
+    import subprocess,json
+    from types import SimpleNamespace
+    m=module();started=[]
+    monkeypatch.setattr(subprocess,'Popen',lambda *args,**kwargs:started.append(1))
+    def run(args,**kwargs):
+        if args[0]=='lsof':return SimpleNamespace(stdout=b'')
+        return SimpleNamespace(returncode=0,stdout=json.dumps(dict(outcome='CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN',version='a0v_142')).encode())
+    monkeypatch.setattr(subprocess,'run',run)
+    journal=SimpleNamespace(_require_live_binding=lambda:None)
+    service=dict(port=8080,argv=['python','api','--serve'],cwd='original')
+    with pytest.raises(m.Maintenance151Blocked):m.restart_services151([service],journal=journal,maintenance=None)
+    assert started==[]

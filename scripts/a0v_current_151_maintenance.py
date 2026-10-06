@@ -285,6 +285,75 @@ def normalize_metadata151(before,expected,actual,template_rows,live_rows):
 
 def run_isolated151(*,thread):
     """Whole current-version window sequence on new isolated volumes only."""
+    return _run_sequence151(thread=thread,current=False)
+
+
+def run_current151(*,thread):
+    read_task(thread=thread)
+    return _run_sequence151(thread=thread,current=True)
+
+
+def require_current151_action(args):
+    if not args or args[0] not in ('exec','restart','inspect') or 'aos-a0v-recovery-pg' not in args:
+        raise Maintenance151Blocked('CURRENT151_ACTION_FORBIDDEN')
+
+
+def stop_services151(services,*,journal,maintenance):
+    import os,signal,subprocess,time
+    for service in services:
+        journal._require_live_binding()
+        original=service['fingerprint']
+        observed=maintenance.read_service_candidate(pid=original['pid'],expected_argv=service['argv'],expected_cwd=service['cwd'],expected_port=service['port'],expected_child_argv=service['helper_argv'])
+        maintenance.require_process(original,observed,executor_pid=os.getpid())
+        journal._write(f"service-{service['port']}-stop-intent.json",dict(fingerprint=original))
+        journal._require_live_binding()
+        os.kill(original['pid'],signal.SIGTERM)
+        for _ in range(100):
+            probe=subprocess.run(['ps','-p',str(original['pid']),'-o','stat='],capture_output=True,text=True)
+            listener=subprocess.run(['lsof','-nP',f"-iTCP:{service['port']}",'-sTCP:LISTEN','-t'],capture_output=True)
+            if (probe.returncode!=0 or probe.stdout.strip().startswith('Z')) and not listener.stdout.strip():break
+            time.sleep(.1)
+        else:raise Maintenance151Blocked('SERVICE_STOP_UNKNOWN_RECONCILE_ONLY')
+        for child in original['children']:
+            probe=subprocess.run(['ps','-p',str(child['pid']),'-o','stat='],capture_output=True,text=True)
+            if probe.returncode==0 and not probe.stdout.strip().startswith('Z'):raise Maintenance151Blocked('WEB_HELPER_DID_NOT_EXIT')
+    return dict(status='verified',services_stopped=[x['port'] for x in services],forced_signals=0)
+
+
+def restart_services151(services,*,journal,maintenance):
+    import os,subprocess,time,urllib.request
+    restarted=[]
+    for service in services:
+        journal._require_live_binding();port=service['port']
+        listener=subprocess.run(['lsof','-nP',f'-iTCP:{port}','-sTCP:LISTEN','-t'],capture_output=True)
+        if listener.stdout.strip():raise Maintenance151Blocked('RESTART_PORT_OCCUPIED_NO_DUPLICATE')
+        if port==8080:
+            preflight=subprocess.run(service['argv'][:-1],cwd=service['cwd'],capture_output=True,timeout=90)
+            if preflight.returncode:raise Maintenance151Blocked('SIGNED_STARTUP_PREFLIGHT_FAILED')
+            report=json.loads(preflight.stdout.strip().splitlines()[-1])
+            if report['outcome']!='CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN' or report['version']!='a0v_151':raise Maintenance151Blocked('SIGNED_STARTUP_SCHEMA_DRIFT')
+            journal._write('signed-startup-preflight.json',report)
+        environment={k:os.environ[k] for k in ('PATH','HOME','TMPDIR','LANG') if k in os.environ}
+        environment.update(service['environment'])
+        journal._write(f'service-{port}-start-intent.json',dict(argv=service['argv'],cwd=service['cwd']))
+        journal._require_live_binding()
+        with os.fdopen(os.open(journal.directory/f'service-{port}.log',os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600),'wb') as handle:
+            process=subprocess.Popen(service['argv'],cwd=service['cwd'],env=environment,stdout=handle,stderr=handle,start_new_session=True)
+        journal._write(f'service-{port}-started.json',dict(pid=process.pid))
+        for _ in range(100):
+            if process.poll() is not None:raise Maintenance151Blocked('RESTARTED_SERVICE_TERMINAL')
+            try:
+                with urllib.request.urlopen(f'http://127.0.0.1:{port}/'+('v1/ready' if port==8080 else ''),timeout=2) as response:
+                    if response.status==200:break
+            except OSError:pass
+            time.sleep(.2)
+        else:raise Maintenance151Blocked('RESTARTED_SERVICE_UNVERIFIED')
+        observed=maintenance.read_service_candidate(pid=process.pid,expected_argv=service['argv'],expected_cwd=service['cwd'],expected_port=port,expected_child_argv=service['helper_argv'])
+        restarted.append(dict(port=port,pid=process.pid,fingerprint=observed))
+    return dict(status='verified',restarted=restarted,http_readonly_smoke=True,business_first_chain=False)
+
+
+def _run_sequence151(*,thread,current):
     import hashlib,io,os,secrets,subprocess,time
     from alembic import command
     from alembic.config import Config
@@ -304,17 +373,40 @@ def run_isolated151(*,thread):
     state.mkdir(mode=0o700)
     journal=Maintenance151Journal(state,head=report['head'])
     source,target='current151-source-'+suffix,'current151-restore-'+suffix
+    if current:source=restore.SOURCE_CONTAINER
     docker=['docker','--context',restore.DEST_CONTEXT]
     tick=time.monotonic()
     def save(name,value):journal._write(name,value)
-    save('intent.json',dict(binding=journal.binding,source=source,target=target,image=image,source_touched=False))
+    save('intent.json',dict(binding=journal.binding,source=source,target=target,image=image,source_touched=current))
     def execute(args,data=None,check=True):
         journal._require_live_binding()
-        result=subprocess.run(docker+args,input=data,capture_output=True,timeout=180)
+        selected=docker
+        if current and restore.SOURCE_CONTAINER in args:
+            require_current151_action(args)
+            selected=['docker','--context',restore.SOURCE_CONTEXT]
+            item=json.loads(subprocess.check_output(selected+['inspect',source]))[0]
+            maintenance.require_source(item)
+            if item['Id']!=report['source_id'] or item['Image']!=report['source_image']:
+                raise Maintenance151Blocked('CURRENT151_SOURCE_IDENTITY_DRIFT')
+        result=subprocess.run(selected+args,input=data,capture_output=True,timeout=180)
         if check and result.returncode:
             raise Maintenance151Blocked('ISOLATED151_COMMAND_FAILED_EXIT_'+str(result.returncode))
         return result
     def pg(name,statement,database=restore.SOURCE,tcp=False,check=True):
+        if current and name==source and tcp:
+            import psycopg
+            from types import SimpleNamespace
+            if database!=restore.SOURCE or statement not in ('SELECT 1','SELECT version_num FROM alembic_version'):
+                raise Maintenance151Blocked('CURRENT151_TCP_READONLY_REQUIRED')
+            journal._require_live_binding()
+            bootstrap=_load('current151_bootstrap',ROOT/'scripts/a0v_current_preview_bootstrap.py')
+            try:
+                with psycopg.connect(**bootstrap._connection_parameters(),connect_timeout=3) as conn:
+                    conn.read_only=True;value=conn.execute(statement).fetchone()[0]
+                return SimpleNamespace(returncode=0,stdout=(str(value)+'\n').encode())
+            except psycopg.OperationalError:
+                if check:raise Maintenance151Blocked('CURRENT151_TCP_READ_FAILED') from None
+                return SimpleNamespace(returncode=2,stdout=b'')
         return execute(['exec',name,'psql','-U','aos_app','-d',database,'-Atq','-v','ON_ERROR_STOP=1']+
             (['-h','127.0.0.1'] if tcp else [])+['-c',statement],check=check)
     def ready(name):
@@ -324,7 +416,8 @@ def run_isolated151(*,thread):
         raise Maintenance151Blocked('ISOLATED151_NOT_READY')
     def inspect(name):
         item=json.loads(execute(['inspect',name]).stdout)[0]
-        require_isolated151(item,name=name,image=image)
+        if current and name==source:maintenance.require_source(item)
+        else:require_isolated151(item,name=name,image=image)
         return item
     def query(name,statement):
         return json.loads(pg(name,"BEGIN READ ONLY;SET LOCAL timezone='UTC';SET LOCAL search_path=pg_catalog,public;"+statement+';COMMIT').stdout)
@@ -341,12 +434,16 @@ def run_isolated151(*,thread):
         restore.require_dump_restore_equivalence(final_expected,normalized)
     globals_data=primitive.prepare_globals((backup/'globals-no-password.sql').read_bytes(),bootstrap='aos_app')
     for name in (source,target):
+        if current and name==source:
+            inspect(name);continue
         execute(['run','-d','--pull','never','--name',name,'--network','none','--cpus','1','--memory','768m',
             '--label','aos.restore-gate=20261006-151','--mount','type=volume,source='+name+'-data,target=/var/lib/postgresql/data',
             '-e','POSTGRES_USER=aos_app','-e','POSTGRES_HOST_AUTH_METHOD=trust',image])
         ready(name);inspect(name)
-        execute(['exec','-i',name,'psql','-U','aos_app','-d','postgres','-q','-v','ON_ERROR_STOP=1','-f','-'],globals_data)
-    execute(['exec','-i',source,'pg_restore','-U','aos_app','-d','postgres','--create','--exit-on-error'],(backup/'current-full.dump').read_bytes())
+        if name==source:
+            execute(['exec','-i',name,'psql','-U','aos_app','-d','postgres','-q','-v','ON_ERROR_STOP=1','-f','-'],globals_data)
+    if not current:
+        execute(['exec','-i',source,'pg_restore','-U','aos_app','-d','postgres','--create','--exit-on-error'],(backup/'current-full.dump').read_bytes())
     restore.require_dump_restore_equivalence(expected,snapshot(source,expected['role_names']))
     if pg(source,'SELECT 1',tcp=True).stdout.strip()!=b'1':raise Maintenance151Blocked('ISOLATED151_TCP_BASELINE_REQUIRED')
     listen_query="SELECT json_agg(x) FROM (SELECT sourcefile,setting,applied,error FROM pg_file_settings WHERE name='listen_addresses') x"
@@ -354,7 +451,10 @@ def run_isolated151(*,thread):
     listen=pg(source,'SHOW listen_addresses').stdout.decode().strip()
     restore_statement=maintenance.listen_restore_statement(rows,effective=listen)
     save('listen-original.json',dict(rows=rows,effective=listen,restore_statement=restore_statement))
-    journal.perform('stop_clients',lambda: dict(status='verified',scope='isolated_no_application_clients'))
+    services=report['services'] if current else None
+    if current:save('services-original.json',services)
+    journal.perform('stop_clients',lambda: stop_services151(services,journal=journal,maintenance=maintenance)
+        if current else dict(status='verified',scope='isolated_no_application_clients'))
     def window():
         values=dict(listen_addresses=pg(source,'SHOW listen_addresses').stdout.decode().strip(),
             tcp_exit=pg(source,'SELECT 1',tcp=True,check=False).returncode,
@@ -379,6 +479,8 @@ def run_isolated151(*,thread):
         return dict(status='verified',sha256=primitive.sha(state/'window.dump'),globals_sha256=primitive.sha(state/'window-globals.sql'),bytes=len(data))
     journal.perform('snapshot_dump',dump)
     def independent_restore():
+        fresh_globals=primitive.prepare_globals((state/'window-globals.sql').read_bytes(),bootstrap='aos_app')
+        execute(['exec','-i',target,'psql','-U','aos_app','-d','postgres','-q','-v','ON_ERROR_STOP=1','-f','-'],fresh_globals)
         execute(['exec','-i',target,'pg_restore','-U','aos_app','-d','postgres','--create','--exit-on-error'],(state/'window.dump').read_bytes())
         restore.require_dump_restore_equivalence(expected,snapshot(target,expected['role_names']))
         window()
@@ -410,13 +512,14 @@ def run_isolated151(*,thread):
         if pg(source,'SELECT 1',tcp=True).stdout.strip()!=b'1' or json.loads(pg(source,listen_query).stdout)!=rows:raise Maintenance151Blocked('LISTEN_RESTORE_DRIFT')
         return dict(status='verified',original_config_restored=True)
     journal.perform('restore_tcp',restore_tcp)
-    journal.perform('restart_clients',lambda:dict(status='verified',scope='isolated_no_application_clients'))
+    journal.perform('restart_clients',lambda: restart_services151(services,journal=journal,maintenance=maintenance)
+        if current else dict(status='verified',scope='isolated_no_application_clients'))
     def acceptance():
         inspect(source);inspect(target)
         require_final_snapshot()
         if pg(source,'SELECT version_num FROM alembic_version',tcp=True).stdout.strip()!=b'a0v_151':raise Maintenance151Blocked('FINAL_VERSION_DRIFT')
-        return dict(status='verified',schema='a0v_151',source_touched=False,business_first_chain=False)
+        return dict(status='verified',schema='a0v_151',source_touched=current,business_first_chain=False)
     journal.perform('acceptance',acceptance)
-    result=dict(outcome='ISOLATED142_TO151_WINDOW_SEQUENCE_GREEN',state=str(state),source=source,target=target,head=report['head'],elapsed_seconds=round(time.monotonic()-tick,3),current_source_touched=False)
+    result=dict(outcome='CURRENT142_TO151_MAINTENANCE_API_WEB_GREEN_BROWSER_PENDING' if current else 'ISOLATED142_TO151_WINDOW_SEQUENCE_GREEN',state=str(state),source=source,target=target,head=report['head'],elapsed_seconds=round(time.monotonic()-tick,3),current_source_touched=current)
     save('result.json',result)
     return result
