@@ -37,7 +37,8 @@ def test_registry_catalog_has_no_login_bypass_or_public_writer():
             r=conn.execute('SELECT rolcanlogin,rolinherit,rolsuper,rolcreatedb,rolcreaterole,rolreplication,rolbypassrls FROM pg_roles WHERE rolname=%s',(role,)).fetchone()
             assert r and not any(r.values())
         rows=conn.execute('SELECT c.relname,c.relrowsecurity,c.relforcerowsecurity,c.relowner=%s::regrole AS owner FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=%s AND c.relkind=%s',(OWNER,SCHEMA,'r')).fetchall()
-        assert {r['relname'] for r in rows}==set(TABLES)
+        from aos_api.aip_provider_capacity_document_registry import DOCUMENT_TABLES
+        assert {r['relname'] for r in rows}==set(TABLES)|set(DOCUMENT_TABLES)
         assert all(r['relrowsecurity'] and r['relforcerowsecurity'] and r['owner'] for r in rows)
         assert conn.execute('SELECT count(*) AS n FROM pg_constraint c JOIN pg_namespace n ON n.oid=c.connamespace WHERE n.nspname=%s AND c.contype=%s AND (c.condeferrable OR c.condeferred)',(SCHEMA,'f')).fetchone()['n']==0
 

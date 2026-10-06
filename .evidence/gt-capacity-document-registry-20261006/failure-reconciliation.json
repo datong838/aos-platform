@@ -1,0 +1,28 @@
+{
+  "cumulative": "adjacent-r3.log",
+  "result": "551 passed, 67 failed, 7 warnings in268.29s",
+  "cause_evidence": "checkpointer SIGKILL at2026-10-06T13:40:04.874Z and recovery-ready13:40:11.797Z; root maximum registration connection rolled back; recovery-mode cascading failures",
+  "cgroup_before": {
+    "oom": 4,
+    "oom_kill": 3
+  },
+  "cgroup_after": {
+    "oom": 6,
+    "oom_kill": 4
+  },
+  "database": "aos_test_rootcommit_f3dfaca7e95a",
+  "independent_reconciliation": {
+    "origin_count": 0,
+    "snapshot_count": 0,
+    "root_count": 0,
+    "epoch": 0,
+    "head": null,
+    "original_template_private_schema_count": 0
+  },
+  "deletions": false,
+  "unknown_resend": false,
+  "formal_access": false,
+  "followup": "Root memory-r2c.log1PASS24.68s fixed256MiB; final cumulative pending",
+  "bootstrap_test_correction": "green-r4 3fail23pass: original bootstrap disallows repeated identity; preserved rejection plus separate administrative storage constraints in green-r5 29pass20.86s",
+  "old_negative_labels": "green-r2/adjacent-r1 overbroad independent_allowed_hash_signature label does not establish validity of intentionally invalid signature/allowlist; later exact labels distinguish these faults"
+}

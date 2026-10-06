@@ -1,0 +1,118 @@
+{
+  "baseline": "AOS-001412/m1@65adfeddf936b45897c7eaa6d8402af16d08e2a4",
+  "task": "gt-capacity-document-registry-20261006",
+  "result": "GREEN_ISOLATED_SIGNED_DOCUMENT_REGISTRY_NO_SOURCE_GRANT",
+  "files": {
+    "services/aos-api/alembic/versions/a0v_153_capacity_document_registry.py": "6a14795a38930d8473693d8325a08d3e078385454e3aa2a617facf511020b1af",
+    "services/aos-api/aos_api/aip_provider_capacity_document_registry.py": "0cba9b6f1f5de19b07d77c754eab8b84c4eab776712d2d705176393cdab97958",
+    "services/aos-api/tests/aip/test_capacity_document_registry_pg.py": "afb56f9ec35443a818a96fd2b188b9181815b56c5f4783b7e1766677ad7af8d8",
+    "services/aos-api/tests/aip/test_capacity_publication_registry_pg.py": "c9f448c80d1b0400b6cb62bda53e6a7a53102b9427e683e430020486a4dac0b7",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "a47245dbe96ee2b2735e6d5c1cd83dc1dcccceb3802ca99378e0b1704e605962",
+    ".evidence/gt-capacity-document-registry-20261006/plan.md": "130d216cce3516c9b4a1a4bd7f1e05cd32d63fd5011528ecfa3e873e2d71a5d9",
+    ".evidence/gt-capacity-publication-registry-20261006/plan.md": "2a870c51c3f53ed2414f9182107e6053c2d0f49c553708a40e0497662106531b",
+    ".evidence/gt-capacity-document-registry-20261006/review.json": "58a400edd925a144a8ae907b2888917ceafb8736d7cd833f5305cf572349d711"
+  },
+  "logs": {
+    "revision-red.log": {
+      "sha256": "a1a4522f2ab1b0f8f3063016a43b17e9eb5774cd7a5f3c494c5344f9ee72bc40",
+      "summary": "1 failed, 22 deselected, 7 warnings in 5.73s"
+    },
+    "red.log": {
+      "sha256": "3531f142a4ad48b2269723be41464325a39dfa52c71ba5a203e6c0fdc3e59c32",
+      "summary": "1 failed, 7 warnings in 6.04s"
+    },
+    "adjacent-r1.log": {
+      "sha256": "dfc11c395a587182b2f899925c4882d0ef7d7e2b1e30f23d5ce4f73a280bf66d",
+      "summary": "1 failed, 605 passed, 7 warnings in 275.13s (0:04:35)"
+    },
+    "adjacent-r2.log": {
+      "sha256": "116bc10966f3e5cbf9fe3c0c49013d9b2388e580da8be6764c25d34735734956",
+      "summary": "611 passed, 7 warnings in 277.35s (0:04:37)"
+    },
+    "adjacent-r3.log": {
+      "sha256": "76bf60aa529962256e7316a72d2c90634dded7c14fb30941aac9d70e14e7ee3b",
+      "summary": "67 failed, 551 passed, 7 warnings in 268.29s (0:04:28)"
+    },
+    "adjacent-r4.log": {
+      "sha256": "b8645b129ecbc09d78a427f9b5973546b1955974df2dd8a03b173c32fe56f905",
+      "summary": "618 passed, 7 warnings in 284.08s (0:04:44)"
+    },
+    "green-r2.log": {
+      "sha256": "60034faac98c8733f6b9265b85c09044d1ed8a14a0cf20e244d430557258f4e5",
+      "summary": "15 passed, 7 warnings in 14.01s"
+    },
+    "green-r3.log": {
+      "sha256": "095810acf1e84e89e23e81a99d2f3a485ea3dc7669b34e25b566ce05c8c76bf6",
+      "summary": "23 passed, 7 warnings in 17.38s"
+    },
+    "green-r1.log": {
+      "sha256": "4e890f3858a31a28d4b440e318bf092b05e8684b17203e4b2d974654ef008929",
+      "summary": "1 passed, 7 warnings in 6.15s"
+    },
+    "green-r4.log": {
+      "sha256": "0ffff7e5f1a49555be43b72124309698815e0ab6550a82131773cf06892b02ce",
+      "summary": "3 failed, 23 passed, 7 warnings in 18.79s"
+    },
+    "green-r5.log": {
+      "sha256": "744aef833ab675645442f85cc50170ff42f924662bd604d93aeba17a2090b007",
+      "summary": "29 passed, 7 warnings in 20.86s"
+    }
+  },
+  "final_cumulative": {
+    "passed": 618,
+    "seconds": 284.08,
+    "warnings": 7,
+    "modules": [
+      "document_registry",
+      "root_registry",
+      "publication",
+      "formal_boundary"
+    ]
+  },
+  "proofs": [
+    "CAPACITY_DOCUMENT_COMMIT_PROOF aos_test_rootcommit_92a3c4dc4a55 kind=policy rollback=empty commit=exact replay=single source_issuance=false",
+    ".CAPACITY_DOCUMENT_COMMIT_PROOF aos_test_rootcommit_9c863f9d638c kind=attestation rollback=empty commit=exact replay=single source_issuance=false",
+    ".CAPACITY_DOCUMENT_COMMIT_PROOF aos_test_rootcommit_bd50870032c5 kind=permit rollback=empty commit=exact replay=single source_issuance=false",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_116db1b76dac fault=signature bootstrap_signed=true signature_valid=false exact_ref_allowed=true rows=0",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_b092cda5e5ad fault=allowed_ref bootstrap_signed=true signature_valid=true exact_ref_allowed=false rows=0",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_9b96c9cd99d6 fault=allowed_id bootstrap_signed=true signature_valid=true exact_ref_allowed=false rows=0",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_3966cbdc14a7 fault=allowed_revision bootstrap_signed=true signature_valid=true exact_ref_allowed=false rows=0",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_d632fc58adc4 fault=allowed_kind bootstrap_signed=true signature_valid=true exact_ref_allowed=false rows=0",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_4673a3f8a3a8 fault=unknown_root bootstrap_signed=true signature_valid=true exact_ref_allowed=true rows=0",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_b5dfde6f059f fault=revoked_root bootstrap_signed=true signature_valid=true exact_ref_allowed=true rows=0",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_61a3c26fe634 fault=expired_root bootstrap_signed=true signature_valid=true exact_ref_allowed=true rows=0",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_1a80d2d03efb fault=expired_document bootstrap_signed=true signature_valid=true exact_ref_allowed=true rows=0",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_762f2925a6be fault=deployment bootstrap_signed=true signature_valid=true exact_ref_allowed=true rows=0",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_adb68cd57300 fault=purpose bootstrap_signed=true signature_valid=true exact_ref_allowed=true rows=0",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_3440ba9fd8c9 fault=canary bootstrap_signed=true signature_valid=true exact_ref_allowed=true rows=0",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_d9f09d85e19e fault=session bootstrap_signed=true signature_valid=true exact_ref_allowed=true rows=0",
+    ".CAPACITY_DOCUMENT_NEGATIVE_PROOF aos_test_rootcommit_6c9a33127701 fault=epoch bootstrap_signed=true signature_valid=true exact_ref_allowed=true rows=0",
+    ".CAPACITY_DOCUMENT_EPOCH_PROOF aos_test_rootcommit_7eeef62d2d2b order=writer_first blocked=true epoch=2 retained_rows=1 administrative_invalidation_only=true",
+    ".CAPACITY_DOCUMENT_MAX_REVISION_PROOF aos_test_rootcommit_77fc953ede09 digits=4300 original_bytes=true committed=true replay=single",
+    ".CAPACITY_DOCUMENT_DUPLICATE_BOOTSTRAP_PROOF aos_test_rootcommit_f1a61196a30a kind=policy both_signed=true duplicate_identity_denied=true rows=0",
+    ".CAPACITY_DOCUMENT_DUPLICATE_BOOTSTRAP_PROOF aos_test_rootcommit_f750d1e21720 kind=attestation both_signed=true duplicate_identity_denied=true rows=0",
+    ".CAPACITY_DOCUMENT_DUPLICATE_BOOTSTRAP_PROOF aos_test_rootcommit_2efb4818787d kind=permit both_signed=true duplicate_identity_denied=true rows=0",
+    ".CAPACITY_DOCUMENT_IDENTITY_PROOF aos_test_rootcommit_b6f52cf61e9a kind=policy administrative_storage_only=true second_rejected=true original_preserved=true",
+    ".CAPACITY_DOCUMENT_IDENTITY_PROOF aos_test_rootcommit_6ef597d01141 kind=attestation administrative_storage_only=true second_rejected=true original_preserved=true",
+    ".CAPACITY_DOCUMENT_IDENTITY_PROOF aos_test_rootcommit_5a8909a1740b kind=permit administrative_storage_only=true second_rejected=true original_preserved=true",
+    ".CAPACITY_ROOT_MAXIMUM_COMMIT_PROOF aos_test_rootcommit_23c40005c86f count=10000 bytes=8190016 sha256=c167fd8b52b52fba60df4ced81d209f06316258a8e80f21e00efa5e3b7a26624 native_memory=256MiB original_file_provenance=false committed=true"
+  ],
+  "memory": {
+    "limit_bytes": 268435456,
+    "oom_before_final": 6,
+    "oom_kill_before_final": 4,
+    "new_oom_in_target_and_final": 0
+  },
+  "failure_evidence": "failure-reconciliation.json; original root memory-r2c.log1PASS24.68s",
+  "retained_databases": true,
+  "formal_database_or_services_accessed": false,
+  "browser": "not applicable",
+  "limitations": [
+    "No final caller COMMIT TTL proof",
+    "No formal OIDC/SCRAM installation identity",
+    "No signed root withdrawal/rotation API",
+    "No Source issuance or consumer authority",
+    "No natural first-chain/eight real scenarios or publication decision"
+  ],
+  "parent_tasks": "Root and original full publication remain ACTIVE"
+}

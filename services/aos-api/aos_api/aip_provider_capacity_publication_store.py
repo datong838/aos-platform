@@ -912,11 +912,16 @@ BEGIN
   END IF;
   -- Object JSON functions decode surrogate literals. Keep each array row opaque.
   array_document := pg_catalog.substr(document,15,pg_catalog.length(document)-15)::json;
+  -- Subsequent canonical checks use p_message; release the full UTF8 copy.
+  document := NULL;
   root_pattern := '^\{"algorithm":"Ed25519","keyId":('||literal_pattern||
     '),"notAfter":('||literal_pattern||'),"notBefore":('||literal_pattern||
     '),"publicKey":"([A-Za-z0-9+/]{43}=)","publisher":('||literal_pattern||
     '),"revision":"(sha256:[0-9a-f]{64})","revokedAt":(null|'||literal_pattern||')\}$';
   FOR original IN SELECT value,ordinality FROM pg_catalog.json_array_elements(array_document) WITH ORDINALITY LOOP
+    -- The running FOR query owns its evaluated JSON input. Do not retain a
+    -- second full-array variable while materializing all typed root rows.
+    array_document := NULL;
     row_count := original.ordinality;
     row_text := original.value::text;
     -- Compare each untouched row and separator directly to the original bytes.

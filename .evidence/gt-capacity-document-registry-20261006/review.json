@@ -1,0 +1,23 @@
+{
+  "source_hashes": {
+    "services/aos-api/alembic/versions/a0v_153_capacity_document_registry.py": "6a14795a38930d8473693d8325a08d3e078385454e3aa2a617facf511020b1af",
+    "services/aos-api/aos_api/aip_provider_capacity_document_registry.py": "0cba9b6f1f5de19b07d77c754eab8b84c4eab776712d2d705176393cdab97958",
+    "services/aos-api/tests/aip/test_capacity_document_registry_pg.py": "afb56f9ec35443a818a96fd2b188b9181815b56c5f4783b7e1766677ad7af8d8",
+    "services/aos-api/tests/aip/test_capacity_publication_registry_pg.py": "c9f448c80d1b0400b6cb62bda53e6a7a53102b9427e683e430020486a4dac0b7",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "a47245dbe96ee2b2735e6d5c1cd83dc1dcccceb3802ca99378e0b1704e605962"
+  },
+  "syntax": "PASS",
+  "scope": "additive a153 private documents; exact Root inventory test compatibility owned by existing Root Task",
+  "findings": [
+    "Full identity retained; SHA256 bounded identity is DB-derived and CHECK recomputed; NUL-delimited PostgreSQL text components are unambiguous. Cryptographic collision would deny insertion, never overwrite.",
+    "Raw signatures and approved exact references loaded server-side; caller cannot supply trusted key, verified status or expected deployment.",
+    "Epoch row locking serializes registration and administrative invalidation; no formal signed revocation protocol claim.",
+    "Original bootstrap forbids duplicate identity references; three new negative cases preserve this gate. Separate administrative fixture checks physical uniqueness only.",
+    "Scoped function retains original full profile parsing, current origin signature and native deployment binding; force RLS and immediate FKs preserved.",
+    "Return-time validity does not prove final caller COMMIT TTL. No Source issuance/consumer, formal authentication, installation or natural business chain is claimed.",
+    "a153 default has no trust seed, no LOGIN role or C extension installation; downgrade refuses deletion to preserve audit.",
+    "Cumulative regression exposed Root maximal-input OOM; original renewed publication Task owns minimal store change releasing unused UTF8/JSON variables after query evaluation. Root plan records rationale and exact-domain isolated follow-up1PASS24.68s without new OOM; final cumulative pending."
+  ],
+  "browser": "not applicable: no UI or running service change",
+  "result": "PASS: reviewed exact sources, original contracts and current cumulative618/284.08s; scoped only"
+}
