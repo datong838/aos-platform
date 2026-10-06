@@ -1592,3 +1592,149 @@ def test_native_provider_query_checks_real_full_original_account_set(source_inpu
             owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
             assert all(native_results())
         owner.rollback()
+
+
+def test_native_original_build_request_reads_actual_original_provenance(native_signed_source):
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_production_contracts import BuildEvidenceBundleRequest
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,
+        CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL,CAPACITY_ORIGINAL_BUILD_PROFILE_SQL)
+    with isolated_owner() as owner:
+        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,
+                        CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL,CAPACITY_ORIGINAL_BUILD_PROFILE_SQL):
+            owner.execute(profile)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        raw=owner.execute('SELECT request_payload FROM public.aip_evidence_bundle_build_provenance WHERE org_id=%s AND project_id=%s LIMIT 1',SCOPE.key).fetchone()['request_payload']
+        expected=BuildEvidenceBundleRequest.model_validate(raw).model_dump(mode='json',by_alias=True)
+        actual=owner.execute('SELECT aos_capacity_publication_private.read_original_build_request(%s) AS value',(Jsonb(raw),)).fetchone()['value']
+        assert actual==expected
+        owner.rollback()
+
+
+def test_native_original_build_request_canonical_domain_and_acl(native_signed_source):
+    import copy
+    from psycopg import Error
+    from psycopg.types.json import Jsonb
+    from pydantic import ValidationError
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_production_contracts import BuildEvidenceBundleRequest
+    from aos_api.aip_production_contract_store import canonical_hash
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,
+        CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL,CAPACITY_ORIGINAL_BUILD_PROFILE_SQL)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        raw=owner.execute('SELECT request_payload FROM public.aip_evidence_bundle_build_provenance WHERE org_id=%s AND project_id=%s LIMIT 1',SCOPE.key).fetchone()['request_payload']
+        cases=[('actual-build',copy.deepcopy(raw))]
+        def changed(label,path,value):
+            document=copy.deepcopy(raw); target=document
+            for part in path[:-1]:target=target[part]
+            target[path[-1]]=value;cases.append((label,document))
+        for key in raw:
+            document=copy.deepcopy(raw);del document[key];cases.append(('missing-'+key,document))
+            changed('null-'+key,[key],None)
+        changed('extra-field',['extra'],False)
+        for value in (0,-1,True,'1',1.0,1,9223372036854775808):
+            changed('exact-revision-'+repr(value),['briefRef','revision'],value)
+        for value in ('',' ','any-kind','x'*80,'x'*81):
+            changed('exact-type-'+repr(value),['briefRef','resourceType'],value)
+        changed('exact-id-too-long',['briefRef','resourceId'],'x'*201)
+        changed('bad-hash',['briefRef','contentHash'],'z'*64)
+        changed('empty-items',['itemRefs'],[])
+        changed('empty-facts',['requiredFactIds'],[])
+        for key in ('requiredFactIds','marking'):
+            for values in ([''],[' x '],['x','x'],[1],['内 部'],['x\x1cy']):
+                changed(key+'-'+repr(values),[key],values)
+        for value in ('2026-10-07T00:00:00','2026-10-07T00:00:00Z',
+                      '2026-10-07T00:00:00+08:00','2026-10-07T00:00:00.123456Z',
+                      '2026-10-07','2026-10-07 00:00:00Z','2026-10-07T00:00:00+00:00',1):
+            changed('cutoff-'+repr(value),['cutoffAt'],value)
+        resource={'resourceType':'arbitrary','resourceId':'x','revision':None,'authority':'source'}
+        changed('resource-canonical',['subjectRefs'],[resource])
+        for key,value in (('resourceType',' x '),('resourceId',''),('authority','\x1cx'),('revision',1)):
+            ref={**resource,key:value};changed('resource-'+key,['subjectRefs'],[ref])
+        ref=copy.deepcopy(resource);del ref['revision'];changed('resource-missing-revision',['subjectRefs'],[ref])
+        changed('license-arbitrary-numbers',['licenseSummary'],{'nested':[1,1.0,1e15,1e-5,True,None,'中文']})
+        changed('license-not-object',['licenseSummary'],[])
+        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,
+                        CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL,CAPACITY_ORIGINAL_BUILD_PROFILE_SQL):owner.execute(profile)
+        names=['original_build_exact_ref','original_build_resource_ref','read_original_build_request']
+        rows=owner.execute("""SELECT p.proname,p.provolatile,p.proisstrict,p.prosecdef,p.proconfig,
+            pg_get_userbyid(p.proowner) AS owner,
+            EXISTS(SELECT 1 FROM aclexplode(p.proacl) WHERE grantee=0 AND privilege_type='EXECUTE') AS public_execute,
+            has_function_privilege('aos_runtime',p.oid,'EXECUTE') AS runtime_execute,
+            has_function_privilege('aos_provider_capacity_issuer',p.oid,'EXECUTE') AS issuer_execute
+            FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+            WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)""",(names,)).fetchall()
+        assert len(rows)==3
+        assert all(row['provolatile']=='i' and row['proisstrict'] and not row['prosecdef']
+                   and row['owner']=='aos_capacity_publication_owner'
+                   and row['proconfig']==['search_path=pg_catalog']
+                   and not row['public_execute'] and not row['runtime_execute'] and not row['issuer_execute'] for row in rows)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        mismatches=[];accepted=0
+        for label,document in cases:
+            try:
+                normalized=BuildEvidenceBundleRequest.model_validate(document).model_dump(mode='json',by_alias=True)
+                expected=canonical_hash(normalized)==canonical_hash(document)
+            except ValidationError:expected=False
+            owner.execute('SAVEPOINT original_build_domain')
+            try:
+                try:
+                    actual=owner.execute('SELECT aos_capacity_publication_private.read_original_build_request(%s) AS value',(Jsonb(document),)).fetchone()['value']
+                    result=True
+                    if expected:assert actual==normalized,label
+                except Error as error:
+                    assert error.sqlstate=='22023',(label,error.sqlstate)
+                    result=False
+            finally:owner.execute('ROLLBACK TO SAVEPOINT original_build_domain')
+            accepted+=int(expected)
+            if result!=expected:mismatches.append((label,expected,result))
+        assert not mismatches,mismatches
+        print('BUILD_CANONICAL_DOMAIN',len(cases),'accepted',accepted)
+        owner.rollback()
+        assert owner.execute("SELECT count(*) AS count FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)",(names,)).fetchone()['count']==0
+        owner.rollback()
+
+
+def test_native_original_build_json_matches_original_decoded_hash_input(native_signed_source):
+    import json
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_ORIGINAL_BUILD_JSON_SQL
+    with isolated_owner() as owner:
+        owner.execute(CAPACITY_ORIGINAL_BUILD_JSON_SQL)
+        flags=owner.execute("""SELECT p.provolatile,p.proisstrict,p.prosecdef,p.proconfig,
+            pg_get_userbyid(p.proowner) AS owner,
+            has_function_privilege('aos_runtime',p.oid,'EXECUTE') AS runtime_execute,
+            has_function_privilege('aos_provider_capacity_issuer',p.oid,'EXECUTE') AS issuer_execute,
+            EXISTS(SELECT 1 FROM aclexplode(p.proacl) WHERE grantee=0 AND privilege_type='EXECUTE') AS public_execute
+            FROM pg_proc p WHERE p.oid='aos_capacity_publication_private.original_build_json(jsonb)'::regprocedure""").fetchone()
+        assert flags['provolatile']=='i' and flags['proisstrict'] and not flags['prosecdef']
+        assert flags['owner']=='aos_capacity_publication_owner'
+        assert flags['proconfig']==['search_path=pg_catalog','extra_float_digits=3']
+        assert not flags['runtime_execute'] and not flags['issuer_execute'] and not flags['public_execute']
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        samples=[None,True,False,0,1,-1,1.0,-0.0,1e15,1e16,1e-4,1e-5,
+                 1.2345678901234567,5e-324,1.7976931348623157e308,
+                 '中文\n\t\b\f\r\\"',{'z':[1e15,1e-5,None], '中文':{'😀':1.0}}]
+        samples += [float(f'1.234567890123456e{exponent}') for exponent in range(-20,25)]
+        mismatches=[]
+        for value in samples:
+            row=owner.execute('SELECT %s::jsonb AS decoded,aos_capacity_publication_private.original_build_json(%s) AS canonical',(Jsonb(value),Jsonb(value))).fetchone()
+            expected=json.dumps(row['decoded'],ensure_ascii=False,sort_keys=True,separators=(',',':'))
+            if row['canonical']!=expected:mismatches.append((repr(value),expected,row['canonical']))
+        # JSONB decimal scale survives; compare the original decoder, including
+        # binary64 overflow/underflow, rather than the pre-insert Python value.
+        for raw in ('1e-4000','-1e-4000','2e-324','-2e-324','1'+('0'*310)+'.0','-1'+('0'*310)+'.0'):
+            row=owner.execute('SELECT %s::jsonb AS decoded,aos_capacity_publication_private.original_build_json(%s::jsonb) AS canonical',(raw,raw)).fetchone()
+            expected=json.dumps(row['decoded'],ensure_ascii=False,sort_keys=True,separators=(',',':'))
+            if row['canonical']!=expected:mismatches.append((raw[:40],expected,row['canonical']))
+        assert not mismatches,mismatches
+        print('BUILD_JSON_DOMAIN',len(samples)+6)
+        owner.rollback()
+        assert owner.execute("SELECT to_regprocedure('aos_capacity_publication_private.original_build_json(jsonb)') AS fn").fetchone()['fn'] is None
+        owner.rollback()

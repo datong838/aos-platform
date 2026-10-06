@@ -1576,3 +1576,128 @@ WHERE provider_instance_id=%(provider_id)s AND revision=%(revision)s AND content
  AND pg_catalog.encode(public.digest(pg_catalog.convert_to(public.canonical_asset_registry_jsonb(
   normalized_provider-ARRAY['tenant','revision','contentHash','createdBy','createdAt']),'UTF8'),'sha256'),'hex')=content_hash
 """
+
+# Original Build input shape only; provenance/receipt/hash authority is checked
+# separately by the complete native Source transaction, never by this reader.
+CAPACITY_ORIGINAL_BUILD_PROFILE_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.original_build_exact_ref(p jsonb)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE v jsonb; revision text; hash text;
+BEGIN
+ v:=aos_capacity_publication_private.original_claim_fields(p,
+  '{"resourceType":"resourceType","resourceId":"resourceId","revision":"revision","contentHash":"contentHash"}'::jsonb);
+ PERFORM aos_capacity_publication_private.original_provider_string(v->'resourceType',80,false);
+ PERFORM aos_capacity_publication_private.original_provider_string(v->'resourceId',200,false);
+ revision:=v->>'revision'; hash:=v->>'contentHash';
+ -- A coercible non-integer representation changes the original model's
+ -- canonical serialization, so it is not an accepted Build provenance input.
+ IF jsonb_typeof(v->'revision')<>'number' OR revision COLLATE "C" !~ '^[0-9]+$'
+  OR revision::numeric<1 OR jsonb_typeof(v->'contentHash')<>'string'
+  OR hash COLLATE "C" !~ '^[0-9a-f]{64}$' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_BUILD_REF' USING ERRCODE='22023';
+ END IF;
+ RETURN v;
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.original_build_resource_ref(p jsonb)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE v jsonb; field text; value text;
+BEGIN
+ v:=aos_capacity_publication_private.original_claim_fields(p,
+  '{"resourceType":"resourceType","resourceId":"resourceId","revision":"revision","authority":"authority"}'::jsonb);
+ FOREACH field IN ARRAY ARRAY['resourceType','resourceId','authority'] LOOP
+  value:=aos_capacity_publication_private.original_provider_string(v->field,2147483647,true);
+  IF value IS DISTINCT FROM v->>field THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGINAL_BUILD_RESOURCE_REF' USING ERRCODE='22023';
+  END IF;
+ END LOOP;
+ IF jsonb_typeof(v->'revision') NOT IN ('string','null') THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_BUILD_RESOURCE_REF' USING ERRCODE='22023';
+ END IF;
+ RETURN v;
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.read_original_build_request(p jsonb)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE v jsonb; field text; item jsonb; value text; values_seen text[]; cutoff text;
+BEGIN
+ v:=aos_capacity_publication_private.original_claim_fields(p,
+  '{"briefRef":"briefRef","subjectRefs":"subjectRefs","cutoffAt":"cutoffAt","itemRefs":"itemRefs","requiredFactIds":"requiredFactIds","marking":"marking","licenseSummary":"licenseSummary"}'::jsonb);
+ PERFORM aos_capacity_publication_private.original_build_exact_ref(v->'briefRef');
+ FOREACH field IN ARRAY ARRAY['subjectRefs','itemRefs','requiredFactIds','marking'] LOOP
+  IF jsonb_typeof(v->field)<>'array' THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGINAL_BUILD_ARRAY' USING ERRCODE='22023';
+  END IF;
+ END LOOP;
+ IF jsonb_array_length(v->'itemRefs')<1 OR jsonb_array_length(v->'requiredFactIds')<1
+  OR jsonb_typeof(v->'licenseSummary')<>'object' OR jsonb_typeof(v->'cutoffAt')<>'string' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_BUILD' USING ERRCODE='22023';
+ END IF;
+ FOR item IN SELECT element.value FROM jsonb_array_elements(v->'subjectRefs') AS element(value) LOOP
+  PERFORM aos_capacity_publication_private.original_build_resource_ref(item);
+ END LOOP;
+ FOR item IN SELECT element.value FROM jsonb_array_elements(v->'itemRefs') AS element(value) LOOP
+  PERFORM aos_capacity_publication_private.original_build_exact_ref(item);
+ END LOOP;
+ FOREACH field IN ARRAY ARRAY['requiredFactIds','marking'] LOOP
+  values_seen:=ARRAY[]::text[];
+  FOR item IN SELECT element.value FROM jsonb_array_elements(v->field) AS element(value) LOOP
+   value:=aos_capacity_publication_private.original_provider_string(item,2147483647,true);
+   IF value IS DISTINCT FROM item#>>'{}' OR value=ANY(values_seen) THEN
+    RAISE EXCEPTION 'CAPACITY_ORIGINAL_BUILD_STRINGS' USING ERRCODE='22023';
+   END IF;
+   values_seen:=array_append(values_seen,value);
+  END LOOP;
+ END LOOP;
+ cutoff:=aos_capacity_publication_private.original_provider_time(v->'cutoffAt');
+ IF cutoff IS DISTINCT FROM v->>'cutoffAt' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_BUILD_CUTOFF' USING ERRCODE='22023';
+ END IF;
+ RETURN v;
+EXCEPTION WHEN OTHERS THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_BUILD' USING ERRCODE='22023';
+END $body$;
+""" + '\n'.join(
+    f'REVOKE ALL ON FUNCTION aos_capacity_publication_private.{signature} FROM PUBLIC;\n'
+    f'ALTER FUNCTION aos_capacity_publication_private.{signature} OWNER TO aos_capacity_publication_owner;'
+    for signature in ('original_build_exact_ref(jsonb)','original_build_resource_ref(jsonb)',
+                      'read_original_build_request(jsonb)'))
+
+CAPACITY_ORIGINAL_BUILD_JSON_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.original_build_json(p jsonb)
+RETURNS text LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER
+SET search_path=pg_catalog SET extra_float_digits=3 AS $body$
+DECLARE rendered text; exponent integer;
+BEGIN
+ CASE jsonb_typeof(p)
+ WHEN 'object' THEN
+  SELECT '{'||coalesce(string_agg(to_jsonb(element.key)::text||':'||
+   aos_capacity_publication_private.original_build_json(element.value),',' ORDER BY element.key COLLATE "C"),'')||'}'
+  INTO rendered FROM jsonb_each(p) AS element(key,value);
+ WHEN 'array' THEN
+  SELECT '['||coalesce(string_agg(aos_capacity_publication_private.original_build_json(element.value),
+   ',' ORDER BY element.ordinality),'')||']' INTO rendered
+  FROM jsonb_array_elements(p) WITH ORDINALITY AS element(value,ordinality);
+ WHEN 'number' THEN
+  rendered:=p::text;
+  -- Match the original driver's JSON decoding: decimal literals become
+  -- binary64; integer literals remain arbitrary precision integers.
+  IF position('.' IN rendered)>0 THEN
+   BEGIN rendered:=(rendered::double precision)::text;
+   EXCEPTION WHEN numeric_value_out_of_range THEN
+    IF abs(rendered::numeric)<1 THEN
+     RETURN CASE WHEN left(rendered,1)='-' THEN '-0.0' ELSE '0.0' END;
+    END IF;
+    RETURN CASE WHEN left(rendered,1)='-' THEN '-Infinity' ELSE 'Infinity' END;
+   END;
+   IF position('e' IN rendered)>0 THEN
+    exponent:=split_part(rendered,'e',2)::integer;
+    -- Python repr uses fixed notation for exponents -4 through 15.
+    IF exponent BETWEEN -4 AND 15 THEN rendered:=(rendered::numeric)::text; END IF;
+   END IF;
+   IF position('.' IN rendered)=0 AND position('e' IN rendered)=0 THEN rendered:=rendered||'.0'; END IF;
+  END IF;
+ ELSE rendered:=p::text;
+ END CASE;
+ RETURN rendered;
+END $body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.original_build_json(jsonb) FROM PUBLIC;
+ALTER FUNCTION aos_capacity_publication_private.original_build_json(jsonb) OWNER TO aos_capacity_publication_owner;
+"""

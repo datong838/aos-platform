@@ -1,0 +1,21 @@
+{
+  "scope": "READONLY_ISOLATED_CUMULATIVE_DATABASE",
+  "database": "aos_test_7097a3e285d5_ti4_test",
+  "versions": [
+    {
+      "version_num": "a0v_156"
+    }
+  ],
+  "build_functions_remaining": [],
+  "roles": [
+    {
+      "rolname": "aos_capacity_publication_owner",
+      "rolcanlogin": false
+    },
+    {
+      "rolname": "aos_provider_capacity_issuer",
+      "rolcanlogin": false
+    }
+  ],
+  "prepare_function": null
+}
