@@ -1,0 +1,88 @@
+{
+  "outcome": "RESTORED_PUBLIC_SCHEMA_EFFECTIVE_ROLE_GRANTS_GREEN",
+  "authority": "AOS-001364",
+  "roles": [
+    {
+      "rolname": "aos_aip_binding_evaluator",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false,
+      "membership": false,
+      "db_create": false,
+      "db_connect": false,
+      "db_temp": true,
+      "schema_create": false
+    },
+    {
+      "rolname": "aos_capacity_evidence_epoch_owner",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false,
+      "membership": false,
+      "db_create": false,
+      "db_connect": false,
+      "db_temp": true,
+      "schema_create": false
+    },
+    {
+      "rolname": "aos_provider_capacity_issuer",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false,
+      "membership": false,
+      "db_create": false,
+      "db_connect": false,
+      "db_temp": true,
+      "schema_create": false
+    },
+    {
+      "rolname": "aos_provider_health_fence_owner",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false,
+      "membership": false,
+      "db_create": false,
+      "db_connect": false,
+      "db_temp": true,
+      "schema_create": false
+    },
+    {
+      "rolname": "aos_publication_epoch_owner",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false,
+      "membership": false,
+      "db_create": false,
+      "db_connect": false,
+      "db_temp": true,
+      "schema_create": false
+    }
+  ],
+  "public_executable_security_definer": [],
+  "limitations": [
+    "public schema scope only; ordinary PUBLIC invoker compatibility still separate",
+    "complete formal issuance/concurrency and source migration/restart pending"
+  ],
+  "effective_table_acl_rows": 80,
+  "effective_update_column_rows": 43
+}
