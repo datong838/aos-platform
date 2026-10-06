@@ -1,0 +1,50 @@
+{
+  "baseline": "AOS-001419/m1@8baf12b2",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "task": "gt-capacity-source-entry-20261007",
+  "status": "PARTIAL_NATIVE_ORIGINAL_APPROVAL_CHECK_GREEN_FULL_SOURCE_INCOMPLETE",
+  "target": {
+    "passed": 16,
+    "seconds": 31.48
+  },
+  "adjacent": {
+    "passed": 631,
+    "deselected_known_entry": 2,
+    "skipped": 0,
+    "warnings": 8,
+    "seconds": 404.91,
+    "exit": 0
+  },
+  "entry_red": {
+    "failed": 2,
+    "seconds": 9.59,
+    "sqlstate": "42883",
+    "reason": "prepare function still absent; not counted as correct fail-closed"
+  },
+  "self_review": [
+    "Original guard metadata/policy constants reused; no alternate approval state or client PASS.",
+    "Original JSON null and SQL NULL both preserve accepted None domain.",
+    "No new lock order; original Guard/epoch/typed dependency checks still required.",
+    "Original typed Source actionBinding recomputation and complete S01-S20 entry still pending.",
+    "Historical fault injection isolated savepoint only; replica restored before controlled Owner read and all faults rolled back.",
+    "No UI changes; browser acceptance not applicable to this SQL read slice.",
+    "No real database, migration, role activation, supplier call, Source publication or execution permission.",
+    "No parent Task Delivery or natural first-chain claim."
+  ],
+  "next": "Complete157 native prepare/sign/commit/current consumer; retain actual caller COMMIT TTL unresolved contract.",
+  "sha256": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "0b9706d1e1490b674dacc38b5e9412a3d31538a9f34f883fa8356c9ecd7ab485",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "c205a27169ea5408e1e2cf0466d31ad2f03cffaaac2e75d6b6577dc0ea8ca5cd",
+    ".evidence/gt-capacity-source-publication-20261006/original-approval-native-red.log": "373fe22edd2eae04d11f794d34822a26ce38b4f8c3ee72053bce0a88314169f6",
+    ".evidence/gt-capacity-source-publication-20261006/original-approval-native-green-r1.log": "a5439c7a1720683b29444cdb11fc0cce97917b7ab671d51d288527e173bd556f",
+    ".evidence/gt-capacity-source-publication-20261006/original-approval-native-green-r2.log": "878bb285e42178c606d66e84ec781e123a1737a5916971b7df5c70342c10d0c9",
+    ".evidence/gt-capacity-source-publication-20261006/original-approval-native-matrix-r1.log": "71b5eae126303d459923e5c97f3a4faebf4f9a218df881ea3f88d344fd8d1d32",
+    ".evidence/gt-capacity-source-publication-20261006/original-approval-adjacent-r1.log": "39bd13bff394d490c29cb8a49c3614daa4cad6e32ec8c5207b3799f2ff4e1e17",
+    ".evidence/gt-capacity-source-publication-20261006/original-approval-entry-red-r1.log": "08bd5c3a5486789f12decc447caebf01479076984437f36bcc6901391f9b55a4",
+    ".evidence/gt-capacity-source-entry-20261007/native-audit.json": "7436ec7534853ae884f5d7222cec76d15f98f8d14b86a4b276d90467e12dd7df"
+  },
+  "container_readback": [
+    "/aos-capacity-publication-scram-20261006 {\"Status\":\"running\",\"Running\":true,\"Paused\":false,\"Restarting\":false,\"OOMKilled\":false,\"Dead\":false,\"Pid\":212077,\"ExitCode\":0,\"Error\":\"\",\"StartedAt\":\"2026-10-06T14:38:32.788850949Z\",\"FinishedAt\":\"0001-01-01T00:00:00Z\"}",
+    "/aos-ed25519-test-31dccb3dc27e {\"Status\":\"running\",\"Running\":true,\"Paused\":false,\"Restarting\":false,\"OOMKilled\":true,\"Dead\":false,\"Pid\":3464,\"ExitCode\":0,\"Error\":\"\",\"StartedAt\":\"2026-10-06T12:30:42.854933917Z\",\"FinishedAt\":\"2026-10-06T12:20:54.749106285Z\"}"
+  ]
+}

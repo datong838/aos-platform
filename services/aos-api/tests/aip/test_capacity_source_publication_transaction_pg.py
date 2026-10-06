@@ -347,3 +347,72 @@ def test_preparation_transport_rejects_actual_signature_drift(native_signed_sour
     with pytest.raises(ProviderCapacityIssuanceBlocked,match='CAPACITY_SOURCE_PREPARATION_AUTHENTICATION_REQUIRED') as caught:
         capacity_source_preparation_bytes(invalid)
     assert invalid.bearer_token.get_secret_value() not in str(caught.value)
+
+
+@pytest.mark.parametrize('kind',['source','allocation'])
+@pytest.mark.parametrize('fault',['action_metadata','object_metadata','maker_role','checker_role','draft_payload','draft_status','policy','eligibility'])
+def test_original_approval_sql_rechecks_native_approval_facts_without_client_guard(native_signed_source,kind,fault):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_APPROVED_SOURCE_ROW_SQL,CAPACITY_APPROVED_ALLOCATION_ROW_SQL
+    from aos_api.aip_provider_capacity_source_issuer import authenticate_capacity_issuance_command
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    _,actual_command,_,source,_=native_signed_source
+    command,_,_=actual_command()
+    maker=authenticate_capacity_issuance_command(command).subject
+    params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,maker=maker)
+    if kind=='source':
+        statement=CAPACITY_APPROVED_SOURCE_ROW_SQL
+        params.update(proposal_id=command.approved_proposal.asset_id,proposal_revision=command.approved_proposal.revision,
+            proposal_hash=command.approved_proposal.content_hash,approval_event_id=command.approval_event.asset_id,
+            approval_event_hash=command.approval_event.content_hash)
+        action='aip_review_provider_capacity_source'
+    else:
+        statement=CAPACITY_APPROVED_ALLOCATION_ROW_SQL
+        params.update(request_id=source.allocation_request_ref.asset_id,request_hash=source.allocation_request_ref.content_hash,
+            approval_event_id=source.allocation_approval_ref.asset_id,approval_event_hash=source.allocation_approval_ref.content_hash)
+        action='aip_request_provider_capacity'
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute("SET LOCAL TimeZone='UTC'")
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        original=owner.execute(statement,params).fetchone()
+        assert original is not None
+        owner.execute('RESET ROLE')
+        original_event_hash=params['approval_event_hash']
+        owner.execute('SAVEPOINT metadata_drift')
+        try:
+            if fault=='action_metadata':
+                owner.execute('UPDATE public.meta_action_type SET name=%s WHERE id=%s',('native metadata drift',action))
+            elif fault=='object_metadata':
+                object_id='ProviderCapacitySourceReview' if kind=='source' else 'ProviderCapacityRequest'
+                owner.execute('UPDATE public.meta_object_type SET name=%s WHERE id=%s',('native object drift',object_id))
+            elif fault in {'maker_role','checker_role'}:
+                subject=maker if fault=='maker_role' else owner.execute(
+                    'SELECT actor_id FROM public.aip_action_approval_event WHERE org_id=%s AND project_id=%s AND approval_event_id=%s',
+                    (*SCOPE.key,params['approval_event_id'])).fetchone()['actor_id']
+                owner.execute('UPDATE public.meta_membership SET role=%s WHERE org_id=%s AND project_id=%s AND subject=%s',
+                    ('developer',*SCOPE.key,subject))
+            else:
+                # Test-admin-only historical fact corruption in a savepoint;
+                # never manufacture an approval or bypass a formal issuer.
+                owner.execute("SET LOCAL session_replication_role='replica'")
+                if fault=='draft_payload':
+                    owner.execute("UPDATE public.aip_action_draft SET snapshot=jsonb_set(snapshot,'{payload}','{}'::jsonb) WHERE org_id=%s AND project_id=%s AND proposal_id=%s",(*SCOPE.key,original['proposal_id']))
+                elif fault=='draft_status':
+                    owner.execute("UPDATE public.aip_action_draft SET status='awaiting_approval' WHERE org_id=%s AND project_id=%s AND proposal_id=%s",(*SCOPE.key,original['proposal_id']))
+                elif fault=='policy':
+                    owner.execute("UPDATE public.aip_action_proposal SET policy_snapshot=policy_snapshot||'{\"verified\":true}'::jsonb WHERE org_id=%s AND project_id=%s AND proposal_id=%s",(*SCOPE.key,original['proposal_id']))
+                else:
+                    owner.execute('UPDATE public.aip_action_approval_event SET eligibility_snapshot_hash=%s WHERE org_id=%s AND project_id=%s AND approval_event_id=%s',('c'*64,*SCOPE.key,params['approval_event_id']))
+                owner.execute("SET LOCAL session_replication_role='origin'")
+                if fault=='eligibility':
+                    from aos_api.aip_provider_capacity_publication_store import CAPACITY_APPROVAL_EVENT_PROJECTION_SQL
+                    # Keep the actual altered event exact-ref coherent so the
+                    # native original eligibility predicate is what rejects it.
+                    params['approval_event_hash']=owner.execute(CAPACITY_APPROVAL_EVENT_PROJECTION_SQL,params).fetchone()['hash']
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            assert owner.execute(statement,params).fetchone() is None, 'Native original facts cannot depend on later client Guard'
+        finally:
+            owner.execute('ROLLBACK TO SAVEPOINT metadata_drift')
+            params['approval_event_hash']=original_event_hash
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        assert owner.execute(statement,params).fetchone() is not None

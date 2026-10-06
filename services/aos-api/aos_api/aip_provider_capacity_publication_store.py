@@ -609,6 +609,70 @@ REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_origin_bootstrap(by
 """
 
 
+def _original_approval_snapshot_predicate():
+    """Reuse original dedicated metadata/policy, never an approval state machine.
+
+    This snapshot predicate takes no new locks. A complete publication caller
+    must hold the original Guard prefixes and recheck all typed dependencies;
+    matching these rows alone cannot authenticate, sign or publish a Source.
+    """
+    from aos_api.aip_provider_capacity_action import ProviderCapacityActionGuard
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+    from aos_api.aip_action_policy import classify_action_risk
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.asset_registry.canonical_json import canonical_json
+    def literal(value):
+        return "'"+canonical_json(value).decode().replace("'","''")+"'::jsonb"
+    alternatives=[]
+    for guard,purpose in ((ProviderCapacityActionGuard,'capacity-allocation'),
+                          (ProviderCapacitySourceActionGuard,'capacity-source-review')):
+        snapshot={**guard.action_snapshot,'revisionHash':canonical_hash(guard.action_snapshot)}
+        risk=classify_action_risk(guard.action_id,snapshot,{},None)
+        policy=dict(floor=risk.floor.value,reasons=list(risk.reasons),**risk.approval_policy)
+        alternatives.append(f"""(p.action_type_id='{guard.action_id}' AND p.purpose='{purpose}'
+          AND p.action_type_snapshot={literal(snapshot)} AND p.policy_snapshot={literal(policy)}
+          AND p.risk_level='{risk.level.value}'
+          AND EXISTS(SELECT 1 FROM public.meta_object_type o WHERE o.id='{guard.object_id}'
+            AND pg_catalog.jsonb_build_object('id',o.id,'name',o.name,'description',o.description,
+              'published',o.published,'properties',o.properties,'required_markings',o.required_markings)
+              ={literal(guard.object_snapshot)})
+          AND EXISTS(SELECT 1 FROM public.meta_action_type a WHERE a.id='{guard.action_id}'
+            AND pg_catalog.jsonb_build_object('id',a.id,'name',a.name,'objectType',a.object_type,
+              'parameters',a.parameters,'requiredMarkings',a.required_markings,
+              'submissionCriteria',a.submission_criteria)={literal(guard.action_snapshot)}))""")
+    return "\n AND ("+" OR ".join(alternatives)+r"""
+ ) AND p.task_id IS NULL AND p.run_id IS NULL AND (p.object_ref IS NULL OR p.object_ref='null'::jsonb)
+   AND p.impact_preview_id IS NULL AND p.client_risk_hint IS NULL
+   AND p.diff='{}'::jsonb AND p.evidence_refs='[]'::jsonb
+   AND p.approval_policy_hash=pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(
+     public.canonical_asset_registry_jsonb(p.policy_snapshot),'UTF8')),'hex')
+   AND EXISTS(SELECT 1 FROM public.aip_action_draft d
+     WHERE (d.org_id,d.project_id,d.proposal_id)=(p.org_id,p.project_id,p.proposal_id)
+       AND d.status='approved'
+       AND pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(
+         public.canonical_asset_registry_jsonb(d.snapshot),'UTF8')),'hex')=p.proposal_hash
+       AND d.snapshot->'actionType'=p.action_type_snapshot AND d.snapshot->'payload'=p.payload
+       AND d.snapshot->'policy'=p.policy_snapshot
+       AND d.snapshot->>'actionBindingHash'=p.action_binding_hash)
+   AND e.value->'actor'->>'actorId'<>p.created_by
+   AND e.value->>'eligibilitySnapshotHash'=pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(
+     public.canonical_asset_registry_jsonb(pg_catalog.jsonb_build_object(
+       'tenant',pg_catalog.jsonb_build_object('orgId',p.org_id,'projectId',p.project_id),
+       'actorId',e.value->'actor'->>'actorId','roles',pg_catalog.jsonb_build_array('owner'),
+       'slotId','checker.1','approvalPolicyHash',p.approval_policy_hash)),'UTF8')),'hex')
+   AND (SELECT count(*) FROM public.meta_membership m
+     WHERE (m.org_id,m.project_id,m.subject)=(p.org_id,p.project_id,p.created_by))=1
+   AND EXISTS(SELECT 1 FROM public.meta_membership m
+     WHERE (m.org_id,m.project_id,m.subject)=(p.org_id,p.project_id,p.created_by)
+       AND pg_catalog.lower(m.role)='owner')
+   AND (SELECT count(*) FROM public.meta_membership m
+     WHERE (m.org_id,m.project_id,m.subject)=(p.org_id,p.project_id,e.value->'actor'->>'actorId'))=1
+   AND EXISTS(SELECT 1 FROM public.meta_membership m
+     WHERE (m.org_id,m.project_id,m.subject)=(p.org_id,p.project_id,e.value->'actor'->>'actorId')
+       AND pg_catalog.lower(m.role)='owner')
+"""
+
+
 # S03/S04/S08 original row fence. This is consumed after private identity
 # validation; every original Guard check and withdrawal epoch still follows.
 _CAPACITY_APPROVED_ROW_SQL = (
@@ -639,7 +703,7 @@ WHERE p.org_id=%(org_id)s AND p.project_id=%(project_id)s
 )
 
 
-CAPACITY_APPROVED_SOURCE_ROW_SQL = _CAPACITY_APPROVED_ROW_SQL + r"""
+CAPACITY_APPROVED_SOURCE_ROW_SQL = _CAPACITY_APPROVED_ROW_SQL + _original_approval_snapshot_predicate() + r"""
   AND p.action_type_id='aip_review_provider_capacity_source'
   AND p.proposal_id=%(proposal_id)s AND p.version=%(proposal_revision)s
   AND p.proposal_hash=%(proposal_hash)s
@@ -648,7 +712,7 @@ FOR SHARE OF p
 
 # S10 runs only after the private reader has held every original Guard fence.
 # Do not add or reorder locks in this snapshot query.
-CAPACITY_APPROVED_ALLOCATION_ROW_SQL = _CAPACITY_APPROVED_ROW_SQL + r"""
+CAPACITY_APPROVED_ALLOCATION_ROW_SQL = _CAPACITY_APPROVED_ROW_SQL + _original_approval_snapshot_predicate() + r"""
   AND p.action_type_id='aip_request_provider_capacity'
   AND p.payload=pg_catalog.jsonb_build_object('requestId',%(request_id)s::text,
                                             'requestHash',%(request_hash)s::text)
