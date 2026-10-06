@@ -1,0 +1,106 @@
+{
+  "base": "31488428653c4d75a443c3bb5cd20c96d5af2f9f",
+  "authority": "AOS-001377",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_action.py": "5f65a30c436de262f0a8b08731af3d5ac4b67ac48ed0955d1c704d4275bc89da",
+    "services/aos-api/aos_api/aip_provider_capacity_source_action.py": "01bd7dfa924b0953703ae9a1647adfd6ef3148f7ac220e4ad82d97c0291f584b",
+    "services/aos-api/aos_api/aip_action_policy.py": "17fd95130b2dc7eeac97aa865d6eaac0c12425138f64d96383f267032af44b8d"
+  },
+  "entries": [
+    {
+      "actionId": "aip_request_provider_capacity",
+      "objectColumns": {
+        "id": "ProviderCapacityRequest",
+        "name": "Provider容量配置申请",
+        "description": "仅供独立审批的不可执行申请",
+        "published": true,
+        "properties": [],
+        "required_markings": []
+      },
+      "actionColumns": {
+        "id": "aip_request_provider_capacity",
+        "name": "申请Provider容量配置",
+        "objectType": "ProviderCapacityRequest",
+        "parameters": [],
+        "requiredMarkings": [],
+        "submissionCriteria": []
+      },
+      "actionSnapshot": {
+        "id": "aip_request_provider_capacity",
+        "name": "申请Provider容量配置",
+        "objectType": "ProviderCapacityRequest",
+        "parameters": [],
+        "requiredMarkings": [],
+        "submissionCriteria": [],
+        "revisionHash": "9f64ba00ef5a85d203c82c45afaa1eb25c000162e9e5b2405614a7aa7ae295e9"
+      },
+      "purpose": "capacity-allocation",
+      "exactPayloadKeys": [
+        "requestId",
+        "requestHash"
+      ],
+      "riskLevel": "R2",
+      "policySnapshot": {
+        "floor": "R2",
+        "reasons": [
+          "formal_provider_allocation_application"
+        ],
+        "makerChecker": true,
+        "minimumApprovals": 1,
+        "executionAllowed": false,
+        "draftOnly": false
+      },
+      "approvalPolicyHash": "e42780f6f1be90b1aafcaee41be9ff02c2cb28ebad92211b9bd816f75d2c94fd",
+      "sql_expected_metadata_byte_hex": "7b226964223a226169705f726571756573745f70726f76696465725f6361706163697479222c226e616d65223a22e794b3e8afb750726f7669646572e5aeb9e9878fe9858de7bdae222c226f626a65637454797065223a2250726f7669646572436170616369747952657175657374222c22706172616d6574657273223a5b5d2c2272657175697265644d61726b696e6773223a5b5d2c227375626d697373696f6e4372697465726961223a5b5d7d",
+      "sql_expected_policy_byte_hex": "7b2264726166744f6e6c79223a66616c73652c22657865637574696f6e416c6c6f776564223a66616c73652c22666c6f6f72223a225232222c226d616b6572436865636b6572223a747275652c226d696e696d756d417070726f76616c73223a312c22726561736f6e73223a5b22666f726d616c5f70726f76696465725f616c6c6f636174696f6e5f6170706c69636174696f6e225d7d"
+    },
+    {
+      "actionId": "aip_review_provider_capacity_source",
+      "objectColumns": {
+        "id": "ProviderCapacitySourceReview",
+        "name": "Provider容量来源审查",
+        "description": "仅供独立审批的不可执行Source条款",
+        "published": true,
+        "properties": [],
+        "required_markings": []
+      },
+      "actionColumns": {
+        "id": "aip_review_provider_capacity_source",
+        "name": "审查Provider容量来源",
+        "objectType": "ProviderCapacitySourceReview",
+        "parameters": [],
+        "requiredMarkings": [],
+        "submissionCriteria": []
+      },
+      "actionSnapshot": {
+        "id": "aip_review_provider_capacity_source",
+        "name": "审查Provider容量来源",
+        "objectType": "ProviderCapacitySourceReview",
+        "parameters": [],
+        "requiredMarkings": [],
+        "submissionCriteria": [],
+        "revisionHash": "baedab1f0b8e77224e7e969978ac306f34eeec41cd014013d2bbf9dada8e1028"
+      },
+      "purpose": "capacity-source-review",
+      "exactPayloadKeys": [
+        "sourceCandidate"
+      ],
+      "riskLevel": "R2",
+      "policySnapshot": {
+        "floor": "R2",
+        "reasons": [
+          "formal_provider_capacity_source_review"
+        ],
+        "makerChecker": true,
+        "minimumApprovals": 1,
+        "executionAllowed": false,
+        "draftOnly": false
+      },
+      "approvalPolicyHash": "b6307c60521a32675f3904dcc4968d1b64efb34e7cef48fcc24c957168f83e49",
+      "sql_expected_metadata_byte_hex": "7b226964223a226169705f7265766965775f70726f76696465725f63617061636974795f736f75726365222c226e616d65223a22e5aea1e69fa550726f7669646572e5aeb9e9878fe69da5e6ba90222c226f626a65637454797065223a2250726f76696465724361706163697479536f75726365526576696577222c22706172616d6574657273223a5b5d2c2272657175697265644d61726b696e6773223a5b5d2c227375626d697373696f6e4372697465726961223a5b5d7d",
+      "sql_expected_policy_byte_hex": "7b2264726166744f6e6c79223a66616c73652c22657865637574696f6e416c6c6f776564223a66616c73652c22666c6f6f72223a225232222c226d616b6572436865636b6572223a747275652c226d696e696d756d417070726f76616c73223a312c22726561736f6e73223a5b22666f726d616c5f70726f76696465725f63617061636974795f736f757263655f726576696577225d7d"
+    }
+  ],
+  "evidence_kind": "DEDICATED_ACTION_STATIC_RULES_FROM_ORIGINAL_CODE_NOT_LIVE_APPROVAL",
+  "boundary": "Payload placeholder values only select existing dedicated risk branch; no proposal or approval created. Dynamic guards, full typed shape, actual SQL and authority remain pending."
+}

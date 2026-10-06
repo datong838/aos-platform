@@ -146,3 +146,7 @@ authenticationExpiresAt必须aware且晚于Source issuedAt，非“整个Source�
 RED先新类型不存在的完整v2原文测试；完整合法文档单项变异包括schema/主体/issuer/audience/auth expiry/txid/pid/attempt/verified字段，检验严格拒绝；v1保持原roundtrip，v2原raw canonical精确roundtrip与原签名字节profile组合。按原request绑定协议，后继signer/SQL须用认证subject和tenant/四refs重算requestHash，不由任何自由context自证。此模块仍untrusted transport，不验JWT/签名、不给capacity，不将完整TaskDelivery。
 
 v2原文格式已按RED→最小→195项含原生签名相邻验证；无完整Source权限，独立督导只读复审无新重大问题。后继consumer核历史发行provenance与自己的当前授权/epochs/期限，不要求Source内历史xid8/PID等于消费事务；实际签发阶段必须匹配当前native xid8/session/attempt/raw。下一仍原完整SQL等价与入口，不再扩通用helper；提交时钟/归属裁决仍pending。
+
+S05/S07静态规则已从原guard/classify_action_risk提取为approval-static-contract.json（原源码hash、两专用metadata/risk/policy/预期canonical bytes），不创任何批准。S08下一隔离原生实验：按原ActionApprovalEventSnapshot/actor实际序列化四个UTC微秒边界，比较PostgreSQL to_jsonb(timestamptz)默认字串与显式UTC规范格式；只读SELECT/本会话SET LOCAL，不变表/role。SQL事件body必须复用原字段及默认null/reason，不能直接hash SELECT row_to_json或未规范timestamptz；时间格式证据不等于完整SQL审批门。
+
+S05/S07/S08精确字段/静态policy/actionBinding/eligibility/event模型字段公式已补入sql-approval-equivalence-plan.md，实际原分支提取见approval-static-contract.json；四个只读原生timestamp探针确认默认SQL时间文本与原模型不同、显式UTC格式一致。现private连接未固定TimeZone，完整入口还须冻结其与原ref生成共同合同并实测合法时区，不直接借四例声称历史兼容/完整SQL通过。下一继续S10-S19动态事实及原DB准备，不因时间裁决pending停工。

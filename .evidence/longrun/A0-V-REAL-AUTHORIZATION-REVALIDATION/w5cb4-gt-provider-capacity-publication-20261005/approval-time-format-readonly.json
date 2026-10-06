@@ -1,0 +1,104 @@
+{
+  "base": "31488428653c4d75a443c3bb5cd20c96d5af2f9f",
+  "authority": "AOS-001377",
+  "evidence_kind": "SERIALIZATION_MECHANICS_ONLY_NOT_APPROVAL_AUTHORITY",
+  "container_id": "63c7d47bac4232b032a827ccf26116aef03ce2e28ca587d9b94a84987c75afd7",
+  "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+  "database": "aos_test_ed25519",
+  "native_readonly_exit": 0,
+  "cases": [
+    {
+      "microsecond": 0,
+      "original_model_created_at": "2026-10-06T00:00:01Z",
+      "original_model_event_fields": [
+        "id",
+        "proposalId",
+        "proposalVersion",
+        "proposalHash",
+        "decision",
+        "actor",
+        "reason",
+        "expiresAt",
+        "createdAt",
+        "actionBindingHash",
+        "approvalPolicyHash",
+        "slotId",
+        "eligibilitySnapshotHash"
+      ],
+      "original_model_event_hash": "29d7d2753977db9a98465734deeadc31fb6a90acda2b232b9e2e9ef19e53f1c6",
+      "native": "2026-10-06T00:00:01+00:00",
+      "canonical": "2026-10-06T00:00:01Z",
+      "native_text_matches_original": false
+    },
+    {
+      "microsecond": 1,
+      "original_model_created_at": "2026-10-06T00:00:01.000001Z",
+      "original_model_event_fields": [
+        "id",
+        "proposalId",
+        "proposalVersion",
+        "proposalHash",
+        "decision",
+        "actor",
+        "reason",
+        "expiresAt",
+        "createdAt",
+        "actionBindingHash",
+        "approvalPolicyHash",
+        "slotId",
+        "eligibilitySnapshotHash"
+      ],
+      "original_model_event_hash": "ef99e5d91e79e22c8964b2def340700274a0ee0dba83af5b0df837f5a79171fc",
+      "native": "2026-10-06T00:00:01.000001+00:00",
+      "canonical": "2026-10-06T00:00:01.000001Z",
+      "native_text_matches_original": false
+    },
+    {
+      "microsecond": 100000,
+      "original_model_created_at": "2026-10-06T00:00:01.100000Z",
+      "original_model_event_fields": [
+        "id",
+        "proposalId",
+        "proposalVersion",
+        "proposalHash",
+        "decision",
+        "actor",
+        "reason",
+        "expiresAt",
+        "createdAt",
+        "actionBindingHash",
+        "approvalPolicyHash",
+        "slotId",
+        "eligibilitySnapshotHash"
+      ],
+      "original_model_event_hash": "f819bdd13929e13e60666c6ca214525b3a65312dd24ac0fa7da7978ae3219245",
+      "native": "2026-10-06T00:00:01.1+00:00",
+      "canonical": "2026-10-06T00:00:01.100000Z",
+      "native_text_matches_original": false
+    },
+    {
+      "microsecond": 999999,
+      "original_model_created_at": "2026-10-06T00:00:01.999999Z",
+      "original_model_event_fields": [
+        "id",
+        "proposalId",
+        "proposalVersion",
+        "proposalHash",
+        "decision",
+        "actor",
+        "reason",
+        "expiresAt",
+        "createdAt",
+        "actionBindingHash",
+        "approvalPolicyHash",
+        "slotId",
+        "eligibilitySnapshotHash"
+      ],
+      "original_model_event_hash": "3db18a16934d51c261d3d3a1d9c01b421629e2e9746d86573e0b9df73bdd1480",
+      "native": "2026-10-06T00:00:01.999999+00:00",
+      "canonical": "2026-10-06T00:00:01.999999Z",
+      "native_text_matches_original": false
+    }
+  ],
+  "finding": "Native to_jsonb(timestamptz) differs in all four cases; explicit UTC no fractional suffix at zero, otherwise exact six microsecond digits matches original model. No business rows or functions installed; full event SQL and complete guard still pending."
+}

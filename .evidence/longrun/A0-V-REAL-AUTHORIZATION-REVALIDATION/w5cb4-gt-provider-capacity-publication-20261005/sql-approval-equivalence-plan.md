@@ -40,3 +40,16 @@ S02不能由SQL解析自由maker或调用者JWT已验boolean满足。S05/S07/S08
 四项pg_temp原生实验仅证明延迟约束可以拒绝未finalized attempt、接受完成后提交、保存点恢复仍拒绝原pending，以及撤销prepare后提交无残留。psql在保存点恢复案例exit0并不意味着无错误，日志明确两次约束拒绝。
 
 实际反例证明SET CONSTRAINTS ALL IMMEDIATE可提前执行时钟检查，随后等过expiry仍COMMIT成功。因此不把延迟trigger作为真正提交时TTL保证；时间合同仍须解决，并由每次consumer的当前性独立门保证任何过期Source不能授业务权限。暂不开放正式prepare/commit，不收口原Task、不停止其他安全施工。
+
+
+## S05/S07/S08 原字段与计算细化
+
+approval-static-contract.json从原两guard的固定snapshot与原classify_action_risk专用分支实际生成，源码hash绑定31488428。payload的None值仅用于选择原静态分支，不是合法申请或批准。Source与allocation均R2、floor R2、makerChecker=true、minimumApprovals=1、executionAllowed=false、draftOnly=false；reason分别formal_provider_capacity_source_review与formal_provider_allocation_application，不能偷换通用R2理由。policy_snapshot精确等于floor/reasons加完整原approval_policy，hash原canonical(policy)，额外字段也拒绝。
+
+S05原Object查询的精确列：id/name/description/published/properties/required_markings，分别映射原object_snapshot的snake_case列；必须仅一原行且逐字段一致。Action查询id/name/object_type/parameters/required_markings/submission_criteria，生成原camelCase objectType/requiredMarkings/submissionCriteria，精确与原action_snapshot匹配；revisionHash=canonical(actionSnapshot但不含revisionHash)的SHA256。SQL不能拿包含数据库其他列的row_to_json做该hash；Source metadata为baedab1f0b8e77224e7e969978ac306f34eeec41cd014013d2bbf9dada8e1028，allocation为9f64ba00ef5a85d203c82c45afaa1eb25c000162e9e5b2405614a7aa7ae295e9。固定字节存档不是live metadata通过证据。
+
+S07 Source actionBinding=canonical({sourceCandidate:原严格模型JSON,actionTypeRevisionHash:Source metadata revisionHash})；allocation binding=canonical({requestId:原request ID,requestHash:原request hash,actionTypeRevisionHash:allocation metadata revisionHash})。eligibility=canonical({tenant:{orgId,projectId},actorId:原批准event.actor_id,roles:['owner'],slotId:'checker.1',approvalPolicyHash:对应proposal原policy hash})。Owner原角色判断lower(role)='owner'且唯一；不能用caller提供roles或makerSubject重算资格而省当前membership锁。
+
+S08批准event canonical body精确字段来自原ActionApprovalEventSnapshot：id/proposalId/proposalVersion/proposalHash/decision/actor/reason/expiresAt/createdAt/actionBindingHash/approvalPolicyHash/slotId/eligibilitySnapshotHash。actor恰{actorType:'user',actorId:原actor_id}，reason保留原字符串（模型缺值默认''不可借此覆盖原SQL NULL不合法字段），可空model字段保持null，不exclude_none；批准入口另必须要求expiresAt非NULL且当前。完整draft模型默认字段、status及原snapshot hash同样不能以事件存在替代。
+
+approval-time-format-readonly.sql/log/json在隔离r4 READ ONLY、SET LOCAL TimeZone UTC实测0/1/100000/999999微秒。PostgreSQL to_jsonb(timestamptz)四例均与原模型字符串不同（UTC偏移及尾零表现）；显式to_char(ts AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS')，微秒为0不带小数，否则'.'+US六位，再加'Z'与四例原模型精确匹配。后继SQL批准事件格式必须规范UTC和六位微秒，拒绝infinity/超出Python可表达年范围；不得直接用timestamptz::text/hash。新完整入口的TimeZone及原ref构建需共同冻结：现private connection未固定TimeZone，当前原guard并未审计它；不能凭本四例宣称全部历史时区ref兼容，需要真实原批准UTC与合法改时区拒绝/兼容矩阵。此实验只证明格式机制，没有新事件/metadata/body函数或原生publication。
