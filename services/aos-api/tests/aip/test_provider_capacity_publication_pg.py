@@ -419,3 +419,100 @@ def test_python_complete_document_object_limit_rejection_stage():
     with pytest.raises(CapacitySignedBodyProfileError) as caught:
         parse_signed_capacity_body(canonical_json(payload),ProviderCapacitySigningPermit)
     assert caught.value.reason=="OBJECT"
+
+
+def _native_deployment_target(native_profile_runner, target, success=True):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL
+    raw = canonical_json(target).hex()
+    statement = CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL + "\nSELECT aos_capacity_publication_private.read_deployment_target(decode('%s','hex'))::text;" % raw
+    return native_profile_runner(statement, success=success)
+
+
+@pytest.mark.parametrize('fault', ['missing', 'extra', 'null', 'host', 'port-bool', 'port-text',
+    'port-float', 'port-zero', 'port-overflow', 'database-upper', 'database-long', 'database-newline',
+    'oid-zero', 'oid-overflow', 'oid-text', 'cluster-number', 'cluster-short', 'cluster-long',
+    'cluster-unicode', 'role', 'alias'])
+def test_native_deployment_target_complete_single_fault(native_profile_runner, fault):
+    from aos_api.aip_provider_capacity_source_contracts import CapacitySourceDeploymentTarget
+    target = permit()['deploymentTarget']
+    if fault == 'missing': target.pop('databaseOid')
+    elif fault == 'extra': target['verified'] = True
+    elif fault == 'null': target['database'] = None
+    elif fault == 'host': target['host'] = 'localhost'
+    elif fault == 'port-bool': target['port'] = True
+    elif fault == 'port-text': target['port'] = '5433'
+    elif fault == 'port-float': target['port'] = 5433.5
+    elif fault == 'port-zero': target['port'] = 0
+    elif fault == 'port-overflow': target['port'] = 65536
+    elif fault == 'database-upper': target['database'] = 'Aos_test'
+    elif fault == 'database-long': target['database'] = 'a'*64
+    elif fault == 'database-newline': target['database'] = 'aos_test\n'
+    elif fault == 'oid-zero': target['databaseOid'] = 0
+    elif fault == 'oid-overflow': target['databaseOid'] = 2**32
+    elif fault == 'oid-text': target['databaseOid'] = '123'
+    elif fault == 'cluster-number': target['clusterIdentifier'] = 1234567890
+    elif fault == 'cluster-short': target['clusterIdentifier'] = '123456789'
+    elif fault == 'cluster-long': target['clusterIdentifier'] = '1'*21
+    elif fault == 'cluster-unicode': target['clusterIdentifier'] = '１'*10
+    elif fault == 'role': target['issuerRole'] = 'aos_app'
+    else: target['database_oid'] = target.pop('databaseOid')
+    if fault == 'alias':
+        assert CapacitySourceDeploymentTarget.model_validate(target).model_dump(mode='json',by_alias=True) != target
+    else:
+        with pytest.raises(ValidationError): CapacitySourceDeploymentTarget.model_validate(target)
+    failure = _native_deployment_target(native_profile_runner, target, success=False)
+    assert 'CAPACITY_DEPLOYMENT_TARGET_REQUIRED' in failure
+
+
+@pytest.mark.parametrize('host', ['127.0.0.1', '::1'])
+def test_native_deployment_target_full_boundaries_roundtrip(native_profile_runner, host):
+    from aos_api.aip_provider_capacity_source_contracts import CapacitySourceDeploymentTarget
+    for port, oid, database, cluster in [(1,1,'a','0'*10),(65535,2**32-1,'a'*63,'9'*20)]:
+        target = permit()['deploymentTarget']
+        target.update(host=host,port=port,databaseOid=oid,database=database,clusterIdentifier=cluster)
+        expected = CapacitySourceDeploymentTarget.model_validate(target).model_dump(mode='json',by_alias=True)
+        assert json.loads(_native_deployment_target(native_profile_runner, target)) == expected
+
+
+@pytest.mark.parametrize('literal', ['NULL', "convert_to('null','UTF8')", "convert_to('[]','UTF8')", "convert_to('true','UTF8')", "convert_to('123','UTF8')"])
+def test_native_deployment_target_rejects_nonobject_and_sql_null(native_profile_runner, literal):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL
+    failure = native_profile_runner(CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL +
+        '\nSELECT aos_capacity_publication_private.read_deployment_target('+literal+');', success=False)
+    assert 'CAPACITY_DEPLOYMENT_TARGET_REQUIRED' in failure
+
+
+@pytest.mark.parametrize('replacement', [b'1e3', b'5433.0'])
+def test_native_deployment_target_original_integer_lexical_gate(native_profile_runner, replacement):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL
+    raw = canonical_json(permit()['deploymentTarget']).replace(b'"port":5433', b'"port":'+replacement)
+    failure = native_profile_runner(CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL +
+        "\nSELECT aos_capacity_publication_private.read_deployment_target(decode('%s','hex'));" % raw.hex(), success=False)
+    assert 'CAPACITY_DEPLOYMENT_TARGET_REQUIRED' in failure
+
+
+def test_native_deployment_target_duplicate_key_rejected(native_profile_runner):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL
+    raw = canonical_json(permit()['deploymentTarget']).replace(b'"port":5433', b'"port":5433,"port":5433')
+    failure = native_profile_runner(CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL +
+        "\nSELECT aos_capacity_publication_private.read_deployment_target(decode('%s','hex'));" % raw.hex(), success=False)
+    assert 'CAPACITY_DEPLOYMENT_TARGET_REQUIRED' in failure
+
+
+def test_native_deployment_target_function_boundary(native_profile_runner):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL
+    result = native_profile_runner(CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL + """
+        SELECT p.proisstrict,p.prosecdef,p.provolatile,p.proconfig,
+          (SELECT count(*) FROM aclexplode(p.proacl) WHERE grantee=0)
+        FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+        WHERE n.nspname='aos_capacity_publication_private' AND p.proname='read_deployment_target';
+    """)
+    assert result == 'f|f|i|{search_path=pg_catalog}|0'
+    raw = canonical_json(permit()['deploymentTarget']).hex()
+    failure = native_profile_runner(CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL + """
+        CREATE ROLE capacity_target_reader NOLOGIN;
+        GRANT USAGE ON SCHEMA aos_capacity_publication_private TO capacity_target_reader;
+        SET ROLE capacity_target_reader;
+        SELECT aos_capacity_publication_private.read_deployment_target(decode('%s','hex'));
+    """ % raw, success=False)
+    assert 'permission denied for function read_deployment_target' in failure

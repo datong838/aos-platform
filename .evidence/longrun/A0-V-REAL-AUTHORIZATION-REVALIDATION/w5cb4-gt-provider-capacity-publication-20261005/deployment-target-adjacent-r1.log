@@ -1,0 +1,131 @@
+........................................................................ [ 31%]
+........................................................................ [ 63%]
+...................................................EEEEEEEEEEEE......... [ 95%]
+...........                                                              [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_capacity_issuer_verifies_actual_https_jwks_and_reauthenticates _
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py, line 208
+  def test_capacity_issuer_verifies_actual_https_jwks_and_reauthenticates(https_signer):
+E       fixture 'https_signer' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, signed_capacity_documents, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py:208
+_ ERROR at setup of test_capacity_issuer_actual_jwt_rejection_never_leaks_token[wrong_key] _
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py, line 218
+  @pytest.mark.parametrize('fault',['wrong_key','expired','audience','scope','issuer','missing_subject'])
+  def test_capacity_issuer_actual_jwt_rejection_never_leaks_token(https_signer,fault):
+E       fixture 'https_signer' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, signed_capacity_documents, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py:218
+_ ERROR at setup of test_capacity_issuer_actual_jwt_rejection_never_leaks_token[expired] _
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py, line 218
+  @pytest.mark.parametrize('fault',['wrong_key','expired','audience','scope','issuer','missing_subject'])
+  def test_capacity_issuer_actual_jwt_rejection_never_leaks_token(https_signer,fault):
+E       fixture 'https_signer' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, signed_capacity_documents, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py:218
+_ ERROR at setup of test_capacity_issuer_actual_jwt_rejection_never_leaks_token[audience] _
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py, line 218
+  @pytest.mark.parametrize('fault',['wrong_key','expired','audience','scope','issuer','missing_subject'])
+  def test_capacity_issuer_actual_jwt_rejection_never_leaks_token(https_signer,fault):
+E       fixture 'https_signer' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, signed_capacity_documents, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py:218
+_ ERROR at setup of test_capacity_issuer_actual_jwt_rejection_never_leaks_token[scope] _
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py, line 218
+  @pytest.mark.parametrize('fault',['wrong_key','expired','audience','scope','issuer','missing_subject'])
+  def test_capacity_issuer_actual_jwt_rejection_never_leaks_token(https_signer,fault):
+E       fixture 'https_signer' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, signed_capacity_documents, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py:218
+_ ERROR at setup of test_capacity_issuer_actual_jwt_rejection_never_leaks_token[issuer] _
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py, line 218
+  @pytest.mark.parametrize('fault',['wrong_key','expired','audience','scope','issuer','missing_subject'])
+  def test_capacity_issuer_actual_jwt_rejection_never_leaks_token(https_signer,fault):
+E       fixture 'https_signer' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, signed_capacity_documents, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py:218
+_ ERROR at setup of test_capacity_issuer_actual_jwt_rejection_never_leaks_token[missing_subject] _
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py, line 218
+  @pytest.mark.parametrize('fault',['wrong_key','expired','audience','scope','issuer','missing_subject'])
+  def test_capacity_issuer_actual_jwt_rejection_never_leaks_token(https_signer,fault):
+E       fixture 'https_signer' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, signed_capacity_documents, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py:218
+_ ERROR at setup of test_capacity_issuer_rejects_unsafe_auth_config_before_jwks[AOS_AUTH_ALLOW_DEV-1] _
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py, line 231
+  @pytest.mark.parametrize('name,value',[('AOS_AUTH_ALLOW_DEV','1'),('AOS_AUTH_EXTERNAL_ONLY','0'),
+      ('AOS_OIDC_JWKS_URL','http://127.0.0.1/jwks'),('AOS_OIDC_ISSUER',''),('AOS_OIDC_AUDIENCE','')])
+  def test_capacity_issuer_rejects_unsafe_auth_config_before_jwks(https_signer,monkeypatch,name,value):
+E       fixture 'https_signer' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, signed_capacity_documents, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py:231
+_ ERROR at setup of test_capacity_issuer_rejects_unsafe_auth_config_before_jwks[AOS_AUTH_EXTERNAL_ONLY-0] _
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py, line 231
+  @pytest.mark.parametrize('name,value',[('AOS_AUTH_ALLOW_DEV','1'),('AOS_AUTH_EXTERNAL_ONLY','0'),
+      ('AOS_OIDC_JWKS_URL','http://127.0.0.1/jwks'),('AOS_OIDC_ISSUER',''),('AOS_OIDC_AUDIENCE','')])
+  def test_capacity_issuer_rejects_unsafe_auth_config_before_jwks(https_signer,monkeypatch,name,value):
+E       fixture 'https_signer' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, signed_capacity_documents, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py:231
+_ ERROR at setup of test_capacity_issuer_rejects_unsafe_auth_config_before_jwks[AOS_OIDC_JWKS_URL-http://127.0.0.1/jwks] _
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py, line 231
+  @pytest.mark.parametrize('name,value',[('AOS_AUTH_ALLOW_DEV','1'),('AOS_AUTH_EXTERNAL_ONLY','0'),
+      ('AOS_OIDC_JWKS_URL','http://127.0.0.1/jwks'),('AOS_OIDC_ISSUER',''),('AOS_OIDC_AUDIENCE','')])
+  def test_capacity_issuer_rejects_unsafe_auth_config_before_jwks(https_signer,monkeypatch,name,value):
+E       fixture 'https_signer' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, signed_capacity_documents, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py:231
+_ ERROR at setup of test_capacity_issuer_rejects_unsafe_auth_config_before_jwks[AOS_OIDC_ISSUER-] _
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py, line 231
+  @pytest.mark.parametrize('name,value',[('AOS_AUTH_ALLOW_DEV','1'),('AOS_AUTH_EXTERNAL_ONLY','0'),
+      ('AOS_OIDC_JWKS_URL','http://127.0.0.1/jwks'),('AOS_OIDC_ISSUER',''),('AOS_OIDC_AUDIENCE','')])
+  def test_capacity_issuer_rejects_unsafe_auth_config_before_jwks(https_signer,monkeypatch,name,value):
+E       fixture 'https_signer' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, signed_capacity_documents, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py:231
+_ ERROR at setup of test_capacity_issuer_rejects_unsafe_auth_config_before_jwks[AOS_OIDC_AUDIENCE-] _
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py, line 231
+  @pytest.mark.parametrize('name,value',[('AOS_AUTH_ALLOW_DEV','1'),('AOS_AUTH_EXTERNAL_ONLY','0'),
+      ('AOS_OIDC_JWKS_URL','http://127.0.0.1/jwks'),('AOS_OIDC_ISSUER',''),('AOS_OIDC_AUDIENCE','')])
+  def test_capacity_issuer_rejects_unsafe_auth_config_before_jwks(https_signer,monkeypatch,name,value):
+E       fixture 'https_signer' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, signed_capacity_documents, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py:231
+=========================== short test summary info ============================
+ERROR tests/aip/test_provider_capacity_source_contracts.py::test_capacity_issuer_verifies_actual_https_jwks_and_reauthenticates
+ERROR tests/aip/test_provider_capacity_source_contracts.py::test_capacity_issuer_actual_jwt_rejection_never_leaks_token[wrong_key]
+ERROR tests/aip/test_provider_capacity_source_contracts.py::test_capacity_issuer_actual_jwt_rejection_never_leaks_token[expired]
+ERROR tests/aip/test_provider_capacity_source_contracts.py::test_capacity_issuer_actual_jwt_rejection_never_leaks_token[audience]
+ERROR tests/aip/test_provider_capacity_source_contracts.py::test_capacity_issuer_actual_jwt_rejection_never_leaks_token[scope]
+ERROR tests/aip/test_provider_capacity_source_contracts.py::test_capacity_issuer_actual_jwt_rejection_never_leaks_token[issuer]
+ERROR tests/aip/test_provider_capacity_source_contracts.py::test_capacity_issuer_actual_jwt_rejection_never_leaks_token[missing_subject]
+ERROR tests/aip/test_provider_capacity_source_contracts.py::test_capacity_issuer_rejects_unsafe_auth_config_before_jwks[AOS_AUTH_ALLOW_DEV-1]
+ERROR tests/aip/test_provider_capacity_source_contracts.py::test_capacity_issuer_rejects_unsafe_auth_config_before_jwks[AOS_AUTH_EXTERNAL_ONLY-0]
+ERROR tests/aip/test_provider_capacity_source_contracts.py::test_capacity_issuer_rejects_unsafe_auth_config_before_jwks[AOS_OIDC_JWKS_URL-http://127.0.0.1/jwks]
+ERROR tests/aip/test_provider_capacity_source_contracts.py::test_capacity_issuer_rejects_unsafe_auth_config_before_jwks[AOS_OIDC_ISSUER-]
+ERROR tests/aip/test_provider_capacity_source_contracts.py::test_capacity_issuer_rejects_unsafe_auth_config_before_jwks[AOS_OIDC_AUDIENCE-]
+215 passed, 12 errors in 5.44s

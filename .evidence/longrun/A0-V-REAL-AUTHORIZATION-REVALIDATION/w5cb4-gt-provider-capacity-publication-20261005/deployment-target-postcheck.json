@@ -1,0 +1,12 @@
+{
+  "native_catalog_after_tests": "0|0|1",
+  "meaning": [
+    "private_schema_absent",
+    "temporary_reader_role_absent",
+    "original_crypto_verifier_present"
+  ],
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "31aff7c35aee00245230dcd7413a384a7856dd93e6f3c9cae0e52e3d9039103a",
+    "services/aos-api/tests/aip/test_provider_capacity_publication_pg.py": "ef56a99db81914045e52ea5e4c6f20eea003a80d2c7aeda097004f931aba2536"
+  }
+}

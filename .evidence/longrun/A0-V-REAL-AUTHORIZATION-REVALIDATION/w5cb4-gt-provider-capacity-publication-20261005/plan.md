@@ -150,3 +150,11 @@ v2原文格式已按RED→最小→195项含原生签名相邻验证；无完整
 S05/S07静态规则已从原guard/classify_action_risk提取为approval-static-contract.json（原源码hash、两专用metadata/risk/policy/预期canonical bytes），不创任何批准。S08下一隔离原生实验：按原ActionApprovalEventSnapshot/actor实际序列化四个UTC微秒边界，比较PostgreSQL to_jsonb(timestamptz)默认字串与显式UTC规范格式；只读SELECT/本会话SET LOCAL，不变表/role。SQL事件body必须复用原字段及默认null/reason，不能直接hash SELECT row_to_json或未规范timestamptz；时间格式证据不等于完整SQL审批门。
 
 S05/S07/S08精确字段/静态policy/actionBinding/eligibility/event模型字段公式已补入sql-approval-equivalence-plan.md，实际原分支提取见approval-static-contract.json；四个只读原生timestamp探针确认默认SQL时间文本与原模型不同、显式UTC格式一致。现private连接未固定TimeZone，完整入口还须冻结其与原ref生成共同合同并实测合法时区，不直接借四例声称历史兼容/完整SQL通过。下一继续S10-S19动态事实及原DB准备，不因时间裁决pending停工。
+
+## AOS-001380 S20部署目标完整typed字段门
+
+原publication Task lease20:00有效，scope仅原publication_store.py、test_provider_capacity_publication_pg.py、本证据目录。本轮在私有计算SQL中新增read_deployment_target(jsonb)：NULL拒绝、object六exactkeys、host严格127.0.0.1或::1，port严格整数1..65535，database严格[a-z][a-z0-9_]{0,62}，databaseOid严格整数1..4294967295，clusterIdentifier严格字符串10..20 ASCII数字，issuerRole固定原issuer。拒绝未知/缺字段、JSON null、bool/字符串冒整数、小数、snakeCase别名；返回原jsonb结构，不强制只允许测试库或自由expectedDB比较。错误统一不回显输入；IMMUTABLE SECURITY INVOKER/search_path pg_catalog，PUBLIC撤权，NULL不使用STRICT静默通过。沿既有原生fixture同会话BEGIN安装计算DDL→正负SELECT→ROLLBACK，不安装152或grant正式issuer。
+
+RED新常量不存在；完整合法target单项变异同时用原Python部署模型确认预期，再原生拒绝；正向双loopback与数值/字串边界。不把该typed门当实际部署匹配或完整permit/Source；原实际DB/cluster受控来源、可信bootstrap/permit、全部S01–S20和真实COMMIT/consumer仍后继必需。固定无网络r4实例/image检查沿原fixture。之后原publication与Source合同相邻和独立复审，Task不Delivery。
+
+独立复审纠正：原Python模型允许populate_by_name的database_oid输入，不能宣称其拒绝别名；只在签名原文规范输入层拒绝别名。typed函数改为bytea入口，先read_signed_body严格无重复/整数原词法/规范字节，再作六字段检查；NULL原bytes主动拒绝。隔离native纯计算测试用--confcutdir=tests/aip隔离无关的父conftest自动迁移，依旧native fixture核固定r4身份且BEGIN/ROLLBACK，不借真库或共享库；保留原迁移连接失败日志为失败，不能作为逻辑GREEN。补指数、重复target键、float整值原文负例。

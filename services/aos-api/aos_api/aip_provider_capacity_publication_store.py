@@ -85,3 +85,53 @@ REVOKE ALL ON SCHEMA aos_capacity_publication_private FROM PUBLIC;
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.canonical_signed_json(json,integer) FROM PUBLIC;
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_signed_body(bytea) FROM PUBLIC;
 """
+
+# Structure only: the full entry must independently bind this exact target to
+# its trusted installation and native database/cluster, never caller claims.
+CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.read_deployment_target(p_raw bytea)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER
+SET search_path = pg_catalog AS $body$
+DECLARE
+  p_target jsonb;
+  field text;
+  value text;
+  upper_bound numeric;
+BEGIN
+  p_target := aos_capacity_publication_private.read_signed_body(p_raw);
+  IF p_target IS NULL OR pg_catalog.jsonb_typeof(p_target) IS DISTINCT FROM 'object' THEN
+    RAISE EXCEPTION 'CAPACITY_DEPLOYMENT_TARGET_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  IF NOT (p_target ?& ARRAY['host','port','database','databaseOid','clusterIdentifier','issuerRole'])
+      OR (SELECT count(*) FROM pg_catalog.jsonb_object_keys(p_target)) <> 6 THEN
+    RAISE EXCEPTION 'CAPACITY_DEPLOYMENT_TARGET_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  FOREACH field IN ARRAY ARRAY['host','database','clusterIdentifier','issuerRole'] LOOP
+    IF pg_catalog.jsonb_typeof(p_target->field) IS DISTINCT FROM 'string' THEN
+      RAISE EXCEPTION 'CAPACITY_DEPLOYMENT_TARGET_REQUIRED' USING ERRCODE='22023';
+    END IF;
+  END LOOP;
+  IF p_target->>'host' NOT IN ('127.0.0.1','::1')
+      OR p_target->>'issuerRole' <> 'aos_provider_capacity_issuer'
+      OR (p_target->>'database') COLLATE "C" !~ '^[a-z][a-z0-9_]{0,62}$'
+      OR (p_target->>'clusterIdentifier') COLLATE "C" !~ '^[0-9]{10,20}$' THEN
+    RAISE EXCEPTION 'CAPACITY_DEPLOYMENT_TARGET_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  FOREACH field IN ARRAY ARRAY['port','databaseOid'] LOOP
+    value := p_target->>field;
+    IF pg_catalog.jsonb_typeof(p_target->field) IS DISTINCT FROM 'number'
+        OR value !~ '^[1-9][0-9]*$' THEN
+      RAISE EXCEPTION 'CAPACITY_DEPLOYMENT_TARGET_REQUIRED' USING ERRCODE='22023';
+    END IF;
+    upper_bound := CASE WHEN field='port' THEN 65535 ELSE 4294967295 END;
+    IF value::numeric > upper_bound THEN
+      RAISE EXCEPTION 'CAPACITY_DEPLOYMENT_TARGET_REQUIRED' USING ERRCODE='22023';
+    END IF;
+  END LOOP;
+  RETURN p_target;
+EXCEPTION WHEN OTHERS THEN
+  RAISE EXCEPTION 'CAPACITY_DEPLOYMENT_TARGET_REQUIRED' USING ERRCODE='22023';
+END
+$body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_deployment_target(bytea) FROM PUBLIC;
+"""
