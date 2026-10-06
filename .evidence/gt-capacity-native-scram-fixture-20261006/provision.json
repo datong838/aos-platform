@@ -1,0 +1,14 @@
+{
+  "container": "aos-capacity-publication-scram-20261006",
+  "id": "4a2af01a0f1c1bb64592f42de4805b80fa210764f15769f718a2ae640ab8fc85",
+  "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+  "volume": "aos-capacity-publication-scram-20261006-data",
+  "internal_network": "aos-capacity-publication-scram-20261006-network",
+  "host": "127.0.0.1",
+  "port": 5434,
+  "memory_bytes": 268435456,
+  "test_only": true,
+  "password_logged": false,
+  "formal_database_accessed": false,
+  "retained": true
+}

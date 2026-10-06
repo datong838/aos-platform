@@ -1,0 +1,42 @@
+{
+  "task_id": "gt-capacity-native-scram-fixture-20261006",
+  "baseline": "AOS-001414/d787f20d47427362dc083371ac14a4a664ed9ba8",
+  "result": "ISOLATED_NATIVE_CRYPTO_SCRAM_PREREQUISITE_GREEN",
+  "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+  "container_id": "4a2af01a0f1c1bb64592f42de4805b80fa210764f15769f718a2ae640ab8fc85",
+  "internal_network": true,
+  "volume_retained": true,
+  "database_port_route": "127.0.0.1:5434 via task-local SSH handle19309 to internal172.18.0.2:5432; Docker internal network does not publish5432",
+  "helper_session_live_verified": 19309,
+  "binary_sha256": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+  "oom": 0,
+  "oom_kill": 0,
+  "targeted": "1 passed6.92s",
+  "adjacent": "131 passed8warnings186.50s",
+  "warning_extra": "original mutated candidate negative intentionally serializes boolean fingerprint; preserved serializer warning",
+  "failures_preserved": [
+    "r1 localhost connection refusal before DB creation",
+    "r2 original private boundary rejected globalPGPASSFILE; no gate relaxed"
+  ],
+  "source_hashes": {
+    ".evidence/gt-capacity-native-scram-fixture-20261006/provision.py": "c50352c258777240a579e8c77ed2ed9d82b331f03bcf8e749b9130a1149d33de",
+    ".evidence/gt-capacity-native-scram-fixture-20261006/run_tests.py": "49991a5570fcdc3d584baf85f69dfcceb38d6f6bfe44f2b20d84367f64c243c5",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "912772410504faee9a4743ea82a0fef056c504e4ad337d8578cfcf817fb7e427"
+  },
+  "log_sha256": {
+    "adjacent-r1.log": "1da41a88324cc9ea52bec0cd72c4a727bdaf13dc0826ff60df10a61ef9de7e32",
+    "integrated-entry-red.log": "e1b93fb72933276a186599e47e6edb3196957d8173d20b365270100fb1b34d35",
+    "same-database-r1.log": "a4f71aa5a1e02bf5ffb72102728e06d366e49ff5ffb266718b271d8339e55c90",
+    "same-database-r2.log": "6c007a610263062c6701e248b0cffc7cb7d950cc85f8a66c34734c116bef23af",
+    "same-database-r3.log": "aac139ae13a5f9e168c67978b8fe844099cc114a63059d1be69cc9466c8f33ad"
+  },
+  "roles_after_tests": "issuer and crypto owner NOLOGIN/NOINHERIT/no elevated flags",
+  "permissions": "crypto callable by controlled publication Owner only; genuine private issuer nativeguard passes and direct crypto helper denied",
+  "complete_source_entry": "same integrated database still SQLSTATE42883; intentional RED, no complete Source Delivery",
+  "formal_database_accessed": false,
+  "scope": "new retained isolated fixture only; test acceptance file belongs ACTIVE parent publication transaction and is uncommitted",
+  "pending": [
+    "full five signed registered origins + exact native Source prepare/sign/commit/current consumer",
+    "formal installation/root rotation/full Source/final caller COMMIT TTL/real business first chain"
+  ]
+}
