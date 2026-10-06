@@ -116,6 +116,7 @@ def require_capacity_issuer_identity(conn,scope):
     row=conn.execute("""SELECT session_user AS login,current_user AS role,
       current_setting('transaction_isolation') AS isolation,current_setting('transaction_read_only') AS read_only,
       current_setting('search_path') AS path,current_setting('session_replication_role') AS replication,
+      current_setting('TimeZone') AS time_zone,
       current_setting('aos.org_id',true) AS org,current_setting('aos.project_id',true) AS project,
       r.rolcanlogin,r.rolinherit,r.rolsuper,r.rolcreatedb,r.rolcreaterole,r.rolreplication,r.rolbypassrls,
       EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid=r.oid OR member=r.oid) AS members,
@@ -124,6 +125,7 @@ def require_capacity_issuer_identity(conn,scope):
       FROM pg_roles r WHERE rolname=current_user""").fetchone()
     if (not row or (row['login'],row['role'],row['isolation'],row['read_only'],row['path'],row['replication'],row['org'],row['project'])
         !=(ISSUER,ISSUER,'serializable','off','pg_catalog, public, pg_temp','origin',*scope.key) or row['rolcanlogin'] is not True
+        or row['time_zone']!='UTC'
         or any(row[k] for k in ('rolinherit','rolsuper','rolcreatedb','rolcreaterole','rolreplication','rolbypassrls','members','owned'))):
         raise ProviderCapacityFormalBoundaryBlocked('CAPACITY_ISSUER_PRIVATE_IDENTITY_REQUIRED')
     _require_read_boundary(conn)

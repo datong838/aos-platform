@@ -49,3 +49,9 @@ private-public-rls-red.log真实private SCRAM SQL在positive GUC下看见dev-org
 ### a150原函数触发执行兼容补验
 
 原生命周期fixture使用较早schema，不能计作a150应用证明。当前disposable完整head150中读取七个原public trigger定义/functionOID，按原tgtype与deferrable注册到owner临时测试表（表名保留以供TG_TABLE_NAME；只填原guard所需行shape，不替代原业务表完整约束）。原函数/ACL/body不改变，PUBLIC EXECUTE实际false，runtime自身无函数EXECUTE仍应正常经过trigger；正向分支原样返回行，缺immutable Receipt/非法terminal状态仍原sqlstate拒绝，事务rollback清临时对象。不赋予真实业务执行，不调安装/Provider/Host；这是权限撤销后的触发执行兼容，完整安装卸载及自然首链仍pending。测试加至已登记test_provider_capacity_formal_boundary_pg.py。
+
+### AOS-001378 原私有签发连接UTC与时区漂移拒绝
+
+源码已证明connect_capacity_issuer没有固定TimeZone，require_capacity_issuer_identity也未核它；四个原生只读probe证明默认PG时间文本和原模型UTC/微秒canonical不同。现仅修原private签发读取路径：connect_capacity_issuer原SERIAL事务启动后SET LOCAL TimeZone='UTC'（不改全局/role默认），require_capacity_issuer_identity每次核current_setting('TimeZone')精确UTC，改过则拒绝。固定UTC是后继SQL原批准hash同契约前置，不宣称全部历史非UTC引用自动兼容。
+
+文件范围：原source Task的services/aos-api/aos_api/aip_provider_capacity_issuer_connection.py；原formalBoundary Task的services/aos-api/aos_api/aip_provider_capacity_formal_boundary.py与tests/aip/test_provider_capacity_formal_boundary_pg.py；分别本Task证据目录。原Lease同Owner且2026-10-06T16:00仍有效，无第二writer/迁移scope。先新增实际SCRAM原private caller两RED：test-only角色默认Asia/Shanghai下新连接仍必须UTC并能读原真实批准（owner临时改role默认且finally RESET，不含秘密日志）；连接后SET LOCAL时区改动须直接identity gate拒绝。之后两行最小入口/身份修改、原formalBoundary全文件及Source/发行相邻回归，专项失败不改Goal状态。只操作aos_test_*隔离库和其测试role、finally复原，权威库/正常服务/权限/原提案事实不变；不把UTC读取证明正式Source已发布。

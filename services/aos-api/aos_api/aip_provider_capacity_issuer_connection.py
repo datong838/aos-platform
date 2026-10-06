@@ -58,6 +58,7 @@ def connect_capacity_issuer(config,scope):
         try:
             conn.isolation_level=psycopg.IsolationLevel.SERIALIZABLE;conn.read_only=False
             conn.execute('SET LOCAL search_path=pg_catalog,public,pg_temp')
+            conn.execute("SET LOCAL TimeZone='UTC'")
             conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",scope.key)
             require_capacity_issuer_identity(conn,scope)
             row=conn.execute("SELECT current_database() AS db,(SELECT setting::int FROM pg_settings WHERE name='statement_timeout') AS statement_ms,"

@@ -67,6 +67,31 @@ def test_actual_private_scram_reads_original_approved_source_claims_without_gran
         assert conn.execute('SELECT count(*) AS n FROM aip_action_approval_event WHERE proposal_id=%s',(result.proposal.id,)).fetchone()['n']==1
 
 
+def test_private_time_zone_is_utc_despite_test_login_default(approved_command, private_database):
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims
+    with isolated_owner() as owner:
+        row = owner.execute("SELECT rolconfig FROM pg_roles WHERE rolname=%s", (ISSUER,)).fetchone()
+        assert row["rolconfig"] is None  # Never replace an existing test role configuration.
+        owner.execute("ALTER ROLE aos_provider_capacity_issuer SET TimeZone='Asia/Shanghai'")
+    try:
+        with connect_capacity_issuer(private_database, SCOPE) as conn:
+            assert conn.execute("SELECT current_setting('TimeZone') AS zone").fetchone()["zone"] == "UTC"
+            assert read_capacity_approved_claims(conn, approved_command[-1]).maker == approved_command[0].subject
+    finally:
+        with isolated_owner() as owner:
+            owner.execute("ALTER ROLE aos_provider_capacity_issuer RESET TimeZone")
+
+
+def test_private_time_zone_drift_rejected_before_approved_claims(approved_command, private_database):
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_formal_boundary import require_capacity_issuer_identity, ProviderCapacityFormalBoundaryBlocked
+    with connect_capacity_issuer(private_database, SCOPE) as conn:
+        conn.execute("SET LOCAL TimeZone='Asia/Shanghai'")
+        with pytest.raises(ProviderCapacityFormalBoundaryBlocked, match="CAPACITY_ISSUER_PRIVATE_IDENTITY_REQUIRED"):
+            require_capacity_issuer_identity(conn, SCOPE)
+
+
 @pytest.mark.parametrize('fault',['runtime','canary','autocommit','idle','role_switch'])
 def test_private_read_rejects_wrong_actual_caller_context(approved_command,private_database,fault):
     from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims,ProviderCapacityFormalBoundaryBlocked

@@ -40,3 +40,9 @@ observedAt仅结构性aware/validUntil检查；正式issuer须按DBnow拒未来�
 候选producer最小设计：a147新增单一不可变候选表，仅account/basis、revision=1、正向tenant、server maker/完整candidateKind+candidate JSON SQL hash、根字段白名单与必填、外层mode固定CANDIDATE_ONLY_NO_CAPACITY_NO_START且verified/execution=false；RLS/append-only/runtime SELECT INSERT。候选记录ID与正式稳定物理账户ID明确分开，不能按候选ID计额。原SERIAL Store核OIDC/currentOwner、Provider exact current sorted head SHARE、原frozen非撤回evidence；basis指向本tenant exact account候选并再次parse/hash/provider重验。只写候选，不建立正式当前映射/Source/占额。runtime直接行仍为不可信候选，后继Source专用guard/issuer完整reparse并核正式来源，不能凭表存在或候选Hash给verified。实际PG先原Provider/Bundle+Owner后缺producer RED，再最小实现/不可执行与正常replay；完整Task保持ACTIVE。
 
 签发Revision仍不可执行，不自动激活capacity。共同occupation须合计普通与Eval、未知不TTL释放、旧活跃占用全量明确映射与原子零执行切换；完整锁图须对账原Capacity→Budget及旧方案Budget→Provider→Route，禁止锁序自相矛盾。后接一次Intent/transport/Usage/Report/Gate，再b90 signed八事实实际COMMIT/API/ToolBinding。当前142库、Host/worker/现实Provider/Secret/商城源/旧Run/manual/230L0/未知重发/外部效果不触碰，m1单写/no push。
+
+### AOS-001378 原私有签发连接UTC与时区漂移拒绝
+
+源码已证明connect_capacity_issuer没有固定TimeZone，require_capacity_issuer_identity也未核它；四个原生只读probe证明默认PG时间文本和原模型UTC/微秒canonical不同。现仅修原private签发读取路径：connect_capacity_issuer原SERIAL事务启动后SET LOCAL TimeZone='UTC'（不改全局/role默认），require_capacity_issuer_identity每次核current_setting('TimeZone')精确UTC，改过则拒绝。固定UTC是后继SQL原批准hash同契约前置，不宣称全部历史非UTC引用自动兼容。
+
+文件范围：原source Task的services/aos-api/aos_api/aip_provider_capacity_issuer_connection.py；原formalBoundary Task的services/aos-api/aos_api/aip_provider_capacity_formal_boundary.py与tests/aip/test_provider_capacity_formal_boundary_pg.py；分别本Task证据目录。原Lease同Owner且2026-10-06T16:00仍有效，无第二writer/迁移scope。先新增实际SCRAM原private caller两RED：test-only角色默认Asia/Shanghai下新连接仍必须UTC并能读原真实批准（owner临时改role默认且finally RESET，不含秘密日志）；连接后SET LOCAL时区改动须直接identity gate拒绝。之后两行最小入口/身份修改、原formalBoundary全文件及Source/发行相邻回归，专项失败不改Goal状态。只操作aos_test_*隔离库和其测试role、finally复原，权威库/正常服务/权限/原提案事实不变；不把UTC读取证明正式Source已发布。
