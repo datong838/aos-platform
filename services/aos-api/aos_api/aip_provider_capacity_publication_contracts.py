@@ -166,17 +166,13 @@ class PublishedProviderCapacitySource(_PublicationDocument):
         return self
 
 
-class CapacitySourceIssuanceContext(AipContractModel):
-    """Signed claims only; authentic subject/native transaction must be rechecked."""
+class CapacitySourceAuthenticationClaims(AipContractModel):
+    """Untrusted transport claims; parsing does not authenticate or authorize."""
     model_config = ConfigDict(revalidate_instances="always", hide_input_in_errors=True)
     maker_subject: StrictStr
     oidc_issuer: StrictStr = Field(min_length=1, max_length=2000)
     oidc_audience: StrictStr
     authentication_expires_at: datetime
-    issuer_role: Literal["aos_provider_capacity_issuer"]
-    transaction_id: StrictStr = Field(min_length=1, max_length=20, pattern=r"^[1-9][0-9]*$")
-    backend_pid: StrictInt = Field(ge=1, le=2147483647)
-    attempt_id: StrictStr
 
     @field_validator("maker_subject", "oidc_audience")
     @classmethod
@@ -199,6 +195,21 @@ class CapacitySourceIssuanceContext(AipContractModel):
             raise ValueError("exact HTTPS issuer claim required")
         return value
 
+    @field_validator("authentication_expires_at")
+    @classmethod
+    def aware_authentication_expiry(cls, value):
+        if value.utcoffset() is None:
+            raise ValueError("aware issuance authentication expiry required")
+        return value
+
+
+class CapacitySourceIssuanceContext(CapacitySourceAuthenticationClaims):
+    """Signed claims only; authentic subject/native transaction must be rechecked."""
+    issuer_role: Literal["aos_provider_capacity_issuer"]
+    transaction_id: StrictStr = Field(min_length=1, max_length=20, pattern=r"^[1-9][0-9]*$")
+    backend_pid: StrictInt = Field(ge=1, le=2147483647)
+    attempt_id: StrictStr
+
     @field_validator("transaction_id")
     @classmethod
     def xid8_claim(cls, value):
@@ -212,14 +223,6 @@ class CapacitySourceIssuanceContext(AipContractModel):
         if str(UUID(value)) != value:
             raise ValueError("canonical server attempt UUID claim required")
         return value
-
-    @field_validator("authentication_expires_at")
-    @classmethod
-    def aware_authentication_expiry(cls, value):
-        if value.utcoffset() is None:
-            raise ValueError("aware issuance authentication expiry required")
-        return value
-
 
 class PublishedProviderCapacitySourceV2(PublishedProviderCapacitySource):
     """Explicit v2 signed transcript, without JWT/signature/native authorization."""

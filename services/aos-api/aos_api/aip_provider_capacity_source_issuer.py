@@ -151,3 +151,39 @@ def check_native_capacity_supplier_inputs(conn,command,policy_document,attestati
             trust_roots=trust_roots,checked_at=now)
     except Exception:
         raise ProviderCapacityIssuanceBlocked('CAPACITY_NATIVE_SIGNED_SUPPLIER_INPUTS_REQUIRED') from None
+
+
+def capacity_source_preparation_bytes(command):
+    """Build secret-free untrusted SQL input from verified original identity.
+
+    The DB independently validates original facts. The controlled signer must
+    authenticate the original JWT again and compare these hints to the exact
+    pending transcript; these bytes themselves are never signing authority.
+    """
+    from datetime import UTC,datetime
+    import os
+    from aos_api.oidc import verify_access_token
+    from aos_api.aip_provider_capacity_publication_contracts import CapacitySourceAuthenticationClaims
+    from aos_api.asset_registry.canonical_json import canonical_json
+    try:
+        principal=authenticate_capacity_issuance_command(command)
+        claims=verify_access_token(command.bearer_token.get_secret_value())
+        audience=os.environ.get('AOS_OIDC_AUDIENCE','').strip()
+        actual_audience=claims.get('aud')
+        if (type(claims.get('sub')) is not str or claims['sub']!=principal.subject
+            or type(claims.get('exp')) is not int or type(claims.get('iss')) is not str
+            or not (actual_audience==audience or (type(actual_audience) is list and audience in actual_audience))):
+            raise ValueError('original exact verified identity claims required')
+        hint=CapacitySourceAuthenticationClaims(makerSubject=principal.subject,
+            oidcIssuer=claims['iss'],oidcAudience=audience,
+            authenticationExpiresAt=datetime.fromtimestamp(claims['exp'],UTC))
+        if hint.authentication_expires_at<=datetime.now(UTC):
+            raise ValueError('current authentication required')
+        return canonical_json(dict(protocol='aos-provider-capacity-source-command/v1',
+            makerSubject=principal.subject,
+            requestHash=capacity_issuance_binding(TenantScope(principal.org_id,principal.project_id),
+                principal.subject,command).content_hash,
+            command=command.model_dump(mode='json',by_alias=True,exclude={'bearer_token','idempotency_key'}),
+            authentication=hint.model_dump(mode='json',by_alias=True)))
+    except Exception:
+        raise ProviderCapacityIssuanceBlocked('CAPACITY_SOURCE_PREPARATION_AUTHENTICATION_REQUIRED') from None

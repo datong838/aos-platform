@@ -1,0 +1,21 @@
+{
+  "baseline": "AOS-001418/m1@66447bb3",
+  "task_id": "gt-capacity-source-entry-20261007",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_contracts.py": "b1352ab443672210ac84fef76164e6585e8a94c7b63351208e17c42a1118db07",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "a47245dbe96ee2b2735e6d5c1cd83dc1dcccceb3802ca99378e0b1704e605962",
+    "services/aos-api/aos_api/aip_provider_capacity_formal_boundary.py": "cacf27b0281e330cb666e53d903336bafd6380336850f8bb0104e143c8857f92",
+    "services/aos-api/aos_api/aip_provider_capacity_source_issuer.py": "9813e06e4a2cb6052370d63e0c181259d7086cc24cd93d1bea596ea36dfeabb4",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "445e40c7bd8cc6a06f004faf016209b5859a6743014739f2664a478674629815"
+  },
+  "observations": [
+    "Full prepare/commit absent actualSQL42883 after156",
+    "PublicationOwner now has only exact original two epochEXEC, no epoch table access",
+    "PublishedProviderCapacitySourceV2 already carries authenticated expiry/issuer/audience/native xid8/PID/serverattempt in signed body, parsing alone is not authentication",
+    "Original issuer effective-definer allowlist still onlytwo epoch functions; full new entry requires body/ACL exact audit, not blanket exception",
+    "No pendingattempt/immutableSource/global mapping schema exists in registry152-156; must implement full atomic write graph",
+    "S01-S20 and currentconsumer required together; finalnativecallerTTL not proven"
+  ],
+  "next_action": "Implement complete157 originalfact-bound transaction and actual native positive, not invalidinput-only stub",
+  "source_authority": false
+}

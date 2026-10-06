@@ -1,0 +1,42 @@
+{
+  "schema": "aos-capacity-authentication-transport-verification/v1",
+  "baseline": "AOS-001418/m1@66447bb3b91c8d34da839575eb637abf7a87b33e",
+  "task_id": "gt-capacity-source-entry-20261007",
+  "parent_tasks": [
+    "gt-provider-capacity-source-20261005",
+    "gt-provider-capacity-publication-schema-20261005",
+    "gt-capacity-source-publication-20261006"
+  ],
+  "task_status": "ACTIVE",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_contracts.py": "ec8206758fdf6d7a519a8cb639887e280bf65d2eed1d5a6fb9f6f78b3a90bf0c",
+    "services/aos-api/aos_api/aip_provider_capacity_source_issuer.py": "5b9b1e9e9c1a09d2a8a2bf142cd61af0e1325fe33f3102086cab48a79ce13e7e",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "9dac28f6337eca2738a4495cb59d731eee8f2d9de1c39e3137e80a601b24903c"
+  },
+  "plan_hash": "ab231b5bb112087928d37db56236c5b3ba54c3a8b3badedb51f95efc2ef35b23",
+  "logs": {
+    ".evidence/gt-capacity-source-publication-20261006/authentication-transport-red.log": "749e800e3bd7c7d078d321c2e59d076b6619945f6728fc1a350e4bd07b724b46",
+    ".evidence/gt-capacity-source-publication-20261006/authentication-transport-green-r1.log": "b9a1d37b44b3b4e8feb61ccf71bd5786ecb1174cfae063ce4ccea8a616e9f5c3",
+    ".evidence/gt-capacity-source-publication-20261006/authentication-transport-adjacent-r1.log": "690c4ca216cd34743d83bb2118d8f8cb564a7d0df20dd765701d3d8a066c08d5",
+    ".evidence/gt-capacity-source-publication-20261006/authentication-transport-native-adjacent-r1.log": "edc46630eede5bf306f171a31983517c3188c41e2b91ddb7429e70a6e7ef2be3",
+    ".evidence/gt-capacity-source-publication-20261006/entry-authentication-red-after156.log": "8a7d9e35f8f04b6012a9a5d5c7d09cd80fafffa3d86e8b472b69be160569b19a",
+    ".evidence/gt-capacity-source-publication-20261006/prepare-native-v2-red-after156.log": "e795238db6979d7f3d3c4d762e3fb2746252f0a9594e64072a94530e51236b5e"
+  },
+  "targeted": "2PASS8.41s realJWT and corruptedsignature reject; safe noJWTSQLbytes",
+  "adjacent": "228PASS381SKIP2knownentrydeselected8warnings119.14s;SKIP not evidence",
+  "explicit_native_publication": "465PASS0SKIP7warnings98.92s; originalnetworknoneC, v2actualsignature and7tamperfalse",
+  "missing_entry_red": "2FAIL9.55s native42883 on originalregisteredactualSCRAM validinputs and missingbytes",
+  "review": [
+    "Original signedv2 exact fields/validators/profile/nativecryptography preserved",
+    "Original principal andverify_access_token; no signature-disabled decode or global auth modification",
+    "NoJWT/privatekey/verified flag in SQLinput; no freeclaimedmaker accepted for Source authority",
+    "Typed authentication hints are unauthenticated transport claims in DB; controlled signer independentJWTmatch still required",
+    "No public SQLstub/function/grant/mapping/Source installation;fullSQLentry and currentconsumer pending",
+    "Targeted primitive transport acceptance never SourceTaskDelivery or Goal completion"
+  ],
+  "syntax": "PASS",
+  "goal_complete": false,
+  "source_published": false,
+  "formal_database_accessed": false,
+  "initial_red": "2FAIL8.32s missingbuilder import"
+}

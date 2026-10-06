@@ -280,3 +280,70 @@ def _registered_publication_inputs(native_signed_source,tmp_path):
         publisher.execute('RESET SESSION AUTHORIZATION')
     return dict(actual_command=actual_command,config=config,provider=f['provider'],refs=refs,documents=documents,
         origin_hash=origin_hash,snapshot_hash=transport.content_hash,source_key=source_key)
+
+
+def test_registered_original_inputs_prepare_native_v2_before_signing(native_signed_source,tmp_path):
+    """Preparation dependency only; full sign/COMMIT/consumer still required."""
+    import json
+    from uuid import uuid4
+    from aos_api.aip_provider_capacity_source_issuer import authenticate_capacity_issuance_command,capacity_source_preparation_bytes
+    from aos_api.aip_provider_capacity_source_contracts import capacity_issuance_binding
+    from aos_api.aip_provider_capacity_publication_contracts import (
+        PublishedProviderCapacitySourceV2,parse_signed_capacity_body)
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    material=_registered_publication_inputs(native_signed_source,tmp_path)
+    command,_,_=material['actual_command']()
+    principal=authenticate_capacity_issuance_command(command)
+    request_hash=capacity_issuance_binding(SCOPE,principal.subject,command).content_hash
+    raw=capacity_source_preparation_bytes(command)
+    # No JWT/secret reaches SQL, including hidden SecretStr placeholders.
+    assert b'bearerToken' not in raw and b'bearer_token' not in raw
+    asset_id='native-source-'+uuid4().hex
+    with connect_capacity_issuer(material['config'],SCOPE) as conn:
+        assert conn.pgconn.used_password is True
+        native=conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+        row=conn.execute('SELECT * FROM public.prepare_capacity_source(%s::bytea,%s::text,%s::text,%s::jsonb)',
+            (raw,command.idempotency_key,asset_id,json.dumps(material['refs'][-1]))).fetchone()
+        prepared=parse_signed_capacity_body(bytes(row['source_raw']),PublishedProviderCapacitySourceV2)
+        assert prepared.asset_id==asset_id and prepared.request_hash==request_hash
+        assert prepared.issuance_context.maker_subject==principal.subject
+        assert prepared.issuance_context.transaction_id==native['xid']
+        assert prepared.issuance_context.backend_pid==native['pid']
+        assert prepared.execution_allowed is False
+        conn.rollback()  # Pending prepare is never committed as a Source.
+
+
+def test_preparation_transport_uses_verified_authentication_without_sql_secret(native_signed_source):
+    from datetime import UTC,datetime
+    import json,os
+    from aos_api.oidc import verify_access_token
+    from aos_api.aip_provider_capacity_source_issuer import capacity_source_preparation_bytes,authenticate_capacity_issuance_command
+    from aos_api.aip_provider_capacity_source_contracts import capacity_issuance_binding
+    _,actual_command,_,_,_=native_signed_source
+    command,_,_=actual_command()
+    principal=authenticate_capacity_issuance_command(command)
+    verified=verify_access_token(command.bearer_token.get_secret_value())
+    raw=capacity_source_preparation_bytes(command)
+    payload=json.loads(raw)
+    assert payload['makerSubject']==principal.subject
+    assert payload['requestHash']==capacity_issuance_binding(SCOPE,principal.subject,command).content_hash
+    assert payload['authentication']==dict(makerSubject=principal.subject,oidcIssuer=verified['iss'],
+        oidcAudience=os.environ['AOS_OIDC_AUDIENCE'],
+        authenticationExpiresAt=datetime.fromtimestamp(verified['exp'],UTC).isoformat().replace('+00:00','Z'))
+    assert payload['command']==command.model_dump(mode='json',by_alias=True,exclude={'bearer_token','idempotency_key'})
+    assert command.bearer_token.get_secret_value().encode() not in raw
+    assert set(payload)=={'protocol','makerSubject','requestHash','command','authentication'}
+    assert b'bearerToken' not in raw and b'bearer_token' not in raw
+
+
+def test_preparation_transport_rejects_actual_signature_drift(native_signed_source):
+    from pydantic import SecretStr
+    from aos_api.aip_provider_capacity_source_issuer import capacity_source_preparation_bytes,ProviderCapacityIssuanceBlocked
+    _,actual_command,_,_,_=native_signed_source
+    command,_,_=actual_command()
+    parts=command.bearer_token.get_secret_value().split('.')
+    parts[2]=('A' if parts[2][0]!='A' else 'B')+parts[2][1:]
+    invalid=command.model_copy(update={'bearer_token':SecretStr('.'.join(parts))})
+    with pytest.raises(ProviderCapacityIssuanceBlocked,match='CAPACITY_SOURCE_PREPARATION_AUTHENTICATION_REQUIRED') as caught:
+        capacity_source_preparation_bytes(invalid)
+    assert invalid.bearer_token.get_secret_value() not in str(caught.value)

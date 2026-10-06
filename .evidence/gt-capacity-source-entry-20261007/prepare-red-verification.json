@@ -1,0 +1,18 @@
+{
+  "schema": "aos-capacity-native-prepare-red/v1",
+  "baseline": "AOS-001418/m1@66447bb3",
+  "task_id": "gt-capacity-source-entry-20261007",
+  "parent_task": "gt-capacity-source-publication-20261006",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "test": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+  "test_hash": "7c7d3dcafe72eb862803ee13b9ef4cfb68c7a29463adef18ed648c0f4107e5a8",
+  "log": ".evidence/gt-capacity-source-publication-20261006/prepare-native-v2-red-after156.log",
+  "log_hash": "e795238db6979d7f3d3c4d762e3fb2746252f0a9594e64072a94530e51236b5e",
+  "result": "1FAIL7.01s;actualUndefinedFunction42883 on original approved/signed registry/privateSCRAM prepare call",
+  "transport": "originalauthenticatedmaker/exactrefs/requestbinding;JWT/idempotency excluded from SQL raw; noverifiedauthority",
+  "is_stub": false,
+  "source_published": false,
+  "source_task_complete": false,
+  "next": "Complete DB-native S01-S20 fullprepare/sign/commit/callerCOMMIT/currentconsumer;never accept argument-only refusal as full entry"
+}
