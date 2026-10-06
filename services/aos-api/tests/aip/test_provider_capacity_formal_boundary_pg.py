@@ -417,3 +417,55 @@ def test_a150_original_trigger_execution_preserves_runtime_normal_and_refusal(fu
             conn.execute('SET CONSTRAINTS ALL IMMEDIATE')
         assert caught.value.sqlstate==error
         conn.rollback()
+
+
+def test_original_approved_event_sql_full_body_matches_native_refs(approved_command, private_database):
+    """Independent S08 computation probe; no SQL approval or publication grant."""
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_action_store import AipActionStore, canonical_hash
+    from aos_api.asset_registry.canonical_json import canonical_json
+    command = approved_command[-1]
+    refs = [command.approval_event, approved_command[2].allocation_approval_ref]
+    with connect_capacity_issuer(private_database, SCOPE) as conn:
+        for ref in refs:
+            row = conn.execute("""WITH original AS (
+                SELECT e.*, CASE WHEN expires_at IS NULL THEN NULL ELSE
+                  to_char(expires_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS') ||
+                  CASE WHEN to_char(expires_at AT TIME ZONE 'UTC','US')='000000' THEN ''
+                    ELSE '.' || to_char(expires_at AT TIME ZONE 'UTC','US') END || 'Z' END AS expiry,
+                  to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS') ||
+                  CASE WHEN to_char(created_at AT TIME ZONE 'UTC','US')='000000' THEN ''
+                    ELSE '.' || to_char(created_at AT TIME ZONE 'UTC','US') END || 'Z' AS created
+                FROM public.aip_action_approval_event e
+                WHERE org_id=%s AND project_id=%s AND approval_event_id=%s
+              ), body AS (
+                SELECT proposal_id,jsonb_build_object(
+                  'id',approval_event_id,'proposalId',proposal_id,'proposalVersion',proposal_version,
+                  'proposalHash',proposal_hash,'decision',decision,
+                  'actor',jsonb_build_object('actorType','user','actorId',actor_id),'reason',reason,
+                  'expiresAt',expiry,'createdAt',created,'actionBindingHash',action_binding_hash,
+                  'approvalPolicyHash',approval_policy_hash,'slotId',slot_id,
+                  'eligibilitySnapshotHash',eligibility_snapshot_hash) AS value,
+                  to_jsonb(expires_at) AS default_expiry,to_jsonb(created_at) AS default_created
+                FROM original
+              ) SELECT proposal_id,value,public.canonical_asset_registry_jsonb(value) AS canonical,
+                encode(public.digest(convert_to(public.canonical_asset_registry_jsonb(value),'UTF8'),'sha256'),'hex') AS hash,
+                encode(public.digest(convert_to(public.canonical_asset_registry_jsonb(
+                  value || jsonb_build_object('expiresAt',default_expiry,'createdAt',default_created)),
+                  'UTF8'),'sha256'),'hex') AS default_time_hash
+              FROM body""", (*SCOPE.key, ref.asset_id)).fetchone()
+            assert row is not None
+            snapshots = AipActionStore()._bundle(conn, SCOPE, row['proposal_id']).approvals
+            snapshot = next(item for item in snapshots if item.id == ref.asset_id)
+            expected = snapshot.model_dump(mode='json', by_alias=True)
+            assert row['value'] == expected
+            assert row['canonical'].encode('utf-8') == canonical_json(expected)
+            assert row['hash'] == canonical_hash(expected) == ref.content_hash
+            assert row['default_time_hash'] != ref.content_hash
+            assert len(expected) == 13
+            for field in expected:
+                changed = conn.execute("""SELECT encode(public.digest(convert_to(
+                    public.canonical_asset_registry_jsonb(%s::jsonb || jsonb_build_object(%s::text,'changed')),
+                    'UTF8'),'sha256'),'hex') AS hash""",
+                    (row['canonical'], field)).fetchone()
+                assert changed['hash'] != ref.content_hash, field
