@@ -162,3 +162,121 @@ def test_original_fact_owner_boundary_rejects_effective_drift(native_signed_sour
                     owner.execute(statements[fault])
                 require_original_fact_boundary(owner)
         require_original_fact_boundary(owner)
+
+
+def test_registered_origin_documents_and_original_private_approval_share_database(native_signed_source,tmp_path):
+    material = _registered_publication_inputs(native_signed_source,tmp_path)
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    command, policy, attestation = material['actual_command']()
+    with connect_capacity_issuer(material['config'],SCOPE) as conn:
+        assert conn.pgconn.used_password is True
+        checked=check_native_capacity_supplier_inputs(conn,command,policy,attestation,
+            trust_roots=material['provider'])
+        assert checked.execution_allowed is False
+        assert checked.source_policy_hash==material['refs'][0]['contentHash']
+        assert checked.supplier_attestation_hash==material['refs'][1]['contentHash']
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        fence=owner.execute('SELECT epoch,head_origin_hash FROM aos_capacity_publication_private.registry_epoch').fetchone()
+        assert fence==dict(epoch=1,head_origin_hash=material['origin_hash'])
+        rows=owner.execute('SELECT kind,asset_id,revision,content_hash,raw_body,signature,origin_hash,origin_epoch,snapshot_hash FROM aos_capacity_publication_private.document ORDER BY kind').fetchall()
+        assert len(rows)==3
+        by_kind={r['kind']:r for r in rows}
+        for ref,(body,signature) in zip(material['refs'],material['documents']):
+            row=by_kind[ref['assetType']]
+            assert (row['asset_id'],row['revision'],row['content_hash'])==(ref['assetId'],str(ref['revision']),ref['contentHash'])
+            assert (bytes(row['raw_body']),bytes(row['signature']))==(body,signature)
+            assert (row['origin_hash'],row['origin_epoch'],row['snapshot_hash'])==(material['origin_hash'],1,material['snapshot_hash'])
+        import base64,json
+        permit_body=json.loads(material['documents'][2][0])
+        root=owner.execute('SELECT public_key,root_revision FROM aos_capacity_publication_private.root_entry '
+            'WHERE snapshot_hash=%s AND publisher_codepoints=%s::integer[] AND key_id_codepoints=%s::integer[]',
+            (material['snapshot_hash'],[ord(c) for c in permit_body['signerPublisher']],
+             [ord(c) for c in permit_body['signerKeyId']])).fetchone()
+        assert root is not None
+        assert bytes(root['public_key'])==base64.b64decode(permit_body['signerPublicKey'],validate=True)
+        assert root['root_revision']==permit_body['signerRootRevision']
+        assert permit_body['sourcePolicyRef']==material['refs'][0]
+    print('CAPACITY_COMBINED_ORIGINAL_INPUT_PROOF same_database=true native_scram=true original_approvals=true signed_origin=true registered_exact_documents=3 source_published=false')
+
+
+def _registered_publication_inputs(native_signed_source,tmp_path):
+    """Real original inputs plus controlled test bootstrap; never formal authority."""
+    import base64
+    import hashlib
+    import json
+    from uuid import uuid4
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding,PublicFormat
+    from aos_api.asset_registry.canonical_json import canonical_json
+    from aos_api.aip_provider_capacity_publication_contracts import (
+        ProviderCapacitySigningPermit,ProviderCapacityOriginBootstrap,
+        freeze_capacity_trust_root_snapshot)
+    from tests.aip.test_provider_capacity_publication_pg import permit,bootstrap
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+
+    f,actual_command,_,_,config=native_signed_source
+    with isolated_owner() as owner:
+        probe=owner.execute('SELECT oid,(SELECT system_identifier::text FROM pg_control_system()) AS cluster FROM pg_database WHERE datname=current_database()').fetchone()
+        assert owner.info.dbname==config.database
+    target=dict(host=config.host,port=config.port,database=config.database,databaseOid=probe['oid'],
+        clusterIdentifier=probe['cluster'],issuerRole='aos_provider_capacity_issuer')
+    f['policy']['deploymentTarget']=target
+    source_key=Ed25519PrivateKey.generate()
+    source_public=source_key.public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)
+    source_root=dict(f['roots'][0],publisher='isolated-source-signer',keyId='isolated-source-key',
+        publicKey=base64.b64encode(source_public).decode())
+    f['roots'].append(source_root)
+    f['rootfile'].write_text(json.dumps(dict(trustRoots=f['roots'])))
+    transport=freeze_capacity_trust_root_snapshot(f['provider'])
+    command,policy,attestation=actual_command()
+    raw_permit=permit()
+    raw_permit.update(assetId='integrated-permit-'+uuid4().hex,publisher=policy.payload.publisher,
+        keyId=policy.payload.key_id,deploymentTarget=target,
+        sourcePolicyRef=command.source_policy_ref.model_dump(mode='json',by_alias=True),
+        signerPublisher=source_root['publisher'],signerKeyId=source_root['keyId'],
+        signerRootRevision=source_root['revision'],signerPublicKey=source_root['publicKey'])
+    parsed_permit=ProviderCapacitySigningPermit.model_validate(raw_permit)
+    permit_bytes=canonical_json(parsed_permit.model_dump(mode='json',by_alias=True))
+    permit_signature=f['keys'][policy.payload.publisher].sign(permit_bytes)
+    documents=[(canonical_json(doc.payload.model_dump(mode='json',by_alias=True)),
+        base64.b64decode(doc.signature,validate=True)) for doc in (policy,attestation)]
+    documents.append((permit_bytes,permit_signature))
+    refs=[command.source_policy_ref.model_dump(mode='json',by_alias=True),
+          command.supplier_attestation_ref.model_dump(mode='json',by_alias=True),
+          dict(assetType='ProviderCapacitySigningPermitRevision',assetId=parsed_permit.asset_id,
+               revision=parsed_permit.revision,contentHash=hashlib.sha256(permit_bytes).hexdigest())]
+    anchor_key=Ed25519PrivateKey.generate()
+    anchor_public=anchor_key.public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)
+    raw_origin=bootstrap()
+    raw_origin.update(assetId='integrated-origin-'+uuid4().hex,bootstrapId='integrated-bootstrap-'+uuid4().hex,
+        publisher='isolated-controlled-anchor',keyId='isolated-anchor-key',publisherSubject='isolated-publisher-subject',
+        deploymentTarget=target,rootSnapshotHash=transport.content_hash,allowedDocumentRefs=refs)
+    origin=ProviderCapacityOriginBootstrap.model_validate(raw_origin)
+    origin_bytes=canonical_json(origin.model_dump(mode='json',by_alias=True))
+    origin_hash=hashlib.sha256(origin_bytes).hexdigest()
+    with isolated_owner() as owner:
+        assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.registry_epoch').fetchone()['n']==0
+        owner.execute('INSERT INTO aos_capacity_publication_private.deployment_anchor '
+            '(org_id,project_id,anchor_revision,signer_publisher,signer_key_id,signer_public_key,publisher_subject,deployment_target) '
+            'VALUES(%s,%s,%s,%s,%s,%s,%s,%s::jsonb)',
+            (*SCOPE.key,origin.anchor_revision,origin.publisher,origin.key_id,anchor_public,
+             origin.publisher_subject,json.dumps(target)))
+        owner.execute('INSERT INTO aos_capacity_publication_private.registry_epoch(org_id,project_id,anchor_revision) VALUES(%s,%s,%s)',
+            (*SCOPE.key,origin.anchor_revision))
+    # Existing signed registration path only. Controlled publisher session in
+    # this test is not a claim of formal publisher login/identity acceptance.
+    with isolated_owner() as publisher:
+        publisher.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        publisher.execute('SET SESSION AUTHORIZATION aos_provider_capacity_policy_publisher')
+        assert publisher.execute('SELECT aos_capacity_publication_private.register_origin(%s,%s,%s) AS hash',
+            (origin_bytes,anchor_key.sign(origin_bytes),transport.canonical_bytes)).fetchone()['hash']==origin_hash
+        for ref,(raw,signature) in zip(refs,documents):
+            assert publisher.execute('SELECT aos_capacity_publication_private.register_document(%s,%s,%s) AS hash',
+                (ref['assetType'],raw,signature)).fetchone()['hash']==ref['contentHash']
+        publisher.execute('RESET SESSION AUTHORIZATION')
+    return dict(actual_command=actual_command,config=config,provider=f['provider'],refs=refs,documents=documents,
+        origin_hash=origin_hash,snapshot_hash=transport.content_hash,source_key=source_key)

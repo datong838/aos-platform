@@ -1,0 +1,53 @@
+{
+  "database": "aos_test_1ab83420db36_ti4_test",
+  "read_only": true,
+  "roles": [
+    {
+      "rolname": "aos_capacity_publication_owner",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_provider_capacity_issuer",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_provider_capacity_policy_publisher",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    }
+  ],
+  "observed": {
+    "original_facts_select": true,
+    "evidence_lock": false,
+    "withdrawal_lock": false,
+    "prepare_present": false,
+    "commit_present": false
+  },
+  "registered_counts": {
+    "deployment_anchor": 1,
+    "root_snapshot": 1,
+    "root_entry": 3,
+    "origin": 1,
+    "document": 3
+  },
+  "source_published": false,
+  "formal_database_accessed": false,
+  "next": "Complete Source prepare/sign/commit/currentconsumer; publication Owner original Evidence/withdrawal EXECUTE still absent and old exact ACL audits require coordinated adaptation before any grant."
+}
