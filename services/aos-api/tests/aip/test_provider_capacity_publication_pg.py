@@ -797,3 +797,108 @@ def test_native_origin_bootstrap_refs_and_original_time_boundaries(native_profil
     result=native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL+CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL+CAPACITY_SIGNING_PERMIT_PROFILE_SQL+CAPACITY_ORIGIN_BOOTSTRAP_PROFILE_SQL+
         "SELECT aos_capacity_publication_private.read_origin_bootstrap(decode('%s','hex'))::text;"%raw.hex())
     assert json.loads(result)==body
+
+
+def source_policy():
+    body=permit()
+    return dict(schemaVersion=1,tenant=body['tenant'],assetId='policy',revision=1,
+        publisher='aos-capacity-source-policy',keyId='policy-key',supplierId='供应方😀',
+        validFrom=body['validFrom'],validUntil=body['validUntil'],purpose='provider_capacity_source',
+        attestationPublisher='supplier',attestationKeyId='supplier-key',
+        attestationRootRevision='sha256:'+'a'*64,maxObservationAgeSeconds=86400,
+        maxFutureSkewSeconds=60,allowedTokenModes=['inflight_upper_bound','fixed_window_rate'],
+        deploymentTarget=body['deploymentTarget'])
+
+
+def _native_source_policy(runner,raw,success=True):
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL,CAPACITY_SIGNING_PERMIT_PROFILE_SQL,CAPACITY_SOURCE_POLICY_PROFILE_SQL)
+    return runner(CAPACITY_IDENTIFIER_PROFILE_SQL+CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL+
+        CAPACITY_SIGNING_PERMIT_PROFILE_SQL+CAPACITY_SOURCE_POLICY_PROFILE_SQL+
+        "SELECT aos_capacity_publication_private.read_source_policy(decode('%s','hex'));"%raw.hex(),success)
+
+
+def test_native_source_policy_complete_roundtrip(native_profile_runner):
+    from aos_api.aip_provider_capacity_source_contracts import ProviderCapacitySourcePolicy
+    from aos_api.aip_provider_capacity_publication_contracts import parse_signed_capacity_body
+    from datetime import timezone
+    for offset,age,skew,modes in [(0,1,0,['inflight_upper_bound']),
+        (1439,86400,60,['fixed_window_rate']),(-1439,86400,60,['fixed_window_rate','inflight_upper_bound'])]:
+        payload=source_policy();start=datetime(2020,1,1,0,0,0,100000,tzinfo=timezone(timedelta(minutes=offset)))
+        payload.update(validFrom=start,validUntil=start+timedelta(days=366),revision=10**100,
+            maxObservationAgeSeconds=age,maxFutureSkewSeconds=skew,allowedTokenModes=modes)
+        model=ProviderCapacitySourcePolicy.model_validate(payload);expected=model.model_dump(mode='json',by_alias=True)
+        raw=canonical_json(expected);assert parse_signed_capacity_body(raw,ProviderCapacitySourcePolicy)==model
+        assert json.loads(_native_source_policy(native_profile_runner,raw))==expected
+
+
+@pytest.mark.parametrize('fault',['missing','extra','publisher','purpose','canary','revision-bool',
+    'revision-zero','identifier','root','age-bool','age-zero','age-high','skew-negative','skew-high',
+    'skew-text','modes-empty','modes-duplicate','modes-extra','modes-unknown','modes-scalar',
+    'deployment','naive','equal-window','long-window','alias','zero-fraction'])
+def test_native_source_policy_complete_single_fault(native_profile_runner,fault):
+    from aos_api.aip_provider_capacity_source_contracts import ProviderCapacitySourcePolicy
+    from aos_api.aip_provider_capacity_publication_contracts import parse_signed_capacity_body
+    payload=ProviderCapacitySourcePolicy.model_validate(source_policy()).model_dump(mode='json',by_alias=True)
+    if fault=='missing':payload.pop('supplierId')
+    elif fault=='extra':payload['verified']=True
+    elif fault=='publisher':payload['publisher']='caller'
+    elif fault=='purpose':payload['purpose']='supplier_capacity_attestation'
+    elif fault=='canary':payload['tenant']['orgId']='dev-org'
+    elif fault=='revision-bool':payload['revision']=True
+    elif fault=='revision-zero':payload['revision']=0
+    elif fault=='identifier':payload['attestationKeyId']='white space'
+    elif fault=='root':payload['attestationRootRevision']='A'*64
+    elif fault=='age-bool':payload['maxObservationAgeSeconds']=True
+    elif fault=='age-zero':payload['maxObservationAgeSeconds']=0
+    elif fault=='age-high':payload['maxObservationAgeSeconds']=86401
+    elif fault=='skew-negative':payload['maxFutureSkewSeconds']=-1
+    elif fault=='skew-high':payload['maxFutureSkewSeconds']=61
+    elif fault=='skew-text':payload['maxFutureSkewSeconds']='0'
+    elif fault=='modes-empty':payload['allowedTokenModes']=[]
+    elif fault=='modes-duplicate':payload['allowedTokenModes']=['inflight_upper_bound']*2
+    elif fault=='modes-extra':payload['allowedTokenModes']=['inflight_upper_bound']*3
+    elif fault=='modes-unknown':payload['allowedTokenModes']=['unbounded']
+    elif fault=='modes-scalar':payload['allowedTokenModes']='inflight_upper_bound'
+    elif fault=='deployment':payload['deploymentTarget']['databaseOid']=True
+    elif fault=='naive':payload['validFrom']='2026-01-01T00:00:00'
+    elif fault=='equal-window':payload['validUntil']=payload['validFrom']
+    elif fault=='long-window':payload.update(validFrom='2026-01-01T00:00:00Z',validUntil='2027-01-03T00:00:00Z')
+    elif fault=='alias':payload['supplier_id']=payload.pop('supplierId')
+    else:payload.update(validFrom='2026-01-01T00:00:00.000000Z',validUntil='2026-01-02T00:00:00Z')
+    raw=canonical_json(payload)
+    with pytest.raises(ValueError):parse_signed_capacity_body(raw,ProviderCapacitySourcePolicy)
+    assert 'CAPACITY_SOURCE_POLICY_REQUIRED' in _native_source_policy(native_profile_runner,raw,False)
+
+
+@pytest.mark.parametrize('literal',['NULL',"convert_to('null','UTF8')","convert_to('[]','UTF8')"])
+def test_native_source_policy_null_shape(native_profile_runner,literal):
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL,CAPACITY_SIGNING_PERMIT_PROFILE_SQL,CAPACITY_SOURCE_POLICY_PROFILE_SQL)
+    assert 'CAPACITY_SOURCE_POLICY_REQUIRED' in native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL+
+        CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL+CAPACITY_SIGNING_PERMIT_PROFILE_SQL+CAPACITY_SOURCE_POLICY_PROFILE_SQL+
+        'SELECT aos_capacity_publication_private.read_source_policy('+literal+');',False)
+
+
+def test_native_source_policy_private_catalog(native_profile_runner):
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL,CAPACITY_SIGNING_PERMIT_PROFILE_SQL,CAPACITY_SOURCE_POLICY_PROFILE_SQL)
+    assert native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL+CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL+
+        CAPACITY_SIGNING_PERMIT_PROFILE_SQL+CAPACITY_SOURCE_POLICY_PROFILE_SQL+"""
+        SELECT p.prosecdef,p.provolatile,p.proisstrict,p.proconfig::text,
+          (SELECT count(*) FROM aclexplode(p.proacl) WHERE grantee=0)
+        FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+        WHERE n.nspname='aos_capacity_publication_private' AND p.proname='read_source_policy';
+        """)== 'f|i|f|{search_path=pg_catalog}|0'
+
+
+def test_native_source_policy_original_integer_limit(native_profile_runner):
+    from aos_api.aip_provider_capacity_source_contracts import ProviderCapacitySourcePolicy
+    from aos_api.aip_provider_capacity_publication_contracts import parse_signed_capacity_body
+    payload=ProviderCapacitySourcePolicy.model_validate(source_policy()).model_dump(mode='json',by_alias=True)
+    original=canonical_json(payload)
+    for field in ['revision','maxObservationAgeSeconds','maxFutureSkewSeconds']:
+        old=('"'+field+'":'+str(payload[field])).encode()
+        raw=original.replace(old,('"'+field+'":'+'9'*4301).encode())
+        with pytest.raises(ValueError):parse_signed_capacity_body(raw,ProviderCapacitySourcePolicy)
+        assert 'CAPACITY_SOURCE_POLICY_REQUIRED' in _native_source_policy(native_profile_runner,raw,False)

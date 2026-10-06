@@ -573,3 +573,77 @@ CAPACITY_APPROVED_ALLOCATION_ROW_SQL = _CAPACITY_APPROVED_ROW_SQL + r"""
   AND p.payload=pg_catalog.jsonb_build_object('requestId',%(request_id)s::text,
                                             'requestHash',%(request_hash)s::text)
 """
+
+# S17 complete policy shape only. Independent roots, signatures, current
+# authority and deployment matching must be checked by the publication path.
+CAPACITY_SOURCE_POLICY_PROFILE_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.read_source_policy(p_raw bytea)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER
+SET search_path = pg_catalog AS $body$
+DECLARE
+  document jsonb;
+  field text;
+  modes jsonb;
+  starts_at timestamptz;
+  ends_at timestamptz;
+BEGIN
+  document := aos_capacity_publication_private.read_signed_body(p_raw);
+  IF document IS NULL OR pg_catalog.jsonb_typeof(document) IS DISTINCT FROM 'object'
+      OR NOT (document ?& ARRAY['schemaVersion','tenant','assetId','revision','publisher',
+        'keyId','supplierId','validFrom','validUntil','purpose','attestationPublisher',
+        'attestationKeyId','attestationRootRevision','maxObservationAgeSeconds',
+        'maxFutureSkewSeconds','allowedTokenModes','deploymentTarget'])
+      OR (SELECT count(*) FROM pg_catalog.jsonb_object_keys(document)) <> 17 THEN
+    RAISE EXCEPTION 'CAPACITY_SOURCE_POLICY_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  IF document->'tenant' IS DISTINCT FROM '{"orgId":"org-org","projectId":"dev-project"}'::jsonb
+      OR document->'schemaVersion' IS DISTINCT FROM '1'::jsonb
+      OR document->'publisher' IS DISTINCT FROM '"aos-capacity-source-policy"'::jsonb
+      OR document->'purpose' IS DISTINCT FROM '"provider_capacity_source"'::jsonb
+      OR pg_catalog.jsonb_typeof(document->'revision') IS DISTINCT FROM 'number'
+      OR (document->>'revision') COLLATE "C" !~ '^[1-9][0-9]*$'
+      OR pg_catalog.length(document->>'revision') > 4300
+      OR pg_catalog.jsonb_typeof(document->'attestationRootRevision') IS DISTINCT FROM 'string'
+      OR (document->>'attestationRootRevision') COLLATE "C" !~ '^sha256:[0-9a-f]{64}$' THEN
+    RAISE EXCEPTION 'CAPACITY_SOURCE_POLICY_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  FOREACH field IN ARRAY ARRAY['assetId','publisher','keyId','supplierId','attestationPublisher','attestationKeyId'] LOOP
+    PERFORM aos_capacity_publication_private.read_identifier(document->field);
+  END LOOP;
+  IF pg_catalog.jsonb_typeof(document->'maxObservationAgeSeconds') IS DISTINCT FROM 'number'
+      OR (document->>'maxObservationAgeSeconds') COLLATE "C" !~ '^[1-9][0-9]*$'
+      OR pg_catalog.length(document->>'maxObservationAgeSeconds') > 5
+      OR pg_catalog.jsonb_typeof(document->'maxFutureSkewSeconds') IS DISTINCT FROM 'number'
+      OR (document->>'maxFutureSkewSeconds') COLLATE "C" !~ '^(0|[1-9][0-9]*)$'
+      OR pg_catalog.length(document->>'maxFutureSkewSeconds') > 2 THEN
+    RAISE EXCEPTION 'CAPACITY_SOURCE_POLICY_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  IF (document->>'maxObservationAgeSeconds')::integer NOT BETWEEN 1 AND 86400
+      OR (document->>'maxFutureSkewSeconds')::integer NOT BETWEEN 0 AND 60 THEN
+    RAISE EXCEPTION 'CAPACITY_SOURCE_POLICY_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  modes := document->'allowedTokenModes';
+  IF pg_catalog.jsonb_typeof(modes) IS DISTINCT FROM 'array' THEN
+    RAISE EXCEPTION 'CAPACITY_SOURCE_POLICY_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  IF pg_catalog.jsonb_array_length(modes) NOT BETWEEN 1 AND 2
+      OR EXISTS (SELECT 1 FROM pg_catalog.jsonb_array_elements(modes) AS refs(value)
+        WHERE value NOT IN ('"inflight_upper_bound"'::jsonb,'"fixed_window_rate"'::jsonb))
+      OR (SELECT count(DISTINCT value) FROM pg_catalog.jsonb_array_elements(modes))
+          <> pg_catalog.jsonb_array_length(modes) THEN
+    RAISE EXCEPTION 'CAPACITY_SOURCE_POLICY_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  PERFORM aos_capacity_publication_private.read_deployment_target(pg_catalog.convert_to(
+      aos_capacity_publication_private.canonical_signed_json((document->'deploymentTarget')::json,1),'UTF8'));
+  starts_at := aos_capacity_publication_private.read_signed_time(document->'validFrom');
+  ends_at := aos_capacity_publication_private.read_signed_time(document->'validUntil');
+  IF ends_at <= starts_at OR extract(epoch FROM ends_at-starts_at) > 31622400 THEN
+    RAISE EXCEPTION 'CAPACITY_SOURCE_POLICY_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  RETURN document;
+EXCEPTION WHEN OTHERS THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_POLICY_REQUIRED' USING ERRCODE='22023';
+END
+$body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_source_policy(bytea) FROM PUBLIC;
+"""

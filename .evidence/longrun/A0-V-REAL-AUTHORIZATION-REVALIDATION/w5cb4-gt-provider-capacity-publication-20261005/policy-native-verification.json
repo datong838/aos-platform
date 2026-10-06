@@ -1,0 +1,25 @@
+{
+  "authority_cutoff": "AOS-001400",
+  "code_base": "79228309eb47baee99046589348f5a9b2c37f06a",
+  "task": "gt-provider-capacity-publication-schema-20261005",
+  "red": "Missing native policy constant: 1 failed / 6.46s",
+  "initial_green": "27 passed / 8.65s",
+  "green": "32 passed / 8.89s",
+  "adjacent": "350 passed, 7 existing warnings / 26.92s",
+  "review": "Complete 17-field original policy contract and canonical raw-byte profile. Reuses original identifier/time/deployment functions. Closed modes and strict bounded numbers. NonSTRICT explicitly denies SQL NULL. Fixed pg_catalog search_path, INVOKER, IMMUTABLE, PUBLIC revoked verified by native catalog. No runtime path, persistent migration, grant, current database or external effect.",
+  "limits": [
+    "Shape parser only: no trusted root/permit registration, cryptographic signature or current authorization",
+    "Pure functions created inside isolated test transaction then rolled back; not installed in authoritative database",
+    "No complete S01-S20/native signed Source COMMIT/consumer or natural first chain",
+    "Original publication Task ACTIVE; no full Task Delivery"
+  ],
+  "sources": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "8356bada2c13eef9a7260de93ffab68f3229dead6b6c5b83ffe3b3f4c21413de",
+    "services/aos-api/tests/aip/test_provider_capacity_publication_pg.py": "5ce31cbeff05ef276fc7968d2324a4e22146456ec5686246de04dff5fefc4351",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/policy-native-plan.md": "cb15a82d83733cacd69d68528802c6efeb3d5dd12e63acc69ec8d10cb1a3d3b9",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/policy-native-red.log": "39c93c65fae81edc75d18645e1422c98b638abb5979960e5d0a4c1eab9b5f6b8",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/policy-native-green.log": "2b095a98d83a452764b75412608e1516668eb7ed43e81fabe3fa5e0b0dc01ced",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/policy-native-green-r2.log": "c9faaf28ebdde8b79addc3a019dfb5c0d7a5c4b1fd65bc171868da8e4c6b680d",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/policy-native-adjacent.log": "0e092fcc6c57b7131ae0c864e9725d94b714a2e136218a8fac9d3f6dcccb43a7"
+  }
+}
