@@ -1,0 +1,7 @@
+{
+  "database": "aos_test_rootcommit_9ff6e0ee1bfb",
+  "read_only": true,
+  "audit": "0|0|0|0|none",
+  "registration_committed": false,
+  "pre_edit_script_error": "UTF8 source decoding; no edits before interrupted pytest"
+}

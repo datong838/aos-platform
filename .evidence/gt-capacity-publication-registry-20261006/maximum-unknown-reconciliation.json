@@ -1,0 +1,7 @@
+{
+  "database": "aos_test_rootcommit_6011122f67ff",
+  "read_only": true,
+  "post_recovery": "0|0|0|0|none",
+  "registration_committed": false,
+  "authorization": "test-only administrative fixture; no unknown resend"
+}

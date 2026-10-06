@@ -132,12 +132,13 @@ def install_registry_schema(execute):
 ORIGIN_REGISTRATION_SQL = r"""
 CREATE FUNCTION aos_capacity_publication_private.register_origin(
  p_body bytea,p_signature bytea,p_roots bytea)
-RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $body$
+RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog
+ SET work_mem='4MB' AS $body$
 DECLARE
  doc jsonb;
  anchor aos_capacity_publication_private.deployment_anchor%ROWTYPE;
  fence aos_capacity_publication_private.registry_epoch%ROWTYPE;
- roots aos_capacity_publication_private.root_entry[];
+ replay_valid boolean;
  snapshot_id text;
  origin_id text;
  observed_oid oid;
@@ -199,40 +200,58 @@ BEGIN
  IF aos_ed25519.verify(p_signature,p_body,anchor.signer_public_key) IS DISTINCT FROM true THEN
    RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
  END IF;
- SELECT array_agg(ROW('org-org','dev-project',snapshot_id,
-   r.root_ordinal,r.publisher_literal,r.key_id_literal,r.publisher_codepoints,r.key_id_codepoints,
-   r.public_key,r.root_revision,r.not_before,r.not_after,r.revoked_at,r.canonical_root)
-     ::aos_capacity_publication_private.root_entry ORDER BY r.root_ordinal)
- INTO roots FROM aos_capacity_publication_private.read_root_snapshot(p_roots) r;
- root_total := coalesce(array_length(roots,1),0);
- -- A fresh pre-write check is not a final-COMMIT TTL guarantee.
- IF clock_timestamp()>=aos_capacity_publication_private.read_signed_time(doc->'validUntil') THEN
-   RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
- END IF;
+ -- The single materialized parse can spill to disk instead of retaining a
+ -- composite array and its expanded copies in backend memory.
  IF fence.head_origin_hash IS NOT NULL THEN
-   IF fence.epoch=1 AND fence.head_origin_hash=origin_id AND EXISTS(
+   IF fence.epoch<>1 OR fence.head_origin_hash<>origin_id THEN
+     RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
+   END IF;
+   WITH roots AS MATERIALIZED (
+     SELECT 'org-org'::text AS org_id,'dev-project'::text AS project_id,snapshot_id AS snapshot_hash,r.*
+       FROM aos_capacity_publication_private.read_root_snapshot(p_roots) r)
+   SELECT EXISTS(
      SELECT 1 FROM aos_capacity_publication_private.origin o
      JOIN aos_capacity_publication_private.root_snapshot s USING(org_id,project_id,snapshot_hash)
      WHERE o.org_id='org-org' AND o.project_id='dev-project' AND o.content_hash=origin_id
        AND o.raw_body=p_body AND o.signature=p_signature AND o.anchor_revision=anchor.anchor_revision
-       AND s.raw_body=p_roots AND s.root_count=root_total)
+       AND s.snapshot_hash=snapshot_id AND s.raw_body=p_roots AND s.root_count=(SELECT count(*) FROM roots))
      AND (SELECT count(*) FROM aos_capacity_publication_private.root_entry
-       WHERE org_id='org-org' AND project_id='dev-project' AND snapshot_hash=snapshot_id)=root_total
+       WHERE org_id='org-org' AND project_id='dev-project' AND snapshot_hash=snapshot_id)=(SELECT count(*) FROM roots)
      AND NOT EXISTS(SELECT * FROM aos_capacity_publication_private.root_entry
        WHERE org_id='org-org' AND project_id='dev-project' AND snapshot_hash=snapshot_id
-       EXCEPT SELECT * FROM unnest(roots)) THEN
-     RETURN origin_id;
+       EXCEPT SELECT * FROM roots)
+   INTO replay_valid;
+   IF replay_valid IS DISTINCT FROM true
+     OR clock_timestamp()>=aos_capacity_publication_private.read_signed_time(doc->'validUntil') THEN
+     RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
    END IF;
-   RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
+   RETURN origin_id;
  END IF;
  IF fence.epoch<>0 THEN
    RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
  END IF;
- INSERT INTO aos_capacity_publication_private.root_snapshot VALUES('org-org','dev-project',snapshot_id,p_roots,root_total);
- INSERT INTO aos_capacity_publication_private.origin VALUES('org-org','dev-project',origin_id,p_body,p_signature,anchor.anchor_revision,snapshot_id);
- INSERT INTO aos_capacity_publication_private.root_entry SELECT * FROM unnest(roots);
+ WITH roots AS MATERIALIZED (
+   SELECT * FROM aos_capacity_publication_private.read_root_snapshot(p_roots)),
+ snapshot_insert AS (
+   INSERT INTO aos_capacity_publication_private.root_snapshot
+     SELECT 'org-org','dev-project',snapshot_id,p_roots,count(*) FROM roots
+     RETURNING org_id,project_id,snapshot_hash),
+ origin_insert AS (
+   INSERT INTO aos_capacity_publication_private.origin
+     SELECT org_id,project_id,origin_id,p_body,p_signature,anchor.anchor_revision,snapshot_hash FROM snapshot_insert
+     RETURNING org_id,project_id,snapshot_hash),
+ root_insert AS (
+   INSERT INTO aos_capacity_publication_private.root_entry
+     SELECT o.org_id,o.project_id,o.snapshot_hash,r.* FROM roots r CROSS JOIN origin_insert o
+     RETURNING root_ordinal)
+ SELECT count(*) INTO root_total FROM root_insert;
  UPDATE aos_capacity_publication_private.registry_epoch SET epoch=1,head_origin_hash=origin_id
    WHERE org_id='org-org' AND project_id='dev-project';
+ -- A fresh return-time check rolls back expired writes, but is not a
+ -- final-COMMIT TTL guarantee.
+ IF clock_timestamp()>=aos_capacity_publication_private.read_signed_time(doc->'validUntil') THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGIN_REGISTRATION_DENIED' USING ERRCODE='42501';
+ END IF;
  RETURN origin_id;
 END
 $body$;

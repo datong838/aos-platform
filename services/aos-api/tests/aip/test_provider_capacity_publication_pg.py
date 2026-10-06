@@ -1419,7 +1419,8 @@ def _native_root_snapshot_count(runner, raw, success=True, limit=False):
     'offset-fraction-zero', 'offset-zero-seconds', 'offset-negative-zero', 'offset-subsecond-utc',
     'equal-window', 'reverse-window', 'revocation-invalid', 'duplicates', 'descending', 'late-invalid',
     'spacing', 'duplicate-field', 'top-extra', 'top-duplicate', 'array-shape', 'root-shape', 'non-ascii',
-    'root-field-order', 'escaped-ascii', 'null'])
+    'root-field-order', 'escaped-ascii', 'null', 'array-leading-space', 'separator-space',
+    'array-trailing-space', 'empty-array-space'])
 def test_native_full_root_snapshot_single_fault_rejected(native_profile_runner, fault):
     root = _root_snapshot_fixture_row()
     roots = [root]
@@ -1470,6 +1471,12 @@ def test_native_full_root_snapshot_single_fault_rejected(native_profile_runner, 
     elif fault == 'root-field-order': raw = raw.replace(b'"algorithm":"Ed25519","keyId":"key-0"', b'"keyId":"key-0","algorithm":"Ed25519"')
     elif fault == 'escaped-ascii': raw = raw.replace(b'"key-0"', br'"\u006bey-0"')
     elif fault == 'null': raw = None
+    elif fault == 'array-leading-space': raw = raw.replace(b'[{', b'[ {', 1)
+    elif fault == 'separator-space':
+        raw = json.dumps(dict(trustRoots=[root, _root_snapshot_fixture_row('z')]),
+            sort_keys=True, separators=(',', ':')).encode('ascii').replace(b'},{', b'}, {', 1)
+    elif fault == 'array-trailing-space': raw = raw[:-2] + b' ]}'
+    elif fault == 'empty-array-space': raw = b'{"trustRoots":[ ]}'
     assert 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' in _native_root_snapshot_count(native_profile_runner, raw,
         False, limit=fault=='late-invalid')
 

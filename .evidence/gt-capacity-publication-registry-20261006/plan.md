@@ -43,3 +43,27 @@ R1a verifier owner前提纠正：原生catalog实测verify与schema均归既有�
 R1a复审补门：known-head重复登记必须对账全部保存root行（count与全列EXCEPT），不是仅body/snapshot hash；增加受控管理员在fixture中TRUNCATE根行后同签名重查的拒绝反例。PUB不能TRUNCATE，该fixture仅模拟外部存储漂移。整体协议不授Source执行权限；后续最大域资源/提交竞争仍需验收。
 
 R1a验收：原入口缺失RED1/5.91s；native首轮fixture未分号9fail保留，随后OID→numeric不可直接cast7fail改text::numeric；原crypto owner错误superuser前提2fail经实际catalog改为独立NOLOGIN aos_ed25519_owner。真实专项21/11.80s；相邻119/149.99s；复审补全已保存root rows对账、8MiB入口上界和pre-write时效后最终专项24/13.65s，7既有warning。两版专项及相邻验证范围分别记录；无finalCOMMIT时效保证。正式anchor安装/OIDC-SCRAM登录配置、最大域资源/实际提交与撤回竞争及Source完整发布仍pending，Task ACTIVE，无完整Delivery。
+
+## R2a真实事务与固定epoch竞争验收
+
+当前AOS-001410/bdec57b2，原Task同owner/四scope未变，Lease到7日12:00；其余5未释放lease不夺不删除。本轮精确文件：services/aos-api/tests/aip/test_capacity_publication_registry_pg.py及本证据目录。两个已登记候选：R2实际COMMIT/rollback/replay/currentness竞争（本轮），最大10000/8MiB资源域（后继）；不因正式安装尚未授权阻断此隔离验收。
+
+固定colima-aos-a0v-test-only、none-network256MiB既有C镜像/label实例，只从无root schema的aos_test_ed25519模板创建随机aos_test_rootcommit_<uuid>库，Admin只在独立新库安装受控test-only anchor/epoch并COMMIT；原模板不改，新库和新域NOLOGIN角色保留供证据复查，不删除库/卷/backup，不对未知结果重发。Node不承诺实际publisher SCRAM/OIDC；SET SESSION AUTHORIZATION fixture只用于真实SQL session/角色协议，正式安装身份仍后继。
+
+一例真实register返回后ROLLBACK，独立新连接核snapshot/origin/root行全零和epoch0/headNULL；随后真实register COMMIT，第三连接核全原文/hash/签名/所有根与epoch1/head一致，已知重复请求只对账不推进。两个psql会话保持打开并可查pg_stat_activity/pids，使用真实pg_blocking_pids证明固定registry_epoch锁：registrar-first时test-only管理员UPDATE epoch被阻，registrar提交后管理员提交epoch2；writer-first时管理员UPDATE epoch未提交，registrar被阻，writer提交后registrar拒旧签名。最后独立连接核原文仍保留、epoch2，旧原文不能再登记。
+
+管理员epoch UPDATE只是模拟固定新域的失效事件，不代表正式signed root撤回API或批准。此次可证明SQL事务持久化/原文回滚与真实行锁协调，不证明final-COMMIT TTL（允许提前检查后延迟提交的旧缺口）、受控安装身份、最大域资源、完整Source/八工作台或自然首链。测试进程读取stdout/pid超时先同句柄对账；不在超时后另起相同副作用或自动重试。无页面变更不做浏览器验收。
+
+## R2b完整签名最大transport资源域
+
+仍同Task四scope，本轮测试fixture返回仅内存临时签名key给测试，不写日志或提交；新随机测试库中以真实签名bootstrap批准8190016byte/10000根纯canonical transport（明确非1MiB原File证据），保持原256MiB image，不增内存/截根。32KiB COPY hexparts→独立TEMP bytea→整sha256对照→一次完整注册；只给PUB临时输入表读取，不改永久root ACL。单次测试statement_timeout/客户端timeout90秒仅作为此大域实验预算，不改产品/全局配置。结束实际COMMIT/独立count/rawhash/epoch核对，失败保留库与原文、只读对账不重发未知效果；不得把小输入通过推及完整10000/8MiB域。若资源错误才做最小实现修复，复验同域及相邻；实际原File1200 expanded证据另门，不混称出处。
+
+## R2b累计资源RED与最小修复方案
+
+累计489中484pass/5fail：最大登记连接中断，随后4项crypto/profile测试命中恢复期；实际C cgroup memory.events oom=1/oom_kill=1，memory固定268435456，非disk再满。未知最大登记库先只读对账：origin/snapshot/root=0、epoch0/headNULL，明确未提交，不重发。原单项1/24.85s通过不能宣称累计稳定。
+
+根因代码保留全量composite[] array_agg再unnest，不能spill，重复内存放大。最小修改仅私有register_origin：替换为一次完整root解析的MATERIALIZED CTE（tuplestore可spill），依赖RETURNING的snapshot→origin→root三个原文INSERT保持全事务原子；known replay同一次MATERIALIZED cache完整count/EXCEPT对账，不再构建array。函数局部work_mem固定4MB（非全局，不增容器RAM/不截根/不改接受域）；派生写完返回前再核窗口，过期异常回滚全部，本检查仍不是final COMMIT TTL保证。实际同10000/8190016完整域+既有28专项/原publication累计复验，所有失败保留，后续不把test-only成正式Source授权。
+
+R2b修复累计仍RED482/489，oom_kill由1到2；未知库5ebb4d180a0c只读确认0/0/0/epoch0，仍未提交。停止通过次数推断；下一步只在新独立test DB诊断同域backend内存上下文和cgroup anon/shmem，观察本身只读，不重放原请求。原私有parser仍复用，正式DB不触及。
+
+R2b final review: complete byte cursor + materialized registry parse verified in cumulative493/127.08s with7 pre-existing warnings. True10000/8190016 COMMIT retained in5300adc5a81c and independent hash/count/epoch proof; rollback/replay and both real epoch session blocking orders green. Fixed256MiB; oom4/kill3 unchanged through final suite. All previous failures/interrupted runs and read-only uncommitted reconciliations preserved. Source fields/function ACL/tenant gates unchanged. No full Root/Source Delivery: formal installation/SCRAM/signed withdrawal/final-COMMIT TTL/consumer still pending.

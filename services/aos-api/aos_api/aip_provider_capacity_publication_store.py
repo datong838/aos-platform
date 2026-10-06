@@ -891,8 +891,8 @@ LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path = pg_catalog AS $bod
 DECLARE
   document text;
   array_document json;
-  joined_rows text;
   row_count bigint;
+  row_cursor integer := 16;
   original record;
   row_text text;
   pieces text[];
@@ -912,17 +912,24 @@ BEGIN
   END IF;
   -- Object JSON functions decode surrogate literals. Keep each array row opaque.
   array_document := pg_catalog.substr(document,15,pg_catalog.length(document)-15)::json;
-  SELECT count(*),COALESCE(pg_catalog.string_agg(value::text,',' ORDER BY ordinality),'')
-    INTO row_count,joined_rows FROM pg_catalog.json_array_elements(array_document) WITH ORDINALITY;
-  IF row_count > 10000 OR document <> '{"trustRoots":['||joined_rows||']}' THEN
-    RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
-  END IF;
   root_pattern := '^\{"algorithm":"Ed25519","keyId":('||literal_pattern||
     '),"notAfter":('||literal_pattern||'),"notBefore":('||literal_pattern||
     '),"publicKey":"([A-Za-z0-9+/]{43}=)","publisher":('||literal_pattern||
     '),"revision":"(sha256:[0-9a-f]{64})","revokedAt":(null|'||literal_pattern||')\}$';
   FOR original IN SELECT value,ordinality FROM pg_catalog.json_array_elements(array_document) WITH ORDINALITY LOOP
+    row_count := original.ordinality;
     row_text := original.value::text;
+    -- Compare each untouched row and separator directly to the original bytes.
+    -- Reject canonical whitespace drift without joining full document copies.
+    IF row_count > 10000 OR pg_catalog.substr(p_message,row_cursor,pg_catalog.octet_length(row_text)) <> pg_catalog.convert_to(row_text,'UTF8') THEN
+      RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
+    END IF;
+    row_cursor := row_cursor + pg_catalog.octet_length(row_text);
+    IF pg_catalog.substr(p_message,row_cursor,1) = pg_catalog.decode('2c','hex') THEN
+      row_cursor := row_cursor + 1;
+    ELSIF pg_catalog.substr(p_message,row_cursor,1) <> pg_catalog.decode('5d','hex') THEN
+      RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
+    END IF;
     pieces := pg_catalog.regexp_match(row_text,root_pattern,'c');
     IF pieces IS NULL THEN
       RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
@@ -953,6 +960,9 @@ BEGIN
     canonical_root := pg_catalog.convert_to(row_text,'UTF8');
     RETURN NEXT;
   END LOOP;
+  IF pg_catalog.substr(p_message,row_cursor) <> pg_catalog.decode('5d7d','hex') THEN
+    RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
+  END IF;
   -- PL/pgSQL materializes the set: later rejection cannot expose a partial set.
 EXCEPTION WHEN OTHERS THEN
   RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
