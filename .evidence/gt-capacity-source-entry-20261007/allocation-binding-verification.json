@@ -1,0 +1,56 @@
+{
+  "baseline": "AOS-001421/m1@50bb68fb",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "task": "gt-capacity-source-entry-20261007",
+  "status": "ALLOCATION_BINDING_REPAIR_GREEN_FULL_SOURCE_INCOMPLETE",
+  "red": {
+    "failed": 1,
+    "seconds": 7.17,
+    "observed": "Coherent wrong binding row accepted despite independent draft/proposal/event/ref hash recomputation"
+  },
+  "target": {
+    "passed": 1,
+    "seconds": 6.95
+  },
+  "adjacent": {
+    "passed": 167,
+    "known_missing_entry_deselected": 5,
+    "skipped": 0,
+    "warnings": 8,
+    "seconds": 312.12
+  },
+  "domain_addition_after_adjacent": {
+    "passed": 4,
+    "seconds": 12.16,
+    "scope": "Three original runtime request INSERT/CHECK + independent original approval Unicode/quote/backslash/combining positives, plus coherentwrong negative/rollback positive; implementation unchanged after adjacent"
+  },
+  "full_entry_red": {
+    "failed": 5,
+    "seconds": 13.28,
+    "sqlstate": "42883",
+    "status": "Native prepare missing, downstream sign/COMMIT/persistence still unexercised"
+  },
+  "self_review": [
+    "Exact original requestId/requestHash/actionTypeRevisionHash three-string canonical formula, original public canonical and SHA256, no new locks/grants/DDL.",
+    "Original whole Guard retained; direct snapshot alone cannot authorize Source or execution.",
+    "Coherent wrong fixture data isolated admin SAVEPOINT, replication origin restored before Owner read, all corruption rolled back.",
+    "Special-character positives use granted original runtime INSERT and independent original maker/checker approval, not forged approvals.",
+    "No exhaustive all-string or typed Source binding equivalence claim; complete157/controlled signer/consumer/native final COMMIT TTL pending.",
+    "No front-end change; browser acceptance not applicable to SQL read slice.",
+    "Final test file contains three accepted-domain cases added after 167 adjacent; those additions executed in four-case target with unchanged final implementation.",
+    "Supervisor AIS-013 remains supervisor-owned; read-only reports/findings consumed, root does not set closure status."
+  ],
+  "sha256": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "dae18dad3ea9cefb2fa810a9e373ea133bd075ff4d92c57657ebc7f7dcb5bd17",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "771aca8236fde528d4d5d8920281b58e164dffda8f30c5255be129a93a5c6935",
+    ".evidence/gt-capacity-source-publication-20261006/allocation-binding-red-r1.log": "589ffe04814e3d0dec3743a71b59ad41e5092f9f454edfdf168230042e39df63",
+    ".evidence/gt-capacity-source-publication-20261006/allocation-binding-green-r1.log": "5adb5ab900e84a9810e3d676e74b125a764bc21d80f720b4d80536cce9759726",
+    ".evidence/gt-capacity-source-publication-20261006/allocation-binding-adjacent-r1.log": "5297b0f1bc4b0911fb667910086e2df88406b87541c461da2ff2fa6b83e594fd",
+    ".evidence/gt-capacity-source-publication-20261006/allocation-binding-domain-r1.log": "77a897c6fc6864eb86ad51027dc8420960ad35f18516e01f35e64bb026fdb8c6",
+    ".evidence/gt-capacity-source-publication-20261006/allocation-binding-entry-red-r1.log": "0f6f3d4846c743cd11a083ff39c30af4dc5926f490435084c4d894770c33792b",
+    ".evidence/gt-capacity-source-entry-20261007/allocation-binding-native-audit.json": "203d9fe0a75c5a0dd44619bdfd349dbe13f6d3a95241d6030b1150eaf8b683b3"
+  },
+  "formal_database_accessed": false,
+  "source_published": false,
+  "parent_delivery": false
+}

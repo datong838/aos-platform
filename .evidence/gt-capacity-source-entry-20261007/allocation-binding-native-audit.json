@@ -1,0 +1,52 @@
+{
+  "database": "aos_test_0befe61fbe47_ti4_test",
+  "read_only": true,
+  "formal_database_accessed": false,
+  "head": "a0v_156",
+  "roles": [
+    {
+      "rolname": "aos_capacity_publication_owner",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_provider_capacity_issuer",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_provider_capacity_policy_publisher",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    }
+  ],
+  "original_three_catalog_boundaries": "PASS",
+  "entrypoints": {
+    "prepare": false,
+    "commit": false
+  },
+  "epoch_access": {
+    "evidence_lock": true,
+    "withdrawal_lock": true,
+    "withdrawal_table": false,
+    "evidence_table": false
+  },
+  "temporary_harness_count": 0,
+  "source_published": false,
+  "full_source_acceptance": "INCOMPLETE"
+}

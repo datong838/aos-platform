@@ -486,3 +486,105 @@ def test_original_approval_sql_rechecks_native_approval_facts_without_client_gua
             params['approval_event_hash']=original_event_hash
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         assert owner.execute(statement,params).fetchone() is not None
+
+
+def test_native_allocation_binding_rejects_coherent_wrong_hash(native_signed_source):
+    """Matching hashes do not replace the original three-field calculation."""
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_provider_capacity_source_issuer import authenticate_capacity_issuance_command
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_APPROVED_ALLOCATION_ROW_SQL,CAPACITY_APPROVAL_EVENT_PROJECTION_SQL)
+    _,actual_command,_,source,_=native_signed_source
+    command,_,_=actual_command()
+    params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,
+        maker=authenticate_capacity_issuance_command(command).subject,
+        request_id=source.allocation_request_ref.asset_id,
+        request_hash=source.allocation_request_ref.content_hash,
+        approval_event_id=source.allocation_approval_ref.asset_id,
+        approval_event_hash=source.allocation_approval_ref.content_hash)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute("SET LOCAL TimeZone='UTC'")
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        original=owner.execute(CAPACITY_APPROVED_ALLOCATION_ROW_SQL,params).fetchone()
+        assert original is not None
+        expected=canonical_hash(dict(requestId=params['request_id'],requestHash=params['request_hash'],
+            actionTypeRevisionHash=original['action_type_snapshot']['revisionHash']))
+        assert original['action_binding_hash']==expected
+        owner.execute('RESET ROLE')
+        original_event_hash=params['approval_event_hash']
+        owner.execute('SAVEPOINT coherent_binding_fault')
+        try:
+            snapshot=owner.execute('SELECT snapshot FROM public.aip_action_draft WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+                (*SCOPE.key,original['proposal_id'])).fetchone()['snapshot']
+            wrong='a'*64 if expected!='a'*64 else 'b'*64
+            snapshot['actionBindingHash']=wrong
+            changed_proposal_hash=canonical_hash(snapshot)
+            # Isolated test-admin historical corruption only, rolled back.
+            # Every dependent stored hash is updated to stay coherent.
+            owner.execute("SET LOCAL session_replication_role='replica'")
+            owner.execute('UPDATE public.aip_action_draft SET snapshot=%s WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+                (Jsonb(snapshot),*SCOPE.key,original['proposal_id']))
+            owner.execute('UPDATE public.aip_action_proposal SET action_binding_hash=%s,proposal_hash=%s '
+                'WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+                (wrong,changed_proposal_hash,*SCOPE.key,original['proposal_id']))
+            owner.execute('UPDATE public.aip_action_approval_event SET action_binding_hash=%s,proposal_hash=%s '
+                'WHERE org_id=%s AND project_id=%s AND approval_event_id=%s',
+                (wrong,changed_proposal_hash,*SCOPE.key,params['approval_event_id']))
+            owner.execute("SET LOCAL session_replication_role='origin'")
+            params['approval_event_hash']=owner.execute(CAPACITY_APPROVAL_EVENT_PROJECTION_SQL,params).fetchone()['hash']
+            assert params['approval_event_hash']!=original_event_hash
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            assert owner.execute(CAPACITY_APPROVED_ALLOCATION_ROW_SQL,params).fetchone() is None, (
+                'Native allocation must recompute original binding even when all stored hashes agree')
+        finally:
+            owner.execute('ROLLBACK TO SAVEPOINT coherent_binding_fault')
+            params['approval_event_hash']=original_event_hash
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        assert owner.execute(CAPACITY_APPROVED_ALLOCATION_ROW_SQL,params).fetchone() is not None
+
+
+@pytest.mark.parametrize('identifier_prefix',['申请-中文-🧭','request-\'"\\-escape','e\u0301-组合-ß'])
+def test_native_allocation_binding_preserves_original_unicode_acceptance(native_signed_source,approved_command,identifier_prefix):
+    from uuid import uuid4
+    from aos_api.db import connect_serializable
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_action_models import DecideActionProposalRequest
+    from aos_api.aip_provider_capacity_action import (
+        propose_provider_capacity_request,decide_provider_capacity_request)
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_APPROVED_ALLOCATION_ROW_SQL
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    maker,checker=approved_command[:2]
+    source=native_signed_source[3]
+    request_id=identifier_prefix+'-'+uuid4().hex
+    # Use the actual original runtime INSERT right and immutable application's
+    # checks; only the new request identifier/idempotency key differ.
+    with connect_serializable(SCOPE) as runtime:
+        row=runtime.execute('INSERT INTO public.aip_provider_capacity_request '
+            '(org_id,project_id,request_id,idempotency_key,request_hash,request_json,created_by,expires_at,created_at) '
+            'SELECT org_id,project_id,%s,%s,request_hash,request_json,created_by,expires_at,created_at '
+            'FROM public.aip_provider_capacity_request WHERE org_id=%s AND project_id=%s AND request_id=%s '
+            'RETURNING request_hash,expires_at',
+            (request_id,'unicode-request-'+uuid4().hex,*SCOPE.key,source.allocation_request_ref.asset_id)).fetchone()
+        assert row is not None
+        runtime.commit()
+    proposal=propose_provider_capacity_request(maker,request_id,'unicode-proposal-'+uuid4().hex,row['expires_at'])
+    approved=decide_provider_capacity_request(checker,proposal.proposal.id,'unicode-checker-'+uuid4().hex,
+        DecideActionProposalRequest(expectedProposalVersion=proposal.proposal.version,
+            expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',
+            reason='original unicode binding acceptance',approvalExpiresAt=row['expires_at']))
+    assert approved.proposal.status.value=='approved'
+    event=approved.approvals[0]
+    params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,maker=maker.subject,
+        request_id=request_id,request_hash=row['request_hash'],approval_event_id=event.id,
+        approval_event_hash=canonical_hash(event.model_dump(mode='json',by_alias=True)))
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute("SET LOCAL TimeZone='UTC'")
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        matched=owner.execute(CAPACITY_APPROVED_ALLOCATION_ROW_SQL,params).fetchone()
+        assert matched is not None
+        assert matched['action_binding_hash']==canonical_hash(dict(requestId=request_id,
+            requestHash=row['request_hash'],actionTypeRevisionHash=matched['action_type_snapshot']['revisionHash']))

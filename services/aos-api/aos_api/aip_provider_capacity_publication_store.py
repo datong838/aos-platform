@@ -716,6 +716,10 @@ CAPACITY_APPROVED_ALLOCATION_ROW_SQL = _CAPACITY_APPROVED_ROW_SQL + _original_ap
   AND p.action_type_id='aip_request_provider_capacity'
   AND p.payload=pg_catalog.jsonb_build_object('requestId',%(request_id)s::text,
                                             'requestHash',%(request_hash)s::text)
+  AND p.action_binding_hash=pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(
+    public.canonical_asset_registry_jsonb(pg_catalog.jsonb_build_object(
+      'requestId',p.payload->'requestId','requestHash',p.payload->'requestHash',
+      'actionTypeRevisionHash',p.action_type_snapshot->'revisionHash')),'UTF8')),'hex')
 """
 
 # S17 complete policy shape only. Independent roots, signatures, current
