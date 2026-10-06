@@ -1414,3 +1414,165 @@ CAPACITY_NATIVE_SOURCE_COMBINATION_SQL = (
                  WHERE value=application->'providerRef')
       AND (basis->>'maxConcurrency')::numeric<=(application->>'requestedMaxConcurrency')::numeric
 """)
+
+# Provider uses the original coercive runtime model, not strict capacity DTOs.
+CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.original_provider_string(p jsonb,maximum integer,strip boolean)
+RETURNS text LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE value text:=p#>>'{}'; trims text;
+BEGIN
+ IF jsonb_typeof(p)<>'string' OR length(value) NOT BETWEEN 1 AND maximum THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_STRING' USING ERRCODE='22023';
+ END IF;
+ IF strip THEN
+  SELECT string_agg(chr(point),'') INTO trims FROM unnest(ARRAY[9,10,11,12,13,28,29,30,31,32,133,160,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288]) point;
+  value:=btrim(value,trims);
+  IF value='' THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_STRING' USING ERRCODE='22023'; END IF;
+ END IF;
+ RETURN value;
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.original_provider_integer(p jsonb)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE value text:=p#>>'{}'; number numeric; trims text; bits bytea; exponent integer;
+ mantissa numeric; point integer; digits text;
+BEGIN
+ IF jsonb_typeof(p)='boolean' THEN RETURN CASE WHEN p='true'::jsonb THEN '1'::jsonb ELSE '0'::jsonb END;
+ ELSIF jsonb_typeof(p)='number' THEN
+  IF position('.' IN value)>0 THEN
+   -- Original JSON reader decodes decimal literals as binary64 floats.
+   -- Reconstruct their exact integer instead of rounded float text/numeric.
+   bits:=float8send(value::double precision);
+   exponent:=((get_byte(bits,0)&127)<<4)+(get_byte(bits,1)>>4);
+   IF exponent=2047 THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_INTEGER' USING ERRCODE='22023'; END IF;
+   mantissa:=(get_byte(bits,1)&15)::numeric;
+   FOR point IN 2..7 LOOP mantissa:=mantissa*256+get_byte(bits,point); END LOOP;
+   IF exponent>0 THEN mantissa:=mantissa+4503599627370496; ELSE exponent:=1; END IF;
+   IF exponent<1075 THEN
+    number:=power(2::numeric,1075-exponent);
+    IF mod(mantissa,number)<>0 THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_INTEGER' USING ERRCODE='22023'; END IF;
+    number:=mantissa/number;
+   ELSE number:=mantissa*power(2::numeric,exponent-1075); END IF;
+   IF (get_byte(bits,0)&128)<>0 THEN number:=-number; END IF;
+  ELSE number:=value::numeric; END IF;
+ ELSIF jsonb_typeof(p)='string' THEN
+  -- Rust integer parsing omits U+001C..U+001F from its whitespace set.
+  SELECT string_agg(chr(code),'') INTO trims FROM unnest(ARRAY[9,10,11,12,13,32,133,160,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288]) code;
+  value:=btrim(value,trims);
+  IF value COLLATE "C" !~ '^[+-]?[0-9](_?[0-9])*(\.0+)?$' THEN
+   RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_INTEGER' USING ERRCODE='22023';
+  END IF;
+  digits:=ltrim(split_part(replace(value,'_',''),'.',1),'+-0');
+  IF length(digits)>4300 THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_INTEGER' USING ERRCODE='22023'; END IF;
+  number:=replace(value,'_','')::numeric;
+ ELSE RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_INTEGER' USING ERRCODE='22023'; END IF;
+ IF number<>trunc(number) THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_INTEGER' USING ERRCODE='22023'; END IF;
+ RETURN to_jsonb(trunc(number));
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.original_provider_ref(p jsonb,kind text)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE v jsonb; asset_type text; asset_id text; revision jsonb; hash text;
+BEGIN
+ v:=aos_capacity_publication_private.original_claim_fields(p,'{"assetType":"asset_type","assetId":"asset_id","revision":"revision","contentHash":"content_hash"}'::jsonb);
+ asset_type:=aos_capacity_publication_private.original_provider_string(v->'assetType',80,true);
+ asset_id:=aos_capacity_publication_private.original_provider_string(v->'assetId',200,true);
+ revision:=aos_capacity_publication_private.original_provider_integer(v->'revision');
+ hash:=aos_capacity_publication_private.original_provider_string(v->'contentHash',64,false);
+ IF asset_type<>kind OR (revision#>>'{}')::numeric<1 OR hash COLLATE "C" !~ '^[0-9a-f]{64}$' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_REF' USING ERRCODE='22023';
+ END IF;
+ RETURN jsonb_build_object('assetType',asset_type,'assetId',asset_id,'revision',revision,'contentHash',hash);
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.original_provider_time(p jsonb)
+RETURNS text LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE value text:=p#>>'{}'; canonical text; naive boolean:=false;
+BEGIN
+ IF jsonb_typeof(p)='string' THEN
+  IF value COLLATE "C" ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN
+   value:=value||'T00:00:00Z';naive:=true;
+  ELSIF value COLLATE "C" ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt ][0-9]{2}:[0-9]{2}(:[0-9]{2}([.,][0-9]+)?)?$' THEN
+   value:=value||'Z';naive:=true;
+  END IF;
+ END IF;
+ SELECT t.canonical INTO canonical FROM aos_capacity_publication_private.original_source_time(
+  CASE WHEN naive THEN to_jsonb(value) ELSE p END) t;
+ RETURN CASE WHEN naive THEN left(canonical,length(canonical)-1) ELSE canonical END;
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.read_original_provider(p jsonb)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE v jsonb; tenant jsonb; endpoint jsonb; metadata jsonb; timeout jsonb; revision jsonb;
+ identifier text; hash text; secret text; version text; actor text; created text; lifecycle text;
+ plugin jsonb; egress jsonb; classification jsonb;
+BEGIN
+ v:=aos_capacity_publication_private.original_claim_fields(p,
+  '{"tenant":"tenant","providerInstanceId":"provider_instance_id","revision":"revision","contentHash":"content_hash","pluginRef":"plugin_ref","endpointProfile":"endpoint_profile","secretRef":"secret_ref","secretVersion":"secret_version","egressPolicyRef":"egress_policy_ref","dataClassificationPolicyRef":"data_classification_policy_ref","lifecycle":"lifecycle","createdBy":"created_by","createdAt":"created_at"}'::jsonb);
+ tenant:=aos_capacity_publication_private.original_claim_fields(v->'tenant','{"orgId":"org_id","projectId":"project_id"}'::jsonb);
+ IF jsonb_typeof(tenant->'orgId')<>'string' OR jsonb_typeof(tenant->'projectId')<>'string' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_TENANT' USING ERRCODE='22023';
+ END IF;
+ identifier:=aos_capacity_publication_private.original_provider_string(v->'providerInstanceId',200,false);
+ revision:=aos_capacity_publication_private.original_provider_integer(v->'revision');
+ hash:=aos_capacity_publication_private.original_provider_string(v->'contentHash',64,false);
+ IF (revision#>>'{}')::numeric<1 OR hash COLLATE "C" !~ '^[0-9a-f]{64}$' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER' USING ERRCODE='22023';
+ END IF;
+ plugin:=aos_capacity_publication_private.original_provider_ref(v->'pluginRef','ProviderPluginRevision');
+ egress:=aos_capacity_publication_private.original_provider_ref(v->'egressPolicyRef','EgressPolicyRevision');
+ classification:=aos_capacity_publication_private.original_provider_ref(v->'dataClassificationPolicyRef','DataClassificationPolicyRevision');
+ endpoint:=v->'endpointProfile';
+ IF jsonb_typeof(endpoint)<>'object' THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_ENDPOINT' USING ERRCODE='22023'; END IF;
+ IF NOT endpoint?'metadata' THEN endpoint:=endpoint||'{"metadata":{}}'::jsonb; END IF;
+ endpoint:=aos_capacity_publication_private.original_claim_fields(endpoint,'{"baseUrl":"base_url","region":"region","timeoutMs":"timeout_ms","metadata":"metadata"}'::jsonb);
+ PERFORM aos_capacity_publication_private.original_provider_string(endpoint->'baseUrl',1024,false);
+ PERFORM aos_capacity_publication_private.original_provider_string(endpoint->'region',120,false);
+ timeout:=aos_capacity_publication_private.original_provider_integer(endpoint->'timeoutMs');
+ IF (timeout#>>'{}')::numeric NOT BETWEEN 100 AND 3600000 THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_ENDPOINT' USING ERRCODE='22023';
+ END IF;
+ metadata:=endpoint->'metadata';
+ IF jsonb_typeof(metadata)<>'object' THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_ENDPOINT' USING ERRCODE='22023'; END IF;
+ IF (SELECT count(*) FROM jsonb_object_keys(metadata))>32
+  OR EXISTS(SELECT 1 FROM jsonb_each(metadata) WHERE jsonb_typeof(value)<>'string') THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_ENDPOINT' USING ERRCODE='22023';
+ END IF;
+ endpoint:=endpoint||jsonb_build_object('timeoutMs',timeout);
+ secret:=aos_capacity_publication_private.original_provider_string(v->'secretRef',512,true);
+ IF NOT (secret LIKE 'vault://%' OR secret LIKE 'secret://%' OR secret LIKE 'keychain://%') THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_SECRET_REF' USING ERRCODE='22023';
+ END IF;
+ version:=aos_capacity_publication_private.original_provider_string(v->'secretVersion',120,false);
+ actor:=aos_capacity_publication_private.original_provider_string(v->'createdBy',200,false);
+ lifecycle:=aos_capacity_publication_private.original_provider_string(v->'lifecycle',30,false);
+ IF lifecycle NOT IN ('draft','validated','active','suspended','revoked') THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER_LIFECYCLE' USING ERRCODE='22023';
+ END IF;
+ created:=aos_capacity_publication_private.original_provider_time(v->'createdAt');
+ RETURN v||jsonb_build_object('tenant',tenant,'providerInstanceId',identifier,'revision',revision,'contentHash',hash,
+  'pluginRef',plugin,'egressPolicyRef',egress,'dataClassificationPolicyRef',classification,
+  'endpointProfile',endpoint,'secretRef',secret,'secretVersion',version,'createdBy',actor,'createdAt',created);
+EXCEPTION WHEN OTHERS THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_PROVIDER' USING ERRCODE='22023';
+END $body$;
+""" + '\n'.join(
+    f'REVOKE ALL ON FUNCTION aos_capacity_publication_private.{signature} FROM PUBLIC;\n'
+    f'ALTER FUNCTION aos_capacity_publication_private.{signature} OWNER TO aos_capacity_publication_owner;'
+    for signature in ('original_provider_string(jsonb,integer,boolean)','original_provider_integer(jsonb)',
+        'original_provider_ref(jsonb,text)','original_provider_time(jsonb)','read_original_provider(jsonb)'))
+
+CAPACITY_NATIVE_PROVIDER_ROW_SQL = r"""
+WITH original AS (
+ SELECT r.provider_instance_id,r.revision,r.content_hash,r.lifecycle,r.payload
+ FROM public.aip_provider_instance_head h JOIN public.aip_provider_instance_revision r
+ ON r.org_id=h.org_id AND r.project_id=h.project_id AND r.provider_instance_id=h.provider_instance_id
+ AND r.revision=h.current_revision
+ WHERE h.org_id=%(org_id)s AND h.project_id=%(project_id)s AND h.provider_instance_id=%(provider_id)s
+ FOR SHARE OF h
+), typed AS (
+ SELECT r.*,aos_capacity_publication_private.read_original_provider(r.payload) AS normalized_provider FROM original r
+) SELECT * FROM typed
+WHERE provider_instance_id=%(provider_id)s AND revision=%(revision)s AND content_hash=%(content_hash)s AND lifecycle='active'
+ AND normalized_provider->'tenant'=pg_catalog.jsonb_build_object('orgId',%(org_id)s::text,'projectId',%(project_id)s::text)
+ AND normalized_provider->>'providerInstanceId'=provider_instance_id
+ AND (normalized_provider->>'revision')::numeric=revision
+ AND normalized_provider->>'contentHash'=content_hash AND normalized_provider->>'lifecycle'=lifecycle
+ AND pg_catalog.encode(public.digest(pg_catalog.convert_to(public.canonical_asset_registry_jsonb(
+  normalized_provider-ARRAY['tenant','revision','contentHash','createdBy','createdAt']),'UTF8'),'sha256'),'hex')=content_hash
+"""

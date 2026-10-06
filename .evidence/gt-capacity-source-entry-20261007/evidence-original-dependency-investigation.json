@@ -1,0 +1,136 @@
+{
+  "authority": "AOS-001428",
+  "database": "aos_test_f57c04b61274_ti4_test",
+  "scope": "READONLY_THREE_ORIGINAL_EVIDENCE_ORIGINS_NOT_NATIVE_PUBLICATION",
+  "files": {
+    "services/aos-api/aos_api/evidence_bundle_provenance.py": "6bafe3d6b95b4458b3f768d52f147c7d2b63fc1bc6026e8033b9429a375fa899",
+    "services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py": "81af51b7d08fea85406f450c4a377071faaac1f229e34dd75d43b8274920ae53",
+    "services/aos-api/aos_api/aip_production_contract_store.py": "717727f73c4cc8e74c5b952b81e92a8be3dfd50bce9cd54a3c809a9929c03e26",
+    "services/aos-api/aos_api/aip_production_contracts.py": "562354dc813c52c073c91c9c480516fe382e34f2ae86e5bd63b27cbbf7fd3105"
+  },
+  "facts": [
+    {
+      "origin": "request",
+      "reference": {
+        "assetType": "EvidenceBundleRevision",
+        "assetId": "evidence-bundle-b018fc3df1f04e4d8351",
+        "revision": 1,
+        "contentHash": "26c9b60ff2ae0c36e3750452907ab3797c3fc5518cdc3d43fae02c067dc84bd8"
+      },
+      "original_evidence_current": true,
+      "original_build_provenance": true,
+      "request_hash": "c7e72a24d011b520730c1dec5f6722481bc40eb5dc209117ba0a918ee988aea0",
+      "required_fact_count": 1,
+      "request_keys": [
+        "briefRef",
+        "cutoffAt",
+        "itemRefs",
+        "licenseSummary",
+        "marking",
+        "requiredFactIds",
+        "subjectRefs"
+      ],
+      "authority_keys": [
+        "briefRef",
+        "conflicts",
+        "coverage",
+        "cutoffAt",
+        "freshness",
+        "itemRefs",
+        "licenseSummary",
+        "marking",
+        "missing",
+        "requiredFactIds",
+        "subjectRefs",
+        "uncertainties"
+      ]
+    },
+    {
+      "origin": "account",
+      "reference": {
+        "assetType": "EvidenceBundleRevision",
+        "assetId": "evidence-bundle-b018fc3df1f04e4d8351",
+        "revision": 1,
+        "contentHash": "26c9b60ff2ae0c36e3750452907ab3797c3fc5518cdc3d43fae02c067dc84bd8"
+      },
+      "original_evidence_current": true,
+      "original_build_provenance": true,
+      "request_hash": "c7e72a24d011b520730c1dec5f6722481bc40eb5dc209117ba0a918ee988aea0",
+      "required_fact_count": 1,
+      "request_keys": [
+        "briefRef",
+        "cutoffAt",
+        "itemRefs",
+        "licenseSummary",
+        "marking",
+        "requiredFactIds",
+        "subjectRefs"
+      ],
+      "authority_keys": [
+        "briefRef",
+        "conflicts",
+        "coverage",
+        "cutoffAt",
+        "freshness",
+        "itemRefs",
+        "licenseSummary",
+        "marking",
+        "missing",
+        "requiredFactIds",
+        "subjectRefs",
+        "uncertainties"
+      ]
+    },
+    {
+      "origin": "basis",
+      "reference": {
+        "assetType": "EvidenceBundleRevision",
+        "assetId": "evidence-bundle-b018fc3df1f04e4d8351",
+        "revision": 1,
+        "contentHash": "26c9b60ff2ae0c36e3750452907ab3797c3fc5518cdc3d43fae02c067dc84bd8"
+      },
+      "original_evidence_current": true,
+      "original_build_provenance": true,
+      "request_hash": "c7e72a24d011b520730c1dec5f6722481bc40eb5dc209117ba0a918ee988aea0",
+      "required_fact_count": 1,
+      "request_keys": [
+        "briefRef",
+        "cutoffAt",
+        "itemRefs",
+        "licenseSummary",
+        "marking",
+        "requiredFactIds",
+        "subjectRefs"
+      ],
+      "authority_keys": [
+        "briefRef",
+        "conflicts",
+        "coverage",
+        "cutoffAt",
+        "freshness",
+        "itemRefs",
+        "licenseSummary",
+        "marking",
+        "missing",
+        "requiredFactIds",
+        "subjectRefs",
+        "uncertainties"
+      ]
+    }
+  ],
+  "observations": [
+    "_bundle constructs original typed EvidenceBundleRevision from columns; marking access skipped when markings=None",
+    "Revocation is exact-ref matching event existence independently of lifecycle",
+    "BuildRequest original model output canonicalhash equals untouched request; originalreceipt binds operation/idempotency/requesthash/exactresult",
+    "Request plus coverage/missing/conflicts/uncertainties/freshness must hash to ref; authority_payload independently hashes to ref",
+    "Original naive cutoff interpretedUTC only by _utc, not aware-only capacity date rules",
+    "Epoch156 locks and originalnative identity audit remain mandatory outside these readonly calls"
+  ],
+  "limitations": [
+    "No native Evidence or full157 entry implemented",
+    "Actual original readonly validations do not prove signing/callerCOMMIT/currentconsumer",
+    "No formal/currentDB access or external effects",
+    "The three origins share one exact Evidence ref in this retained baseline; this is not three-distinct-bundle proof. Native S15 needs independent origin fault coverage."
+  ],
+  "distinct_exact_ref_count": 1
+}

@@ -1,0 +1,275 @@
+{
+  "baseline": "a775d81dccc468659930efeb117e8c73dfaa53ea",
+  "authority": "AOS-001428",
+  "scope": "ORIGINAL_PROVIDER_TYPED_CURRENT_QUERY_HEAD_LOCKS_NOT_COMPLETE_SOURCE",
+  "files": {
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "cff00132b86d798b7ff1a3c5af89bacabe9ca76c83e5ae7792f57263e08f3739",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "e2ebaf2fd1cd886f53d7671971f82596256f61ce8968869aa1d42bdaff5f9dc4",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "3caf3e542730302a45441a46c1be5e6d6a628fb22b1d67418df665ef95f69d07",
+    ".evidence/gt-capacity-source-entry-20261007/evidence-original-dependency-investigation.json": "f8b5d9e3809626d5b9f4e6a1f81d78b331f5dab433287d105bde4bbc37fd8f2a"
+  },
+  "logs": [
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/provider-native-adjacent-r1.log",
+      "sha256": "dd3160f4c007150faa13ec03cfcfba2d6f30f29992f243e990bf7ecb808a0c62",
+      "summary": [
+        "26 passed, 70 deselected, 7 warnings in 53.56s"
+      ],
+      "retained_databases": [
+        "aos_test_b825d8ba5083_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/provider-native-complete-entry-red-r1.log",
+      "sha256": "1c2d72cd85bec8cc323a88633c8cecf4ac1e7446f9ee371f18a79824290553a7",
+      "summary": [
+        "5 failed, 67 deselected, 7 warnings in 12.61s"
+      ],
+      "retained_databases": [
+        "aos_test_a3d34fdf759a_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/provider-native-cumulative-r1.log",
+      "sha256": "e8dd6b871392bc63f63ded462bba3a680f03c15cce4e0d0fe0c65d2a0528c30e",
+      "summary": [
+        "67 passed, 5 deselected, 7 warnings in 129.67s (0:02:09)"
+      ],
+      "retained_databases": [
+        "aos_test_5d0f232a7a71_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/provider-native-full-set-r1.log",
+      "sha256": "0945d515e22b71dc26492dc3dbc98d733760bf21d08f9a980485c2638458610d",
+      "summary": [
+        "4 failed, 68 deselected, 7 warnings in 13.98s"
+      ],
+      "retained_databases": [
+        "aos_test_a689c8ad6116_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/provider-native-green-r2.log",
+      "sha256": "fbfddc88fcb5335e659f7933e0006743db1248d6f55752e07aa0780fdc96570a",
+      "summary": [
+        "1 failed, 8 passed, 63 deselected, 7 warnings in 21.28s"
+      ],
+      "retained_databases": [
+        "aos_test_84bf098c5e1d_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/provider-native-green-r3.log",
+      "sha256": "c6b8c46ae6474a87c7d9abe0580ba9f4e631d69df13770d7729bd843f4ef6c05",
+      "summary": [
+        "9 passed, 63 deselected, 7 warnings in 21.62s"
+      ],
+      "retained_databases": [
+        "aos_test_edc0c565876b_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/provider-native-locks-r1.log",
+      "sha256": "d750da5f74da969d336e13958201a9c11abdb4303050d641e08ec563b455f8e2",
+      "summary": [
+        "2 passed, 66 deselected, 7 warnings in 8.64s"
+      ],
+      "retained_databases": [
+        "aos_test_9ff05ae9d1d5_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/provider-native-matrix-r1.log",
+      "sha256": "eb0bb0e5d3dd1b290bd176430e3ea63880447e6675e9c58b6c796b2b90498ed7",
+      "summary": [
+        "3 passed, 63 deselected, 7 warnings in 10.16s"
+      ],
+      "retained_databases": [
+        "aos_test_7d178e2a1ebd_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/provider-native-profile-green-r1.log",
+      "sha256": "19f0b9ca39f0e590ab3f817ea7360440c0ce23206fcf67c7852bc4a7664815cf",
+      "summary": [
+        "1 passed, 63 deselected, 7 warnings in 6.80s"
+      ],
+      "retained_databases": [
+        "aos_test_09a2de0e0d07_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/provider-native-profile-red-r1.log",
+      "sha256": "3fda9f1eb507483c7f27c605918438abb7dd4668b673642269393fdf4f3772e0",
+      "summary": [
+        "1 failed, 63 deselected, 7 warnings in 6.83s"
+      ],
+      "retained_databases": [
+        "aos_test_9f2f1451a427_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/provider-native-whitespace-red-r1.log",
+      "sha256": "dbc96f2b9d0820b0b2697cde369fbb90daa18d0e65af9b1de49bb6c683bd329a",
+      "summary": [
+        "1 failed, 71 deselected, 7 warnings in 6.83s"
+      ],
+      "retained_databases": [
+        "aos_test_722240843db1_ti4_test"
+      ]
+    }
+  ],
+  "provider_model_oracle": {
+    "standard_cases": 85,
+    "raw_decimal_cases": 6,
+    "total_sampled": 91,
+    "coverage": "Sampled original-model compatibility; not exhaustive equivalence"
+  },
+  "original_sql_constants_unchanged": 22,
+  "query_reference_faults": [
+    "id",
+    "revision",
+    "hash",
+    "canary_tenant"
+  ],
+  "payload_faults": [
+    "id",
+    "revision",
+    "hash",
+    "tenant",
+    "lifecycle",
+    "business_content"
+  ],
+  "head_lock_orders": [
+    "reader_first",
+    "writer_first"
+  ],
+  "actual_two_provider_approval_records": [
+    {
+      "proposal_id": "proposal-671f6823c8b54354943c",
+      "proposal_hash": "bee7d02ed34080dc85fd1783d1b173e4d81b88ff508d3b10d6ccc69f33587bbb",
+      "maker": "capacity-maker-91e1ca631d634d3b8c92f04d07e67cbb",
+      "approval_event_id": "approval-8d63ba385ffe4c9d9ccf",
+      "checker": "checker-cc64f2ed898d4ca78b0b014dcec0be8d",
+      "candidate_id": "capacity-candidate-93e7da7eac284e8b8b49ebb6a67711ba",
+      "account_hash": "1e69c6b2a3244e97b04263f775925d55151f59a341f16c20d9a9d03850d08de9",
+      "provider_refs": [
+        {
+          "assetId": "capacity-provider-e1952b09d17e41ec986c18e4393a1793",
+          "revision": 1,
+          "assetType": "ProviderInstanceRevision",
+          "contentHash": "ba939321c01ab4ac59dea42d3136567aaab1b8d260f444a559c200d66ac5a3ec"
+        },
+        {
+          "assetId": "native-whole-provider-008e2bd1bf0c45ddb499ac1ce9f8bd0d",
+          "revision": 1,
+          "assetType": "ProviderInstanceRevision",
+          "contentHash": "c52cd46244dd57cc0ba6504859f364c8c5a4e886688c276eda47b06654b110f0"
+        }
+      ]
+    },
+    {
+      "proposal_id": "proposal-896681eac5d543b7993d",
+      "proposal_hash": "74303ad87d50adcaf1a4b453db11af9557350f5aac1fe0efd61a27c53b865f38",
+      "maker": "capacity-maker-689d63425b7941e3b7d530f69728cce0",
+      "approval_event_id": "approval-cc40b708a541491999b0",
+      "checker": "checker-7cfea101b39d4f1bae824727e75e99a4",
+      "candidate_id": "capacity-candidate-8d526abb4c42417da12ce2f56d250a6e",
+      "account_hash": "6c5d98c1edce0192d193f73cda322a2ad8af92a6ffaff89aa8947983eb52e9a5",
+      "provider_refs": [
+        {
+          "assetId": "capacity-provider-b280dfde56c848e0b1a15ab63aec24c0",
+          "revision": 1,
+          "assetType": "ProviderInstanceRevision",
+          "contentHash": "86857d82dc266caaa24f213780e8e3bf151c024e054a4205884765e5019290f3"
+        },
+        {
+          "assetId": "native-whole-provider-519b0af2ac024077bf620b72565a42d6",
+          "revision": 1,
+          "assetType": "ProviderInstanceRevision",
+          "contentHash": "5ae21ffbda56f2dcd483ee1ee6fe6a812a942f4e03dd8a3f7c0f9e8480ba34e1"
+        }
+      ]
+    },
+    {
+      "proposal_id": "proposal-9455fbd481e7460d81cd",
+      "proposal_hash": "5941c7e1f7c42cf414650d07bba9f88676d67021bf73dd5d51a105c6762d246d",
+      "maker": "capacity-maker-933cb8dac7504fe5917b16514e6b8bb1",
+      "approval_event_id": "approval-9631a4d11c6b42fd9f94",
+      "checker": "checker-afa8784c37294957b582b00ac1e79870",
+      "candidate_id": "capacity-candidate-ad4c571a69e54fb7a9a9ee445d06bc13",
+      "account_hash": "fa72ef24e01c060f1c501fdd38ed7cd8fa3779225031ffecf4e31ad93e97eea3",
+      "provider_refs": [
+        {
+          "assetId": "capacity-provider-aa92830bcbf743f3be6d15ac4cbbbed5",
+          "revision": 1,
+          "assetType": "ProviderInstanceRevision",
+          "contentHash": "988b26b16ef7929aa0c152d698e6a9178ce3792db47b94038022c08fb6c0ae6f"
+        },
+        {
+          "assetId": "native-whole-provider-2fdc279f87c440bd845512db83cd7c37",
+          "revision": 1,
+          "assetType": "ProviderInstanceRevision",
+          "contentHash": "66133dd1c583f48ec2c736d5b83c43db6adc363b07a6bd67b09213e6462a225a"
+        }
+      ]
+    },
+    {
+      "proposal_id": "proposal-cc8000146ba541af8c1b",
+      "proposal_hash": "3c2cd93bf6a7f2af9d310410c5296fb50cca9ea9f949bb6b1a2f1647ae2d0beb",
+      "maker": "capacity-maker-01565dbfd36a4434a585bc9ac61808da",
+      "approval_event_id": "approval-1e5851f5a7a847e8abef",
+      "checker": "checker-da169e412b7a475f9602d8bb5aec8dac",
+      "candidate_id": "capacity-candidate-f9a1716f1f2048fb8df4ffdd2d4eb7a8",
+      "account_hash": "0cbc137001209a9d1669d7adf7a614b14afc2f058969365b74d904e777d2595a",
+      "provider_refs": [
+        {
+          "assetId": "capacity-provider-0e02d2cdbc2f4cb5b0879b89a9ee2eb1",
+          "revision": 1,
+          "assetType": "ProviderInstanceRevision",
+          "contentHash": "f3c6eed7b4a7511ad04222418482b77121369279e08b5ddaa831c87952246594"
+        },
+        {
+          "assetId": "native-whole-provider-822b1547224f45998c25444caf8170c2",
+          "revision": 1,
+          "assetType": "ProviderInstanceRevision",
+          "contentHash": "803c45481d627d808562a955b9137d8af37d682ae8e94c3db0e486a8650f482b"
+        }
+      ]
+    }
+  ],
+  "catalog": {
+    "database": "aos_test_5d0f232a7a71_ti4_test",
+    "schema_head": "a0v_156",
+    "roles": [
+      {
+        "rolname": "aos_capacity_publication_owner",
+        "rolcanlogin": false
+      },
+      {
+        "rolname": "aos_provider_capacity_issuer",
+        "rolcanlogin": false
+      }
+    ],
+    "remaining_profiles": 0,
+    "prepare": null
+  },
+  "fixture": {
+    "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+    "volume": "aos-capacity-publication-scram-20261006-data",
+    "memory_mib": 384,
+    "oom": 1,
+    "oom_kill": 1
+  },
+  "limitations": [
+    "No157/fullprepare/sign/commit/actualcallerCOMMIT/currentconsumer",
+    "Uninstalled pure profiles and original row queries; not fullS14 integrated exit",
+    "Fullset extended Source approvals do not verify matching extended supplierdocuments",
+    "S15 readonly investigation threeorigins share ONE exactref; distinct faultcoverage pending",
+    "Final caller COMMIT TTL unresolved",
+    "Isolated admin immutable-row faults all savepoint rolledback",
+    "No currentformalDB/services/Host/worker/Provider start/mall/oldRun/external effect",
+    "No Source Task Delivery"
+  ]
+}

@@ -1291,3 +1291,304 @@ def test_native_candidate_combination_rejects_rehashed_original_row_term_faults(
             owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
             assert owner.execute(CAPACITY_NATIVE_SOURCE_COMBINATION_SQL,params).fetchone() is not None
         owner.rollback()
+
+
+def test_native_original_provider_profile_preserves_actual_business_hash(native_signed_source):
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_model_runtime_contracts import ProviderInstanceRevision
+    from aos_api.aip_model_runtime_store import AipModelRuntimeStore
+    from aos_api.aip_action_store import canonical_hash
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,
+        CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL,CAPACITY_NATIVE_PROVIDER_ROW_SQL)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        row=owner.execute("SELECT r.payload,r.content_hash FROM public.aip_provider_instance_head h JOIN public.aip_provider_instance_revision r USING(org_id,project_id,provider_instance_id) WHERE h.org_id=%s AND h.project_id=%s AND r.revision=h.current_revision LIMIT 1",SCOPE.key).fetchone()
+        assert row is not None
+        expected=ProviderInstanceRevision.model_validate(row['payload']).model_dump(mode='json',by_alias=True)
+        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):
+            owner.execute(profile)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        actual=owner.execute('SELECT aos_capacity_publication_private.read_original_provider(%s) AS value',(Jsonb(row['payload']),)).fetchone()['value']
+        assert actual==expected
+        assert canonical_hash({k:v for k,v in actual.items() if k not in AipModelRuntimeStore._META_FIELDS})==row['content_hash']
+        params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,provider_id=actual['providerInstanceId'],revision=actual['revision'],content_hash=row['content_hash'])
+        assert owner.execute(CAPACITY_NATIVE_PROVIDER_ROW_SQL,params).fetchone()['normalized_provider']==expected
+        assert owner.execute(CAPACITY_NATIVE_PROVIDER_ROW_SQL,{**params,'org_id':'dev-org'}).fetchone() is None
+        owner.rollback()
+        assert owner.execute("SELECT to_regprocedure('aos_capacity_publication_private.read_original_provider(jsonb)') AS fn").fetchone()['fn'] is None
+        owner.rollback()
+
+
+def test_native_original_provider_profile_matches_original_model_domain(native_signed_source):
+    from copy import deepcopy
+    from pydantic import ValidationError
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_model_runtime_contracts import ProviderInstanceRevision
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,
+        CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        raw=owner.execute('SELECT payload FROM public.aip_provider_instance_revision WHERE org_id=%s AND project_id=%s LIMIT 1',SCOPE.key).fetchone()['payload']
+        base=ProviderInstanceRevision.model_validate(raw)
+        cases=[('original',raw),('all_snake',base.model_dump(mode='json',by_alias=False))]
+        for label,field,value in [
+            ('revision_string','revision',str(base.revision)),('revision_float','revision',float(base.revision)),
+            ('revision_true','revision',True),('revision_false','revision',False),('revision_fraction','revision',1.5),
+            ('revision_big','revision',9223372036854775808),('revision_big_string','revision','9223372036854775808'),
+            ('revision_string_over_digits','revision','1'*4301),('revision_string_zero_padding','revision','0'*4500+'1'),
+            ('revision_padded','revision','\u00a0+001\u00a0'),('revision_decimal','revision','01.00'),
+            ('revision_underscore','revision','1_0'),('revision_bad_underscore','revision','1__0'),
+            ('revision_exponent_string','revision','1e0'),('revision_null','revision',None),
+            ('created_naive','createdAt','2026-10-07T00:00:00'),('created_date_only','createdAt','2026-10-07'),
+            ('created_naive_minutes','createdAt','2026-10-07 01:02'),
+            ('created_naive_fraction','createdAt','2026-10-07T01:02:03,1234567'),
+            ('created_epoch','createdAt','1700000000.25'),('created_epoch_number','createdAt',1700000000.25),
+            ('created_offset','createdAt','2026-10-07 01:02:03+0800'),('created_null','createdAt',None),
+            ('created_invalid','createdAt','2026-02-30T01:00:00'),
+            ('actor_spaces','createdBy',' owner '),('actor_null','createdBy',None),
+            ('id_spaces','providerInstanceId',' provider '),('id_blank','providerInstanceId',' '),
+            ('id_long','providerInstanceId','x'*201),('tenant_canary','tenant',dict(orgId='dev-org',projectId='dev-project')),
+            ('tenant_empty','tenant',dict(orgId='',projectId='')),('hash_upper','contentHash','A'*64),
+            ('hash_newline','contentHash','a'*64+'\n'),('secret_trim','secretRef',' '+base.secret_ref+'\u00a0'),
+            ('secret_prefix_only','secretRef','vault://'),('secret_plain','secretRef','literal-value'),
+            ('secret_null','secretRef',None),('secret_version_spaces','secretVersion',' '),
+            ('lifecycle_suspended','lifecycle','suspended'),('lifecycle_wrong','lifecycle','disabled'),
+            ('extra','unknown',1)]:
+            v=deepcopy(raw);v[field]=value;cases.append((label,v))
+        for label,field,value in [
+            ('timeout_string','timeoutMs',str(base.endpoint_profile.timeout_ms)),
+            ('timeout_float','timeoutMs',float(base.endpoint_profile.timeout_ms)),('timeout_bool','timeoutMs',True),
+            ('timeout_min','timeoutMs',100),('timeout_max','timeoutMs',3600000),('timeout_over','timeoutMs',3600001),
+            ('timeout_fraction','timeoutMs',100.5),('base_space','baseUrl',' '),('region_empty','region',''),
+            ('metadata_null','metadata',None),('metadata_empty_values','metadata',{'':'','x':'\u200b'}),
+            ('metadata_numeric','metadata',{'key':1}),('metadata_over','metadata',{str(i):'' for i in range(33)}),
+            ('secret_shape','apiKey','forbidden')]:
+            v=deepcopy(raw);v['endpointProfile'][field]=value;cases.append((label,v))
+        v=deepcopy(raw);v['endpointProfile'].pop('metadata',None);cases.append(('metadata_default',v))
+        for label,field,value in [('ref_revision_str','revision','01.0'),('ref_revision_bool','revision',True),
+            ('ref_id_trim','assetId',' '+raw['pluginRef']['assetId']+' '),('ref_wrong_kind','assetType','AgentTemplateRevision'),
+            ('ref_id_blank','assetId',' '),('ref_hash_number','contentHash',1)]:
+            v=deepcopy(raw);v['pluginRef'][field]=value;cases.append((label,v))
+        for point in [9,10,11,12,13,28,29,30,31,32,133,160,5760,8192,8232,8233,8239,8287,12288]:
+            v=deepcopy(raw);v['revision']=chr(point)+'1'+chr(point);cases.append(('revision_whitespace_'+str(point),v))
+        v=deepcopy(raw);v['provider_instance_id']=raw['providerInstanceId'];cases.append(('duplicate_alias',v))
+        v=deepcopy(raw);del v['createdBy'];cases.append(('missing',v))
+        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):
+            owner.execute(profile)
+        names=['original_provider_string','original_provider_integer','original_provider_ref','original_provider_time','read_original_provider']
+        flags=owner.execute("""SELECT p.provolatile,p.proisstrict,p.prosecdef,p.proconfig,r.rolname,
+            has_function_privilege('aos_runtime',p.oid,'EXECUTE') AS runtime_exec,
+            has_function_privilege('aos_provider_capacity_issuer',p.oid,'EXECUTE') AS issuer_exec,
+            EXISTS(SELECT 1 FROM aclexplode(COALESCE(p.proacl,acldefault('f',p.proowner))) a
+                WHERE a.grantee=0 AND a.privilege_type='EXECUTE') AS public_exec
+            FROM pg_proc p JOIN pg_roles r ON r.oid=p.proowner JOIN pg_namespace n ON n.oid=p.pronamespace
+            WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)""",(names,)).fetchall()
+        assert len(flags)==5
+        assert all(f['provolatile']=='i' and f['proisstrict'] and not f['prosecdef']
+            and f['proconfig']==['search_path=pg_catalog'] and f['rolname']=='aos_capacity_publication_owner'
+            and not f['runtime_exec'] and not f['issuer_exec'] and not f['public_exec'] for f in flags)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        mismatches=[]
+        for label,value in cases:
+            try:expected=ProviderInstanceRevision.model_validate(value).model_dump(mode='json',by_alias=True)
+            except ValidationError:expected=None
+            try:
+                with owner.transaction():
+                    actual=owner.execute('SELECT aos_capacity_publication_private.read_original_provider(%s) AS value',(Jsonb(value),)).fetchone()['value']
+            except psycopg.Error as error:
+                assert error.sqlstate=='22023';actual=None
+            if expected!=actual:mismatches.append((label,expected is not None,actual is not None))
+        # Keep decimal JSON literals unrounded until PostgreSQL stores JSONB.
+        import json
+        for number in ['9007199254740993.0','9007199254740995.0','1.23e40','-1.0','1.5','1.0e309']:
+            value=deepcopy(raw);value['revision']='RAW_REVISION_NUMBER'
+            document=json.dumps(value).replace('"RAW_REVISION_NUMBER"',number)
+            stored=owner.execute('SELECT %s::jsonb AS value',(document,)).fetchone()['value']
+            try:expected=ProviderInstanceRevision.model_validate(stored).model_dump(mode='json',by_alias=True)
+            except ValidationError:expected=None
+            try:
+                with owner.transaction():
+                    actual=owner.execute('SELECT aos_capacity_publication_private.read_original_provider(%s::jsonb) AS value',(document,)).fetchone()['value']
+            except psycopg.Error as error:
+                assert error.sqlstate=='22023';actual=None
+            if expected!=actual:mismatches.append(('raw_decimal_'+number,expected is not None,actual is not None))
+        owner.rollback()
+        assert owner.execute("SELECT count(*) AS n FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)",(names,)).fetchone()['n']==0
+        owner.rollback()
+    assert not mismatches, f'Original Provider/native incompatibilities: {mismatches!r}'
+
+
+def test_native_original_provider_current_row_rejects_coherent_payload_faults(native_signed_source):
+    from copy import deepcopy
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_model_runtime_contracts import ProviderInstanceRevision
+    from aos_api.aip_model_runtime_store import AipModelRuntimeStore
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,
+        CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL,CAPACITY_NATIVE_PROVIDER_ROW_SQL)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        row=owner.execute('SELECT r.* FROM public.aip_provider_instance_head h JOIN public.aip_provider_instance_revision r USING(org_id,project_id,provider_instance_id) WHERE h.org_id=%s AND h.project_id=%s AND r.revision=h.current_revision LIMIT 1',SCOPE.key).fetchone()
+        params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,provider_id=row['provider_instance_id'],revision=row['revision'],content_hash=row['content_hash'])
+        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):
+            owner.execute(profile)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        assert owner.execute(CAPACITY_NATIVE_PROVIDER_ROW_SQL,params).fetchone() is not None
+        for fault,field,value in [('wrong_id','provider_id','absent-provider'),('wrong_revision','revision',row['revision']+1),('wrong_hash','content_hash','f'*64),('canary','org_id','dev-org')]:
+            assert owner.execute(CAPACITY_NATIVE_PROVIDER_ROW_SQL,{**params,field:value}).fetchone() is None,fault
+        for fault,field,value in [('payload_id','providerInstanceId','other-provider'),('payload_revision','revision',row['revision']+1),
+            ('payload_hash','contentHash','e'*64),('payload_tenant','tenant',dict(orgId='dev-org',projectId='dev-project')),
+            ('payload_lifecycle','lifecycle','suspended'),('business_content','secretVersion','different-secret-version')]:
+            owner.execute('RESET ROLE');owner.execute('SAVEPOINT provider_payload_fault')
+            try:
+                body=deepcopy(row['payload']);body[field]=value
+                normalized=ProviderInstanceRevision.model_validate(body).model_dump(mode='json',by_alias=True)
+                if fault in {'payload_revision','payload_hash','payload_tenant'}:
+                    assert canonical_hash({k:v for k,v in normalized.items() if k not in AipModelRuntimeStore._META_FIELDS})==row['content_hash']
+                owner.execute("SET LOCAL session_replication_role='replica'")
+                owner.execute('UPDATE public.aip_provider_instance_revision SET payload=%s WHERE org_id=%s AND project_id=%s AND provider_instance_id=%s AND revision=%s',
+                    (Jsonb(body),*SCOPE.key,row['provider_instance_id'],row['revision']))
+                owner.execute("SET LOCAL session_replication_role='origin'")
+                owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                assert owner.execute(CAPACITY_NATIVE_PROVIDER_ROW_SQL,params).fetchone() is None,fault
+            finally:owner.execute('ROLLBACK TO SAVEPOINT provider_payload_fault')
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            assert owner.execute(CAPACITY_NATIVE_PROVIDER_ROW_SQL,params).fetchone() is not None
+        owner.rollback()
+
+
+@pytest.mark.parametrize('order',['reader_first','writer_first'])
+def test_native_provider_query_holds_original_head_share_fence(native_signed_source,order):
+    from threading import Event,Thread
+    import time
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,
+        CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL,CAPACITY_NATIVE_PROVIDER_ROW_SQL)
+    with isolated_owner() as owner:
+        row=owner.execute('SELECT r.* FROM public.aip_provider_instance_head h JOIN public.aip_provider_instance_revision r USING(org_id,project_id,provider_instance_id) WHERE h.org_id=%s AND h.project_id=%s AND r.revision=h.current_revision LIMIT 1',SCOPE.key).fetchone()
+        owner.rollback()
+    params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,provider_id=row['provider_instance_id'],revision=row['revision'],content_hash=row['content_hash'])
+    release=Event();reader_ready=Event();writer_ready=Event();reader_done=Event();writer_done=Event();results={}
+    def reader():
+        try:
+            with isolated_owner() as conn:
+                conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+                for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):conn.execute(profile)
+                conn.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                results['reader_pid']=conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+                if order=='writer_first':reader_ready.set()
+                assert conn.execute(CAPACITY_NATIVE_PROVIDER_ROW_SQL,params).fetchone() is not None
+                if order=='reader_first':reader_ready.set()
+                assert release.wait(12)
+                conn.rollback()
+            results['reader_rolled_back']=True
+        except BaseException as exc:results['reader_error']=type(exc).__name__
+        finally:reader_done.set()
+    def writer():
+        try:
+            with isolated_owner() as conn:
+                results['writer_pid']=conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+                if order=='reader_first':writer_ready.set()
+                # A no-op still acquires the real original head row write lock.
+                conn.execute('UPDATE public.aip_provider_instance_head SET current_revision=current_revision WHERE org_id=%s AND project_id=%s AND provider_instance_id=%s',
+                    (*SCOPE.key,params['provider_id']))
+                if order=='writer_first':writer_ready.set()
+                assert release.wait(12)
+                conn.rollback()
+            results['writer_rolled_back']=True
+        except BaseException as exc:results['writer_error']=type(exc).__name__
+        finally:writer_done.set()
+    rt,wt=Thread(target=reader),Thread(target=writer)
+    first,ready,second,other_ready=(rt,reader_ready,wt,writer_ready) if order=='reader_first' else (wt,writer_ready,rt,reader_ready)
+    first.start();blocked=False
+    try:
+        assert ready.wait(10),results
+        second.start();assert other_ready.wait(10),results
+        waiting,holding=('writer_pid','reader_pid') if order=='reader_first' else ('reader_pid','writer_pid')
+        deadline=time.monotonic()+4
+        while time.monotonic()<deadline:
+            with isolated_owner() as probe:
+                blockers=probe.execute('SELECT pg_blocking_pids(%s) AS blockers',(results[waiting],)).fetchone()['blockers']
+                probe.rollback()
+            if results[holding] in blockers:blocked=True;break
+            if reader_done.is_set() or writer_done.is_set():break
+            time.sleep(.02)
+        assert blocked,'native Provider read did not hold original head SHARE fence'
+        assert not reader_done.is_set() and not writer_done.is_set()
+    finally:
+        release.set();rt.join(10) if rt.ident else None;wt.join(10) if wt.ident else None
+    assert not rt.is_alive() and not wt.is_alive()
+    assert results.get('reader_rolled_back') and results.get('writer_rolled_back'),results
+    with isolated_owner() as owner:
+        assert owner.execute("SELECT to_regprocedure('aos_capacity_publication_private.read_original_provider(jsonb)') AS fn").fetchone()['fn'] is None
+        assert owner.execute('SELECT current_revision FROM public.aip_provider_instance_head WHERE org_id=%s AND project_id=%s AND provider_instance_id=%s',(*SCOPE.key,params['provider_id'])).fetchone()['current_revision']==row['revision']
+        owner.rollback()
+
+
+@pytest.mark.parametrize('fault',[None,'second_head','second_payload_hash','second_payload_revision'])
+def test_native_provider_query_checks_real_full_original_account_set(source_inputs,fault):
+    from uuid import uuid4
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner,produce_formal_provider
+    from aos_api.db import connect_serializable
+    from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+    from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+    from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+    from aos_api.aip_action_models import DecideActionProposalRequest
+    from aos_api.aip_model_eval_request_store import ModelEvalRequestBlocked
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,
+        CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL,CAPACITY_NATIVE_PROVIDER_ROW_SQL)
+    maker,checker,source,_=source_inputs
+    second=produce_formal_provider(SCOPE,maker.subject,'native-whole-provider-'+uuid4().hex)
+    with connect_serializable(SCOPE) as runtime:
+        account=ProviderPhysicalAccountCandidate.model_validate(runtime.execute('SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',(source.physical_account_ref.asset_id,)).fetchone()['request_json']['candidate'])
+        basis=ProviderCapacityBasisCandidate.model_validate(runtime.execute('SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',(source.basis_ref.asset_id,)).fetchone()['request_json']['candidate'])
+    extra=account.provider_refs[0].model_copy(update=dict(asset_id=second.provider_instance_id,revision=second.revision,content_hash=second.content_hash))
+    account=account.model_copy(update=dict(provider_refs=[*account.provider_refs,extra]))
+    store=ProviderCapacityCandidateStore()
+    saved=store.create_account(SCOPE,maker,'native-full-account-'+uuid4().hex,account)
+    account_ref=source.physical_account_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))
+    saved_basis=store.create_basis(SCOPE,maker,'native-full-basis-'+uuid4().hex,basis.model_copy(update=dict(physical_account_ref=account_ref)))
+    changed=source.model_copy(update=dict(physical_account_ref=account_ref,basis_ref=source.basis_ref.model_copy(update=dict(asset_id=saved_basis['candidate_id'],content_hash=saved_basis['content_hash']))))
+    proposal=propose_provider_capacity_source(maker,changed,'native-full-source-'+uuid4().hex,changed.valid_until)
+    approved=decide_provider_capacity_source(checker,proposal.proposal.id,'native-full-checker-'+uuid4().hex,
+        DecideActionProposalRequest(expectedProposalVersion=proposal.proposal.version,expectedProposalHash=proposal.proposal.proposal_hash,
+            decision='approved',reason='isolated original full Provider set',approvalExpiresAt=changed.valid_until))
+    assert approved.proposal.status.value=='approved'
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):owner.execute(profile)
+        def native_results():
+            return [owner.execute(CAPACITY_NATIVE_PROVIDER_ROW_SQL,dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,
+                provider_id=ref.asset_id,revision=ref.revision,content_hash=ref.content_hash)).fetchone() is not None
+                for ref in sorted(account.provider_refs,key=lambda item:item.asset_id)]
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        assert all(native_results()) and len(account.provider_refs)==2
+        ProviderCapacityCandidateStore._account_dependencies(owner,SCOPE,account)
+        if fault:
+            owner.execute('RESET ROLE');owner.execute('SAVEPOINT second_original_provider_fault')
+            try:
+                owner.execute("SET LOCAL session_replication_role='replica'")
+                if fault=='second_head':
+                    owner.execute('UPDATE public.aip_provider_instance_head SET current_revision=current_revision+1 WHERE org_id=%s AND project_id=%s AND provider_instance_id=%s',(*SCOPE.key,second.provider_instance_id))
+                else:
+                    body=owner.execute('SELECT payload FROM public.aip_provider_instance_revision WHERE org_id=%s AND project_id=%s AND provider_instance_id=%s AND revision=%s',(*SCOPE.key,second.provider_instance_id,second.revision)).fetchone()['payload']
+                    body['contentHash' if fault=='second_payload_hash' else 'revision']='0'*64 if fault=='second_payload_hash' else second.revision+1
+                    owner.execute('UPDATE public.aip_provider_instance_revision SET payload=%s WHERE org_id=%s AND project_id=%s AND provider_instance_id=%s AND revision=%s',(Jsonb(body),*SCOPE.key,second.provider_instance_id,second.revision))
+                owner.execute("SET LOCAL session_replication_role='origin'")
+                owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                results=native_results()
+                assert sum(results)==1,'native checks must include second actual account Provider'
+                with pytest.raises(ModelEvalRequestBlocked):ProviderCapacityCandidateStore._account_dependencies(owner,SCOPE,account)
+            finally:owner.execute('ROLLBACK TO SAVEPOINT second_original_provider_fault')
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            assert all(native_results())
+        owner.rollback()
