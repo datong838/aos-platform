@@ -1,0 +1,15 @@
+{
+  "baseline_head": "18952840990e5c64bc2c04dcc0bfab222f0747b3",
+  "task_id": "gt-provider-capacity-formal-boundary-20261005",
+  "authority_revision": "AOS-001389",
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_source_action.py": "b4239fc835365560a17b5c9861ff4a35e4a8acc59e313b738eae6b1c278961d6",
+    "services/aos-api/aos_api/aip_provider_capacity_source_authority.py": "a6742120ee1b07d2b8ef1cf7730cf73634d8b783bcdcab9e9b0c84268b2e1ae0",
+    "services/aos-api/aos_api/aip_model_eval_request_store.py": "2dcbd06784f23684ee331f3b35b2cff66c015f735018493ac70c98f4f4de854b",
+    "services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py": "44f8abe1c12148181a4fd34bb5fa08195d0daa939f7422f13b09988b401358c6",
+    "services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py": "3836c22534205ba6f2371645bda36b445526dbba318806e337d52c1a63b5d0a3"
+  },
+  "boundary": "isolated test DB; no current authoritative DB/Provider invocation",
+  "specialized": "3 passed in 10.61s; original real two-Provider candidate stores and Source proposal",
+  "adjacent_status": "80 passed, 7 existing warnings, 106.22s; handle 66291 exit 0"
+}

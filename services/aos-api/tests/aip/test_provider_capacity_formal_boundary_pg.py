@@ -16,6 +16,54 @@ from tests.aip._runtime_guard_history_fixture import isolated_owner
 ISSUER='aos_provider_capacity_issuer'
 
 
+@pytest.mark.parametrize('fault',[None,'second_head','second_payload'])
+def test_original_source_checks_every_account_provider(source_inputs,fault):
+    from psycopg.types.json import Jsonb
+    from aos_api.db import connect_serializable
+    from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+    from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+    from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,ProviderCapacitySourceActionBlocked
+    from tests.aip._runtime_guard_history_fixture import produce_formal_provider
+    maker,_,source,_=source_inputs
+    second=produce_formal_provider(SCOPE,maker.subject,'other-account-provider-'+uuid4().hex)
+    with connect_serializable(SCOPE) as conn:
+        account=ProviderPhysicalAccountCandidate.model_validate(conn.execute(
+            'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+            (source.physical_account_ref.asset_id,)).fetchone()['request_json']['candidate'])
+        basis=ProviderCapacityBasisCandidate.model_validate(conn.execute(
+            'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+            (source.basis_ref.asset_id,)).fetchone()['request_json']['candidate'])
+    extra=account.provider_refs[0].model_copy(update=dict(asset_id=second.provider_instance_id,
+        revision=second.revision,content_hash=second.content_hash))
+    store=ProviderCapacityCandidateStore()
+    saved=store.create_account(SCOPE,maker,'whole-account-'+uuid4().hex,
+        account.model_copy(update=dict(provider_refs=[*account.provider_refs,extra])))
+    account_ref=source.physical_account_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))
+    saved_basis=store.create_basis(SCOPE,maker,'whole-basis-'+uuid4().hex,
+        basis.model_copy(update=dict(physical_account_ref=account_ref)))
+    changed=source.model_copy(update=dict(physical_account_ref=account_ref,
+        basis_ref=source.basis_ref.model_copy(update=dict(asset_id=saved_basis['candidate_id'],content_hash=saved_basis['content_hash']))))
+    with isolated_owner() as conn:
+        if fault=='second_head':
+            conn.execute('UPDATE public.aip_provider_instance_head SET current_revision=current_revision+1 '
+                'WHERE org_id=%s AND project_id=%s AND provider_instance_id=%s',(*SCOPE.key,second.provider_instance_id))
+        elif fault=='second_payload':
+            row=conn.execute('SELECT payload FROM public.aip_provider_instance_revision WHERE org_id=%s AND project_id=%s '
+                'AND provider_instance_id=%s AND revision=%s',(*SCOPE.key,second.provider_instance_id,second.revision)).fetchone()
+            payload=row['payload'];payload['contentHash']='0'*64
+            conn.execute('UPDATE public.aip_provider_instance_revision SET payload=%s WHERE org_id=%s AND project_id=%s '
+                'AND provider_instance_id=%s AND revision=%s',(Jsonb(payload),*SCOPE.key,second.provider_instance_id,second.revision))
+    with connect_serializable(SCOPE) as conn:
+        before=conn.execute('SELECT count(*) AS n FROM public.aip_action_proposal').fetchone()['n']
+    if fault is None:
+        assert propose_provider_capacity_source(maker,changed,'whole-review-'+uuid4().hex,changed.valid_until).proposal.status.value=='drafted'
+    else:
+        with pytest.raises(ProviderCapacitySourceActionBlocked):
+            propose_provider_capacity_source(maker,changed,'whole-reject-'+uuid4().hex,changed.valid_until)
+        with connect_serializable(SCOPE) as conn:
+            assert conn.execute('SELECT count(*) AS n FROM public.aip_action_proposal').fetchone()['n']==before
+
+
 @pytest.mark.parametrize('alternate',['basis_account','account_provider','basis_mixed','provider_mixed'])
 def test_original_nested_ref_aliases_reach_source_review(source_inputs,alternate):
     from psycopg.types.json import Jsonb

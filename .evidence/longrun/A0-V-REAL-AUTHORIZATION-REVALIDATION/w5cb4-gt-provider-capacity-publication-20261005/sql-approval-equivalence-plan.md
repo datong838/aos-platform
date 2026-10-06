@@ -104,3 +104,9 @@ S13最终验收：六模块450 passed/215.84s、7既有warnings，实际原consu
 S13引用别名实际复现：ref-alias-red.log两项通过原runtime实际INSERT/CHECK，原模型/Python组合通过后在新增SQL处SOURCE_ACCOUNT_OR_CONCURRENCY_DRIFTED误拒，8.48s。第一修复ref-alias-green.log暴露箭头与减键运算优先级未加括号；修复后第二轮测试同时与尚未退出旧累计竞争全局隔离issuer角色，并且测试断言将proposal原drafted误写awaiting_approval。该轮失败不算逻辑通过。已结束旧轮(143)，只读核隔离aos-a0v-test-pg的aos_guard_approval_issuer为NOLOGIN且无password/活跃连接；不存在真库操作。最终串行ref-alias-green-r3.log 6 passed/14.03s，原native四种snake/mixed别名Source proposal均drafted、存储哈希未重写；原重hash负例扩展双别名/scalar拒绝。最终相邻ref-alias-adjacent-r2.log仍待终结，禁止将早期中止或状态断言失败作为完成证据。
 
 最终串行相邻回归已终结：ref-alias-adjacent-r2.log 454 passed/207.14s，7既有warnings，exit0。自复审与限制见ref-alias-verification.md；独立督导自主复审本次修复尚无新结论，不宣称独立复审收口。
+
+## S14 原完整 Provider 集合入口验收调查
+
+候选一：S14–S15原完整Provider/Evidence当前性，有现formal-boundary Task/Lease授权，无真实Provider调用，先证明多Provider原实际入口。候选二：AIS-001的231摘要更新，需独立文档scope登记，先不越现租约写入。选择第一项。具体测试文件 services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py；证据同formal-boundary目录 provider-set-original*.log/md。用原Store真实建立两个Provider的account/basis，第二个不是request.providerRef；合法完整集合须原Source proposal成功。随后仅改变第二Provider head或payload，原入口须拒绝且proposal计数不增加；不改业务代码，不先复制Model解析进SQL。调查明确S14原模型、当前head和canonical payload的最低等价证据，后继原生SQL须核全部集合并保留原锁序；本调查不当完整发行通过。
+
+S14完整Provider集合原入口实测：3 passed/10.61s，整formal-boundary文件80 passed/106.22s；证据见provider-set-original-verification.md和精确sources.json。追加Provider独立漂移拒绝且无新proposal。业务代码未改；下一实现必须保留allocation先Provider、neutral Evidence、account全部Provider的真实前缀锁序和typed canonical内容校验，不能只做集合存在/count。已消费独立督导RQ-02具体对象/connection锁图约束；完整native发行/consumer及实际COMMIT仍未证明。
