@@ -1,0 +1,28 @@
+{
+  "head": "53c1ba5415d0505b994bca8ad844d51814848100",
+  "authority": "AOS-001413",
+  "active_task": "gt-capacity-publication-registry-20261006",
+  "source": "services/aos-api/aos_api/aip_provider_capacity_publication_registry.py",
+  "source_sha256": "a2a7773348d09c8fa2b8789f00d65510261408a5011ad98aca2ff44218526490",
+  "observed_sql_entrypoints": [
+    "aos_capacity_publication_private.immutable_registry_row",
+    "aos_capacity_publication_private.register_origin"
+  ],
+  "finding": "Root epoch competition is proven only by administrative test invalidation; no signed authority withdrawal/rotation SQL entrypoint exists. Document registration uses existing epoch1 and denies invalidated epochs, but cannot itself authorize or perform invalidation.",
+  "registered_candidates": [
+    {
+      "candidate": "Signed root-policy epoch withdrawal protocol",
+      "basis": "Root planR1/R2 full exit and publication plan signed external authority exactref/expected epoch withdrawal",
+      "dependency": "Freeze complete purpose/actual anchor/key/old origin/new epoch/idempotent authority provenance and issuer-consumer lock ordering before new contract/migration scope."
+    },
+    {
+      "candidate": "Complete Source publication and current consumer",
+      "basis": "Original publicationS01-S20",
+      "dependency": "Original approval/Provider/neutral locks, physical mapping, registered three signed originals/permit, signed root revocation coordination, native issuance context; Source final-COMMIT TTL decision remains separate."
+    }
+  ],
+  "selected": "Signed root withdrawal: next freeze exact protocol and file-level Task, then true signed positive/negative COMMIT competition RED. Do not claim administrator epoch UPDATE is implementation.",
+  "formal_database_accessed": false,
+  "source_modified_in_this_investigation": false,
+  "goal_complete": false
+}

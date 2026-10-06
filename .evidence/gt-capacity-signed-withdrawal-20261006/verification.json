@@ -1,0 +1,59 @@
+{
+  "task_id": "gt-capacity-signed-withdrawal-20261006",
+  "baseline": "AOS-001413/53c1ba5415d0505b994bca8ad844d51814848100",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "result": "SIGNED_WITHDRAWAL_ISOLATED_PG_GREEN",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_withdrawal_contracts.py": "bd289b5c2fa873ab374f276a31b827437cc7bed90cbfef256b07101493a4bd78",
+    "services/aos-api/aos_api/aip_provider_capacity_withdrawal_registry.py": "3a54ba97acf86e3b742cf2991fb7f4994392e89f9e755994d33eb25815e6de0d",
+    "services/aos-api/alembic/versions/a0v_154_capacity_signed_withdrawal.py": "c2673a27d93c95abb0f5a380fcea309ef79b3c227e6d9b3a21177d68047b9021",
+    "services/aos-api/tests/aip/test_capacity_signed_withdrawal_pg.py": "d9577672ab062b44be2078ee2ece589e5ca8148241cac7607b76375439fa1864",
+    "services/aos-api/tests/aip/test_capacity_publication_registry_pg.py": "6c19d73c89ab7d7f666eb0a92d53683138e10050b2a70e2b3986c9ec37ec0567"
+  },
+  "plan_sha256": "92e60afdc59790f08a330d4d3d1b9c3bdab8eb063cf152eee11baadb0ec224d5",
+  "log_sha256": {
+    "adjacent-r1.log": "c3b250271a04ca731e664c74de9cb6de493e31d14803aedbc040b1b3c88b596f",
+    "green-r1.log": "f4a3adffe82127318ec35c54508ce0a222e442f57bf6646f3b5849269287d012",
+    "green-r2.log": "9a150f28866749b5b5c7d4939c1b327ac1308534effbb4e9f65419067bd3c472",
+    "green-r3.log": "863980dcf47a71909ffb437a2921cd30bc0c30d8aa1ccd8deffea9489fee28d4",
+    "green-r4.log": "599deb74b3e8b162aab93206c1b41c4ff71b43f64057a0f1750049f012904b05",
+    "red.log": "7081db20322dbbeee6d3924e02e27460057af43808ebafc29831108b6276804c"
+  },
+  "targeted": "31 passed in31.95s",
+  "cumulative": "649 passed,7 existingwarnings in315.48s",
+  "failed_fixture_reconciliation": {
+    "database": "aos_test_rootcommit_5ce8a715d56c",
+    "read_only": true,
+    "origin_root_snapshot_root_entry_document": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "epoch": 0,
+    "head": null,
+    "reason": "original canonical UTC+00:00 rejected before registration; corrected model normalization preserves gate"
+  },
+  "native_memory_events": {
+    "oom_before": 6,
+    "oom_after": 6,
+    "oom_kill_before": 4,
+    "oom_kill_after": 4
+  },
+  "root_maximum_cumulative": {
+    "database": "aos_test_rootcommit_de17f9451c3e",
+    "root_count": 10000,
+    "raw_bytes": 8190016,
+    "sha256": "c167fd8b52b52fba60df4ced81d209f06316258a8e80f21e00efa5e3b7a26624",
+    "result": "actual COMMIT proof in raw cumulative log"
+  },
+  "scope": "new signed invalidation and immutable history only; real formal DB/services untouched; all isolated databases retained",
+  "pending": [
+    "Root controlled formal installation and rotation",
+    "Full Source publication/current consumer/global mapping",
+    "Final caller-COMMIT TTL decision",
+    "Natural business chain/eight real scenarios/observation/publication"
+  ],
+  "browser": "not applicable: no UI/live services changed",
+  "review_sha256": "23920f9ce9bbb30bbc359358581ef976d109299522858cf9840371951228bac7"
+}

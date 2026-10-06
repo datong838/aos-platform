@@ -1,0 +1,30 @@
+{
+  "baseline": "AOS-001413/53c1ba5415d0505b994bca8ad844d51814848100",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_withdrawal_contracts.py": "bd289b5c2fa873ab374f276a31b827437cc7bed90cbfef256b07101493a4bd78",
+    "services/aos-api/aos_api/aip_provider_capacity_withdrawal_registry.py": "3a54ba97acf86e3b742cf2991fb7f4994392e89f9e755994d33eb25815e6de0d",
+    "services/aos-api/alembic/versions/a0v_154_capacity_signed_withdrawal.py": "c2673a27d93c95abb0f5a380fcea309ef79b3c227e6d9b3a21177d68047b9021",
+    "services/aos-api/tests/aip/test_capacity_signed_withdrawal_pg.py": "d9577672ab062b44be2078ee2ece589e5ca8148241cac7607b76375439fa1864",
+    "services/aos-api/tests/aip/test_capacity_publication_registry_pg.py": "6c19d73c89ab7d7f666eb0a92d53683138e10050b2a70e2b3986c9ec37ec0567"
+  },
+  "syntax": "PASS",
+  "review": [
+    "Only controlled anchor authority key verifies new purpose; signer/root key supplied by caller never accepted. Archived origin raw/signature re-verified and all ref fields reconstructed.",
+    "Native deployment DB/OID/cluster plus controlled target/subject/role/anchor must agree; publisher session and membership flags enforce independent channel. Formal OIDC/SCRAM identity not proven by test SET SESSION AUTHORIZATION.",
+    "Stable existing epoch lock acquired first; only new-domain immutable rows afterward. No original approval/Provider/neutral lock inversion. Actual signed withdrawal versus document COMMIT competition verifies ordering, not final-clock TTL.",
+    "Complete15-field native parser reuses original canonical/profile/identity/time/target primitives; inherited366-day bound and integer domains aligned. Full4300-digit event revision preserved with DB-derived bounded identity CHECK/unique.",
+    "New current independent authority may invalidate old expired original, but archived signature and immutable provenance required. No implicit root rotation/recovery after invalidation.",
+    "Exact known withdrawal raw/signature/provenance and current epoch/head compared; repeat returns without epoch change. Changed signed event after invalidation rejected.",
+    "Atomic INSERT audit+UPDATE epoch; RLS forced/Owner fixed/function search_path fixed/PUBLIC/runtime/issuer no tables/helpers. Immutable old rows preserved; downgrade refuses destructive removal.",
+    "Original Root inventory assertion changed only to exact seven-table union; all role flags/table owners/forcedRLS/immediate FKs preserved. No source consumer/grant or current database modification."
+  ],
+  "failure": "green-r3 one expired-origin fixture rejected unnormalizedUTC+00:00 before original registration; normalize with original model, original gate preserved; corrected green-r4 31PASS31.95s",
+  "scope_pending": [
+    "Root controlled formal installation and rotation",
+    "Full Source publication/current consumer/global mapping",
+    "Final caller-COMMIT TTL decision",
+    "Natural business chain/eight real scenarios/observation/publication"
+  ],
+  "browser": "not applicable: no UI/live services changed",
+  "result": "PASS: targeted31 and cumulative649; exact reviewed source hashes unchanged"
+}
