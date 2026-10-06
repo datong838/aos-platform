@@ -115,7 +115,8 @@ def test_original_private_claims_and_runtime_withdrawal_share_commit_fence(appro
 
 
 @pytest.mark.parametrize('target',['request','account','basis'])
-def test_private_claims_recheck_three_distinct_evidence_origins(source_inputs,approved_command,private_database,target):
+@pytest.mark.parametrize('fault',['revoke','receipt_hash','receipt_result'])
+def test_private_claims_recheck_three_distinct_evidence_origins(source_inputs,approved_command,private_database,target,fault):
     from aos_api.db import connect_serializable
     from aos_api.aip_action_store import canonical_hash
     from aos_api.aip_action_models import DecideActionProposalRequest
@@ -165,9 +166,23 @@ def test_private_claims_recheck_three_distinct_evidence_origins(source_inputs,ap
         assert fact.source==changed
         assert fact.supplier_verified is False and fact.execution_allowed is False
     ref=refs[target]
-    producer.revoke_evidence_bundle(SCOPE,ACTOR,ref.asset_id,'distinct-revoke-'+uuid4().hex,
-        RevokeEvidenceBundleRequest(expectedRevision=ref.revision,expectedContentHash=ref.content_hash,
-            reason='isolated three-origin withdrawal'))
+    if fault=='revoke':
+        producer.revoke_evidence_bundle(SCOPE,ACTOR,ref.asset_id,'distinct-revoke-'+uuid4().hex,
+            RevokeEvidenceBundleRequest(expectedRevision=ref.revision,expectedContentHash=ref.content_hash,
+                reason='isolated three-origin withdrawal'))
+    else:
+        from psycopg.types.json import Jsonb
+        with isolated_owner() as conn:
+            parent=conn.execute('SELECT idempotency_key FROM public.aip_evidence_bundle_build_provenance '
+                'WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s AND content_hash=%s',
+                (*SCOPE.key,ref.asset_id,ref.revision,ref.content_hash)).fetchone()
+            field='request_hash' if fault=='receipt_hash' else 'result_ref'
+            value='d'*64 if fault=='receipt_hash' else Jsonb({})
+            changed_receipt=conn.execute(sql.SQL('UPDATE public.aip_production_contract_receipt SET {}=%s '
+                'WHERE org_id=%s AND project_id=%s AND operation=\'evidence_bundle.build\' AND idempotency_key=%s '
+                'RETURNING receipt_id').format(sql.Identifier(field)),
+                (value,*SCOPE.key,parent['idempotency_key'])).fetchall()
+            assert len(changed_receipt)==1
     with connect_capacity_issuer(private_database,SCOPE) as conn:
         with pytest.raises(ProviderCapacityFormalBoundaryBlocked):read_capacity_approved_claims(conn,command)
         conn.rollback()

@@ -1,0 +1,17 @@
+# S15 原出处/收据完整消费者反例与最小复用
+
+基线 AOS-001395 / m1@3190dd8b；231完整Source与publication S15已要求原build出处/contract。候选一：已登记S15原出处单项反例，独立于待定COMMIT TTL；候选二：完整prepare/sign/finalize，继续完整退出但不绕过待定合同。执行第一项。
+
+沿已真实三distinct Evidence测试，扩展各路Receipt request_hash/result_ref单项漂移；在合法私有读取成功后由隔离维护owner修改原receipt行并COMMIT，再以原JWT/private SCRAM消费者读取，必须拒绝。先实际RED，不以别的拒绝门替代；不关闭trigger、不构造TEMP替代Consumer。三路原build与原批准均保持完整。仅aos_test_*5433。
+
+文件：services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py；确认RED后最小复用原 evidence_bundle_provenance.read_build_provenance，挂入 services/aos-api/aos_api/aip_provider_capacity_source_authority.py 的候选Evidence读取及 services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py 的原neutral已持锁读取。两份现Source/formal TaskLease同owner已核；不修改原验证器/迁移/权限/通用ContractStore。原ExactRevisionRef类型桥接，不复制hash/field验算。稳定原异常映射，不能新增授权。
+
+专项9种路径（3撤回+6Receipt漂移）再formal/source action/source PG及原provenance相邻；复审原接入合法build域、异常、现ACLRLS和unknown界限，落盘并m1精确提交/AuthorityPrime同步。无前端变化，不做无关浏览器。风险：历史缺原build出处的Bundle不能作为正式Source证据；原Bundle读/普通业务不改，完整Source发行、root/permit、最终COMMIT仍后继未证明。
+
+## RED、实现与复审
+
+真实原private消费者RED：6 failed/3 passed/28.03s，六个receipt_hash/result_ref×request/account/basis均DID NOT RAISE，三revoke仍拒绝。保留原JWT、真实批准以及真实不可变build出处，没有关闭guard；篡改仅原旧Receipt可修改列且每次RETURNING证实精确一行。
+
+最小代码：candidate._evidence和neutral已锁定后各调用同原read_build_provenance，FormalExactRef转换为原ExactRevisionRef；沿原tenant连接，不另连DB、不commit、不增新锁序/权限。BuildProvenanceUnavailable转原CandidateBlocked/FenceBlocked，再由原Guard/private异常映射拒绝。原验证器原五source fields、canonical request/authority hash、原build receipt精确result仍复用，不复制。原普通get_evidence_bundle行为不变。专项9 passed/29.26s。
+
+边界：新增为同一读取快照中的完整build出处和收据核验；旧Receipt自身可被维护owner改动，未证明Receipt所有writer在最终签名发行COMMIT前的协调。neutral Evidence epoch仅保证原撤回门，不冒充新增Receipt写者fence。完整Source发行SQL必须沿S15保留此语义并评估所有writer/COMMIT；本片段不完成正式发行/业务Goal。相邻包括原provenance、Source candidate/sourceAction/private consumer/Evidence epoch，不由9项宣称全部合法历史Bundle兼容。

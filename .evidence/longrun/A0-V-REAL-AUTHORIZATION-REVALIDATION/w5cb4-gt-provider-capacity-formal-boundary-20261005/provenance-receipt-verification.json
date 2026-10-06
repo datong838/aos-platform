@@ -1,0 +1,30 @@
+{
+  "authority_cutoff": "AOS-001395",
+  "code_base": "3190dd8b0986cf2e62d4fdf711db7b8754e58f66",
+  "tasks": [
+    "gt-provider-capacity-source-20261005",
+    "gt-provider-capacity-formal-boundary-20261005"
+  ],
+  "red": "6 receipt cases DID NOT RAISE, 3 revocations pass / 28.03s",
+  "green": "9 passed / 29.26s",
+  "adjacent": "194 passed / 274.58s",
+  "warnings": "7 existing startup plus original source_pg malformed bool serialization",
+  "scope": "Real distinct request/account/basis build Evidence; native checker approval; original JWT and actual private SCRAM consumer; exact one committed receipt field changed; six drift rejections after fix",
+  "implementation": "Reuse original read_build_provenance at candidate Evidence read and held neutral epoch three-reference read; original tenant/transaction, exception mapping, ACL unchanged",
+  "review": "Consistent with S15 plan. No copied hash checker, new connection/commit/permissions/migration or ordinary ContractStore change. Private issuer retains original provenance/receipt SELECT/RLS. Tests preserve ordinary original build, aliases, withdrawal and current identity paths.",
+  "limits": [
+    "Snapshot check only; no claim all Receipt writers are fenced through final Source COMMIT",
+    "Full signed Source root/permit/prepare/sign/finalize/current consumer pending",
+    "No current database accessed, no service restart, no business execution",
+    "Independent AIS-007 closure belongs to supervisor; original Tasks remain ACTIVE"
+  ],
+  "sources": {
+    "services/aos-api/aos_api/aip_provider_capacity_source_authority.py": "7c25c116243c3e2583de55aa91e48873ebc2185d2779dcb95199c4d81a2720ed",
+    "services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py": "39af56f90ff8f169fe15ef32f7645e0cc2ea48412ec32bf59a3558a7975c4c29",
+    "services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py": "69e0fca6bb22764084b1012c40fb8d1bb478a38057b7ae9c4adda083b74e01c7",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/provenance-receipt-plan.md": "a6c950de59bc04b0e76f07192201f6df36fe7f6c9bfa44132a308732bf4402de",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/provenance-receipt-red.log": "5c9592740de01c7570f2550d8864a621d9cbea898e7a056781fd35fea920ca81",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/provenance-receipt-green.log": "68a939a2f51e758b3b213274cf2f549d86f1004bd15b43ac9a5bf51048410eb0",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/provenance-receipt-adjacent.log": "11dd5dc6439ee6c3919e051036527f3c8b71fff2c66fdae4d34e208e6ae89cc7"
+  }
+}

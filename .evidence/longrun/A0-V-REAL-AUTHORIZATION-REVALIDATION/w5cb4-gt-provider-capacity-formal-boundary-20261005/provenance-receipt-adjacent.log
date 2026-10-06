@@ -1,0 +1,47 @@
+CAPACITY_WITHDRAWAL_COMMIT_PROOF {"authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START", "current_database_accessed": false, "epoch": 1, "execution_allowed": false, "fresh_reader_rejected": true, "holding_pid": 470571, "order": "reader_first", "pg_blocking_pids": [470571], "proposal_status": "approved", "reader_committed": true, "reader_pid": 470571, "reader_rejected": false, "supplier_verified": false, "target": "source", "waiting_pid": 470572, "withdrawal_count": 1, "writer_committed": true, "writer_pid": 470572}
+.CAPACITY_WITHDRAWAL_COMMIT_PROOF {"authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START", "current_database_accessed": false, "epoch": 1, "execution_allowed": false, "fresh_reader_rejected": true, "holding_pid": 470624, "order": "reader_first", "pg_blocking_pids": [470624], "proposal_status": "approved", "reader_committed": true, "reader_pid": 470624, "reader_rejected": false, "supplier_verified": false, "target": "allocation", "waiting_pid": 470625, "withdrawal_count": 1, "writer_committed": true, "writer_pid": 470625}
+.CAPACITY_WITHDRAWAL_COMMIT_PROOF {"authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START", "current_database_accessed": false, "epoch": 1, "execution_allowed": false, "fresh_reader_rejected": true, "holding_pid": 470677, "order": "writer_first", "pg_blocking_pids": [470677], "proposal_status": "approved", "reader_committed": false, "reader_pid": 470678, "reader_rejected": true, "supplier_verified": false, "target": "source", "waiting_pid": 470678, "withdrawal_count": 1, "writer_committed": true, "writer_pid": 470677}
+.CAPACITY_WITHDRAWAL_COMMIT_PROOF {"authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START", "current_database_accessed": false, "epoch": 1, "execution_allowed": false, "fresh_reader_rejected": true, "holding_pid": 470744, "order": "writer_first", "pg_blocking_pids": [470744], "proposal_status": "approved", "reader_committed": false, "reader_pid": 470745, "reader_rejected": true, "supplier_verified": false, "target": "allocation", "waiting_pid": 470745, "withdrawal_count": 1, "writer_committed": true, "writer_pid": 470744}
+..............CAPACITY_PRIVATE_ALIAS_PROOF {"account_raw_hash": "2cd7bb419857fab1181a65e974af4cbc08b95e422c60ffa9e1b1fe2259c6631c", "alternate": "basis_account", "basis_raw_hash": "4664ab8fab1ad8982590746aa569c458b1210b88934d1c0f8f0edff8c3b23ee5", "current_database_accessed": false, "exact_claims_match": true, "execution_allowed": false, "issuer_role": "aos_provider_capacity_issuer", "proposal_status": "approved", "scram_used": true, "supplier_verified": false}
+.CAPACITY_PRIVATE_ALIAS_PROOF {"account_raw_hash": "e804de42f896d203a21d2006cb568d57b3e1d268d35603c9cb84524395ce706a", "alternate": "account_provider", "basis_raw_hash": "538229a48b984ab7ddaabc8a27ea1f44ba683e720ba9957efa147873bf5884b3", "current_database_accessed": false, "exact_claims_match": true, "execution_allowed": false, "issuer_role": "aos_provider_capacity_issuer", "proposal_status": "approved", "scram_used": true, "supplier_verified": false}
+.CAPACITY_PRIVATE_ALIAS_PROOF {"account_raw_hash": "897bbfb2b9d569762175affe546213d357fa6a48ddd16058bc44d2d966011753", "alternate": "basis_mixed", "basis_raw_hash": "21621e814490b0a581f7df7e84a76d6aaebb70a42af9429eb9fb43b9d3b8cccc", "current_database_accessed": false, "exact_claims_match": true, "execution_allowed": false, "issuer_role": "aos_provider_capacity_issuer", "proposal_status": "approved", "scram_used": true, "supplier_verified": false}
+.CAPACITY_PRIVATE_ALIAS_PROOF {"account_raw_hash": "d9885e9ebd948e039cd4f6f12c4af77847ee475ac07120d340cdc1dfd3ea86ee", "alternate": "provider_mixed", "basis_raw_hash": "cf4fc00557864651b4d4b831d49c0ba77e799c9e6d212528a89348026eff8a50", "current_database_accessed": false, "exact_claims_match": true, "execution_allowed": false, "issuer_role": "aos_provider_capacity_issuer", "proposal_status": "approved", "scram_used": true, "supplier_verified": false}
+.................................................... [ 37%]
+........................................................................ [ 74%]
+..................................................                       [100%]
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/aip/test_provider_capacity_source_pg.py::test_original_candidate_dependencies_reject_without_new_rows[mutated]
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/pydantic/main.py:475: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='supplier_account_fingerprint', input_value=True, input_type=bool])
+    return self.__pydantic_serializer__.to_python(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+194 passed, 8 warnings in 274.58s (0:04:34)

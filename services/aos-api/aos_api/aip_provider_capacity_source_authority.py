@@ -45,6 +45,13 @@ class ProviderCapacityCandidateStore:
         item=AipProductionContractStore().get_evidence_bundle(scope,ref.asset_id,ref.revision,conn=conn)
         if item.content_hash!=ref.content_hash or item.lifecycle.value!='frozen' or item.revoked:
             raise ProviderCapacityCandidateBlocked('CURRENT_EXACT_EVIDENCE_REQUIRED')
+        from aos_api.aip_production_contracts import ExactRevisionRef
+        from aos_api.evidence_bundle_provenance import read_build_provenance,BuildProvenanceUnavailable
+        try:
+            read_build_provenance(conn,scope,ExactRevisionRef(resource_type='EvidenceBundleRevision',
+                resource_id=ref.asset_id,revision=ref.revision,content_hash=ref.content_hash))
+        except BuildProvenanceUnavailable as exc:
+            raise ProviderCapacityCandidateBlocked('CURRENT_EVIDENCE_BUILD_PROVENANCE_REQUIRED') from exc
 
     def _create(self,scope,principal,key,candidate,kind,model):
         if (type(scope) is not TenantScope or scope.key!=('org-org','dev-project')

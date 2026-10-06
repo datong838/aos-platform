@@ -1,0 +1,528 @@
+...FFFFFF                                                                [100%]
+=================================== FAILURES ===================================
+_ test_private_claims_recheck_three_distinct_evidence_origins[receipt_hash-request] _
+
+source_inputs = (Principal(subject='capacity-maker-1ce9acae41434ddd9e4a99629270400c', org_id='org-org', project_id='dev-project', role..., slot_id='checker.1', eligibility_snapshot_hash='0bbc98b6c02bcb79481f9bda2067434a4583f2db81bd8d3515327cd810ecc698')]))
+approved_command = (Principal(subject='capacity-maker-1ce9acae41434ddd9e4a99629270400c', org_id='org-org', project_id='dev-project', role...='test-only-unverified', revision=1, content_hash='bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')))
+private_database = ProviderCapacityIssuerDatabaseConfig(host='127.0.0.1', port=5433, database='aos_test_957dab2ed76f_ti4_test')
+target = 'request', fault = 'receipt_hash'
+
+    @pytest.mark.parametrize('target',['request','account','basis'])
+    @pytest.mark.parametrize('fault',['revoke','receipt_hash','receipt_result'])
+    def test_private_claims_recheck_three_distinct_evidence_origins(source_inputs,approved_command,private_database,target,fault):
+        from aos_api.db import connect_serializable
+        from aos_api.aip_action_store import canonical_hash
+        from aos_api.aip_action_models import DecideActionProposalRequest
+        from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+        from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+        from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+        from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+        from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims,ProviderCapacityFormalBoundaryBlocked
+        from aos_api.aip_production_contracts import RevokeEvidenceBundleRequest
+        from tests.aip.test_evidence_bundle_provenance_pg import build_inputs,ACTOR
+        maker,checker,source,_=source_inputs
+        with connect_serializable(SCOPE) as conn:
+            account=ProviderPhysicalAccountCandidate.model_validate(conn.execute(
+                'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                (source.physical_account_ref.asset_id,)).fetchone()['request_json']['candidate'])
+            basis=ProviderCapacityBasisCandidate.model_validate(conn.execute(
+                'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                (source.basis_ref.asset_id,)).fetchone()['request_json']['candidate'])
+        refs={'request':account.evidence_ref}
+        for kind in ['account','basis']:
+            producer,key,body=build_inputs.__wrapped__()
+            bundle=producer.build_evidence_bundle(SCOPE,ACTOR,key,body)
+            refs[kind]=account.evidence_ref.model_copy(update=dict(asset_id=bundle.bundle_id,
+                revision=bundle.revision,content_hash=bundle.content_hash))
+        assert len({ref.asset_id for ref in refs.values()})==3
+        store=ProviderCapacityCandidateStore()
+        saved=store.create_account(SCOPE,maker,'distinct-account-'+uuid4().hex,
+            account.model_copy(update=dict(evidence_ref=refs['account'])))
+        ar=source.physical_account_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))
+        saved=store.create_basis(SCOPE,maker,'distinct-basis-'+uuid4().hex,
+            basis.model_copy(update=dict(physical_account_ref=ar,evidence_ref=refs['basis'])))
+        changed=source.model_copy(update=dict(physical_account_ref=ar,
+            basis_ref=source.basis_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))))
+        proposal=propose_provider_capacity_source(maker,changed,'distinct-proposal-'+uuid4().hex,changed.valid_until)
+        approved=decide_provider_capacity_source(checker,proposal.proposal.id,'distinct-approval-'+uuid4().hex,
+            DecideActionProposalRequest(expectedProposalVersion=proposal.proposal.version,
+                expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',
+                reason='isolated distinct Evidence origins',approvalExpiresAt=changed.valid_until))
+        command=approved_command[-1].model_copy(update=dict(idempotency_key='distinct-private-'+uuid4().hex,
+            approved_proposal=approved_command[-1].approved_proposal.model_copy(update=dict(
+                asset_id=approved.proposal.id,revision=approved.proposal.version,content_hash=approved.proposal.proposal_hash)),
+            approval_event=approved_command[-1].approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+                content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+        with connect_capacity_issuer(private_database,SCOPE) as conn:
+            fact=read_capacity_approved_claims(conn,command)
+            assert conn.pgconn.used_password is True
+            assert fact.source==changed
+            assert fact.supplier_verified is False and fact.execution_allowed is False
+        ref=refs[target]
+        if fault=='revoke':
+            producer.revoke_evidence_bundle(SCOPE,ACTOR,ref.asset_id,'distinct-revoke-'+uuid4().hex,
+                RevokeEvidenceBundleRequest(expectedRevision=ref.revision,expectedContentHash=ref.content_hash,
+                    reason='isolated three-origin withdrawal'))
+        else:
+            from psycopg.types.json import Jsonb
+            with isolated_owner() as conn:
+                parent=conn.execute('SELECT idempotency_key FROM public.aip_evidence_bundle_build_provenance '
+                    'WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s AND content_hash=%s',
+                    (*SCOPE.key,ref.asset_id,ref.revision,ref.content_hash)).fetchone()
+                field='request_hash' if fault=='receipt_hash' else 'result_ref'
+                value='d'*64 if fault=='receipt_hash' else Jsonb({})
+                changed_receipt=conn.execute(sql.SQL('UPDATE public.aip_production_contract_receipt SET {}=%s '
+                    'WHERE org_id=%s AND project_id=%s AND operation=\'evidence_bundle.build\' AND idempotency_key=%s '
+                    'RETURNING receipt_id').format(sql.Identifier(field)),
+                    (value,*SCOPE.key,parent['idempotency_key'])).fetchall()
+                assert len(changed_receipt)==1
+        with connect_capacity_issuer(private_database,SCOPE) as conn:
+>           with pytest.raises(ProviderCapacityFormalBoundaryBlocked):read_capacity_approved_claims(conn,command)
+E           Failed: DID NOT RAISE ProviderCapacityFormalBoundaryBlocked
+
+services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py:187: Failed
+_ test_private_claims_recheck_three_distinct_evidence_origins[receipt_hash-account] _
+
+source_inputs = (Principal(subject='capacity-maker-a6639ef10a42428ba128b5b2439969df', org_id='org-org', project_id='dev-project', role..., slot_id='checker.1', eligibility_snapshot_hash='5e29bf2aaf1a3ace014a4d0660244fc050ad2a187f0dde8eb64ccd85e1dc3064')]))
+approved_command = (Principal(subject='capacity-maker-a6639ef10a42428ba128b5b2439969df', org_id='org-org', project_id='dev-project', role...='test-only-unverified', revision=1, content_hash='bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')))
+private_database = ProviderCapacityIssuerDatabaseConfig(host='127.0.0.1', port=5433, database='aos_test_957dab2ed76f_ti4_test')
+target = 'account', fault = 'receipt_hash'
+
+    @pytest.mark.parametrize('target',['request','account','basis'])
+    @pytest.mark.parametrize('fault',['revoke','receipt_hash','receipt_result'])
+    def test_private_claims_recheck_three_distinct_evidence_origins(source_inputs,approved_command,private_database,target,fault):
+        from aos_api.db import connect_serializable
+        from aos_api.aip_action_store import canonical_hash
+        from aos_api.aip_action_models import DecideActionProposalRequest
+        from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+        from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+        from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+        from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+        from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims,ProviderCapacityFormalBoundaryBlocked
+        from aos_api.aip_production_contracts import RevokeEvidenceBundleRequest
+        from tests.aip.test_evidence_bundle_provenance_pg import build_inputs,ACTOR
+        maker,checker,source,_=source_inputs
+        with connect_serializable(SCOPE) as conn:
+            account=ProviderPhysicalAccountCandidate.model_validate(conn.execute(
+                'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                (source.physical_account_ref.asset_id,)).fetchone()['request_json']['candidate'])
+            basis=ProviderCapacityBasisCandidate.model_validate(conn.execute(
+                'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                (source.basis_ref.asset_id,)).fetchone()['request_json']['candidate'])
+        refs={'request':account.evidence_ref}
+        for kind in ['account','basis']:
+            producer,key,body=build_inputs.__wrapped__()
+            bundle=producer.build_evidence_bundle(SCOPE,ACTOR,key,body)
+            refs[kind]=account.evidence_ref.model_copy(update=dict(asset_id=bundle.bundle_id,
+                revision=bundle.revision,content_hash=bundle.content_hash))
+        assert len({ref.asset_id for ref in refs.values()})==3
+        store=ProviderCapacityCandidateStore()
+        saved=store.create_account(SCOPE,maker,'distinct-account-'+uuid4().hex,
+            account.model_copy(update=dict(evidence_ref=refs['account'])))
+        ar=source.physical_account_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))
+        saved=store.create_basis(SCOPE,maker,'distinct-basis-'+uuid4().hex,
+            basis.model_copy(update=dict(physical_account_ref=ar,evidence_ref=refs['basis'])))
+        changed=source.model_copy(update=dict(physical_account_ref=ar,
+            basis_ref=source.basis_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))))
+        proposal=propose_provider_capacity_source(maker,changed,'distinct-proposal-'+uuid4().hex,changed.valid_until)
+        approved=decide_provider_capacity_source(checker,proposal.proposal.id,'distinct-approval-'+uuid4().hex,
+            DecideActionProposalRequest(expectedProposalVersion=proposal.proposal.version,
+                expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',
+                reason='isolated distinct Evidence origins',approvalExpiresAt=changed.valid_until))
+        command=approved_command[-1].model_copy(update=dict(idempotency_key='distinct-private-'+uuid4().hex,
+            approved_proposal=approved_command[-1].approved_proposal.model_copy(update=dict(
+                asset_id=approved.proposal.id,revision=approved.proposal.version,content_hash=approved.proposal.proposal_hash)),
+            approval_event=approved_command[-1].approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+                content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+        with connect_capacity_issuer(private_database,SCOPE) as conn:
+            fact=read_capacity_approved_claims(conn,command)
+            assert conn.pgconn.used_password is True
+            assert fact.source==changed
+            assert fact.supplier_verified is False and fact.execution_allowed is False
+        ref=refs[target]
+        if fault=='revoke':
+            producer.revoke_evidence_bundle(SCOPE,ACTOR,ref.asset_id,'distinct-revoke-'+uuid4().hex,
+                RevokeEvidenceBundleRequest(expectedRevision=ref.revision,expectedContentHash=ref.content_hash,
+                    reason='isolated three-origin withdrawal'))
+        else:
+            from psycopg.types.json import Jsonb
+            with isolated_owner() as conn:
+                parent=conn.execute('SELECT idempotency_key FROM public.aip_evidence_bundle_build_provenance '
+                    'WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s AND content_hash=%s',
+                    (*SCOPE.key,ref.asset_id,ref.revision,ref.content_hash)).fetchone()
+                field='request_hash' if fault=='receipt_hash' else 'result_ref'
+                value='d'*64 if fault=='receipt_hash' else Jsonb({})
+                changed_receipt=conn.execute(sql.SQL('UPDATE public.aip_production_contract_receipt SET {}=%s '
+                    'WHERE org_id=%s AND project_id=%s AND operation=\'evidence_bundle.build\' AND idempotency_key=%s '
+                    'RETURNING receipt_id').format(sql.Identifier(field)),
+                    (value,*SCOPE.key,parent['idempotency_key'])).fetchall()
+                assert len(changed_receipt)==1
+        with connect_capacity_issuer(private_database,SCOPE) as conn:
+>           with pytest.raises(ProviderCapacityFormalBoundaryBlocked):read_capacity_approved_claims(conn,command)
+E           Failed: DID NOT RAISE ProviderCapacityFormalBoundaryBlocked
+
+services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py:187: Failed
+_ test_private_claims_recheck_three_distinct_evidence_origins[receipt_hash-basis] _
+
+source_inputs = (Principal(subject='capacity-maker-203b7de499ca4b6a8dd81b7989cdbc0f', org_id='org-org', project_id='dev-project', role..., slot_id='checker.1', eligibility_snapshot_hash='34729d64985795a9dec42baa1b6f4587e24a74790fd68e3a183dc8547fc222bf')]))
+approved_command = (Principal(subject='capacity-maker-203b7de499ca4b6a8dd81b7989cdbc0f', org_id='org-org', project_id='dev-project', role...='test-only-unverified', revision=1, content_hash='bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')))
+private_database = ProviderCapacityIssuerDatabaseConfig(host='127.0.0.1', port=5433, database='aos_test_957dab2ed76f_ti4_test')
+target = 'basis', fault = 'receipt_hash'
+
+    @pytest.mark.parametrize('target',['request','account','basis'])
+    @pytest.mark.parametrize('fault',['revoke','receipt_hash','receipt_result'])
+    def test_private_claims_recheck_three_distinct_evidence_origins(source_inputs,approved_command,private_database,target,fault):
+        from aos_api.db import connect_serializable
+        from aos_api.aip_action_store import canonical_hash
+        from aos_api.aip_action_models import DecideActionProposalRequest
+        from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+        from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+        from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+        from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+        from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims,ProviderCapacityFormalBoundaryBlocked
+        from aos_api.aip_production_contracts import RevokeEvidenceBundleRequest
+        from tests.aip.test_evidence_bundle_provenance_pg import build_inputs,ACTOR
+        maker,checker,source,_=source_inputs
+        with connect_serializable(SCOPE) as conn:
+            account=ProviderPhysicalAccountCandidate.model_validate(conn.execute(
+                'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                (source.physical_account_ref.asset_id,)).fetchone()['request_json']['candidate'])
+            basis=ProviderCapacityBasisCandidate.model_validate(conn.execute(
+                'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                (source.basis_ref.asset_id,)).fetchone()['request_json']['candidate'])
+        refs={'request':account.evidence_ref}
+        for kind in ['account','basis']:
+            producer,key,body=build_inputs.__wrapped__()
+            bundle=producer.build_evidence_bundle(SCOPE,ACTOR,key,body)
+            refs[kind]=account.evidence_ref.model_copy(update=dict(asset_id=bundle.bundle_id,
+                revision=bundle.revision,content_hash=bundle.content_hash))
+        assert len({ref.asset_id for ref in refs.values()})==3
+        store=ProviderCapacityCandidateStore()
+        saved=store.create_account(SCOPE,maker,'distinct-account-'+uuid4().hex,
+            account.model_copy(update=dict(evidence_ref=refs['account'])))
+        ar=source.physical_account_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))
+        saved=store.create_basis(SCOPE,maker,'distinct-basis-'+uuid4().hex,
+            basis.model_copy(update=dict(physical_account_ref=ar,evidence_ref=refs['basis'])))
+        changed=source.model_copy(update=dict(physical_account_ref=ar,
+            basis_ref=source.basis_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))))
+        proposal=propose_provider_capacity_source(maker,changed,'distinct-proposal-'+uuid4().hex,changed.valid_until)
+        approved=decide_provider_capacity_source(checker,proposal.proposal.id,'distinct-approval-'+uuid4().hex,
+            DecideActionProposalRequest(expectedProposalVersion=proposal.proposal.version,
+                expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',
+                reason='isolated distinct Evidence origins',approvalExpiresAt=changed.valid_until))
+        command=approved_command[-1].model_copy(update=dict(idempotency_key='distinct-private-'+uuid4().hex,
+            approved_proposal=approved_command[-1].approved_proposal.model_copy(update=dict(
+                asset_id=approved.proposal.id,revision=approved.proposal.version,content_hash=approved.proposal.proposal_hash)),
+            approval_event=approved_command[-1].approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+                content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+        with connect_capacity_issuer(private_database,SCOPE) as conn:
+            fact=read_capacity_approved_claims(conn,command)
+            assert conn.pgconn.used_password is True
+            assert fact.source==changed
+            assert fact.supplier_verified is False and fact.execution_allowed is False
+        ref=refs[target]
+        if fault=='revoke':
+            producer.revoke_evidence_bundle(SCOPE,ACTOR,ref.asset_id,'distinct-revoke-'+uuid4().hex,
+                RevokeEvidenceBundleRequest(expectedRevision=ref.revision,expectedContentHash=ref.content_hash,
+                    reason='isolated three-origin withdrawal'))
+        else:
+            from psycopg.types.json import Jsonb
+            with isolated_owner() as conn:
+                parent=conn.execute('SELECT idempotency_key FROM public.aip_evidence_bundle_build_provenance '
+                    'WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s AND content_hash=%s',
+                    (*SCOPE.key,ref.asset_id,ref.revision,ref.content_hash)).fetchone()
+                field='request_hash' if fault=='receipt_hash' else 'result_ref'
+                value='d'*64 if fault=='receipt_hash' else Jsonb({})
+                changed_receipt=conn.execute(sql.SQL('UPDATE public.aip_production_contract_receipt SET {}=%s '
+                    'WHERE org_id=%s AND project_id=%s AND operation=\'evidence_bundle.build\' AND idempotency_key=%s '
+                    'RETURNING receipt_id').format(sql.Identifier(field)),
+                    (value,*SCOPE.key,parent['idempotency_key'])).fetchall()
+                assert len(changed_receipt)==1
+        with connect_capacity_issuer(private_database,SCOPE) as conn:
+>           with pytest.raises(ProviderCapacityFormalBoundaryBlocked):read_capacity_approved_claims(conn,command)
+E           Failed: DID NOT RAISE ProviderCapacityFormalBoundaryBlocked
+
+services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py:187: Failed
+_ test_private_claims_recheck_three_distinct_evidence_origins[receipt_result-request] _
+
+source_inputs = (Principal(subject='capacity-maker-cad20700b61c4d8a93f1414639271d23', org_id='org-org', project_id='dev-project', role..., slot_id='checker.1', eligibility_snapshot_hash='6f47160c443105ff164c307f1e533b0603d3169262c296b82aafee75137ca89a')]))
+approved_command = (Principal(subject='capacity-maker-cad20700b61c4d8a93f1414639271d23', org_id='org-org', project_id='dev-project', role...='test-only-unverified', revision=1, content_hash='bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')))
+private_database = ProviderCapacityIssuerDatabaseConfig(host='127.0.0.1', port=5433, database='aos_test_957dab2ed76f_ti4_test')
+target = 'request', fault = 'receipt_result'
+
+    @pytest.mark.parametrize('target',['request','account','basis'])
+    @pytest.mark.parametrize('fault',['revoke','receipt_hash','receipt_result'])
+    def test_private_claims_recheck_three_distinct_evidence_origins(source_inputs,approved_command,private_database,target,fault):
+        from aos_api.db import connect_serializable
+        from aos_api.aip_action_store import canonical_hash
+        from aos_api.aip_action_models import DecideActionProposalRequest
+        from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+        from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+        from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+        from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+        from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims,ProviderCapacityFormalBoundaryBlocked
+        from aos_api.aip_production_contracts import RevokeEvidenceBundleRequest
+        from tests.aip.test_evidence_bundle_provenance_pg import build_inputs,ACTOR
+        maker,checker,source,_=source_inputs
+        with connect_serializable(SCOPE) as conn:
+            account=ProviderPhysicalAccountCandidate.model_validate(conn.execute(
+                'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                (source.physical_account_ref.asset_id,)).fetchone()['request_json']['candidate'])
+            basis=ProviderCapacityBasisCandidate.model_validate(conn.execute(
+                'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                (source.basis_ref.asset_id,)).fetchone()['request_json']['candidate'])
+        refs={'request':account.evidence_ref}
+        for kind in ['account','basis']:
+            producer,key,body=build_inputs.__wrapped__()
+            bundle=producer.build_evidence_bundle(SCOPE,ACTOR,key,body)
+            refs[kind]=account.evidence_ref.model_copy(update=dict(asset_id=bundle.bundle_id,
+                revision=bundle.revision,content_hash=bundle.content_hash))
+        assert len({ref.asset_id for ref in refs.values()})==3
+        store=ProviderCapacityCandidateStore()
+        saved=store.create_account(SCOPE,maker,'distinct-account-'+uuid4().hex,
+            account.model_copy(update=dict(evidence_ref=refs['account'])))
+        ar=source.physical_account_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))
+        saved=store.create_basis(SCOPE,maker,'distinct-basis-'+uuid4().hex,
+            basis.model_copy(update=dict(physical_account_ref=ar,evidence_ref=refs['basis'])))
+        changed=source.model_copy(update=dict(physical_account_ref=ar,
+            basis_ref=source.basis_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))))
+        proposal=propose_provider_capacity_source(maker,changed,'distinct-proposal-'+uuid4().hex,changed.valid_until)
+        approved=decide_provider_capacity_source(checker,proposal.proposal.id,'distinct-approval-'+uuid4().hex,
+            DecideActionProposalRequest(expectedProposalVersion=proposal.proposal.version,
+                expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',
+                reason='isolated distinct Evidence origins',approvalExpiresAt=changed.valid_until))
+        command=approved_command[-1].model_copy(update=dict(idempotency_key='distinct-private-'+uuid4().hex,
+            approved_proposal=approved_command[-1].approved_proposal.model_copy(update=dict(
+                asset_id=approved.proposal.id,revision=approved.proposal.version,content_hash=approved.proposal.proposal_hash)),
+            approval_event=approved_command[-1].approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+                content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+        with connect_capacity_issuer(private_database,SCOPE) as conn:
+            fact=read_capacity_approved_claims(conn,command)
+            assert conn.pgconn.used_password is True
+            assert fact.source==changed
+            assert fact.supplier_verified is False and fact.execution_allowed is False
+        ref=refs[target]
+        if fault=='revoke':
+            producer.revoke_evidence_bundle(SCOPE,ACTOR,ref.asset_id,'distinct-revoke-'+uuid4().hex,
+                RevokeEvidenceBundleRequest(expectedRevision=ref.revision,expectedContentHash=ref.content_hash,
+                    reason='isolated three-origin withdrawal'))
+        else:
+            from psycopg.types.json import Jsonb
+            with isolated_owner() as conn:
+                parent=conn.execute('SELECT idempotency_key FROM public.aip_evidence_bundle_build_provenance '
+                    'WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s AND content_hash=%s',
+                    (*SCOPE.key,ref.asset_id,ref.revision,ref.content_hash)).fetchone()
+                field='request_hash' if fault=='receipt_hash' else 'result_ref'
+                value='d'*64 if fault=='receipt_hash' else Jsonb({})
+                changed_receipt=conn.execute(sql.SQL('UPDATE public.aip_production_contract_receipt SET {}=%s '
+                    'WHERE org_id=%s AND project_id=%s AND operation=\'evidence_bundle.build\' AND idempotency_key=%s '
+                    'RETURNING receipt_id').format(sql.Identifier(field)),
+                    (value,*SCOPE.key,parent['idempotency_key'])).fetchall()
+                assert len(changed_receipt)==1
+        with connect_capacity_issuer(private_database,SCOPE) as conn:
+>           with pytest.raises(ProviderCapacityFormalBoundaryBlocked):read_capacity_approved_claims(conn,command)
+E           Failed: DID NOT RAISE ProviderCapacityFormalBoundaryBlocked
+
+services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py:187: Failed
+_ test_private_claims_recheck_three_distinct_evidence_origins[receipt_result-account] _
+
+source_inputs = (Principal(subject='capacity-maker-2abc2ec4f0734140b38327771336d804', org_id='org-org', project_id='dev-project', role..., slot_id='checker.1', eligibility_snapshot_hash='5b530f080a23db29b31ed49d229794b6dd6375c30ec1b0218e2d82971a6128ef')]))
+approved_command = (Principal(subject='capacity-maker-2abc2ec4f0734140b38327771336d804', org_id='org-org', project_id='dev-project', role...='test-only-unverified', revision=1, content_hash='bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')))
+private_database = ProviderCapacityIssuerDatabaseConfig(host='127.0.0.1', port=5433, database='aos_test_957dab2ed76f_ti4_test')
+target = 'account', fault = 'receipt_result'
+
+    @pytest.mark.parametrize('target',['request','account','basis'])
+    @pytest.mark.parametrize('fault',['revoke','receipt_hash','receipt_result'])
+    def test_private_claims_recheck_three_distinct_evidence_origins(source_inputs,approved_command,private_database,target,fault):
+        from aos_api.db import connect_serializable
+        from aos_api.aip_action_store import canonical_hash
+        from aos_api.aip_action_models import DecideActionProposalRequest
+        from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+        from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+        from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+        from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+        from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims,ProviderCapacityFormalBoundaryBlocked
+        from aos_api.aip_production_contracts import RevokeEvidenceBundleRequest
+        from tests.aip.test_evidence_bundle_provenance_pg import build_inputs,ACTOR
+        maker,checker,source,_=source_inputs
+        with connect_serializable(SCOPE) as conn:
+            account=ProviderPhysicalAccountCandidate.model_validate(conn.execute(
+                'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                (source.physical_account_ref.asset_id,)).fetchone()['request_json']['candidate'])
+            basis=ProviderCapacityBasisCandidate.model_validate(conn.execute(
+                'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                (source.basis_ref.asset_id,)).fetchone()['request_json']['candidate'])
+        refs={'request':account.evidence_ref}
+        for kind in ['account','basis']:
+            producer,key,body=build_inputs.__wrapped__()
+            bundle=producer.build_evidence_bundle(SCOPE,ACTOR,key,body)
+            refs[kind]=account.evidence_ref.model_copy(update=dict(asset_id=bundle.bundle_id,
+                revision=bundle.revision,content_hash=bundle.content_hash))
+        assert len({ref.asset_id for ref in refs.values()})==3
+        store=ProviderCapacityCandidateStore()
+        saved=store.create_account(SCOPE,maker,'distinct-account-'+uuid4().hex,
+            account.model_copy(update=dict(evidence_ref=refs['account'])))
+        ar=source.physical_account_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))
+        saved=store.create_basis(SCOPE,maker,'distinct-basis-'+uuid4().hex,
+            basis.model_copy(update=dict(physical_account_ref=ar,evidence_ref=refs['basis'])))
+        changed=source.model_copy(update=dict(physical_account_ref=ar,
+            basis_ref=source.basis_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))))
+        proposal=propose_provider_capacity_source(maker,changed,'distinct-proposal-'+uuid4().hex,changed.valid_until)
+        approved=decide_provider_capacity_source(checker,proposal.proposal.id,'distinct-approval-'+uuid4().hex,
+            DecideActionProposalRequest(expectedProposalVersion=proposal.proposal.version,
+                expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',
+                reason='isolated distinct Evidence origins',approvalExpiresAt=changed.valid_until))
+        command=approved_command[-1].model_copy(update=dict(idempotency_key='distinct-private-'+uuid4().hex,
+            approved_proposal=approved_command[-1].approved_proposal.model_copy(update=dict(
+                asset_id=approved.proposal.id,revision=approved.proposal.version,content_hash=approved.proposal.proposal_hash)),
+            approval_event=approved_command[-1].approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+                content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+        with connect_capacity_issuer(private_database,SCOPE) as conn:
+            fact=read_capacity_approved_claims(conn,command)
+            assert conn.pgconn.used_password is True
+            assert fact.source==changed
+            assert fact.supplier_verified is False and fact.execution_allowed is False
+        ref=refs[target]
+        if fault=='revoke':
+            producer.revoke_evidence_bundle(SCOPE,ACTOR,ref.asset_id,'distinct-revoke-'+uuid4().hex,
+                RevokeEvidenceBundleRequest(expectedRevision=ref.revision,expectedContentHash=ref.content_hash,
+                    reason='isolated three-origin withdrawal'))
+        else:
+            from psycopg.types.json import Jsonb
+            with isolated_owner() as conn:
+                parent=conn.execute('SELECT idempotency_key FROM public.aip_evidence_bundle_build_provenance '
+                    'WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s AND content_hash=%s',
+                    (*SCOPE.key,ref.asset_id,ref.revision,ref.content_hash)).fetchone()
+                field='request_hash' if fault=='receipt_hash' else 'result_ref'
+                value='d'*64 if fault=='receipt_hash' else Jsonb({})
+                changed_receipt=conn.execute(sql.SQL('UPDATE public.aip_production_contract_receipt SET {}=%s '
+                    'WHERE org_id=%s AND project_id=%s AND operation=\'evidence_bundle.build\' AND idempotency_key=%s '
+                    'RETURNING receipt_id').format(sql.Identifier(field)),
+                    (value,*SCOPE.key,parent['idempotency_key'])).fetchall()
+                assert len(changed_receipt)==1
+        with connect_capacity_issuer(private_database,SCOPE) as conn:
+>           with pytest.raises(ProviderCapacityFormalBoundaryBlocked):read_capacity_approved_claims(conn,command)
+E           Failed: DID NOT RAISE ProviderCapacityFormalBoundaryBlocked
+
+services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py:187: Failed
+_ test_private_claims_recheck_three_distinct_evidence_origins[receipt_result-basis] _
+
+source_inputs = (Principal(subject='capacity-maker-6392444c3ea747fabdc045547bf75996', org_id='org-org', project_id='dev-project', role..., slot_id='checker.1', eligibility_snapshot_hash='83dafe075ef61c7d89e6edaa64ca685ef1b61a09e3889276735ac00d0fd0d23a')]))
+approved_command = (Principal(subject='capacity-maker-6392444c3ea747fabdc045547bf75996', org_id='org-org', project_id='dev-project', role...='test-only-unverified', revision=1, content_hash='bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')))
+private_database = ProviderCapacityIssuerDatabaseConfig(host='127.0.0.1', port=5433, database='aos_test_957dab2ed76f_ti4_test')
+target = 'basis', fault = 'receipt_result'
+
+    @pytest.mark.parametrize('target',['request','account','basis'])
+    @pytest.mark.parametrize('fault',['revoke','receipt_hash','receipt_result'])
+    def test_private_claims_recheck_three_distinct_evidence_origins(source_inputs,approved_command,private_database,target,fault):
+        from aos_api.db import connect_serializable
+        from aos_api.aip_action_store import canonical_hash
+        from aos_api.aip_action_models import DecideActionProposalRequest
+        from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+        from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+        from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+        from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+        from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims,ProviderCapacityFormalBoundaryBlocked
+        from aos_api.aip_production_contracts import RevokeEvidenceBundleRequest
+        from tests.aip.test_evidence_bundle_provenance_pg import build_inputs,ACTOR
+        maker,checker,source,_=source_inputs
+        with connect_serializable(SCOPE) as conn:
+            account=ProviderPhysicalAccountCandidate.model_validate(conn.execute(
+                'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                (source.physical_account_ref.asset_id,)).fetchone()['request_json']['candidate'])
+            basis=ProviderCapacityBasisCandidate.model_validate(conn.execute(
+                'SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                (source.basis_ref.asset_id,)).fetchone()['request_json']['candidate'])
+        refs={'request':account.evidence_ref}
+        for kind in ['account','basis']:
+            producer,key,body=build_inputs.__wrapped__()
+            bundle=producer.build_evidence_bundle(SCOPE,ACTOR,key,body)
+            refs[kind]=account.evidence_ref.model_copy(update=dict(asset_id=bundle.bundle_id,
+                revision=bundle.revision,content_hash=bundle.content_hash))
+        assert len({ref.asset_id for ref in refs.values()})==3
+        store=ProviderCapacityCandidateStore()
+        saved=store.create_account(SCOPE,maker,'distinct-account-'+uuid4().hex,
+            account.model_copy(update=dict(evidence_ref=refs['account'])))
+        ar=source.physical_account_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))
+        saved=store.create_basis(SCOPE,maker,'distinct-basis-'+uuid4().hex,
+            basis.model_copy(update=dict(physical_account_ref=ar,evidence_ref=refs['basis'])))
+        changed=source.model_copy(update=dict(physical_account_ref=ar,
+            basis_ref=source.basis_ref.model_copy(update=dict(asset_id=saved['candidate_id'],content_hash=saved['content_hash']))))
+        proposal=propose_provider_capacity_source(maker,changed,'distinct-proposal-'+uuid4().hex,changed.valid_until)
+        approved=decide_provider_capacity_source(checker,proposal.proposal.id,'distinct-approval-'+uuid4().hex,
+            DecideActionProposalRequest(expectedProposalVersion=proposal.proposal.version,
+                expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',
+                reason='isolated distinct Evidence origins',approvalExpiresAt=changed.valid_until))
+        command=approved_command[-1].model_copy(update=dict(idempotency_key='distinct-private-'+uuid4().hex,
+            approved_proposal=approved_command[-1].approved_proposal.model_copy(update=dict(
+                asset_id=approved.proposal.id,revision=approved.proposal.version,content_hash=approved.proposal.proposal_hash)),
+            approval_event=approved_command[-1].approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+                content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+        with connect_capacity_issuer(private_database,SCOPE) as conn:
+            fact=read_capacity_approved_claims(conn,command)
+            assert conn.pgconn.used_password is True
+            assert fact.source==changed
+            assert fact.supplier_verified is False and fact.execution_allowed is False
+        ref=refs[target]
+        if fault=='revoke':
+            producer.revoke_evidence_bundle(SCOPE,ACTOR,ref.asset_id,'distinct-revoke-'+uuid4().hex,
+                RevokeEvidenceBundleRequest(expectedRevision=ref.revision,expectedContentHash=ref.content_hash,
+                    reason='isolated three-origin withdrawal'))
+        else:
+            from psycopg.types.json import Jsonb
+            with isolated_owner() as conn:
+                parent=conn.execute('SELECT idempotency_key FROM public.aip_evidence_bundle_build_provenance '
+                    'WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s AND content_hash=%s',
+                    (*SCOPE.key,ref.asset_id,ref.revision,ref.content_hash)).fetchone()
+                field='request_hash' if fault=='receipt_hash' else 'result_ref'
+                value='d'*64 if fault=='receipt_hash' else Jsonb({})
+                changed_receipt=conn.execute(sql.SQL('UPDATE public.aip_production_contract_receipt SET {}=%s '
+                    'WHERE org_id=%s AND project_id=%s AND operation=\'evidence_bundle.build\' AND idempotency_key=%s '
+                    'RETURNING receipt_id').format(sql.Identifier(field)),
+                    (value,*SCOPE.key,parent['idempotency_key'])).fetchall()
+                assert len(changed_receipt)==1
+        with connect_capacity_issuer(private_database,SCOPE) as conn:
+>           with pytest.raises(ProviderCapacityFormalBoundaryBlocked):read_capacity_approved_claims(conn,command)
+E           Failed: DID NOT RAISE ProviderCapacityFormalBoundaryBlocked
+
+services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py:187: Failed
+--------------------------- Captured stderr teardown ---------------------------
+Retained isolated test database: aos_test_957dab2ed76f_ti4_test
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py::test_private_claims_recheck_three_distinct_evidence_origins[receipt_hash-request]
+FAILED services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py::test_private_claims_recheck_three_distinct_evidence_origins[receipt_hash-account]
+FAILED services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py::test_private_claims_recheck_three_distinct_evidence_origins[receipt_hash-basis]
+FAILED services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py::test_private_claims_recheck_three_distinct_evidence_origins[receipt_result-request]
+FAILED services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py::test_private_claims_recheck_three_distinct_evidence_origins[receipt_result-account]
+FAILED services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py::test_private_claims_recheck_three_distinct_evidence_origins[receipt_result-basis]
+6 failed, 3 passed, 85 deselected, 7 warnings in 28.03s
