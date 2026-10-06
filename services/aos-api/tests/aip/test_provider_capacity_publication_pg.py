@@ -1339,3 +1339,226 @@ def test_native_root_identifier_unicode_order_and_acl(native_profile_runner):
         SELECT aos_capacity_publication_private.read_root_identifier_literal('"authority"');
     """, False)
     assert 'permission denied for function read_root_identifier_literal' in error
+
+
+
+def test_native_full_root_snapshot_original_file_complete(native_profile_runner, tmp_path):
+    import base64
+    from datetime import datetime
+    from aos_api.asset_registry.signature import FileTrustRootProvider
+    from aos_api.aip_provider_capacity_publication_contracts import freeze_capacity_trust_root_snapshot
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL)
+    roots = [dict(publisher='authority', keyId='key-' + str(i), algorithm='Ed25519',
+        publicKey=base64.b64encode(bytes(range(32))).decode(), notBefore='2020-01-01T00:00:00Z',
+        notAfter='2030-01-01T00:00:00Z', revokedAt=None, revision='sha256:' + 'a' * 64)
+        for i in range(1001)]
+    roots[0]['keyId'] = 'surrogate-\ud800'
+    roots[1]['publisher'] = 'publisher with space'
+    roots[2]['keyId'] = '😀' * 240
+    roots[3].update(notBefore='0001-01-01T00:00:00+23:59', notAfter='9999-12-31T23:59:59.999999-23:59')
+    roots[4].update(notBefore='2020-01-01T00:00:00.000001+00:00:30.123456',
+        revokedAt='2019-01-01T01:02:03.000001-05:30:01.123456')
+    roots[5]['keyId'] = 'quote-"-\\-字'
+    path = tmp_path / 'full-native-roots.json'
+    path.write_text(json.dumps(dict(trustRoots=roots)))
+    frozen = freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path))
+    statement = "SELECT root_ordinal,publisher_literal,key_id_literal,encode(public_key,'hex'),root_revision," +         "((extract(epoch FROM not_before))*1000000)::bigint," +         "((extract(epoch FROM not_after))*1000000)::bigint," +         "COALESCE(((extract(epoch FROM revoked_at))*1000000)::bigint::text,'null')," +         "encode(canonical_root,'hex') FROM aos_capacity_publication_private.read_root_snapshot(" +         "decode('%s','hex')) ORDER BY root_ordinal;" % frozen.canonical_bytes.hex()
+    result = native_profile_runner(CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL + CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL + statement).splitlines()
+    def micros(value):
+        if value is None: return 'null'
+        dt = datetime.fromisoformat(value)
+        delta = dt.replace(tzinfo=None) - datetime(1970,1,1) - dt.utcoffset()
+        return str((delta.days * 86400 + delta.seconds) * 1000000 + delta.microseconds)
+    expected = []
+    for i, root in enumerate(json.loads(frozen.canonical_bytes)['trustRoots'], 1):
+        raw = json.dumps(root, ensure_ascii=True, sort_keys=True, separators=(',', ':')).encode('ascii')
+        expected.append('|'.join([str(i), json.dumps(root['publisher']), json.dumps(root['keyId']),
+            bytes(range(32)).hex(), root['revision'], micros(root['notBefore']), micros(root['notAfter']),
+            micros(root['revokedAt']), raw.hex()]))
+    assert len(result) == frozen.root_count == 1001
+    assert result == expected
+
+
+def _root_snapshot_fixture_row(key='key-0'):
+    import base64
+    return dict(algorithm='Ed25519', publisher='authority', keyId=key,
+        publicKey=base64.b64encode(bytes(range(32))).decode(), notBefore='2020-01-01T00:00:00+00:00',
+        notAfter='2030-01-01T00:00:00+00:00', revokedAt=None, revision='sha256:'+'a'*64)
+
+
+def _native_root_snapshot_count(runner, raw, success=True, limit=False):
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL)
+    argument = 'NULL' if raw is None else "decode('%s','hex')" % raw.hex()
+    select = 'SELECT root_ordinal' if limit else 'SELECT count(*)'
+    ddl = CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL + CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL
+    if raw is not None and len(raw) > 1024*1024:
+        # Supply large bodies as stored values, not optimizer-visible giant constants.
+        # The temporary input is rolled back with the native fixture transaction.
+        ddl += 'CREATE TEMP TABLE root_snapshot_parts(n integer,part text);'
+        ddl += 'COPY root_snapshot_parts FROM STDIN;\n'
+        ddl += ''.join(str(i) + '\t' + raw[pos:pos+32768].hex() + '\n'
+            for i,pos in enumerate(range(0,len(raw),32768)))
+        ddl += '\\.\n'
+        ddl += 'CREATE TEMP TABLE root_snapshot_input(message bytea NOT NULL);'
+        ddl += "INSERT INTO root_snapshot_input SELECT decode(string_agg(part,'' ORDER BY n),'hex') FROM root_snapshot_parts;"
+        import hashlib
+        ddl += "DO $verify$ BEGIN IF (SELECT encode(pg_catalog.sha256(message),'hex') FROM root_snapshot_input) <> '" + \
+            hashlib.sha256(raw).hexdigest() + "' THEN RAISE EXCEPTION 'copied root bytes mismatch'; END IF; END $verify$;"
+        source = 'root_snapshot_input CROSS JOIN LATERAL aos_capacity_publication_private.read_root_snapshot(message)'
+    else:
+        source = 'aos_capacity_publication_private.read_root_snapshot(' + argument + ')'
+    return runner(ddl + select + ' FROM ' + source + (' LIMIT 1;' if limit else ';'), success)
+
+
+@pytest.mark.parametrize('fault', ['missing', 'extra', 'algorithm', 'key-type', 'publisher-empty',
+    'identifier-241', 'nul', 'base64-short', 'base64-padbits', 'base64-whitespace', 'revision-uppercase',
+    'revision-type', 'naive', 'year-zero', 'year-five-digits', 'day', 'leap-day', 'hour', 'minute',
+    'second', 'local-fraction-zero', 'local-fraction-short', 'offset-hour', 'offset-minute', 'offset-second',
+    'offset-fraction-zero', 'offset-zero-seconds', 'offset-negative-zero', 'offset-subsecond-utc',
+    'equal-window', 'reverse-window', 'revocation-invalid', 'duplicates', 'descending', 'late-invalid',
+    'spacing', 'duplicate-field', 'top-extra', 'top-duplicate', 'array-shape', 'root-shape', 'non-ascii',
+    'root-field-order', 'escaped-ascii', 'null'])
+def test_native_full_root_snapshot_single_fault_rejected(native_profile_runner, fault):
+    root = _root_snapshot_fixture_row()
+    roots = [root]
+    if fault == 'missing': root.pop('publisher')
+    elif fault == 'extra': root['verified'] = True
+    elif fault == 'algorithm': root['algorithm'] = 'RSA'
+    elif fault == 'key-type': root['keyId'] = 12
+    elif fault == 'publisher-empty': root['publisher'] = ''
+    elif fault == 'identifier-241': root['keyId'] = 'k' * 241
+    elif fault == 'nul': root['keyId'] = 'a\x00z'
+    elif fault == 'base64-short': root['publicKey'] = 'YQ=='
+    elif fault == 'base64-padbits': root['publicKey'] = root['publicKey'][:-2] + '9='
+    elif fault == 'base64-whitespace': root['publicKey'] += '\n'
+    elif fault == 'revision-uppercase': root['revision'] = 'sha256:'+'A'*64
+    elif fault == 'revision-type': root['revision'] = True
+    elif fault == 'naive': root['notBefore'] = '2020-01-01T00:00:00'
+    elif fault == 'year-zero': root['notBefore'] = '0000-01-01T00:00:00+00:00'
+    elif fault == 'year-five-digits': root['notBefore'] = '10000-01-01T00:00:00+00:00'
+    elif fault == 'day': root['notBefore'] = '2020-04-31T00:00:00+00:00'
+    elif fault == 'leap-day': root['notBefore'] = '2019-02-29T00:00:00+00:00'
+    elif fault == 'hour': root['notBefore'] = '2020-01-01T24:00:00+00:00'
+    elif fault == 'minute': root['notBefore'] = '2020-01-01T00:60:00+00:00'
+    elif fault == 'second': root['notBefore'] = '2020-01-01T00:00:60+00:00'
+    elif fault == 'local-fraction-zero': root['notBefore'] = '2020-01-01T00:00:00.000000+00:00'
+    elif fault == 'local-fraction-short': root['notBefore'] = '2020-01-01T00:00:00.1+00:00'
+    elif fault == 'offset-hour': root['notBefore'] = '2020-01-01T00:00:00+24:00'
+    elif fault == 'offset-minute': root['notBefore'] = '2020-01-01T00:00:00+00:60'
+    elif fault == 'offset-second': root['notBefore'] = '2020-01-01T00:00:00+00:00:60'
+    elif fault == 'offset-fraction-zero': root['notBefore'] = '2020-01-01T00:00:00+00:00:01.000000'
+    elif fault == 'offset-zero-seconds': root['notBefore'] = '2020-01-01T00:00:00+00:00:00'
+    elif fault == 'offset-negative-zero': root['notBefore'] = '2020-01-01T00:00:00-00:00'
+    elif fault == 'offset-subsecond-utc': root['notBefore'] = '2020-01-01T00:00:00+00:00:00.123456'
+    elif fault == 'equal-window': root['notBefore'] = root['notAfter']
+    elif fault == 'reverse-window': root['notBefore'] = '2040-01-01T00:00:00+00:00'
+    elif fault == 'revocation-invalid': root['revokedAt'] = 7
+    elif fault == 'duplicates': roots.append(dict(root))
+    elif fault == 'descending': roots = [_root_snapshot_fixture_row('z'), root]
+    elif fault == 'late-invalid': roots.append(dict(_root_snapshot_fixture_row('z'), algorithm='RSA'))
+    elif fault == 'array-shape': roots = root
+    elif fault == 'root-shape': roots = [7]
+    elif fault == 'non-ascii': root['publisher'] = '字'
+    payload = dict(trustRoots=roots)
+    if fault == 'top-extra': payload['verified'] = True
+    raw = json.dumps(payload, sort_keys=True, separators=(',', ':'), ensure_ascii=fault != 'non-ascii').encode('utf8')
+    if fault == 'spacing': raw = raw.replace(b':', b': ', 1)
+    elif fault == 'duplicate-field': raw = raw.replace(b'"algorithm":"Ed25519"', b'"algorithm":"Ed25519","algorithm":"Ed25519"')
+    elif fault == 'top-duplicate': raw = raw[:-1] + b',"trustRoots":[]}'
+    elif fault == 'root-field-order': raw = raw.replace(b'"algorithm":"Ed25519","keyId":"key-0"', b'"keyId":"key-0","algorithm":"Ed25519"')
+    elif fault == 'escaped-ascii': raw = raw.replace(b'"key-0"', br'"\u006bey-0"')
+    elif fault == 'null': raw = None
+    assert 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' in _native_root_snapshot_count(native_profile_runner, raw,
+        False, limit=fault=='late-invalid')
+
+
+def test_native_full_root_snapshot_count_size_and_empty(native_profile_runner):
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL)
+    assert _native_root_snapshot_count(native_profile_runner, b'{"trustRoots":[]}') == '0'
+    roots = [_root_snapshot_fixture_row('key-%05d' % i) for i in range(10000)]
+    raw = json.dumps(dict(trustRoots=roots), sort_keys=True, separators=(',', ':')).encode('ascii')
+    assert 2*1024*1024 < len(raw) < 8*1024*1024
+    assert _native_root_snapshot_count(native_profile_runner, raw) == '10000'
+    roots.append(_root_snapshot_fixture_row('key-10000'))
+    raw = json.dumps(dict(trustRoots=roots), sort_keys=True, separators=(',', ':')).encode('ascii')
+    assert 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' in _native_root_snapshot_count(native_profile_runner, raw, False)
+    assert 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' in native_profile_runner(CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL +
+        CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL + "SELECT count(*) FROM aos_capacity_publication_private.read_root_snapshot(" +
+        "convert_to(repeat('a',8388609),'UTF8'));", False)
+
+
+def test_native_full_root_snapshot_original_time_normalizations(native_profile_runner, tmp_path):
+    from datetime import datetime
+    from aos_api.asset_registry.signature import FileTrustRootProvider
+    from aos_api.aip_provider_capacity_publication_contracts import freeze_capacity_trust_root_snapshot
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL)
+    times = ['2020-02-29T23:59:59.000001+05:30', '2020-01-01T00:00:00-00:00:30.123456',
+        '2020-01-01T00:00:00+23:59:59.999999', '2020-01-01T00:00:00-23:59:59.999999',
+        '2020-01-01T00:00:00+00:00:00.123456', '2020-01-01T00:00:00-00:00',
+        '2020-01-01T00:00:00+05:30:00.123456', '2020-01-01T00:00:00,100000Z',
+        '2020-W01-3T00:00:00Z', '2020-01-01T00:00:00+05', '2020-01-01T00:00:00.000000Z']
+    roots = [dict(_root_snapshot_fixture_row('key-%02d' % i), notBefore=value)
+        for i,value in enumerate(times)]
+    path = tmp_path / 'normalized-root-times.json'
+    path.write_text(json.dumps(dict(trustRoots=roots)))
+    frozen = freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path))
+    normalized = json.loads(frozen.canonical_bytes)['trustRoots']
+    assert normalized[4]['notBefore'] == '2020-01-01T00:00:00+00:00'
+    actual = native_profile_runner(CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL + CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL +
+        'SELECT ((extract(epoch FROM not_before))*1000000)::bigint FROM ' +
+        "aos_capacity_publication_private.read_root_snapshot(decode('%s','hex')) ORDER BY root_ordinal;" %
+        frozen.canonical_bytes.hex()).splitlines()
+    expected = []
+    for root in normalized:
+        dt = datetime.fromisoformat(root['notBefore'])
+        delta = dt.replace(tzinfo=None)-datetime(1970,1,1)-dt.utcoffset()
+        expected.append(str((delta.days*86400+delta.seconds)*1000000+delta.microseconds))
+    assert actual == expected
+
+
+def test_native_full_root_snapshot_original_expanded_file(native_profile_runner, tmp_path):
+    from aos_api.asset_registry.signature import FileTrustRootProvider
+    from aos_api.aip_provider_capacity_publication_contracts import freeze_capacity_trust_root_snapshot
+    roots = [dict(_root_snapshot_fixture_row('k'+str(i).zfill(4)+'\x7f'*234+'z'),
+        publisher='p'+'\x7f'*238+'q') for i in range(1200)]
+    raw = json.dumps(dict(trustRoots=roots), ensure_ascii=False, separators=(',', ':')).encode('utf8')
+    assert len(raw) < 1024*1024
+    path = tmp_path / 'native-expanded-roots.json'
+    path.write_bytes(raw)
+    frozen = freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path))
+    assert 2*1024*1024 < len(frozen.canonical_bytes) < 8*1024*1024
+    assert _native_root_snapshot_count(native_profile_runner, frozen.canonical_bytes) == '1200'
+
+
+def test_native_full_root_snapshot_catalog_and_role_denial(native_profile_runner):
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL)
+    ddl = CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL + CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL
+    actual = native_profile_runner(ddl + """
+      SELECT p.proname,p.provolatile,p.prosecdef,p.proconfig::text,
+        (SELECT count(*) FROM aclexplode(p.proacl) WHERE grantee=0 AND privilege_type='EXECUTE')
+      FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+      WHERE n.nspname='aos_capacity_publication_private'
+        AND p.proname IN ('read_root_time_literal','read_root_snapshot') ORDER BY p.proname;
+    """).splitlines()
+    assert actual == ['read_root_snapshot|i|f|{search_path=pg_catalog}|0',
+        'read_root_time_literal|i|f|{search_path=pg_catalog}|0']
+    error = native_profile_runner(ddl + """
+        CREATE ROLE capacity_root_snapshot_reader NOLOGIN;
+        GRANT USAGE ON SCHEMA aos_capacity_publication_private TO capacity_root_snapshot_reader;
+        SET LOCAL ROLE capacity_root_snapshot_reader;
+        SELECT count(*) FROM aos_capacity_publication_private.read_root_snapshot(convert_to('{"trustRoots":[]}','UTF8'));
+    """, False)
+    assert 'permission denied for function read_root_snapshot' in error
+
+
+def test_native_full_root_snapshot_near_transport_bound_stored_input(native_profile_runner):
+    # Pure transport upper domain, not proof of original file/anchor provenance.
+    roots = [_root_snapshot_fixture_row('key-%05d-' % i + '\x7f'*85) for i in range(10000)]
+    raw = json.dumps(dict(trustRoots=roots), sort_keys=True, separators=(',', ':')).encode('ascii')
+    assert 7*1024*1024 < len(raw) < 8*1024*1024
+    assert _native_root_snapshot_count(native_profile_runner, raw) == '10000'

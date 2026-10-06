@@ -842,3 +842,121 @@ END
 $body$;
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_supplier_attestation(bytea) FROM PUBLIC;
 """
+
+
+# Complete normalized root transport, independent of signed-document limits.
+# Every returned row remains untrusted until an authorized anchored registration.
+CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.read_root_time_literal(p_literal text)
+RETURNS timestamptz LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER
+SET search_path = pg_catalog AS $body$
+DECLARE
+  pieces text[];
+  local_time timestamp;
+  offset_micros bigint;
+BEGIN
+  pieces := pg_catalog.regexp_match(p_literal,
+    '^"([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\.([0-9]{6}))?([+-])([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:\.([0-9]{6}))?)?"$', 'c');
+  IF pieces IS NULL OR pieces[1]::integer = 0
+      OR pieces[4]::integer > 23 OR pieces[5]::integer > 59 OR pieces[6]::integer > 59
+      OR pieces[9]::integer > 23 OR pieces[10]::integer > 59
+      OR COALESCE(pieces[11],'0')::integer > 59
+      OR pieces[7] = '000000' OR pieces[12] = '000000'
+      OR (pieces[11] = '00' AND pieces[12] IS NULL) THEN
+    RAISE EXCEPTION 'CAPACITY_ROOT_TIME_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  offset_micros := (pieces[9]::bigint*3600+pieces[10]::bigint*60+
+      COALESCE(pieces[11],'0')::bigint)*1000000+COALESCE(pieces[12],'0')::bigint;
+  -- Original FileReader normalizes pure subsecond zero offsets to UTC.
+  IF (offset_micros = 0 AND pieces[8] <> '+')
+      OR (offset_micros > 0 AND offset_micros < 1000000) THEN
+    RAISE EXCEPTION 'CAPACITY_ROOT_TIME_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  local_time := pg_catalog.make_timestamp(pieces[1]::integer,pieces[2]::integer,pieces[3]::integer,
+      pieces[4]::integer,pieces[5]::integer,
+      pieces[6]::integer+COALESCE(pieces[7],'0')::integer/1000000.0);
+  RETURN (local_time AT TIME ZONE 'UTC') - pg_catalog.make_interval(
+      secs => (CASE WHEN pieces[8]='-' THEN -offset_micros ELSE offset_micros END)/1000000.0);
+EXCEPTION WHEN OTHERS THEN
+  RAISE EXCEPTION 'CAPACITY_ROOT_TIME_REQUIRED' USING ERRCODE='22023';
+END
+$body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_root_time_literal(text) FROM PUBLIC;
+
+CREATE FUNCTION aos_capacity_publication_private.read_root_snapshot(p_message bytea)
+RETURNS TABLE(root_ordinal integer,publisher_literal text,key_id_literal text,
+    publisher_codepoints integer[],key_id_codepoints integer[],public_key bytea,root_revision text,
+    not_before timestamptz,not_after timestamptz,revoked_at timestamptz,canonical_root bytea)
+LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path = pg_catalog AS $body$
+DECLARE
+  document text;
+  array_document json;
+  joined_rows text;
+  row_count bigint;
+  original record;
+  row_text text;
+  pieces text[];
+  previous_publisher integer[];
+  previous_key integer[];
+  literal_pattern constant text := $regex$"(?:[^"\\]|\\.)*"$regex$;
+  root_pattern text;
+BEGIN
+  IF p_message IS NULL OR pg_catalog.octet_length(p_message) > 8388608
+      OR pg_catalog.current_setting('server_encoding') <> 'UTF8' THEN
+    RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  document := pg_catalog.convert_from(p_message,'UTF8');
+  IF pg_catalog.octet_length(document) <> pg_catalog.length(document)
+      OR pg_catalog.left(document,15) <> '{"trustRoots":[' OR pg_catalog.right(document,2) <> ']}' THEN
+    RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  -- Object JSON functions decode surrogate literals. Keep each array row opaque.
+  array_document := pg_catalog.substr(document,15,pg_catalog.length(document)-15)::json;
+  SELECT count(*),COALESCE(pg_catalog.string_agg(value::text,',' ORDER BY ordinality),'')
+    INTO row_count,joined_rows FROM pg_catalog.json_array_elements(array_document) WITH ORDINALITY;
+  IF row_count > 10000 OR document <> '{"trustRoots":['||joined_rows||']}' THEN
+    RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  root_pattern := '^\{"algorithm":"Ed25519","keyId":('||literal_pattern||
+    '),"notAfter":('||literal_pattern||'),"notBefore":('||literal_pattern||
+    '),"publicKey":"([A-Za-z0-9+/]{43}=)","publisher":('||literal_pattern||
+    '),"revision":"(sha256:[0-9a-f]{64})","revokedAt":(null|'||literal_pattern||')\}$';
+  FOR original IN SELECT value,ordinality FROM pg_catalog.json_array_elements(array_document) WITH ORDINALITY LOOP
+    row_text := original.value::text;
+    pieces := pg_catalog.regexp_match(row_text,root_pattern,'c');
+    IF pieces IS NULL THEN
+      RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
+    END IF;
+    publisher_literal := pieces[5];
+    key_id_literal := pieces[1];
+    publisher_codepoints := aos_capacity_publication_private.read_root_identifier_literal(publisher_literal);
+    key_id_codepoints := aos_capacity_publication_private.read_root_identifier_literal(key_id_literal);
+    IF previous_publisher IS NOT NULL AND (publisher_codepoints < previous_publisher
+        OR (publisher_codepoints = previous_publisher AND key_id_codepoints <= previous_key)) THEN
+      RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
+    END IF;
+    previous_publisher := publisher_codepoints;
+    previous_key := key_id_codepoints;
+    public_key := pg_catalog.decode(pieces[4],'base64');
+    IF pg_catalog.octet_length(public_key) <> 32 OR pg_catalog.encode(public_key,'base64') <> pieces[4] THEN
+      RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
+    END IF;
+    root_revision := pieces[6];
+    not_before := aos_capacity_publication_private.read_root_time_literal(pieces[3]);
+    not_after := aos_capacity_publication_private.read_root_time_literal(pieces[2]);
+    revoked_at := CASE WHEN pieces[7]='null' THEN NULL
+      ELSE aos_capacity_publication_private.read_root_time_literal(pieces[7]) END;
+    IF not_before >= not_after THEN
+      RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
+    END IF;
+    root_ordinal := original.ordinality;
+    canonical_root := pg_catalog.convert_to(row_text,'UTF8');
+    RETURN NEXT;
+  END LOOP;
+  -- PL/pgSQL materializes the set: later rejection cannot expose a partial set.
+EXCEPTION WHEN OTHERS THEN
+  RAISE EXCEPTION 'CAPACITY_ROOT_SNAPSHOT_REQUIRED' USING ERRCODE='22023';
+END
+$body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_root_snapshot(bytea) FROM PUBLIC;
+"""

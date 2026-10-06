@@ -1,0 +1,71 @@
+..............................................F...                       [100%]
+=================================== FAILURES ===================================
+_____________ test_native_full_root_snapshot_count_size_and_empty ______________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x11e941800>
+
+    def test_native_full_root_snapshot_count_size_and_empty(native_profile_runner):
+        from aos_api.aip_provider_capacity_publication_store import (CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL,
+            CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL)
+        assert _native_root_snapshot_count(native_profile_runner, b'{"trustRoots":[]}') == '0'
+        roots = [_root_snapshot_fixture_row('key-%05d' % i) for i in range(10000)]
+        raw = json.dumps(dict(trustRoots=roots), sort_keys=True, separators=(',', ':')).encode('ascii')
+        assert 2*1024*1024 < len(raw) < 8*1024*1024
+>       assert _native_root_snapshot_count(native_profile_runner, raw) == '10000'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_provider_capacity_publication_pg.py:1469: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/tests/aip/test_provider_capacity_publication_pg.py:1395: in _native_root_snapshot_count
+    return runner(CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL + CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL + select +
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+statement = "\nCREATE FUNCTION aos_capacity_publication_private.read_root_identifier_literal(p_literal text)\nRETURNS integer[] LA...616161616161616161616161616161616161616161616161616161616161616161222c227265766f6b65644174223a6e756c6c7d5d7d','hex'));"
+success = True
+
+    def run(statement, success=True):
+        result = subprocess.run(prefix+["exec", "-i", target, "psql", "-U", "aos_app", "-d", "aos_test_ed25519", "-Atq", "-v", "ON_ERROR_STOP=1", "-f", "-"], input="BEGIN; CREATE SCHEMA aos_capacity_publication_private;\n"+CAPACITY_SIGNED_BODY_PROFILE_SQL+"\n"+statement+"\nROLLBACK;", text=True, capture_output=True, timeout=60)
+        if success:
+>           assert result.returncode == 0, result.stderr
+E           AssertionError: psql:<stdin>:270: server closed the connection unexpectedly
+E             	This probably means the server terminated abnormally
+E             	before or while processing the request.
+E             psql:<stdin>:270: error: connection to server was lost
+E             
+E           assert 2 == 0
+E            +  where 2 = CompletedProcess(args=['docker', '--context', 'colima-aos-a0v-test-only', 'exec', '-i', 'aos-ed25519-test-31dccb3dc27e...nated abnormally\n\tbefore or while processing the request.\npsql:<stdin>:270: error: connection to server was lost\n').returncode
+
+services/aos-api/tests/aip/test_provider_capacity_publication_pg.py:315: AssertionError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_provider_capacity_publication_pg.py::test_native_full_root_snapshot_count_size_and_empty
+1 failed, 49 passed, 410 deselected, 7 warnings in 19.10s

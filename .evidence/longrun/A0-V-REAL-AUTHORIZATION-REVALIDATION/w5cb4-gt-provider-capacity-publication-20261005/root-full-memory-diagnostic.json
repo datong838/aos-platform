@@ -1,0 +1,13 @@
+{
+  "memory_limit": 268435456,
+  "running": true,
+  "oom_killed": true,
+  "container_restart_count": 0,
+  "pg_recovery_events": [
+    "2026-10-06 11:09:55.924 UTC [1] LOG:  server process (PID 35554) was terminated by signal 9: Killed",
+    "2026-10-06 11:09:55.925 UTC [1] LOG:  terminating any other active server processes",
+    "2026-10-06 11:09:55.928 UTC [1] LOG:  all server processes terminated; reinitializing",
+    "2026-10-06 11:09:56.013 UTC [35555] LOG:  database system was not properly shut down; automatic recovery in progress",
+    "2026-10-06 11:09:56.054 UTC [1] LOG:  database system is ready to accept connections"
+  ]
+}

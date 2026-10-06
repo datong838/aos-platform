@@ -1,0 +1,39 @@
+{
+  "baseline": "2c8b6fb988c4dd776e680e5e24562f16145bcbb0",
+  "task": "gt-provider-capacity-publication-schema-20261005",
+  "final_adjacent": "478 passed, 7 warnings in 71.46s",
+  "native_profile_scope": "complete normalized ASCII root snapshot structure only, not trust/registration",
+  "review": {
+    "original_full_1001_rows_and_all_fields_compared": true,
+    "original_time_normalizations_compared_at_integer_microseconds": true,
+    "count_zero_10000_and_10001_checked": true,
+    "near_8MiB_8190016_bytes_and_complete_sha256_checked": true,
+    "late_invalid_root_with_LIMIT1_rejected": true,
+    "catalog_and_actual_role_denial_checked": true,
+    "large_input_path": "COPY chunks to temporary bytea, hash, full single parser call, transaction rollback",
+    "large_inline_SQL_memory_risk": "observed backend/client cgroup OOM; unrestricted inline usage not accepted as stable",
+    "current_db_access": false,
+    "production_root_registration": false,
+    "source_final_COMMIT_pass": false,
+    "full_task_complete": false,
+    "browser_applicable": false
+  },
+  "sources": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "7c4a2461560d4f22b902f5d5b0de18d003c0a0fd10c9053a8a27f09613036ec8",
+    "services/aos-api/tests/aip/test_provider_capacity_publication_pg.py": "e05684c2baba55e9e685ac8546b448df7223535218a1066056c366c4f5ee19fe",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-snapshot-profile-plan.md": "aa6e9ff5db8185aadc18b4ad16a5b87e529e2ab1d8ea064f125e419e1db73438",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-red.log": "58975eb6828e777e6a4f7f3ed739fbe068aa5841bbcd8afa6c887d11945ca627",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-green.log": "471ba8e8501a172f091d8450802b8b6580f395ea535549aa59ef49dae18d3b9c",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-diagnostic.log": "95eb7ea720245062e37143b36fb722dd6434fc5aaf96dc1a94b694c57f65f849",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-green-r2.log": "0197661ad3699808897c103c3669742f581c0e236a4b80aedb3bdc743caa6548",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-green-r3.log": "813dd7365f57fe075a9538c813da3f511947dc8da150386239946b6208eb5396",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-green-r4.log": "f1cbfc92404e3fbb4032fc55b2df470e6137c94894dab2a006c37dab7dfb708b",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-memory-diagnostic.json": "ef5f2b8f13d6411ec81073ba1d23b170a1f4eeb5a51ae5b8bca1283a2b7fa60d",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-stored-input-diagnostic.log": "4ed697fd9bd6fd5428d68b4bd83d2f82d395fa47debf2fe9f7c08904865f13f1",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-green-r5.log": "126a59d6c819831e60946caee1b35e7a39aa5df3f27a3a941fef8206ed091759",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-near-bound.log": "b5659d2307bda9300b5be39c42d2267675313a6e334c6356141e42a05446741c",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-near-bound-r2.log": "5e27305cb136cdbf67dfbeff5096c15535b5f2823b1cdba878ec3ea142ef0dec",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-near-bound-r3.log": "56b3088e2696232a039b465ecf66ebd7099f3dbcec429f9f69c11c457ccc1549",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-full-adjacent.log": "642b9bb1716eb3224c31b616bd1118e2f350c4e7fbb06f3de41acd1952f2da80"
+  }
+}

@@ -1,0 +1,2 @@
+psql:<stdin>:189: ERROR:  CAPACITY_ROOT_SNAPSHOT_REQUIRED
+CONTEXT:  PL/pgSQL function aos_capacity_publication_private.read_root_snapshot(bytea) line 39 at RAISE
