@@ -1,0 +1,96 @@
+{
+  "outcome": "ROLE_LEVEL_SCOPE_NEGATIVE_MATRIX_GREEN_WITH_EMPTY_TABLE_LIMITS",
+  "authority": "AOS-001365",
+  "records": [
+    {
+      "role": "aos_aip_binding_evaluator",
+      "tables": 56,
+      "nonempty_positive_tables": [
+        "meta_membership",
+        "bundle_installation",
+        "bundle_installation_revision",
+        "bundle_composition",
+        "bundle_composition_lock",
+        "aip_agent_registry_receipt"
+      ],
+      "empty_positive_tables": [
+        "aip_evidence_bundle_revision",
+        "aip_evidence_bundle_build_provenance",
+        "aip_evidence_bundle_revoke_event",
+        "aip_production_contract_receipt",
+        "aip_action_withdrawal_event",
+        "aip_license_source_issuance",
+        "aip_license_source_head",
+        "aip_license_source_initialization_fence",
+        "aip_budget_cost_proposal",
+        "aip_budget_cost_proposal_receipt",
+        "aip_budget_cost_decision",
+        "aip_budget_cost_revocation",
+        "aip_budget_cost_issuer_receipt",
+        "aip_budget_receipt",
+        "aip_budget_cost_runtime_fence",
+        "aip_budget_head",
+        "aip_budget_revision",
+        "aip_budget_reservation",
+        "aip_model_eval_budget_reservation",
+        "aip_runtime_guard_policy_head",
+        "aip_runtime_guard_policy_revision",
+        "aip_network_policy_head",
+        "aip_network_policy_revision",
+        "aip_model_governance_policy_head",
+        "aip_model_governance_policy_revision",
+        "aip_eval_contract_head",
+        "aip_eval_contract_revision",
+        "aip_eval_suite_revision",
+        "aip_publication_event",
+        "aip_release_gate_decision",
+        "aip_eval_dataset_revision",
+        "aip_provider_health_observation",
+        "aip_model_capacity_pool_head",
+        "aip_model_capacity_pool_revision",
+        "aip_model_capacity_reservation",
+        "aip_capability_binding",
+        "aip_binding_evaluation_proof",
+        "aip_provider_instance_head",
+        "aip_provider_instance_revision",
+        "aip_registered_model_head",
+        "aip_registered_model_revision",
+        "aip_runtime_policy_head",
+        "aip_runtime_policy_revision",
+        "aip_model_route_head",
+        "aip_model_route_revision",
+        "aip_model_price_snapshot_head",
+        "aip_model_price_snapshot_revision",
+        "aip_action_proposal",
+        "aip_action_draft",
+        "aip_action_approval_event"
+      ]
+    },
+    {
+      "role": "aos_provider_capacity_issuer",
+      "tables": 13,
+      "nonempty_positive_tables": [
+        "meta_membership"
+      ],
+      "empty_positive_tables": [
+        "aip_provider_capacity_request",
+        "aip_provider_capacity_candidate",
+        "aip_provider_instance_head",
+        "aip_provider_instance_revision",
+        "aip_evidence_bundle_revision",
+        "aip_evidence_bundle_build_provenance",
+        "aip_evidence_bundle_revoke_event",
+        "aip_production_contract_receipt",
+        "aip_action_withdrawal_event",
+        "aip_action_proposal",
+        "aip_action_draft",
+        "aip_action_approval_event"
+      ]
+    }
+  ],
+  "limitations": [
+    "SET ROLE only; not native formal consumption",
+    "empty positive tables lack real-row isolation evidence",
+    "formal issuance/concurrency/source migration/restart pending"
+  ]
+}
