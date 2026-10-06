@@ -5,6 +5,86 @@ signature/key or grant capacity. Production installation and the
 full approval/currentness/mapping/signature/COMMIT boundary remain separate.
 """
 
+# Root file identifiers have a wider domain than signed document identifiers.
+# Return codepoints rather than PostgreSQL text, which cannot hold surrogates.
+# This validates syntax only; it does not establish trust or register a root.
+CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.read_root_identifier_literal(p_literal text)
+RETURNS integer[] LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER
+SET search_path = pg_catalog AS $body$
+DECLARE
+  size integer := pg_catalog.length(p_literal);
+  pos integer := 2;
+  code integer;
+  low_code integer;
+  escape text;
+  digits text;
+  points integer[] := ARRAY[]::integer[];
+  strip_points constant integer[] := ARRAY[9,10,11,12,13,28,29,30,31,32,133,160,5760,
+      8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288];
+BEGIN
+  IF p_literal IS NULL OR size NOT BETWEEN 3 AND 2882
+      OR pg_catalog.octet_length(p_literal) <> size
+      OR pg_catalog.left(p_literal,1) <> '"' OR pg_catalog.right(p_literal,1) <> '"' THEN
+    RAISE EXCEPTION 'CAPACITY_ROOT_IDENTIFIER_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  WHILE pos < size LOOP
+    code := pg_catalog.ascii(pg_catalog.substr(p_literal,pos,1));
+    IF code = 92 THEN
+      escape := pg_catalog.substr(p_literal,pos+1,1);
+      IF escape = 'u' THEN
+        digits := pg_catalog.substr(p_literal,pos+2,4);
+        IF pos+5 >= size OR digits COLLATE "C" !~ '^[0-9a-f]{4}$' THEN
+          RAISE EXCEPTION 'CAPACITY_ROOT_IDENTIFIER_REQUIRED' USING ERRCODE='22023';
+        END IF;
+        code := ('x'||digits)::bit(16)::integer;
+        -- Canonical ensure_ascii uses literal printable ASCII and short escapes.
+        IF code BETWEEN 32 AND 126 OR code = ANY(ARRAY[8,9,10,12,13]) THEN
+          RAISE EXCEPTION 'CAPACITY_ROOT_IDENTIFIER_REQUIRED' USING ERRCODE='22023';
+        END IF;
+        pos := pos+6;
+        IF code BETWEEN 55296 AND 56319 AND pos+5 < size
+            AND pg_catalog.substr(p_literal,pos,2) = E'\\u' THEN
+          digits := pg_catalog.substr(p_literal,pos+2,4);
+          IF digits COLLATE "C" ~ '^[0-9a-f]{4}$' THEN
+            low_code := ('x'||digits)::bit(16)::integer;
+            IF low_code BETWEEN 56320 AND 57343 THEN
+              code := 65536+(code-55296)*1024+low_code-56320;
+              pos := pos+6;
+            END IF;
+          END IF;
+        END IF;
+      ELSE
+        code := CASE escape WHEN '"' THEN 34 WHEN E'\\' THEN 92
+          WHEN 'b' THEN 8 WHEN 't' THEN 9 WHEN 'n' THEN 10 WHEN 'f' THEN 12 WHEN 'r' THEN 13
+          ELSE NULL END;
+        IF code IS NULL OR pos+1 >= size THEN
+          RAISE EXCEPTION 'CAPACITY_ROOT_IDENTIFIER_REQUIRED' USING ERRCODE='22023';
+        END IF;
+        pos := pos+2;
+      END IF;
+    ELSE
+      IF code NOT BETWEEN 32 AND 126 OR code = 34 THEN
+        RAISE EXCEPTION 'CAPACITY_ROOT_IDENTIFIER_REQUIRED' USING ERRCODE='22023';
+      END IF;
+      pos := pos+1;
+    END IF;
+    IF code = 0 OR pg_catalog.cardinality(points) >= 240 THEN
+      RAISE EXCEPTION 'CAPACITY_ROOT_IDENTIFIER_REQUIRED' USING ERRCODE='22023';
+    END IF;
+    points := pg_catalog.array_append(points,code);
+  END LOOP;
+  IF pos <> size OR pg_catalog.cardinality(points) = 0
+      OR points[1] = ANY(strip_points)
+      OR points[pg_catalog.cardinality(points)] = ANY(strip_points) THEN
+    RAISE EXCEPTION 'CAPACITY_ROOT_IDENTIFIER_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  RETURN points;
+END
+$body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_root_identifier_literal(text) FROM PUBLIC;
+"""
+
 # S08 snapshot only. Full approval consumers must separately enforce original
 # proposal/Owner/withdrawal locks, exact references and current non-NULL expiry.
 CAPACITY_APPROVAL_EVENT_PROJECTION_SQL = r"""

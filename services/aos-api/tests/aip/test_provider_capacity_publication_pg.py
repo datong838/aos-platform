@@ -1243,3 +1243,99 @@ def test_native_complete_root_transport_preserves_opaque_rows(native_profile_run
     normal = native_profile_runner("SELECT value::jsonb->>'keyId' FROM json_array_elements(" + array_sql +
         ") WITH ORDINALITY WHERE ordinality=" + str(normal_index) + ';')
     assert normal == 'key-10'
+
+
+
+def test_native_root_identifier_original_file_domain(native_profile_runner, tmp_path):
+    import base64, random
+    from aos_api.asset_registry.signature import FileTrustRootProvider, _is_exact_identifier
+    from aos_api.aip_provider_capacity_publication_contracts import freeze_capacity_trust_root_snapshot
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL
+    rng = random.Random(631)
+    identities = ['key with space', 'k' * 240, '😀' * 240, 'a\ud800z', 'a\udc00z',
+        'a\ud800\ud800z', 'a\udc00\udc00z', 'a"\\z', '字😀é', 'a\x7fz']
+    identities += ['a' + chr(i) + 'z' for i in range(1, 128)]
+    identities += ['a' + ''.join(chr(rng.randrange(1, 0x110000)) for _ in range(20)) + 'z' for _ in range(30)]
+    for identity in identities:
+        assert _is_exact_identifier(identity)
+    roots = [dict(publisher='authority', keyId=key, algorithm='Ed25519',
+        publicKey=base64.b64encode(bytes(range(32))).decode(), notBefore='2020-01-01T00:00:00Z',
+        notAfter='2030-01-01T00:00:00Z', revokedAt=None, revision='sha256:' + 'a' * 64)
+        for key in dict.fromkeys(identities)]
+    path = tmp_path / 'identity-domain.json'
+    path.write_text(json.dumps(dict(trustRoots=roots)))
+    frozen = freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path))
+    values = [root['keyId'] for root in json.loads(frozen.canonical_bytes)['trustRoots']]
+    rows = []
+    for number, identity in enumerate(values):
+        literal = json.dumps(identity, ensure_ascii=True)
+        rows.append("(%d,convert_from(decode('%s','hex'),'UTF8'))" % (number, literal.encode('ascii').hex()))
+    result = native_profile_runner(CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL +
+        'SELECT aos_capacity_publication_private.read_root_identifier_literal(literal)::text '
+        'FROM (VALUES ' + ','.join(rows) + ') AS inputs(n,literal) ORDER BY n;').splitlines()
+    assert len(result) == frozen.root_count == len(values)
+    assert result == ['{' + ','.join(str(ord(ch)) for ch in identity) + '}' for identity in values]
+
+
+@pytest.mark.parametrize('literal', [
+    None, '', 'null', 'true', '[]', '{}', '""', ' "a"', '"a" ', '"a"x',
+    '"a""z"', '"a\nz"', '"é"', r'"a\u0061z"', r'"a\u002fz"', r'"a\/z"',
+    r'"a\u0008z"', r'"a\u0009z"', r'"a\u000az"', r'"a\u000cz"', r'"a\u000dz"',
+    r'"a\u00FFz"', r'"a\x7fz"', r'"a\u0zzzz"', r'"a\u123"', r'"a\uz"',
+    r'"a\u0000z"', r'"a\"', '"' + 'k' * 241 + '"', json.dumps('😀' * 241),
+    json.dumps('a' + chr(127) + 'z', ensure_ascii=False),
+])
+def test_native_root_identifier_malformed_or_noncanonical_rejected(native_profile_runner, literal):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL
+    argument = 'NULL' if literal is None else "convert_from(decode('%s','hex'),'UTF8')" % literal.encode('utf8').hex()
+    assert 'CAPACITY_ROOT_IDENTIFIER_REQUIRED' in native_profile_runner(CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL +
+        'SELECT aos_capacity_publication_private.read_root_identifier_literal(' + argument + ');', False)
+
+
+@pytest.mark.parametrize('code', [9,10,11,12,13,28,29,30,31,32,133,160,5760,
+    8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288])
+def test_native_root_identifier_original_strip_edges(native_profile_runner, code):
+    from aos_api.asset_registry.signature import _is_exact_identifier
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL
+    assert chr(code).isspace()
+    for identity in [chr(code) + 'a', 'a' + chr(code)]:
+        assert not _is_exact_identifier(identity)
+        literal = json.dumps(identity).encode('ascii')
+        assert 'CAPACITY_ROOT_IDENTIFIER_REQUIRED' in native_profile_runner(CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL +
+            "SELECT aos_capacity_publication_private.read_root_identifier_literal(convert_from(decode('%s','hex'),'UTF8'));" % literal.hex(), False)
+
+
+def test_native_root_identifier_catalog_boundary(native_profile_runner):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL
+    result = native_profile_runner(CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL + """
+      SELECT p.provolatile,p.prosecdef,p.proconfig::text,
+        (SELECT count(*) FROM aclexplode(p.proacl) WHERE grantee=0 AND privilege_type='EXECUTE')
+      FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+      WHERE n.nspname='aos_capacity_publication_private' AND p.proname='read_root_identifier_literal';
+    """)
+    assert result == 'i|f|{search_path=pg_catalog}|0'
+
+
+def test_native_root_identifier_unicode_order_and_acl(native_profile_runner):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL
+    # Numeric codepoint arrays preserve Python identity ordering even for lone surrogates.
+    ordered = ['a', '字', '\ud800', '\udc00', '😀']
+    assert sorted(ordered) == ordered
+    expressions = ["aos_capacity_publication_private.read_root_identifier_literal(convert_from(decode('%s','hex'),'UTF8'))" %
+        json.dumps(value).encode('ascii').hex() for value in ordered]
+    assert native_profile_runner(CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL + 'SELECT ' +
+        ' AND '.join(expressions[i] + '<' + expressions[i+1] for i in range(len(expressions)-1)) + ';') == 't'
+    # A canonical surrogate pair counts as one character, as in the original file JSON reader.
+    assert native_profile_runner(CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL +
+        "SELECT aos_capacity_publication_private.read_root_identifier_literal(" +
+        "convert_from(decode('225c75643833645c756465303022','hex'),'UTF8'))::text;") == '{128512}'
+    assert {code for code in range(0x110000) if chr(code).isspace()} == {
+        9,10,11,12,13,28,29,30,31,32,133,160,5760,8192,8193,8194,8195,8196,8197,8198,
+        8199,8200,8201,8202,8232,8233,8239,8287,12288}
+    error = native_profile_runner(CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL + """
+        CREATE ROLE capacity_root_profile_reader NOLOGIN;
+        GRANT USAGE ON SCHEMA aos_capacity_publication_private TO capacity_root_profile_reader;
+        SET LOCAL ROLE capacity_root_profile_reader;
+        SELECT aos_capacity_publication_private.read_root_identifier_literal('"authority"');
+    """, False)
+    assert 'permission denied for function read_root_identifier_literal' in error

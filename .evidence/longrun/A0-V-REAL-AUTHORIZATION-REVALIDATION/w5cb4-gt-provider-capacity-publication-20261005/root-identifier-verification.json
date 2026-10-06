@@ -1,0 +1,29 @@
+{
+  "baseline": "7b3ab914af5c95924306367e1c6ec0d9295fb75f",
+  "task": "gt-provider-capacity-publication-schema-20261005",
+  "target": "63 passed, 347 deselected, 7 warnings in 11.29s",
+  "adjacent": "427 passed, 7 warnings in 30.43s",
+  "review": {
+    "root_file_identifier_domain_retained": true,
+    "canonical_ascii_surrogates_scanned_without_pg_text_decode": true,
+    "python_whitespace_complete_set_checked": true,
+    "numeric_codepoints_order_matches_python": true,
+    "public_execute_revoked_and_actual_role_denied": true,
+    "caller_key_trusted": false,
+    "schema_installed_in_current_db": false,
+    "full_snapshot_validator_complete": false,
+    "source_final_commit_verified": false,
+    "full_task_complete": false,
+    "browser_applicable": false
+  },
+  "sources": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "58600204b5dcb99755c331bf32da08d4db03cf0b7a675b1541ea811a2a73ad26",
+    "services/aos-api/tests/aip/test_provider_capacity_publication_pg.py": "56e4a132bc1eae761047b2ef0f3b0d88cd71b488aaa1b92915ab493104514201",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-identifier-profile-plan.md": "53396fb5bbef11f2784ce82c3f789ddc63349b860746224d09ddfafa897f4fc2",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-identifier-red.log": "2939d7dc001ca7213976b015fa68184895a73f3a984cbfca8cd712e6b85a74f7",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-identifier-green.log": "95969ec063bd6adaeef1b39e90db390563eb7340a831ed15354af9fbf39cdebc",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-identifier-green-r2.log": "6283f2fc57b2bbf5f6e3e40d3d467bda5a08b1f3be62a5105c231b9278d96704",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-identifier-green-r3.log": "d693bb12fb5994c28833b5a30d8069335a8786095b77dbd55ed085d2bf8762c9",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-identifier-adjacent.log": "27cf6f893298ee2b409d76a85c28522ceacd48b0be8a0ead47fafc9d626fc30b"
+  }
+}
