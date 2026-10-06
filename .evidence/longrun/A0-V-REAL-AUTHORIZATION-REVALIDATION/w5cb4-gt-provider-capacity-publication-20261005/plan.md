@@ -168,3 +168,11 @@ RED新常量不存在；完整合法target单项变异同时用原Python部署�
 测试RED新常量缺失；原Identifier完整正负Unicode边界、201长度、全scalar连续区间端点与间隙邻边原生对照；fixture只临时计算DDL并ROLLBACK。完整publisher/policy/permit/Source文档shape和当前性仍后继，不收口Task。独立复审关注字符语义/locale/区间二分与版本差异，不以本单字段门宣称发布成立。
 
 独立复审补验收：对完整Python分类生成的700区间，与SQL starts/ends、冻结JSON、canonical SHA256做精确静态对比，核排序/不重叠，排除SQL区间内部额外断点被只测端点漏掉。正式未来安装必须核实际Python Unicode14.0.0（不仅测试），版本漂移先显式重新冻结和回归、不静默接受。当前无安装入口，不宣称已部署版本门。
+
+## AOS-001382 完整SigningPermit typed SQL门
+
+原Task scope/Owner/lease20:00有效。本轮仅publication_store.py、test_provider_capacity_publication_pg.py和本证据目录。新增私有read_signed_time(jsonb)与read_signing_permit(bytea)：原bytes先通用canonical门，Permit恰15字段；tenant正向双键，schemaVersion严格1，revision严格正整数，五identifier字段沿已冻结原Unicode规则，purpose固定；deploymentTarget复用完整原bytes目标门；sourcePolicyRef恰4字段/固定kind/正revision/原identifier/hash，root revision sha256 lowercase64，public key canonical base64恰32字节。原UTF8/无重复/严格数字词法仍在typed解释前。datetime必须原模型canonical RFC3339有offset/Z、整秒不带000000、非零微秒恰六位、禁止+00:00/-00:00（原model_dump变Z）、合法日期/time/offset。validFrom<validUntil且间隔<=366天，不把全UTC限制施加于原允许非零offset文档。
+
+拒NULL、未知/缺/alias字段、合法签名但错误purpose/字段、bool冒int、key非canonical padding、naive/invalid date/zero小数/期限逆序或超界。未来完整签发仍要独立root/permit取钥、actual target、current epoch/原批准和签名校验；该函数只返回未认证结构，不注册许可。函数INVOCER/IMMUTABLE/nonSTRICT/pg_catalog/PUBLIC撤权，同fixedr4 transaction安装纯计算→原生positive/单项negative→ROLLBACK。RED常量缺失；原完整Permit Python parse oracle先确认每个canonical变异确实拒绝，合法Unicode/nonzero offset/边界与原模型一致。专项/原publication+Source auth相邻/独立复审后精确提交；不收口完整Task。
+
+独立复审要求补原Python3.11 json.loads十进制整数上限：先读取当前sys.get_int_max_str_digits并做完整Permit revision/sourcePolicyRef.revision 4300/4301/5000位双oracle原生测试；在当前4300冻结合同成立时两个revision字段SQL均限制4300位，不能放宽原parse拒绝的字节。未来实际安装必须核此Python运行配置，与Unicode版本一样显式兼容复审，不宣称已实现部署门。补新两函数SQL NULL和catalog invoker/immutable/nonSTRICT/PUBLIC ACL专项；纯计算DDL均回滚。

@@ -1,0 +1,164 @@
+FFFFFF                                                                   [100%]
+=================================== FAILURES ===================================
+________ test_native_signing_permit_integer_parse_limit[4300-revision] _________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x108f72340>
+field = 'revision', digits = 4300
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+        assert sys.get_int_max_str_digits() == 4300
+        document = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode='json',by_alias=True)
+        if field == 'revision':
+            document['revision'] = 'INTEGER_PLACEHOLDER'
+        else:
+            document['sourcePolicyRef']['revision'] = 'INTEGER_PLACEHOLDER'
+        raw = canonical_json(document).replace(b'"INTEGER_PLACEHOLDER"', b'1'*digits)
+        if digits <= 4300:
+>           parsed = parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           NameError: name 'parse_signed_capacity_body' is not defined
+
+tests/aip/test_provider_capacity_publication_pg.py:728: NameError
+_____ test_native_signing_permit_integer_parse_limit[4300-policy-revision] _____
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10910dc60>
+field = 'policy-revision', digits = 4300
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+        assert sys.get_int_max_str_digits() == 4300
+        document = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode='json',by_alias=True)
+        if field == 'revision':
+            document['revision'] = 'INTEGER_PLACEHOLDER'
+        else:
+            document['sourcePolicyRef']['revision'] = 'INTEGER_PLACEHOLDER'
+        raw = canonical_json(document).replace(b'"INTEGER_PLACEHOLDER"', b'1'*digits)
+        if digits <= 4300:
+>           parsed = parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           NameError: name 'parse_signed_capacity_body' is not defined
+
+tests/aip/test_provider_capacity_publication_pg.py:728: NameError
+________ test_native_signing_permit_integer_parse_limit[4301-revision] _________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x107a6ede0>
+field = 'revision', digits = 4301
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+        assert sys.get_int_max_str_digits() == 4300
+        document = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode='json',by_alias=True)
+        if field == 'revision':
+            document['revision'] = 'INTEGER_PLACEHOLDER'
+        else:
+            document['sourcePolicyRef']['revision'] = 'INTEGER_PLACEHOLDER'
+        raw = canonical_json(document).replace(b'"INTEGER_PLACEHOLDER"', b'1'*digits)
+        if digits <= 4300:
+            parsed = parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+            assert json.loads(_native_permit(native_profile_runner,raw)) == parsed.model_dump(mode='json',by_alias=True)
+        else:
+            with pytest.raises(ValueError):
+>               parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               NameError: name 'parse_signed_capacity_body' is not defined
+
+tests/aip/test_provider_capacity_publication_pg.py:732: NameError
+_____ test_native_signing_permit_integer_parse_limit[4301-policy-revision] _____
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x107a6ee80>
+field = 'policy-revision', digits = 4301
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+        assert sys.get_int_max_str_digits() == 4300
+        document = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode='json',by_alias=True)
+        if field == 'revision':
+            document['revision'] = 'INTEGER_PLACEHOLDER'
+        else:
+            document['sourcePolicyRef']['revision'] = 'INTEGER_PLACEHOLDER'
+        raw = canonical_json(document).replace(b'"INTEGER_PLACEHOLDER"', b'1'*digits)
+        if digits <= 4300:
+            parsed = parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+            assert json.loads(_native_permit(native_profile_runner,raw)) == parsed.model_dump(mode='json',by_alias=True)
+        else:
+            with pytest.raises(ValueError):
+>               parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               NameError: name 'parse_signed_capacity_body' is not defined
+
+tests/aip/test_provider_capacity_publication_pg.py:732: NameError
+________ test_native_signing_permit_integer_parse_limit[5000-revision] _________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x107a6f4c0>
+field = 'revision', digits = 5000
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+        assert sys.get_int_max_str_digits() == 4300
+        document = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode='json',by_alias=True)
+        if field == 'revision':
+            document['revision'] = 'INTEGER_PLACEHOLDER'
+        else:
+            document['sourcePolicyRef']['revision'] = 'INTEGER_PLACEHOLDER'
+        raw = canonical_json(document).replace(b'"INTEGER_PLACEHOLDER"', b'1'*digits)
+        if digits <= 4300:
+            parsed = parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+            assert json.loads(_native_permit(native_profile_runner,raw)) == parsed.model_dump(mode='json',by_alias=True)
+        else:
+            with pytest.raises(ValueError):
+>               parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               NameError: name 'parse_signed_capacity_body' is not defined
+
+tests/aip/test_provider_capacity_publication_pg.py:732: NameError
+_____ test_native_signing_permit_integer_parse_limit[5000-policy-revision] _____
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x107a6f560>
+field = 'policy-revision', digits = 5000
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+        assert sys.get_int_max_str_digits() == 4300
+        document = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode='json',by_alias=True)
+        if field == 'revision':
+            document['revision'] = 'INTEGER_PLACEHOLDER'
+        else:
+            document['sourcePolicyRef']['revision'] = 'INTEGER_PLACEHOLDER'
+        raw = canonical_json(document).replace(b'"INTEGER_PLACEHOLDER"', b'1'*digits)
+        if digits <= 4300:
+            parsed = parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+            assert json.loads(_native_permit(native_profile_runner,raw)) == parsed.model_dump(mode='json',by_alias=True)
+        else:
+            with pytest.raises(ValueError):
+>               parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               NameError: name 'parse_signed_capacity_body' is not defined
+
+tests/aip/test_provider_capacity_publication_pg.py:732: NameError
+=========================== short test summary info ============================
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[4300-revision]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[4300-policy-revision]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[4301-revision]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[4301-policy-revision]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[5000-revision]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[5000-policy-revision]
+6 failed, 199 deselected in 0.42s

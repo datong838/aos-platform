@@ -1,0 +1,192 @@
+..FFFF                                                                   [100%]
+=================================== FAILURES ===================================
+________ test_native_signing_permit_integer_parse_limit[4301-revision] _________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10c6f9c60>
+field = 'revision', digits = 4301
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+        from aos_api.aip_provider_capacity_publication_contracts import parse_signed_capacity_body
+        assert sys.get_int_max_str_digits() == 4300
+        document = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode='json',by_alias=True)
+        if field == 'revision':
+            document['revision'] = 'INTEGER_PLACEHOLDER'
+        else:
+            document['sourcePolicyRef']['revision'] = 'INTEGER_PLACEHOLDER'
+        raw = canonical_json(document).replace(b'"INTEGER_PLACEHOLDER"', b'1'*digits)
+        if digits <= 4300:
+            parsed = parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+            assert json.loads(_native_permit(native_profile_runner,raw)) == parsed.model_dump(mode='json',by_alias=True)
+        else:
+            with pytest.raises(ValueError):
+                parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+>           assert 'CAPACITY_SIGNING_PERMIT_REQUIRED' in _native_permit(native_profile_runner,raw,success=False)
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:734: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/aip/test_provider_capacity_publication_pg.py:635: in _native_permit
+    return native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL + CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL +
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+statement = "\nCREATE FUNCTION aos_capacity_publication_private.read_identifier(p_value jsonb)\nRETURNS text LANGUAGE plpgsql IMMU...31383133375a222c2276616c6964556e74696c223a22323032362d31302d30365430383a30303a35352e3231383133375a227d','hex'))::text;"
+success = False
+
+    def run(statement, success=True):
+        result = subprocess.run(prefix+["exec", "-i", target, "psql", "-U", "aos_app", "-d", "aos_test_ed25519", "-Atq", "-v", "ON_ERROR_STOP=1", "-f", "-"], input="BEGIN; CREATE SCHEMA aos_capacity_publication_private;\n"+CAPACITY_SIGNED_BODY_PROFILE_SQL+"\n"+statement+"\nROLLBACK;", text=True, capture_output=True, timeout=60)
+        if success:
+            assert result.returncode == 0, result.stderr
+            return result.stdout.strip()
+>       assert result.returncode != 0
+E       assert 0 != 0
+E        +  where 0 = CompletedProcess(args=['docker', '--context', 'colima-aos-a0v-test-only', 'exec', '-i', 'aos-ed25519-test-31dccb3dc27e...6789"}, "signerRootRevision": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}\n', stderr='').returncode
+
+tests/aip/test_provider_capacity_publication_pg.py:317: AssertionError
+_____ test_native_signing_permit_integer_parse_limit[4301-policy-revision] _____
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10c75a480>
+field = 'policy-revision', digits = 4301
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+        from aos_api.aip_provider_capacity_publication_contracts import parse_signed_capacity_body
+        assert sys.get_int_max_str_digits() == 4300
+        document = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode='json',by_alias=True)
+        if field == 'revision':
+            document['revision'] = 'INTEGER_PLACEHOLDER'
+        else:
+            document['sourcePolicyRef']['revision'] = 'INTEGER_PLACEHOLDER'
+        raw = canonical_json(document).replace(b'"INTEGER_PLACEHOLDER"', b'1'*digits)
+        if digits <= 4300:
+            parsed = parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+            assert json.loads(_native_permit(native_profile_runner,raw)) == parsed.model_dump(mode='json',by_alias=True)
+        else:
+            with pytest.raises(ValueError):
+                parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+>           assert 'CAPACITY_SIGNING_PERMIT_REQUIRED' in _native_permit(native_profile_runner,raw,success=False)
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:734: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/aip/test_provider_capacity_publication_pg.py:635: in _native_permit
+    return native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL + CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL +
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+statement = "\nCREATE FUNCTION aos_capacity_publication_private.read_identifier(p_value jsonb)\nRETURNS text LANGUAGE plpgsql IMMU...31323132375a222c2276616c6964556e74696c223a22323032362d31302d30365430383a30303a35352e3331323132375a227d','hex'))::text;"
+success = False
+
+    def run(statement, success=True):
+        result = subprocess.run(prefix+["exec", "-i", target, "psql", "-U", "aos_app", "-d", "aos_test_ed25519", "-Atq", "-v", "ON_ERROR_STOP=1", "-f", "-"], input="BEGIN; CREATE SCHEMA aos_capacity_publication_private;\n"+CAPACITY_SIGNED_BODY_PROFILE_SQL+"\n"+statement+"\nROLLBACK;", text=True, capture_output=True, timeout=60)
+        if success:
+            assert result.returncode == 0, result.stderr
+            return result.stdout.strip()
+>       assert result.returncode != 0
+E       assert 0 != 0
+E        +  where 0 = CompletedProcess(args=['docker', '--context', 'colima-aos-a0v-test-only', 'exec', '-i', 'aos-ed25519-test-31dccb3dc27e...6789"}, "signerRootRevision": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}\n', stderr='').returncode
+
+tests/aip/test_provider_capacity_publication_pg.py:317: AssertionError
+________ test_native_signing_permit_integer_parse_limit[5000-revision] _________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10b086e80>
+field = 'revision', digits = 5000
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+        from aos_api.aip_provider_capacity_publication_contracts import parse_signed_capacity_body
+        assert sys.get_int_max_str_digits() == 4300
+        document = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode='json',by_alias=True)
+        if field == 'revision':
+            document['revision'] = 'INTEGER_PLACEHOLDER'
+        else:
+            document['sourcePolicyRef']['revision'] = 'INTEGER_PLACEHOLDER'
+        raw = canonical_json(document).replace(b'"INTEGER_PLACEHOLDER"', b'1'*digits)
+        if digits <= 4300:
+            parsed = parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+            assert json.loads(_native_permit(native_profile_runner,raw)) == parsed.model_dump(mode='json',by_alias=True)
+        else:
+            with pytest.raises(ValueError):
+                parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+>           assert 'CAPACITY_SIGNING_PERMIT_REQUIRED' in _native_permit(native_profile_runner,raw,success=False)
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:734: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/aip/test_provider_capacity_publication_pg.py:635: in _native_permit
+    return native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL + CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL +
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+statement = "\nCREATE FUNCTION aos_capacity_publication_private.read_identifier(p_value jsonb)\nRETURNS text LANGUAGE plpgsql IMMU...30313738335a222c2276616c6964556e74696c223a22323032362d31302d30365430383a30303a35352e3430313738335a227d','hex'))::text;"
+success = False
+
+    def run(statement, success=True):
+        result = subprocess.run(prefix+["exec", "-i", target, "psql", "-U", "aos_app", "-d", "aos_test_ed25519", "-Atq", "-v", "ON_ERROR_STOP=1", "-f", "-"], input="BEGIN; CREATE SCHEMA aos_capacity_publication_private;\n"+CAPACITY_SIGNED_BODY_PROFILE_SQL+"\n"+statement+"\nROLLBACK;", text=True, capture_output=True, timeout=60)
+        if success:
+            assert result.returncode == 0, result.stderr
+            return result.stdout.strip()
+>       assert result.returncode != 0
+E       assert 0 != 0
+E        +  where 0 = CompletedProcess(args=['docker', '--context', 'colima-aos-a0v-test-only', 'exec', '-i', 'aos-ed25519-test-31dccb3dc27e...6789"}, "signerRootRevision": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}\n', stderr='').returncode
+
+tests/aip/test_provider_capacity_publication_pg.py:317: AssertionError
+_____ test_native_signing_permit_integer_parse_limit[5000-policy-revision] _____
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10b086d40>
+field = 'policy-revision', digits = 5000
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+        from aos_api.aip_provider_capacity_publication_contracts import parse_signed_capacity_body
+        assert sys.get_int_max_str_digits() == 4300
+        document = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode='json',by_alias=True)
+        if field == 'revision':
+            document['revision'] = 'INTEGER_PLACEHOLDER'
+        else:
+            document['sourcePolicyRef']['revision'] = 'INTEGER_PLACEHOLDER'
+        raw = canonical_json(document).replace(b'"INTEGER_PLACEHOLDER"', b'1'*digits)
+        if digits <= 4300:
+            parsed = parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+            assert json.loads(_native_permit(native_profile_runner,raw)) == parsed.model_dump(mode='json',by_alias=True)
+        else:
+            with pytest.raises(ValueError):
+                parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+>           assert 'CAPACITY_SIGNING_PERMIT_REQUIRED' in _native_permit(native_profile_runner,raw,success=False)
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:734: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/aip/test_provider_capacity_publication_pg.py:635: in _native_permit
+    return native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL + CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL +
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+statement = "\nCREATE FUNCTION aos_capacity_publication_private.read_identifier(p_value jsonb)\nRETURNS text LANGUAGE plpgsql IMMU...37313533365a222c2276616c6964556e74696c223a22323032362d31302d30365430383a30303a35352e3437313533365a227d','hex'))::text;"
+success = False
+
+    def run(statement, success=True):
+        result = subprocess.run(prefix+["exec", "-i", target, "psql", "-U", "aos_app", "-d", "aos_test_ed25519", "-Atq", "-v", "ON_ERROR_STOP=1", "-f", "-"], input="BEGIN; CREATE SCHEMA aos_capacity_publication_private;\n"+CAPACITY_SIGNED_BODY_PROFILE_SQL+"\n"+statement+"\nROLLBACK;", text=True, capture_output=True, timeout=60)
+        if success:
+            assert result.returncode == 0, result.stderr
+            return result.stdout.strip()
+>       assert result.returncode != 0
+E       assert 0 != 0
+E        +  where 0 = CompletedProcess(args=['docker', '--context', 'colima-aos-a0v-test-only', 'exec', '-i', 'aos-ed25519-test-31dccb3dc27e...6789"}, "signerRootRevision": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}\n', stderr='').returncode
+
+tests/aip/test_provider_capacity_publication_pg.py:317: AssertionError
+=========================== short test summary info ============================
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[4301-revision]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[4301-policy-revision]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[5000-revision]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[5000-policy-revision]
+4 failed, 2 passed, 199 deselected in 0.77s

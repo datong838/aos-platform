@@ -1,0 +1,94 @@
+FFFFFF                                                                   [100%]
+=================================== FAILURES ===================================
+________ test_native_signing_permit_integer_parse_limit[4300-revision] _________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10c472340>
+field = 'revision', digits = 4300
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+>       from aos_api.aip_provider_capacity_source_contracts import parse_signed_capacity_body
+E       ImportError: cannot import name 'parse_signed_capacity_body' from 'aos_api.aip_provider_capacity_source_contracts' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_contracts.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:720: ImportError
+_____ test_native_signing_permit_integer_parse_limit[4300-policy-revision] _____
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10c609c60>
+field = 'policy-revision', digits = 4300
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+>       from aos_api.aip_provider_capacity_source_contracts import parse_signed_capacity_body
+E       ImportError: cannot import name 'parse_signed_capacity_body' from 'aos_api.aip_provider_capacity_source_contracts' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_contracts.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:720: ImportError
+________ test_native_signing_permit_integer_parse_limit[4301-revision] _________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10ae7ed40>
+field = 'revision', digits = 4301
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+>       from aos_api.aip_provider_capacity_source_contracts import parse_signed_capacity_body
+E       ImportError: cannot import name 'parse_signed_capacity_body' from 'aos_api.aip_provider_capacity_source_contracts' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_contracts.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:720: ImportError
+_____ test_native_signing_permit_integer_parse_limit[4301-policy-revision] _____
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10ae7ee80>
+field = 'policy-revision', digits = 4301
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+>       from aos_api.aip_provider_capacity_source_contracts import parse_signed_capacity_body
+E       ImportError: cannot import name 'parse_signed_capacity_body' from 'aos_api.aip_provider_capacity_source_contracts' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_contracts.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:720: ImportError
+________ test_native_signing_permit_integer_parse_limit[5000-revision] _________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10ae7f4c0>
+field = 'revision', digits = 5000
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+>       from aos_api.aip_provider_capacity_source_contracts import parse_signed_capacity_body
+E       ImportError: cannot import name 'parse_signed_capacity_body' from 'aos_api.aip_provider_capacity_source_contracts' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_contracts.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:720: ImportError
+_____ test_native_signing_permit_integer_parse_limit[5000-policy-revision] _____
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10ae7f060>
+field = 'policy-revision', digits = 5000
+
+    @pytest.mark.parametrize('field', ['revision','policy-revision'])
+    @pytest.mark.parametrize('digits', [4300,4301,5000])
+    def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+        import sys
+        from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+>       from aos_api.aip_provider_capacity_source_contracts import parse_signed_capacity_body
+E       ImportError: cannot import name 'parse_signed_capacity_body' from 'aos_api.aip_provider_capacity_source_contracts' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_contracts.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:720: ImportError
+=========================== short test summary info ============================
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[4300-revision]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[4300-policy-revision]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[4301-revision]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[4301-policy-revision]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[5000-revision]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_signing_permit_integer_parse_limit[5000-policy-revision]
+6 failed, 199 deselected in 0.40s

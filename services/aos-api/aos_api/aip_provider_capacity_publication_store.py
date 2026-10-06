@@ -1,7 +1,7 @@
 """Publication SQL prerequisites; no operational publication Store yet.
 
-These pure encoding functions do not validate a document's business fields,
-authenticate a signature/key or grant capacity. Production installation and the
+These pure encoding and untrusted shape checks do not authenticate a
+signature/key or grant capacity. Production installation and the
 full approval/currentness/mapping/signature/COMMIT boundary remain separate.
 """
 
@@ -138,6 +138,114 @@ REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_deployment_target(b
 
 # Frozen original Python 3.11 Unicode 14 identifier semantics. Regenerate only
 # after an explicit model/runtime compatibility review, never from PG locale.
+# Frozen Python 3.11 JSON decimal conversion limit; deployment must verify it.
+CAPACITY_SIGNING_PERMIT_INTEGER_DIGITS = 4300
+CAPACITY_SIGNING_PERMIT_PROFILE_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.read_signed_time(p_value jsonb)
+RETURNS timestamptz LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER
+SET search_path = pg_catalog AS $body$
+DECLARE
+  value text;
+  local_value timestamp;
+  offset_minutes integer := 0;
+  zone text;
+BEGIN
+  IF p_value IS NULL OR pg_catalog.jsonb_typeof(p_value) IS DISTINCT FROM 'string' THEN
+    RAISE EXCEPTION 'CAPACITY_SIGNING_PERMIT_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  value := p_value #>> ARRAY[]::text[];
+  IF value COLLATE "C" !~ '^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{6})?(Z|[+-]([01][0-9]|2[0-3]):[0-5][0-9])$'
+      OR value ~ '\.000000(Z|[+-])' OR value ~ '[+-]00:00$'
+      OR pg_catalog.left(value,4) = '0000' THEN
+    RAISE EXCEPTION 'CAPACITY_SIGNING_PERMIT_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  -- Python accepts offsets through 23:59; PG's direct timezone parser does not.
+  -- Parse the bounded local date separately and apply the explicit offset.
+  IF pg_catalog.right(value,1) = 'Z' THEN
+    local_value := pg_catalog.left(value,pg_catalog.length(value)-1)::timestamp;
+  ELSE
+    zone := pg_catalog.right(value,6);
+    offset_minutes := (pg_catalog.substr(zone,2,2)::integer*60
+                       +pg_catalog.substr(zone,5,2)::integer)
+                      * CASE WHEN pg_catalog.left(zone,1)='-' THEN -1 ELSE 1 END;
+    local_value := pg_catalog.left(value,pg_catalog.length(value)-6)::timestamp;
+  END IF;
+  RETURN (local_value - offset_minutes * interval '1 minute') AT TIME ZONE 'UTC';
+EXCEPTION WHEN OTHERS THEN
+  RAISE EXCEPTION 'CAPACITY_SIGNING_PERMIT_REQUIRED' USING ERRCODE='22023';
+END
+$body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_signed_time(jsonb) FROM PUBLIC;
+
+CREATE FUNCTION aos_capacity_publication_private.read_signing_permit(p_raw bytea)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER
+SET search_path = pg_catalog AS $body$
+DECLARE
+  document jsonb;
+  policy_ref jsonb;
+  field text;
+  public_key text;
+  starts_at timestamptz;
+  ends_at timestamptz;
+BEGIN
+  document := aos_capacity_publication_private.read_signed_body(p_raw);
+  IF document IS NULL OR pg_catalog.jsonb_typeof(document) IS DISTINCT FROM 'object'
+      OR NOT (document ?& ARRAY['schemaVersion','tenant','assetId','revision','publisher',
+        'keyId','validFrom','validUntil','deploymentTarget','purpose','sourcePolicyRef',
+        'signerPublisher','signerKeyId','signerRootRevision','signerPublicKey'])
+      OR (SELECT count(*) FROM pg_catalog.jsonb_object_keys(document)) <> 15 THEN
+    RAISE EXCEPTION 'CAPACITY_SIGNING_PERMIT_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  IF document->'tenant' IS DISTINCT FROM '{"orgId":"org-org","projectId":"dev-project"}'::jsonb
+      OR document->'schemaVersion' IS DISTINCT FROM '1'::jsonb
+      OR pg_catalog.jsonb_typeof(document->'revision') IS DISTINCT FROM 'number'
+      OR (document->>'revision') COLLATE "C" !~ '^[1-9][0-9]*$'
+      OR pg_catalog.length(document->>'revision') > 4300
+      OR document->'purpose' IS DISTINCT FROM '"provider_capacity_source_signing_permit"'::jsonb THEN
+    RAISE EXCEPTION 'CAPACITY_SIGNING_PERMIT_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  FOREACH field IN ARRAY ARRAY['assetId','publisher','keyId','signerPublisher','signerKeyId'] LOOP
+    PERFORM aos_capacity_publication_private.read_identifier(document->field);
+  END LOOP;
+  PERFORM aos_capacity_publication_private.read_deployment_target(pg_catalog.convert_to(
+      aos_capacity_publication_private.canonical_signed_json((document->'deploymentTarget')::json,1),'UTF8'));
+  policy_ref := document->'sourcePolicyRef';
+  IF pg_catalog.jsonb_typeof(policy_ref) IS DISTINCT FROM 'object'
+      OR NOT (policy_ref ?& ARRAY['assetType','assetId','revision','contentHash'])
+      OR (SELECT count(*) FROM pg_catalog.jsonb_object_keys(policy_ref)) <> 4
+      OR policy_ref->'assetType' IS DISTINCT FROM '"ProviderCapacitySourcePolicyRevision"'::jsonb
+      OR pg_catalog.jsonb_typeof(policy_ref->'revision') IS DISTINCT FROM 'number'
+      OR (policy_ref->>'revision') COLLATE "C" !~ '^[1-9][0-9]*$'
+      OR pg_catalog.length(policy_ref->>'revision') > 4300
+      OR pg_catalog.jsonb_typeof(policy_ref->'contentHash') IS DISTINCT FROM 'string'
+      OR (policy_ref->>'contentHash') COLLATE "C" !~ '^[0-9a-f]{64}$' THEN
+    RAISE EXCEPTION 'CAPACITY_SIGNING_PERMIT_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  PERFORM aos_capacity_publication_private.read_identifier(policy_ref->'assetId');
+  IF pg_catalog.jsonb_typeof(document->'signerRootRevision') IS DISTINCT FROM 'string'
+      OR (document->>'signerRootRevision') COLLATE "C" !~ '^sha256:[0-9a-f]{64}$'
+      OR pg_catalog.jsonb_typeof(document->'signerPublicKey') IS DISTINCT FROM 'string' THEN
+    RAISE EXCEPTION 'CAPACITY_SIGNING_PERMIT_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  public_key := document->>'signerPublicKey';
+  IF pg_catalog.length(public_key) <> 44
+      OR pg_catalog.octet_length(pg_catalog.decode(public_key,'base64')) <> 32
+      OR pg_catalog.encode(pg_catalog.decode(public_key,'base64'),'base64') <> public_key THEN
+    RAISE EXCEPTION 'CAPACITY_SIGNING_PERMIT_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  starts_at := aos_capacity_publication_private.read_signed_time(document->'validFrom');
+  ends_at := aos_capacity_publication_private.read_signed_time(document->'validUntil');
+  IF ends_at <= starts_at OR extract(epoch FROM ends_at-starts_at) > 31622400 THEN
+    RAISE EXCEPTION 'CAPACITY_SIGNING_PERMIT_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  RETURN document;
+EXCEPTION WHEN OTHERS THEN
+  RAISE EXCEPTION 'CAPACITY_SIGNING_PERMIT_REQUIRED' USING ERRCODE='22023';
+END
+$body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_signing_permit(bytea) FROM PUBLIC;
+"""
+
 CAPACITY_IDENTIFIER_UNICODE_VERSION = '14.0.0'
 CAPACITY_IDENTIFIER_RANGES_SHA256 = '455c3fa3aed3a66f57dca53b768cb7c62b01e753139e5fe2849b3ffb5385fe4a'
 CAPACITY_IDENTIFIER_PROFILE_SQL = r"""

@@ -626,3 +626,109 @@ def test_identifier_complete_frozen_manifest_matches_original_semantics():
         predicate='str.isprintable() and not str.isspace()',ranges=expected)
     frozen = json.dumps(manifest,separators=(',',':'),sort_keys=True).encode()
     assert hashlib.sha256(frozen).hexdigest() == CAPACITY_IDENTIFIER_RANGES_SHA256
+
+
+def _native_permit(native_profile_runner, raw, success=True):
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_IDENTIFIER_PROFILE_SQL, CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL,
+        CAPACITY_SIGNING_PERMIT_PROFILE_SQL)
+    return native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL + CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL +
+        CAPACITY_SIGNING_PERMIT_PROFILE_SQL + "\nSELECT aos_capacity_publication_private.read_signing_permit(decode('%s','hex'))::text;" % raw.hex(), success=success)
+
+
+@pytest.mark.parametrize('fault', ['missing','extra','alias','schema','tenant','purpose','revision-bool',
+    'revision-zero','publisher-invisible','ref-extra','ref-kind','ref-id','ref-revision','ref-hash',
+    'root','key-newline','key-padding','key-size','naive','zero-fraction','utc-offset','invalid-date',
+    'time-24','expired-window','long-window','target'])
+def test_native_signing_permit_complete_typed_negative(native_profile_runner, fault):
+    from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit, parse_signed_capacity_body
+    payload = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode='json',by_alias=True)
+    if fault == 'missing': payload.pop('signerPublisher')
+    elif fault == 'extra': payload['verified'] = True
+    elif fault == 'alias': payload['signer_publisher'] = payload.pop('signerPublisher')
+    elif fault == 'schema': payload['schemaVersion'] = 2
+    elif fault == 'tenant': payload['tenant']['orgId'] = 'dev-org'
+    elif fault == 'purpose': payload['purpose'] = 'supplier_capacity_attestation'
+    elif fault == 'revision-bool': payload['revision'] = True
+    elif fault == 'revision-zero': payload['revision'] = 0
+    elif fault == 'publisher-invisible': payload['publisher'] = '\u200b'
+    elif fault == 'ref-extra': payload['sourcePolicyRef']['verified'] = True
+    elif fault == 'ref-kind': payload['sourcePolicyRef']['assetType'] = 'EvidenceBundleRevision'
+    elif fault == 'ref-id': payload['sourcePolicyRef']['assetId'] = 'white space'
+    elif fault == 'ref-revision': payload['sourcePolicyRef']['revision'] = 0
+    elif fault == 'ref-hash': payload['sourcePolicyRef']['contentHash'] = 'A'*64
+    elif fault == 'root': payload['signerRootRevision'] = 'b'*64
+    elif fault == 'key-newline': payload['signerPublicKey'] += '\n'
+    elif fault == 'key-padding': payload['signerPublicKey'] = payload['signerPublicKey'][:-2]+'F='
+    elif fault == 'key-size': payload['signerPublicKey'] = 'AAAA'
+    elif fault == 'naive': payload['validFrom'] = '2026-01-01T00:00:00'
+    elif fault == 'zero-fraction': payload.update(validFrom='2026-01-01T00:00:00.000000Z',validUntil='2026-01-02T00:00:00Z')
+    elif fault == 'utc-offset': payload.update(validFrom='2026-01-01T00:00:00+00:00',validUntil='2026-01-02T00:00:00Z')
+    elif fault == 'invalid-date': payload['validFrom'] = '2026-02-30T00:00:00Z'
+    elif fault == 'time-24': payload['validFrom'] = '2026-01-01T24:00:00Z'
+    elif fault == 'expired-window': payload['validUntil'] = payload['validFrom']
+    elif fault == 'long-window': payload.update(validFrom='2026-01-01T00:00:00Z',validUntil='2027-01-03T00:00:00Z')
+    else: payload['deploymentTarget']['databaseOid'] = True
+    raw = canonical_json(payload)
+    with pytest.raises(ValueError): parse_signed_capacity_body(raw, ProviderCapacitySigningPermit)
+    assert 'CAPACITY_SIGNING_PERMIT_REQUIRED' in _native_permit(native_profile_runner, raw, success=False)
+
+
+@pytest.mark.parametrize('offset', [0,480,-330,1439,-1439])
+def test_native_signing_permit_original_complete_positive(native_profile_runner, offset):
+    from datetime import timezone
+    from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+    payload = permit()
+    start = datetime(2020,1,1,0,0,0,100000,tzinfo=timezone(timedelta(minutes=offset)))
+    payload.update(publisher='中文供应方😀',validFrom=start,validUntil=start+timedelta(days=366),revision=10**100)
+    body = ProviderCapacitySigningPermit.model_validate(payload)
+    expected = body.model_dump(mode='json',by_alias=True)
+    assert json.loads(_native_permit(native_profile_runner, canonical_json(expected))) == expected
+
+
+def test_native_signing_permit_private_properties(native_profile_runner):
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_IDENTIFIER_PROFILE_SQL, CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL,
+        CAPACITY_SIGNING_PERMIT_PROFILE_SQL)
+    assert native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL + CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL
+        + CAPACITY_SIGNING_PERMIT_PROFILE_SQL + """
+        SELECT p.proname,p.prosecdef,p.provolatile,p.proisstrict,p.proconfig::text,
+          (SELECT count(*) FROM aclexplode(p.proacl) WHERE grantee=0)
+        FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+        WHERE n.nspname='aos_capacity_publication_private'
+          AND p.proname IN ('read_signed_time','read_signing_permit') ORDER BY p.proname;
+        """) == ('read_signed_time|f|i|f|{search_path=pg_catalog}|0\n'
+                   'read_signing_permit|f|i|f|{search_path=pg_catalog}|0')
+
+
+@pytest.mark.parametrize('literal', ['NULL', "convert_to('null','UTF8')", "convert_to('[]','UTF8')"])
+def test_native_signing_permit_null_shape_rejected(native_profile_runner, literal):
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_IDENTIFIER_PROFILE_SQL, CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL,
+        CAPACITY_SIGNING_PERMIT_PROFILE_SQL)
+    error = native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL + CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL
+        + CAPACITY_SIGNING_PERMIT_PROFILE_SQL
+        + f'SELECT aos_capacity_publication_private.read_signing_permit({literal});', success=False)
+    assert 'CAPACITY_SIGNING_PERMIT_REQUIRED' in error
+
+
+@pytest.mark.parametrize('field', ['revision','policy-revision'])
+@pytest.mark.parametrize('digits', [4300,4301,5000])
+def test_native_signing_permit_integer_parse_limit(native_profile_runner, field, digits):
+    import sys
+    from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+    from aos_api.aip_provider_capacity_publication_contracts import parse_signed_capacity_body
+    assert sys.get_int_max_str_digits() == 4300
+    document = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode='json',by_alias=True)
+    if field == 'revision':
+        document['revision'] = 'INTEGER_PLACEHOLDER'
+    else:
+        document['sourcePolicyRef']['revision'] = 'INTEGER_PLACEHOLDER'
+    raw = canonical_json(document).replace(b'"INTEGER_PLACEHOLDER"', b'1'*digits)
+    if digits <= 4300:
+        parsed = parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+        assert json.loads(_native_permit(native_profile_runner,raw)) == parsed.model_dump(mode='json',by_alias=True)
+    else:
+        with pytest.raises(ValueError):
+            parse_signed_capacity_body(raw,ProviderCapacitySigningPermit)
+        assert 'CAPACITY_SIGNING_PERMIT_REQUIRED' in _native_permit(native_profile_runner,raw,success=False)
