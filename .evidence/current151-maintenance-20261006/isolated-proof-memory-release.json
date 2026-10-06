@@ -1,0 +1,17 @@
+[
+  {
+    "container": "current151-cas-proof-f0ae33066236",
+    "stopped": true,
+    "volume_retained": "current151-cas-proof-f0ae33066236-data"
+  },
+  {
+    "container": "current151-source-b8b8c39df2df",
+    "stopped": true,
+    "volume_retained": "current151-source-b8b8c39df2df-data"
+  },
+  {
+    "container": "current151-source-dc334d87cdee",
+    "stopped": true,
+    "volume_retained": "current151-source-dc334d87cdee-data"
+  }
+]

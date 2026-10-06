@@ -1,0 +1,20 @@
+{"ts": "2026-10-06T04:13:51.016908+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.schemas", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T04:13:51.017070+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.tables", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T04:13:51.017102+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.types", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T04:13:51.017123+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.constraints", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T04:13:51.017151+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.defaults", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T04:13:51.017170+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.comments", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T04:13:51.017188+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.checkconstraint_byname", "trace_id": "-", "org_id": "-", "project_id": "-"}
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py", line 718, in run_current151_repair
+    journal.perform('independent_restore',independent_restore)
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py", line 240, in perform
+    result=operation()
+           ^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py", line 715, in independent_restore
+    execute(target,['exec','-i',target,'pg_restore','-U','aos_app','-d','postgres','--create','--exit-on-error'],(state/'window.dump').read_bytes())
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py", line 626, in execute
+    if check and result.returncode:raise Maintenance151Blocked('REPAIR_COMMAND_TERMINAL_'+str(result.returncode))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+current151_repair_r2.Maintenance151Blocked: REPAIR_COMMAND_TERMINAL_1

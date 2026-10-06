@@ -44,3 +44,11 @@ Maintenance151Journal绑定冻结head/thread/Task/base，不仅step名称。原�
 固定原源Id/image/volume及原window restore身份；停止原进程后封TCP，窗口内完整dump/globals、fresh none-network命名卷独立151恢复、完整目录窄等价通过，再在此恢复上精确CAS并要求全snapshot仅三表恢复旧hash；实际源CAS SQL hash与演练相同且一次终端记录。源完成后full snapshot与修复预期精确相等，151withdrawal fence与原模板完整151门通过才恢复原listen、PG重启、修复API/Web启动。最终完整快照不可有启动读取写回；浏览器仍是单独未完成门。未知attempt不得恢复重发；新实例都保留且不push。
 
 当前入口首次预检拒绝发生在claim/stop之前，源库/原服务未动：原142恢复应使用原142 role_names，不能用151新增角色清单做snapshot；full_snapshot的role_names本身是冻结比较输入。只读按原142 roles重算完整窄等价通过，修正该调用参数；原151源/新151副本仍用151角色清单，未删除任何roles校验或放宽原比较。保留current-repair-r1终端失败；没有claim可证尚未进入实际副作用阶段。
+
+## 151修复窗口恢复失败的接续合同
+
+实际phase current151-repair-e1d51a4f1798（HEAD34063052）已完成reconcile/stop/fence/snapshot_dump；independent_restore失败。当前源完整snapshot仍与失败前精确相等，151、空listen，API/Web实际无listener，repair_timestamps从未attempt。新window.dump4594656字节与globals哈希回读通过。独立target current151-restore-05bb402299de已部分恢复603表但pg_restore exit1，server PID88 signal9，cgroup oom_kill1/State.OOMKilled，隔离VM2GB；不能重发其pg_restore或拿603表当恢复通过。
+
+先只读取得终端日志/内存计数后，停止已明确终端的三synthetic proof实例和两GREEN隔离窗口的四实例；逐项核原owner/Task/image/none/无端口/唯一命名卷，O_EXCL stop意图、正常stop与实际Running=false回读；所有卷、容器、备份/结果保留。没有停止原142窗口restore或原same-image151模板（后续核验依赖），没有改隔离VM全局配置或不明归属实例。
+
+下一阶段须新绑定HEAD与当前Task、原claim/四已验证done/失败attempt及备份hash，旧claim不可删/改，不能伪造旧independent_restore done。以新的独立none-network卷完成原151 dump全恢复（内存已释放，恢复session限制maintenance_work_mem/work_mem按实际方案），严格完整snapshot窄等价、原schema上精确CAS演练和严格151fence后，才继续当前同一封闭源上的一次CAS与配置/API/Web恢复。新阶段只能消费真实已验证前序证据，未知结果先只读对账；不能重跑142迁移入口或原restore。原两个安全研发候选仍登记，但优先恢复当前预览服务。局部OOM不设置Goal blocked，维护Task保持ACTIVE。

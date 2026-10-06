@@ -1,0 +1,25 @@
+{
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/current151-repair-e1d51a4f1798",
+  "source_version": "a0v_151",
+  "source_snapshot_unchanged": true,
+  "listen_addresses": "",
+  "backup_hashes_verified": true,
+  "backup_bytes": 4594656,
+  "repair_attempt_exists": false,
+  "completed_steps": [
+    "stop_clients-done",
+    "reconcile-done",
+    "fence_tcp-done",
+    "snapshot_dump-done"
+  ],
+  "failed_step": "independent_restore",
+  "restore_terminal_exit": 1,
+  "restore_server_signal": 9,
+  "restore_memory_oom_kill": 1,
+  "isolated_vm_memory_bytes": 2054840320,
+  "api_web_stopped": true,
+  "listeners": {
+    "8080": [],
+    "8434": []
+  }
+}

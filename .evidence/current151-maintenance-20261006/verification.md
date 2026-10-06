@@ -50,3 +50,9 @@ run_current151_repair仅固定原源/原failed window，先精确八done/九migr
 Repair151Journal独立11步默认原Journal不变；新历史门RED7项失败，最终99passed1deselected0.38秒；wrong-thread入口无资源调用、历史缺记录/非零terminal/换源/已acceptance拒绝，原未知intent保护相邻保持。代码whitespace检查通过。精确三字段CAS已独立原生回滚专项通过；完整当前资源序列需下一实际运行证据，不把单测算完整维护通过。
 
 入口复审：source每次操作核原容器Id/image/卷/端口，窗口PG本机Unix读操作不开放TCP；新dump/globals/fullrestore只在新none-network卷，原全部备份保留。restore演练SQL与当前SQL逐字hash相同，当前只有一次CAS终端，后续严格全snapshot与原151fence/模板通过才恢复配置、PG/API/Web。源码commit后运行，任一失败保留封闭窗口/attempt供只读对账。
+
+## 实际维护窗口与OOM诊断
+
+新入口第一次在任何claim/停止前因为142恢复角色清单参数错误而拒绝；只读按原142 role_names全库窄等价PASS，修正调用、99专项/相邻通过并提交34063052。第二次实际phase e1d51a4f1798已完成四步骤，完整dump4594656字节和globals hash验证；独立新151恢复遭OOM（signal9/cgroup oom_kill1/容器OOMKilled），exit1，不能宣称恢复通过，未执行当前CAS。原副本、原attempt、数据卷都保留。
+
+current-repair-oom-reconciliation.json实际全库快照未变、schema151、listen空、API8080/Web8434实际无监听；源数据仍原启动后状态（3updated_at待恢复）。已按原owner/Task/none-network/image/命名卷身份停止七个本Task的已终端或已GREEN测试实例释放隔离VM内存，全部保留卷；不涉及本机源或原备份模板。证据两个memory-release.json和私有逐实例stop-intent。当前维护Task ACTIVE，不Delivery；新恢复阶段需新HEAD绑定并明确消费真实四done，不能重放原部分restore/claim。

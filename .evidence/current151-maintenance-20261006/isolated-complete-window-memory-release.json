@@ -1,0 +1,26 @@
+[
+  {
+    "container": "current151-source-e322c5b61a71",
+    "stopped": true,
+    "volume_retained": "current151-source-e322c5b61a71-data",
+    "completed_rehearsal_preserved": true
+  },
+  {
+    "container": "current151-restore-e322c5b61a71",
+    "stopped": true,
+    "volume_retained": "current151-restore-e322c5b61a71-data",
+    "completed_rehearsal_preserved": true
+  },
+  {
+    "container": "current151-source-420b2c7ae9c0",
+    "stopped": true,
+    "volume_retained": "current151-source-420b2c7ae9c0-data",
+    "completed_rehearsal_preserved": true
+  },
+  {
+    "container": "current151-restore-420b2c7ae9c0",
+    "stopped": true,
+    "volume_retained": "current151-restore-420b2c7ae9c0-data",
+    "completed_rehearsal_preserved": true
+  }
+]
