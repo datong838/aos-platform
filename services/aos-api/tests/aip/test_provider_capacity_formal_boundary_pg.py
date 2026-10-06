@@ -1033,3 +1033,24 @@ def test_actual_private_approved_proposal_sql_matches_original_claims(approved_c
             {'approval_event_hash':'0'*64},{'proposal_revision':1},{'proposal_id':'missing'},
             {'approval_event_id':'missing'}]:
             assert conn.execute(CAPACITY_APPROVED_SOURCE_ROW_SQL,{**params,**changed}).fetchone() is None
+
+
+def test_actual_private_allocation_approved_sql_matches_original_claims(approved_command,private_database):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_APPROVED_ALLOCATION_ROW_SQL
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims
+    source=approved_command[2]
+    params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,maker=approved_command[0].subject,
+        approval_event_id=source.allocation_approval_ref.asset_id,
+        approval_event_hash=source.allocation_approval_ref.content_hash,
+        request_id=source.allocation_request_ref.asset_id,request_hash=source.allocation_request_ref.content_hash)
+    with connect_capacity_issuer(private_database,SCOPE) as conn:
+        row=conn.execute(CAPACITY_APPROVED_ALLOCATION_ROW_SQL,params).fetchone()
+        assert conn.pgconn.used_password is True
+        assert row['status']=='approved' and row['version']==2
+        assert row['payload']==dict(requestId=params['request_id'],requestHash=params['request_hash'])
+        fact=read_capacity_approved_claims(conn,approved_command[-1])
+        assert fact.source==source and fact.execution_allowed is False and fact.supplier_verified is False
+        for changed in [{'maker':'other'},{'org_id':'dev-org'},{'approval_event_hash':'0'*64},
+            {'request_id':'missing'},{'request_hash':'0'*64},{'approval_event_id':'missing'}]:
+            assert conn.execute(CAPACITY_APPROVED_ALLOCATION_ROW_SQL,{**params,**changed}).fetchone() is None

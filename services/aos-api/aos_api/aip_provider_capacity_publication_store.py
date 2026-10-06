@@ -531,16 +531,14 @@ REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_origin_bootstrap(by
 
 # S03/S04/S08 original row fence. This is consumed after private identity
 # validation; every original Guard check and withdrawal epoch still follows.
-CAPACITY_APPROVED_SOURCE_ROW_SQL = (
+_CAPACITY_APPROVED_ROW_SQL = (
     "WITH exact_event AS (" + CAPACITY_APPROVAL_EVENT_PROJECTION_SQL + r"""
 )
 SELECT p.* FROM public.aip_action_proposal p
 JOIN exact_event e ON e.proposal_id=p.proposal_id
 WHERE p.org_id=%(org_id)s AND p.project_id=%(project_id)s
   AND p.org_id='org-org' AND p.project_id='dev-project'
-  AND p.proposal_id=%(proposal_id)s AND p.created_by=%(maker)s
-  AND p.action_type_id='aip_review_provider_capacity_source' AND p.status='approved'
-  AND p.version=2 AND p.version=%(proposal_revision)s AND p.proposal_hash=%(proposal_hash)s
+  AND p.created_by=%(maker)s AND p.status='approved' AND p.version=2
   AND p.expires_at > pg_catalog.clock_timestamp()
   AND e.hash=%(approval_event_hash)s
   AND e.value->'proposalVersion'='1'::jsonb
@@ -557,6 +555,21 @@ WHERE p.org_id=%(org_id)s AND p.project_id=%(project_id)s
   AND (SELECT count(*) FROM public.aip_action_approval_event all_events
     WHERE all_events.org_id=p.org_id AND all_events.project_id=p.project_id
       AND all_events.proposal_id=p.proposal_id)=1
-FOR SHARE OF p
 """
 )
+
+
+CAPACITY_APPROVED_SOURCE_ROW_SQL = _CAPACITY_APPROVED_ROW_SQL + r"""
+  AND p.action_type_id='aip_review_provider_capacity_source'
+  AND p.proposal_id=%(proposal_id)s AND p.version=%(proposal_revision)s
+  AND p.proposal_hash=%(proposal_hash)s
+FOR SHARE OF p
+"""
+
+# S10 runs only after the private reader has held every original Guard fence.
+# Do not add or reorder locks in this snapshot query.
+CAPACITY_APPROVED_ALLOCATION_ROW_SQL = _CAPACITY_APPROVED_ROW_SQL + r"""
+  AND p.action_type_id='aip_request_provider_capacity'
+  AND p.payload=pg_catalog.jsonb_build_object('requestId',%(request_id)s::text,
+                                            'requestHash',%(request_hash)s::text)
+"""

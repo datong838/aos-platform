@@ -1,0 +1,27 @@
+{
+  "authority_cutoff": "AOS-001399",
+  "code_base": "1da9eb1cd44c736b75df473684df0c1a77bd45e9",
+  "tasks": [
+    "gt-provider-capacity-formal-boundary-20261005",
+    "gt-provider-capacity-publication-schema-20261005"
+  ],
+  "red": "Missing allocation SQL constant: 1 failed / 6.94s",
+  "green": "10 passed / 26.25s",
+  "adjacent": "156 passed, 8 warnings in 254.89s (0:04:14)",
+  "review": "SQL native allocation proposal/event/request exact binding read after original complete Guard. Common event projection retained; original Source-specific predicates and SHARE unchanged. No new lock acquisition, runtime path, permission, DDL or transaction changes.",
+  "limits": [
+    "No claim full S01-S20 SQL equivalent or native Source issuance/consumer",
+    "No direct committed extra-payload mutation: original append-only/state guards retained; exact two-field SQL equality reviewed",
+    "No current database, restart or external execution",
+    "Original Tasks ACTIVE; no full Task Delivery"
+  ],
+  "sources": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "04167c7b9c6e0efe6e348e3528d23d2b7099091e7c9af424da6570bbc91b08bc",
+    "services/aos-api/aos_api/aip_provider_capacity_formal_boundary.py": "cacf27b0281e330cb666e53d903336bafd6380336850f8bb0104e143c8857f92",
+    "services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py": "57871596bef2e699cbbecbae18d9856773a324b0a4a167f702a0b24e0240cc18",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/allocation-approved-sql-plan.md": "ed3d62037f01564b8b46bd8a0d7603b4cdb3d073423fa2d131bd54527cf8e383",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/allocation-approved-sql-red.log": "5cf5311491ff1ab315a789a0949f7b658f28e5221af6a8c4cef67b6601e1d6f4",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/allocation-approved-sql-green.log": "41846a0e896e31b0fd598215e87e36bd6d3731cd79b99fed6a6cf17a1d55a1b3",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/allocation-approved-sql-adjacent.log": "402a28ab90cad1c44bb80eace8e5b1ab20de24d1840684da74a80de5e067bc68"
+  }
+}

@@ -176,6 +176,16 @@ def read_capacity_approved_claims(conn,command):
             raise ValueError('proposal withdrawn')
         guard=ProviderCapacitySourceActionGuard()
         guard.check_proposal(conn,scope,event['actor_id'],row,checker=True)
+        from aos_api.aip_provider_capacity_publication_store import CAPACITY_APPROVED_ALLOCATION_ROW_SQL
+        source=ProviderCapacitySourceCandidate.model_validate(row['payload']['sourceCandidate'])
+        allocation=conn.execute(CAPACITY_APPROVED_ALLOCATION_ROW_SQL,dict(
+            org_id=scope.org_id,project_id=scope.project_id,maker=principal.subject,
+            approval_event_id=source.allocation_approval_ref.asset_id,
+            approval_event_hash=source.allocation_approval_ref.content_hash,
+            request_id=source.allocation_request_ref.asset_id,
+            request_hash=source.allocation_request_ref.content_hash)).fetchone()
+        if allocation is None:
+            raise ValueError('original allocation approval required')
         bundle=AipActionStore()._bundle(conn,scope,ref.asset_id)
         expected=canonical_hash(dict(tenant=dict(orgId=scope.org_id,projectId=scope.project_id),actorId=event['actor_id'],
             roles=['owner'],slotId='checker.1',approvalPolicyHash=row['approval_policy_hash']))
