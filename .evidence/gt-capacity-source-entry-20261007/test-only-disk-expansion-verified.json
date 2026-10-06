@@ -1,0 +1,48 @@
+{
+  "context": "colima-aos-a0v-test-only",
+  "size_gib": 50,
+  "filesystem_uuid": "c6232edb-863d-4bea-8fac-8aeea513dfb0",
+  "all_original_container_image_mount_sets_retained": 43,
+  "identity": {
+    "version": "PostgreSQL 16.14 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+    "db": "aos_test_5f0346f9effd_ti4_test",
+    "cluster": "7693564235776004128",
+    "migration": "a0v_156"
+  },
+  "documents_exact_hash_and_Ed25519": 3,
+  "origin_and_withdrawal_exact_hash_and_Ed25519": true,
+  "epoch": {
+    "epoch": 2,
+    "head_origin_hash": null
+  },
+  "roles": [
+    {
+      "rolname": "aos_capacity_publication_owner",
+      "rolcanlogin": false
+    },
+    {
+      "rolname": "aos_provider_capacity_issuer",
+      "rolcanlogin": false
+    }
+  ],
+  "PG": {
+    "id": "4a2af01a0f1c1bb64592f42de4805b80fa210764f15769f718a2ae640ab8fc85",
+    "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+    "started_at": "2026-10-06T20:31:59.834177389Z",
+    "volume": [
+      {
+        "Type": "volume",
+        "Name": "aos-capacity-publication-scram-20261006-data",
+        "Source": "/var/lib/docker/volumes/aos-capacity-publication-scram-20261006-data/_data",
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "z",
+        "RW": true,
+        "Propagation": ""
+      }
+    ]
+  },
+  "original_reserved_blocks_restored": 353854,
+  "formal_system_restarted": false,
+  "no_deletion": true
+}

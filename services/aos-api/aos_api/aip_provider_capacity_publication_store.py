@@ -2075,3 +2075,101 @@ END $body$;
 ALTER FUNCTION aos_capacity_publication_private.require_original_withdrawal_boundary() OWNER TO aos_capacity_publication_owner;
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.require_original_withdrawal_boundary() FROM PUBLIC;
 """
+
+# S17 current signed material for future157, after the original Source lock
+# prefix. The registry SHARE lock belongs to the new suffix, never the prefix.
+# Exact signatures/current provenance are necessary, not Source authorization.
+CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL = r"""
+WITH fence AS MATERIALIZED (
+ SELECT f.* FROM aos_capacity_publication_private.registry_epoch f
+ WHERE f.org_id=%(org_id)s AND f.project_id=%(project_id)s
+  AND f.org_id='org-org' AND f.project_id='dev-project'
+  AND current_setting('aos.org_id',true)=f.org_id
+  AND current_setting('aos.project_id',true)=f.project_id
+ FOR SHARE OF f
+), exact AS MATERIALIZED (
+ SELECT d.*,f.anchor_revision,f.epoch AS registry_current_epoch
+ FROM aos_capacity_publication_private.document d JOIN fence f USING(org_id,project_id)
+ WHERE d.kind=%(kind)s AND d.asset_id=%(asset_id)s AND d.revision=%(revision)s::text
+  AND d.content_hash=%(content_hash)s AND d.origin_hash=f.head_origin_hash
+  AND d.origin_epoch=f.epoch AND f.epoch=1
+  AND NOT EXISTS(SELECT 1 FROM aos_capacity_publication_private.origin_withdrawal w
+    WHERE (w.org_id,w.project_id,w.origin_hash)=(d.org_id,d.project_id,d.origin_hash))
+), typed AS MATERIALIZED (
+ SELECT d.*,CASE d.kind
+  WHEN 'ProviderCapacitySourcePolicyRevision' THEN aos_capacity_publication_private.read_source_policy(d.raw_body)
+  WHEN 'SupplierCapacityAttestationRevision' THEN aos_capacity_publication_private.read_supplier_attestation(d.raw_body)
+  WHEN 'ProviderCapacitySigningPermitRevision' THEN aos_capacity_publication_private.read_signing_permit(d.raw_body)
+  ELSE NULL END AS payload
+ FROM exact d
+), parents AS MATERIALIZED (
+ SELECT d.*,o.raw_body AS origin_raw,o.signature AS origin_signature,
+  aos_capacity_publication_private.read_origin_bootstrap(o.raw_body) AS bootstrap,
+  s.raw_body AS snapshot_raw,s.root_count,
+  a.signer_publisher,a.signer_key_id,a.signer_public_key,a.publisher_subject,a.deployment_target,
+  r.publisher_literal,r.key_id_literal,r.publisher_codepoints,r.key_id_codepoints,
+  r.public_key,r.root_revision,r.not_before,r.not_after,r.revoked_at,r.canonical_root
+ FROM typed d
+ JOIN aos_capacity_publication_private.origin o
+  ON (o.org_id,o.project_id,o.content_hash,o.anchor_revision,o.snapshot_hash)=
+    (d.org_id,d.project_id,d.origin_hash,d.anchor_revision,d.snapshot_hash)
+ JOIN aos_capacity_publication_private.deployment_anchor a
+  ON (a.org_id,a.project_id,a.anchor_revision)=(d.org_id,d.project_id,d.anchor_revision)
+ JOIN aos_capacity_publication_private.root_snapshot s
+  ON (s.org_id,s.project_id,s.snapshot_hash)=(d.org_id,d.project_id,d.snapshot_hash)
+ JOIN aos_capacity_publication_private.root_entry r
+  ON (r.org_id,r.project_id,r.snapshot_hash,r.root_ordinal)=
+    (d.org_id,d.project_id,d.snapshot_hash,d.root_ordinal)
+), roots AS MATERIALIZED (
+ SELECT p.content_hash,r.* FROM parents p
+ CROSS JOIN LATERAL aos_capacity_publication_private.read_root_snapshot(p.snapshot_raw) r
+)
+SELECT p.* FROM parents p
+WHERE p.payload IS NOT NULL
+ AND p.payload->'tenant'='{"orgId":"org-org","projectId":"dev-project"}'::jsonb
+ AND p.payload->>'assetId'=p.asset_id AND p.payload->>'revision'=p.revision
+ AND p.content_hash=encode(sha256(p.raw_body),'hex')
+ AND p.identity_hash=encode(sha256(convert_to('aos-capacity-document-identity/v1','UTF8')
+  ||decode('00','hex')||convert_to(p.kind,'UTF8')||decode('00','hex')||convert_to(p.asset_id,'UTF8')
+  ||decode('00','hex')||convert_to(p.revision,'UTF8')),'hex')
+ AND p.origin_hash=encode(sha256(p.origin_raw),'hex')
+ AND p.snapshot_hash='sha256:'||encode(sha256(p.snapshot_raw),'hex')
+ AND p.bootstrap->>'anchorRevision'=p.anchor_revision
+ AND p.bootstrap->>'publisher'=p.signer_publisher AND p.bootstrap->>'keyId'=p.signer_key_id
+ AND p.bootstrap->>'publisherSubject'=p.publisher_subject
+ AND p.bootstrap->>'rootSnapshotHash'=p.snapshot_hash
+ AND p.bootstrap->'deploymentTarget'=p.deployment_target
+ AND p.deployment_target->>'database'=current_database()
+ AND (p.deployment_target->>'databaseOid')::numeric=(SELECT oid::text::numeric FROM pg_database WHERE datname=current_database())
+ AND p.deployment_target->>'clusterIdentifier'=(SELECT system_identifier::text FROM pg_control_system())
+ AND CASE WHEN p.kind IN ('ProviderCapacitySourcePolicyRevision','ProviderCapacitySigningPermitRevision')
+   THEN p.payload->'deploymentTarget'=p.deployment_target ELSE true END
+ AND EXISTS(SELECT 1 FROM jsonb_array_elements(p.bootstrap->'allowedDocumentRefs') ref
+  WHERE ref.value=jsonb_build_object('assetType',p.kind,'assetId',p.asset_id,
+    'revision',p.payload->'revision','contentHash',p.content_hash))
+ AND (SELECT count(*) FROM roots r WHERE r.content_hash=p.content_hash)=p.root_count
+ AND EXISTS(SELECT 1 FROM roots r WHERE r.content_hash=p.content_hash
+  AND r.root_ordinal=p.root_ordinal AND r.publisher_literal=p.publisher_literal AND r.key_id_literal=p.key_id_literal
+  AND r.publisher_codepoints=p.publisher_codepoints AND r.key_id_codepoints=p.key_id_codepoints
+  AND r.public_key=p.public_key AND r.root_revision=p.root_revision
+  AND r.not_before=p.not_before AND r.not_after=p.not_after AND r.revoked_at IS NOT DISTINCT FROM p.revoked_at
+  AND r.canonical_root=p.canonical_root)
+ AND p.publisher_codepoints=ARRAY(SELECT ascii(substr(p.payload->>'publisher',i,1)) FROM generate_series(1,length(p.payload->>'publisher')) i)
+ AND p.key_id_codepoints=ARRAY(SELECT ascii(substr(p.payload->>'keyId',i,1)) FROM generate_series(1,length(p.payload->>'keyId')) i)
+ AND clock_timestamp()>=aos_capacity_publication_private.read_signed_time(p.bootstrap->'validFrom')
+ AND clock_timestamp()<aos_capacity_publication_private.read_signed_time(p.bootstrap->'validUntil')
+ AND clock_timestamp()>=aos_capacity_publication_private.read_signed_time(p.payload->'validFrom')
+ AND clock_timestamp()<aos_capacity_publication_private.read_signed_time(p.payload->'validUntil')
+ AND clock_timestamp()>=p.not_before AND clock_timestamp()<p.not_after
+ AND (p.revoked_at IS NULL OR clock_timestamp()<p.revoked_at)
+ AND CASE WHEN EXISTS(SELECT 1 FROM pg_proc f JOIN pg_namespace n ON n.oid=f.pronamespace
+   JOIN pg_language l ON l.oid=f.prolang JOIN pg_roles owner ON owner.oid=f.proowner
+   WHERE n.nspname='aos_ed25519' AND f.proname='verify' AND f.proargtypes='17 17 17'::oidvector
+    AND f.prorettype='boolean'::regtype AND f.probin='$libdir/aos_ed25519' AND f.prosrc='aos_ed25519_verify'
+    AND l.lanname='c' AND NOT f.prosecdef AND f.provolatile='i' AND f.proisstrict
+    AND owner.rolname='aos_ed25519_owner' AND n.nspowner=owner.oid
+    AND NOT(owner.rolcanlogin OR owner.rolinherit OR owner.rolsuper OR owner.rolcreatedb OR owner.rolcreaterole OR owner.rolreplication OR owner.rolbypassrls)
+    AND NOT EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid=owner.oid OR member=owner.oid))
+   THEN aos_ed25519.verify(p.origin_signature,p.origin_raw,p.signer_public_key) IS TRUE
+    AND aos_ed25519.verify(p.signature,p.raw_body,p.public_key) IS TRUE ELSE false END
+"""

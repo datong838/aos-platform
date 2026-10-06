@@ -9,6 +9,44 @@ from tests.aip.test_provider_capacity_source_pg import (
 from tests.aip.test_provider_capacity_request_pg import original_inputs, SCOPE
 
 
+@pytest.fixture(autouse=True)
+def registered_database_isolation(request, _isolated_postgres_database, monkeypatch):
+    """Each signed registration owns a retained database, including parameters."""
+    import os
+    from tests.conftest import _isolated_postgres_database as database_fixture
+
+    registered_cases = {
+        'test_registered_origin_documents_and_original_private_approval_share_database',
+        'test_registered_original_inputs_prepare_native_v2_before_signing',
+        'test_complete_native_publication_requires_actual_caller_commit',
+        'test_native_registered_signed_document_current_rows_require_exact_originals',
+        'test_native_current_signed_document_single_field_faults_restore_exact_originals',
+        'test_native_current_signed_exact_scope_matrix_and_ordinary_role_denial',
+        'test_native_current_signed_actual_withdrawal_commit_rollback_and_replay',
+        'test_native_current_signed_withdrawal_serializable_epoch_competition',
+    }
+    if request.node.originalname not in registered_cases:
+        yield
+        return
+    # Never reuse or erase another case's immutable registry domain. Reuse the
+    # existing bootstrap/migration/restore implementation, with retention required.
+    assert os.environ.get('AOS_TEST_RETAIN_DATABASE') == '1'
+    assert os.environ.get('AOS_TEST_USE_SHARED_DATABASE') == '0'
+    assert psycopg.conninfo.conninfo_to_dict(os.environ['AOS_DATABASE_URL'])['dbname'].startswith('aos_test_')
+    from aos_api import tenant_catalog, data_os_store
+    with monkeypatch.context() as local:
+        # These bootstrap caches describe the parent database. Restore them
+        # only after every dependent fixture and the child environment close.
+        local.setattr(tenant_catalog, '_schema_ready', False)
+        local.setattr(data_os_store, '_schema_ready', False)
+        database = database_fixture.__wrapped__()
+        try:
+            next(database)
+            yield
+        finally:
+            database.close()
+
+
 def test_private_native_publication_rejects_missing_original_bytes(native_signed_source):
     from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
     from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs
@@ -292,7 +330,7 @@ def _registered_publication_inputs(native_signed_source,tmp_path):
                 (ref['assetType'],raw,signature)).fetchone()['hash']==ref['contentHash']
         publisher.execute('RESET SESSION AUTHORIZATION')
     return dict(actual_command=actual_command,config=config,provider=f['provider'],refs=refs,documents=documents,
-        origin_hash=origin_hash,snapshot_hash=transport.content_hash,source_key=source_key)
+        origin_hash=origin_hash,snapshot_hash=transport.content_hash,source_key=source_key,anchor_key=anchor_key,origin_payload=origin.model_dump(mode='json',by_alias=True))
 
 
 def test_registered_original_inputs_prepare_native_v2_before_signing(native_signed_source,tmp_path):
@@ -2283,3 +2321,319 @@ def test_native_original_withdrawal_audit_denied_to_ordinary_callers(native_sign
                 with owner.transaction():
                     owner.execute('SELECT aos_capacity_publication_private.'+name+'()')
         owner.rollback()
+
+
+def test_native_registered_signed_document_current_rows_require_exact_originals(native_signed_source,tmp_path):
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs
+    from aos_api import aip_provider_capacity_publication_store as native
+    material=_registered_publication_inputs(native_signed_source,tmp_path)
+    command,policy,attestation=material['actual_command']()
+    with connect_capacity_issuer(material['config'],SCOPE) as issuer:
+        assert issuer.pgconn.used_password
+        original=check_native_capacity_supplier_inputs(issuer,command,policy,attestation,trust_roots=material['provider'])
+        assert original.execution_allowed is False
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        for ref,(raw,signature) in zip(material['refs'],material['documents']):
+            params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,kind=ref['assetType'],
+                asset_id=ref['assetId'],revision=str(ref['revision']),content_hash=ref['contentHash'])
+            row=owner.execute(native.CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL,params).fetchone()
+            assert row is not None and bytes(row['raw_body'])==raw and bytes(row['signature'])==signature
+            assert row['origin_hash']==material['origin_hash'] and row['snapshot_hash']==material['snapshot_hash']
+        owner.rollback()
+    print('NATIVE_REGISTERED_ORIGINAL_SIGNED_DOCUMENTS three_exact_rows original_scram_positive no_source_publication')
+
+
+def _current_signed_params(ref):
+    return dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,kind=ref['assetType'],
+        asset_id=ref['assetId'],revision=str(ref['revision']),content_hash=ref['contentHash'])
+
+
+def _read_native_current_signed(owner,params):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL
+    try:
+        with owner.transaction():
+            return owner.execute(CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL,params).fetchone()
+    except psycopg.Error as error:
+        assert error.sqlstate in ('22023','22P02','22003'),error.sqlstate
+        return None
+
+
+def test_native_current_signed_document_single_field_faults_restore_exact_originals(native_signed_source,tmp_path):
+    import hashlib
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.asset_registry.canonical_json import canonical_json
+    from psycopg.types.json import Jsonb
+    material=_registered_publication_inputs(native_signed_source,tmp_path)
+    ref=material['refs'][1];params=_current_signed_params(ref)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        original=_read_native_current_signed(owner,params);assert original
+        owner.execute('RESET ROLE')
+        document_where=' WHERE org_id=%s AND project_id=%s AND content_hash=%s'
+        root_where=' WHERE org_id=%s AND project_id=%s AND snapshot_hash=%s AND root_ordinal=%s'
+        dargs=(*SCOPE.key,ref['contentHash']);rargs=(*SCOPE.key,original['snapshot_hash'],original['root_ordinal'])
+        faults={
+            'signature':('UPDATE aos_capacity_publication_private.document SET signature=%s'+document_where,(Ed25519PrivateKey.generate().sign(bytes(original['raw_body'])),*dargs)),
+            'raw_canonical':('UPDATE aos_capacity_publication_private.document SET raw_body=%s,content_hash=%s'+document_where,(bytes(original['raw_body'])+b' ',hashlib.sha256(bytes(original['raw_body'])+b' ').hexdigest(),*dargs)),
+            'identity_hash':('UPDATE aos_capacity_publication_private.document SET identity_hash=%s'+document_where,('0'*64,*dargs)),
+            'document_origin':('UPDATE aos_capacity_publication_private.document SET origin_hash=%s'+document_where,('0'*64,*dargs)),
+            'document_snapshot':('UPDATE aos_capacity_publication_private.document SET snapshot_hash=%s'+document_where,('sha256:'+'0'*64,*dargs)),
+            'document_root_ordinal':('UPDATE aos_capacity_publication_private.document SET root_ordinal=%s'+document_where,(9999,*dargs)),
+            'registry_epoch':('UPDATE aos_capacity_publication_private.registry_epoch SET epoch=epoch+1 WHERE org_id=%s AND project_id=%s',SCOPE.key),
+            'registry_head':('UPDATE aos_capacity_publication_private.registry_epoch SET head_origin_hash=NULL WHERE org_id=%s AND project_id=%s',SCOPE.key),
+            'root_public_key':('UPDATE aos_capacity_publication_private.root_entry SET public_key=%s'+root_where,(b'\x00'*32,*rargs)),
+            'root_revision':('UPDATE aos_capacity_publication_private.root_entry SET root_revision=%s'+root_where,('sha256:'+'0'*64,*rargs)),
+            'root_expiry':("UPDATE aos_capacity_publication_private.root_entry SET not_after=clock_timestamp()-interval '1 second'"+root_where,rargs),
+            'root_future':("UPDATE aos_capacity_publication_private.root_entry SET not_before=clock_timestamp()+interval '1 minute'"+root_where,rargs),
+            'root_revoked':("UPDATE aos_capacity_publication_private.root_entry SET revoked_at=clock_timestamp()-interval '1 second'"+root_where,rargs),
+            'root_canonical':('UPDATE aos_capacity_publication_private.root_entry SET canonical_root=canonical_root||%s'+root_where,(b' ',*rargs)),
+            'root_publisher_points':('UPDATE aos_capacity_publication_private.root_entry SET publisher_codepoints=%s,publisher_literal=%s'+root_where,([ord(c) for c in 'different-publisher'],'"different-publisher"',*rargs)),
+            'snapshot_count':('UPDATE aos_capacity_publication_private.root_snapshot SET root_count=root_count+1 WHERE org_id=%s AND project_id=%s AND snapshot_hash=%s',(*SCOPE.key,original['snapshot_hash'])),
+            'snapshot_raw':('UPDATE aos_capacity_publication_private.root_snapshot SET raw_body=raw_body||%s WHERE org_id=%s AND project_id=%s AND snapshot_hash=%s',(b' ',*SCOPE.key,original['snapshot_hash'])),
+            'origin_signature':('UPDATE aos_capacity_publication_private.origin SET signature=%s WHERE org_id=%s AND project_id=%s AND content_hash=%s',(b'\x00'*64,*SCOPE.key,original['origin_hash'])),
+            'anchor_subject':('UPDATE aos_capacity_publication_private.deployment_anchor SET publisher_subject=%s WHERE org_id=%s AND project_id=%s AND anchor_revision=%s',('different-subject',*SCOPE.key,original['anchor_revision'])),
+            'anchor_key':('UPDATE aos_capacity_publication_private.deployment_anchor SET signer_public_key=%s WHERE org_id=%s AND project_id=%s AND anchor_revision=%s',(b'\x00'*32,*SCOPE.key,original['anchor_revision'])),
+            'verifier_mode':('ALTER FUNCTION aos_ed25519.verify(bytea,bytea,bytea) STABLE',None),
+            'verifier_strict':('ALTER FUNCTION aos_ed25519.verify(bytea,bytea,bytea) CALLED ON NULL INPUT',None),
+        }
+        # Replica bypasses triggers/FKs, never CHECK constraints. Those two
+        # rejected corruptions prove storage enforcement, not query behavior.
+        for name,(statement,args) in faults.items():
+            owner.execute('SAVEPOINT current_signed_fault')
+            try:
+                owner.execute("SET LOCAL session_replication_role='replica'")
+                if name in ('identity_hash','snapshot_raw'):
+                    with pytest.raises(psycopg.errors.CheckViolation):
+                        owner.execute(statement,args)
+                else:
+                    owner.execute(statement,args)
+                    owner.execute("SET LOCAL session_replication_role='origin'")
+                    owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                    actual = dict(params)
+                    if name == 'raw_canonical':
+                        actual['content_hash'] = hashlib.sha256(bytes(original['raw_body'])+b' ').hexdigest()
+                    assert _read_native_current_signed(owner,actual) is None,name
+            finally:owner.execute('ROLLBACK TO SAVEPOINT current_signed_fault')
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            assert _read_native_current_signed(owner,params),name
+            owner.execute('RESET ROLE')
+        # Exact row identity can be made internally coherent while disagreeing
+        # with its signed payload. Compare with the matching altered row params.
+        for field,value in [('asset_id','coherent-different-id'),('revision','2')]:
+            owner.execute('SAVEPOINT current_signed_identity_fault')
+            try:
+                actual={**params,field:value}
+                identity=hashlib.sha256(b'aos-capacity-document-identity/v1\0'+actual['kind'].encode()+b'\0'+actual['asset_id'].encode()+b'\0'+actual['revision'].encode()).hexdigest()
+                from psycopg import sql
+                owner.execute("SET LOCAL session_replication_role='replica'")
+                owner.execute(sql.SQL('UPDATE aos_capacity_publication_private.document SET {}=%s,identity_hash=%s'+document_where).format(sql.Identifier(field)),(value,identity,*dargs))
+                owner.execute("SET LOCAL session_replication_role='origin'")
+                owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                assert _read_native_current_signed(owner,actual) is None,field
+            finally:owner.execute('ROLLBACK TO SAVEPOINT current_signed_identity_fault')
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner');assert _read_native_current_signed(owner,params)
+            owner.execute('RESET ROLE')
+        # Re-sign a complete original bootstrap with the controlled test anchor;
+        # bind every persisted parent to it, so only actual deployment identity
+        # (not a mismatched hash/signature/allowlist/policy target) rejects.
+        for field in ('databaseOid','clusterIdentifier'):
+            owner.execute('SAVEPOINT current_signed_deployment_fault')
+            try:
+                payload={**material['origin_payload'],'deploymentTarget':dict(material['origin_payload']['deploymentTarget'])}
+                target=payload['deploymentTarget'];target[field]=target[field]+1 if field=='databaseOid' else str(int(target[field])+1)
+                raw=canonical_json(payload);digest=hashlib.sha256(raw).hexdigest();signature=material['anchor_key'].sign(raw)
+                owner.execute("SET LOCAL session_replication_role='replica'")
+                owner.execute('UPDATE aos_capacity_publication_private.deployment_anchor SET deployment_target=%s WHERE org_id=%s AND project_id=%s AND anchor_revision=%s',(Jsonb(target),*SCOPE.key,original['anchor_revision']))
+                owner.execute('UPDATE aos_capacity_publication_private.origin SET raw_body=%s,signature=%s,content_hash=%s WHERE org_id=%s AND project_id=%s AND content_hash=%s',(raw,signature,digest,*SCOPE.key,original['origin_hash']))
+                owner.execute('UPDATE aos_capacity_publication_private.document SET origin_hash=%s WHERE org_id=%s AND project_id=%s',(digest,*SCOPE.key))
+                owner.execute('UPDATE aos_capacity_publication_private.registry_epoch SET head_origin_hash=%s WHERE org_id=%s AND project_id=%s',(digest,*SCOPE.key))
+                owner.execute("SET LOCAL session_replication_role='origin'")
+                owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                assert _read_native_current_signed(owner,params) is None,field
+            finally:owner.execute('ROLLBACK TO SAVEPOINT current_signed_deployment_fault')
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner');assert _read_native_current_signed(owner,params)
+            owner.execute('RESET ROLE')
+        owner.rollback()
+    print('NATIVE_CURRENT_SIGNED_FAULTS 20_query_refusals 2_storage_CHECK_refusals 2_coherent_identity 2_resigned_deployment all_restore')
+
+
+def test_native_current_signed_exact_scope_matrix_and_ordinary_role_denial(native_signed_source,tmp_path):
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL
+    material=_registered_publication_inputs(native_signed_source,tmp_path)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        for ref in material['refs']:
+            params=_current_signed_params(ref);assert _read_native_current_signed(owner,params)
+            for field,value in [('org_id','dev-org'),('project_id','other'),('kind','OtherKind'),('asset_id','missing'),('revision','2'),('content_hash','0'*64)]:
+                assert _read_native_current_signed(owner,{**params,field:value}) is None,(ref['assetType'],field)
+            owner.execute("SELECT set_config('aos.org_id','dev-org',true)");assert _read_native_current_signed(owner,params) is None
+            owner.execute("SELECT set_config('aos.org_id',%s,true)",(SCOPE.org_id,))
+        for role in ('aos_runtime','aos_provider_capacity_issuer'):
+            owner.execute('SET LOCAL ROLE '+role)
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with owner.transaction():owner.execute(CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL,_current_signed_params(material['refs'][0]))
+        owner.rollback()
+
+
+def _integrated_signed_origin_withdrawal(material):
+    import hashlib
+    from datetime import UTC, datetime, timedelta
+    from uuid import uuid4
+    from aos_api.asset_registry.canonical_json import canonical_json
+    from aos_api.aip_provider_capacity_withdrawal_contracts import ProviderCapacityOriginWithdrawal
+    origin=material['origin_payload']
+    payload=dict(schemaVersion=1,tenant=origin['tenant'],assetId='integrated-withdrawal-'+uuid4().hex,
+        revision=1,publisher=origin['publisher'],keyId=origin['keyId'],
+        validFrom=datetime.now(UTC)-timedelta(minutes=1),validUntil=datetime.now(UTC)+timedelta(minutes=10),
+        deploymentTarget=origin['deploymentTarget'],purpose='provider_capacity_origin_withdrawal',
+        anchorRevision=origin['anchorRevision'],publisherSubject=origin['publisherSubject'],
+        policyPublisherRole=origin['policyPublisherRole'],originRef=dict(
+            assetType='ProviderCapacityOriginBootstrapRevision',assetId=origin['assetId'],
+            revision=origin['revision'],contentHash=material['origin_hash']),expectedEpoch=1)
+    raw=canonical_json(ProviderCapacityOriginWithdrawal.model_validate(payload).model_dump(mode='json',by_alias=True))
+    return raw,material['anchor_key'].sign(raw),hashlib.sha256(raw).hexdigest()
+
+
+def _assert_integrated_signed_history(owner,material,withdrawal_count):
+    assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.origin_withdrawal').fetchone()['n']==withdrawal_count
+    assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.origin').fetchone()['n']==1
+    rows=owner.execute('SELECT content_hash,raw_body,signature FROM aos_capacity_publication_private.document').fetchall()
+    assert len(rows)==3
+    actual={r['content_hash']:(bytes(r['raw_body']),bytes(r['signature'])) for r in rows}
+    for ref,document in zip(material['refs'],material['documents']):
+        assert actual[ref['contentHash']]==document
+
+
+def test_native_current_signed_actual_withdrawal_commit_rollback_and_replay(native_signed_source,tmp_path):
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    material=_registered_publication_inputs(native_signed_source,tmp_path)
+    raw,signature,digest=_integrated_signed_origin_withdrawal(material)
+    call='SELECT aos_capacity_publication_private.withdraw_origin(%s,%s) AS digest'
+    with isolated_owner() as publisher:
+        publisher.execute("SELECT set_config('aos.org_id',%s,false),set_config('aos.project_id',%s,false)",SCOPE.key)
+        publisher.execute('SET SESSION AUTHORIZATION aos_provider_capacity_policy_publisher')
+        publisher.commit()
+        assert publisher.execute(call,(raw,signature)).fetchone()['digest']==digest
+        publisher.rollback()
+        with isolated_owner() as owner:
+            owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            for ref in material['refs']:assert _read_native_current_signed(owner,_current_signed_params(ref))
+            assert owner.execute('SELECT epoch,head_origin_hash FROM aos_capacity_publication_private.registry_epoch').fetchone()==dict(epoch=1,head_origin_hash=material['origin_hash'])
+            _assert_integrated_signed_history(owner,material,0)
+            owner.rollback()
+        assert publisher.execute(call,(raw,signature)).fetchone()['digest']==digest
+        publisher.commit()
+        assert publisher.execute(call,(raw,signature)).fetchone()['digest']==digest
+        publisher.commit()
+        publisher.execute('RESET SESSION AUTHORIZATION');publisher.commit()
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        for ref in material['refs']:assert _read_native_current_signed(owner,_current_signed_params(ref)) is None
+        assert owner.execute('SELECT epoch,head_origin_hash FROM aos_capacity_publication_private.registry_epoch').fetchone()==dict(epoch=2,head_origin_hash=None)
+        row=owner.execute('SELECT raw_body,signature,prior_epoch,new_epoch FROM aos_capacity_publication_private.origin_withdrawal').fetchone()
+        assert bytes(row['raw_body'])==raw and bytes(row['signature'])==signature
+        assert row['prior_epoch']==1 and row['new_epoch']==2
+        _assert_integrated_signed_history(owner,material,1)
+        owner.rollback()
+    print('NATIVE_CURRENT_SIGNED_REAL_WITHDRAWAL rollback=all3_current commit=all3_denied replay=single history=exact')
+
+
+@pytest.mark.parametrize('order',['reader_first','withdrawal_first','withdrawal_rollback_first'])
+def test_native_current_signed_withdrawal_serializable_epoch_competition(native_signed_source,tmp_path,order):
+    from threading import Event,Thread
+    import time
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL
+    material=_registered_publication_inputs(native_signed_source,tmp_path)
+    raw,signature,digest=_integrated_signed_origin_withdrawal(material)
+    release=Event();reader_ready=Event();writer_ready=Event();reader_done=Event();writer_done=Event();results={}
+    def reader():
+        try:
+            with isolated_owner() as conn:
+                conn.isolation_level=psycopg.IsolationLevel.SERIALIZABLE
+                conn.execute("SET LOCAL statement_timeout='10s'; SET LOCAL lock_timeout='8s'")
+                conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+                conn.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                results['reader_pid']=conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+                if order!='reader_first':reader_ready.set()
+                try:
+                    # Preserve 40001 from the real transaction; the malformed
+                    # payload helper intentionally accepts only parser errors.
+                    rows=[conn.execute(CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL,_current_signed_params(ref)).fetchone() for ref in material['refs']]
+                    assert all(rows)
+                    assert [(bytes(r['raw_body']),bytes(r['signature'])) for r in rows]==material['documents']
+                    results['reader_current']=True
+                    if order=='reader_first':
+                        reader_ready.set();assert release.wait(12)
+                    conn.commit();results['reader_committed']=True
+                except psycopg.errors.SerializationFailure as error:
+                    results['reader_sqlstate']=error.sqlstate;conn.rollback()
+        except BaseException as error:
+            results['reader_error']=(type(error).__name__,str(error))
+        finally:reader_done.set()
+    def writer():
+        try:
+            with isolated_owner() as conn:
+                conn.isolation_level=psycopg.IsolationLevel.SERIALIZABLE
+                conn.execute("SET LOCAL statement_timeout='10s'; SET LOCAL lock_timeout='8s'")
+                conn.execute("SELECT set_config('aos.org_id',%s,false),set_config('aos.project_id',%s,false)",SCOPE.key)
+                results['writer_pid']=conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+                conn.execute('SET SESSION AUTHORIZATION aos_provider_capacity_policy_publisher')
+                if order=='reader_first':writer_ready.set()
+                assert conn.execute('SELECT aos_capacity_publication_private.withdraw_origin(%s,%s) AS digest',(raw,signature)).fetchone()['digest']==digest
+                if order!='reader_first':writer_ready.set();assert release.wait(12)
+                if order=='withdrawal_rollback_first':conn.rollback();results['writer_rolled_back']=True
+                else:conn.commit();results['writer_committed']=True
+                conn.execute('RESET SESSION AUTHORIZATION');conn.commit()
+        except BaseException as error:
+            results['writer_error']=(type(error).__name__,str(error))
+        finally:writer_done.set()
+    rt,wt=Thread(target=reader),Thread(target=writer)
+    first,ready,second,other_ready=(rt,reader_ready,wt,writer_ready) if order=='reader_first' else (wt,writer_ready,rt,reader_ready)
+    first.start();blocked=False
+    try:
+        assert ready.wait(10),results
+        second.start();assert other_ready.wait(10),results
+        waiting,holding=('writer_pid','reader_pid') if order=='reader_first' else ('reader_pid','writer_pid')
+        deadline=time.monotonic()+4
+        while time.monotonic()<deadline:
+            with isolated_owner() as probe:
+                blockers=probe.execute('SELECT pg_blocking_pids(%s) AS blockers',(results[waiting],)).fetchone()['blockers']
+                probe.rollback()
+            if results[holding] in blockers:blocked=True;break
+            if reader_done.is_set() or writer_done.is_set():break
+            time.sleep(.02)
+        assert blocked,results
+        assert not reader_done.is_set() and not writer_done.is_set(),results
+    finally:
+        release.set()
+        if rt.ident:rt.join(12)
+        if wt.ident:wt.join(12)
+    assert not rt.is_alive() and not wt.is_alive(),results
+    assert 'reader_error' not in results and 'writer_error' not in results,results
+    if order=='withdrawal_first':
+        assert results.get('reader_sqlstate')=='40001' and not results.get('reader_current'),results
+    else:assert results.get('reader_current') and results.get('reader_committed'),results
+    rolled_back=order=='withdrawal_rollback_first'
+    assert results.get('writer_rolled_back' if rolled_back else 'writer_committed'),results
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        for ref in material['refs']:
+            row=_read_native_current_signed(owner,_current_signed_params(ref))
+            assert (row is not None)==rolled_back
+        assert owner.execute('SELECT epoch,head_origin_hash FROM aos_capacity_publication_private.registry_epoch').fetchone()==dict(
+            epoch=1 if rolled_back else 2,head_origin_hash=material['origin_hash'] if rolled_back else None)
+        _assert_integrated_signed_history(owner,material,0 if rolled_back else 1)
+        owner.rollback()
+    print('NATIVE_CURRENT_SIGNED_EPOCH_COMPETITION '+order+' actual_blocker=true actual_commit_or_rollback=true history=exact')

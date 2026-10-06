@@ -1,0 +1,55 @@
+{
+  "scope": "READONLY_NEXT_S17_REGISTERED_ORIGINAL_INPUT_INVESTIGATION_NOT_SOURCE_AUTHORITY",
+  "baseline": "442100c2",
+  "authority": "AOS-001433",
+  "database": "aos_test_67dab90cc4cc_ti4_test",
+  "documents": [
+    {
+      "kind": "ProviderCapacitySigningPermitRevision",
+      "asset_id": "integrated-permit-d0e8c1b2e9954d90b7908563a73f1af6",
+      "revision": "1",
+      "content_hash": "f5b56daeed20b24fcc06ac1b30f0ab78967d3f7620f3c8acfdfc03c7c2fb92ea",
+      "original_raw_sha_matches": true,
+      "registered_root_signature_verifies": true,
+      "root_revision": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "origin_epoch": 1
+    },
+    {
+      "kind": "ProviderCapacitySourcePolicyRevision",
+      "asset_id": "source-policy",
+      "revision": "1",
+      "content_hash": "e092dc12687d8b3f5f5a88a49d4f53cae5bd5764f1a19dfc69d0953cfd373fbb",
+      "original_raw_sha_matches": true,
+      "registered_root_signature_verifies": true,
+      "root_revision": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "origin_epoch": 1,
+      "original_model_canonical_roundtrip": true,
+      "native_existing_profile_equal": true
+    },
+    {
+      "kind": "SupplierCapacityAttestationRevision",
+      "asset_id": "supplier-attestation",
+      "revision": "1",
+      "content_hash": "94357af7ce145f10115f251dc7df540c69d142ede563f3a0d6bb199e4396da71",
+      "original_raw_sha_matches": true,
+      "registered_root_signature_verifies": true,
+      "root_revision": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "origin_epoch": 1,
+      "original_model_canonical_roundtrip": true,
+      "native_existing_profile_equal": true
+    }
+  ],
+  "current_registry_epochs": [
+    {
+      "org_id": "org-org",
+      "project_id": "dev-project",
+      "epoch": 1,
+      "head_origin_hash": "e22e791c5e66e3c3d6ff783107461d66a8fd16d200c0f182cad587270c72ac73"
+    }
+  ],
+  "pending": [
+    "current complete157 signature verification and root/registryepoch lock order",
+    "no inferred formal supplier/root/current deployment authorization",
+    "S16 original lockprefix and complete signedSource prepare/commit/actual callerCOMMIT/consumer"
+  ]
+}

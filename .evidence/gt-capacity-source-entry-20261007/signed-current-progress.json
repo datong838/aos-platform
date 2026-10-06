@@ -1,0 +1,37 @@
+{
+  "schema": "aos-capacity-signed-current-checkpoint/v1",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_base": "AOS-001433",
+  "base_head": "442100c2004c14c42014e59ec2068e456a61b07b",
+  "status": "partial_native_read_prerequisite_verified_complete157_pending",
+  "source_delivery": false,
+  "final_test_result": {
+    "passed": 152,
+    "failed": 5,
+    "warnings": 7,
+    "skipped": 0,
+    "seconds": 350.37,
+    "failures": "all five actual missing prepare42883"
+  },
+  "prior_failure_correction": "Previous145PASS5FAIL: first prepare42883, remainingfour registry-empty fixture; preserved historical logs and reports",
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "79ff8e2c0ae6674443bd4918d4c7a3ecaf3264e8dffd2daa2403c426ddd226f2",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "4801be660722dea724f3bc144dafdc6912c7b9b524aab80b930d77e6d4c501d6",
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "ae75def3684f1c9091da3e4f243e41486dc9fe2aaeccd063acb35c9c50d4e759",
+    ".evidence/gt-capacity-source-entry-20261007/signed-current-verification.md": "665b62f3044886722f4b33b997e522745539d1bf9a5cf63d01d4bad7ef32d991",
+    ".evidence/gt-capacity-source-entry-20261007/signed-original-next-investigation.json": "8af4eab8fe4f6d85d8978eba269d7b6e927f18b0dfa9ad122013586e666d6e36",
+    ".evidence/gt-capacity-source-entry-20261007/test-only-disk-expansion-before.json": "3675e98dd74c72a27c7548c1d7169e0f464ec48854d1c9d7b36da5f161af1a56",
+    ".evidence/gt-capacity-source-entry-20261007/test-only-disk-expansion-restored.json": "cf348e1ae966eaab6aa30d886a65dceebf40bcb4acd731d6f5dfede0d45ddbc8",
+    ".evidence/gt-capacity-source-entry-20261007/test-only-disk-expansion-verified.json": "804d469fc907414d87f0cf35cdb24416e73fb60c8abfe06701de7e89b0644837",
+    ".evidence/gt-capacity-source-publication-20261006/signed-current-native-adjacent-r1.log": "9ed8489c9ecca4b38d7bb666d3e98778981f63ad9afd3f935825165b777b564d",
+    ".evidence/gt-capacity-source-publication-20261006/signed-current-native-cumulative-r1.log": "3599af52bc942d931552b19b5bf78a2f2b163c37c8bb1217e92fdfe7c35b88ce",
+    ".evidence/gt-capacity-source-publication-20261006/signed-current-native-faults-r1.log": "c1af8ca5764611db88de0875134e1bd1d0657f9d2a8818ab935087791162d7c7",
+    ".evidence/gt-capacity-source-publication-20261006/signed-current-native-faults-r2.log": "ad1216acc83da17796e68e15ee95c0099881bc235df7910629361e4911dacfef",
+    ".evidence/gt-capacity-source-publication-20261006/signed-current-native-faults-r3.log": "3ce5cf61e966ab2ddd065099d9df5f17aac9d9e756b2ff9e37b2e37609c89293",
+    ".evidence/gt-capacity-source-publication-20261006/signed-current-native-green-r1.log": "07fbff0fbfed9ecd82d8efa9dd7d7224aca5a260657e2789ada8ef17812c2a0d",
+    ".evidence/gt-capacity-source-publication-20261006/signed-current-native-red-r1.log": "c58e3adf6e240cea222161399b05a69ff0438b2408ea78ed5ca605c11c09d4a5",
+    ".evidence/gt-capacity-source-publication-20261006/signed-current-native-withdrawal-r1.log": "de3b6fbfc8440296ded38bc6af22bd2556804bd01b09b4301912bb4a07044d98",
+    ".evidence/gt-capacity-source-publication-20261006/signed-current-native-withdrawal-r2.log": "faa4d881f869d54d6ad74edc6fdd5f3910d32f9a2f4444874a74c10d7c287002"
+  },
+  "next": "Complete native Source157 with original S01-S20 contract, controlled signer, caller actualCOMMIT/current consumer and finalCOMMIT TTL; no shortcut approval"
+}
