@@ -25,3 +25,5 @@ Maintenance151Journal绑定冻结head/thread/Task/base，不仅step名称。原�
 
 ## 最新隔离窗口完整路径
 原两代码文件和本证据scope内增加run_isolated151(thread)：先真实preflight；在aos-recovery/current151-*独占0700目录绑定HEAD/Task，固定恢复镜像、colima-aos-a0v-test-only、current151-*新命名卷/none-network/noports。由第二份142已校验备份建立隔离源，再依九步journal执行：无应用客户端→ALTER SYSTEM空listen/restart及TCP拒绝/客户端0/prepared0→窗口内全备globals/dump→新独立恢复并全库窄等价→逐步重新生成已演练hash SQL，每步O_EXCL intent/terminal和版本回读→完整151快照与严格fence→原配置来源恢复/restart/TCP与版本→无应用客户端→最终snapshot、身份、租约/HEAD。任一失败保留所有卷/目录/attempt，禁止重发。此入口不能选择当前源容器，不提供current执行入口；完整当前维护Task仍ACTIVE。
+
+首次隔离九步成功但final snapshot比较RED，只读定位仅a146/a148四新metadata行created_at不同。修正验收：限定精确四ID/两表，旧metadata每行hash不变且count只增加2；原151模板和现场四新增整行去掉created_at后逐字一致，时间须为带时区datetime。只有这些已核行hash与两表总hash可在比较副本中归一，剩余table/count/role/full_catalog等仍原完整比对。首次失败保留，不重跑任何迁移；后续只读调和和未尝试配置恢复分别记录，不能覆盖原verify-attempt。

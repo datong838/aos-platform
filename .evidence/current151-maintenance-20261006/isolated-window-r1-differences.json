@@ -1,0 +1,32 @@
+[
+  {
+    "path": "/metadata/meta_action_type/aip_request_provider_capacity",
+    "expected": "6dc27fe9501034749ae0b2a795eb26af4ded90890b5a6c457bba5c57d3ba1714",
+    "actual": "b702a180819b0e905c2f619b3eb032563a1df356b3605d32c5f9d77120c570bf"
+  },
+  {
+    "path": "/metadata/meta_action_type/aip_review_provider_capacity_source",
+    "expected": "0ed6fd26656d3d75f97fc3516ece11a4f18fb541f35195a1bc31a05984f81c15",
+    "actual": "e78dc4ac87c116f7c4e533b16395d2334add3412a6d7b8213d5eae73b1eef288"
+  },
+  {
+    "path": "/metadata/meta_object_type/ProviderCapacityRequest",
+    "expected": "7803704584bd40bc7dc3417733db0e9bff5345f767a039ce0ba7133f44178713",
+    "actual": "7e37dfa64b2bb741e33e9a86e44de3c909c23c2fd6bc2bcec30e24ec20280fc5"
+  },
+  {
+    "path": "/metadata/meta_object_type/ProviderCapacitySourceReview",
+    "expected": "1aebf6145d22f23bef01b9995927ddaa338e5f6f551b40063fbe790d7258d093",
+    "actual": "b4997d4ba1854cce2cf83502888947cbafd23fb9ca69bcd876031f85a974a64d"
+  },
+  {
+    "path": "/tables/meta_action_type/sha256",
+    "expected": "d973babb1d3624f853dcd7cbbd310ab094c690524167f279e47cdbbceb6bb488",
+    "actual": "1baf22ef68613f0816cbec38e6918fcf699cf89e73e5783874bd0330f34d42c7"
+  },
+  {
+    "path": "/tables/meta_object_type/sha256",
+    "expected": "267c82cc6d2a337689bee9172742867632b72286441d10219d7be7c7ddf14cc2",
+    "actual": "443c2a55e8cb0a49ab09e92ac68c37ed7b288c82e9fd05fb737b4dd8dee31b46"
+  }
+]

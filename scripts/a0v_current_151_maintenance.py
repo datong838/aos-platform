@@ -255,6 +255,33 @@ def require_isolated151(item,*,name,image):
         raise Maintenance151Blocked('ISOLATED151_RESOURCE_REQUIRED')
 
 
+METADATA151_ADDITIONS={'meta_object_type':('ProviderCapacityRequest','ProviderCapacitySourceReview'),
+    'meta_action_type':('aip_request_provider_capacity','aip_review_provider_capacity_source')}
+
+def normalize_metadata151(before,expected,actual,template_rows,live_rows):
+    """Permit only four migration-created timestamps; preserve every old row."""
+    import copy
+    normalized=copy.deepcopy(actual)
+    for table,names in METADATA151_ADDITIONS.items():
+        old=before['metadata'][table];new=actual['metadata'][table]
+        if (set(new)!=set(old)|set(names) or any(new.get(k)!=v for k,v in old.items())
+            or actual['tables'][table]['count']!=len(old)+len(names)):
+            raise Maintenance151Blocked('METADATA151_OLD_ROWS_OR_ADDITIONS_DRIFT')
+        a={x['id']:x for x in template_rows[table]};b={x['id']:x for x in live_rows[table]}
+        if len(template_rows[table])!=len(names) or len(live_rows[table])!=len(names) or set(a)!=set(names) or set(b)!=set(names):
+            raise Maintenance151Blocked('METADATA151_EXACT_ROWS_REQUIRED')
+        for name in names:
+            for row in (a[name],b[name]):
+                try:stamp=datetime.fromisoformat(row['created_at'])
+                except (KeyError,TypeError,ValueError):raise Maintenance151Blocked('METADATA151_TIMESTAMP_REQUIRED') from None
+                if stamp.tzinfo is None:raise Maintenance151Blocked('METADATA151_TIMESTAMP_REQUIRED')
+            if {k:v for k,v in a[name].items() if k!='created_at'}!={k:v for k,v in b[name].items() if k!='created_at'}:
+                raise Maintenance151Blocked('METADATA151_CONTENT_DRIFT')
+            normalized['metadata'][table][name]=expected['metadata'][table][name]
+        normalized['tables'][table]['sha256']=expected['tables'][table]['sha256']
+    return normalized
+
+
 
 def run_isolated151(*,thread):
     """Whole current-version window sequence on new isolated volumes only."""
@@ -302,6 +329,16 @@ def run_isolated151(*,thread):
     def query(name,statement):
         return json.loads(pg(name,"BEGIN READ ONLY;SET LOCAL timezone='UTC';SET LOCAL search_path=pg_catalog,public;"+statement+';COMMIT').stdout)
     def snapshot(name,roles):return restore.full_snapshot(primitive,lambda q:query(name,q),roles)
+    def metadata_rows(name):
+        from psycopg import sql
+        return {table:query(name,'SELECT json_agg(row_to_json(t) ORDER BY id) AS value FROM (SELECT * FROM public.'+table+
+            ' WHERE id IN ('+','.join(sql.Literal(x).as_string() for x in names)+')) t')
+            for table,names in METADATA151_ADDITIONS.items()}
+    template_rows=metadata_rows(json.loads((historic/'same-image-phase/intent.json').read_text())['container'])
+    def require_final_snapshot():
+        observed=snapshot(source,final_expected['role_names'])
+        normalized=normalize_metadata151(expected,final_expected,observed,template_rows,metadata_rows(source))
+        restore.require_dump_restore_equivalence(final_expected,normalized)
     globals_data=primitive.prepare_globals((backup/'globals-no-password.sql').read_bytes(),bootstrap='aos_app')
     for name in (source,target):
         execute(['run','-d','--pull','never','--name',name,'--network','none','--cpus','1','--memory','768m',
@@ -364,7 +401,7 @@ def run_isolated151(*,thread):
     journal.perform('migrate_steps',migrate)
     def verify():
         window()
-        restore.require_dump_restore_equivalence(final_expected,snapshot(source,final_expected['role_names']))
+        require_final_snapshot()
         require_withdrawal_fence(ReadOnlyCatalogConnection(lambda q:query(source,q)))
         return dict(status='verified',full_snapshot='exact_except_reviewed_check_associativity',withdrawal_fence='exact')
     journal.perform('verify',verify)
@@ -376,7 +413,7 @@ def run_isolated151(*,thread):
     journal.perform('restart_clients',lambda:dict(status='verified',scope='isolated_no_application_clients'))
     def acceptance():
         inspect(source);inspect(target)
-        restore.require_dump_restore_equivalence(final_expected,snapshot(source,final_expected['role_names']))
+        require_final_snapshot()
         if pg(source,'SELECT version_num FROM alembic_version',tcp=True).stdout.strip()!=b'a0v_151':raise Maintenance151Blocked('FINAL_VERSION_DRIFT')
         return dict(status='verified',schema='a0v_151',source_touched=False,business_first_chain=False)
     journal.perform('acceptance',acceptance)

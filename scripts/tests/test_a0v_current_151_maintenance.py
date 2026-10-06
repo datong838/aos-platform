@@ -121,3 +121,20 @@ def test_isolated151_refuses_current_or_drifted_resource(fault):
     elif fault=='image':item['Image']='other'
     elif fault=='volume':item['Mounts'][0]['Name']='aos-a0v-recovery-pg-data'
     with pytest.raises(m.Maintenance151Blocked):m.require_isolated151(item,name=name,image='image')
+
+
+@pytest.mark.parametrize('fault',['payload','old_row','unknown_id'])
+def test_metadata_timestamp_equivalence_rejects_other_changes(fault):
+    import copy
+    m=module();ids=m.METADATA151_ADDITIONS
+    before=dict(metadata={t:{'old':'same'} for t in ids})
+    actual=dict(metadata={t:{'old':'same',**{i:'newhash' for i in names}} for t,names in ids.items()},tables={t:dict(count=3,sha256='new') for t in ids})
+    expected=copy.deepcopy(actual)
+    rows={t:[dict(id=i,created_at='2026-10-05T10:00:00+00:00',value='same') for i in names] for t,names in ids.items()}
+    live=copy.deepcopy(rows)
+    for entries in live.values():
+        for row in entries:row['created_at']='2026-10-06T10:00:00+00:00'
+    if fault=='payload':next(iter(live.values()))[0]['value']='changed'
+    elif fault=='old_row':next(iter(actual['metadata'].values()))['old']='changed'
+    else:next(iter(live.values()))[0]['id']='other'
+    with pytest.raises(m.Maintenance151Blocked):m.normalize_metadata151(before,expected,actual,rows,live)

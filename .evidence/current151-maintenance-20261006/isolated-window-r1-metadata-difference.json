@@ -1,0 +1,30 @@
+{
+  "meta_object_type": {
+    "ProviderCapacityRequest": {
+      "created_at": [
+        "2026-10-05T19:30:20.685863+00:00",
+        "2026-10-06T03:35:28.770974+00:00"
+      ]
+    },
+    "ProviderCapacitySourceReview": {
+      "created_at": [
+        "2026-10-05T20:00:20.324091+00:00",
+        "2026-10-06T03:35:29.939815+00:00"
+      ]
+    }
+  },
+  "meta_action_type": {
+    "aip_request_provider_capacity": {
+      "created_at": [
+        "2026-10-05T19:30:20.685863+00:00",
+        "2026-10-06T03:35:28.770974+00:00"
+      ]
+    },
+    "aip_review_provider_capacity_source": {
+      "created_at": [
+        "2026-10-05T20:00:20.324091+00:00",
+        "2026-10-06T03:35:29.939815+00:00"
+      ]
+    }
+  }
+}

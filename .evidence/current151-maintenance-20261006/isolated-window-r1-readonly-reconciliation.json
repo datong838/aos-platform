@@ -1,0 +1,7 @@
+{
+  "outcome": "READONLY_FAILED_STAGE_RECONCILIATION_GREEN",
+  "source_touched": false,
+  "migrations_replayed": 0,
+  "allowed_differences": "four new metadata created_at fields only",
+  "full_sequence": "not accepted; original verify attempt retained; restore_tcp unattempted"
+}

@@ -1,0 +1,89 @@
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_142 -> a0v_143, Fence original Health DML by tenant/provider; never replicate health facts.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_143 -> a0v_144, Bound formal evaluation to original authorities and one atomic transaction.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_144 -> a0v_145, Immutable nonexecuting Provider allocation requests, no capacity activation.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_145 -> a0v_146, Reserved Provider allocation approval metadata; no execution grant.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_146 -> a0v_147, Unverified physical capacity candidates only; no account or capacity publication.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_147 -> a0v_148, Reserved Provider allocation approval metadata; no execution grant.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_148 -> a0v_149, Neutral Evidence epoch for capacity review and future issuer commit ordering.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_149 -> a0v_150, Dedicated read/lock identity for capacity issuance, with no publication grants yet.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_150 -> a0v_151, Independent proposal withdrawal ordering, without granting capacity.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_142 -> a0v_143, Fence original Health DML by tenant/provider; never replicate health facts.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_143 -> a0v_144, Bound formal evaluation to original authorities and one atomic transaction.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_144 -> a0v_145, Immutable nonexecuting Provider allocation requests, no capacity activation.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_145 -> a0v_146, Reserved Provider allocation approval metadata; no execution grant.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_146 -> a0v_147, Unverified physical capacity candidates only; no account or capacity publication.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_147 -> a0v_148, Reserved Provider allocation approval metadata; no execution grant.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_148 -> a0v_149, Neutral Evidence epoch for capacity review and future issuer commit ordering.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_149 -> a0v_150, Dedicated read/lock identity for capacity issuance, with no publication grants yet.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Generating static SQL
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a0v_150 -> a0v_151, Independent proposal withdrawal ordering, without granting capacity.
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py", line 370, in run_isolated151
+    journal.perform('verify',verify)
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py", line 239, in perform
+    result=operation()
+           ^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py", line 367, in verify
+    restore.require_dump_restore_equivalence(final_expected,snapshot(source,final_expected['role_names']))
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py", line 121, in require_dump_restore_equivalence
+    require_exact_restore(left,right)
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py", line 104, in require_exact_restore
+    require(before==after,'FULL_RESTORE_STATE_MISMATCH')
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py", line 42, in require
+    if not value:raise Restore150Blocked(reason)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+isolated151_restore.Restore150Blocked: FULL_RESTORE_STATE_MISMATCH
