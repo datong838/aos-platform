@@ -1,0 +1,19 @@
+{
+  "task": "aos-231-current-summary-reconciliation-20261006",
+  "authority_cutoff": "AOS-001393",
+  "code_cutoff": "bb2c7ea7dbfec2073caf4f525ba93b6af7720bc1",
+  "before_sha256": "8bf1eb2fc672aaeaa88646e2f3aa80932e9e712179b02d849d4edbede0bce827",
+  "after_sha256": "4b9c17c7776ed1d74f1dd163530048d512a25414d1f04a65c0ddaf31974e5270",
+  "unchanged_prefix_sha256": "25ec933a8cbe6a070f3b48960c2e9a37cea1239228fa0fb3ff61492eaf945821",
+  "unchanged_suffix_sha256": "fd77c4de536aad85bcfdbf0f5fc5147c0b9eeba41798efd502eff8eaee9dc359",
+  "single_latest_summary": true,
+  "outside_fragment_unchanged": true,
+  "sources": {
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/authority.json": "4ab5c4b243aaf8e98305c6e8f6374cfa14a4e905ebf5f7e59c573c75d4a05de1",
+    ".evidence/current151-maintenance-20261006/post-browser-readonly-audit.json": "0055033386096de43ebd3662c9e649fc301225e850f725af4ade3a4e53c5cccf",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/private-alias-consumer-proof.json": "dd3a30f9bd221a50fc0c0d3ce312948eb4957088067cf77ae47bbf4e39d2a868"
+  },
+  "current_database_accessed": false,
+  "business_first_chain": false,
+  "independent_finding_closure_not_asserted": true
+}

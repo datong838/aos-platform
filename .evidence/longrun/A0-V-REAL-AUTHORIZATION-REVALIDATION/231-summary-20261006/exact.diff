@@ -1,0 +1,45 @@
+--- 231-before
++++ 231-after
+@@ -235,23 +235,26 @@
+ 
+ ## 10. 维护与当前接续卡
+ 
+-### 当前接续摘要：2026-10-05，AOS-001340
+-
+-独立督导发现下方 v1.7 摘要仍停留在 AOS-000545/AR1-c。本段修正当前接续入口，旧表保留为历史截止，不改变本文业务目标与验收标准。权威命名字段、有效 Lease 与实际证据分别核验，不以历史摘要代替实时数据库事实。
+-
+-| 字段 | 当前检查点 |
++### 当前接续摘要：2026-10-06，证据截止 AOS-001393 / m1@bb2c7ea7
++
++本段按同一证据截止替换旧 AOS-001340 摘要，修复独立督导 AIS-001 指出的接续漂移；旧章节与旧锁序记录继续作为历史，不改变长期业务目标及真实操作授权门。这里是可定位的截止快照，接续前仍须回读实时 Authority、Task/Delivery、HEAD/工作树及有效 Lease；本摘要不产生新的数据库或运行事实。
++
++| 字段 | 截止点与证据范围 |
+ |---|---|
+-| 唯一施工者 | 本线程 `01a107a2-e9e4-7670-bc44-1144fa9b27e2`，m1 单写；旧线程正式暂停；不 push，不动其他分支 |
+-| 当前代码 | AOS m1 `b1d64cc8`；独立督导仓 m1 `0b24ac5`；Authority `AOS-001340`，A1；总体仍 `W5CB4_E16_RUNTIME_HOST_ADMISSION_GATED_FIRST_CHAIN_PENDING` |
+-| 当前准入施工 | b90 完整八依赖 evaluator Task 仍 ACTIVE；已验 Health、签名 Source、原预算事实及联合输入；完整命令、三写正向 COMMIT、产品 API 和实例 ToolBinding 尚未完成 |
+-| 本次实际证据 | 完整命令原拟 Budget→Capacity 锁序，已实测原内容写者 Capacity→Budget 的双向等待及 PostgreSQL 死锁；新增 native Capacity 预锁使原写者先等容量，相邻111 passed/36.59s，最终8 passed/9.71s，六表/fence/head revision与version回滚前后不变。协调探针不证明正式Capacity正向。此前签名 Source + HTTPS 预算联合输入仍有效，完整命令未完成 |
+-| 当前库边界 | 当日独立维护检查点已将命名当前库推进至 a0v_142；本次联合测试仅 5433 自动销毁库，无当前库写入，不新增实时数据库或服务证明；原 Goal 中 a0v_135 为旧截止 |
+-| 用户最新优先级 | 先独立督导任务职责，再建立 AOS 仓外通用督导代码包与独立运行；只读监督，不增加代码写者或业务执行权；完成后继续完整 evaluator，不扩展无必要 helper |
+-| 督导现状 | 仓外通用包、独立宿主及项目状态已建立；34 项 Python 专项及真实 Prime runner/SDK 本地请求限额验证通过。后台自动检查实际读取214条材料范围，三只读工具/两层重试0已核验，但最终 Agnes 429；原调用明确失败、无报告消费，引擎阻断持久保存。有效自主报告与连续值班仍未验收；宿主只读观察，不自动撞限额 |
+-| 业务交付 | 自然首条经营闭环、八工作台真实场景、连续观察与发布均待证明；隔离测试数不折算业务成果 |
+-| 授权边界 | org-org/dev-project 唯一正向，dev-org/dev-project 零副作用；当前库只读，Host/worker/Provider、商城源、旧 Run、手工执行与外部效果仍遵守独立正式授权门 |
+-
+-证据：`aos-platform/.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-e17-s3owaob90/implementation/joint-input-verification.md`；当前权威、有效 Lease、Task/Delivery 见 AOS 项目开发上下文 memory。到 14:00 的 daily0900 preflight 记录已收口为过期记录对账，不产生新的维护动作。
++| 唯一施工者 | 本线程 `01a107a2-e9e4-7670-bc44-1144fa9b27e2`；m1 串行单写；旧线程正式暂停；不 push、不动其他分支、不覆盖用户改动 |
++| 代码与权威 | m1 代码截止 `bb2c7ea7`，Authority `AOS-001393`，A1；总体仍 `W5CB4_E16_RUNTIME_HOST_ADMISSION_GATED_FIRST_CHAIN_PENDING`。后续纯文档/证据提交不作为本截止的业务代码重验 |
++| 当前 Task/Delivery | b90 完整 evaluator、Provider Source、formal-boundary、publication-schema 四 Task 均 ACTIVE、未有 Delivery；三项 Source 相关及 b90 原同 owner Lease 已核到 2026-10-06 20:00 +08:00。过期 Lease 不凭 TTL 删除/夺取，接续必须新鲜回读 |
++| Source 当前实现 | 原批准/原行读取与组合、当前依赖/撤回协调持续推进；`publication_store.py` 尚无完整 operational Store。完整独立 bootstrap/root/permit、稳定账户映射、prepare/sign/finalize、真实签名 Source COMMIT/replay/consumer 尚未完成；实际 COMMIT 时限合同待原裁决，不因局部待定停止其他安全项 |
++| 本轮实现与原入口证据 | S13 嵌套引用单别名兼容修复：专项6/14.03s、相邻454/207.14s；S14 原完整Provider集合及payload版本身份真实RED后最小修复：专项8/18.52s、八模块520/316.04s；S16 两原批准直接withdrawal与private原入口四种真实阻塞/COMMIT/新读取拒绝：专项4/15.04s、相邻108/148.70s。数字各有独立scope，不相加或折算业务完成率 |
++| 督导整改补证 | AIS-005 由督导自主保留 `RESOLUTION_PROPOSED`；已新增四种原raw别名候选→原独立checker批准→真实private SCRAM claims组合正向4/12.37s，整文件85/116.80s。返回仍supplier_verified=False、execution_allowed=False；发现关闭须督导自主核新快照，施工者不改其finding状态 |
++| 当前库与服务边界 | 已存12:32维护/浏览器后只读审计记录：原当前库 `aos_current_preview_20260927@a0v_151`、原卷 `aos-a0v-recovery-pg-data`，603表完整快照及撤回fence吻合。该运行代码截止 `b3371c40`，八页面均为入口禁入、有效安装0；不称八业务工作台正向通过。本轮仅隔离测试，未查询/修改当前库、重启PG/API/Web；无最新代码运行验收。Goal内135及旧摘要142仅旧截止 |
++| 独立督导现状 | 独立对话 `01a1102f-8ef9-75b1-9624-9c8246b64afe` 自有Goal与30分钟提醒 `aos-3` 已建立；本轮官方线程快照active，已自主研究历史/当前/未来并复查S13、锁图、完整发行退出、自然首链和unknown义务，无需施工者逐次邀请。提醒配置不等于已验定时送达；独立对话不等于常驻OS进程。督导只写自己的研究记录，AOS唯一施工写者不变 |
++| 机制质量与恢复边界 | 原agnes-2.5-flash r3 verdict7/7、assessment6/7限制保留；不宣称模型稳定性/学习收益全通过。用户要求局部故障不得整体blocked、退避及5次后GPT-6.1 Sol↔GPT-6 Sol切换；应用内部硬禁blocked与自动模型切换尚未实现，不以提示词冒充系统保证 |
++| 下一施工顺序 | 沿登记S14–S19完整依赖、独立取钥/稳定身份及正式Source发行/当前consumer向完整退出收敛，再共享occupation/一次Intent、Model/Route Eval、b90完整三写真正COMMIT/API/实例ToolBinding及b70/O4真实观察；具体锁图须按表/行/模式/connection，不凭“容量先于预算”名称证明全图安全。未知/已提交外部义务不得TTL清零 |
++| 完整业务交付 | 安装、配置、禁入、恢复、卸载重装及自然首条经营闭环逐项真实权威证据，随后八工作台、连续观察与发布决定仍为完整Goal；隔离测试、计划、提交、页面200均不代替退出 |
++| 授权边界 | org-org/dev-project唯一正向；dev-org/dev-project零副作用canary。真库迁移/维护须原独立正式门；Host/worker/Provider需正式身份/Owner/八配置/审批预算。禁止商城源、旧12Run重放、手工run_definition、230 L0、未知外部结果重发；保留数据/备份/卷与用户改动 |
++
++证据入口：`aos-platform/.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/` 下 `ref-alias-verification.md`、`provider-payload-identity-verification.md`、`approval-withdrawal-commit-proof.json`、`private-alias-consumer-proof.json`；`aos-platform/.evidence/current151-maintenance-20261006/verification.md` 的12:32恢复段及 `post-browser-readonly-audit.json` 为历史维护截止。当前 Authority/七份强一致投影、Task/Delivery/renewal/Lease 见 AOS 项目开发上下文 memory。独立督导自主报告见仓外 `long-task-supervisor/state/aos-independent-supervisor/reports/`；本轮没有替督导作裁决。
+ 
+ 本次锁序证据见同目录 `capacity-budget-lock-verification.md` 和两份实际锁图 JSON。有限 current142 方案复核 Task 已交接收口，不等于全图或方案整体验收；完整 evaluator Task 保持 ACTIVE 至18:00，下一步直接完整八facts、原CAS/Receipt/proof实际COMMIT及产品API，不以辅助预锁单段替代整体交付。独立只读路线审阅确认原锁循环，并要求明确初始Binding行锁；该要求已落实到实施方案，全图完整性仍须随完整命令竞争测试证明。
+ 
