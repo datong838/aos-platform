@@ -114,7 +114,7 @@ def test_original_private_claims_and_runtime_withdrawal_share_commit_fence(appro
             execution_allowed=False,current_database_accessed=False),sort_keys=True))
 
 
-@pytest.mark.parametrize('fault',[None,'second_head','second_payload'])
+@pytest.mark.parametrize('fault',[None,'second_head','second_payload','second_payload_revision'])
 def test_original_source_checks_every_account_provider(source_inputs,fault):
     from psycopg.types.json import Jsonb
     from aos_api.db import connect_serializable
@@ -145,10 +145,12 @@ def test_original_source_checks_every_account_provider(source_inputs,fault):
         if fault=='second_head':
             conn.execute('UPDATE public.aip_provider_instance_head SET current_revision=current_revision+1 '
                 'WHERE org_id=%s AND project_id=%s AND provider_instance_id=%s',(*SCOPE.key,second.provider_instance_id))
-        elif fault=='second_payload':
+        elif fault in {'second_payload','second_payload_revision'}:
             row=conn.execute('SELECT payload FROM public.aip_provider_instance_revision WHERE org_id=%s AND project_id=%s '
                 'AND provider_instance_id=%s AND revision=%s',(*SCOPE.key,second.provider_instance_id,second.revision)).fetchone()
-            payload=row['payload'];payload['contentHash']='0'*64
+            payload=row['payload']
+            if fault=='second_payload':payload['contentHash']='0'*64
+            else:payload['revision']=second.revision+1
             conn.execute('UPDATE public.aip_provider_instance_revision SET payload=%s WHERE org_id=%s AND project_id=%s '
                 'AND provider_instance_id=%s AND revision=%s',(Jsonb(payload),*SCOPE.key,second.provider_instance_id,second.revision))
     with connect_serializable(SCOPE) as conn:

@@ -6,6 +6,7 @@ from aos_api.auth import Principal
 from aos_api.db import connect_serializable
 from aos_api.tenant_scope import TenantScope
 from aos_api.aip_model_eval_request_store import AipModelEvalRequestStore,ModelEvalRequestBlocked
+from aos_api.aip_model_runtime_contracts import ProviderInstanceRevision
 from aos_api.aip_production_contract_store import AipProductionContractStore,ProductionContractError
 from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
 
@@ -31,7 +32,12 @@ class ProviderCapacityCandidateStore:
     @staticmethod
     def _account_dependencies(conn,scope,candidate):
         for ref in sorted(candidate.provider_refs,key=lambda item:item.asset_id):
-            AipModelEvalRequestStore._current_revision(conn,scope,'provider',ref)
+            row=AipModelEvalRequestStore._current_revision(conn,scope,'provider',ref)
+            # The original business hash excludes revision metadata. Keep its
+            # typed normalization, then bind payload identity to the exact ref.
+            provider=ProviderInstanceRevision.model_validate(row['payload'])
+            if provider.provider_instance_id!=ref.asset_id or provider.revision!=ref.revision:
+                raise ModelEvalRequestBlocked('exact Provider payload identity required')
         ProviderCapacityCandidateStore._evidence(conn,scope,candidate.evidence_ref)
 
     @staticmethod

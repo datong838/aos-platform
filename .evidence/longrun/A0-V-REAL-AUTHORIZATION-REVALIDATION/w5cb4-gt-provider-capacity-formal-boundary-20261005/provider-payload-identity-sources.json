@@ -1,0 +1,18 @@
+{
+  "baseline_head": "a734b56820d76e35cd19c606f4640e243f195afd",
+  "authority": "AOS-001391",
+  "tasks": [
+    "gt-provider-capacity-source-20261005",
+    "gt-provider-capacity-formal-boundary-20261005"
+  ],
+  "sources": {
+    "services/aos-api/aos_api/aip_provider_capacity_source_authority.py": "6973cae1a9f23317b12cffd3a8bd62c88c02af27873fa0fe2ce27b27cb255773",
+    "services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py": "33711d02b884da72cfe1b180307fbfc4a2575cd01f882b510acfc170ae0ea956",
+    "services/aos-api/aos_api/aip_model_eval_request_store.py": "2dcbd06784f23684ee331f3b35b2cff66c015f735018493ac70c98f4f4de854b",
+    "services/aos-api/aos_api/aip_model_runtime_contracts.py": "4684c8bfb0e2a7102279db52229d6b2a02e5f8443696cabc1f54ae025810bdfa"
+  },
+  "log_sha256": "5d2ad625c199225a1690d0d06b097dbdf27f2a6ab3f315392cc78b3a7e2bda20",
+  "result": "520 passed/316.04s",
+  "current_database_accessed": false,
+  "independent_review": "pending autonomous fresh evidence"
+}

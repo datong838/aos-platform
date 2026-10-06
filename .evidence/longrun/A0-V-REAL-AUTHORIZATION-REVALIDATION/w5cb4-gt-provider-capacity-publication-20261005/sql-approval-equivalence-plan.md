@@ -118,3 +118,17 @@ S14完整Provider集合原入口实测：3 passed/10.61s，整formal-boundary文
 目标是原Source批准和原allocation批准两项各覆盖reader-first/writer-first：原runtime直接INSERT withdrawal（不改proposal approved状态），实际private SCRAM reader运行完整原approved-claims入口并持有原conn到真正COMMIT。记录双方backend pid及pg_blocking_pids证明等待，不能用sleep成功代替互斥。reader-first允许先取得仅claims且writer等其COMMIT，之后新reader拒绝；writer-first持有原withdrawal epoch写锁，reader等待writer COMMIT后必须拒绝，不能让旧serializable快照漏看撤回。退出后核原status仍approved、原撤回真实持久及epoch=1；claims仍无supplier/execution授权。四项成功只证明此原生协调门，不是正式Source发行/实际COMMIT TTL/业务首链。专项后原formal-boundary+151 withdrawal suite相邻；保留自主督导复查与完整Task退出未完成。
 
 S16原两批准完整private入口与runtime直接withdrawal竞争：专项4/15.04s，相邻108/148.70s；实际四组阻塞PID与双方真实COMMIT/拒绝/新reader拒绝/approved状态未改见formal-boundary approval-withdrawal-commit-proof.json。原claims协调成立，完整签名Source最终COMMIT TTL/consumer仍未证明，原Task不Delivery。
+
+## S14 原Provider载荷版本身份缺口调查
+
+原AipModelEvalRequestStore._current_revision先核原row id/revision/hash，再严格模型重解析/tenant/lifecycle/canonical业务内容；但业务hash明确排除revision等META字段，其返回校验未显式比较item.revision与row/ref。原ProviderPayload的revision允许>=1，改变它可能仍通过hash与全部原当前性检查。此为待实际原Source入口验证的假设，不先宣称事故。原source Task expired16:00已按官方renew_task用同owner/精确expected Task/Lease/无Delivery/无重叠恢复20:00，未删/夺Lease。
+
+仅formal-boundary原多Provider实测新增second_payload_revision：原Store合法存两Provider account/basis后，仅隔离owner改变额外Provider payload.revision，row revision/hash/原Source refs不变，期望原Source入口拒绝且无新proposal。若真实RED证实，Source专用source_authority._account_dependencies沿原_current_revision后重解析同原模型并明确provider_instance_id/revision=每个原ref，不替换通用ModelEval语义，不改变原Provider排序、Evidence、SQL、RLS/ACL或迁移。source_authority.py由Source Task拥有，formal-boundary测试/证据由其原Task拥有；不修改非本scope ModelEval模块。保留原别名/默认/非strict字段归一接受域，正常typed exact identities不变。专项及全部Source/approval/formal/publication相邻后自复审；完整Source发行和真正COMMIT TTL仍未收口。
+
+S14载荷版本实际RED：provider-payload-identity-red.log原完整Source proposal未拒绝（DID NOT RAISE，1 failed/8.47s）。实际只变额外Provider payload.revision，原业务hash排除META字段，证实缺口。最小修复仅source_authority._account_dependencies：沿原锁/原_current_revision获取实际row后，使用同ProviderInstanceRevision模型重解析，再要求payload provider_instance_id/revision与exactref一致；原typed alias/default/secret_ref规范化继续适用，未改全局ModelEval/SQL/迁移/权限。专项含合法双Provider与原嵌套别名共8 passed/18.52s；八模块相邻进行中，不提前计通过。
+
+## AIS-005 自主督导要求的私有别名组合正向补验
+
+已读reports/ais005-recheck-20261006.md：督导自主保留RESOLUTION_PROPOSED，缺四种snake/mixed原row别名在真实private批准消费者的组合正向。当前S14回归同handle终结后，先冻结其代码/日志快照，再仅扩展formal-boundary原alias测试：原runtime候选INSERT/hash/147 CHECK真实COMMIT→原Source proposal→独立原checker批准→新exact proposal/event native command（原JWT，同maker）→真实private SCRAM read_capacity_approved_claims，与changed Source exactrefs及alias原raw hash逐字一致。supplier_verified与execution_allowed必须False，无签名Source注册/容量激活。不能拼接原runtime alias正向与另一条private canonical正向；不修改督导finding状态，等其自主复核新证据。完整Task仍未交付。
+
+S14版本身份最终八模块相邻520 passed/316.04s，8 warnings（7既有启动＋本轮扩充覆盖原source_pg故意bool序列化warning）。自复审/风险与原始日志hash见formal-boundary provider-payload-identity-verification.md/sources.json；Source局部身份缺口修复，未证明通用ModelEval所有资产或完整发行/consumer。

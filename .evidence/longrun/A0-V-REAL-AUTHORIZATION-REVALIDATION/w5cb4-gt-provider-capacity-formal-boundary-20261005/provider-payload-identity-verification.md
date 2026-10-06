@@ -1,0 +1,9 @@
+# S14 Provider载荷版本身份最小修复
+
+原Source入口反例证实：只改第二Provider payload.revision，表revision/hash与所有原exactrefs不变，原入口仍创建草稿（red.log DID NOT RAISE，1 failed/8.47s）。原业务canonical hash排除revision等metadata，单凭hash不能证明版本身份一致。
+
+修复仅source_authority._account_dependencies：保留原_current_revision的head SHARE/typed/canonical/tenant/lifecycle验证及原排序，再使用同ProviderInstanceRevision模型重解析返回的实际payload，比较provider_instance_id/revision与每个exactref。ModelEvalRequestBlocked沿原Source/候选依赖拒绝路径处理；不替换通用ModelEval实现，不改raw/stored hash、别名/default/secret_ref规范化、Evidence、迁移、权限或真实数据。重复一次有界模型解析是本最小修复的代价；后继完整入口可复用已解析对象，但不得改变接口悄悄影响其他调用方。
+
+专项8 passed/18.52s（四个完整Provider集合场景＋四个原嵌套引用别名）；八模块相邻520 passed/316.04s/exit0。warnings为7个启动/旧库警告及新增覆盖原source_pg故意bool替代fingerprint用例触发的serializer警告；不是本逻辑产生新正常流告警。相邻也再次执行两批准原撤回四方向竞争。
+
+自复审与方案一致：变化在原Source Task scope内，同owner官方续租20:00，无第二写者；formal测试在原formal Task内。所有正常原行版本身份相符，异常元数据明确拒绝。数据库和Provider全为隔离fixture，无当前权威库/Host/worker/真实Provider操作，无浏览器或前端变更。修复快照不是完整signed Source发行、COMMIT时限或首链验收；自主督导尚未复核新版本身份修复，完整Task继续ACTIVE。
