@@ -1,0 +1,22 @@
+{
+  "outcome": "RESTORED151_NATIVE_STRICT_FENCE_READONLY_PASS",
+  "container": "current151-restore-01acf86d2126",
+  "container_id": "dc28f61a03998b7813e16b167553c8a09e1ba8563436b926ff70868b91f840d4",
+  "image": "sha256:73ab830fbe32945cf873ebc20ca0aceb532a73a3d4fda1684d1b4b9e0a965fe3",
+  "network": "none",
+  "facts": {
+    "version": "a0v_151",
+    "public_tables": 603,
+    "proposals": 0,
+    "withdrawals": 0,
+    "epochs": 0
+  },
+  "original_full_restore_verified": {
+    "schema": "a0v_151",
+    "status": "verified",
+    "tables": 603
+  },
+  "original_full_restore_record_sha256": "9f32a7b71ef0b882df338df7e3d09c4f19f9bd1afaf962a1bd82ee7b5a89c37a",
+  "nonempty_history_proof": "separate reconstructed-history Alembic tests; restored real history cannot replace that proof",
+  "mutation": false
+}

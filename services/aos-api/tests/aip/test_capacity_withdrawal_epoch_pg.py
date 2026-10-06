@@ -15,7 +15,33 @@ def test_withdrawal_epoch_is_private_and_backfilled(original_inputs):
 import pytest
 
 
-@pytest.mark.parametrize('fault', ['table_acl','policy','function_acl','function_mode','trigger','foreign_key','owner_schema','owner_extra','column','constraint'])
+@pytest.mark.parametrize('fault', ['missing_epoch', 'wrong_scope', 'blank_id'])
+def test_runtime_epoch_lock_rejects_missing_row_and_scope_without_lazy_creation(drafted, fault):
+    from psycopg.errors import InsufficientPrivilege
+    from tests.aip.test_provider_capacity_formal_boundary_pg import isolated_owner
+
+    proposal_id = drafted[6].proposal.id
+    with isolated_owner() as conn:
+        conn.execute("SELECT set_config('aos.org_id','org-org',true),set_config('aos.project_id','dev-project',true)")
+        args = (*SCOPE.key, proposal_id)
+        assert conn.execute('SELECT public.aos_capacity_withdrawal_epoch_lock(%s,%s,%s) AS epoch', args).fetchone()['epoch'] == 0
+        conn.execute('SAVEPOINT fault')
+        try:
+            if fault == 'missing_epoch':
+                conn.execute('DELETE FROM public.aip_capacity_withdrawal_epoch WHERE org_id=%s AND project_id=%s AND proposal_id=%s', args)
+                expected = 'CAPACITY_WITHDRAWAL_EPOCH_MISSING'
+            else:
+                args = ('dev-org', SCOPE.project_id, proposal_id) if fault == 'wrong_scope' else (*SCOPE.key, '')
+                expected = 'CAPACITY_WITHDRAWAL_SCOPE_REQUIRED'
+            conn.execute('SET LOCAL ROLE aos_runtime')
+            with pytest.raises(InsufficientPrivilege, match=expected):
+                conn.execute('SELECT public.aos_capacity_withdrawal_epoch_lock(%s,%s,%s)', args)
+        finally:
+            conn.execute('ROLLBACK TO SAVEPOINT fault')
+        assert conn.execute('SELECT epoch FROM public.aip_capacity_withdrawal_epoch WHERE org_id=%s AND project_id=%s AND proposal_id=%s', (*SCOPE.key, proposal_id)).fetchone()['epoch'] == 0
+
+
+@pytest.mark.parametrize('fault', ['table_acl','policy','function_acl','function_mode','function_body','function_owner','owner_login','missing_init_trigger','trigger','foreign_key','owner_schema','owner_extra','column','constraint'])
 def test_withdrawal_boundary_rejects_actual_catalog_drift(original_inputs, fault):
     from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence, CapacityWithdrawalFenceBlocked
     from tests.aip.test_provider_capacity_formal_boundary_pg import isolated_owner
@@ -27,6 +53,10 @@ def test_withdrawal_boundary_rejects_actual_catalog_drift(original_inputs, fault
             'policy': 'ALTER POLICY capacity_withdrawal_epoch_scope ON public.aip_capacity_withdrawal_epoch USING(true)',
             'function_acl': 'GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) TO PUBLIC',
             'function_mode': 'ALTER FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) SECURITY INVOKER',
+            'function_body': "CREATE OR REPLACE FUNCTION public.aos_capacity_withdrawal_epoch_lock(p_org text,p_project text,p_id text) RETURNS bigint LANGUAGE plpgsql AS 'BEGIN RETURN 0; END;'",
+            'function_owner': 'ALTER FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) OWNER TO aos_app',
+            'owner_login': 'ALTER ROLE aos_capacity_withdrawal_epoch_owner LOGIN',
+            'missing_init_trigger': 'DROP TRIGGER zz_capacity_withdrawal_epoch_init_a0v151 ON public.aip_action_proposal',
             'trigger': 'ALTER TABLE public.aip_action_withdrawal_event DISABLE TRIGGER zz_capacity_withdrawal_epoch_bump_a0v151',
             'owner_schema': 'GRANT CREATE ON SCHEMA public TO aos_capacity_withdrawal_epoch_owner',
             'owner_extra': 'GRANT SELECT ON public.meta_action_type TO aos_capacity_withdrawal_epoch_owner',

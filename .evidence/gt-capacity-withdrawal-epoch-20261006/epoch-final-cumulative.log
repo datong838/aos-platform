@@ -1,0 +1,110 @@
+.....F.................................................................. [ 58%]
+....................................................                     [100%]
+=================================== FAILURES ===================================
+_____ test_withdrawal_boundary_rejects_actual_catalog_drift[function_body] _____
+
+original_inputs = (Principal(subject='capacity-maker-fb59e9e56ef440ed9892f4c43410c9f8', org_id='org-org', project_id='dev-project', role...at=datetime.datetime(2026, 10, 6, 4, 57, 42, 863864, tzinfo=datetime.timezone.utc), revoked=False, revoke_reason=None))
+fault = 'function_body'
+
+    @pytest.mark.parametrize('fault', ['table_acl','policy','function_acl','function_mode','function_body','function_owner','owner_login','missing_init_trigger','trigger','foreign_key','owner_schema','owner_extra','column','constraint'])
+    def test_withdrawal_boundary_rejects_actual_catalog_drift(original_inputs, fault):
+        from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence, CapacityWithdrawalFenceBlocked
+        from tests.aip.test_provider_capacity_formal_boundary_pg import isolated_owner
+        from psycopg import sql
+        with isolated_owner() as conn:
+            require_withdrawal_fence(conn)
+            changes={
+                'table_acl': 'GRANT SELECT ON public.aip_capacity_withdrawal_epoch TO aos_runtime',
+                'policy': 'ALTER POLICY capacity_withdrawal_epoch_scope ON public.aip_capacity_withdrawal_epoch USING(true)',
+                'function_acl': 'GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) TO PUBLIC',
+                'function_mode': 'ALTER FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) SECURITY INVOKER',
+                'function_body': "CREATE OR REPLACE FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) RETURNS bigint LANGUAGE plpgsql AS 'BEGIN RETURN 0; END;'",
+                'function_owner': 'ALTER FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) OWNER TO aos_app',
+                'owner_login': 'ALTER ROLE aos_capacity_withdrawal_epoch_owner LOGIN',
+                'missing_init_trigger': 'DROP TRIGGER zz_capacity_withdrawal_epoch_init_a0v151 ON public.aip_action_proposal',
+                'trigger': 'ALTER TABLE public.aip_action_withdrawal_event DISABLE TRIGGER zz_capacity_withdrawal_epoch_bump_a0v151',
+                'owner_schema': 'GRANT CREATE ON SCHEMA public TO aos_capacity_withdrawal_epoch_owner',
+                'owner_extra': 'GRANT SELECT ON public.meta_action_type TO aos_capacity_withdrawal_epoch_owner',
+                'column': 'ALTER TABLE public.aip_capacity_withdrawal_epoch ALTER COLUMN epoch DROP NOT NULL',
+                'constraint': 'ALTER TABLE public.aip_capacity_withdrawal_epoch DROP CONSTRAINT aip_capacity_withdrawal_epoch_epoch_check',
+            }
+            conn.execute('SAVEPOINT drift')
+            if fault=='foreign_key':
+                name=conn.execute("SELECT conname FROM pg_constraint WHERE conrelid='public.aip_action_withdrawal_event'::regclass AND contype='f'").fetchone()['conname']
+                conn.execute(sql.SQL('ALTER TABLE public.aip_action_withdrawal_event ALTER CONSTRAINT {} DEFERRABLE INITIALLY DEFERRED').format(sql.Identifier(name)))
+>           else: conn.execute(changes[fault])
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_capacity_withdrawal_epoch_pg.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [BAD] at 0x11a7c4d10>
+query = "CREATE OR REPLACE FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) RETURNS bigint LANGUAGE plpgsql AS 'BEGIN RETURN 0; END;'"
+params = None, prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.InvalidFunctionDefinition: cannot change name of input parameter "p_org"
+E           HINT:  Use DROP FUNCTION aos_capacity_withdrawal_epoch_lock(text,text,text) first.
+
+.venv/lib/python3.11/site-packages/psycopg/connection.py:300: InvalidFunctionDefinition
+=============================== warnings summary ===============================
+aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/aip/test_provider_capacity_source_pg.py::test_original_candidate_dependencies_reject_without_new_rows[mutated]
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/pydantic/main.py:475: UserWarning: Pydantic serializer warnings:
+    PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='supplier_account_fingerprint', input_value=True, input_type=bool])
+    return self.__pydantic_serializer__.to_python(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/aip/test_capacity_withdrawal_epoch_pg.py::test_withdrawal_boundary_rejects_actual_catalog_drift[function_body]
+1 failed, 123 passed, 8 warnings in 177.21s (0:02:57)

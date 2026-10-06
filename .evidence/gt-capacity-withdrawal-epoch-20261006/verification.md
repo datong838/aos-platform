@@ -24,3 +24,15 @@
 方案/代码复审：真实原入口无替代migration runner；错误异常类型/文本符合PG；savepoint包括故障注入，新DDL和ACL都有恢复断言；原函数用例保留，未篡改生产版本记录或降低迁移downgrade拒绝；scope/Lease同Owner有效且无重叠。diff --check通过。无UI改动，本切片无需新增浏览器操作。本证据是重建非空历史结构的事务验收，不等于完整历史备份恢复、正式Source/Capacity发布或首链。完整epoch Task仍ACTIVE，原恢复副本native全量验收及更多损坏边界待核；不Delivery，不complete Goal。
 
 收尾：代码/证据提交d9244aca，authority经原memoryctl CAS推进AOS-001371；原sync适配器同步AOS/Prime，实际回读全部7个强一致投影CURRENT、memory-validate GREEN。此次未获直接Codex记忆更新请求，运行时写入范围明确排除该可选异步adapter，未改全局代码/manifest；Codex旧1370 note显示STALE，不宣称其摄入。Goal实际回读active，Task保持ACTIVE。下一已登记步骤是恢复151原native边界验收与full b90真实生产输入组合；当前权威库不再执行维护。
+
+## 2026-10-06 最终epoch退出审计
+本节覆盖上文epoch Task未收口结论，不覆盖fullSource/publication/正式业务退出。
+
+- 独立owner/ACL/RLS/函数/trigger/FK/表结构：原10项实际漂移及新增owner LOGIN、函数body、函数owner、init trigger缺失均由原strict fence拒绝，savepoint回滚后原fence再通过。
+- 缺行/租户/标识：原drafted proposal自动创建epoch0；实际aos_runtime SQL函数对缺epoch行42501/EPOCH_MISSING、dev-org参数及空id42501/SCOPE_REQUIRED。测试故障和角色切换全回滚后原epoch行仍0。
+- 两原审批并发：epoch-final-cumulative.log中Source/allocation各writer-first旧SER拒绝、reader-first实际pg_blocking_pids阻塞及reader.commit后writer完成通过；原normal withdrawal/Action/原Source和formalBoundary相邻通过。
+- 历史迁移：上一节完整Alembic非空重建150→151、准确backfill及前置/中途DDL/ACL/version rollback证明保留，不再重跑。
+- 全库恢复：既有完整603表恢复终端verified；本轮原恢复容器identity/image/network-none/version151 fresh只读核验，原strict fence PASS，restored151-native-readonly.json。该真实副本正向proposal/withdrawal/epoch均0，不能替代非空重建用例。
+- 本轮累计首次123passed/1failed177.21s；唯一function_body故障注入遗漏原参数名，被PG在注入处提前拒绝，未进入fence，是测试设置错误不是生产RED。保留原参数名后21passed33.10s，再补逐项审计发现的3项缺行/参数反例，最终完整epoch文件24passed7warnings38.21s exit0。此前累计已通过相邻123项未因纯测试补强重复执行，不宣称有一条124/127全量exit0运行。
+
+本轮只改原测试及本Task证据；strict fence/迁移/Source生产代码不变，diff --check通过；无UI更改，无新浏览器动作。原所有隔离库/备份/失败日志保留。Task退出为WITHDRAWAL_EPOCH_ISOLATED_NATIVE_MIGRATION_RESTORE_AND_CONCURRENCY_VERIFIED，可以独立Delivery；正式Source签发/稳定账户global mapping/共享占额/Intent/Model执行、b90三写/API及自然首链仍未完成，不能由本Task授权。下一项回原publication Task冻结SQL验签/签发隔离边界和152迁移范围，保持整体Goal active。

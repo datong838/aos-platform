@@ -21,3 +21,8 @@ reader位置：Source guard完整super.check_proposal返回（含原metadata/Own
 原 env.py 已支持 config.attributes.connection，本轮不改生产入口。仅扩展上述测试文件，保留迁移函数用例并新增 command.upgrade 两条正反路径。测试仅在本轮一次性 aos_test_ 库的外层回滚事务中还原151新增对象之前的150结构，精确将测试版本记录置150，再调用原 Alembic env/revision/version 更新；核成功151、非空原行不变及epoch精确回填。延迟FK反例在savepoint中运行完整命令，失败回滚后须仍150、无新增epoch表、原行不变，再运行正常命令；最终外层回滚后原151恢复。本次是隔离重建历史结构的完整版本事务，不冒充完整历史备份恢复。使用现有Task/16:00 Lease，只改精确测试及本目录证据，不改权威库/服务/其他Task文件。现有源码若已符合要求，不制造生产RED；新增验收补足先前未证明的版本事务。
 
 补强中途失败门：在savepoint内创建不同owner的同名lock函数，原迁移完成epoch建表、backfill、ownership/RLS后真实CREATE FUNCTION遇DuplicateFunction失败。回滚后核版本仍150、epoch表/三函数/两trigger不存在、独立owner schema USAGE回到之前、原行快照相同；随后正常升级并回读原fence。该人为冲突仅在测试savepoint，绝不写当前权威库。
+
+## 最终独立epoch退出核验
+已存在current151-repair-c5a8f26afb71的完整603表恢复及exact withdrawal fence verified记录，仅只读核当前恢复容器身份/版本和原strict fence，不重新restore/迁移/启动、不授Task维护权限。补原PG漂移参数：owner LOGIN、lock函数body/owner、init trigger缺失；各自隔离savepoint中注入，原strict fence拒绝并回滚恢复后再通过。使用原Source PG测试的实际两审批writer-first旧SER拒绝、reader-first pg_blocking_pids等待及writer正常完成，连同原Action/formalBoundary/epoch累计回归。恢复历史空表不能证明非空回填，仍使用上轮明确隔离非空完整Alembic证据；各层不互相冒充。全部退出对账通过后才给本epoch Task Delivery，fullSource/publication/b90不收口。新增修改仍限本Task测试文件及证据目录，权威库只读。
+
+退出逐项对账发现原“缺epoch行”与SQL wrongscope/blank id尚无直接用例：复用原drafted proposal的自动初始化epoch0，维护连接savepoint内仅准备缺行故障，切原aos_runtime执行真实lock函数须42501/EPOCH_MISSING；wrongscope/blank id同原scope连接应SCOPE_REQUIRED。故障和角色切换savepoint全回滚后，原epoch行仍0，证明无懒创建/跨scope副作用；仅本测试文件追加参数用例。
