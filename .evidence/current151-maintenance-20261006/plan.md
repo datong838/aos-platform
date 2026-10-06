@@ -16,3 +16,6 @@
 
 ## 窗口执行日志
 Maintenance151Journal绑定冻结head/thread/Task/base，不仅step名称。原步骤顺序不变；每步前检查所有原done.status=verified及相同binding，O_EXCL/0600/fsync记录attempt后才operation。只有非空dict且status=verified可写done；异常或错误输出只留attempt，后续拒绝重发。仅primitive阶段，不接真实副作用。反例覆盖Timeout后重发、缺前序、head变化、未验证输出。
+
+## 执行时身份复核
+每一步在检查历史证据后、写attempt之前，重新读取当前Task/Lease/authority与Git HEAD和m1分支；身份或租约失效不得调用operation，也不产生attempt。写attempt后、调用operation前再次复核，捕获该间隔内漂移；此时保留attempt并只读对账，不重发。真实受控操作仍须自身精确资源复核，这个复核不提供原子Git/租约锁，也不授予迁移权限。RED验证创建journal后的HEAD漂移、Task失效和attempt写入后的漂移均令操作调用数为零。

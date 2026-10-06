@@ -43,8 +43,9 @@ def test_restore_identity_rejects_replacement_resources(fault):
     with pytest.raises(m.Maintenance151Blocked):m.require_resource_identity(expected,observed)
 
 
-def test_timeout_attempt_cannot_be_reissued(tmp_path):
+def test_timeout_attempt_cannot_be_reissued(tmp_path,monkeypatch):
     m=module();calls=[];j=m.Maintenance151Journal(tmp_path,head='a'*40)
+    monkeypatch.setattr(j,'_require_live_binding',lambda: None)
     def unknown():
         calls.append(1);raise TimeoutError('unknown effect')
     with pytest.raises(TimeoutError):j.perform('stop_clients',unknown)
@@ -52,9 +53,40 @@ def test_timeout_attempt_cannot_be_reissued(tmp_path):
     assert calls==[1]
 
 
-def test_changed_head_or_unverified_result_cannot_advance(tmp_path):
+def test_changed_head_or_unverified_result_cannot_advance(tmp_path,monkeypatch):
     m=module();j=m.Maintenance151Journal(tmp_path,head='a'*40)
+    monkeypatch.setattr(j,'_require_live_binding',lambda: None)
     j.perform('stop_clients',lambda: dict(status='verified',ports=[]))
     with pytest.raises(m.Maintenance151Blocked):m.Maintenance151Journal(tmp_path,head='b'*40).perform('fence_tcp',lambda: dict(status='verified'))
     with pytest.raises(m.Maintenance151Blocked):j.perform('fence_tcp',lambda: dict(status='failed'))
     assert not (tmp_path/'fence_tcp-done.json').exists()
+
+
+@pytest.mark.parametrize('fault',['head','branch','task'])
+def test_live_drift_prevents_operation_and_attempt(tmp_path,monkeypatch,fault):
+    import subprocess
+    m=module();calls=[];j=m.Maintenance151Journal(tmp_path,head='a'*40)
+    def task(**kwargs):
+        if fault=='task':raise m.Maintenance151Blocked('MAINTENANCE_151_FUTURE_LEASE_REQUIRED')
+        return dict(task_id=m.TASK)
+    monkeypatch.setattr(m,'read_task',task)
+    def git(args,**kwargs):
+        if args[-1]=='HEAD':return ('b' if fault=='head' else 'a')*40+'\n'
+        return ('other' if fault=='branch' else 'm1')+'\n'
+    monkeypatch.setattr(subprocess,'check_output',git)
+    with pytest.raises(m.Maintenance151Blocked):
+        j.perform('stop_clients',lambda: calls.append(1))
+    assert calls==[]
+    assert not (tmp_path/'stop_clients-attempt.json').exists()
+
+
+def test_drift_after_intent_preserves_unknown_attempt_without_effect(tmp_path,monkeypatch):
+    m=module();calls=[];checks=[];j=m.Maintenance151Journal(tmp_path,head='a'*40)
+    def check():
+        checks.append(1)
+        if len(checks)==2:raise m.Maintenance151Blocked('EXECUTION_HEAD_DRIFT')
+    monkeypatch.setattr(j,'_require_live_binding',check)
+    with pytest.raises(m.Maintenance151Blocked):j.perform('stop_clients',lambda: calls.append(1))
+    assert calls==[]
+    assert (tmp_path/'stop_clients-attempt.json').exists()
+    assert not (tmp_path/'stop_clients-done.json').exists()

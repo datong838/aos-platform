@@ -148,6 +148,14 @@ class Maintenance151Journal:
             raise Maintenance151Blocked('JOURNAL_IDENTITY_REQUIRED')
         self.binding=dict(head=head,thread=THREAD,task=TASK,authority=BASE)
 
+    def _require_live_binding(self):
+        import subprocess
+        read_task(thread=self.binding['thread'])
+        head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
+        branch=subprocess.check_output(['git','branch','--show-current'],cwd=ROOT,text=True).strip()
+        if head!=self.binding['head'] or branch!='m1':
+            raise Maintenance151Blocked('EXECUTION_HEAD_OR_BRANCH_DRIFT')
+
     def _write(self,name,data):
         import os
         try:fd=os.open(self.directory/name,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
@@ -169,7 +177,9 @@ class Maintenance151Journal:
                 except (OSError,ValueError):raise Maintenance151Blocked('PRIOR_EVIDENCE_INVALID') from None
                 if not isinstance(r,dict) or r.get('binding')!=self.binding or r.get('step')!=prior or (suffix=='done' and r.get('result',{}).get('status')!='verified'):
                     raise Maintenance151Blocked('PRIOR_BINDING_OR_VERIFICATION_DRIFT')
+        self._require_live_binding()
         self._write(step+'-attempt.json',dict(binding=self.binding,step=step))
+        self._require_live_binding()
         result=operation()
         if not isinstance(result,dict) or result.get('status')!='verified':
             raise Maintenance151Blocked('VERIFIED_POSTCONDITION_REQUIRED')

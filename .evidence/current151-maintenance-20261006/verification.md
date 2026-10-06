@@ -11,3 +11,8 @@
 ## 现场资源与窗口日志阶段
 现场源Id/Image/唯一volume匹配第二backup intent、secondrestore身份镜像卷固定、现场full snapshot等于原saved再窄等价验证源，实际只读GREEN。资源5反例RED后GREEN。新journal实际文件测试：Timeout只留intent、重发operation不调用；head变化拒绝前序binding、failed结果不生成done。最终20passed；这些纯执行器边界测试不证明真实窗口/数据库迁移。
 尚未接入真实stop/fence/备份/迁移operation；服务当前运行，源142未改。newTask保持ACTIVE。
+
+## 执行时身份复核检查点
+创建journal后的HEAD/branch/Task漂移反例真实RED：三例均已调用operation（调用数1，期望0）；另外三例因新复核入口缺失失败，18passed/6failed。最小增加每步写attempt前与写后两次实时Task/Lease/authority和m1/HEAD复核。专项24passed；专项与旧维护保护累计63passed/1deselected。唯一排除为既有旧执行器硬编码1329、测试依赖当前1369权威的错误消息断言，原失败仍保留，不宣称旧整套全绿。
+
+真实只读`_require_live_binding`通过：Task/Lease/AOS-001369/m1@465fa10f一致，证据live-journal-binding.json；没有调用journal operation，没有服务或数据库副作用。方案与实现均明确两次采样不是原子锁，真实operation仍须自身资源复核。完整当前迁移/重启/八工作台与自然首链未通过，Task保持ACTIVE。
