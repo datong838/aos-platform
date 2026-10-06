@@ -1,0 +1,29 @@
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            BuildKit is currently disabled; enable it by removing the DOCKER_BUILDKIT=0
+            environment-variable.
+
+Sending build context to Docker daemon   12.8kB
+Step 1/10 : ARG PG_BASE_IMAGE
+Step 2/10 : FROM ${PG_BASE_IMAGE} AS build
+ ---> 73ab830fbe32
+Step 3/10 : RUN apk add --no-cache build-base openssl-dev
+ ---> Using cache
+ ---> b554f173914d
+Step 4/10 : WORKDIR /build
+ ---> Using cache
+ ---> 20c33c9d27f9
+Step 5/10 : COPY aos_ed25519.c Makefile aos_ed25519.control aos_ed25519--1.0.sql ./
+ ---> 40a039178b8c
+Step 6/10 : RUN make with_llvm=no && make with_llvm=no install DESTDIR=/stage     && pg_config --version && openssl version && cc --version
+ ---> Running in 4641fe06a37a
+gcc -Wall -Wmissing-prototypes -Wpointer-arith -Wdeclaration-after-statement -Werror=vla -Wendif-labels -Wmissing-format-attribute -Wimplicit-fallthrough=3 -Wcast-function-type -Wshadow=compatible-local -Wformat-security -fno-strict-aliasing -fwrapv -fexcess-precision=standard -Wno-format-truncation -Wno-stringop-truncation -O2 -Wall -Wextra -Werror -fPIC -fvisibility=hidden -I. -I./ -I/usr/local/include/postgresql/server -I/usr/local/include/postgresql/internal -D_GNU_SOURCE  -I/usr/include/libxml2   -c -o aos_ed25519.o aos_ed25519.c
+gcc -Wall -Wmissing-prototypes -Wpointer-arith -Wdeclaration-after-statement -Werror=vla -Wendif-labels -Wmissing-format-attribute -Wimplicit-fallthrough=3 -Wcast-function-type -Wshadow=compatible-local -Wformat-security -fno-strict-aliasing -fwrapv -fexcess-precision=standard -Wno-format-truncation -Wno-stringop-truncation -O2 -Wall -Wextra -Werror -fPIC -fvisibility=hidden -shared -o aos_ed25519.so aos_ed25519.o -L/usr/local/lib    -L/usr/local/lib -Wl,--as-needed -fvisibility=hidden -lcrypto 
+/bin/mkdir -p '/stage/usr/local/lib/postgresql'
+/bin/mkdir -p '/stage/usr/local/share/postgresql/extension'
+/bin/mkdir -p '/stage/usr/local/share/postgresql/extension'
+/usr/bin/install -c -m 755  aos_ed25519.so '/stage/usr/local/lib/postgresql/aos_ed25519.so'
+/usr/bin/install -c -m 644 .//aos_ed25519.control '/stage/usr/local/share/postgresql/extension/'
+/usr/bin/install -c -m 644 .//aos_ed25519--1.0.sql  '/stage/usr/local/share/postgresql/extension/'
+PostgreSQL 16.14
+[91m/bin/sh: openssl: not found
+[0mThe command '/bin/sh -c make with_llvm=no && make with_llvm=no install DESTDIR=/stage     && pg_config --version && openssl version && cc --version' returned a non-zero code: 127

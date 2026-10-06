@@ -1,0 +1,55 @@
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            BuildKit is currently disabled; enable it by removing the DOCKER_BUILDKIT=0
+            environment-variable.
+
+Sending build context to Docker daemon   12.8kB
+Step 1/10 : ARG PG_BASE_IMAGE
+Step 2/10 : FROM ${PG_BASE_IMAGE} AS build
+ ---> 73ab830fbe32
+Step 3/10 : RUN apk add --no-cache build-base openssl-dev
+ ---> Using cache
+ ---> b554f173914d
+Step 4/10 : WORKDIR /build
+ ---> Using cache
+ ---> 20c33c9d27f9
+Step 5/10 : COPY aos_ed25519.c Makefile aos_ed25519.control aos_ed25519--1.0.sql ./
+ ---> Using cache
+ ---> 40a039178b8c
+Step 6/10 : RUN make with_llvm=no && make with_llvm=no install DESTDIR=/stage     && pg_config --version && apk info -v libcrypto3 openssl-dev && cc --version
+ ---> Running in e3a26c40ad2f
+gcc -Wall -Wmissing-prototypes -Wpointer-arith -Wdeclaration-after-statement -Werror=vla -Wendif-labels -Wmissing-format-attribute -Wimplicit-fallthrough=3 -Wcast-function-type -Wshadow=compatible-local -Wformat-security -fno-strict-aliasing -fwrapv -fexcess-precision=standard -Wno-format-truncation -Wno-stringop-truncation -O2 -Wall -Wextra -Werror -fPIC -fvisibility=hidden -I. -I./ -I/usr/local/include/postgresql/server -I/usr/local/include/postgresql/internal -D_GNU_SOURCE  -I/usr/include/libxml2   -c -o aos_ed25519.o aos_ed25519.c
+gcc -Wall -Wmissing-prototypes -Wpointer-arith -Wdeclaration-after-statement -Werror=vla -Wendif-labels -Wmissing-format-attribute -Wimplicit-fallthrough=3 -Wcast-function-type -Wshadow=compatible-local -Wformat-security -fno-strict-aliasing -fwrapv -fexcess-precision=standard -Wno-format-truncation -Wno-stringop-truncation -O2 -Wall -Wextra -Werror -fPIC -fvisibility=hidden -shared -o aos_ed25519.so aos_ed25519.o -L/usr/local/lib    -L/usr/local/lib -Wl,--as-needed -fvisibility=hidden -lcrypto 
+/bin/mkdir -p '/stage/usr/local/lib/postgresql'
+/bin/mkdir -p '/stage/usr/local/share/postgresql/extension'
+/bin/mkdir -p '/stage/usr/local/share/postgresql/extension'
+/usr/bin/install -c -m 755  aos_ed25519.so '/stage/usr/local/lib/postgresql/aos_ed25519.so'
+/usr/bin/install -c -m 644 .//aos_ed25519.control '/stage/usr/local/share/postgresql/extension/'
+/usr/bin/install -c -m 644 .//aos_ed25519--1.0.sql  '/stage/usr/local/share/postgresql/extension/'
+PostgreSQL 16.14
+[91mWARNING: opening from cache https://dl-cdn.alpinelinux.org/alpine/v3.24/main/aarch64/APKINDEX.tar.gz: No such file or directory
+WARNING: opening from cache https://dl-cdn.alpinelinux.org/alpine/v3.24/community/aarch64/APKINDEX.tar.gz: No such file or directory
+[0mlibcrypto3: Crypto library from openssl
+libcrypto3: https://www.openssl.org/
+libcrypto3: 4845 KiB
+openssl-dev: Toolkit for Transport Layer Security (TLS) (development files)
+openssl-dev: https://www.openssl.org/
+openssl-dev: 1960 KiB
+cc (Alpine 15.2.0) 15.2.0
+Copyright (C) 2025 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+ ---> Removed intermediate container e3a26c40ad2f
+ ---> 5730cbb477be
+Step 7/10 : FROM ${PG_BASE_IMAGE}
+ ---> 73ab830fbe32
+Step 8/10 : COPY --from=build /stage/usr/local/lib/postgresql/aos_ed25519.so /usr/local/lib/postgresql/
+ ---> 248fc159310f
+Step 9/10 : COPY --from=build /stage/usr/local/share/postgresql/extension/aos_ed25519* /usr/local/share/postgresql/extension/
+ ---> 3898e4575fef
+Step 10/10 : LABEL aos.task=gt-capacity-sql-ed25519-20261006
+ ---> Running in 6db34cb73aa7
+ ---> Removed intermediate container 6db34cb73aa7
+ ---> 1858a8ae0823
+Successfully built 1858a8ae0823
+Successfully tagged aos-ed25519-test:20261006-r3

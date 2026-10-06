@@ -1,0 +1,11 @@
+PostgreSQL 16.14
+libcrypto3: Crypto library from openssl
+libcrypto3: https://www.openssl.org/
+libcrypto3: 4845 KiB
+	/lib/ld-musl-aarch64.so.1 (0xe4885f3a0000)
+	libcrypto.so.3 => /usr/lib/libcrypto.so.3 (0xe4885ef19000)
+	libc.musl-aarch64.so.1 => /lib/ld-musl-aarch64.so.1 (0xe4885f3a0000)
+6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e  /usr/local/lib/postgresql/aos_ed25519.so
+8213a2bb2045b315209511a0ad9709b698d27e96c528d120ffe5c66e4a57005e  /usr/local/share/postgresql/extension/aos_ed25519--1.0.sql
+b8ed0944fec477a668418ebd4e8f7a8d8528b7a256f1fd9feca6609b2aef9d4f  /usr/local/share/postgresql/extension/aos_ed25519.control
+ae1d370e3146642824c6ee4bde0fdf83b9e8174a9d28d093362afde5cc4b3e6c  /usr/lib/libcrypto.so.3

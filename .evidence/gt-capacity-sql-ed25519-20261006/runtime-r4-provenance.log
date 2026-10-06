@@ -1,0 +1,12 @@
+PostgreSQL 16.14
+V:3.5.7-r0
+	/lib/ld-musl-aarch64.so.1 (0xe001e3e70000)
+	libcrypto.so.3 => /usr/lib/libcrypto.so.3 (0xe001e39e9000)
+	libc.musl-aarch64.so.1 => /lib/ld-musl-aarch64.so.1 (0xe001e3e70000)
+Error relocating /usr/local/lib/postgresql/aos_ed25519.so: pfree: symbol not found
+Error relocating /usr/local/lib/postgresql/aos_ed25519.so: pg_detoast_datum_packed: symbol not found
+Error relocating /usr/local/lib/postgresql/aos_ed25519.so: toast_raw_datum_size: symbol not found
+6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e  /usr/local/lib/postgresql/aos_ed25519.so
+add5aff9bf5ed07b7db16793cc498b210533b9006e180a0c1b405c2b6539bb67  /usr/local/share/postgresql/extension/aos_ed25519--1.0.sql
+b8ed0944fec477a668418ebd4e8f7a8d8528b7a256f1fd9feca6609b2aef9d4f  /usr/local/share/postgresql/extension/aos_ed25519.control
+ae1d370e3146642824c6ee4bde0fdf83b9e8174a9d28d093362afde5cc4b3e6c  /usr/lib/libcrypto.so.3

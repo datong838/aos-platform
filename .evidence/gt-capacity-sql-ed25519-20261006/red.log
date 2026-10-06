@@ -1,0 +1,5 @@
+ERROR:  schema "aos_ed25519" does not exist
+LINE 1: BEGIN READ ONLY;SELECT aos_ed25519.verify(NULL::bytea,NULL::...
+                               ^
+
+native_exit_code 1

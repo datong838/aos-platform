@@ -1,0 +1,13 @@
+{
+  "task": "gt-capacity-sql-ed25519-20261006",
+  "context": "colima-aos-a0v-test-only",
+  "container": "aos-ed25519-test-fa4713e9a335",
+  "image": "sha256:1858a8ae08234dfc2fdc8e6002f24d35abc1a7326ee58cdc7a66dd8db3c7071f",
+  "volume": "aos-ed25519-test-fa4713e9a335-data",
+  "database": "aos_test_ed25519",
+  "created": "2026-10-06T05:20:23.651313+00:00",
+  "state": "launched",
+  "exit_code": 0,
+  "container_id": "ba519ae3139542d41149e11df98269d6c5420bd1a80bb17e8609a56df459d042",
+  "stderr": ""
+}

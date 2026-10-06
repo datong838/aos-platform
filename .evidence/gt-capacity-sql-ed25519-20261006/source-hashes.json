@@ -1,0 +1,9 @@
+{
+  "services/aos-api/postgres-extensions/aos_ed25519/aos_ed25519.control": "b8ed0944fec477a668418ebd4e8f7a8d8528b7a256f1fd9feca6609b2aef9d4f",
+  "services/aos-api/postgres-extensions/aos_ed25519/Dockerfile": "ab5592724ff5a77fef2df3346d39c3e312ccef1f5242db9da8501818bce83387",
+  "services/aos-api/postgres-extensions/aos_ed25519/Makefile": "820727e02d2f1b6d4f8b4f79a402aead7d1904b88452f19c3268c58fb6344220",
+  "services/aos-api/postgres-extensions/aos_ed25519/README.md": "fb4891afcac777b76c623d6f60f4f3cdde063ee00fa463f96409069b46cb24e5",
+  "services/aos-api/postgres-extensions/aos_ed25519/aos_ed25519.c": "65e6110b5d21ea6f30b7919e48bee5a3ba968b272228668b40022fa615e8b47a",
+  "services/aos-api/postgres-extensions/aos_ed25519/aos_ed25519--1.0.sql": "add5aff9bf5ed07b7db16793cc498b210533b9006e180a0c1b405c2b6539bb67",
+  "scripts/tests/test_capacity_sql_ed25519.py": "dfd0673249121f200d04862205b32e69759955ef8a35e19854a93916bf803b9c"
+}

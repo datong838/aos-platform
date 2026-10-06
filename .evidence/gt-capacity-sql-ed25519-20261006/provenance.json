@@ -1,0 +1,17 @@
+{
+  "task": "gt-capacity-sql-ed25519-20261006",
+  "context": "colima-aos-a0v-test-only",
+  "container": "aos-ed25519-test-31dccb3dc27e",
+  "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+  "volume": "aos-ed25519-test-31dccb3dc27e-data",
+  "database": "aos_test_ed25519",
+  "created": "2026-10-06T05:24:28.884437+00:00",
+  "state": "launched",
+  "exit_code": 0,
+  "container_id": "63c7d47bac4232b032a827ccf26116aef03ce2e28ca587d9b94a84987c75afd7",
+  "stderr": "",
+  "runtime_libcrypto_version": "3.5.7-r0",
+  "build_libcrypto_version": "3.5.9-r0",
+  "binary_sha256": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+  "scope": "isolated verifier only; production deployment and Source trust not granted"
+}
