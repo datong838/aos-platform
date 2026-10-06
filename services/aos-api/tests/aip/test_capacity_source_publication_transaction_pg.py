@@ -588,3 +588,100 @@ def test_native_allocation_binding_preserves_original_unicode_acceptance(native_
         assert matched is not None
         assert matched['action_binding_hash']==canonical_hash(dict(requestId=request_id,
             requestHash=row['request_hash'],actionTypeRevisionHash=matched['action_type_snapshot']['revisionHash']))
+
+
+@pytest.mark.parametrize('representation',['nested_alias','offset_space','epoch_string'])
+def test_original_source_binding_uses_typed_normalization_in_private_reader(native_signed_source,approved_command,representation,capsys):
+    """Original stored representation may differ from its approved typed hash."""
+    from datetime import timedelta,timezone
+    from uuid import uuid4
+    from aos_api.db import connect_serializable
+    from aos_api.aip_action_store import AipActionStore,canonical_hash
+    from aos_api.aip_action_models import CreateActionProposalRequest,DecideActionProposalRequest
+    from aos_api.aip_action_policy import classify_action_risk
+    from aos_api.aip_provider_capacity_source_action import (
+        ProviderCapacitySourceActionGuard,decide_provider_capacity_source)
+    from aos_api.aip_provider_capacity_source_contracts import ProviderCapacitySourceCandidate
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_APPROVED_SOURCE_ROW_SQL
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    maker,checker=approved_command[:2]
+    source=native_signed_source[3]
+    raw=source.model_dump(mode='json',by_alias=True)
+    if representation=='nested_alias':
+        mapping=dict(assetType='asset_type',assetId='asset_id',contentHash='content_hash')
+        raw['physicalAccountRef']={mapping.get(k,k):v for k,v in raw['physicalAccountRef'].items()}
+    elif representation=='offset_space':
+        zone=timezone(timedelta(hours=8))
+        raw['validFrom']=source.valid_from.astimezone(zone).isoformat(sep=' ')
+        raw['validUntil']=source.valid_until.astimezone(zone).isoformat(sep=' ')
+    else:
+        raw['validUntil']=str(int(source.valid_until.timestamp()))
+    normalized=ProviderCapacitySourceCandidate.model_validate(raw)
+    assert raw!=normalized.model_dump(mode='json',by_alias=True)
+    guard=ProviderCapacitySourceActionGuard()
+    with connect_serializable(SCOPE) as runtime:
+        snapshot=guard.read_metadata(runtime)
+    payload=dict(sourceCandidate=raw)
+    body=CreateActionProposalRequest(actionTypeId=guard.action_id,purpose='capacity-source-review',
+        payload=payload,expiresAt=normalized.valid_until)
+    # Real original store/Guard and independent original decision, never
+    # direct proposal/event INSERT or altered hashes of a fake approval.
+    proposal=AipActionStore(provider_capacity_source_guard=guard).create_proposal(
+        SCOPE,maker.subject,'source-domain-proposal-'+uuid4().hex,body,snapshot,
+        classify_action_risk(guard.action_id,snapshot,payload,None))
+    approved=decide_provider_capacity_source(checker,proposal.proposal.id,'source-domain-checker-'+uuid4().hex,
+        DecideActionProposalRequest(expectedProposalVersion=proposal.proposal.version,
+            expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',
+            reason='original Source normalization acceptance',approvalExpiresAt=normalized.valid_until))
+    assert approved.proposal.status.value=='approved'
+    assert approved.proposal.payload['sourceCandidate']==raw
+    typed_binding=canonical_hash(dict(sourceCandidate=normalized.model_dump(mode='json',by_alias=True),
+        actionTypeRevisionHash=snapshot['revisionHash']))
+    raw_binding=canonical_hash(dict(sourceCandidate=raw,actionTypeRevisionHash=snapshot['revisionHash']))
+    assert typed_binding!=raw_binding
+    assert approved.proposal.action_binding_hash==typed_binding
+    command,_,_=native_signed_source[1]()
+    command=command.model_copy(update=dict(idempotency_key='source-domain-native-'+uuid4().hex,
+        approved_proposal=command.approved_proposal.model_copy(update=dict(asset_id=approved.proposal.id,
+            revision=approved.proposal.version,content_hash=approved.proposal.proposal_hash)),
+        approval_event=command.approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+            content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+    with connect_capacity_issuer(native_signed_source[4],SCOPE) as issuer:
+        assert issuer.pgconn.used_password is True
+        identity=issuer.execute('SELECT current_database() AS database,session_user AS role').fetchone()
+        claims=read_capacity_approved_claims(issuer,command)
+        assert claims.source==normalized and claims.maker==maker.subject
+        assert claims.approved_proposal==command.approved_proposal
+        assert claims.approval_event==command.approval_event
+        assert claims.supplier_verified is False and claims.execution_allowed is False
+    params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,maker=maker.subject,
+        proposal_id=command.approved_proposal.asset_id,proposal_revision=command.approved_proposal.revision,
+        proposal_hash=command.approved_proposal.content_hash,approval_event_id=command.approval_event.asset_id,
+        approval_event_hash=command.approval_event.content_hash)
+    raw_binding_predicate="""AND p.action_binding_hash=pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(
+      public.canonical_asset_registry_jsonb(pg_catalog.jsonb_build_object(
+        'sourceCandidate',p.payload->'sourceCandidate',
+        'actionTypeRevisionHash',p.action_type_snapshot->'revisionHash')),'UTF8')),'hex')
+    FOR SHARE OF p"""
+    naive_statement=CAPACITY_APPROVED_SOURCE_ROW_SQL.replace('FOR SHARE OF p',raw_binding_predicate)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute("SET LOCAL TimeZone='UTC'")
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        current=owner.execute(CAPACITY_APPROVED_SOURCE_ROW_SQL,params).fetchone()
+        assert current is not None and current['action_binding_hash']==typed_binding
+        # Counterfactual only: installing this raw hash predicate would reject
+        # the legitimate original approval proven by the private reader above.
+        assert owner.execute(naive_statement,params).fetchone() is None
+    import json
+    with capsys.disabled():
+        print('CAPACITY_SOURCE_TYPED_BINDING_PROOF '+json.dumps(dict(
+            representation=representation,database=identity['database'],issuer_role=identity['role'],
+            scram_used=True,proposal_id=command.approved_proposal.asset_id,
+            proposal_hash=command.approved_proposal.content_hash,approval_event_id=command.approval_event.asset_id,
+            approval_event_hash=command.approval_event.content_hash,raw_binding_hash=raw_binding,
+            typed_binding_hash=typed_binding,private_normalized_claim=True,native_snapshot_positive=True,
+            naive_raw_binding_rejected=True,current_database_accessed=False,
+            supplier_verified=False,execution_allowed=False),sort_keys=True))

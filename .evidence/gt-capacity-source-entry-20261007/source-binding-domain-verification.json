@@ -1,0 +1,110 @@
+{
+  "baseline": "AOS-001422/m1@09d1e219",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "task": "gt-capacity-source-entry-20261007",
+  "status": "ORIGINAL_TYPED_SOURCE_DOMAIN_PROVEN_NATIVE_NORMALIZATION_NOT_IMPLEMENTED",
+  "target_initial": {
+    "passed": 3,
+    "seconds": 13.44
+  },
+  "native_counterfactual_target": {
+    "passed": 3,
+    "seconds": 13.46
+  },
+  "module": {
+    "passed": 43,
+    "known_entry_red_deselected": 5,
+    "skipped": 0,
+    "warnings": 7,
+    "seconds": 82.76
+  },
+  "final_logging_only_target": {
+    "passed": 3,
+    "seconds": 13.33,
+    "warnings": 7
+  },
+  "proofs": [
+    {
+      "approval_event_hash": "ac982d9537d69097ce66a4640f852cdafbfeb7ae8945479341ddd265867c251d",
+      "approval_event_id": "approval-22da051ec0e34678bc22",
+      "current_database_accessed": false,
+      "database": "aos_test_6eb5fdf2f333_ti4_test",
+      "execution_allowed": false,
+      "issuer_role": "aos_provider_capacity_issuer",
+      "naive_raw_binding_rejected": true,
+      "native_snapshot_positive": true,
+      "private_normalized_claim": true,
+      "proposal_hash": "8d81d99fdf250d0f6d5182af97581246c6d6ab554159c3f7aa240b684336eaeb",
+      "proposal_id": "proposal-8f5f313070584a31883a",
+      "raw_binding_hash": "4f81fb858f17035b0cc5fa3611a9a3b4cc99fdae23a9ba61f8e02a6a9b578833",
+      "representation": "nested_alias",
+      "scram_used": true,
+      "supplier_verified": false,
+      "typed_binding_hash": "6deb4fffe232b25f456bda9930e40e91615ee114274e965eae5b6e038a0d01df"
+    },
+    {
+      "approval_event_hash": "bdddad5dc04b8328b96b06a309a4e2e24f4c73ea9843365490f70b73ce21ac78",
+      "approval_event_id": "approval-7064d72079e2414c8433",
+      "current_database_accessed": false,
+      "database": "aos_test_6eb5fdf2f333_ti4_test",
+      "execution_allowed": false,
+      "issuer_role": "aos_provider_capacity_issuer",
+      "naive_raw_binding_rejected": true,
+      "native_snapshot_positive": true,
+      "private_normalized_claim": true,
+      "proposal_hash": "30f2d787f27293e5ce173f4742a33c13e0b11d388701e5ee1b56d0527fee7354",
+      "proposal_id": "proposal-5bd2226f9e294cafa19e",
+      "raw_binding_hash": "91793642eb69ae8e5c50ba5c41837da8fb5dc8c809b0ff02dc9969612c8babb1",
+      "representation": "offset_space",
+      "scram_used": true,
+      "supplier_verified": false,
+      "typed_binding_hash": "152cf2535c53879ee5d85734fb97f1d7c4f1b0201475689ce88dbc2a46b97af8"
+    },
+    {
+      "approval_event_hash": "86c147bf45408073bd8c333e9d943d90563b7774db80146dc8f0a696d96c2824",
+      "approval_event_id": "approval-cb2848126c2e4e3e90b7",
+      "current_database_accessed": false,
+      "database": "aos_test_6eb5fdf2f333_ti4_test",
+      "execution_allowed": false,
+      "issuer_role": "aos_provider_capacity_issuer",
+      "naive_raw_binding_rejected": true,
+      "native_snapshot_positive": true,
+      "private_normalized_claim": true,
+      "proposal_hash": "c40d378ded18e63f7ad2864e1791b1cefe45d8a9a4a2d61dee1c0d205440ecaf",
+      "proposal_id": "proposal-5e6730d4a1e3458d89b9",
+      "raw_binding_hash": "ef0b77232fa5b3377f28efab85c0308678b0529d4223355ad05c87871a8fa8aa",
+      "representation": "epoch_string",
+      "scram_used": true,
+      "supplier_verified": false,
+      "typed_binding_hash": "f3a0a0ad3c9e9d4ca9c27bc3c90d495cc85d2a70d6f23ef9784c3cb811d98c9c"
+    }
+  ],
+  "required_next": "Implement original typed Source alias/time normalization then native correct binding recomputation in complete157; preserve original accepted representations. Do not install rawJSON binding shortcut.",
+  "unproven": [
+    "Exhaustive original Source model accepted domain",
+    "Native typed Source normalization and coherentwrong rejection",
+    "Complete prepare/control signer/commit/actual caller COMMIT/current consumer S01-S20",
+    "Final caller wall-clock COMMIT TTL",
+    "Formal Source/budget/execution or natural first chain"
+  ],
+  "self_review": [
+    "Original AipActionStore+SourceGuard creator, independent original checker approval and actual private SCRAM reader; no fake approved rows or bypass.",
+    "Counterfactual rawhash predicate only in test query; native normal acceptance preserved in product SQL.",
+    "Time offset space form same absolute instant; epoch validUntil floor within original limits; raw model representation genuinely differs.",
+    "Code change test-only, no new native function/schema/grant/role/service/real database writes.",
+    "Full module before log-only addition; final3-case executes exact final test assertion/proof code, product implementation unchanged throughout.",
+    "No browser changes or applicable UI validation.",
+    "All parent Tasks ACTIVE; no helper Delivery/fullSource claim."
+  ],
+  "sha256": {
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "0a7fa3b2ca3f736eff61bdb6cb5de68c074946f4c9163793392d64ab65250fb5",
+    "services/aos-api/aos_api/aip_provider_capacity_source_action.py": "b4239fc835365560a17b5c9861ff4a35e4a8acc59e313b738eae6b1c278961d6",
+    "services/aos-api/aos_api/aip_provider_capacity_source_contracts.py": "dc22d6e59535572cd98c79f514a5b79270989748161fc71a382416983d20bd72",
+    "services/aos-api/aos_api/aip_binding_formal_evaluator_contracts.py": "fe39e98d935f97727358f09bc0493d4bdc88e96a512cdb263c864d92bf3e8cb6",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "dae18dad3ea9cefb2fa810a9e373ea133bd075ff4d92c57657ebc7f7dcb5bd17",
+    ".evidence/gt-capacity-source-publication-20261006/source-binding-domain-r1.log": "b8d12d7177e48eea8321d4a4dbd0a5495c446bd4204c1493739ca4f0dce40220",
+    ".evidence/gt-capacity-source-publication-20261006/source-binding-domain-r2.log": "18d3c923e25542199cba5e1985427e2f9ba6d486035ac41731681da36851503b",
+    ".evidence/gt-capacity-source-publication-20261006/source-binding-domain-module-r1.log": "80aa4a8a83e2d6139877f787dcc714a97c06daf3d3199952c8ca2ac5cb000ef2",
+    ".evidence/gt-capacity-source-publication-20261006/source-binding-domain-final-r1.log": "6784be305732d8b1ebeef6dc31d604ddb16b94468f97267b19e99f1223135838"
+  }
+}
