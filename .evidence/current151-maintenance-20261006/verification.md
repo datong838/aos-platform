@@ -21,3 +21,12 @@
 适配器缺失RED3failed/24passed；首次真实preflight在原审计器多行SELECT被适配器错误拒绝（SELECT后换行），原失败log保留。补一个换行RED1failed/27passed后最小修正为SELECT后允许空白，仍拒绝多语句。专项与旧维护保护67passed/1deselected，旧1329消息断言排除原因同上。
 
 真实第二次preflight退出0：同原source142与第二份备份/独立142恢复均完整回读；固定same-image恢复库151完整snapshot精确匹配a151保存after；原require_withdrawal_fence逐项检查列/约束/RLS/owner/function body hash/ACL/额外权限/trigger/立即外键顺序通过；结束Task/HEAD再读一致。证据live-restored151-preflight-r2.json及对应log。没有修改业务审计器，没有开放LOGIN，没有迁移源或停止服务，mutation_permission仍false。管理员只读审计不代替原生issuer身份或完整业务授权；下一步按原合同接零执行窗口与受控维护操作。
+
+## 最新完整隔离维护窗口验收
+代码408d82fe建立完整隔离路径，资源5个反例RED后专项/相邻72passed/1deselected。首次真实隔离运行在current151-window-942e6cab76d9：停写/TCP拒绝/客户端0/prepared0、窗口全备与独立全恢复、143..151九步terminal0；最终比较RED，只有146/148四新元数据created_at差异，旧行/目录保持。失败记录与封闭的隔离卷全部保留，没有重跑旧迁移。
+
+代码a44685b3：四已登记新增ID仅created_at允许带时区时间差；payload/旧row/未知ID三个反例RED后专项/相邻75passed/1deselected。以实际四原整行与新整行只读调和确认其余字段一致，完整snapshot窄等价通过；这不是首轮整序列通过。
+
+独立新卷current151-window-e322c5b61a71实际完整序列47.49秒、进程exit0：九个journal done全verified，九步migration exit0，每步预期版本及原冻结SQL hash验证；窗口备份/独立全恢复、完整151旧数据和目录（仅四新增created_at归一及已审15CHECK结合律）、原严格withdrawal fence、恢复原listen配置来源并restart/TCP schema151、最终资源/完整snapshot/Task/HEAD通过。原dump、globals、两新恢复卷均保留。证据isolated-window-r2.json/log及journal-summary.json精确hash绑定。两无应用阶段仅isolated_no_application_clients，不当真实API/Web重启。
+
+本Task仍ACTIVE，没有Delivery；当前权威源142及现有API/Web未改，source_touched=false。完整当前维护入口/真实零执行窗口/源迁移/最新服务启动/八工作台浏览器仍未通过；Host/worker/Provider关闭，正式业务首链保持pending。方案与本阶段一致，不把隔离47.49秒当当前维护通过。下一立即将相同已验收步骤接入固定当前资源与精确原进程控制。

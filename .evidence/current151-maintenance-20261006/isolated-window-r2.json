@@ -1,0 +1,9 @@
+{
+  "outcome": "ISOLATED142_TO151_WINDOW_SEQUENCE_GREEN",
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/current151-window-e322c5b61a71",
+  "source": "current151-source-e322c5b61a71",
+  "target": "current151-restore-e322c5b61a71",
+  "head": "a44685b36cd651bdfc0555eef32d84de98fff902",
+  "elapsed_seconds": 47.49,
+  "current_source_touched": false
+}
