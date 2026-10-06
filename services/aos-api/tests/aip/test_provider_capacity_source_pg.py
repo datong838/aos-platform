@@ -292,3 +292,33 @@ def test_native_signed_source_rereads_real_root_after_matching(native_signed_sou
             check_native_capacity_supplier_inputs(conn,command,policy,attestation,trust_roots=f['provider'])
         conn.rollback()
     assert len(calls)==2
+
+
+@pytest.mark.parametrize('target', ['source', 'allocation'])
+def test_direct_withdrawal_committed_after_native_serial_snapshot_is_rejected(native_signed_source, target):
+    from aos_api.db import connect
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs, ProviderCapacityIssuanceBlocked
+    f, actual_command, _, source, config = native_signed_source
+    command, policy, attestation = actual_command()
+    with connect(SCOPE) as lookup:
+        proposal_id = command.approved_proposal.asset_id if target == 'source' else lookup.execute(
+            'SELECT proposal_id FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s AND approval_event_id=%s',
+            (*SCOPE.key, source.allocation_approval_ref.asset_id)).fetchone()['proposal_id']
+        row = lookup.execute('SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+                             (*SCOPE.key, proposal_id)).fetchone()
+    with connect_capacity_issuer(config, SCOPE) as reader:
+        assert reader.execute('SHOW transaction_isolation').fetchone()['transaction_isolation'] == 'serializable'
+        assert reader.execute('SELECT count(*) AS n FROM aip_action_withdrawal_event WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+                              (*SCOPE.key, proposal_id)).fetchone()['n'] == 0
+        with connect(SCOPE) as writer:
+            writer.execute('INSERT INTO aip_action_withdrawal_event '
+                           '(org_id,project_id,withdrawal_event_id,proposal_id,proposal_version,proposal_hash,actor_id,reason,idempotency_key,request_hash) '
+                           'VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                           (*SCOPE.key, 'snapshot-withdraw-'+uuid4().hex, proposal_id, row['version']+1, row['proposal_hash'],
+                            row['created_by'], 'isolated writer-first old snapshot', 'snapshot-key-'+uuid4().hex, 'd'*64))
+            writer.commit()
+            assert writer.execute('SELECT count(*) AS n FROM aip_action_withdrawal_event WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+                                  (*SCOPE.key, proposal_id)).fetchone()['n'] == 1
+        with pytest.raises(ProviderCapacityIssuanceBlocked):
+            check_native_capacity_supplier_inputs(reader, command, policy, attestation, trust_roots=f['provider'])
