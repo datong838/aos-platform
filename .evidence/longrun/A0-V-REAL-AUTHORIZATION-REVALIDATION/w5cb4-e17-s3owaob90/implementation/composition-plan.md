@@ -1,5 +1,11 @@
 # 完整评估命令的原消费者接线清单
 
+## 2026-10-06 当前151恢复后的接续
+
+维护Task已Delivery，最新authority1370/HEAD680255fa；原b90同Owner、TaskACTIVE、无Delivery、精确scope无未提交代码、无活跃pytest/review，已按原renew_task受支持API续至20:00。候选一为完整八facts的原signed输入/真实三写COMMIT/API接线；候选二为独立publication/withdrawal原生运行门（各原Task权限另核）。选择一，不以helper或拒绝测试替代正向完整退出。
+
+先在5433一次性aos_test_*_ti4_test库运行现有完整命令五个原TLS/OIDC/native拒绝反例，保持AOS_TEST_RETAIN_DATABASE=1；禁止共享库/18435当前库。该结果只校准接续基线及运行依赖，下一RED必须由原signed Growth1.13 Source/Budget实际输入进入完整evaluate_binding_in_transaction并最终COMMIT；不造模型Gate/Health/Owner/Capacity READY。若测试库故障，先精确归属/服务状态对账，不改当前151服务，不将Goal blocked。
+
 2026-10-05，基线code461a84f8/Authority1334。沿完整Task ACTIVE；本清单补充主plan，不改变退出定义或授权当前142写入。
 
 1. native evaluator实际SCRAM/SERIAL同caller事务，严格schema1与原signed Principal；Body不供给actor/roles/clock/facts。原幂等锁、原Receipt、Binding expectedVersion和实际scope先校验，不内部commit或retry。
