@@ -1,0 +1,28 @@
+{
+  "schema": "aos-capacity-supplier-cross-contract-investigation/v1",
+  "authority": "AOS-001434",
+  "head": "f8e36603",
+  "database": "aos_test_ce77fe1f6a93_ti4_test",
+  "read_only": true,
+  "original_models_and_persisted_same_case": true,
+  "checks": {
+    "policy_attestation_publisher_key_supplier": true,
+    "supplier_account_fingerprint": true,
+    "whole_provider_set": true,
+    "basis_evidence_ref": true,
+    "concurrency_coverage": true,
+    "same_token_mode_unit": true,
+    "token_coverage": true,
+    "mode_policy_allowed": true,
+    "attestation_inside_policy_window": true,
+    "source_covered_by_all_three": true,
+    "supplier_observation_exact_if_applicable": true,
+    "fixed_window_exact_if_applicable": true
+  },
+  "provider_count": 1,
+  "token_mode": "inflight_upper_bound",
+  "basis_kind": "owner_allocation",
+  "full_SQL_cross_contract_implemented": false,
+  "source_delivery": false,
+  "next": "translate all original S18/S19 comparisons against original native typed account/basis plus registered signed policy/attestation; preserve original lock prefix and terms limits, actual pair oracle RED before implementation"
+}

@@ -20,6 +20,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_registered_original_inputs_prepare_native_v2_before_signing',
         'test_complete_native_publication_requires_actual_caller_commit',
         'test_native_registered_signed_document_current_rows_require_exact_originals',
+        'test_native_signed_supplier_combination_keeps_original_approved_terms',
         'test_native_current_signed_document_single_field_faults_restore_exact_originals',
         'test_native_current_signed_exact_scope_matrix_and_ordinary_role_denial',
         'test_native_current_signed_actual_withdrawal_commit_rollback_and_replay',
@@ -254,7 +255,7 @@ def test_registered_origin_documents_and_original_private_approval_share_databas
     print('CAPACITY_COMBINED_ORIGINAL_INPUT_PROOF same_database=true native_scram=true original_approvals=true signed_origin=true registered_exact_documents=3 source_published=false')
 
 
-def _registered_publication_inputs(native_signed_source,tmp_path):
+def _registered_publication_inputs(native_signed_source,tmp_path,*,signed_fault=None):
     """Real original inputs plus controlled test bootstrap; never formal authority."""
     import base64
     import hashlib
@@ -276,6 +277,8 @@ def _registered_publication_inputs(native_signed_source,tmp_path):
     target=dict(host=config.host,port=config.port,database=config.database,databaseOid=probe['oid'],
         clusterIdentifier=probe['cluster'],issuerRole='aos_provider_capacity_issuer')
     f['policy']['deploymentTarget']=target
+    if signed_fault is not None:
+        signed_fault(f)  # Own test documents, before genuine signing/registration.
     source_key=Ed25519PrivateKey.generate()
     source_public=source_key.public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)
     source_root=dict(f['roots'][0],publisher='isolated-source-signer',keyId='isolated-source-key',
@@ -2637,3 +2640,137 @@ def test_native_current_signed_withdrawal_serializable_epoch_competition(native_
         _assert_integrated_signed_history(owner,material,0 if rolled_back else 1)
         owner.rollback()
     print('NATIVE_CURRENT_SIGNED_EPOCH_COMPETITION '+order+' actual_blocker=true actual_commit_or_rollback=true history=exact')
+
+
+@pytest.mark.parametrize('fault',[
+    'valid','larger_supplier_limits','supplier','fingerprint','provider_hash',
+    'extra_provider','evidence_hash','root_revision','allowed_mode','observation_age','future_observation',
+    'rate_valid','rate_window_seconds','rate_window_anchor','rate_offset_equivalent',
+    'supplier_basis_valid','supplier_basis_observation','low_concurrency','low_tokens',
+    'policy_publisher','policy_key','attestation_window',
+])
+def test_native_signed_supplier_combination_keeps_original_approved_terms(native_signed_source,approved_command,tmp_path,fault):
+    """Same stored original approvals and genuine signatures, never a caller flag."""
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_issuer import (
+        check_native_capacity_supplier_inputs,authenticate_capacity_issuance_command)
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+    from aos_api import aip_provider_capacity_publication_store as native
+    from datetime import timedelta
+    from aos_api.aip_provider_capacity_source_issuer import ProviderCapacityIssuanceBlocked
+    # Produce a new basis and Source approval through the original APIs. Never
+    # mutate a stored approved payload or manufacture coherent approval hashes.
+    if fault.startswith(('rate_','supplier_basis_')):
+        from uuid import uuid4
+        from datetime import timezone
+        from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+        from aos_api.aip_provider_capacity_source_contracts import ProviderCapacityBasisCandidate
+        from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+        from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+        from aos_api.aip_action_models import DecideActionProposalRequest
+        from aos_api.aip_action_store import canonical_hash
+        f,old_command,basis,source,config=native_signed_source
+        maker_principal,checker=approved_command[:2]
+        raw=basis.model_dump(mode='python',by_alias=True)
+        if fault.startswith('rate_'):
+            raw['tokenLimit']=dict(mode='fixed_window_rate',unit='token',maxTokens=basis.token_limit.max_tokens,
+                windowSeconds=60,windowAnchor=f['now'])
+        else:raw['basisKind']='supplier_limit_claim'
+        basis=ProviderCapacityBasisCandidate.model_validate(raw)
+        saved=ProviderCapacityCandidateStore().create_basis(SCOPE,maker_principal,'signed-combination-basis-'+uuid4().hex,basis)
+        source=source.model_copy(update={'basis_ref':FormalExactRef(assetType='ProviderCapacityBasisCandidateRevision',
+            assetId=saved['candidate_id'],revision=1,contentHash=saved['content_hash'])})
+        proposal=propose_provider_capacity_source(maker_principal,source,'signed-combination-proposal-'+uuid4().hex,source.valid_until)
+        approved=decide_provider_capacity_source(checker,proposal.proposal.id,'signed-combination-approve-'+uuid4().hex,
+            DecideActionProposalRequest.model_validate(dict(expectedProposalVersion=proposal.proposal.version,
+                expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',
+                reason='isolated original signed supplier combination',approvalExpiresAt=source.valid_until)))
+        f['attestation']['tokenLimit']=basis.token_limit.model_dump(mode='python',by_alias=True)
+        f['attestation']['observedAt']=basis.observed_at
+        f['policy']['allowedTokenModes']=[basis.token_limit.mode]
+        def actual_command():
+            command,policy,attestation=old_command()
+            return command.model_copy(update={
+                'approved_proposal':FormalExactRef(assetType='ActionProposal',assetId=approved.proposal.id,
+                    revision=2,contentHash=approved.proposal.proposal_hash),
+                'approval_event':FormalExactRef(assetType='ActionApprovalEvent',assetId=approved.approvals[0].id,
+                    revision=1,contentHash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True)))}),policy,attestation
+        native_signed_source=(f,actual_command,basis,source,config)
+    def change(f):
+        att,pol=f['attestation'],f['policy']
+        approved_source=native_signed_source[3]
+        if fault=='larger_supplier_limits':
+            att['maxConcurrency']+=1
+            att['tokenLimit']['maxTokens']+=1
+        elif fault=='supplier':att['supplierId']='different-signed-supplier'
+        elif fault=='fingerprint':att['supplierAccountFingerprint']='d'*64
+        elif fault=='provider_hash':att['providerRefs'][0]['contentHash']='d'*64
+        elif fault=='extra_provider':
+            att['providerRefs'].append(dict(att['providerRefs'][0],assetId='additional-signed-provider'))
+        elif fault=='evidence_hash':att['evidenceRef']['contentHash']='d'*64
+        elif fault=='root_revision':pol['attestationRootRevision']='sha256:'+'d'*64
+        elif fault=='allowed_mode':
+            pol['allowedTokenModes']=['fixed_window_rate' if att['tokenLimit']['mode']=='inflight_upper_bound' else 'inflight_upper_bound']
+        elif fault=='observation_age':
+            att['observedAt']=att['observedAt']-timedelta(days=2)
+        elif fault=='future_observation':
+            att['observedAt']=f['now']+timedelta(minutes=2)
+        elif fault=='rate_window_seconds':att['tokenLimit']['windowSeconds']=120
+        elif fault=='rate_window_anchor':att['tokenLimit']['windowAnchor']+=timedelta(seconds=1)
+        elif fault=='rate_offset_equivalent':
+            att['tokenLimit']['windowAnchor']=att['tokenLimit']['windowAnchor'].astimezone(timezone(timedelta(hours=5,minutes=30)))
+        elif fault=='supplier_basis_observation':att['observedAt']+=timedelta(seconds=1)
+        elif fault=='low_concurrency':
+            assert att['maxConcurrency']>1
+            att['maxConcurrency']-=1
+        elif fault=='low_tokens':
+            assert att['tokenLimit']['maxTokens']>1
+            att['tokenLimit']['maxTokens']-=1
+        elif fault=='policy_publisher':pol['attestationPublisher']='aos-capacity-source-policy'
+        elif fault=='policy_key':pol['attestationKeyId']='different-signed-key'
+        elif fault=='attestation_window':att['validUntil']=approved_source.valid_until-timedelta(seconds=1)
+    material=_registered_publication_inputs(native_signed_source,tmp_path,signed_fault=change)
+    command,policy,attestation=material['actual_command']()
+    _,_,basis,source,_=native_signed_source
+    maker=authenticate_capacity_issuance_command(command).subject
+    accepted=fault in ('valid','larger_supplier_limits','rate_valid','rate_offset_equivalent','supplier_basis_valid')
+    with connect_capacity_issuer(material['config'],SCOPE) as issuer:
+        assert issuer.pgconn.used_password
+        if accepted:
+            original=check_native_capacity_supplier_inputs(issuer,command,policy,attestation,trust_roots=material['provider'])
+            assert original.execution_allowed is False
+        else:
+            with pytest.raises(ProviderCapacityIssuanceBlocked):
+                check_native_capacity_supplier_inputs(issuer,command,policy,attestation,trust_roots=material['provider'])
+    params=ProviderCapacitySourceActionGuard._combination_params(SCOPE,source,maker)
+    params.update(proposal_id=command.approved_proposal.asset_id,
+        proposal_revision=command.approved_proposal.revision,proposal_hash=command.approved_proposal.content_hash,
+        approval_event_id=command.approval_event.asset_id,approval_event_hash=command.approval_event.content_hash)
+    for name,ref in zip(('policy','attestation'),material['refs'][:2]):
+        params.update({name+'_id':ref['assetId'],name+'_revision':str(ref['revision']),name+'_hash':ref['contentHash']})
+    statement=getattr(native,'CAPACITY_NATIVE_SIGNED_SUPPLIER_COMBINATION_SQL',None)
+    assert statement is not None, 'Original signed supplier combination must be translated into native SQL'
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        owner.execute("SET LOCAL TimeZone='UTC'")
+        for profile in (native.CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,native.CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL):
+            owner.execute(profile)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        # Both documents must independently pass S17: refusal must come from
+        # the cross-contract comparison, not invalid signatures/registration.
+        for ref in material['refs'][:2]:
+            assert owner.execute(native.CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL,_current_signed_params(ref)).fetchone() is not None
+        row=owner.execute(statement,params).fetchone()
+        assert (row is not None)==accepted
+        if accepted:
+            assert row['source']==source.model_dump(mode='json',by_alias=True)
+            assert row['basis']==basis.model_dump(mode='json',by_alias=True)
+            if fault=='valid':
+                # Client selectors cannot substitute a different stored parent.
+                for field in ('account_hash','basis_hash','policy_hash','attestation_hash','approval_event_hash','proposal_hash'):
+                    wrong=dict(params);wrong[field]='d'*64
+                    assert owner.execute(statement,wrong).fetchone() is None
+
+        owner.rollback()
+    print('S18_S19_SAME_ORIGINAL_SCRAM_AND_REGISTERED_SIGNATURES no_source_delivery')

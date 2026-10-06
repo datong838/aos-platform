@@ -1,0 +1,30 @@
+{
+  "schema": "aos-capacity-supplier-combination-checkpoint/v1",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_base": "AOS-001434",
+  "base_head": "f8e366039c54cd21b00b60976fc88acdf238b130",
+  "status": "partial_signed_supplier_cross_contract_verified_full157_pending",
+  "source_delivery": false,
+  "final_test_result": {
+    "passed": 174,
+    "failed": 5,
+    "skipped": 0,
+    "warnings": 7,
+    "seconds": 517.27,
+    "failures": "first caught42883 assertion plus4 actualUndefinedFunction prepare"
+  },
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "e560a2e9c7d61aada669fb5da276f2ff50c5789c04f0344c0644593a475f9b0f",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "5fe91fd170934dcb85043e166479dd799c715a0e7ed10c79e306e2772b5a08a2",
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "3a2ccb6d8a6b890cc920edf874aa3786a59d9d6a674a0816e185828347e79f7f",
+    ".evidence/gt-capacity-source-entry-20261007/supplier-combination-verification.md": "d4ac246b10a8d95378751d208ca83462298c23fce620817dbeab8d74810a48e1",
+    ".evidence/gt-capacity-source-entry-20261007/supplier-cross-contract-investigation.json": "4f1472b8e1505902ace626dff089c0f7cb36ed6a50099108d12bdbf7f64c1256",
+    ".evidence/gt-capacity-source-publication-20261006/supplier-combination-adjacent-r1.log": "6012b547d214c72726f31ddbf30377a8925ec2c41f41119b1f499fd02400c88b",
+    ".evidence/gt-capacity-source-publication-20261006/supplier-combination-cumulative-r1.log": "83c55e8fd71d5f66968f893eedb87e5efbf8a126bf18469c478020bd5eadb67a",
+    ".evidence/gt-capacity-source-publication-20261006/supplier-combination-domain-r1.log": "e8748760fa8c21fe32428caa892e530a6e91d231b452dc6f74ef25587e8b9981",
+    ".evidence/gt-capacity-source-publication-20261006/supplier-combination-domain-r2.log": "01d4b12eed240292bba36fe7451a4b92937b27a8b59292cc4242769a75425e4c",
+    ".evidence/gt-capacity-source-publication-20261006/supplier-combination-green-r1.log": "59a0f8000ea2e63307f75a17552a306ef662d89bc6bf4770fc59c82862ac0eef",
+    ".evidence/gt-capacity-source-publication-20261006/supplier-combination-original-modes-r1.log": "340967bc7c84fe0c88cc81d011ed067583e8f35449c2514fafeb318cf6e9e82e",
+    ".evidence/gt-capacity-source-publication-20261006/supplier-combination-red-r1.log": "566f84c01b385eeae6016520709c8a970b0ecccda57b0ca3ac3983dc559761d1"
+  }
+}

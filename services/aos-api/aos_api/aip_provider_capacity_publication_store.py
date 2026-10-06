@@ -2173,3 +2173,100 @@ WHERE p.payload IS NOT NULL
    THEN aos_ed25519.verify(p.origin_signature,p.origin_raw,p.signer_public_key) IS TRUE
     AND aos_ed25519.verify(p.signature,p.raw_body,p.public_key) IS TRUE ELSE false END
 """
+
+
+def _supplier_registered_document_sql(prefix, kind):
+    """Fixed internal document selectors; caller never provides document bodies."""
+    return (CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL
+        .replace('%(kind)s', "'"+kind+"'")
+        .replace('%(asset_id)s', '%('+prefix+'_id)s')
+        .replace('%(revision)s', '%('+prefix+'_revision)s')
+        .replace('%(content_hash)s', '%('+prefix+'_hash)s'))
+
+
+# S18/S19 suffix prerequisite. The future157 entry must first execute the full
+# original Source dependency/withdrawal lock prefix; CTE order is not that proof.
+CAPACITY_NATIVE_SIGNED_SUPPLIER_COMBINATION_SQL = (
+    'WITH approved AS MATERIALIZED ('+CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL+'), account_row AS MATERIALIZED ('+
+    _combination_candidate_sql('account',statement=CAPACITY_NATIVE_CANDIDATE_ROW_SQL)+'), basis_row AS MATERIALIZED ('+
+    _combination_candidate_sql('basis',statement=CAPACITY_NATIVE_CANDIDATE_ROW_SQL)+'), policy_row AS MATERIALIZED ('+
+    _supplier_registered_document_sql('policy','ProviderCapacitySourcePolicyRevision')+'), attestation_row AS MATERIALIZED ('+
+    _supplier_registered_document_sql('attestation','SupplierCapacityAttestationRevision')+r"""), terms AS MATERIALIZED (
+ SELECT aos_capacity_publication_private.read_original_source_candidate(s.payload->'sourceCandidate') AS source,
+  a.normalized_candidate AS account,b.normalized_candidate AS basis,p.payload AS policy,t.payload AS attestation,
+  a.candidate_id AS account_id,a.revision AS account_revision,a.content_hash AS account_hash,
+  b.candidate_id AS basis_id,b.revision AS basis_revision,b.content_hash AS basis_hash,
+  t.root_revision AS attestation_root_revision,
+  p.not_before AS policy_root_start,p.not_after AS policy_root_end,p.revoked_at AS policy_root_revoked,
+  t.not_before AS attestation_root_start,t.not_after AS attestation_root_end,t.revoked_at AS attestation_root_revoked,
+  p.bootstrap AS policy_bootstrap,t.bootstrap AS attestation_bootstrap,
+  p.origin_hash AS policy_origin,t.origin_hash AS attestation_origin,
+  p.snapshot_hash AS policy_snapshot,t.snapshot_hash AS attestation_snapshot,
+  p.registry_current_epoch AS policy_epoch,t.registry_current_epoch AS attestation_epoch
+ FROM approved s CROSS JOIN account_row a CROSS JOIN basis_row b
+ CROSS JOIN policy_row p CROSS JOIN attestation_row t
+), timed AS MATERIALIZED (
+ SELECT t.*,clock_timestamp() AS checked_at,
+  (SELECT instant FROM aos_capacity_publication_private.original_source_time(source->'validFrom')) AS source_start,
+  (SELECT instant FROM aos_capacity_publication_private.original_source_time(source->'validUntil')) AS source_end,
+  (SELECT instant FROM aos_capacity_publication_private.original_source_time(basis->'validFrom')) AS basis_start,
+  (SELECT instant FROM aos_capacity_publication_private.original_source_time(basis->'validUntil')) AS basis_end,
+  (SELECT instant FROM aos_capacity_publication_private.original_source_time(basis->'observedAt')) AS basis_observed,
+  aos_capacity_publication_private.read_signed_time(policy->'validFrom') AS policy_start,
+  aos_capacity_publication_private.read_signed_time(policy->'validUntil') AS policy_end,
+  aos_capacity_publication_private.read_signed_time(attestation->'validFrom') AS attestation_start,
+  aos_capacity_publication_private.read_signed_time(attestation->'validUntil') AS attestation_end,
+  aos_capacity_publication_private.read_signed_time(attestation->'observedAt') AS attestation_observed
+ FROM terms t
+)
+SELECT source,basis,account FROM timed t
+WHERE source IS NOT NULL
+ AND source->'physicalAccountRef'=jsonb_build_object('assetType','ProviderPhysicalAccountCandidateRevision',
+  'assetId',account_id,'revision',account_revision,'contentHash',account_hash)
+ AND source->'basisRef'=jsonb_build_object('assetType','ProviderCapacityBasisCandidateRevision',
+  'assetId',basis_id,'revision',basis_revision,'contentHash',basis_hash)
+ AND basis->'physicalAccountRef'=source->'physicalAccountRef'
+ AND policy_origin=attestation_origin AND policy_snapshot=attestation_snapshot AND policy_epoch=attestation_epoch
+ AND attestation->>'publisher'=policy->>'attestationPublisher'
+ AND attestation->>'keyId'=policy->>'attestationKeyId'
+ AND attestation->>'supplierId'=policy->>'supplierId'
+ AND attestation_root_revision=policy->>'attestationRootRevision'
+ AND attestation->>'supplierId'=account->>'supplierId'
+ AND attestation->>'supplierAccountFingerprint'=account->>'supplierAccountFingerprint'
+ AND (SELECT jsonb_agg(value ORDER BY value) FROM jsonb_array_elements(attestation->'providerRefs'))=
+     (SELECT jsonb_agg(value ORDER BY value) FROM jsonb_array_elements(account->'providerRefs'))
+ AND attestation->'evidenceRef'=basis->'evidenceRef'
+ AND (attestation->>'maxConcurrency')::numeric>=(basis->>'maxConcurrency')::numeric
+ AND attestation->'tokenLimit'->>'mode'=basis->'tokenLimit'->>'mode'
+ AND attestation->'tokenLimit'->>'unit'=basis->'tokenLimit'->>'unit'
+ AND (attestation->'tokenLimit'->>'maxTokens')::numeric>=(basis->'tokenLimit'->>'maxTokens')::numeric
+ AND policy->'allowedTokenModes' ? (attestation->'tokenLimit'->>'mode')
+ AND CASE WHEN basis->'tokenLimit'->>'mode'='fixed_window_rate' THEN
+  attestation->'tokenLimit'->'windowSeconds'=basis->'tokenLimit'->'windowSeconds'
+  AND aos_capacity_publication_private.read_signed_time(attestation->'tokenLimit'->'windowAnchor')=
+    (SELECT instant FROM aos_capacity_publication_private.original_source_time(basis->'tokenLimit'->'windowAnchor'))
+ ELSE true END
+ AND policy_root_start<=checked_at AND checked_at<policy_root_end
+ AND (policy_root_revoked IS NULL OR checked_at<policy_root_revoked)
+ AND attestation_root_start<=checked_at AND checked_at<attestation_root_end
+ AND (attestation_root_revoked IS NULL OR checked_at<attestation_root_revoked)
+ AND aos_capacity_publication_private.read_signed_time(policy_bootstrap->'validFrom')<=checked_at
+ AND checked_at<aos_capacity_publication_private.read_signed_time(policy_bootstrap->'validUntil')
+ AND aos_capacity_publication_private.read_signed_time(attestation_bootstrap->'validFrom')<=checked_at
+ AND checked_at<aos_capacity_publication_private.read_signed_time(attestation_bootstrap->'validUntil')
+ AND source_start<source_end AND source_start<=checked_at AND checked_at<source_end
+ AND policy_start<=source_start AND source_end<=policy_end
+ AND attestation_start<=source_start AND source_end<=attestation_end
+ AND basis_start<=source_start AND source_end<=basis_end
+ AND policy_start<=attestation_start AND attestation_end<=policy_end
+ AND attestation_start<=checked_at AND checked_at<attestation_end
+ AND policy_start<=checked_at AND checked_at<policy_end
+ AND attestation_observed<=checked_at+(policy->>'maxFutureSkewSeconds')::numeric*interval '1 second'
+ AND checked_at-attestation_observed<=(policy->>'maxObservationAgeSeconds')::numeric*interval '1 second'
+ AND CASE WHEN basis->>'basisKind'='supplier_limit_claim' THEN attestation_observed=basis_observed ELSE true END
+ AND (SELECT count(*) FROM public.aip_action_approval_event e JOIN public.aip_action_proposal p
+  ON (p.org_id,p.project_id,p.proposal_id)=(e.org_id,e.project_id,e.proposal_id)
+  WHERE e.org_id=%(org_id)s AND e.project_id=%(project_id)s
+   AND e.approval_event_id=ANY(ARRAY[%(approval_event_id)s,source->'allocationApprovalRef'->>'assetId'])
+   AND e.expires_at>checked_at AND p.expires_at>checked_at)=2
+""")
