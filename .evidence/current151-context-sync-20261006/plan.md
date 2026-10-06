@@ -1,0 +1,7 @@
+# 当前151事实同步方案
+
+仅更新 docs/palantier/AOS项目开发上下文 的 authority 与受管理投影及本证据目录，不修改业务代码/数据或Goal私有存储。前置为current151维护Delivery、HEAD8ac0f572、原权威1369、真实恢复结果与浏览器后全快照证据。
+
+通过原memoryctl CAS推进一个版本，保持A1业务交付状态、业务最后GREEN与下一正式门不变；前置最新维护已通过、八业务正向未通过事实；保留历史条目但明确旧库版本/重启待办已被本次证据替代。不得把本轮负门提升为安装或自然首链完成。
+
+source commit与evidence追加新精确记录，下一步骤优先现有b90联合consumer和独立publication/withdrawal运行门。同步全部强一致投影与Prime，实际status/validate回读CURRENT/GREEN后交付；不更改其他Task/Lease、不换权威卷、不push。若同步失败，原CAS事实保留并修复投影，不再次推进版本伪造成功。
