@@ -13,3 +13,6 @@ reader位置：Source guard完整super.check_proposal返回（含原metadata/Own
 待实施范围：新增a0v_151_capacity_withdrawal_epoch.py（down150）、新withdrawal fence helper及PG测试；原Source action集成属于formalBoundary Task，private connector及原RED测试属于Source Task，分别先同Owner对账续租，不交叉夺Lease。publication未来迁移顺延152（原151 publication文件尚未创建）；需在原publication方案/Task范围显式对账后才编码该未来迁移。当前150恢复证据保留，不宣称其覆盖新151；151加入后最新代码/源迁移恢复安全门必须重新登记。
 
 退出：双writer-first RED转GREEN；reader-first Source/allocation实际pg_blocking_pids等待、提交后writer完成；原normal withdraw/普通Action兼容、backfill旧撤回/缺行/伪owner/function/ACL/延迟FK/触发禁用/错scope反例；Source+formalBoundary+原Action累计回归。原当前库不迁移/不重启，完整业务Goal保持active。
+
+## 2026-10-06 历史回填验收补充
+只读实测既存150恢复副本正向proposal=0、withdrawal=0。该副本151升级只能证明其实际历史兼容，不能证明非空撤回回填。后续在本Task文件 services/aos-api/tests/aip/test_capacity_withdrawal_epoch_pg.py 增加独立非空150历史迁移用例：保留原proposal/withdrawal快照，执行真实151 upgrade，核epoch准确计数、未撤回为0、原行无变化、撤回锁拒绝；坏原数据或前置门失败须证明DDL/版本事务回滚。副本151升级另在恢复Task登记安全门后执行，不复用旧150完成结论。

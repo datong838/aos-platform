@@ -1,0 +1,7 @@
+{
+  "observed_at": "2026-10-06T02:57:54.303089+00:00",
+  "operation": "READ ONLY",
+  "target": "current150-same-77f8f834ea15",
+  "output": "a0v_150\n{\"positive_proposals\" : 0, \"invalid_id\" : 0}\n{\"positive_withdrawals\" : 0, \"withdrawn_proposals\" : 0}\n",
+  "conclusion": "Restored150 contains no positive proposals or withdrawals; upgrade of this clone cannot prove nonempty historical backfill. Separate nonempty disposable historical test required. No migration executed."
+}

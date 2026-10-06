@@ -1,0 +1,73 @@
+...........F                                                             [100%]
+=================================== FAILURES ===================================
+_____ test_nonempty_historical_withdrawal_backfill_preserves_original_rows _____
+
+drafted = (Principal(subject='capacity-maker-e6685cb05b6c42188c6fa4a5e1536288', org_id='org-org', project_id='dev-project', role...city-request-69b13a3bd9af4a2b8b82e93b2f0bc52c', 'idempotency_key': 'draft-c86a45190d8640ed93d437c46f175ff8', ...}, ...)
+
+    def test_nonempty_historical_withdrawal_backfill_preserves_original_rows(drafted):
+        """Transactional migration-function drill, not a full restored Alembic upgrade."""
+        import importlib.util
+        import os
+        from pathlib import Path
+        from uuid import uuid4
+        from alembic.migration import MigrationContext
+        from alembic.operations import Operations
+        from sqlalchemy import create_engine
+
+        assert '/aos_test_' in os.environ['AOS_DATABASE_URL']
+>       engine = create_engine(os.environ['AOS_DATABASE_URL'])
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_capacity_withdrawal_epoch_pg.py:59:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<string>:2: in create_engine
+    ???
+.venv/lib/python3.11/site-packages/sqlalchemy/util/deprecations.py:281: in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/create.py:617: in create_engine
+    dbapi = dbapi_meth(**dbapi_args)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2'>
+
+    @classmethod
+    def import_dbapi(cls):
+>       import psycopg2
+E       ModuleNotFoundError: No module named 'psycopg2'
+
+.venv/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/psycopg2.py:697: ModuleNotFoundError
+=============================== warnings summary ===============================
+aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/aip/test_capacity_withdrawal_epoch_pg.py::test_nonempty_historical_withdrawal_backfill_preserves_original_rows
+1 failed, 11 passed, 7 warnings in 19.80s
