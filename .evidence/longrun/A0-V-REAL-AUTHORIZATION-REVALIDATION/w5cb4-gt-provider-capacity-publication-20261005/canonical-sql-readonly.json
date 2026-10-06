@@ -1,0 +1,8 @@
+{
+  "scope": "read-only encoding experiment, no signed authorization",
+  "python_canonical_utf8": "{\"publisher\":\"测试发布者\",\"purpose\":\"provider_capacity_source_signing_permit\",\"revision\":1}",
+  "pg_jsonb_text": "{\"purpose\": \"provider_capacity_source_signing_permit\", \"revision\": 1, \"publisher\": \"测试发布者\"}",
+  "hashes_differ": true,
+  "duplicate_purpose_jsonb_last_value": "allowed",
+  "decision": "Verify original raw canonical bytes; never JSONB text reserialization. Strict duplicate-key and bounded document profile must precede signature-purpose interpretation."
+}

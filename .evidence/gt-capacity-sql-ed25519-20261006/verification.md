@@ -17,3 +17,5 @@
 现有独立路线督导提出超上界TOAST、同连接失败后恢复、schema/函数catalog与隔离容器身份及产物来源检查，全部补入最终测试和证据。代码复核：detoast前逻辑长度检查，EVP资源生命周期内不调用可能PG长跳转的API，正常路径释放EVP和复制输入；不含私钥/签名/SPI/网络/文件写操作。没有前端改动，浏览器验收不适用。
 
 本Task只证明密码学校验依赖；verify true仅验证给定公开key，不能建立可信Source。正式root/permit/bootstrap、当前性/撤回epoch、全域映射、完整原caller锁序、一次publication COMMIT与consumer仍未实现/验收，原publication/b90/全Goal保持未完成。此隔离镜像不是生产部署授权。
+
+最终独立route_supervisor只读回读r4源码/终结日志确认“交付范围内未发现新的重大阻断”，允许本依赖子Task收口；正式Delivery在AOS-001373，结果ISOLATED_SQL_ED25519_VERIFIER_NATIVE_19_PASS_NO_PRODUCTION_AUTHORITY，七强投影CURRENT。原publication已进入签名原文字节/重复JSON键及同事务稳定ID待签阶段调查；具体完整SQL实现仍pending。

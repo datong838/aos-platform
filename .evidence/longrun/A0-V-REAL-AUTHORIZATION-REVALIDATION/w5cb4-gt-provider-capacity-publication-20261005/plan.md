@@ -1,5 +1,15 @@
 # 完整非执行容量Source publication施工方案门
 
+## 2026-10-06 验签依赖收口后的签名原文门
+
+独立Task gt-capacity-sql-ed25519-20261006在m1@1b24ceca收口，仅PG原生验签依赖19项通过；固定隔离镜像/角色ACL/输入存储和来源证据见对应verification。没有生产扩展安装授权，完整publication退出仍沿本原Task。
+
+本轮只读canonical-sql-readonly.json实测：现canonical_json的UTF8紧凑排序bytes与PG jsonb::text字节及hash不同；jsonb接受重复purpose字段并保留后者。SQL不能先jsonb重序列化再验签，也不能把jsonb解析成功作为签名文档无歧义证明。
+
+冻结下一接口原则：bootstrap、policy/attestation、permit、Source均传递原始message bytea及64字节signature，原始bytes做hash/verify并不可变保存；SQL从独立受控root/permit读取32字节key，不接收issuer自由key作为trust。解析器必须在解释purpose前拒绝重复键、未知键、无效UTF8/NUL、过深结构/过长数组/消息>2MiB、非严格整型与非法期限；类型文档完整字段与Python原契约一致，原文canonical profile核对不能由调用者verified flag替代。JSONB仅作已验证文档的字段比对视图，不成为签名原文。SQL端严格解析/原文canonical校验尚未实现，须独立真实重复purpose/重复target/数字表示变体负例与Python原签名正例后才能接受正式文档；不因密码学校验true省略该门。
+
+完整发布签名与稳定ID顺序也须冻结：稳定账户ID由数据库在同一publication事务中得出，Source签名必须绑定该精确ID、Provider全集合及原批准/受控permit，不能先签自由alias后改ID。优先两阶段同caller：prepare仅在持原guard完整锁及新域后缀锁的同事务内返回不可授业务权的精确待签bytes；受控签发组件签名；commit在同原连接重验全部原批准/epoch/target/permit和待签bytes，再一次发布映射+Source+provenance+attempt COMMIT。issuer直接调用commit不满足真实签名/原合同则整个事务拒绝；prepare不得提前COMMIT或留下可消费Source/global mapping。未知签发或COMMIT结果只读按原attempt对账，不重发签名/发布。该完整函数/body/锁序仍须后续冻结和原生演练，不宣称两阶段已实现。
+
 基线m1 a96a4bc0 / AOS-001354；Task gt-provider-capacity-publication-schema-20261005 ACTIVE，唯一m1 writer/no push。原fullSource和formalBoundary Tasks串行负责现issuer/read-boundary范围，b90持续ACTIVE。没有当前库迁移/部署权限。
 
 ## 文件级范围
