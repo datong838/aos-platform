@@ -1,0 +1,181 @@
+{
+  "schema": "aos-full157-next-entry-inventory/v1",
+  "head": "5dbc75abef3fbd18611c4142ee7d18cc7fee7339",
+  "authority": "AOS-001437",
+  "read_only_source_inspection": true,
+  "native_query_inventory": [
+    {
+      "name": "CAPACITY_ROOT_IDENTIFIER_PROFILE_SQL",
+      "line": 11
+    },
+    {
+      "name": "CAPACITY_APPROVAL_EVENT_PROJECTION_SQL",
+      "line": 90
+    },
+    {
+      "name": "CAPACITY_REQUEST_ROW_SQL",
+      "line": 128
+    },
+    {
+      "name": "CAPACITY_CANDIDATE_ROW_SQL",
+      "line": 151
+    },
+    {
+      "name": "CAPACITY_SOURCE_COMBINATION_SQL",
+      "line": 206
+    },
+    {
+      "name": "CAPACITY_SIGNED_BODY_PROFILE_SQL",
+      "line": 238
+    },
+    {
+      "name": "CAPACITY_DEPLOYMENT_TARGET_PROFILE_SQL",
+      "line": 321
+    },
+    {
+      "name": "CAPACITY_SIGNING_PERMIT_PROFILE_SQL",
+      "line": 373
+    },
+    {
+      "name": "CAPACITY_IDENTIFIER_PROFILE_SQL",
+      "line": 481
+    },
+    {
+      "name": "CAPACITY_ORIGIN_BOOTSTRAP_PROFILE_SQL",
+      "line": 534
+    },
+    {
+      "name": "_CAPACITY_APPROVED_ROW_SQL",
+      "line": 678
+    },
+    {
+      "name": "CAPACITY_APPROVED_SOURCE_ROW_SQL",
+      "line": 706
+    },
+    {
+      "name": "CAPACITY_APPROVED_ALLOCATION_ROW_SQL",
+      "line": 715
+    },
+    {
+      "name": "CAPACITY_SOURCE_POLICY_PROFILE_SQL",
+      "line": 727
+    },
+    {
+      "name": "CAPACITY_SUPPLIER_ATTESTATION_PROFILE_SQL",
+      "line": 800
+    },
+    {
+      "name": "CAPACITY_ROOT_SNAPSHOT_PROFILE_SQL",
+      "line": 917
+    },
+    {
+      "name": "CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL",
+      "line": 1050
+    },
+    {
+      "name": "CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL",
+      "line": 1176
+    },
+    {
+      "name": "CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL",
+      "line": 1186
+    },
+    {
+      "name": "CAPACITY_NATIVE_REQUEST_ROW_SQL",
+      "line": 1256
+    },
+    {
+      "name": "CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL",
+      "line": 1266
+    },
+    {
+      "name": "CAPACITY_NATIVE_CANDIDATE_ROW_SQL",
+      "line": 1392
+    },
+    {
+      "name": "CAPACITY_NATIVE_SOURCE_COMBINATION_SQL",
+      "line": 1400
+    },
+    {
+      "name": "CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL",
+      "line": 1419
+    },
+    {
+      "name": "CAPACITY_NATIVE_PROVIDER_ROW_SQL",
+      "line": 1560
+    },
+    {
+      "name": "CAPACITY_ORIGINAL_BUILD_PROFILE_SQL",
+      "line": 1582
+    },
+    {
+      "name": "CAPACITY_ORIGINAL_BUILD_JSON_SQL",
+      "line": 1663
+    },
+    {
+      "name": "CAPACITY_ORIGINAL_EVIDENCE_PROFILE_SQL",
+      "line": 1705
+    },
+    {
+      "name": "CAPACITY_NATIVE_EVIDENCE_ROW_SQL",
+      "line": 1792
+    },
+    {
+      "name": "CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL",
+      "line": 1846
+    },
+    {
+      "name": "CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL",
+      "line": 2082
+    },
+    {
+      "name": "CAPACITY_NATIVE_SIGNED_SUPPLIER_COMBINATION_SQL",
+      "line": 2189
+    },
+    {
+      "name": "_CAPACITY_SOURCE_WINDOW_REQUEST_SQL",
+      "line": 2276
+    },
+    {
+      "name": "_CAPACITY_SOURCE_WINDOW_REQUEST_SQL",
+      "line": 2281
+    },
+    {
+      "name": "_CAPACITY_SOURCE_WINDOW_ALLOCATION_SQL",
+      "line": 2285
+    },
+    {
+      "name": "CAPACITY_NATIVE_SOURCE_WINDOW_SQL",
+      "line": 2294
+    },
+    {
+      "name": "CAPACITY_NATIVE_SIGNING_PERMIT_COMBINATION_SQL",
+      "line": 2342
+    }
+  ],
+  "original_files": {
+    "services/aos-api/aos_api/aip_provider_capacity_source_issuer.py": "5b9b1e9e9c1a09d2a8a2bf142cd61af0e1325fe33f3102086cab48a79ce13e7e",
+    "services/aos-api/aos_api/aip_provider_capacity_source_action.py": "b4239fc835365560a17b5c9861ff4a35e4a8acc59e313b738eae6b1c278961d6",
+    "services/aos-api/aos_api/aip_provider_capacity_action.py": "d03de45f01d498d68ebeda0da99a0b35b7744ab4deda9a012511531f2dfe9048",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "445e40c7bd8cc6a06f004faf016209b5859a6743014739f2664a478674629815"
+  },
+  "migration157_present": false,
+  "preparation_protocol": "aos-provider-capacity-source-command/v1",
+  "preparation_fields": [
+    "protocol",
+    "makerSubject",
+    "requestHash",
+    "command",
+    "authentication"
+  ],
+  "preparation_untrusted": true,
+  "full_entry_verified": false,
+  "source_delivery": false,
+  "next_requirements": [
+    "Native canonical original command/authentication parsing; hints are not JWT authority.",
+    "Original Source and allocation metadata/membership/proposal/approval/withdrawal/evidence/provider exact lock prefix, before registry suffix.",
+    "Execute original supplier/window/permit prerequisites inside full prepare and commit, not independent helpers.",
+    "Controlled signer reauthenticates originalJWT and exact pending native transcript; same SERIALIZABLE session/xid actual callerCOMMIT then consumer.",
+    "Final callerCOMMIT TTL still unresolved; no helper/PASS can close SourceDelivery."
+  ]
+}

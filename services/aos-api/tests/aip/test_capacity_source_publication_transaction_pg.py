@@ -2998,3 +2998,113 @@ def test_native_signing_permit_binds_exact_policy_and_controlled_source_root(nat
             assert bytes(row['source_signer_public_key'])==material['source_key'].public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)
         owner.rollback()
     print('S20_REAL_PERMIT_AND_SEPARATE_SOURCE_SIGNER',fault,'no_source_delivery')
+
+
+@pytest.mark.parametrize('layout',['shared','distinct'])
+def test_original_full_publication_prefix_trace_records_real_guard_order(native_signed_source,approved_command,monkeypatch,layout):
+    """Actual original execution oracle for157, never a replacement Source gate."""
+    import hashlib,json
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+    from aos_api.aip_provider_capacity_action import ProviderCapacityActionGuard
+    f,actual_command,basis,source,config=native_signed_source
+    command,policy,attestation=actual_command()
+    from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate
+    from aos_api.db import connect
+    with connect(SCOPE) as current:
+        account=ProviderCapacitySourceActionGuard._candidate(current,SCOPE,source.physical_account_ref,'account',ProviderPhysicalAccountCandidate,f['maker'])
+    expected_evidence={basis.evidence_ref.asset_id}
+    if layout=='distinct':
+        from uuid import uuid4
+        from tests.aip.test_evidence_bundle_provenance_pg import build_inputs,ACTOR
+        from tests.aip._runtime_guard_history_fixture import produce_formal_provider
+        from aos_api.aip_provider_capacity_source_authority import ProviderCapacityCandidateStore
+        from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+        from aos_api.aip_action_models import DecideActionProposalRequest
+        from aos_api.aip_action_store import canonical_hash
+        maker,checker,_,_,_=approved_command
+        produced=[]
+        for _ in range(2):
+            store,key,request=build_inputs.__wrapped__()
+            produced.append(store.build_evidence_bundle(SCOPE,ACTOR,key,request))
+        providers=[produce_formal_provider(SCOPE,maker.subject,'prefix-provider-'+uuid4().hex) for _ in range(2)]
+        refs=[*account.provider_refs,*[account.provider_refs[0].model_copy(update=dict(asset_id=v.provider_instance_id,revision=v.revision,content_hash=v.content_hash)) for v in providers]]
+        # Reverse real reference order; original account dependencies must sort.
+        refs=sorted(refs,key=lambda r:r.asset_id,reverse=True)
+        account=account.model_copy(update=dict(provider_refs=refs,evidence_ref=account.evidence_ref.model_copy(update=dict(asset_id=produced[0].bundle_id,revision=produced[0].revision,content_hash=produced[0].content_hash))))
+        candidates=ProviderCapacityCandidateStore();a=candidates.create_account(SCOPE,maker,'prefix-account-'+uuid4().hex,account)
+        account_ref=source.physical_account_ref.model_copy(update=dict(asset_id=a['candidate_id'],content_hash=a['content_hash']))
+        basis=basis.model_copy(update=dict(physical_account_ref=account_ref,evidence_ref=basis.evidence_ref.model_copy(update=dict(asset_id=produced[1].bundle_id,revision=produced[1].revision,content_hash=produced[1].content_hash))))
+        b=candidates.create_basis(SCOPE,maker,'prefix-basis-'+uuid4().hex,basis)
+        source=source.model_copy(update=dict(physical_account_ref=account_ref,basis_ref=source.basis_ref.model_copy(update=dict(asset_id=b['candidate_id'],content_hash=b['content_hash']))))
+        proposed=propose_provider_capacity_source(maker,source,'prefix-source-'+uuid4().hex,source.valid_until)
+        decision=DecideActionProposalRequest(expectedProposalVersion=proposed.proposal.version,expectedProposalHash=proposed.proposal.proposal_hash,decision='approved',reason='original prefix distinct real dependencies',approvalExpiresAt=source.valid_until)
+        approved=decide_provider_capacity_source(checker,proposed.proposal.id,'prefix-source-approve-'+uuid4().hex,decision)
+        f['attestation'].update(providerRefs=[r.model_dump(mode='json',by_alias=True) for r in refs],evidenceRef=basis.evidence_ref.model_dump(mode='json',by_alias=True))
+        command,policy,attestation=actual_command()
+        command=command.model_copy(update=dict(approved_proposal=command.approved_proposal.model_copy(update=dict(asset_id=approved.proposal.id,content_hash=approved.proposal.proposal_hash)),approval_event=command.approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+        expected_evidence.update(v.bundle_id for v in produced)
+    original=psycopg.Connection.execute
+    trace=[]
+    def observed(conn,query,*args,**kwargs):
+        result=original(conn,query,*args,**kwargs)  # Exact native execution, no bypass.
+        text=query if type(query) is str else query.as_string(conn)
+        normalized=' '.join(text.lower().split())
+        category=None
+        if normalized.startswith('select public.aos_capacity_evidence_epoch_issuer_lock('):category='neutral_evidence_epoch'
+        elif normalized.startswith('select public.aos_capacity_withdrawal_epoch_lock('):category='withdrawal_epoch'
+        elif 'from public.aip_provider_capacity_request r' in normalized:category='original_request_read'
+        elif 'from public.aip_evidence_bundle_revision' in normalized:category='original_evidence_read'
+        elif 'from public.aip_evidence_bundle_build_provenance' in normalized:category='original_build_read'
+        elif 'from public.aip_production_contract_receipt' in normalized:category='original_receipt_read'
+        elif 'for share' in normalized:
+            if 'for share of p' in normalized and 'public.aip_action_proposal p' in normalized:category='approved_proposal'
+            elif 'from meta_object_type' in normalized:category='metadata_object'
+            elif 'from meta_action_type' in normalized:category='metadata_action'
+            elif 'from public.meta_membership' in normalized or 'from meta_membership' in normalized:category='membership_owner'
+            elif 'aip_provider_capacity_request' in normalized:category='original_request'
+            elif 'aip_provider_instance_head' in normalized:category='provider_head'
+            elif 'aip_evidence_bundle_revision' in normalized:category='evidence_row'
+            elif 'aip_provider_capacity_candidate_revision' in normalized:category='candidate_row'
+            elif 'aip_action_proposal' in normalized:category='approved_proposal'
+            else:category='other_share'
+        if category:
+            event=dict(category=category,explicit_share=('for share' in normalized),query_sha256=hashlib.sha256(text.encode()).hexdigest())
+            # Only asset/epoch identifiers from fixed SQL parameter positions;
+            # never retain credentials, arbitrary parameters or JWT claims.
+            if category in ('neutral_evidence_epoch','withdrawal_epoch','provider_head','original_evidence_read'):
+                assert len(args)==1 and len(args[0])>=3
+                event['target_id']=args[0][2]
+            trace.append(event)
+        return result
+    with connect_capacity_issuer(config,SCOPE) as caller:
+        assert type(caller) is psycopg.Connection and caller.pgconn.used_password
+        identity=caller.execute("SELECT current_user AS role,session_user AS login,pg_backend_pid() AS pid,pg_current_xact_id()::text AS xid,current_setting('transaction_isolation') AS isolation").fetchone()
+        assert identity['role']==identity['login']=='aos_provider_capacity_issuer'
+        assert identity['isolation']=='serializable'
+        with monkeypatch.context() as local:
+            local.setattr(psycopg.Connection,'execute',observed)
+            checked=check_native_capacity_supplier_inputs(caller,command,policy,attestation,trust_roots=f['provider'])
+        assert psycopg.Connection.execute is original
+        assert checked.execution_allowed is False
+        categories=[e['category'] for e in trace]
+        assert categories[0]=='approved_proposal'
+        assert categories.count('metadata_object')==2 and categories.count('metadata_action')==2
+        print('ORIGINAL_PREFIX_CATEGORIES='+json.dumps(categories))
+        assert categories.index('original_request_read')<categories.index('provider_head')<categories.index('neutral_evidence_epoch')
+        assert categories.index('original_evidence_read')<categories.index('neutral_evidence_epoch')
+        assert categories.index('neutral_evidence_epoch')<len(categories)-2
+        assert categories[-2:]==['withdrawal_epoch','withdrawal_epoch']
+        assert categories.count('withdrawal_epoch')==2
+        epoch_ids=[e['target_id'] for e in trace if e['category']=='neutral_evidence_epoch']
+        assert epoch_ids==sorted(expected_evidence)
+        epoch_end=max(i for i,e in enumerate(trace) if e['category']=='neutral_evidence_epoch')
+        account_provider_ids=[e['target_id'] for e in trace[epoch_end+1:] if e['category']=='provider_head']
+        assert account_provider_ids==sorted(r.asset_id for r in account.provider_refs)
+        if layout=='distinct':assert len(epoch_ids)==3 and len(account_provider_ids)==3
+        assert caller.execute("SELECT count(*) AS n FROM pg_locks WHERE pid=pg_backend_pid() AND mode='RowShareLock'").fetchone()['n']>0
+        refs=dict(request_source=source.allocation_request_ref.model_dump(mode='json',by_alias=True),account_source=source.physical_account_ref.model_dump(mode='json',by_alias=True),basis_source=source.basis_ref.model_dump(mode='json',by_alias=True))
+        report=dict(schema='aos-original-full-prefix-trace/v1',layout=layout,native_identity=identity,original_source_refs=refs,trace=trace,source_metadata=ProviderCapacitySourceActionGuard.action_id,allocation_metadata=ProviderCapacityActionGuard.action_id,source_delivery=False,full157=False,distinct_observed_evidence=len({e['target_id'] for e in trace if e['category']=='original_evidence_read'}),distinct_neutral_targets=len({e['target_id'] for e in trace if e['category']=='neutral_evidence_epoch'}))
+        print('ORIGINAL_FULL_PREFIX_TRACE='+json.dumps(report,sort_keys=True))
+        caller.rollback()
