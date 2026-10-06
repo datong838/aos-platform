@@ -1,0 +1,15 @@
+{
+  "head": "b3371c404a2a4931392dc0bf806db76481e35870",
+  "schema": "a0v_151",
+  "table_count": 603,
+  "post_browser_full_snapshot_equal": true,
+  "withdrawal_fence": "exact",
+  "source_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+  "source_image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+  "volume": [
+    "aos-a0v-recovery-pg-data"
+  ],
+  "pg_started_at": "2026-10-06T04:25:22.420516341Z",
+  "snapshot_sha256": "c3398b6543a7155da2e69f7204cf71f36d4eb341b75f4b34fafc60bc44499068",
+  "business_first_chain": false
+}

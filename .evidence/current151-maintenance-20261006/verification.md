@@ -61,3 +61,15 @@ current-repair-oom-reconciliation.json实际全库快照未变、schema151、lis
 新增固定run_current151_repair_recovery，共同后半CAS/fence/startup/最终快照逻辑复用。Recovery151Journal只消费原四真实done与原claim/hash，拒绝已restore done、任何后续未知attempt、错binding/claim与失效前序；新8步骤不复制/伪造父done。精确旧PID/children已退出+端口空，源完整snapshot仍相等、原配置来源同原window、原SQL hash匹配、OOMKilled实际容器证据、备份hash再验后才独占新claim。纯门RED7failed；最终106passed1deselected0.38秒，代码whitespace通过。
 
 复审原_run_sequence151 AST与本修改前HEAD精确相同；恢复仅新副本pg_restore会话限制maintenance_work_mem16MB/work_mem4MB，原源码接口不接可选容器/父路径、不改源或VM配置。错误先落私有stderr/exit再终止，原未知效果不能重发。源码提交后再执行；实际恢复/当前CAS/服务启动仍须新现场证据。
+
+## 实际151恢复与浏览器复验（2026-10-06 12:32 +08:00）
+
+HEAD b3371c404a2a4931392dc0bf806db76481e35870 的恢复运行正常终端exit0；私有阶段 current151-repair-c5a8f26afb71 八步骤done全部verified，完整独立151恢复与同SQL演练后当前三updated_at精确CAS仅一次终端成功。原失败claim/attempt、全部备份、恢复卷保留，没有重发旧migration/部分restore。current-recovery-r1.json/log记录结果 CURRENT151_REPAIR_SERVICES_GREEN_BROWSER_PENDING，不是自然首链。
+
+同一权威源Id 9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde、原卷 aos-a0v-recovery-pg-data，PG于12:25:22重启；签名入口最新API PID38729于12:25:24启动、Web PID38761于12:25:32启动。两个端口均只监听127.0.0.1；正式 /v1/ready 返回ready（诊断曾误查 /health 得404，不作为服务失败或健康证明）。
+
+CUA复用原浏览器tab1，org-org/dev-project实际可见。八route cockpit/content-campaign/operations/creator-growth/media-studio/analyst/price-governance/customer 全部稳定显示“当前工作台入口不可用”，目录为空；只读目录重读后同结论。应用列表稳定显示当前有效安装0个及active installation没有此模块。技能发布37条仅已评测、0发布，正式发布/Logic/模型路由证据缺口仍存在。仅证明负门正常呈现，不能声称业务视图或核心业务交互通过；没有新建/安装/发布/执行。
+
+浏览器之后再次真实只读全库审计：603表、全目录/角色与修复预期精确相等，三旧tenant时间戳原值仍保留；withdrawal fence精确通过。post-browser-readonly-audit.json绑定HEAD/原源Id/镜像/卷/PG启动时间/完整快照SHA。首次审计在全部比较通过后因摘要读取第一个bind mount的Name字段报错；未写数据库，随后按Type=volume生成正确摘要并重新完整通过。没有归一旧数据差异。
+
+本轮结论：维护恢复及八页面负门复验有真实证据，八业务工作台正向安装/配置/交互和自然经营首链仍pending。Task暂保持ACTIVE，等待交付与authority/Prime事实同步；Goal保持active，下一安全研发入口仍为登记的b90联合权威consumer及b70/O4观察，正式Host/worker/Provider权限不扩张。
