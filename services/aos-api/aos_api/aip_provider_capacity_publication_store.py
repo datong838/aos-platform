@@ -1839,3 +1839,239 @@ WHERE e.coverage IN ('complete','partial','blocked','unknown')
   jsonb_build_object('resourceType','EvidenceBundleRevision','resourceId',e.bundle_id,
        'revision',e.revision,'contentHash',e.content_hash))
 """
+
+# Original 155 -> 156 -> 151 catalog checks, for the future complete157 only.
+# VOLATILE is deliberate: catalog changes must be observed by each invocation.
+# These invoker routines neither acquire locks nor authenticate/publish a Source.
+CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.require_original_fact_boundary()
+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE
+ owner_oid oid; fact_oids oid[]; r record; g record; flags record;
+ tables text[] := ARRAY['meta_membership','aip_provider_capacity_request','aip_provider_capacity_candidate',
+  'aip_provider_instance_head','aip_provider_instance_revision','aip_evidence_bundle_revision',
+  'aip_evidence_bundle_build_provenance','aip_evidence_bundle_revoke_event',
+  'aip_production_contract_receipt','aip_action_withdrawal_event','meta_object_type','meta_action_type',
+  'aip_action_proposal','aip_action_draft','aip_action_approval_event'];
+ locks jsonb := '{"meta_membership":"subject","aip_provider_instance_head":"provider_instance_id","meta_object_type":"id","meta_action_type":"id","aip_action_proposal":"proposal_id"}';
+ tenant text := '((org_id = ''org-org''::text) AND (project_id = ''dev-project''::text) AND (org_id = NULLIF(current_setting(''aos.org_id''::text, true), ''''::text)) AND (project_id = NULLIF(current_setting(''aos.project_id''::text, true), ''''::text)))';
+ expression text; tab text; n integer;
+BEGIN
+ SELECT * INTO r FROM pg_roles WHERE rolname='aos_capacity_publication_owner';
+ IF NOT FOUND OR r.rolcanlogin OR r.rolinherit OR r.rolsuper OR r.rolcreatedb OR r.rolcreaterole
+  OR r.rolreplication OR r.rolbypassrls OR EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid=r.oid OR member=r.oid)
+ THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+ owner_oid:=r.oid;
+ IF EXISTS(SELECT 1 FROM pg_default_acl d WHERE d.defaclrole=owner_oid
+   OR EXISTS(SELECT 1 FROM aclexplode(d.defaclacl) a WHERE a.grantee=owner_oid))
+  OR EXISTS(SELECT 1 FROM pg_namespace WHERE nspname='public' AND has_schema_privilege(owner_oid,oid,'CREATE'))
+  OR EXISTS(SELECT 1 FROM pg_database WHERE datname=current_database() AND has_database_privilege(owner_oid,oid,'CREATE'))
+ THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+ SELECT array_agg(to_regclass('public.'||t)::oid) INTO fact_oids FROM unnest(tables) t;
+ IF array_position(fact_oids,NULL) IS NOT NULL OR (SELECT count(DISTINCT x) FROM unnest(fact_oids) x)<>15
+ THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+ IF EXISTS(SELECT 1 FROM pg_class c,LATERAL aclexplode(c.relacl) a
+   WHERE c.relnamespace='public'::regnamespace AND a.grantee=owner_oid
+    AND (NOT(c.oid=ANY(fact_oids)) OR a.privilege_type<>'SELECT' OR a.is_grantable))
+  OR (SELECT count(DISTINCT c.oid) FROM pg_class c,LATERAL aclexplode(c.relacl) a
+   WHERE c.relnamespace='public'::regnamespace AND a.grantee=owner_oid)<>15
+ THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+ IF EXISTS(SELECT 1 FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid,LATERAL aclexplode(x.attacl) a
+   WHERE a.grantee=owner_oid AND (a.privilege_type<>'UPDATE' OR a.is_grantable OR NOT EXISTS(
+    SELECT 1 FROM jsonb_each_text(locks) l WHERE c.oid=to_regclass('public.'||l.key) AND x.attname=l.value)))
+  OR (SELECT count(DISTINCT (c.oid,x.attname)) FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid,
+    LATERAL aclexplode(x.attacl) a WHERE a.grantee=owner_oid)<>5
+ THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+ IF EXISTS(SELECT 1 FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relkind IN('r','v','m','p','f')
+   AND (has_table_privilege(owner_oid,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER,REFERENCES')
+    OR (NOT(c.oid=ANY(fact_oids)) AND (has_table_privilege(owner_oid,c.oid,'SELECT')
+     OR has_any_column_privilege(owner_oid,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')))))
+ THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+ IF EXISTS(SELECT 1 FROM pg_class c JOIN pg_attribute a ON a.attrelid=c.oid
+   WHERE c.relnamespace='public'::regnamespace AND a.attnum>0 AND NOT a.attisdropped
+    AND (has_column_privilege(owner_oid,c.oid,a.attnum,'INSERT,REFERENCES')
+      OR has_column_privilege(owner_oid,c.oid,a.attnum,'UPDATE'))
+    AND NOT EXISTS(SELECT 1 FROM jsonb_each_text(locks) l WHERE c.oid=to_regclass('public.'||l.key) AND a.attname=l.value))
+  OR (SELECT count(DISTINCT (c.oid,a.attname)) FROM pg_class c JOIN pg_attribute a ON a.attrelid=c.oid
+   WHERE c.relnamespace='public'::regnamespace AND a.attnum>0 AND NOT a.attisdropped
+    AND (has_column_privilege(owner_oid,c.oid,a.attnum,'INSERT,REFERENCES')
+      OR has_column_privilege(owner_oid,c.oid,a.attnum,'UPDATE')))<>5
+ THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+ FOREACH tab IN ARRAY tables LOOP
+  IF tab IN ('meta_object_type','meta_action_type') THEN CONTINUE; END IF;
+  expression:=tenant;
+  IF tab='aip_action_proposal' THEN
+   expression:='('||substring(tenant FROM 2 FOR length(tenant)-2)||' AND (action_type_id = ANY (ARRAY[''aip_request_provider_capacity''::text, ''aip_review_provider_capacity_source''::text])) AND ((action_type_snapshot ->> ''id''::text) = action_type_id))';
+  ELSIF tab IN ('aip_action_draft','aip_action_approval_event') THEN
+   expression:='('||substring(tenant FROM 2 FOR length(tenant)-2)||' AND (EXISTS ( SELECT 1 FROM public.aip_action_proposal p WHERE ((p.org_id = '||tab||'.org_id) AND (p.project_id = '||tab||'.project_id) AND (p.proposal_id = '||tab||'.proposal_id)))))';
+  END IF;
+  SELECT * INTO flags FROM pg_class WHERE oid=to_regclass('public.'||tab);
+  IF NOT flags.relrowsecurity OR NOT flags.relforcerowsecurity
+  THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+  SELECT count(*) INTO n FROM pg_policy WHERE polrelid=flags.oid AND owner_oid=ANY(polroles);
+  IF n<>2 OR EXISTS(SELECT 1 FROM pg_policy p WHERE p.polrelid=flags.oid AND owner_oid=ANY(p.polroles)
+    AND (p.polname NOT IN ('capacity_publication_fact_a0v155','capacity_publication_fact_restrict_a0v155')
+     OR p.polcmd<>'*' OR p.polpermissive<>(p.polname='capacity_publication_fact_a0v155')
+     OR p.polroles<>ARRAY[owner_oid] OR
+     regexp_replace(trim(coalesce(pg_get_expr(p.polqual,p.polrelid),'')),E'\\s+',' ','g')<>
+      regexp_replace(trim(expression),E'\\s+',' ','g') OR
+     regexp_replace(trim(coalesce(pg_get_expr(p.polwithcheck,p.polrelid),'')),E'\\s+',' ','g')<>
+      regexp_replace(trim(expression),E'\\s+',' ','g')))
+  THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+ END LOOP;
+ SELECT * INTO g FROM pg_proc WHERE oid=to_regprocedure('public.capacity_publication_owner_read_lock_only_a0v155()');
+ IF NOT FOUND OR g.proowner<>owner_oid OR g.prosecdef OR g.proconfig IS DISTINCT FROM ARRAY['search_path=pg_catalog']
+  OR g.prorettype<>2279 OR g.proargtypes::text<>''
+  OR encode(sha256(convert_to(g.prosrc,'UTF8')),'hex')<>'3270bc4120dd7bfeadd75b7506914ec1653df938a5adc7f71cec41fffd9893c1'
+  OR EXISTS(SELECT 1 FROM aclexplode(g.proacl) a WHERE a.grantee<>g.proowner)
+ THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+ IF (SELECT count(*) FROM pg_trigger WHERE tgname='capacity_publication_owner_read_lock_only_a0v155')<>5
+  OR EXISTS(SELECT 1 FROM pg_trigger t WHERE t.tgname='capacity_publication_owner_read_lock_only_a0v155'
+    AND (NOT EXISTS(SELECT 1 FROM jsonb_each_text(locks) l WHERE t.tgrelid=to_regclass('public.'||l.key))
+     OR t.tgfoid<>g.oid OR t.tgenabled<>'O' OR t.tgtype<>31 OR t.tgqual IS NOT NULL
+     OR t.tgargs<>''::bytea OR t.tgnargs<>0 OR cardinality(t.tgattr::smallint[])<>0))
+ THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+END $body$;
+ALTER FUNCTION aos_capacity_publication_private.require_original_fact_boundary() OWNER TO aos_capacity_publication_owner;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.require_original_fact_boundary() FROM PUBLIC;
+
+CREATE FUNCTION aos_capacity_publication_private.require_original_epoch_pair_boundary()
+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE owner_oid oid; ids oid[] := ARRAY[]::oid[]; r record; expected record; allowed text[];
+BEGIN
+ PERFORM aos_capacity_publication_private.require_original_fact_boundary();
+ SELECT oid INTO owner_oid FROM pg_roles WHERE rolname='aos_capacity_publication_owner';
+ FOR expected IN SELECT * FROM (VALUES
+  ('public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)','aos_capacity_evidence_epoch_owner','763f808a880573c3f6cd372beb76347b68e93fa864f3a620b6a0c7764bb13c58'),
+  ('public.aos_capacity_withdrawal_epoch_lock(text,text,text)','aos_capacity_withdrawal_epoch_owner','bdea4da16d8d4af2897cde94d5c755bb36019a884cd5307d5bc3c2fbfe181bd7')) AS v(signature,neutral_owner,digest)
+ LOOP
+  SELECT p.*,roles.rolname,l.lanname INTO r FROM pg_proc p JOIN pg_roles roles ON roles.oid=p.proowner
+    JOIN pg_language l ON l.oid=p.prolang WHERE p.oid=to_regprocedure(expected.signature);
+  IF NOT FOUND OR r.rolname<>expected.neutral_owner OR r.lanname<>'plpgsql' OR NOT r.prosecdef
+   OR r.proconfig IS DISTINCT FROM ARRAY['search_path=pg_catalog'] OR r.prorettype<>20 OR r.proargtypes::text<>'25 25 25'
+   OR encode(sha256(convert_to(r.prosrc,'UTF8')),'hex')<>expected.digest
+  THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_LOCK_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+  ids:=array_append(ids,r.oid);
+  allowed:=ARRAY[expected.neutral_owner,'aos_capacity_publication_owner','aos_provider_capacity_issuer'];
+  IF expected.neutral_owner='aos_capacity_withdrawal_epoch_owner' THEN allowed:=array_append(allowed,'aos_runtime'); END IF;
+  IF (SELECT array_agg(DISTINCT coalesce(roles.rolname,'PUBLIC')::text ORDER BY coalesce(roles.rolname,'PUBLIC')::text)
+    FROM aclexplode(coalesce(r.proacl,acldefault('f',r.proowner))) a LEFT JOIN pg_roles roles ON roles.oid=a.grantee)
+   IS DISTINCT FROM (SELECT array_agg(x ORDER BY x) FROM unnest(allowed) x)
+   OR EXISTS(SELECT 1 FROM aclexplode(coalesce(r.proacl,acldefault('f',r.proowner))) a LEFT JOIN pg_roles roles ON roles.oid=a.grantee
+    WHERE a.privilege_type<>'EXECUTE' OR (a.is_grantable AND NOT(coalesce(roles.rolname,'PUBLIC')='aos_capacity_evidence_epoch_owner'
+      AND expected.neutral_owner='aos_capacity_evidence_epoch_owner')))
+  THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_LOCK_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+ END LOOP;
+ IF (SELECT count(*) FROM pg_proc p,LATERAL aclexplode(p.proacl) a WHERE p.pronamespace='public'::regnamespace
+   AND p.proowner<>owner_oid AND a.grantee=owner_oid)<>2
+  OR EXISTS(SELECT 1 FROM pg_proc p,LATERAL aclexplode(p.proacl) a WHERE p.pronamespace='public'::regnamespace
+   AND p.proowner<>owner_oid AND a.grantee=owner_oid AND (NOT(p.oid=ANY(ids)) OR a.privilege_type<>'EXECUTE' OR a.is_grantable))
+  OR (SELECT count(*) FROM pg_proc p WHERE p.pronamespace='public'::regnamespace AND p.proowner<>owner_oid
+    AND p.prosecdef AND has_function_privilege(owner_oid,p.oid,'EXECUTE'))<>2
+  OR EXISTS(SELECT 1 FROM pg_proc p WHERE p.pronamespace='public'::regnamespace AND p.proowner<>owner_oid
+    AND p.prosecdef AND has_function_privilege(owner_oid,p.oid,'EXECUTE') AND NOT(p.oid=ANY(ids)))
+ THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_LOCK_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+END $body$;
+ALTER FUNCTION aos_capacity_publication_private.require_original_epoch_pair_boundary() OWNER TO aos_capacity_publication_owner;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.require_original_epoch_pair_boundary() FROM PUBLIC;
+
+CREATE FUNCTION aos_capacity_publication_private.require_original_withdrawal_boundary()
+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE owner_oid oid; table_oid oid; publication_caller boolean; r record; t record; expected record;
+ ids oid[] := ARRAY[]::oid[]; allowed text[]; columns jsonb; constraints text[];
+ policy_expr text := '((org_id = NULLIF(current_setting(''aos.org_id''::text, true), ''''::text)) AND (project_id = NULLIF(current_setting(''aos.project_id''::text, true), ''''::text)))';
+BEGIN
+ SELECT EXISTS(SELECT 1 FROM pg_proc p,LATERAL aclexplode(p.proacl) a
+  WHERE a.grantee=to_regrole('aos_capacity_publication_owner')::oid AND p.oid IN (
+   to_regprocedure('public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)'),
+   to_regprocedure('public.aos_capacity_withdrawal_epoch_lock(text,text,text)'))) INTO publication_caller;
+ IF publication_caller THEN
+  BEGIN
+   PERFORM aos_capacity_publication_private.require_original_epoch_pair_boundary();
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+   RAISE EXCEPTION 'WITHDRAWAL_PUBLICATION_CALLER_DRIFT' USING ERRCODE='22023';
+  END;
+ END IF;
+ SELECT * INTO r FROM pg_roles WHERE rolname='aos_capacity_withdrawal_epoch_owner';
+ IF NOT FOUND OR r.rolcanlogin OR r.rolinherit OR r.rolsuper OR r.rolcreatedb OR r.rolcreaterole
+  OR r.rolreplication OR r.rolbypassrls OR EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid=r.oid OR member=r.oid)
+ THEN RAISE EXCEPTION 'WITHDRAWAL_OWNER_DRIFT' USING ERRCODE='22023'; END IF;
+ owner_oid:=r.oid;
+ SELECT * INTO t FROM pg_class WHERE oid=to_regclass('public.aip_capacity_withdrawal_epoch');
+ IF NOT FOUND OR t.relowner<>owner_oid OR NOT t.relrowsecurity OR NOT t.relforcerowsecurity OR t.relkind<>'r'
+ THEN RAISE EXCEPTION 'WITHDRAWAL_TABLE_DRIFT' USING ERRCODE='22023'; END IF;
+ table_oid:=t.oid;
+ IF EXISTS(SELECT 1 FROM aclexplode(coalesce(t.relacl,acldefault('r',t.relowner))) a WHERE a.grantee<>owner_oid)
+  OR EXISTS(SELECT 1 FROM pg_attribute c,LATERAL aclexplode(c.attacl) a WHERE c.attrelid=table_oid)
+ THEN RAISE EXCEPTION 'WITHDRAWAL_TABLE_ACL_DRIFT' USING ERRCODE='22023'; END IF;
+ SELECT jsonb_agg(jsonb_build_object('attname',a.attname,'atttypid',a.atttypid::bigint,'attnotnull',a.attnotnull,
+   'attidentity',a.attidentity,'attgenerated',a.attgenerated,'default_expr',pg_get_expr(d.adbin,d.adrelid)) ORDER BY a.attnum)
+ INTO columns FROM pg_attribute a LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum
+ WHERE a.attrelid=table_oid AND a.attnum>0 AND NOT a.attisdropped;
+ IF columns IS DISTINCT FROM '[{"attname":"org_id","atttypid":25,"attnotnull":true,"attidentity":"","attgenerated":"","default_expr":null},{"attname":"project_id","atttypid":25,"attnotnull":true,"attidentity":"","attgenerated":"","default_expr":null},{"attname":"proposal_id","atttypid":25,"attnotnull":true,"attidentity":"","attgenerated":"","default_expr":null},{"attname":"epoch","atttypid":20,"attnotnull":true,"attidentity":"","attgenerated":"","default_expr":"0"}]'::jsonb
+  OR (SELECT count(*) FROM pg_constraint WHERE conrelid=table_oid)<>5
+  OR EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid=table_oid AND (NOT convalidated OR condeferrable OR condeferred))
+ THEN RAISE EXCEPTION 'WITHDRAWAL_TABLE_STRUCTURE_DRIFT' USING ERRCODE='22023'; END IF;
+ SELECT array_agg(DISTINCT pg_get_constraintdef(oid,true) ORDER BY pg_get_constraintdef(oid,true)) INTO constraints
+ FROM pg_constraint WHERE conrelid=table_oid;
+ IF constraints IS DISTINCT FROM (SELECT array_agg(x ORDER BY x) FROM unnest(ARRAY[
+  'CHECK (org_id = ''org-org''::text)','CHECK (project_id = ''dev-project''::text)',
+  'CHECK (proposal_id <> ''''::text AND proposal_id = btrim(proposal_id))','CHECK (epoch >= 0)',
+  'PRIMARY KEY (org_id, project_id, proposal_id)']) x)
+ THEN RAISE EXCEPTION 'WITHDRAWAL_TABLE_STRUCTURE_DRIFT' USING ERRCODE='22023'; END IF;
+ IF (SELECT count(*) FROM pg_policy WHERE polrelid=table_oid)<>1 OR NOT EXISTS(
+  SELECT 1 FROM pg_policy WHERE polrelid=table_oid AND polname='capacity_withdrawal_epoch_scope' AND polcmd='*'
+   AND polpermissive AND polroles=ARRAY[owner_oid] AND pg_get_expr(polqual,polrelid)=policy_expr
+   AND pg_get_expr(polwithcheck,polrelid)=policy_expr)
+ THEN RAISE EXCEPTION 'WITHDRAWAL_POLICY_DRIFT' USING ERRCODE='22023'; END IF;
+ FOR expected IN SELECT * FROM (VALUES
+  ('lock','public.aos_capacity_withdrawal_epoch_lock(text,text,text)',20,'25 25 25','bdea4da16d8d4af2897cde94d5c755bb36019a884cd5307d5bc3c2fbfe181bd7'),
+  ('init','public.aos_capacity_withdrawal_epoch_init()',2279,'','159967048b7e16fa777469e06605fb0c24652b00b4423d949a3ac170844fdf7d'),
+  ('bump','public.aos_capacity_withdrawal_epoch_bump()',2279,'','666fb5350dab9121e46c2fb21a19a09f82c8165078968140b623757ae9557a38')) AS v(name,signature,return_type,args,digest)
+ LOOP
+  SELECT * INTO r FROM pg_proc WHERE oid=to_regprocedure(expected.signature);
+  IF NOT FOUND OR r.proowner<>owner_oid OR NOT r.prosecdef OR r.proconfig IS DISTINCT FROM ARRAY['search_path=pg_catalog']
+   OR r.prorettype<>expected.return_type OR r.proargtypes::text<>expected.args
+   OR encode(sha256(convert_to(r.prosrc,'UTF8')),'hex')<>expected.digest
+  THEN RAISE EXCEPTION 'WITHDRAWAL_FUNCTION_DRIFT' USING ERRCODE='22023'; END IF;
+  ids:=array_append(ids,r.oid);
+  allowed:=ARRAY['aos_capacity_withdrawal_epoch_owner'];
+  IF expected.name='lock' THEN
+   allowed:=allowed||ARRAY['aos_runtime','aos_provider_capacity_issuer'];
+   IF publication_caller THEN allowed:=array_append(allowed,'aos_capacity_publication_owner'); END IF;
+  END IF;
+  IF (SELECT array_agg(DISTINCT coalesce(roles.rolname,'PUBLIC')::text ORDER BY coalesce(roles.rolname,'PUBLIC')::text)
+    FROM aclexplode(coalesce(r.proacl,acldefault('f',r.proowner))) a LEFT JOIN pg_roles roles ON roles.oid=a.grantee)
+    IS DISTINCT FROM (SELECT array_agg(x ORDER BY x) FROM unnest(allowed) x)
+   OR EXISTS(SELECT 1 FROM aclexplode(coalesce(r.proacl,acldefault('f',r.proowner))) a WHERE a.privilege_type<>'EXECUTE' OR a.is_grantable)
+  THEN RAISE EXCEPTION 'WITHDRAWAL_FUNCTION_ACL_DRIFT' USING ERRCODE='22023'; END IF;
+ END LOOP;
+ IF EXISTS(SELECT 1 FROM pg_class c WHERE c.relowner=owner_oid AND c.oid<>table_oid
+    AND c.oid<>(SELECT reltoastrelid FROM pg_class WHERE oid=table_oid)
+    AND NOT EXISTS(SELECT 1 FROM pg_index i WHERE i.indexrelid=c.oid AND i.indrelid IN(table_oid,(SELECT reltoastrelid FROM pg_class WHERE oid=table_oid))))
+  OR EXISTS(SELECT 1 FROM pg_proc WHERE proowner=owner_oid AND NOT(oid=ANY(ids)))
+  OR EXISTS(SELECT 1 FROM pg_namespace WHERE nspowner=owner_oid)
+  OR EXISTS(SELECT 1 FROM pg_database WHERE datdba=owner_oid)
+  OR EXISTS(SELECT 1 FROM pg_class c,LATERAL aclexplode(c.relacl) a WHERE a.grantee=owner_oid AND c.relowner<>owner_oid)
+  OR EXISTS(SELECT 1 FROM pg_attribute c,LATERAL aclexplode(c.attacl) a WHERE a.grantee=owner_oid)
+  OR EXISTS(SELECT 1 FROM pg_proc p,LATERAL aclexplode(p.proacl) a WHERE a.grantee=owner_oid AND NOT(p.oid=ANY(ids)))
+  OR EXISTS(SELECT 1 FROM pg_namespace n,LATERAL aclexplode(n.nspacl) a WHERE a.grantee=owner_oid AND (n.nspname<>'public' OR a.privilege_type<>'USAGE' OR a.is_grantable))
+  OR EXISTS(SELECT 1 FROM pg_proc p WHERE p.prosecdef AND has_function_privilege(owner_oid,p.oid,'EXECUTE') AND NOT(p.oid=ANY(ids)))
+ THEN RAISE EXCEPTION 'WITHDRAWAL_OWNER_EXTRA_PERMISSION' USING ERRCODE='22023'; END IF;
+ FOR expected IN SELECT * FROM (VALUES
+   ('public.aip_action_proposal','zz_capacity_withdrawal_epoch_init_a0v151',ids[2]),
+   ('public.aip_action_withdrawal_event','zz_capacity_withdrawal_epoch_bump_a0v151',ids[3])) AS v(relation,name,fn)
+ LOOP
+  SELECT * INTO r FROM pg_trigger WHERE tgrelid=expected.relation::regclass AND tgname=expected.name;
+  IF NOT FOUND OR r.tgfoid<>expected.fn OR r.tgtype<>5 OR r.tgenabled<>'O'
+   OR r.tgattr::text<>'' OR r.tgqual IS NOT NULL OR r.tgargs<>''::bytea
+  THEN RAISE EXCEPTION 'WITHDRAWAL_TRIGGER_DRIFT' USING ERRCODE='22023'; END IF;
+ END LOOP;
+ IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='public.aip_action_withdrawal_event'::regclass AND tgisinternal AND (tgtype & 4)=4)
+  OR EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='public.aip_action_withdrawal_event'::regclass AND tgisinternal AND (tgtype & 4)=4
+    AND (tgtype<>5 OR tgdeferrable OR tginitdeferred OR tgenabled<>'O' OR tgname>='zz_capacity_withdrawal_epoch_bump_a0v151'))
+ THEN RAISE EXCEPTION 'WITHDRAWAL_FOREIGN_KEY_ORDER_DRIFT' USING ERRCODE='22023'; END IF;
+END $body$;
+ALTER FUNCTION aos_capacity_publication_private.require_original_withdrawal_boundary() OWNER TO aos_capacity_publication_owner;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.require_original_withdrawal_boundary() FROM PUBLIC;
+"""

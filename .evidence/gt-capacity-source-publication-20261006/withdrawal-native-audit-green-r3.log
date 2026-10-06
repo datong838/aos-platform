@@ -1,0 +1,459 @@
+{"ts": "2026-10-06T19:55:08.425663+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 6cd2ca0eff8f, Core-schema baseline migration asset for Wave 0.
+INFO  [alembic.runtime.migration] Running upgrade 6cd2ca0eff8f -> 228ec02oauth, Add tenant-scoped encrypted OAuth token store.
+INFO  [alembic.runtime.migration] Running upgrade 228ec02oauth -> b7e2c4a92283, Add tenant-safe ecommerce core objects, links and sync state.
+INFO  [alembic.runtime.migration] Running upgrade b7e2c4a92283 -> 228ec03linkguard, Add database guards for ecommerce Link tenant and endpoint shape.
+INFO  [alembic.runtime.migration] Running upgrade 228ec03linkguard -> 228logicgraph, Add tenant-scoped canonical AIP Logic graph snapshots and revisions.
+INFO  [alembic.runtime.migration] Running upgrade 228logicgraph -> 228logicrun, Add immutable tenant-scoped AIP Logic dry-run history.
+INFO  [alembic.runtime.migration] Running upgrade 228logicrun -> 228logiceval, Add tenant-scoped Evals suites and immutable Logic report evidence.
+INFO  [alembic.runtime.migration] Running upgrade 228logiceval -> 228logicpublish, Add immutable tenant-scoped AIP Logic publications.
+INFO  [alembic.runtime.migration] Running upgrade 228logicpublish -> a93c7e1b4f20, Add the canonical asset bundle registry.
+INFO  [alembic.runtime.migration] Running upgrade a93c7e1b4f20 -> 228assetsecurity, Add atomic asset bundle lifecycle audit events.
+INFO  [alembic.runtime.migration] Running upgrade 228assetsecurity -> 228assetinvariants, Seal asset registry status and projection invariants.
+INFO  [alembic.runtime.migration] Running upgrade 228assetinvariants -> 228assetevidence, Persist immutable evidence snapshots with lifecycle events.
+INFO  [alembic.runtime.migration] Running upgrade 228assetevidence -> 228assetinstall, Add immutable bundle composition and installation control-plane storage.
+INFO  [alembic.runtime.migration] Running upgrade 228assetinstall -> 228assetintegration, Add immutable Integration Case, Evidence, and projection storage.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 228assetintegration -> 228ti1e1expand, TI-1 E1 nullable tenant scope and NOT VALID relationship expansion.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e1expand -> 228ti1e2dual, TI-1 E2 authz dual-write evidence ledger.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e2dual -> 228ti1e3ledger, TI-1 E3 append-only ownership and quarantine ledger.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e3ledger -> 228ti1e3exec, TI-1 E3 append-only execution and role-separation events.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e3exec -> 228ti2e1expand, TI-2 E1 nullable Module instance and overlay expansion.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e1expand -> 228ti2e4validate, TI-2 E4 validate Module identity foreign keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e4validate -> 228ti2e6rls, TI-2 E6 enforce tenant RLS for the Module instance family.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e6rls -> 228ti2e7contract, TI-2 E7 contract Module identities and tenant-scoped primary keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e7contract -> 228ti3e1expand, TI-3 E1 expand TenantScope columns for object runtime resources.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e1expand -> 228ti3e4validate, TI-3 E4 validate Object runtime workspace foreign keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e4validate -> 228ti3e6rls, TI-3 E6 enforce tenant RLS for the Object Runtime family.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e6rls -> 228ti3e7contract, TI-3 E7 contract Object Runtime tenant identities and active rows.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e7contract -> 228ti4c1expand, TI-4 C1 add NOT VALID workspace alias foreign keys to e-commerce tables.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4c1expand -> 228ti4d1expand, TI-4 D1 expand TenantScope columns and workspace FKs for Data OS.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d1expand -> 228ti4d4validate, TI-4 D4 validate Data OS workspace foreign keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d4validate -> 228ti4d6rls, TI-4 D6 enforce tenant RLS for the Data OS family.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d6rls -> 228ti4d7contract, TI-4 D7 contract Data OS tenant identities and quarantine history.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d7contract -> 228ti4c3contract, TI-4 C3 validate and enforce e-commerce Connector tenant boundaries.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4c3contract -> 228ti4a1apollo, TI-4 A1 contract Apollo Spoke tenant instances.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4a1apollo -> 228ti5a1aip, TI-5 A1 contract tenant-scoped AIP runtime tables.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5a1aip -> 228ti5a2kv, TI-5 A2 contract legacy AIP KV into tenant-scoped storage.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5a2kv -> 228ti5a3lineage, TI-5 A3 contract decision lineage from its draft execution context.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5a3lineage -> 228ti5b1models, TI-5 B1 tenant contract for model-management tables.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5b1models -> 228ti6bcontract, TI-6 2B contract remaining Workshop and TWA scoped identities.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6bcontract -> 228ti6cassets, TI-6 2C enforce RLS for asset installation and Integration Case stores.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6cassets -> 228ti6drelations, TI-6 2D anchor asset-control roots to the canonical workspace.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6drelations -> 228ti6edirectory, TI-6 3A align the test and Qiyue control-plane directory.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6edirectory -> o1a0_001, O1-A0: Expand-only migration — DLQ + derived columns + projection outbox + alias sidecar + uninstalled fix.
+INFO  [alembic.runtime.migration] Running upgrade o1a0_001 -> d5e1_001, D5-E1: Expand ecom_object/ecom_link CHECK constraints for 12 OT + 14 Link types.
+INFO  [alembic.runtime.migration] Running upgrade d5e1_001 -> o1r1_001, O1-R1: distinguish legacy projection receipts from authoritative Outbox events.
+INFO  [alembic.runtime.migration] Running upgrade o1r1_001 -> o1r1_002, O1-R1: replace the empty O1-A0 DLQ shell with the reviewed PG contract.
+INFO  [alembic.runtime.migration] Running upgrade o1r1_002 -> o1r2_001, O1-R2: enforce the single-projector compatibility-write boundary.
+INFO  [alembic.runtime.migration] Running upgrade o1r2_001 -> o1r3_001, O1-R3: installation-bound organization ontology overlays.
+INFO  [alembic.runtime.migration] Running upgrade o1r3_001 -> o1p12_001, O1-A/P12 derived metric CAS, receipt and outbox contract.
+INFO  [alembic.runtime.migration] Running upgrade o1p12_001 -> o1d_001, O1-D versioned and reversible canonical alias migration contract.
+INFO  [alembic.runtime.migration] Running upgrade o1d_001 -> o1d_002, O1-D make the manifest run part of the immutable sidecar identity.
+INFO  [alembic.runtime.migration] Running upgrade o1d_002 -> o1ua2_001, O1-UA2 tenant-authoritative knowledge, action, task and evidence records.
+INFO  [alembic.runtime.migration] Running upgrade o1ua2_001 -> o1ua2_002, O1-UA2 explicit Plan/Checkpoint records and cleanup idempotency.
+INFO  [alembic.runtime.migration] Running upgrade o1ua2_002 -> o1ux2_001, O1-UX2 tenant-authoritative exploration assets.
+INFO  [alembic.runtime.migration] Running upgrade o1ux2_001 -> aip1_001, AIP-1 canonical Task/Plan/Run runtime.
+INFO  [alembic.runtime.migration] Running upgrade aip1_001 -> aip3_001, AIP-3 canonical Action Proposal, Approval, Lease and Receipt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip3_001 -> aip3b_001, AIP-3B execution guardrails and append-only receipt reconciliation.
+INFO  [alembic.runtime.migration] Running upgrade aip3b_001 -> aip3b_002, Make AIP Action Receipt chains database-immutable.
+INFO  [alembic.runtime.migration] Running upgrade aip3b_002 -> aip4_001, AIP-4 Eval, release, lineage, and usage authority contracts.
+INFO  [alembic.runtime.migration] Running upgrade aip4_001 -> aip4_002, AIP-4 E1A immutable EvalPack suite revisions.
+INFO  [alembic.runtime.migration] Running upgrade aip4_002 -> aip4_003, AIP-4 E1B immutable Eval report revisions.
+INFO  [alembic.runtime.migration] Running upgrade aip4_003 -> aip4_004, Bind AIP lineage facts to immutable authority source events.
+INFO  [alembic.runtime.migration] Running upgrade aip4_004 -> aip4_005, Persist tenant-scoped telemetry spans and honest usage quantities.
+INFO  [alembic.runtime.migration] Running upgrade aip4_005 -> aip4_006, Add append-only usage attribution and capability receipts.
+INFO  [alembic.runtime.migration] Running upgrade aip4_006 -> aip4_007, Add the append-only ResearchJob provider and receipt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip4_007 -> aip4_008, Bind every ResearchJob manifest to one exact immutable lineage event.
+INFO  [alembic.runtime.migration] Running upgrade aip4_008 -> aip5_001, Add the governed AIP memory authority tables.
+INFO  [alembic.runtime.migration] Running upgrade aip5_001 -> aip5_002, Add tenant-scoped AIP memory pipeline control authority.
+INFO  [alembic.runtime.migration] Running upgrade aip5_002 -> aip5_003, Add immutable schedule events for AIP memory pipelines.
+INFO  [alembic.runtime.migration] Running upgrade aip5_003 -> aip5_004, Add tenant-scoped rebuildable knowledge search projections.
+INFO  [alembic.runtime.migration] Running upgrade aip5_004 -> aip6_001, Add canonical AIP agent, skill and handoff authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_001 -> aip6_002, Add durable AIP-6 registry command receipts.
+INFO  [alembic.runtime.migration] Running upgrade aip6_002 -> aip6_003, Persist exact AgentInstance snapshots on AgentRun and Handoff.
+INFO  [alembic.runtime.migration] Running upgrade aip6_003 -> aip6_004, Add immutable AIP capability catalog authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_004 -> w2_001, Add W2-A task brief and evidence bundle authority.
+Retained isolated test database: aos_test_2bb3809a084f_ti4_test
+E
+==================================== ERRORS ====================================
+_ ERROR at setup of test_native_original_withdrawal_boundary_requires_implemented_audit _
+
+self = <sqlalchemy.engine.base.Connection object at 0x11ad5ed50>
+dialect = <sqlalchemy.dialects.postgresql.psycopg.PGDialect_psycopg object at 0x11ade44d0>
+context = <sqlalchemy.dialects.postgresql.psycopg.PGExecutionContext_psycopg object at 0x11b1b8f90>
+statement = <sqlalchemy.dialects.postgresql.psycopg.PGCompiler_psycopg object at 0x11b1b8a50>
+parameters = [{}]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1969: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Cursor [closed] [BAD] at 0x11ac4fc40>
+query = "CREATE TABLE aip_evidence_bundle_revision (\n      org_id TEXT NOT NULL, project_id TEXT NOT NULL, bundle_id TEXT NOT...b_typeof(missing)='array'),\n      CHECK(jsonb_typeof(conflicts)='array'), CHECK(jsonb_typeof(uncertainties)='array'))"
+params = {}, prepare = None, binary = None
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool | None = None,
+    ) -> Self:
+        """
+        Execute a query or command to the database.
+        """
+        try:
+            with self._conn.lock:
+                self._conn.wait(
+                    self._execute_gen(query, params, prepare=prepare, binary=binary)
+                )
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.DiskFull: could not extend file "base/1774567/1779599": wrote only 4096 of 8192 bytes at block 0
+E           HINT:  Check free disk space.
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/cursor.py:117: DiskFull
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+        with psycopg.connect(admin_dsn, autocommit=True) as conn:
+            conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database_name)))
+    
+        previous_dsn = os.environ.get("AOS_DATABASE_URL")
+        previous_twa_store = os.environ.get("AOS_TWA_STORE")
+        os.environ["AOS_DATABASE_URL"] = test_dsn
+        config = Config(os.path.join(os.path.dirname(__file__), "..", "alembic.ini"))
+        config.set_main_option(
+            "script_location", os.path.join(os.path.dirname(__file__), "..", "alembic")
+        )
+        config.set_main_option("sqlalchemy.url", test_dsn)
+        try:
+            os.environ["AOS_TWA_STORE"] = "pg"
+            from aos_api import twa_pg
+            from aos_api.data_os_store import ensure_data_os_schema
+            from aos_api.db import init_schema
+            from aos_api.tenant_catalog import ensure_tenant_catalog_schema
+    
+            twa_pg.clear_mode_cache()
+            command.upgrade(config, "228assetintegration")
+            init_schema()
+            ensure_tenant_catalog_schema()
+            # Contract migrations validate workspace parents before request/demo
+            # fixtures run, so the disposable database needs its canonical test
+            # workspace at bootstrap time.
+            from aos_api.db import connect as bootstrap_connect
+    
+            with bootstrap_connect() as conn:
+                conn.execute(
+                    "INSERT INTO twa_org (id,name) VALUES ('dev-org','测试组织') "
+                    "ON CONFLICT (id) DO NOTHING"
+                )
+                conn.execute(
+                    "INSERT INTO twa_workspace (org_id,project_id,name) "
+                    "VALUES ('dev-org','dev-project','测试工作区') "
+                    "ON CONFLICT (org_id,project_id) DO NOTHING"
+                )
+                conn.commit()
+            from aos_api.canvas_config import ensure_schema as ensure_canvas_schema
+            from aos_api.module_deployments import ensure_schema as ensure_deployment_schema
+            from aos_api.module_events import ensure_events_schema
+            from aos_api.module_interfaces import ensure_schema as ensure_interface_schema
+            from aos_api.module_queries import ensure_schema as ensure_query_schema
+            from aos_api.module_store import ensure_module_schema
+            from aos_api.module_variables import ensure_schema as ensure_variable_schema
+            from aos_api.routers.drafts import ensure_draft_schema
+            from aos_api.widget_instances import ensure_schema as ensure_widget_schema
+    
+            ensure_module_schema()
+            ensure_canvas_schema()
+            ensure_deployment_schema()
+            ensure_events_schema()
+            ensure_interface_schema()
+            ensure_query_schema()
+            ensure_variable_schema()
+            ensure_widget_schema()
+            ensure_draft_schema()
+>           command.upgrade(config, "head")
+
+services/aos-api/tests/conftest.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/command.py:487: in upgrade
+    script.run_env()
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/script/base.py:550: in run_env
+    util.load_python_file(self.dir, "env.py")
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/util/pyfiles.py:114: in load_python_file
+    module = load_module_py(module_id, path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/util/pyfiles.py:132: in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/alembic/env.py:71: in <module>
+    run_migrations_online()
+services/aos-api/alembic/env.py:65: in run_migrations_online
+    context.run_migrations()
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/runtime/environment.py:967: in run_migrations
+    self.get_context().run_migrations(**kw)
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/runtime/migration.py:621: in run_migrations
+    step.migration_fn(**kw)
+services/aos-api/alembic/versions/w2_001_brief_evidence.py:48: in upgrade
+    op.execute("""CREATE TABLE aip_evidence_bundle_revision (
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/operations/ops.py:2645: in execute
+    return operations.invoke(op)
+           ^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/operations/base.py:448: in invoke
+    return fn(self, operation)
+           ^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/operations/toimpl.py:259: in execute_sql
+    operations.migration_context.impl.execute(
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/ddl/impl.py:259: in execute
+    self._exec(sql, execution_options)
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/ddl/impl.py:252: in _exec
+    return conn.execute(construct, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1421: in execute
+    return meth(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1643: in _execute_clauseelement
+    ret = self._execute_context(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1848: in _execute_context
+    return self._exec_single_context(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1988: in _exec_single_context
+    self._handle_dbapi_exception(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2365: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1969: in _exec_single_context
+    self.dialect.do_execute(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Cursor [closed] [BAD] at 0x11ac4fc40>
+query = "CREATE TABLE aip_evidence_bundle_revision (\n      org_id TEXT NOT NULL, project_id TEXT NOT NULL, bundle_id TEXT NOT...b_typeof(missing)='array'),\n      CHECK(jsonb_typeof(conflicts)='array'), CHECK(jsonb_typeof(uncertainties)='array'))"
+params = {}, prepare = None, binary = None
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool | None = None,
+    ) -> Self:
+        """
+        Execute a query or command to the database.
+        """
+        try:
+            with self._conn.lock:
+                self._conn.wait(
+                    self._execute_gen(query, params, prepare=prepare, binary=binary)
+                )
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           sqlalchemy.exc.OperationalError: (psycopg.errors.DiskFull) could not extend file "base/1774567/1779599": wrote only 4096 of 8192 bytes at block 0
+E           HINT:  Check free disk space.
+E           [SQL: CREATE TABLE aip_evidence_bundle_revision (
+E                 org_id TEXT NOT NULL, project_id TEXT NOT NULL, bundle_id TEXT NOT NULL, revision BIGINT NOT NULL,
+E                 brief_ref JSONB NOT NULL, subject_refs JSONB NOT NULL, cutoff_at TIMESTAMPTZ NOT NULL,
+E                 item_refs JSONB NOT NULL, coverage TEXT NOT NULL, missing JSONB NOT NULL, conflicts JSONB NOT NULL,
+E                 uncertainties JSONB NOT NULL, freshness TEXT NOT NULL, marking JSONB NOT NULL, license_summary JSONB NOT NULL,
+E                 content_hash TEXT NOT NULL, lifecycle TEXT NOT NULL, created_by TEXT NOT NULL,
+E                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+E                 PRIMARY KEY(org_id,project_id,bundle_id,revision), UNIQUE(org_id,project_id,bundle_id,content_hash),
+E                 CHECK(revision>=1), CHECK(content_hash ~ '^[0-9a-f]{64}$'),
+E                 CHECK(coverage IN ('complete','partial','blocked','unknown')),
+E                 CHECK(freshness IN ('fresh','stale','blocked','unknown')),
+E                 CHECK(lifecycle IN ('frozen','withdrawn','superseded')),
+E                 CHECK(jsonb_typeof(brief_ref)='object'), CHECK(jsonb_typeof(subject_refs)='array'),
+E                 CHECK(jsonb_typeof(item_refs)='array'), CHECK(jsonb_typeof(missing)='array'),
+E                 CHECK(jsonb_typeof(conflicts)='array'), CHECK(jsonb_typeof(uncertainties)='array'))]
+E           (Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/cursor.py:117: OperationalError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_boundary_requires_implemented_audit
+99 deselected, 7 warnings, 1 error in 2.29s

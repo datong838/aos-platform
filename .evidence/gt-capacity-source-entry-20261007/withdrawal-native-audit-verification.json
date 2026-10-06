@@ -1,0 +1,88 @@
+{
+  "scope": "NATIVE_ORIGINAL_WITHDRAWAL_CATALOG_TRANSLATION_ONLY_NOT_LOCK_ACQUISITION_OR_SOURCE_DELIVERY",
+  "authority": "AOS-001432",
+  "baseline": "2f224e7b066914edb3d98095f849a5a1b410d8df",
+  "logs": {
+    "withdrawal-native-audit-green-r1.log": {
+      "summary": "1 failed, 99 deselected, 7 warnings in 7.07s",
+      "databases": [
+        "aos_test_391e19cd5e1c_ti4_test"
+      ]
+    },
+    "withdrawal-native-audit-green-r2.log": {
+      "summary": "1 failed, 99 deselected, 7 warnings in 6.80s",
+      "databases": [
+        "aos_test_e3f41d1eb833_ti4_test"
+      ]
+    },
+    "withdrawal-native-audit-green-r3.log": {
+      "summary": "99 deselected, 7 warnings, 1 error in 2.29s",
+      "databases": [
+        "aos_test_2bb3809a084f_ti4_test"
+      ]
+    },
+    "withdrawal-native-audit-green-r4.log": {
+      "summary": "16 passed, 84 deselected, 7 warnings in 31.82s",
+      "databases": [
+        "aos_test_04ffd7d4ccb6_ti4_test"
+      ]
+    },
+    "withdrawal-native-audit-extended-r1.log": {
+      "summary": "1 failed, 54 passed, 69 deselected, 7 warnings in 98.93s (0:01:38)",
+      "databases": [
+        "aos_test_9fcffd6f65d8_ti4_test"
+      ]
+    },
+    "withdrawal-native-audit-extended-r2.log": {
+      "summary": "11 passed, 115 deselected, 7 warnings in 23.28s",
+      "databases": [
+        "aos_test_edc8dfcaad87_ti4_test"
+      ]
+    },
+    "withdrawal-native-audit-cumulative-r1.log": {
+      "summary": "5 failed, 145 passed, 7 warnings in 287.91s (0:04:47)",
+      "databases": [
+        "aos_test_67dab90cc4cc_ti4_test"
+      ]
+    }
+  },
+  "original_store_prefix_unchanged": true,
+  "original_prefix_sha256": "e161fd173e28d3f7774271f40b211f206957073b9a403ef205b4c8ab339d4bbb",
+  "append_bytes": 20774,
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "381d75db661b2b266c29d314bc2cd7168ca33da4e3ef3a88668c511dd57d9a7a",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "142cdb6e2d7b474532f18a918648ce54372107931cd7adde044fcf5228fddef9",
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "b3c023c1b2e54b81be5f028cd28d6473c66276c3df06385af23143f5be622cac",
+    ".evidence/gt-capacity-source-entry-20261007/withdrawal-native-audit-catalog.json": "b23d4f3194afbad70969d505f20f68b9e91cda81f47e5fe4de273b588dcde77e",
+    ".evidence/gt-capacity-source-entry-20261007/test-only-storage-recovery.json": "ee5d0742f894bcb2aac2332512e7dc4c8bc7893cb04c93ed662eb5ac96ff3bdb",
+    ".evidence/gt-capacity-source-publication-20261006/withdrawal-native-audit-green-r1.log": "5294bd28befd5ab9210177c750f3bec8f3816c8ffac50a761746740c63ac5886",
+    ".evidence/gt-capacity-source-publication-20261006/withdrawal-native-audit-green-r2.log": "982626fbe7e2057e52a60673312dba8f29572fa9f958bd733ab70b4f8f2e695b",
+    ".evidence/gt-capacity-source-publication-20261006/withdrawal-native-audit-green-r3.log": "d33038708c138fe795b29ff7281825e337ac535bd94aaaa5b2cb56d1760e9517",
+    ".evidence/gt-capacity-source-publication-20261006/withdrawal-native-audit-green-r4.log": "6b1e77aecb32f2a48ff7ccba19f3b6da32a40be29fc545a094a366944bc38285",
+    ".evidence/gt-capacity-source-publication-20261006/withdrawal-native-audit-extended-r1.log": "dc8ee2c354387beb9c58d99439278172ad68ab89725efb74f143d3b344e0c1a2",
+    ".evidence/gt-capacity-source-publication-20261006/withdrawal-native-audit-extended-r2.log": "f2e744ee88374bdf5b5bbb56a1eac76b3774f233770b2b48b454ca0d9568504c",
+    ".evidence/gt-capacity-source-publication-20261006/withdrawal-native-audit-cumulative-r1.log": "ccd5aea973f49cf1d6f475a2e174a09552554731c6fbeaadc685d1f3c21e35e7"
+  },
+  "original_contract_files": {
+    "services/aos-api/aos_api/aip_capacity_withdrawal_fence.py": "fff578453b5805006fae2ff5d9f890fef4cc840795f4631704f52ae9336f8f04",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_lock_boundary.py": "d1e49b67bcac153d4d85f34df70d696308185f002053abf8340d538cbac31980",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "445e40c7bd8cc6a06f004faf016209b5859a6743014739f2664a478674629815",
+    "services/aos-api/aos_api/aip_provider_capacity_formal_boundary.py": "cacf27b0281e330cb666e53d903336bafd6380336850f8bb0104e143c8857f92"
+  },
+  "review": {
+    "native_catalog_checks_preserve_original_owner_acl_identity_structure_policy_body_trigger_fk_order": true,
+    "all_old_store_content_unchanged": true,
+    "invoker_pg_catalog_volatile_owner_only": true,
+    "ordinary_role_real_invocation_denied": true,
+    "original_legacy_pair_none_and_partial_pair_semantics_preserved": true,
+    "temporary_ddl_rollback_and_roles_no_login": true,
+    "browser": "N/A private uninstalled catalog SQL"
+  },
+  "pending": [
+    "S16 original Source+allocation sorted withdrawal locks and unchanged original Provider/Evidence internal order in full native entry",
+    "S17-S20 signed original typed provenance/keys/currentepochs/deployment/globalmapping",
+    "public complete prepare/controlledsign/commit/actual caller COMMIT/currentconsumer",
+    "final callerCOMMIT TTL and natural first business chain",
+    "finite isolated VM storage capacity; preserve all retained DBs/volumes/backups"
+  ]
+}

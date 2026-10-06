@@ -1,0 +1,26 @@
+{
+  "scope": "READONLY_RETAINED_ISOLATED_DB_AFTER_CUMULATIVE_TESTS",
+  "database": "aos_test_67dab90cc4cc_ti4_test",
+  "migration": [
+    {
+      "version_num": "a0v_156"
+    }
+  ],
+  "temporary_native_audit_functions": [],
+  "original_pair_audit": true,
+  "original_withdrawal_audit": true,
+  "roles": [
+    {
+      "rolname": "aos_capacity_publication_owner",
+      "rolcanlogin": false
+    },
+    {
+      "rolname": "aos_provider_capacity_issuer",
+      "rolcanlogin": false
+    }
+  ],
+  "prepare": {
+    "signature": null
+  },
+  "not_source_delivery": true
+}

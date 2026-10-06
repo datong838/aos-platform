@@ -1,0 +1,21 @@
+{
+  "scope": "TEST_ONLY_EXT4_RESERVATION_ADJUSTMENT_NO_DATA_DELETION_OR_RESTART",
+  "context": "colima-aos-a0v-test-only",
+  "container": "aos-capacity-publication-scram-20261006",
+  "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+  "started_at": "2026-10-06T14:38:32.788850949Z",
+  "volume_names": [
+    "aos-capacity-publication-scram-20261006-data"
+  ],
+  "ext4_uuid": "c6232edb-863d-4bea-8fac-8aeea513dfb0",
+  "device": "/dev/vdb1",
+  "block_size": 4096,
+  "block_count": 7864059,
+  "before_reserved_blocks": 353854,
+  "after_reserved_blocks": 78640,
+  "current_free_space": "Filesystem                Size      Used Available Use% Mounted on\n/dev/vdb1                29.4G     28.1G      1.0G  96% /etc/resolv.conf\n",
+  "effect": "root-only reserved percentage lowered to1%, original data/image/volume/process retained",
+  "rollback": "restore reserved_blocks=353854 after capacity allows; never delete retained evidence or databases",
+  "failure_log": "withdrawal-native-audit-green-r3.log",
+  "remaining_risk": "disk remains96% used; no unlimited future DB creation capacity proven"
+}

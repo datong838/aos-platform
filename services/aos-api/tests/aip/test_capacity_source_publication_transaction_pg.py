@@ -152,16 +152,29 @@ def test_original_fact_owner_boundary_rejects_effective_drift(native_signed_sour
         'guard_public_execute':f'GRANT EXECUTE ON FUNCTION public.{GUARD_NAME}() TO PUBLIC',
     }
     with isolated_owner() as owner:
+        _install_original_withdrawal_audit(owner)
         require_original_fact_boundary(owner)
-        with pytest.raises(CapacityPublicationBoundaryBlocked):
-            with owner.transaction():
-                if fault=='database_create':
-                    from psycopg import sql
-                    owner.execute(sql.SQL('GRANT CREATE ON DATABASE {} TO aos_capacity_publication_owner').format(sql.Identifier(owner.info.dbname)))
-                else:
-                    owner.execute(statements[fault])
+        owner.execute('SAVEPOINT original_fact_native_fault')
+        try:
+            if fault=='database_create':
+                from psycopg import sql
+                owner.execute(sql.SQL('GRANT CREATE ON DATABASE {} TO aos_capacity_publication_owner').format(sql.Identifier(owner.info.dbname)))
+            else:
+                owner.execute(statements[fault])
+            with pytest.raises(CapacityPublicationBoundaryBlocked):
                 require_original_fact_boundary(owner)
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            with pytest.raises(psycopg.errors.InvalidParameterValue) as captured:
+                with owner.transaction():
+                    owner.execute('SELECT aos_capacity_publication_private.require_original_fact_boundary()')
+            assert captured.value.diag.message_primary=='CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED'
+            _assert_native_withdrawal_rejects(owner,'WITHDRAWAL_PUBLICATION_CALLER_DRIFT')
+        finally:
+            owner.execute('ROLLBACK TO SAVEPOINT original_fact_native_fault')
         require_original_fact_boundary(owner)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        owner.execute('SELECT aos_capacity_publication_private.require_original_withdrawal_boundary()')
+        owner.rollback()
 
 
 def test_registered_origin_documents_and_original_private_approval_share_database(native_signed_source,tmp_path):
@@ -2033,6 +2046,18 @@ def test_native_evidence_query_preserves_genuine_build_cutoff_and_numeric_hash(n
         owner.rollback()
 
 
+def _install_original_withdrawal_audit(owner):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL
+    owner.execute(CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL)
+
+
+def _assert_native_withdrawal_rejects(owner,reason):
+    with pytest.raises(psycopg.errors.InvalidParameterValue) as captured:
+        with owner.transaction():
+            owner.execute('SELECT aos_capacity_publication_private.require_original_withdrawal_boundary()')
+    assert captured.value.diag.message_primary==reason
+
+
 @pytest.mark.parametrize('statement,reason',[
     ('ALTER ROLE aos_capacity_withdrawal_epoch_owner LOGIN','WITHDRAWAL_OWNER_DRIFT'),
     ('ALTER ROLE aos_capacity_withdrawal_epoch_owner INHERIT','WITHDRAWAL_OWNER_DRIFT'),
@@ -2054,13 +2079,20 @@ def test_original_withdrawal_catalog_fault_oracle(native_signed_source,statement
     from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence,CapacityWithdrawalFenceBlocked
     from tests.aip._runtime_guard_history_fixture import isolated_owner
     with isolated_owner() as owner:
+        _install_original_withdrawal_audit(owner)
         require_withdrawal_fence(owner)
-        with pytest.raises(CapacityWithdrawalFenceBlocked,match='^'+reason+'$'):
-            with owner.transaction():
-                owner.execute(statement)
-                owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        owner.execute('SAVEPOINT withdrawal_catalog_fault')
+        try:
+            owner.execute(statement)
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            with pytest.raises(CapacityWithdrawalFenceBlocked,match='^'+reason+'$'):
                 require_withdrawal_fence(owner)
+            _assert_native_withdrawal_rejects(owner,reason)
+        finally:
+            owner.execute('ROLLBACK TO SAVEPOINT withdrawal_catalog_fault')
         require_withdrawal_fence(owner)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        owner.execute('SELECT aos_capacity_publication_private.require_original_withdrawal_boundary()')
         owner.rollback()
     print('ORIGINAL_WITHDRAWAL_FAULT_RESTORED',reason,statement)
 
@@ -2069,15 +2101,22 @@ def test_original_withdrawal_catalog_rejects_extra_neutral_owner_function(native
     from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence,CapacityWithdrawalFenceBlocked
     from tests.aip._runtime_guard_history_fixture import isolated_owner
     with isolated_owner() as owner:
+        _install_original_withdrawal_audit(owner)
         require_withdrawal_fence(owner)
-        with pytest.raises(CapacityWithdrawalFenceBlocked,match='^WITHDRAWAL_OWNER_EXTRA_PERMISSION$'):
-            with owner.transaction():
-                owner.execute("CREATE FUNCTION public.isolated_withdrawal_extra() RETURNS bigint LANGUAGE sql SET search_path=pg_catalog AS 'SELECT 0::bigint'")
-                owner.execute('REVOKE EXECUTE ON FUNCTION public.isolated_withdrawal_extra() FROM PUBLIC')
-                owner.execute('ALTER FUNCTION public.isolated_withdrawal_extra() OWNER TO aos_capacity_withdrawal_epoch_owner')
-                owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        owner.execute('SAVEPOINT withdrawal_extra_function')
+        try:
+            owner.execute("CREATE FUNCTION public.isolated_withdrawal_extra() RETURNS bigint LANGUAGE sql SET search_path=pg_catalog AS 'SELECT 0::bigint'")
+            owner.execute('REVOKE EXECUTE ON FUNCTION public.isolated_withdrawal_extra() FROM PUBLIC')
+            owner.execute('ALTER FUNCTION public.isolated_withdrawal_extra() OWNER TO aos_capacity_withdrawal_epoch_owner')
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            with pytest.raises(CapacityWithdrawalFenceBlocked,match='^WITHDRAWAL_OWNER_EXTRA_PERMISSION$'):
                 require_withdrawal_fence(owner)
+            _assert_native_withdrawal_rejects(owner,'WITHDRAWAL_OWNER_EXTRA_PERMISSION')
+        finally:
+            owner.execute('ROLLBACK TO SAVEPOINT withdrawal_extra_function')
         require_withdrawal_fence(owner)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        owner.execute('SELECT aos_capacity_publication_private.require_original_withdrawal_boundary()')
         assert owner.execute("SELECT to_regprocedure('public.isolated_withdrawal_extra()') AS fn").fetchone()['fn'] is None
         owner.rollback()
 
@@ -2086,13 +2125,161 @@ def test_native_original_withdrawal_boundary_requires_implemented_audit(native_s
     from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence
     from tests.aip._runtime_guard_history_fixture import isolated_owner
     with isolated_owner() as owner:
+        _install_original_withdrawal_audit(owner)
         require_withdrawal_fence(owner)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
-        state=None
-        try:
-            with owner.transaction():
-                owner.execute('SELECT aos_capacity_publication_private.require_original_withdrawal_boundary()')
-        except psycopg.Error as error:
-            state=error.sqlstate
+        for name in ('require_original_fact_boundary','require_original_epoch_pair_boundary','require_original_withdrawal_boundary'):
+            owner.execute('SELECT aos_capacity_publication_private.'+name+'()')
+        owner.execute('RESET ROLE')
+        names=['require_original_fact_boundary','require_original_epoch_pair_boundary','require_original_withdrawal_boundary']
+        rows=owner.execute("""SELECT p.provolatile,p.prosecdef,p.proconfig,pg_get_userbyid(p.proowner) AS owner,
+         has_function_privilege('aos_runtime',p.oid,'EXECUTE') AS runtime_execute,
+         has_function_privilege('aos_provider_capacity_issuer',p.oid,'EXECUTE') AS issuer_execute,
+         EXISTS(SELECT 1 FROM aclexplode(p.proacl) WHERE grantee=0) AS public_grant
+         FROM pg_proc p WHERE p.pronamespace='aos_capacity_publication_private'::regnamespace AND p.proname=ANY(%s)""",(names,)).fetchall()
+        assert len(rows)==3 and all(r['provolatile']=='v' and not r['prosecdef'] and r['proconfig']==['search_path=pg_catalog']
+            and r['owner']=='aos_capacity_publication_owner' and not r['runtime_execute'] and not r['issuer_execute'] and not r['public_grant'] for r in rows)
         owner.rollback()
-        assert state is None, 'Actual native original withdrawal catalog audit missing or rejects original valid boundary: SQLSTATE='+str(state)
+        assert owner.execute("SELECT count(*) AS n FROM pg_proc WHERE pronamespace='aos_capacity_publication_private'::regnamespace AND proname=ANY(%s)",(names,)).fetchone()['n']==0
+        owner.rollback()
+
+
+@pytest.mark.parametrize('statement',[
+    'REVOKE EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) FROM aos_capacity_publication_owner',
+    'REVOKE EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) FROM aos_capacity_publication_owner',
+    'GRANT EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) TO aos_capacity_publication_owner WITH GRANT OPTION',
+    'GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) TO aos_capacity_publication_owner WITH GRANT OPTION',
+    'GRANT EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) TO PUBLIC',
+    'GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) TO PUBLIC',
+    "CREATE OR REPLACE FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(p_org text,p_project text,p_id text) RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$ BEGIN RETURN 0; END $$",
+    'ALTER FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) SECURITY INVOKER',
+])
+def test_native_withdrawal_audit_checks_complete_original_epoch_pair(native_signed_source,statement):
+    from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence,CapacityWithdrawalFenceBlocked
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    with isolated_owner() as owner:
+        _install_original_withdrawal_audit(owner)
+        require_withdrawal_fence(owner)
+        owner.execute('SAVEPOINT epoch_pair_native_fault')
+        try:
+            owner.execute(statement)
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            with pytest.raises(CapacityWithdrawalFenceBlocked,match='^WITHDRAWAL_PUBLICATION_CALLER_DRIFT$'):
+                require_withdrawal_fence(owner)
+            _assert_native_withdrawal_rejects(owner,'WITHDRAWAL_PUBLICATION_CALLER_DRIFT')
+        finally:owner.execute('ROLLBACK TO SAVEPOINT epoch_pair_native_fault')
+        require_withdrawal_fence(owner)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        owner.execute('SELECT aos_capacity_publication_private.require_original_withdrawal_boundary()')
+        owner.rollback()
+
+
+@pytest.mark.parametrize('public',[False,True])
+def test_native_withdrawal_audit_rejects_effective_foreign_definer(native_signed_source,public):
+    from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence,CapacityWithdrawalFenceBlocked
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    with isolated_owner() as owner:
+        _install_original_withdrawal_audit(owner)
+        owner.execute('SAVEPOINT foreign_definer_native_fault')
+        try:
+            owner.execute("CREATE FUNCTION public.isolated_original_epoch_foreign_definer() RETURNS bigint LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog AS 'SELECT 0::bigint'")
+            if not public:
+                owner.execute('REVOKE EXECUTE ON FUNCTION public.isolated_original_epoch_foreign_definer() FROM PUBLIC')
+                owner.execute('GRANT EXECUTE ON FUNCTION public.isolated_original_epoch_foreign_definer() TO aos_capacity_publication_owner')
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            with pytest.raises(CapacityWithdrawalFenceBlocked,match='^WITHDRAWAL_PUBLICATION_CALLER_DRIFT$'):
+                require_withdrawal_fence(owner)
+            _assert_native_withdrawal_rejects(owner,'WITHDRAWAL_PUBLICATION_CALLER_DRIFT')
+        finally:owner.execute('ROLLBACK TO SAVEPOINT foreign_definer_native_fault')
+        require_withdrawal_fence(owner)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        owner.execute('SELECT aos_capacity_publication_private.require_original_withdrawal_boundary()')
+        owner.rollback()
+
+
+@pytest.mark.parametrize('statement,reason',[
+    ('GRANT aos_runtime TO aos_capacity_withdrawal_epoch_owner','WITHDRAWAL_OWNER_DRIFT'),
+    ('ALTER TABLE public.aip_capacity_withdrawal_epoch OWNER TO aos_runtime','WITHDRAWAL_TABLE_DRIFT'),
+    ('ALTER TABLE public.aip_capacity_withdrawal_epoch ADD COLUMN unexpected text','WITHDRAWAL_TABLE_STRUCTURE_DRIFT'),
+    ('CREATE POLICY isolated_extra ON public.aip_capacity_withdrawal_epoch USING(true)','WITHDRAWAL_POLICY_DRIFT'),
+    ('ALTER POLICY capacity_withdrawal_epoch_scope ON public.aip_capacity_withdrawal_epoch TO aos_runtime','WITHDRAWAL_POLICY_DRIFT'),
+    ('ALTER FUNCTION public.aos_capacity_withdrawal_epoch_init() SET search_path=public','WITHDRAWAL_FUNCTION_DRIFT'),
+    ('GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_bump() TO PUBLIC','WITHDRAWAL_PUBLICATION_CALLER_DRIFT'),
+    ('GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_init() TO aos_capacity_withdrawal_epoch_owner WITH GRANT OPTION','WITHDRAWAL_FUNCTION_ACL_DRIFT'),
+    ('GRANT USAGE ON SCHEMA public TO aos_capacity_withdrawal_epoch_owner WITH GRANT OPTION','WITHDRAWAL_OWNER_EXTRA_PERMISSION'),
+])
+def test_native_original_withdrawal_extended_catalog_faults(native_signed_source,statement,reason):
+    from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence,CapacityWithdrawalFenceBlocked
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    with isolated_owner() as owner:
+        _install_original_withdrawal_audit(owner)
+        require_withdrawal_fence(owner)
+        owner.execute('SAVEPOINT withdrawal_extended_fault')
+        try:
+            owner.execute(statement)
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            with pytest.raises(CapacityWithdrawalFenceBlocked,match='^'+reason+'$'):
+                require_withdrawal_fence(owner)
+            _assert_native_withdrawal_rejects(owner,reason)
+        finally:owner.execute('ROLLBACK TO SAVEPOINT withdrawal_extended_fault')
+        require_withdrawal_fence(owner)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        owner.execute('SELECT aos_capacity_publication_private.require_original_withdrawal_boundary()')
+        owner.rollback()
+
+
+@pytest.mark.parametrize('fault',['disabled_fk','deferred_fk','extra_owned_table','unvalidated_check','legacy_no_pair'])
+def test_native_original_withdrawal_structural_and_legacy_controls(native_signed_source,fault):
+    from psycopg import sql
+    from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence,CapacityWithdrawalFenceBlocked
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    with isolated_owner() as owner:
+        _install_original_withdrawal_audit(owner)
+        require_withdrawal_fence(owner)
+        owner.execute('SAVEPOINT withdrawal_structure_fault')
+        try:
+            reason='WITHDRAWAL_FOREIGN_KEY_ORDER_DRIFT'
+            if fault=='disabled_fk':
+                fk=owner.execute("SELECT tgname FROM pg_trigger WHERE tgrelid='public.aip_action_withdrawal_event'::regclass AND tgisinternal AND (tgtype & 4)=4 ORDER BY tgname LIMIT 1").fetchone()['tgname']
+                owner.execute(sql.SQL('ALTER TABLE public.aip_action_withdrawal_event DISABLE TRIGGER {}').format(sql.Identifier(fk)))
+            elif fault=='deferred_fk':
+                fk=owner.execute("SELECT conname FROM pg_constraint WHERE conrelid='public.aip_action_withdrawal_event'::regclass AND contype='f' ORDER BY conname LIMIT 1").fetchone()['conname']
+                owner.execute(sql.SQL('ALTER TABLE public.aip_action_withdrawal_event ALTER CONSTRAINT {} DEFERRABLE INITIALLY DEFERRED').format(sql.Identifier(fk)))
+            elif fault=='extra_owned_table':
+                owner.execute('CREATE TABLE public.isolated_withdrawal_extra_owned (id text)')
+                owner.execute('ALTER TABLE public.isolated_withdrawal_extra_owned OWNER TO aos_capacity_withdrawal_epoch_owner')
+                reason='WITHDRAWAL_OWNER_EXTRA_PERMISSION'
+            elif fault=='unvalidated_check':
+                check=owner.execute("SELECT conname FROM pg_constraint WHERE conrelid='public.aip_capacity_withdrawal_epoch'::regclass AND pg_get_constraintdef(oid,true)='CHECK (epoch >= 0)'").fetchone()['conname']
+                owner.execute(sql.SQL('ALTER TABLE public.aip_capacity_withdrawal_epoch DROP CONSTRAINT {}').format(sql.Identifier(check)))
+                owner.execute(sql.SQL('ALTER TABLE public.aip_capacity_withdrawal_epoch ADD CONSTRAINT {} CHECK(epoch>=0) NOT VALID').format(sql.Identifier(check)))
+                reason='WITHDRAWAL_TABLE_STRUCTURE_DRIFT'
+            else:
+                owner.execute('REVOKE EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) FROM aos_capacity_publication_owner')
+                owner.execute('REVOKE EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) FROM aos_capacity_publication_owner')
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            if fault=='legacy_no_pair':
+                require_withdrawal_fence(owner)
+                owner.execute('SELECT aos_capacity_publication_private.require_original_withdrawal_boundary()')
+            else:
+                with pytest.raises(CapacityWithdrawalFenceBlocked,match='^'+reason+'$'):
+                    require_withdrawal_fence(owner)
+                _assert_native_withdrawal_rejects(owner,reason)
+        finally:owner.execute('ROLLBACK TO SAVEPOINT withdrawal_structure_fault')
+        require_withdrawal_fence(owner)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        owner.execute('SELECT aos_capacity_publication_private.require_original_withdrawal_boundary()')
+        owner.rollback()
+
+
+@pytest.mark.parametrize('role',['aos_runtime','aos_provider_capacity_issuer'])
+def test_native_original_withdrawal_audit_denied_to_ordinary_callers(native_signed_source,role):
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    with isolated_owner() as owner:
+        _install_original_withdrawal_audit(owner)
+        owner.execute('SET LOCAL ROLE '+role)
+        for name in ('require_original_fact_boundary','require_original_epoch_pair_boundary','require_original_withdrawal_boundary'):
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with owner.transaction():
+                    owner.execute('SELECT aos_capacity_publication_private.'+name+'()')
+        owner.rollback()
