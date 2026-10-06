@@ -902,3 +902,132 @@ def test_native_source_policy_original_integer_limit(native_profile_runner):
         raw=original.replace(old,('"'+field+'":'+'9'*4301).encode())
         with pytest.raises(ValueError):parse_signed_capacity_body(raw,ProviderCapacitySourcePolicy)
         assert 'CAPACITY_SOURCE_POLICY_REQUIRED' in _native_source_policy(native_profile_runner,raw,False)
+
+
+def supplier_attestation(mode='inflight_upper_bound'):
+    policy=source_policy()
+    token=dict(mode=mode,unit='token',maxTokens=10**12)
+    if mode=='fixed_window_rate':token.update(windowSeconds=86400,windowAnchor=policy['validFrom'])
+    return dict(schemaVersion=1,tenant=policy['tenant'],assetId='attestation',revision=1,
+        publisher='供应方😀',keyId='supplier-key',supplierId=policy['supplierId'],
+        validFrom=policy['validFrom'],validUntil=policy['validUntil'],purpose='supplier_capacity_attestation',
+        supplierAccountFingerprint='b'*64,providerRefs=[ref('ProviderInstanceRevision')],
+        evidenceRef=ref('EvidenceBundleRevision'),maxConcurrency=1000000,tokenLimit=token,
+        observedAt=policy['validFrom']-timedelta(days=1))
+
+
+def _native_attestation(runner,raw,success=True):
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_SIGNING_PERMIT_PROFILE_SQL,CAPACITY_SUPPLIER_ATTESTATION_PROFILE_SQL)
+    return runner(CAPACITY_IDENTIFIER_PROFILE_SQL+CAPACITY_SIGNING_PERMIT_PROFILE_SQL+
+        CAPACITY_SUPPLIER_ATTESTATION_PROFILE_SQL+
+        "SELECT aos_capacity_publication_private.read_supplier_attestation(decode('%s','hex'));"%raw.hex(),success)
+
+
+@pytest.mark.parametrize('mode',['inflight_upper_bound','fixed_window_rate'])
+def test_native_supplier_attestation_complete_roundtrip(native_profile_runner,mode):
+    from aos_api.aip_provider_capacity_source_contracts import SupplierCapacityAttestation
+    from aos_api.aip_provider_capacity_publication_contracts import parse_signed_capacity_body
+    from datetime import timezone
+    for count,offset,limit in [(1,1439,1),(1000,-1439,10**12)]:
+        payload=supplier_attestation(mode);start=datetime(2020,1,1,0,0,0,999999,tzinfo=timezone(timedelta(minutes=offset)))
+        payload.update(validFrom=start,validUntil=start+timedelta(days=366),observedAt=start-timedelta(days=1),
+            revision=10**100,providerRefs=[ref('ProviderInstanceRevision','p'+str(i)) for i in range(count)],
+            maxConcurrency=1 if count==1 else 1000000)
+        payload['tokenLimit']['maxTokens']=limit
+        if mode=='fixed_window_rate':payload['tokenLimit'].update(windowAnchor=start,windowSeconds=1 if count==1 else 86400)
+        model=SupplierCapacityAttestation.model_validate(payload);expected=model.model_dump(mode='json',by_alias=True)
+        raw=canonical_json(expected);assert parse_signed_capacity_body(raw,SupplierCapacityAttestation)==model
+        assert json.loads(_native_attestation(native_profile_runner,raw))==expected
+
+
+@pytest.mark.parametrize('fault',['missing','extra','canary','purpose','revision-bool','identifier','fingerprint',
+    'providers-empty','providers-many','provider-kind','provider-extra','provider-revision','provider-hash',
+    'provider-id','provider-duplicate','evidence-kind','evidence-null','concurrency-zero','concurrency-high',
+    'concurrency-bool','token-mode','token-unit','token-zero','token-high','token-bool','token-extra',
+    'token-missing','window-zero','window-high','window-bool','window-naive','inflight-window',
+    'observed-naive','observed-end','validity-naive','validity-equal','validity-long','alias'])
+def test_native_supplier_attestation_complete_single_fault(native_profile_runner,fault):
+    from aos_api.aip_provider_capacity_source_contracts import SupplierCapacityAttestation
+    from aos_api.aip_provider_capacity_publication_contracts import parse_signed_capacity_body
+    payload=SupplierCapacityAttestation.model_validate(supplier_attestation('fixed_window_rate')).model_dump(mode='json',by_alias=True)
+    token=payload['tokenLimit'];provider=payload['providerRefs'][0]
+    if fault=='missing':payload.pop('supplierId')
+    elif fault=='extra':payload['verified']=True
+    elif fault=='canary':payload['tenant']['orgId']='dev-org'
+    elif fault=='purpose':payload['purpose']='provider_capacity_source'
+    elif fault=='revision-bool':payload['revision']=True
+    elif fault=='identifier':payload['keyId']='white space'
+    elif fault=='fingerprint':payload['supplierAccountFingerprint']='A'*64
+    elif fault=='providers-empty':payload['providerRefs']=[]
+    elif fault=='providers-many':payload['providerRefs']=[ref('ProviderInstanceRevision','p'+str(i)) for i in range(1001)]
+    elif fault=='provider-kind':provider['assetType']='EvidenceBundleRevision'
+    elif fault=='provider-extra':provider['verified']=True
+    elif fault=='provider-revision':provider['revision']=False
+    elif fault=='provider-hash':provider['contentHash']='A'*64
+    elif fault=='provider-id':provider['assetId']='white space'
+    elif fault=='provider-duplicate':payload['providerRefs'].append({**provider,'revision':2})
+    elif fault=='evidence-kind':payload['evidenceRef']['assetType']='ProviderInstanceRevision'
+    elif fault=='evidence-null':payload['evidenceRef']=None
+    elif fault=='concurrency-zero':payload['maxConcurrency']=0
+    elif fault=='concurrency-high':payload['maxConcurrency']=1000001
+    elif fault=='concurrency-bool':payload['maxConcurrency']=True
+    elif fault=='token-mode':token['mode']='unbounded'
+    elif fault=='token-unit':token['unit']='request'
+    elif fault=='token-zero':token['maxTokens']=0
+    elif fault=='token-high':token['maxTokens']=10**12+1
+    elif fault=='token-bool':token['maxTokens']=True
+    elif fault=='token-extra':token['verified']=True
+    elif fault=='token-missing':token.pop('unit')
+    elif fault=='window-zero':token['windowSeconds']=0
+    elif fault=='window-high':token['windowSeconds']=86401
+    elif fault=='window-bool':token['windowSeconds']=True
+    elif fault=='window-naive':token['windowAnchor']='2026-01-01T00:00:00'
+    elif fault=='inflight-window':token['mode']='inflight_upper_bound'
+    elif fault=='observed-naive':payload['observedAt']='2026-01-01T00:00:00'
+    elif fault=='observed-end':payload['observedAt']=payload['validUntil']
+    elif fault=='validity-naive':payload['validFrom']='2026-01-01T00:00:00'
+    elif fault=='validity-equal':payload['validUntil']=payload['validFrom']
+    elif fault=='validity-long':payload.update(validFrom='2026-01-01T00:00:00Z',validUntil='2027-01-03T00:00:00Z')
+    else:payload['supplier_id']=payload.pop('supplierId')
+    raw=canonical_json(payload)
+    with pytest.raises(ValueError):parse_signed_capacity_body(raw,SupplierCapacityAttestation)
+    assert 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' in _native_attestation(native_profile_runner,raw,False)
+
+
+@pytest.mark.parametrize('literal',['NULL',"convert_to('null','UTF8')","convert_to('[]','UTF8')"])
+def test_native_supplier_attestation_null_shape(native_profile_runner,literal):
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_SIGNING_PERMIT_PROFILE_SQL,CAPACITY_SUPPLIER_ATTESTATION_PROFILE_SQL)
+    assert 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' in native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL+
+        CAPACITY_SIGNING_PERMIT_PROFILE_SQL+CAPACITY_SUPPLIER_ATTESTATION_PROFILE_SQL+
+        'SELECT aos_capacity_publication_private.read_supplier_attestation('+literal+');',False)
+
+
+def test_native_supplier_attestation_private_catalog(native_profile_runner):
+    from aos_api.aip_provider_capacity_publication_store import (CAPACITY_IDENTIFIER_PROFILE_SQL,
+        CAPACITY_SIGNING_PERMIT_PROFILE_SQL,CAPACITY_SUPPLIER_ATTESTATION_PROFILE_SQL)
+    assert native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL+CAPACITY_SIGNING_PERMIT_PROFILE_SQL+
+        CAPACITY_SUPPLIER_ATTESTATION_PROFILE_SQL+"""
+        SELECT p.prosecdef,p.provolatile,p.proisstrict,p.proconfig::text,
+          (SELECT count(*) FROM aclexplode(p.proacl) WHERE grantee=0)
+        FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+        WHERE n.nspname='aos_capacity_publication_private' AND p.proname='read_supplier_attestation';
+        """)== 'f|i|f|{search_path=pg_catalog}|0'
+
+
+@pytest.mark.parametrize('field',['revision','maxConcurrency','maxTokens','windowSeconds','providerRevision'])
+def test_native_supplier_attestation_original_integer_limit(native_profile_runner,field):
+    from aos_api.aip_provider_capacity_source_contracts import SupplierCapacityAttestation
+    from aos_api.aip_provider_capacity_publication_contracts import parse_signed_capacity_body
+    payload=SupplierCapacityAttestation.model_validate(supplier_attestation('fixed_window_rate')).model_dump(mode='json',by_alias=True)
+    raw=canonical_json(payload);digits=b'9'*4301
+    if field=='providerRevision':
+        item=canonical_json(payload['providerRefs'][0])
+        raw=raw.replace(item,item.replace(b'"revision":1',b'"revision":'+digits))
+    elif field=='revision':raw=raw.replace(b'"revision":1,"schemaVersion"',b'"revision":'+digits+b',"schemaVersion"')
+    else:
+        value=payload[field] if field=='maxConcurrency' else payload['tokenLimit'][field]
+        old=('"'+field+'":'+str(value)).encode();raw=raw.replace(old,('"'+field+'":').encode()+digits)
+    with pytest.raises(ValueError):parse_signed_capacity_body(raw,SupplierCapacityAttestation)
+    assert 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' in _native_attestation(native_profile_runner,raw,False)

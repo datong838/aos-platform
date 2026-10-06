@@ -1,0 +1,25 @@
+{
+  "authority_cutoff": "AOS-001401",
+  "code_base": "3e1db75192a31ce5b20bf2cea4dcdaba5eebb5dd",
+  "task": "gt-provider-capacity-publication-schema-20261005",
+  "red": "Missing native attestation constant: 2 failed / 6.48s",
+  "initial_green": "40 passed / 8.74s",
+  "green": "49 passed / 10.44s",
+  "adjacent": "399 passed, 7 existing warnings / 31.15s",
+  "review": "Original 16-field SupplierCapacityAttestation plus complete 3/5-field token contracts. Native raw canonical parsing, exact Provider/Evidence refs and Provider ID uniqueness, numeric/1000-map/Unicode/offset boundaries; original observation-before-validFrom remains accepted. NonSTRICT SQL NULL rejection, INVOKER IMMUTABLE fixed pg_catalog search_path and no PUBLIC ACL verified. No runtime/migration/permissions/transaction changes.",
+  "limits": [
+    "Shape parser is not independent trusted origin, signature verification or current policy applicability",
+    "Functions created only in isolated test transactions and rolled back; not installed on authoritative database",
+    "Full S01-S20, root/permit registration, signed Source COMMIT and operational consumer still pending",
+    "Original publication Task ACTIVE; no full Task Delivery or Goal completion"
+  ],
+  "sources": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "46de073b329b8ba7c8625df5c4d11a4df85a4ed9a5ca4f2cafb09686209ebf89",
+    "services/aos-api/tests/aip/test_provider_capacity_publication_pg.py": "7c8b361ea767384ed366e06ec1e2a828bca8a8e25a09db08c0fa00fde48f372f",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/attestation-native-plan.md": "5d4de23a3d080bef1c26a4c33e28a1de4aded82fbe9820b995408f8d56990aa8",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/attestation-native-red.log": "7564c91e77cdaf56313b59c6613e43e548664ec46d3ac2a6bf14f0d8bd53109e",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/attestation-native-green.log": "53b94a5909ddda441de3bd6b8d3dd1bb0e12252c41d7eb3f1837efc69409d3b3",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/attestation-native-green-r2.log": "a0d2c376c4dab823842ce6310c2cc63e8ecbe28a34c26354233660ef7e68cf2c",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/attestation-native-adjacent.log": "526019c07166523b99b315aeb2e8bd1ed39ba6100d5889f697501467193b8bc0"
+  }
+}

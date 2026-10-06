@@ -647,3 +647,118 @@ END
 $body$;
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_source_policy(bytea) FROM PUBLIC;
 """
+
+# S17/S18 complete supplier shape; this never authenticates the supplier.
+CAPACITY_SUPPLIER_ATTESTATION_PROFILE_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.read_supplier_attestation(p_raw bytea)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER
+SET search_path = pg_catalog AS $body$
+DECLARE
+  document jsonb;
+  field text;
+  refs jsonb;
+  ref jsonb;
+  token jsonb;
+  starts_at timestamptz;
+  ends_at timestamptz;
+  observed_at timestamptz;
+BEGIN
+  document := aos_capacity_publication_private.read_signed_body(p_raw);
+  IF document IS NULL OR pg_catalog.jsonb_typeof(document) IS DISTINCT FROM 'object'
+      OR NOT (document ?& ARRAY['schemaVersion','tenant','assetId','revision','publisher','keyId',
+        'supplierId','validFrom','validUntil','purpose','supplierAccountFingerprint','providerRefs',
+        'evidenceRef','maxConcurrency','tokenLimit','observedAt'])
+      OR (SELECT count(*) FROM pg_catalog.jsonb_object_keys(document)) <> 16 THEN
+    RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  IF document->'tenant' IS DISTINCT FROM '{"orgId":"org-org","projectId":"dev-project"}'::jsonb
+      OR document->'schemaVersion' IS DISTINCT FROM '1'::jsonb
+      OR document->'purpose' IS DISTINCT FROM '"supplier_capacity_attestation"'::jsonb
+      OR pg_catalog.jsonb_typeof(document->'revision') IS DISTINCT FROM 'number'
+      OR (document->>'revision') COLLATE "C" !~ '^[1-9][0-9]*$'
+      OR pg_catalog.length(document->>'revision') > 4300
+      OR pg_catalog.jsonb_typeof(document->'supplierAccountFingerprint') IS DISTINCT FROM 'string'
+      OR (document->>'supplierAccountFingerprint') COLLATE "C" !~ '^[0-9a-f]{64}$'
+      OR pg_catalog.jsonb_typeof(document->'maxConcurrency') IS DISTINCT FROM 'number'
+      OR (document->>'maxConcurrency') COLLATE "C" !~ '^[1-9][0-9]*$'
+      OR pg_catalog.length(document->>'maxConcurrency') > 7 THEN
+    RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  IF (document->>'maxConcurrency')::integer NOT BETWEEN 1 AND 1000000 THEN
+    RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  FOREACH field IN ARRAY ARRAY['assetId','publisher','keyId','supplierId'] LOOP
+    PERFORM aos_capacity_publication_private.read_identifier(document->field);
+  END LOOP;
+  refs := document->'providerRefs';
+  IF pg_catalog.jsonb_typeof(refs) IS DISTINCT FROM 'array'
+      OR pg_catalog.jsonb_array_length(refs) NOT BETWEEN 1 AND 1000 THEN
+    RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  FOREACH field IN ARRAY ARRAY['providerRefs','evidenceRef'] LOOP
+    refs := CASE WHEN field='providerRefs' THEN document->field
+        ELSE pg_catalog.jsonb_build_array(document->field) END;
+    FOR ref IN SELECT value FROM pg_catalog.jsonb_array_elements(refs) LOOP
+      IF pg_catalog.jsonb_typeof(ref) IS DISTINCT FROM 'object'
+          OR NOT (ref ?& ARRAY['assetType','assetId','revision','contentHash'])
+          OR (SELECT count(*) FROM pg_catalog.jsonb_object_keys(ref)) <> 4
+          OR ref->'assetType' IS DISTINCT FROM pg_catalog.to_jsonb(
+            CASE WHEN field='providerRefs' THEN 'ProviderInstanceRevision'::text ELSE 'EvidenceBundleRevision'::text END)
+          OR pg_catalog.jsonb_typeof(ref->'revision') IS DISTINCT FROM 'number'
+          OR (ref->>'revision') COLLATE "C" !~ '^[1-9][0-9]*$'
+          OR pg_catalog.length(ref->>'revision') > 4300
+          OR pg_catalog.jsonb_typeof(ref->'contentHash') IS DISTINCT FROM 'string'
+          OR (ref->>'contentHash') COLLATE "C" !~ '^[0-9a-f]{64}$' THEN
+        RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+      END IF;
+      PERFORM aos_capacity_publication_private.read_identifier(ref->'assetId');
+    END LOOP;
+  END LOOP;
+  IF (SELECT count(DISTINCT value->'assetId') FROM pg_catalog.jsonb_array_elements(document->'providerRefs'))
+      <> pg_catalog.jsonb_array_length(document->'providerRefs') THEN
+    RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  token := document->'tokenLimit';
+  IF pg_catalog.jsonb_typeof(token) IS DISTINCT FROM 'object'
+      OR NOT (token ?& ARRAY['mode','unit','maxTokens'])
+      OR token->'unit' IS DISTINCT FROM '"token"'::jsonb
+      OR pg_catalog.jsonb_typeof(token->'maxTokens') IS DISTINCT FROM 'number'
+      OR (token->>'maxTokens') COLLATE "C" !~ '^[1-9][0-9]*$'
+      OR pg_catalog.length(token->>'maxTokens') > 13 THEN
+    RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  IF (token->>'maxTokens')::bigint NOT BETWEEN 1 AND 1000000000000 THEN
+    RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  IF token->'mode'='"inflight_upper_bound"'::jsonb THEN
+    IF (SELECT count(*) FROM pg_catalog.jsonb_object_keys(token)) <> 3 THEN
+      RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+    END IF;
+  ELSIF token->'mode'='"fixed_window_rate"'::jsonb THEN
+    IF NOT (token ?& ARRAY['windowSeconds','windowAnchor'])
+        OR (SELECT count(*) FROM pg_catalog.jsonb_object_keys(token)) <> 5
+        OR pg_catalog.jsonb_typeof(token->'windowSeconds') IS DISTINCT FROM 'number'
+        OR (token->>'windowSeconds') COLLATE "C" !~ '^[1-9][0-9]*$'
+        OR pg_catalog.length(token->>'windowSeconds') > 5 THEN
+      RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+    END IF;
+    IF (token->>'windowSeconds')::integer NOT BETWEEN 1 AND 86400 THEN
+      RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+    END IF;
+    PERFORM aos_capacity_publication_private.read_signed_time(token->'windowAnchor');
+  ELSE
+    RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  starts_at := aos_capacity_publication_private.read_signed_time(document->'validFrom');
+  ends_at := aos_capacity_publication_private.read_signed_time(document->'validUntil');
+  observed_at := aos_capacity_publication_private.read_signed_time(document->'observedAt');
+  IF ends_at <= starts_at OR extract(epoch FROM ends_at-starts_at) > 31622400 OR observed_at >= ends_at THEN
+    RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+  END IF;
+  RETURN document;
+EXCEPTION WHEN OTHERS THEN
+  RAISE EXCEPTION 'CAPACITY_SUPPLIER_ATTESTATION_REQUIRED' USING ERRCODE='22023';
+END
+$body$;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_supplier_attestation(bytea) FROM PUBLIC;
+"""
