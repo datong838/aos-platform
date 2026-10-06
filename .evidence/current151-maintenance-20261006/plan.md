@@ -42,3 +42,5 @@ Maintenance151Journal绑定冻结head/thread/Task/base，不仅step名称。原�
 继续在scripts/a0v_current_151_maintenance.py与原专项测试内实现run_current151_repair(thread)，不提供可选源容器/原失败目录。Repair151Journal使用独立步骤序列，复用原intent-before-effect/精确Task与HEAD复核，不包含迁移步骤；原Journal默认序列保持不变。新phase关联原八已验证步骤/九终端/失败attempt哈希；原进程只有父进程已实际消失可重新登记PPID，其他PID/启动时间/argv/cwd/children/listen全部必须等于原启动记录。新阶段必须代码已提交。
 
 固定原源Id/image/volume及原window restore身份；停止原进程后封TCP，窗口内完整dump/globals、fresh none-network命名卷独立151恢复、完整目录窄等价通过，再在此恢复上精确CAS并要求全snapshot仅三表恢复旧hash；实际源CAS SQL hash与演练相同且一次终端记录。源完成后full snapshot与修复预期精确相等，151withdrawal fence与原模板完整151门通过才恢复原listen、PG重启、修复API/Web启动。最终完整快照不可有启动读取写回；浏览器仍是单独未完成门。未知attempt不得恢复重发；新实例都保留且不push。
+
+当前入口首次预检拒绝发生在claim/stop之前，源库/原服务未动：原142恢复应使用原142 role_names，不能用151新增角色清单做snapshot；full_snapshot的role_names本身是冻结比较输入。只读按原142 roles重算完整窄等价通过，修正该调用参数；原151源/新151副本仍用151角色清单，未删除任何roles校验或放宽原比较。保留current-repair-r1终端失败；没有claim可证尚未进入实际副作用阶段。

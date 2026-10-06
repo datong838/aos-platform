@@ -629,7 +629,7 @@ def run_current151_repair(*,thread):
         return execute(name,['exec','-i',name,'psql','-U','aos_app','-d',restore.SOURCE,'-Atq','-v','ON_ERROR_STOP=1','-f','-'],statement.encode(),check)
     def query(name,statement):
         return json.loads(pg(name,"BEGIN READ ONLY;SET LOCAL timezone='UTC';SET LOCAL search_path=pg_catalog,public;"+statement+';COMMIT;').stdout)
-    def snapshot(name):return restore.full_snapshot(primitive,lambda q:query(name,q),expected['role_names'])
+    def snapshot(name,roles=None):return restore.full_snapshot(primitive,lambda q:query(name,q),expected['role_names'] if roles is None else roles)
     def tenant_rows(name):
         return {t:query(name,"SELECT COALESCE(json_agg(row_to_json(t)),'[]'::json) AS value FROM public."+t+' t') for t in TENANT_TIMESTAMP_TABLES151}
     def metadata_rows(name):
@@ -652,8 +652,8 @@ def run_current151_repair(*,thread):
     old_target=records['intent.json']['target']
     old_item=json.loads(subprocess.check_output(['docker','--context',restore.DEST_CONTEXT,'inspect',old_target]))[0]
     require_isolated151(old_item,name=old_target,image=image)
-    if snapshot(old_target)['version']!='a0v_142':raise Maintenance151Blocked('ORIGINAL_WINDOW_RESTORE_VERSION_DRIFT')
-    restore.require_dump_restore_equivalence(old_expected,snapshot(old_target))
+    if snapshot(old_target,old_expected['role_names'])['version']!='a0v_142':raise Maintenance151Blocked('ORIGINAL_WINDOW_RESTORE_VERSION_DRIFT')
+    restore.require_dump_restore_equivalence(old_expected,snapshot(old_target,old_expected['role_names']))
     old_rows=tenant_rows(old_target);live_rows=tenant_rows(source)
     repair_sql=build_tenant_timestamp_repair151(old_rows,live_rows).as_string();repair_hash=hashlib.sha256(repair_sql.encode()).hexdigest()
     if snapshot(source)!=expected:raise Maintenance151Blocked('REPAIR_SOURCE_CHANGED_SINCE_FAILURE')

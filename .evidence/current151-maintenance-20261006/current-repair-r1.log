@@ -1,0 +1,19 @@
+{"ts": "2026-10-06T04:12:35.352818+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.schemas", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T04:12:35.352922+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.tables", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T04:12:35.352952+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.types", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T04:12:35.352974+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.constraints", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T04:12:35.352991+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.defaults", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T04:12:35.353009+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.comments", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-06T04:12:35.353024+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.checkconstraint_byname", "trace_id": "-", "org_id": "-", "project_id": "-"}
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_151_maintenance.py", line 656, in run_current151_repair
+    restore.require_dump_restore_equivalence(old_expected,snapshot(old_target))
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py", line 121, in require_dump_restore_equivalence
+    require_exact_restore(left,right)
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py", line 104, in require_exact_restore
+    require(before==after,'FULL_RESTORE_STATE_MISMATCH')
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_150_restore_gate.py", line 42, in require
+    if not value:raise Restore150Blocked(reason)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+repair151_restore.Restore150Blocked: FULL_RESTORE_STATE_MISMATCH
