@@ -1196,3 +1196,50 @@ def test_root_snapshot_transport_never_promotes_original_file_mode_to_trust(tmp_
     frozen=freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path))
     assert frozen.authorization=='ROOT_SNAPSHOT_TRANSPORT_ONLY_NO_TRUST_NO_REGISTRATION'
     assert not hasattr(frozen,'verified') and not hasattr(frozen,'execution_allowed')
+
+
+
+def test_native_complete_root_transport_preserves_opaque_rows(native_profile_runner, tmp_path):
+    """PG object functions decode legal file surrogates; array rows stay opaque."""
+    import base64
+    from aos_api.asset_registry.signature import FileTrustRootProvider
+    from aos_api.aip_provider_capacity_publication_contracts import freeze_capacity_trust_root_snapshot
+    roots = [dict(publisher='authority', keyId='key-' + str(i), algorithm='Ed25519',
+        publicKey=base64.b64encode(bytes(range(32))).decode(), notBefore='2020-01-01T00:00:00Z',
+        notAfter='2030-01-01T00:00:00Z', revokedAt=None, revision='sha256:' + 'a' * 64)
+        for i in range(1001)]
+    roots[0]['keyId'] = 'surrogate-\ud800'
+    roots[1]['keyId'] = 'key with space'
+    roots[2]['keyId'] = 'k' * 240
+    roots[3]['notAfter'] = '2030-01-01T00:00:00+00:00:30.123456'
+    path = tmp_path / 'native-root-full.json'
+    path.write_text(json.dumps(dict(trustRoots=roots)))
+    frozen = freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path))
+    raw = frozen.canonical_bytes
+    raw_sql = "decode('%s','hex')" % raw.hex()
+    assert raw.startswith(b'{"trustRoots":[') and raw.endswith(b']}')
+    # Slice only this known frozen transport framing; this is not a caller-input parser.
+    array_raw = raw[len(b'{"trustRoots":'):-1]
+    array_sql = "convert_from(decode('%s','hex'),'UTF8')::json" % array_raw.hex()
+    actual = native_profile_runner("SELECT 'sha256:'||encode(pg_catalog.sha256(" + raw_sql + "),'hex');")
+    assert actual == frozen.content_hash
+    assert native_profile_runner("SELECT convert_from(" + raw_sql + ",'UTF8')::json::text;") == raw.decode('ascii')
+    row_texts = native_profile_runner("SELECT value::text FROM json_array_elements(" + array_sql +
+        ") WITH ORDINALITY ORDER BY ordinality;").splitlines()
+    expected = [json.dumps(root, sort_keys=True, separators=(',', ':'), ensure_ascii=True)
+        for root in json.loads(raw)['trustRoots']]
+    assert len(row_texts) == frozen.root_count == 1001
+    assert row_texts == expected  # Every root retained in order; no unusable root silently dropped.
+    surrogate = next(value for value in expected if 'surrogate-' in value)
+    surrogate_sql = "convert_from(decode('%s','hex'),'UTF8')::json" % surrogate.encode('ascii').hex()
+    for expression in [surrogate_sql + "->'keyId'", "json_object_keys(" + surrogate_sql + ")",
+            "json_each(" + surrogate_sql + ")", "(" + surrogate_sql + ")::jsonb"]:
+        assert 'Unicode low surrogate must follow a high surrogate' in native_profile_runner(
+            'SELECT ' + expression + ';', False)
+    assert 'Unicode low surrogate must follow a high surrogate' in native_profile_runner(
+        "SELECT convert_from(" + raw_sql + ",'UTF8')::json->'trustRoots';", False)
+    # An ordinary row remains individually interpretable after lossless full-array retention.
+    normal_index = next(i for i, root in enumerate(json.loads(raw)['trustRoots'], 1) if root['keyId'] == 'key-10')
+    normal = native_profile_runner("SELECT value::jsonb->>'keyId' FROM json_array_elements(" + array_sql +
+        ") WITH ORDINALITY WHERE ordinality=" + str(normal_index) + ';')
+    assert normal == 'key-10'

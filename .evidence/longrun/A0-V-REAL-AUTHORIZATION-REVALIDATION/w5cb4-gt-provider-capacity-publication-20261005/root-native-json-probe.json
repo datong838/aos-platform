@@ -1,0 +1,37 @@
+{
+  "opaque-json-text": {
+    "exit": 0,
+    "stdout": "{\"trustRoots\":[{\"keyId\":\"surrogate-\\ud800\"},{\"keyId\":\"normal\"}]}\n",
+    "stderr": ""
+  },
+  "opaque-root-literal": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": "ERROR:  invalid input syntax for type json\nDETAIL:  Unicode low surrogate must follow a high surrogate.\nCONTEXT:  JSON data, line 1: {\"keyId\":\"surrogate-\\ud800\"...\n"
+  },
+  "array-elements": {
+    "exit": 0,
+    "stdout": "2\n",
+    "stderr": ""
+  },
+  "jsonb": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": "ERROR:  invalid input syntax for type json\nLINE 1: SELECT $j${\"keyId\":\"surrogate-\\ud800\"}$j$::jsonb;\n               ^\nDETAIL:  Unicode low surrogate must follow a high surrogate.\nCONTEXT:  JSON data, line 1: {\"keyId\":\"surrogate-\\ud800\"...\n"
+  },
+  "json-each": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": "ERROR:  invalid input syntax for type json\nDETAIL:  Unicode low surrogate must follow a high surrogate.\nCONTEXT:  JSON data, line 1: {\"trustRoots\":[{\"keyId\":\"surrogate-\\ud800\"...\n"
+  },
+  "root-each": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": "ERROR:  invalid input syntax for type json\nDETAIL:  Unicode low surrogate must follow a high surrogate.\nCONTEXT:  JSON data, line 1: {\"keyId\":\"surrogate-\\ud800\"...\n"
+  },
+  "root-object-keys": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": "ERROR:  invalid input syntax for type json\nDETAIL:  Unicode low surrogate must follow a high surrogate.\nCONTEXT:  JSON data, line 1: {\"keyId\":\"surrogate-\\ud800\"...\n"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "baseline": "f8a097a20c74dfbe121017165ea294b2706ffc51",
+  "scope": "gt-provider-capacity-publication-schema-20261005",
+  "target": "1 passed, 346 deselected, 7 warnings in 6.61s",
+  "adjacent": "364 passed, 7 warnings in 25.26s",
+  "review": {
+    "production_code_changed": false,
+    "full_1001_rows_equal_in_order": true,
+    "whole_hash_verified_native": true,
+    "object_field_extraction_not_safe_for_original_domain": true,
+    "partial_root_filtering": false,
+    "known_frozen_frame_slicing_not_untrusted_parser": true,
+    "current_db_access": false,
+    "root_registration": false,
+    "full_task_complete": false,
+    "browser_applicable": false
+  },
+  "next": "独立完整ASCII scalar/profile校验，再正式152权限/可信anchor/bootstrap整hash/epoch登记；不能以opaque原文保留替代trustedroot输入",
+  "sources": {
+    "services/aos-api/tests/aip/test_provider_capacity_publication_pg.py": "155de5ea5b0176c26ed233605d1baaf8400ec6321657c17edade4f4817b95caa",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-native-storage-plan.md": "e81f0ddf14edf95c061d4b02ae8568772177ddf0dea9c72b6f4c6efda78b4965",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-native-json-probe.json": "8e191d1e7a1ac4a45215cc42274c0c65312356f03681f800549ac93c04a50352",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-native-storage-target.log": "041893094e60fe1880c988bf96d721a58f3661d659b5e5532cfd7cd71cd044a3",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-native-storage-adjacent.log": "e67dac2fd4c41785d540183472f510ca5743544cd818bc05d21ffe32b93794ce"
+  }
+}
