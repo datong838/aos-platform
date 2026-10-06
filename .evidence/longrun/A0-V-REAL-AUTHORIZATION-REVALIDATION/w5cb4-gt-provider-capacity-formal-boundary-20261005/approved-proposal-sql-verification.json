@@ -1,0 +1,28 @@
+{
+  "authority_cutoff": "AOS-001398",
+  "code_base": "a0740c2754255ece7b680fd51523c1e603407e7f",
+  "tasks": [
+    "gt-provider-capacity-formal-boundary-20261005",
+    "gt-provider-capacity-publication-schema-20261005"
+  ],
+  "red": "1 failed: original SQL constant missing / 9.53s",
+  "green": "9 passed / 25.89s",
+  "adjacent": "155 passed, 8 existing warnings / 243.63s",
+  "implementation": "Reuse original 13-field approval projection joined to original proposal inside authenticated private SCRAM claims reader. Exact scope/maker/ref/hash/status/revision/event/current expiry; original proposal SHARE and subsequent full Guard retained.",
+  "review": "Plan consistent. No migration, new approval authority, new connection, lock scope expansion, ACL, runtime Source proposal or external effects. Real original withdrawal COMMIT ordering and raw alias consumers pass.",
+  "limits": [
+    "Not complete S01-S20 SQL equivalence or signed Source COMMIT/current consumer",
+    "Original Source/formal/publication Tasks remain ACTIVE; no full Delivery",
+    "No current authoritative database accessed or service restart; no execution or supplier-verification authority",
+    "Independent supervisor closes its own findings"
+  ],
+  "sources": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "9760ae7a788abe08d8b6c51dc212c7efa74d6354eb11d582d808fe0ea42c5c68",
+    "services/aos-api/aos_api/aip_provider_capacity_formal_boundary.py": "2412cffee38765c39c5bea51e454dba22c2d118f13eb928d41af1b7ce06bfaf4",
+    "services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py": "b9a80f4a679cc69d67dae27a1c28f5b405758a9d45eac0485391b6da5afca6cd",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/approved-proposal-sql-plan.md": "b3c2a1795f7e8841d570aea994b4319d0305f925e2460998e33c66176a1207cd",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/approved-proposal-sql-red.log": "17aea609bd0d9c4253b385d9736b95ebb454acc4e3d0e1bab34dc7ad0e6bb79b",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/approved-proposal-sql-green.log": "6b90fa412a5b3847c239a47b515fc23cd387a475f3f32d849b856345bb7e2749",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005/approved-proposal-sql-adjacent.log": "8d6f7d0724a82a17c4cad8f11bd109d593185a9eb7a0e459c6e74f5fe5427128"
+  }
+}

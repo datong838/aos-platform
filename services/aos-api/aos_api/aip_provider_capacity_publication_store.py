@@ -527,3 +527,36 @@ END
 $body$;
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_origin_bootstrap(bytea) FROM PUBLIC;
 """
+
+
+# S03/S04/S08 original row fence. This is consumed after private identity
+# validation; every original Guard check and withdrawal epoch still follows.
+CAPACITY_APPROVED_SOURCE_ROW_SQL = (
+    "WITH exact_event AS (" + CAPACITY_APPROVAL_EVENT_PROJECTION_SQL + r"""
+)
+SELECT p.* FROM public.aip_action_proposal p
+JOIN exact_event e ON e.proposal_id=p.proposal_id
+WHERE p.org_id=%(org_id)s AND p.project_id=%(project_id)s
+  AND p.org_id='org-org' AND p.project_id='dev-project'
+  AND p.proposal_id=%(proposal_id)s AND p.created_by=%(maker)s
+  AND p.action_type_id='aip_review_provider_capacity_source' AND p.status='approved'
+  AND p.version=2 AND p.version=%(proposal_revision)s AND p.proposal_hash=%(proposal_hash)s
+  AND p.expires_at > pg_catalog.clock_timestamp()
+  AND e.hash=%(approval_event_hash)s
+  AND e.value->'proposalVersion'='1'::jsonb
+  AND e.value->'decision'='"approved"'::jsonb
+  AND e.value->'slotId'='"checker.1"'::jsonb
+  AND e.value->>'proposalHash'=p.proposal_hash
+  AND e.value->>'actionBindingHash'=p.action_binding_hash
+  AND e.value->>'approvalPolicyHash'=p.approval_policy_hash
+  AND EXISTS (SELECT 1 FROM public.aip_action_approval_event current_event
+    WHERE current_event.org_id=p.org_id AND current_event.project_id=p.project_id
+      AND current_event.proposal_id=p.proposal_id
+      AND current_event.approval_event_id=%(approval_event_id)s
+      AND current_event.expires_at > pg_catalog.clock_timestamp())
+  AND (SELECT count(*) FROM public.aip_action_approval_event all_events
+    WHERE all_events.org_id=p.org_id AND all_events.project_id=p.project_id
+      AND all_events.proposal_id=p.proposal_id)=1
+FOR SHARE OF p
+"""
+)

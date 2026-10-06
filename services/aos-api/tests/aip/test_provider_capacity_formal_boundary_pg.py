@@ -1009,3 +1009,27 @@ def test_original_request_sql_storage_fence_detached_faults(approved_command):
             conn.execute('ROLLBACK TO SAVEPOINT compatible_alias')
             conn.execute('RELEASE SAVEPOINT compatible_alias')
         conn.rollback()
+
+
+
+def test_actual_private_approved_proposal_sql_matches_original_claims(approved_command,private_database):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_APPROVED_SOURCE_ROW_SQL
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims
+    command=approved_command[-1]
+    params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,maker=approved_command[0].subject,
+        proposal_id=command.approved_proposal.asset_id,proposal_revision=command.approved_proposal.revision,
+        proposal_hash=command.approved_proposal.content_hash,approval_event_id=command.approval_event.asset_id,
+        approval_event_hash=command.approval_event.content_hash)
+    with connect_capacity_issuer(private_database,SCOPE) as conn:
+        row=conn.execute(CAPACITY_APPROVED_SOURCE_ROW_SQL,params).fetchone()
+        assert conn.pgconn.used_password is True
+        assert row['proposal_id']==command.approved_proposal.asset_id and row['status']=='approved'
+        assert row['proposal_hash']==command.approved_proposal.content_hash and row['version']==2
+        fact=read_capacity_approved_claims(conn,command)
+        assert fact.source==approved_command[2]
+        assert fact.supplier_verified is False and fact.execution_allowed is False
+        for changed in [{'maker':'other'}, {'org_id':'dev-org'}, {'proposal_hash':'0'*64},
+            {'approval_event_hash':'0'*64},{'proposal_revision':1},{'proposal_id':'missing'},
+            {'approval_event_id':'missing'}]:
+            assert conn.execute(CAPACITY_APPROVED_SOURCE_ROW_SQL,{**params,**changed}).fetchone() is None

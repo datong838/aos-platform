@@ -155,8 +155,11 @@ def read_capacity_approved_claims(conn,command):
         scope=TenantScope(principal.org_id,principal.project_id)
         require_capacity_issuer_identity(conn,scope)
         ref=command.approved_proposal
-        row=conn.execute('SELECT * FROM public.aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s FOR SHARE',
-            (*scope.key,ref.asset_id)).fetchone()
+        from aos_api.aip_provider_capacity_publication_store import CAPACITY_APPROVED_SOURCE_ROW_SQL
+        row=conn.execute(CAPACITY_APPROVED_SOURCE_ROW_SQL,dict(org_id=scope.org_id,project_id=scope.project_id,
+            maker=principal.subject,proposal_id=ref.asset_id,proposal_revision=ref.revision,
+            proposal_hash=ref.content_hash,approval_event_id=command.approval_event.asset_id,
+            approval_event_hash=command.approval_event.content_hash)).fetchone()
         if (not row or row['action_type_id']!=ACTION_ID or row['created_by']!=principal.subject
             or row['status']!='approved' or row['version']!=ref.revision or row['proposal_hash']!=ref.content_hash):
             raise ValueError('original Source approval required')

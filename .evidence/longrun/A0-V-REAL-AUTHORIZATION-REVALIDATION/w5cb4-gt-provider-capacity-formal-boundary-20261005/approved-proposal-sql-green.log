@@ -1,0 +1,40 @@
+CAPACITY_WITHDRAWAL_COMMIT_PROOF {"authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START", "current_database_accessed": false, "epoch": 1, "execution_allowed": false, "fresh_reader_rejected": true, "holding_pid": 485416, "order": "reader_first", "pg_blocking_pids": [485416], "proposal_status": "approved", "reader_committed": true, "reader_pid": 485416, "reader_rejected": false, "supplier_verified": false, "target": "source", "waiting_pid": 485417, "withdrawal_count": 1, "writer_committed": true, "writer_pid": 485417}
+.CAPACITY_WITHDRAWAL_COMMIT_PROOF {"authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START", "current_database_accessed": false, "epoch": 1, "execution_allowed": false, "fresh_reader_rejected": true, "holding_pid": 485469, "order": "reader_first", "pg_blocking_pids": [485469], "proposal_status": "approved", "reader_committed": true, "reader_pid": 485469, "reader_rejected": false, "supplier_verified": false, "target": "allocation", "waiting_pid": 485471, "withdrawal_count": 1, "writer_committed": true, "writer_pid": 485471}
+.CAPACITY_WITHDRAWAL_COMMIT_PROOF {"authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START", "current_database_accessed": false, "epoch": 1, "execution_allowed": false, "fresh_reader_rejected": true, "holding_pid": 485523, "order": "writer_first", "pg_blocking_pids": [485523], "proposal_status": "approved", "reader_committed": false, "reader_pid": 485524, "reader_rejected": true, "supplier_verified": false, "target": "source", "waiting_pid": 485524, "withdrawal_count": 1, "writer_committed": true, "writer_pid": 485523}
+.CAPACITY_WITHDRAWAL_COMMIT_PROOF {"authorization": "APPROVED_CLAIMS_ONLY_NO_CAPACITY_NO_START", "current_database_accessed": false, "epoch": 1, "execution_allowed": false, "fresh_reader_rejected": true, "holding_pid": 485589, "order": "writer_first", "pg_blocking_pids": [485589], "proposal_status": "approved", "reader_committed": false, "reader_pid": 485590, "reader_rejected": true, "supplier_verified": false, "target": "allocation", "waiting_pid": 485590, "withdrawal_count": 1, "writer_committed": true, "writer_pid": 485589}
+.CAPACITY_PRIVATE_ALIAS_PROOF {"account_raw_hash": "5adb235a04a46afbd0c7ed091baa7d81c8ed89366f5250052bdbeb2ff3e6e868", "alternate": "basis_account", "basis_raw_hash": "6669838221da584b3d1edb408df999790f78e4a84010bc01fa416ceb618abaa6", "current_database_accessed": false, "exact_claims_match": true, "execution_allowed": false, "issuer_role": "aos_provider_capacity_issuer", "proposal_status": "approved", "scram_used": true, "supplier_verified": false}
+.CAPACITY_PRIVATE_ALIAS_PROOF {"account_raw_hash": "2ad119f0c4ec577031d53d36ebd7ebe720d6a45eb4c028f7f32eef488a6e495e", "alternate": "account_provider", "basis_raw_hash": "37817062bec05cdbba97042abe75c877c3e295a5a04fde05a1969f50501ffd71", "current_database_accessed": false, "exact_claims_match": true, "execution_allowed": false, "issuer_role": "aos_provider_capacity_issuer", "proposal_status": "approved", "scram_used": true, "supplier_verified": false}
+.CAPACITY_PRIVATE_ALIAS_PROOF {"account_raw_hash": "8e250701d2bbb258336135765dd0dc2c63a191742c8f9387b004511ae1c26546", "alternate": "basis_mixed", "basis_raw_hash": "2ed058b5bcee1435773f3ca02364ab478c2f2a49476b0c4c2268c3e59a81427e", "current_database_accessed": false, "exact_claims_match": true, "execution_allowed": false, "issuer_role": "aos_provider_capacity_issuer", "proposal_status": "approved", "scram_used": true, "supplier_verified": false}
+.CAPACITY_PRIVATE_ALIAS_PROOF {"account_raw_hash": "4cd3bfcda406b6f4eed5dabc6c4af83d8668c2c8b33c226862a9af6c252605e7", "alternate": "provider_mixed", "basis_raw_hash": "8cb4ac3a50440e03f333ef64d4fd6b4a6de52abb3b35a6285692a61fe6278ce7", "current_database_accessed": false, "exact_claims_match": true, "execution_allowed": false, "issuer_role": "aos_provider_capacity_issuer", "proposal_status": "approved", "scram_used": true, "supplier_verified": false}
+..                                                                [100%]
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+9 passed, 86 deselected, 7 warnings in 25.89s
