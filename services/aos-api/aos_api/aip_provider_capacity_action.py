@@ -87,10 +87,10 @@ class ProviderCapacityActionGuard:
                  request_hash: str) -> tuple[ProviderCapacityRequest, str]:
         if type(scope) is not TenantScope or scope.key != ('org-org','dev-project'):
             raise ProviderCapacityActionBlocked('PROVIDER_CAPACITY_POSITIVE_SCOPE_REQUIRED')
-        row = conn.execute("""SELECT *, encode(public.digest(convert_to(
-            public.canonical_asset_registry_jsonb(request_json),'UTF8'),'sha256'),'hex') AS actual_hash
-            FROM aip_provider_capacity_request WHERE org_id=%s AND project_id=%s AND request_id=%s""",
-            (*scope.key, request_id)).fetchone()
+        from aos_api.aip_provider_capacity_publication_store import CAPACITY_REQUEST_ROW_SQL
+        row = conn.execute(CAPACITY_REQUEST_ROW_SQL,
+            dict(org_id=scope.org_id, project_id=scope.project_id,
+                 request_id=request_id, request_hash=request_hash)).fetchone()
         now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
         if (row is None or row['request_hash'] != request_hash or row['actual_hash'] != request_hash
             or row['authorization_mode'] != 'REQUEST_ONLY_NO_CAPACITY_NO_START'

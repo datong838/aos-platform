@@ -535,3 +535,64 @@ def test_publication_event_projection_nullable_fields_original_model(approved_co
         assert row is not None and row['value']==expected
         assert row['canonical'].encode()==canonical_json(expected) and row['hash']==canonical_hash(expected)
         conn.rollback()
+
+
+def test_original_request_sql_storage_fence_private_reads(approved_command,private_database):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_REQUEST_ROW_SQL
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_action import ProviderCapacityActionGuard
+    ref=approved_command[2].allocation_request_ref
+    params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,request_id=ref.asset_id,request_hash=ref.content_hash)
+    with connect_capacity_issuer(private_database,SCOPE) as conn:
+        row=conn.execute(CAPACITY_REQUEST_ROW_SQL,params).fetchone()
+        assert row is not None and row['actual_hash']==row['request_hash']==ref.content_hash
+        assert row['request_json']['makerSubject']==row['created_by']==approved_command[0].subject
+        request,maker=ProviderCapacityActionGuard._request(conn,SCOPE,ref.asset_id,ref.content_hash)
+        assert maker==approved_command[0].subject and request.physical_account_id==row['request_json']['application']['physicalAccountId']
+        for changed in [dict(request_hash='f'*64),dict(org_id='dev-org'),dict(request_id=uuid4().hex)]:
+            assert conn.execute(CAPACITY_REQUEST_ROW_SQL,{**params,**changed}).fetchone() is None
+
+
+def test_original_request_sql_storage_fence_detached_faults(approved_command):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_REQUEST_ROW_SQL
+    ref=approved_command[2].allocation_request_ref
+    params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,request_id=ref.asset_id,request_hash=ref.content_hash)
+    with isolated_owner() as conn:
+        conn.execute('CREATE TEMP TABLE request_storage_probe AS SELECT * FROM public.aip_provider_capacity_request WITH NO DATA')
+        conn.execute('INSERT INTO pg_temp.request_storage_probe SELECT * FROM public.aip_provider_capacity_request '
+                     'WHERE org_id=%(org_id)s AND project_id=%(project_id)s AND request_id=%(request_id)s',params)
+        statement=CAPACITY_REQUEST_ROW_SQL.replace('FROM public.aip_provider_capacity_request r','FROM pg_temp.request_storage_probe r')
+        assert conn.execute(statement,params).fetchone() is not None
+        faults=["basis_verified=TRUE","basis_verified=NULL","execution_allowed=TRUE","execution_allowed=NULL",
+                "authorization_mode='other'","created_by='other'","request_hash='other'",
+                "expires_at=clock_timestamp()-interval '1 second'",
+                "request_json=request_json || '{\"extra\":true}'::jsonb",
+                "request_json=request_json-'application'",
+                "request_json=jsonb_set(request_json,'{makerSubject}','123'::jsonb)",
+                "request_json=jsonb_set(request_json,'{makerSubject}','\"other\"'::jsonb)",
+                "request_json='[]'::jsonb","request_json='null'::jsonb"]
+        for assignment in faults:
+            conn.execute('SAVEPOINT detached_fault')
+            conn.execute('UPDATE pg_temp.request_storage_probe SET '+assignment)
+            current_params=params
+            if assignment.startswith('request_json='):
+                # Keep the raw hash self-consistent to exercise shape/maker
+                # checks independently of the expected-hash rejection.
+                row=conn.execute("UPDATE pg_temp.request_storage_probe SET request_hash=encode(public.digest(convert_to("
+                    "public.canonical_asset_registry_jsonb(request_json),'UTF8'),'sha256'),'hex') RETURNING request_hash").fetchone()
+                current_params={**params,'request_hash':row['request_hash']}
+            assert conn.execute(statement,current_params).fetchone() is None,assignment
+            conn.execute('ROLLBACK TO SAVEPOINT detached_fault')
+            conn.execute('RELEASE SAVEPOINT detached_fault')
+        from aos_api.aip_provider_capacity_authorization import ProviderCapacityRequest
+        for alias in ['账户 内部','account\u200b']:
+            conn.execute('SAVEPOINT compatible_alias')
+            conn.execute("UPDATE pg_temp.request_storage_probe SET request_json=jsonb_set(request_json,'{application,physicalAccountId}',to_jsonb(%s::text))",(alias,))
+            row=conn.execute("UPDATE pg_temp.request_storage_probe SET request_hash=encode(public.digest(convert_to("
+                "public.canonical_asset_registry_jsonb(request_json),'UTF8'),'sha256'),'hex') RETURNING request_hash").fetchone()
+            stored=conn.execute(statement,{**params,'request_hash':row['request_hash']}).fetchone()
+            assert stored is not None
+            assert ProviderCapacityRequest.model_validate(stored['request_json']['application']).physical_account_id==alias
+            conn.execute('ROLLBACK TO SAVEPOINT compatible_alias')
+            conn.execute('RELEASE SAVEPOINT compatible_alias')
+        conn.rollback()

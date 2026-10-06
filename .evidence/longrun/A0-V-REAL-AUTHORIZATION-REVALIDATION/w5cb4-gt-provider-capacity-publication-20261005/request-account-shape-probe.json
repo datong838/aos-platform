@@ -1,0 +1,15 @@
+{
+  "schema": "aos-readonly-contract-probe/v1",
+  "baseline": "05d099d73f2289719183b780d0737d81d7695d12",
+  "authority": "AOS-001384",
+  "original_model": "aos_api.aip_provider_capacity_authorization.ProviderCapacityRequest",
+  "compared_helper": "aos_api.aip_provider_capacity_publication_contracts._identifier",
+  "scope": "local original model validation only; no DB or business authorization",
+  "cases": [
+    {"value": "账户 内部", "original_request_accepts": true, "identifier_accepts": false},
+    {"value": "account\u200b", "original_request_accepts": true, "identifier_accepts": false},
+    {"value": " account", "original_request_accepts": false, "identifier_accepts": false},
+    {"value": "account\u00a0", "original_request_accepts": false, "identifier_accepts": false}
+  ],
+  "conclusion": "S11 physicalAccountId uses original 1..200 and strip-only semantics; cannot reuse printable/nonwhitespace identifier gate. Full SQL S11 and actual issuance still pending."
+}

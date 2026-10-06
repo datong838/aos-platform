@@ -180,3 +180,9 @@ RED新常量不存在；完整合法target单项变异同时用原Python部署�
 字段门完成后回到已登记S08完整批准SQL：两个安全候选是S08原批准事件13字段投影及时间非法值，S11原capacity request整份JSON/原批准依赖。先选S08只读原生非有限/超Python年份/BC范围实验；现四微秒正向投影不能覆盖这些错误。仅固定隔离r4 READ ONLY VALUES/SELECT，不创建批准、不改真实行，结果决定后继完整批准函数的拒绝门；S11后继仍需原Model/数据库全部动态事实。
 
 S08转入实际发布模块：publication_store.py加入CAPACITY_APPROVAL_EVENT_PROJECTION_SQL，窄命名参数org_id/project_id/approval_event_id只读原public事件，UTC连接条件、positive tenant、版本>=1、原nullable扩展hash格式及finite/UTC Python年域成立后构造13字段含null，原canonical_asset_registry_jsonb/digest计算原字节/hash。无宽写函数/新表/grant/迁移；零行须由后继全guard拒绝，投影不是批准/当前性授权。测试沿formal-boundary已有真实Source/allocation批准fixtures及private SCRAM/RLS，双方完整模型/原refs/canonical字节匹配；dev-org/缺event/时区漂移拒绝。非法时间负例仅本会话TEMP LIKE原表型（无正式authority）承载，替换查询唯一FROM用于计算域测试，rollback，不改原不可变event，不据TEMP正负宣称权限成立。
+
+## AOS-001384 S11 原申请存储门进实际读取路径
+
+两个安全候选：S11原完整request存储fence进入SQL并原guard消费；S12 account/basis整份JSON候选fence。先S11，保留所有原Python typed/time/Provider/Evidence检查与锁顺序，不能以新SQL布尔取代它们。publication_store.py新增CAPACITY_REQUEST_ROW_SQL，原唯一tenant/id读取、原整份canonical JSON实际hash=stored=request expectedhash、原固定authorization_mode、两个IS FALSE、expires_at>当前DB clock、request_json恰application/makerSubject且maker字符串=created_by均在原生查询中成立才返回。仅已登记formal-boundary范围action.py的_request改用该查询；query后再次当前clock期限及原模型/tenant/proposalExpiry/window/Provider/Evidence原样核，原错误码不变。无入口/grant/新表，原runtime和private issuer仍由原身份门核，fullSource未完成。
+
+本轮测试在formal-boundary_pg.py沿真实批准/私有SCRAM读actual原申请比hash和原refs，错hash/dev/missing拒绝；TEMP AS原行型仅计算域逐项破坏flags/mode/maker/keys/expiry/stored hash，再拒绝，不改原不可变行。原Python账户strip-only已发现，SQL不在此存储门擅加Unicode identifier或application canonical形状约束；整份typed应用SQL仍单独后续。专项、原capacity/action/source/formal+publication合同相邻、自洽独立复审，Task不Delivery。

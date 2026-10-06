@@ -70,3 +70,5 @@ approval-time-format-readonly.sql/log/json在隔离r4 READ ONLY、SET LOCAL Time
 S08整份事件原生计算新增证据位于formal-boundary Task的approval-event-native-probe-r1.log：真实原Source及allocation批准13字段投影与原模型/refs精确一致，默认SQL时间投影hash不同，26次单字段改变hash。私有连接UTC/drift门已于m1@9c1af075实现；前节“现连接未固定”仅描述旧基线。实验未核所有NULL、infinity/超范围年负例，未证明完整SQL批准/Owner/撤回/发布和历史非UTC兼容。
 
 2026-10-06 S08只读边界续查：approval-time-invalid-native.sql/log在固定隔离r4 READ ONLY验证非有限±infinity、10000年及公元前1年。纯to_char对infinity返回NULL，公元前1年投影为0001-01-01T00:00:00，与公元1年的字串相同，不能省略有限/年份域检查。isfinite(value)且UTC extract(year) BETWEEN 1 AND 9999分别拒绝四错误样本，保留Python首/末年；这只是完整批准SQL所需拒绝条件的真实反例，不是批准函数或业务发行通过。后继原完整S08事件函数必须先拒NULL/非有限/UTC年域，再使用完整微秒规范格式及13字段原hash，不凭日期字符串重构更正历史批准。
+
+S11下一合同调查已由原Python模型真实验证：request-account-shape-probe.json中的内部空格、零宽字符账户别名被原ProviderCapacityRequest接受，但_identifier拒绝；边缘空格和NBSP被原request拒绝。原physicalAccountId仅1..200/strip-only，不是公开签名publisher的printable/nonwhitespace；后继SQL必须冻结Python strip边界而保留原内部字符，不偷换已完成Unicode identifier门。原request存储makerSubject亦只1..200/strip-only。整份JSON哈希、strict application、proposalExpiresAt原行相等/current窗口与原Provider/Evidence锁仍须组合，不由本地模型probe授Source权限。

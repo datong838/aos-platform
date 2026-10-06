@@ -43,6 +43,29 @@ SELECT proposal_id,value,canonical,
   pg_catalog.encode(public.digest(pg_catalog.convert_to(canonical,'UTF8'),'sha256'),'hex') AS hash FROM encoded
 """
 
+# S11 immutable storage fence, used by the original guard. A returned row is
+# still unverified application data: typed terms/current dependencies follow.
+CAPACITY_REQUEST_ROW_SQL = r"""
+WITH actual AS (
+  SELECT r.*,pg_catalog.encode(public.digest(pg_catalog.convert_to(
+    public.canonical_asset_registry_jsonb(request_json),'UTF8'),'sha256'),'hex') AS actual_hash
+  FROM public.aip_provider_capacity_request r
+  WHERE org_id=%(org_id)s AND project_id=%(project_id)s AND request_id=%(request_id)s
+    AND org_id='org-org' AND project_id='dev-project'
+)
+SELECT * FROM actual
+WHERE request_hash=%(request_hash)s AND actual_hash=%(request_hash)s
+  AND authorization_mode='REQUEST_ONLY_NO_CAPACITY_NO_START'
+  AND basis_verified IS FALSE AND execution_allowed IS FALSE
+  AND expires_at > pg_catalog.clock_timestamp()
+  AND CASE WHEN pg_catalog.jsonb_typeof(request_json)='object' THEN
+    request_json ?& ARRAY['application','makerSubject']
+    AND (SELECT count(*) FROM pg_catalog.jsonb_object_keys(request_json))=2
+    ELSE FALSE END
+  AND pg_catalog.jsonb_typeof(request_json->'makerSubject')='string'
+  AND request_json->>'makerSubject'=created_by
+"""
+
 CAPACITY_SIGNED_BODY_PROFILE_SQL = r"""
 CREATE FUNCTION aos_capacity_publication_private.canonical_signed_json(p_value json, p_depth integer)
 RETURNS text LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER

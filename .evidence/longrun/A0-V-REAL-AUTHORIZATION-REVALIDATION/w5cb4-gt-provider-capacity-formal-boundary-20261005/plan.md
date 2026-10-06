@@ -1,5 +1,7 @@
 # 正式容量发行数据库边界方案门
 
+2026-10-06 AOS-001384 S11：本Task仅aip_provider_capacity_action.py的_request及formal-boundary_pg.py，消费publication Task原完整存储SQL门。原typed/time/current Provider/Evidence与锁顺序全部保留，零行原错误码；runtime/private身份仍原门。两Task串行、lease16:00/20:00有效。方案详publication plan最后S11节，先RED再最小实现，不将此存储门当全SQL申请类型或最终Source批准。
+
 2026-10-06 AOS-001383 S08续接：原Task lease16:00有效，唯一写者串行测试publication_store.py新只读事件投影SQL。本Task只修改test_provider_capacity_formal_boundary_pg.py，沿已有真正Source/allocation审批、private SCRAM/RLS验证13字段/字节/原ref，并拒跨租户、缺event、时区漂移；TEMP原表型负例只验证计算域，全部rollback，不碰原不可变event或真实库。production常量归publication Task，方案详其plan最后一节。仍无全SQL批准、Source发行/consumer与完整Delivery。
 
 基线 m1 7c24f983 / AOS-001352；Task gt-provider-capacity-formal-boundary-20261005，与ACTIVE fullSource issuer Task串行协作、仍唯一m1写者。
