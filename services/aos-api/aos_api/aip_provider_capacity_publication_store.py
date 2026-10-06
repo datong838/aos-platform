@@ -102,12 +102,31 @@ def _combination_candidate_sql(kind):
     return statement
 
 
+def _original_exact_ref_sql(value):
+    # Fixed internal expressions only. Mirror original populate_by_name for
+    # the three aliased fields without dropping unknown or duplicate fields.
+    value='('+value+')'
+    return f"""CASE WHEN pg_catalog.jsonb_typeof({value})='object' THEN
+      CASE WHEN (SELECT count(*) FROM pg_catalog.jsonb_object_keys({value}))=4
+        AND {value} - ARRAY['assetType','asset_type','assetId','asset_id','revision','contentHash','content_hash']='{{}}'::jsonb
+        AND (({value} ? 'assetType') <> ({value} ? 'asset_type'))
+        AND (({value} ? 'assetId') <> ({value} ? 'asset_id'))
+        AND (({value} ? 'contentHash') <> ({value} ? 'content_hash'))
+        AND {value} ? 'revision'
+      THEN pg_catalog.jsonb_build_object(
+        'assetType',COALESCE({value}->'assetType',{value}->'asset_type'),
+        'assetId',COALESCE({value}->'assetId',{value}->'asset_id'),
+        'revision',{value}->'revision',
+        'contentHash',COALESCE({value}->'contentHash',{value}->'content_hash'))
+      ELSE NULL END ELSE NULL END"""
+
+
 # Original S13 combination, reading all three authoritative stored claims.
 # This does not replace typed models, original approvals or dependency locks.
 CAPACITY_SOURCE_COMBINATION_SQL = (
     'WITH request AS ('+CAPACITY_REQUEST_ROW_SQL+'), account AS ('+
     _combination_candidate_sql('account')+'), basis AS ('+
-    _combination_candidate_sql('basis')+r"""), terms AS (
+    _combination_candidate_sql('basis')+f"""), terms AS (
       SELECT a.candidate_id,a.revision,a.content_hash,
         a.request_json->'candidate' AS account,
         b.request_json->'candidate' AS basis,
@@ -115,7 +134,7 @@ CAPACITY_SOURCE_COMBINATION_SQL = (
       FROM account a CROSS JOIN basis b CROSS JOIN request r
       WHERE r.created_by=%(maker)s
     ) SELECT 1 AS matched FROM terms
-    WHERE basis->'physicalAccountRef'=pg_catalog.jsonb_build_object(
+    WHERE {_original_exact_ref_sql("basis->'physicalAccountRef'")}=pg_catalog.jsonb_build_object(
       'assetType','ProviderPhysicalAccountCandidateRevision','assetId',candidate_id,
       'revision',revision,'contentHash',content_hash)
       AND pg_catalog.jsonb_typeof(account->'physicalAccountId')='string'
@@ -123,7 +142,7 @@ CAPACITY_SOURCE_COMBINATION_SQL = (
       AND account->'physicalAccountId'=application->'physicalAccountId'
       AND CASE WHEN pg_catalog.jsonb_typeof(account->'providerRefs')='array' THEN
         EXISTS(SELECT 1 FROM pg_catalog.jsonb_array_elements(account->'providerRefs') AS refs(value)
-               WHERE value=application->'providerRef') ELSE FALSE END
+               WHERE {_original_exact_ref_sql('value')}=application->'providerRef') ELSE FALSE END
       AND CASE WHEN pg_catalog.jsonb_typeof(basis->'maxConcurrency')='number'
         AND pg_catalog.jsonb_typeof(application->'requestedMaxConcurrency')='number'
         AND pg_catalog.length(basis->>'maxConcurrency')<=7

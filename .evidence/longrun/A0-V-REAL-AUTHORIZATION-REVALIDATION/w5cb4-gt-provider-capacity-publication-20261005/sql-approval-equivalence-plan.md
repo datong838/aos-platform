@@ -95,3 +95,12 @@ publication_store 新增 CAPACITY_SOURCE_COMBINATION_SQL，复用原 S11 request
 S12后继typed basis时间合同真实本地probe见basis-time-original-contract-probe.json：原ProviderCapacityBasisCandidate接受epoch秒、数字epoch字符串、小写t/z、空格分隔和+08时区（输出为原模型规范形式），拒naive observation及float/bool并发。正常CandidateStore存model_dump JSON会规范化，但原_candidate对原raw canonical hash校验后仍用model_validate读取；因此不能在“严格等价”名义下将所有历史raw候选都强行要求与SigningPermit相同RFC3339字节。必须先复核原INSERT路径/既存行约束并明确接受域：原普通Store规范输出、原读取接受域和未来发行合同各自取证；尚未批准的硬化不能隐式改变正常功能。本probe纯模型，不证明DB发行或业务权限。
 
 S13最终验收：六模块450 passed/215.84s、7既有warnings，实际原consumer已接入三原行组合SQL，独立只读复审无重大问题；formal-boundary/combination-verification.md为证据入口。原typed模型/签名与完整prepare/commit均未收口。
+
+
+## S13 原引用别名兼容调查与修复计划
+
+原FormalExactRef继承populate_by_name=True，candidate147只限定顶层camelCase键，nested ref并未要求只camelCase；候选账户Provider refs或basis accountRef可能使用snake_case/混合别名，经原模型重解析与Python四条件成立，但新S13 raw JSONB相等潜在误拒。先通过实际原runtime INSERT/hash/CHECK和真实Source proposal入口复现，而非TEMP模型替代。若RED证实，在publication_store内部生成固定SQL引用规范表达式：精确4字段、允许每个字段camel或snake任选其一，禁止双别名/unknown字段和缺失；将basis accountRef及account Provider元素规范为原camel四字段后比较。S11/S12整份raw hash不改，Source引用仍指向原raw hash；不改模型或a147迁移。原consumer/_combination位置和原时间/当前性不变。专项真实别名正向+双别名/extra负向，完整相邻和独立复审后收口。
+
+S13引用别名实际复现：ref-alias-red.log两项通过原runtime实际INSERT/CHECK，原模型/Python组合通过后在新增SQL处SOURCE_ACCOUNT_OR_CONCURRENCY_DRIFTED误拒，8.48s。第一修复ref-alias-green.log暴露箭头与减键运算优先级未加括号；修复后第二轮测试同时与尚未退出旧累计竞争全局隔离issuer角色，并且测试断言将proposal原drafted误写awaiting_approval。该轮失败不算逻辑通过。已结束旧轮(143)，只读核隔离aos-a0v-test-pg的aos_guard_approval_issuer为NOLOGIN且无password/活跃连接；不存在真库操作。最终串行ref-alias-green-r3.log 6 passed/14.03s，原native四种snake/mixed别名Source proposal均drafted、存储哈希未重写；原重hash负例扩展双别名/scalar拒绝。最终相邻ref-alias-adjacent-r2.log仍待终结，禁止将早期中止或状态断言失败作为完成证据。
+
+最终串行相邻回归已终结：ref-alias-adjacent-r2.log 454 passed/207.14s，7既有warnings，exit0。自复审与限制见ref-alias-verification.md；独立督导自主复审本次修复尚无新结论，不宣称独立复审收口。

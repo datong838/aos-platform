@@ -16,6 +16,38 @@ from tests.aip._runtime_guard_history_fixture import isolated_owner
 ISSUER='aos_provider_capacity_issuer'
 
 
+@pytest.mark.parametrize('alternate',['basis_account','account_provider','basis_mixed','provider_mixed'])
+def test_original_nested_ref_aliases_reach_source_review(source_inputs,alternate):
+    from psycopg.types.json import Jsonb
+    from aos_api.db import connect_serializable
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source
+    maker,_,source,_=source_inputs
+    with connect_serializable(SCOPE) as conn:
+        account=conn.execute('SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                             (source.physical_account_ref.asset_id,)).fetchone()['request_json']
+        basis=conn.execute('SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+                           (source.basis_ref.asset_id,)).fetchone()['request_json']
+        def aliases(ref):
+            mapping=dict(assetId='asset_id') if alternate.endswith('mixed') else dict(assetType='asset_type',assetId='asset_id',contentHash='content_hash')
+            return {mapping.get(k,k):v for k,v in ref.items()}
+        if alternate in {'account_provider','provider_mixed'}:account['candidate']['providerRefs'][0]=aliases(account['candidate']['providerRefs'][0])
+        account_id='alias-account-'+uuid4().hex;ah=canonical_hash(account)
+        ar=source.physical_account_ref.model_copy(update=dict(asset_id=account_id,content_hash=ah))
+        basis['candidate']['physicalAccountRef']=ar.model_dump(by_alias=True)
+        if alternate in {'basis_account','basis_mixed'}:basis['candidate']['physicalAccountRef']=aliases(basis['candidate']['physicalAccountRef'])
+        basis_id='alias-basis-'+uuid4().hex;bh=canonical_hash(basis)
+        for kind,identifier,body,digest in [('account',account_id,account,ah),('basis',basis_id,basis,bh)]:
+            conn.execute('INSERT INTO public.aip_provider_capacity_candidate '
+                '(org_id,project_id,candidate_id,candidate_kind,idempotency_key,content_hash,request_json,created_by) '
+                'VALUES(%s,%s,%s,%s,%s,%s,%s,%s)',(*SCOPE.key,identifier,kind,'alias-'+uuid4().hex,digest,Jsonb(body),maker.subject))
+        conn.commit()
+    changed=source.model_copy(update=dict(physical_account_ref=ar,
+        basis_ref=source.basis_ref.model_copy(update=dict(asset_id=basis_id,content_hash=bh))))
+    proposal=propose_provider_capacity_source(maker,changed,'alias-review-'+uuid4().hex,changed.valid_until)
+    assert proposal.proposal.status.value=='drafted'
+
+
 def test_source_combination_sql_original_private_rows(approved_command,private_database):
     from aos_api.aip_provider_capacity_publication_store import CAPACITY_SOURCE_COMBINATION_SQL
     from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
@@ -54,7 +86,8 @@ def test_source_combination_sql_independently_rehashed_faults(approved_command):
         assert conn.execute(statement,params).fetchone() is not None
         for fault in ['alias','basis_ref','provider_missing','provider_hash','provider_extra','provider_array',
                       'concurrency','basis_bool','basis_fraction','basis_null','request_string','request_maker',
-                      'basis_zero','basis_huge','request_huge','basis_negative']:
+                      'basis_zero','basis_huge','request_huge','basis_negative','provider_duplicate_alias',
+                      'basis_duplicate_alias','provider_scalar','basis_scalar']:
             conn.execute('SAVEPOINT combination_fault')
             a,b,r=deepcopy(account),deepcopy(basis),deepcopy(request)
             if fault=='alias':a['candidate']['physicalAccountId']='different'
@@ -62,6 +95,8 @@ def test_source_combination_sql_independently_rehashed_faults(approved_command):
             elif fault=='provider_hash':a['candidate']['providerRefs'][0]['contentHash']='f'*64
             elif fault=='provider_extra':a['candidate']['providerRefs'][0]['extra']=True
             elif fault=='provider_array':a['candidate']['providerRefs']={}
+            elif fault=='provider_duplicate_alias':a['candidate']['providerRefs'][0]['asset_id']=a['candidate']['providerRefs'][0]['assetId']
+            elif fault=='provider_scalar':a['candidate']['providerRefs']=[123]
             elif fault=='concurrency':b['candidate']['maxConcurrency']=r['application']['requestedMaxConcurrency']+1
             elif fault=='basis_bool':b['candidate']['maxConcurrency']=True
             elif fault=='basis_fraction':b['candidate']['maxConcurrency']=1.5
@@ -77,6 +112,8 @@ def test_source_combination_sql_independently_rehashed_faults(approved_command):
             ah=canonical_hash(a)
             b['candidate']['physicalAccountRef']={**b['candidate']['physicalAccountRef'],'contentHash':ah}
             if fault=='basis_ref':b['candidate']['physicalAccountRef']['assetId']='different'
+            elif fault=='basis_duplicate_alias':b['candidate']['physicalAccountRef']['asset_id']=b['candidate']['physicalAccountRef']['assetId']
+            elif fault=='basis_scalar':b['candidate']['physicalAccountRef']=123
             bh,rh=canonical_hash(b),canonical_hash(r)
             conn.execute("UPDATE pg_temp.combination_candidates SET request_json=%s,content_hash=%s WHERE candidate_kind='account'",(Jsonb(a),ah))
             conn.execute("UPDATE pg_temp.combination_candidates SET request_json=%s,content_hash=%s WHERE candidate_kind='basis'",(Jsonb(b),bh))
