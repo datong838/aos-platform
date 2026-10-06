@@ -22,3 +22,6 @@ Maintenance151Journal绑定冻结head/thread/Task/base，不仅step名称。原�
 
 ## 恢复151现场审计
 仍只改原maintenance script/test：只读JSON连接适配器使用psycopg Literal绑定参数、仅接SELECT且拒绝多语句，严格把已知OID列/数组与tgargs转换成原驱动类型。调用原require_withdrawal_fence，不改其校验标准；固定原same-image恢复容器/镜像/卷，完整snapshot与a151已保存after精确比较，末尾重验容器身份。将该现场门接入preflight，不能用旧PASS标签放行。该管理员只读目录审计不替代原生issuer身份测试或当前源操作门。
+
+## 最新隔离窗口完整路径
+原两代码文件和本证据scope内增加run_isolated151(thread)：先真实preflight；在aos-recovery/current151-*独占0700目录绑定HEAD/Task，固定恢复镜像、colima-aos-a0v-test-only、current151-*新命名卷/none-network/noports。由第二份142已校验备份建立隔离源，再依九步journal执行：无应用客户端→ALTER SYSTEM空listen/restart及TCP拒绝/客户端0/prepared0→窗口内全备globals/dump→新独立恢复并全库窄等价→逐步重新生成已演练hash SQL，每步O_EXCL intent/terminal和版本回读→完整151快照与严格fence→原配置来源恢复/restart/TCP与版本→无应用客户端→最终snapshot、身份、租约/HEAD。任一失败保留所有卷/目录/attempt，禁止重发。此入口不能选择当前源容器，不提供current执行入口；完整当前维护Task仍ACTIVE。

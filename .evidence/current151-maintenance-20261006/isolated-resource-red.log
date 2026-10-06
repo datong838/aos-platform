@@ -1,0 +1,99 @@
+............................FFFFF                                        [100%]
+=================================== FAILURES ===================================
+______ test_isolated151_refuses_current_or_drifted_resource[source_name] _______
+
+fault = 'source_name'
+
+    @pytest.mark.parametrize('fault',['source_name','network','ports','image','volume'])
+    def test_isolated151_refuses_current_or_drifted_resource(fault):
+        m=module();name='current151-source-abcd'
+        item=dict(Name='/'+name,Image='image',State=dict(Running=True),HostConfig=dict(NetworkMode='none',Privileged=False),NetworkSettings=dict(Ports={}),Mounts=[dict(Type='volume',Name=name+'-data',Destination='/var/lib/postgresql/data',RW=True)])
+        if fault=='source_name':name='aos-a0v-recovery-pg';item['Name']='/'+name
+        elif fault=='network':item['HostConfig']['NetworkMode']='bridge'
+        elif fault=='ports':item['NetworkSettings']['Ports']={'5432/tcp':[dict(HostPort='18435')]}
+        elif fault=='image':item['Image']='other'
+        elif fault=='volume':item['Mounts'][0]['Name']='aos-a0v-recovery-pg-data'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_isolated151(item,name=name,image='image')
+                                                    ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_isolated151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:123: AttributeError
+________ test_isolated151_refuses_current_or_drifted_resource[network] _________
+
+fault = 'network'
+
+    @pytest.mark.parametrize('fault',['source_name','network','ports','image','volume'])
+    def test_isolated151_refuses_current_or_drifted_resource(fault):
+        m=module();name='current151-source-abcd'
+        item=dict(Name='/'+name,Image='image',State=dict(Running=True),HostConfig=dict(NetworkMode='none',Privileged=False),NetworkSettings=dict(Ports={}),Mounts=[dict(Type='volume',Name=name+'-data',Destination='/var/lib/postgresql/data',RW=True)])
+        if fault=='source_name':name='aos-a0v-recovery-pg';item['Name']='/'+name
+        elif fault=='network':item['HostConfig']['NetworkMode']='bridge'
+        elif fault=='ports':item['NetworkSettings']['Ports']={'5432/tcp':[dict(HostPort='18435')]}
+        elif fault=='image':item['Image']='other'
+        elif fault=='volume':item['Mounts'][0]['Name']='aos-a0v-recovery-pg-data'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_isolated151(item,name=name,image='image')
+                                                    ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_isolated151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:123: AttributeError
+_________ test_isolated151_refuses_current_or_drifted_resource[ports] __________
+
+fault = 'ports'
+
+    @pytest.mark.parametrize('fault',['source_name','network','ports','image','volume'])
+    def test_isolated151_refuses_current_or_drifted_resource(fault):
+        m=module();name='current151-source-abcd'
+        item=dict(Name='/'+name,Image='image',State=dict(Running=True),HostConfig=dict(NetworkMode='none',Privileged=False),NetworkSettings=dict(Ports={}),Mounts=[dict(Type='volume',Name=name+'-data',Destination='/var/lib/postgresql/data',RW=True)])
+        if fault=='source_name':name='aos-a0v-recovery-pg';item['Name']='/'+name
+        elif fault=='network':item['HostConfig']['NetworkMode']='bridge'
+        elif fault=='ports':item['NetworkSettings']['Ports']={'5432/tcp':[dict(HostPort='18435')]}
+        elif fault=='image':item['Image']='other'
+        elif fault=='volume':item['Mounts'][0]['Name']='aos-a0v-recovery-pg-data'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_isolated151(item,name=name,image='image')
+                                                    ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_isolated151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:123: AttributeError
+_________ test_isolated151_refuses_current_or_drifted_resource[image] __________
+
+fault = 'image'
+
+    @pytest.mark.parametrize('fault',['source_name','network','ports','image','volume'])
+    def test_isolated151_refuses_current_or_drifted_resource(fault):
+        m=module();name='current151-source-abcd'
+        item=dict(Name='/'+name,Image='image',State=dict(Running=True),HostConfig=dict(NetworkMode='none',Privileged=False),NetworkSettings=dict(Ports={}),Mounts=[dict(Type='volume',Name=name+'-data',Destination='/var/lib/postgresql/data',RW=True)])
+        if fault=='source_name':name='aos-a0v-recovery-pg';item['Name']='/'+name
+        elif fault=='network':item['HostConfig']['NetworkMode']='bridge'
+        elif fault=='ports':item['NetworkSettings']['Ports']={'5432/tcp':[dict(HostPort='18435')]}
+        elif fault=='image':item['Image']='other'
+        elif fault=='volume':item['Mounts'][0]['Name']='aos-a0v-recovery-pg-data'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_isolated151(item,name=name,image='image')
+                                                    ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_isolated151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:123: AttributeError
+_________ test_isolated151_refuses_current_or_drifted_resource[volume] _________
+
+fault = 'volume'
+
+    @pytest.mark.parametrize('fault',['source_name','network','ports','image','volume'])
+    def test_isolated151_refuses_current_or_drifted_resource(fault):
+        m=module();name='current151-source-abcd'
+        item=dict(Name='/'+name,Image='image',State=dict(Running=True),HostConfig=dict(NetworkMode='none',Privileged=False),NetworkSettings=dict(Ports={}),Mounts=[dict(Type='volume',Name=name+'-data',Destination='/var/lib/postgresql/data',RW=True)])
+        if fault=='source_name':name='aos-a0v-recovery-pg';item['Name']='/'+name
+        elif fault=='network':item['HostConfig']['NetworkMode']='bridge'
+        elif fault=='ports':item['NetworkSettings']['Ports']={'5432/tcp':[dict(HostPort='18435')]}
+        elif fault=='image':item['Image']='other'
+        elif fault=='volume':item['Mounts'][0]['Name']='aos-a0v-recovery-pg-data'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_isolated151(item,name=name,image='image')
+                                                    ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_isolated151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:123: AttributeError
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_isolated151_refuses_current_or_drifted_resource[source_name]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_isolated151_refuses_current_or_drifted_resource[network]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_isolated151_refuses_current_or_drifted_resource[ports]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_isolated151_refuses_current_or_drifted_resource[image]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_isolated151_refuses_current_or_drifted_resource[volume]
+5 failed, 28 passed in 0.16s

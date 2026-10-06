@@ -241,3 +241,145 @@ class Maintenance151Journal:
             raise Maintenance151Blocked('VERIFIED_POSTCONDITION_REQUIRED')
         self._write(step+'-done.json',dict(binding=self.binding,step=step,result=result))
         return result
+
+
+def require_isolated151(item,*,name,image):
+    import re
+    mounts=item.get('Mounts',[])
+    valid=(len(mounts)==1 and all(mounts[0].get(k)==v for k,v in
+        dict(Type='volume',Name=name+'-data',Destination='/var/lib/postgresql/data',RW=True).items()))
+    if (not re.fullmatch(r'current151-(source|restore)-[a-z0-9]+',name)
+        or item['Name']!='/'+name or item['Image']!=image or not item['State']['Running']
+        or item['HostConfig']['NetworkMode']!='none' or item['HostConfig']['Privileged']
+        or any(item['NetworkSettings']['Ports'].values()) or not valid):
+        raise Maintenance151Blocked('ISOLATED151_RESOURCE_REQUIRED')
+
+
+
+def run_isolated151(*,thread):
+    """Whole current-version window sequence on new isolated volumes only."""
+    import hashlib,io,os,secrets,subprocess,time
+    from alembic import command
+    from alembic.config import Config
+    from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence
+    report=preflight(thread=thread)
+    subprocess.run(['git','diff','--exit-code','HEAD','--','scripts/a0v_current_151_maintenance.py'],cwd=ROOT,check=True,capture_output=True)
+    historic=ROOT.parent/'aos-recovery/current150-w5cb4-current150-restore-gate-20261005-154201'
+    backup=historic/'second-consistent-142-20261006'
+    restore=_load('isolated151_restore',ROOT/'scripts/a0v_current_150_restore_gate.py')
+    primitive=_load('isolated151_snapshot',ROOT/'scripts/a0v_current_142_restore_gate.py')
+    maintenance=_load('isolated151_window',ROOT/'scripts/a0v_current_142_maintenance.py')
+    expected=json.loads((backup/'source.json').read_text())
+    final_expected=json.loads((historic/'rehearsal-a151/after.json').read_text())
+    image=json.loads((backup/'restore-phase/intent.json').read_text())['image']
+    suffix=secrets.token_hex(6)
+    state=ROOT.parent/('aos-recovery/current151-window-'+suffix)
+    state.mkdir(mode=0o700)
+    journal=Maintenance151Journal(state,head=report['head'])
+    source,target='current151-source-'+suffix,'current151-restore-'+suffix
+    docker=['docker','--context',restore.DEST_CONTEXT]
+    tick=time.monotonic()
+    def save(name,value):journal._write(name,value)
+    save('intent.json',dict(binding=journal.binding,source=source,target=target,image=image,source_touched=False))
+    def execute(args,data=None,check=True):
+        journal._require_live_binding()
+        result=subprocess.run(docker+args,input=data,capture_output=True,timeout=180)
+        if check and result.returncode:
+            raise Maintenance151Blocked('ISOLATED151_COMMAND_FAILED_EXIT_'+str(result.returncode))
+        return result
+    def pg(name,statement,database=restore.SOURCE,tcp=False,check=True):
+        return execute(['exec',name,'psql','-U','aos_app','-d',database,'-Atq','-v','ON_ERROR_STOP=1']+
+            (['-h','127.0.0.1'] if tcp else [])+['-c',statement],check=check)
+    def ready(name):
+        for _ in range(30):
+            if execute(['exec',name,'pg_isready','-U','aos_app'],check=False).returncode==0:return
+            time.sleep(1)
+        raise Maintenance151Blocked('ISOLATED151_NOT_READY')
+    def inspect(name):
+        item=json.loads(execute(['inspect',name]).stdout)[0]
+        require_isolated151(item,name=name,image=image)
+        return item
+    def query(name,statement):
+        return json.loads(pg(name,"BEGIN READ ONLY;SET LOCAL timezone='UTC';SET LOCAL search_path=pg_catalog,public;"+statement+';COMMIT').stdout)
+    def snapshot(name,roles):return restore.full_snapshot(primitive,lambda q:query(name,q),roles)
+    globals_data=primitive.prepare_globals((backup/'globals-no-password.sql').read_bytes(),bootstrap='aos_app')
+    for name in (source,target):
+        execute(['run','-d','--pull','never','--name',name,'--network','none','--cpus','1','--memory','768m',
+            '--label','aos.restore-gate=20261006-151','--mount','type=volume,source='+name+'-data,target=/var/lib/postgresql/data',
+            '-e','POSTGRES_USER=aos_app','-e','POSTGRES_HOST_AUTH_METHOD=trust',image])
+        ready(name);inspect(name)
+        execute(['exec','-i',name,'psql','-U','aos_app','-d','postgres','-q','-v','ON_ERROR_STOP=1','-f','-'],globals_data)
+    execute(['exec','-i',source,'pg_restore','-U','aos_app','-d','postgres','--create','--exit-on-error'],(backup/'current-full.dump').read_bytes())
+    restore.require_dump_restore_equivalence(expected,snapshot(source,expected['role_names']))
+    if pg(source,'SELECT 1',tcp=True).stdout.strip()!=b'1':raise Maintenance151Blocked('ISOLATED151_TCP_BASELINE_REQUIRED')
+    listen_query="SELECT json_agg(x) FROM (SELECT sourcefile,setting,applied,error FROM pg_file_settings WHERE name='listen_addresses') x"
+    rows=json.loads(pg(source,listen_query).stdout)
+    listen=pg(source,'SHOW listen_addresses').stdout.decode().strip()
+    restore_statement=maintenance.listen_restore_statement(rows,effective=listen)
+    save('listen-original.json',dict(rows=rows,effective=listen,restore_statement=restore_statement))
+    journal.perform('stop_clients',lambda: dict(status='verified',scope='isolated_no_application_clients'))
+    def window():
+        values=dict(listen_addresses=pg(source,'SHOW listen_addresses').stdout.decode().strip(),
+            tcp_exit=pg(source,'SELECT 1',tcp=True,check=False).returncode,
+            other_clients=int(pg(source,"SELECT count(*) FROM pg_stat_activity WHERE backend_type='client backend' AND pid<>pg_backend_pid()").stdout),
+            prepared=int(pg(source,'SELECT count(*) FROM pg_prepared_xacts').stdout))
+        maintenance.require_window(**values)
+        return values
+    def fence():
+        pg(source,"ALTER SYSTEM SET listen_addresses=''")
+        execute(['restart',source]);ready(source)
+        return dict(status='verified',**window())
+    journal.perform('fence_tcp',fence)
+    def write_bytes(name,data):
+        with os.fdopen(os.open(state/name,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600),'wb') as f:
+            f.write(data);f.flush();os.fsync(f.fileno())
+    def dump():
+        window();restore.require_dump_restore_equivalence(expected,snapshot(source,expected['role_names']))
+        data=execute(['exec',source,'pg_dump','-U','aos_app','-d',restore.SOURCE,'-Fc']).stdout
+        write_bytes('window.dump',data)
+        write_bytes('window-globals.sql',execute(['exec',source,'pg_dumpall','-U','aos_app','--globals-only','--no-role-passwords']).stdout)
+        execute(['exec','-i',target,'pg_restore','-l'],data)
+        return dict(status='verified',sha256=primitive.sha(state/'window.dump'),globals_sha256=primitive.sha(state/'window-globals.sql'),bytes=len(data))
+    journal.perform('snapshot_dump',dump)
+    def independent_restore():
+        execute(['exec','-i',target,'pg_restore','-U','aos_app','-d','postgres','--create','--exit-on-error'],(state/'window.dump').read_bytes())
+        restore.require_dump_restore_equivalence(expected,snapshot(target,expected['role_names']))
+        window()
+        return dict(status='verified',tables=len(expected['tables']))
+    journal.perform('independent_restore',independent_restore)
+    def migrate():
+        config=Config(str(ROOT/'services/aos-api/alembic.ini'))
+        config.set_main_option('script_location',str(ROOT/'services/aos-api/alembic'))
+        for n in range(143,152):
+            window();inspect(source)
+            if pg(source,'SELECT version_num FROM alembic_version').stdout.strip()!=f'a0v_{n-1}'.encode():raise Maintenance151Blocked('MIGRATION_VERSION_DRIFT')
+            config.output_buffer=io.StringIO();command.upgrade(config,f'a0v_{n-1}:a0v_{n}',sql=True)
+            data=config.output_buffer.getvalue().encode()
+            if hashlib.sha256(data).hexdigest()!=report['sql_hashes'][str(n)]:raise Maintenance151Blocked('MIGRATION_SQL_HASH_DRIFT')
+            save(f'migration-{n}-attempt.json',dict(binding=journal.binding,sha256=report['sql_hashes'][str(n)]))
+            result=execute(['exec','-i',source,'psql','-U','aos_app','-d',restore.SOURCE,'-q','-v','ON_ERROR_STOP=1','-f','-'],data,check=False)
+            save(f'migration-{n}-terminal.json',dict(exit_code=result.returncode))
+            if result.returncode or pg(source,'SELECT version_num FROM alembic_version').stdout.strip()!=f'a0v_{n}'.encode():raise Maintenance151Blocked('MIGRATION_STEP_FAILED_RECONCILE_ONLY')
+        return dict(status='verified',version='a0v_151',steps=9)
+    journal.perform('migrate_steps',migrate)
+    def verify():
+        window()
+        restore.require_dump_restore_equivalence(final_expected,snapshot(source,final_expected['role_names']))
+        require_withdrawal_fence(ReadOnlyCatalogConnection(lambda q:query(source,q)))
+        return dict(status='verified',full_snapshot='exact_except_reviewed_check_associativity',withdrawal_fence='exact')
+    journal.perform('verify',verify)
+    def restore_tcp():
+        pg(source,restore_statement);execute(['restart',source]);ready(source)
+        if pg(source,'SELECT 1',tcp=True).stdout.strip()!=b'1' or json.loads(pg(source,listen_query).stdout)!=rows:raise Maintenance151Blocked('LISTEN_RESTORE_DRIFT')
+        return dict(status='verified',original_config_restored=True)
+    journal.perform('restore_tcp',restore_tcp)
+    journal.perform('restart_clients',lambda:dict(status='verified',scope='isolated_no_application_clients'))
+    def acceptance():
+        inspect(source);inspect(target)
+        restore.require_dump_restore_equivalence(final_expected,snapshot(source,final_expected['role_names']))
+        if pg(source,'SELECT version_num FROM alembic_version',tcp=True).stdout.strip()!=b'a0v_151':raise Maintenance151Blocked('FINAL_VERSION_DRIFT')
+        return dict(status='verified',schema='a0v_151',source_touched=False,business_first_chain=False)
+    journal.perform('acceptance',acceptance)
+    result=dict(outcome='ISOLATED142_TO151_WINDOW_SEQUENCE_GREEN',state=str(state),source=source,target=target,head=report['head'],elapsed_seconds=round(time.monotonic()-tick,3),current_source_touched=False)
+    save('result.json',result)
+    return result

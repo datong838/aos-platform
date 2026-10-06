@@ -109,3 +109,15 @@ def test_readonly_catalog_adapter_rejects_effects_or_multiple_statements(stateme
     m=module();calls=[];c=m.ReadOnlyCatalogConnection(lambda s: calls.append(s))
     with pytest.raises(m.Maintenance151Blocked):c.execute(statement)
     assert calls==[]
+
+
+@pytest.mark.parametrize('fault',['source_name','network','ports','image','volume'])
+def test_isolated151_refuses_current_or_drifted_resource(fault):
+    m=module();name='current151-source-abcd'
+    item=dict(Name='/'+name,Image='image',State=dict(Running=True),HostConfig=dict(NetworkMode='none',Privileged=False),NetworkSettings=dict(Ports={}),Mounts=[dict(Type='volume',Name=name+'-data',Destination='/var/lib/postgresql/data',RW=True)])
+    if fault=='source_name':name='aos-a0v-recovery-pg';item['Name']='/'+name
+    elif fault=='network':item['HostConfig']['NetworkMode']='bridge'
+    elif fault=='ports':item['NetworkSettings']['Ports']={'5432/tcp':[dict(HostPort='18435')]}
+    elif fault=='image':item['Image']='other'
+    elif fault=='volume':item['Mounts'][0]['Name']='aos-a0v-recovery-pg-data'
+    with pytest.raises(m.Maintenance151Blocked):m.require_isolated151(item,name=name,image='image')
