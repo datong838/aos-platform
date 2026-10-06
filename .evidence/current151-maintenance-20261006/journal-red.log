@@ -1,0 +1,26 @@
+..................FF                                                     [100%]
+=================================== FAILURES ===================================
+___________________ test_timeout_attempt_cannot_be_reissued ____________________
+
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-590/test_timeout_attempt_cannot_be0')
+
+    def test_timeout_attempt_cannot_be_reissued(tmp_path):
+>       m=module();calls=[];j=m.Maintenance151Journal(tmp_path,head='a'*40)
+                              ^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'Maintenance151Journal'
+
+scripts/tests/test_a0v_current_151_maintenance.py:47: AttributeError
+____________ test_changed_head_or_unverified_result_cannot_advance _____________
+
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-590/test_changed_head_or_unverifie0')
+
+    def test_changed_head_or_unverified_result_cannot_advance(tmp_path):
+>       m=module();j=m.Maintenance151Journal(tmp_path,head='a'*40)
+                     ^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'Maintenance151Journal'
+
+scripts/tests/test_a0v_current_151_maintenance.py:56: AttributeError
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_timeout_attempt_cannot_be_reissued
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_changed_head_or_unverified_result_cannot_advance
+2 failed, 18 passed in 0.10s

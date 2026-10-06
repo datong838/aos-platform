@@ -33,3 +33,28 @@ def test_maintenance_rejects_unbound_or_stale_receipt(fault):
 def test_bound_active_receipt_is_only_preflight_permission():
     m=module();task=dict(task_id=m.TASK,owner=m.OWNER,status='ACTIVE',base_revision='AOS-001369',scope=list(m.SCOPES),lease_expires_at='2026-10-07T00:00:00+00:00')
     assert m.require_task(task,[dict(task)],revision='AOS-001369',thread=m.THREAD,delivered=False,now=datetime(2026,10,6,tzinfo=timezone.utc)) is None
+
+
+@pytest.mark.parametrize('fault',['source_id','source_image','source_volume','target_image','target_volume'])
+def test_restore_identity_rejects_replacement_resources(fault):
+    m=module()
+    expected=dict(source_id='source',source_image='image',source_volume='source-volume',target_image='image',target_volume='target-volume')
+    observed=dict(expected);observed[fault]='replacement'
+    with pytest.raises(m.Maintenance151Blocked):m.require_resource_identity(expected,observed)
+
+
+def test_timeout_attempt_cannot_be_reissued(tmp_path):
+    m=module();calls=[];j=m.Maintenance151Journal(tmp_path,head='a'*40)
+    def unknown():
+        calls.append(1);raise TimeoutError('unknown effect')
+    with pytest.raises(TimeoutError):j.perform('stop_clients',unknown)
+    with pytest.raises(m.Maintenance151Blocked):j.perform('stop_clients',lambda: calls.append(2))
+    assert calls==[1]
+
+
+def test_changed_head_or_unverified_result_cannot_advance(tmp_path):
+    m=module();j=m.Maintenance151Journal(tmp_path,head='a'*40)
+    j.perform('stop_clients',lambda: dict(status='verified',ports=[]))
+    with pytest.raises(m.Maintenance151Blocked):m.Maintenance151Journal(tmp_path,head='b'*40).perform('fence_tcp',lambda: dict(status='verified'))
+    with pytest.raises(m.Maintenance151Blocked):j.perform('fence_tcp',lambda: dict(status='failed'))
+    assert not (tmp_path/'fence_tcp-done.json').exists()

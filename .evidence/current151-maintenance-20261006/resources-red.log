@@ -1,0 +1,79 @@
+.............FFFFF                                                       [100%]
+=================================== FAILURES ===================================
+________ test_restore_identity_rejects_replacement_resources[source_id] ________
+
+fault = 'source_id'
+
+    @pytest.mark.parametrize('fault',['source_id','source_image','source_volume','target_image','target_volume'])
+    def test_restore_identity_rejects_replacement_resources(fault):
+        m=module()
+        expected=dict(source_id='source',source_image='image',source_volume='source-volume',target_image='image',target_volume='target-volume')
+        observed=dict(expected);observed[fault]='replacement'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_resource_identity(expected,observed)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_resource_identity'
+
+scripts/tests/test_a0v_current_151_maintenance.py:43: AttributeError
+______ test_restore_identity_rejects_replacement_resources[source_image] _______
+
+fault = 'source_image'
+
+    @pytest.mark.parametrize('fault',['source_id','source_image','source_volume','target_image','target_volume'])
+    def test_restore_identity_rejects_replacement_resources(fault):
+        m=module()
+        expected=dict(source_id='source',source_image='image',source_volume='source-volume',target_image='image',target_volume='target-volume')
+        observed=dict(expected);observed[fault]='replacement'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_resource_identity(expected,observed)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_resource_identity'
+
+scripts/tests/test_a0v_current_151_maintenance.py:43: AttributeError
+______ test_restore_identity_rejects_replacement_resources[source_volume] ______
+
+fault = 'source_volume'
+
+    @pytest.mark.parametrize('fault',['source_id','source_image','source_volume','target_image','target_volume'])
+    def test_restore_identity_rejects_replacement_resources(fault):
+        m=module()
+        expected=dict(source_id='source',source_image='image',source_volume='source-volume',target_image='image',target_volume='target-volume')
+        observed=dict(expected);observed[fault]='replacement'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_resource_identity(expected,observed)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_resource_identity'
+
+scripts/tests/test_a0v_current_151_maintenance.py:43: AttributeError
+______ test_restore_identity_rejects_replacement_resources[target_image] _______
+
+fault = 'target_image'
+
+    @pytest.mark.parametrize('fault',['source_id','source_image','source_volume','target_image','target_volume'])
+    def test_restore_identity_rejects_replacement_resources(fault):
+        m=module()
+        expected=dict(source_id='source',source_image='image',source_volume='source-volume',target_image='image',target_volume='target-volume')
+        observed=dict(expected);observed[fault]='replacement'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_resource_identity(expected,observed)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_resource_identity'
+
+scripts/tests/test_a0v_current_151_maintenance.py:43: AttributeError
+______ test_restore_identity_rejects_replacement_resources[target_volume] ______
+
+fault = 'target_volume'
+
+    @pytest.mark.parametrize('fault',['source_id','source_image','source_volume','target_image','target_volume'])
+    def test_restore_identity_rejects_replacement_resources(fault):
+        m=module()
+        expected=dict(source_id='source',source_image='image',source_volume='source-volume',target_image='image',target_volume='target-volume')
+        observed=dict(expected);observed[fault]='replacement'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_resource_identity(expected,observed)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_resource_identity'
+
+scripts/tests/test_a0v_current_151_maintenance.py:43: AttributeError
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_restore_identity_rejects_replacement_resources[source_id]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_restore_identity_rejects_replacement_resources[source_image]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_restore_identity_rejects_replacement_resources[source_volume]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_restore_identity_rejects_replacement_resources[target_image]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_restore_identity_rejects_replacement_resources[target_volume]
+5 failed, 13 passed in 0.08s

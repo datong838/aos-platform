@@ -100,6 +100,22 @@ def preflight(*,thread):
     restore.require_dump_restore_equivalence(saved,json.loads((backup/'restore-phase/snapshot.json').read_text()))
     item=json.loads(subprocess.check_output(['docker','--context',restore.SOURCE_CONTEXT,'inspect',restore.SOURCE_CONTAINER]))[0]
     maintenance.require_source(item)
+    source_intent=json.loads((backup/'intent.json').read_text())
+    target_intent=json.loads((backup/'restore-phase/intent.json').read_text())
+    target=json.loads(subprocess.check_output(['docker','--context',restore.DEST_CONTEXT,'inspect',target_intent['container']]))[0]
+    restore.require_target(target,container=target_intent['container'],image=target_intent['image'])
+    target_volumes=[x['Name'] for x in target['Mounts'] if x['Type']=='volume']
+    source_volumes=[x['Name'] for x in item['Mounts'] if x['Type']=='volume']
+    if len(target_volumes)!=1 or len(source_volumes)!=1:
+        raise Maintenance151Blocked('UNIQUE_VOLUME_REQUIRED')
+    require_resource_identity(dict(source_id=source_intent['source_id'],source_image=source_intent['image'],source_volume=source_intent['source_volume'],target_image=target_intent['image'],target_volume=target_intent['volume']),
+        dict(source_id=item['Id'],source_image=item['Image'],source_volume=source_volumes[0],target_image=target['Image'],target_volume=target_volumes[0]))
+    def target_query(q):
+        return json.loads(subprocess.check_output(['docker','--context',restore.DEST_CONTEXT,'exec',target_intent['container'],'psql','-U','aos_app','-d',restore.SOURCE,'-v','ON_ERROR_STOP=1','-Atq','-c',"BEGIN READ ONLY;SET LOCAL timezone='UTC';SET LOCAL search_path=pg_catalog,public;"+q+';COMMIT'],timeout=300))
+    live_target=restore.full_snapshot(primitive,target_query,saved['role_names'])
+    if live_target!=json.loads((backup/'restore-phase/snapshot.json').read_text()):
+        raise Maintenance151Blocked('SECOND_RESTORE_LIVE_SNAPSHOT_DRIFT')
+    restore.require_dump_restore_equivalence(saved,live_target)
     parameters=bootstrap._connection_parameters()
     if (parameters['host'],parameters['port'],parameters['dbname'])!=('127.0.0.1',18435,restore.SOURCE):
         raise Maintenance151Blocked('SOURCE_CONNECTION_DRIFT')
@@ -113,3 +129,49 @@ def preflight(*,thread):
     if read_task(thread=thread)!=task or subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()!=head:
         raise Maintenance151Blocked('PREFLIGHT_BASELINE_CHANGED')
     return dict(outcome='CURRENT151_READ_ONLY_PREFLIGHT_GREEN',head=head,authority=BASE,source_version=current['version'],code_version='a0v_151',sql_hashes=sql_hashes,source_id=item['Id'],source_image=item['Image'],services=services,mutation_permission=False)
+
+
+def require_resource_identity(expected,observed):
+    keys={'source_id','source_image','source_volume','target_image','target_volume'}
+    if set(expected)!=keys or set(observed)!=keys or any(not isinstance(expected[k],str) or not expected[k] or expected[k]!=observed[k] for k in keys):
+        raise Maintenance151Blocked('BACKUP_RESOURCE_IDENTITY_DRIFT')
+
+
+STEPS=('stop_clients','fence_tcp','snapshot_dump','independent_restore','migrate_steps','verify','restore_tcp','restart_clients','acceptance')
+
+class Maintenance151Journal:
+    """Persist intent before effects; unknown or failed attempts never auto-replay."""
+    def __init__(self,directory,*,head):
+        import re
+        self.directory=Path(directory)
+        if not self.directory.is_dir() or self.directory.is_symlink() or not re.fullmatch('[0-9a-f]{40}',head):
+            raise Maintenance151Blocked('JOURNAL_IDENTITY_REQUIRED')
+        self.binding=dict(head=head,thread=THREAD,task=TASK,authority=BASE)
+
+    def _write(self,name,data):
+        import os
+        try:fd=os.open(self.directory/name,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+        except FileExistsError:raise Maintenance151Blocked('EXISTING_ATTEMPT_RECONCILE_ONLY') from None
+        with os.fdopen(fd,'w') as f:
+            json.dump(data,f,sort_keys=True);f.flush();os.fsync(f.fileno())
+        fd=os.open(self.directory,os.O_RDONLY)
+        try:os.fsync(fd)
+        finally:os.close(fd)
+
+    def perform(self,step,operation):
+        if step not in STEPS:raise Maintenance151Blocked('UNKNOWN_STEP')
+        for prior in STEPS[:STEPS.index(step)]:
+            for suffix in ('attempt','done'):
+                p=self.directory/(prior+'-'+suffix+'.json')
+                if not p.is_file() or p.is_symlink() or p.stat().st_size>65536:
+                    raise Maintenance151Blocked('PRIOR_STEP_UNVERIFIED')
+                try:r=json.loads(p.read_text())
+                except (OSError,ValueError):raise Maintenance151Blocked('PRIOR_EVIDENCE_INVALID') from None
+                if not isinstance(r,dict) or r.get('binding')!=self.binding or r.get('step')!=prior or (suffix=='done' and r.get('result',{}).get('status')!='verified'):
+                    raise Maintenance151Blocked('PRIOR_BINDING_OR_VERIFICATION_DRIFT')
+        self._write(step+'-attempt.json',dict(binding=self.binding,step=step))
+        result=operation()
+        if not isinstance(result,dict) or result.get('status')!='verified':
+            raise Maintenance151Blocked('VERIFIED_POSTCONDITION_REQUIRED')
+        self._write(step+'-done.json',dict(binding=self.binding,step=step,result=result))
+        return result
