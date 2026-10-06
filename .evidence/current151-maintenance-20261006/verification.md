@@ -56,3 +56,8 @@ Repair151Journal独立11步默认原Journal不变；新历史门RED7项失败，
 新入口第一次在任何claim/停止前因为142恢复角色清单参数错误而拒绝；只读按原142 role_names全库窄等价PASS，修正调用、99专项/相邻通过并提交34063052。第二次实际phase e1d51a4f1798已完成四步骤，完整dump4594656字节和globals hash验证；独立新151恢复遭OOM（signal9/cgroup oom_kill1/容器OOMKilled），exit1，不能宣称恢复通过，未执行当前CAS。原副本、原attempt、数据卷都保留。
 
 current-repair-oom-reconciliation.json实际全库快照未变、schema151、listen空、API8080/Web8434实际无监听；源数据仍原启动后状态（3updated_at待恢复）。已按原owner/Task/none-network/image/命名卷身份停止七个本Task的已终端或已GREEN测试实例释放隔离VM内存，全部保留卷；不涉及本机源或原备份模板。证据两个memory-release.json和私有逐实例stop-intent。当前维护Task ACTIVE，不Delivery；新恢复阶段需新HEAD绑定并明确消费真实四done，不能重放原部分restore/claim。
+
+## 原窗口恢复接续入口
+新增固定run_current151_repair_recovery，共同后半CAS/fence/startup/最终快照逻辑复用。Recovery151Journal只消费原四真实done与原claim/hash，拒绝已restore done、任何后续未知attempt、错binding/claim与失效前序；新8步骤不复制/伪造父done。精确旧PID/children已退出+端口空，源完整snapshot仍相等、原配置来源同原window、原SQL hash匹配、OOMKilled实际容器证据、备份hash再验后才独占新claim。纯门RED7failed；最终106passed1deselected0.38秒，代码whitespace通过。
+
+复审原_run_sequence151 AST与本修改前HEAD精确相同；恢复仅新副本pg_restore会话限制maintenance_work_mem16MB/work_mem4MB，原源码接口不接可选容器/父路径、不改源或VM配置。错误先落私有stderr/exit再终止，原未知效果不能重发。源码提交后再执行；实际恢复/当前CAS/服务启动仍须新现场证据。

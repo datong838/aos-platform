@@ -52,3 +52,8 @@ Maintenance151Journal绑定冻结head/thread/Task/base，不仅step名称。原�
 先只读取得终端日志/内存计数后，停止已明确终端的三synthetic proof实例和两GREEN隔离窗口的四实例；逐项核原owner/Task/image/none/无端口/唯一命名卷，O_EXCL stop意图、正常stop与实际Running=false回读；所有卷、容器、备份/结果保留。没有停止原142窗口restore或原same-image151模板（后续核验依赖），没有改隔离VM全局配置或不明归属实例。
 
 下一阶段须新绑定HEAD与当前Task、原claim/四已验证done/失败attempt及备份hash，旧claim不可删/改，不能伪造旧independent_restore done。以新的独立none-network卷完成原151 dump全恢复（内存已释放，恢复session限制maintenance_work_mem/work_mem按实际方案），严格完整snapshot窄等价、原schema上精确CAS演练和严格151fence后，才继续当前同一封闭源上的一次CAS与配置/API/Web恢复。新阶段只能消费真实已验证前序证据，未知结果先只读对账；不能重跑142迁移入口或原restore。原两个安全研发候选仍登记，但优先恢复当前预览服务。局部OOM不设置Goal blocked，维护Task保持ACTIVE。
+
+## 新绑定恢复接续实现
+在原两script/test文件内抽出共同_run_current151_repair(thread,recovery)，原入口recovery=False保持原序列，新固定入口run_current151_repair_recovery只接受固定e1d51a4f1798父phase。Recovery151Journal只有reconcile/independent_restore/rehearse_repair/repair_timestamps/verify/restore_tcp/restart_clients/acceptance，不生成或复制父四done。纯门严格父claim/intent绑定34063052、四done、独立restore仅attempt、无后续attempt/所有done；父备份hash再验、实际空listen/client0/prepared0/当前源全snapshot未变、原PID消失/空端口、原监听来源与原window文件相等，才独占新claim。
+
+所有恢复调用新none-network卷，不重用05bb402299de部分target。pg_restore仅此新副本session PGOPTIONS maintenance_work_mem=16MB/work_mem=4MB，保持原768m/1cpu限制，不改源或VM配置。backup_dir指父实际窗口备份，新intent记录父claim/父证据hash，journal前序来自真实核验，不伪造。命令错误先记录私有stderr和exit供诊断，再终止。共同序列后半保持完整快照、CAS逐字hash、151fence、原监听、最新签名API/Web与最终快照门不变。

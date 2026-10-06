@@ -586,6 +586,14 @@ def require_failed_window151(records):
 
 
 def run_current151_repair(*,thread):
+    return _run_current151_repair(thread=thread,recovery=False)
+
+
+def run_current151_repair_recovery(*,thread):
+    return _run_current151_repair(thread=thread,recovery=True)
+
+
+def _run_current151_repair(*,thread,recovery):
     """One claimed, backed-up repair phase for the known terminal startup drift."""
     import copy,hashlib,os,secrets,subprocess,time
     task=read_task(thread=thread)
@@ -609,7 +617,18 @@ def run_current151_repair(*,thread):
     maintenance=_load('repair151_process',ROOT/'scripts/a0v_current_142_maintenance.py')
     image=json.loads((historic/'second-consistent-142-20261006/restore-phase/intent.json').read_text())['image']
     state=ROOT.parent/('aos-recovery/current151-repair-'+secrets.token_hex(6));state.mkdir(mode=0o700)
-    journal=Repair151Journal(state,head=head);journal._require_live_binding()
+    journal=(Recovery151Journal if recovery else Repair151Journal)(state,head=head);journal._require_live_binding()
+    parent=ROOT.parent/'aos-recovery/current151-repair-e1d51a4f1798'
+    backup_dir=parent if recovery else state
+    if recovery:
+        if parent.is_symlink() or not parent.is_dir() or any(p.is_symlink() for p in parent.glob('*.json')):raise Maintenance151Blocked('RECOVERY_PARENT_PATH_REQUIRED')
+        claim_path=ROOT.parent/'aos-recovery/current151-repair-claim-da8531053c83.json'
+        if claim_path.is_symlink() or any((parent/n).is_symlink() for n in ('window.dump','window-globals.sql')):raise Maintenance151Blocked('RECOVERY_SYMLINK_REFUSED')
+        parent_claim=json.loads(claim_path.read_text())
+        parent_records={p.name:json.loads(p.read_text()) for p in parent.glob('*.json')}
+        require_recovery_parent151(parent_records,parent_claim)
+        b=parent_records['snapshot_dump-done.json']['result']
+        if primitive.sha(parent/'window.dump')!=b['dump_sha256'] or primitive.sha(parent/'window-globals.sql')!=b['globals_sha256']:raise Maintenance151Blocked('RECOVERY_BACKUP_HASH_DRIFT')
     source=restore.SOURCE_CONTAINER;target='current151-restore-'+secrets.token_hex(6)
     def inspect_source():
         journal._require_live_binding()
@@ -623,6 +642,8 @@ def run_current151_repair(*,thread):
         if name==source:
             require_current151_action(args);inspect_source()
         result=subprocess.run(['docker','--context',context]+args,input=data,capture_output=True,timeout=180)
+        if result.returncode:
+            journal._write('command-failure-'+secrets.token_hex(4)+'.json',dict(args=args,exit_code=result.returncode,stderr=result.stderr.decode(errors='replace')))
         if check and result.returncode:raise Maintenance151Blocked('REPAIR_COMMAND_TERMINAL_'+str(result.returncode))
         return result
     def pg(name,statement,check=True):
@@ -659,27 +680,48 @@ def run_current151_repair(*,thread):
     if snapshot(source)!=expected:raise Maintenance151Blocked('REPAIR_SOURCE_CHANGED_SINCE_FAILURE')
     corrected=copy.deepcopy(expected)
     for t in TENANT_TIMESTAMP_TABLES151:corrected['tables'][t]=old_expected['tables'][t]
-    services=maintenance.current_services();previous=records['restart_clients-done.json']['result']['restarted']
-    saved_services=json.loads((original/'services-original.json').read_text())
-    for service in services:
-        saved=next(x for x in saved_services if x['port']==service['port'])
-        if any(service[k]!=saved[k] for k in ('argv','cwd','environment','helper_argv')):raise Maintenance151Blocked('REPAIR_SERVICE_COMMAND_DRIFT')
-        prior=next(x['fingerprint'] for x in previous if x['port']==service['port']);now=service['fingerprint']
-        if any(prior[k]!=now[k] for k in maintenance.PROCESS_FIELDS if k!='ppid'):raise Maintenance151Blocked('REPAIR_STARTED_PROCESS_DRIFT')
-        if prior['ppid']!=now['ppid']:
-            parent=subprocess.run(['ps','-p',str(prior['ppid']),'-o','stat='],capture_output=True,text=True)
-            if parent.returncode==0 and not parent.stdout.strip().startswith('Z'):raise Maintenance151Blocked('ORIGINAL_WINDOW_PROCESS_STILL_ACTIVE')
+    if recovery:
+        services=json.loads((parent/'services-original.json').read_text())
+        for service in services:
+            port=service['port']
+            if subprocess.run(['lsof','-nP',f'-iTCP:{port}','-sTCP:LISTEN','-t'],capture_output=True).stdout.strip():raise Maintenance151Blocked('RECOVERY_SERVICE_ALREADY_RUNNING')
+            for pid in [service['fingerprint']['pid']]+[x['pid'] for x in service['fingerprint']['children']]:
+                r=subprocess.run(['ps','-p',str(pid),'-o','stat='],capture_output=True,text=True)
+                if r.returncode==0 and not r.stdout.strip().startswith('Z'):raise Maintenance151Blocked('RECOVERY_ORIGINAL_PROCESS_STILL_ACTIVE')
+        partial=parent_records['intent.json']['target']
+        item=json.loads(execute(partial,['inspect',partial]).stdout)[0]
+        require_isolated151(item,name=partial,image=image)
+        if not item['State']['OOMKilled']:raise Maintenance151Blocked('RECOVERY_OOM_TERMINAL_EVIDENCE_REQUIRED')
+        if repair_hash!=parent_records['intent.json']['repair_sql_sha256']:raise Maintenance151Blocked('RECOVERY_REPAIR_SQL_HASH_DRIFT')
+    else:
+        services=maintenance.current_services();previous=records['restart_clients-done.json']['result']['restarted']
+        saved_services=json.loads((original/'services-original.json').read_text())
+        for service in services:
+            saved=next(x for x in saved_services if x['port']==service['port'])
+            if any(service[k]!=saved[k] for k in ('argv','cwd','environment','helper_argv')):raise Maintenance151Blocked('REPAIR_SERVICE_COMMAND_DRIFT')
+            prior=next(x['fingerprint'] for x in previous if x['port']==service['port']);now=service['fingerprint']
+            if any(prior[k]!=now[k] for k in maintenance.PROCESS_FIELDS if k!='ppid'):raise Maintenance151Blocked('REPAIR_STARTED_PROCESS_DRIFT')
+            if prior['ppid']!=now['ppid']:
+                parent=subprocess.run(['ps','-p',str(prior['ppid']),'-o','stat='],capture_output=True,text=True)
+                if parent.returncode==0 and not parent.stdout.strip().startswith('Z'):raise Maintenance151Blocked('ORIGINAL_WINDOW_PROCESS_STILL_ACTIVE')
     audit_restored151(base=historic,restore=restore,primitive=primitive)
     listen_query="SELECT json_agg(x) FROM (SELECT sourcefile,setting,applied,error FROM pg_file_settings WHERE name='listen_addresses') x"
-    listen_rows=query(source,listen_query);listen=pg(source,'SHOW listen_addresses').stdout.decode().strip()
-    restore_statement=maintenance.listen_restore_statement(listen_rows,effective=listen)
-    if tcp_probe()!=0:raise Maintenance151Blocked('REPAIR_TCP_BASELINE_REQUIRED')
+    if recovery:
+        listen_record=json.loads((parent/'listen-original.json').read_text())
+        if listen_record!=json.loads((original/'listen-original.json').read_text()):raise Maintenance151Blocked('RECOVERY_LISTEN_ORIGIN_DRIFT')
+        listen_rows=listen_record['rows'];restore_statement=listen_record['restore_statement'];window()
+    else:
+        listen_rows=query(source,listen_query);listen=pg(source,'SHOW listen_addresses').stdout.decode().strip()
+        restore_statement=maintenance.listen_restore_statement(listen_rows,effective=listen)
+        if tcp_probe()!=0:raise Maintenance151Blocked('REPAIR_TCP_BASELINE_REQUIRED')
     if read_task(thread=thread)!=task:raise Maintenance151Blocked('REPAIR_TASK_DRIFT')
     hashes={p.name:primitive.sha(p) for p in original.glob('*.json') if p.is_file()}
     journal._write('intent.json',dict(binding=journal.binding,original_window=str(original),original_hashes=hashes,source_id=source_identity['source_id'],source_image=source_identity['image'],source=source,target=target,image=image,repair_sql_sha256=repair_hash))
+    if recovery:
+        journal._write('recovery-parent.json',dict(parent=str(parent),parent_claim=parent_claim,hashes={p.name:primitive.sha(p) for p in parent.glob('*.json') if p.is_file()},backup_dump_sha256=primitive.sha(parent/'window.dump'),backup_globals_sha256=primitive.sha(parent/'window-globals.sql')))
     journal._write('services-original.json',services)
-    journal._write('listen-original.json',dict(rows=listen_rows,effective=listen,restore_statement=restore_statement))
-    claim=ROOT.parent/'aos-recovery/current151-repair-claim-da8531053c83.json'
+    journal._write('listen-original.json',listen_record if recovery else dict(rows=listen_rows,effective=listen,restore_statement=restore_statement))
+    claim=ROOT.parent/('aos-recovery/current151-recovery-claim-e1d51a4f1798.json' if recovery else 'aos-recovery/current151-repair-claim-da8531053c83.json')
     try:fd=os.open(claim,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
     except FileExistsError:raise Maintenance151Blocked('REPAIR_PHASE_EXISTS_RECONCILE_ONLY') from None
     with os.fdopen(fd,'w') as f:json.dump(dict(binding=journal.binding,state=str(state)),f);f.flush();os.fsync(f.fileno())
@@ -687,14 +729,14 @@ def run_current151_repair(*,thread):
     try:os.fsync(fd)
     finally:os.close(fd)
     journal.perform('reconcile',lambda:dict(status='verified',source_version='a0v_151',original_failed_window_bound=True))
-    journal.perform('stop_clients',lambda:stop_services151(services,journal=journal,maintenance=maintenance))
+    if not recovery:journal.perform('stop_clients',lambda:stop_services151(services,journal=journal,maintenance=maintenance))
     def fence():
         pg(source,"ALTER SYSTEM SET listen_addresses=''");execute(source,['restart',source])
         for _ in range(30):
             if execute(source,['exec',source,'pg_isready','-U','aos_app'],check=False).returncode==0:break
             time.sleep(1)
         return dict(status='verified',**window())
-    journal.perform('fence_tcp',fence)
+    if not recovery:journal.perform('fence_tcp',fence)
     def dump():
         window()
         if snapshot(source)!=expected:raise Maintenance151Blocked('REPAIR_WINDOW_SNAPSHOT_DRIFT')
@@ -702,7 +744,7 @@ def run_current151_repair(*,thread):
             data=execute(source,['exec',source]+args).stdout
             with os.fdopen(os.open(state/filename,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600),'wb') as f:f.write(data);f.flush();os.fsync(f.fileno())
         return dict(status='verified',dump_sha256=primitive.sha(state/'window.dump'),globals_sha256=primitive.sha(state/'window-globals.sql'))
-    journal.perform('snapshot_dump',dump)
+    if not recovery:journal.perform('snapshot_dump',dump)
     def independent_restore():
         window()
         execute(target,['run','-d','--pull','never','--name',target,'--network','none','--cpus','1','--memory','768m','--mount','type=volume,source='+target+'-data,target=/var/lib/postgresql/data','-e','POSTGRES_USER=aos_app','-e','POSTGRES_HOST_AUTH_METHOD=trust',image])
@@ -710,9 +752,10 @@ def run_current151_repair(*,thread):
             if execute(target,['exec',target,'pg_isready','-U','aos_app'],check=False).returncode==0:break
             time.sleep(1)
         item=json.loads(execute(target,['inspect',target]).stdout)[0];require_isolated151(item,name=target,image=image)
-        globals_data=primitive.prepare_globals((state/'window-globals.sql').read_bytes(),bootstrap='aos_app')
+        globals_data=primitive.prepare_globals((backup_dir/'window-globals.sql').read_bytes(),bootstrap='aos_app')
         execute(target,['exec','-i',target,'psql','-U','aos_app','-d','postgres','-q','-v','ON_ERROR_STOP=1','-f','-'],globals_data)
-        execute(target,['exec','-i',target,'pg_restore','-U','aos_app','-d','postgres','--create','--exit-on-error'],(state/'window.dump').read_bytes())
+        restore_args=['exec']+(['-e','PGOPTIONS=-c maintenance_work_mem=16MB -c work_mem=4MB'] if recovery else [])+['-i',target,'pg_restore','-U','aos_app','-d','postgres','--create','--exit-on-error']
+        execute(target,restore_args,(backup_dir/'window.dump').read_bytes())
         restore.require_dump_restore_equivalence(expected,snapshot(target))
         return dict(status='verified',tables=len(expected['tables']),schema='a0v_151')
     journal.perform('independent_restore',independent_restore)
@@ -754,3 +797,21 @@ def run_current151_repair(*,thread):
     report=dict(outcome='CURRENT151_REPAIR_SERVICES_GREEN_BROWSER_PENDING',state=str(state),head=head,schema='a0v_151',old_timestamps_restored=True,business_first_chain=False)
     journal._write('result.json',report)
     return report
+
+
+class Recovery151Journal(Maintenance151Journal):
+    steps=('reconcile','independent_restore','rehearse_repair','repair_timestamps','verify','restore_tcp','restart_clients','acceptance')
+
+
+def require_recovery_parent151(records,claim):
+    binding=dict(head='34063052b0dc02ed497ab0501294efe86fc355c1',thread=THREAD,task=TASK,authority=BASE)
+    try:
+        valid=(claim['binding']==binding and claim['state']==str(ROOT.parent/'aos-recovery/current151-repair-e1d51a4f1798') and records['intent.json']['binding']==binding and records['intent.json']['source']=='aos-a0v-recovery-pg')
+        for step in ('reconcile','stop_clients','fence_tcp','snapshot_dump','independent_restore'):
+            attempt=records[step+'-attempt.json'];valid=valid and attempt['binding']==binding and attempt['step']==step
+            if step!='independent_restore':
+                done=records[step+'-done.json'];valid=valid and done['binding']==binding and done['step']==step and done['result']['status']=='verified'
+        valid=valid and 'independent_restore-done.json' not in records and not any(step+'-attempt.json' in records or step+'-done.json' in records for step in ('rehearse_repair','repair_timestamps','verify','restore_tcp','restart_clients','acceptance'))
+    except (KeyError,TypeError):valid=False
+    if not valid:raise Maintenance151Blocked('RECOVERY_EXACT_TERMINAL_PARENT_REQUIRED')
+    return binding

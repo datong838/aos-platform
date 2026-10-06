@@ -264,3 +264,33 @@ def test_current_repair_wrong_thread_never_touches_resources(monkeypatch):
     monkeypatch.setattr(subprocess,'run',lambda *a,**k:calls.append(a))
     with pytest.raises(m.Maintenance151Blocked):m.run_current151_repair(thread='old-thread')
     assert calls==[]
+
+
+def repair_parent151(m):
+    b=dict(head='34063052b0dc02ed497ab0501294efe86fc355c1',thread=m.THREAD,task=m.TASK,authority=m.BASE)
+    records={'intent.json':dict(binding=b,source='aos-a0v-recovery-pg')}
+    for step in ('reconcile','stop_clients','fence_tcp','snapshot_dump','independent_restore'):
+        records[step+'-attempt.json']=dict(binding=b,step=step)
+        if step!='independent_restore':records[step+'-done.json']=dict(binding=b,step=step,result=dict(status='verified'))
+    return records,dict(binding=b,state='/Users/ddt/work/projects/ai_agent/aos-recovery/current151-repair-e1d51a4f1798')
+
+
+@pytest.mark.parametrize('fault',['missing','binding','accepted_restore','later_attempt','claim','failed_prior'])
+def test_recovery_refuses_unverified_or_already_started_parent(fault):
+    m=module();records,claim=repair_parent151(m)
+    if fault=='missing':records.pop('snapshot_dump-done.json')
+    elif fault=='binding':records['independent_restore-attempt.json']['binding']=dict(head='x')
+    elif fault=='accepted_restore':records['independent_restore-done.json']=dict(status='verified')
+    elif fault=='later_attempt':records['repair_timestamps-attempt.json']=dict(status='unknown')
+    elif fault=='claim':claim['state']='different'
+    elif fault=='failed_prior':records['stop_clients-done.json']['result']['status']='failed'
+    with pytest.raises(m.Maintenance151Blocked):m.require_recovery_parent151(records,claim)
+
+
+def test_recovery_consumes_real_parent_without_fabricating_prior_steps(tmp_path,monkeypatch):
+    m=module();records,claim=repair_parent151(m);m.require_recovery_parent151(records,claim)
+    j=m.Recovery151Journal(tmp_path,head='a'*40);monkeypatch.setattr(j,'_require_live_binding',lambda:None)
+    assert 'snapshot_dump' not in j.steps and 'stop_clients' not in j.steps
+    j.perform('reconcile',lambda:dict(status='verified'))
+    j.perform('independent_restore',lambda:dict(status='verified'))
+    with pytest.raises(m.Maintenance151Blocked):j.perform('independent_restore',lambda:dict(status='verified'))

@@ -1,0 +1,130 @@
+FFFFFFF                                                                  [100%]
+=================================== FAILURES ===================================
+_____ test_recovery_refuses_unverified_or_already_started_parent[missing] ______
+
+fault = 'missing'
+
+    @pytest.mark.parametrize('fault',['missing','binding','accepted_restore','later_attempt','claim','failed_prior'])
+    def test_recovery_refuses_unverified_or_already_started_parent(fault):
+        m=module();records,claim=repair_parent151(m)
+        if fault=='missing':records.pop('snapshot_dump-done.json')
+        elif fault=='binding':records['independent_restore-attempt.json']['binding']=dict(head='x')
+        elif fault=='accepted_restore':records['independent_restore-done.json']=dict(status='verified')
+        elif fault=='later_attempt':records['repair_timestamps-attempt.json']=dict(status='unknown')
+        elif fault=='claim':claim['state']='different'
+        elif fault=='failed_prior':records['stop_clients-done.json']['result']['status']='failed'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_recovery_parent151(records,claim)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_recovery_parent151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:287: AttributeError
+_____ test_recovery_refuses_unverified_or_already_started_parent[binding] ______
+
+fault = 'binding'
+
+    @pytest.mark.parametrize('fault',['missing','binding','accepted_restore','later_attempt','claim','failed_prior'])
+    def test_recovery_refuses_unverified_or_already_started_parent(fault):
+        m=module();records,claim=repair_parent151(m)
+        if fault=='missing':records.pop('snapshot_dump-done.json')
+        elif fault=='binding':records['independent_restore-attempt.json']['binding']=dict(head='x')
+        elif fault=='accepted_restore':records['independent_restore-done.json']=dict(status='verified')
+        elif fault=='later_attempt':records['repair_timestamps-attempt.json']=dict(status='unknown')
+        elif fault=='claim':claim['state']='different'
+        elif fault=='failed_prior':records['stop_clients-done.json']['result']['status']='failed'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_recovery_parent151(records,claim)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_recovery_parent151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:287: AttributeError
+_ test_recovery_refuses_unverified_or_already_started_parent[accepted_restore] _
+
+fault = 'accepted_restore'
+
+    @pytest.mark.parametrize('fault',['missing','binding','accepted_restore','later_attempt','claim','failed_prior'])
+    def test_recovery_refuses_unverified_or_already_started_parent(fault):
+        m=module();records,claim=repair_parent151(m)
+        if fault=='missing':records.pop('snapshot_dump-done.json')
+        elif fault=='binding':records['independent_restore-attempt.json']['binding']=dict(head='x')
+        elif fault=='accepted_restore':records['independent_restore-done.json']=dict(status='verified')
+        elif fault=='later_attempt':records['repair_timestamps-attempt.json']=dict(status='unknown')
+        elif fault=='claim':claim['state']='different'
+        elif fault=='failed_prior':records['stop_clients-done.json']['result']['status']='failed'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_recovery_parent151(records,claim)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_recovery_parent151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:287: AttributeError
+__ test_recovery_refuses_unverified_or_already_started_parent[later_attempt] ___
+
+fault = 'later_attempt'
+
+    @pytest.mark.parametrize('fault',['missing','binding','accepted_restore','later_attempt','claim','failed_prior'])
+    def test_recovery_refuses_unverified_or_already_started_parent(fault):
+        m=module();records,claim=repair_parent151(m)
+        if fault=='missing':records.pop('snapshot_dump-done.json')
+        elif fault=='binding':records['independent_restore-attempt.json']['binding']=dict(head='x')
+        elif fault=='accepted_restore':records['independent_restore-done.json']=dict(status='verified')
+        elif fault=='later_attempt':records['repair_timestamps-attempt.json']=dict(status='unknown')
+        elif fault=='claim':claim['state']='different'
+        elif fault=='failed_prior':records['stop_clients-done.json']['result']['status']='failed'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_recovery_parent151(records,claim)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_recovery_parent151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:287: AttributeError
+______ test_recovery_refuses_unverified_or_already_started_parent[claim] _______
+
+fault = 'claim'
+
+    @pytest.mark.parametrize('fault',['missing','binding','accepted_restore','later_attempt','claim','failed_prior'])
+    def test_recovery_refuses_unverified_or_already_started_parent(fault):
+        m=module();records,claim=repair_parent151(m)
+        if fault=='missing':records.pop('snapshot_dump-done.json')
+        elif fault=='binding':records['independent_restore-attempt.json']['binding']=dict(head='x')
+        elif fault=='accepted_restore':records['independent_restore-done.json']=dict(status='verified')
+        elif fault=='later_attempt':records['repair_timestamps-attempt.json']=dict(status='unknown')
+        elif fault=='claim':claim['state']='different'
+        elif fault=='failed_prior':records['stop_clients-done.json']['result']['status']='failed'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_recovery_parent151(records,claim)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_recovery_parent151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:287: AttributeError
+___ test_recovery_refuses_unverified_or_already_started_parent[failed_prior] ___
+
+fault = 'failed_prior'
+
+    @pytest.mark.parametrize('fault',['missing','binding','accepted_restore','later_attempt','claim','failed_prior'])
+    def test_recovery_refuses_unverified_or_already_started_parent(fault):
+        m=module();records,claim=repair_parent151(m)
+        if fault=='missing':records.pop('snapshot_dump-done.json')
+        elif fault=='binding':records['independent_restore-attempt.json']['binding']=dict(head='x')
+        elif fault=='accepted_restore':records['independent_restore-done.json']=dict(status='verified')
+        elif fault=='later_attempt':records['repair_timestamps-attempt.json']=dict(status='unknown')
+        elif fault=='claim':claim['state']='different'
+        elif fault=='failed_prior':records['stop_clients-done.json']['result']['status']='failed'
+>       with pytest.raises(m.Maintenance151Blocked):m.require_recovery_parent151(records,claim)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_recovery_parent151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:287: AttributeError
+______ test_recovery_consumes_real_parent_without_fabricating_prior_steps ______
+
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-614/test_recovery_consumes_real_pa0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1079162d0>
+
+    def test_recovery_consumes_real_parent_without_fabricating_prior_steps(tmp_path,monkeypatch):
+>       m=module();records,claim=repair_parent151(m);m.require_recovery_parent151(records,claim)
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'maintenance151' has no attribute 'require_recovery_parent151'
+
+scripts/tests/test_a0v_current_151_maintenance.py:291: AttributeError
+=========================== short test summary info ============================
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_recovery_refuses_unverified_or_already_started_parent[missing]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_recovery_refuses_unverified_or_already_started_parent[binding]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_recovery_refuses_unverified_or_already_started_parent[accepted_restore]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_recovery_refuses_unverified_or_already_started_parent[later_attempt]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_recovery_refuses_unverified_or_already_started_parent[claim]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_recovery_refuses_unverified_or_already_started_parent[failed_prior]
+FAILED scripts/tests/test_a0v_current_151_maintenance.py::test_recovery_consumes_real_parent_without_fabricating_prior_steps
+7 failed, 60 deselected in 0.12s
