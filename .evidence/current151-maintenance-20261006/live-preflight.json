@@ -1,0 +1,93 @@
+{
+  "outcome": "CURRENT151_READ_ONLY_PREFLIGHT_GREEN",
+  "head": "83c7cb94214cb130337a4772acdc9a3c686bdf39",
+  "authority": "AOS-001369",
+  "source_version": "a0v_142",
+  "code_version": "a0v_151",
+  "sql_hashes": {
+    "143": "44595959209f7e334fa39f4c62727c514f027129339d5fad56935f233b1eb7d0",
+    "144": "0ca9a9f5039c202525dfbc09fc35a2b7e3b3c1059e10f3dfd22e086f4ec24a7f",
+    "145": "8a417cf04c4bf61a0364a1ce1858a9e86a8c155a0bbdf4375f3cd0d28a9b9d96",
+    "146": "d7c2525c72bed15b15489fe8c95ca420fefb02c9cb5fa75702f4429df7d705ce",
+    "147": "3c9fc837cb029cb973e034534acc984eefeb2fa85a6947805497f5cf3a03121c",
+    "148": "d786a100f67ef5fe7653d98a90445d6df7f44bae56d7c94100a580e339382446",
+    "149": "ef135326420afebed6af7343f0c7f7cdb1f9883f1cbff19799ab9b84b48e445f",
+    "150": "af64fc423853cc786d7f8e16ef0a006013202d0976a0faec0c98f8381bc503f8",
+    "151": "4ca72815a3e266275b6736540c899e990f6eae4396f05247d5cc610ee3d05962"
+  },
+  "source_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+  "source_image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+  "services": [
+    {
+      "label": "com.aos.a0v-api-daily0900",
+      "port": 8080,
+      "argv": [
+        "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+        "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_current_preview_http.py",
+        "--signed-receipt",
+        "/Users/ddt/work/projects/ai_agent/.aos-current-build-pyGkqQ/signing-receipt.json",
+        "--serve"
+      ],
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+      "environment": {
+        "PATH": "/Users/ddt/.docker/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+        "PYTHONUNBUFFERED": "1"
+      },
+      "helper_argv": null,
+      "fingerprint": {
+        "pid": 7130,
+        "ppid": 1,
+        "uid": 501,
+        "started": "Mon Oct  5 10:20:30 2026",
+        "argv_sha256": "c81c2cb67f52827a36cc8d815b5d9a4a92efd93ff07cf204a3e0d2d3b3efa2ca",
+        "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+        "children": [],
+        "listener_ports": [
+          8080
+        ]
+      }
+    },
+    {
+      "label": "com.aos.a0v-web-8434",
+      "port": 8434,
+      "argv": [
+        "/Users/ddt/.codex-runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/Users/ddt/work/projects/ai_agent/aos-platform/node_modules/.pnpm/vite@5.4.21/node_modules/vite/bin/vite.js",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8434"
+      ],
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform/apps/web",
+      "environment": {
+        "VITE_AOS_API_PROXY_TARGET": "http://127.0.0.1:8080"
+      },
+      "helper_argv": [
+        "/Users/ddt/work/projects/ai_agent/aos-platform/node_modules/.pnpm/@esbuild+darwin-arm64@0.21.5/node_modules/@esbuild/darwin-arm64/bin/esbuild",
+        "--service=0.21.5",
+        "--ping"
+      ],
+      "fingerprint": {
+        "pid": 7155,
+        "ppid": 1,
+        "uid": 501,
+        "started": "Mon Oct  5 10:20:38 2026",
+        "argv_sha256": "4cd8ae42f94933c4fa6fceeb4cda83e16c8940a1509321db6ef2f849bd771270",
+        "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform/apps/web",
+        "children": [
+          {
+            "pid": 7156,
+            "ppid": 7155,
+            "uid": 501,
+            "started": "Mon Oct  5 10:20:38 2026",
+            "argv_sha256": "d76592cffd7f6b7d2e96cda9fcb2b8bd908f96f5181122e60faa399aabea545e"
+          }
+        ],
+        "listener_ports": [
+          8434
+        ]
+      }
+    }
+  ],
+  "mutation_permission": false
+}
