@@ -214,6 +214,7 @@ def parse_signed_capacity_body(raw: bytes, document_type):
                 if len(value) > 1000: raise CapacitySignedBodyProfileError("ARRAY")
                 for item in value: bounded(item)
             elif isinstance(value, dict):
+                if len(value) > 1000: raise CapacitySignedBodyProfileError("OBJECT")
                 for key, item in value.items(): bounded(key); bounded(item)
         bounded(payload)
         model = document_type.model_validate(payload)

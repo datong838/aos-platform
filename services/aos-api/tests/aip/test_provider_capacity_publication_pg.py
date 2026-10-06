@@ -204,3 +204,129 @@ def test_original_signed_bytes_native_crypto_and_document_profile_are_separate()
     with pytest.raises(CapacitySignedBodyProfileError) as caught:
         parse_signed_capacity_body(ambiguous, ProviderCapacitySigningPermit)
     assert caught.value.reason == "DUPLICATE_KEY"
+
+
+@pytest.fixture
+def native_profile_runner():
+    if not os.environ.get("AOS_CRYPTO_TEST_CONTAINER"):
+        pytest.skip("explicit isolated native verifier required")
+    target = os.environ["AOS_CRYPTO_TEST_CONTAINER"]
+    assert target.startswith("aos-ed25519-test-")
+    prefix = ["docker", "--context", "colima-aos-a0v-test-only"]
+    state = json.loads(subprocess.check_output(prefix+["inspect", target], text=True))[0]
+    assert state["Image"] == os.environ["AOS_CRYPTO_TEST_IMAGE"]
+    assert state["HostConfig"]["NetworkMode"] == "none" and not state["HostConfig"]["PortBindings"]
+    assert not state["HostConfig"]["Privileged"]
+    assert state["Config"]["Labels"]["aos.task"] == "gt-capacity-sql-ed25519-20261006"
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_SIGNED_BODY_PROFILE_SQL
+
+    def run(statement, success=True):
+        result = subprocess.run(prefix+["exec", "-i", target, "psql", "-U", "aos_app", "-d", "aos_test_ed25519", "-Atq", "-v", "ON_ERROR_STOP=1", "-f", "-"], input="BEGIN; CREATE SCHEMA aos_capacity_publication_private;\n"+CAPACITY_SIGNED_BODY_PROFILE_SQL+"\n"+statement+"\nROLLBACK;", text=True, capture_output=True, timeout=60)
+        if success:
+            assert result.returncode == 0, result.stderr
+            return result.stdout.strip()
+        assert result.returncode != 0
+        return result.stderr
+    return run
+
+
+def test_native_full_permit_canonical_bytes_preserved(native_profile_runner):
+    from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+    payload = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode="json", by_alias=True)
+    raw = canonical_json(payload)
+    assert native_profile_runner("SELECT aos_capacity_publication_private.read_signed_body(decode('%s','hex'))->>'purpose';" % raw.hex()) == "provider_capacity_source_signing_permit"
+
+
+@pytest.mark.parametrize("fault", ["duplicate-purpose", "duplicate-target", "float", "exponent", "negative-zero", "spacing", "nul", "utf8", "array", "depth", "size"])
+def test_native_complete_body_single_fault_rejected(native_profile_runner, fault):
+    from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacitySigningPermit
+    payload = ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode="json", by_alias=True)
+    raw = canonical_json(payload)
+    if fault == "duplicate-purpose":
+        value = json.dumps(payload["purpose"]).encode()
+        raw = raw.replace(b'"purpose":'+value, b'"purpose":'+value+b',"purpose":'+value)
+    elif fault == "duplicate-target": raw = raw.replace(b'"databaseOid":123', b'"databaseOid":123,"databaseOid":123')
+    elif fault == "float": raw = raw.replace(b'"revision":1', b'"revision":1.0')
+    elif fault == "exponent": raw = raw.replace(b'"revision":1', b'"revision":1e0')
+    elif fault == "negative-zero": raw = raw.replace(b'"revision":1', b'"revision":-0')
+    elif fault == "spacing": raw = json.dumps(payload).encode()
+    elif fault == "nul": raw = canonical_json({**payload,"publisher":"authority\x00"})
+    elif fault == "utf8": raw = raw[:-1]+b'\xff}'
+    elif fault == "array": raw = canonical_json({**payload,"padding":[0]*1001})
+    elif fault == "depth": raw = raw[:-1]+b',"padding":'+b'['*33+b'0'+b']'*33+b'}'
+    else: raw = b' '*2097153
+    error = native_profile_runner("SELECT aos_capacity_publication_private.read_signed_body(decode('%s','hex'));" % raw.hex(), False)
+    assert "CAPACITY_SIGNED_BODY" in error
+
+
+@pytest.mark.parametrize("value", [
+    {}, [], True, None, 0, -1, 9223372036854775807,
+    {"中":"\"\\\n\t", "z":[], "😀":{"x":None}, "é":[True,False,0]},
+    [0]*1000, {str(i):i for i in range(1000)},
+], ids=["empty-object","empty-array","true","null","zero","negative","bigint","unicode-escapes","array-limit","object-limit"])
+def test_native_json_encoding_matches_python_without_granting_document_shape(native_profile_runner, value):
+    raw = canonical_json(value)
+    assert native_profile_runner("SELECT aos_capacity_publication_private.canonical_signed_json(aos_capacity_publication_private.read_signed_body(decode('%s','hex'))::json,1);" % raw.hex()) == raw.decode()
+
+
+@pytest.mark.parametrize("kind", ["bootstrap", "published"])
+def test_native_full_publication_profiles(native_profile_runner, kind):
+    from aos_api.aip_provider_capacity_publication_contracts import ProviderCapacityOriginBootstrap, PublishedProviderCapacitySource
+    model,payload=(ProviderCapacityOriginBootstrap,bootstrap()) if kind=="bootstrap" else (PublishedProviderCapacitySource,published())
+    raw=canonical_json(model.model_validate(payload).model_dump(mode="json",by_alias=True))
+    assert native_profile_runner("SELECT aos_capacity_publication_private.read_signed_body(decode('%s','hex'))->>'purpose';" % raw.hex()) == payload["purpose"]
+
+
+def test_native_function_catalog_and_explicit_compute_role(native_profile_runner):
+    assert native_profile_runner("""
+SELECT pg_catalog.current_setting('server_encoding');
+SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+WHERE n.nspname='aos_capacity_publication_private' AND NOT p.prosecdef AND p.proisstrict
+AND p.provolatile='i' AND p.proconfig=ARRAY['search_path=pg_catalog'];
+SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace,
+LATERAL aclexplode(p.proacl) a WHERE n.nspname='aos_capacity_publication_private' AND a.grantee=0;
+SELECT count(*) FROM pg_namespace n,LATERAL aclexplode(n.nspacl) a
+WHERE n.nspname='aos_capacity_publication_private' AND a.grantee=0;
+SELECT aos_capacity_publication_private.read_signed_body(NULL) IS NULL;
+""") == "UTF8\n2\n0\n0\nt"
+    error=native_profile_runner("CREATE ROLE profile_reader NOLOGIN; SET LOCAL ROLE profile_reader; SELECT aos_capacity_publication_private.read_signed_body(decode('7b7d','hex'));",False)
+    assert "permission denied for schema aos_capacity_publication_private" in error
+    error=native_profile_runner("CREATE ROLE profile_reader NOLOGIN; GRANT USAGE ON SCHEMA aos_capacity_publication_private TO profile_reader; SET LOCAL ROLE profile_reader; SELECT aos_capacity_publication_private.read_signed_body(decode('7b7d','hex'));",False)
+    assert "permission denied for function read_signed_body" in error
+    assert native_profile_runner("CREATE ROLE profile_reader NOLOGIN; GRANT USAGE ON SCHEMA aos_capacity_publication_private TO profile_reader; GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA aos_capacity_publication_private TO profile_reader; SET LOCAL ROLE profile_reader; SELECT aos_capacity_publication_private.read_signed_body(decode('7b7d','hex')); ") == "{}"
+
+
+def test_native_bounded_object_depth_and_toast(native_profile_runner):
+    oversized={str(i):i for i in range(1001)}
+    assert "CAPACITY_SIGNED_BODY" in native_profile_runner("SELECT aos_capacity_publication_private.read_signed_body(decode('%s','hex'));" % canonical_json(oversized).hex(),False)
+    for depth in (32,33):
+        raw=b'['*depth+b'0'+b']'*depth
+        statement="SELECT aos_capacity_publication_private.read_signed_body(decode('%s','hex')) IS NOT NULL;" % raw.hex()
+        result=native_profile_runner(statement,depth==32)
+        assert result=="t" if depth==32 else "CAPACITY_SIGNED_BODY" in result
+    raw=canonical_json({"padding":["x"*2000]*1000})
+    assert len(raw)<2097152
+    assert native_profile_runner("CREATE TEMP TABLE signed_body_test(raw bytea); INSERT INTO signed_body_test VALUES(decode('%s','hex')); SELECT pg_column_size(raw)<octet_length(raw), aos_capacity_publication_private.read_signed_body(raw) IS NOT NULL FROM signed_body_test;" % raw.hex()) == "t|t"
+
+
+@pytest.mark.parametrize("storage", ["EXTENDED", "EXTERNAL"])
+def test_native_exact_message_size_boundary_in_storage(native_profile_runner, storage):
+    limit=2097152
+    raw=canonical_json({"padding":"x"*(limit-len(canonical_json({"padding":""})))})
+    assert len(raw)==limit
+    statement="CREATE TEMP TABLE signed_body_test(raw bytea); ALTER TABLE signed_body_test ALTER COLUMN raw SET STORAGE %s; INSERT INTO signed_body_test VALUES(decode('%s','hex')); SELECT octet_length(raw), pg_column_size(raw)<octet_length(raw), aos_capacity_publication_private.read_signed_body(raw) IS NOT NULL FROM signed_body_test;" % (storage,raw.hex())
+    assert native_profile_runner(statement)==("2097152|t|t" if storage=="EXTENDED" else "2097152|f|t")
+    oversized=raw[:-2]+b'x"}'
+    assert len(oversized)==limit+1
+    error=native_profile_runner("CREATE TEMP TABLE signed_body_test(raw bytea); ALTER TABLE signed_body_test ALTER COLUMN raw SET STORAGE %s; INSERT INTO signed_body_test VALUES(decode('%s','hex')); SELECT aos_capacity_publication_private.read_signed_body(raw) FROM signed_body_test;" % (storage,oversized.hex()),False)
+    assert "CAPACITY_SIGNED_BODY_PROFILE_REQUIRED" in error
+
+
+def test_python_complete_document_object_limit_rejection_stage():
+    from aos_api.aip_provider_capacity_publication_contracts import (
+        ProviderCapacitySigningPermit, parse_signed_capacity_body, CapacitySignedBodyProfileError)
+    payload=ProviderCapacitySigningPermit.model_validate(permit()).model_dump(mode="json",by_alias=True)
+    payload.update({"extra"+str(i):i for i in range(1000)})
+    with pytest.raises(CapacitySignedBodyProfileError) as caught:
+        parse_signed_capacity_body(canonical_json(payload),ProviderCapacitySigningPermit)
+    assert caught.value.reason=="OBJECT"

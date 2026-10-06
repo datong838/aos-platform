@@ -1,0 +1,12 @@
+{
+  "task": "gt-provider-capacity-publication-schema-20261005",
+  "isolated_sql_schema_after_rollback": 0,
+  "test_role_after_rollback": 0,
+  "existing_crypto_function_count": 1,
+  "result": "167passed/17.36s/exit0; no persistent SQL profile installation",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "cf247a0440d978509d75dd2f9847cf1eefaf62ef6c3d0a584a410bc064bd046c",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_contracts.py": "3ff5ce335339143cc9b3fd582881b16a0a3669ee2d2ccf80c17624c865e61cde",
+    "services/aos-api/tests/aip/test_provider_capacity_publication_pg.py": "74c108eb9f9290f7ce345d62dd5089815f04d6d9f6a258c0db48628e115dfee9"
+  }
+}

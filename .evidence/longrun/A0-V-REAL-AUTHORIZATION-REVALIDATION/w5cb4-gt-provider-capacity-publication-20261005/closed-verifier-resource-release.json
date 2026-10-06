@@ -1,0 +1,22 @@
+{
+  "targets": [
+    {
+      "container": "aos-ed25519-test-fa4713e9a335",
+      "id": "ba519ae3139542d41149e11df98269d6c5420bd1a80bb17e8609a56df459d042",
+      "volume": "aos-ed25519-test-fa4713e9a335-data",
+      "running": true,
+      "stop_exit": 0,
+      "running_after": false
+    },
+    {
+      "container": "aos-ed25519-test-0603d8550a26",
+      "id": "0d54adfe62137a2358d7c847e89443cc488aa85ddcf6c7774474a69d0fa37b98",
+      "volume": "aos-ed25519-test-0603d8550a26-data",
+      "running": true,
+      "stop_exit": 0,
+      "running_after": false
+    }
+  ],
+  "volumes_preserved": true,
+  "final_verifier_preserved": true
+}

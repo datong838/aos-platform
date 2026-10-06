@@ -1,0 +1,52 @@
+{
+  "container": "aos-a0v-test-pg",
+  "context": "colima-aos-a0v-test-only",
+  "state": {
+    "Status": "running",
+    "Running": true,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": true,
+    "Dead": false,
+    "Pid": 1653,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-02T14:56:32.670482735Z",
+    "FinishedAt": "2026-10-02T14:55:45.422009004Z"
+  },
+  "memory_limit": 0,
+  "memory_swap": 0,
+  "ports": {
+    "5432/tcp": [
+      {
+        "HostIp": "127.0.0.1",
+        "HostPort": "5433"
+      }
+    ]
+  },
+  "recovery_events": [
+    "2026-10-06 05:04:36.444 UTC [380279] LOG:  checkpoint complete: wrote 7409 buffers (45.2%); 0 WAL file(s) added, 0 removed, 6 recycled; write=269.250 s, sync=0.409 s, total=269.670 s; sync files=10422, longest=0.003 s, average=0.001 s; distance=88804 kB, estimate=114502 kB; lsn=15/8D105B60, redo lsn=15/8866BDB8",
+    "2026-10-06 05:09:36.048 UTC [380279] LOG:  checkpoint complete: wrote 6585 buffers (40.2%); 0 WAL file(s) added, 0 removed, 5 recycled; write=269.538 s, sync=0.020 s, total=269.571 s; sync files=509, longest=0.001 s, average=0.001 s; distance=76398 kB, estimate=110692 kB; lsn=15/8D1078D8, redo lsn=15/8D1078A0",
+    "2026-10-06 05:31:12.758 UTC [380279] LOG:  checkpoint complete: wrote 97 buffers (0.6%); 0 WAL file(s) added, 0 removed, 2 recycled; write=0.005 s, sync=0.004 s, total=0.014 s; sync files=11, longest=0.004 s, average=0.001 s; distance=34591 kB, estimate=103082 kB; lsn=15/8F2CF698, redo lsn=15/8F2CF660",
+    "2026-10-06 05:31:39.436 UTC [380279] LOG:  checkpoint complete: wrote 96 buffers (0.6%); 0 WAL file(s) added, 0 removed, 2 recycled; write=0.003 s, sync=0.002 s, total=0.007 s; sync files=8, longest=0.001 s, average=0.001 s; distance=34264 kB, estimate=96200 kB; lsn=15/914459C8, redo lsn=15/91445990",
+    "2026-10-06 05:32:34.644 UTC [380279] LOG:  checkpoint complete: wrote 128 buffers (0.8%); 0 WAL file(s) added, 0 removed, 2 recycled; write=0.004 s, sync=0.002 s, total=0.009 s; sync files=10, longest=0.002 s, average=0.001 s; distance=34700 kB, estimate=90050 kB; lsn=15/93628D60, redo lsn=15/93628D28",
+    "2026-10-06 05:34:10.477 UTC [380279] LOG:  checkpoint complete: wrote 98 buffers (0.6%); 0 WAL file(s) added, 0 removed, 2 recycled; write=0.006 s, sync=0.005 s, total=0.014 s; sync files=10, longest=0.004 s, average=0.001 s; distance=34230 kB, estimate=84468 kB; lsn=15/957966A8, redo lsn=15/95796670",
+    "2026-10-06 05:36:35.951 UTC [380279] LOG:  checkpoint complete: wrote 132 buffers (0.8%); 0 WAL file(s) added, 0 removed, 2 recycled; write=0.006 s, sync=0.001 s, total=0.011 s; sync files=11, longest=0.001 s, average=0.001 s; distance=34775 kB, estimate=79499 kB; lsn=15/9798C3B8, redo lsn=15/9798C380",
+    "2026-10-06 05:37:01.057 UTC [380279] LOG:  checkpoint complete: wrote 102 buffers (0.6%); 0 WAL file(s) added, 0 removed, 2 recycled; write=0.007 s, sync=0.001 s, total=0.013 s; sync files=11, longest=0.001 s, average=0.001 s; distance=34266 kB, estimate=74975 kB; lsn=15/99B02D18, redo lsn=15/99B02CE0",
+    "2026-10-06 05:42:23.529 UTC [380279] LOG:  checkpoint complete: wrote 383 buffers (2.3%); 0 WAL file(s) added, 1 removed, 1 recycled; write=22.357 s, sync=0.003 s, total=22.369 s; sync files=11, longest=0.003 s, average=0.001 s; distance=30036 kB, estimate=70481 kB; lsn=15/9BF44578, redo lsn=15/9B857DA8",
+    "2026-10-06 05:42:23.532 UTC [380279] LOG:  checkpoint complete: wrote 12 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=2, longest=0.001 s, average=0.001 s; distance=7090 kB, estimate=64142 kB; lsn=15/9BF44628, redo lsn=15/9BF445F0",
+    "2026-10-06 05:42:46.561 UTC [380279] LOG:  checkpoint complete: wrote 100 buffers (0.6%); 0 WAL file(s) added, 2 removed, 1 recycled; write=0.003 s, sync=0.001 s, total=0.010 s; sync files=11, longest=0.001 s, average=0.001 s; distance=34236 kB, estimate=61152 kB; lsn=15/9E0B37D8, redo lsn=15/9E0B37A0",
+    "2026-10-06 05:44:32.744 UTC [1] LOG:  checkpointer process (PID 380279) was terminated by signal 9: Killed",
+    "2026-10-06 05:44:32.754 UTC [1] LOG:  all server processes terminated; reinitializing",
+    "2026-10-06 05:44:32.934 UTC [398806] LOG:  database system was interrupted; last known up at 2026-10-06 05:42:46 UTC",
+    "2026-10-06 05:44:32.963 UTC [398809] FATAL:  the database system is in recovery mode",
+    "2026-10-06 05:44:41.826 UTC [398806] LOG:  database system was not properly shut down; automatic recovery in progress",
+    "2026-10-06 05:44:41.900 UTC [398806] LOG:  redo starts at 15/9E0B37A0",
+    "2026-10-06 05:44:41.901 UTC [398806] CONTEXT:  WAL redo at 15/9E0B3850 for Database/DROP: dir 1663/38142908",
+    "2026-10-06 05:44:41.901 UTC [398806] CONTEXT:  WAL redo at 15/9E0B3850 for Database/DROP: dir 1663/38142908",
+    "2026-10-06 05:44:42.027 UTC [398806] LOG:  redo done at 15/A008BFA0 system usage: CPU: user: 0.07 s, system: 0.05 s, elapsed: 0.12 s",
+    "2026-10-06 05:44:42.111 UTC [398807] LOG:  checkpoint starting: end-of-recovery immediate wait",
+    "2026-10-06 05:44:42.250 UTC [398807] LOG:  checkpoint complete: wrote 5202 buffers (31.8%); 0 WAL file(s) added, 2 removed, 0 recycled; write=0.032 s, sync=0.104 s, total=0.139 s; sync files=3309, longest=0.013 s, average=0.001 s; distance=32610 kB, estimate=32610 kB; lsn=15/A008C048, redo lsn=15/A008C048",
+    "2026-10-06 05:44:42.254 UTC [1] LOG:  database system is ready to accept connections"
+  ]
+}

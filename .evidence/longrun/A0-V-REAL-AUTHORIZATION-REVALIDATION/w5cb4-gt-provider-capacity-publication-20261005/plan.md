@@ -1,5 +1,15 @@
 # 完整非执行容量Source publication施工方案门
 
+## 本波SQL原文字节实施范围
+
+首SQL RED12 errors缺新store模块，最小SQL实现12项native专项通过。复核大消息逐项array_append可能重复复制大块内存，改string_agg有序聚合；补object键数<=1000（Python与SQL同步）、空容器/true/null/转义/Unicode排序/嵌套边界、完整bootstrap/PublishedSource、2MiB附近TOAST及ACL/普通role拒绝与精确grant验证。此调整解决未关闭的性能/权限验收风险，不为刷新进度制造测试。
+
+独立复审补权限约束：递归helper不能作为正式issuer/消费者可直接执行接口；未来152只给其同private owner所有权，原issuer只获受审计完整publication窄SECD入口，effective schema/helper EXECUTE额外grant必须拒绝。隔离普通角色双grant只验证纯计算调用依赖并rollback，不成为正式ACL。read_signed_body同时核server_encoding=UTF8，固定body/hash/owner/ACL后才可接入；SQL encoding helper仅字节规范，不是完整typed schema或trust认证。
+
+在原登记aip_provider_capacity_publication_store.py定义CAPACITY_SIGNED_BODY_PROFILE_SQL纯计算DDL；未来152复用前须单独登记迁移scope，本波不创建151/152迁移、不注册真实anchor/policy/permit。固定private schema aos_capacity_publication_private，递归canonical_signed_json(json,depth)与read_signed_body(bytea) SECURITY INVOKER/STRICT/IMMUTABLE、search_path=pg_catalog、PUBLIC全撤。只重建UTF8规范字节与无重复json视图，无表写/SPI外部效果/签名授权。object用json_each保留重复key且C排序，array保持顺序并限1000，string由to_json解码后text重生成，number只允许0或非零起始十进制整数，null/bool保持原字面；container深度最大32。read_signed_body先核raw2MiB，解析json，重建canonical bytes逐字节一致后才返回jsonb；NULL返回NULL，正式门必须IS TRUE/非NULL拒绝。
+
+测试扩展原test_provider_capacity_publication_pg.py：只在已固定none-network/非privileged/无端口r4独立实例同连接BEGIN建private计算函数→真实SQL正负调用→ROLLBACK，每例不持久化DDL。完整合法permit、中文/转义/数组/数字边界、重复purpose/target、float/exponent/-0、空白/alias表示、深度/数组上界、invalidUTF8/NUL、TOAST及size/NULL；核ACL/search_path/SECDEF，普通角色缺schema或EXECUTE拒绝。通用encoding helper不负责bootstrap/permit/Source字段shape/当前性，后继完整SQL入口必须独立逐项validate typed contract，不能把可解析任意JSON等同合法Source。
+
 ## 2026-10-06 验签依赖收口后的签名原文门
 
 本波先冻结并实现原登记aip_provider_capacity_publication_contracts.py与test_provider_capacity_publication_pg.py的文档边界，不改现issuer/旧contracts：OriginBootstrap含独立publisher subject/角色、actual deployment target、anchor/root snapshot hash、允许policy/attestation/permit exactrefs；SigningPermit含parent policy exactref、许可Source publisher/key/root/public key及target；PublishedSource含server UUID稳定账号、supplier/fingerprint、完整Provider/Evidence refs、Source/allocation原proposal/approval与candidate refs、policy/attestation/permit/origin exactrefs、epoch、原requestHash、观测/期限/计量及executionAllowed=false。共同schema/tenant/asset/revision/publisher/key/有效期严格校验；所有解析结果仅是未认证文档。
@@ -8,13 +18,13 @@
 
 独立复审指出不完整JSON负例可能被缺字段间接拒绝，专项验收改为完整合法文档单项变异，并返回不含原始输入的稳定ProfileError reason（SIZE/DEPTH/DUPLICATE_KEY/NON_INTEGER/NUL/ARRAY/NONCANONICAL/INVALID_DOCUMENT），区分预解析/文档profile与后续字段校验，不能仅凭任意ValueError算相应门通过。
 
-138项最终含原生验签组合相邻通过；原Task仍ACTIVE。SQL strict profile下一实现选型的只读证据sql-profile-feasibility-readonly.json确认原生json保留重复键，to_json支持UTF8非ASCII字符串，C排序与现Python关键字序一致，整数词法拒绝1.0/1e0/-0。计划用private受审计的PL/pgSQL递归json遍历，先duplicate/depth/array/strict integer检查并按C排序及to_json字符串再生成紧凑canonical bytes，逐字节对比原始message后才提供jsonb字段视图；先不能转jsonb丢重复字段。函数输入<=2MiB/递归<=32/数组<=1000，固定schema/search_path/nonPUBLIC/SECURITY INVOKER纯计算，密码学仍调用已证明的窄C verifier。该算法尚未编码/原生验收；必须覆盖完整原policy/attestation/permit/Source与Unicode/转义/数字/重复键正负矩阵，之后才能用于完整152受控publication门。
+138项最终含原生验签组合相邻通过；原Task仍ACTIVE。SQL strict profile下一实现选型的只读证据sql-profile-feasibility-readonly.json确认原生json保留重复键，to_json支持UTF8非ASCII字符串，C排序与现Python关键字序一致，整数词法拒绝1.0/1e0/-0。计划用private受审计的PL/pgSQL递归json遍历，先duplicate/depth/array/strict integer检查并按C排序及to_json字符串再生成紧凑canonical bytes，逐字节对比原始message后才提供jsonb字段视图；先不能转jsonb丢重复字段。函数输入<=2MiB/递归<=32/数组<=1000，固定schema/search_path/nonPUBLIC/SECURITY INVOKER纯计算，密码学仍调用已证明的窄C verifier。此句属于本波前选型记录：通用encoding算法现已实现并通过167项含原生SQL的相邻验证；完整typed字段约束、可信取钥、原policy/attestation业务正负矩阵与受控publication仍pending，不能把encoding门当完整152发布门。
 
 独立Task gt-capacity-sql-ed25519-20261006在m1@1b24ceca收口，仅PG原生验签依赖19项通过；固定隔离镜像/角色ACL/输入存储和来源证据见对应verification。没有生产扩展安装授权，完整publication退出仍沿本原Task。
 
 本轮只读canonical-sql-readonly.json实测：现canonical_json的UTF8紧凑排序bytes与PG jsonb::text字节及hash不同；jsonb接受重复purpose字段并保留后者。SQL不能先jsonb重序列化再验签，也不能把jsonb解析成功作为签名文档无歧义证明。
 
-冻结下一接口原则：bootstrap、policy/attestation、permit、Source均传递原始message bytea及64字节signature，原始bytes做hash/verify并不可变保存；SQL从独立受控root/permit读取32字节key，不接收issuer自由key作为trust。解析器必须在解释purpose前拒绝重复键、未知键、无效UTF8/NUL、过深结构/过长数组/消息>2MiB、非严格整型与非法期限；类型文档完整字段与Python原契约一致，原文canonical profile核对不能由调用者verified flag替代。JSONB仅作已验证文档的字段比对视图，不成为签名原文。SQL端严格解析/原文canonical校验尚未实现，须独立真实重复purpose/重复target/数字表示变体负例与Python原签名正例后才能接受正式文档；不因密码学校验true省略该门。
+冻结下一接口原则：bootstrap、policy/attestation、permit、Source均传递原始message bytea及64字节signature，原始bytes做hash/verify并不可变保存；SQL从独立受控root/permit读取32字节key，不接收issuer自由key作为trust。解析器必须在解释purpose前拒绝重复键、未知键、无效UTF8/NUL、过深结构/过长数组/消息>2MiB、非严格整型与非法期限；类型文档完整字段与Python原契约一致，原文canonical profile核对不能由调用者verified flag替代。JSONB仅作已验证文档的字段比对视图，不成为签名原文。此处为签名契约阶段历史状态：本波已实现通用SQL无重复/整数/canonical字节门并原生验收，typed文档shape及授权校验仍未实现；正式文档接受仍须完整原policy/attestation与trust/COMMIT正负例；不因密码学校验true省略该门。
 
 完整发布签名与稳定ID顺序也须冻结：稳定账户ID由数据库在同一publication事务中得出，Source签名必须绑定该精确ID、Provider全集合及原批准/受控permit，不能先签自由alias后改ID。优先两阶段同caller：prepare仅在持原guard完整锁及新域后缀锁的同事务内返回不可授业务权的精确待签bytes；受控签发组件签名；commit在同原连接重验全部原批准/epoch/target/permit和待签bytes，再一次发布映射+Source+provenance+attempt COMMIT。issuer直接调用commit不满足真实签名/原合同则整个事务拒绝；prepare不得提前COMMIT或留下可消费Source/global mapping。未知签发或COMMIT结果只读按原attempt对账，不重发签名/发布。该完整函数/body/锁序仍须后续冻结和原生演练，不宣称两阶段已实现。
 
