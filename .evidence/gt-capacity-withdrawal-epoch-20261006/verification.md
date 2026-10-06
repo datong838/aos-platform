@@ -13,3 +13,12 @@
 ## 非空历史迁移函数补验
 最终文件13passed/7warnings22.40s，包含原11项及两个非空历史用例。一次隔离事务恢复151相关对象创建前结构，保留非空原proposal/withdrawal快照，调用真实migration.upgrade，逐proposal比较epoch与原撤回计数并证明原行不变；原已撤回锁42501拒绝。延迟FK时真实迁移拒绝，回滚savepoint后无新表、原行不变，再执行正常迁移成功。整个测试事务rollback后原151表和版本恢复。
 边界：不是完整Alembic150→151版本事务演练，不是完整历史恢复副本验收；当前恢复副本仍150且该两表为空，源库未迁移。最初两次失败均测试驱动选择错误，未运行迁移，不称业务RED；历史backfill-r2为中间1pass，rollback为补锁前13pass，complete为最终13pass。方案与代码一致，DDL全部仅aos_test_隔离库事务，未改生产代码；完整Task保持ACTIVE。
+
+## 2026-10-06 12:56 完整版本事务与中途失败验收
+本节覆盖前述“未验完整Alembic版本事务”；源库现状以AOS-001370维护151事实为准，前述源142/恢复150是历史时间点，不触发重放。
+
+仅扩展原PG测试及本证据目录，生产迁移/原env/fence未改。原env的supplied connection入口运行真实command.upgrade、revision和version更新：隔离非空历史结构150→151成功，逐proposal epoch精确等于历史撤回计数、原proposal/withdrawal全文快照不变；已撤回reader仍42501拒绝。延迟FK前置拒绝和同名函数中途DuplicateFunction拒绝，均savepoint回滚；中途失败发生在建表/回填/owner/RLS已执行后。版本仍150、新表/三函数/两trigger均不存在、完整public schema ACL精确等于之前、原行快照不变；正常再升级151，外层rollback恢复初始151。
+
+首次版本事务专项15passed/7warnings24.31s，相邻84passed/7warnings108.10s。中途失败补强首轮82passed/4failed108.78s：4项均测试错误地把PUBLIC继承的有效USAGE当独立owner直接授权；不是生产RED。改为比较原schema ACL全文后，最终本文件+原Action+formalBoundary **86passed/7warnings112.71s exit0**，日志alembic-adjacent-r2.log。全部只用5433本轮新建aos_test_隔离库，按fixture保留，不清理库/卷。最初启动路径exit127未执行测试，alembic-version-transaction.log保留。
+
+方案/代码复审：真实原入口无替代migration runner；错误异常类型/文本符合PG；savepoint包括故障注入，新DDL和ACL都有恢复断言；原函数用例保留，未篡改生产版本记录或降低迁移downgrade拒绝；scope/Lease同Owner有效且无重叠。diff --check通过。无UI改动，本切片无需新增浏览器操作。本证据是重建非空历史结构的事务验收，不等于完整历史备份恢复、正式Source/Capacity发布或首链。完整epoch Task仍ACTIVE，原恢复副本native全量验收及更多损坏边界待核；不Delivery，不complete Goal。

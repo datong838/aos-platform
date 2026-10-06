@@ -16,3 +16,8 @@ reader位置：Source guard完整super.check_proposal返回（含原metadata/Own
 
 ## 2026-10-06 历史回填验收补充
 只读实测既存150恢复副本正向proposal=0、withdrawal=0。该副本151升级只能证明其实际历史兼容，不能证明非空撤回回填。后续在本Task文件 services/aos-api/tests/aip/test_capacity_withdrawal_epoch_pg.py 增加独立非空150历史迁移用例：保留原proposal/withdrawal快照，执行真实151 upgrade，核epoch准确计数、未撤回为0、原行无变化、撤回锁拒绝；坏原数据或前置门失败须证明DDL/版本事务回滚。副本151升级另在恢复Task登记安全门后执行，不复用旧150完成结论。
+
+## 完整 Alembic 版本事务补验（12:44）
+原 env.py 已支持 config.attributes.connection，本轮不改生产入口。仅扩展上述测试文件，保留迁移函数用例并新增 command.upgrade 两条正反路径。测试仅在本轮一次性 aos_test_ 库的外层回滚事务中还原151新增对象之前的150结构，精确将测试版本记录置150，再调用原 Alembic env/revision/version 更新；核成功151、非空原行不变及epoch精确回填。延迟FK反例在savepoint中运行完整命令，失败回滚后须仍150、无新增epoch表、原行不变，再运行正常命令；最终外层回滚后原151恢复。本次是隔离重建历史结构的完整版本事务，不冒充完整历史备份恢复。使用现有Task/16:00 Lease，只改精确测试及本目录证据，不改权威库/服务/其他Task文件。现有源码若已符合要求，不制造生产RED；新增验收补足先前未证明的版本事务。
+
+补强中途失败门：在savepoint内创建不同owner的同名lock函数，原迁移完成epoch建表、backfill、ownership/RLS后真实CREATE FUNCTION遇DuplicateFunction失败。回滚后核版本仍150、epoch表/三函数/两trigger不存在、独立owner schema USAGE回到之前、原行快照相同；随后正常升级并回读原fence。该人为冲突仅在测试savepoint，绝不写当前权威库。
