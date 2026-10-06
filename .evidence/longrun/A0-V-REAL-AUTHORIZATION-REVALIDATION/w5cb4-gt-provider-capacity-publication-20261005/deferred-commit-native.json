@@ -1,0 +1,33 @@
+{
+  "container_id": "63c7d47bac4232b032a827ccf26116aef03ce2e28ca587d9b94a84987c75afd7",
+  "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+  "database": "aos_test_ed25519",
+  "cases": [
+    {
+      "name": "prepare_only",
+      "psql_exit": 3,
+      "expected_errors": 1,
+      "result": "EXPECTED_NATIVE_RESULT"
+    },
+    {
+      "name": "finalized",
+      "psql_exit": 0,
+      "expected_errors": 0,
+      "result": "EXPECTED_NATIVE_RESULT"
+    },
+    {
+      "name": "failed_savepoint_preserves_pending",
+      "psql_exit": 0,
+      "expected_errors": 2,
+      "result": "EXPECTED_NATIVE_RESULT"
+    },
+    {
+      "name": "rolled_back_prepare",
+      "psql_exit": 0,
+      "expected_errors": 0,
+      "result": "EXPECTED_NATIVE_RESULT"
+    }
+  ],
+  "persistent_probe_functions_after_disconnect": 0,
+  "boundary": "TEMP SELECT/DDL only; mechanism feasibility, not issuer ACL or complete publication authorization"
+}

@@ -1,0 +1,1945 @@
+{
+  "head": "55194683825289887d21d9f36c54f1070edecfee",
+  "authority": "AOS-001375",
+  "evidence_kind": "SCHEMA_FIELD_INVENTORY_NOT_COMPLETE_VALIDATOR",
+  "models": [
+    {
+      "model": "ActionApprovalEventSnapshot",
+      "required": [
+        "id",
+        "proposalId",
+        "proposalVersion",
+        "proposalHash",
+        "decision",
+        "actor",
+        "createdAt"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "proposalId": {
+          "title": "Proposalid",
+          "type": "string"
+        },
+        "proposalVersion": {
+          "minimum": 1,
+          "title": "Proposalversion",
+          "type": "integer"
+        },
+        "proposalHash": {
+          "title": "Proposalhash",
+          "type": "string"
+        },
+        "decision": {
+          "$ref": "#/$defs/ApprovalDecision"
+        },
+        "actor": {
+          "$ref": "#/$defs/ActorRef"
+        },
+        "reason": {
+          "default": "",
+          "title": "Reason",
+          "type": "string"
+        },
+        "expiresAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expiresat"
+        },
+        "createdAt": {
+          "format": "date-time",
+          "title": "Createdat",
+          "type": "string"
+        },
+        "actionBindingHash": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Actionbindinghash"
+        },
+        "approvalPolicyHash": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Approvalpolicyhash"
+        },
+        "slotId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Slotid"
+        },
+        "eligibilitySnapshotHash": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Eligibilitysnapshothash"
+        }
+      },
+      "definitions": {
+        "ActorRef": {
+          "additionalProperties": false,
+          "properties": {
+            "actorType": {
+              "title": "Actortype",
+              "type": "string"
+            },
+            "actorId": {
+              "title": "Actorid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "actorType",
+            "actorId"
+          ],
+          "title": "ActorRef",
+          "type": "object"
+        },
+        "ApprovalDecision": {
+          "enum": [
+            "approved",
+            "rejected"
+          ],
+          "title": "ApprovalDecision",
+          "type": "string"
+        }
+      }
+    },
+    {
+      "model": "ProviderCapacityRequest",
+      "required": [
+        "schemaVersion",
+        "tenant",
+        "providerRef",
+        "physicalAccountId",
+        "requestedMaxConcurrency",
+        "requestedMaxTokenUnits",
+        "tokenUnit",
+        "basisKind",
+        "basisEvidenceRef",
+        "validFrom",
+        "validUntil",
+        "proposalExpiresAt"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "maximum": 1,
+          "minimum": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "tenant": {
+          "$ref": "#/$defs/FormalEvaluationTenant"
+        },
+        "providerRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "physicalAccountId": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Physicalaccountid",
+          "type": "string"
+        },
+        "requestedMaxConcurrency": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "title": "Requestedmaxconcurrency",
+          "type": "integer"
+        },
+        "requestedMaxTokenUnits": {
+          "maximum": 1000000000000,
+          "minimum": 1,
+          "title": "Requestedmaxtokenunits",
+          "type": "integer"
+        },
+        "tokenUnit": {
+          "const": "token",
+          "title": "Tokenunit",
+          "type": "string"
+        },
+        "basisKind": {
+          "const": "owner_requested_allocation",
+          "title": "Basiskind",
+          "type": "string"
+        },
+        "basisEvidenceRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "validFrom": {
+          "format": "date-time",
+          "title": "Validfrom",
+          "type": "string"
+        },
+        "validUntil": {
+          "format": "date-time",
+          "title": "Validuntil",
+          "type": "string"
+        },
+        "proposalExpiresAt": {
+          "format": "date-time",
+          "title": "Proposalexpiresat",
+          "type": "string"
+        }
+      },
+      "definitions": {
+        "FormalEvaluationTenant": {
+          "additionalProperties": false,
+          "properties": {
+            "orgId": {
+              "const": "org-org",
+              "title": "Orgid",
+              "type": "string"
+            },
+            "projectId": {
+              "const": "dev-project",
+              "title": "Projectid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "orgId",
+            "projectId"
+          ],
+          "title": "FormalEvaluationTenant",
+          "type": "object"
+        },
+        "FormalExactRef": {
+          "additionalProperties": false,
+          "properties": {
+            "assetType": {
+              "maxLength": 80,
+              "minLength": 1,
+              "title": "Assettype",
+              "type": "string"
+            },
+            "assetId": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Assetid",
+              "type": "string"
+            },
+            "revision": {
+              "minimum": 1,
+              "title": "Revision",
+              "type": "integer"
+            },
+            "contentHash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Contenthash",
+              "type": "string"
+            }
+          },
+          "required": [
+            "assetType",
+            "assetId",
+            "revision",
+            "contentHash"
+          ],
+          "title": "FormalExactRef",
+          "type": "object"
+        }
+      }
+    },
+    {
+      "model": "ProviderPhysicalAccountCandidate",
+      "required": [
+        "schemaVersion",
+        "tenant",
+        "physicalAccountId",
+        "supplierId",
+        "supplierAccountFingerprint",
+        "providerRefs",
+        "evidenceRef"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "maximum": 1,
+          "minimum": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "tenant": {
+          "$ref": "#/$defs/FormalEvaluationTenant"
+        },
+        "physicalAccountId": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Physicalaccountid",
+          "type": "string"
+        },
+        "supplierId": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Supplierid",
+          "type": "string"
+        },
+        "supplierAccountFingerprint": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Supplieraccountfingerprint",
+          "type": "string"
+        },
+        "providerRefs": {
+          "items": {
+            "$ref": "#/$defs/FormalExactRef"
+          },
+          "maxItems": 1000,
+          "minItems": 1,
+          "title": "Providerrefs",
+          "type": "array"
+        },
+        "evidenceRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        }
+      },
+      "definitions": {
+        "FormalEvaluationTenant": {
+          "additionalProperties": false,
+          "properties": {
+            "orgId": {
+              "const": "org-org",
+              "title": "Orgid",
+              "type": "string"
+            },
+            "projectId": {
+              "const": "dev-project",
+              "title": "Projectid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "orgId",
+            "projectId"
+          ],
+          "title": "FormalEvaluationTenant",
+          "type": "object"
+        },
+        "FormalExactRef": {
+          "additionalProperties": false,
+          "properties": {
+            "assetType": {
+              "maxLength": 80,
+              "minLength": 1,
+              "title": "Assettype",
+              "type": "string"
+            },
+            "assetId": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Assetid",
+              "type": "string"
+            },
+            "revision": {
+              "minimum": 1,
+              "title": "Revision",
+              "type": "integer"
+            },
+            "contentHash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Contenthash",
+              "type": "string"
+            }
+          },
+          "required": [
+            "assetType",
+            "assetId",
+            "revision",
+            "contentHash"
+          ],
+          "title": "FormalExactRef",
+          "type": "object"
+        }
+      }
+    },
+    {
+      "model": "ProviderCapacityBasisCandidate",
+      "required": [
+        "schemaVersion",
+        "tenant",
+        "basisKind",
+        "physicalAccountRef",
+        "evidenceRef",
+        "maxConcurrency",
+        "tokenLimit",
+        "observedAt",
+        "validFrom",
+        "validUntil"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "maximum": 1,
+          "minimum": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "tenant": {
+          "$ref": "#/$defs/FormalEvaluationTenant"
+        },
+        "basisKind": {
+          "enum": [
+            "owner_allocation",
+            "supplier_limit_claim"
+          ],
+          "title": "Basiskind",
+          "type": "string"
+        },
+        "physicalAccountRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "evidenceRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "maxConcurrency": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "title": "Maxconcurrency",
+          "type": "integer"
+        },
+        "tokenLimit": {
+          "discriminator": {
+            "mapping": {
+              "fixed_window_rate": "#/$defs/FixedWindowTokenLimit",
+              "inflight_upper_bound": "#/$defs/InflightTokenLimit"
+            },
+            "propertyName": "mode"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/InflightTokenLimit"
+            },
+            {
+              "$ref": "#/$defs/FixedWindowTokenLimit"
+            }
+          ],
+          "title": "Tokenlimit"
+        },
+        "observedAt": {
+          "format": "date-time",
+          "title": "Observedat",
+          "type": "string"
+        },
+        "validFrom": {
+          "format": "date-time",
+          "title": "Validfrom",
+          "type": "string"
+        },
+        "validUntil": {
+          "format": "date-time",
+          "title": "Validuntil",
+          "type": "string"
+        }
+      },
+      "definitions": {
+        "FixedWindowTokenLimit": {
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "fixed_window_rate",
+              "title": "Mode",
+              "type": "string"
+            },
+            "unit": {
+              "const": "token",
+              "title": "Unit",
+              "type": "string"
+            },
+            "maxTokens": {
+              "maximum": 1000000000000,
+              "minimum": 1,
+              "title": "Maxtokens",
+              "type": "integer"
+            },
+            "windowSeconds": {
+              "maximum": 86400,
+              "minimum": 1,
+              "title": "Windowseconds",
+              "type": "integer"
+            },
+            "windowAnchor": {
+              "format": "date-time",
+              "title": "Windowanchor",
+              "type": "string"
+            }
+          },
+          "required": [
+            "mode",
+            "unit",
+            "maxTokens",
+            "windowSeconds",
+            "windowAnchor"
+          ],
+          "title": "FixedWindowTokenLimit",
+          "type": "object"
+        },
+        "FormalEvaluationTenant": {
+          "additionalProperties": false,
+          "properties": {
+            "orgId": {
+              "const": "org-org",
+              "title": "Orgid",
+              "type": "string"
+            },
+            "projectId": {
+              "const": "dev-project",
+              "title": "Projectid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "orgId",
+            "projectId"
+          ],
+          "title": "FormalEvaluationTenant",
+          "type": "object"
+        },
+        "FormalExactRef": {
+          "additionalProperties": false,
+          "properties": {
+            "assetType": {
+              "maxLength": 80,
+              "minLength": 1,
+              "title": "Assettype",
+              "type": "string"
+            },
+            "assetId": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Assetid",
+              "type": "string"
+            },
+            "revision": {
+              "minimum": 1,
+              "title": "Revision",
+              "type": "integer"
+            },
+            "contentHash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Contenthash",
+              "type": "string"
+            }
+          },
+          "required": [
+            "assetType",
+            "assetId",
+            "revision",
+            "contentHash"
+          ],
+          "title": "FormalExactRef",
+          "type": "object"
+        },
+        "InflightTokenLimit": {
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "inflight_upper_bound",
+              "title": "Mode",
+              "type": "string"
+            },
+            "unit": {
+              "const": "token",
+              "title": "Unit",
+              "type": "string"
+            },
+            "maxTokens": {
+              "maximum": 1000000000000,
+              "minimum": 1,
+              "title": "Maxtokens",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "mode",
+            "unit",
+            "maxTokens"
+          ],
+          "title": "InflightTokenLimit",
+          "type": "object"
+        }
+      }
+    },
+    {
+      "model": "ProviderCapacitySourceCandidate",
+      "required": [
+        "schemaVersion",
+        "tenant",
+        "physicalAccountRef",
+        "basisRef",
+        "allocationRequestRef",
+        "allocationApprovalRef",
+        "validFrom",
+        "validUntil",
+        "executionAllowed"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "maximum": 1,
+          "minimum": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "tenant": {
+          "$ref": "#/$defs/FormalEvaluationTenant"
+        },
+        "physicalAccountRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "basisRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "allocationRequestRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "allocationApprovalRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "validFrom": {
+          "format": "date-time",
+          "title": "Validfrom",
+          "type": "string"
+        },
+        "validUntil": {
+          "format": "date-time",
+          "title": "Validuntil",
+          "type": "string"
+        },
+        "executionAllowed": {
+          "title": "Executionallowed",
+          "type": "boolean"
+        }
+      },
+      "definitions": {
+        "FormalEvaluationTenant": {
+          "additionalProperties": false,
+          "properties": {
+            "orgId": {
+              "const": "org-org",
+              "title": "Orgid",
+              "type": "string"
+            },
+            "projectId": {
+              "const": "dev-project",
+              "title": "Projectid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "orgId",
+            "projectId"
+          ],
+          "title": "FormalEvaluationTenant",
+          "type": "object"
+        },
+        "FormalExactRef": {
+          "additionalProperties": false,
+          "properties": {
+            "assetType": {
+              "maxLength": 80,
+              "minLength": 1,
+              "title": "Assettype",
+              "type": "string"
+            },
+            "assetId": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Assetid",
+              "type": "string"
+            },
+            "revision": {
+              "minimum": 1,
+              "title": "Revision",
+              "type": "integer"
+            },
+            "contentHash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Contenthash",
+              "type": "string"
+            }
+          },
+          "required": [
+            "assetType",
+            "assetId",
+            "revision",
+            "contentHash"
+          ],
+          "title": "FormalExactRef",
+          "type": "object"
+        }
+      }
+    },
+    {
+      "model": "ProviderCapacitySourcePolicy",
+      "required": [
+        "schemaVersion",
+        "tenant",
+        "assetId",
+        "revision",
+        "publisher",
+        "keyId",
+        "supplierId",
+        "validFrom",
+        "validUntil",
+        "purpose",
+        "attestationPublisher",
+        "attestationKeyId",
+        "attestationRootRevision",
+        "maxObservationAgeSeconds",
+        "maxFutureSkewSeconds",
+        "allowedTokenModes",
+        "deploymentTarget"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "maximum": 1,
+          "minimum": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "tenant": {
+          "$ref": "#/$defs/FormalEvaluationTenant"
+        },
+        "assetId": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Assetid",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "publisher": {
+          "const": "aos-capacity-source-policy",
+          "title": "Publisher",
+          "type": "string"
+        },
+        "keyId": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Keyid",
+          "type": "string"
+        },
+        "supplierId": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Supplierid",
+          "type": "string"
+        },
+        "validFrom": {
+          "format": "date-time",
+          "title": "Validfrom",
+          "type": "string"
+        },
+        "validUntil": {
+          "format": "date-time",
+          "title": "Validuntil",
+          "type": "string"
+        },
+        "purpose": {
+          "const": "provider_capacity_source",
+          "title": "Purpose",
+          "type": "string"
+        },
+        "attestationPublisher": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Attestationpublisher",
+          "type": "string"
+        },
+        "attestationKeyId": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Attestationkeyid",
+          "type": "string"
+        },
+        "attestationRootRevision": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Attestationrootrevision",
+          "type": "string"
+        },
+        "maxObservationAgeSeconds": {
+          "maximum": 86400,
+          "minimum": 1,
+          "title": "Maxobservationageseconds",
+          "type": "integer"
+        },
+        "maxFutureSkewSeconds": {
+          "maximum": 60,
+          "minimum": 0,
+          "title": "Maxfutureskewseconds",
+          "type": "integer"
+        },
+        "allowedTokenModes": {
+          "items": {
+            "enum": [
+              "inflight_upper_bound",
+              "fixed_window_rate"
+            ],
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 1,
+          "title": "Allowedtokenmodes",
+          "type": "array"
+        },
+        "deploymentTarget": {
+          "$ref": "#/$defs/CapacitySourceDeploymentTarget"
+        }
+      },
+      "definitions": {
+        "CapacitySourceDeploymentTarget": {
+          "additionalProperties": false,
+          "properties": {
+            "host": {
+              "enum": [
+                "127.0.0.1",
+                "::1"
+              ],
+              "title": "Host",
+              "type": "string"
+            },
+            "port": {
+              "maximum": 65535,
+              "minimum": 1,
+              "title": "Port",
+              "type": "integer"
+            },
+            "database": {
+              "pattern": "^[a-z][a-z0-9_]{0,62}$",
+              "title": "Database",
+              "type": "string"
+            },
+            "databaseOid": {
+              "maximum": 4294967295,
+              "minimum": 1,
+              "title": "Databaseoid",
+              "type": "integer"
+            },
+            "clusterIdentifier": {
+              "pattern": "^[0-9]{10,20}$",
+              "title": "Clusteridentifier",
+              "type": "string"
+            },
+            "issuerRole": {
+              "const": "aos_provider_capacity_issuer",
+              "title": "Issuerrole",
+              "type": "string"
+            }
+          },
+          "required": [
+            "host",
+            "port",
+            "database",
+            "databaseOid",
+            "clusterIdentifier",
+            "issuerRole"
+          ],
+          "title": "CapacitySourceDeploymentTarget",
+          "type": "object"
+        },
+        "FormalEvaluationTenant": {
+          "additionalProperties": false,
+          "properties": {
+            "orgId": {
+              "const": "org-org",
+              "title": "Orgid",
+              "type": "string"
+            },
+            "projectId": {
+              "const": "dev-project",
+              "title": "Projectid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "orgId",
+            "projectId"
+          ],
+          "title": "FormalEvaluationTenant",
+          "type": "object"
+        }
+      }
+    },
+    {
+      "model": "SupplierCapacityAttestation",
+      "required": [
+        "schemaVersion",
+        "tenant",
+        "assetId",
+        "revision",
+        "publisher",
+        "keyId",
+        "supplierId",
+        "validFrom",
+        "validUntil",
+        "purpose",
+        "supplierAccountFingerprint",
+        "providerRefs",
+        "evidenceRef",
+        "maxConcurrency",
+        "tokenLimit",
+        "observedAt"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "maximum": 1,
+          "minimum": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "tenant": {
+          "$ref": "#/$defs/FormalEvaluationTenant"
+        },
+        "assetId": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Assetid",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "publisher": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Publisher",
+          "type": "string"
+        },
+        "keyId": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Keyid",
+          "type": "string"
+        },
+        "supplierId": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Supplierid",
+          "type": "string"
+        },
+        "validFrom": {
+          "format": "date-time",
+          "title": "Validfrom",
+          "type": "string"
+        },
+        "validUntil": {
+          "format": "date-time",
+          "title": "Validuntil",
+          "type": "string"
+        },
+        "purpose": {
+          "const": "supplier_capacity_attestation",
+          "title": "Purpose",
+          "type": "string"
+        },
+        "supplierAccountFingerprint": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Supplieraccountfingerprint",
+          "type": "string"
+        },
+        "providerRefs": {
+          "items": {
+            "$ref": "#/$defs/FormalExactRef"
+          },
+          "maxItems": 1000,
+          "minItems": 1,
+          "title": "Providerrefs",
+          "type": "array"
+        },
+        "evidenceRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "maxConcurrency": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "title": "Maxconcurrency",
+          "type": "integer"
+        },
+        "tokenLimit": {
+          "discriminator": {
+            "mapping": {
+              "fixed_window_rate": "#/$defs/FixedWindowTokenLimit",
+              "inflight_upper_bound": "#/$defs/InflightTokenLimit"
+            },
+            "propertyName": "mode"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/InflightTokenLimit"
+            },
+            {
+              "$ref": "#/$defs/FixedWindowTokenLimit"
+            }
+          ],
+          "title": "Tokenlimit"
+        },
+        "observedAt": {
+          "format": "date-time",
+          "title": "Observedat",
+          "type": "string"
+        }
+      },
+      "definitions": {
+        "FixedWindowTokenLimit": {
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "fixed_window_rate",
+              "title": "Mode",
+              "type": "string"
+            },
+            "unit": {
+              "const": "token",
+              "title": "Unit",
+              "type": "string"
+            },
+            "maxTokens": {
+              "maximum": 1000000000000,
+              "minimum": 1,
+              "title": "Maxtokens",
+              "type": "integer"
+            },
+            "windowSeconds": {
+              "maximum": 86400,
+              "minimum": 1,
+              "title": "Windowseconds",
+              "type": "integer"
+            },
+            "windowAnchor": {
+              "format": "date-time",
+              "title": "Windowanchor",
+              "type": "string"
+            }
+          },
+          "required": [
+            "mode",
+            "unit",
+            "maxTokens",
+            "windowSeconds",
+            "windowAnchor"
+          ],
+          "title": "FixedWindowTokenLimit",
+          "type": "object"
+        },
+        "FormalEvaluationTenant": {
+          "additionalProperties": false,
+          "properties": {
+            "orgId": {
+              "const": "org-org",
+              "title": "Orgid",
+              "type": "string"
+            },
+            "projectId": {
+              "const": "dev-project",
+              "title": "Projectid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "orgId",
+            "projectId"
+          ],
+          "title": "FormalEvaluationTenant",
+          "type": "object"
+        },
+        "FormalExactRef": {
+          "additionalProperties": false,
+          "properties": {
+            "assetType": {
+              "maxLength": 80,
+              "minLength": 1,
+              "title": "Assettype",
+              "type": "string"
+            },
+            "assetId": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Assetid",
+              "type": "string"
+            },
+            "revision": {
+              "minimum": 1,
+              "title": "Revision",
+              "type": "integer"
+            },
+            "contentHash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Contenthash",
+              "type": "string"
+            }
+          },
+          "required": [
+            "assetType",
+            "assetId",
+            "revision",
+            "contentHash"
+          ],
+          "title": "FormalExactRef",
+          "type": "object"
+        },
+        "InflightTokenLimit": {
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "inflight_upper_bound",
+              "title": "Mode",
+              "type": "string"
+            },
+            "unit": {
+              "const": "token",
+              "title": "Unit",
+              "type": "string"
+            },
+            "maxTokens": {
+              "maximum": 1000000000000,
+              "minimum": 1,
+              "title": "Maxtokens",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "mode",
+            "unit",
+            "maxTokens"
+          ],
+          "title": "InflightTokenLimit",
+          "type": "object"
+        }
+      }
+    },
+    {
+      "model": "ProviderCapacityOriginBootstrap",
+      "required": [
+        "schemaVersion",
+        "tenant",
+        "assetId",
+        "revision",
+        "publisher",
+        "keyId",
+        "validFrom",
+        "validUntil",
+        "deploymentTarget",
+        "purpose",
+        "bootstrapId",
+        "publisherSubject",
+        "policyPublisherRole",
+        "anchorRevision",
+        "rootSnapshotHash",
+        "allowedDocumentRefs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "maximum": 1,
+          "minimum": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "tenant": {
+          "$ref": "#/$defs/FormalEvaluationTenant"
+        },
+        "assetId": {
+          "title": "Assetid",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "publisher": {
+          "title": "Publisher",
+          "type": "string"
+        },
+        "keyId": {
+          "title": "Keyid",
+          "type": "string"
+        },
+        "validFrom": {
+          "format": "date-time",
+          "title": "Validfrom",
+          "type": "string"
+        },
+        "validUntil": {
+          "format": "date-time",
+          "title": "Validuntil",
+          "type": "string"
+        },
+        "deploymentTarget": {
+          "$ref": "#/$defs/CapacitySourceDeploymentTarget"
+        },
+        "purpose": {
+          "const": "provider_capacity_origin_bootstrap",
+          "title": "Purpose",
+          "type": "string"
+        },
+        "bootstrapId": {
+          "title": "Bootstrapid",
+          "type": "string"
+        },
+        "publisherSubject": {
+          "title": "Publishersubject",
+          "type": "string"
+        },
+        "policyPublisherRole": {
+          "const": "aos_provider_capacity_policy_publisher",
+          "title": "Policypublisherrole",
+          "type": "string"
+        },
+        "anchorRevision": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Anchorrevision",
+          "type": "string"
+        },
+        "rootSnapshotHash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Rootsnapshothash",
+          "type": "string"
+        },
+        "allowedDocumentRefs": {
+          "items": {
+            "$ref": "#/$defs/FormalExactRef"
+          },
+          "maxItems": 1000,
+          "minItems": 1,
+          "title": "Alloweddocumentrefs",
+          "type": "array"
+        }
+      },
+      "definitions": {
+        "CapacitySourceDeploymentTarget": {
+          "additionalProperties": false,
+          "properties": {
+            "host": {
+              "enum": [
+                "127.0.0.1",
+                "::1"
+              ],
+              "title": "Host",
+              "type": "string"
+            },
+            "port": {
+              "maximum": 65535,
+              "minimum": 1,
+              "title": "Port",
+              "type": "integer"
+            },
+            "database": {
+              "pattern": "^[a-z][a-z0-9_]{0,62}$",
+              "title": "Database",
+              "type": "string"
+            },
+            "databaseOid": {
+              "maximum": 4294967295,
+              "minimum": 1,
+              "title": "Databaseoid",
+              "type": "integer"
+            },
+            "clusterIdentifier": {
+              "pattern": "^[0-9]{10,20}$",
+              "title": "Clusteridentifier",
+              "type": "string"
+            },
+            "issuerRole": {
+              "const": "aos_provider_capacity_issuer",
+              "title": "Issuerrole",
+              "type": "string"
+            }
+          },
+          "required": [
+            "host",
+            "port",
+            "database",
+            "databaseOid",
+            "clusterIdentifier",
+            "issuerRole"
+          ],
+          "title": "CapacitySourceDeploymentTarget",
+          "type": "object"
+        },
+        "FormalEvaluationTenant": {
+          "additionalProperties": false,
+          "properties": {
+            "orgId": {
+              "const": "org-org",
+              "title": "Orgid",
+              "type": "string"
+            },
+            "projectId": {
+              "const": "dev-project",
+              "title": "Projectid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "orgId",
+            "projectId"
+          ],
+          "title": "FormalEvaluationTenant",
+          "type": "object"
+        },
+        "FormalExactRef": {
+          "additionalProperties": false,
+          "properties": {
+            "assetType": {
+              "maxLength": 80,
+              "minLength": 1,
+              "title": "Assettype",
+              "type": "string"
+            },
+            "assetId": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Assetid",
+              "type": "string"
+            },
+            "revision": {
+              "minimum": 1,
+              "title": "Revision",
+              "type": "integer"
+            },
+            "contentHash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Contenthash",
+              "type": "string"
+            }
+          },
+          "required": [
+            "assetType",
+            "assetId",
+            "revision",
+            "contentHash"
+          ],
+          "title": "FormalExactRef",
+          "type": "object"
+        }
+      }
+    },
+    {
+      "model": "ProviderCapacitySigningPermit",
+      "required": [
+        "schemaVersion",
+        "tenant",
+        "assetId",
+        "revision",
+        "publisher",
+        "keyId",
+        "validFrom",
+        "validUntil",
+        "deploymentTarget",
+        "purpose",
+        "sourcePolicyRef",
+        "signerPublisher",
+        "signerKeyId",
+        "signerRootRevision",
+        "signerPublicKey"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "maximum": 1,
+          "minimum": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "tenant": {
+          "$ref": "#/$defs/FormalEvaluationTenant"
+        },
+        "assetId": {
+          "title": "Assetid",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "publisher": {
+          "title": "Publisher",
+          "type": "string"
+        },
+        "keyId": {
+          "title": "Keyid",
+          "type": "string"
+        },
+        "validFrom": {
+          "format": "date-time",
+          "title": "Validfrom",
+          "type": "string"
+        },
+        "validUntil": {
+          "format": "date-time",
+          "title": "Validuntil",
+          "type": "string"
+        },
+        "deploymentTarget": {
+          "$ref": "#/$defs/CapacitySourceDeploymentTarget"
+        },
+        "purpose": {
+          "const": "provider_capacity_source_signing_permit",
+          "title": "Purpose",
+          "type": "string"
+        },
+        "sourcePolicyRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "signerPublisher": {
+          "title": "Signerpublisher",
+          "type": "string"
+        },
+        "signerKeyId": {
+          "title": "Signerkeyid",
+          "type": "string"
+        },
+        "signerRootRevision": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Signerrootrevision",
+          "type": "string"
+        },
+        "signerPublicKey": {
+          "maxLength": 44,
+          "minLength": 44,
+          "title": "Signerpublickey",
+          "type": "string"
+        }
+      },
+      "definitions": {
+        "CapacitySourceDeploymentTarget": {
+          "additionalProperties": false,
+          "properties": {
+            "host": {
+              "enum": [
+                "127.0.0.1",
+                "::1"
+              ],
+              "title": "Host",
+              "type": "string"
+            },
+            "port": {
+              "maximum": 65535,
+              "minimum": 1,
+              "title": "Port",
+              "type": "integer"
+            },
+            "database": {
+              "pattern": "^[a-z][a-z0-9_]{0,62}$",
+              "title": "Database",
+              "type": "string"
+            },
+            "databaseOid": {
+              "maximum": 4294967295,
+              "minimum": 1,
+              "title": "Databaseoid",
+              "type": "integer"
+            },
+            "clusterIdentifier": {
+              "pattern": "^[0-9]{10,20}$",
+              "title": "Clusteridentifier",
+              "type": "string"
+            },
+            "issuerRole": {
+              "const": "aos_provider_capacity_issuer",
+              "title": "Issuerrole",
+              "type": "string"
+            }
+          },
+          "required": [
+            "host",
+            "port",
+            "database",
+            "databaseOid",
+            "clusterIdentifier",
+            "issuerRole"
+          ],
+          "title": "CapacitySourceDeploymentTarget",
+          "type": "object"
+        },
+        "FormalEvaluationTenant": {
+          "additionalProperties": false,
+          "properties": {
+            "orgId": {
+              "const": "org-org",
+              "title": "Orgid",
+              "type": "string"
+            },
+            "projectId": {
+              "const": "dev-project",
+              "title": "Projectid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "orgId",
+            "projectId"
+          ],
+          "title": "FormalEvaluationTenant",
+          "type": "object"
+        },
+        "FormalExactRef": {
+          "additionalProperties": false,
+          "properties": {
+            "assetType": {
+              "maxLength": 80,
+              "minLength": 1,
+              "title": "Assettype",
+              "type": "string"
+            },
+            "assetId": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Assetid",
+              "type": "string"
+            },
+            "revision": {
+              "minimum": 1,
+              "title": "Revision",
+              "type": "integer"
+            },
+            "contentHash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Contenthash",
+              "type": "string"
+            }
+          },
+          "required": [
+            "assetType",
+            "assetId",
+            "revision",
+            "contentHash"
+          ],
+          "title": "FormalExactRef",
+          "type": "object"
+        }
+      }
+    },
+    {
+      "model": "PublishedProviderCapacitySource",
+      "required": [
+        "schemaVersion",
+        "tenant",
+        "assetId",
+        "revision",
+        "publisher",
+        "keyId",
+        "validFrom",
+        "validUntil",
+        "deploymentTarget",
+        "purpose",
+        "physicalAccountId",
+        "supplierId",
+        "supplierAccountFingerprint",
+        "providerRefs",
+        "evidenceRefs",
+        "sourceProposalRef",
+        "sourceApprovalRef",
+        "allocationRequestRef",
+        "allocationApprovalRef",
+        "accountCandidateRef",
+        "basisCandidateRef",
+        "sourcePolicyRef",
+        "supplierAttestationRef",
+        "signingPermitRef",
+        "originRef",
+        "originEpoch",
+        "sourceWithdrawalEpoch",
+        "allocationWithdrawalEpoch",
+        "requestHash",
+        "maxConcurrency",
+        "tokenLimit",
+        "observedAt",
+        "issuedAt",
+        "executionAllowed"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "maximum": 1,
+          "minimum": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "tenant": {
+          "$ref": "#/$defs/FormalEvaluationTenant"
+        },
+        "assetId": {
+          "title": "Assetid",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "publisher": {
+          "title": "Publisher",
+          "type": "string"
+        },
+        "keyId": {
+          "title": "Keyid",
+          "type": "string"
+        },
+        "validFrom": {
+          "format": "date-time",
+          "title": "Validfrom",
+          "type": "string"
+        },
+        "validUntil": {
+          "format": "date-time",
+          "title": "Validuntil",
+          "type": "string"
+        },
+        "deploymentTarget": {
+          "$ref": "#/$defs/CapacitySourceDeploymentTarget"
+        },
+        "purpose": {
+          "const": "provider_capacity_published_source",
+          "title": "Purpose",
+          "type": "string"
+        },
+        "physicalAccountId": {
+          "title": "Physicalaccountid",
+          "type": "string"
+        },
+        "supplierId": {
+          "title": "Supplierid",
+          "type": "string"
+        },
+        "supplierAccountFingerprint": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Supplieraccountfingerprint",
+          "type": "string"
+        },
+        "providerRefs": {
+          "items": {
+            "$ref": "#/$defs/FormalExactRef"
+          },
+          "maxItems": 1000,
+          "minItems": 1,
+          "title": "Providerrefs",
+          "type": "array"
+        },
+        "evidenceRefs": {
+          "items": {
+            "$ref": "#/$defs/FormalExactRef"
+          },
+          "maxItems": 1000,
+          "minItems": 1,
+          "title": "Evidencerefs",
+          "type": "array"
+        },
+        "sourceProposalRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "sourceApprovalRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "allocationRequestRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "allocationApprovalRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "accountCandidateRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "basisCandidateRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "sourcePolicyRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "supplierAttestationRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "signingPermitRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "originRef": {
+          "$ref": "#/$defs/FormalExactRef"
+        },
+        "originEpoch": {
+          "minimum": 0,
+          "title": "Originepoch",
+          "type": "integer"
+        },
+        "sourceWithdrawalEpoch": {
+          "minimum": 0,
+          "title": "Sourcewithdrawalepoch",
+          "type": "integer"
+        },
+        "allocationWithdrawalEpoch": {
+          "minimum": 0,
+          "title": "Allocationwithdrawalepoch",
+          "type": "integer"
+        },
+        "requestHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Requesthash",
+          "type": "string"
+        },
+        "maxConcurrency": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "title": "Maxconcurrency",
+          "type": "integer"
+        },
+        "tokenLimit": {
+          "discriminator": {
+            "mapping": {
+              "fixed_window_rate": "#/$defs/FixedWindowTokenLimit",
+              "inflight_upper_bound": "#/$defs/InflightTokenLimit"
+            },
+            "propertyName": "mode"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/InflightTokenLimit"
+            },
+            {
+              "$ref": "#/$defs/FixedWindowTokenLimit"
+            }
+          ],
+          "title": "Tokenlimit"
+        },
+        "observedAt": {
+          "format": "date-time",
+          "title": "Observedat",
+          "type": "string"
+        },
+        "issuedAt": {
+          "format": "date-time",
+          "title": "Issuedat",
+          "type": "string"
+        },
+        "executionAllowed": {
+          "title": "Executionallowed",
+          "type": "boolean"
+        }
+      },
+      "definitions": {
+        "CapacitySourceDeploymentTarget": {
+          "additionalProperties": false,
+          "properties": {
+            "host": {
+              "enum": [
+                "127.0.0.1",
+                "::1"
+              ],
+              "title": "Host",
+              "type": "string"
+            },
+            "port": {
+              "maximum": 65535,
+              "minimum": 1,
+              "title": "Port",
+              "type": "integer"
+            },
+            "database": {
+              "pattern": "^[a-z][a-z0-9_]{0,62}$",
+              "title": "Database",
+              "type": "string"
+            },
+            "databaseOid": {
+              "maximum": 4294967295,
+              "minimum": 1,
+              "title": "Databaseoid",
+              "type": "integer"
+            },
+            "clusterIdentifier": {
+              "pattern": "^[0-9]{10,20}$",
+              "title": "Clusteridentifier",
+              "type": "string"
+            },
+            "issuerRole": {
+              "const": "aos_provider_capacity_issuer",
+              "title": "Issuerrole",
+              "type": "string"
+            }
+          },
+          "required": [
+            "host",
+            "port",
+            "database",
+            "databaseOid",
+            "clusterIdentifier",
+            "issuerRole"
+          ],
+          "title": "CapacitySourceDeploymentTarget",
+          "type": "object"
+        },
+        "FixedWindowTokenLimit": {
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "fixed_window_rate",
+              "title": "Mode",
+              "type": "string"
+            },
+            "unit": {
+              "const": "token",
+              "title": "Unit",
+              "type": "string"
+            },
+            "maxTokens": {
+              "maximum": 1000000000000,
+              "minimum": 1,
+              "title": "Maxtokens",
+              "type": "integer"
+            },
+            "windowSeconds": {
+              "maximum": 86400,
+              "minimum": 1,
+              "title": "Windowseconds",
+              "type": "integer"
+            },
+            "windowAnchor": {
+              "format": "date-time",
+              "title": "Windowanchor",
+              "type": "string"
+            }
+          },
+          "required": [
+            "mode",
+            "unit",
+            "maxTokens",
+            "windowSeconds",
+            "windowAnchor"
+          ],
+          "title": "FixedWindowTokenLimit",
+          "type": "object"
+        },
+        "FormalEvaluationTenant": {
+          "additionalProperties": false,
+          "properties": {
+            "orgId": {
+              "const": "org-org",
+              "title": "Orgid",
+              "type": "string"
+            },
+            "projectId": {
+              "const": "dev-project",
+              "title": "Projectid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "orgId",
+            "projectId"
+          ],
+          "title": "FormalEvaluationTenant",
+          "type": "object"
+        },
+        "FormalExactRef": {
+          "additionalProperties": false,
+          "properties": {
+            "assetType": {
+              "maxLength": 80,
+              "minLength": 1,
+              "title": "Assettype",
+              "type": "string"
+            },
+            "assetId": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Assetid",
+              "type": "string"
+            },
+            "revision": {
+              "minimum": 1,
+              "title": "Revision",
+              "type": "integer"
+            },
+            "contentHash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Contenthash",
+              "type": "string"
+            }
+          },
+          "required": [
+            "assetType",
+            "assetId",
+            "revision",
+            "contentHash"
+          ],
+          "title": "FormalExactRef",
+          "type": "object"
+        },
+        "InflightTokenLimit": {
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "inflight_upper_bound",
+              "title": "Mode",
+              "type": "string"
+            },
+            "unit": {
+              "const": "token",
+              "title": "Unit",
+              "type": "string"
+            },
+            "maxTokens": {
+              "maximum": 1000000000000,
+              "minimum": 1,
+              "title": "Maxtokens",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "mode",
+            "unit",
+            "maxTokens"
+          ],
+          "title": "InflightTokenLimit",
+          "type": "object"
+        }
+      }
+    }
+  ],
+  "boundary": "JSON Schema is insufficient for model validators and canonical time serialization. All semantic validators and original guards remain required; no SQL authority or production permission."
+}

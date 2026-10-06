@@ -1,0 +1,9 @@
+{
+  "head": "55194683825289887d21d9f36c54f1070edecfee",
+  "authority": "AOS-001375",
+  "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+  "container_id": "63c7d47bac4232b032a827ccf26116aef03ce2e28ca587d9b94a84987c75afd7",
+  "exit": 0,
+  "result": "COUNTEREXAMPLE_CONFIRMED",
+  "finding": "Deferred constraint alone cannot guarantee expiry at actual COMMIT: caller can SET CONSTRAINTS ALL IMMEDIATE, wait past expiry, and commit. Temporary session-only probe, not publication implementation."
+}
