@@ -1,6 +1,7 @@
 """Untrusted signed-body transport. Parsing never authenticates or grants rights."""
 import base64
 import json
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
@@ -294,3 +295,39 @@ def parse_signed_capacity_body(raw: bytes, document_type):
         raise
     except (ValueError, TypeError, RecursionError, OverflowError):
         raise CapacitySignedBodyProfileError("INVALID_DOCUMENT") from None
+
+
+@dataclass(frozen=True, slots=True)
+class CapacityTrustRootSnapshotTransport:
+    """Opaque complete roots, never a registered or trusted source."""
+    canonical_bytes: bytes
+    content_hash: str
+    root_count: int
+    authorization: Literal['ROOT_SNAPSHOT_TRANSPORT_ONLY_NO_TRUST_NO_REGISTRATION'] = field(
+        default='ROOT_SNAPSHOT_TRANSPORT_ONLY_NO_TRUST_NO_REGISTRATION', init=False)
+
+
+def freeze_capacity_trust_root_snapshot(provider):
+    """One original safe file snapshot, normalized without dropping roots.
+
+    This uses the original frozen provider's internal mapping solely to
+    enumerate its complete validated snapshot. Bytes use an independent ASCII
+    protocol; signed-document shape parsers and trust decisions do not apply.
+    """
+    import hashlib
+    from aos_api.asset_registry.signature import FileTrustRootProvider, FrozenTrustRootProvider
+    if type(provider) is not FileTrustRootProvider:
+        raise ValueError('original safe file trust-root provider required')
+    snapshot=provider.snapshot()
+    if type(snapshot) is not FrozenTrustRootProvider:
+        raise ValueError('original frozen trust-root snapshot required')
+    roots=[]
+    for _,root in sorted(snapshot._roots.items()):
+        roots.append(dict(publisher=root.publisher,keyId=root.key_id,algorithm='Ed25519',
+            publicKey=base64.b64encode(root.public_key).decode('ascii'),revision=root.revision,
+            notBefore=root.not_before.isoformat(),notAfter=root.not_after.isoformat(),
+            revokedAt=None if root.revoked_at is None else root.revoked_at.isoformat()))
+    raw=json.dumps(dict(trustRoots=roots),sort_keys=True,separators=(',',':'),ensure_ascii=True).encode('ascii')
+    if len(raw)>8*1024*1024:
+        raise ValueError('complete trust-root snapshot transport exceeds bound')
+    return CapacityTrustRootSnapshotTransport(raw,'sha256:'+hashlib.sha256(raw).hexdigest(),len(roots))

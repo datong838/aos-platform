@@ -1,0 +1,28 @@
+{
+  "authority_cutoff": "AOS-001404",
+  "code_base": "e64591bc",
+  "task": "gt-provider-capacity-publication-schema-20261005",
+  "red": "missing original transport entry: 1 failed / 5.71s",
+  "green": "8 passed / 5.90s before final normalization/revocation expansion",
+  "adjacent": "363 passed, 7 existing warnings / 25.59s final with noncanonical valid base64, comma time and revocation mutation",
+  "diagnostic": "expanded first run 1 failed/6 passed /5.86s because original FileProvider does not reject file 0666; no production reader change",
+  "review": "One original safe complete File snapshot; frozen immutable mapping enumerated without reread/subset/cache. Root identities up to240/internal whitespace/surrogates/control preserved in separate deterministic ASCII transport, original aware isoformat offset retained, all8 fields and revocation retained. Sorted root semantics/hash stable under file formatting/order and change with key/revocation. 1200-root input<1MiB yielding output>2MiB verified without truncation under independent8MiB bound.",
+  "limits": [
+    "Internal coupling to original FrozenTrustRootProvider._roots: original signature suite included; no shared signature code modified",
+    "Original file mode alone not trust: exact FileProvider validates content/regular-file/symlink/size, independent config ownership and anchor authorization still mandatory",
+    "Opaque ASCII snapshot cannot blindly cast to PostgreSQL JSONB or use existing signed-document profile",
+    "Transport only, no trusted root registration/issuer authorization/Source COMMIT/current consumer",
+    "No real database/service/permissions/external effects; original Task ACTIVE"
+  ],
+  "sources": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_contracts.py": "b1352ab443672210ac84fef76164e6585e8a94c7b63351208e17c42a1118db07",
+    "services/aos-api/tests/aip/test_provider_capacity_publication_pg.py": "fc494c50febe0efc19be422239e776f9e33c9ba36733cfb53edc7628f97d25ba",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-snapshot-transport-plan.md": "8d7ab0400bb712a276e3e378ed129127712e11d19cfbd62e7fda8578492e48c6",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-transport-red.log": "38503120e659f0fbebc6007f59923b968c2e5ab11d44660b2772e27253c58cac",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-transport-green.log": "6746733dbeddf47c48a10afeaa37cc013b02b80bcd0c1488450f0a7d7e88df8f",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-transport-green-r2.log": "9d5aa43321f843491328fb9fb219dfd31363e328f33319e598b471f7d1fe86c4",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-transport-green-r3.log": "98fcd4d730819b360c469cbdb0bb60955a223aa07cf08191028c02201d3f84b6",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-transport-adjacent.log": "b5f0cb2fc72730f8b619dca0a75cc6633583e43e8a72f153c0e2f628fd17f25e",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/root-transport-adjacent-r2.log": "7155c0b865dd1bdaa88cc8202db9a71c71b60e88a330007a6ae006fa5e330f9b"
+  }
+}

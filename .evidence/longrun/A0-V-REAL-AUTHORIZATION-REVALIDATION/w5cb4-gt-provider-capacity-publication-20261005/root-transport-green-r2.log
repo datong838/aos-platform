@@ -1,0 +1,55 @@
+....F..                                                                  [100%]
+=================================== FAILURES ===================================
+_ test_root_snapshot_transport_retains_original_safe_file_rejections[unsafe-file] _
+
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-694/test_root_snapshot_transport_r2')
+fault = 'unsafe-file'
+
+    @pytest.mark.parametrize('fault',['duplicate','symlink','unsafe-file','non-file-provider'])
+    def test_root_snapshot_transport_retains_original_safe_file_rejections(tmp_path,fault):
+        from aos_api.asset_registry.signature import FileTrustRootProvider,FrozenTrustRootProvider
+        from aos_api.aip_provider_capacity_publication_contracts import freeze_capacity_trust_root_snapshot
+        path=tmp_path/'roots.json';path.write_text('{"trustRoots":[]}');path.chmod(0o600)
+        provider=FileTrustRootProvider(path)
+        if fault=='duplicate':path.write_text('{"trustRoots":[],"trustRoots":[]}')
+        elif fault=='symlink':
+            link=tmp_path/'root-link.json';link.symlink_to(path);provider=FileTrustRootProvider(link)
+        elif fault=='unsafe-file':path.chmod(0o666)
+        else:provider=FrozenTrustRootProvider({})
+>       with pytest.raises(ValueError):freeze_capacity_trust_root_snapshot(provider)
+E       Failed: DID NOT RAISE ValueError
+
+services/aos-api/tests/aip/test_provider_capacity_publication_pg.py:1165: Failed
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_provider_capacity_publication_pg.py::test_root_snapshot_transport_retains_original_safe_file_rejections[unsafe-file]
+1 failed, 6 passed, 338 deselected, 7 warnings in 5.86s

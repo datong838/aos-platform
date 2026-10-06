@@ -1103,3 +1103,96 @@ def test_original_full_root_snapshot_exceeds_signed_document_array_scope(native_
     assert 'CAPACITY_SIGNED_BODY_PROFILE_REQUIRED' in failure
     exact=native_profile_runner("SELECT aos_capacity_publication_private.canonical_signed_json(convert_from(decode('%s','hex'),'UTF8')::json,1);"%raw.hex(),False)
     assert 'CAPACITY_SIGNED_BODY_ARRAY' in exact
+
+
+def test_original_root_snapshot_complete_transport_preserves_safe_file(tmp_path):
+    import hashlib,base64
+    from aos_api.asset_registry.signature import FileTrustRootProvider
+    from aos_api.aip_provider_capacity_publication_contracts import freeze_capacity_trust_root_snapshot
+    roots=[dict(publisher='authority',keyId='key-'+str(i),algorithm='Ed25519',
+        publicKey=base64.b64encode(bytes(range(32))).decode(),notBefore='2020-01-01T00:00:00Z',
+        notAfter='2030-01-01T00:00:00Z',revokedAt=None,revision='sha256:'+'a'*64) for i in range(1001)]
+    roots[0]['keyId']='key with space';roots[1]['keyId']='k'*240
+    roots[2]['keyId']='surrogate-\ud800';roots[3]['keyId']='control-\x7f-字😀'
+    roots[4].update(notBefore='0001-01-01T00:00:00+23:59',notAfter='2020-01-01T00:00:00+00:00:30.123456')
+    roots[5]['revokedAt']='2026-01-01T01:02:03.000001+05:30'
+    roots[7]['publicKey']=roots[7]['publicKey'][:-2]+'9='
+    roots[8]['notBefore']='2020-01-01T00:00:00,100000Z'
+    path=tmp_path/'root-full.json';path.write_text(json.dumps(dict(trustRoots=roots)));path.chmod(0o600)
+    frozen=freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path))
+    assert frozen.root_count==1001 and frozen.authorization=='ROOT_SNAPSHOT_TRANSPORT_ONLY_NO_TRUST_NO_REGISTRATION'
+    assert frozen.content_hash=='sha256:'+hashlib.sha256(frozen.canonical_bytes).hexdigest()
+    assert frozen.canonical_bytes.isascii() and len(frozen.canonical_bytes)<8*1024*1024
+    values=json.loads(frozen.canonical_bytes)['trustRoots'];assert len(values)==1001
+    by_key={r['keyId']:r for r in values}
+    assert by_key['surrogate-\ud800']['publicKey']==roots[2]['publicKey']
+    assert by_key['control-\x7f-字😀']['keyId']==roots[3]['keyId']
+    assert by_key[roots[4]['keyId']]['notBefore']==roots[4]['notBefore']
+    assert by_key[roots[4]['keyId']]['notAfter']==roots[4]['notAfter']
+    assert by_key[roots[5]['keyId']]['revokedAt']==roots[5]['revokedAt']
+    assert by_key[roots[7]['keyId']]['publicKey']==base64.b64encode(bytes(range(32))).decode()
+    assert by_key[roots[8]['keyId']]['notBefore']=='2020-01-01T00:00:00.100000+00:00'
+    path.write_text(json.dumps(dict(trustRoots=list(reversed(roots))),indent=2))
+    assert freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path))==frozen
+    roots[6]['revokedAt']='2026-01-02T00:00:00Z'
+    path.write_text(json.dumps(dict(trustRoots=roots)))
+    assert freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path)).content_hash!=frozen.content_hash
+    roots[6]['revokedAt']=None
+    roots[6]['publicKey']=base64.b64encode(b'x'*32).decode()
+    path.write_text(json.dumps(dict(trustRoots=roots)))
+    assert freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path)).content_hash!=frozen.content_hash
+
+
+def test_root_snapshot_transport_keeps_expanded_complete_domain(tmp_path):
+    import base64
+    from aos_api.asset_registry.signature import FileTrustRootProvider
+    from aos_api.aip_provider_capacity_publication_contracts import freeze_capacity_trust_root_snapshot
+    public=base64.b64encode(bytes(range(32))).decode()
+    roots=[dict(publisher='p'+'\x7f'*238+'q',keyId='k'+str(i).zfill(4)+'\x7f'*234+'z',
+        algorithm='Ed25519',publicKey=public,notBefore='2020-01-01T00:00:00Z',
+        notAfter='2030-01-01T00:00:00Z',revokedAt=None,revision='sha256:'+'a'*64) for i in range(1200)]
+    raw=json.dumps(dict(trustRoots=roots),ensure_ascii=False,separators=(',',':')).encode()
+    assert len(raw)<1024*1024
+    path=tmp_path/'expanded-root.json';path.write_bytes(raw);path.chmod(0o600)
+    frozen=freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path))
+    assert frozen.root_count==1200 and 2*1024*1024<len(frozen.canonical_bytes)<8*1024*1024
+    assert len(json.loads(frozen.canonical_bytes)['trustRoots'])==1200
+
+
+@pytest.mark.parametrize('fault',['duplicate','symlink','non-regular','non-file-provider'])
+def test_root_snapshot_transport_retains_original_safe_file_rejections(tmp_path,fault):
+    from aos_api.asset_registry.signature import FileTrustRootProvider,FrozenTrustRootProvider
+    from aos_api.aip_provider_capacity_publication_contracts import freeze_capacity_trust_root_snapshot
+    path=tmp_path/'roots.json';path.write_text('{"trustRoots":[]}');path.chmod(0o600)
+    provider=FileTrustRootProvider(path)
+    if fault=='duplicate':path.write_text('{"trustRoots":[],"trustRoots":[]}')
+    elif fault=='symlink':
+        link=tmp_path/'root-link.json';link.symlink_to(path);provider=FileTrustRootProvider(link)
+    elif fault=='non-regular':provider=FileTrustRootProvider(tmp_path)
+    else:provider=FrozenTrustRootProvider({})
+    with pytest.raises(ValueError):freeze_capacity_trust_root_snapshot(provider)
+
+
+def test_root_snapshot_transport_uses_one_original_frozen_read(tmp_path,monkeypatch):
+    from aos_api.asset_registry.signature import FileTrustRootProvider
+    from aos_api.aip_provider_capacity_publication_contracts import freeze_capacity_trust_root_snapshot
+    path=tmp_path/'roots.json';path.write_text('{"trustRoots":[]}');path.chmod(0o600)
+    original=FileTrustRootProvider.snapshot;calls=[]
+    def snapshot_then_file_changes(provider):
+        calls.append(provider)
+        frozen=original(provider)
+        path.write_text('{"trustRoots":[],"trustRoots":[]}')
+        return frozen
+    monkeypatch.setattr(FileTrustRootProvider,'snapshot',snapshot_then_file_changes)
+    frozen=freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path))
+    assert frozen.root_count==0 and json.loads(frozen.canonical_bytes)==dict(trustRoots=[])
+    assert len(calls)==1
+
+
+def test_root_snapshot_transport_never_promotes_original_file_mode_to_trust(tmp_path):
+    from aos_api.asset_registry.signature import FileTrustRootProvider
+    from aos_api.aip_provider_capacity_publication_contracts import freeze_capacity_trust_root_snapshot
+    path=tmp_path/'mode-only-root.json';path.write_text('{"trustRoots":[]}');path.chmod(0o666)
+    frozen=freeze_capacity_trust_root_snapshot(FileTrustRootProvider(path))
+    assert frozen.authorization=='ROOT_SNAPSHOT_TRANSPORT_ONLY_NO_TRUST_NO_REGISTRATION'
+    assert not hasattr(frozen,'verified') and not hasattr(frozen,'execution_allowed')
