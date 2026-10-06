@@ -1,0 +1,9 @@
+{
+  "unicode_version": "14.0.0",
+  "native_transition_boundary_samples": 2496,
+  "native_catalog_postcheck": "0|1",
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "7398821cc8003392495dfd08170bfa3657088aadeb2c00e96d4a6959a81f8426",
+    "services/aos-api/tests/aip/test_provider_capacity_publication_pg.py": "dbce9cf860a054d9dfd89d1bede8b07cc09cad5af5a0ec5b361e93176925f647"
+  }
+}

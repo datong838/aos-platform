@@ -158,3 +158,13 @@ S05/S07/S08精确字段/静态policy/actionBinding/eligibility/event模型字段
 RED新常量不存在；完整合法target单项变异同时用原Python部署模型确认预期，再原生拒绝；正向双loopback与数值/字串边界。不把该typed门当实际部署匹配或完整permit/Source；原实际DB/cluster受控来源、可信bootstrap/permit、全部S01–S20和真实COMMIT/consumer仍后继必需。固定无网络r4实例/image检查沿原fixture。之后原publication与Source合同相邻和独立复审，Task不Delivery。
 
 独立复审纠正：原Python模型允许populate_by_name的database_oid输入，不能宣称其拒绝别名；只在签名原文规范输入层拒绝别名。typed函数改为bytea入口，先read_signed_body严格无重复/整数原词法/规范字节，再作六字段检查；NULL原bytes主动拒绝。隔离native纯计算测试用--confcutdir=tests/aip隔离无关的父conftest自动迁移，依旧native fixture核固定r4身份且BEGIN/ROLLBACK，不借真库或共享库；保留原迁移连接失败日志为失败，不能作为逻辑GREEN。补指数、重复target键、float整值原文负例。
+
+## AOS-001381 完整typed文档标识符原语义门
+
+只读identifier-unicode-native-probe.json反证[:graph:]与原_identifier不等价：NBSP、软连字符、零宽/格式、私用区、未分配字符共9样本SQL允许而Python拒绝。禁止换ASCII白名单误拒现合法中文/组合标记/emoji。原Python3.11 runtime Unicode14.0.0；按原isprintable且非isspace的单字符条件冻结完整scalar连续允许区间并存source版本/hash，不随PG locale或运行时版本隐式变化。UTF8 PG ascii(chr(cp))已实际核对15样本codepoint语义。
+
+原scope publication_store.py新增纯SQLread_identifier(jsonb)，仅string、长度1..200，逐char nativeUnicode码点按冻结区间二分查找；NULL/非string/任一非法码点稳定拒绝，不echo原值。IMMUTABLE INVOKER/pg_catalog/PUBLIC撤权，无表写。仅后继模型中原_identifier调用字段使用，不能收紧只strip的旧FormalExactRef/物理候选字段；document raw仍先read_signed_body，不凭这个字段函数宣称完整canonical文档/签名/来源。原模型未知Unicode版本升级须重新冻结与回归，不能自动放宽。
+
+测试RED新常量缺失；原Identifier完整正负Unicode边界、201长度、全scalar连续区间端点与间隙邻边原生对照；fixture只临时计算DDL并ROLLBACK。完整publisher/policy/permit/Source文档shape和当前性仍后继，不收口Task。独立复审关注字符语义/locale/区间二分与版本差异，不以本单字段门宣称发布成立。
+
+独立复审补验收：对完整Python分类生成的700区间，与SQL starts/ends、冻结JSON、canonical SHA256做精确静态对比，核排序/不重叠，排除SQL区间内部额外断点被只测端点漏掉。正式未来安装必须核实际Python Unicode14.0.0（不仅测试），版本漂移先显式重新冻结和回归、不静默接受。当前无安装入口，不宣称已部署版本门。

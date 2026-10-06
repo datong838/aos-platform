@@ -1,0 +1,107 @@
+{
+  "unicode_version": "14.0.0",
+  "scope": "read-only character classification; no schema or authority",
+  "rows": [
+    {
+      "codepoint": 65,
+      "unicode_category": "Lu",
+      "python_allowed": true,
+      "sql_graph_allowed": true
+    },
+    {
+      "codepoint": 32,
+      "unicode_category": "Zs",
+      "python_allowed": false,
+      "sql_graph_allowed": false
+    },
+    {
+      "codepoint": 160,
+      "unicode_category": "Zs",
+      "python_allowed": false,
+      "sql_graph_allowed": true
+    },
+    {
+      "codepoint": 173,
+      "unicode_category": "Cf",
+      "python_allowed": false,
+      "sql_graph_allowed": true
+    },
+    {
+      "codepoint": 847,
+      "unicode_category": "Mn",
+      "python_allowed": true,
+      "sql_graph_allowed": true
+    },
+    {
+      "codepoint": 8203,
+      "unicode_category": "Cf",
+      "python_allowed": false,
+      "sql_graph_allowed": true
+    },
+    {
+      "codepoint": 8205,
+      "unicode_category": "Cf",
+      "python_allowed": false,
+      "sql_graph_allowed": true
+    },
+    {
+      "codepoint": 8232,
+      "unicode_category": "Zl",
+      "python_allowed": false,
+      "sql_graph_allowed": false
+    },
+    {
+      "codepoint": 8238,
+      "unicode_category": "Cf",
+      "python_allowed": false,
+      "sql_graph_allowed": true
+    },
+    {
+      "codepoint": 8288,
+      "unicode_category": "Cf",
+      "python_allowed": false,
+      "sql_graph_allowed": true
+    },
+    {
+      "codepoint": 57344,
+      "unicode_category": "Co",
+      "python_allowed": false,
+      "sql_graph_allowed": true
+    },
+    {
+      "codepoint": 888,
+      "unicode_category": "Cn",
+      "python_allowed": false,
+      "sql_graph_allowed": true
+    },
+    {
+      "codepoint": 20013,
+      "unicode_category": "Lo",
+      "python_allowed": true,
+      "sql_graph_allowed": true
+    },
+    {
+      "codepoint": 65279,
+      "unicode_category": "Cf",
+      "python_allowed": false,
+      "sql_graph_allowed": true
+    },
+    {
+      "codepoint": 128512,
+      "unicode_category": "So",
+      "python_allowed": true,
+      "sql_graph_allowed": true
+    }
+  ],
+  "mismatches": [
+    160,
+    173,
+    8203,
+    8205,
+    8238,
+    8288,
+    57344,
+    888,
+    65279
+  ]
+}

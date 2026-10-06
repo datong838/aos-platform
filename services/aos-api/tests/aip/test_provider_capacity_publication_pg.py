@@ -516,3 +516,113 @@ def test_native_deployment_target_function_boundary(native_profile_runner):
         SELECT aos_capacity_publication_private.read_deployment_target(decode('%s','hex'));
     """ % raw, success=False)
     assert 'permission denied for function read_deployment_target' in failure
+
+
+def _native_identifier(native_profile_runner, value, success=True):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+    statement = CAPACITY_IDENTIFIER_PROFILE_SQL + "\nSELECT aos_capacity_publication_private.read_identifier(convert_from(decode('%s','hex'),'UTF8')::jsonb);" % canonical_json(value).hex()
+    return native_profile_runner(statement, success=success)
+
+
+@pytest.mark.parametrize('value', ['authority', '中文标识', 'a\u034fb', '😀', 'a'*200])
+def test_native_identifier_original_unicode_positive(native_profile_runner, value):
+    from aos_api.aip_provider_capacity_source_contracts import _identifier
+    assert _identifier(value) == value
+    assert _native_identifier(native_profile_runner, value) == value
+
+
+@pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+    '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+    from aos_api.aip_provider_capacity_source_contracts import _identifier
+    with pytest.raises(ValueError): _identifier(value)
+    assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+
+
+def test_native_identifier_all_unicode_range_boundaries(native_profile_runner):
+    import unicodedata
+    from aos_api.aip_provider_capacity_source_contracts import _identifier
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_IDENTIFIER_PROFILE_SQL, CAPACITY_IDENTIFIER_UNICODE_VERSION)
+    assert unicodedata.unidata_version == CAPACITY_IDENTIFIER_UNICODE_VERSION
+    points = set()
+    previous = False
+    for cp in range(0x110000):
+        value = chr(cp)
+        allowed = value.isprintable() and not value.isspace()
+        if allowed != previous:
+            points.update([cp-1, cp])
+        previous = allowed
+    samples = []
+    for cp in sorted(points):
+        if not 1 <= cp <= 0x10ffff or 0xd800 <= cp <= 0xdfff:
+            continue  # PostgreSQL UTF8 cannot carry NUL or surrogate scalars.
+        try:
+            _identifier(chr(cp))
+            accepted = 'true'
+        except ValueError:
+            accepted = 'false'
+        samples.append('(%s,%s)' % (cp,accepted))
+    statement = CAPACITY_IDENTIFIER_PROFILE_SQL + """
+        DO $probe$ DECLARE sample record; accepted boolean; BEGIN
+          FOR sample IN SELECT * FROM (VALUES %s) AS cases(cp,expected) LOOP
+            BEGIN
+              PERFORM aos_capacity_publication_private.read_identifier(to_jsonb(chr(sample.cp)));
+              accepted := true;
+            EXCEPTION WHEN SQLSTATE '22023' THEN accepted := false;
+            END;
+            IF accepted IS DISTINCT FROM sample.expected THEN
+              RAISE EXCEPTION 'identifier classification mismatch at codepoint %%',sample.cp;
+            END IF;
+          END LOOP;
+        END $probe$;
+        SELECT %s;
+    """ % (','.join(samples),len(samples))
+    assert native_profile_runner(statement) == str(len(samples))
+
+
+def test_native_identifier_function_boundary(native_profile_runner):
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+    result = native_profile_runner(CAPACITY_IDENTIFIER_PROFILE_SQL + """
+        SELECT p.proisstrict,p.prosecdef,p.provolatile,p.proconfig,
+          (SELECT count(*) FROM aclexplode(p.proacl) WHERE grantee=0)
+        FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+        WHERE n.nspname='aos_capacity_publication_private' AND p.proname='read_identifier';
+    """)
+    assert result == 'f|f|i|{search_path=pg_catalog}|0'
+
+
+def test_identifier_complete_frozen_manifest_matches_original_semantics():
+    import hashlib
+    import re
+    import unicodedata
+    from pathlib import Path
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_IDENTIFIER_PROFILE_SQL, CAPACITY_IDENTIFIER_UNICODE_VERSION,
+        CAPACITY_IDENTIFIER_RANGES_SHA256)
+    assert unicodedata.unidata_version == CAPACITY_IDENTIFIER_UNICODE_VERSION == '14.0.0'
+    expected = []
+    start = None
+    for cp in range(0x110000):
+        value = chr(cp)
+        accepted = value.isprintable() and not value.isspace()
+        if accepted and start is None:
+            start = cp
+        if start is not None and (not accepted or cp == 0x10ffff):
+            expected.append([start,cp-1 if not accepted else cp])
+            start = None
+    arrays = []
+    for name in ['starts','ends']:
+        matches = re.findall(name+r' integer\[\] := ARRAY\[([0-9,]+)\];', CAPACITY_IDENTIFIER_PROFILE_SQL)
+        assert len(matches) == 1
+        arrays.append([int(value) for value in matches[0].split(',')])
+    actual = [list(pair) for pair in zip(*arrays,strict=True)]
+    assert actual == expected
+    assert all(a <= b for a,b in actual)
+    assert all(actual[index-1][1]+1 < a for index,(a,b) in enumerate(actual) if index)
+    path = Path(__file__).resolve().parents[4] / '.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/identifier-unicode-ranges.json'
+    manifest = json.loads(path.read_text())
+    assert manifest == dict(unicode_version='14.0.0',
+        predicate='str.isprintable() and not str.isspace()',ranges=expected)
+    frozen = json.dumps(manifest,separators=(',',':'),sort_keys=True).encode()
+    assert hashlib.sha256(frozen).hexdigest() == CAPACITY_IDENTIFIER_RANGES_SHA256

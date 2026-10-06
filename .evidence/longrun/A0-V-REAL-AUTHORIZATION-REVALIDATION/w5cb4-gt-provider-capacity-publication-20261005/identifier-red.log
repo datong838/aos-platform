@@ -1,0 +1,601 @@
+FFFFFFFFFFFFFFFFFFFFFFFF                                                 [100%]
+=================================== FAILURES ===================================
+_________ test_native_identifier_original_unicode_positive[authority] __________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10d214f40>
+value = 'authority'
+
+    @pytest.mark.parametrize('value', ['authority', '中文标识', 'a\u034fb', '😀', 'a'*200])
+    def test_native_identifier_original_unicode_positive(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        assert _identifier(value) == value
+>       assert _native_identifier(native_profile_runner, value) == value
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:531: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10d214f40>
+value = 'authority', success = True
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+__ test_native_identifier_original_unicode_positive[\u4e2d\u6587\u6807\u8bc6] __
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10d341260>
+value = '中文标识'
+
+    @pytest.mark.parametrize('value', ['authority', '中文标识', 'a\u034fb', '😀', 'a'*200])
+    def test_native_identifier_original_unicode_positive(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        assert _identifier(value) == value
+>       assert _native_identifier(native_profile_runner, value) == value
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:531: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10d341260>
+value = '中文标识', success = True
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+__________ test_native_identifier_original_unicode_positive[a\u034fb] __________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10d3414e0>
+value = 'a͏b'
+
+    @pytest.mark.parametrize('value', ['authority', '中文标识', 'a\u034fb', '😀', 'a'*200])
+    def test_native_identifier_original_unicode_positive(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        assert _identifier(value) == value
+>       assert _native_identifier(native_profile_runner, value) == value
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:531: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10d3414e0>
+value = 'a͏b', success = True
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+_________ test_native_identifier_original_unicode_positive[\U0001f600] _________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10d341760>
+value = '😀'
+
+    @pytest.mark.parametrize('value', ['authority', '中文标识', 'a\u034fb', '😀', 'a'*200])
+    def test_native_identifier_original_unicode_positive(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        assert _identifier(value) == value
+>       assert _native_identifier(native_profile_runner, value) == value
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:531: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10d341760>
+value = '😀', success = True
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+_ test_native_identifier_original_unicode_positive[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] _
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0dd00>
+value = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
+    @pytest.mark.parametrize('value', ['authority', '中文标识', 'a\u034fb', '😀', 'a'*200])
+    def test_native_identifier_original_unicode_positive(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        assert _identifier(value) == value
+>       assert _native_identifier(native_profile_runner, value) == value
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:531: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0dd00>
+value = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+success = True
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+______________ test_native_identifier_original_unicode_negative[] ______________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0e3e0>
+value = ''
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0e3e0>
+value = '', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+_ test_native_identifier_original_unicode_negative[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] _
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0e980>
+value = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0e980>
+value = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+_____________ test_native_identifier_original_unicode_negative[ a] _____________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0f100>
+value = ' a'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0f100>
+value = ' a', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+_____________ test_native_identifier_original_unicode_negative[a ] _____________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0f600>
+value = 'a '
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0f600>
+value = 'a ', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+____________ test_native_identifier_original_unicode_negative[a b] _____________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0fba0>
+value = 'a b'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0fba0>
+value = 'a b', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+____________ test_native_identifier_original_unicode_negative[a\n] _____________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0fd80>
+value = 'a\n'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0fd80>
+value = 'a\n', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+____________ test_native_identifier_original_unicode_negative[\xa0] ____________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0f560>
+value = '\xa0'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0f560>
+value = '\xa0', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+____________ test_native_identifier_original_unicode_negative[\xad] ____________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd358a0>
+value = '\xad'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd358a0>
+value = '\xad', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+___________ test_native_identifier_original_unicode_negative[\u200b] ___________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd35bc0>
+value = '\u200b'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd35bc0>
+value = '\u200b', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+___________ test_native_identifier_original_unicode_negative[\u200d] ___________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd35620>
+value = '\u200d'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd35620>
+value = '\u200d', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+___________ test_native_identifier_original_unicode_negative[\u2028] ___________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0e660>
+value = '\u2028'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0e660>
+value = '\u2028', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+___________ test_native_identifier_original_unicode_negative[\u202e] ___________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0f600>
+value = '\u202e'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd0f600>
+value = '\u202e', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+___________ test_native_identifier_original_unicode_negative[\u2060] ___________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd360c0>
+value = '\u2060'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd360c0>
+value = '\u2060', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+___________ test_native_identifier_original_unicode_negative[\ue000] ___________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd36980>
+value = '\ue000'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd36980>
+value = '\ue000', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+___________ test_native_identifier_original_unicode_negative[\u0378] ___________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd36b60>
+value = '\u0378'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd36b60>
+value = '\u0378', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+___________ test_native_identifier_original_unicode_negative[\ufeff] ___________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd356c0>
+value = '\ufeff'
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd356c0>
+value = '\ufeff', success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+____________ test_native_identifier_original_unicode_negative[None] ____________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd34ea0>
+value = None
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd34ea0>
+value = None, success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+____________ test_native_identifier_original_unicode_negative[True] ____________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd349a0>
+value = True
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd349a0>
+value = True, success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+_____________ test_native_identifier_original_unicode_negative[1] ______________
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd34540>
+value = 1
+
+    @pytest.mark.parametrize('value', ['', 'a'*201, ' a', 'a ', 'a b', 'a\n', '\u00a0', '\u00ad',
+        '\u200b', '\u200d', '\u2028', '\u202e', '\u2060', '\ue000', '\u0378', '\ufeff', None, True, 1])
+    def test_native_identifier_original_unicode_negative(native_profile_runner, value):
+        from aos_api.aip_provider_capacity_source_contracts import _identifier
+        with pytest.raises(ValueError): _identifier(value)
+>       assert 'CAPACITY_IDENTIFIER_REQUIRED' in _native_identifier(native_profile_runner, value, success=False)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/aip/test_provider_capacity_publication_pg.py:539: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+native_profile_runner = <function native_profile_runner.<locals>.run at 0x10bd34540>
+value = 1, success = False
+
+    def _native_identifier(native_profile_runner, value, success=True):
+>       from aos_api.aip_provider_capacity_publication_store import CAPACITY_IDENTIFIER_PROFILE_SQL
+E       ImportError: cannot import name 'CAPACITY_IDENTIFIER_PROFILE_SQL' from 'aos_api.aip_provider_capacity_publication_store' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py)
+
+tests/aip/test_provider_capacity_publication_pg.py:522: ImportError
+=========================== short test summary info ============================
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_positive[authority]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_positive[\u4e2d\u6587\u6807\u8bc6]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_positive[a\u034fb]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_positive[\U0001f600]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_positive[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[ a]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[a ]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[a b]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[a\n]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[\xa0]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[\xad]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[\u200b]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[\u200d]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[\u2028]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[\u202e]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[\u2060]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[\ue000]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[\u0378]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[\ufeff]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[None]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[True]
+FAILED tests/aip/test_provider_capacity_publication_pg.py::test_native_identifier_original_unicode_negative[1]
+24 failed, 137 deselected in 0.87s
