@@ -173,9 +173,9 @@ WHERE content_hash=%(content_hash)s AND actual_hash=%(content_hash)s
 """
 
 
-def _combination_candidate_sql(kind):
+def _combination_candidate_sql(kind, *, statement=CAPACITY_CANDIDATE_ROW_SQL):
     # Only the two fixed original kinds are used, never caller SQL or names.
-    statement=CAPACITY_CANDIDATE_ROW_SQL.replace('%(candidate_kind)s',"'"+kind+"'")
+    statement=statement.replace('%(candidate_kind)s',"'"+kind+"'")
     for field in ('candidate_id','revision','content_hash'):
         target={'candidate_id':'id','revision':'revision','content_hash':'hash'}[field]
         statement=statement.replace('%('+field+')s','%('+kind+'_'+target+')s')
@@ -1261,3 +1261,156 @@ WHERE expires_at=(normalized_application->>'proposalExpiresAt')::timestamptz
   AND (normalized_application->>'validFrom')::timestamptz<=pg_catalog.clock_timestamp()
   AND pg_catalog.clock_timestamp()<(normalized_application->>'proposalExpiresAt')::timestamptz
 """
+
+# Fixed original candidate models. Returned normalized claims remain untrusted.
+CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL = r"""
+CREATE FUNCTION aos_capacity_publication_private.original_claim_fields(p jsonb,names jsonb)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE result jsonb:='{}'::jsonb; name text; alias text; allowed text[];
+BEGIN
+ IF jsonb_typeof(p)<>'object' OR jsonb_typeof(names)<>'object'
+  OR (SELECT count(*) FROM jsonb_object_keys(p))<>(SELECT count(*) FROM jsonb_object_keys(names)) THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_CLAIM_FIELDS' USING ERRCODE='22023';
+ END IF;
+ SELECT array_agg(value) INTO allowed FROM (
+  SELECT key AS value FROM jsonb_each_text(names) UNION SELECT value FROM jsonb_each_text(names)) fields;
+ IF p-allowed<>'{}'::jsonb THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_CLAIM_FIELDS' USING ERRCODE='22023'; END IF;
+ FOR name,alias IN SELECT key,value FROM jsonb_each_text(names) LOOP
+  result:=result||jsonb_build_object(name,aos_capacity_publication_private.original_source_field(p,name,alias));
+ END LOOP;
+ RETURN result;
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.original_claim_header(v jsonb)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE tenant jsonb;
+BEGIN
+ IF jsonb_typeof(v->'schemaVersion')<>'number' OR v->>'schemaVersion'<>'1' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_CLAIM_HEADER' USING ERRCODE='22023';
+ END IF;
+ tenant:=aos_capacity_publication_private.original_claim_fields(v->'tenant','{"orgId":"org_id","projectId":"project_id"}'::jsonb);
+ IF tenant<>jsonb_build_object('orgId','org-org','projectId','dev-project') THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_CLAIM_HEADER' USING ERRCODE='22023';
+ END IF;
+ RETURN v||jsonb_build_object('tenant',tenant);
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.original_claim_identity(p jsonb)
+RETURNS text LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE value text:=p#>>'{}'; trims text;
+BEGIN
+ SELECT string_agg(chr(point),'') INTO trims FROM unnest(ARRAY[9,10,11,12,13,28,29,30,31,32,133,160,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288]) point;
+ IF jsonb_typeof(p)<>'string' OR length(value) NOT BETWEEN 1 AND 200 OR value<>btrim(value,trims) THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_CLAIM_IDENTITY' USING ERRCODE='22023';
+ END IF;
+ RETURN value;
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.original_claim_integer(p jsonb,ceiling bigint)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+BEGIN
+ IF jsonb_typeof(p)<>'number' OR (p#>>'{}') COLLATE "C" !~ '^[1-9][0-9]*$' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_CLAIM_INTEGER' USING ERRCODE='22023';
+ END IF;
+ IF (p#>>'{}')::numeric>ceiling THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_CLAIM_INTEGER' USING ERRCODE='22023'; END IF;
+ RETURN p;
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.read_original_token_limit(p jsonb)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE names jsonb; v jsonb; time_text text;
+BEGIN
+ names:='{"mode":"mode","unit":"unit","maxTokens":"max_tokens"}'::jsonb;
+ IF p->'mode'='"fixed_window_rate"'::jsonb THEN
+  names:=names||'{"windowSeconds":"window_seconds","windowAnchor":"window_anchor"}'::jsonb;
+ ELSIF p->'mode' IS DISTINCT FROM '"inflight_upper_bound"'::jsonb THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_TOKEN_LIMIT' USING ERRCODE='22023';
+ END IF;
+ v:=aos_capacity_publication_private.original_claim_fields(p,names);
+ IF v->'unit'<>'"token"'::jsonb THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_TOKEN_LIMIT' USING ERRCODE='22023'; END IF;
+ PERFORM aos_capacity_publication_private.original_claim_integer(v->'maxTokens',1000000000000);
+ IF v->'mode'='"fixed_window_rate"'::jsonb THEN
+  PERFORM aos_capacity_publication_private.original_claim_integer(v->'windowSeconds',86400);
+  SELECT canonical INTO time_text FROM aos_capacity_publication_private.original_source_time(v->'windowAnchor');
+  v:=v||jsonb_build_object('windowAnchor',time_text);
+ END IF;
+ RETURN v;
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.read_original_physical_account(p jsonb)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE v jsonb; refs jsonb:='[]'::jsonb; element jsonb; normalized jsonb; ids text[]:='{}'::text[]; evidence jsonb;
+BEGIN
+ v:=aos_capacity_publication_private.original_claim_header(aos_capacity_publication_private.original_claim_fields(p,
+  '{"schemaVersion":"schema_version","tenant":"tenant","physicalAccountId":"physical_account_id","supplierId":"supplier_id","supplierAccountFingerprint":"supplier_account_fingerprint","providerRefs":"provider_refs","evidenceRef":"evidence_ref"}'::jsonb));
+ PERFORM aos_capacity_publication_private.original_claim_identity(v->'physicalAccountId');
+ PERFORM aos_capacity_publication_private.original_claim_identity(v->'supplierId');
+ IF jsonb_typeof(v->'supplierAccountFingerprint')<>'string'
+  OR (v->>'supplierAccountFingerprint') COLLATE "C" !~ '^[0-9a-f]{64}$'
+  OR jsonb_typeof(v->'providerRefs')<>'array' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_ACCOUNT' USING ERRCODE='22023';
+ END IF;
+ IF jsonb_array_length(v->'providerRefs') NOT BETWEEN 1 AND 1000 THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_ACCOUNT' USING ERRCODE='22023';
+ END IF;
+ FOR element IN SELECT value FROM jsonb_array_elements(v->'providerRefs') LOOP
+  normalized:=aos_capacity_publication_private.original_source_ref(element,'ProviderInstanceRevision');
+  IF normalized->>'assetId'=ANY(ids) THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_ACCOUNT' USING ERRCODE='22023'; END IF;
+  ids:=array_append(ids,normalized->>'assetId'); refs:=refs||jsonb_build_array(normalized);
+ END LOOP;
+ evidence:=aos_capacity_publication_private.original_source_ref(v->'evidenceRef','EvidenceBundleRevision');
+ RETURN v||jsonb_build_object('providerRefs',refs,'evidenceRef',evidence);
+EXCEPTION WHEN OTHERS THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_ACCOUNT' USING ERRCODE='22023';
+END $body$;
+CREATE FUNCTION aos_capacity_publication_private.read_original_capacity_basis(p jsonb)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE v jsonb; account jsonb; evidence jsonb; tokens jsonb;
+ starts timestamptz; ends timestamptz; observed timestamptz; start_text text; end_text text; observation_text text;
+BEGIN
+ v:=aos_capacity_publication_private.original_claim_header(aos_capacity_publication_private.original_claim_fields(p,
+  '{"schemaVersion":"schema_version","tenant":"tenant","basisKind":"basis_kind","physicalAccountRef":"physical_account_ref","evidenceRef":"evidence_ref","maxConcurrency":"max_concurrency","tokenLimit":"token_limit","observedAt":"observed_at","validFrom":"valid_from","validUntil":"valid_until"}'::jsonb));
+ IF v->'basisKind' NOT IN ('"owner_allocation"'::jsonb,'"supplier_limit_claim"'::jsonb) THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_BASIS' USING ERRCODE='22023';
+ END IF;
+ account:=aos_capacity_publication_private.original_source_ref(v->'physicalAccountRef','ProviderPhysicalAccountCandidateRevision');
+ evidence:=aos_capacity_publication_private.original_source_ref(v->'evidenceRef','EvidenceBundleRevision');
+ PERFORM aos_capacity_publication_private.original_claim_integer(v->'maxConcurrency',1000000);
+ tokens:=aos_capacity_publication_private.read_original_token_limit(v->'tokenLimit');
+ SELECT instant,canonical INTO starts,start_text FROM aos_capacity_publication_private.original_source_time(v->'validFrom');
+ SELECT instant,canonical INTO ends,end_text FROM aos_capacity_publication_private.original_source_time(v->'validUntil');
+ SELECT instant,canonical INTO observed,observation_text FROM aos_capacity_publication_private.original_source_time(v->'observedAt');
+ IF starts>=ends OR ends-starts>interval '366 days' OR observed>ends THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_BASIS' USING ERRCODE='22023';
+ END IF;
+ RETURN v||jsonb_build_object('physicalAccountRef',account,'evidenceRef',evidence,'tokenLimit',tokens,
+  'validFrom',start_text,'validUntil',end_text,'observedAt',observation_text);
+EXCEPTION WHEN OTHERS THEN RAISE EXCEPTION 'CAPACITY_ORIGINAL_BASIS' USING ERRCODE='22023';
+END $body$;
+""" + '\n'.join(
+    f'REVOKE ALL ON FUNCTION aos_capacity_publication_private.{signature} FROM PUBLIC;\n'
+    f'ALTER FUNCTION aos_capacity_publication_private.{signature} OWNER TO aos_capacity_publication_owner;'
+    for signature in ('original_claim_fields(jsonb,jsonb)','original_claim_header(jsonb)',
+        'original_claim_identity(jsonb)','original_claim_integer(jsonb,bigint)',
+        'read_original_token_limit(jsonb)','read_original_physical_account(jsonb)',
+        'read_original_capacity_basis(jsonb)'))
+
+CAPACITY_NATIVE_CANDIDATE_ROW_SQL = 'WITH original AS ('+CAPACITY_CANDIDATE_ROW_SQL+r"""), typed AS (
+ SELECT c.*,CASE c.candidate_kind
+  WHEN 'account' THEN aos_capacity_publication_private.read_original_physical_account(c.request_json->'candidate')
+  WHEN 'basis' THEN aos_capacity_publication_private.read_original_capacity_basis(c.request_json->'candidate')
+ END AS normalized_candidate FROM original c
+) SELECT * FROM typed WHERE normalized_candidate IS NOT NULL
+"""
+
+CAPACITY_NATIVE_SOURCE_COMBINATION_SQL = (
+    'WITH request AS ('+CAPACITY_NATIVE_REQUEST_ROW_SQL+'), account AS ('+
+    _combination_candidate_sql('account',statement=CAPACITY_NATIVE_CANDIDATE_ROW_SQL)+'), basis AS ('+
+    _combination_candidate_sql('basis',statement=CAPACITY_NATIVE_CANDIDATE_ROW_SQL)+r"""), terms AS (
+      SELECT a.candidate_id,a.revision,a.content_hash,
+        a.normalized_candidate AS account,b.normalized_candidate AS basis,
+        r.normalized_application AS application
+      FROM account a CROSS JOIN basis b CROSS JOIN request r
+    ) SELECT 1 AS matched FROM terms
+    WHERE basis->'physicalAccountRef'=pg_catalog.jsonb_build_object(
+      'assetType','ProviderPhysicalAccountCandidateRevision','assetId',candidate_id,
+      'revision',revision,'contentHash',content_hash)
+      AND account->'physicalAccountId'=application->'physicalAccountId'
+      AND EXISTS(SELECT 1 FROM pg_catalog.jsonb_array_elements(account->'providerRefs') AS refs(value)
+                 WHERE value=application->'providerRef')
+      AND (basis->>'maxConcurrency')::numeric<=(application->>'requestedMaxConcurrency')::numeric
+""")

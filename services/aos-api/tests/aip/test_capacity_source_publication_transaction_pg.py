@@ -1009,3 +1009,285 @@ def test_native_original_capacity_request_rechecks_exact_row_expiry(native_signe
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         assert owner.execute(CAPACITY_NATIVE_REQUEST_ROW_SQL,params).fetchone() is not None
         owner.rollback()
+
+
+@pytest.mark.parametrize('kind',['account','basis'])
+def test_native_original_candidate_profile_matches_original_model(native_signed_source,kind):
+    from copy import deepcopy
+    from datetime import timedelta,timezone
+    from pydantic import ValidationError
+    from psycopg.types.json import Jsonb
+    from psycopg import sql
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL
+    source=native_signed_source[3]
+    ref=source.physical_account_ref if kind=='account' else source.basis_ref
+    model=ProviderPhysicalAccountCandidate if kind=='account' else ProviderCapacityBasisCandidate
+    function='read_original_physical_account' if kind=='account' else 'read_original_capacity_basis'
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        raw=owner.execute('SELECT request_json FROM public.aip_provider_capacity_candidate WHERE org_id=%s AND project_id=%s AND candidate_id=%s AND revision=%s',
+            (*SCOPE.key,ref.asset_id,ref.revision)).fetchone()['request_json']['candidate']
+        baseline=model.model_validate(raw)
+        cases=[('original_row',raw),('all_snake',baseline.model_dump(mode='json',by_alias=False))]
+        changes=[('extra','unknown',1),('schema_bool','schemaVersion',True),('schema_float','schemaVersion',1.0),
+            ('schema_two','schemaVersion',2),('canary','tenant',dict(orgId='dev-org',projectId='dev-project')),
+            ('tenant_null','tenant',None)]
+        if kind=='account':
+            providers=raw['providerRefs']
+            changed=deepcopy(providers[0]);changed['revision']+=1
+            changes += [
+                ('identity_trim','physicalAccountId',' padded '),('identity_null','physicalAccountId',None),
+                ('identity_inside','physicalAccountId','account \u200b账户😀'),('identity_long','physicalAccountId','a'*201),
+                ('supplier_trim','supplierId','supplier\u00a0'),('supplier_inside','supplierId','supplier 中间'),
+                ('fingerprint_upper','supplierAccountFingerprint','A'*64),('fingerprint_newline','supplierAccountFingerprint','a'*64+'\n'),
+                ('fingerprint_number','supplierAccountFingerprint',1),('providers_empty','providerRefs',[]),
+                ('providers_duplicate','providerRefs',[providers[0],providers[0]]),
+                ('providers_same_id_new_revision','providerRefs',[providers[0],changed]),
+                ('providers_over','providerRefs',providers*1001),('providers_scalar','providerRefs',{}),
+                ('provider_null','providerRefs',[None]),('evidence_null','evidenceRef',None),
+            ]
+            alias=deepcopy(raw)
+            alias['providerRefs']=[{dict(assetType='asset_type',assetId='asset_id',contentHash='content_hash').get(k,k):v
+                for k,v in entry.items()} for entry in providers]
+            cases.append(('provider_alias',alias))
+        else:
+            changes += [
+                ('basis_supplier','basisKind','supplier_limit_claim'),('basis_null','basisKind',None),
+                ('basis_wrong','basisKind','owner_requested_allocation'),('concurrency_bool','maxConcurrency',True),
+                ('concurrency_float','maxConcurrency',2.0),('concurrency_string','maxConcurrency','2'),
+                ('concurrency_zero','maxConcurrency',0),('concurrency_over','maxConcurrency',1000001),
+                ('observed_naive','observedAt','2026-10-07T00:00:00'),
+                ('observed_before_start','observedAt',(baseline.valid_from-timedelta(days=1000)).isoformat()),
+                ('observed_after_until','observedAt',(baseline.valid_until+timedelta(seconds=1)).isoformat()),
+                ('equal_window','validFrom',raw['validUntil']),
+                ('large_window','validUntil',(baseline.valid_from+timedelta(days=367)).isoformat()),
+                ('token_null','tokenLimit',None),
+                ('token_float','tokenLimit',dict(mode='inflight_upper_bound',unit='token',maxTokens=1.0)),
+                ('token_max','tokenLimit',dict(mode='inflight_upper_bound',unit='token',maxTokens=1000000000000)),
+                ('token_over','tokenLimit',dict(mode='inflight_upper_bound',unit='token',maxTokens=1000000000001)),
+                ('token_bool','tokenLimit',dict(mode='inflight_upper_bound',unit='token',maxTokens=True)),
+                ('token_unit','tokenLimit',dict(mode='inflight_upper_bound',unit='tokens',maxTokens=1)),
+                ('token_mode','tokenLimit',dict(mode='other',unit='token',maxTokens=1)),
+                ('token_extra','tokenLimit',dict(mode='inflight_upper_bound',unit='token',maxTokens=1,windowSeconds=1)),
+            ]
+            fixed=dict(mode='fixed_window_rate',unit='token',maxTokens=100,windowSeconds=60,windowAnchor=raw['validFrom'])
+            changes.append(('fixed_valid','tokenLimit',fixed))
+            for label,field,value in [('fixed_zero','windowSeconds',0),('fixed_over','windowSeconds',86401),
+                ('fixed_bool','windowSeconds',True),('fixed_float','windowSeconds',60.0),
+                ('fixed_naive','windowAnchor','2026-10-07T00:00:00'),
+                ('fixed_epoch','windowAnchor',str(int(baseline.valid_from.timestamp())))]:
+                candidate=deepcopy(fixed);candidate[field]=value;changes.append((label,'tokenLimit',candidate))
+            alias=deepcopy(raw)
+            alias['physicalAccountRef']={dict(assetType='asset_type',assetId='asset_id',contentHash='content_hash').get(k,k):v
+                for k,v in alias['physicalAccountRef'].items()}
+            cases.append(('account_ref_alias',alias))
+            offset=deepcopy(raw)
+            for field,attribute in [('validFrom','valid_from'),('validUntil','valid_until'),('observedAt','observed_at')]:
+                offset[field]=getattr(baseline,attribute).astimezone(timezone(timedelta(hours=8))).isoformat(sep=' ')
+            cases.append(('offset_space',offset))
+        for label,field,value in changes:
+            candidate=deepcopy(raw);candidate[field]=value;cases.append((label,candidate))
+        duplicate=deepcopy(raw);duplicate['schema_version']=1;cases.append(('duplicate_alias',duplicate))
+        missing=deepcopy(raw);del missing['evidenceRef'];cases.append(('missing',missing))
+        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+        owner.execute(CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL)
+        names=['original_claim_fields','original_claim_header','original_claim_identity','original_claim_integer',
+            'read_original_token_limit','read_original_physical_account','read_original_capacity_basis']
+        flags=owner.execute("""SELECT p.provolatile,p.proisstrict,p.prosecdef,p.proconfig,r.rolname,
+            has_function_privilege('aos_runtime',p.oid,'EXECUTE') AS runtime_exec,
+            has_function_privilege('aos_provider_capacity_issuer',p.oid,'EXECUTE') AS issuer_exec,
+            EXISTS(SELECT 1 FROM aclexplode(COALESCE(p.proacl,acldefault('f',p.proowner))) a
+                WHERE a.grantee=0 AND a.privilege_type='EXECUTE') AS public_exec
+            FROM pg_proc p JOIN pg_roles r ON r.oid=p.proowner JOIN pg_namespace n ON n.oid=p.pronamespace
+            WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)""",(names,)).fetchall()
+        assert len(flags)==7
+        assert all(f['provolatile']=='i' and f['proisstrict'] and not f['prosecdef']
+            and f['proconfig']==['search_path=pg_catalog'] and f['rolname']=='aos_capacity_publication_owner'
+            and not f['runtime_exec'] and not f['issuer_exec'] and not f['public_exec'] for f in flags)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        mismatches=[]
+        for label,candidate in cases:
+            try:expected=model.model_validate(candidate).model_dump(mode='json',by_alias=True)
+            except ValidationError:expected=None
+            try:
+                with owner.transaction():
+                    actual=owner.execute(sql.SQL('SELECT aos_capacity_publication_private.{}(%s) AS value').format(sql.Identifier(function)),
+                        (Jsonb(candidate),)).fetchone()['value']
+            except psycopg.Error as error:
+                assert error.sqlstate=='22023';actual=None
+            if expected!=actual:mismatches.append((label,expected is not None,actual is not None))
+        owner.rollback()
+        assert owner.execute("SELECT count(*) AS n FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)",
+            (names,)).fetchone()['n']==0
+        owner.rollback()
+    assert not mismatches, f'Original {kind}/native incompatibilities: {mismatches!r}'
+
+
+def test_native_original_candidate_rows_and_combination_keep_original_claims(native_signed_source):
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_source_issuer import authenticate_capacity_issuance_command
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL,
+        CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_NATIVE_CANDIDATE_ROW_SQL,
+        CAPACITY_NATIVE_SOURCE_COMBINATION_SQL,CAPACITY_SOURCE_COMBINATION_SQL)
+    from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+    _,actual_command,_,source,_=native_signed_source
+    command,_,_=actual_command();maker=authenticate_capacity_issuance_command(command).subject
+    params=ProviderCapacitySourceActionGuard._combination_params(SCOPE,source,maker)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL):
+            owner.execute(profile)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        for kind,ref,model in [('account',source.physical_account_ref,ProviderPhysicalAccountCandidate),('basis',source.basis_ref,ProviderCapacityBasisCandidate)]:
+            row=owner.execute(CAPACITY_NATIVE_CANDIDATE_ROW_SQL,dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,
+                candidate_id=ref.asset_id,revision=ref.revision,candidate_kind=kind,content_hash=ref.content_hash,maker=maker)).fetchone()
+            assert row is not None and row['content_hash']==ref.content_hash and row['actual_hash']==ref.content_hash
+            assert row['normalized_candidate']==model.model_validate(row['request_json']['candidate']).model_dump(mode='json',by_alias=True)
+            assert row['basis_verified'] is False and row['execution_allowed'] is False
+        assert owner.execute(CAPACITY_SOURCE_COMBINATION_SQL,params).fetchone() is not None
+        assert owner.execute(CAPACITY_NATIVE_SOURCE_COMBINATION_SQL,params).fetchone() is not None
+        assert owner.execute(CAPACITY_NATIVE_SOURCE_COMBINATION_SQL,{**params,'maker':'wrong-native-maker'}).fetchone() is None
+        owner.rollback()
+
+
+@pytest.mark.parametrize('representation',['basis_account','account_provider','basis_mixed','provider_mixed','basis_epoch','token_alias'])
+def test_native_candidate_combination_preserves_real_original_private_approval(native_signed_source,approved_command,representation,capsys):
+    from uuid import uuid4
+    from psycopg.types.json import Jsonb
+    from aos_api.db import connect_serializable
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_provider_capacity_source_action import (
+        propose_provider_capacity_source,decide_provider_capacity_source,ProviderCapacitySourceActionGuard)
+    from aos_api.aip_action_models import DecideActionProposalRequest
+    from aos_api.aip_provider_capacity_source_contracts import ProviderCapacityBasisCandidate
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_formal_boundary import read_capacity_approved_claims
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL,
+        CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_NATIVE_SOURCE_COMBINATION_SQL,
+        CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL)
+    maker,checker=approved_command[:2];source=native_signed_source[3]
+    with connect_serializable(SCOPE) as runtime:
+        account=runtime.execute('SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+            (source.physical_account_ref.asset_id,)).fetchone()['request_json']
+        basis=runtime.execute('SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+            (source.basis_ref.asset_id,)).fetchone()['request_json']
+        mapping=dict(assetId='asset_id') if representation.endswith('mixed') else dict(assetType='asset_type',assetId='asset_id',contentHash='content_hash')
+        if representation in {'account_provider','provider_mixed'}:
+            account['candidate']['providerRefs'][0]={mapping.get(k,k):v for k,v in account['candidate']['providerRefs'][0].items()}
+        account_id='native-domain-account-'+uuid4().hex;account_hash=canonical_hash(account)
+        account_ref=source.physical_account_ref.model_copy(update=dict(asset_id=account_id,content_hash=account_hash))
+        basis['candidate']['physicalAccountRef']=account_ref.model_dump(by_alias=True)
+        if representation in {'basis_account','basis_mixed'}:
+            basis['candidate']['physicalAccountRef']={mapping.get(k,k):v for k,v in basis['candidate']['physicalAccountRef'].items()}
+        if representation=='basis_epoch':
+            parsed=ProviderCapacityBasisCandidate.model_validate(basis['candidate'])
+            for field,attribute in [('validFrom','valid_from'),('validUntil','valid_until'),('observedAt','observed_at')]:
+                basis['candidate'][field]=str(int(getattr(parsed,attribute).timestamp()))
+        if representation=='token_alias':
+            basis['candidate']['tokenLimit']['max_tokens']=basis['candidate']['tokenLimit'].pop('maxTokens')
+        normalized_basis=ProviderCapacityBasisCandidate.model_validate(basis['candidate'])
+        basis_id='native-domain-basis-'+uuid4().hex;basis_hash=canonical_hash(basis)
+        for kind,identifier,body,digest in [('account',account_id,account,account_hash),('basis',basis_id,basis,basis_hash)]:
+            runtime.execute('INSERT INTO public.aip_provider_capacity_candidate '
+                '(org_id,project_id,candidate_id,candidate_kind,idempotency_key,content_hash,request_json,created_by) '
+                'VALUES(%s,%s,%s,%s,%s,%s,%s,%s)',
+                (*SCOPE.key,identifier,kind,'native-domain-'+uuid4().hex,digest,Jsonb(body),maker.subject))
+        runtime.commit()
+    changed=source.model_copy(update=dict(physical_account_ref=account_ref,
+        basis_ref=source.basis_ref.model_copy(update=dict(asset_id=basis_id,content_hash=basis_hash)),
+        valid_until=min(source.valid_until,normalized_basis.valid_until)))
+    proposal=propose_provider_capacity_source(maker,changed,'native-domain-review-'+uuid4().hex,changed.valid_until)
+    approved=decide_provider_capacity_source(checker,proposal.proposal.id,'native-domain-checker-'+uuid4().hex,
+        DecideActionProposalRequest(expectedProposalVersion=proposal.proposal.version,
+            expectedProposalHash=proposal.proposal.proposal_hash,decision='approved',
+            reason='isolated original native candidate acceptance',approvalExpiresAt=changed.valid_until))
+    command,_,_=native_signed_source[1]()
+    command=command.model_copy(update=dict(idempotency_key='native-domain-read-'+uuid4().hex,
+        approved_proposal=command.approved_proposal.model_copy(update=dict(asset_id=approved.proposal.id,
+            revision=approved.proposal.version,content_hash=approved.proposal.proposal_hash)),
+        approval_event=command.approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+            content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+    with connect_capacity_issuer(native_signed_source[4],SCOPE) as issuer:
+        assert issuer.pgconn.used_password is True
+        claims=read_capacity_approved_claims(issuer,command)
+        assert claims.source==changed and claims.maker==maker.subject
+        assert claims.supplier_verified is False and claims.execution_allowed is False
+    params=ProviderCapacitySourceActionGuard._combination_params(SCOPE,changed,maker.subject)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL):
+            owner.execute(profile)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        assert owner.execute(CAPACITY_NATIVE_SOURCE_COMBINATION_SQL,params).fetchone() is not None
+        assert owner.execute(CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL,dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,maker=maker.subject,
+            proposal_id=command.approved_proposal.asset_id,proposal_revision=command.approved_proposal.revision,
+            proposal_hash=command.approved_proposal.content_hash,approval_event_id=command.approval_event.asset_id,
+            approval_event_hash=command.approval_event.content_hash)).fetchone() is not None
+        owner.rollback()
+    import json
+    with capsys.disabled():
+        print('CAPACITY_NATIVE_CANDIDATE_COMBINATION_PROOF '+json.dumps(dict(representation=representation,
+            proposal_id=approved.proposal.id,proposal_hash=approved.proposal.proposal_hash,
+            approval_event_id=command.approval_event.asset_id,approval_event_hash=command.approval_event.content_hash,
+            account_raw_hash=account_hash,basis_raw_hash=basis_hash,actual_runtime_insert=True,
+            original_independent_approval=True,native_scram_claims=True,native_source_binding=True,
+            native_original_combination=True,source_published=False,current_database_accessed=False),sort_keys=True))
+
+
+def test_native_candidate_combination_rejects_rehashed_original_row_term_faults(native_signed_source):
+    from copy import deepcopy
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard
+    from aos_api.aip_provider_capacity_source_issuer import authenticate_capacity_issuance_command
+    from aos_api.aip_provider_capacity_source_contracts import ProviderPhysicalAccountCandidate,ProviderCapacityBasisCandidate
+    from aos_api.aip_provider_capacity_publication_store import (
+        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL,
+        CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_NATIVE_SOURCE_COMBINATION_SQL)
+    _,actual_command,_,source,_=native_signed_source
+    command,_,_=actual_command();maker=authenticate_capacity_issuance_command(command).subject
+    params=ProviderCapacitySourceActionGuard._combination_params(SCOPE,source,maker)
+    with isolated_owner() as owner:
+        owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+        account=owner.execute('SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+            (source.physical_account_ref.asset_id,)).fetchone()['request_json']
+        basis=owner.execute('SELECT request_json FROM public.aip_provider_capacity_candidate WHERE candidate_id=%s',
+            (source.basis_ref.asset_id,)).fetchone()['request_json']
+        request=owner.execute('SELECT request_json FROM public.aip_provider_capacity_request WHERE request_id=%s',
+            (source.allocation_request_ref.asset_id,)).fetchone()['request_json']['application']
+        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL):
+            owner.execute(profile)
+        owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+        assert owner.execute(CAPACITY_NATIVE_SOURCE_COMBINATION_SQL,params).fetchone() is not None
+        for fault in ['account_alias','basis_ref','provider_member','concurrency']:
+            owner.execute('RESET ROLE');owner.execute('SAVEPOINT original_term_fault')
+            try:
+                a,b=deepcopy(account),deepcopy(basis)
+                if fault=='account_alias':a['candidate']['physicalAccountId']='different-original-alias'
+                elif fault=='provider_member':a['candidate']['providerRefs'][0]['assetId']='different-provider-member'
+                elif fault=='concurrency':b['candidate']['maxConcurrency']=request['requestedMaxConcurrency']+1
+                account_hash=canonical_hash(a)
+                b['candidate']['physicalAccountRef']['contentHash']=account_hash
+                if fault=='basis_ref':b['candidate']['physicalAccountRef']['assetId']='different-original-account'
+                basis_hash=canonical_hash(b)
+                # Models still valid: only original cross-row terms have changed.
+                ProviderPhysicalAccountCandidate.model_validate(a['candidate'])
+                ProviderCapacityBasisCandidate.model_validate(b['candidate'])
+                owner.execute("SET LOCAL session_replication_role='replica'")
+                for body,digest,identifier in [(a,account_hash,params['account_id']),(b,basis_hash,params['basis_id'])]:
+                    owner.execute('UPDATE public.aip_provider_capacity_candidate SET request_json=%s,content_hash=%s WHERE org_id=%s AND project_id=%s AND candidate_id=%s',
+                        (Jsonb(body),digest,*SCOPE.key,identifier))
+                owner.execute("SET LOCAL session_replication_role='origin'")
+                owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                assert owner.execute(CAPACITY_NATIVE_SOURCE_COMBINATION_SQL,{**params,'account_hash':account_hash,'basis_hash':basis_hash}).fetchone() is None,fault
+            finally:owner.execute('ROLLBACK TO SAVEPOINT original_term_fault')
+            owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            assert owner.execute(CAPACITY_NATIVE_SOURCE_COMBINATION_SQL,params).fetchone() is not None
+        owner.rollback()

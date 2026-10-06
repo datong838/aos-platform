@@ -1,0 +1,218 @@
+{
+  "baseline": "df1abcbbbcce831c4448035f3a7e2990ebc2929b",
+  "authority": "AOS-001426",
+  "scope": "ORIGINAL_CANDIDATE_NATIVE_MODELS_AND_COMBINATION_NOT_COMPLETE_SOURCE",
+  "files": {
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "d23eb1e118341a676d21fc899de950ff9f9fce6c8ce6aaf32b448d1ec34696b3",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "53ecd6d60743b5beff41c371ed0b995513ea60ba047d7bd14167e0e47d632bd8",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "ae58a8a5723339c177b48e8e0030372bc7ecfaa52c5dadfe60dfb03de6a9bc1e"
+  },
+  "logs": [
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/candidates-native-red-r1.log",
+      "sha256": "a5dd8b51e8f0373bca06698cb60d666051dc2fc4a3ffe00f2ce8ddf821eaf8c2",
+      "summary": [
+        "2 failed, 53 deselected, 7 warnings in 8.84s"
+      ],
+      "retained_databases": [
+        "aos_test_88fe232006ee_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/candidates-native-green-r1.log",
+      "sha256": "429fa87976a46cf306790e2e6d909ccf6023f9584dae107af0439b9056c79c54",
+      "summary": [
+        "2 passed, 53 deselected, 7 warnings in 8.03s"
+      ],
+      "retained_databases": [
+        "aos_test_d23c22006a7b_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/candidates-native-matrix-r1.log",
+      "sha256": "4d17d39b3806eb2a80eeef1b02a66be1a9832de8b9f8b5410a76dc9e3ed913c6",
+      "summary": [
+        "3 passed, 53 deselected, 7 warnings in 10.32s"
+      ],
+      "retained_databases": [
+        "aos_test_314f0e6e4081_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/candidates-native-actual-domain-r1.log",
+      "sha256": "15c6b731edc511a00a072e700be806bbd6888e5164549e11a4273d4d3d20428f",
+      "summary": [
+        "7 passed, 56 deselected, 7 warnings in 23.10s"
+      ],
+      "retained_databases": [
+        "aos_test_b8764273cffb_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/candidates-native-cumulative-r1.log",
+      "sha256": "5ff2a38ff658e8dd82cabfa2c47f18034a6783e5a2e7003a27681b2d6369bba9",
+      "summary": [
+        "58 passed, 5 deselected, 7 warnings in 113.54s (0:01:53)"
+      ],
+      "retained_databases": [
+        "aos_test_f57c04b61274_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/candidates-native-adjacent-r1.log",
+      "sha256": "ec7431642ce850f417f0f7cf5c726363d80fbc7973bf04ea3456a6db6e3a280c",
+      "summary": [
+        "14 passed, 82 deselected, 7 warnings in 32.38s"
+      ],
+      "retained_databases": [
+        "aos_test_ef3224012f76_ti4_test"
+      ]
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/candidates-native-complete-entry-red-r1.log",
+      "sha256": "b04ce53a4193451bb2798654ccd7ecc0cac591cb2a6efd372e01b42fd84cc25e",
+      "summary": [
+        "5 failed, 58 deselected, 7 warnings in 13.70s"
+      ],
+      "retained_databases": [
+        "aos_test_6e4a2fe17a77_ti4_test"
+      ]
+    }
+  ],
+  "original_combination_sql_unchanged_sha256": "0f9dfab7a8a0c8f3dd39f79beb5dbba0cc161ea64b26d10ad5dc01b492ad722d",
+  "actual_domain_proofs": [
+    {
+      "account_raw_hash": "c6734b8269046b4513c6e0785fa330f4eedca175353ac8c2fd244f4e7b7f5a15",
+      "actual_runtime_insert": true,
+      "approval_event_hash": "fe0227da7309244967e6daf1ae104eb652db4948c02ef9a2d693187768ee368c",
+      "approval_event_id": "approval-aafa2a8e871142558355",
+      "basis_raw_hash": "86785684dc449f05e41e7b7ad5c2b8622093816ff31cfe31d6957d4362152c86",
+      "current_database_accessed": false,
+      "native_original_combination": true,
+      "native_scram_claims": true,
+      "native_source_binding": true,
+      "original_independent_approval": true,
+      "proposal_hash": "e3e1961c7682910d7d301ee213cad38a704b972e9c5a2c20c7fb488613ff1ea7",
+      "proposal_id": "proposal-afcd9ac0298b4c7c9e86",
+      "representation": "basis_account",
+      "source_published": false
+    },
+    {
+      "account_raw_hash": "bd95b6c5ed3c9b807d820e4d6e348f9440a674075c452336d3d34ddc25362da7",
+      "actual_runtime_insert": true,
+      "approval_event_hash": "7ca9dccf4777b3537b7e844c255d70abee5c2bd84e48ce2bed24c3ed70e5f428",
+      "approval_event_id": "approval-0e89d0c6cf9c499eadf1",
+      "basis_raw_hash": "44de8c61206227cfdcb66ba10a50ce7a228339c321d30dbb77ca33ac6d2b3331",
+      "current_database_accessed": false,
+      "native_original_combination": true,
+      "native_scram_claims": true,
+      "native_source_binding": true,
+      "original_independent_approval": true,
+      "proposal_hash": "20e25735298105338f2649f2600cea02e637650305ab40a45b8398300b94001a",
+      "proposal_id": "proposal-6814c8633b8a486db27d",
+      "representation": "account_provider",
+      "source_published": false
+    },
+    {
+      "account_raw_hash": "56b1a6baa469ba81c77bbfb839219342e6f4e2370baaa07fb72af419fdf38953",
+      "actual_runtime_insert": true,
+      "approval_event_hash": "f6ead92c68ecddfec400dadec1793bd999bca801135c6f907e3946a1ea692d26",
+      "approval_event_id": "approval-20dbf16ca462400898c5",
+      "basis_raw_hash": "bb4e6dc607567701fca0552f54e0fff6d3308b60e0889921f2e30dbf032f43c8",
+      "current_database_accessed": false,
+      "native_original_combination": true,
+      "native_scram_claims": true,
+      "native_source_binding": true,
+      "original_independent_approval": true,
+      "proposal_hash": "61e3f94a96fd3337055e57b5277832cdc45a9677b538ed8d4a2e605164885b35",
+      "proposal_id": "proposal-ac84f2056d6f48eab7ad",
+      "representation": "basis_mixed",
+      "source_published": false
+    },
+    {
+      "account_raw_hash": "77a8ce0288ddd4f5f0ce362450a10cc443f3f28664670e3958074113000b17fa",
+      "actual_runtime_insert": true,
+      "approval_event_hash": "09ef4dbf42b5e27011f0acd07b30ae3fc32beb6b1ede2e9a00d7a5ce4ab33b98",
+      "approval_event_id": "approval-8d3ea7feb2c94740964e",
+      "basis_raw_hash": "49b39f5736959903f1ceacc3ca25c0bcb3df0ac1e3b0dd84d5e358c47d693e1c",
+      "current_database_accessed": false,
+      "native_original_combination": true,
+      "native_scram_claims": true,
+      "native_source_binding": true,
+      "original_independent_approval": true,
+      "proposal_hash": "985544ab3f053186a49bae5d3ef14e934324ca9b048ec7da9023f917c655c4c3",
+      "proposal_id": "proposal-df4dfbf1884242d99f62",
+      "representation": "provider_mixed",
+      "source_published": false
+    },
+    {
+      "account_raw_hash": "eca4103e35c148dc3f661498803dbd97766b19ac4d02a6f0c401cf9303624b92",
+      "actual_runtime_insert": true,
+      "approval_event_hash": "b7267fb4389683af9b272cd68e01aefc1c42d1a76cb8b1c1b60af1d50958e7bd",
+      "approval_event_id": "approval-7b11c13d85f64c7eb38a",
+      "basis_raw_hash": "b45479625fa7a5b2feb25e8da3c0dbf5e94990f145e40bc16ebae342afb72b08",
+      "current_database_accessed": false,
+      "native_original_combination": true,
+      "native_scram_claims": true,
+      "native_source_binding": true,
+      "original_independent_approval": true,
+      "proposal_hash": "d6c5a23d467769e00a27aff831ae9a75a4d90bf9a0b48116e9062b71f66d2a08",
+      "proposal_id": "proposal-0ad0ef92dc754eee98cd",
+      "representation": "basis_epoch",
+      "source_published": false
+    },
+    {
+      "account_raw_hash": "4fb748db90d7a3e4cf13fac9336c2cac7efe4605b894c1a42b0901e8353db4ce",
+      "actual_runtime_insert": true,
+      "approval_event_hash": "7e5d0ad947692a071d37e1e46533ab34f6bea096d38d6e0c0979a14493af5e0d",
+      "approval_event_id": "approval-aacd8817f2e8495a9c38",
+      "basis_raw_hash": "47dc7cd1169cdbb063d4323616173a56dde16ef13c0da1f06d7d718fc816e53f",
+      "current_database_accessed": false,
+      "native_original_combination": true,
+      "native_scram_claims": true,
+      "native_source_binding": true,
+      "original_independent_approval": true,
+      "proposal_hash": "bb01f21cc91be5e7778238ca7274a4b270811623b44b90ddc70572991469c715",
+      "proposal_id": "proposal-93cd392811144618b932",
+      "representation": "token_alias",
+      "source_published": false
+    }
+  ],
+  "negative_terms": [
+    "account_alias",
+    "basis_ref",
+    "provider_member",
+    "concurrency"
+  ],
+  "catalog": {
+    "database": "aos_test_f57c04b61274_ti4_test",
+    "schema_head": "a0v_156",
+    "roles": [
+      {
+        "rolname": "aos_capacity_publication_owner",
+        "rolcanlogin": false
+      },
+      {
+        "rolname": "aos_provider_capacity_issuer",
+        "rolcanlogin": false
+      }
+    ],
+    "remaining_candidate_profiles": 0,
+    "prepare": null
+  },
+  "fixture": {
+    "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+    "volume": "aos-capacity-publication-scram-20261006-data",
+    "memory_mib": 384,
+    "oom": 1,
+    "oom_kill": 1
+  },
+  "limitations": [
+    "No installed157, complete prepare/sign/commit/actual callerCOMMIT/currentconsumer",
+    "S14-S20 original dependencies/locks/epochs/signedregistry still required",
+    "Final caller COMMIT TTL unresolved",
+    "Sampled model oracle not exhaustive accepted-domain equivalence",
+    "Four negative terms use isolated admin SAVEPOINT, no fabricated approvals",
+    "No formal/current DB or service action, no naturalfirstchain, no Source-parent Delivery"
+  ]
+}
