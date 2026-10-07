@@ -208,3 +208,23 @@ pglast上游issue205（https://github.com/lelit/pglast/issues/205）记录8.x tr
 原native cost revoke已证实的隐式UPDATE现在可从actual trigger AST对应aip_budget_cost_runtime_fence；withdrawal bump为epoch INSERT/UPSERT而非显式locking clause，必须连同FK/unique/AFTER顺序审计。Provider健康touch为epoch条件INSERT→FOR UPDATE、bump为UPDATE，实际before/after/truncate关联已记录。Source59闭包不读取health epoch或cost fence，未来joint入口必须组合原健康配置及cost当前性门，不能当作Source已涵盖。
 
 本调查仍只涵盖catalog给定范围与显式schema调用，未证明Python动态writer/所有SQL入口/隐式内核锁或实际运行总序；DML关系候选包含join读关系，不等于精确写对象。新的原生对向验证应按合同补Source批准撤回epoch链与联合健康/费用顺序，旧未决义务零执行切换与合法业务链仍pending。父合同/Goal ACTIVE，无完整业务完成或正式权限新增。
+
+## 下一已登记原生边：原 action withdrawal API → 原 epoch AFTER writer
+
+实际调查原_source epoch并发用admin UPDATE epoch=epoch三个no-op writer，未覆盖原AipActionStore.withdraw完整入口。已读取并hash固定routers/aip_actions.py→aip_action_service.py→aip_action_store.py：principal认证scope/maker→withdrawal advisory→proposal FOR UPDATE→maker/status/expiry/exactversion/hash→proposal/draft UPDATE→withdrawal INSERT/FK/AFTER epoch UPSERT→action_event INSERT→原COMMIT。新增original-withdrawal-next-entry.json登记差异。下一证据脚本original_withdrawal_lock_probe.py／run_original_withdrawal_lock_probe.py仅新完整原Source fixture，用原signer/maker与原API，不直接INSERT事件、不关原门；两个test-only独立hold锁分别观察proposal前缀与epoch触发等待，原请求只发一次，未知结果只读对账。隔离hold锁只是native primitive，不冒称合法joint consumer；原test结束后的fixture生命周期/签名源撤回不影响maker原proposal权限，仍应逐项核合法status/hash，不合适则停止该动作改选新fixture，不能改批准资料硬过。
+
+### 原撤回API r1只读对账与探针修复
+
+r1原Source正向与epoch/Origin负门已执行，但新增等待观察超时，1FAIL且teardown1ERROR。只读新库确认原API实际已COMMIT：withdrawal1/proposal withdrawn v3/epoch1/业务记录0，无活跃连接，绝不重发该request。首个等待用pg_stat_activity在长observer事务中查询，须每轮pg_stat_clear_snapshot消除cached stats，不能凭空把未观察到改PASS。撤回了原fixture自身批准proposal，使清理阶段原审批再验失败；r2必须用原Source Candidate/maker/checker APIs创建另一个新的approved proposal（不改候选/签名资料、不withdraw原fixture proposal），同原Action类型/trigger，但明确它不是已发布Source引用。用新随机全fixture+新key只发一次，确保两个原提案各自状态/版本独立，观察后原Sourcefixture清理仍通过。r1库/卷/备份及失败记录保留。
+
+## 原撤回API实际writer双等待检查点
+
+新完整原Source distinct fixture先完成实际SCRAM consumer与epoch/Owner/Origin负门。通过原propose_provider_capacity_source与原checker decide另建相同原Source Candidate的独立批准proposal，不修改旧批准/候选；原maker JWT→原withdraw HTTP router→原service/store，单次新request先等待proposal SHARE holder，释放后同API backend再等待epoch SHARE holder，原withdrawal INSERT/AFTER UPSERT仍未提交时observer事件0；释放epoch后原API HTTP200及实际COMMIT，proposal v2→v3 withdrawn/epoch0→1/withdrawal1/actionevent1。完整原test连同fixture清理1PASS/7warnings52.96s，库aos_test_384992d717f4_ti4_test保留。
+
+独立SER READ ONLY核新proposal/event/maker/version/epoch和原Source引用proposal仍approved v2/epoch0，Source签名/hash有效但Origin已按原test撤回；occupation入口清理、角色惰性/无membership。actual bump body与a0v151 BUMP_BODY精确一致，原AFTER ROW INSERT、FK非延期且名称排在bump前；业务AgentRun/普通预算/Eval预算/容量0/canary0。没有direct INSERT撤回或手动increment epoch，isolated holders只是锁primitive，不能冒充joint consumer；独立提案不是已发布Source exact ref，未测试app lifespan/正式API部署。
+
+r1等待观察未成立且撤回原fixture提案导致teardown再验失败（1FAIL+1ERROR）。只读库aos_test_6ed054c786b4_ti4_test确认实际withdrawal已COMMIT v3/epoch1、业务0/无活跃连接，结果对账记录保留、不重发。r2刷新pg_stat统计snapshot并换新独立批准proposal/新全fixture；不改旧库来清除失败。所有库卷备份保留，Source/Profile产品dirty和正式服务未改。
+
+补齐原writer边withdrawal advisory→proposal UPDATE→draft UPDATE→withdrawal INSERT/原FK→AFTER epoch UPSERT→event→COMMIT。它与未来Source proposal/epoch预锁排序相符，仅reader-first两阶段锁primitive证明；writer-first staleSource消费拒绝和完整joint所有入口尚需后续实际证明。父合同仍pending/ACTIVE，Goal active、业务gates保持。
+
+失败r1原log保留0600未改，提交仅剔尾空白safe副本。原sha256 8116e0353f62d8cbf2dbe0ab9cd1674dadcd461eea45191cb94b7f7fdf803364；safe sha256 54302588e4ee0175bbb0144a789855d13c9a81548372eaef3b09250a2edfb5af。

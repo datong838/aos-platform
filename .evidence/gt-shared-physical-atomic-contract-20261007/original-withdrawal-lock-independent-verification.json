@@ -1,0 +1,35 @@
+{
+  "status": "ORIGINAL_WITHDRAWAL_COMMIT_AND_TRUSTED_TRIGGER_INDEPENDENTLY_VERIFIED",
+  "identity": {
+    "database": "aos_test_384992d717f4_ti4_test",
+    "readonly": "on",
+    "cluster": "7693564235776004128"
+  },
+  "withdrawal_events": 1,
+  "action_events": 1,
+  "new_proposal_version": 3,
+  "new_epoch": 1,
+  "original_source_proposal_unchanged": true,
+  "original_source_signature_valid": true,
+  "source_origin_withdrawn": true,
+  "trusted_bump_body_sha256": "666fb5350dab9121e46c2fb21a19a09f82c8165078968140b623757ae9557a38",
+  "original_fk_before_after_bump_verified": true,
+  "product_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "canary": 0,
+  "file_sha256": {
+    "original_withdrawal_lock_probe.py": "e6a7d80744a0edea934e111bb0e77ca2d154ab284c75888dc858765c02c3b7aa",
+    "run_original_withdrawal_lock_probe.py": "1028bbc7d2f19920c03aded6c2e8864e7585c7e86f8cabc6e5748064cea03bee",
+    "original-withdrawal-lock-verification.json": "2c694324f701fc074ee2b8991c76ba22ec400c71ca148d270e6f2cfecff51455",
+    "original-withdrawal-r1-reconciliation.json": "571a0a4e886f10f3a739e445fb35478b4a3654c85a4ed1c756c7a84d7baf72a4",
+    "verify_original_withdrawal_lock.py": "f7a0300428f322fba1ec3fa9c7ae1d19bf712513a3c08b18a4f5090da23b9ec9"
+  },
+  "limitations": [
+    "Wait evidence belongs to the executed original probe; retained state alone cannot prove prior waiting",
+    "Separate approved proposal and isolated row-lock primitives, not joint business admission"
+  ]
+}

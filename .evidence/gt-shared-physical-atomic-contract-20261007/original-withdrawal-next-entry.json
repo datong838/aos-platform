@@ -1,0 +1,28 @@
+{
+  "status": "ORIGINAL_ACTION_WITHDRAWAL_NATIVE_EDGE_PREPARED_NOT_EXECUTED",
+  "head": "99c30bfaf8de4cb8acabaa59ab907474c982fc5f",
+  "source_sha256": {
+    "services/aos-api/aos_api/routers/aip_actions.py": "2e493cbb42f89edb8a270cb7f5a6a20369f964f815f109c237b0f91086d6268b",
+    "services/aos-api/aos_api/aip_action_service.py": "68c15b994f9c7ca6a8dfe8fafcc8c0ab847ae5b52fb19b5fad78aeedc274c41b",
+    "services/aos-api/aos_api/aip_action_store.py": "16557baf565e31894d7caef2cf87360b8a711a48cff2dc01bdbaf879fbcd464b",
+    "services/aos-api/tests/aip/test_capacity_occupation_source_pg.py": "80794df030f61edb6dcac1765166e9b344c0c56f55b1ed46b34a3bff004aa398"
+  },
+  "original_source_epoch_test": "direct admin UPDATE epoch=epoch, not original action withdrawal API",
+  "actual_writer_path": [
+    "withdraw_action_proposal require_principal",
+    "AipActionService.withdraw principal tenant/subject",
+    "AipActionStore.withdraw withdrawal idempotency advisory",
+    "proposal FOR UPDATE",
+    "maker/status/expiry/exact version/hash gates",
+    "proposal UPDATE and draft UPDATE",
+    "withdrawal INSERT and original FK/AFTER epoch UPSERT",
+    "action event INSERT",
+    "actual COMMIT then bundle"
+  ],
+  "next_native_candidate": "fresh original full Source fixture, actual signed maker withdrawal API blocked first at proposal row then original epoch trigger, no old attempt replay",
+  "limitations": [
+    "Source original epoch no-op writers do not prove this API complete path",
+    "Independent isolated lock-holder is a native primitive, not a lawful joint ledger consumer",
+    "Only fresh owned fixture; formal DB/readiness and production effects stay forbidden"
+  ]
+}

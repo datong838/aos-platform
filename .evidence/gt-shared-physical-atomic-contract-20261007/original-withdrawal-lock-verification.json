@@ -1,0 +1,36 @@
+{
+  "status": "ORIGINAL_MAKER_WITHDRAWAL_API_TWO_NATIVE_WAITS_AND_COMMIT_VERIFIED",
+  "identity": {
+    "database": "aos_test_384992d717f4_ti4_test",
+    "cluster": "7693564235776004128"
+  },
+  "proposal_id": "proposal-02550803c98f4aa49fa0",
+  "maker": "capacity-maker-61cec8c1938f4ea990dde3467fc47df9",
+  "idempotency_key": "isolated-native-withdrawal-576e1ad04bf94e9398aab84dc45b151e",
+  "original_source_proposal_id": "proposal-3a710ed00fde4bca9049",
+  "before_proposal_version": 2,
+  "after_proposal_version": 3,
+  "before_epoch": 0,
+  "after_epoch": 1,
+  "api_pid": 159291,
+  "holder_pids": [
+    159266,
+    159267
+  ],
+  "product_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "canary": 0,
+  "head": "99c30bfaf8de4cb8acabaa59ab907474c982fc5f",
+  "probe_sha256": "e6a7d80744a0edea934e111bb0e77ca2d154ab284c75888dc858765c02c3b7aa",
+  "limitations": [
+    "Original full fixture Source history, no lawful complete business AgentRun",
+    "Independent isolated admin row locks are primitives, not a joint ledger consumer",
+    "Separate original approved Source proposal is not the published Source exact reference",
+    "Existing fixture app authority; no app lifespan/restart acceptance",
+    "One original API request only; no direct withdrawal INSERT or epoch UPDATE"
+  ]
+}

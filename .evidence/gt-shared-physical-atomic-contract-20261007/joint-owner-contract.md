@@ -58,3 +58,13 @@ pglast上游issue205（https://github.com/lelit/pglast/issues/205）记录8.x tr
 原native cost revoke已证实的隐式UPDATE现在可从actual trigger AST对应aip_budget_cost_runtime_fence；withdrawal bump为epoch INSERT/UPSERT而非显式locking clause，必须连同FK/unique/AFTER顺序审计。Provider健康touch为epoch条件INSERT→FOR UPDATE、bump为UPDATE，实际before/after/truncate关联已记录。Source59闭包不读取health epoch或cost fence，未来joint入口必须组合原健康配置及cost当前性门，不能当作Source已涵盖。
 
 本调查仍只涵盖catalog给定范围与显式schema调用，未证明Python动态writer/所有SQL入口/隐式内核锁或实际运行总序；DML关系候选包含join读关系，不等于精确写对象。新的原生对向验证应按合同补Source批准撤回epoch链与联合健康/费用顺序，旧未决义务零执行切换与合法业务链仍pending。父合同/Goal ACTIVE，无完整业务完成或正式权限新增。
+
+## 原撤回API实际writer双等待检查点
+
+新完整原Source distinct fixture先完成实际SCRAM consumer与epoch/Owner/Origin负门。通过原propose_provider_capacity_source与原checker decide另建相同原Source Candidate的独立批准proposal，不修改旧批准/候选；原maker JWT→原withdraw HTTP router→原service/store，单次新request先等待proposal SHARE holder，释放后同API backend再等待epoch SHARE holder，原withdrawal INSERT/AFTER UPSERT仍未提交时observer事件0；释放epoch后原API HTTP200及实际COMMIT，proposal v2→v3 withdrawn/epoch0→1/withdrawal1/actionevent1。完整原test连同fixture清理1PASS/7warnings52.96s，库aos_test_384992d717f4_ti4_test保留。
+
+独立SER READ ONLY核新proposal/event/maker/version/epoch和原Source引用proposal仍approved v2/epoch0，Source签名/hash有效但Origin已按原test撤回；occupation入口清理、角色惰性/无membership。actual bump body与a0v151 BUMP_BODY精确一致，原AFTER ROW INSERT、FK非延期且名称排在bump前；业务AgentRun/普通预算/Eval预算/容量0/canary0。没有direct INSERT撤回或手动increment epoch，isolated holders只是锁primitive，不能冒充joint consumer；独立提案不是已发布Source exact ref，未测试app lifespan/正式API部署。
+
+r1等待观察未成立且撤回原fixture提案导致teardown再验失败（1FAIL+1ERROR）。只读库aos_test_6ed054c786b4_ti4_test确认实际withdrawal已COMMIT v3/epoch1、业务0/无活跃连接，结果对账记录保留、不重发。r2刷新pg_stat统计snapshot并换新独立批准proposal/新全fixture；不改旧库来清除失败。所有库卷备份保留，Source/Profile产品dirty和正式服务未改。
+
+补齐原writer边withdrawal advisory→proposal UPDATE→draft UPDATE→withdrawal INSERT/原FK→AFTER epoch UPSERT→event→COMMIT。它与未来Source proposal/epoch预锁排序相符，仅reader-first两阶段锁primitive证明；writer-first staleSource消费拒绝和完整joint所有入口尚需后续实际证明。父合同仍pending/ACTIVE，Goal active、业务gates保持。

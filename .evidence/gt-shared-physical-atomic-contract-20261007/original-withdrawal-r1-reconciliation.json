@@ -1,0 +1,23 @@
+{
+  "status": "R1_API_COMMIT_RECONCILED_NO_REPLAY",
+  "database": "aos_test_6ed054c786b4_ti4_test",
+  "withdrawal": {
+    "proposal_id": "proposal-7bdd07d9505b4932ba62",
+    "idempotency_key": "isolated-native-withdrawal-08775db9a7a7402a8a496642b71043af",
+    "proposal_version": 3,
+    "status": "withdrawn",
+    "version": 3,
+    "epoch": 1
+  },
+  "product_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "original_test": "new probe1FAIL and teardown1ERROR; original Source positive checks ran before probe",
+  "limitations": [
+    "Wait observation absent; no two-wait PASS",
+    "Actual withdrawal invalidated original fixture approved proposal and cleanup revalidation"
+  ]
+}
