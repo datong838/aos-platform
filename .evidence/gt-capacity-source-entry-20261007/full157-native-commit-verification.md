@@ -1,0 +1,7 @@
+Private signature-checked Source commit checkpoint
+
+Positive two original layouts: 2 PASS/28.06s. Expanded signature/raw/key/new-transaction negatives and positive replay/immutability: 6 PASS/66.94s. Final positive ACL, two separately approved Sources sharing one account, and signed/pending neighbors: 5 PASS/59.12s. Seven existing warnings, no SKIP.
+Setup parameter collision is not a functional RED. Corrected harness then actual prepare succeeded before undefined private commit produced SQL42883 (15.53s).
+Native trusted-current signing key verification precedes atomic global identity/provider mappings, immutable Source/raw/signature/provenance and pending finalize. Independent actual caller COMMIT readback and Ed25519 verification pass. Three ordinary roles cannot read five private tables or execute private commit; four immutable tables reject update/delete. Invalid finalize and rollback leave no residue.
+Final retained database a0v_156/cluster7693564235776004128: five temporary tables/eight new functions absent; exact original public prepare/commit absent; retained databases and volume preserved. Original code and tests preserved; AST, whitespace and credential checks pass.
+No complete Source Delivery or public installation. Fixture signing is not production controlled-signer/JWT proof. S01, public entry, current consumer and actual final COMMIT TTL remain pending; full Goal and parent tasks active. Formal DB/services/runtime unchanged.

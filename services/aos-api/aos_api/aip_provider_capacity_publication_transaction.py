@@ -842,3 +842,126 @@ END $body$;
 ALTER FUNCTION aos_capacity_publication_private.prepare_original_source(bytea,text,text,jsonb) OWNER TO aos_capacity_publication_owner;
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.prepare_original_source(bytea,text,text,jsonb) FROM PUBLIC;
 """
+
+
+CAPACITY_SOURCE_COMMIT_SQL = r"""
+CREATE TABLE aos_capacity_publication_private.source_publication(
+ org_id text NOT NULL CHECK(org_id='org-org'),project_id text NOT NULL CHECK(project_id='dev-project'),
+ asset_id text NOT NULL,revision integer NOT NULL CHECK(revision=1),
+ content_hash text NOT NULL CHECK(content_hash=encode(sha256(source_raw),'hex')),
+ source_raw bytea NOT NULL,signature bytea NOT NULL CHECK(octet_length(signature)=64),
+ account_id uuid NOT NULL REFERENCES aos_capacity_publication_private.global_account,
+ attempt_id uuid NOT NULL UNIQUE REFERENCES aos_capacity_publication_private.source_pending(attempt_id),
+ PRIMARY KEY(org_id,project_id,asset_id));
+CREATE TABLE aos_capacity_publication_private.source_provenance(
+ org_id text NOT NULL,project_id text NOT NULL,asset_id text NOT NULL,
+ original_signed_facts jsonb NOT NULL,source_signer_root_revision text NOT NULL,
+ native_xid xid8 NOT NULL,native_pid integer NOT NULL,native_session text NOT NULL,
+ PRIMARY KEY(org_id,project_id,asset_id),
+ FOREIGN KEY(org_id,project_id,asset_id) REFERENCES aos_capacity_publication_private.source_publication);
+ALTER TABLE aos_capacity_publication_private.source_publication OWNER TO aos_capacity_publication_owner;
+ALTER TABLE aos_capacity_publication_private.source_provenance OWNER TO aos_capacity_publication_owner;
+REVOKE ALL ON aos_capacity_publication_private.source_publication,aos_capacity_publication_private.source_provenance
+ FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer,aos_provider_capacity_policy_publisher;
+ALTER TABLE aos_capacity_publication_private.source_publication ENABLE ROW LEVEL SECURITY;
+ALTER TABLE aos_capacity_publication_private.source_publication FORCE ROW LEVEL SECURITY;
+ALTER TABLE aos_capacity_publication_private.source_provenance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE aos_capacity_publication_private.source_provenance FORCE ROW LEVEL SECURITY;
+CREATE POLICY source_publication_owner ON aos_capacity_publication_private.source_publication TO aos_capacity_publication_owner
+ USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+ WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true));
+CREATE POLICY source_provenance_owner ON aos_capacity_publication_private.source_provenance TO aos_capacity_publication_owner
+ USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+ WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true));
+CREATE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()
+RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog AS $body$
+BEGIN RAISE EXCEPTION 'CAPACITY_SOURCE_PUBLICATION_IMMUTABLE' USING ERRCODE='42501'; END $body$;
+ALTER FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation() OWNER TO aos_capacity_publication_owner;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation() FROM PUBLIC;
+CREATE TRIGGER source_identity_immutable BEFORE UPDATE OR DELETE ON aos_capacity_publication_private.global_account
+ FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation();
+CREATE TRIGGER source_identity_immutable BEFORE UPDATE OR DELETE ON aos_capacity_publication_private.global_provider
+ FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation();
+CREATE TRIGGER source_publication_immutable BEFORE UPDATE OR DELETE ON aos_capacity_publication_private.source_publication
+ FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation();
+CREATE TRIGGER source_provenance_immutable BEFORE UPDATE OR DELETE ON aos_capacity_publication_private.source_provenance
+ FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation();
+
+CREATE FUNCTION aos_capacity_publication_private.commit_original_source(p_key text,p_raw bytea,p_signature bytea)
+RETURNS TABLE(asset_id text,revision integer,content_hash text,source_raw bytea,signature bytea)
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE
+ v_pending aos_capacity_publication_private.source_pending%ROWTYPE;
+ v_existing aos_capacity_publication_private.source_publication%ROWTYPE;
+ v_account aos_capacity_publication_private.global_account%ROWTYPE;
+ v_provider aos_capacity_publication_private.global_provider%ROWTYPE;
+ v_input jsonb;v_candidate jsonb;v_ref jsonb;
+BEGIN
+ IF current_user IS DISTINCT FROM 'aos_capacity_publication_owner'
+  OR session_user IS DISTINCT FROM 'aos_provider_capacity_issuer'
+  OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+  OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project'
+  OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'
+  OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'
+  OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'
+  OR current_setting('TimeZone') IS DISTINCT FROM 'UTC' THEN
+  RAISE EXCEPTION 'CAPACITY_ORIGINAL_FACT_CONTEXT_REQUIRED' USING ERRCODE='42501'; END IF;
+ IF p_key IS NULL OR p_raw IS NULL OR p_signature IS NULL OR octet_length(p_signature)<>64 THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMIT_BINDING_CONFLICT' USING ERRCODE='42501'; END IF;
+ -- Do not acquire pending before the original lock prefix in a fresh caller.
+ -- An unfinished row is usable only by its already-lock-holding native caller.
+ SELECT p.* INTO v_pending FROM aos_capacity_publication_private.source_pending p
+  WHERE p.org_id='org-org' AND p.project_id='dev-project' AND p.attempt_key=p_key AND p.source_raw=p_raw;
+ IF NOT FOUND OR v_pending.source_hash<>encode(sha256(p_raw),'hex') THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMIT_BINDING_CONFLICT' USING ERRCODE='42501'; END IF;
+ IF v_pending.finalized THEN
+  SELECT s.* INTO v_existing FROM aos_capacity_publication_private.source_publication s
+   WHERE s.org_id='org-org' AND s.project_id='dev-project' AND s.attempt_id=v_pending.attempt_id;
+  IF NOT FOUND OR v_existing.source_raw<>p_raw OR v_existing.signature<>p_signature THEN
+   RAISE EXCEPTION 'CAPACITY_SOURCE_COMMIT_BINDING_CONFLICT' USING ERRCODE='42501'; END IF;
+  RETURN QUERY SELECT v_existing.asset_id,v_existing.revision,v_existing.content_hash,v_existing.source_raw,v_existing.signature;
+  RETURN;
+ END IF;
+ IF v_pending.native_xid<>pg_current_xact_id() OR v_pending.native_pid<>pg_backend_pid()
+  OR v_pending.native_session<>session_user THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMIT_BINDING_CONFLICT' USING ERRCODE='42501'; END IF;
+ v_input:=aos_capacity_publication_private.read_source_command_signed_facts(v_pending.command_raw,v_pending.permit_ref);
+ IF v_input IS DISTINCT FROM v_pending.signed_facts THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMIT_ORIGINALS_DRIFTED' USING ERRCODE='42501'; END IF;
+ SELECT p.* INTO STRICT v_pending FROM aos_capacity_publication_private.source_pending p
+  WHERE p.attempt_id=v_pending.attempt_id FOR UPDATE;
+ -- The original registered-material query audits the exact native C verifier
+ -- and derives the current trusted Source key from the separate signing root.
+ IF aos_ed25519.verify(p_signature,p_raw,decode(v_input->>'sourceSignerPublicKey','base64')) IS DISTINCT FROM true THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMIT_SIGNATURE_INVALID' USING ERRCODE='42501'; END IF;
+ v_candidate:=v_input->'facts'->'account';
+ INSERT INTO aos_capacity_publication_private.global_account(account_id,supplier_id,fingerprint,org_id,project_id)
+ VALUES(v_pending.account_id,v_candidate->>'supplierId',v_candidate->>'supplierAccountFingerprint','org-org','dev-project')
+ ON CONFLICT DO NOTHING;
+ SELECT a.* INTO STRICT v_account FROM aos_capacity_publication_private.global_account a
+  WHERE a.supplier_id=v_candidate->>'supplierId' AND a.fingerprint=v_candidate->>'supplierAccountFingerprint' FOR SHARE;
+ IF v_account.account_id<>v_pending.account_id OR (v_account.org_id,v_account.project_id) IS DISTINCT FROM ('org-org'::text,'dev-project'::text) THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_GLOBAL_OWNERSHIP_CONFLICT' USING ERRCODE='42501'; END IF;
+ FOR v_ref IN SELECT value FROM jsonb_array_elements(v_candidate->'providerRefs') ORDER BY value->>'assetId' COLLATE "C" LOOP
+  INSERT INTO aos_capacity_publication_private.global_provider(provider_id,account_id,org_id,project_id)
+   VALUES(v_ref->>'assetId',v_pending.account_id,'org-org','dev-project') ON CONFLICT DO NOTHING;
+  SELECT m.* INTO STRICT v_provider FROM aos_capacity_publication_private.global_provider m
+   WHERE m.provider_id=v_ref->>'assetId' FOR SHARE;
+  IF v_provider.account_id<>v_pending.account_id OR (v_provider.org_id,v_provider.project_id) IS DISTINCT FROM ('org-org'::text,'dev-project'::text) THEN
+   RAISE EXCEPTION 'CAPACITY_SOURCE_GLOBAL_OWNERSHIP_CONFLICT' USING ERRCODE='42501'; END IF;
+ END LOOP;
+ -- Mapping checks can wait. Recheck all current deadlines before publishing.
+ v_input:=aos_capacity_publication_private.read_source_command_signed_facts(v_pending.command_raw,v_pending.permit_ref);
+ IF v_input IS DISTINCT FROM v_pending.signed_facts THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_COMMIT_ORIGINALS_DRIFTED' USING ERRCODE='42501'; END IF;
+ INSERT INTO aos_capacity_publication_private.source_publication(org_id,project_id,asset_id,revision,content_hash,source_raw,signature,account_id,attempt_id)
+ VALUES('org-org','dev-project',v_pending.source_asset_id,1,v_pending.source_hash,p_raw,p_signature,v_pending.account_id,v_pending.attempt_id)
+ RETURNING * INTO v_existing;
+ INSERT INTO aos_capacity_publication_private.source_provenance(org_id,project_id,asset_id,original_signed_facts,source_signer_root_revision,native_xid,native_pid,native_session)
+ VALUES('org-org','dev-project',v_pending.source_asset_id,v_input,v_input->>'sourceSignerRootRevision',pg_current_xact_id(),pg_backend_pid(),session_user);
+ UPDATE aos_capacity_publication_private.source_pending p SET finalized=true WHERE p.attempt_id=v_pending.attempt_id;
+ RETURN QUERY SELECT v_existing.asset_id,v_existing.revision,v_existing.content_hash,v_existing.source_raw,v_existing.signature;
+END $body$;
+ALTER FUNCTION aos_capacity_publication_private.commit_original_source(text,bytea,bytea) OWNER TO aos_capacity_publication_owner;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.commit_original_source(text,bytea,bytea) FROM PUBLIC;
+"""

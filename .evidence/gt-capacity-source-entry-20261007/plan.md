@@ -314,6 +314,18 @@ green-r4三个正向PASS32.33s。扩展r1为16PASS/8FAIL226.85s：三revision负
 
 ### 235bdcc6 / AOS-001441：待签原文施工切入
 
+### 7659f4d6 / AOS-001443：完整私有提交施工
+
+无live pytest，原same-owner ACTIVE Lease至12:00，current投影一致。候选一原生核签commit，候选二current consumer（依赖一），先一。transaction.py追加CAPACITY_SOURCE_COMMIT_SQL：私有immutable Source与provenance两表，Owner-only/FORCE RLS、普通角色零读写；禁止publication/provenance及全域identity覆盖/删除。commit原三参数，不接收自由key/事实：先pending精确key+raw及samexid/PID/session，再全部原signed facts重核及可信Source signer root，核当前permit/root、精确bytes/SHA、原Ed25519真实签名；prepare已持identity锁，原子发布同账户UUID的global账号和完整Provider映射、Source/raw/signature/provenance、finalize pending。签名或原事实失败则无映射/Source残留；完成replay只返同签名同原文immutable行，不重签/改写。当前私有函数仅未来完整157装配，不开放public入口或补迁移；S01完整安装审计与受控signer/JWT仍另验，final actualCOMMIT TTL仍unresolved。
+
+先真实signed prepare后调用原三参数commit临时harness，缺实现SQL42883 RED；临时harness用PL延迟解析，不能用constant缺失或setup失败冒充真实调用。最小实现后真实签名/actual callerCOMMIT/独立Owner回读与Ed25519回验、同事务replay；坏签名/改raw/wrongkey/回滚后新xid拒绝，无效commit SAVEPOINT恢复后pending-only COMMIT仍23514、回滚无残留。新增case注册独立保留数据库，清理仅本次表/函数/harness，恢复原facts checker。隔离盘剩2GiB，首轮先窄RED与正向再选择负门组；不删库卷备份或测试运行中重启。
+
+首批两布局正向2PASS28.06s；扩展核签/回滚/完成新xid重读/四表UPDATE和DELETE immutable门6PASS66.94s。复审追加同一事务两份原API独立Source批准的两次真实核签与一次实际COMMIT，期望两Source/两provenance共享一个global账号和完整Provider集合；正向内追加三普通角色私有表/commit真实禁入。相邻选择一原signed suffix加一原pending未finalized门，不重新广跑旧acceptance。当前保留盘1.4GiB，限定五案例后核空间，不以删除历史数据扩容。
+
+最终5PASS302deselected7既有warnings/noSKIP59.12s，包括两shared/distinct实际SourceCOMMIT、同事务两原API独立批准共享一个global账号的真实双签发COMMIT、原signed suffix正向及原unfinished COMMIT相邻。正向内每布局三角色对五私有表与private commit真实42501禁入，四不可变表UPDATE/DELETE各实际拒绝，同txn与actualCOMMIT后新txn replay不写新行。前批四invalid-finalize负门6PASS66.94s仍有效（之后仅增加测试断言，无生产代码变更）。old production HEAD前缀及旧测试除三登记名称外byte完整，AST/非日志whitespace与凭证扫描通过。首次commit harness输入/output同名42P13为setup失败，不算RED；修构造后实际prepare已成功、SQL42883缺commit为真实RED15.53s。
+
+最终retained aos_test_99102594ee48_ti4_test/7693564235776004128/a0v_156：本次五临时表/八私有新函数均0，原public.prepare_capacity_source和commit_capacity_source均不存在，fixtures精确清理并恢复原checker；库/卷/备份保留。实际签名由隔离fixture密钥完成，不能宣称生产controlled signer/JWT验收；私有SQL核签原子提交通过不等于全157S01安装/consumer/current最终时效或自然链完成，父Tasks/Goal仍ACTIVE。最后盘1.1GiB，下一大批前先无删除增容方案。浏览器N/A，无UI/正式部署/当前库服务修改，无Host/worker/Provider/push。
+
 e85f0774/AOS-001442后立即接续完整commit调查：原测试接口实际为public.prepare_capacity_source(bytea,text,text,jsonb)和public.commit_capacity_source(text,bytea,bytea)。最终catalog首次使用了非实际prepare名称，证据不能据此支持实际入口缺失；已在同保留库精确回读两个原接口均不存在并修正catalog/verification hash。既有原生aos_ed25519.verify(bytea,bytea,bytea)为受控C函数、immutable/strict、NOLOGIN owner；仅名称/此属性仍不替代完整安装审计。下一commit须同native pending身份与精确bytes/SHA，重新读全部原锁事实及当前Source签名根，验真后原子写global映射、immutable Source/provenance及pending finalize；rollback和完成replay联验，consumer依赖此真实提交。正式入口安装/全S01及finalCOMMIT TTL依旧不通过。调查冻结full157-native-commit-next-investigation.json，两个已登记候选沿原依赖，无第二写者。
 
 四原同owner活跃Lease已核原source issuer/formal boundary/transaction/157范围，17原private函数catalog与public prepare/commit不存在已回读。两个候选仍完整157写路径与consumer；按依赖先写路径。生产代码仅transaction.py追加未来157私有pending SQL（暂不新增自动安装迁移或issuer公共grant），完整public prepare/commit由全S01安装审计与commit实现齐备后组装。原SQL fullchain RED不重复当新进展。

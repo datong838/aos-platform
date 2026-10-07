@@ -1,0 +1,76 @@
+{
+  "status": "PRIVATE_SOURCE_SIGNATURE_CHECKED_COMMIT_GREEN_FULL_ENTRY_PENDING",
+  "authority": "AOS-001443",
+  "base_head": "7659f4d6305cbcd273c54a5afa4c6348c2bd7cc3",
+  "tests": [
+    {
+      "scope": "two original layouts actual COMMIT",
+      "passed": 2,
+      "seconds": 28.06
+    },
+    {
+      "scope": "commit and four invalid-finalize faults",
+      "passed": 6,
+      "seconds": 66.94
+    },
+    {
+      "scope": "final positive ACL immutability replay and adjacent",
+      "passed": 5,
+      "seconds": 59.12
+    }
+  ],
+  "warnings": 7,
+  "skipped": 0,
+  "original_production_and_tests_preserved": true,
+  "source_delivery": false,
+  "parent_tasks": "ACTIVE",
+  "goal": "ACTIVE",
+  "formal_db_or_services_changed": false,
+  "browser": "N/A no UI/deployment",
+  "remaining": [
+    "Full157 exact S01 installation/audit",
+    "Controlled production signer and JWT authorization",
+    "Full public preparation/commit entry",
+    "Current consumer revalidation",
+    "Final actual COMMIT TTL unresolved",
+    "Natural first chain and full Goal"
+  ],
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": {
+      "sha256": "fba5ecddb18da7e828815112a815510f5b36db6161fc005dfa44f6ee8d240994",
+      "bytes": 70043
+    },
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": {
+      "sha256": "cffc1fa1bcd179d59887db864110d7e07d860e1669668a7e58d2f8100a6f39a7",
+      "bytes": 314496
+    },
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": {
+      "sha256": "142360223eba237a2835fd0b8e3afb195c581338916027ee79a4a82cf5601be9",
+      "bytes": 124617
+    },
+    ".evidence/gt-capacity-source-entry-20261007/full157-native-commit-catalog-r1.json": {
+      "sha256": "3d6ba836437106d3b56274b8354bab17fbbb1c1a99fe217a4925701fabcc5f77",
+      "bytes": 217
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-commit-expanded-r1.log": {
+      "sha256": "0eeb4b32e3e4c75fe247fdef6f551fe5695ef85f570f62d09b1c025b65d67a3c",
+      "bytes": 340912
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-commit-final-neighborhood-r1.log": {
+      "sha256": "c91bb853ffb83f2b162583e7d195cd44603d483c9b4067da59fb8d0cca6ecf8c",
+      "bytes": 292565
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-commit-green-r1.log": {
+      "sha256": "7a75ad29d88408959575f2288b58c7ca8677dcd00f81b51f2ae14778d8b2e1ad",
+      "bytes": 147554
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-commit-red-r1.log": {
+      "sha256": "b67b591da0977892a673d6359520de766ffbf4880f6481726b457acd118d5514",
+      "bytes": 154374
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-commit-red-r2.log": {
+      "sha256": "a02d811615c0c885a73083652b3df6514707a056cdfbbdeb68e71c1c63aebf36",
+      "bytes": 103278
+    }
+  }
+}

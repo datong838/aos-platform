@@ -1,0 +1,9 @@
+{
+  "database": "aos_test_99102594ee48_ti4_test",
+  "cluster": "7693564235776004128",
+  "migration": "a0v_156",
+  "temporary_tables": 0,
+  "temporary_functions": 0,
+  "public_prepare": null,
+  "public_commit": null
+}

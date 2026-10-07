@@ -16,6 +16,9 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
     from tests.conftest import _isolated_postgres_database as database_fixture
 
     registered_cases = {
+        'test_native_committed_sources_share_one_physical_account',
+        'test_native_committed_source_is_durable_and_signed',
+        'test_native_committed_source_refuses_invalid_finalize',
         'test_native_pending_source_respects_existing_global_ownership',
         'test_native_pending_source_rejects_new_key_for_same_request',
         'test_native_pending_sources_reuse_physical_account_in_same_transaction',
@@ -4115,3 +4118,158 @@ def test_native_pending_source_respects_existing_global_ownership(native_pending
     caller.rollback()
     with isolated_owner() as owner:
         assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.source_pending').fetchone()['n']==0
+
+
+@pytest.fixture
+def native_commit_source_reader(native_pending_source_reader):
+    from uuid import uuid4
+    from psycopg import sql
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,prepare,raw,material,original=native_pending_source_reader
+    identifier=sql.Identifier('public','publication_commit_harness_'+uuid4().hex)
+    caller.rollback()
+    implementation=getattr(transaction,'CAPACITY_SOURCE_COMMIT_SQL',None)
+    with isolated_owner() as owner:
+        if implementation is not None:owner.execute(implementation)
+        owner.execute(sql.SQL('''CREATE FUNCTION {}(attempt_key text,p_raw bytea,p_signature bytea)
+            RETURNS TABLE(asset_id text,revision integer,content_hash text,source_raw bytea,signature bytea)
+            LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $body$
+            BEGIN RETURN QUERY SELECT * FROM aos_capacity_publication_private.commit_original_source($1,$2,$3); END $body$''').format(identifier))
+        owner.execute(sql.SQL('ALTER FUNCTION {}(text,bytea,bytea) OWNER TO aos_capacity_publication_owner').format(identifier))
+        owner.execute(sql.SQL('REVOKE ALL ON FUNCTION {}(text,bytea,bytea) FROM PUBLIC').format(identifier))
+        owner.execute(sql.SQL('GRANT EXECUTE ON FUNCTION {}(text,bytea,bytea) TO aos_provider_capacity_issuer').format(identifier))
+    _refresh_native_facts_transaction(caller)
+    try:yield caller,prepare,identifier,raw,material,original
+    finally:
+        caller.rollback()
+        with isolated_owner() as owner:
+            owner.execute(sql.SQL('DROP FUNCTION {}(text,bytea,bytea)').format(identifier))
+            if implementation is not None:
+                owner.execute('DROP FUNCTION aos_capacity_publication_private.commit_original_source(text,bytea,bytea)')
+                owner.execute('DROP TABLE aos_capacity_publication_private.source_provenance')
+                owner.execute('DROP TABLE aos_capacity_publication_private.source_publication')
+                for table in ('global_provider','global_account'):
+                    owner.execute('DROP TRIGGER source_identity_immutable ON aos_capacity_publication_private.'+table)
+                owner.execute('DROP FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()')
+
+
+def _call_native_commit_source(caller,identifier,key,raw,signature):
+    from psycopg import sql
+    return caller.execute(sql.SQL('SELECT * FROM {}(%s,%s,%s)').format(identifier),
+        (key,raw,signature)).fetchone()
+
+
+@pytest.mark.parametrize('native_original_fact_reader',['shared','distinct'],indirect=True)
+def test_native_committed_source_is_durable_and_signed(native_commit_source_reader):
+    import hashlib
+    from uuid import uuid4
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,prepare,commit,command_raw,material,_=native_commit_source_reader
+    key='commit-'+uuid4().hex;asset='committed-source-'+uuid4().hex
+    prepared=_call_native_pending_source(caller,prepare,command_raw,key,asset,material['refs'][-1])
+    raw=bytes(prepared['source_raw']);signature=material['source_key'].sign(raw)
+    committed=_call_native_commit_source(caller,commit,key,raw,signature)
+    assert committed['asset_id']==asset and committed['revision']==1
+    assert committed['content_hash']==hashlib.sha256(raw).hexdigest()
+    replay=_call_native_commit_source(caller,commit,key,raw,signature)
+    assert replay==committed
+    caller.commit()
+    _refresh_native_facts_transaction(caller)
+    assert _call_native_commit_source(caller,commit,key,raw,signature)==committed
+    caller.commit()
+    with isolated_owner() as owner:
+        durable=owner.execute('SELECT source_raw,signature,account_id FROM aos_capacity_publication_private.source_publication WHERE asset_id=%s',(asset,)).fetchone()
+        assert durable and bytes(durable['source_raw'])==raw and bytes(durable['signature'])==signature
+        assert durable['account_id']==prepared['account_id']
+        assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.global_account').fetchone()['n']==1
+        assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.source_provenance').fetchone()['n']==1
+        assert owner.execute('SELECT bool_and(finalized) AS done FROM aos_capacity_publication_private.source_pending').fetchone()['done'] is True
+        provider_ids=owner.execute('SELECT provider_id FROM aos_capacity_publication_private.global_provider').fetchall()
+        import json
+        assert {r['provider_id'] for r in provider_ids}=={r['assetId'] for r in json.loads(raw)['providerRefs']}
+        provenance=owner.execute('SELECT native_xid::text AS xid,native_pid,native_session,original_signed_facts FROM aos_capacity_publication_private.source_provenance WHERE asset_id=%s',(asset,)).fetchone()
+        assert provenance['xid']==json.loads(raw)['issuanceContext']['transactionId']
+        assert provenance['native_pid']==json.loads(raw)['issuanceContext']['backendPid']
+        assert provenance['native_session']=='aos_provider_capacity_issuer'
+        for table,column in (('global_account','fingerprint'),('global_provider','provider_id'),
+            ('source_publication','source_raw'),('source_provenance','original_signed_facts')):
+            for statement in ('UPDATE aos_capacity_publication_private.'+table+' SET '+column+'='+column,
+                              'DELETE FROM aos_capacity_publication_private.'+table):
+                with pytest.raises(psycopg.errors.InsufficientPrivilege,match='CAPACITY_SOURCE_PUBLICATION_IMMUTABLE'):
+                    with owner.transaction():owner.execute(statement)
+        from psycopg import sql
+        for role in ('aos_runtime','aos_provider_capacity_issuer','aos_provider_capacity_policy_publisher'):
+            for table in ('source_publication','source_provenance','source_pending','global_account','global_provider'):
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with owner.transaction():
+                        owner.execute(sql.SQL('SET LOCAL ROLE {}').format(sql.Identifier(role)))
+                        owner.execute('SELECT * FROM aos_capacity_publication_private.'+table)
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with owner.transaction():
+                    owner.execute(sql.SQL('SET LOCAL ROLE {}').format(sql.Identifier(role)))
+                    owner.execute('SELECT * FROM aos_capacity_publication_private.commit_original_source(%s,%s,%s)',(key,raw,signature))
+    material['source_key'].public_key().verify(signature,raw)
+
+
+@pytest.mark.parametrize('fault',['signature','raw','key','new_transaction'])
+def test_native_committed_source_refuses_invalid_finalize(native_commit_source_reader,fault):
+    from uuid import uuid4
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,prepare,commit,command_raw,material,_=native_commit_source_reader
+    key='commit-'+uuid4().hex;asset='committed-source-'+uuid4().hex
+    prepared=_call_native_pending_source(caller,prepare,command_raw,key,asset,material['refs'][-1])
+    raw=bytes(prepared['source_raw']);signature=material['source_key'].sign(raw)
+    if fault=='signature':signature=bytes([signature[0]^1])+signature[1:]
+    elif fault=='raw':raw=raw+b' '
+    elif fault=='key':key+='-different'
+    else:
+        caller.rollback();_refresh_native_facts_transaction(caller)
+    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+        with caller.transaction():_call_native_commit_source(caller,commit,key,raw,signature)
+    if fault!='new_transaction':
+        with pytest.raises(psycopg.errors.CheckViolation,match='CAPACITY_SOURCE_PENDING_NOT_FINALIZED'):caller.commit()
+    caller.rollback()
+    with isolated_owner() as owner:
+        for table in ('source_pending','source_publication','source_provenance','global_account','global_provider'):
+            assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.'+table).fetchone()['n']==0
+
+
+def test_native_committed_sources_share_one_physical_account(native_commit_source_reader,approved_command):
+    from uuid import uuid4
+    from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+    from aos_api.aip_action_models import DecideActionProposalRequest
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_provider_capacity_source_issuer import capacity_source_preparation_bytes
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,prepare,commit,raw,material,original=native_commit_source_reader
+    maker,checker=approved_command[:2];source=original[3]
+    caller.rollback()
+    proposed=propose_provider_capacity_source(maker,source,'commit-original-'+uuid4().hex,source.valid_until)
+    approved=decide_provider_capacity_source(checker,proposed.proposal.id,'commit-approved-'+uuid4().hex,
+        DecideActionProposalRequest(expectedProposalVersion=proposed.proposal.version,
+            expectedProposalHash=proposed.proposal.proposal_hash,decision='approved',
+            reason='isolated two publications one physical account',approvalExpiresAt=source.valid_until))
+    command,_,_=material['actual_command']()
+    command=command.model_copy(update=dict(
+        approved_proposal=command.approved_proposal.model_copy(update=dict(asset_id=approved.proposal.id,
+            content_hash=approved.proposal.proposal_hash)),
+        approval_event=command.approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+            content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+    _refresh_native_facts_transaction(caller)
+    prepared=[]
+    for command_raw in (raw,capacity_source_preparation_bytes(command)):
+        key='commit-'+uuid4().hex;asset='committed-source-'+uuid4().hex
+        row=_call_native_pending_source(caller,prepare,command_raw,key,asset,material['refs'][-1])
+        prepared.append((key,row))
+    assert prepared[0][1]['account_id']==prepared[1][1]['account_id']
+    for key,row in prepared:
+        source_raw=bytes(row['source_raw'])
+        _call_native_commit_source(caller,commit,key,source_raw,material['source_key'].sign(source_raw))
+    caller.commit()
+    with isolated_owner() as owner:
+        rows=owner.execute('SELECT account_id FROM aos_capacity_publication_private.source_publication').fetchall()
+        assert len(rows)==2 and {r['account_id'] for r in rows}=={prepared[0][1]['account_id']}
+        assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.global_account').fetchone()['n']==1
+        assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.source_provenance').fetchone()['n']==2
+        assert owner.execute('SELECT bool_and(finalized) AS done FROM aos_capacity_publication_private.source_pending').fetchone()['done'] is True
