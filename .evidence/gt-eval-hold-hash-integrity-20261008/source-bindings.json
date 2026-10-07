@@ -1,0 +1,9 @@
+{
+  "services/aos-api/aos_api/aip_model_eval_budget_reservation.py": "43428d6baed7ae03a4e675541c92ba6c247d0b5dbabd4b020b15b5cca23ee66c",
+  "services/aos-api/tests/aip/test_model_eval_budget_reservation_integrity.py": "a1a07415c00893b30f378c253c65cc0848d09ef46bfa55ff6f46c467d503fae2",
+  ".evidence/gt-eval-hold-hash-integrity-20261008/run-eval-hold-hash-native.py": "ddcc18389af69de17dd4b17cf459c95c4b3101474d0dc141c8110deb82b6f891",
+  ".evidence/gt-eval-hold-hash-integrity-20261008/test-eval-hold-hash-native.py": "69de090fdba6da70e3be2f6a897fb16a6bb2404e531a0913903a5215b3b43423",
+  ".evidence/gt-eval-hold-hash-integrity-20261008/legal_model_hash_prefix.py": "fad36264c51aa06efeacffeaebdfad2629082fdbfe779a1c6927cb0fe72369ce",
+  ".evidence/gt-eval-hold-hash-integrity-20261008/legal_eval_hash_application.py": "aec11115c76286be62522dee24f812c9d8514400ac684eecc22f07fc7225ce2f",
+  ".evidence/gt-eval-hold-hash-integrity-20261008/verify-readback.py": "fa23b4cfd19abb6393b4e466d9b9e81398184ec1ac739e2ef95c6579b3c99606"
+}

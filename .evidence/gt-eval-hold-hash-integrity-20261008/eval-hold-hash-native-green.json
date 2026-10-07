@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-07T21:56:17.079198+00:00",
+  "database": "aos_test_3bc353e1ed36_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": ".evidence/gt-eval-hold-hash-integrity-20261008/test-eval-hold-hash-native.py::test_eval_hold_rejects_mismatched_content_hash",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "Isolated original-runtime budget-fact bridge primitive only; no Source or joint execution"
+}

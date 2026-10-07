@@ -42,6 +42,27 @@ class AipModelEvalBudgetReservationStore:
             revision=ref.revision, contentHash="sha256:" + ref.content_hash,
         )
 
+    @staticmethod
+    def _require_exact_hold(row: Any, expected: dict[str, Any]) -> None:
+        """Bind stored immutable bytes and current approved request before replay."""
+        fields = {
+            "reservationId": "reservation_id", "requestId": "request_id",
+            "requestHash": "request_hash", "proposalId": "proposal_id",
+            "proposalHash": "proposal_hash", "approvalEventId": "approval_event_id",
+            "budgetPolicyRef": "budget_policy_ref", "budgetRevisionRef": "budget_revision_ref",
+            "priceRef": "price_ref", "currency": "currency",
+            "upperBoundMinor": "upper_bound_minor", "state": "state",
+        }
+        try:
+            payload = {key: row[column] for key, column in fields.items()}
+            payload["reservationId"] = str(payload["reservationId"])
+            stored_hash = row["content_hash"]
+            if (canonical_hash(payload, prefixed=True) != stored_hash
+                or canonical_hash(expected, prefixed=True) != stored_hash):
+                raise ModelEvalBudgetBlocked("Model Eval hold immutable hash drifted")
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ModelEvalBudgetBlocked("Model Eval hold immutable hash required") from exc
+
     def hold(self, conn: Any, scope: TenantScope, request_id: str,
              approval_event_id: str) -> dict[str, Any]:
         if (type(scope) is not TenantScope
@@ -162,6 +183,19 @@ class AipModelEvalBudgetReservationStore:
         existing = conn.execute("""SELECT * FROM aip_model_eval_budget_reservation
             WHERE org_id=%s AND project_id=%s AND request_id=%s""",
             (*scope.key, request_id)).fetchone()
+        reservation_id = existing["reservation_id"] if existing is not None else uuid.uuid4()
+        immutable = {
+            "reservationId": str(reservation_id), "requestId": request_id,
+            "requestHash": application["request_hash"],
+            "proposalId": proposal["proposal_id"],
+            "proposalHash": proposal["proposal_hash"],
+            "approvalEventId": approval_event_id,
+            "budgetPolicyRef": request.budget_policy_ref.model_dump(mode="json", by_alias=True),
+            "budgetRevisionRef": budget_ref.model_dump(mode="json", by_alias=True),
+            "priceRef": price_ref.model_dump(mode="json", by_alias=True),
+            "currency": request.currency, "upperBoundMinor": request.upper_bound_minor,
+            "state": "held",
+        }
         if existing is not None:
             if (existing["approval_event_id"] != approval_event_id
                 or existing["request_hash"] != application["request_hash"]
@@ -169,6 +203,7 @@ class AipModelEvalBudgetReservationStore:
                 or existing["upper_bound_minor"] != request.upper_bound_minor
                 or existing["state"] != "held"):
                 raise ModelEvalBudgetBlocked("Model Eval hold identity drifted")
+            self._require_exact_hold(existing, immutable)
             return dict(existing)
         buckets = derive_model_eval_bucket_authorities(
             request_id=request_id, budget_revision_ref=budget_ref,
@@ -192,19 +227,6 @@ class AipModelEvalBudgetReservationStore:
             provider_ref=self._ref(request.provider_ref, "ProviderInstanceRevision"),
         )
 
-        reservation_id = uuid.uuid4()
-        immutable = {
-            "reservationId": str(reservation_id), "requestId": request_id,
-            "requestHash": application["request_hash"],
-            "proposalId": proposal["proposal_id"],
-            "proposalHash": proposal["proposal_hash"],
-            "approvalEventId": approval_event_id,
-            "budgetPolicyRef": request.budget_policy_ref.model_dump(mode="json", by_alias=True),
-            "budgetRevisionRef": budget_ref.model_dump(mode="json", by_alias=True),
-            "priceRef": price_ref.model_dump(mode="json", by_alias=True),
-            "currency": request.currency, "upperBoundMinor": request.upper_bound_minor,
-            "state": "held",
-        }
         content_hash = canonical_hash(immutable, prefixed=True)
         conn.execute("""INSERT INTO aip_model_eval_budget_reservation (
             org_id,project_id,reservation_id,request_id,request_hash,proposal_id,
