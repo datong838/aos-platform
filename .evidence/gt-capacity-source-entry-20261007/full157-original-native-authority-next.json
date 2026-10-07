@@ -1,0 +1,68 @@
+{
+  "schema": "aos-original-native-authority-next-composition/v1",
+  "authority": "AOS-001451",
+  "head": "17a7d17e3ad4a4bf06d30b0d232f2c5514bb3069",
+  "store_sha256": "13682034eaae269ea6e63f34805548b63e0484e5368169882e9c8249aec0ce77",
+  "native_components": [
+    {
+      "function": "require_original_fact_boundary()",
+      "trusted_body_sha256": "a58f562c97da4059549b8e18289c6a5f46b8a61553031b53961b60684231f030",
+      "native_dependencies": [],
+      "catalogs": [
+        "pg_attribute",
+        "pg_auth_members",
+        "pg_catalog",
+        "pg_class",
+        "pg_database",
+        "pg_default_acl",
+        "pg_get_expr",
+        "pg_namespace",
+        "pg_policy",
+        "pg_proc",
+        "pg_roles",
+        "pg_trigger"
+      ]
+    },
+    {
+      "function": "require_original_epoch_pair_boundary()",
+      "trusted_body_sha256": "14a149a2aeb315ec72b22fdfbb6e2823fcee42b6d0c2fefb0f9e95543266662f",
+      "native_dependencies": [
+        "aos_capacity_publication_private.require_original_fact_boundary"
+      ],
+      "catalogs": [
+        "pg_catalog",
+        "pg_language",
+        "pg_proc",
+        "pg_roles"
+      ]
+    },
+    {
+      "function": "require_original_withdrawal_boundary()",
+      "trusted_body_sha256": "2014546ab4d63fbe764082fcdaf52e439ef39af4e2aa881756c7e7316b7eb17d",
+      "native_dependencies": [
+        "aos_capacity_publication_private.require_original_epoch_pair_boundary"
+      ],
+      "catalogs": [
+        "pg_attrdef",
+        "pg_attribute",
+        "pg_auth_members",
+        "pg_catalog",
+        "pg_class",
+        "pg_constraint",
+        "pg_database",
+        "pg_get_constraintdef",
+        "pg_get_expr",
+        "pg_index",
+        "pg_namespace",
+        "pg_policy",
+        "pg_proc",
+        "pg_roles",
+        "pg_trigger"
+      ]
+    }
+  ],
+  "selected_registered_candidate": "compose existing native original fact/epoch/withdrawal/evidence boundary into current private installation audit before public privilege",
+  "dependent_candidate": "current consumer requires public committed Source plus original JWT controlled signer",
+  "risk": "Calling verified private42function-table audit alone does not establish original issuer/global registry/self-integrity or permit authority; preserve exact future public signatures and no blanket definer whitelist",
+  "formal_resources_changed": false
+}

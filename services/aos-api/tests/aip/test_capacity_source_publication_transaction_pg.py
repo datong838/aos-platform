@@ -23,6 +23,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_latest_migration_installs_private_source_boundary',
         'test_migrated_private_source_drift_cannot_rebuild_fragments',
         'test_native_private_installation_audit_rejects_current_drift',
+        'test_native_current_installation_rechecks_original_live_boundaries',
         'test_native_committed_sources_share_one_physical_account',
         'test_native_committed_source_is_durable_and_signed',
         'test_native_committed_source_refuses_invalid_finalize',
@@ -4622,6 +4623,73 @@ def test_native_private_installation_audit_rejects_current_drift(native_signed_s
                             audit()
                         raise RestoreFault()
                 audit()
+        finally:
+            owner.execute('DROP FUNCTION aos_capacity_publication_private.require_current_source_installation()')
+        transaction.require_source_transaction_tables(owner)
+
+
+def test_native_current_installation_rechecks_original_live_boundaries(native_signed_source):
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from psycopg import sql
+    GUARD_NAME=transaction.GUARD_NAME
+    class RestoreFault(Exception):pass
+    changes={
+        'extra_select':'GRANT SELECT ON public.twa_org TO aos_capacity_publication_owner',
+        'public_select':'GRANT SELECT ON public.twa_org TO PUBLIC',
+        'extra_column':'GRANT UPDATE(name) ON public.meta_object_type TO aos_capacity_publication_owner',
+        'public_column':'GRANT UPDATE(name) ON public.meta_object_type TO PUBLIC',
+        'login':'ALTER ROLE aos_capacity_publication_owner LOGIN',
+        'membership':'GRANT aos_runtime TO aos_capacity_publication_owner',
+        'default_acl':'ALTER DEFAULT PRIVILEGES FOR ROLE aos_capacity_publication_owner GRANT SELECT ON TABLES TO aos_runtime',
+        'schema_create':'GRANT CREATE ON SCHEMA public TO aos_capacity_publication_owner',
+        'database_create':None,
+        'policy':'ALTER POLICY capacity_publication_fact_restrict_a0v155 ON public.aip_action_proposal USING(true)',
+        'extra_policy':'CREATE POLICY extra_publication_owner ON public.aip_action_proposal TO aos_capacity_publication_owner USING(true)',
+        'rls':'ALTER TABLE public.aip_action_proposal NO FORCE ROW LEVEL SECURITY',
+        'disabled_trigger':f'ALTER TABLE public.aip_action_proposal DISABLE TRIGGER {GUARD_NAME}',
+        'guard_body':f'CREATE OR REPLACE FUNCTION public.{GUARD_NAME}() RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog AS $$ BEGIN RETURN NEW; END $$',
+        'guard_public_execute':f'GRANT EXECUTE ON FUNCTION public.{GUARD_NAME}() TO PUBLIC',
+    }
+    changes.update({
+        'evidence_epoch_acl':'GRANT EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) TO PUBLIC',
+        'withdrawal_epoch_path':'ALTER FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) SET search_path=public',
+        'evidence_table_acl':'GRANT SELECT ON public.aip_capacity_evidence_epoch TO aos_runtime',
+        'evidence_policy':'ALTER POLICY capacity_evidence_epoch_scope ON public.aip_capacity_evidence_epoch USING(true)',
+        'evidence_bump':'ALTER TABLE public.aip_evidence_bundle_revoke_event DISABLE TRIGGER capacity_evidence_epoch_bump_a0v149',
+        'evidence_owner':'ALTER ROLE aos_capacity_evidence_epoch_owner INHERIT',
+    })
+    with isolated_owner() as owner:
+        before=_private_source_row_fingerprint(owner)
+        transaction.require_source_transaction_tables(owner)
+        owner.execute(transaction.source_private_installation_audit_sql())
+        try:
+            def audit():
+                with owner.transaction():
+                    owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                    owner.execute('SELECT aos_capacity_publication_private.require_current_source_installation()')
+                    owner.execute('RESET ROLE')
+            audit()
+            for fault,statement in changes.items():
+                with pytest.raises(RestoreFault):
+                    with owner.transaction():
+                        if fault=='database_create':
+                            owner.execute(sql.SQL('GRANT CREATE ON DATABASE {} TO aos_capacity_publication_owner').format(sql.Identifier(owner.info.dbname)))
+                        else:owner.execute(statement)
+                        with pytest.raises(psycopg.Error) as rejected:audit()
+                        assert rejected.value.sqlstate in ('22023','42501'),fault
+                        assert rejected.value.diag.message_primary in {
+                            'CAPACITY_SOURCE_CURRENT_INSTALLATION_DRIFTED',
+                            'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED',
+                            'WITHDRAWAL_PUBLICATION_CALLER_DRIFT',
+                            'CAPACITY_EVIDENCE_TABLE_DRIFTED',
+                            'CAPACITY_EVIDENCE_RLS_POLICY_DRIFTED',
+                            'CAPACITY_EVIDENCE_TRIGGER_DRIFTED',
+                            'CAPACITY_EVIDENCE_OWNER_DRIFTED',
+                        },(fault,rejected.value.diag.message_primary)
+                        raise RestoreFault()
+                audit()
+            assert _private_source_row_fingerprint(owner)==before
         finally:
             owner.execute('DROP FUNCTION aos_capacity_publication_private.require_current_source_installation()')
         transaction.require_source_transaction_tables(owner)

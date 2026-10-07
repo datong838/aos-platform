@@ -1257,6 +1257,13 @@ BEGIN
         body.append("IF encode(sha256(convert_to(aos_capacity_publication_private.canonical_signed_json("
                     "v_table::json,1),'UTF8')),'hex')<>" + literal(_SOURCE_TABLE_HASHES[name])
                     + ' THEN ' + fail + ' END IF;')
+    # The trusted helper bodies alone do not prove current original ACL/RLS/
+    # epoch catalogs. Invoke their existing live audits on every native call.
+    body.extend([
+        'PERFORM aos_capacity_publication_private.require_original_fact_boundary();',
+        'PERFORM aos_capacity_publication_private.require_original_withdrawal_boundary();',
+        'PERFORM aos_capacity_publication_private.require_original_evidence_boundary();',
+    ])
     body.append('END;')
     return ('CREATE FUNCTION aos_capacity_publication_private.require_current_source_installation() '
         'RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $audit$\n'

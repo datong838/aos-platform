@@ -1,0 +1,116 @@
+{
+  "schema": "aos-native-original-live-boundary-verification/v1",
+  "authority": "AOS-001451",
+  "head": "17a7d17e3ad4a4bf06d30b0d232f2c5514bb3069",
+  "change": "Invoke trusted original fact/withdrawal/evidence live audits after fixed private installation contract audit",
+  "real_red": "Extra original table SELECT did not raise12.87s",
+  "specialized": "1PASS15.58s covers21single-cause faults and rollback/positive restoration plus equal Source fingerprints",
+  "adjacent": "4PASS38.77s original installed checker/full actualSourceCOMMIT/current private audit positive/default drift",
+  "warnings": 7,
+  "skips": 0,
+  "logs": {
+    ".evidence/gt-capacity-source-publication-20261006/full157-original-live-audit-red-r1.log": {
+      "sha256": "0f87922689b205c0a33f484d13fa2d525b67a0347fdf073d96d499c9249ffe96",
+      "summary": "1 failed, 367 deselected, 7 warnings in 12.87s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-original-live-audit-green-r1.log": {
+      "sha256": "935bb3393b1b904ebd566a5fadb76966f8163870a802dea280259b119885dafe",
+      "summary": "1 passed, 367 deselected, 7 warnings in 15.58s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-original-live-audit-adjacent-r1.log": {
+      "sha256": "860bb359c3a08158357d176acf2e06ed3827610d3bd8614b59a32396b3e26493",
+      "summary": "4 passed, 364 deselected, 7 warnings in 38.77s"
+    }
+  },
+  "readback": [
+    {
+      "database": "aos_test_465435b71beb_ti4_test",
+      "private_installation_audit": true,
+      "temporary_audit_absent": true,
+      "source_rows": [],
+      "versions": [
+        "a0v_157"
+      ]
+    },
+    {
+      "database": "aos_test_568e0c3ffb5d_ti4_test",
+      "private_installation_audit": true,
+      "temporary_audit_absent": true,
+      "source_rows": [
+        {
+          "asset_id": "source-9d3a7a80fc4447c89b1e0de905612a0c",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true
+        }
+      ],
+      "versions": [
+        "a0v_157"
+      ]
+    },
+    {
+      "database": "aos_test_b08605eca11e_ti4_test",
+      "private_installation_audit": true,
+      "temporary_audit_absent": true,
+      "source_rows": [],
+      "versions": [
+        "a0v_157"
+      ]
+    },
+    {
+      "database": "aos_test_d23f2b2d9cf0_ti4_test",
+      "private_installation_audit": true,
+      "temporary_audit_absent": true,
+      "source_rows": [],
+      "versions": [
+        "a0v_157"
+      ]
+    },
+    {
+      "database": "aos_test_d8967870151c_ti4_test",
+      "private_installation_audit": true,
+      "temporary_audit_absent": true,
+      "source_rows": [],
+      "versions": [
+        "a0v_157"
+      ]
+    },
+    {
+      "database": "aos_test_e5deef8650a9_ti4_test",
+      "private_installation_audit": true,
+      "temporary_audit_absent": true,
+      "source_rows": [],
+      "versions": [
+        "a0v_157"
+      ]
+    },
+    {
+      "database": "aos_test_e6c3da8c9457_ti4_test",
+      "private_installation_audit": true,
+      "temporary_audit_absent": true,
+      "source_rows": [],
+      "versions": [
+        "a0v_157"
+      ]
+    }
+  ],
+  "code_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "1a33b8666ad1188335120d62e4e79ea2768e6f7843c17c5fedf2b7f0786e3781",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "7391e65c6c3541b5a1e29c21bf3f426e6b29d9fb2975831485c9a86f681f7354"
+  },
+  "legacy_functions_preserved_except_native_audit_compiler": true,
+  "legacy_tests_preserved_except_registration": true,
+  "a157_unchanged": true,
+  "browser": "N/A noUI/formalservices",
+  "formal_resources_changed": false,
+  "source_delivery": false,
+  "full_goal_complete": false,
+  "remaining": [
+    "original signed registry full catalog and issuer boundary",
+    "audit/public entry self-integrity",
+    "controlled original JWT signer",
+    "current consumer",
+    "final actual caller COMMIT TTL",
+    "natural business chain"
+  ]
+}
