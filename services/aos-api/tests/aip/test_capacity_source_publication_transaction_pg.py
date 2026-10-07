@@ -16,6 +16,8 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
     from tests.conftest import _isolated_postgres_database as database_fixture
 
     registered_cases = {
+        'test_native_source_installer_assembles_complete_private_transaction',
+        'test_native_source_function_installation_rejects_catalog_drift',
         'test_native_committed_sources_share_one_physical_account',
         'test_native_committed_source_is_durable_and_signed',
         'test_native_committed_source_refuses_invalid_finalize',
@@ -4273,3 +4275,103 @@ def test_native_committed_sources_share_one_physical_account(native_commit_sourc
         assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.global_account').fetchone()['n']==1
         assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.source_provenance').fetchone()['n']==2
         assert owner.execute('SELECT bool_and(finalized) AS done FROM aos_capacity_publication_private.source_pending').fetchone()['done'] is True
+
+
+@pytest.fixture
+def native_complete_source_installation(native_signed_source,tmp_path):
+    from uuid import uuid4
+    from psycopg import sql
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs,capacity_source_preparation_bytes
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    material=_registered_publication_inputs(native_signed_source,tmp_path)
+    command,policy,attestation=material['actual_command']()
+    prepare=sql.Identifier('public','complete_prepare_'+uuid4().hex)
+    commit=sql.Identifier('public','complete_commit_'+uuid4().hex)
+    catalog="SELECT oid,oid::regprocedure::text AS signature FROM pg_proc WHERE pronamespace='aos_capacity_publication_private'::regnamespace"
+    with connect_capacity_issuer(material['config'],SCOPE) as caller:
+        assert caller.pgconn.used_password is True
+        assert check_native_capacity_supplier_inputs(caller,command,policy,attestation,
+            trust_roots=native_signed_source[0]['provider']).execution_allowed is False
+        caller.rollback()
+        with isolated_owner() as owner:
+            before={r['oid'] for r in owner.execute(catalog).fetchall()}
+            transaction.install_source_transaction_boundary(owner.execute)
+            transaction.require_source_transaction_functions(owner)
+            installed=[r['signature'] for r in owner.execute(catalog).fetchall() if r['oid'] not in before]
+            assert set(installed)=={item['signature'] for item in transaction.source_transaction_function_manifest()}
+            owner.execute(sql.SQL("""CREATE FUNCTION {}(raw bytea,attempt_key text,source_id text,permit jsonb)
+                RETURNS TABLE(source_raw bytea,account_id uuid,attempt_id uuid) LANGUAGE sql SECURITY DEFINER
+                SET search_path=pg_catalog AS $body$
+                SELECT * FROM aos_capacity_publication_private.prepare_original_source(raw,attempt_key,source_id,permit) $body$""").format(prepare))
+            owner.execute(sql.SQL("""CREATE FUNCTION {}(attempt_key text,p_raw bytea,p_signature bytea)
+                RETURNS TABLE(asset_id text,revision integer,content_hash text,source_raw bytea,signature bytea)
+                LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $body$
+                BEGIN RETURN QUERY SELECT * FROM aos_capacity_publication_private.commit_original_source($1,$2,$3); END $body$""").format(commit))
+            for ident,args in ((prepare,'bytea,text,text,jsonb'),(commit,'text,bytea,bytea')):
+                owner.execute(sql.SQL('ALTER FUNCTION {}('+args+') OWNER TO aos_capacity_publication_owner').format(ident))
+                owner.execute(sql.SQL('REVOKE ALL ON FUNCTION {}('+args+') FROM PUBLIC').format(ident))
+                owner.execute(sql.SQL('GRANT EXECUTE ON FUNCTION {}('+args+') TO aos_provider_capacity_issuer').format(ident))
+        _refresh_native_facts_transaction(caller)
+        try:
+            yield caller,prepare,commit,capacity_source_preparation_bytes(command),material
+        finally:
+            caller.rollback()
+            with isolated_owner() as owner:
+                owner.execute(sql.SQL('DROP FUNCTION {}(text,bytea,bytea)').format(commit))
+                owner.execute(sql.SQL('DROP FUNCTION {}(bytea,text,text,jsonb)').format(prepare))
+                for table in ('source_provenance','source_publication','source_pending','global_provider','global_account'):
+                    owner.execute('DROP TABLE aos_capacity_publication_private.'+table)
+                for signature in reversed(installed):
+                    owner.execute('DROP FUNCTION '+signature)
+                assert {r['oid'] for r in owner.execute(catalog).fetchall()}==before
+            with connect_capacity_issuer(material['config'],SCOPE) as restored:
+                assert check_native_capacity_supplier_inputs(restored,command,policy,attestation,
+                    trust_roots=native_signed_source[0]['provider']).execution_allowed is False
+
+
+def test_native_source_installer_assembles_complete_private_transaction(native_complete_source_installation):
+    import hashlib
+    from uuid import uuid4
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,prepare,commit,command_raw,material=native_complete_source_installation
+    key='complete-'+uuid4().hex;asset='source-'+uuid4().hex
+    pending=_call_native_pending_source(caller,prepare,command_raw,key,asset,material['refs'][-1])
+    raw=bytes(pending['source_raw']);signature=material['source_key'].sign(raw)
+    result=_call_native_commit_source(caller,commit,key,raw,signature)
+    assert result['asset_id']==asset and result['content_hash']==hashlib.sha256(raw).hexdigest()
+    caller.commit()
+    with isolated_owner() as owner:
+        transaction.require_source_transaction_functions(owner)
+        durable=owner.execute('SELECT source_raw,signature,account_id FROM aos_capacity_publication_private.source_publication WHERE asset_id=%s',(asset,)).fetchone()
+        assert bytes(durable['source_raw'])==raw and bytes(durable['signature'])==signature
+        assert durable['account_id']==pending['account_id']
+        material['source_key'].public_key().verify(bytes(durable['signature']),bytes(durable['source_raw']))
+
+
+@pytest.mark.parametrize('fault',['body','search_path','security','volatility','strict','acl','overload'])
+def test_native_source_function_installation_rejects_catalog_drift(native_complete_source_installation,fault):
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    signature='aos_capacity_publication_private.read_source_issuer_url(jsonb)'
+    class RestoreFault(Exception):pass
+    changes={
+        'body':"CREATE OR REPLACE FUNCTION aos_capacity_publication_private.read_source_issuer_url(p jsonb) RETURNS text LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path=pg_catalog AS $body$ BEGIN RETURN 'tampered'; END $body$",
+        'search_path':'ALTER FUNCTION '+signature+' SET search_path=public',
+        'security':'ALTER FUNCTION '+signature+' SECURITY DEFINER',
+        'volatility':'ALTER FUNCTION '+signature+' VOLATILE',
+        'strict':'ALTER FUNCTION '+signature+' STRICT',
+        'acl':'GRANT EXECUTE ON FUNCTION '+signature+' TO PUBLIC',
+        'overload':"CREATE FUNCTION aos_capacity_publication_private.read_source_issuer_url(text) RETURNS text LANGUAGE sql AS 'SELECT $1'",
+    }
+    with isolated_owner() as owner:
+        transaction.require_source_transaction_functions(owner)
+        with pytest.raises(RestoreFault):
+            with owner.transaction():
+                owner.execute(changes[fault])
+                with pytest.raises(transaction.CapacityPublicationBoundaryBlocked,match='CAPACITY_SOURCE_FUNCTION_INSTALLATION_DRIFTED'):
+                    transaction.require_source_transaction_functions(owner)
+                raise RestoreFault()
+        transaction.require_source_transaction_functions(owner)

@@ -1,0 +1,905 @@
+[
+  {
+    "all_types": null,
+    "body_sha256": "3c29d165ee0c9a0088c2722adb12f74edc93e257dbec31286ad7eb4704b3c68e",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb",
+      "text",
+      "text"
+    ],
+    "modes": null,
+    "names": [
+      "p",
+      "camel",
+      "snake"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_source_field(jsonb,text,text)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "1113a35e4fd4d8bcb537b65b9acda453a035a235e847afd386ecdd2d09a0e3f3",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb",
+      "text"
+    ],
+    "modes": null,
+    "names": [
+      "p",
+      "kind"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_source_ref(jsonb,text)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": [
+      "jsonb",
+      "timestamptz",
+      "text"
+    ],
+    "body_sha256": "a6e74dbee08f18eb26864caa47bb29a5990bb52ba479b2300c426f290594e5d0",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": [
+      "i",
+      "t",
+      "t"
+    ],
+    "names": [
+      "p",
+      "instant",
+      "canonical"
+    ],
+    "return_type": "record",
+    "returns_set": true,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_source_time(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "fdb586d5b806d88b28b4e17b03aead4c37d85ccbd9d2d6d947ef804aa947d266",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_original_source_candidate(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "7293f310295e184ea1c171c884b3c169200a20173db2b4dc4f46aa20ac8339f6",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_original_capacity_application(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "fc5ad5c61c38b8c38b7c6471598f9e0ba59f483f6fa628db77bede8442bf5ad4",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb",
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p",
+      "names"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_claim_fields(jsonb,jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "c2589a4c08b2a310a1152f11ffe91db412cfaaa78c82f08bd55817d934e76b26",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "v"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_claim_header(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "baa432d58f318581f9dc1f7f776711092eed79fdcc6ee4ba679138ba8b01d5c0",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "text",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_claim_identity(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "6c4f5aec32709e6fdc676ec6fa6f87578c35884d85bf9e1200e08aa589cd55e4",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb",
+      "bigint"
+    ],
+    "modes": null,
+    "names": [
+      "p",
+      "ceiling"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_claim_integer(jsonb,bigint)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "b4536a9af7dda0d6c601e4691c3ed0d63b7d9c60607096625b17ca0c6858804f",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_original_token_limit(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "9a809073808d6d6597a0152ca2f584d8e883aef020c212820997042b3298a7b4",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_original_physical_account(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "024e074047c77f17976269003010adce11daf890f383727136d43b7078ae67f7",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_original_capacity_basis(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "8b32b852a768c763503b420732fde3b92b8315360b3ee1deb731990a4dd2fa37",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb",
+      "integer",
+      "boolean"
+    ],
+    "modes": null,
+    "names": [
+      "p",
+      "maximum",
+      "strip"
+    ],
+    "return_type": "text",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_provider_string(jsonb,integer,boolean)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "7fc17cc2984b40b18e79d9c36121c502552d582d1b888e3174c33d060b71c19a",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_provider_integer(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "e31c0d3625abf65bd8dffd8865ba2e3b414ce17c79dc202fa2111db02dc03dd1",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb",
+      "text"
+    ],
+    "modes": null,
+    "names": [
+      "p",
+      "kind"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_provider_ref(jsonb,text)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "62375d07037e9b375409c58a58379872cb1e612c797198ef3cd1368c79ea48ec",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "text",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_provider_time(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "b343241ef8d26f1fb694312b6718d6ceeb1b8c5b89a7360ba10abed67f94915d",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_original_provider(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "7e221de578be74f547b29fb48db916fd549b5e7a8d1e50366ddfc96c4c1ebbee",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_build_exact_ref(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "30c5809542f0e4c6f2a63ebab4610c236148dc3c714a245efd13220c3e253cdc",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_build_resource_ref(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "4136765f220e5cee7510b099d89c0c6072ea2ef14d2ef912881ff8d4b9a4bc60",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_original_build_request(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "616634fda01217dcd3749f2e97bbc102250e62b35802896c5a4863766ff7b55b",
+    "config": [
+      "search_path=pg_catalog",
+      "extra_float_digits=3"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "text",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_build_json(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "d6aa9c94cc457df79076b2b8d0f27684ace9a919a1316cb0cb11b77d5e0494dd",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "double precision",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_build_float(jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "2eac1d1d4f07d5875039750381e0300480e253bdfbd357f006afdb95f3cd0294",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb",
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "lhs",
+      "rhs"
+    ],
+    "return_type": "boolean",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_build_equal(jsonb,jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "979b519eaa93f169aaf81e21d7623c4db05a627e56d3e1d74067ad800d629351",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb",
+      "jsonb",
+      "jsonb",
+      "jsonb",
+      "jsonb",
+      "jsonb",
+      "jsonb",
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "brief",
+      "subjects",
+      "items",
+      "missing",
+      "conflicts",
+      "uncertainties",
+      "marking",
+      "license"
+    ],
+    "return_type": "boolean",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.original_evidence_fields(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)",
+    "strict": true,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "a58f562c97da4059549b8e18289c6a5f46b8a61553031b53961b60684231f030",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [],
+    "modes": null,
+    "names": [],
+    "return_type": "void",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.require_original_fact_boundary()",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "14a149a2aeb315ec72b22fdfbb6e2823fcee42b6d0c2fefb0f9e95543266662f",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [],
+    "modes": null,
+    "names": [],
+    "return_type": "void",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.require_original_epoch_pair_boundary()",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "2014546ab4d63fbe764082fcdaf52e439ef39af4e2aa881756c7e7316b7eb17d",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [],
+    "modes": null,
+    "names": [],
+    "return_type": "void",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.require_original_withdrawal_boundary()",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "46c58a291d3b782a43368231aacd840c859a80645c41f95aa808c0812155641f",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [],
+    "modes": null,
+    "names": [],
+    "return_type": "void",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.require_original_evidence_boundary()",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "afcd3eaa1cd3e5b406d798ba647eb6be43fbf94d8b1c063245d7e500376135f8",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "text"
+    ],
+    "modes": null,
+    "names": [
+      "p_actor"
+    ],
+    "return_type": "void",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.require_original_owner(text)",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "786a0db74372553b756269e8828b7f8dadc950d5c7ec52b9603cfb134d3ac281",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p_ref"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_original_fact_provider(jsonb)",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "2690eca9b7d0f645bf5bb2f107211b0d5b10f5d8e90f836ddf40d05475d345aa",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb",
+      "boolean"
+    ],
+    "modes": null,
+    "names": [
+      "p_ref",
+      "p_build"
+    ],
+    "return_type": "void",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.require_original_fact_evidence(jsonb,boolean)",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "86a77a85d5c661527dac4cd22013e26c4f50243c245f660b9856b1e4f7425bf4",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb",
+      "text"
+    ],
+    "modes": null,
+    "names": [
+      "source_value",
+      "p_maker"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_original_fact_request(jsonb,text)",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "de0c6f09813e736e40e1d567abd52bb416fb45046c122c33ec4f3ccc3f50b058",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "text",
+      "jsonb",
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p_maker",
+      "p_source_ref",
+      "p_event_ref"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_original_source_facts(text,jsonb,jsonb)",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "2bb9bb72783d6d4d073b5c9049c5dc4793168ad84affd0b48e6dbc54d72ee2c3",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p"
+    ],
+    "return_type": "text",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_source_issuer_url(jsonb)",
+    "strict": false,
+    "volatility": "i"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "64e64b4b214f561bca0ee7a18ce34acaf0505da754239fd24e530f5e44d17ad3",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "bytea"
+    ],
+    "modes": null,
+    "names": [
+      "p_raw"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_source_command(bytea)",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "cc7a91b7a3eb77f570e8155e9668b4d81b8283802f0ac47dc13952cbbf503f1a",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "bytea"
+    ],
+    "modes": null,
+    "names": [
+      "p_raw"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_source_command_facts(bytea)",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "a907c6a3cc88f497198be1a5a9c6893da0357ee4f780a66da12a2dbb71aa677d",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "bytea",
+      "jsonb"
+    ],
+    "modes": null,
+    "names": [
+      "p_raw",
+      "p_permit_ref"
+    ],
+    "return_type": "jsonb",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.read_source_command_signed_facts(bytea,jsonb)",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "809c3286ccb4bd9c0c9891d7bba697a5837931ea8ba5a485432ffa5deb4f8b1a",
+    "config": [
+      "search_path=pg_catalog",
+      "aos.org_id=org-org",
+      "aos.project_id=dev-project"
+    ],
+    "input_types": [],
+    "modes": null,
+    "names": [],
+    "return_type": "trigger",
+    "returns_set": false,
+    "security_definer": true,
+    "signature": "aos_capacity_publication_private.require_pending_source_finalized()",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": [
+      "bytea",
+      "text",
+      "text",
+      "jsonb",
+      "bytea",
+      "uuid",
+      "uuid"
+    ],
+    "body_sha256": "9737103f84fc0d75825f559aa62b22d86490996874fb6197b35f50223f07a106",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "bytea",
+      "text",
+      "text",
+      "jsonb"
+    ],
+    "modes": [
+      "i",
+      "i",
+      "i",
+      "i",
+      "t",
+      "t",
+      "t"
+    ],
+    "names": [
+      "p_raw",
+      "p_attempt_key",
+      "p_source_asset_id",
+      "p_permit_ref",
+      "source_raw",
+      "account_id",
+      "attempt_id"
+    ],
+    "return_type": "record",
+    "returns_set": true,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.prepare_original_source(bytea,text,text,jsonb)",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": null,
+    "body_sha256": "9959ddcdf153e7bda7dbecba2bb52d62af8adc735af594315661bec6582b30df",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [],
+    "modes": null,
+    "names": [],
+    "return_type": "trigger",
+    "returns_set": false,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.refuse_source_publication_mutation()",
+    "strict": false,
+    "volatility": "v"
+  },
+  {
+    "all_types": [
+      "text",
+      "bytea",
+      "bytea",
+      "text",
+      "integer",
+      "text",
+      "bytea",
+      "bytea"
+    ],
+    "body_sha256": "51fd12a7e90243c7f21344ba49497a8efd83e5b6c628e42cadf914be539e40ac",
+    "config": [
+      "search_path=pg_catalog"
+    ],
+    "input_types": [
+      "text",
+      "bytea",
+      "bytea"
+    ],
+    "modes": [
+      "i",
+      "i",
+      "i",
+      "t",
+      "t",
+      "t",
+      "t",
+      "t"
+    ],
+    "names": [
+      "p_key",
+      "p_raw",
+      "p_signature",
+      "asset_id",
+      "revision",
+      "content_hash",
+      "source_raw",
+      "signature"
+    ],
+    "return_type": "record",
+    "returns_set": true,
+    "security_definer": false,
+    "signature": "aos_capacity_publication_private.commit_original_source(text,bytea,bytea)",
+    "strict": false,
+    "volatility": "v"
+  }
+]

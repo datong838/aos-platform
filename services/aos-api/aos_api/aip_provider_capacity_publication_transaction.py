@@ -1,5 +1,6 @@
 """Original-fact access for the complete publication definer; no Source issued."""
 import hashlib
+import re
 
 from aos_api.aip_provider_capacity_formal_boundary import TABLES, SCOPED, LOCKS, _policy_expression, _normalized
 from aos_api.aip_provider_capacity_publication_registry import OWNER
@@ -965,3 +966,107 @@ END $body$;
 ALTER FUNCTION aos_capacity_publication_private.commit_original_source(text,bytea,bytea) OWNER TO aos_capacity_publication_owner;
 REVOKE ALL ON FUNCTION aos_capacity_publication_private.commit_original_source(text,bytea,bytea) FROM PUBLIC;
 """
+
+
+def _source_transaction_statements():
+    from aos_api import aip_provider_capacity_publication_store as store
+    profiles = (
+        'CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL', 'CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL',
+        'CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL', 'CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL',
+        'CAPACITY_ORIGINAL_BUILD_PROFILE_SQL', 'CAPACITY_ORIGINAL_BUILD_JSON_SQL',
+        'CAPACITY_ORIGINAL_EVIDENCE_PROFILE_SQL', 'CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL',
+    )
+    return (*(getattr(store, name) for name in profiles), CAPACITY_ORIGINAL_SOURCE_FACTS_SQL,
+            CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL, CAPACITY_ORIGINAL_SOURCE_SIGNED_FACTS_SQL,
+            CAPACITY_SOURCE_PENDING_SQL, CAPACITY_SOURCE_COMMIT_SQL)
+
+
+def install_source_transaction_boundary(execute):
+    """Install the private composition in the caller's migration transaction.
+
+    Requires the original a155/a156 boundaries. No public entry or issuer grant;
+    errors must propagate so the caller rolls back the entire installation.
+    """
+    for statement in _source_transaction_statements():
+        execute(statement)
+
+
+def source_transaction_function_manifest():
+    """Compile exact function contracts from trusted SQL, never target catalogs.
+
+    This deliberately accepts only the restricted grammar used by these fixed
+    definitions; a new unsupported definition must fail rather than be skipped.
+    Table, constraint, policy and trigger contracts require a separate audit.
+    """
+    pattern = re.compile(
+        r'CREATE FUNCTION\s+(aos_capacity_publication_private\.\w+)\s*\((.*?)\)\s*'
+        r'(.*?)\bAS\s+(\$\w*\$)(.*?)\4', re.S | re.I)
+    manifest = []
+    for statement in _source_transaction_statements():
+        matches = list(pattern.finditer(statement))
+        if len(matches) != len(re.findall(r'\bCREATE FUNCTION\b', statement, re.I)):
+            raise ValueError('CAPACITY_SOURCE_FUNCTION_CONTRACT_UNSUPPORTED')
+        for match in matches:
+            name, arguments, header, _, body = match.groups()
+            inputs = [item.strip().split(None, 1) for item in arguments.split(',') if item.strip()]
+            returned = re.search(r'RETURNS\s+(.*?)\s+LANGUAGE\s+plpgsql\b', header, re.S | re.I)
+            if not returned or any(len(item) != 2 for item in inputs):
+                raise ValueError('CAPACITY_SOURCE_FUNCTION_CONTRACT_UNSUPPORTED')
+            result = returned.group(1).strip()
+            table = re.fullmatch(r'TABLE\s*\((.*?)\)', result, re.S | re.I)
+            outputs = [item.strip().split(None, 1) for item in table.group(1).split(',')] if table else []
+            settings = re.findall(r'\bSET\s+("[^"]+"|[\w.]+)\s*=\s*(\x27[^\x27]*\x27|[\w.]+)', header, re.I)
+            manifest.append(dict(
+                signature=name+'('+','.join(item[1] for item in inputs)+')',
+                names=[item[0] for item in inputs+outputs],
+                input_types=[item[1] for item in inputs],
+                all_types=[item[1] for item in inputs+outputs] if outputs else None,
+                modes=['i']*len(inputs)+['t']*len(outputs) if outputs else None,
+                return_type='record' if table else result, returns_set=bool(table),
+                body_sha256=hashlib.sha256(body.encode()).hexdigest(),
+                strict=bool(re.search(r'\bSTRICT\b', header, re.I)),
+                volatility='i' if re.search(r'\bIMMUTABLE\b', header, re.I) else
+                           's' if re.search(r'\bSTABLE\b', header, re.I) else 'v',
+                security_definer=bool(re.search(r'\bSECURITY DEFINER\b', header, re.I)),
+                config=[key.strip('"')+'='+value.strip("'") for key, value in settings] or None,
+            ))
+    if len({item['signature'] for item in manifest}) != len(manifest):
+        raise ValueError('CAPACITY_SOURCE_FUNCTION_CONTRACT_DUPLICATED')
+    return tuple(manifest)
+
+
+def require_source_transaction_functions(conn):
+    """Audit exact new functions plus original boundaries; not full S01."""
+    from aos_api.aip_provider_capacity_publication_lock_boundary import require_publication_lock_boundary
+    require_publication_lock_boundary(conn)
+    manifest = source_transaction_function_manifest()
+    names = sorted({item['signature'].split('(')[0].split('.')[1] for item in manifest})
+    count = conn.execute("SELECT count(*) AS n FROM pg_proc WHERE "
+        "pronamespace='aos_capacity_publication_private'::regnamespace AND proname=ANY(%s::text[])",
+        (names,)).fetchone()['n']
+    if count != len(manifest):
+        raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_FUNCTION_INSTALLATION_DRIFTED')
+    for expected in manifest:
+        row = conn.execute("""SELECT p.oid,r.rolname AS owner,l.lanname AS language,
+            p.prosrc,p.prosecdef,p.proconfig,p.proisstrict,p.provolatile,p.proparallel,
+            p.proargnames,p.proargtypes::oid[] AS inputs,p.proallargtypes,p.proargmodes,
+            p.prorettype,p.proretset,p.pronargdefaults,p.prokind,p.provariadic,
+            EXISTS(SELECT 1 FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
+                   WHERE a.grantee<>p.proowner OR a.privilege_type<>'EXECUTE' OR a.is_grantable) AS bad_acl
+            FROM pg_proc p JOIN pg_roles r ON r.oid=p.proowner
+            JOIN pg_language l ON l.oid=p.prolang WHERE p.oid=to_regprocedure(%s)""",
+            (expected['signature'],)).fetchone()
+        def types(names):
+            return [conn.execute('SELECT to_regtype(%s)::oid AS oid', (name,)).fetchone()['oid'] for name in names]
+        if (not row or row['owner']!=OWNER or row['language']!='plpgsql'
+            or hashlib.sha256(row['prosrc'].encode()).hexdigest()!=expected['body_sha256']
+            or row['prosecdef']!=expected['security_definer'] or row['proconfig']!=expected['config']
+            or row['proisstrict']!=expected['strict'] or row['provolatile']!=expected['volatility']
+            or row['proparallel']!='u' or row['proargnames']!=(expected['names'] or None)
+            or row['inputs']!=types(expected['input_types'])
+            or row['proallargtypes']!=(types(expected['all_types']) if expected['all_types'] else None)
+            or row['proargmodes']!=expected['modes']
+            or row['prorettype']!=types([expected['return_type']])[0]
+            or row['proretset']!=expected['returns_set'] or row['pronargdefaults']!=0
+            or row['prokind']!='f' or row['provariadic']!=0 or row['bad_acl']):
+            raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_FUNCTION_INSTALLATION_DRIFTED')

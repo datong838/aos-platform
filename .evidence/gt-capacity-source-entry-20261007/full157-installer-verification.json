@@ -1,0 +1,55 @@
+{
+  "authority": "AOS-001445",
+  "base_head": "917bb860da5bfe513cdb3a26037c5da1446e30b2",
+  "browser": "N/A backend private functions only",
+  "current_consumer": false,
+  "drifts": [
+    "body",
+    "search_path",
+    "security",
+    "volatility",
+    "strict",
+    "acl",
+    "overload"
+  ],
+  "files": {
+    ".evidence/gt-capacity-source-entry-20261007/full157-function-manifest.json": "sha256:1790d44cd733a7ab753a3625cd5acdc0223d4c7681ce700c0eb8eb189583af0b",
+    ".evidence/gt-capacity-source-entry-20261007/full157-installer-catalog-r2.json": "sha256:ce0a549edfe6ceefbf3823434d817d9d686777be0b79c201746b6f9b403cb9c7",
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "sha256:48f884906ed7996f18472498e59c65c2311f7587ae394a5ff57ec3b1a6c9e4f2",
+    ".evidence/gt-capacity-source-publication-20261006/full157-installer-green-r1.log": "sha256:8b21c63baca1d8ef0251dd7af09d640adb0ee7c4815d3ca1248f8e15e901160f",
+    ".evidence/gt-capacity-source-publication-20261006/full157-installer-green-r2.log": "sha256:9e1eeae8907f4bb597f5d76bae0df1884ad49e1949ba7364eab9f10a4f06e89d",
+    ".evidence/gt-capacity-source-publication-20261006/full157-installer-red-r1.log": "sha256:4204f3115c3ff56d4570766207ea40d904cd45a1bbc2f159bf3a38996a7199a1",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "sha256:b0b1bdb440d270fcc43962d8d398c43d7bcbf0f2e17a1948169230e639305396",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "sha256:48f8fe3b369bb3bf4641f91b78b105d1ef6c806878dfe89f984355ac48a2244c"
+  },
+  "final": {
+    "deselected": 305,
+    "exit": 0,
+    "passed": 10,
+    "seconds": 95.03,
+    "skipped": 0,
+    "warnings": 7
+  },
+  "final_actual_commit_ttl": "unresolved",
+  "first_attempt": {
+    "failed": 6,
+    "passed": 1,
+    "reason": "wrong jsonb signature in negative test, body created additional text overload; overload audit repaired",
+    "seconds": 64.57
+  },
+  "full157": false,
+  "full_s01": false,
+  "functions": 41,
+  "goal": "active",
+  "native_commit": true,
+  "parents": "ACTIVE",
+  "production_signer_jwt": false,
+  "red": {
+    "failed": 1,
+    "reason": "missing complete installer API after native original checker",
+    "seconds": 12.17
+  },
+  "schema": "aos-source-private-installer-verification/v1",
+  "source_delivery": false,
+  "trusted_sql_segments": 13
+}
