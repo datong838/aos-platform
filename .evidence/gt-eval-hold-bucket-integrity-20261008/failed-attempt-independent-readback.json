@@ -1,0 +1,13 @@
+{
+  "database": "aos_test_f40f9bbf1e41_ti4_test",
+  "cluster": "7693564235776004128",
+  "counts": {
+    "aip_model_eval_budget_reservation": 0,
+    "aip_model_eval_budget_reservation_bucket": 0,
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0
+  },
+  "exposure_minor": 0,
+  "provider_calls": 0,
+  "isolation": "serializable read only"
+}

@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-07T22:11:09.468820+00:00",
+  "database": "aos_test_41590854395f_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": ".evidence/gt-eval-hold-bucket-integrity-20261008/test-eval-hold-bucket-native.py::test_eval_hold_rejects_missing_shared_buckets",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "Isolated original-runtime budget-fact bridge primitive only; no Source or joint execution"
+}

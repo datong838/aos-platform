@@ -1,0 +1,15 @@
+{
+  "services/aos-api/aos_api/aip_model_eval_budget_reservation.py": "d699c8b8907da96ce1a073134cf58b9b26af14fac5b43ba44188068879393310",
+  ".evidence/gt-eval-hold-bucket-integrity-20261008/plan.md": "b7aaeeb1cb8f91fb498d5e732a8b6552c31b0008ff1220db345b521e9c660d25",
+  ".evidence/gt-eval-hold-bucket-integrity-20261008/verification.md": "cee27e0c5157a7b06c170b71b653128962811bb5bb3b574b16826f44cc2bebd7",
+  ".evidence/gt-eval-hold-bucket-integrity-20261008/legal_eval_bucket_application.py": "744f847842dda181923021b189630a157b51bb5a2dc9b929b9ffed0cf74db705",
+  ".evidence/gt-eval-hold-bucket-integrity-20261008/legal_model_bucket_prefix.py": "30aca4fab3dc735381662ad8a23f45c838f0a9b13d751d3da48d499e65f7be61",
+  ".evidence/gt-eval-hold-bucket-integrity-20261008/test-eval-hold-bucket-native.py": "a8c38d44a75a84cbd52657cebcbc73d05649d57850b09bb256b1a761625bcc37",
+  ".evidence/gt-eval-hold-bucket-integrity-20261008/run-eval-hold-bucket-native-r2.py": "8d4eb4e8c12aab112f00350da3191d0185632b10fed081c95943509c4cfd2550",
+  ".evidence/gt-eval-hold-bucket-integrity-20261008/verify-readback.py": "bfccd606062f0d0fdfbc8686fcb12f8c98016a2b59b2fe31da4093ff09edcfea",
+  ".evidence/gt-eval-hold-bucket-integrity-20261008/independent-readback.json": "5fc72e4f56ad33300e31b3bf47b742bdde5181425a670724b8a5f2564f095117",
+  ".evidence/gt-eval-hold-bucket-integrity-20261008/eval-hold-bucket-native-green-r2.json": "3b62c6262920d000379182eafb1946b7fd46dfbbc3f5016919b4cb51054a9490",
+  ".evidence/gt-eval-hold-bucket-integrity-20261008/eval-hold-bucket-native-rollback.json": "27e161b41a3d4def432495bccd1d510d0b34ce4d4ec742b2cd40f315be2f6523",
+  ".evidence/gt-eval-hold-bucket-integrity-20261008/failed-attempt-independent-readback.json": "4d871d5b5a6f1d2bf892b57537f901af509288b9487bb10d6d7e2a3c90becf4e",
+  ".evidence/gt-eval-hold-bucket-integrity-20261008/adjacent.log": "5f3cff259b571245131af3523d646efed840e941cd8786a8047171948bada454"
+}

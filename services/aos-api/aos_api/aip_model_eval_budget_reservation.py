@@ -204,6 +204,22 @@ class AipModelEvalBudgetReservationStore:
                 or existing["state"] != "held"):
                 raise ModelEvalBudgetBlocked("Model Eval hold identity drifted")
             self._require_exact_hold(existing, immutable)
+            backing = conn.execute("""SELECT count(*) AS n,
+                bool_and(l.reserved_minor=%s AND l.currency=%s
+                  AND b.held_minor>=l.reserved_minor
+                  AND ((l.bucket_kind='task' AND l.account_id=%s)
+                    OR (l.bucket_kind='daily' AND l.account_id=%s)
+                    OR (l.bucket_kind='pilot' AND l.account_id=%s))) AS exact
+                FROM aip_model_eval_budget_reservation_bucket l
+                JOIN aip_budget_bucket b
+                  USING(org_id,project_id,bucket_kind,account_id,period_start,currency)
+                WHERE l.org_id=%s AND l.project_id=%s AND l.reservation_id=%s""",
+                (request.upper_bound_minor, request.currency,
+                 f"model-eval/{request_id}", f"{budget_ref.resource_id}:daily",
+                 f"{budget_ref.resource_id}:pilot", *scope.key,
+                 existing["reservation_id"])).fetchone()
+            if backing["n"] != 3 or backing["exact"] is not True:
+                raise ModelEvalBudgetBlocked("Model Eval hold shared bucket backing drifted")
             return dict(existing)
         buckets = derive_model_eval_bucket_authorities(
             request_id=request_id, budget_revision_ref=budget_ref,
