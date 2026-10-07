@@ -1,0 +1,35 @@
+{
+  "status": "JOINT_FILE_PLAN_BOUND_TO_CURRENT_SOURCE_NOT_IMPLEMENTATION_OR_FROZEN_AUTHORITY",
+  "head": "28f00da84f583559e94a2330a497f0af7ddf56d2",
+  "plan_sha256": "077c11c2381319375f25d826131b542861f0062eac526f266ad069bbaec130e5",
+  "files": {
+    "aos_api/ecommerce_growth_host_ports.py": "1f32bc3fe0d95830d110d12ce179921eee688bc188baa9e694d23752ebd14a62",
+    "aos_api/ecommerce_growth_runtime_adapters.py": "86db8d7c55280c8f5ab6127f340090442b389c9a481d3e983939a1cb46584689",
+    "aos_api/ecommerce_content_capacity_owner.py": "521627cb25102c0d4e4f052b594057684ffc03893ef59b40e491dbc72eb9bf92",
+    "aos_api/ecommerce_content_budget_command_owner.py": "71b10bc63dd2f18bae9660a8d1156df63074d38bb349454a5b648b6a9b10d94c",
+    "aos_api/aip_agent_run_service.py": "a1bd917852b34b7b22f4f5ca0efc228e38bfd89c8f9f0cc6687e96d121c9969f",
+    "aos_api/aip_budget_reservation_store.py": "9768077653548c0ed4f6087593a1cab7eb77292ec550ab82b0e3dfb3824816b5",
+    "aos_api/aip_model_eval_budget_reservation.py": "4c8917003bc844f9e5e79bd5f65715e59860e7faa549dce762d524ca5c00af28",
+    "aos_api/aip_model_capacity_reservation.py": "61a3ad63491b4b517c57ffb1a9058be9b44066d23f5beae75d5974df096d53f2"
+  },
+  "pending": [
+    "Explicitly authorized joint producer; old budget producer requires later capacity ACK",
+    "New Eval application execution Owner/unique Intent not wired in current static product scan",
+    "Budget fact narrow database verification permissions",
+    "All-entry switch and legitimate unknown history"
+  ],
+  "eval_static_product_scan": {
+    "python_files": 2112,
+    "file_manifest_sha256": "9dcaf3156fcd1654703f17149c525b03b51347bbf771ff21fd9b624778d98920",
+    "imports_or_class_references": [],
+    "parse_failed": [],
+    "limitations": [
+      "Current aos_api Python static AST only; dynamic imports and external clients not proven absent"
+    ]
+  },
+  "content_budget_producer_source": {
+    "path": "services/aos-api/alembic/versions/a0v_104_ecommerce_content_budget_command_intent.py",
+    "sha256": "97d3bc0bd57b729cbcff097eaa5f160d57ae56d3b1f9066db037ce0ca1dcfe49",
+    "requires_capacity_accepted_same_ack_xid": true
+  }
+}

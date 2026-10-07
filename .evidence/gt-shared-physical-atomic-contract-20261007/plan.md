@@ -288,3 +288,7 @@ Host原生probe补充精确验收：新复制空完整template→新test-owned s
 新保留aos_test_host_control_b69daa51e90c原生4case通过：Host直接execute COMMIT和bound.commit no-op后execute COMMIT均真实结束原SER事务并持久1row；bound early SET及expired execute COMMIT被test-owned strict gate23514全回滚。每case原factory跨tenant拒绝、bound.rollback拒绝且同原xid仍INTRANS均通过。独立SER READ ONLY核原三产品文件hash未变、exact新triggerbody/队列配置、rows/audit/迁移头及产品四类0。没有创建产品Task/Intent/hold或授正式执行权，不把可信Host回调转发能力称为外部包访问权限。
 
 新joint不能仅依赖bound.commit no-op保证完整原子性。提交gate除期限还必须核精确hold/budget/唯一Intent/finalized全部齐备，同xid/tenant/原签名来源；early SQL COMMIT在未齐备时必须原生拒绝。已有可信Host SQL能力不应靠简单全局regex封锁。下一优先整合完整joint文件级合同及新Owner/private调用权和全入口switch，协议矩阵/后续等待/合法unknown仍列缺口。此检查点不交付关闭父合同。
+
+## 本轮完整接线文件计划
+
+已实际读原Host native-connection委托入口和ContentGenerateHostService.execute（5926）、预算_store.reserve（5953）与enqueue_content_command（5960）；原budget reserve_in_transaction与pool reserve_pool_in_transaction均严格要求type(conn) is psycopg.Connection，借用wrapper不能充作原native接口。新增joint-implementation-plan.md，逐文件登记普通/Eval/Content/all-entry switch、原生预算借用入口、Source与预算数据库验证、唯一Intent和合法业务来源验收，不编写产品文件，不把分阶段Content事务当完整joint。此前native反例收口，不继续以单个primitive绿色代替该完整实施包。
