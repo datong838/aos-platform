@@ -19,6 +19,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_native_source_installer_assembles_complete_private_transaction',
         'test_native_source_function_installation_rejects_catalog_drift',
         'test_native_source_table_installation_rejects_catalog_drift',
+        'test_native_private_source_installation_preserves_original_checker',
         'test_native_committed_sources_share_one_physical_account',
         'test_native_committed_source_is_durable_and_signed',
         'test_native_committed_source_refuses_invalid_finalize',
@@ -4418,3 +4419,43 @@ def test_native_source_table_installation_rejects_catalog_drift(native_complete_
                     audit(owner)
                 raise RestoreFault()
         audit(owner)
+
+
+
+def test_native_private_source_installation_preserves_original_checker(native_signed_source,tmp_path):
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    material=_registered_publication_inputs(native_signed_source,tmp_path)
+    command,policy,attestation=material['actual_command']()
+    def check():
+        with connect_capacity_issuer(material['config'],SCOPE) as caller:
+            assert caller.pgconn.used_password is True
+            result=check_native_capacity_supplier_inputs(caller,command,policy,attestation,
+                trust_roots=native_signed_source[0]['provider'])
+            assert result.execution_allowed is False
+    check()
+    catalog="SELECT oid,oid::regprocedure::text AS signature,prosrc FROM pg_proc WHERE pronamespace='aos_capacity_publication_private'::regnamespace ORDER BY oid"
+    with isolated_owner() as owner:
+        before=owner.execute(catalog).fetchall()
+        transaction.install_source_transaction_boundary(owner.execute)
+        transaction.require_source_transaction_tables(owner)
+        installed=[r['signature'] for r in owner.execute(catalog).fetchall() if r['oid'] not in {x['oid'] for x in before}]
+        assert len(installed)==41
+    try:
+        # Real native role/approval/signed supplier checker with the entire
+        # private installation committed, and no added public definer grant.
+        check()
+        with isolated_owner() as owner:
+            transaction.require_source_transaction_tables(owner)
+            for signature in ('public.prepare_capacity_source(bytea,text,text,jsonb)',
+                              'public.commit_capacity_source(text,bytea,bytea)'):
+                assert owner.execute('SELECT to_regprocedure(%s)::text AS value',(signature,)).fetchone()['value'] is None
+    finally:
+        with isolated_owner() as owner:
+            for name in ('source_provenance','source_publication','source_pending','global_provider','global_account'):
+                owner.execute('DROP TABLE aos_capacity_publication_private.'+name)
+            for signature in reversed(installed):owner.execute('DROP FUNCTION '+signature)
+            assert owner.execute(catalog).fetchall()==before
+        check()

@@ -1,0 +1,27 @@
+{
+  "after_cleanup_checker": true,
+  "authority": "AOS-001448",
+  "base_head": "48bb9d937a73becec391883a82ae68699a005329",
+  "before_checker": true,
+  "committed_install_checker": true,
+  "current_consumer": false,
+  "deselected": 334,
+  "files": {
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "sha256:797218983db5da4e5d8383e847604275f507d0d327b2f1c010e99be2a106b61a",
+    ".evidence/gt-capacity-source-publication-20261006/full157-private-install-checker-compatibility-r1.log": "sha256:c71f943d207fe6a9c9552482bd338937e35fd0039aea098dfbc2f80b824a68ef",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "sha256:0d14e62d68ddf1d4f31a67421f21bf212717b5221edf1d90ddc0d6a49c31d7bd"
+  },
+  "final_actual_commit_ttl": "unresolved",
+  "full_s01": false,
+  "goal": "active",
+  "migration_installed": false,
+  "native_scram": true,
+  "original_catalog_restored": true,
+  "passed": 1,
+  "public_entry_grants": false,
+  "schema": "aos-source-private-installed-checker-compatibility/v1",
+  "seconds": 15.37,
+  "skipped": 0,
+  "source_delivery": false,
+  "warnings": 7
+}
