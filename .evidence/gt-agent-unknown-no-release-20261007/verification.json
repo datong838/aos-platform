@@ -1,0 +1,41 @@
+{
+  "baseline": "e5bc1999b4074f484efb9a0d70a931bf1a3856df",
+  "status": "SCOPED_UNIT_FIX_VERIFIED",
+  "logs": {
+    "red-r1.log": {
+      "sha256": "c7af5835a477bc9d17117b2174e69605e5b98d7ef6ce83faafd108ea46af7c77",
+      "summary": "1 failed, 13 passed"
+    },
+    "green-r1.log": {
+      "sha256": "342cafb4f64e370f2997c6b79e42c667d2010ef201a6fea4dbc93a7dcfb3c359",
+      "summary": "65 passed"
+    }
+  },
+  "retained_databases": {
+    "aos_test_edc5fbf5136e_ti4_test": {
+      "heads": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "agent_runs": 0,
+      "capacity": 0
+    },
+    "aos_test_e40c659eebdc_ti4_test": {
+      "heads": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "agent_runs": 0,
+      "capacity": 0
+    }
+  },
+  "production_sha256": "fc4752e757171f15ea5526f083eebc54176595e173a9da647ce50cf770e6c2f1",
+  "executable_change": "Only transition release branch excludes UNKNOWN",
+  "limitations": [
+    "Tests exercise actual service with fake connection/gate; no lawful AgentRun PG proof",
+    "PG readback only confirms retained bootstrap databases untouched by these unit tests",
+    "Legacy TTL and start COMMIT-unknown release remain pending; no joint physical ledger proof"
+  ]
+}

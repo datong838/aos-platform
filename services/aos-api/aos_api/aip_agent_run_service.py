@@ -186,7 +186,9 @@ class AipAgentRunService(AipAgentRegistryStore):
                 if reservation_id:
                     self._capacity_gate.release(scope, reservation_id)
                 raise
-            if from_status in {AgentRunStatus.RUNNING, AgentRunStatus.PAUSED} and to_status is not AgentRunStatus.RUNNING:
+            # Unknown execution effects require reconciliation, not an eager
+            # release. Legacy pool TTL remains a separate cutover obligation.
+            if from_status in {AgentRunStatus.RUNNING, AgentRunStatus.PAUSED} and to_status not in {AgentRunStatus.RUNNING, AgentRunStatus.UNKNOWN}:
                 try:
                     self._capacity_gate.release_for_run(scope, agent_run_id)
                 except Exception:

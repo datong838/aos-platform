@@ -69,6 +69,30 @@ def test_leaving_running_releases_capacity_for_agent_run():
     service.transition(SCOPE,"run-1",expected_version=1,from_status=AgentRunStatus.RUNNING,to_status=AgentRunStatus.SUCCEEDED,actor="pytest",occurred_at=NOW)
     assert capacity.released==["run:run-1"]
 
+def test_unknown_commits_status_without_proactively_releasing_capacity():
+    conn=Conn({**row(),"status":"running","version":1});capacity=Capacity()
+    service=AipAgentRunService(factory(conn),capacity_gate=capacity)
+    service._from_row=lambda scope,value:value
+    result=service.transition(SCOPE,"run-1",expected_version=1,from_status=AgentRunStatus.RUNNING,to_status=AgentRunStatus.UNKNOWN,actor="pytest",occurred_at=NOW)
+    assert result["status"]=="unknown" and conn.committed
+    assert capacity.reserved==[] and capacity.released==[]
+
+@pytest.mark.parametrize("target",[AgentRunStatus.PAUSED,AgentRunStatus.SUCCEEDED,AgentRunStatus.FAILED,AgentRunStatus.CANCELLED])
+def test_other_original_running_exits_keep_capacity_release_behavior(target):
+    conn=Conn({**row(),"status":"running","version":1});capacity=Capacity()
+    service=AipAgentRunService(factory(conn),capacity_gate=capacity)
+    service._from_row=lambda scope,value:value
+    result=service.transition(SCOPE,"run-1",expected_version=1,from_status=AgentRunStatus.RUNNING,to_status=target,actor="pytest",occurred_at=NOW)
+    assert result["status"]==target.value and conn.committed
+    assert capacity.reserved==[] and capacity.released==["run:run-1"]
+
+def test_unknown_cas_conflict_does_not_release_existing_capacity():
+    conn=Conn({**row(),"status":"running","version":1},updated=False);capacity=Capacity()
+    service=AipAgentRunService(factory(conn),capacity_gate=capacity)
+    with pytest.raises(AipAgentRegistryConflict):
+        service.transition(SCOPE,"run-1",expected_version=1,from_status=AgentRunStatus.RUNNING,to_status=AgentRunStatus.UNKNOWN,actor="pytest",occurred_at=NOW)
+    assert not conn.committed and capacity.reserved==[] and capacity.released==[]
+
 def test_release_failure_after_committed_terminal_transition_uses_ttl_recovery():
     conn=Conn({**row(),"status":"running","version":1});service=AipAgentRunService(factory(conn),model_resolver=Resolver(resolution()),capacity_gate=ReleaseFails())
     service._from_row=lambda scope,value:value
