@@ -1,0 +1,4 @@
+Retained database aos_test_later_wait_5014a31a1e51
+check_then_wait COMMIT_CONFIRMED rows 1
+wait_then_check COMMIT_FAILED rows 0
+LATER_DEFERRED_WAIT_CROSSES_CHECKED_DEADLINE_NATIVE_COUNTEREXAMPLE_CONFIRMED

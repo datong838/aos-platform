@@ -1,0 +1,36 @@
+{
+  "database": "aos_test_later_wait_5014a31a1e51",
+  "head": "447ecd8da6aa7967ce4e70417064637f34057212",
+  "cases": [
+    {
+      "case": "check_then_wait",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 198484,
+        "xid": "223144",
+        "isolation": "serializable"
+      },
+      "deadline": 1791392302.770221,
+      "status": "COMMIT_CONFIRMED",
+      "end_calls": 1,
+      "sqlstate": null,
+      "message": null
+    },
+    {
+      "case": "wait_then_check",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 198500,
+        "xid": "223145",
+        "isolation": "serializable"
+      },
+      "deadline": 1791392304.92943,
+      "status": "COMMIT_FAILED",
+      "end_calls": 1,
+      "sqlstate": "23514",
+      "message": "GT_TEST_DEADLINE_EXPIRED"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "status": "INDEPENDENT_LATER_WAIT_COUNTEREXAMPLE_AND_ROLLBACK_VERIFIED",
+  "database": "aos_test_later_wait_5014a31a1e51",
+  "retained_rows": [
+    {
+      "case_id": "check_then_wait",
+      "deadline": 1791392302.770221,
+      "xid": "223144"
+    }
+  ],
+  "audit": [
+    {
+      "case_id": "check_then_wait",
+      "event": "checked",
+      "clock": 1791392300.772604
+    },
+    {
+      "case_id": "check_then_wait",
+      "event": "wait_completed",
+      "clock": 1791392302.887817
+    }
+  ],
+  "trigger_definitions_exact": true,
+  "function_definitions_exact": true,
+  "original_business_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "migration_heads": [
+    {
+      "version_num": "a0v_157"
+    }
+  ],
+  "advisory_locks_remaining": 0,
+  "attempt_states": [
+    "COMMIT_CONFIRMED",
+    "COMMIT_FAILED"
+  ],
+  "limitations": [
+    "Synthetic trusted test schema, not an original product exploit or execution authority",
+    "Decision check before a later blocking deferred trigger does not guarantee deadline at commit completion",
+    "Ordering the check last in this controlled two-trigger case rejects expiration; whole product queue/locks/end channels remain pending",
+    "No statement about WAL flush or remote commit acknowledgement deadline; no Source/JWT/Intent/budget/product change"
+  ]
+}

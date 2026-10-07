@@ -1,0 +1,21 @@
+{
+  "status": "ORDINARY_VS_EVAL_BUDGET_FACT_CONTRACT_SOURCE_BOUND",
+  "files": {
+    "services/aos-api/aos_api/aip_budget_reservation_store.py": "9768077653548c0ed4f6087593a1cab7eb77292ec550ab82b0e3dfb3824816b5",
+    "services/aos-api/alembic/versions/ar2_003_ecommerce_budget_reservation.py": "01e2acdf9fd5d0de08b1620c8cd5e3c6cf8983bc649e7c4c0a67bca461b10486",
+    "services/aos-api/aos_api/aip_model_eval_budget_reservation.py": "4c8917003bc844f9e5e79bd5f65715e59860e7faa549dce762d524ca5c00af28",
+    "services/aos-api/alembic/versions/a0v_134_model_eval_budget_reservation.py": "ceba02772f96dc4d0d05e6c40a5cc2f2ffaf832db4b521e8e41ff93404618209"
+  },
+  "differences": [
+    "Ordinary reservation and invocation are mutable versioned state, with initial_hold_refs preserving original identity after transition; Eval reservation is immutable held-only.",
+    "Ordinary initial reserve writes invocation/reservation/three links/buckets plus original held event sequence1; formal joint bridge must bind these, not use later mutable revision hash as initial hold ref.",
+    "Ordinary submitted to unknown retains risk by moving submitted_minor to unknown_minor. release_no_effect requires original provider/reconciliation evidence after submission; future physical obligation may release only after independent exact corresponding result evidence.",
+    "Both kinds need exact current request/approval/budget/provider/price and same native transaction binding; current Eval primitive does not implement complete hash/deadline checks or ordinary branch."
+  ],
+  "pending": [
+    "Formal Source session/JWT and signed facts bound to same joint request",
+    "Complete fixed ordinary/Eval original-runtime bridges with trusted installer/ACL audit",
+    "Joint ledger/finalize/unique Intent/deferred actual COMMIT control",
+    "All-entry cutover and legitimate ordinary Task/AgentRun creation without synthetic seeds"
+  ]
+}

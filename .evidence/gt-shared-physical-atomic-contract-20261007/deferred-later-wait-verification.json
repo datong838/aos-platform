@@ -1,0 +1,138 @@
+{
+  "status": "LATER_DEFERRED_WAIT_CROSSES_CHECKED_DEADLINE_NATIVE_COUNTEREXAMPLE_CONFIRMED",
+  "database": "aos_test_later_wait_5014a31a1e51",
+  "template": "aos_test_f2ef54f0da1d_ti4_test",
+  "cluster": "7693564235776004128",
+  "head": "447ecd8da6aa7967ce4e70417064637f34057212",
+  "migration_heads": [
+    {
+      "version_num": "a0v_157"
+    }
+  ],
+  "probe_sha256": "97119212c92ce53d0d5d4896886cc14a87893aa433b34c694ca24d40c554dfee",
+  "cases": [
+    {
+      "case": "check_then_wait",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 198484,
+        "xid": "223144",
+        "isolation": "serializable"
+      },
+      "deadline": 1791392302.770221,
+      "status": "COMMIT_CONFIRMED",
+      "end_calls": 1,
+      "sqlstate": null,
+      "message": null,
+      "before": 1791392300.770911,
+      "first_actual_wait": {
+        "query": "COMMIT",
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "clock": 1791392300.774086
+      },
+      "crossed_actual_wait": {
+        "query": "COMMIT",
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "clock": 1791392302.886084
+      },
+      "after": 1791392302.897738,
+      "rows": 1,
+      "audits": [
+        {
+          "event": "checked",
+          "clock": 1791392300.772604
+        },
+        {
+          "event": "wait_completed",
+          "clock": 1791392302.887817
+        }
+      ]
+    },
+    {
+      "case": "wait_then_check",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 198500,
+        "xid": "223145",
+        "isolation": "serializable"
+      },
+      "deadline": 1791392304.92943,
+      "status": "COMMIT_FAILED",
+      "end_calls": 1,
+      "sqlstate": "23514",
+      "message": "GT_TEST_DEADLINE_EXPIRED",
+      "before": 1791392302.930108,
+      "first_actual_wait": {
+        "query": "COMMIT",
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "clock": 1791392302.933768
+      },
+      "crossed_actual_wait": {
+        "query": "COMMIT",
+        "wait_event_type": "Lock",
+        "wait_event": "advisory",
+        "clock": 1791392305.042424
+      },
+      "after": 1791392305.048603,
+      "rows": 0,
+      "audits": []
+    }
+  ],
+  "actual_triggers": [
+    {
+      "relname": "check_then_wait",
+      "tgname": "a_first",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "definition": "CREATE CONSTRAINT TRIGGER a_first AFTER INSERT ON gt_later_wait.check_then_wait DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION gt_later_wait.check_deadline()"
+    },
+    {
+      "relname": "check_then_wait",
+      "tgname": "z_second",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "definition": "CREATE CONSTRAINT TRIGGER z_second AFTER INSERT ON gt_later_wait.check_then_wait DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION gt_later_wait.wait_lock()"
+    },
+    {
+      "relname": "wait_then_check",
+      "tgname": "a_first",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "definition": "CREATE CONSTRAINT TRIGGER a_first AFTER INSERT ON gt_later_wait.wait_then_check DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION gt_later_wait.wait_lock()"
+    },
+    {
+      "relname": "wait_then_check",
+      "tgname": "z_second",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "definition": "CREATE CONSTRAINT TRIGGER z_second AFTER INSERT ON gt_later_wait.wait_then_check DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION gt_later_wait.check_deadline()"
+    }
+  ],
+  "actual_functions": [
+    {
+      "proname": "check_deadline",
+      "definition": "CREATE OR REPLACE FUNCTION gt_later_wait.check_deadline()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$BEGIN\n IF pg_catalog.current_query() IS DISTINCT FROM 'COMMIT' THEN\n  RAISE EXCEPTION 'GT_TEST_COMMIT_COMMAND_REQUIRED' USING ERRCODE='23514';\n END IF;\n IF clock_timestamp()>=NEW.deadline THEN\n  RAISE EXCEPTION 'GT_TEST_DEADLINE_EXPIRED' USING ERRCODE='23514';\n END IF;\n INSERT INTO gt_later_wait.audit VALUES(NEW.case_id,'checked',clock_timestamp());\n RETURN NULL;\nEND$function$\n"
+    },
+    {
+      "proname": "wait_lock",
+      "definition": "CREATE OR REPLACE FUNCTION gt_later_wait.wait_lock()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$BEGIN\n PERFORM pg_catalog.pg_advisory_xact_lock(NEW.lock_key);\n INSERT INTO gt_later_wait.audit VALUES(NEW.case_id,'wait_completed',clock_timestamp());\n RETURN NULL;\nEND$function$\n"
+    }
+  ],
+  "original_business_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "limitations": [
+    "Synthetic trusted test schema, not an original product exploit or execution authority",
+    "Decision check before a later blocking deferred trigger does not guarantee deadline at commit completion",
+    "Ordering the check last in this controlled two-trigger case rejects expiration; whole product queue/locks/end channels remain pending",
+    "No statement about WAL flush or remote commit acknowledgement deadline; no Source/JWT/Intent/budget/product change"
+  ]
+}
