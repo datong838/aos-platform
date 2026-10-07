@@ -1,0 +1,95 @@
+{
+  "schema": "aos-current-shared-occupation-gap/v1",
+  "head": "387f62e8f6cd3a6d5cde1e1788e98afb4c76497d",
+  "identity": {
+    "database": "aos_test_b4d598de67c0_ti4_test",
+    "read_only": "on",
+    "cluster": "7693564235776004128"
+  },
+  "migration_heads": [
+    {
+      "version_num": "a0v_157"
+    }
+  ],
+  "container": "4be7e2967dfd98ad81a6d9e554c420024e9e4e90cdf5649e19355d940542aad2",
+  "log": ".evidence/gt-capacity-source-publication-20261006/shared-occupation-current-red-r1.log",
+  "log_sha256": "2290693db6e95373a8286fd000ada0cf35670483c6128aae65a25997284f7301",
+  "file_sha256": {
+    "services/aos-api/tests/aip/test_model_eval_shared_capacity_pg.py": "42d6ae569072260c28cafae6b8d9ac75f127efbfa49a710eb7b84f54c0c6f679",
+    "services/aos-api/aos_api/aip_model_capacity_reservation.py": "6917c6ba108a1d374d05c1cda0714f776c4a1bc2160cdabe6f24f6edd4b9f68b",
+    "services/aos-api/aos_api/aip_model_capacity_authority.py": "66127903fbf59a91050e3cf99a89343c9c9f713b9aa69dfb2d4b2b61d45b9bce",
+    "services/aos-api/aos_api/aip_provider_capacity_source_consumer.py": "a22d722ca6f262af612162c14c033773c4fe8553f14698ce00e1fc8d9e65d281"
+  },
+  "durable_reservations": [
+    {
+      "org_id": "org-org",
+      "project_id": "dev-project",
+      "agent_run_id": "test:gtb4:no-physical-account",
+      "pool_id": "test:gtb4:pool:one",
+      "pool_revision": 1,
+      "status": "reserved",
+      "request_units": 1,
+      "token_units": 10,
+      "provider_id": "test:gtb4:provider",
+      "max_concurrency": 1,
+      "max_token_units": 100
+    },
+    {
+      "org_id": "org-org",
+      "project_id": "dev-project",
+      "agent_run_id": "test:gtb4:ordinary:first",
+      "pool_id": "test:gtb4:pool:first",
+      "pool_revision": 1,
+      "status": "reserved",
+      "request_units": 1,
+      "token_units": 10,
+      "provider_id": "test:gtb4:provider",
+      "max_concurrency": 1,
+      "max_token_units": 100
+    },
+    {
+      "org_id": "org-org",
+      "project_id": "dev-project",
+      "agent_run_id": "test:gtb4:ordinary:second",
+      "pool_id": "test:gtb4:pool:second",
+      "pool_revision": 1,
+      "status": "reserved",
+      "request_units": 1,
+      "token_units": 10,
+      "provider_id": "test:gtb4:provider",
+      "max_concurrency": 1,
+      "max_token_units": 100
+    }
+  ],
+  "durable_events": [
+    {
+      "event_type": "reserved",
+      "n": 3
+    }
+  ],
+  "source_counts": {
+    "source_publication": 0,
+    "source_pending": 0,
+    "source_provenance": 0,
+    "global_account": 0
+  },
+  "negative_canary": {
+    "reservations": 0,
+    "events": 0
+  },
+  "existing_test_result": "2 failed, 6 passed; --runxfail; expected shared-authority RED",
+  "established": [
+    "Old entry committed a reservation with zero signed capacity Sources in this isolated database.",
+    "Two distinct Route pools of one fixture Provider each committed one reservation.",
+    "Native persisted rows and events agree with actual DID NOT RAISE failures.",
+    "Current code counts/expires by pool and revision, and commits on its own connection."
+  ],
+  "limits": [
+    "Fixture manually seeds READY and pool rows: this is a negative counterexample, not a legitimate business positive.",
+    "No supplier physical cap is established; two reservations do not prove any real supplier oversubscription.",
+    "No unknown external send was produced; TTL code audit is a future integration requirement, not a real unknown-loss proof.",
+    "No Source consumer/pool integration, cutover, budget+occupation+Intent atomicity, formal deployment or COMMIT-TTL resolution."
+  ],
+  "formal_resources_touched": false,
+  "full_goal_complete": false
+}

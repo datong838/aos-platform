@@ -544,3 +544,16 @@ green-r3不同当前Owner两个布局均2PASS65.90s/noSKIP。下一负门补强�
 方案/代码一致性复核：协议只接受currentJWT+positiveTenant+exactSourceRef，不允许传maker/role/verified/history；两次真实OIDC验签点在SQL前后，当前Owner同事务锁在原facts后、新registry/global前。历史parser从受控pending读取全部原结构，旧认证期限仅与已签Source issuedAt比，不伪造或延长原token；currentJWT deadline仍以实际DBclock/客户端实际验证为准。原originalOwner/双批准/currentProvider/Evidence/root/permit/origin、global mapping、fullSource重组/C签名三次currentness均保留。newpublic使用原显式三入口可信manifest，没有新增私有权限、自动部署、COMMIT或Source/attempt写入。函数本地use_column只为inline OUT冲突，legacy路径实际回归通过。
 
 限制继续列明：当前是受控issuer服务中的独立Owner读取，runtime/CapacityPool/共享occupation的同事务真实调用尚未接线；本API不授Start/占用。生产OIDC/配置/可信镜像及SQL安装来源未由隔离夹具证明，后继正式配置和部署receipt必须独立核对。原actual caller COMMIT墙钟TTL缺口未解决，不能把read时的过期拒绝当COMMIT问题已修复。后续业务组合锁图及更全数据当前性反例仍须沿父计划继续。浏览器不适用本纯后端波；正式库/服务/卷/Host/worker/Provider未改，父Tasks/fullGoal保持ACTIVE，不开SourceDelivery/正式放行。
+## 2026-10-07 AOS-001462 共享占用接线：现存反例与切换合同核对
+
+本轮在 m1@387f62e8 先核现存 GT-b4 原测试及原方案，不新增独立替代容量池。原方案以 tenant/Provider 作为账户的早期表述须由现已实现的 supplier/physicalAccount 稳定映射细化：多个 Provider 映射到同一物理账户时必须合计，Source/revision/Route/用途变化不能分裂账户。原早期预算先于容量锁排序不能直接沿用，须与现存普通 Capacity→Budget、Source 原批准/Owner/Evidence/withdrawal→registry/global 顺序合并核对。
+
+本轮精确写入范围仅本 plan、shared-occupation-audit.py、shared-occupation-audit.json；真实反例日志在原同 owner publication Task 的 shared-occupation-current-red-r1.log。现存 test_model_eval_shared_capacity_pg.py 不修改，使用 --runxfail 执行两条已登记反例及六个入参隔离门；日志必须证明实际 DID NOT RAISE，再以隔离管理只读连接回读该次保留库中实际 durable reservation/event/pool 及迁移头。夹具 READY/手插池只证明旧路径可被隔离反例触发，绝不当合法经营正向或供应商物理额度证明。无真实 Provider/外部发送，不删除保留库。
+
+后续完整运行合同（未在本轮授权上线）：同一业务 caller 事务重验 signed Source、当前批准 allocation、完整 Provider 精确集合、稳定全域 physicalAccount 和同维度同窗口上界；保留普通池局部上界，所有普通/Eval 用途共享全域占用与预算账户；不能顺次调用各自 commit 的旧 Gate 拼成原子事务。旧 reserved/consumed 不能单凭 expires_at 当外部义务结束；需要关联真实发送 Intent/Receipt/只读对账，submitted/unknown 不因 TTL 清零。切换必须先盘点全部旧活跃与不明义务，未知映射禁入，不删除旧账；新旧入口切换、共享占用与预算及一次 Intent 必须实际同事务 COMMIT/失败回滚验证。
+
+Source 当前 nonexecuting 合同不得暗改为 Start 授权；后继 occupation writer 的独立身份、权限/SQL白名单、完整授权依据必须另冻结和登记精确 Task，不能给现 issuer 添加一般 pool/ledger 写权限。待修改的业务文件为 aip_model_capacity_reservation.py、aip_model_capacity_authority.py、专用共享 occupation/Intent 合同与 Store、新 additive migration，以及普通/Eval/组合锁实际 PG 测试；本轮尚不写这些运行文件。完整 Source COMMIT 时钟问题、受控配置安装来源与业务自然首链继续 pending，不开父 Delivery。
+
+本次真实执行 shared-occupation-current-red-r1.log：2FAILED/6PASS/7existingwarnings/7.09s，无SKIP，两个已登记共享物理权威反例均 DID NOT RAISE。独立 SERIAL READ ONLY 回读日志明确保留库 aos_test_b4d598de67c0_ti4_test，验证原隔离 container/cluster 身份、三条 durable reserved、三条 reserved event、signed Source publication=0、dev-org reservation/event=0；两条 ordinary 预留实际属于同一fixture Provider的两个不同池，各自maxConcurrency=1。精确 HEAD/代码与log SHA、原生行和证据限制见 shared-occupation-audit.json。该证据更新下一行动：必须保护普通入口，不能只给Eval添加共享门；不推导真实供应商已超额。当前旧代码 pool/revision 分组及自有commit是静态可见事实，unknown义务TTL清除尚未产生实际外部反例，不能写成已验证事故。
+
+下一实际步骤：先冻结共享占用的独立服务身份和事务边界。现consumer session_user固定issuer且使用现privateSECDEF可信白名单，旧runtime connection不能直接调用；旧reserve又自行commit，两者独立调用不能证明同caller当前性。需设计occupation用途的完整可信Source读取 profile，复用全部原Source facts与当前membership/期限核验且不授Source写权；与ordinary/Eval原批准用途重新核验、旧占用全量映射和budget同caller协调。此合同须先落盘表/行/锁模式/连接图及每个writer逆序检查，再登记独立精确Task并做原生RED，禁止通过放宽issuer白名单或传verified布尔量接线。当前报告只作为父Task实施检查点，不开完整Source/sharedoccupation Delivery。
