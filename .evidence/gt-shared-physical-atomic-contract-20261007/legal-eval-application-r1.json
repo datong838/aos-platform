@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-07T16:28:43.504634+00:00",
+  "database": "aos_test_33f4889645de_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": ".evidence/gt-shared-physical-atomic-contract-20261007/test_legal_eval_application_chain.py::test_original_eval_application_after_legal_publication",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "Original quota preflight gates only; not full Eval or business execution"
+}

@@ -1,0 +1,71 @@
+{
+  "status": "INDEPENDENT_READ_ONLY_EVAL_APPLICATION_VERIFIED",
+  "database": "aos_test_eb6ca3ed1d24_ti4_test",
+  "failed_attempts": [
+    {
+      "attempt": "r1",
+      "database": "aos_test_33f4889645de_ti4_test",
+      "pytest_exit": 1,
+      "counts": {
+        "aip_model_eval_request": 0,
+        "aip_agent_run": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aip_model_capacity_reservation": 0
+      },
+      "no_replay": true
+    },
+    {
+      "attempt": "r2",
+      "database": "aos_test_0ee455a745a5_ti4_test",
+      "pytest_exit": 1,
+      "counts": {
+        "aip_model_eval_request": 0,
+        "aip_agent_run": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aip_model_capacity_reservation": 0
+      },
+      "no_replay": true
+    }
+  ],
+  "cluster": "7693564235776004128",
+  "counts": {
+    "aip_model_eval_request": 1,
+    "aip_agent_run": 0,
+    "aip_model_eval_budget_reservation": 0,
+    "aip_model_capacity_reservation": 0
+  },
+  "exact_request_hash": true,
+  "current_model": {
+    "version": 1,
+    "content_hash": "4f0c345f36536f0f39bc39d9d77da5958d08584d636847ab279ed3ace464fd29",
+    "lifecycle": "validated"
+  },
+  "proposal_nonexecuting": true,
+  "independent_approval": [
+    {
+      "actor_id": "test-checker-124ef9b803884811adcc04cda0943368",
+      "decision": "approved"
+    }
+  ],
+  "exact_suite_target": true,
+  "model_quality_gates": 0,
+  "canary": 0,
+  "limitations": [
+    "Test-owned dataset/redaction artifacts and actual deterministic Graph governance gate",
+    "Model-target Suite remains unexecuted; no Model quality gate",
+    "No budget hold, shared physical joint, unique execution Intent or formal business"
+  ],
+  "evidence_hashes": {
+    "run_legal_eval_application_r2.py": "68641ff3cc61043a63997e984642a8ba37c3ef845e12b90e657393ec03f0e747",
+    "legal-eval-application-r2.log": "cd8f2b9388189f9f028b741dda6a70dff186cd5d169eaac379224f762a6326fe",
+    "legal-eval-application-r3.log": "787a3dc58e9a39ca029d501269e58594ddb80e6f713b292b348ce0b5cfe3db94",
+    "legal-eval-application-r1.log": "d22852d99289b2b582921fa874f7eb347d6e3727735b6abf3253cb41e436880f",
+    "run_legal_eval_application_r3.py": "5c9622515d574339b7bbd3fe68c7974f44b09d5ced39badc84d68c41b871d811",
+    "legal-eval-application-r1.json": "6f4f935a8ca90c615a8ed3851436635b6d707e0ece6fe8438220851b55c24570",
+    "legal-eval-application-result-r3.json": "73ab9bf3a2c02f6df7355a4ce8da8368b23409624ff180c7272e793321781b05",
+    "test_legal_eval_application_chain_r3.py": "ea9aa282a4755d1efbcc42308fc449bf1d59d212036cb437c5146614dbedd0a9",
+    "legal-eval-application-r2.json": "a810e87a71305a073dfb5bff407209f774a30cf5849b59a7d13239c20f70d22b",
+    "legal-eval-application-r3.json": "b8aaefbfe0def0b91d19f75de9e59572755bd8990207ac805bd2e482d89a442f",
+    "test_legal_eval_application_chain_r2.py": "ed368a04c6139e262679bef127308352b3ed06f3a33cb33e51b4d2387778b89f"
+  }
+}

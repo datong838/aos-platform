@@ -114,3 +114,13 @@ Eval：现有 `AipModelEvalRequestStore`持久化一等申请、`ModelEvalAction
 新增 test_legal_model_creation_prefix.py / run_legal_model_prefix.py / legal-model-prefix-r1.log/json（仅本证据scope）。在新全迁移保留实验库复用原正式Provider fixture、原签名费用提案/独立审批/consume/derive、原签名Quota审批/Consumer；显式构建模型DTO并使用原canonical hash与publish_model，不直接插入model/head/activepolicy。回读actual head/version、唯一publication Receipt与预算/配额exact绑定及canary0。只证明创建前缀；Suite/Contract治理来源及Eval执行Owner未覆盖。失败保持原记录，不重发未知结果。
 
 Model前缀本次1 passed/7 warnings/13.59s，保留库 aos_test_ff3f78ea18d6_ti4_test。实际 original publish_model 输出validated revision1/head version1；独立只读核唯一publication Receipt、exact当前active quota/budget、角色恢复、四业务表0及canary model0。未创建Eval申请/hold/Intent；治理Suite/Contract来源继续待核。结果见legal-model-prefix-result-r1.json与legal-model-prefix-independent.json。
+
+### 合法发布后的一等 Eval 申请与独立审批验证计划
+
+新增 test_legal_eval_application_chain.py / run_legal_eval_application.py / legal-eval-application-r1.log/json/result。复用已验证Model前缀，在新随机保留库实际创建原Graph/Suite/Runner治理gate/Contract，再注册未执行的model-target Suite/冻结Contract；这个test-only数据集与治理结果不证明model质量。actual head1构造ModelEvalRequestCreate；原Store幂等create、错误head7负门、原Action签名身份提案、独立checker审批与self-check负门；明确executionAllowed=false、无模型gate/AgentRun/预算hold/Intent。绝不把治理布尔Graph的通过冒称Model评测。独立只读核精确来源/申请/审批与业务零行。下一实际Model执行Owner及真实数据集语义仍单独登记。
+
+申请r1在治理helper短模块名导入处失败，库aos_test_33f4889645de_ti4_test保留，尚无申请/审批动作。原前缀helper硬编码输出文件导致本轮资料覆盖旧result-r1，已将新资料独立另存legal-model-prefix-application-r1.json并从精确HEAD还原已提交旧文件，未修改历史DB。r2仅新增独立helper副本/target/runner与独立输出文件，将原extension_runtime测试目录加入sys.path；新随机库重新执行新独立资料，不重发r1任何proposal。失败首轮脚本与日志保留。
+
+r2仍在同helper import失败，库aos_test_0ee455a745a5_ti4_test保留；新增测试目录选错层级，rg定位依赖实际位于services/aos-api/tests。r3新增精确该目录，保留r2全部脚本/结果并使用独立r3输出与全新库；不动产品、不重放已有提案。
+
+申请r3 1 passed/7 warnings/14.04s，保留aos_test_eb6ca3ed1d24_ti4_test。独立READ ONLY核request1/hash/actual head1/validated model、exact Suite target、approval1且独立checker、executionAllowed=false、model quality gate0及三业务表0/canary0；r1/r2申请0/业务0，各已提交前缀保留，不重放。结果仅原非执行申请接续，真实模型数据集、Model执行Owner、shared physical/budget/unique Intent尚未接通。

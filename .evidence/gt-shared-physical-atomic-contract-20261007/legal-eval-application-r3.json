@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-07T16:31:27.812741+00:00",
+  "database": "aos_test_eb6ca3ed1d24_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": ".evidence/gt-shared-physical-atomic-contract-20261007/test_legal_eval_application_chain_r3.py::test_original_eval_application_after_legal_publication",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "Original non-executable Eval application only; no Model quality or joint execution"
+}
