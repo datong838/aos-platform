@@ -1,0 +1,24 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-model-current-gate-denial-20261008",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001497",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/aip_eval_authority_store.py",
+    "aos-platform/services/aos-api/tests/aip/test_aip_eval_authority_store.py",
+    "aos-platform/services/aos-api/tests/aip/test_model_current_gate_denial.py",
+    "aos-platform/.evidence/gt-model-current-gate-denial-20261008"
+  ],
+  "excluded_scope": [
+    "formal DB/services/Provider/Host/worker",
+    "old Source/profile scopes and typed execution activation",
+    "historical gate write/revoke/replay"
+  ],
+  "expected_outputs": [
+    "Explicit unsupported Model/Route current gate denial after original exact checks; Skill/Logic preserved",
+    "Unit/native adjacent and original Model consumer propagation; full typed proof pending"
+  ],
+  "lease_expires_at": "2026-10-07T22:38:36.146017+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-08T03:38:37+08:00"
+}

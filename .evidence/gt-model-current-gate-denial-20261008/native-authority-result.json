@@ -1,0 +1,133 @@
+{
+  "observed_at": "2026-10-07T19:40:22.623058+00:00",
+  "database": "aos_test_fe3c20fb2109_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_model_current_gate_denial.py::test_current_reader_rejects_unsupported_model_proof[False-registered_model-RegisteredModelRevision]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_current_gate_denial.py::test_current_reader_rejects_unsupported_model_proof[False-model_route-ModelRouteRevision]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_current_gate_denial.py::test_current_reader_rejects_unsupported_model_proof[True-registered_model-RegisteredModelRevision]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_current_gate_denial.py::test_current_reader_rejects_unsupported_model_proof[True-model_route-ModelRouteRevision]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_current_gate_denial.py::test_other_current_gate_reads_keep_original_behavior[skill_template]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_current_gate_denial.py::test_other_current_gate_reads_keep_original_behavior[logic_graph]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_eval_authority_store.py::test_dataset_revision_survives_recreation_and_is_tenant_scoped",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_eval_authority_store.py::test_direct_dataset_store_cannot_register_missing_artifact_source",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_eval_authority_store.py::test_direct_dataset_store_cannot_register_unlinked_artifact_receipt",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_eval_authority_store.py::test_eval_run_idempotency_transition_and_restart",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_eval_authority_store.py::test_gate_publication_lineage_usage_and_metric_are_idempotent",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_eval_authority_store.py::test_usage_without_scoped_lineage_fails_closed",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_eval_authority_store.py::test_exact_release_gate_verifier_enforces_target_hash_and_expiry",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_context_roundtrip_preserves_canonical_hash[legacy]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_context_roundtrip_preserves_canonical_hash[contract]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_context_roundtrip_preserves_canonical_hash[media]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_old_row_without_context_columns_is_compatible",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_partial_media_context_is_rejected_instead_of_discarded",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_derive_rejects_unsupported_target_before_run_read_or_gate_write[registered_model]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_derive_rejects_unsupported_target_before_run_read_or_gate_write[model_route]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_existing_execution_sources_keep_their_original_proof_checks[skill_template]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_existing_execution_sources_keep_their_original_proof_checks[logic_graph]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_publish_existing_gate_rejects_before_clock_or_event_write[registered_model]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_publish_existing_gate_rejects_before_clock_or_event_write[model_route]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_release_publication_signed_skill_pg.py::test_signed_skill_gate_derives_and_current_revocation_blocks_publish",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "Original authority and signed Skill current regression; retained isolated schemas and DB, no Model execution"
+}

@@ -1,0 +1,116 @@
+..............................F.............                             [100%]
+=================================== FAILURES ===================================
+_________________ test_real_tenant_with_no_route_fails_closed __________________
+
+    def test_real_tenant_with_no_route_fails_closed() -> None:
+        from aos_api.aip_model_runtime_store import ModelRuntimeNotFound
+        resolver = AipModelRuntimeResolver()
+        try:
+>           resolver.resolve(SCOPE, "does-not-exist", now=NOW)
+
+services/aos-api/tests/aip/test_aip_model_runtime_resolver.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/aos_api/aip_model_runtime_resolver.py:130: in resolve
+    route = self._store.get_route(scope, route_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/aos_api/aip_model_runtime_store.py:231: in get_route
+    return self._get("model_route", scope, asset_id, revision)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/aos_api/aip_model_runtime_store.py:593: in _get
+    with self._connect_factory(scope) as connection:
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+services/aos-api/aos_api/db.py:41: in _connect
+    with psycopg.connect(dsn, row_factory=dict_row) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=disabled password=disabled dbname=unit_no_database host=127.0.0.1 port=1 hostaddr=127.0.0.1'
+autocommit = False, prepare_threshold = 5, context = None
+row_factory = <function dict_row at 0x10b263ce0>, cursor_factory = None
+kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 1 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-07T19:41:08.629767+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    aos-api.db:db.py:40 db_connect host_port_from_env=True
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_model_runtime_resolver.py::test_real_tenant_with_no_route_fails_closed
+1 failed, 43 passed, 7 warnings in 0.50s

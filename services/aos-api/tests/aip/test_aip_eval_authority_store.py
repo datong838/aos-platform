@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import uuid
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
@@ -143,6 +144,8 @@ def authority_store():
             yield conn
 
     yield AipEvalAuthorityStore(connect_factory=scoped_connect), scoped_connect
+    if os.environ.get("AOS_TEST_RETAIN_DATABASE") == "1":
+        return
     with connect() as conn:
         conn.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
         conn.commit()
@@ -477,8 +480,12 @@ def test_usage_without_scoped_lineage_fails_closed(authority_store) -> None:
         store.append_usage_receipt(SCOPE_A, receipt)
 
 
+@pytest.mark.parametrize("asset_kind,ref_kind", [
+    (AssetType.REGISTERED_MODEL, "RegisteredModelRevision"),
+    (AssetType.MODEL_ROUTE, "ModelRouteRevision"),
+])
 def test_exact_release_gate_verifier_enforces_target_hash_and_expiry(
-    authority_store,
+    authority_store, asset_kind, ref_kind,
 ) -> None:
     store, _ = authority_store
     store.create_eval_run(
@@ -495,7 +502,7 @@ def test_exact_release_gate_verifier_enforces_target_hash_and_expiry(
     gate = ReleaseGateDecision(
         tenant=_tenant(SCOPE_A),
         decision_id="gate-model-1",
-        target=_asset(AssetType.REGISTERED_MODEL, "model-1", H2),
+        target=_asset(asset_kind, "model-1", H2),
         suite_ref=_asset(AssetType.EVAL_SUITE, "suite-model-1"),
         eval_run_id="run-1",
         eval_report=ArtifactRef(
@@ -511,15 +518,16 @@ def test_exact_release_gate_verifier_enforces_target_hash_and_expiry(
     )
     store.append_release_gate(SCOPE_A, gate)
     ref = _versioned_ref("EvalGateDecision", gate.decision_id, H1)
-    target = _versioned_ref("RegisteredModelRevision", "model-1", H2)
-    assert store.require_exact_passed(
-        SCOPE_A, ref, expected_target=target, now=NOW + timedelta(days=1)
-    ) == gate
+    target = _versioned_ref(ref_kind, "model-1", H2)
+    with pytest.raises(AipEvalGateDependencyBlocked, match="signed execution"):
+        store.require_exact_passed(
+            SCOPE_A, ref, expected_target=target, now=NOW + timedelta(days=1)
+        )
     with pytest.raises(AipEvalGateDependencyBlocked, match="target drifted"):
         store.require_exact_passed(
             SCOPE_A,
             ref,
-            expected_target=_versioned_ref("RegisteredModelRevision", "model-2", H2),
+            expected_target=_versioned_ref(ref_kind, "model-2", H2),
             now=NOW + timedelta(days=1),
         )
     with pytest.raises(AipEvalGateDependencyBlocked, match="not currently effective"):

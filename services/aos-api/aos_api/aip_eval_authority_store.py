@@ -527,6 +527,10 @@ class AipEvalAuthorityStore:
                 or gate.target.content_hash != expected_target.content_hash
             ):
                 raise AipEvalGateDependencyBlocked("eval gate target drifted")
+        if gate.target.asset_type in {AssetType.REGISTERED_MODEL, AssetType.MODEL_ROUTE}:
+            raise AipEvalGateDependencyBlocked(
+                "Model/Route signed execution evidence is not supported"
+            )
         return gate
 
     def append_publication_event(

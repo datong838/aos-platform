@@ -1,0 +1,106 @@
+FFFF..                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_current_reader_rejects_unsupported_model_proof[False-registered_model-RegisteredModelRevision] _
+
+kind = <AssetType.REGISTERED_MODEL: 'registered_model'>
+ref_kind = 'RegisteredModelRevision', bind_target = False
+
+    @pytest.mark.parametrize("kind, ref_kind", [(AssetType.REGISTERED_MODEL, "RegisteredModelRevision"),
+        (AssetType.MODEL_ROUTE, "ModelRouteRevision")])
+    @pytest.mark.parametrize("bind_target", [False, True])
+    def test_current_reader_rejects_unsupported_model_proof(kind, ref_kind, bind_target):
+        store, connect, gate = reader(kind)
+        ref = VersionedAssetRef(assetType="EvalGateDecision", assetId=gate.decision_id,
+            revision=1, contentHash=gate.decision_hash)
+        target = VersionedAssetRef(assetType=ref_kind, assetId="target", revision=1, contentHash="2" * 64)
+>       with pytest.raises(AipEvalGateDependencyBlocked, match="signed execution"):
+E       Failed: DID NOT RAISE AipEvalGateDependencyBlocked
+
+services/aos-api/tests/aip/test_model_current_gate_denial.py:48: Failed
+_ test_current_reader_rejects_unsupported_model_proof[False-model_route-ModelRouteRevision] _
+
+kind = <AssetType.MODEL_ROUTE: 'model_route'>, ref_kind = 'ModelRouteRevision'
+bind_target = False
+
+    @pytest.mark.parametrize("kind, ref_kind", [(AssetType.REGISTERED_MODEL, "RegisteredModelRevision"),
+        (AssetType.MODEL_ROUTE, "ModelRouteRevision")])
+    @pytest.mark.parametrize("bind_target", [False, True])
+    def test_current_reader_rejects_unsupported_model_proof(kind, ref_kind, bind_target):
+        store, connect, gate = reader(kind)
+        ref = VersionedAssetRef(assetType="EvalGateDecision", assetId=gate.decision_id,
+            revision=1, contentHash=gate.decision_hash)
+        target = VersionedAssetRef(assetType=ref_kind, assetId="target", revision=1, contentHash="2" * 64)
+>       with pytest.raises(AipEvalGateDependencyBlocked, match="signed execution"):
+E       Failed: DID NOT RAISE AipEvalGateDependencyBlocked
+
+services/aos-api/tests/aip/test_model_current_gate_denial.py:48: Failed
+_ test_current_reader_rejects_unsupported_model_proof[True-registered_model-RegisteredModelRevision] _
+
+kind = <AssetType.REGISTERED_MODEL: 'registered_model'>
+ref_kind = 'RegisteredModelRevision', bind_target = True
+
+    @pytest.mark.parametrize("kind, ref_kind", [(AssetType.REGISTERED_MODEL, "RegisteredModelRevision"),
+        (AssetType.MODEL_ROUTE, "ModelRouteRevision")])
+    @pytest.mark.parametrize("bind_target", [False, True])
+    def test_current_reader_rejects_unsupported_model_proof(kind, ref_kind, bind_target):
+        store, connect, gate = reader(kind)
+        ref = VersionedAssetRef(assetType="EvalGateDecision", assetId=gate.decision_id,
+            revision=1, contentHash=gate.decision_hash)
+        target = VersionedAssetRef(assetType=ref_kind, assetId="target", revision=1, contentHash="2" * 64)
+>       with pytest.raises(AipEvalGateDependencyBlocked, match="signed execution"):
+E       Failed: DID NOT RAISE AipEvalGateDependencyBlocked
+
+services/aos-api/tests/aip/test_model_current_gate_denial.py:48: Failed
+_ test_current_reader_rejects_unsupported_model_proof[True-model_route-ModelRouteRevision] _
+
+kind = <AssetType.MODEL_ROUTE: 'model_route'>, ref_kind = 'ModelRouteRevision'
+bind_target = True
+
+    @pytest.mark.parametrize("kind, ref_kind", [(AssetType.REGISTERED_MODEL, "RegisteredModelRevision"),
+        (AssetType.MODEL_ROUTE, "ModelRouteRevision")])
+    @pytest.mark.parametrize("bind_target", [False, True])
+    def test_current_reader_rejects_unsupported_model_proof(kind, ref_kind, bind_target):
+        store, connect, gate = reader(kind)
+        ref = VersionedAssetRef(assetType="EvalGateDecision", assetId=gate.decision_id,
+            revision=1, contentHash=gate.decision_hash)
+        target = VersionedAssetRef(assetType=ref_kind, assetId="target", revision=1, contentHash="2" * 64)
+>       with pytest.raises(AipEvalGateDependencyBlocked, match="signed execution"):
+E       Failed: DID NOT RAISE AipEvalGateDependencyBlocked
+
+services/aos-api/tests/aip/test_model_current_gate_denial.py:48: Failed
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_model_current_gate_denial.py::test_current_reader_rejects_unsupported_model_proof[False-registered_model-RegisteredModelRevision]
+FAILED services/aos-api/tests/aip/test_model_current_gate_denial.py::test_current_reader_rejects_unsupported_model_proof[False-model_route-ModelRouteRevision]
+FAILED services/aos-api/tests/aip/test_model_current_gate_denial.py::test_current_reader_rejects_unsupported_model_proof[True-registered_model-RegisteredModelRevision]
+FAILED services/aos-api/tests/aip/test_model_current_gate_denial.py::test_current_reader_rejects_unsupported_model_proof[True-model_route-ModelRouteRevision]
+4 failed, 2 passed, 7 warnings in 0.39s

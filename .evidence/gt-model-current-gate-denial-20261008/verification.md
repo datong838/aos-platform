@@ -1,0 +1,24 @@
+# Scoped verification
+
+{
+  "status": "UNSUPPORTED_MODEL_CURRENT_GATE_DENIAL_GREEN_FULL_TYPED_PENDING",
+  "red": "4 failed,2passed; missing signed-proof denial",
+  "unit_adjacent": "43passed,1 real-PG node deselected,7existing warnings",
+  "native_adjacent": "41passed,no skip,7existing warnings; complete resolver includes real-PG node; original signed Skill passes",
+  "retained_database": "aos_test_ab0a99dc3609_ti4_test",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_eval_authority_store.py": "66c4add1125262e4e4f06e527a32066bcf1cad6730a997cfb6f6e22b9f292298",
+    "services/aos-api/tests/aip/test_model_current_gate_denial.py": "0dabd44b9d27ebac98db17e64f0043e2e2a989209ce146593ccc70fab8ca48ad",
+    "services/aos-api/tests/aip/test_aip_eval_authority_store.py": "13a711b5c549d16359a8f92a6781771bf929d274b7b4f758cd0a5d4d02b26216"
+  },
+  "review": "Exact return-only guard after existing exact/hash/status/time/target checks; original error consumed by Resolver/ModelStore; no stored Gate mutations. Skill/Logic unit compatible and signed Skill native regression. Original schemas retained only explicit test retention env. No UI change; browser not applicable.",
+  "risks": [
+    "All current Model/Route gate consumption deliberately denied until full typed evidence support",
+    "New code not loaded by current API; no formal deployment",
+    "Full typed signed execution/Usage/Intent/historicalGate disposition unfinished"
+  ],
+  "diagnostics": [
+    "Initial stdin decoder SyntaxError had no effects",
+    "First pure resolver group43pass1DB connection refused: real-PG node ran against intentionally disabled unit DSN; native r3 verifies it, log retained"
+  ]
+}
