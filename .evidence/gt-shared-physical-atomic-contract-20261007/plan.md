@@ -124,3 +124,15 @@ SHARE→UPDATE试验原生40P01，一方rollback另一方commit，独立回读ep
 剩余交付：完整传递锁图/对向writer、两token模式、零执行旧义务导入与完整映射、合法Skill/Logic/ModelRoute/Task、ordinary/Eval+Source+预算+一次Intent实际COMMIT/rollback。本证据检查点不关闭父Task、不改变业务gate、无正式数据库/服务/外部执行。
 
 旧ordinary/Eval仍在桶后取fence UPDATE。新入口若先fence再桶，与未切换旧writer会形成相反顺序。因此fence前置不可单独上线：全入口共同切换或明确禁入旧writer必须先在零执行窗口完成，并真实并发证明。未完成前新joint入口保持禁入；不改变旧正常算法以伪造共同合同通过。
+
+## 固定窗口完整新Source原生反例
+
+新增fixed_window_probe.py、run_fixed_window_probe.py、fixed-window-r1.log、fixed-window-counterexample.json。插件在原fixture前包裹_distinct_native_fact_material，原API新create_basis→propose→原checker decide，更新待签资料的token模式/窗口/anchor并由原actual_command签出；不改已存批准payload，不伪造批准hash，不重发旧attempt。接续原完整prepare/commit/current Source consumer，再在同真实SCRAM/SERIAL/runtime caller调用旧池内核。两个真实Provider池各1预留，token quantum取签名maxTokens//2+1，合计超上限而concurrency2不超过签名上限2，DB clock开始结束确认处于同anchor/window。观察提交前0、实际COMMIT后2rows/2events及AgentRun0/canary0，再继续原epoch/Owner/撤回负门，所有实验库保留。Route/Model DTO仍synthetic，不能称合法业务运行或已发生实际token支出，仅证明固定窗口预留联合上界缺口。独立回读原签名窗口/hash/physicalProvider映射和持久预留必需；窗口滚动/释放/unknown语义还需未来账本完整验证。
+
+### 固定窗口结果与共同账本约束
+
+完整原Source/occupation原test1PASS/8warnings50.90s；通过新basis/source原maker/checkerAPI与原签名生产链签出fixed_window_rate Source。两真实Provider旧pool在同一实际caller/同DB clock窗口预留20002token，签名上限20000，request2未超并发2；未提交observer0、提交后2rows/2events。原epoch/独立Owner/撤回负门继续通过。独立只读verify_fixed_window.py复核签名/hash/窗口参数/账户3Provider/两池每10001/持久计数/角色归还/epoch2撤回，AgentRun0/canary0。原实验两个随机完整迁移数据库保留；Source已撤回，不重新准入或重发。
+
+计額模型不得混同：inflight_upper_bound累计未settled/reconciled义务，与deadline/Source撤回/窗口滚动无关；fixed_window_rate同时保留并发inflight义务与以签名anchor/seconds、DB clock计算的窗口token上界。prepared/held必须按窗口预留，submitted/unknown不得回退已计rate；取消仅能凭未提交不可变Receipt释放该prepared预留。旧pool release/expired事件不是未发送证明。signedSource revision变更或anchor/seconds变化必须有完整旧窗口/未决义务映射与零执行切换，不可借新revision初始化满额度。实际Usage未知保留upper bound，settlement/reconcile是否返还rate须正式语义和Receipt，不靠经验猜测。
+
+当前两种模式的原生反例已齐，未实现joint writer/窗口滚动/全入口并发或合法业务；下一完整共同账本仍须Source currentness+shared account版本序列+原budget+一次Intent，并在过时快照时整事务终止/结果对账后重建全部校验，不透明重发。父合同尚待完整传递锁图及旧active/unknown切换权威，不关闭。

@@ -1,0 +1,46 @@
+{
+  "status": "SIGNED_FIXED_WINDOW_DURABLE_COUNTEREXAMPLE_VERIFIED",
+  "identity": {
+    "database": "aos_test_1c592b9c2334_ti4_test",
+    "readonly": "on",
+    "cluster": "7693564235776004128"
+  },
+  "signature_valid": true,
+  "source_hash_valid": true,
+  "token_limit": {
+    "mode": "fixed_window_rate",
+    "unit": "token",
+    "maxTokens": 20000,
+    "windowSeconds": 60,
+    "windowAnchor": "2026-10-07T13:14:19.025339Z"
+  },
+  "same_window": true,
+  "reserved_tokens": 20002,
+  "request_units": 2,
+  "events": 2,
+  "provider_count": 3,
+  "pool_count": 2,
+  "canary": 0,
+  "agent_runs": 0,
+  "origin_withdrawn": true,
+  "occupation_role_restored": true,
+  "migration_heads": [
+    {
+      "version_num": "a0v_157"
+    }
+  ],
+  "head": "a3369361890fe425950d40e47287e7f3ed9f1b24",
+  "file_sha256": {
+    "fixed_window_probe.py": "c80c492bbb8913a78c0768370a5dd945011d253fb79cb46cdfbefccb02911e21",
+    "run_fixed_window_probe.py": "9e92ce6f394c93ca2ab296473ba3f7f5e6b9b3d5b9cf397e8ad6f0bb5ce27fac",
+    "verify_fixed_window.py": "fde1ec1da51dfc3a1f9b1e2c4c2058ab3e4e3992265c28246b4a02cb7ab79b37",
+    "fixed-window-r1.log": "4e9692f59937bf19ac64047ad39c5ac504c24a85401b86222992f348203a469b",
+    "fixed-window-counterexample.json": "3c767c97ae820c46ded7a331680beb1ffbbf94e4bafc6021e9556af291896a24"
+  },
+  "limitations": [
+    "Synthetic Route/Model DTOs; no lawful business admission or AgentRun",
+    "Reserved upper bounds only, not actual token spend; no budget/Intent/window-roll or unknown release proof",
+    "Source now withdrawn; immutable signature history is not current admission",
+    "Caller xid/pid, precommit invisibility and observation times are original probe observations; independent read verifies final rows and window arithmetic"
+  ]
+}

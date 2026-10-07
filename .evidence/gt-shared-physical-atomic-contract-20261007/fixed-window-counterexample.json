@@ -1,0 +1,52 @@
+{
+  "classification": "SIGNED_FIXED_WINDOW_SOURCE_OLD_POOLS_EXCEED_SHARED_TOKEN_UPPER_BOUND",
+  "database": "aos_test_1c592b9c2334_ti4_test",
+  "cluster": "7693564235776004128",
+  "source_hash": "ae11f864ecd46fe232f743af360408954ba82d56f38dca47d45c38ac93005460",
+  "physical_account_id": "d6b3ac55-9aa6-4e3c-8c38-2fe266befc7a",
+  "token_limit": {
+    "mode": "fixed_window_rate",
+    "unit": "token",
+    "maxTokens": 20000,
+    "windowSeconds": 60,
+    "windowAnchor": "2026-10-07T13:14:19.025339Z"
+  },
+  "signed_concurrency_limit": 2,
+  "actual_request_units": 2,
+  "actual_token_units": 20002,
+  "rows": [
+    {
+      "reservation_id": "capres-96f308b5d6a64cdeba516d9c320f4337",
+      "pool_id": "test:fixed-window:pool:1:552bbd9e14a84bd3934bcc1523f771a8",
+      "request_units": 1,
+      "token_units": 10001,
+      "status": "reserved"
+    },
+    {
+      "reservation_id": "capres-f0ff1393885b4e9e84da6b9735d42d91",
+      "pool_id": "test:fixed-window:pool:0:552bbd9e14a84bd3934bcc1523f771a8",
+      "request_units": 1,
+      "token_units": 10001,
+      "status": "reserved"
+    }
+  ],
+  "events": 2,
+  "actual_caller": {
+    "xid": "220513",
+    "pid": 119921
+  },
+  "window_start_observation": {
+    "at": "2026-10-07 13:14:44.003556+00:00",
+    "window_index": 0
+  },
+  "window_finish_observation": {
+    "at": "2026-10-07 13:14:44.015424+00:00",
+    "window_index": 0
+  },
+  "execution_allowed": false,
+  "canary": 0,
+  "limitations": [
+    "Synthetic Route/Model DTOs; no lawful business admission or AgentRun",
+    "Reserved upper bounds only, not actual token spend; no budget/Intent/window-roll or unknown release proof"
+  ]
+}
