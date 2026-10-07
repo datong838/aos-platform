@@ -1,0 +1,330 @@
+{
+  "authority": "AOS-001449",
+  "code_base": "086c8213",
+  "current_consumer": false,
+  "durable_sources": [
+    {
+      "cluster": "7693564235776004128",
+      "database": "aos_test_154701411b96_ti4_test",
+      "exact_installer_audit": true,
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "public_entries": {
+        "commit": null,
+        "prepare": null
+      },
+      "source_rows": [
+        {
+          "account_id": "85a32929-36ef-4617-b9c4-062f26b70314",
+          "asset_id": "source-6ff5ef6e246b4c0cac1d794629bd1126",
+          "content_hash": "8c1a455cb72ec114a9673523394b923c77c46969fdc4b34f735bd37df6c98750",
+          "finalized": true,
+          "hash_ok": true,
+          "native_session": "aos_provider_capacity_issuer",
+          "native_xid": "179595",
+          "revision": 1,
+          "signature_ok": true,
+          "source_signer_root_revision": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      ]
+    }
+  ],
+  "final_actual_commit_ttl": "unresolved",
+  "formal_production_signer": false,
+  "full_s01": false,
+  "observed_databases": [
+    {
+      "database": "aos_test_fc7e678103fc_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_eea23160db4f_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_ba9baa6f7efb_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_154701411b96_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 1
+    },
+    {
+      "database": "aos_test_6aa468b20751_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_120211286aea_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_9f0fab08f20a_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_36f9d8d70b43_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_e261a1696eca_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_3fdb92421ef8_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_3bdce16b2868_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_98a6c2ec03a8_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_2c61ddb95d7d_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_54aeb70951c7_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_c5ea48df9e6a_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_3b2139271e1e_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_1369a46cf5dd_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_a2a44e6a09bc_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_f959060e4469_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_6205841deeb5_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_83ff9b4a1925_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_77f92df250ec_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_c6100193cc89_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_eb6175c642a3_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_82d8f643f394_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_f8e709d3968f_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_c19ab012e9c0_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_8fb8dc917fb6_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_e7ad4633561b_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_c5c3db58e933_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_a2fb7946b33a_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    },
+    {
+      "database": "aos_test_8caa34fb56a6_ti4_test",
+      "migration": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "source_rows": 0
+    }
+  ],
+  "schema": "aos-source-migrated-durable-post-cleanup/v1",
+  "source_delivery": false
+}

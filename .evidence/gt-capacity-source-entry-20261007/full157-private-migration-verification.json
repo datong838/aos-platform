@@ -1,0 +1,62 @@
+{
+  "schema": "aos-private-source-migration-verification/v1",
+  "base_head": "086c8213cfc22089e33c521442ec084a92fbe716",
+  "authority": "AOS-001449",
+  "migration": "a0v_157",
+  "scope": "isolated private installation and migrated fixture coexistence",
+  "files": {
+    "services/aos-api/alembic/versions/a0v_157_capacity_source_publication_transaction.py": "968d7f6e6464016d62a47bb365112780f110e6da9e7121263dca1fb7377c1199",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "27c05883c774c4d44a43e74ff67fbcd16656a38e022b81c2a857f657b3c8c6e1"
+  },
+  "logs": {
+    ".evidence/gt-capacity-source-publication-20261006/full157-private-migration-green-r2.log": {
+      "sha256": "c0ea46adf19251ee04b210c60739a16525f42a927335b5217b24265966bedfa1",
+      "terminal_summary": "1 passed, 335 deselected, 7 warnings in 13.99s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-private-migration-native-r1.log": {
+      "sha256": "5d36f74e1d7200d7c9035701a57a984f735a29184bf36685b4f4b59f104a0f89",
+      "terminal_summary": "11 passed, 325 deselected, 7 warnings in 117.12s (0:01:57)"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-private-migration-adjacent-r1.log": {
+      "sha256": "582ae764f5d36d519d42b7d18dcea28611ba566f634cb8cc4cb2d7c485da8862",
+      "terminal_summary": "35 passed, 302 deselected, 7 warnings in 305.64s (0:05:05)"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-private-migration-red-r1.log": {
+      "sha256": "55d24bde1e2a5f5b24a2cd4df88ab154f75a661c2cd4f99c118e544526780080",
+      "terminal_summary": "1 failed, 335 deselected, 7 warnings in 12.61s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-private-migration-green-r1.log": {
+      "sha256": "61104be94a4813c4a7b353393c145c7ab7ea4ad7a1e0f7ab4c4ff4e7df36fac2",
+      "terminal_summary": "335 deselected, 7 warnings, 1 error in 5.95s"
+    }
+  },
+  "old_test_ast_preserved_except": [
+    "native_commit_source_reader",
+    "native_complete_source_installation",
+    "native_full_signed_reader",
+    "native_original_command_reader",
+    "native_original_fact_reader",
+    "native_pending_source_reader",
+    "registered_database_isolation",
+    "test_native_private_source_installation_preserves_original_checker"
+  ],
+  "production_transaction_and_a155_a156_unchanged": true,
+  "durable_readback": "full157-private-migration-durable-readback.json",
+  "failed_migration_rollback": "full157-private-migration-error-rollback.json",
+  "browser": "N/A: no UI or formal deployment",
+  "remaining": [
+    "runtime S01 enforcement and exact public entries",
+    "controlled JWT signer",
+    "final actual caller COMMIT TTL",
+    "current consumer",
+    "full natural business chain"
+  ],
+  "source_delivery": false,
+  "full_goal_complete": false,
+  "formal_resources_changed": false,
+  "failed_log_redaction": {
+    "original_preserved_outside_repository": "/Users/ddt/.local/state/aos-isolated-lab-backups/20261007-private-migration-log/green-r1.raw.log",
+    "original_sha256": "1dffa9e948e20c077ba0ddfdad4c708127245f8632473d8a05bf7c2f2dcaa616",
+    "redacted": "connection password"
+  }
+}

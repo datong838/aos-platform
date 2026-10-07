@@ -1,0 +1,1053 @@
+{"ts": "2026-10-07T01:27:00.418215+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 6cd2ca0eff8f, Core-schema baseline migration asset for Wave 0.
+INFO  [alembic.runtime.migration] Running upgrade 6cd2ca0eff8f -> 228ec02oauth, Add tenant-scoped encrypted OAuth token store.
+INFO  [alembic.runtime.migration] Running upgrade 228ec02oauth -> b7e2c4a92283, Add tenant-safe ecommerce core objects, links and sync state.
+INFO  [alembic.runtime.migration] Running upgrade b7e2c4a92283 -> 228ec03linkguard, Add database guards for ecommerce Link tenant and endpoint shape.
+INFO  [alembic.runtime.migration] Running upgrade 228ec03linkguard -> 228logicgraph, Add tenant-scoped canonical AIP Logic graph snapshots and revisions.
+INFO  [alembic.runtime.migration] Running upgrade 228logicgraph -> 228logicrun, Add immutable tenant-scoped AIP Logic dry-run history.
+INFO  [alembic.runtime.migration] Running upgrade 228logicrun -> 228logiceval, Add tenant-scoped Evals suites and immutable Logic report evidence.
+INFO  [alembic.runtime.migration] Running upgrade 228logiceval -> 228logicpublish, Add immutable tenant-scoped AIP Logic publications.
+INFO  [alembic.runtime.migration] Running upgrade 228logicpublish -> a93c7e1b4f20, Add the canonical asset bundle registry.
+INFO  [alembic.runtime.migration] Running upgrade a93c7e1b4f20 -> 228assetsecurity, Add atomic asset bundle lifecycle audit events.
+INFO  [alembic.runtime.migration] Running upgrade 228assetsecurity -> 228assetinvariants, Seal asset registry status and projection invariants.
+INFO  [alembic.runtime.migration] Running upgrade 228assetinvariants -> 228assetevidence, Persist immutable evidence snapshots with lifecycle events.
+INFO  [alembic.runtime.migration] Running upgrade 228assetevidence -> 228assetinstall, Add immutable bundle composition and installation control-plane storage.
+INFO  [alembic.runtime.migration] Running upgrade 228assetinstall -> 228assetintegration, Add immutable Integration Case, Evidence, and projection storage.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 228assetintegration -> 228ti1e1expand, TI-1 E1 nullable tenant scope and NOT VALID relationship expansion.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e1expand -> 228ti1e2dual, TI-1 E2 authz dual-write evidence ledger.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e2dual -> 228ti1e3ledger, TI-1 E3 append-only ownership and quarantine ledger.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e3ledger -> 228ti1e3exec, TI-1 E3 append-only execution and role-separation events.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e3exec -> 228ti2e1expand, TI-2 E1 nullable Module instance and overlay expansion.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e1expand -> 228ti2e4validate, TI-2 E4 validate Module identity foreign keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e4validate -> 228ti2e6rls, TI-2 E6 enforce tenant RLS for the Module instance family.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e6rls -> 228ti2e7contract, TI-2 E7 contract Module identities and tenant-scoped primary keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e7contract -> 228ti3e1expand, TI-3 E1 expand TenantScope columns for object runtime resources.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e1expand -> 228ti3e4validate, TI-3 E4 validate Object runtime workspace foreign keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e4validate -> 228ti3e6rls, TI-3 E6 enforce tenant RLS for the Object Runtime family.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e6rls -> 228ti3e7contract, TI-3 E7 contract Object Runtime tenant identities and active rows.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e7contract -> 228ti4c1expand, TI-4 C1 add NOT VALID workspace alias foreign keys to e-commerce tables.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4c1expand -> 228ti4d1expand, TI-4 D1 expand TenantScope columns and workspace FKs for Data OS.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d1expand -> 228ti4d4validate, TI-4 D4 validate Data OS workspace foreign keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d4validate -> 228ti4d6rls, TI-4 D6 enforce tenant RLS for the Data OS family.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d6rls -> 228ti4d7contract, TI-4 D7 contract Data OS tenant identities and quarantine history.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d7contract -> 228ti4c3contract, TI-4 C3 validate and enforce e-commerce Connector tenant boundaries.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4c3contract -> 228ti4a1apollo, TI-4 A1 contract Apollo Spoke tenant instances.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4a1apollo -> 228ti5a1aip, TI-5 A1 contract tenant-scoped AIP runtime tables.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5a1aip -> 228ti5a2kv, TI-5 A2 contract legacy AIP KV into tenant-scoped storage.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5a2kv -> 228ti5a3lineage, TI-5 A3 contract decision lineage from its draft execution context.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5a3lineage -> 228ti5b1models, TI-5 B1 tenant contract for model-management tables.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5b1models -> 228ti6bcontract, TI-6 2B contract remaining Workshop and TWA scoped identities.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6bcontract -> 228ti6cassets, TI-6 2C enforce RLS for asset installation and Integration Case stores.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6cassets -> 228ti6drelations, TI-6 2D anchor asset-control roots to the canonical workspace.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6drelations -> 228ti6edirectory, TI-6 3A align the test and Qiyue control-plane directory.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6edirectory -> o1a0_001, O1-A0: Expand-only migration — DLQ + derived columns + projection outbox + alias sidecar + uninstalled fix.
+INFO  [alembic.runtime.migration] Running upgrade o1a0_001 -> d5e1_001, D5-E1: Expand ecom_object/ecom_link CHECK constraints for 12 OT + 14 Link types.
+INFO  [alembic.runtime.migration] Running upgrade d5e1_001 -> o1r1_001, O1-R1: distinguish legacy projection receipts from authoritative Outbox events.
+INFO  [alembic.runtime.migration] Running upgrade o1r1_001 -> o1r1_002, O1-R1: replace the empty O1-A0 DLQ shell with the reviewed PG contract.
+INFO  [alembic.runtime.migration] Running upgrade o1r1_002 -> o1r2_001, O1-R2: enforce the single-projector compatibility-write boundary.
+INFO  [alembic.runtime.migration] Running upgrade o1r2_001 -> o1r3_001, O1-R3: installation-bound organization ontology overlays.
+INFO  [alembic.runtime.migration] Running upgrade o1r3_001 -> o1p12_001, O1-A/P12 derived metric CAS, receipt and outbox contract.
+INFO  [alembic.runtime.migration] Running upgrade o1p12_001 -> o1d_001, O1-D versioned and reversible canonical alias migration contract.
+INFO  [alembic.runtime.migration] Running upgrade o1d_001 -> o1d_002, O1-D make the manifest run part of the immutable sidecar identity.
+INFO  [alembic.runtime.migration] Running upgrade o1d_002 -> o1ua2_001, O1-UA2 tenant-authoritative knowledge, action, task and evidence records.
+INFO  [alembic.runtime.migration] Running upgrade o1ua2_001 -> o1ua2_002, O1-UA2 explicit Plan/Checkpoint records and cleanup idempotency.
+INFO  [alembic.runtime.migration] Running upgrade o1ua2_002 -> o1ux2_001, O1-UX2 tenant-authoritative exploration assets.
+INFO  [alembic.runtime.migration] Running upgrade o1ux2_001 -> aip1_001, AIP-1 canonical Task/Plan/Run runtime.
+INFO  [alembic.runtime.migration] Running upgrade aip1_001 -> aip3_001, AIP-3 canonical Action Proposal, Approval, Lease and Receipt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip3_001 -> aip3b_001, AIP-3B execution guardrails and append-only receipt reconciliation.
+INFO  [alembic.runtime.migration] Running upgrade aip3b_001 -> aip3b_002, Make AIP Action Receipt chains database-immutable.
+INFO  [alembic.runtime.migration] Running upgrade aip3b_002 -> aip4_001, AIP-4 Eval, release, lineage, and usage authority contracts.
+INFO  [alembic.runtime.migration] Running upgrade aip4_001 -> aip4_002, AIP-4 E1A immutable EvalPack suite revisions.
+INFO  [alembic.runtime.migration] Running upgrade aip4_002 -> aip4_003, AIP-4 E1B immutable Eval report revisions.
+INFO  [alembic.runtime.migration] Running upgrade aip4_003 -> aip4_004, Bind AIP lineage facts to immutable authority source events.
+INFO  [alembic.runtime.migration] Running upgrade aip4_004 -> aip4_005, Persist tenant-scoped telemetry spans and honest usage quantities.
+INFO  [alembic.runtime.migration] Running upgrade aip4_005 -> aip4_006, Add append-only usage attribution and capability receipts.
+INFO  [alembic.runtime.migration] Running upgrade aip4_006 -> aip4_007, Add the append-only ResearchJob provider and receipt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip4_007 -> aip4_008, Bind every ResearchJob manifest to one exact immutable lineage event.
+INFO  [alembic.runtime.migration] Running upgrade aip4_008 -> aip5_001, Add the governed AIP memory authority tables.
+INFO  [alembic.runtime.migration] Running upgrade aip5_001 -> aip5_002, Add tenant-scoped AIP memory pipeline control authority.
+INFO  [alembic.runtime.migration] Running upgrade aip5_002 -> aip5_003, Add immutable schedule events for AIP memory pipelines.
+INFO  [alembic.runtime.migration] Running upgrade aip5_003 -> aip5_004, Add tenant-scoped rebuildable knowledge search projections.
+INFO  [alembic.runtime.migration] Running upgrade aip5_004 -> aip6_001, Add canonical AIP agent, skill and handoff authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_001 -> aip6_002, Add durable AIP-6 registry command receipts.
+INFO  [alembic.runtime.migration] Running upgrade aip6_002 -> aip6_003, Persist exact AgentInstance snapshots on AgentRun and Handoff.
+INFO  [alembic.runtime.migration] Running upgrade aip6_003 -> aip6_004, Add immutable AIP capability catalog authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_004 -> w2_001, Add W2-A task brief and evidence bundle authority.
+INFO  [alembic.runtime.migration] Running upgrade w2_001 -> aip7_001, Add AIP-7 immutable model runtime authority.
+INFO  [alembic.runtime.migration] Running upgrade aip7_001 -> w2_002, Add W2-B eval contract and responsibility plan authority.
+INFO  [alembic.runtime.migration] Running upgrade w2_002 -> aip7_002, Add AIP-7 exact model capacity pool and reservation authority.
+INFO  [alembic.runtime.migration] Running upgrade aip7_002 -> w2_003, Add W2-C stage template, artifact relation and review return authority.
+INFO  [alembic.runtime.migration] Running upgrade w2_003 -> w1e_001, Make bundle installation uninstall a complete immutable transition.
+INFO  [alembic.runtime.migration] Running upgrade w1e_001 -> w2_004, Add W2-D impact preview and production start decision authority.
+INFO  [alembic.runtime.migration] Running upgrade w2_004 -> aip5_005, Add AIP-5 E7 agent memory projection and improvement authorities.
+INFO  [alembic.runtime.migration] Running upgrade aip5_005 -> bind1_001, Add BIND-1 operational dependency snapshots to existing bindings.
+INFO  [alembic.runtime.migration] Running upgrade bind1_001 -> bind1_002, Align BIND provider refs with the AIP-7 ProviderInstance authority.
+INFO  [alembic.runtime.migration] Running upgrade bind1_002 -> bind1_003, Add exact provenance for governed published Skill revisions.
+INFO  [alembic.runtime.migration] Running upgrade bind1_003 -> aip8_001, Add governed Analyst QueryJob and Result authority.
+INFO  [alembic.runtime.migration] Running upgrade aip8_001 -> aip8_002, Add append-only Assist thread, turn, event and receipt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip8_002 -> aip9_001, Add tenant-scoped MediaJob and AvatarSession runtime authority.
+INFO  [alembic.runtime.migration] Running upgrade aip9_001 -> aip9_002, Run AIP-9 event sequence locking through a fixed-path definer guard.
+INFO  [alembic.runtime.migration] Running upgrade aip9_002 -> aip10_001, Add canonical tenant-scoped AIP BudgetRevision authority.
+INFO  [alembic.runtime.migration] Running upgrade aip10_001 -> aip10_002, Add canonical tenant runtime guard policy authority.
+INFO  [alembic.runtime.migration] Running upgrade aip10_002 -> aip10_003, Add immutable model quota and budget-policy authority.
+INFO  [alembic.runtime.migration] Running upgrade aip10_003 -> aip10_004, Add NetworkPolicy authority and fixed EvalGate expiry.
+INFO  [alembic.runtime.migration] Running upgrade aip10_004 -> aip10_005, Bind governed published Skills to an exact published LogicRevision.
+INFO  [alembic.runtime.migration] Running upgrade aip10_005 -> aip10_006, Add durable AgentRun execution-attempt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip10_006 -> aip6_007, Add versioned AgentInstance prompt/tools overlay authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_007 -> aip6_008, Add guardrails_json to AgentInstance overlay revision authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_008 -> w2_005, Add EvidenceBundle revoke events and disclosure decision authority (W-L10).
+INFO  [alembic.runtime.migration] Running upgrade w2_005 -> w2_006, Add ProductionContextRevision four-contract freeze authority (W-L11).
+INFO  [alembic.runtime.migration] Running upgrade w2_006 -> w2_007, Add HandoffDecisionRevision authority separate from Envelope transport (W-L12).
+INFO  [alembic.runtime.migration] Running upgrade w2_007 -> o1ux2_002, O1-UX2 SavedExploration share grant authority (W-L16).
+INFO  [alembic.runtime.migration] Running upgrade o1ux2_002 -> aip11_001, ResearchJob cancel/retry command receipts (W-L17).
+INFO  [alembic.runtime.migration] Running upgrade aip11_001 -> aip12_001, Add EffectReviewRevision and EffectMaturityDecision authority (W-L19).
+INFO  [alembic.runtime.migration] Running upgrade aip12_001 -> aip13_001, ToolBinding table + AssigneeResolutionReceipt (W-L20).
+INFO  [alembic.runtime.migration] Running upgrade aip13_001 -> w3_012, Add tenant-safe append-only OperationCase authority (W3-12A1).
+INFO  [alembic.runtime.migration] Running upgrade w3_012 -> d0_after_001, Add tenant-safe canonical aftersales original events.
+INFO  [alembic.runtime.migration] Running upgrade d0_after_001 -> w3_011, Add tenant-safe content and campaign canonical authorities.
+INFO  [alembic.runtime.migration] Running upgrade w3_011 -> w3_013, Add tenant-safe Workshop preparation intent and immutable result authority.
+INFO  [alembic.runtime.migration] Running upgrade w3_013 -> w4_001, Make base Evidence append-only and add exact revoke authority.
+INFO  [alembic.runtime.migration] Running upgrade w4_001 -> w3_014, Retain exact ProductionProfile provenance on ProductionContext (W3-04).
+INFO  [alembic.runtime.migration] Running upgrade w3_014 -> w3_015, Retain ProductionContext provenance across preview and start decision (W3-05).
+INFO  [alembic.runtime.migration] Running upgrade w3_015 -> w3_016, Add responsibility successor and takeover assignment authority (W3-07).
+INFO  [alembic.runtime.migration] Running upgrade w3_016 -> w3_017, Add dispatch intent, confirmation and Task priority authority (W3-08).
+INFO  [alembic.runtime.migration] Running upgrade w3_017 -> w3_018, Add W3-13 ecommerce analyst canonical authorities.
+INFO  [alembic.runtime.migration] Running upgrade w3_018 -> w4_002, Bind Eval runs and reports to exact EvalContract revisions.
+INFO  [alembic.runtime.migration] Running upgrade w4_002 -> w4_003, Close ReviewIssue rule, event payload and return impact lineage.
+INFO  [alembic.runtime.migration] Running upgrade w4_003 -> w5_001, Persist exact external-Action Preview and Proposal binding lineage.
+INFO  [alembic.runtime.migration] Running upgrade w5_001 -> w5_002, Add explicit Action Draft revisions and exact approval/lease lineage.
+INFO  [alembic.runtime.migration] Running upgrade w5_002 -> w5_003, Add durable Action execution intent and exact delivery bridge facts.
+INFO  [alembic.runtime.migration] Running upgrade w5_003 -> w5_004, Add durable Action reconciliation and exact compensation policy facts.
+INFO  [alembic.runtime.migration] Running upgrade w5_004 -> w5_005, W5-06 canonical Action webhook inbox, replay and ordering authority.
+INFO  [alembic.runtime.migration] Running upgrade w5_005 -> w5_006, Add canonical Action Kill policy, Canary plan and drill authorities.
+INFO  [alembic.runtime.migration] Running upgrade w5_006 -> w6_001, Exact assignee candidate and readiness snapshots (W6-01).
+INFO  [alembic.runtime.migration] Running upgrade w6_001 -> w6_002, Responsibility profile recommendation, confirmation and merge authority (W6-02).
+INFO  [alembic.runtime.migration] Running upgrade w6_002 -> w6_003, Creator discovery, matching and side-effect-free batch preparation (W6-03).
+INFO  [alembic.runtime.migration] Running upgrade w6_003 -> w6_004, Creator explicit start, partial and collaboration lifecycle (W6-04).
+INFO  [alembic.runtime.migration] Running upgrade w6_004 -> w6_005, Price research, match, policy and side-effect-free batch authority (W6-05).
+INFO  [alembic.runtime.migration] Running upgrade w6_005 -> w6_006, Typed price case and disposition authority without external effects (W6-06).
+INFO  [alembic.runtime.migration] Running upgrade w6_006 -> w6_007, Customer consent, segment, journey, dialogue and zero-send batch authority (W6-07).
+INFO  [alembic.runtime.migration] Running upgrade w6_007 -> w6_008, Customer contact governance without contact resolution or dispatch (W6-08).
+INFO  [alembic.runtime.migration] Running upgrade w6_008 -> w6_009, Three-module partial, usage, effect and handoff closure bridge (W6-09).
+INFO  [alembic.runtime.migration] Running upgrade w6_009 -> w7_001, Profile projected cost and governed confirmation envelope (W7-02).
+INFO  [alembic.runtime.migration] Running upgrade w7_001 -> w7_002, Close canonical executor fence, checkpoint and resume contracts (W7-04).
+INFO  [alembic.runtime.migration] Running upgrade w7_002 -> w7_003, Close immutable Artifact family, Variant and selection contracts (W7-05).
+INFO  [alembic.runtime.migration] Running upgrade w7_003 -> w7_004, Bind media Eval subjects and close the immutable four-gate review set (W7-06).
+INFO  [alembic.runtime.migration] Running upgrade w7_004 -> w7_005, Add tenant-scoped media Provider Job and quarantine authority (W7-07).
+INFO  [alembic.runtime.migration] Running upgrade w7_005 -> w7_006, Add media attempt Capacity/Budget/Usage/Settlement authority (W7-08).
+INFO  [alembic.runtime.migration] Running upgrade w7_006 -> biw2_001, Add tenant-bound DataRequirement and Fulfillment authorities.
+INFO  [alembic.runtime.migration] Running upgrade biw2_001 -> biw2_002, Add the controlled DataRequirement CAS entrypoint.
+INFO  [alembic.runtime.migration] Running upgrade biw2_002 -> biw2_003, Add controlled exact FulfillmentReceipt binding. Revision ID: biw2_003.
+INFO  [alembic.runtime.migration] Running upgrade biw2_003 -> biw2_004, Add fenced delivery control for the immutable DataRequirement Outbox.
+INFO  [alembic.runtime.migration] Running upgrade biw2_004 -> biw3_001, Add tenant-bound read-only observation session and plan authority.
+INFO  [alembic.runtime.migration] Running upgrade biw3_001 -> biw3_002, Add append-only exact ObservationReceipt authority.
+INFO  [alembic.runtime.migration] Running upgrade biw3_002 -> biw3_003, Add governed aggregate schema profiling authority.
+INFO  [alembic.runtime.migration] Running upgrade biw3_003 -> biw3_004, Add confirmed SourceField to canonical ontology mapping authority.
+INFO  [alembic.runtime.migration] Running upgrade biw3_004 -> biw3_005, Add receipt-first semantic hydration authority. Revision ID: biw3_005.
+INFO  [alembic.runtime.migration] Running upgrade biw3_005 -> biw3_006, Add investigation data-handling bindings and receipts. Revision ID: biw3_006.
+INFO  [alembic.runtime.migration] Running upgrade biw3_006 -> biw4_001, Add ecommerce BusinessInvestigationCase draft authority. Revision ID: biw4_001.
+INFO  [alembic.runtime.migration] Running upgrade biw4_001 -> biw4_002, Add BusinessInvestigationRun, Event and local Outbox. Revision ID: biw4_002.
+INFO  [alembic.runtime.migration] Running upgrade biw4_002 -> biw4_003, Add active Run slot and trigger idempotency. Revision ID: biw4_003.
+INFO  [alembic.runtime.migration] Running upgrade biw4_003 -> biw4_004, Add governed investigation artifact revision schema. Revision ID: biw4_004.
+INFO  [alembic.runtime.migration] Running upgrade biw4_004 -> biw4_005, Add artifact cutoff and atomic selection binding. Revision ID: biw4_005.
+INFO  [alembic.runtime.migration] Running upgrade biw4_005 -> biw4_006, Add canonical Case lifecycle and Run control state. Revision ID: biw4_006.
+INFO  [alembic.runtime.migration] Running upgrade biw4_006 -> biw4_007, Extend canonical Run state with waiting and reconciliation. Revision ID: biw4_007.
+INFO  [alembic.runtime.migration] Running upgrade biw4_007 -> biw6_001, Add immutable cross-layer compilation receipts. Revision ID: biw6_001.
+INFO  [alembic.runtime.migration] Running upgrade biw6_001 -> biw6_002, Add controlled investigation Artifact publication. Revision ID: biw6_002.
+INFO  [alembic.runtime.migration] Running upgrade biw6_002 -> biw8_001, Add versioned investigation SchedulePolicy authority. Revision ID: biw8_001.
+INFO  [alembic.runtime.migration] Running upgrade biw8_001 -> wcat_001, Add tenant-bound AIP feature activation authority. Revision ID: wcat_001.
+INFO  [alembic.runtime.migration] Running upgrade wcat_001 -> wcat_002, Add tenant-bound, non-runtime model route draft authority.
+INFO  [alembic.runtime.migration] Running upgrade wcat_002 -> wcat_003, Repair tenant GUC names in model route draft RLS.
+INFO  [alembic.runtime.migration] Running upgrade wcat_003 -> aip_p3_001, Add tenant-scoped Logic automation policy and run authority.
+INFO  [alembic.runtime.migration] Running upgrade aip_p3_001 -> aip_p3_002, Grant tenant runtime access to Logic automation authority.
+INFO  [alembic.runtime.migration] Running upgrade aip_p3_002 -> aip_p4_001, Add governed AIP import job and reversible candidate authority.
+INFO  [alembic.runtime.migration] Running upgrade aip_p4_001 -> aip_p5_001, Add fail-closed Action Proposal withdrawal authority.
+INFO  [alembic.runtime.migration] Running upgrade aip_p5_001 -> r5_d02_001, Bind creator outreach and lifecycle authorities to persistent read receipts.
+INFO  [alembic.runtime.migration] Running upgrade r5_d02_001 -> ar1_001, Subordinate runtime authority; additive, never executed by registration.
+INFO  [alembic.runtime.migration] Running upgrade ar1_001 -> ar1_002, Immutable subordinate configuration revisions; maintenance-only migration.
+INFO  [alembic.runtime.migration] Running upgrade ar1_002 -> ar1_003, Trusted runtime-host directory; no default assignments or worker startup.
+INFO  [alembic.runtime.migration] Running upgrade ar1_003 -> ar1_004, Persistent generation execution attempts; additive and empty by default.
+INFO  [alembic.runtime.migration] Running upgrade ar1_004 -> ar2_001, Tenant-scoped ecommerce operation dispatch authority; empty by default.
+INFO  [alembic.runtime.migration] Running upgrade ar2_001 -> ar2_002, Persistent schedule binding, occurrence and atomic delivery authority.
+INFO  [alembic.runtime.migration] Running upgrade ar2_002 -> ar2_003, Receipt-first ecommerce capability and three-bucket budget authority.
+INFO  [alembic.runtime.migration] Running upgrade ar2_003 -> ar2_004, Durable receipt-first ecommerce growth result feedback and recovery.
+INFO  [alembic.runtime.migration] Running upgrade ar2_004 -> ar2_005, Exact ecommerce growth host invocation Receipts and cutover authority.
+INFO  [alembic.runtime.migration] Running upgrade ar2_005 -> ar2_006, Persist exact read-only investigation description receipts.
+INFO  [alembic.runtime.migration] Running upgrade ar2_006 -> ar2_007, Reject absent description identity fields, including direct SQL callers.
+INFO  [alembic.runtime.migration] Running upgrade ar2_007 -> ar2_008, Retain complete fulfillment authority, including original timezone and blockers.
+INFO  [alembic.runtime.migration] Running upgrade ar2_008 -> ar2_009, Retain content-addressed snapshots of existing source readiness evaluations.
+INFO  [alembic.runtime.migration] Running upgrade ar2_009 -> ar2_010, Record opaque source configuration identities without copying secrets.
+INFO  [alembic.runtime.migration] Running upgrade ar2_010 -> ar2_011, Add atomic ecommerce analysis data-resume Run transition.
+INFO  [alembic.runtime.migration] Running upgrade ar2_011 -> ar2_012, Pin analysis reconcile transition authority ahead of temporary schemas.
+INFO  [alembic.runtime.migration] Running upgrade ar2_012 -> ar2_013, Persistent ecommerce growth group-cutover preparation authority.
+INFO  [alembic.runtime.migration] Running upgrade ar2_013 -> ar2_014, Atomic ecommerce growth cutover claim gate and commit authority.
+INFO  [alembic.runtime.migration] Running upgrade ar2_014 -> ar2_015, Validated activation resume authority; additive and closed by default.
+INFO  [alembic.runtime.migration] Running upgrade ar2_015 -> ar2_016, Validation-window rollback authority for ecommerce growth cutover.
+INFO  [alembic.runtime.migration] Running upgrade ar2_016 -> ar2_017, Bind runtime disable to exact ecommerce growth dispatch detachment.
+INFO  [alembic.runtime.migration] Running upgrade ar2_017 -> ar2_018, Bind runtime uninstall terminal state to exact released authority.
+INFO  [alembic.runtime.migration] Running upgrade ar2_018 -> a0v_001, Adopt meta_schedule_run into the managed tenant schema.
+INFO  [alembic.runtime.migration] Running upgrade a0v_001 -> a0v_002, Add cost_pending without conflating completed execution and settled money.
+INFO  [alembic.runtime.migration] Running upgrade a0v_002 -> a0v_003, Immutable content execution input/result journal; budget owns invocation state.
+INFO  [alembic.runtime.migration] Running upgrade a0v_003 -> a0v_004, Declare capability invocation lineage without impersonating a TaskRun.
+INFO  [alembic.runtime.migration] Running upgrade a0v_004 -> a0v_005, Persist immutable original canonical ingress commands for exact recovery.
+INFO  [alembic.runtime.migration] Running upgrade a0v_005 -> a0v_006, Immutable derived preparation attached to the original ingress command.
+INFO  [alembic.runtime.migration] Running upgrade a0v_006 -> a0v_007, Immutable Dataset result attached to the original ingress command.
+INFO  [alembic.runtime.migration] Running upgrade a0v_007 -> a0v_008, Record proven local executor termination; old runs remain unknown.
+INFO  [alembic.runtime.migration] Running upgrade a0v_008 -> a0v_009, Preserve the failed-run fact atomically with recovery claim.
+INFO  [alembic.runtime.migration] Running upgrade a0v_009 -> a0v_010, Protect both old and new classifications during compatibility updates.
+INFO  [alembic.runtime.migration] Running upgrade a0v_010 -> a0v_011, Make canonical JSON hashing independent of the caller's search path.
+INFO  [alembic.runtime.migration] Running upgrade a0v_011 -> a0v_012, Private, tenant-bound retained AgentRun text outputs.
+INFO  [alembic.runtime.migration] Running upgrade a0v_012 -> a0v_013, Scoped immutable descriptive analysis method revisions.
+INFO  [alembic.runtime.migration] Running upgrade a0v_013 -> a0v_014, Scoped immutable human stage decision revisions.
+INFO  [alembic.runtime.migration] Running upgrade a0v_014 -> a0v_015, Private, tenant-bound retained AgentRun query inputs.
+INFO  [alembic.runtime.migration] Running upgrade a0v_015 -> a0v_016, Allow only clean never-active approved installations to retire.
+INFO  [alembic.runtime.migration] Running upgrade a0v_016 -> a0v_017, Clean applied preparation may append recovery without rewriting history.
+INFO  [alembic.runtime.migration] Running upgrade a0v_017 -> a0v_018, Inherit the exact original approval on clean preparation recovery.
+INFO  [alembic.runtime.migration] Running upgrade a0v_018 -> a0v_019, Retire verified but never configured/enabled instances with honest receipts.
+INFO  [alembic.runtime.migration] Running upgrade a0v_019 -> a0v_020, Retire configured, disabled generations which never entered execution.
+INFO  [alembic.runtime.migration] Running upgrade a0v_020 -> a0v_021, Retire enabled but never dispatched, exactly disabled released generations.
+INFO  [alembic.runtime.migration] Running upgrade a0v_021 -> a0v_022, Immutable source selection history; no runtime activation or business writes.
+INFO  [alembic.runtime.migration] Running upgrade a0v_022 -> a0v_023, Immutable pipeline controls pinned to exact source selections.
+INFO  [alembic.runtime.migration] Running upgrade a0v_023 -> a0v_024, Bind each controlled source attempt to its existing run and exact approval.
+INFO  [alembic.runtime.migration] Running upgrade a0v_024 -> a0v_025, Immutable schedule bindings to exact approved runtime controls.
+INFO  [alembic.runtime.migration] Running upgrade a0v_025 -> a0v_026, Immutable first-registration receipt; no registration write capability.
+INFO  [alembic.runtime.migration] Running upgrade a0v_026 -> a0v_027, Restricted control-service entrypoint for fenced first registration.
+INFO  [alembic.runtime.migration] Running upgrade a0v_027 -> a0v_028, Bounded tenant dispatch row locks without direct runtime DML privileges.
+INFO  [alembic.runtime.migration] Running upgrade a0v_028 -> a0v_029, Immutable withdrawal receipt storage only; no withdrawal execution grant.
+INFO  [alembic.runtime.migration] Running upgrade a0v_029 -> a0v_030, Atomic withdrawal of unused first-registration occupancy, preserving history.
+INFO  [alembic.runtime.migration] Running upgrade a0v_030 -> a0v_031, Add empty UI read transport, without granting enqueue or worker mutation rights.
+INFO  [alembic.runtime.migration] Running upgrade a0v_031 -> a0v_032, Restricted UI delivery role and fixed entry points; no execution privileges.
+INFO  [alembic.runtime.migration] Running upgrade a0v_032 -> a0v_033, Runtime-owned UI read locks and bounded delivery column updates.
+INFO  [alembic.runtime.migration] Running upgrade a0v_033 -> a0v_034, Seal UI read ACLs against inherited public-schema default privileges.
+INFO  [alembic.runtime.migration] Running upgrade a0v_034 -> a0v_035, Original-subject UI delivery queries without direct table access.
+INFO  [alembic.runtime.migration] Running upgrade a0v_035 -> a0v_036, Empty configuration staging transport; no API submission authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_036 -> a0v_037, Fixed configuration receipt admission and original-subject query functions.
+INFO  [alembic.runtime.migration] Running upgrade a0v_037 -> a0v_038, Recover a lost receipt by original subject and key, without resubmitting.
+INFO  [alembic.runtime.migration] Running upgrade a0v_038 -> a0v_039, Event schema storage vocabulary only; no write authority or activation.
+INFO  [alembic.runtime.migration] Running upgrade a0v_039 -> a0v_040, Atomically store disabled product event policy and its exact Case successor.
+INFO  [alembic.runtime.migration] Running upgrade a0v_040 -> a0v_041, Lock exact event-save authorities without granting direct table UPDATE.
+INFO  [alembic.runtime.migration] Running upgrade a0v_041 -> a0v_042, Immutable event-control receipts; no new executable state or enable function.
+INFO  [alembic.runtime.migration] Running upgrade a0v_042 -> a0v_043, Immutable original batch routing for product event occurrences.
+INFO  [alembic.runtime.migration] Running upgrade a0v_043 -> a0v_044, Allow the complete event-control group while preserving the original nine.
+INFO  [alembic.runtime.migration] Running upgrade a0v_044 -> a0v_045, Bind complete snapshot groups to immutable source claims and original inputs.
+INFO  [alembic.runtime.migration] Running upgrade a0v_045 -> a0v_046, Immutable relationship preparation bound to an exact original snapshot group.
+INFO  [alembic.runtime.migration] Running upgrade a0v_046 -> a0v_047, Persist exact link-only command before any independently committed application.
+INFO  [alembic.runtime.migration] Running upgrade a0v_047 -> a0v_048, Immutable conditional retirement preparation bound to original group link command.
+INFO  [alembic.runtime.migration] Running upgrade a0v_048 -> a0v_049, Lock an exact current Requirement without granting runtime table updates.
+INFO  [alembic.runtime.migration] Running upgrade a0v_049 -> a0v_050, Require fulfillment and running analysis Receipts before Outbox completion.
+INFO  [alembic.runtime.migration] Running upgrade a0v_050 -> a0v_051, Align cutover SQL approval version with committed AIP approval events.
+INFO  [alembic.runtime.migration] Running upgrade a0v_051 -> a0v_052, Accept the canonical absent source-draft ref in cutover SQL validation.
+INFO  [alembic.runtime.migration] Running upgrade a0v_052 -> a0v_053, Add immutable approval refresh authority for an in-flight cutover.
+INFO  [alembic.runtime.migration] Running upgrade a0v_053 -> a0v_054, Receipt-first lifecycle for the one optional ecommerce event-control dispatch.
+INFO  [alembic.runtime.migration] Running upgrade a0v_054 -> a0v_055, Retire the same generation after a host stop advances its fence epoch.
+INFO  [alembic.runtime.migration] Running upgrade a0v_055 -> a0v_056, Register a successor against retained, exactly detached dispatch history.
+INFO  [alembic.runtime.migration] Running upgrade a0v_056 -> a0v_057, Lock Case/Policy before an approval event exists, without table write grants.
+INFO  [alembic.runtime.migration] Running upgrade a0v_057 -> a0v_058, Include optional event control in the exact host Receipt journal.
+INFO  [alembic.runtime.migration] Running upgrade a0v_058 -> a0v_059, Historical Receipts must survive removal of optional current dispatch rows.
+INFO  [alembic.runtime.migration] Running upgrade a0v_059 -> a0v_060, Audited terminal closure of fenced, unaccepted product-event initialization.
+INFO  [alembic.runtime.migration] Running upgrade a0v_060 -> a0v_061, Tenant/installation scoped internal bootstrap definition, admitted by event enable.
+INFO  [alembic.runtime.migration] Running upgrade a0v_061 -> a0v_062, Immutable atomic schedule-group claims, separate from source-call claims.
+INFO  [alembic.runtime.migration] Running upgrade a0v_062 -> a0v_063, Versioned installed snapshot schedule configuration and exclusive membership.
+INFO  [alembic.runtime.migration] Running upgrade a0v_063 -> a0v_064, Bind new schedule claims to exact enabled configuration; retain v1 history.
+INFO  [alembic.runtime.migration] Running upgrade a0v_064 -> a0v_065, Immutable saved-input renewal history; no execution or source-call grant.
+INFO  [alembic.runtime.migration] Running upgrade a0v_065 -> a0v_066, A saved-input renewal definition is never an ordinary schedule read grant.
+INFO  [alembic.runtime.migration] Running upgrade a0v_066 -> a0v_067, Read-only application ledger for future exact configuration continuation.
+INFO  [alembic.runtime.migration] Running upgrade a0v_067 -> a0v_068, Atomic owner for an approved same-generation dispatch configuration refresh.
+INFO  [alembic.runtime.migration] Running upgrade a0v_068 -> a0v_069, Limit configuration refresh mutation to the nine requested business operations.
+INFO  [alembic.runtime.migration] Running upgrade a0v_069 -> a0v_070, Permit event-control retirement after an exact dispatch configuration refresh.
+INFO  [alembic.runtime.migration] Running upgrade a0v_070 -> a0v_071, Permit formal unaccepted closure after a proven dispatch configuration refresh.
+INFO  [alembic.runtime.migration] Running upgrade a0v_071 -> a0v_072, Recover an omitted ecommerce dispatch fence after runtime disable succeeded.
+INFO  [alembic.runtime.migration] Running upgrade a0v_072 -> a0v_073, Allow successor registration after a fully proven predecessor uninstall.
+INFO  [alembic.runtime.migration] Running upgrade a0v_073 -> a0v_074, Permit negative event retirement after an exact runtime lease release.
+INFO  [alembic.runtime.migration] Running upgrade a0v_074 -> a0v_075, Keep Run head physical fields aligned when control returns to PREPARING.
+INFO  [alembic.runtime.migration] Running upgrade a0v_075 -> a0v_076, Close unaccepted analysis occurrences after an exact released-runtime fence.
+INFO  [alembic.runtime.migration] Running upgrade a0v_076 -> a0v_077, Repair one stale schedule cursor from its authoritative terminal run.
+INFO  [alembic.runtime.migration] Running upgrade a0v_077 -> a0v_078, Bind approved SchedulePolicy writes to immutable runtime authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_078 -> a0v_079, Repair schedule-control Case hash lookup without changing stored authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_079 -> a0v_080, Repair schedule-control approval hash datetime serialization.
+INFO  [alembic.runtime.migration] Running upgrade a0v_080 -> a0v_081, Repair schedule-control approval policy request hash binding.
+INFO  [alembic.runtime.migration] Running upgrade a0v_081 -> a0v_082, Audited terminal closure of an unaccepted schedule analysis initialization.
+INFO  [alembic.runtime.migration] Running upgrade a0v_082 -> a0v_083, Audited terminal closure for a snapshot group rejected before any source call.
+INFO  [alembic.runtime.migration] Running upgrade a0v_083 -> a0v_084, Permit one audited disabled definition advance to an exact replacement.
+INFO  [alembic.runtime.migration] Running upgrade a0v_084 -> a0v_085, Allow an audited replacement to renew one immutable saved snapshot group.
+INFO  [alembic.runtime.migration] Running upgrade a0v_085 -> a0v_086, Allow an audited chain of replacements to renew one immutable saved snapshot group.
+INFO  [alembic.runtime.migration] Running upgrade a0v_086 -> a0v_087, Anchor replacement renewal to the prior recovery current definition.
+INFO  [alembic.runtime.migration] Running upgrade a0v_087 -> a0v_088, Allow recoverable authoritative Store work to participate in runtime drain.
+INFO  [alembic.runtime.migration] Running upgrade a0v_088 -> a0v_089, Persist bounded runtime-attempt terminal reasons without raw errors.
+INFO  [alembic.runtime.migration] Running upgrade a0v_089 -> a0v_090, Allow digest-identical canonical aliases in replacement saved recovery.
+INFO  [alembic.runtime.migration] Running upgrade a0v_090 -> a0v_091, Audited terminal closure for a stalled snapshot group abandoned with effects.
+INFO  [alembic.runtime.migration] Running upgrade a0v_091 -> a0v_092, Lock exact retired-dispatch evidence without broad runtime table UPDATE grants.
+INFO  [alembic.runtime.migration] Running upgrade a0v_092 -> a0v_093, Add an empty, opt-in, database-clock Host lease foundation; no worker wiring.
+INFO  [alembic.runtime.migration] Running upgrade a0v_093 -> a0v_094, Add a restricted in-transaction Host lease guard; no worker is wired yet.
+INFO  [alembic.runtime.migration] Running upgrade a0v_094 -> a0v_095, Analysis-only pending Outbox claim; ambiguous attempts need separate review.
+INFO  [alembic.runtime.migration] Running upgrade a0v_095 -> a0v_096, Close the unfenced unknown-reconciliation entry before adding a new one.
+INFO  [alembic.runtime.migration] Running upgrade a0v_096 -> a0v_097, Add an empty immutable canonical witness sidecar; no writer is granted.
+INFO  [alembic.runtime.migration] Running upgrade a0v_097 -> a0v_098, Inert, isolated historical witness writer; no application principal is granted.
+INFO  [alembic.runtime.migration] Running upgrade a0v_098 -> a0v_099, Receipt-first internal daily review target for accepted content feedback.
+INFO  [alembic.runtime.migration] Running upgrade a0v_099 -> a0v_100, Fail-closed terminal TaskRun gate for the daily review target.
+INFO  [alembic.runtime.migration] Running upgrade a0v_100 -> a0v_101, Durable one-attempt content TaskRun intent after an exact v2 Review Handoff.
+INFO  [alembic.runtime.migration] Running upgrade a0v_101 -> a0v_102, One-attempt AgentRun handoff after the accepted content TaskRun.
+INFO  [alembic.runtime.migration] Running upgrade a0v_102 -> a0v_103, One-attempt capacity start after the accepted content AgentRun.
+INFO  [alembic.runtime.migration] Running upgrade a0v_103 -> a0v_104, One-attempt content budget command after an accepted capacity start.
+INFO  [alembic.runtime.migration] Running upgrade a0v_104 -> a0v_105, Allow an exact EvalContract revision to carry its embedded content gate policy.
+INFO  [alembic.runtime.migration] Running upgrade a0v_105 -> a0v_106, Receipt-first pending improvement target; no observed effect is asserted.
+INFO  [alembic.runtime.migration] Running upgrade a0v_106 -> a0v_107, Append-only D01 decisions; runtime writes only through checked functions.
+INFO  [alembic.runtime.migration] Running upgrade a0v_107 -> a0v_108, Immutable tenant-scoped source registration outcome, without connection secrets.
+INFO  [alembic.runtime.migration] Running upgrade a0v_108 -> a0v_109, Immutable tenant-scoped first-pipeline registration outcome.
+INFO  [alembic.runtime.migration] Running upgrade a0v_109 -> a0v_110, Immutable tenant-scoped budget activation preview and decision evidence.
+INFO  [alembic.runtime.migration] Running upgrade a0v_110 -> a0v_111, Reject direct active BudgetRevision inserts until formal DB consumption exists.
+INFO  [alembic.runtime.migration] Running upgrade a0v_111 -> a0v_112, Default-empty, tenant-scoped Eval issuer, identity, revocation and receipt authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_112 -> a0v_113, Remove inherited default table writes from the four Eval authority tables.
+INFO  [alembic.runtime.migration] Running upgrade a0v_113 -> a0v_114, Bind one Skill Eval report case to exact Target and Judge persisted receipts.
+INFO  [alembic.runtime.migration] Running upgrade a0v_114 -> a0v_115, Reserve future system policy ActionType identities at the database boundary.
+INFO  [alembic.runtime.migration] Running upgrade a0v_115 -> a0v_116, Reject direct active NetworkPolicy inserts until atomic approval consumption exists.
+INFO  [alembic.runtime.migration] Running upgrade a0v_116 -> a0v_117, Register exact global network activation metadata and reserve its ObjectType.
+INFO  [alembic.runtime.migration] Running upgrade a0v_117 -> a0v_118, Require a separate database login to issue network approval evidence.
+INFO  [alembic.runtime.migration] Running upgrade a0v_118 -> a0v_119, Seal consumer identities and activation receipts before enabling consumption.
+INFO  [alembic.runtime.migration] Running upgrade a0v_119 -> a0v_120, Consume an exact network approval through a nonprivileged atomic function.
+INFO  [alembic.runtime.migration] Running upgrade a0v_120 -> a0v_121, Expose exact read-only network consumption receipts without table grants.
+INFO  [alembic.runtime.migration] Running upgrade a0v_121 -> a0v_122, Bind trusted consumer-service subjects to exact original-maker authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_122 -> a0v_123, Persist new network approval delivery without enabling a worker or replay.
+INFO  [alembic.runtime.migration] Running upgrade a0v_123 -> a0v_124, Persist unapproved first-budget cost proposals, never activation authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_124 -> a0v_125, Separate budget risk issuer identity and immutable review history.
+INFO  [alembic.runtime.migration] Running upgrade a0v_125 -> a0v_126, Independent atomic consumer for cost-approved initial BudgetRevision.
+INFO  [alembic.runtime.migration] Running upgrade a0v_126 -> a0v_127, Original maker boundary and genuinely read-only budget receipt recovery.
+INFO  [alembic.runtime.migration] Running upgrade a0v_127 -> a0v_128, Derive paired development configuration from a consumed cost decision.
+INFO  [alembic.runtime.migration] Running upgrade a0v_128 -> a0v_129, Formal guard policy metadata and isolated activation boundary.
+INFO  [alembic.runtime.migration] Running upgrade a0v_129 -> a0v_130, Formal quota metadata and isolated activation boundary.
+INFO  [alembic.runtime.migration] Running upgrade a0v_130 -> a0v_131, Add subject-review signing identities and immutable receipts, default closed.
+INFO  [alembic.runtime.migration] Running upgrade a0v_131 -> a0v_132, Bind each subject-review case to one exact persisted Eval Report.
+INFO  [alembic.runtime.migration] Running upgrade a0v_132 -> a0v_133, Immutable, tenant-scoped first Model Eval application; no execution grant.
+INFO  [alembic.runtime.migration] Running upgrade a0v_133 -> a0v_134, Add a separate, tenant-scoped first Model Eval budget hold ledger.
+INFO  [alembic.runtime.migration] Running upgrade a0v_134 -> a0v_135, Keep shared schema receipts writable only by the maintenance owner.
+INFO  [alembic.runtime.migration] Running upgrade a0v_135 -> a0v_136, Add isolated source issuance/head and formal evaluation proof storage.
+INFO  [alembic.runtime.migration] Running upgrade a0v_136 -> a0v_137, Fence trusted-source revocation without granting runtime head writes.
+INFO  [alembic.runtime.migration] Running upgrade a0v_137 -> a0v_138, Preserve original build input without changing legacy evidence hashes.
+INFO  [alembic.runtime.migration] Running upgrade a0v_138 -> a0v_139, Coordinate first source issuance with revoke before any license head exists.
+INFO  [alembic.runtime.migration] Running upgrade a0v_139 -> a0v_140, Reserved original Action metadata and independent source approval writer.
+INFO  [alembic.runtime.migration] Running upgrade a0v_140 -> a0v_141, Narrow original source approval ACL; login provisioning stays closed.
+INFO  [alembic.runtime.migration] Running upgrade a0v_141 -> a0v_142, Dedicated source issuance identity; original approval and receipt remain authority.
+INFO  [alembic.runtime.migration] Running upgrade a0v_142 -> a0v_143, Fence original Health DML by tenant/provider; never replicate health facts.
+INFO  [alembic.runtime.migration] Running upgrade a0v_143 -> a0v_144, Bound formal evaluation to original authorities and one atomic transaction.
+INFO  [alembic.runtime.migration] Running upgrade a0v_144 -> a0v_145, Immutable nonexecuting Provider allocation requests, no capacity activation.
+INFO  [alembic.runtime.migration] Running upgrade a0v_145 -> a0v_146, Reserved Provider allocation approval metadata; no execution grant.
+INFO  [alembic.runtime.migration] Running upgrade a0v_146 -> a0v_147, Unverified physical capacity candidates only; no account or capacity publication.
+INFO  [alembic.runtime.migration] Running upgrade a0v_147 -> a0v_148, Reserved Provider allocation approval metadata; no execution grant.
+INFO  [alembic.runtime.migration] Running upgrade a0v_148 -> a0v_149, Neutral Evidence epoch for capacity review and future issuer commit ordering.
+INFO  [alembic.runtime.migration] Running upgrade a0v_149 -> a0v_150, Dedicated read/lock identity for capacity issuance, with no publication grants yet.
+INFO  [alembic.runtime.migration] Running upgrade a0v_150 -> a0v_151, Independent proposal withdrawal ordering, without granting capacity.
+INFO  [alembic.runtime.migration] Running upgrade a0v_151 -> a0v_152, Private empty root registry; no configured anchor or root registration.
+INFO  [alembic.runtime.migration] Running upgrade a0v_152 -> a0v_153, Private signed original documents, without Source or execution permissions.
+INFO  [alembic.runtime.migration] Running upgrade a0v_153 -> a0v_154, Immutable signed authority withdrawal with stable registry epoch invalidation.
+INFO  [alembic.runtime.migration] Running upgrade a0v_154 -> a0v_155, Original fact access for complete Source publication; publication still pending.
+INFO  [alembic.runtime.migration] Running upgrade a0v_155 -> a0v_156, Exact original epoch locks for the controlled publication Owner.
+INFO  [alembic.runtime.migration] Running upgrade a0v_156 -> a0v_157, Audited private Source transaction foundation; public issuance still gated.
+Retained isolated test database: aos_test_0fd7850482df_ti4_test
+E
+==================================== ERRORS ====================================
+___ ERROR at setup of test_latest_migration_installs_private_source_boundary ___
+
+self = <sqlalchemy.engine.base.Connection object at 0x11ee47fd0>
+dialect = <sqlalchemy.dialects.postgresql.psycopg.PGDialect_psycopg object at 0x11ee48090>
+constructor = <bound method DefaultExecutionContext._init_compiled of <class 'sqlalchemy.dialects.postgresql.psycopg.PGExecutionContext_psycopg'>>
+statement = <sqlalchemy.dialects.postgresql.psycopg.PGCompiler_psycopg object at 0x11f1a35d0>
+parameters = [immutabledict({})], execution_options = immutabledict({})
+args = (<sqlalchemy.dialects.postgresql.psycopg.PGCompiler_psycopg object at 0x11f1a35d0>, [immutabledict({})], <sqlalchemy.s...None, type_=NullType()), BindParameter('null', None, type_=NullType()), BindParameter('true', None, type_=NullType())])
+kw = {'cache_hit': <CacheStats.CACHE_MISS: 1>}
+
+    def _execute_context(
+        self,
+        dialect: Dialect,
+        constructor: Callable[..., ExecutionContext],
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+        execution_options: _ExecuteOptions,
+        *args: Any,
+        **kw: Any,
+    ) -> CursorResult[Any]:
+        """Create an :class:`.ExecutionContext` and execute, returning
+        a :class:`_engine.CursorResult`."""
+    
+        if execution_options:
+            yp = execution_options.get("yield_per", None)
+            if yp:
+                execution_options = execution_options.union(
+                    {"stream_results": True, "max_row_buffer": yp}
+                )
+        try:
+            conn = self._dbapi_connection
+            if conn is None:
+                conn = self._revalidate_connection()
+    
+>           context = constructor(
+                dialect, self, conn, execution_options, *args, **kw
+            )
+
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1817: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:1416: in _init_compiled
+    self.compiled_parameters = [
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:1417: in <listcomp>
+    compiled.construct_params(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.postgresql.psycopg.PGCompiler_psycopg object at 0x11f1a35d0>
+params = immutabledict({})
+extracted_parameters = [BindParameter('20', None, type_=NullType()), BindParameter('25', None, type_=NullType()), BindParameter('null', None, type_=NullType()), BindParameter('true', None, type_=NullType())]
+escape_names = False, _group_number = 0, _check = True, _no_postcompile = False
+
+    def construct_params(
+        self,
+        params: Optional[_CoreSingleExecuteParams] = None,
+        extracted_parameters: Optional[Sequence[BindParameter[Any]]] = None,
+        escape_names: bool = True,
+        _group_number: Optional[int] = None,
+        _check: bool = True,
+        _no_postcompile: bool = False,
+    ) -> _MutableCoreSingleExecuteParams:
+        """return a dictionary of bind parameter keys and values"""
+    
+        if self._render_postcompile and not _no_postcompile:
+            assert self._post_compile_expanded_state is not None
+            if not params:
+                return dict(self._post_compile_expanded_state.parameters)
+            else:
+                raise exc.InvalidRequestError(
+                    "can't construct new parameters when render_postcompile "
+                    "is used; the statement is hard-linked to the original "
+                    "parameters.  Use construct_expanded_state to generate a "
+                    "new statement and parameters."
+                )
+    
+        has_escaped_names = escape_names and bool(self.escaped_bind_names)
+    
+        if extracted_parameters:
+            # related the bound parameters collected in the original cache key
+            # to those collected in the incoming cache key.  They will not have
+            # matching names but they will line up positionally in the same
+            # way.   The parameters present in self.bind_names may be clones of
+            # these original cache key params in the case of DML but the .key
+            # will be guaranteed to match.
+            if self.cache_key is None:
+                raise exc.CompileError(
+                    "This compiled object has no original cache key; "
+                    "can't pass extracted_parameters to construct_params"
+                )
+            else:
+                orig_extracted = self.cache_key[1]
+    
+            ckbm_tuple = self._cache_key_bind_match
+            assert ckbm_tuple is not None
+            ckbm, _ = ckbm_tuple
+            resolved_extracted = {
+                bind: extracted
+                for b, extracted in zip(orig_extracted, extracted_parameters)
+                for bind in ckbm[b]
+            }
+        else:
+            resolved_extracted = None
+    
+        if params:
+            pd = {}
+            for bindparam, name in self.bind_names.items():
+                escaped_name = (
+                    self.escaped_bind_names.get(name, name)
+                    if has_escaped_names
+                    else name
+                )
+    
+                if bindparam.key in params:
+                    pd[escaped_name] = params[bindparam.key]
+                elif name in params:
+                    pd[escaped_name] = params[name]
+    
+                elif _check and bindparam.required:
+                    if _group_number:
+                        raise exc.InvalidRequestError(
+                            "A value is required for bind parameter %r, "
+                            "in parameter group %d"
+                            % (bindparam.key, _group_number),
+                            code="cd3x",
+                        )
+                    else:
+                        raise exc.InvalidRequestError(
+                            "A value is required for bind parameter %r"
+                            % bindparam.key,
+                            code="cd3x",
+                        )
+                else:
+                    if resolved_extracted:
+                        value_param = resolved_extracted.get(
+                            bindparam, bindparam
+                        )
+                    else:
+                        value_param = bindparam
+    
+                    if bindparam.callable:
+                        pd[escaped_name] = value_param.effective_value
+                    else:
+                        pd[escaped_name] = value_param.value
+            return pd
+        else:
+            pd = {}
+            for bindparam, name in self.bind_names.items():
+                escaped_name = (
+                    self.escaped_bind_names.get(name, name)
+                    if has_escaped_names
+                    else name
+                )
+    
+                if _check and bindparam.required:
+                    if _group_number:
+                        raise exc.InvalidRequestError(
+                            "A value is required for bind parameter %r, "
+                            "in parameter group %d"
+                            % (bindparam.key, _group_number),
+                            code="cd3x",
+                        )
+                    else:
+>                       raise exc.InvalidRequestError(
+                            "A value is required for bind parameter %r"
+                            % bindparam.key,
+                            code="cd3x",
+                        )
+E                       sqlalchemy.exc.InvalidRequestError: A value is required for bind parameter '25' (Background on this error at: https://sqlalche.me/e/20/cd3x)
+
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/sql/compiler.py:1963: InvalidRequestError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:[REDACTED]@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+        with psycopg.connect(admin_dsn, autocommit=True) as conn:
+            conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database_name)))
+    
+        previous_dsn = os.environ.get("AOS_DATABASE_URL")
+        previous_twa_store = os.environ.get("AOS_TWA_STORE")
+        os.environ["AOS_DATABASE_URL"] = test_dsn
+        config = Config(os.path.join(os.path.dirname(__file__), "..", "alembic.ini"))
+        config.set_main_option(
+            "script_location", os.path.join(os.path.dirname(__file__), "..", "alembic")
+        )
+        config.set_main_option("sqlalchemy.url", test_dsn)
+        try:
+            os.environ["AOS_TWA_STORE"] = "pg"
+            from aos_api import twa_pg
+            from aos_api.data_os_store import ensure_data_os_schema
+            from aos_api.db import init_schema
+            from aos_api.tenant_catalog import ensure_tenant_catalog_schema
+    
+            twa_pg.clear_mode_cache()
+            command.upgrade(config, "228assetintegration")
+            init_schema()
+            ensure_tenant_catalog_schema()
+            # Contract migrations validate workspace parents before request/demo
+            # fixtures run, so the disposable database needs its canonical test
+            # workspace at bootstrap time.
+            from aos_api.db import connect as bootstrap_connect
+    
+            with bootstrap_connect() as conn:
+                conn.execute(
+                    "INSERT INTO twa_org (id,name) VALUES ('dev-org','测试组织') "
+                    "ON CONFLICT (id) DO NOTHING"
+                )
+                conn.execute(
+                    "INSERT INTO twa_workspace (org_id,project_id,name) "
+                    "VALUES ('dev-org','dev-project','测试工作区') "
+                    "ON CONFLICT (org_id,project_id) DO NOTHING"
+                )
+                conn.commit()
+            from aos_api.canvas_config import ensure_schema as ensure_canvas_schema
+            from aos_api.module_deployments import ensure_schema as ensure_deployment_schema
+            from aos_api.module_events import ensure_events_schema
+            from aos_api.module_interfaces import ensure_schema as ensure_interface_schema
+            from aos_api.module_queries import ensure_schema as ensure_query_schema
+            from aos_api.module_store import ensure_module_schema
+            from aos_api.module_variables import ensure_schema as ensure_variable_schema
+            from aos_api.routers.drafts import ensure_draft_schema
+            from aos_api.widget_instances import ensure_schema as ensure_widget_schema
+    
+            ensure_module_schema()
+            ensure_canvas_schema()
+            ensure_deployment_schema()
+            ensure_events_schema()
+            ensure_interface_schema()
+            ensure_query_schema()
+            ensure_variable_schema()
+            ensure_widget_schema()
+            ensure_draft_schema()
+>           command.upgrade(config, "head")
+
+services/aos-api/tests/conftest.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/command.py:487: in upgrade
+    script.run_env()
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/script/base.py:550: in run_env
+    util.load_python_file(self.dir, "env.py")
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/util/pyfiles.py:114: in load_python_file
+    module = load_module_py(module_id, path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/util/pyfiles.py:132: in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/alembic/env.py:71: in <module>
+    run_migrations_online()
+services/aos-api/alembic/env.py:65: in run_migrations_online
+    context.run_migrations()
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/runtime/environment.py:967: in run_migrations
+    self.get_context().run_migrations(**kw)
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/runtime/migration.py:621: in run_migrations
+    step.migration_fn(**kw)
+services/aos-api/alembic/versions/a0v_157_capacity_source_publication_transaction.py:18: in upgrade
+    install_source_transaction_boundary(op.execute)
+services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py:992: in install_source_transaction_boundary
+    execute(statement)
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/operations/ops.py:2645: in execute
+    return operations.invoke(op)
+           ^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/operations/base.py:448: in invoke
+    return fn(self, operation)
+           ^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/operations/toimpl.py:259: in execute_sql
+    operations.migration_context.impl.execute(
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/ddl/impl.py:259: in execute
+    self._exec(sql, execution_options)
+services/aos-api/.venv/lib/python3.11/site-packages/alembic/ddl/impl.py:252: in _exec
+    return conn.execute(construct, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1421: in execute
+    return meth(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1643: in _execute_clauseelement
+    ret = self._execute_context(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1823: in _execute_context
+    self._handle_dbapi_exception(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2365: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1817: in _execute_context
+    context = constructor(
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:1416: in _init_compiled
+    self.compiled_parameters = [
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:1417: in <listcomp>
+    compiled.construct_params(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.postgresql.psycopg.PGCompiler_psycopg object at 0x11f1a35d0>
+params = immutabledict({})
+extracted_parameters = [BindParameter('20', None, type_=NullType()), BindParameter('25', None, type_=NullType()), BindParameter('null', None, type_=NullType()), BindParameter('true', None, type_=NullType())]
+escape_names = False, _group_number = 0, _check = True, _no_postcompile = False
+
+    def construct_params(
+        self,
+        params: Optional[_CoreSingleExecuteParams] = None,
+        extracted_parameters: Optional[Sequence[BindParameter[Any]]] = None,
+        escape_names: bool = True,
+        _group_number: Optional[int] = None,
+        _check: bool = True,
+        _no_postcompile: bool = False,
+    ) -> _MutableCoreSingleExecuteParams:
+        """return a dictionary of bind parameter keys and values"""
+    
+        if self._render_postcompile and not _no_postcompile:
+            assert self._post_compile_expanded_state is not None
+            if not params:
+                return dict(self._post_compile_expanded_state.parameters)
+            else:
+                raise exc.InvalidRequestError(
+                    "can't construct new parameters when render_postcompile "
+                    "is used; the statement is hard-linked to the original "
+                    "parameters.  Use construct_expanded_state to generate a "
+                    "new statement and parameters."
+                )
+    
+        has_escaped_names = escape_names and bool(self.escaped_bind_names)
+    
+        if extracted_parameters:
+            # related the bound parameters collected in the original cache key
+            # to those collected in the incoming cache key.  They will not have
+            # matching names but they will line up positionally in the same
+            # way.   The parameters present in self.bind_names may be clones of
+            # these original cache key params in the case of DML but the .key
+            # will be guaranteed to match.
+            if self.cache_key is None:
+                raise exc.CompileError(
+                    "This compiled object has no original cache key; "
+                    "can't pass extracted_parameters to construct_params"
+                )
+            else:
+                orig_extracted = self.cache_key[1]
+    
+            ckbm_tuple = self._cache_key_bind_match
+            assert ckbm_tuple is not None
+            ckbm, _ = ckbm_tuple
+            resolved_extracted = {
+                bind: extracted
+                for b, extracted in zip(orig_extracted, extracted_parameters)
+                for bind in ckbm[b]
+            }
+        else:
+            resolved_extracted = None
+    
+        if params:
+            pd = {}
+            for bindparam, name in self.bind_names.items():
+                escaped_name = (
+                    self.escaped_bind_names.get(name, name)
+                    if has_escaped_names
+                    else name
+                )
+    
+                if bindparam.key in params:
+                    pd[escaped_name] = params[bindparam.key]
+                elif name in params:
+                    pd[escaped_name] = params[name]
+    
+                elif _check and bindparam.required:
+                    if _group_number:
+                        raise exc.InvalidRequestError(
+                            "A value is required for bind parameter %r, "
+                            "in parameter group %d"
+                            % (bindparam.key, _group_number),
+                            code="cd3x",
+                        )
+                    else:
+                        raise exc.InvalidRequestError(
+                            "A value is required for bind parameter %r"
+                            % bindparam.key,
+                            code="cd3x",
+                        )
+                else:
+                    if resolved_extracted:
+                        value_param = resolved_extracted.get(
+                            bindparam, bindparam
+                        )
+                    else:
+                        value_param = bindparam
+    
+                    if bindparam.callable:
+                        pd[escaped_name] = value_param.effective_value
+                    else:
+                        pd[escaped_name] = value_param.value
+            return pd
+        else:
+            pd = {}
+            for bindparam, name in self.bind_names.items():
+                escaped_name = (
+                    self.escaped_bind_names.get(name, name)
+                    if has_escaped_names
+                    else name
+                )
+    
+                if _check and bindparam.required:
+                    if _group_number:
+                        raise exc.InvalidRequestError(
+                            "A value is required for bind parameter %r, "
+                            "in parameter group %d"
+                            % (bindparam.key, _group_number),
+                            code="cd3x",
+                        )
+                    else:
+>                       raise exc.InvalidRequestError(
+                            "A value is required for bind parameter %r"
+                            % bindparam.key,
+                            code="cd3x",
+                        )
+E                       sqlalchemy.exc.StatementError: (sqlalchemy.exc.InvalidRequestError) A value is required for bind parameter '25'
+E                       [SQL: 
+E                       CREATE FUNCTION aos_capacity_publication_private.require_original_fact_boundary()
+E                       RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+E                       DECLARE
+E                        owner_oid oid; fact_oids oid[]; r record; g record; flags record;
+E                        tables text[] := ARRAY['meta_membership','aip_provider_capacity_request','aip_provider_capacity_candidate',
+E                         'aip_provider_instance_head','aip_provider_instance_revision','aip_evidence_bundle_revision',
+E                         'aip_evidence_bundle_build_provenance','aip_evidence_bundle_revoke_event',
+E                         'aip_production_contract_receipt','aip_action_withdrawal_event','meta_object_type','meta_action_type',
+E                         'aip_action_proposal','aip_action_draft','aip_action_approval_event'];
+E                        locks jsonb := '{"meta_membership":"subject","aip_provider_instance_head":"provider_instance_id","meta_object_type":"id","meta_action_type":"id","aip_action_proposal":"proposal_id"}';
+E                        tenant text := '((org_id = ''org-org''::text) AND (project_id = ''dev-project''::text) AND (org_id = NULLIF(current_setting(''aos.org_id''::text, true), ''''::text)) AND (project_id = NULLIF(current_setting(''aos.project_id''::text, true), ''''::text)))';
+E                        expression text; tab text; n integer;
+E                       BEGIN
+E                        SELECT * INTO r FROM pg_roles WHERE rolname='aos_capacity_publication_owner';
+E                        IF NOT FOUND OR r.rolcanlogin OR r.rolinherit OR r.rolsuper OR r.rolcreatedb OR r.rolcreaterole
+E                         OR r.rolreplication OR r.rolbypassrls OR EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid=r.oid OR member=r.oid)
+E                        THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                        owner_oid:=r.oid;
+E                        IF EXISTS(SELECT 1 FROM pg_default_acl d WHERE d.defaclrole=owner_oid
+E                          OR EXISTS(SELECT 1 FROM aclexplode(d.defaclacl) a WHERE a.grantee=owner_oid))
+E                         OR EXISTS(SELECT 1 FROM pg_namespace WHERE nspname='public' AND has_schema_privilege(owner_oid,oid,'CREATE'))
+E                         OR EXISTS(SELECT 1 FROM pg_database WHERE datname=current_database() AND has_database_privilege(owner_oid,oid,'CREATE'))
+E                        THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                        SELECT array_agg(to_regclass('public.'||t)::oid) INTO fact_oids FROM unnest(tables) t;
+E                        IF array_position(fact_oids,NULL) IS NOT NULL OR (SELECT count(DISTINCT x) FROM unnest(fact_oids) x)<>15
+E                        THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                        IF EXISTS(SELECT 1 FROM pg_class c,LATERAL aclexplode(c.relacl) a
+E                          WHERE c.relnamespace='public'::regnamespace AND a.grantee=owner_oid
+E                           AND (NOT(c.oid=ANY(fact_oids)) OR a.privilege_type<>'SELECT' OR a.is_grantable))
+E                         OR (SELECT count(DISTINCT c.oid) FROM pg_class c,LATERAL aclexplode(c.relacl) a
+E                          WHERE c.relnamespace='public'::regnamespace AND a.grantee=owner_oid)<>15
+E                        THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                        IF EXISTS(SELECT 1 FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid,LATERAL aclexplode(x.attacl) a
+E                          WHERE a.grantee=owner_oid AND (a.privilege_type<>'UPDATE' OR a.is_grantable OR NOT EXISTS(
+E                           SELECT 1 FROM jsonb_each_text(locks) l WHERE c.oid=to_regclass('public.'||l.key) AND x.attname=l.value)))
+E                         OR (SELECT count(DISTINCT (c.oid,x.attname)) FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid,
+E                           LATERAL aclexplode(x.attacl) a WHERE a.grantee=owner_oid)<>5
+E                        THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                        IF EXISTS(SELECT 1 FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relkind IN('r','v','m','p','f')
+E                          AND (has_table_privilege(owner_oid,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER,REFERENCES')
+E                           OR (NOT(c.oid=ANY(fact_oids)) AND (has_table_privilege(owner_oid,c.oid,'SELECT')
+E                            OR has_any_column_privilege(owner_oid,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')))))
+E                        THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                        IF EXISTS(SELECT 1 FROM pg_class c JOIN pg_attribute a ON a.attrelid=c.oid
+E                          WHERE c.relnamespace='public'::regnamespace AND a.attnum>0 AND NOT a.attisdropped
+E                           AND (has_column_privilege(owner_oid,c.oid,a.attnum,'INSERT,REFERENCES')
+E                             OR has_column_privilege(owner_oid,c.oid,a.attnum,'UPDATE'))
+E                           AND NOT EXISTS(SELECT 1 FROM jsonb_each_text(locks) l WHERE c.oid=to_regclass('public.'||l.key) AND a.attname=l.value))
+E                         OR (SELECT count(DISTINCT (c.oid,a.attname)) FROM pg_class c JOIN pg_attribute a ON a.attrelid=c.oid
+E                          WHERE c.relnamespace='public'::regnamespace AND a.attnum>0 AND NOT a.attisdropped
+E                           AND (has_column_privilege(owner_oid,c.oid,a.attnum,'INSERT,REFERENCES')
+E                             OR has_column_privilege(owner_oid,c.oid,a.attnum,'UPDATE')))<>5
+E                        THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                        FOREACH tab IN ARRAY tables LOOP
+E                         IF tab IN ('meta_object_type','meta_action_type') THEN CONTINUE; END IF;
+E                         expression:=tenant;
+E                         IF tab='aip_action_proposal' THEN
+E                          expression:='('||substring(tenant FROM 2 FOR length(tenant)-2)||' AND (action_type_id = ANY (ARRAY[''aip_request_provider_capacity''::text, ''aip_review_provider_capacity_source''::text])) AND ((action_type_snapshot ->> ''id''::text) = action_type_id))';
+E                         ELSIF tab IN ('aip_action_draft','aip_action_approval_event') THEN
+E                          expression:='('||substring(tenant FROM 2 FOR length(tenant)-2)||' AND (EXISTS ( SELECT 1 FROM public.aip_action_proposal p WHERE ((p.org_id = '||tab||'.org_id) AND (p.project_id = '||tab||'.project_id) AND (p.proposal_id = '||tab||'.proposal_id)))))';
+E                         END IF;
+E                         SELECT * INTO flags FROM pg_class WHERE oid=to_regclass('public.'||tab);
+E                         IF NOT flags.relrowsecurity OR NOT flags.relforcerowsecurity
+E                         THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                         SELECT count(*) INTO n FROM pg_policy WHERE polrelid=flags.oid AND owner_oid=ANY(polroles);
+E                         IF n<>2 OR EXISTS(SELECT 1 FROM pg_policy p WHERE p.polrelid=flags.oid AND owner_oid=ANY(p.polroles)
+E                           AND (p.polname NOT IN ('capacity_publication_fact_a0v155','capacity_publication_fact_restrict_a0v155')
+E                            OR p.polcmd<>'*' OR p.polpermissive<>(p.polname='capacity_publication_fact_a0v155')
+E                            OR p.polroles<>ARRAY[owner_oid] OR
+E                            regexp_replace(trim(coalesce(pg_get_expr(p.polqual,p.polrelid),'')),E'\\s+',' ','g')<>
+E                             regexp_replace(trim(expression),E'\\s+',' ','g') OR
+E                            regexp_replace(trim(coalesce(pg_get_expr(p.polwithcheck,p.polrelid),'')),E'\\s+',' ','g')<>
+E                             regexp_replace(trim(expression),E'\\s+',' ','g')))
+E                         THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                        END LOOP;
+E                        SELECT * INTO g FROM pg_proc WHERE oid=to_regprocedure('public.capacity_publication_owner_read_lock_only_a0v155()');
+E                        IF NOT FOUND OR g.proowner<>owner_oid OR g.prosecdef OR g.proconfig IS DISTINCT FROM ARRAY['search_path=pg_catalog']
+E                         OR g.prorettype<>2279 OR g.proargtypes::text<>''
+E                         OR encode(sha256(convert_to(g.prosrc,'UTF8')),'hex')<>'3270bc4120dd7bfeadd75b7506914ec1653df938a5adc7f71cec41fffd9893c1'
+E                         OR EXISTS(SELECT 1 FROM aclexplode(g.proacl) a WHERE a.grantee<>g.proowner)
+E                        THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                        IF (SELECT count(*) FROM pg_trigger WHERE tgname='capacity_publication_owner_read_lock_only_a0v155')<>5
+E                         OR EXISTS(SELECT 1 FROM pg_trigger t WHERE t.tgname='capacity_publication_owner_read_lock_only_a0v155'
+E                           AND (NOT EXISTS(SELECT 1 FROM jsonb_each_text(locks) l WHERE t.tgrelid=to_regclass('public.'||l.key))
+E                            OR t.tgfoid<>g.oid OR t.tgenabled<>'O' OR t.tgtype<>31 OR t.tgqual IS NOT NULL
+E                            OR t.tgargs<>''::bytea OR t.tgnargs<>0 OR cardinality(t.tgattr::smallint[])<>0))
+E                        THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                       END $body$;
+E                       ALTER FUNCTION aos_capacity_publication_private.require_original_fact_boundary() OWNER TO aos_capacity_publication_owner;
+E                       REVOKE ALL ON FUNCTION aos_capacity_publication_private.require_original_fact_boundary() FROM PUBLIC;
+E                       
+E                       CREATE FUNCTION aos_capacity_publication_private.require_original_epoch_pair_boundary()
+E                       RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+E                       DECLARE owner_oid oid; ids oid[] := ARRAY[]::oid[]; r record; expected record; allowed text[];
+E                       BEGIN
+E                        PERFORM aos_capacity_publication_private.require_original_fact_boundary();
+E                        SELECT oid INTO owner_oid FROM pg_roles WHERE rolname='aos_capacity_publication_owner';
+E                        FOR expected IN SELECT * FROM (VALUES
+E                         ('public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)','aos_capacity_evidence_epoch_owner','763f808a880573c3f6cd372beb76347b68e93fa864f3a620b6a0c7764bb13c58'),
+E                         ('public.aos_capacity_withdrawal_epoch_lock(text,text,text)','aos_capacity_withdrawal_epoch_owner','bdea4da16d8d4af2897cde94d5c755bb36019a884cd5307d5bc3c2fbfe181bd7')) AS v(signature,neutral_owner,digest)
+E                        LOOP
+E                         SELECT p.*,roles.rolname,l.lanname INTO r FROM pg_proc p JOIN pg_roles roles ON roles.oid=p.proowner
+E                           JOIN pg_language l ON l.oid=p.prolang WHERE p.oid=to_regprocedure(expected.signature);
+E                         IF NOT FOUND OR r.rolname<>expected.neutral_owner OR r.lanname<>'plpgsql' OR NOT r.prosecdef
+E                          OR r.proconfig IS DISTINCT FROM ARRAY['search_path=pg_catalog'] OR r.prorettype<>20 OR r.proargtypes::text<>'25 25 25'
+E                          OR encode(sha256(convert_to(r.prosrc,'UTF8')),'hex')<>expected.digest
+E                         THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_LOCK_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                         ids:=array_append(ids,r.oid);
+E                         allowed:=ARRAY[expected.neutral_owner,'aos_capacity_publication_owner','aos_provider_capacity_issuer'];
+E                         IF expected.neutral_owner='aos_capacity_withdrawal_epoch_owner' THEN allowed:=array_append(allowed,'aos_runtime'); END IF;
+E                         IF (SELECT array_agg(DISTINCT coalesce(roles.rolname,'PUBLIC')::text ORDER BY coalesce(roles.rolname,'PUBLIC')::text)
+E                           FROM aclexplode(coalesce(r.proacl,acldefault('f',r.proowner))) a LEFT JOIN pg_roles roles ON roles.oid=a.grantee)
+E                          IS DISTINCT FROM (SELECT array_agg(x ORDER BY x) FROM unnest(allowed) x)
+E                          OR EXISTS(SELECT 1 FROM aclexplode(coalesce(r.proacl,acldefault('f',r.proowner))) a LEFT JOIN pg_roles roles ON roles.oid=a.grantee
+E                           WHERE a.privilege_type<>'EXECUTE' OR (a.is_grantable AND NOT(coalesce(roles.rolname,'PUBLIC')='aos_capacity_evidence_epoch_owner'
+E                             AND expected.neutral_owner='aos_capacity_evidence_epoch_owner')))
+E                         THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_LOCK_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                        END LOOP;
+E                        IF (SELECT count(*) FROM pg_proc p,LATERAL aclexplode(p.proacl) a WHERE p.pronamespace='public'::regnamespace
+E                          AND p.proowner<>owner_oid AND a.grantee=owner_oid)<>2
+E                         OR EXISTS(SELECT 1 FROM pg_proc p,LATERAL aclexplode(p.proacl) a WHERE p.pronamespace='public'::regnamespace
+E                          AND p.proowner<>owner_oid AND a.grantee=owner_oid AND (NOT(p.oid=ANY(ids)) OR a.privilege_type<>'EXECUTE' OR a.is_grantable))
+E                         OR (SELECT count(*) FROM pg_proc p WHERE p.pronamespace='public'::regnamespace AND p.proowner<>owner_oid
+E                           AND p.prosecdef AND has_function_privilege(owner_oid,p.oid,'EXECUTE'))<>2
+E                         OR EXISTS(SELECT 1 FROM pg_proc p WHERE p.pronamespace='public'::regnamespace AND p.proowner<>owner_oid
+E                           AND p.prosecdef AND has_function_privilege(owner_oid,p.oid,'EXECUTE') AND NOT(p.oid=ANY(ids)))
+E                        THEN RAISE EXCEPTION 'CAPACITY_PUBLICATION_ORIGINAL_LOCK_BOUNDARY_DRIFTED' USING ERRCODE='22023'; END IF;
+E                       END $body$;
+E                       ALTER FUNCTION aos_capacity_publication_private.require_original_epoch_pair_boundary() OWNER TO aos_capacity_publication_owner;
+E                       REVOKE ALL ON FUNCTION aos_capacity_publication_private.require_original_epoch_pair_boundary() FROM PUBLIC;
+E                       
+E                       CREATE FUNCTION aos_capacity_publication_private.require_original_withdrawal_boundary()
+E                       RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+E                       DECLARE owner_oid oid; table_oid oid; publication_caller boolean; r record; t record; expected record;
+E                        ids oid[] := ARRAY[]::oid[]; allowed text[]; columns jsonb; constraints text[];
+E                        policy_expr text := '((org_id = NULLIF(current_setting(''aos.org_id''::text, true), ''''::text)) AND (project_id = NULLIF(current_setting(''aos.project_id''::text, true), ''''::text)))';
+E                       BEGIN
+E                        SELECT EXISTS(SELECT 1 FROM pg_proc p,LATERAL aclexplode(p.proacl) a
+E                         WHERE a.grantee=to_regrole('aos_capacity_publication_owner')::oid AND p.oid IN (
+E                          to_regprocedure('public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)'),
+E                          to_regprocedure('public.aos_capacity_withdrawal_epoch_lock(text,text,text)'))) INTO publication_caller;
+E                        IF publication_caller THEN
+E                         BEGIN
+E                          PERFORM aos_capacity_publication_private.require_original_epoch_pair_boundary();
+E                         EXCEPTION WHEN SQLSTATE '22023' THEN
+E                          RAISE EXCEPTION 'WITHDRAWAL_PUBLICATION_CALLER_DRIFT' USING ERRCODE='22023';
+E                         END;
+E                        END IF;
+E                        SELECT * INTO r FROM pg_roles WHERE rolname='aos_capacity_withdrawal_epoch_owner';
+E                        IF NOT FOUND OR r.rolcanlogin OR r.rolinherit OR r.rolsuper OR r.rolcreatedb OR r.rolcreaterole
+E                         OR r.rolreplication OR r.rolbypassrls OR EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid=r.oid OR member=r.oid)
+E                        THEN RAISE EXCEPTION 'WITHDRAWAL_OWNER_DRIFT' USING ERRCODE='22023'; END IF;
+E                        owner_oid:=r.oid;
+E                        SELECT * INTO t FROM pg_class WHERE oid=to_regclass('public.aip_capacity_withdrawal_epoch');
+E                        IF NOT FOUND OR t.relowner<>owner_oid OR NOT t.relrowsecurity OR NOT t.relforcerowsecurity OR t.relkind<>'r'
+E                        THEN RAISE EXCEPTION 'WITHDRAWAL_TABLE_DRIFT' USING ERRCODE='22023'; END IF;
+E                        table_oid:=t.oid;
+E                        IF EXISTS(SELECT 1 FROM aclexplode(coalesce(t.relacl,acldefault('r',t.relowner))) a WHERE a.grantee<>owner_oid)
+E                         OR EXISTS(SELECT 1 FROM pg_attribute c,LATERAL aclexplode(c.attacl) a WHERE c.attrelid=table_oid)
+E                        THEN RAISE EXCEPTION 'WITHDRAWAL_TABLE_ACL_DRIFT' USING ERRCODE='22023'; END IF;
+E                        SELECT jsonb_agg(jsonb_build_object('attname',a.attname,'atttypid',a.atttypid::bigint,'attnotnull',a.attnotnull,
+E                          'attidentity',a.attidentity,'attgenerated',a.attgenerated,'default_expr',pg_get_expr(d.adbin,d.adrelid)) ORDER BY a.attnum)
+E                        INTO columns FROM pg_attribute a LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum
+E                        WHERE a.attrelid=table_oid AND a.attnum>0 AND NOT a.attisdropped;
+E                        IF columns IS DISTINCT FROM '[{"attname":"org_id","atttypid"%(25)s,"attnotnull"%(true)s,"attidentity":"","attgenerated":"","default_expr"%(null)s},{"attname":"project_id","atttypid"%(25)s,"attnotnull"%(true)s,"attidentity":"","attgenerated":"","default_expr"%(null)s},{"attname":"proposal_id","atttypid"%(25)s,"attnotnull"%(true)s,"attidentity":"","attgenerated":"","default_expr"%(null)s},{"attname":"epoch","atttypid"%(20)s,"attnotnull"%(true)s,"attidentity":"","attgenerated":"","default_expr":"0"}]'::jsonb
+E                         OR (SELECT count(*) FROM pg_constraint WHERE conrelid=table_oid)<>5
+E                         OR EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid=table_oid AND (NOT convalidated OR condeferrable OR condeferred))
+E                        THEN RAISE EXCEPTION 'WITHDRAWAL_TABLE_STRUCTURE_DRIFT' USING ERRCODE='22023'; END IF;
+E                        SELECT array_agg(DISTINCT pg_get_constraintdef(oid,true) ORDER BY pg_get_constraintdef(oid,true)) INTO constraints
+E                        FROM pg_constraint WHERE conrelid=table_oid;
+E                        IF constraints IS DISTINCT FROM (SELECT array_agg(x ORDER BY x) FROM unnest(ARRAY[
+E                         'CHECK (org_id = ''org-org''::text)','CHECK (project_id = ''dev-project''::text)',
+E                         'CHECK (proposal_id <> ''''::text AND proposal_id = btrim(proposal_id))','CHECK (epoch >= 0)',
+E                         'PRIMARY KEY (org_id, project_id, proposal_id)']) x)
+E                        THEN RAISE EXCEPTION 'WITHDRAWAL_TABLE_STRUCTURE_DRIFT' USING ERRCODE='22023'; END IF;
+E                        IF (SELECT count(*) FROM pg_policy WHERE polrelid=table_oid)<>1 OR NOT EXISTS(
+E                         SELECT 1 FROM pg_policy WHERE polrelid=table_oid AND polname='capacity_withdrawal_epoch_scope' AND polcmd='*'
+E                          AND polpermissive AND polroles=ARRAY[owner_oid] AND pg_get_expr(polqual,polrelid)=policy_expr
+E                          AND pg_get_expr(polwithcheck,polrelid)=policy_expr)
+E                        THEN RAISE EXCEPTION 'WITHDRAWAL_POLICY_DRIFT' USING ERRCODE='22023'; END IF;
+E                        FOR expected IN SELECT * FROM (VALUES
+E                         ('lock','public.aos_capacity_withdrawal_epoch_lock(text,text,text)',20,'25 25 25','bdea4da16d8d4af2897cde94d5c755bb36019a884cd5307d5bc3c2fbfe181bd7'),
+E                         ('init','public.aos_capacity_withdrawal_epoch_init()',2279,'','159967048b7e16fa777469e06605fb0c24652b00b4423d949a3ac170844fdf7d'),
+E                         ('bump','public.aos_capacity_withdrawal_epoch_bump()',2279,'','666fb5350dab9121e46c2fb21a19a09f82c8165078968140b623757ae9557a38')) AS v(name,signature,return_type,args,digest)
+E                        LOOP
+E                         SELECT * INTO r FROM pg_proc WHERE oid=to_regprocedure(expected.signature);
+E                         IF NOT FOUND OR r.proowner<>owner_oid OR NOT r.prosecdef OR r.proconfig IS DISTINCT FROM ARRAY['search_path=pg_catalog']
+E                          OR r.prorettype<>expected.return_type OR r.proargtypes::text<>expected.args
+E                          OR encode(sha256(convert_to(r.prosrc,'UTF8')),'hex')<>expected.digest
+E                         THEN RAISE EXCEPTION 'WITHDRAWAL_FUNCTION_DRIFT' USING ERRCODE='22023'; END IF;
+E                         ids:=array_append(ids,r.oid);
+E                         allowed:=ARRAY['aos_capacity_withdrawal_epoch_owner'];
+E                         IF expected.name='lock' THEN
+E                          allowed:=allowed||ARRAY['aos_runtime','aos_provider_capacity_issuer'];
+E                          IF publication_caller THEN allowed:=array_append(allowed,'aos_capacity_publication_owner'); END IF;
+E                         END IF;
+E                         IF (SELECT array_agg(DISTINCT coalesce(roles.rolname,'PUBLIC')::text ORDER BY coalesce(roles.rolname,'PUBLIC')::text)
+E                           FROM aclexplode(coalesce(r.proacl,acldefault('f',r.proowner))) a LEFT JOIN pg_roles roles ON roles.oid=a.grantee)
+E                           IS DISTINCT FROM (SELECT array_agg(x ORDER BY x) FROM unnest(allowed) x)
+E                          OR EXISTS(SELECT 1 FROM aclexplode(coalesce(r.proacl,acldefault('f',r.proowner))) a WHERE a.privilege_type<>'EXECUTE' OR a.is_grantable)
+E                         THEN RAISE EXCEPTION 'WITHDRAWAL_FUNCTION_ACL_DRIFT' USING ERRCODE='22023'; END IF;
+E                        END LOOP;
+E                        IF EXISTS(SELECT 1 FROM pg_class c WHERE c.relowner=owner_oid AND c.oid<>table_oid
+E                           AND c.oid<>(SELECT reltoastrelid FROM pg_class WHERE oid=table_oid)
+E                           AND NOT EXISTS(SELECT 1 FROM pg_index i WHERE i.indexrelid=c.oid AND i.indrelid IN(table_oid,(SELECT reltoastrelid FROM pg_class WHERE oid=table_oid))))
+E                         OR EXISTS(SELECT 1 FROM pg_proc WHERE proowner=owner_oid AND NOT(oid=ANY(ids)))
+E                         OR EXISTS(SELECT 1 FROM pg_namespace WHERE nspowner=owner_oid)
+E                         OR EXISTS(SELECT 1 FROM pg_database WHERE datdba=owner_oid)
+E                         OR EXISTS(SELECT 1 FROM pg_class c,LATERAL aclexplode(c.relacl) a WHERE a.grantee=owner_oid AND c.relowner<>owner_oid)
+E                         OR EXISTS(SELECT 1 FROM pg_attribute c,LATERAL aclexplode(c.attacl) a WHERE a.grantee=owner_oid)
+E                         OR EXISTS(SELECT 1 FROM pg_proc p,LATERAL aclexplode(p.proacl) a WHERE a.grantee=owner_oid AND NOT(p.oid=ANY(ids)))
+E                         OR EXISTS(SELECT 1 FROM pg_namespace n,LATERAL aclexplode(n.nspacl) a WHERE a.grantee=owner_oid AND (n.nspname<>'public' OR a.privilege_type<>'USAGE' OR a.is_grantable))
+E                         OR EXISTS(SELECT 1 FROM pg_proc p WHERE p.prosecdef AND has_function_privilege(owner_oid,p.oid,'EXECUTE') AND NOT(p.oid=ANY(ids)))
+E                        THEN RAISE EXCEPTION 'WITHDRAWAL_OWNER_EXTRA_PERMISSION' USING ERRCODE='22023'; END IF;
+E                        FOR expected IN SELECT * FROM (VALUES
+E                          ('public.aip_action_proposal','zz_capacity_withdrawal_epoch_init_a0v151',ids[2]),
+E                          ('public.aip_action_withdrawal_event','zz_capacity_withdrawal_epoch_bump_a0v151',ids[3])) AS v(relation,name,fn)
+E                        LOOP
+E                         SELECT * INTO r FROM pg_trigger WHERE tgrelid=expected.relation::regclass AND tgname=expected.name;
+E                         IF NOT FOUND OR r.tgfoid<>expected.fn OR r.tgtype<>5 OR r.tgenabled<>'O'
+E                          OR r.tgattr::text<>'' OR r.tgqual IS NOT NULL OR r.tgargs<>''::bytea
+E                         THEN RAISE EXCEPTION 'WITHDRAWAL_TRIGGER_DRIFT' USING ERRCODE='22023'; END IF;
+E                        END LOOP;
+E                        IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='public.aip_action_withdrawal_event'::regclass AND tgisinternal AND (tgtype & 4)=4)
+E                         OR EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='public.aip_action_withdrawal_event'::regclass AND tgisinternal AND (tgtype & 4)=4
+E                           AND (tgtype<>5 OR tgdeferrable OR tginitdeferred OR tgenabled<>'O' OR tgname>='zz_capacity_withdrawal_epoch_bump_a0v151'))
+E                        THEN RAISE EXCEPTION 'WITHDRAWAL_FOREIGN_KEY_ORDER_DRIFT' USING ERRCODE='22023'; END IF;
+E                       END $body$;
+E                       ALTER FUNCTION aos_capacity_publication_private.require_original_withdrawal_boundary() OWNER TO aos_capacity_publication_owner;
+E                       REVOKE ALL ON FUNCTION aos_capacity_publication_private.require_original_withdrawal_boundary() FROM PUBLIC;
+E                       ]
+E                       [parameters: [immutabledict({})]]
+E                       (Background on this error at: https://sqlalche.me/e/20/cd3x)
+
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/sql/compiler.py:1963: StatementError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py::test_latest_migration_installs_private_source_boundary
+335 deselected, 7 warnings, 1 error in 5.95s

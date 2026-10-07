@@ -20,6 +20,8 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_native_source_function_installation_rejects_catalog_drift',
         'test_native_source_table_installation_rejects_catalog_drift',
         'test_native_private_source_installation_preserves_original_checker',
+        'test_latest_migration_installs_private_source_boundary',
+        'test_migrated_private_source_drift_cannot_rebuild_fragments',
         'test_native_committed_sources_share_one_physical_account',
         'test_native_committed_source_is_durable_and_signed',
         'test_native_committed_source_refuses_invalid_finalize',
@@ -3169,12 +3171,14 @@ def native_original_fact_reader(request,native_signed_source,approved_command):
             trust_roots=f['provider']).execution_allowed is False
         with isolated_owner() as owner:
             before={r['oid'] for r in owner.execute(catalog).fetchall()}
-            for profile in ('CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL','CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL',
-                'CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL','CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL',
-                'CAPACITY_ORIGINAL_BUILD_PROFILE_SQL','CAPACITY_ORIGINAL_BUILD_JSON_SQL',
-                'CAPACITY_ORIGINAL_EVIDENCE_PROFILE_SQL','CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL'):
-                owner.execute(getattr(original,profile))
-            owner.execute(CAPACITY_ORIGINAL_SOURCE_FACTS_SQL)
+            persisted=_reuse_migrated_private_source(owner)
+            if not persisted:
+                for profile in ('CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL','CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL',
+                    'CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL','CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL',
+                    'CAPACITY_ORIGINAL_BUILD_PROFILE_SQL','CAPACITY_ORIGINAL_BUILD_JSON_SQL',
+                    'CAPACITY_ORIGINAL_EVIDENCE_PROFILE_SQL','CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL'):
+                    owner.execute(getattr(original,profile))
+                owner.execute(CAPACITY_ORIGINAL_SOURCE_FACTS_SQL)
             installed=[r['signature'] for r in owner.execute(catalog).fetchall() if r['oid'] not in before]
             owner.execute(sql.SQL("""CREATE FUNCTION {}(m text,s jsonb,e jsonb) RETURNS jsonb
                 LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog AS $body$
@@ -3613,7 +3617,9 @@ def native_original_command_reader(native_original_fact_reader):
     identifier=sql.Identifier('public','publication_command_harness_'+uuid4().hex)
     signatures=['read_source_issuer_url(jsonb)','read_source_command(bytea)','read_source_command_facts(bytea)']
     with isolated_owner() as owner:
-        owner.execute(CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL)
+        persisted=_reuse_migrated_private_source(owner)
+        if persisted:signatures=[]
+        else:owner.execute(CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL)
         owner.execute(sql.SQL("""CREATE FUNCTION {}(raw bytea) RETURNS jsonb LANGUAGE sql
             SECURITY DEFINER SET search_path=pg_catalog AS $body$
             SELECT aos_capacity_publication_private.read_source_command_facts(raw) $body$""").format(identifier))
@@ -3791,8 +3797,11 @@ def native_full_signed_reader(native_original_fact_reader,tmp_path):
     signatures=['read_source_issuer_url(jsonb)','read_source_command(bytea)',
         'read_source_command_facts(bytea)','read_source_command_signed_facts(bytea,jsonb)']
     with isolated_owner() as owner:
-        owner.execute(CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL)
-        owner.execute(CAPACITY_ORIGINAL_SOURCE_SIGNED_FACTS_SQL)
+        persisted=_reuse_migrated_private_source(owner)
+        if persisted:signatures=[]
+        else:
+            owner.execute(CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL)
+            owner.execute(CAPACITY_ORIGINAL_SOURCE_SIGNED_FACTS_SQL)
         owner.execute(sql.SQL("""CREATE FUNCTION {}(raw bytea,permit jsonb) RETURNS jsonb LANGUAGE sql
             SECURITY DEFINER SET search_path=pg_catalog AS $body$
             SELECT aos_capacity_publication_private.read_source_command_signed_facts(raw,permit) $body$""").format(identifier))
@@ -3968,7 +3977,8 @@ def native_pending_source_reader(native_full_signed_reader):
     identifier=sql.Identifier('public','publication_pending_harness_'+uuid4().hex)
     caller.rollback()
     with isolated_owner() as owner:
-        owner.execute(CAPACITY_SOURCE_PENDING_SQL)
+        persisted=_reuse_migrated_private_source(owner)
+        if not persisted:owner.execute(CAPACITY_SOURCE_PENDING_SQL)
         owner.execute(sql.SQL("""CREATE FUNCTION {}(raw bytea,attempt_key text,source_id text,permit jsonb)
             RETURNS TABLE(source_raw bytea,account_id uuid,attempt_id uuid) LANGUAGE sql SECURITY DEFINER
             SET search_path=pg_catalog AS $body$
@@ -3982,11 +3992,12 @@ def native_pending_source_reader(native_full_signed_reader):
         caller.rollback()
         with isolated_owner() as owner:
             owner.execute(sql.SQL('DROP FUNCTION {}(bytea,text,text,jsonb)').format(identifier))
-            owner.execute('DROP FUNCTION aos_capacity_publication_private.prepare_original_source(bytea,text,text,jsonb)')
-            owner.execute('DROP TABLE aos_capacity_publication_private.source_pending')
-            owner.execute('DROP FUNCTION aos_capacity_publication_private.require_pending_source_finalized()')
-            owner.execute('DROP TABLE aos_capacity_publication_private.global_provider')
-            owner.execute('DROP TABLE aos_capacity_publication_private.global_account')
+            if not persisted:
+                owner.execute('DROP FUNCTION aos_capacity_publication_private.prepare_original_source(bytea,text,text,jsonb)')
+                owner.execute('DROP TABLE aos_capacity_publication_private.source_pending')
+                owner.execute('DROP FUNCTION aos_capacity_publication_private.require_pending_source_finalized()')
+                owner.execute('DROP TABLE aos_capacity_publication_private.global_provider')
+                owner.execute('DROP TABLE aos_capacity_publication_private.global_account')
 
 
 def _call_native_pending_source(caller,identifier,raw,key,asset,permit):
@@ -4135,7 +4146,8 @@ def native_commit_source_reader(native_pending_source_reader):
     caller.rollback()
     implementation=getattr(transaction,'CAPACITY_SOURCE_COMMIT_SQL',None)
     with isolated_owner() as owner:
-        if implementation is not None:owner.execute(implementation)
+        persisted=_reuse_migrated_private_source(owner)
+        if implementation is not None and not persisted:owner.execute(implementation)
         owner.execute(sql.SQL('''CREATE FUNCTION {}(attempt_key text,p_raw bytea,p_signature bytea)
             RETURNS TABLE(asset_id text,revision integer,content_hash text,source_raw bytea,signature bytea)
             LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $body$
@@ -4149,7 +4161,7 @@ def native_commit_source_reader(native_pending_source_reader):
         caller.rollback()
         with isolated_owner() as owner:
             owner.execute(sql.SQL('DROP FUNCTION {}(text,bytea,bytea)').format(identifier))
-            if implementation is not None:
+            if implementation is not None and not persisted:
                 owner.execute('DROP FUNCTION aos_capacity_publication_private.commit_original_source(text,bytea,bytea)')
                 owner.execute('DROP TABLE aos_capacity_publication_private.source_provenance')
                 owner.execute('DROP TABLE aos_capacity_publication_private.source_publication')
@@ -4299,10 +4311,11 @@ def native_complete_source_installation(native_signed_source,tmp_path):
         caller.rollback()
         with isolated_owner() as owner:
             before={r['oid'] for r in owner.execute(catalog).fetchall()}
-            transaction.install_source_transaction_boundary(owner.execute)
+            persisted=_reuse_migrated_private_source(owner)
+            if not persisted:transaction.install_source_transaction_boundary(owner.execute)
             transaction.require_source_transaction_tables(owner)
             installed=[r['signature'] for r in owner.execute(catalog).fetchall() if r['oid'] not in before]
-            assert set(installed)=={item['signature'] for item in transaction.source_transaction_function_manifest()}
+            assert set(installed)==(set() if persisted else {item['signature'] for item in transaction.source_transaction_function_manifest()})
             owner.execute(sql.SQL("""CREATE FUNCTION {}(raw bytea,attempt_key text,source_id text,permit jsonb)
                 RETURNS TABLE(source_raw bytea,account_id uuid,attempt_id uuid) LANGUAGE sql SECURITY DEFINER
                 SET search_path=pg_catalog AS $body$
@@ -4321,13 +4334,18 @@ def native_complete_source_installation(native_signed_source,tmp_path):
         finally:
             caller.rollback()
             with isolated_owner() as owner:
+                records_before=_private_source_row_fingerprint(owner) if persisted else None
                 owner.execute(sql.SQL('DROP FUNCTION {}(text,bytea,bytea)').format(commit))
                 owner.execute(sql.SQL('DROP FUNCTION {}(bytea,text,text,jsonb)').format(prepare))
-                for table in ('source_provenance','source_publication','source_pending','global_provider','global_account'):
-                    owner.execute('DROP TABLE aos_capacity_publication_private.'+table)
-                for signature in reversed(installed):
-                    owner.execute('DROP FUNCTION '+signature)
+                if not persisted:
+                    for table in ('source_provenance','source_publication','source_pending','global_provider','global_account'):
+                        owner.execute('DROP TABLE aos_capacity_publication_private.'+table)
+                    for signature in reversed(installed):
+                        owner.execute('DROP FUNCTION '+signature)
                 assert {r['oid'] for r in owner.execute(catalog).fetchall()}==before
+                if persisted:
+                    assert _private_source_row_fingerprint(owner)==records_before
+                    transaction.require_source_transaction_tables(owner)
             with connect_capacity_issuer(material['config'],SCOPE) as restored:
                 assert check_native_capacity_supplier_inputs(restored,command,policy,attestation,
                     trust_roots=native_signed_source[0]['provider']).execution_allowed is False
@@ -4439,10 +4457,11 @@ def test_native_private_source_installation_preserves_original_checker(native_si
     catalog="SELECT oid,oid::regprocedure::text AS signature,prosrc FROM pg_proc WHERE pronamespace='aos_capacity_publication_private'::regnamespace ORDER BY oid"
     with isolated_owner() as owner:
         before=owner.execute(catalog).fetchall()
-        transaction.install_source_transaction_boundary(owner.execute)
+        persisted=_reuse_migrated_private_source(owner)
+        if not persisted:transaction.install_source_transaction_boundary(owner.execute)
         transaction.require_source_transaction_tables(owner)
         installed=[r['signature'] for r in owner.execute(catalog).fetchall() if r['oid'] not in {x['oid'] for x in before}]
-        assert len(installed)==41
+        assert len(installed)==(0 if persisted else 41)
     try:
         # Real native role/approval/signed supplier checker with the entire
         # private installation committed, and no added public definer grant.
@@ -4454,8 +4473,76 @@ def test_native_private_source_installation_preserves_original_checker(native_si
                 assert owner.execute('SELECT to_regprocedure(%s)::text AS value',(signature,)).fetchone()['value'] is None
     finally:
         with isolated_owner() as owner:
-            for name in ('source_provenance','source_publication','source_pending','global_provider','global_account'):
-                owner.execute('DROP TABLE aos_capacity_publication_private.'+name)
-            for signature in reversed(installed):owner.execute('DROP FUNCTION '+signature)
+            if not persisted:
+                for name in ('source_provenance','source_publication','source_pending','global_provider','global_account'):
+                    owner.execute('DROP TABLE aos_capacity_publication_private.'+name)
+                for signature in reversed(installed):owner.execute('DROP FUNCTION '+signature)
             assert owner.execute(catalog).fetchall()==before
         check()
+
+
+
+def test_latest_migration_installs_private_source_boundary(native_signed_source):
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from psycopg import sql
+    with isolated_owner() as owner:
+        versions={r['version_num'] for r in owner.execute('SELECT version_num FROM alembic_version').fetchall()}
+        assert 'a0v_157' in versions,'Latest code migration must install the audited private Source boundary'
+        transaction.require_source_transaction_tables(owner)
+        for name in ('global_account','global_provider','source_pending','source_publication','source_provenance'):
+            assert owner.execute(sql.SQL('SELECT count(*) AS n FROM aos_capacity_publication_private.{}').format(sql.Identifier(name))).fetchone()['n']==0
+            for role in ('aos_runtime','aos_provider_capacity_issuer','aos_provider_capacity_policy_publisher'):
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with owner.transaction():
+                        owner.execute(sql.SQL('SET LOCAL ROLE {}').format(sql.Identifier(role)))
+                        owner.execute(sql.SQL('SELECT * FROM aos_capacity_publication_private.{} LIMIT 1').format(sql.Identifier(name)))
+        for signature in ('public.prepare_capacity_source(bytea,text,text,jsonb)','public.commit_capacity_source(text,bytea,bytea)'):
+            assert owner.execute('SELECT to_regprocedure(%s)::text AS value',(signature,)).fetchone()['value'] is None
+
+
+
+def _reuse_migrated_private_source(owner):
+    """Reuse only an exact full installation; never downgrade or delete it.
+
+    Older retained a156 databases can still host explicitly owned temporary
+    fragments. A newer recorded migration with missing objects is drift and
+    must fail the audit instead of silently rebuilding those objects.
+    """
+    from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_tables
+    versions=[r['version_num'] for r in owner.execute('SELECT version_num FROM alembic_version').fetchall()]
+    migrated=any(v.startswith('a0v_') and v[4:].isdigit() and int(v[4:])>=157 for v in versions)
+    present=owner.execute("SELECT count(*) AS n FROM pg_class WHERE relnamespace='aos_capacity_publication_private'::regnamespace AND relname=ANY(%s::text[])",
+        (['global_account','global_provider','source_pending','source_publication','source_provenance'],)).fetchone()['n']
+    if migrated or present==5:
+        require_source_transaction_tables(owner)
+        return True
+    return False
+
+
+
+def _private_source_row_fingerprint(owner):
+    from psycopg import sql
+    result={}
+    for name in ('global_account','global_provider','source_pending','source_publication','source_provenance'):
+        result[name]=owner.execute(sql.SQL("""SELECT count(*) AS n,
+            coalesce(array_agg(digest ORDER BY digest),ARRAY[]::text[]) AS digests
+            FROM (SELECT encode(sha256(convert_to(to_jsonb(t)::text,'UTF8')),'hex') AS digest
+                  FROM aos_capacity_publication_private.{} t) records""").format(sql.Identifier(name))).fetchone()
+    return result
+
+
+def test_migrated_private_source_drift_cannot_rebuild_fragments(native_signed_source):
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    class RestoreFault(Exception):pass
+    with isolated_owner() as owner:
+        assert _reuse_migrated_private_source(owner) is True
+        with pytest.raises(RestoreFault):
+            with owner.transaction():
+                owner.execute('DROP TABLE aos_capacity_publication_private.source_provenance')
+                with pytest.raises(transaction.CapacityPublicationBoundaryBlocked,match='CAPACITY_SOURCE_TABLE_INSTALLATION_DRIFTED'):
+                    _reuse_migrated_private_source(owner)
+                assert owner.execute("SELECT to_regclass('aos_capacity_publication_private.source_provenance')::text AS value").fetchone()['value'] is None
+                raise RestoreFault()
+        assert _reuse_migrated_private_source(owner) is True

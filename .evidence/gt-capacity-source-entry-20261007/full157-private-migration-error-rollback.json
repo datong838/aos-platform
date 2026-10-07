@@ -1,0 +1,19 @@
+{
+  "database": "aos_test_0fd7850482df_ti4_test",
+  "migration": [
+    {
+      "version_num": "228assetintegration"
+    }
+  ],
+  "native_migration_error": "SQLAlchemy JSON colon binds; changed executor to original native cursor, no body rewrite",
+  "new_functions": [],
+  "new_tables": {
+    "global_account": null,
+    "global_provider": null,
+    "source_pending": null,
+    "source_provenance": null,
+    "source_publication": null
+  },
+  "schema": "aos-source-migration-failure-rollback/v1",
+  "source_delivery": false
+}
