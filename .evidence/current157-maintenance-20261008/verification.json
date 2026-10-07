@@ -1,0 +1,69 @@
+{
+  "task": "current157-maintenance-20261008",
+  "head": "5f0e4b50670450cd34c02a26709145ded5c76a10",
+  "result": "CURRENT157_ORIGINAL_VOLUME_RESTART_BROWSER_DENIAL_GATES_GREEN_FIRST_CHAIN_PENDING",
+  "files": [
+    {
+      "path": ".evidence/current157-maintenance-20261008/plan.md",
+      "sha256": "ac60a7b67d3b72abe4bb110f227051a4950e8d59092d711a7adf900addd643aa"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/preflight.json",
+      "sha256": "b0a261ce09173b244af627058dd656496a258b5edf344d6f2397bf418b7488d5"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/first-backup-restore.json",
+      "sha256": "bb861bf3659837424ecfe3939974b6e6d98b3a1d0a944244c087449e4eef4022"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/first-six-step-rehearsal.json",
+      "sha256": "57770e7fde6236324c01862e3c37160b79638f891275a4e6129a294d5785faf0"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/socket-six-step-rehearsal.json",
+      "sha256": "59933767a96bf7cf29c4d2506910495fdf0b6cfb8fdcb3fc37721ff9000a9427"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/socket-native-negative-gates.json",
+      "sha256": "067e2b84d0c57a7b774c301b11215c972ccc79c618785ba451ec5fc486ef0944"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/second-backup.json",
+      "sha256": "bffd70b3d51fb8c0a3f604cbdb3c0d26106201999f56037cd3f73fefe0f25992"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/second-socket-six-step-rehearsal.json",
+      "sha256": "a0bcb60363f133375c34ab552bdece7988aa2470e6999b426c37c9ba67c820fb"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/current-window-result.json",
+      "sha256": "6f64107c0b2357925c94b31d2c30fe825e0fd2565a4f67ce3337d51484d21b39"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/committed-code.json",
+      "sha256": "b516f5a4f48651940b7ccdba49f64924158df9bf11356bd94dc706184db629c2"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/bundles-deployment-intent.json",
+      "sha256": "4bf187016dbf702cfd991ee98a0c953c33f057dc4d5cc4d0430720718a24b5d7"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/bundles-deployment-result.json",
+      "sha256": "86b20862f35f1225fbc746352cffd3585d06563a8e35aeefc51458eabd82c0a4"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/browser-verification.json",
+      "sha256": "456ef929c7f49099d6b63c55171b1bb7c28da091043d09d6b1082c7b455db5df"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/post-browser-readonly-verification.json",
+      "sha256": "8856741a0d2aa1c5fb02700501602d1328359eb40f2e77399851ff4bd7ffc40e"
+    },
+    {
+      "path": ".evidence/current157-maintenance-20261008/acceptance.md",
+      "sha256": "fafc3c481ef6c0d2bb3bb6e1cef29392467cad2e0d5ea1ccb2ecc47b24a705e9"
+    }
+  ],
+  "raw_local_evidence_retained": true,
+  "business_first_chain": false
+}

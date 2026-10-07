@@ -1,0 +1,98 @@
+{
+  "event": "2026-10-07T17:15:17.220Z",
+  "head": "5f0e4b50670450cd34c02a26709145ded5c76a10",
+  "version": "a0v_157",
+  "volume": "aos-a0v-recovery-pg-data",
+  "source_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+  "pg_started": "2026-10-07T18:10:10.201377415Z",
+  "services": [
+    {
+      "pid": 99269,
+      "ppid": 1,
+      "uid": 501,
+      "started": "Thu Oct  8 02:10:12 2026",
+      "argv_sha256": "65bb1feb12cfdbec1ae94cdbcc851c31e4b2668db62f6a59622840a13d1becbb",
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+      "children": [],
+      "listener_ports": [
+        8080
+      ]
+    },
+    {
+      "pid": 99310,
+      "ppid": 1,
+      "uid": 501,
+      "started": "Thu Oct  8 02:10:21 2026",
+      "argv_sha256": "4cd8ae42f94933c4fa6fceeb4cda83e16c8940a1509321db6ef2f849bd771270",
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform/apps/web",
+      "children": [
+        {
+          "pid": 99311,
+          "ppid": 99310,
+          "uid": 501,
+          "started": "Thu Oct  8 02:10:21 2026",
+          "argv_sha256": "d76592cffd7f6b7d2e96cda9fcb2b8bd908f96f5181122e60faa399aabea545e"
+        }
+      ],
+      "listener_ports": [
+        8434
+      ]
+    }
+  ],
+  "old_table_count": 602,
+  "old_table_data_unchanged": true,
+  "public_snapshot_unchanged_after_browser": true,
+  "http": [
+    {
+      "url": "http://127.0.0.1:8080/v1/health",
+      "status": 200,
+      "body": {
+        "status": "ok"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:8080/v1/ready",
+      "status": 200,
+      "body": {
+        "status": "ready"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:8434/api/v1/ecommerce-workshop/modules",
+      "status": 200,
+      "body": {
+        "schemaVersion": "aos.ecommerce-workshop/v1",
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "evaluatedAt": "2026-10-07T18:26:49.189729Z",
+        "dataCutoff": null,
+        "items": [],
+        "count": 0
+      }
+    },
+    {
+      "url": "http://127.0.0.1:8434/api/v1/runtime-workshop/modules",
+      "status": 200,
+      "body": {
+        "schemaVersion": "aos.runtime-workshop-catalog/v1",
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "evaluatedAt": "2026-10-07T18:26:49.254287Z",
+        "dataCutoff": null,
+        "items": [],
+        "count": 0
+      }
+    }
+  ],
+  "verified_at": "2026-10-07T18:26:49.255142+00:00",
+  "read_only_probe_failures": [
+    "151-only full snapshot rejected expected 157 private schemas",
+    "web /v1 returned SPA HTML: corrected documented /api proxy",
+    "missing bearer rejected401: used existing documented local dev principal"
+  ],
+  "no_migration_retry": true
+}

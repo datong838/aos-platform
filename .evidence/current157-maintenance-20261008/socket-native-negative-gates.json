@@ -1,0 +1,22 @@
+{
+  "pg": "current157-socket-pg-adce8ec152af",
+  "results": [
+    {
+      "case": "wrong-cluster",
+      "exit": 1,
+      "version_unchanged": "a0v_157",
+      "container": "current157-negative-6349ed64ee4c",
+      "stderr": "Traceback (most recent call last):\n  File \"/migrate.py\", line 22, in <module>\n    assert cursor.execute('SELECT system_identifier::text AS id FROM pg_control_system()').fetchone()['id']==cluster\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+      "stdout": ""
+    },
+    {
+      "case": "already-current-step",
+      "exit": 1,
+      "version_unchanged": "a0v_157",
+      "container": "current157-negative-bf6d078ccbf0",
+      "stderr": "Traceback (most recent call last):\n  File \"/migrate.py\", line 24, in <module>\n    assert cursor.execute('SELECT version_num FROM alembic_version').fetchall()==[{'version_num':'a0v_'+str(step-1)}]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+      "stdout": ""
+    }
+  ],
+  "database_migration_attempted": false
+}

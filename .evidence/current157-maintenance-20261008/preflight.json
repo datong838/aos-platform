@@ -1,0 +1,41 @@
+{
+  "event": "2026-10-07T17:15:17.220Z",
+  "observed_at": "2026-10-07T17:24:04.096600+00:00",
+  "head": "5f0e4b50670450cd34c02a26709145ded5c76a10",
+  "branch": "m1",
+  "code_heads": [
+    "a0v_157"
+  ],
+  "source_version": "a0v_151",
+  "source_tables": 603,
+  "source_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+  "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+  "volumes": [
+    "aos-a0v-recovery-pg-data"
+  ],
+  "pg_started": "2026-10-06T04:25:22.420516341Z",
+  "pending_migrations": [
+    "a0v_152",
+    "a0v_153",
+    "a0v_154",
+    "a0v_155",
+    "a0v_156",
+    "a0v_157"
+  ],
+  "source_snapshot_sha256": "9c0edb556161e6e766a6a30ab8333fefb9def212e9eed9c54a7d74d8ae492657",
+  "other_database_sessions": [],
+  "prepared_transactions": 0,
+  "signed_receipt_sha256": "1530d5fb03fa052d70a90f89f7ec09d7301455459e2e3034f41998a178369886",
+  "signed_receipt_keys": [
+    "buildTreeHash",
+    "contentHashes",
+    "effects",
+    "keyId",
+    "outcome",
+    "signedTree",
+    "signedTreeHash",
+    "trustRootRevision"
+  ],
+  "mutation_executed": false,
+  "restart_completed": false
+}

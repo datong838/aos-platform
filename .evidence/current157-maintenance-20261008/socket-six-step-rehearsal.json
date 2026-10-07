@@ -1,0 +1,16 @@
+{
+  "status": "ISOLATED_FULL151_RESTORE_SIX_ORIGINAL_UNIX_STEPS_GREEN",
+  "head": "5f0e4b50670450cd34c02a26709145ded5c76a10",
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/current157-fac006c02b6e/socket-rehearsal-b4f8eff89984",
+  "pg": "current157-socket-pg-adce8ec152af",
+  "volume": "current157-socket-pg-adce8ec152af-data",
+  "tool_image": "sha256:982fd540f5eb90d3b936bea1aa084b70a72470b5d2bd024964455c3cf45e3e25",
+  "network": "none",
+  "capabilities_dropped": true,
+  "root_and_socket_readonly": true,
+  "old_602_table_data_unchanged": true,
+  "private_tables_empty": true,
+  "current_database_writes": 0,
+  "zero_window_second_backup_pending": true,
+  "current_migration_restart_pending": true
+}

@@ -1,0 +1,84 @@
+{
+  "event": "2026-10-07T17:15:17.220Z",
+  "head": "5f0e4b50670450cd34c02a26709145ded5c76a10",
+  "browser_id": "2",
+  "tab_id": "1",
+  "eight_routes": [
+    {
+      "route": "/workshop/cockpit",
+      "visible_result": "当前工作台入口不可用；当前目录没有此工作台的可见入口",
+      "business_green": false
+    },
+    {
+      "route": "/workshop/content-campaign",
+      "visible_result": "当前工作台入口不可用；当前目录没有此工作台的可见入口",
+      "business_green": false
+    },
+    {
+      "route": "/workshop/operations",
+      "visible_result": "当前工作台入口不可用；当前目录没有此工作台的可见入口",
+      "business_green": false
+    },
+    {
+      "route": "/workshop/creator-growth",
+      "visible_result": "当前工作台入口不可用；当前目录没有此工作台的可见入口",
+      "business_green": false
+    },
+    {
+      "route": "/workshop/media-studio",
+      "visible_result": "当前工作台入口不可用；当前目录没有此工作台的可见入口",
+      "business_green": false
+    },
+    {
+      "route": "/workshop/analyst",
+      "visible_result": "当前工作台入口不可用；当前目录没有此工作台的可见入口",
+      "business_green": false
+    },
+    {
+      "route": "/workshop/price-governance",
+      "visible_result": "当前工作台入口不可用；当前目录没有此工作台的可见入口",
+      "business_green": false
+    },
+    {
+      "route": "/workshop/customer",
+      "visible_result": "当前工作台入口不可用；当前目录没有此工作台的可见入口",
+      "business_green": false
+    }
+  ],
+  "async_read_completion_verified": true,
+  "readonly_directory_retry": "completed and denied remains",
+  "tenant": {
+    "org": "org-org",
+    "project": "dev-project",
+    "selected_in_visible_dropdown": true
+  },
+  "active_workshop_installations": 0,
+  "evaluated_skills": 37,
+  "published_skills": 0,
+  "dev_org_canary": [
+    {
+      "route": "ecommerce-workshop",
+      "status": 403,
+      "body": {
+        "code": "AUTH_TENANT_UNKNOWN",
+        "message": "organization/workspace scope is not registered",
+        "details": null,
+        "traceId": "b6aee0c1-4120-4388-b0d2-b8f068d54c0d"
+      }
+    },
+    {
+      "route": "runtime-workshop",
+      "status": 403,
+      "body": {
+        "code": "AUTH_TENANT_UNKNOWN",
+        "message": "organization/workspace scope is not registered",
+        "details": null,
+        "traceId": "8d648918-58d3-40ce-a6c5-2dabf93d3015"
+      }
+    }
+  ],
+  "browser_retained": "http://127.0.0.1:8434/workshop",
+  "verified_at": "2026-10-07T18:28:13.573434+00:00",
+  "directory_initial_red": "frozen-code bundles missing; exact same HEAD 1809 files added; reread green",
+  "no_business_action": true
+}

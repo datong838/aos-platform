@@ -1,0 +1,11 @@
+{
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/current157-fac006c02b6e/current-window-70b9d977b3d6/second-backup",
+  "head": "5f0e4b50670450cd34c02a26709145ded5c76a10",
+  "source_snapshot_unchanged": true,
+  "window": {
+    "listen_addresses": "",
+    "tcp_refused": true,
+    "other_clients": 0,
+    "prepared": 0
+  }
+}

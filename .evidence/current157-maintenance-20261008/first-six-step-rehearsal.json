@@ -1,0 +1,13 @@
+{
+  "status": "ORIGINAL_COMMITTED_SIX_STEP_ISOLATED_REHEARSAL_GREEN",
+  "head": "5f0e4b50670450cd34c02a26709145ded5c76a10",
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/current157-fac006c02b6e/rehearsal-92a1d6ac710f",
+  "container": "current157-online-ad851b9b2e26",
+  "volume": "current157-online-ad851b9b2e26-data",
+  "network": "current157-online-ad851b9b2e26-network",
+  "source_current_database_writes": 0,
+  "old_table_data_unchanged": true,
+  "private_table_function_installation_audit": true,
+  "second_window_backup_pending": true,
+  "current_migration_restart_pending": true
+}
