@@ -11,6 +11,9 @@ from contextlib import AbstractContextManager
 from datetime import datetime
 from typing import Any
 
+import psycopg
+from psycopg.pq import TransactionStatus
+
 from aos_api.aip_budget_reservation_contracts import (
     BudgetBucketAuthority,
     BudgetExactRef,
@@ -89,162 +92,195 @@ class AipBudgetReservationStore:
         actor = self._identity(actor, "actor")
         request_hash = request.request_hash()
         with self._connect_factory(scope) as conn:
-            self._lock_invocation(conn, scope, request.operation_id, request.invocation_key)
-            existing = self._reservation_by_key(
-                conn, scope, request.operation_id, request.invocation_key, lock=True
-            )
-            if existing is not None:
-                if existing["request_hash"] != request_hash:
-                    raise BudgetReservationConflict("invocation key payload drifted")
-                return self._view(conn, scope, existing, replayed=True)
+            return self._reserve_in_transaction(conn, scope, request, actor=actor, request_hash=request_hash)
 
-            checked_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
-            budget = self._budget_authority(conn, scope, request.policy_ref, checked_at)
-            self._task_authority(conn, scope, request.task_ref, operation_id=request.operation_id)
-            self._price_authority(conn, scope, request.pricing_ref, checked_at)
-            self._approval_authority(
-                conn,
-                scope,
-                request.approval_ref,
-                checked_at,
-                task_ref=request.task_ref,
-                operation_id=request.operation_id,
-                upper_bound_minor=request.upper_bound_minor,
-                policy_ref=request.policy_ref,
-                pricing_ref=request.pricing_ref,
-                invocation_key=request.invocation_key,
+    def reserve_in_transaction(
+        self, conn: psycopg.Connection, scope: TenantScope,
+        request: ReserveBudgetRequest, *, actor: str,
+    ) -> BudgetReservationRevision:
+        """Hold ordinary Task budget without opening or ending the caller transaction."""
+        if type(scope) is not TenantScope or type(request) is not ReserveBudgetRequest:
+            raise BudgetReservationBlocked("exact ordinary budget request and tenant required")
+        try:
+            request = ReserveBudgetRequest.model_validate(
+                request.model_dump(mode="python", by_alias=True), strict=True
             )
-            buckets = derive_bucket_authorities(
-                request,
-                checked_at=checked_at,
-                budget_effective_from=budget["effective_from"],
-                budget_effective_until=budget["effective_until"],
-                daily_limit_minor=int(budget["daily_limit_minor"]),
-                pilot_limit_minor=int(budget["monthly_limit_minor"]),
-            )
-            self._prepare_and_lock_buckets(conn, scope, buckets)
-            for bucket in sorted(
-                buckets, key=lambda item: (item.kind, item.account_id, item.period_start)
+        except (TypeError, ValueError) as error:
+            raise BudgetReservationBlocked("exact ordinary budget request required") from error
+        actor = self._identity(actor, "actor")
+        if (type(conn) is not psycopg.Connection or conn.closed or conn.autocommit
+            or conn.read_only or conn.info.transaction_status != TransactionStatus.INTRANS):
+            raise BudgetReservationBlocked("native budget caller transaction required")
+        identity = conn.execute("""SELECT current_user AS role,
+            current_setting('aos.org_id',true) AS org_id,
+            current_setting('aos.project_id',true) AS project_id,
+            current_setting('transaction_isolation') AS isolation,
+            current_setting('transaction_read_only') AS read_only""").fetchone()
+        if identity != {"role":"aos_runtime", "org_id":scope.org_id,
+                       "project_id":scope.project_id, "isolation":"serializable", "read_only":"off"}:
+            raise BudgetReservationBlocked("native budget caller transaction required")
+        return self._reserve_in_transaction(conn, scope, request, actor=actor, request_hash=request.request_hash())
+
+    def _reserve_in_transaction(
+        self, conn, scope: TenantScope, request: ReserveBudgetRequest,
+        *, actor: str, request_hash: str,
+    ) -> BudgetReservationRevision:
+        self._lock_invocation(conn, scope, request.operation_id, request.invocation_key)
+        existing = self._reservation_by_key(
+            conn, scope, request.operation_id, request.invocation_key, lock=True
+        )
+        if existing is not None:
+            if existing["request_hash"] != request_hash:
+                raise BudgetReservationConflict("invocation key payload drifted")
+            return self._view(conn, scope, existing, replayed=True)
+
+        checked_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+        budget = self._budget_authority(conn, scope, request.policy_ref, checked_at)
+        self._task_authority(conn, scope, request.task_ref, operation_id=request.operation_id)
+        self._price_authority(conn, scope, request.pricing_ref, checked_at)
+        self._approval_authority(
+            conn,
+            scope,
+            request.approval_ref,
+            checked_at,
+            task_ref=request.task_ref,
+            operation_id=request.operation_id,
+            upper_bound_minor=request.upper_bound_minor,
+            policy_ref=request.policy_ref,
+            pricing_ref=request.pricing_ref,
+            invocation_key=request.invocation_key,
+        )
+        buckets = derive_bucket_authorities(
+            request,
+            checked_at=checked_at,
+            budget_effective_from=budget["effective_from"],
+            budget_effective_until=budget["effective_until"],
+            daily_limit_minor=int(budget["daily_limit_minor"]),
+            pilot_limit_minor=int(budget["monthly_limit_minor"]),
+        )
+        self._prepare_and_lock_buckets(conn, scope, buckets)
+        for bucket in sorted(
+            buckets, key=lambda item: (item.kind, item.account_id, item.period_start)
+        ):
+            row = self._bucket_row(conn, scope, bucket)
+            if (
+                row is None
+                or row["period_end"] != bucket.period_end
+                or int(row["limit_minor"]) != bucket.limit_minor
             ):
-                row = self._bucket_row(conn, scope, bucket)
-                if (
-                    row is None
-                    or row["period_end"] != bucket.period_end
-                    or int(row["limit_minor"]) != bucket.limit_minor
-                ):
-                    raise BudgetReservationConflict("budget bucket authority drifted")
-                exposure = sum(
-                    int(row[name])
-                    for name in (
-                        "held_minor",
-                        "submitted_minor",
-                        "settled_minor",
-                        "unknown_minor",
-                    )
+                raise BudgetReservationConflict("budget bucket authority drifted")
+            exposure = sum(
+                int(row[name])
+                for name in (
+                    "held_minor",
+                    "submitted_minor",
+                    "settled_minor",
+                    "unknown_minor",
                 )
-                if exposure + request.upper_bound_minor > bucket.limit_minor:
-                    raise BudgetReservationBlocked(f"{bucket.kind} budget limit exceeded")
-
-            # Recheck cost authority after any bucket-lock wait, immediately before the new hold.
-            self._cost_risk_authority(conn, scope, request.policy_ref, request.pricing_ref, request.upper_bound_minor)
-            invocation_id = uuid.uuid4()
-            reservation_id = uuid.uuid4()
-            initial_invocation, initial_reservation = self.initial_hold_refs(
-                request, invocation_id=invocation_id, reservation_id=reservation_id
             )
-            invocation_hash = initial_invocation.content_hash
-            content_hash = initial_reservation.content_hash
+            if exposure + request.upper_bound_minor > bucket.limit_minor:
+                raise BudgetReservationBlocked(f"{bucket.kind} budget limit exceeded")
+
+        # Recheck cost authority after any bucket-lock wait, immediately before the new hold.
+        self._cost_risk_authority(conn, scope, request.policy_ref, request.pricing_ref, request.upper_bound_minor)
+        invocation_id = uuid.uuid4()
+        reservation_id = uuid.uuid4()
+        initial_invocation, initial_reservation = self.initial_hold_refs(
+            request, invocation_id=invocation_id, reservation_id=reservation_id
+        )
+        invocation_hash = initial_invocation.content_hash
+        content_hash = initial_reservation.content_hash
+        conn.execute(
+            f"""INSERT INTO {self._storage_schema}.aip_capability_invocation(
+            org_id,project_id,invocation_id,operation_id,invocation_key,request_hash,
+            task_ref,policy_ref,approval_ref,pricing_ref,currency,upper_bound_minor,state,
+            revision,content_hash,created_at,updated_at)
+            VALUES(%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,
+            'prepared',1,%s,%s,%s)""",
+            (
+                *scope.key,
+                invocation_id,
+                request.operation_id,
+                request.invocation_key,
+                request_hash,
+                self._json(request.task_ref),
+                self._json(request.policy_ref),
+                self._json(request.approval_ref),
+                self._json(request.pricing_ref),
+                request.currency,
+                request.upper_bound_minor,
+                invocation_hash,
+                checked_at,
+                checked_at,
+            ),
+        )
+        conn.execute(
+            f"""INSERT INTO {self._storage_schema}.aip_budget_reservation(
+            org_id,project_id,reservation_id,invocation_id,operation_id,invocation_key,
+            task_ref,policy_ref,pricing_ref,approval_ref,currency,upper_bound_minor,
+            state,request_hash,revision,content_hash,created_at,updated_at)
+            VALUES(%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+            %s,%s,'held',%s,1,%s,%s,%s)""",
+            (
+                *scope.key,
+                reservation_id,
+                invocation_id,
+                request.operation_id,
+                request.invocation_key,
+                self._json(request.task_ref),
+                self._json(request.policy_ref),
+                self._json(request.pricing_ref),
+                self._json(request.approval_ref),
+                request.currency,
+                request.upper_bound_minor,
+                request_hash,
+                content_hash,
+                checked_at,
+                checked_at,
+            ),
+        )
+        for bucket in buckets:
             conn.execute(
-                f"""INSERT INTO {self._storage_schema}.aip_capability_invocation(
-                org_id,project_id,invocation_id,operation_id,invocation_key,request_hash,
-                task_ref,policy_ref,approval_ref,pricing_ref,currency,upper_bound_minor,state,
-                revision,content_hash,created_at,updated_at)
-                VALUES(%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,
-                'prepared',1,%s,%s,%s)""",
+                f"""UPDATE {self._storage_schema}.aip_budget_bucket SET held_minor=held_minor+%s,
+                version=version+1,updated_at=clock_timestamp()
+                WHERE org_id=%s AND project_id=%s AND bucket_kind=%s
+                AND account_id=%s AND period_start=%s AND currency=%s""",
                 (
-                    *scope.key,
-                    invocation_id,
-                    request.operation_id,
-                    request.invocation_key,
-                    request_hash,
-                    self._json(request.task_ref),
-                    self._json(request.policy_ref),
-                    self._json(request.approval_ref),
-                    self._json(request.pricing_ref),
-                    request.currency,
                     request.upper_bound_minor,
-                    invocation_hash,
-                    checked_at,
-                    checked_at,
+                    *scope.key,
+                    bucket.kind,
+                    bucket.account_id,
+                    bucket.period_start,
+                    request.currency,
                 ),
             )
             conn.execute(
-                f"""INSERT INTO {self._storage_schema}.aip_budget_reservation(
-                org_id,project_id,reservation_id,invocation_id,operation_id,invocation_key,
-                task_ref,policy_ref,pricing_ref,approval_ref,currency,upper_bound_minor,
-                state,request_hash,revision,content_hash,created_at,updated_at)
-                VALUES(%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
-                %s,%s,'held',%s,1,%s,%s,%s)""",
+                f"""INSERT INTO {self._storage_schema}.aip_budget_reservation_bucket(
+                org_id,project_id,reservation_id,bucket_kind,account_id,period_start,
+                currency,reserved_minor) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",
                 (
                     *scope.key,
                     reservation_id,
-                    invocation_id,
-                    request.operation_id,
-                    request.invocation_key,
-                    self._json(request.task_ref),
-                    self._json(request.policy_ref),
-                    self._json(request.pricing_ref),
-                    self._json(request.approval_ref),
+                    bucket.kind,
+                    bucket.account_id,
+                    bucket.period_start,
                     request.currency,
                     request.upper_bound_minor,
-                    request_hash,
-                    content_hash,
-                    checked_at,
-                    checked_at,
                 ),
             )
-            for bucket in buckets:
-                conn.execute(
-                    f"""UPDATE {self._storage_schema}.aip_budget_bucket SET held_minor=held_minor+%s,
-                    version=version+1,updated_at=clock_timestamp()
-                    WHERE org_id=%s AND project_id=%s AND bucket_kind=%s
-                    AND account_id=%s AND period_start=%s AND currency=%s""",
-                    (
-                        request.upper_bound_minor,
-                        *scope.key,
-                        bucket.kind,
-                        bucket.account_id,
-                        bucket.period_start,
-                        request.currency,
-                    ),
-                )
-                conn.execute(
-                    f"""INSERT INTO {self._storage_schema}.aip_budget_reservation_bucket(
-                    org_id,project_id,reservation_id,bucket_kind,account_id,period_start,
-                    currency,reserved_minor) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",
-                    (
-                        *scope.key,
-                        reservation_id,
-                        bucket.kind,
-                        bucket.account_id,
-                        bucket.period_start,
-                        request.currency,
-                        request.upper_bound_minor,
-                    ),
-                )
-            self._event(
-                conn,
-                scope,
-                reservation_id,
-                sequence=1,
-                from_state=None,
-                to_state="held",
-                actor=actor,
-                evidence_ref=request.approval_ref,
-                occurred_at=checked_at,
-            )
-            row = self._reservation_by_id(conn, scope, reservation_id, lock=False)
-            return self._view(conn, scope, row, replayed=False)
+        self._event(
+            conn,
+            scope,
+            reservation_id,
+            sequence=1,
+            from_state=None,
+            to_state="held",
+            actor=actor,
+            evidence_ref=request.approval_ref,
+            occurred_at=checked_at,
+        )
+        row = self._reservation_by_id(conn, scope, reservation_id, lock=False)
+        return self._view(conn, scope, row, replayed=False)
 
     @staticmethod
     def initial_hold_refs(

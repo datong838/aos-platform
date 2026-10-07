@@ -10,6 +10,7 @@ import importlib.util
 import json
 from pathlib import Path
 import sys
+import time
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -158,6 +159,14 @@ def _runtime_role_connection(connect, scope):
 
 def _register_current_content_eval_gate(connect):
     """Formal isolated Graph/Suite/release/contract authority, not production install."""
+    original_connect = connect
+    @contextmanager
+    def scoped_connect(scope):
+        assert scope == SCOPE
+        with original_connect(scope) as conn:
+            conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)", scope.key)
+            yield conn
+    connect = scoped_connect
     graph = LogicGraphStore(lambda: connect(SCOPE)).create(
         *SCOPE.key, "fixture", build_content_pre_review_graph())
     target = AssetRevisionRef(asset_type=AssetType.LOGIC_GRAPH, asset_id=graph.id,
@@ -229,6 +238,20 @@ def _register_current_content_eval_gate(connect):
     frozen = contracts.freeze_eval_contract(SCOPE, "fixture", draft.contract_id,
         draft.version, "content-p2g-subject-freeze")
     with connect(SCOPE) as conn:
+        # Release records use the app clock; the owned PG fixture may lag it.
+        # Wait for actual DB time, preserving every current-authority check.
+        floor = conn.execute("""SELECT greatest(g.decided_at,e.occurred_at) AS floor
+            FROM aip_release_gate_decision g JOIN aip_publication_event e
+              ON e.org_id=g.org_id AND e.project_id=g.project_id
+             AND e.release_gate_decision_id=g.decision_id
+            WHERE g.org_id=%s AND g.project_id=%s AND g.decision_id=%s
+              AND e.event_id=%s""",
+            (*SCOPE.key, gate.decision_id, published.event_id)).fetchone()["floor"]
+        deadline = time.monotonic() + 2
+        while conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"] < floor:
+            if time.monotonic() >= deadline:
+                pytest.fail("owned PG clock did not reach committed release timestamps within 2s")
+            time.sleep(0.01)
         exact = require_current_content_pre_review_gate(conn, SCOPE)
     assert exact.resource_id == frozen.contract_id
     assert exact.content_hash == frozen.content_hash

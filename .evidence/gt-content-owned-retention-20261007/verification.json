@@ -1,0 +1,52 @@
+{
+  "database": "a0v_growth_graph_test_c2e343e62f6f4d10bc2db0ce684d8a09",
+  "template": "aos_test_f2ef54f0da1d_ti4_test",
+  "cluster_id": "7693564235776004128",
+  "migration": "a0v_157",
+  "readonly": true,
+  "records": {
+    "aip_logic_graph": {
+      "org-org": 1,
+      "dev-org": 0
+    },
+    "aip_release_gate_decision": {
+      "org-org": 1,
+      "dev-org": 0
+    },
+    "aip_publication_event": {
+      "org-org": 1,
+      "dev-org": 0
+    },
+    "aip_eval_contract_head": {
+      "org-org": 1,
+      "dev-org": 0
+    },
+    "aip_task_run": {
+      "org-org": 1,
+      "dev-org": 0
+    },
+    "aip_budget_reservation": {
+      "org-org": 1,
+      "dev-org": 0
+    },
+    "aip_capability_invocation": {
+      "org-org": 1,
+      "dev-org": 0
+    },
+    "aip_usage_receipt": {
+      "org-org": 0,
+      "dev-org": 0
+    }
+  },
+  "lineage": {
+    "decided_at": "2026-10-07T11:36:47.113892+00:00",
+    "occurred_at": "2026-10-07T11:36:47.128186+00:00",
+    "epoch": 1,
+    "now": "2026-10-07T11:38:16.674348+00:00"
+  },
+  "default_fixture_AST_unchanged": true,
+  "template_unchanged_empty": true,
+  "log_sha256": "1ec24715a080e0fcfa34646a917d10cf6c455554c1dafc553fa20ec5f38fd0ce",
+  "formal_resources_changed": false,
+  "full_goal_complete": false
+}

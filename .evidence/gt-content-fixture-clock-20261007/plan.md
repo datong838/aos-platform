@@ -1,0 +1,11 @@
+# 内容评审测试夹具双时钟对账
+
+基线9bc6ef7b/AOS-001470；独立Task，唯一原施工者，无重叠Lease。
+
+原相邻测试21PASS1FAIL39.01s，单独复验1FAIL，分别gate时间和event未来时间校验拒绝。只读原生PG五次测量DB-app约-63.38ms（初次-65.24ms/roundtrip5ms），release原服务datetime.now生成decided_at/occurred_at，原消费者clock_timestamp判断。这是已证实夹具立即读双时钟竞态，不归因为预算算法；正式系统跨时钟契约风险另登记，不改产品门或私有存储。
+
+唯一代码路径 services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py：夹具创建和freeze原真实授权后，在同一回读连接中读取对应gate.decided_at与event.occurred_at，以max为floor；用原生clock_timestamp轮询，仅DB真实追上才调用原完整require_current_content_pre_review_gate。monotonic上限2s，10ms轮询；超限显式失败，禁止无限重试、固定睡眠伪造pass、修改签名记录/时间/hash或放宽原校验。
+
+先保存两次实际RED与时差证据；最小修复后失效项单独复验，再原预算+ModelEval相邻，以及原内容夹具一条原业务测试。预算算法独立只读回读并复审。只在隔离owned5434实验库新增保留测试记录，不动正式库/卷/服务/Provider，页面不受影响无需浏览器。完整Goal仍active，不宣称自然链或完整共享physical+budget+Intent完成。
+
+原内容补验1FAIL11.19s，发生于旧factory未设置tenant，最新a144 PUBLICATION_EPOCH_WRITER_SCOPE_REQUIRED，不在时钟等待。追加最小测试helper wrapper：TenantScope必须等于原SCOPE，set_config org/project transactionlocal，全部原注册服务复用同wrapper，不改变role或绕过trigger。旧DB保留/正确lab路由归独立Task gt-content-owned-retention-20261007，修复后再补验。

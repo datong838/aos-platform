@@ -1,0 +1,343 @@
+{
+  "proof_log": "final-budget-green-r4.log",
+  "verified_at": "2026-10-07T11:38:16.955927+00:00",
+  "head": "9bc6ef7b1d97ce56aca6b8711e60cb8700ddafc2",
+  "container_id": "4be7e2967dfd98ad81a6d9e554c420024e9e4e90cdf5649e19355d940542aad2",
+  "cluster_id": "7693564235776004128",
+  "readonly": true,
+  "schemas": [
+    {
+      "schema": "ar2_budget_176431d5fa8646a191c89ffbf49b2d4d",
+      "counts": [
+        1,
+        1,
+        3,
+        1
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 3,
+        "held": 1200,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_23e3347dbbe54f0cb56c6eb20b0a5214",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_fe2304d8fe97406ca8d5321e5d4de01d",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_e7b2a2299183429d9cb4a42820d1557a",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_eee0a63b48e5487098a542ece869bacf",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_d96461b5631947e7b7a7ec4770d8bbc2",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_2856120c4b4c4c8d8e527da68f454f18",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_3b5ccc5f48f546319ec70d1482626313",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_7e927c71282d4281bb8a46ffeec18fe5",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_cd157140fc8c48aca98d84b737a18f1b",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_65760e36de3b437e853852ba5bfba142",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_23a9f7e51b4c41998a131b17425ece79",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_beec6eb1653c48429fe443dfb266e7c4",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_829f7ed52af54c6187cea5999f9d74a7",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    },
+    {
+      "schema": "ar2_budget_2df68bc839c840d1af4fa4bebc8820c2",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canary": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "buckets": {
+        "n": 0,
+        "held": 0,
+        "other": 0
+      }
+    }
+  ],
+  "original_algorithm_identical_except_SQL_newline_indentation": true,
+  "other_original_methods_identical": true,
+  "caller_api_no_transaction_lifecycle_calls": true,
+  "hashes": {
+    "services/aos-api/aos_api/aip_budget_reservation_store.py": "9768077653548c0ed4f6087593a1cab7eb77292ec550ab82b0e3dfb3824816b5",
+    "services/aos-api/tests/aip/test_budget_caller_transaction_pg.py": "b1c493ba8a55a5512a29b59c3375d422e24d3aef81d0be46997ece54c45e252f",
+    "services/aos-api/tests/aip/test_aip_budget_reservation_pg.py": "66fef67885d5441f6f6dd5c74d5e2f13cf640ab4d2ae398e98b587a8a7561eb2",
+    "services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py": "04e5870d801e0e92d93db5e8f765f37b34d6198b80aa4b73845cc272de37bce6",
+    ".evidence/gt-budget-caller-transaction-20261007/final-release-green-r4.log": "1f327ea8b4ee28242b00d5e086e244333213f4690e81b51a5c4e1a4b06d512c6",
+    ".evidence/gt-budget-caller-transaction-20261007/adjacent-clock-green-r1.log": "0e85c84f1c720a6c09a50f655960bb6c1f0f5bede53b4831b91a81202d653a76",
+    ".evidence/gt-budget-caller-transaction-20261007/release-clock-red-r1.log": "8652cc11ef331c0664afcc8f7b6e4d99d94545b3ae7baab34059314f200926a3",
+    ".evidence/gt-budget-caller-transaction-20261007/red-r2.log": "c0be82a2d0aab716e9a1ae137f69c1f43ee018444067099875302306dab722aa",
+    ".evidence/gt-budget-caller-transaction-20261007/release-revoke-clock-red-r1.log": "1cc560bc982361291fbd17dde99ff5a58133d2e85850ae5afbfe6f3dd74b8234",
+    ".evidence/gt-budget-caller-transaction-20261007/release-clock-red-r2.log": "264d49fe770933f8e5de48a3caff04186c0c7349b5a381a80016eaf552823c9c",
+    ".evidence/gt-budget-caller-transaction-20261007/red-r1.log": "f46bb03dd2834d28a6057476978eadd479b244b3206378271800830dea9a499e",
+    ".evidence/gt-budget-caller-transaction-20261007/adjacent-r1.log": "28a8c9a34d93bd199f41b3da7daa9bfbefcb67b7a970e4e97f0373c83d8a2a64",
+    ".evidence/gt-budget-caller-transaction-20261007/cumulative-green-r2.log": "d8b98e08edd72b8d18c141becdb7228828c40b8c6f6cae49b1355727e7f2bc57",
+    ".evidence/gt-budget-caller-transaction-20261007/final-release-revoke-green-r5.log": "1ec24715a080e0fcfa34646a917d10cf6c455554c1dafc553fa20ec5f38fd0ce",
+    ".evidence/gt-budget-caller-transaction-20261007/final-cumulative-green-r3.log": "ef5eccd1ebcddde67030eb0ea7c7ff03c7e8e639830d2568bc181be36f4da3dc",
+    ".evidence/gt-budget-caller-transaction-20261007/content-clock-adjacent-r1.log": "1670c42342a71e8d3d4a82366f800fcfa5f8b5c684022915417c8712880d2e11",
+    ".evidence/gt-budget-caller-transaction-20261007/green-r1.log": "b3900417dbb633959625f22e15745074377e071232463ac0628bc7db42d488f1",
+    ".evidence/gt-budget-caller-transaction-20261007/adjacent-failure-recheck-r1.log": "cf708260caa3e715fc81ed57a18d99807a388f1d384621ae9ba1008a8978ad68",
+    ".evidence/gt-budget-caller-transaction-20261007/final-budget-green-r4.log": "743ac089c244245438d92622f2d106211566a894dc846ae3bcbc6d86fe86f63e",
+    ".evidence/gt-budget-caller-transaction-20261007/release-clock-green-r1.log": "a335ff1f98459cfe01f92ac00945b28b3b37b8bc05d13f61aed3274801f91b08",
+    ".evidence/gt-budget-caller-transaction-20261007/content-owned-green-r4.log": "274e02f32cf1c34e7483a99e796fb3558fdcfeebdb9b55e7c9df27ce01cea03c",
+    ".evidence/gt-budget-caller-transaction-20261007/release-content-clock-green-r2.log": "032fa10842adafe6d8e85a4d65a4d3b09556232b03e789916e495008281829e1",
+    ".evidence/gt-budget-caller-transaction-20261007/content-owned-green-r3.log": "dd6b8367efd617b92a573c0443e1e5fec37a571a5d7819b233d4901c75864a0e",
+    ".evidence/gt-budget-caller-transaction-20261007/plan.md": "1b3cd1121c6c4a433bf76abd28cf8942f8310fed6d60174098a4516f67d2cc5c",
+    ".evidence/gt-content-fixture-clock-20261007/plan.md": "6a09ce5aa59d5c7ea1e4235ad8111efcf269b2d4b0ee5c1b75ef69de29b428ee"
+  },
+  "formal_resources_changed": false,
+  "shared_physical_budget_intent_complete": false,
+  "full_goal_complete": false
+}

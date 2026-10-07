@@ -1,0 +1,20 @@
+{
+  "database": "aos_test_ff6b91f67e64_ti4_test",
+  "cluster_id": "7693564235776004128",
+  "readonly": true,
+  "clock_skew_test_seconds": [
+    5,
+    -5
+  ],
+  "durable_events": {
+    "publication_id": "publication-fc0b0e2f32b7022c1b37c741385101ad",
+    "published_at": "2026-10-07T11:36:46.597399+00:00",
+    "revoked_at": "2026-10-07T11:36:46.612208+00:00",
+    "n": 2
+  },
+  "latest_event": "revoked",
+  "publication_epoch": 2,
+  "log_sha256": "1ec24715a080e0fcfa34646a917d10cf6c455554c1dafc553fa20ec5f38fd0ce",
+  "formal_resources_changed": false,
+  "full_goal_complete": false
+}

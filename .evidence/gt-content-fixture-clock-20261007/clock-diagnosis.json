@@ -1,0 +1,25 @@
+{
+  "head": "9bc6ef7b1d97ce56aca6b8711e60cb8700ddafc2",
+  "cluster_id": "7693564235776004128",
+  "readonly": true,
+  "db_minus_app_ms": [
+    -65.241,
+    -63.384,
+    -63.389,
+    -63.383,
+    -63.388
+  ],
+  "roundtrip_ms": [
+    5.004,
+    0.349,
+    0.353,
+    0.297,
+    0.326
+  ],
+  "initial_failure": "governance release gate drifted or expired",
+  "independent_recheck_failure": "publication lineage drifted",
+  "production_app_clock_writer": "aip_release_publication_service.py datetime.now(UTC)",
+  "consumer_clock": "ecommerce_content_pre_review_authority.py clock_timestamp()",
+  "fixture_fix": "bounded native DB-clock wait for persisted timestamps before original validator",
+  "product_clock_contract_risk_open": true
+}

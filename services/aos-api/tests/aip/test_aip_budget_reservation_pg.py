@@ -140,9 +140,12 @@ def database():
         yield SimpleNamespace(owner=owner, schema=schema, migration=migration)
     finally:
         owner.execute("RESET ROLE")
-        owner.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
-        if created_runtime:
-            owner.execute("DROP ROLE aos_runtime")
+        if os.getenv('AOS_TEST_RETAIN_DATABASE') == '1':
+            print('Retained isolated budget schema:',schema)
+        else:
+            owner.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
+            if created_runtime:
+                owner.execute("DROP ROLE aos_runtime")
         owner.close()
 
 

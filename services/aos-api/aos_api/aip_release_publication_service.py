@@ -170,7 +170,7 @@ class AipReleasePublicationService:
                     and report.pass_rate >= suite.gate_threshold
                     else ReleaseGateStatus.FAILED
                 )
-                decided_at = datetime.now(UTC)
+                decided_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
                 expires_at = decided_at + timedelta(days=30)
                 report_ref = ArtifactRef(
                     artifact_id=report.report_id,
@@ -254,7 +254,8 @@ class AipReleasePublicationService:
                     raise AipReleaseAssetUnsupported("release gate target type does not match route")
                 if gate.status is not ReleaseGateStatus.PASSED:
                     raise AipReleaseGateRejected("release gate is not passed")
-                if not gate.decided_at <= datetime.now(UTC) < gate.expires_at:
+                checked_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+                if not gate.decided_at <= checked_at < gate.expires_at:
                     raise AipReleaseGateRejected("release gate is expired or not effective")
                 self._verify_gate_evidence(conn, scope, gate)
                 self._verify_publishable_target(conn, scope, gate.target)
@@ -267,7 +268,7 @@ class AipReleasePublicationService:
                     release_gate_decision_id=gate.decision_id,
                     reason_hash=request.reason_hash,
                     actor=actor,
-                    occurred_at=datetime.now(UTC),
+                    occurred_at=conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"],
                 )
                 self._insert_event(conn, scope, event)
                 conn.commit()
@@ -332,7 +333,7 @@ class AipReleasePublicationService:
                     release_gate_decision_id=published.release_gate_decision_id,
                     reason_hash=request.reason_hash,
                     actor=actor,
-                    occurred_at=datetime.now(UTC),
+                    occurred_at=conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"],
                 )
                 self._insert_event(conn, scope, event)
                 conn.commit()

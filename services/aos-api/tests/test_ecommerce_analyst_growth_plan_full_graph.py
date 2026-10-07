@@ -32,6 +32,38 @@ def disposable_database():
     import psycopg
     from psycopg import sql
     from psycopg.rows import dict_row
+    if os.environ.get("AOS_TEST_RETAIN_DATABASE") == "1":
+        from aos_api.db import get_dsn
+        with psycopg.connect(get_dsn(), row_factory=dict_row) as current:
+            params = {k: v for k, v in current.info.get_parameters().items()
+                      if k in {"host", "port", "user", "dbname"}}
+            assert params["host"] == "127.0.0.1" and params["port"] == "5434"
+            assert params["user"] == "aos_app" and params["dbname"].startswith("aos_test_")
+            assert current.execute("SELECT system_identifier::text AS id FROM pg_control_system()").fetchone()["id"] == "7693564235776004128"
+            current_head = current.execute("SELECT version_num FROM alembic_version").fetchone()["version_num"]
+        template = os.environ.get("AOS_CONTENT_TEST_TEMPLATE", params["dbname"])
+        assert template.startswith("aos_test_") and all(c.isalnum() or c == "_" for c in template)
+        with psycopg.connect(**dict(params, dbname=template), row_factory=dict_row) as source:
+            assert source.execute("SELECT system_identifier::text AS id FROM pg_control_system()").fetchone()["id"] == "7693564235776004128"
+            assert source.execute("SELECT version_num FROM alembic_version").fetchone()["version_num"] == current_head
+            for table in ("aip_logic_graph", "aip_publication_event", "aip_eval_contract_head"):
+                assert source.execute(sql.SQL("SELECT count(*) AS n FROM {}").format(sql.Identifier(table))).fetchone()["n"] == 0
+        name = "a0v_growth_graph_test_" + uuid.uuid4().hex
+        with psycopg.connect(**dict(params, dbname="postgres"), autocommit=True) as admin:
+            admin.execute(sql.SQL("CREATE DATABASE {} TEMPLATE {}").format(
+                sql.Identifier(name), sql.Identifier(template)))
+        @contextmanager
+        def retained_connect(scope):
+            assert scope == SCOPE
+            with psycopg.connect(**dict(params, dbname=name), row_factory=dict_row) as conn:
+                assert conn.info.dbname == name
+                conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)", scope.key)
+                yield conn
+        try:
+            yield retained_connect
+        finally:
+            print(f"Retained isolated content database: {name}")
+        return
     sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
     from a0v_canonical_ecommerce_first_install import container_database_connect_factory
     raw = container_database_connect_factory(context="colima-aos-extension", container="aos-a0v-recovery-pg", database_name="aos_meta_head")

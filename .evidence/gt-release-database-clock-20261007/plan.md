@@ -1,0 +1,13 @@
+# 发布原服务统一数据库时钟
+
+承接gt-budget-caller与原内容相邻实际双时钟失败；不扩大授权。局部fixture最大2秒native等待实际命中超时，不能靠加等待或改签名时间通过。原service datetime.now分别产生decided_at/publish gate有效校验/occurred_at，原current gate consumer数据库clock_timestamp；应用未来时间会产生不可立即消费的持久授权。
+
+文件aos_api/aip_release_publication_service.py，仅derive_gate决定时间、publish生效校验及新published事件发生时间三处切换为当前原事务conn.execute SELECT clock_timestamp AS now；门30天有效期与原hash计算、原exactGraph/Suite/report、不可变写入/幂等/tenant、撤回路径保持。withdraw事件此Task不修改，残余app-clock风险另列。新tests/aip/test_release_publication_db_clock_pg.py用真实ownedPG原完整注册Graph/Suite/report/gate/publish/contract；仅应用release模块datetime.now模拟+5秒，原DB不变；先旧代码2秒夹具timeout RED，再3点最小修改后原完整validator立即通过，独立检查decided_at/occurred_at<=dbNow。
+
+仅owned5434/cluster7693564235776004128测试库，PASS不赋予发送/生产权限。fixture2s等待仍保留以failclosed提示旧保留数据；原release数据库clk新数据须正常消费。专项+37预算/ModelEval+原内容Plan相邻，再原release现有测试。保留所有自建测试DB；正式资源不动；Goal保持active。
+
+初次clock RED/GREEN均因测试替换datetime类后原serializer isinstance失配而TypeError，不计行为RED；测试补元类使原datetime识别保持，原service暂恢复三处原值后真实复现+5秒再修复。原业务序列/哈希不变。
+
+原future+5s行为RED1FAIL7.49s（owned DB确未到授权floor）；最小修复后future clock+原content Plan+原release service/API12PASS31.48s。追加同一测试app-5s发布以覆盖原publish生效校验，同DB真实时间校验保持。全组单进程相邻38PASS11FAIL44.57s：原API db_conn夹具在tests/conftest.py:221删除多数meta_object_type，随后11项ModelEval均MODEL_EVAL_OBJECT_TYPE_DRIFTED，尚未budgethold；不调整产品guard、不手工恢复元数据。按测试状态边界将12release/content与37budget/ModelEval分别在fresh已migrated保留DB复验；合并失败原日志保留，不宣称单进程49PASS。
+
+最后复审：原revoke同publication排序仍用datetime.now，app回拨可把撤回排到发布前，危及原current lineage。更新最终范围为原service四处统一DBclock，取消前述撤回不改的临时限制，不更改撤回权限/幂等/hash/账本。先在已3处DBclock版本用app-5s真实revoke期望occurred>=published且最新事件revoked复现RED，再最小第四处改动；发布/内容12专项复验，预算37已在独立freshDB40.37s全部通过，第四处不触预算无需重复。原单进程49组11元数据清理失败保留。
