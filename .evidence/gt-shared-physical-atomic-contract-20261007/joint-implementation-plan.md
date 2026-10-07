@@ -136,3 +136,13 @@ r2仍在同helper import失败，库aos_test_0ee455a745a5_ti4_test保留；新�
 原预算caller本次通过；独立SER READ ONLY核不可变hold hash、hold/3links/3实际预算桶xmin均等于确认COMMIT xid；FORCE RLS2表、held10/其他风险0、hold1/links3/AgentRun0/pool0。实际held义务保留，不因申请过期释放或重放；此前r3申请证据预算0是这一确认提交之前的历史观察，不改写历史。
 
 完整joint文件包追加aos_api/aip_eval_runner.py与tests/aip/test_model_eval_execution_gate.py及真实原PG接续测试：原两个入口注册模型拒绝已native只读验证（2入口/callback0/写0），不能删除拒绝直接接受任意target executor。新typed exact应用Owner须验证当前申请/独立审批/预算同xid/Source/physical/唯一Intent/finalize与正式执行资格，生成绑定Suite/Contract/model-target的数据；旧通用run/run_by_contract保持无权拒绝。真实model-specific数据集、合法runtime及ModelQuality报告与Gate另验，不复用Boolean Graph结果冒称模型质量。
+
+预算fact窄桥目录输入已独立只读落盘budget-fact-bridge-catalog.json：8表Owner均aos_app，34条policy包含runtime与若干特定Owner，以及PUBLIC策略；不能仅凭存在PUBLIC策略推断任意新NOLOGIN Owner可读，必须回读其USING表达式与角色门。下一结合精确column grants/租户RLS/实际xid及原hash/ref验证设计，无新role/function/grant创建。
+
+补核polpermissive：本次PUBLIC策略全是restrictive，不授予新Owner行访问。窄fact Owner若新增，必须精确permissive tenant策略+最小列ACL或原角色trusted桥，不能以PUBLIC/角色membership/BYPASSRLS绕过。
+
+### 原runtime窄预算fact桥原生候选验证
+
+新增独立r4原合法申请fixture副本、test_budget_fact_owner_bridge.py、run_budget_fact_owner_bridge.py及r4结果。新随机全迁移保留库，新NOLOGIN/NOINHERIT/无membership/无特权ledger-probe Owner仅schema USAGE与固定函数EXECUTE；固定函数属于原aos_runtime，最小schema CREATE安装后撤销，PUBLIC EXECUTE撤销，不向ledger Owner授任何原预算/申请表权限，不用membership/BYPASSRLS。函数只核exact tenant/request/hash/原hold及3links+3桶actual current xid，返回数据库事实；原hold/审批先由原流程完成，不在桥内造审批。测试原DB表访问拒绝、exact同caller正向、bad hash/canary拒绝、COMMIT后新tx旧hold拒绝。所有caller为owned admin native SCRAM→LOCAL runtime/ledger，仅ACL/xid primitive，不是正式occupation身份/Source/执行权。只调用新临时函数，结束撤除函数及role/schema grants，角色/schema保留无权，hold保留。完整production桥仍需Source/session/安装/全Intent/finalizer trusted审计和普通预算分支。
+
+窄桥候选本次1 passed/7 warnings/13.98s，保留库aos_test_bde66457881c_ti4_test；独立READ ONLY核新Owner7特权位全false、membership0、5原表table/column权限0、函数已撤且schema USAGE已撤、held义务1/3links/3桶同确认xid且held10、AgentRun0/pool0/canary0。新Owner没有原runtime membership，也不需要改原表RLS。固定函数原runtime Owner方案可继续细化，但本次是owned admin/session primitive，不是正式occupation/JWT/Source联动；普通预算分支及完整finalizer还pending。

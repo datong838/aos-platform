@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-07T16:46:48.118585+00:00",
+  "database": "aos_test_bde66457881c_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": ".evidence/gt-shared-physical-atomic-contract-20261007/test_budget_fact_owner_bridge.py::test_budget_fact_owner_bridge",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "Isolated original-runtime budget-fact bridge primitive only; no Source or joint execution"
+}

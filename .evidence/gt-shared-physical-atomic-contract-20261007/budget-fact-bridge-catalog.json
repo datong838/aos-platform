@@ -1,0 +1,462 @@
+{
+  "status": "READ_ONLY_BUDGET_FACT_BRIDGE_CATALOG_INPUT",
+  "database": "aos_test_eb6ca3ed1d24_ti4_test",
+  "requested_tables": [
+    "aip_model_eval_budget_reservation",
+    "aip_model_eval_budget_reservation_bucket",
+    "aip_budget_bucket",
+    "aip_budget_reservation",
+    "aip_budget_reservation_bucket",
+    "aip_model_eval_request",
+    "aip_action_proposal",
+    "aip_action_approval_event"
+  ],
+  "tables": [
+    {
+      "relname": "aip_action_approval_event",
+      "owner": "aos_app",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "runtime_select": true,
+      "runtime_insert": true
+    },
+    {
+      "relname": "aip_action_proposal",
+      "owner": "aos_app",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "runtime_select": true,
+      "runtime_insert": true
+    },
+    {
+      "relname": "aip_budget_bucket",
+      "owner": "aos_app",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "runtime_select": true,
+      "runtime_insert": true
+    },
+    {
+      "relname": "aip_budget_reservation",
+      "owner": "aos_app",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "runtime_select": true,
+      "runtime_insert": true
+    },
+    {
+      "relname": "aip_budget_reservation_bucket",
+      "owner": "aos_app",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "runtime_select": true,
+      "runtime_insert": true
+    },
+    {
+      "relname": "aip_model_eval_budget_reservation",
+      "owner": "aos_app",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "runtime_select": true,
+      "runtime_insert": true
+    },
+    {
+      "relname": "aip_model_eval_budget_reservation_bucket",
+      "owner": "aos_app",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "runtime_select": true,
+      "runtime_insert": true
+    },
+    {
+      "relname": "aip_model_eval_request",
+      "owner": "aos_app",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "runtime_select": true,
+      "runtime_insert": true
+    }
+  ],
+  "policies": [
+    {
+      "relname": "aip_action_approval_event",
+      "polname": "binding_evaluator_restrict_a0v144",
+      "polcmd": "*",
+      "roles": [
+        "PUBLIC"
+      ],
+      "using_expr": "(((CURRENT_USER <> 'aos_aip_binding_evaluator'::name) AND (SESSION_USER <> 'aos_aip_binding_evaluator'::name)) OR ((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id) AND (p.action_type_id = 'aip_issue_source_license'::text) AND ((p.action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text))))))",
+      "check_expr": "(((CURRENT_USER <> 'aos_aip_binding_evaluator'::name) AND (SESSION_USER <> 'aos_aip_binding_evaluator'::name)) OR ((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id) AND (p.action_type_id = 'aip_issue_source_license'::text) AND ((p.action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text))))))",
+      "permissive": false
+    },
+    {
+      "relname": "aip_action_approval_event",
+      "polname": "binding_evaluator_source_related_a0v144",
+      "polcmd": "*",
+      "roles": [
+        "aos_aip_binding_evaluator"
+      ],
+      "using_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id) AND (p.action_type_id = 'aip_issue_source_license'::text) AND ((p.action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text)))))",
+      "check_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id) AND (p.action_type_id = 'aip_issue_source_license'::text) AND ((p.action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text)))))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_approval_event",
+      "polname": "capacity_issuer_related_a0v150",
+      "polcmd": "*",
+      "roles": [
+        "aos_provider_capacity_issuer"
+      ],
+      "using_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id)))))",
+      "check_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id)))))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_approval_event",
+      "polname": "capacity_issuer_related_restrict_a0v150",
+      "polcmd": "*",
+      "roles": [
+        "aos_provider_capacity_issuer"
+      ],
+      "using_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id)))))",
+      "check_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id)))))",
+      "permissive": false
+    },
+    {
+      "relname": "aip_action_approval_event",
+      "polname": "capacity_publication_fact_a0v155",
+      "polcmd": "*",
+      "roles": [
+        "aos_capacity_publication_owner"
+      ],
+      "using_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id)))))",
+      "check_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id)))))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_approval_event",
+      "polname": "capacity_publication_fact_restrict_a0v155",
+      "polcmd": "*",
+      "roles": [
+        "aos_capacity_publication_owner"
+      ],
+      "using_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id)))))",
+      "check_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id)))))",
+      "permissive": false
+    },
+    {
+      "relname": "aip_action_approval_event",
+      "polname": "guard_consumer_a0v129",
+      "polcmd": "*",
+      "roles": [
+        "aos_guard_policy_consumer_owner"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_approval_event",
+      "polname": "network_consumer_a0v120",
+      "polcmd": "*",
+      "roles": [
+        "aos_network_consumer_owner"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_approval_event",
+      "polname": "source_approval_related_a0v141",
+      "polcmd": "*",
+      "roles": [
+        "aos_source_license_approval_issuer"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id) AND (p.action_type_id = 'aip_issue_source_license'::text) AND ((p.action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text)))))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id) AND (p.action_type_id = 'aip_issue_source_license'::text) AND ((p.action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text)))))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_approval_event",
+      "polname": "source_issuer_related_a0v142",
+      "polcmd": "*",
+      "roles": [
+        "aos_source_license_issuer"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id) AND (p.action_type_id = 'aip_issue_source_license'::text) AND ((p.action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text)))))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (EXISTS ( SELECT 1\n   FROM aip_action_proposal p\n  WHERE ((p.org_id = aip_action_approval_event.org_id) AND (p.project_id = aip_action_approval_event.project_id) AND (p.proposal_id = aip_action_approval_event.proposal_id) AND (p.action_type_id = 'aip_issue_source_license'::text) AND ((p.action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text)))))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_approval_event",
+      "polname": "tenant_scope_aip_action_approval_event_aip3",
+      "polcmd": "*",
+      "roles": [
+        "aos_runtime"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_proposal",
+      "polname": "binding_evaluator_restrict_a0v144",
+      "polcmd": "*",
+      "roles": [
+        "PUBLIC"
+      ],
+      "using_expr": "(((CURRENT_USER <> 'aos_aip_binding_evaluator'::name) AND (SESSION_USER <> 'aos_aip_binding_evaluator'::name)) OR ((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = 'aip_issue_source_license'::text) AND ((action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text)))",
+      "check_expr": "(((CURRENT_USER <> 'aos_aip_binding_evaluator'::name) AND (SESSION_USER <> 'aos_aip_binding_evaluator'::name)) OR ((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = 'aip_issue_source_license'::text) AND ((action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text)))",
+      "permissive": false
+    },
+    {
+      "relname": "aip_action_proposal",
+      "polname": "binding_evaluator_source_a0v144",
+      "polcmd": "*",
+      "roles": [
+        "aos_aip_binding_evaluator"
+      ],
+      "using_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = 'aip_issue_source_license'::text) AND ((action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text))",
+      "check_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = 'aip_issue_source_license'::text) AND ((action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_proposal",
+      "polname": "capacity_issuer_proposal_a0v150",
+      "polcmd": "*",
+      "roles": [
+        "aos_provider_capacity_issuer"
+      ],
+      "using_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = ANY (ARRAY['aip_request_provider_capacity'::text, 'aip_review_provider_capacity_source'::text])) AND ((action_type_snapshot ->> 'id'::text) = action_type_id))",
+      "check_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = ANY (ARRAY['aip_request_provider_capacity'::text, 'aip_review_provider_capacity_source'::text])) AND ((action_type_snapshot ->> 'id'::text) = action_type_id))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_proposal",
+      "polname": "capacity_issuer_proposal_restrict_a0v150",
+      "polcmd": "*",
+      "roles": [
+        "aos_provider_capacity_issuer"
+      ],
+      "using_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = ANY (ARRAY['aip_request_provider_capacity'::text, 'aip_review_provider_capacity_source'::text])) AND ((action_type_snapshot ->> 'id'::text) = action_type_id))",
+      "check_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = ANY (ARRAY['aip_request_provider_capacity'::text, 'aip_review_provider_capacity_source'::text])) AND ((action_type_snapshot ->> 'id'::text) = action_type_id))",
+      "permissive": false
+    },
+    {
+      "relname": "aip_action_proposal",
+      "polname": "capacity_publication_fact_a0v155",
+      "polcmd": "*",
+      "roles": [
+        "aos_capacity_publication_owner"
+      ],
+      "using_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = ANY (ARRAY['aip_request_provider_capacity'::text, 'aip_review_provider_capacity_source'::text])) AND ((action_type_snapshot ->> 'id'::text) = action_type_id))",
+      "check_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = ANY (ARRAY['aip_request_provider_capacity'::text, 'aip_review_provider_capacity_source'::text])) AND ((action_type_snapshot ->> 'id'::text) = action_type_id))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_proposal",
+      "polname": "capacity_publication_fact_restrict_a0v155",
+      "polcmd": "*",
+      "roles": [
+        "aos_capacity_publication_owner"
+      ],
+      "using_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = ANY (ARRAY['aip_request_provider_capacity'::text, 'aip_review_provider_capacity_source'::text])) AND ((action_type_snapshot ->> 'id'::text) = action_type_id))",
+      "check_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = ANY (ARRAY['aip_request_provider_capacity'::text, 'aip_review_provider_capacity_source'::text])) AND ((action_type_snapshot ->> 'id'::text) = action_type_id))",
+      "permissive": false
+    },
+    {
+      "relname": "aip_action_proposal",
+      "polname": "guard_consumer_a0v129",
+      "polcmd": "*",
+      "roles": [
+        "aos_guard_policy_consumer_owner"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_proposal",
+      "polname": "network_consumer_a0v120",
+      "polcmd": "*",
+      "roles": [
+        "aos_network_consumer_owner"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_proposal",
+      "polname": "source_approval_proposal_a0v141",
+      "polcmd": "*",
+      "roles": [
+        "aos_source_license_approval_issuer"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = 'aip_issue_source_license'::text) AND ((action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = 'aip_issue_source_license'::text) AND ((action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_proposal",
+      "polname": "source_issuer_proposal_a0v142",
+      "polcmd": "*",
+      "roles": [
+        "aos_source_license_issuer"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = 'aip_issue_source_license'::text) AND ((action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)) AND (action_type_id = 'aip_issue_source_license'::text) AND ((action_type_snapshot ->> 'id'::text) = 'aip_issue_source_license'::text))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_action_proposal",
+      "polname": "tenant_scope_aip_action_proposal_aip3",
+      "polcmd": "*",
+      "roles": [
+        "aos_runtime"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_budget_bucket",
+      "polname": "budget_consumer_a0v126",
+      "polcmd": "*",
+      "roles": [
+        "aos_budget_consumer_owner"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_budget_bucket",
+      "polname": "tenant_scope_aip_budget_bucket_ar2_003",
+      "polcmd": "*",
+      "roles": [
+        "aos_runtime"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_budget_reservation",
+      "polname": "binding_evaluator_restrict_a0v144",
+      "polcmd": "*",
+      "roles": [
+        "PUBLIC"
+      ],
+      "using_expr": "(((CURRENT_USER <> 'aos_aip_binding_evaluator'::name) AND (SESSION_USER <> 'aos_aip_binding_evaluator'::name)) OR ((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text))))",
+      "check_expr": "(((CURRENT_USER <> 'aos_aip_binding_evaluator'::name) AND (SESSION_USER <> 'aos_aip_binding_evaluator'::name)) OR ((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text))))",
+      "permissive": false
+    },
+    {
+      "relname": "aip_budget_reservation",
+      "polname": "binding_evaluator_scope_a0v144",
+      "polcmd": "*",
+      "roles": [
+        "aos_aip_binding_evaluator"
+      ],
+      "using_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_budget_reservation",
+      "polname": "budget_consumer_a0v126",
+      "polcmd": "*",
+      "roles": [
+        "aos_budget_consumer_owner"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_budget_reservation",
+      "polname": "tenant_scope_aip_budget_reservation_ar2_003",
+      "polcmd": "*",
+      "roles": [
+        "aos_runtime"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_budget_reservation_bucket",
+      "polname": "tenant_scope_aip_budget_reservation_bucket_ar2_003",
+      "polcmd": "*",
+      "roles": [
+        "aos_runtime"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_model_eval_budget_reservation",
+      "polname": "binding_evaluator_restrict_a0v144",
+      "polcmd": "*",
+      "roles": [
+        "PUBLIC"
+      ],
+      "using_expr": "(((CURRENT_USER <> 'aos_aip_binding_evaluator'::name) AND (SESSION_USER <> 'aos_aip_binding_evaluator'::name)) OR ((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text))))",
+      "check_expr": "(((CURRENT_USER <> 'aos_aip_binding_evaluator'::name) AND (SESSION_USER <> 'aos_aip_binding_evaluator'::name)) OR ((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text))))",
+      "permissive": false
+    },
+    {
+      "relname": "aip_model_eval_budget_reservation",
+      "polname": "binding_evaluator_scope_a0v144",
+      "polcmd": "*",
+      "roles": [
+        "aos_aip_binding_evaluator"
+      ],
+      "using_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = 'org-org'::text) AND (project_id = 'dev-project'::text) AND (org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_model_eval_budget_reservation",
+      "polname": "tenant_scope_aip_model_eval_budget_reservation_a0v134",
+      "polcmd": "*",
+      "roles": [
+        "aos_runtime"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_model_eval_budget_reservation_bucket",
+      "polname": "tenant_scope_aip_model_eval_budget_reservation_bucket_a0v134",
+      "polcmd": "*",
+      "roles": [
+        "aos_runtime"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    },
+    {
+      "relname": "aip_model_eval_request",
+      "polname": "tenant_scope_aip_model_eval_request_a0v133",
+      "polcmd": "*",
+      "roles": [
+        "aos_runtime"
+      ],
+      "using_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "check_expr": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+      "permissive": true
+    }
+  ],
+  "not_authorization": [
+    "No new role/function/grant created",
+    "Column-only SELECT and tenant FORCE RLS require exact trusted-body/ACL/type/ref/actual-xid verification before finalizer implementation",
+    "Current physical joint owner remains unimplemented"
+  ],
+  "conclusion": "PUBLIC policies here are restrictive, not a grant of row access. New independent fact Owner requires explicit narrow permissive tenant policy plus column ACL or original-role trusted bridge; no membership/BYPASSRLS shortcut."
+}

@@ -1,0 +1,27 @@
+{
+  "status": "TEST_OWNED_ORIGINAL_RUNTIME_BUDGET_BRIDGE_VERIFIED",
+  "database": "aos_test_bde66457881c_ti4_test",
+  "owner": "gt_ledger_probe_c8fc1f7ac762",
+  "schema": "gt_budget_fact_c8fc1f7ac762",
+  "actual_function_body": "CREATE OR REPLACE FUNCTION gt_budget_fact_c8fc1f7ac762.verify_eval(p_hold uuid, p_request text, p_hash text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog'\nAS $function$\n    DECLARE h public.aip_model_eval_budget_reservation%ROWTYPE; n bigint; exact_rows boolean;\n    BEGIN\n      IF current_user<>'aos_runtime' OR session_user<>'aos_app'\n         OR current_setting('transaction_isolation')<>'serializable'\n         OR current_setting('transaction_read_only')<>'off'\n         OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'\n         OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' THEN\n        RAISE EXCEPTION 'TEST_BUDGET_FACT_SCOPE_IDENTITY' USING ERRCODE='42501';\n      END IF;\n      SELECT * INTO h FROM public.aip_model_eval_budget_reservation\n        WHERE org_id='org-org' AND project_id='dev-project' AND reservation_id=p_hold\n          AND request_id=p_request AND request_hash=p_hash AND state='held'\n          AND xmin::text=pg_current_xact_id()::text;\n      IF NOT FOUND THEN\n        RAISE EXCEPTION 'TEST_BUDGET_FACT_EXACT_CURRENT_XID' USING ERRCODE='23514';\n      END IF;\n      SELECT count(*),bool_and(l.reserved_minor=h.upper_bound_minor\n          AND b.held_minor>=l.reserved_minor AND l.xmin::text=pg_current_xact_id()::text\n          AND b.xmin::text=pg_current_xact_id()::text) INTO n,exact_rows\n        FROM public.aip_model_eval_budget_reservation_bucket l\n        JOIN public.aip_budget_bucket b USING(org_id,project_id,bucket_kind,account_id,period_start,currency)\n        WHERE l.org_id=h.org_id AND l.project_id=h.project_id AND l.reservation_id=h.reservation_id;\n      IF n<>3 OR exact_rows IS DISTINCT FROM true THEN\n        RAISE EXCEPTION 'TEST_BUDGET_FACT_THREE_BUCKETS' USING ERRCODE='23514';\n      END IF;\n      RETURN jsonb_build_object('reservationId',h.reservation_id,'requestHash',h.request_hash,\n        'contentHash',h.content_hash,'upperBoundMinor',h.upper_bound_minor,\n        'xid',pg_current_xact_id()::text,'executionAllowed',false);\n    END $function$\n",
+  "native_identity": {
+    "xid": "223124",
+    "pid": 194409
+  },
+  "proof": {
+    "xid": "223124",
+    "contentHash": "sha256:9ee6ce4ec1c52dcd33b0bb6588addd3e8f43382ec9e3a93576b50cf08eaec44b",
+    "requestHash": "6567b77bbf324284db50849a9445d9fdb4f297f54bca6ad31d18788f5ffd12c9",
+    "reservationId": "12ff9db8-2b38-46ef-9a98-faf52a8d5c46",
+    "upperBoundMinor": 10,
+    "executionAllowed": false
+  },
+  "direct_table_read_denied": true,
+  "hash_canary_old_xid_denied": true,
+  "limitations": [
+    "Owned admin SCRAM/session; not original occupation Source identity",
+    "Eval-budget same-xid/ACL primitive only; no full joint/Intent/ordinary budget",
+    "Formal bridge requires exact installer, original authority and complete hash/ref/deadline finalizer"
+  ],
+  "temporary_function_removed_and_role_inert": true
+}

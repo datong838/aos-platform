@@ -1,0 +1,78 @@
+{
+  "status": "INDEPENDENT_BUDGET_FACT_BRIDGE_CLEANUP_AND_NATIVE_ROWS_VERIFIED",
+  "database": "aos_test_bde66457881c_ti4_test",
+  "owner": "gt_ledger_probe_c8fc1f7ac762",
+  "role_flags": {
+    "rolcanlogin": false,
+    "rolinherit": false,
+    "rolsuper": false,
+    "rolbypassrls": false,
+    "rolcreatedb": false,
+    "rolcreaterole": false,
+    "rolreplication": false
+  },
+  "original_table_and_column_permissions": {
+    "aip_model_eval_budget_reservation": {
+      "any_table": false,
+      "any_column": false
+    },
+    "aip_model_eval_budget_reservation_bucket": {
+      "any_table": false,
+      "any_column": false
+    },
+    "aip_budget_bucket": {
+      "any_table": false,
+      "any_column": false
+    },
+    "aip_model_eval_request": {
+      "any_table": false,
+      "any_column": false
+    },
+    "aip_action_approval_event": {
+      "any_table": false,
+      "any_column": false
+    }
+  },
+  "function_removed": true,
+  "schema_usage_revoked": true,
+  "memberships": 0,
+  "hold": {
+    "request_hash": "6567b77bbf324284db50849a9445d9fdb4f297f54bca6ad31d18788f5ffd12c9",
+    "content_hash": "sha256:9ee6ce4ec1c52dcd33b0bb6588addd3e8f43382ec9e3a93576b50cf08eaec44b",
+    "state": "held",
+    "xid": "223124"
+  },
+  "links": [
+    {
+      "link_xid": "223124",
+      "bucket_xid": "223124",
+      "reserved_minor": 10,
+      "held_minor": 10
+    },
+    {
+      "link_xid": "223124",
+      "bucket_xid": "223124",
+      "reserved_minor": 10,
+      "held_minor": 10
+    },
+    {
+      "link_xid": "223124",
+      "bucket_xid": "223124",
+      "reserved_minor": 10,
+      "held_minor": 10
+    }
+  ],
+  "counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_model_eval_request": 1,
+    "aip_model_eval_budget_reservation": 1
+  },
+  "canary": 0,
+  "actual_test_function_body_sha256": "9547715bac0d3ea308a832f06252b7e27512d654f4753e73d78b8346ea2009b4",
+  "limitations": [
+    "Owned admin SCRAM/session; not original occupation Source identity",
+    "Eval-budget same-xid/ACL primitive only; no full joint/Intent/ordinary budget",
+    "Formal bridge requires exact installer, original authority and complete hash/ref/deadline finalizer"
+  ]
+}
