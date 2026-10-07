@@ -36,3 +36,9 @@ inflight_upper_bound 保留所有 held/prepared/submitted/unknown 未决上界�
 拟议文件为 `aos_api/aip_physical_capacity_occupation.py`、追加迁移、完整 `tests/aip/test_physical_capacity_joint_pg.py`，再接 AgentRun、Eval、Content 原入口；这些产品文件尚未取得本 Task 的代码 Lease，不能偷偷开码。原 Source/profile dirty Scope 亦不纳入本 Task。
 
 下一验收必须同时覆盖：两 token 模式、same caller COMMIT/rollback/replay、不同 Provider/pool/revision/ordinary/Eval 共同上限、真实并发与过时快照、等待后和实际 COMMIT 期限、旧 unknown 导入/零执行切换、合法 Skill/Logic/ModelRoute/Task 创建链、一次 Intent、原功能相邻与租户零副作用。正式数据库迁移、服务重启、自然首链、八工作台、连续观察与发布仍走 231 后续门。
+
+## 原费用撤回隐式 writer 边补证
+
+2026-10-07 原生catalog盘点（完整157 retained库）及cost-revoke-lock r2补证：原BudgetCostIssuer从REVIEWER member SHARE→budget-cost-review advisory→撤回 INSERT→AFTER ROW INSERT的aip_budget_cost_revoke_fence_a0v_126 UPDATE原fence。触发器body独立核对a0v_126 trusted迁移完全相同。实际签名checker/consumer/get原测试后，同批准maker签名revoke对SER/runtimecaller持有的fence真实等待；caller rollback后原Issuer COMMIT，fence1→2/revocation1/receipt1。这里的caller仅持锁，不是联合ledger caller，也没有budgethold/Intent。
+
+原费用Issuer角色不同于SourceOwner：a0v_125要求仅原aos_runtime SET membership（无ADMIN/INHERIT），consumer无membership；不得因新Owner零membership设计而误改旧Issuer原身份。原Source reader清理由fixture完成，catalog无该入口不授重装/重发。此native边证据不能把完整锁图标GREEN；新联合Owner仍须预持并复验review/member/currentness与最终强度fence，核两方原writer对向路径，不凭词法事件猜全序。catalog_lock_inventory明确dynamic EXECUTE/helper call和控制流尚未闭包。

@@ -152,3 +152,21 @@ SHARE→UPDATE试验原生40P01，一方rollback另一方commit，独立回读ep
 完整原Source distinct test1PASS/7warnings50.07s；实际专用SCRAM/SER/runtime caller→独立NOLOGIN ledger-probeOwner→原SourceOwner窄桥→未改原reader，positive解析Source一致、同xid/pid；原reader/auditor定义及ACL before/after完全一致。独立Owner无Sourceprivate USAGE/SELECT、原RPC EXECUTE、C verifier EXECUTE和membership。原client坏JWT提前拒绝；native过期authentication packet、错误source ref和普通admin/runtime非专用session拒绝，随后原epoch并发/独立Owner/撤回负门继续通过。测试函数finally只删本次owned probe函数，角色REVOKE额外USAGE并保持NOLOGIN、库数据保留。独立回读Source签名hash、epoch2撤回、probe函数0/角色额外grant0/AgentRun0/容量0/canary0，bootstrapSource0。
 
 窄桥解决新Owner不能扩授原Source reader精确ACL的接线问题；它没有实现physical ledger/budget/Intent，不授正式配置/服务/Provider启动权。将来生产桥须固定trusted DDL/hash/SECURITY DEFINER/search_path/完整角色ACL表审计，客户端_consumpion_packet验签前后原样保持。父合同full传递锁/旧义务零执行切换与合法业务链仍pending。旧cutover盘点同时留下5笔精确签名历史映射、4笔无映射旧行，其中2expired仍无零效果证明；均测试行而非合法AgentRun unknown历史。
+
+## 下一步：原生数据库隐式触发器锁边盘点
+
+新增catalog_lock_inventory.py／catalog-lock-inventory.json。仅只读已登记owner-bridge r2保留库aos_test_fc2688b199ad_ti4_test及完整157空模板aos_test_f2ef54f0da1d_ti4_test，核cluster/READ ONLY/迁移头。从实际pg_trigger/pg_proc收集Source私有表、原public预算/费用/Model/Provider/审批与成员表及其递归静态触发依赖；记录函数hash、触发时机/延期属性、静态关系及词法锁事件。动态EXECUTE/控制流/间接function调用均标剩余，词法顺序不称真实运行顺序；不输出函数全文、签名、JWT或业务payload，不产生DDL/数据写入。实际Source reader若原fixture已清理只标缺失，不重装或重发attempt。与当前源hash共同绑定，明确trusted定义比对和原生完整writer竞争仍须后续，不因catalog清单冻结完整锁图。所有库卷备份原样保留。
+
+### 原费用撤回隐式 fence 原生等待验证
+
+新增cost_revoke_lock_probe.py／run_cost_revoke_lock_probe.py／cost-revoke-lock-r1.log／cost-revoke-lock-verification.json。完整原test_real_caller_consumes_once_and_legacy_store_reads的新随机保留库，由原prepared→签名checker decide→专用consumer consume→原store get全部通过后，用同批准的原签名maker revoke经原Issuer执行；另一个实际SER/runtimecaller仅锁原费用fence、不写version或hold，observer核真实pg_blocking_pids。rollback该caller后撤回成功实际COMMIT，独立查看revocation1/fence version+1/issuer receipt，费用/AgentRun/canary零新增。fixture仅原历史Provider producer，无Price bypass/伪造Task/hold，不能称合法完整业务或联合ledger。不得未知结果重发，先核清理/角色/结果。此步骤补实际原隐式writer锁，不改源代码/正式库。
+
+首轮原测试正向已通过，但探针导入包模块与pytest实际模块不同，未捕获approved资料，1FAIL/7warnings7.74s；未进入新撤回，非产品拒绝。仅修正为pyfuncitem.module，失败库ee694e57dab4保留，不对旧批准重发撤回，第二轮新库验证。
+
+独立核验首次把旧费用Issuer误当Source独立Owner而期待membership0；a0v_125原迁移明确GRANT aos_runtime TO aos_budget_cost_issuer，当前原生membership严格NOADMIN/NOINHERIT/SET true，consumer无membership。仅纠正verifier按原角色精确合同核验，数据库不改；不是新增授权。
+
+### 实际触发器和原费用撤回结果
+
+两份完整157库原生只读目录各97相关表/488触发器/94函数；包含Source私有边界动态EXECUTE与原runtime/审批触发器，词法事件仅候选，未覆盖动态完整closure。原reader已由Source fixture清理，目录不重建。费用撤回AFTER INSERT函数aip_budget_cost_revoke_fence_a0v_126原生body与a0v_126 trusted迁移完全一致，SECURITY INVOKER/search_path=pg_catalog，原触发器AFTER ROW INSERT/nondeferrable。
+
+第二轮完整原test1PASS/7warnings7.63s，原checker签名→consumerconsume→storeget后，maker签名原Issuer撤回实际等待SER/runtimecaller持原fence；observer pg_blocking_pids精确证明，未提交revocation0，caller只rollback锁后Issuer实际COMMIT、revocation1/fence1→2/revokeReceipt1。独立只读两个保留库（失败r1 revocation0；r2 revocation1）回读通过，issuer/consumer NOLOGIN，issuer仅原runtime SET membership，hold/AgentRun/capacity/canary0。没有Price bypass/Task伪造/Provider发送/Source重放。记录证明原隐式writer锁边，未证明全joint无循环或完整业务；费用review/member先锁再到fence与未来联合前缀需共同排序。

@@ -1,0 +1,86 @@
+{
+  "status": "ORIGINAL_COST_REVOKE_COMMIT_AND_ROLE_CLEANUP_READBACK_VERIFIED",
+  "databases": {
+    "aos_test_860bd2813958_ti4_test": {
+      "identity": {
+        "database": "aos_test_860bd2813958_ti4_test",
+        "readonly": "on",
+        "cluster": "7693564235776004128"
+      },
+      "trigger_matches_trusted_migration": true,
+      "roles": {
+        "aos_budget_cost_issuer": {
+          "no_login_or_privileged_flags": true,
+          "original_memberships": [
+            {
+              "member": "aos_budget_cost_issuer",
+              "role": "aos_runtime",
+              "admin_option": false,
+              "inherit_option": false,
+              "set_option": true
+            }
+          ]
+        },
+        "aos_budget_consumer_call": {
+          "no_login_or_privileged_flags": true,
+          "original_memberships": []
+        }
+      },
+      "product_counts": {
+        "aip_agent_run": 0,
+        "aip_budget_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aip_model_capacity_reservation": 0
+      },
+      "canary": 0,
+      "revocations": 1
+    },
+    "aos_test_ee694e57dab4_ti4_test": {
+      "identity": {
+        "database": "aos_test_ee694e57dab4_ti4_test",
+        "readonly": "on",
+        "cluster": "7693564235776004128"
+      },
+      "trigger_matches_trusted_migration": true,
+      "roles": {
+        "aos_budget_cost_issuer": {
+          "no_login_or_privileged_flags": true,
+          "original_memberships": [
+            {
+              "member": "aos_budget_cost_issuer",
+              "role": "aos_runtime",
+              "admin_option": false,
+              "inherit_option": false,
+              "set_option": true
+            }
+          ]
+        },
+        "aos_budget_consumer_call": {
+          "no_login_or_privileged_flags": true,
+          "original_memberships": []
+        }
+      },
+      "product_counts": {
+        "aip_agent_run": 0,
+        "aip_budget_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aip_model_capacity_reservation": 0
+      },
+      "canary": 0,
+      "revocations": 0
+    }
+  },
+  "file_sha256": {
+    "cost_revoke_lock_probe.py": "d18615fed690191476549ee5a995c187d74988fa00011c7261173b93a347adc0",
+    "run_cost_revoke_lock_probe.py": "5542175f48214184c1416a7d6c4a812ad79ce17e7e68628cb86c75cf81394362",
+    "cost-revoke-lock-r2.log": "6a5f634292cb8dfa5e020938b4e308d6a33a300a6321339498df4315daaf1ce5",
+    "cost-revoke-lock-verification.json": "b9183618f82de54d95c2fc6e87581b542170b704be77c6bfd6a2832cf2e92df0",
+    "verify_cost_revoke_lock.py": "50e2fa3f39dee98cac22ace46614f1e0e37c9031721d4d9bb3e6bc93ae56602b"
+  },
+  "trusted_migration_sha256": "269e6a4a550764e485736413bde5744fe6d508b5dac069db0484bb255efa9ff7",
+  "limitations": [
+    "Live wait/pid/xid proven by original probe, not reconstructed from persistent state",
+    "Only original cost revoke implicit fence edge; full joint writer graph still unverified",
+    "Historical Provider fixture, not a complete authorized business run"
+  ]
+}

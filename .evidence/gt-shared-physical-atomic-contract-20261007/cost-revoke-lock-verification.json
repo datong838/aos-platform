@@ -1,0 +1,32 @@
+{
+  "status": "ORIGINAL_SIGNED_REVOKE_NATIVE_FENCE_WAIT_VERIFIED",
+  "database": "aos_test_860bd2813958_ti4_test",
+  "cluster": "7693564235776004128",
+  "caller": {
+    "role": "aos_runtime",
+    "isolation": "serializable",
+    "pid": 132137,
+    "xid": "221100"
+  },
+  "issuer": {
+    "pid": 132138,
+    "session": "aos_budget_cost_issuer",
+    "database": "aos_test_860bd2813958_ti4_test"
+  },
+  "blocked_by": [
+    132137
+  ],
+  "budget_id": "test:activation:c7731f4e5a7d409aad5b7f42c2641738",
+  "budget_revision": 2,
+  "decision_id": "budget-cost-decision-db01e03132fa4e2ab3ed2ef47b08be1f",
+  "revocation_id": "budget-cost-revoke-970566c9af7c4ef29def6e936dd132f9",
+  "before_version": 1,
+  "after_version": 2,
+  "head": "2b1d7ee12510f5fd219044c4a718dbf46c98b9a6",
+  "probe_sha256": "d18615fed690191476549ee5a995c187d74988fa00011c7261173b93a347adc0",
+  "limitations": [
+    "Original fixture Provider history producer; no complete business authorization",
+    "Native runtime row lock is not physical/budget/Intent joint implementation",
+    "No Provider call, new hold, Source attempt replay, or formal effects"
+  ]
+}
