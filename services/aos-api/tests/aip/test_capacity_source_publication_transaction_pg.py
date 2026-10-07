@@ -26,6 +26,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_native_current_installation_rechecks_original_live_boundaries',
         'test_native_current_installation_rechecks_original_registry_functions',
         'test_native_current_installation_rechecks_original_registry_tables',
+        'test_native_current_installation_rechecks_native_verifier',
         'test_native_committed_sources_share_one_physical_account',
         'test_native_committed_source_is_durable_and_signed',
         'test_native_committed_source_refuses_invalid_finalize',
@@ -4798,6 +4799,60 @@ def test_native_current_installation_rechecks_original_registry_tables(native_si
                                 audit()
                             raise RestoreFault()
                     audit()
+            assert _private_source_row_fingerprint(owner)==before
+        finally:
+            owner.execute('DROP FUNCTION aos_capacity_publication_private.require_current_source_installation()')
+        transaction.require_source_transaction_tables(owner)
+
+
+def test_native_current_installation_rechecks_native_verifier(native_signed_source):
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    class RestoreFault(Exception):pass
+    signature='aos_ed25519.verify(bytea,bytea,bytea)'
+    changes={
+        'volatility':'ALTER FUNCTION '+signature+' VOLATILE',
+        'strict':'ALTER FUNCTION '+signature+' CALLED ON NULL INPUT',
+        'parallel':'ALTER FUNCTION '+signature+' PARALLEL UNSAFE',
+        'security':'ALTER FUNCTION '+signature+' SECURITY DEFINER',
+        'config':'ALTER FUNCTION '+signature+' SET search_path=public',
+        'public_execute':'GRANT EXECUTE ON FUNCTION '+signature+' TO PUBLIC',
+        'runtime_execute':'GRANT EXECUTE ON FUNCTION '+signature+' TO aos_runtime',
+        'caller_execute_revoked':'REVOKE EXECUTE ON FUNCTION '+signature+' FROM aos_capacity_publication_owner',
+        'owner_execute_revoked':'REVOKE EXECUTE ON FUNCTION '+signature+' FROM aos_ed25519_owner',
+        'execute_grantoption':'GRANT EXECUTE ON FUNCTION '+signature+' TO aos_capacity_publication_owner WITH GRANT OPTION',
+        'owner_login':'ALTER ROLE aos_ed25519_owner LOGIN',
+        'owner_inherit':'ALTER ROLE aos_ed25519_owner INHERIT',
+        'owner_bypassrls':'ALTER ROLE aos_ed25519_owner BYPASSRLS',
+        'owner_membership':'GRANT aos_runtime TO aos_ed25519_owner',
+        'schema_owner':'ALTER SCHEMA aos_ed25519 OWNER TO aos_runtime',
+        'schema_public_usage':'GRANT USAGE ON SCHEMA aos_ed25519 TO PUBLIC',
+        'schema_caller_create':'GRANT CREATE ON SCHEMA aos_ed25519 TO aos_capacity_publication_owner',
+        'schema_caller_revoked':'REVOKE USAGE ON SCHEMA aos_ed25519 FROM aos_capacity_publication_owner',
+        'schema_runtime_usage':'GRANT USAGE ON SCHEMA aos_ed25519 TO aos_runtime',
+        'extension_membership':'ALTER EXTENSION aos_ed25519 DROP FUNCTION '+signature,
+        'sql_replacement':"CREATE OR REPLACE FUNCTION aos_ed25519.verify(signature bytea,message bytea,public_key bytea) RETURNS boolean LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE SECURITY INVOKER AS $$ SELECT true $$",
+        'overload':"CREATE FUNCTION aos_ed25519.verify(text) RETURNS boolean LANGUAGE sql AS $$ SELECT true $$",
+    }
+    with isolated_owner() as owner:
+        before=_private_source_row_fingerprint(owner)
+        transaction.require_source_transaction_tables(owner)
+        owner.execute(transaction.source_private_installation_audit_sql())
+        try:
+            def audit():
+                with owner.transaction():
+                    owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                    owner.execute('SELECT aos_capacity_publication_private.require_current_source_installation()')
+                    owner.execute('RESET ROLE')
+            audit()
+            for fault,statement in changes.items():
+                with pytest.raises(RestoreFault):
+                    with owner.transaction():
+                        owner.execute(statement)
+                        with pytest.raises(psycopg.errors.InsufficientPrivilege,match='CAPACITY_SOURCE_CURRENT_INSTALLATION_DRIFTED'):
+                            audit()
+                        raise RestoreFault()
+                audit()
             assert _private_source_row_fingerprint(owner)==before
         finally:
             owner.execute('DROP FUNCTION aos_capacity_publication_private.require_current_source_installation()')

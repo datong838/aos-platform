@@ -1277,6 +1277,50 @@ BEGIN
         body.append('IF NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_roles r ON r.oid=p.proowner '
             'JOIN pg_language l ON l.oid=p.prolang WHERE p.oid=to_regprocedure('
             + literal(item['signature']) + ') AND ' + ' AND '.join(checks) + ') THEN ' + fail + ' END IF;')
+    # Original extension SQL/control plus the 152 publication Owner grants
+    # define this contract. Current catalog observations never define it.
+    # Match catalog names directly so revoked schema USAGE is our drift verdict,
+    # rather than an unclassified regprocedure lookup permission error.
+    body.append(f"""IF NOT EXISTS(
+      SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+      JOIN pg_language l ON l.oid=p.prolang JOIN pg_roles r ON r.oid=p.proowner
+      WHERE n.nspname='aos_ed25519' AND p.proname='verify'
+       AND p.proargtypes='17 17 17'::oidvector AND p.prorettype='boolean'::regtype
+       AND p.proargnames=ARRAY['signature','message','public_key']::text[]
+       AND p.proallargtypes IS NULL AND p.proargmodes IS NULL
+       AND p.probin='$libdir/aos_ed25519' AND p.prosrc='aos_ed25519_verify'
+       AND l.lanname='c' AND NOT p.prosecdef AND p.provolatile='i' AND p.proisstrict
+       AND p.proparallel='s' AND p.proconfig IS NULL AND p.pronargdefaults=0
+       AND p.prokind='f' AND p.provariadic=0 AND NOT p.proretset
+       AND NOT p.proleakproof AND p.prosupport=0
+       AND r.rolname='aos_ed25519_owner' AND n.nspowner=r.oid
+       AND NOT(r.rolcanlogin OR r.rolinherit OR r.rolsuper OR r.rolcreatedb
+         OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls)
+       AND NOT EXISTS(SELECT 1 FROM pg_auth_members a WHERE a.roleid=r.oid OR a.member=r.oid)
+       AND (SELECT count(*) FROM pg_proc x WHERE x.pronamespace=n.oid AND x.proname='verify')=1
+       AND EXISTS(SELECT 1 FROM pg_depend d JOIN pg_extension e ON e.oid=d.refobjid
+         WHERE d.classid='pg_proc'::regclass AND d.objid=p.oid
+         AND d.refclassid='pg_extension'::regclass AND d.deptype='e'
+         AND e.extname='aos_ed25519' AND e.extversion='1.0'
+         AND e.extnamespace=n.oid AND NOT e.extrelocatable)
+       AND NOT EXISTS(SELECT 1 FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
+         WHERE a.grantee NOT IN (r.oid,{literal(OWNER)}::regrole::oid)
+         OR a.grantor<>r.oid OR a.privilege_type<>'EXECUTE' OR a.is_grantable)
+       AND EXISTS(SELECT 1 FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
+         WHERE a.grantee=r.oid AND a.privilege_type='EXECUTE')
+       AND EXISTS(SELECT 1 FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
+         WHERE a.grantee={literal(OWNER)}::regrole::oid AND a.privilege_type='EXECUTE')
+       AND NOT EXISTS(SELECT 1 FROM aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner))) a
+         WHERE a.grantor<>r.oid OR a.is_grantable OR NOT(
+           (a.grantee=r.oid AND a.privilege_type IN ('USAGE','CREATE'))
+           OR (a.grantee={literal(OWNER)}::regrole::oid AND a.privilege_type='USAGE')))
+       AND EXISTS(SELECT 1 FROM aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner))) a
+         WHERE a.grantee=r.oid AND a.privilege_type='USAGE')
+       AND EXISTS(SELECT 1 FROM aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner))) a
+         WHERE a.grantee=r.oid AND a.privilege_type='CREATE')
+       AND EXISTS(SELECT 1 FROM aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner))) a
+         WHERE a.grantee={literal(OWNER)}::regrole::oid AND a.privilege_type='USAGE')
+    ) THEN {fail} END IF;""")
     for name, expected_hash in {**_SOURCE_TABLE_HASHES, **_ORIGINAL_REGISTRY_TABLE_HASHES}.items():
         body.append('v_oid:=to_regclass(' + literal('aos_capacity_publication_private.' + name) + '); '
                     'IF v_oid IS NULL THEN ' + fail + ' END IF;')
