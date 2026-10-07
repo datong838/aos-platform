@@ -1,0 +1,20 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "current157-api-refresh-20261008",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001493",
+  "scope": [
+    "aos-platform/.evidence/current157-api-refresh-20261008",
+    "aos-platform/maintenance/current-preview-api"
+  ],
+  "excluded_scope": [
+    "aos-platform/maintenance/current-preview-database",
+    "aos-platform/formal-runtime"
+  ],
+  "expected_outputs": [
+    "Deploy latest committed11b9 API snapshot and complete bundles with original signed Receipt; exact PID stop/start, schema157 no migration, health/ready/readonly catalog and data unchanged; other WIP excluded"
+  ],
+  "lease_expires_at": "2026-10-07T20:45:13.845579+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-08T02:45:14+08:00"
+}

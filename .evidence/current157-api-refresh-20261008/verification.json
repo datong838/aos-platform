@@ -1,0 +1,19 @@
+{
+  "task": "current157-api-refresh-20261008",
+  "head": "11b9deade613306093e1b6bb19065283a8f193ce",
+  "files": {
+    ".evidence/current157-api-refresh-20261008/task.json": "53fb6022b97d8b500985f2f560fb4fea8096bd8d4293621ff32712b902c585ca",
+    ".evidence/current157-api-refresh-20261008/plan.md": "e3464b9ca6478ca8b23c331ce34900208d7642ab2b392eba011333fd5bf76af5",
+    ".evidence/current157-api-refresh-20261008/refresh-api.py": "0a14db3ea59b45dea265cfea4bf07d45f8264a0dceec20a12ec2dd5aa152903e",
+    ".evidence/current157-api-refresh-20261008/preflight.json": "ecd50a76183801e0bb6f0430b86f2ef77314158ab98a757421c9d53384b87144",
+    ".evidence/current157-api-refresh-20261008/stop-intent.json": "9bc1c5a139a55aa60ad7999c52af31ced6eba21822ec574bd1ef0033e06159aa",
+    ".evidence/current157-api-refresh-20261008/start-intent.json": "bb40dbaf5591504ee2485d28cbb9d72de61d8f03bf877fc6af1da3ae8756c5a2",
+    ".evidence/current157-api-refresh-20261008/started.json": "a5c9b2d956ea63a9c696f3301c17094979d65952e1847246b2fceca101a127ba",
+    ".evidence/current157-api-refresh-20261008/before-data.json": "1eaeac667f59042522fa7896eda55312dd8bb24f84371c64439aa3f3ea9c547f",
+    ".evidence/current157-api-refresh-20261008/result.json": "03e22583ce1235a8bfb2b95e74ace5e4b02aadf514c014281156038e1f2e3314",
+    ".evidence/current157-api-refresh-20261008/browser-post-readonly.json": "babc00da464a557689c8510961f4b25f95d0863e4c4ba655e568db149a5b8377",
+    ".evidence/current157-api-refresh-20261008/verification.md": "bd89e700f260626209f94b73b58f6b0aee3d9dfdd06d55194aafb45733428853"
+  },
+  "source_app_head": "11b9deade613306093e1b6bb19065283a8f193ce",
+  "business_first_chain": false
+}

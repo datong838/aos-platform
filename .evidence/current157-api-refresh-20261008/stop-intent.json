@@ -1,0 +1,16 @@
+{
+  "fingerprint": {
+    "pid": 99269,
+    "ppid": 1,
+    "uid": 501,
+    "started": "Thu Oct  8 02:10:12 2026",
+    "argv_sha256": "65bb1feb12cfdbec1ae94cdbcc851c31e4b2668db62f6a59622840a13d1becbb",
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+    "children": [],
+    "listener_ports": [
+      8080
+    ]
+  },
+  "archive_sha256": "ccc080d19d4517d06b8b4b7c40f73ea30f201bf09e547e8da4ba6ce4e4dd310c",
+  "root": "/Users/ddt/work/projects/ai_agent/aos-recovery/current157-fac006c02b6e/committed-code-11b9dead"
+}

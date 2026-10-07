@@ -1,0 +1,59 @@
+{
+  "head": "11b9deade613306093e1b6bb19065283a8f193ce",
+  "api": {
+    "pid": 3876,
+    "ppid": 1,
+    "uid": 501,
+    "started": "Thu Oct  8 02:46:19 2026",
+    "argv_sha256": "988ae5bc350399025f8cce18244c5bb0a8341e45a801f1d284851e2fcb132a87",
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+    "children": [],
+    "listener_ports": [
+      8080
+    ]
+  },
+  "after_browser": {
+    "version": "a0v_157",
+    "public_catalog_unchanged": true,
+    "old_tables_unchanged": 602
+  },
+  "http": [
+    {
+      "org": "org-org",
+      "route": "ecommerce-workshop",
+      "status": 200
+    },
+    {
+      "org": "org-org",
+      "route": "runtime-workshop",
+      "status": 200
+    },
+    {
+      "org": "dev-org",
+      "route": "ecommerce-workshop",
+      "status": 403
+    },
+    {
+      "org": "dev-org",
+      "route": "runtime-workshop",
+      "status": 403
+    }
+  ],
+  "eight_routes_denied": [
+    "cockpit",
+    "content-campaign",
+    "operations",
+    "creator-growth",
+    "media-studio",
+    "analyst",
+    "price-governance",
+    "customer"
+  ],
+  "active_workshops": 0,
+  "browser_id": "2",
+  "tab_id": "1",
+  "browser_kept": true,
+  "business_first_chain": false,
+  "verified_at": "2026-10-07T18:48:19.763199+00:00",
+  "prior_probe_failure": "read-only function extraction missing json binding; rolled back; only read probe resumed, no restart or migration retry"
+}
