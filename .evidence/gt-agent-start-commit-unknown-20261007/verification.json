@@ -1,0 +1,45 @@
+{
+  "status": "START_COMMIT_ERROR_PRESERVATION_UNIT_VERIFIED",
+  "baseline": "60480bcc0813a9dadf2c7064b657aa8d4b0c44df",
+  "production_sha256": "a1bd917852b34b7b22f4f5ca0efc228e38bfd89c8f9f0cc6687e96d121c9969f",
+  "logs": {
+    "red-r1.log": {
+      "sha256": "926f71bb15081d4e15b0ebd64deb6b804a165435e8a3d34669bdb7906864b09c",
+      "summary": "2 failed, 13 passed"
+    },
+    "green-r1.log": {
+      "sha256": "4567728af8d037faefd21bd545a83bf551e16d25b552e58036d7c26dc128df1a",
+      "summary": "66 passed"
+    }
+  },
+  "retained_databases": {
+    "aos_test_43dc59c3ed96_ti4_test": {
+      "counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0
+      },
+      "heads": [
+        {
+          "version_num": "a0v_157"
+        }
+      ]
+    },
+    "aos_test_7f22886a8626_ti4_test": {
+      "counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0
+      },
+      "heads": [
+        {
+          "version_num": "a0v_157"
+        }
+      ]
+    }
+  },
+  "exact_change": "Only commit-exception eager release replaced with static structured warning",
+  "limitations": [
+    "Fake connection/gate simulations, including post-commit response loss; no native PG fault injection",
+    "Retained bootstrap PG only; lawful AgentRun creation chain not proven",
+    "Legacy pool TTL can still expire reservations; physical joint ledger remains pending"
+  ]
+}

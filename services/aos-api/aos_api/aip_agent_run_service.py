@@ -184,7 +184,14 @@ class AipAgentRunService(AipAgentRegistryStore):
                 conn.commit()
             except Exception:
                 if reservation_id:
-                    self._capacity_gate.release(scope, reservation_id)
+                    # A COMMIT error cannot prove that the AgentRun update
+                    # rolled back. Keep the reservation for read-only
+                    # reconciliation; never spend or release it a second time.
+                    log.warning(
+                        "capacity_start_commit_outcome_unknown agent_run_id=%s reservation_id=%s",
+                        agent_run_id,
+                        reservation_id,
+                    )
                 raise
             # Unknown execution effects require reconciliation, not an eager
             # release. Legacy pool TTL remains a separate cutover obligation.

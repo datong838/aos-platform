@@ -58,10 +58,23 @@ def test_cas_failure_releases_capacity_reservation():
     with pytest.raises(AipAgentRegistryConflict):service.transition(SCOPE,"run-1",expected_version=1,from_status=AgentRunStatus.QUEUED,to_status=AgentRunStatus.RUNNING,actor="pytest",occurred_at=NOW)
     assert capacity.released==["reservation-1"]
 
-def test_commit_failure_releases_capacity_reservation():
+def test_commit_failure_preserves_capacity_for_read_only_reconciliation():
     conn=Conn(row(),commit_error=True);capacity=Capacity();service=AipAgentRunService(factory(conn),model_resolver=Resolver(resolution()),capacity_gate=capacity)
     with pytest.raises(RuntimeError,match="commit failed"):service.transition(SCOPE,"run-1",expected_version=1,from_status=AgentRunStatus.QUEUED,to_status=AgentRunStatus.RUNNING,actor="pytest",occurred_at=NOW)
-    assert capacity.released==["reservation-1"]
+    assert capacity.reserved==["run-1"] and capacity.released==[]
+
+def test_commit_response_loss_preserves_capacity_and_original_error():
+    original_error=RuntimeError("commit response lost")
+    class CommittedThenLostResponse(Conn):
+        def commit(self):
+            super().commit()
+            raise original_error
+    conn=CommittedThenLostResponse(row());capacity=Capacity()
+    service=AipAgentRunService(factory(conn),model_resolver=Resolver(resolution()),capacity_gate=capacity)
+    with pytest.raises(RuntimeError) as error:
+        service.transition(SCOPE,"run-1",expected_version=1,from_status=AgentRunStatus.QUEUED,to_status=AgentRunStatus.RUNNING,actor="pytest",occurred_at=NOW)
+    assert error.value is original_error and conn.committed
+    assert capacity.reserved==["run-1"] and capacity.released==[]
 
 def test_leaving_running_releases_capacity_for_agent_run():
     conn=Conn({**row(),"status":"running","version":1});capacity=Capacity();service=AipAgentRunService(factory(conn),model_resolver=Resolver(resolution()),capacity_gate=capacity)
