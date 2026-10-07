@@ -1,0 +1,35 @@
+{
+  "status": "ORIGINAL_MODEL_RUNNER_DENIES_BEFORE_CALLBACK_READ_ONLY",
+  "database": "aos_test_eb6ca3ed1d24_ti4_test",
+  "entries": [
+    {
+      "entry": "run_by_contract",
+      "error": "formal Model Eval executor authority unavailable",
+      "callbacks": 0
+    },
+    {
+      "entry": "run",
+      "error": "formal Model Eval executor authority unavailable",
+      "callbacks": 0
+    }
+  ],
+  "before": {
+    "aip_eval_run": 1,
+    "aip_eval_report_revision": 1,
+    "aip_model_eval_request": 1,
+    "aip_model_eval_budget_reservation": 0,
+    "aip_agent_run": 0
+  },
+  "after": {
+    "aip_eval_run": 1,
+    "aip_eval_report_revision": 1,
+    "aip_model_eval_request": 1,
+    "aip_model_eval_budget_reservation": 0,
+    "aip_agent_run": 0
+  },
+  "actual_source_sha256": "3b4c54d1e2f12dd320d15aafaf25daa1b92893b9e8114e1d241c548ed1f9d3cf",
+  "limitations": [
+    "No executable Model authority or Model quality result",
+    "New trusted application/joint/Intent Owner and typed Runner interface required; never delete original rejection unconditionally"
+  ]
+}

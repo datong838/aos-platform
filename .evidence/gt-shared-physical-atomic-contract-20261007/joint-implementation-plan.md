@@ -124,3 +124,15 @@ Model前缀本次1 passed/7 warnings/13.59s，保留库 aos_test_ff3f78ea18d6_ti
 r2仍在同helper import失败，库aos_test_0ee455a745a5_ti4_test保留；新增测试目录选错层级，rg定位依赖实际位于services/aos-api/tests。r3新增精确该目录，保留r2全部脚本/结果并使用独立r3输出与全新库；不动产品、不重放已有提案。
 
 申请r3 1 passed/7 warnings/14.04s，保留aos_test_eb6ca3ed1d24_ti4_test。独立READ ONLY核request1/hash/actual head1/validated model、exact Suite target、approval1且独立checker、executionAllowed=false、model quality gate0及三业务表0/canary0；r1/r2申请0/业务0，各已提交前缀保留，不重放。结果仅原非执行申请接续，真实模型数据集、Model执行Owner、shared physical/budget/unique Intent尚未接通。
+
+### 原Runner模型执行门只读核查
+
+新增 probe_original_model_runner_gate.py与original-model-runner-gate.json。针对刚保留r3库，真实native SERIAL READ ONLY+aos_runtime租户连接，原AipEvalRunner两个入口分别使用真实Suite/Contract精确引用与计数callback；必须原formal Model executor unavailable拒绝、callback0，Eval run/report与预算/AgentRun/申请计数前后不变。不调用Provider，不解除原负门。若通过，在完整文件清单补aip_eval_runner.py与真正typed Model接续接口，不能仅删除两处拒绝或注入任意executor回调。
+
+### 原预算hold在合法一等申请上的actual caller验证
+
+新增 probe_legal_eval_budget_caller.py、legal-eval-budget-caller-attempt.json、legal-eval-budget-caller.json。仅针对保留r3申请库、原未到期精确申请/独立审批，先只读核reservation0。真实nativeSER+aos_runtime：错审批/canary拒绝；首次hold后读取同xid/pid并显式rollback，独立回读全预算桶快照与reservation/link0；第二次hold caller实际COMMIT（先落attempt，失败未知只读对账、不重发）；已知提交后合法幂等replay并回滚，只读核唯一hold/三桶reserved与held10、无AgentRun/ModelGate/canary。只验证原预算同事务foundation，无Source/physical/Intent，因此不得启动Model。脚本已有attempt一律拒绝重新执行。
+
+原预算caller本次通过；独立SER READ ONLY核不可变hold hash、hold/3links/3实际预算桶xmin均等于确认COMMIT xid；FORCE RLS2表、held10/其他风险0、hold1/links3/AgentRun0/pool0。实际held义务保留，不因申请过期释放或重放；此前r3申请证据预算0是这一确认提交之前的历史观察，不改写历史。
+
+完整joint文件包追加aos_api/aip_eval_runner.py与tests/aip/test_model_eval_execution_gate.py及真实原PG接续测试：原两个入口注册模型拒绝已native只读验证（2入口/callback0/写0），不能删除拒绝直接接受任意target executor。新typed exact应用Owner须验证当前申请/独立审批/预算同xid/Source/physical/唯一Intent/finalize与正式执行资格，生成绑定Suite/Contract/model-target的数据；旧通用run/run_by_contract保持无权拒绝。真实model-specific数据集、合法runtime及ModelQuality报告与Gate另验，不复用Boolean Graph结果冒称模型质量。

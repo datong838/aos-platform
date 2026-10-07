@@ -1,0 +1,90 @@
+{
+  "status": "ORIGINAL_LEGAL_APPLICATION_BUDGET_CALLER_VERIFIED",
+  "database": "aos_test_eb6ca3ed1d24_ti4_test",
+  "request_id": "model-eval-request-7d8d729c7f5345dd96ad",
+  "reservation_id": "0a11831a-96b4-4be3-b566-8ac3f2afda68",
+  "negative_gates": [
+    "current approved checker event required",
+    "current immutable Model Eval request required"
+  ],
+  "rollback_full_snapshot_equal": true,
+  "commit_identity": {
+    "xid": 223052,
+    "pid": 191559
+  },
+  "replay_same_reservation": true,
+  "before": {
+    "buckets": [],
+    "counts": {
+      "aip_model_eval_budget_reservation": 0,
+      "aip_model_eval_budget_reservation_bucket": 0,
+      "aip_agent_run": 0
+    }
+  },
+  "after": {
+    "buckets": [
+      {
+        "bucket_kind": "daily",
+        "account_id": "test:activation:124ef9b803884811adcc04cda0943368:daily",
+        "period_start": "2026-10-07 16:30:25.623022+00:00",
+        "currency": "CNY",
+        "held_minor": 10,
+        "submitted_minor": 0,
+        "settled_minor": 0,
+        "unknown_minor": 0,
+        "version": 2
+      },
+      {
+        "bucket_kind": "pilot",
+        "account_id": "test:activation:124ef9b803884811adcc04cda0943368:pilot",
+        "period_start": "2026-10-07 16:30:25.623022+00:00",
+        "currency": "CNY",
+        "held_minor": 10,
+        "submitted_minor": 0,
+        "settled_minor": 0,
+        "unknown_minor": 0,
+        "version": 2
+      },
+      {
+        "bucket_kind": "task",
+        "account_id": "model-eval/model-eval-request-7d8d729c7f5345dd96ad",
+        "period_start": "2026-10-07 16:30:25.623022+00:00",
+        "currency": "CNY",
+        "held_minor": 10,
+        "submitted_minor": 0,
+        "settled_minor": 0,
+        "unknown_minor": 0,
+        "version": 2
+      }
+    ],
+    "counts": {
+      "aip_model_eval_budget_reservation": 1,
+      "aip_model_eval_budget_reservation_bucket": 3,
+      "aip_agent_run": 0
+    }
+  },
+  "links": [
+    {
+      "bucket_kind": "daily",
+      "account_id": "test:activation:124ef9b803884811adcc04cda0943368:daily",
+      "reserved_minor": 10
+    },
+    {
+      "bucket_kind": "pilot",
+      "account_id": "test:activation:124ef9b803884811adcc04cda0943368:pilot",
+      "reserved_minor": 10
+    },
+    {
+      "bucket_kind": "task",
+      "account_id": "model-eval/model-eval-request-7d8d729c7f5345dd96ad",
+      "reserved_minor": 10
+    }
+  ],
+  "model_quality_gates": 0,
+  "source_sha256": "4c8917003bc844f9e5e79bd5f65715e59860e7faa549dce762d524ca5c00af28",
+  "limitations": [
+    "Original budget foundation only: no signed capacity Source/shared physical ledger/unique Intent",
+    "No Model execution or quality result",
+    "Native owned admin SCRAM then SET LOCAL runtime; not formal service identity"
+  ]
+}

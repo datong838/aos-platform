@@ -1,0 +1,64 @@
+{
+  "status": "INDEPENDENT_LEGAL_EVAL_BUDGET_SAME_XID_VERIFIED",
+  "database": "aos_test_eb6ca3ed1d24_ti4_test",
+  "reservation_id": "0a11831a-96b4-4be3-b566-8ac3f2afda68",
+  "native_xid": "223052",
+  "immutable_hash_verified": true,
+  "links_and_buckets_same_xid": [
+    {
+      "bucket_kind": "daily",
+      "reserved_minor": 10,
+      "link_xid": "223052",
+      "bucket_xid": "223052",
+      "held_minor": 10,
+      "submitted_minor": 0,
+      "settled_minor": 0,
+      "unknown_minor": 0
+    },
+    {
+      "bucket_kind": "pilot",
+      "reserved_minor": 10,
+      "link_xid": "223052",
+      "bucket_xid": "223052",
+      "held_minor": 10,
+      "submitted_minor": 0,
+      "settled_minor": 0,
+      "unknown_minor": 0
+    },
+    {
+      "bucket_kind": "task",
+      "reserved_minor": 10,
+      "link_xid": "223052",
+      "bucket_xid": "223052",
+      "held_minor": 10,
+      "submitted_minor": 0,
+      "settled_minor": 0,
+      "unknown_minor": 0
+    }
+  ],
+  "rls_flags": [
+    {
+      "relname": "aip_model_eval_budget_reservation",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "aip_model_eval_budget_reservation_bucket",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    }
+  ],
+  "counts": {
+    "aip_model_eval_budget_reservation": 1,
+    "aip_model_eval_budget_reservation_bucket": 3,
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0
+  },
+  "attempt_hash": "736c11baa52264acd26b0f2939cb7fb4f327987de837bb10124a15610bebd231",
+  "limits": [
+    "Original budget foundation only: no signed capacity Source/shared physical ledger/unique Intent",
+    "No Model execution or quality result",
+    "Native owned admin SCRAM then SET LOCAL runtime; not formal service identity"
+  ],
+  "retention": "Held obligation preserved; no TTL release or replay after expiry; earlier zero-count evidence is historical before this known commit"
+}
