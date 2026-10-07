@@ -1,0 +1,33 @@
+{
+  "schema": "aos-consumer-historical-auth-native-probe/v1",
+  "head": "ae090fac43edbc60878fa17f18bef0e184229049",
+  "authority": "AOS-001457",
+  "database": "aos_test_ea579cd4b89c_ti4_test",
+  "identity": {
+    "db": "aos_test_ea579cd4b89c_ti4_test",
+    "cluster": "7693564235776004128",
+    "read_only": "on"
+  },
+  "asset_id": "controlled-source-03914a4fd3294d8a92f447423c7d98c5",
+  "source_hash": "15eca7139b930fa2a1092a428eca2e32c331755be613f249abc330757820009a",
+  "source_signature_native_valid": true,
+  "source_finalized": true,
+  "historical_provenance_matches": true,
+  "historical_auth_expired": true,
+  "original_parser_denial": {
+    "sqlstate": "22023",
+    "reason": "CAPACITY_SOURCE_COMMAND_REQUIRED"
+  },
+  "single_variable_unsigned_parser_control_accepted": true,
+  "parser_control_is_authentication_or_authority": false,
+  "source_fingerprint_unchanged": true,
+  "transaction_rolled_back": true,
+  "checked_at": "2026-10-07T04:16:02.104737+00:00",
+  "source_expiry": "2026-10-07T03:56:18.657997Z",
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "209384879cc16ccbe650ac9177adaa05115e8b5e73b1633eeb55c841648ca5ba",
+    "services/aos-api/aos_api/aip_provider_capacity_source_issuer.py": "df38704f66862e4b3abff8177539ed933fa786bf7c256ba69f82245ead044f78"
+  },
+  "consumer_positive_proven": false,
+  "conclusion": "Original issuance parser cannot be reused for later consumption; consumer must independently authenticate current caller and recheck current originals while preserving historical signed provenance."
+}

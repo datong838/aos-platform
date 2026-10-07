@@ -1,0 +1,22 @@
+{
+  "schema": "aos-current-source-consumer-next-investigation/v1",
+  "head": "ae090fac43edbc60878fa17f18bef0e184229049",
+  "authority": "AOS-001457",
+  "database": "aos_test_ea579cd4b89c_ti4_test",
+  "asset_id": "controlled-source-03914a4fd3294d8a92f447423c7d98c5",
+  "source_hash": "15eca7139b930fa2a1092a428eca2e32c331755be613f249abc330757820009a",
+  "canonical_profile_valid": true,
+  "finalized": true,
+  "source_window_current": false,
+  "original_issuance_jwt_expired_now": true,
+  "consumer_runtime_file_exists": false,
+  "public_private_read_executed": false,
+  "runtime_private_read_denied": true,
+  "denial_sqlstate": "42501",
+  "next_constraints": [
+    "Implement explicit current consumer read boundary instead of granting runtime private table/schema access",
+    "Historical issuance JWT binding is signed provenance; consumer has independent current identity and authorization, do not replay old token or treat Source alone as permission",
+    "Recheck current native signature/registered root/permit/origin/withdrawal/global account and Provider mapping/approval/time under same consumer transaction",
+    "Formal Source consumer role/installation/current identity remain separate; no Host/worker/Provider or external effect"
+  ]
+}
