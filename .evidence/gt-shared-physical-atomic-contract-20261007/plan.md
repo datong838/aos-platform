@@ -1,0 +1,126 @@
+# 全物理账户、原预算与一次 Intent 联合合同入口
+
+基线 m1 e5bc1999 / AOS-001471，唯一施工者。此 Task 先核合同与原生反例，不修改已到期 Source/Profile Lease 的文件。已提交预算和 pool caller 内核均不是完整物理账本。
+
+## 当前源码事实
+
+签名 Source 的 physical_account_id 是规范 server UUID。私有 global_account 对 supplier_id/fingerprint 全局唯一，global_provider 将 Provider 映射到同一账户；多个 Provider、Source revision 或 pool revision 不能分别享用同一账户全部额度。当前映射有明确 org/project 所有者，不能自行开放跨租户共用。Source execution_allowed=false 不授发送权。
+
+occupation Source 要求独立真实 SCRAM session、aos_runtime、SERIAL/readwrite 与精确租户，并在原完整 currentness 检查中持 epoch SHARE。原预算 reserve_in_transaction 与 Eval hold 已支持同 caller。旧 pool 内核按 pool/revision 计数，且到期会排除 reserved/consumed；必须保留兼容事实，不能拿它作 unknown 物理义务释放。
+
+## 联合锁图候选，逐 writer 复核后才能冻结
+
+Source／Model／批准／配置 currentness → 稳定 physicalAccount mutex → 普通 Route/pool 约束（如适用）→ 原三预算桶稳定排序 → operation/invocation/Intent 幂等账本。旧预算先于 physical 的草案不能直接实施；需核对现存全部 writer，不在持预算锁后反向等待 physical。
+
+锁前、锁等待后与实际 COMMIT 前的 JWT／Source TTL／批准和配置再验分别证明；函数返回前校验不能冒充实际 COMMIT 证明。原普通入口在联合切换启用后也必须接线，不能只给 Eval 加共享门。正式身份不足仅限制发送，继续隔离实现与负门。
+
+## 完整额度与旧义务切换
+
+必须覆盖 Source 签名的 inflight_upper_bound 与 fixed_window_rate 两种 token_limit。单账户并发合计普通／Eval／不同 Provider 和池，不随 Source revision 重置。窗口滚动不解除 inflight 义务；held/prepared、submitted、unknown、settled/reconciled 的账本、上界、窗口计额与幂等释放须完整规定。
+
+unknown 不因 TTL、撤销或 Price 漂移释放或重发。完整映射旧 pool reserved/consumed/released/expired 与 ContentCapacityOwner start/unknown 历史；旧 expired 不自动证明外部零效果。零执行切换、旧入口接线／拒绝、旧新共同计数及完整账户映射缺一时禁新启用，不能清零既有义务。
+
+## 下一实际调查与文件级实施准备
+
+1. 复核 ecommerce_content_capacity_owner 和 capacity consume/release/expiry writer，产出锁图与旧 unknown 来源清单。
+2. 在原完整 signed Source 的两个 Provider 映同 physicalAccount 上建立原生反例。拟议 tests/aip/test_physical_capacity_joint_pg.py 尚未登记代码 Lease，先固定合法资料与验收合同。
+3. 新 joint owner 候选 aos_api/aip_physical_capacity_occupation.py 与 additive migration 必须另登记精确范围，FORCE RLS、不可变身份／事件、真实申请与原 approval、原预算 ref、一 Intent 唯一性同时落地。原普通／Eval预算内核不复制，不造假 Task/AgentRun。
+4. 验证 actual caller COMMIT／rollback、不同用途与 revision 并发、unknown 保留、两种 Token 模式及等待后权限／TTL，不以容易通过的单池测试替代全物理联合目标。
+
+独立候选为旧 API 测试元数据清理隔离契约与 Source/Profile 未覆盖权限 catalog。当前合同尚未冻结，尚无新 ledger 代码、业务执行或整体完成；完整 Goal 保持 active。
+
+## 本轮原生 TTL 反例步骤
+
+文件限定本 Task 的 legacy_ttl_probe.py、legacy-ttl-r1.log、legacy-ttl-r1.json。使用已登记隔离容器及现有0600 passfile；只从前轮保留的空完整迁移库复制新实验库，原模板只读且保持不变，新库永久保留。本轮不改 API，也不插入伪造 Task/AgentRun 以声称合法业务启动。
+
+复用旧池测试构造的两个独立 max_concurrency=1 池，将实验池 lease_seconds 配为合法1秒。分别以原 Gate reserve 和 reserve→consume 建立占用；先证明第二笔被并发上限拒绝，再以新只读事务轮询真实 DB clock 等待自然到期（单例最多5秒）。不修改 expires_at。第二笔若成功、旧状态变 expired，则记录旧原子算法确会凭 TTL 恢复额度；这是未知义务切换所需的负向依据，不证明真实 unknown AgentRun 历史。另记录 Source 缺失、canary0、事件和实际已提交行。原 AgentRun unknown 自动释放继续列为源码确认、PG合法历史反例待补。
+
+### 原生结果与准备阶段失败
+
+首轮在新库 aos_test_legacy_ttl_ae6edba4017f 中试图修改已插入的池版本租约，被 AIP4_APPEND_ONLY 拒绝，未建立容量申请；失败库和 legacy-ttl-r1.log 保留。这属于准备脚本错误，不算目标行为 RED。修正为首次 INSERT 时写合法1秒租约，无禁用 trigger、改 expires_at 或清库。
+
+第二轮新库及基线绑定见 legacy-ttl-r2.json：两个 case 的第二笔在到期前均因 capacity_concurrency_exhausted 拒绝，真实 DB clock 超过原 expires_at 后，原 Gate 将首笔 reserved/consumed 改为 expired 并为第二笔写 reserved。独立 SERIAL READ ONLY 回读验证4 reservation／7 event、AgentRun0、dev-org0、模板仍零行，迁移头一致。验证见 legacy-ttl-independent-verification.json。产品代码未变；这证明 legacy TTL 回收路径，不证明 unknown AgentRun 的合法 PG 历史或 signed Source 联合账本。
+
+## 旧义务导入与释放合同（切换前必须满足）
+
+| 旧池状态／关联事实 | 物理义务切换判定 | 释放条件 |
+| --- | --- | --- |
+| reserved + 未提交外部 Intent | 默认保留 held，并核全部提交结果 | 当前不可变取消／回滚 Receipt 证明未提交，且无未知发送 |
+| consumed 或已提交 Intent | 保留 submitted 上界 | 对应结算或正式 reconcile Receipt，不能由 TTL 代替 |
+| 任意旧状态 + AgentRun/Attempt unknown 或 COMMIT 结果未知 | 保留 unknown；禁止重发 | 独立只读对账证明实际结果，并产生可验证结算／reconcile |
+| released/expired 但缺少对应结果 Receipt | 不视为零占用；列待对账义务 | 原 event 仅证明池状态改变，仍需上列结果证据 |
+| settled/reconciled | 校验精确 operation、invocation、account、tenant、上界与结果绑定 | 幂等一次释放并保留不可变事件，不能删记录 |
+
+旧状态不能单独决定物理余额。Source 撤销、窗口滚动、模型／Price 漂移均不得解除 unknown inflight；fixed_window_rate 还需保留已计窗口支出，释放 inflight 不等于返还已发生 rate 用量。未能映射的旧行列入保守义务或禁止该账户新准入，不能丢弃行后初始化满额度。
+
+## 已确认 writer 差异和冻结前剩余验证
+
+原 AgentRun transition 当前在 RUNNING/PAUSED 离开且目标非 RUNNING 时调用 release_for_run，包含 UNKNOWN；进入 RUNNING 后 commit 报错也会 release 新 reservation。UNKNOWN 无外部零效果证明，这两者均须正式接线时改为可对账的保留义务；目前只读核到源代码，后者未伪称真实 PG COMMIT-unknown。
+
+ContentCapacityOwner 先独立 claim COMMIT，再借用 HostTransaction 启动并 COMMIT，最后独立 ack；异常保留 claimed、禁止第二启动。ContentBudgetCommandOwner 再独立 claim／dispatch／ack。不能把这些独立事务与已完成 caller 预算内核顺序拼接称为一次 capacity+budget+Intent COMMIT。
+
+原池依次 pool_head UPDATE→reservation replay UPDATE→过期行 UPDATE；原预算 invocation advisory→三桶排序 UPDATE；Eval 原 proposal UPDATE 与 policy/budget head SHARE。联合 Owner 必须避免在持原桶/operation 锁后反向请求 physicalAccount；沿 currentness→physical→pool→原桶→Intent 的候选顺序逐入口检验，旧 writer 在零执行切换前禁入或完整接线。仍待真实相反 writer 等待／死锁反例、完整 signed Source 两 Provider 共同计数、合法 AgentRun unknown PG 历史与一次 Intent 实际提交回滚。这些未完成，不冻结合同、不关闭 Task，不称物理联合容量 GREEN。
+
+### 合法 unknown 资料核查与下一步
+
+test_aip6_capability_run_handoff.ids 直接插入 Task/Plan/Run；同组 AgentRun 测试猴补 _require_logic，Skill fixture 直接写发布行。test_ecommerce_content_agentrun_owner_pg 创建简化表并直接写 AgentRun／Receipt，不能用于本合同的合法创建链正向证明。不得用这些夹具消除目前缺口。
+
+本轮新增 authority_inventory.py／authority-inventory.json：只读核已登记 retained signed Source 三实验库的原完整表、global_account/global_provider 映射规模、AgentRun/Task/Receipt/容量状态；同时产出实际文件 hash 与 AST writer 调用行号。输出不含签名、JWT、凭证或原业务 payload。目标是核对现有真实历史能否复用，而非重发旧 Source attempt。后续合法 PG fixture 需通过当前签名 Eval→gate→publication→Skill、原 Logic、真实 Task Owner 与实例/binding/ModelRoute currentness 共同构造；Source/profile过期 Lease 文件本轮仍不改。
+
+只读结果：aos_test_5555333a8a3a_ti4_test 的 Source1／账户关联Provider1；aos_test_76dab8183c82_ti4_test 的 Source1／账户关联Provider3；aos_test_66ef56c3d543_ti4_test 的 Source0。三个库 AgentRun 均0。多 Provider 的实际账户映射资料已存在，但原 origin 已撤销，不能拿历史 Source 行作为当前准入或重发依据。此结果不授旧 attempt 重试权。
+
+### 锁图修订（取代首段简写的 operation 后置候选）
+
+普通 reserve_in_transaction 实际先 invocation advisory→reservation replay UPDATE，随后检查原 Task/Budget/Price/Approval，然后原三桶排序 UPDATE。不能改写成预算桶先于 invocation；联合 Owner 候选为完整 currentness锁前缀→稳定 physical mutex→pool_head→原 invocation/replay→已持 currentness复验→原排序预算桶→physical义务与一次Intent INSERT。上述仍只是候选：Eval 先锁 proposal UPDATE，再 policy/budget head SHARE，需要提前锁住其完整 currentness，保证持 physical 后不会再引入反向等待。
+
+| 入口／writer | 实际锁或事务顺序 | 联合接线必须证明 |
+| --- | --- | --- |
+| Source prepare/finalize | 原 signed facts lock前缀→排序 account/provider/attempt/request advisory→global映射 SHARE→pending UPDATE；finalize仅原xid/pid/session复用 | 不把 pending先锁后回到原currentness；新 physical mutex与发布身份锁的协调须单独验证 |
+| 普通池 | pool_head UPDATE→旧reservation UPDATE→TTL清理 | 新旧共同计额与unknown保留，不能只调用旧 reserve即称全账户准入 |
+| 普通预算 | invocation advisory→已有reservation UPDATE→原authority→三桶 UPDATE | prehold重入不新增反向锁；全部currentness过等待和实际COMMIT前再验 |
+| Eval预算 | proposal UPDATE→policy/head SHARE→原authority→原桶 | 与普通入口同账户/桶顺序，无对向等待；两种token模式不省略 |
+| Content | admitted currentness→独立claim COMMIT→start COMMIT→ack/nextIntent COMMIT | 既有sole-claim未知不重发保留；完整联合切换不能声称旧多事务已是一次COMMIT |
+
+核查输出源hash绑定当前文件，包括未提交Source/profile文件；后者只读，未夺到期Lease。AST只枚举静态execute，动态SQL、完整传递锁以及实际PG并发仍待补。Task继续ACTIVE，当前结果为合同调查检查点，未完成Delivery、未冻结全部锁图、未取得正式业务授权。
+
+## 后续基线更新：两处主动释放已局部修复
+
+上文“unknown会release”和“启动commit报错release”是e5bc1999时的历史源码事实，不再作为最新HEAD行为。60480bcc已取消目标UNKNOWN主动release；edf71ef8已将启动COMMIT异常release改为保留并抛回原异常、记录静态warning。分别65PASS与66PASS单元相邻验收，精确AST范围核对，独立Delivery已完成；没有合法PG创建链或真实COMMIT故障注入。父联合合同Task仍ACTIVE。
+
+旧池TTL反例和发布历史映射证据仍有效：本两修复未改aip_model_capacity_reservation。下一主步骤须current signed Source真实专用身份消费→跨Provider同account占用→两token模式→原ordinary/Eval预算+一次Intent全量联合验证，不能因为主动release修复就省略旧expired/unknown对账与零执行切换。合法AgentRun夹具需真实Logic publication和当前ModelRoute Eval，现ReadyRuntimeStore.require_model_governance空实现、Skill测试注入ReadyRoute/PublishedLogicAuthority仅unit，不可借来冒充完整合法前置。
+
+## 当前 Source + caller 池内核原生反例实施
+
+本目录新增 source_pool_probe.py、run_source_pool_probe.py、source-pool-r1.log、source-pool-counterexample.json。不改旧Source/Profile租约文件；原完整test_occupation_source_consumption_uses_actual_business_caller[distinct]原样执行，插件只在已建立独立SCRAM/SERIAL/runtime Source caller时插入额外反例，然后继续原epoch并发／独立Owner／撤回负门。禁重发历史attempt，所有Source由此次保留随机数据库中的原fixture新建。
+
+Source中三个Provider共用physicalAccount，选两个真实签名Provider refs，各首次插入一个旧pool，pool上限均为Source.max_concurrency，token quantum=1（确认不超过Source上界）。Route/Model DTO仅旧池算法合法输入、无发布权威，因此仅作反例，不造Task/AgentRun或宣称业务READY。调用当前Source完整consumer及原reserve_pool_in_transaction，精确同xid/pid；第一池申请至账户上限，第二Provider再申请1。若成功，则原Source+caller池内核组合仍超出共享账户，证明必须新增联合Owner。独立observer在COMMIT前看0、COMMIT后看上限+1预留与events并确认canary0；全部库保留。此轮仅覆盖inflight Source的跨Provider并发反例，固定窗口计量、合法业务、预算/一次Intent和完整联合Gate仍pending。
+
+## 独立持久回读计划
+
+新增 verify_source_pool.py 与 source-pool-independent-verification.json。只连接原r3保留库，SERIALIZABLE READ ONLY，核原Source签名/哈希、真实账户Provider映射、两池三笔持久预留与事件、AgentRun/canary零行、origin撤销和专用角色归还；仅输出布尔与计数，不输出签名/JWT/原资料。此为反例复核，不能称当前Source可准入或合法业务GREEN。准备r1凭证环境门失败、r2DTO转换失败均保留，不计行为RED。完整联合锁图、固定窗口与原预算/Intent仍未完成，父Task不得关闭。
+
+### 独立回读结果
+
+verify_source_pool.py 原生只读回读成功：Source签名和SHA256有效，3个真实签名Provider映同一个物理账户；两个旧池共3笔reserved／3事件，超过签名上限2；AgentRun0、canary0，专用occupation角色NOLOGIN且零membership，registry epoch2/origin已撤回。证据绑定edf71ef8及原r3日志/探针hash。原同caller xid/pid和提交前不可见由原探针证明，回读不重构或冒称重验。整个检查未发业务请求、未修改数据库。
+
+原test完整1PASS只是Source原控制继续通过，跨池全账户计额仍缺失；两个token模式、完整联合锁顺序、旧未知义务切换、原预算与一次Intent仍pending。本次仅完成当前反例的持久独立核实，父Task保持ACTIVE，不作Delivery或整体GREEN。
+
+## SERIAL 快照与共同账户锁原生验证
+
+新增 snapshot_lock_probe.py、snapshot-lock-r1.log、snapshot-lock-verification.json。只从已登记空完整迁移bootstrap库复制新的保留实验库，建立独立test-only probe schema，不造Task/AgentRun、无Source授权重放。三case分别advisory-only、共同guard FOR UPDATE不修改、共同guard UPDATE版本；两个实际原生SER/readwrite/runtime/精确tenant连接，在第二连接已建立旧快照后证明真实锁等待，用独立pg_blocking_pids观测，再提交第一连接。记录第二连接计数是否过时、40001发生于锁/INSERT/COMMIT哪个阶段及最终持久行。目标是确定联合Owner必须更新共同序列行并在提交前拒绝过时快照，而非依赖锁后普通SELECT自动刷新。所有DDL仅隔离实验schema，保留库和原模板，模板/AgentRun/canary需独立回读。该primitive证据不是签名Source联合Owner实现或业务完成。
+
+### 共同账户快照结果及费用锁升级补验
+
+advisory_only与row_lock_unchanged都实际等待第一caller，锁后snapshot_count仍0，第二INSERT被SSI40001拒绝；versioned_row_update在锁阶段40001，未到计数。三case最终各1持久义务，模板空、AgentRun0、canary0，仅native primitive，非joint实现。
+
+新增upgrade_lock_probe.py／upgrade-lock-r1.log／upgrade-lock-verification.json。在同一保留probe库新增test-onlyguard，两个原生SER/runtimecaller先共享锁再各UPDATE，观察40P01锁升级循环。read_formal_budget_fact对原费用fence取SHARE，require_cost_risk取UPDATE并version+1，ordinary/Eval在桶锁后调用后者；未来联合合同须避免先SHARE后UPDATE或持预算桶回physical。本实验不调用合法预算申请，不声称产品已发生此死锁，只验证拟议复用锁组合风险。追加方案首次系统python解释器报编码错误、未写文件，本次使用已登记Python3.11完成。
+
+### 本轮锁合同修订与限制
+
+SHARE→UPDATE试验原生40P01，一方rollback另一方commit，独立回读epoch1；共同快照试验最终3case各1义务，原产品AgentRun/容量/事件均0，模板未新增probe schema。verify_lock_probes.py明确区分即时等待/SQLSTATE证据与独立持久状态证据。
+
+联合锁前缀必须按最终强度预锁原费用fence UPDATE，避免read_formal_budget_fact SHARE再升级；同预算多account共同fence须在physicalAccount之前统一取，普通/Eval原内核后续重入不得反向取得新锁。还须完整预锁原head/member/proposal/Price/currentness并核发布/撤回writer一致顺序。共同physical guard每次申请/释放/导入写version，不能仅advisory或不更新FOR UPDATE当快照刷新。此为需原入口实测的设计约束，不宣称所有writer已冻结。
+
+剩余交付：完整传递锁图/对向writer、两token模式、零执行旧义务导入与完整映射、合法Skill/Logic/ModelRoute/Task、ordinary/Eval+Source+预算+一次Intent实际COMMIT/rollback。本证据检查点不关闭父Task、不改变业务gate、无正式数据库/服务/外部执行。
+
+旧ordinary/Eval仍在桶后取fence UPDATE。新入口若先fence再桶，与未切换旧writer会形成相反顺序。因此fence前置不可单独上线：全入口共同切换或明确禁入旧writer必须先在零执行窗口完成，并真实并发证明。未完成前新joint入口保持禁入；不改变旧正常算法以伪造共同合同通过。

@@ -1,0 +1,20 @@
+{
+  "authority": "AOS-001471",
+  "head": "e5bc1999b4074f484efb9a0d70a931bf1a3856df",
+  "sha256": {
+    "services/aos-api/aos_api/aip_provider_capacity_occupation_source.py": "e6b46538babab94fb56a5aca005cee0aae6190d3e7958c57ba7c10b66846686d",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_contracts.py": "ec8206758fdf6d7a519a8cb639887e280bf65d2eed1d5a6fb9f6f78b3a90bf0c",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "cd9564e8c37d0bdac9af7fa8311a0db7febc09a1ee1af6346245fc9ae2d61cc7",
+    "services/aos-api/aos_api/aip_model_capacity_reservation.py": "61a3ad63491b4b517c57ffb1a9058be9b44066d23f5beae75d5974df096d53f2",
+    "services/aos-api/aos_api/aip_budget_reservation_store.py": "9768077653548c0ed4f6087593a1cab7eb77292ec550ab82b0e3dfb3824816b5",
+    "services/aos-api/aos_api/aip_model_eval_budget_reservation.py": "4c8917003bc844f9e5e79bd5f65715e59860e7faa549dce762d524ca5c00af28",
+    "services/aos-api/aos_api/ecommerce_content_capacity_owner.py": "521627cb25102c0d4e4f052b594057684ffc03893ef59b40e491dbc72eb9bf92"
+  },
+  "observed_gaps": [
+    "Old tenant+provider physical key and budget-first lock order do not implement Source global account UUID and unique supplier/fingerprint provider mapping",
+    "Old pool counts per pool/revision and TTL expires reserved/consumed; cannot use it for unknown physical-account release",
+    "Occupation Source demands dedicated native SCRAM session and runtime/SERIAL tenant; caller budget kernels exist, joint owner and singleIntent do not",
+    "Both signed inflight upper-bound and fixed-window token limits must be implemented"
+  ],
+  "formal_effects": false
+}

@@ -1,0 +1,101 @@
+{
+  "status": "SERIAL_SNAPSHOT_LOCK_PRIMITIVES_VERIFIED",
+  "database": "aos_test_snapshot_lock_9314bde51c58",
+  "template": "aos_test_f2ef54f0da1d_ti4_test",
+  "cluster": "7693564235776004128",
+  "migration_heads": [
+    {
+      "version_num": "a0v_157"
+    }
+  ],
+  "cases": [
+    {
+      "case": "advisory_only",
+      "first_caller": {
+        "role": "aos_runtime",
+        "isolation": "serializable",
+        "pid": 116471,
+        "xid": "220324"
+      },
+      "second_caller": {
+        "role": "aos_runtime",
+        "isolation": "serializable",
+        "pid": 116472,
+        "xid": "220325"
+      },
+      "observed_blockers": [
+        116471
+      ],
+      "final_count": 1,
+      "lock_acquired": true,
+      "snapshot_count": 0,
+      "rejected_at": "insert",
+      "sqlstate": "40001"
+    },
+    {
+      "case": "row_lock_unchanged",
+      "first_caller": {
+        "role": "aos_runtime",
+        "isolation": "serializable",
+        "pid": 116474,
+        "xid": "220326"
+      },
+      "second_caller": {
+        "role": "aos_runtime",
+        "isolation": "serializable",
+        "pid": 116475,
+        "xid": "220327"
+      },
+      "observed_blockers": [
+        116474
+      ],
+      "final_count": 1,
+      "lock_acquired": true,
+      "snapshot_count": 0,
+      "rejected_at": "insert",
+      "sqlstate": "40001"
+    },
+    {
+      "case": "versioned_row_update",
+      "first_caller": {
+        "role": "aos_runtime",
+        "isolation": "serializable",
+        "pid": 116478,
+        "xid": "220328"
+      },
+      "second_caller": {
+        "role": "aos_runtime",
+        "isolation": "serializable",
+        "pid": 116479,
+        "xid": "220329"
+      },
+      "observed_blockers": [
+        116478
+      ],
+      "final_count": 1,
+      "rejected_at": "lock",
+      "sqlstate": "40001"
+    }
+  ],
+  "guard_rows": [
+    {
+      "case_id": "advisory_only",
+      "epoch": 0
+    },
+    {
+      "case_id": "row_lock_unchanged",
+      "epoch": 0
+    },
+    {
+      "case_id": "versioned_row_update",
+      "epoch": 1
+    }
+  ],
+  "head": "edf71ef8e160ce3f75e1977abb7889d3329adb91",
+  "probe_sha256": "97c459b9e07df089baed02a22abf640e5b08167c97e64169188672e36ca1f601",
+  "limitations": [
+    "Test-only primitive schema; not physical ledger implementation or Source authorization",
+    "Both native callers use owned admin login with transaction-local runtime role, not dedicated signed occupation identity",
+    "No Task, AgentRun, Provider, budget, Intent or business execution"
+  ]
+}

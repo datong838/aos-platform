@@ -1,0 +1,43 @@
+{
+  "classification": "CURRENT_SIGNED_SOURCE_PLUS_OLD_CALLER_POOLS_OVERSUBSCRIBE_ACCOUNT",
+  "database": "aos_test_b6bde5fde605_ti4_test",
+  "cluster": "7693564235776004128",
+  "source_hash": "1859699142aaa1fff794e06a2dfaf984100a87b0ccb06de1868e38ab51f937fa",
+  "physical_account_id": "b591fc6a-adb5-436f-b1d8-e46c8274ef20",
+  "signed_concurrency_limit": 2,
+  "actual_committed_request_units": 3,
+  "events": 3,
+  "rows": [
+    {
+      "reservation_id": "capres-920b993bf1624d2f82498c2311fbbbd3",
+      "pool_id": "test:joint-probe:pool:0:7612da627c3e455eb2ade53b662eb76e",
+      "request_units": 1,
+      "token_units": 1,
+      "status": "reserved"
+    },
+    {
+      "reservation_id": "capres-a5a9011231b241d5be02484c6e828d0e",
+      "pool_id": "test:joint-probe:pool:0:7612da627c3e455eb2ade53b662eb76e",
+      "request_units": 1,
+      "token_units": 1,
+      "status": "reserved"
+    },
+    {
+      "reservation_id": "capres-d89e51fa83324c51bdbd790401a35733",
+      "pool_id": "test:joint-probe:pool:1:7612da627c3e455eb2ade53b662eb76e",
+      "request_units": 1,
+      "token_units": 1,
+      "status": "reserved"
+    }
+  ],
+  "actual_caller": {
+    "xid": "220264",
+    "pid": 112691
+  },
+  "execution_allowed": false,
+  "canary": 0,
+  "limitations": [
+    "Synthetic Route/Model pool DTOs, no lawful business READY or AgentRun",
+    "Not a physical joint Owner; no budget/Intent composition or fixed-window proof"
+  ]
+}

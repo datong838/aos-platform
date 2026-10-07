@@ -1,0 +1,39 @@
+{
+  "status": "DURABLE_COUNTEREXAMPLE_INDEPENDENTLY_VERIFIED",
+  "identity": {
+    "database": "aos_test_b6bde5fde605_ti4_test",
+    "readonly": "on",
+    "cluster": "7693564235776004128"
+  },
+  "signature_valid": true,
+  "source_hash_valid": true,
+  "signed_limit": 2,
+  "committed_request_units": 3,
+  "provider_count": 3,
+  "pool_count": 2,
+  "events": 3,
+  "canary": 0,
+  "agent_runs": 0,
+  "origin_withdrawn": true,
+  "occupation_role_restored": true,
+  "migration_heads": [
+    {
+      "version_num": "a0v_157"
+    }
+  ],
+  "head": "edf71ef8e160ce3f75e1977abb7889d3329adb91",
+  "file_sha256": {
+    "source_pool_probe.py": "f01494f563fbdb1632ac9a9ab8ce60a5016d7001794349c9e002dec8ae52da84",
+    "run_source_pool_probe.py": "8c8bba03443042c51d7e7783abd9b4aa474edd5073cedf7af3a3366a1d25a42d",
+    "verify_source_pool.py": "ea9750faff376dc2d908737a5e8ed0d726eb834e8b6d9b9bf95338176b23b96a",
+    "source-pool-counterexample.json": "77f5705d5c67fc5d752e19b766d4c2a086fef94dd3ce9ccc7b025ffbd6677945",
+    "source-pool-r3.log": "98aad1690581e43e22ce1b724e95d30ea59f87e5684cb1c658527d3dae64e79b"
+  },
+  "limitations": [
+    "Synthetic Route/Model pool DTOs, no lawful business READY or AgentRun",
+    "Not a physical joint Owner; no budget/Intent composition or fixed-window proof",
+    "Source is now withdrawn; signature history does not authorize admission or replay",
+    "Precommit invisibility and caller xid/pid are original probe evidence, not independently reconstructed",
+    "Only retained isolated database read; no formal database, service or business execution"
+  ]
+}

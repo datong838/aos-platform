@@ -1,0 +1,109 @@
+{
+  "database": "aos_test_legacy_ttl_f65022995fae",
+  "template": "aos_test_f2ef54f0da1d_ti4_test",
+  "template_heads": [
+    {
+      "version_num": "a0v_157"
+    }
+  ],
+  "cluster": "7693564235776004128",
+  "head": "e5bc1999b4074f484efb9a0d70a931bf1a3856df",
+  "observations": [
+    {
+      "initial": "reserved",
+      "before": {
+        "status": "reserved",
+        "expires_at": "2026-10-07 11:55:37.444512+00:00",
+        "observed_at": "2026-10-07 11:55:37.449416+00:00",
+        "expired": true
+      },
+      "rows": [
+        {
+          "reservation_id": "capres-7f062fcc552b467a8a54b4ce7818be34",
+          "status": "reserved",
+          "expires_at": "2026-10-07 11:55:38.454560+00:00"
+        },
+        {
+          "reservation_id": "capres-ef9e535f70b84cb6a3f5baa99d98eb11",
+          "status": "expired",
+          "expires_at": "2026-10-07 11:55:37.444512+00:00"
+        }
+      ],
+      "events": [
+        {
+          "reservation_id": "capres-ef9e535f70b84cb6a3f5baa99d98eb11",
+          "event_type": "reserved",
+          "occurred_at": "2026-10-07 11:55:36.451087+00:00"
+        },
+        {
+          "reservation_id": "capres-ef9e535f70b84cb6a3f5baa99d98eb11",
+          "event_type": "expired",
+          "occurred_at": "2026-10-07 11:55:37.460232+00:00"
+        },
+        {
+          "reservation_id": "capres-7f062fcc552b467a8a54b4ce7818be34",
+          "event_type": "reserved",
+          "occurred_at": "2026-10-07 11:55:37.462509+00:00"
+        }
+      ],
+      "expected_unknown_preservation": "NOT_IMPLEMENTED_BY_LEGACY_POOL",
+      "actual_second_admitted": true
+    },
+    {
+      "initial": "consumed",
+      "before": {
+        "status": "consumed",
+        "expires_at": "2026-10-07 11:55:38.491135+00:00",
+        "observed_at": "2026-10-07 11:55:38.499731+00:00",
+        "expired": true
+      },
+      "rows": [
+        {
+          "reservation_id": "capres-361e5aa7761a470baeb1a8a8e7e589c7",
+          "status": "expired",
+          "expires_at": "2026-10-07 11:55:38.491135+00:00"
+        },
+        {
+          "reservation_id": "capres-c1a4c34156bc49969bb468ceceff55b1",
+          "status": "reserved",
+          "expires_at": "2026-10-07 11:55:39.505003+00:00"
+        }
+      ],
+      "events": [
+        {
+          "reservation_id": "capres-361e5aa7761a470baeb1a8a8e7e589c7",
+          "event_type": "reserved",
+          "occurred_at": "2026-10-07 11:55:37.496498+00:00"
+        },
+        {
+          "reservation_id": "capres-361e5aa7761a470baeb1a8a8e7e589c7",
+          "event_type": "consumed",
+          "occurred_at": "2026-10-07 11:55:37.504886+00:00"
+        },
+        {
+          "reservation_id": "capres-361e5aa7761a470baeb1a8a8e7e589c7",
+          "event_type": "expired",
+          "occurred_at": "2026-10-07 11:55:38.510249+00:00"
+        },
+        {
+          "reservation_id": "capres-c1a4c34156bc49969bb468ceceff55b1",
+          "event_type": "reserved",
+          "occurred_at": "2026-10-07 11:55:38.512175+00:00"
+        }
+      ],
+      "expected_unknown_preservation": "NOT_IMPLEMENTED_BY_LEGACY_POOL",
+      "actual_second_admitted": true
+    }
+  ],
+  "canary": 0,
+  "source_hashes": {
+    "aip_model_capacity_reservation.py": "61a3ad63491b4b517c57ffb1a9058be9b44066d23f5beae75d5974df096d53f2",
+    "aip_agent_run_service.py": "ff52e90d21655d05bbee1fccf895eafcbac5a3b9718ee9d3a2ba2ffa89160c14"
+  },
+  "classification": "LEGACY_NATIVE_EXPIRY_COUNTEREXAMPLE_CONFIRMED",
+  "limitations": [
+    "Synthetic legacy pool only; no signed Source or legitimate AgentRun authority",
+    "Unknown AgentRun auto-release is source-confirmed, not a native AgentRun PG reproduction",
+    "No physical joint-ledger, business execution, or formal database changes"
+  ]
+}

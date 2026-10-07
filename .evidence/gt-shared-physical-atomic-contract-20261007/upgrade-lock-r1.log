@@ -1,0 +1,1 @@
+NATIVE_SHARE_UPDATE_UPGRADE_CYCLE_CONFIRMED [{'status': 'rejected', 'sqlstate': '40P01'}, {'status': 'committed'}] final_epoch= 1

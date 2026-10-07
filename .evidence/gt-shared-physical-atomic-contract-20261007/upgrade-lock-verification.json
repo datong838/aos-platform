@@ -1,0 +1,30 @@
+{
+  "status": "NATIVE_SHARE_UPDATE_UPGRADE_CYCLE_CONFIRMED",
+  "database": "aos_test_snapshot_lock_9314bde51c58",
+  "first_caller": {
+    "pid": 117127,
+    "xid": "220331"
+  },
+  "second_caller": {
+    "pid": 117128,
+    "xid": "220332"
+  },
+  "first_blocked_by": [
+    117128
+  ],
+  "first_result": {
+    "status": "rejected",
+    "sqlstate": "40P01"
+  },
+  "second_result": {
+    "status": "committed"
+  },
+  "final_epoch": 1,
+  "head": "edf71ef8e160ce3f75e1977abb7889d3329adb91",
+  "probe_sha256": "75fe861a7ee187baea2e91e0d1e98609989b0fb66cbf7fb7c31ace7108a91be5",
+  "original_cost_runtime_sha256": "7d4066e9c0b5a3f1056fb55eb981049f506eae620041b1d2901e50bfe168d5ab",
+  "limitations": [
+    "Native test-only row lock composition; not original complete budget execution",
+    "No Source replay, Task, AgentRun, budget hold, Intent or Provider execution"
+  ]
+}

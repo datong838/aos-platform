@@ -1,0 +1,4 @@
+Retained native snapshot lock database: aos_test_snapshot_lock_9314bde51c58
+advisory_only {'lock_acquired': True, 'snapshot_count': 0, 'rejected_at': 'insert', 'sqlstate': '40001'} final_count= 1
+row_lock_unchanged {'lock_acquired': True, 'snapshot_count': 0, 'rejected_at': 'insert', 'sqlstate': '40001'} final_count= 1
+versioned_row_update {'rejected_at': 'lock', 'sqlstate': '40001'} final_count= 1

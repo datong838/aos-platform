@@ -1,0 +1,88 @@
+{
+  "status": "LOCK_PRIMITIVE_DURABLE_STATE_INDEPENDENTLY_VERIFIED",
+  "databases": {
+    "aos_test_snapshot_lock_9314bde51c58": {
+      "identity": {
+        "database": "aos_test_snapshot_lock_9314bde51c58",
+        "readonly": "on",
+        "cluster": "7693564235776004128"
+      },
+      "counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_capacity_event": 0
+      },
+      "heads": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "rows": [
+        {
+          "case_id": "advisory_only",
+          "n": 1,
+          "units": 1
+        },
+        {
+          "case_id": "row_lock_unchanged",
+          "n": 1,
+          "units": 1
+        },
+        {
+          "case_id": "versioned_row_update",
+          "n": 1,
+          "units": 1
+        }
+      ],
+      "guard_rows": [
+        {
+          "case_id": "advisory_only",
+          "epoch": 0
+        },
+        {
+          "case_id": "row_lock_unchanged",
+          "epoch": 0
+        },
+        {
+          "case_id": "share_to_update",
+          "epoch": 1
+        },
+        {
+          "case_id": "versioned_row_update",
+          "epoch": 1
+        }
+      ],
+      "canary": 0
+    },
+    "aos_test_f2ef54f0da1d_ti4_test": {
+      "identity": {
+        "database": "aos_test_f2ef54f0da1d_ti4_test",
+        "readonly": "on",
+        "cluster": "7693564235776004128"
+      },
+      "counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_capacity_event": 0
+      },
+      "heads": [
+        {
+          "version_num": "a0v_157"
+        }
+      ]
+    }
+  },
+  "file_sha256": {
+    "snapshot_lock_probe.py": "97c459b9e07df089baed02a22abf640e5b08167c97e64169188672e36ca1f601",
+    "upgrade_lock_probe.py": "75fe861a7ee187baea2e91e0d1e98609989b0fb66cbf7fb7c31ace7108a91be5",
+    "verify_lock_probes.py": "3455443d69ba715b1188a29b8ffabd4193526850109019e8f008d5b162b658be",
+    "snapshot-lock-verification.json": "cf7155cc601a565f5f332c72a79bcdc811b95a6ebb0646aec164a9fd632bf79c",
+    "upgrade-lock-verification.json": "c9fb9241b58d8ebe62b8c9856931e973b662a505820adc80ec9523d2abd93872",
+    "snapshot-lock-r1.log": "35c883568bf0e082c7b2bbe21db5179858984958a4fab1dddad35389fef3b77e",
+    "upgrade-lock-r1.log": "9ec8e1b39c88d86f7998e19c2a40b926ba2709852991ca6902076391edb8b5f8"
+  },
+  "limitations": [
+    "Native blocking pids, stale reads and 40001/40P01 are original live-run observations",
+    "Independent read proves final retained state only; no claim of original joint business authority"
+  ]
+}

@@ -1,0 +1,10 @@
+Retained owned counterexample database: aos_test_legacy_ttl_ae6edba4017f
+{"ts": "2026-10-07T11:54:50.592750+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-07T11:54:50.606921+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-physical-atomic-contract-20261007/legacy_ttl_probe.py", line 58, in <module>
+    conn.execute('UPDATE aip_model_capacity_pool_revision SET lease_seconds=1 WHERE org_id=%s AND project_id=%s AND pool_id=%s',
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py", line 300, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.ObjectNotInPrerequisiteState: AIP4_APPEND_ONLY
+CONTEXT:  PL/pgSQL function guard_aip4_append_only() line 3 at RAISE

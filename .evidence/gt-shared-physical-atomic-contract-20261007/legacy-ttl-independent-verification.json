@@ -1,0 +1,33 @@
+{
+  "status": "NATIVE_READ_ONLY_VERIFIED",
+  "databases": {
+    "aos_test_legacy_ttl_f65022995fae": {
+      "heads": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "counts": {
+        "aip_model_capacity_reservation": 4,
+        "aip_model_capacity_event": 7,
+        "aip_agent_run": 0
+      }
+    },
+    "aos_test_f2ef54f0da1d_ti4_test": {
+      "heads": [
+        {
+          "version_num": "a0v_157"
+        }
+      ],
+      "counts": {
+        "aip_model_capacity_reservation": 0,
+        "aip_model_capacity_event": 0,
+        "aip_agent_run": 0
+      }
+    }
+  },
+  "log_sha256": "434d083dd232865769a49d07e51499df4d9c9a73ef9f5e7f5ff862642ce6fb04",
+  "record_sha256": "14d6a577b75d61325b4527f8b1dfc0ad78cd7cd707b180beaffef07a603c3769",
+  "business_admission_proven": false,
+  "unknown_agent_run_pg_proven": false
+}
