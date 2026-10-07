@@ -42,3 +42,11 @@ inflight_upper_bound 保留所有 held/prepared/submitted/unknown 未决上界�
 2026-10-07 原生catalog盘点（完整157 retained库）及cost-revoke-lock r2补证：原BudgetCostIssuer从REVIEWER member SHARE→budget-cost-review advisory→撤回 INSERT→AFTER ROW INSERT的aip_budget_cost_revoke_fence_a0v_126 UPDATE原fence。触发器body独立核对a0v_126 trusted迁移完全相同。实际签名checker/consumer/get原测试后，同批准maker签名revoke对SER/runtimecaller持有的fence真实等待；caller rollback后原Issuer COMMIT，fence1→2/revocation1/receipt1。这里的caller仅持锁，不是联合ledger caller，也没有budgethold/Intent。
 
 原费用Issuer角色不同于SourceOwner：a0v_125要求仅原aos_runtime SET membership（无ADMIN/INHERIT），consumer无membership；不得因新Owner零membership设计而误改旧Issuer原身份。原Source reader清理由fixture完成，catalog无该入口不授重装/重发。此native边证据不能把完整锁图标GREEN；新联合Owner仍须预持并复验review/member/currentness与最终强度fence，核两方原writer对向路径，不凭词法事件猜全序。catalog_lock_inventory明确dynamic EXECUTE/helper call和控制流尚未闭包。
+
+## Source 活跃安装 AST 闭包检查点
+
+完整原Source distinct r2测试1PASS/7warnings48.73s，真实SCRAM/SER/runtime消费后只读采集59函数，嵌入SQL解析失败0、显式未解析调用0、实际动态EXECUTE0。词法扫描三个EXECUTE实为ACL字符串；独立synthetic语法正负例覆盖literal/dynamic/lock/assignment，不能当业务证据。public.digest两个重载保守遍历，三个非SQL密码函数仍opaque。7函数含显式锁子句，仅evidence_epoch_lock出现INSERT（缺失epoch时ON CONFLICT），隐式唯一/FK锁仍独立分析。锁子句别名与关系候选不直接等于全部真实持锁对象，控制流结构不是全writer运行顺序。
+
+独立SER READ ONLY复核：54 helper hash未变，两个legacy profile恢复为可信原编译；两个public occupation入口由内层清理，private installation audit由exact_public_source_caller外层finally精确DROP。活跃audit先匹配occupation可信编译，清理来源经原fixture AST核对，缺失不能作当前准入。原Source签名/hash正确、registry epoch2/origin撤回，occupation角色NOLOGIN零membership，AgentRun/容量/普通预算/Eval预算0/canary0。原verifier误期待audit清理后保留，失败未修改数据库，修正仅生命周期断言；独立复核通过。所有实验库卷备份保留。
+
+r1部分AST43函数/414解析失败归档，不抹除失败；r2严格处理PL parseMode=3固定target赋值，非支持语法仍失败透明。此检查点收窄Source helper资料缺口，不冻结完整joint锁图，不实现physical ledger/budget/Intent，不授正式库迁移或业务启动。下一候选是Source发布/撤回和审批/Provider/Price原writer与锁前缀对照，再核旧unknown零执行切换；父Task和完整Goal保持ACTIVE。

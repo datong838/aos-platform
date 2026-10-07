@@ -170,3 +170,21 @@ SHARE→UPDATE试验原生40P01，一方rollback另一方commit，独立回读ep
 两份完整157库原生只读目录各97相关表/488触发器/94函数；包含Source私有边界动态EXECUTE与原runtime/审批触发器，词法事件仅候选，未覆盖动态完整closure。原reader已由Source fixture清理，目录不重建。费用撤回AFTER INSERT函数aip_budget_cost_revoke_fence_a0v_126原生body与a0v_126 trusted迁移完全一致，SECURITY INVOKER/search_path=pg_catalog，原触发器AFTER ROW INSERT/nondeferrable。
 
 第二轮完整原test1PASS/7warnings7.63s，原checker签名→consumerconsume→storeget后，maker签名原Issuer撤回实际等待SER/runtimecaller持原fence；observer pg_blocking_pids精确证明，未提交revocation0，caller只rollback锁后Issuer实际COMMIT、revocation1/fence1→2/revokeReceipt1。独立只读两个保留库（失败r1 revocation0；r2 revocation1）回读通过，issuer/consumer NOLOGIN，issuer仅原runtime SET membership，hold/AgentRun/capacity/canary0。没有Price bypass/Task伪造/Provider发送/Source重放。记录证明原隐式writer锁边，未证明全joint无循环或完整业务；费用review/member先锁再到fence与未来联合前缀需共同排序。
+
+## 下一步：原 Source 活跃安装的 PostgreSQL AST helper 闭包
+
+新增source_lock_closure_probe.py／run_source_lock_closure_probe.py／source-lock-closure-r1.log／source-lock-closure.json。复用完整原distinct Source测试新随机保留库，在其真实SCRAM/SER/runtimecaller已消费Source后、原epoch/Owner并发负门前，只读admin读actual pg_proc定义，pglast解析PLpgSQL控制流及嵌入SQL AST，递归显式schema函数调用、关系与锁子句，另记动态EXECUTE模板及未解析/多重候选。原compiled reader/auditor expectedbody与当前live匹配；private helper由原Source实际完整auditor校验，不把targetcatalog当期待值。仅结构/hash输出，无函数全文/JWT/签名/参数/业务payload，不执行动态SQL；parse失败和opaque函数明列，不声称全writer无循环。随后原完整epoch/独立Owner/撤回测试原样继续。所有库卷备份保留，不改变Source/Profile产品文件。补本合同动态helper资料，以据实收窄剩余开码条件，不能靠部分parse数量宣布冻结。
+
+AST首轮完整原测试1PASS/7warnings53.38s，调查仅43函数/414嵌入SQL解析失败，主要因为PLpgSQL_expr.parseMode=3赋值表达式含target:=RHS。首轮JSON归档source-lock-closure-r1.json，不拿不完整数据冒称闭包。按libPG解析出的mode仅处理受限固定简单赋值target，0原SQL、2表达式、3严格匹配target:=RHS，其他保留failure。第二轮仍新Source/随机保留库，不改或重放旧attempt。
+
+### AST 独立回读失败诊断与最小修复方案
+
+原完整test已PASS，但verify_source_lock_closure.py期待三个legacy helper均保留，实际exact_public_source_caller外层fixture finally会在内层恢复之后DROP require_current_source_installation()。只修证据verifier：通过原fixture AST确认精确DROP常量，活跃installation定义与occupation可信编译匹配，结束后要求public两个入口及private安装audit三者均不存在；另两个legacy helper按可信恢复编译hash匹配、54其余helper原hash一致。保留全部原测试库/卷，不执行DDL或重发Source。错误属于复核生命周期期待，不认定原产品失败，不放宽任意缺失helper；原完整r2无需因verifier修正重复执行。
+
+## Source 活跃安装 AST 闭包检查点
+
+完整原Source distinct r2测试1PASS/7warnings48.73s，真实SCRAM/SER/runtime消费后只读采集59函数，嵌入SQL解析失败0、显式未解析调用0、实际动态EXECUTE0。词法扫描三个EXECUTE实为ACL字符串；独立synthetic语法正负例覆盖literal/dynamic/lock/assignment，不能当业务证据。public.digest两个重载保守遍历，三个非SQL密码函数仍opaque。7函数含显式锁子句，仅evidence_epoch_lock出现INSERT（缺失epoch时ON CONFLICT），隐式唯一/FK锁仍独立分析。锁子句别名与关系候选不直接等于全部真实持锁对象，控制流结构不是全writer运行顺序。
+
+独立SER READ ONLY复核：54 helper hash未变，两个legacy profile恢复为可信原编译；两个public occupation入口由内层清理，private installation audit由exact_public_source_caller外层finally精确DROP。活跃audit先匹配occupation可信编译，清理来源经原fixture AST核对，缺失不能作当前准入。原Source签名/hash正确、registry epoch2/origin撤回，occupation角色NOLOGIN零membership，AgentRun/容量/普通预算/Eval预算0/canary0。原verifier误期待audit清理后保留，失败未修改数据库，修正仅生命周期断言；独立复核通过。所有实验库卷备份保留。
+
+r1部分AST43函数/414解析失败归档，不抹除失败；r2严格处理PL parseMode=3固定target赋值，非支持语法仍失败透明。此检查点收窄Source helper资料缺口，不冻结完整joint锁图，不实现physical ledger/budget/Intent，不授正式库迁移或业务启动。下一候选是Source发布/撤回和审批/Provider/Price原writer与锁前缀对照，再核旧unknown零执行切换；父Task和完整Goal保持ACTIVE。

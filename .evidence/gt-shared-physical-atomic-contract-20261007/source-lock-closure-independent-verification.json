@@ -1,0 +1,60 @@
+{
+  "status": "SOURCE_AST_CONTROLS_AND_RETAINED_RESTORATION_VERIFIED",
+  "identity": {
+    "database": "aos_test_2807432bd393_ti4_test",
+    "readonly": "on",
+    "cluster": "7693564235776004128"
+  },
+  "synthetic_parser_controls": {
+    "literal": {
+      "dynamic": 0,
+      "locks": 0,
+      "calls": []
+    },
+    "dynamic": {
+      "dynamic": 1,
+      "locks": 0,
+      "calls": []
+    },
+    "lock": {
+      "dynamic": 0,
+      "locks": 1,
+      "calls": []
+    },
+    "assignment": {
+      "dynamic": 0,
+      "locks": 0,
+      "calls": [
+        "aos_capacity_publication_private.control_helper"
+      ]
+    }
+  },
+  "unchanged_helper_bodies": 54,
+  "root_entries_removed": 2,
+  "outer_fixture_installation_audit_removed": 1,
+  "trusted_legacy_profiles_restored": 2,
+  "fixture_cleanup_sha256": "4aa91d9ac8ab0e0733087a91a42b7fc4ef657b03775ce3f95117f09193d1e967",
+  "signed_source_history_valid": true,
+  "origin_withdrawn": true,
+  "occupation_role_inert": true,
+  "product_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "canary": 0,
+  "file_sha256": {
+    "source_lock_closure_probe.py": "a92daec51d0b3dd0f46cdb49bf0367c8948e71c8115ca863ebb7c682503c09aa",
+    "run_source_lock_closure_probe.py": "11035efec80da1eeb8575c7318d08b9541f703b4f98fe746380b46482b7c5943",
+    "source-lock-closure.json": "953884638217ca557dd236f30d745e6f1b60da124d9bb7871a5ccf87323e1597",
+    "source-lock-closure-r1.json": "3e1f23be1054372c82a318d03ac9729c97632e2a40384416370a9378e7cbd9df",
+    "source-lock-closure-r2.log": "e540dea563f078a4bc4272012d1e3c362f59ffc2a5d0b8481043efb900a9ea88",
+    "verify_source_lock_closure.py": "ebd265b1d020deea84b5bd29a12a7c4a38492b87f4ea504d17eae8a4689e2ce4"
+  },
+  "limitations": [
+    "Parser controls are synthetic grammar cases, not database business authority",
+    "Original successful Source native test proves active installation window, not retained current admission",
+    "Three non-SQL crypto functions, conservative overloads, implicit locks and opposite writers remain separately governed"
+  ]
+}
