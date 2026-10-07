@@ -1,0 +1,1251 @@
+{
+  "authority": "AOS-001446",
+  "code_head": "98a6380de19e0012a279b545d10ab3c8d3113ca2",
+  "full_s01": false,
+  "reference_database": "aos_test_52de2ca0f6bc_ti4_test",
+  "rollback_new_tables_absent": true,
+  "rollback_original_function_catalog_equal": true,
+  "runtime_allowlist": false,
+  "schema": "aos-source-table-trusted-reference/v1",
+  "source_delivery": false,
+  "sql_sha256": [
+    "783b9ef1c96fa0c21f33cc4f3d52f05c67397af2b8f42720f05007b2427996e3",
+    "99c6154aa9a35e54f28f2d9dfa5b38d4d33d16b91b4a2370cc8a608c8d29ca0d",
+    "e88727a8957ddbb696c266e2738f550698424507622f89d5fb6c4a37b1f7a55f",
+    "aaa60ce155c75affecdb3cbab6f2a77e8f54fbc9a83d1c29ffe95981cc282a4c",
+    "1d34412792a983a0eaacd3a6252a68ce8371cd01a196bfedd2a8de99b6ad1d4d",
+    "9fbd68209739efae3d1d9032fcf1b2bf78837e286300b0ece67ad1c256eaecfc",
+    "ff8393837187c31f9115e37271c8a8bdeb2bba99f8478b70ac4f88aee5904643",
+    "d39972352fc8cb8b3561b7ca8b608758ee3885eb2b9f9136945108f92f0fbc57",
+    "2b9ef74adf34650ef6f735c5dd981573916effbd1bce47eb296d1432cbfec6a4",
+    "c018820ab8ac98077af30e6cfd353f136d55530d4ca27a3bd166c9df3b9d3c81",
+    "994a8d8bbc995dd2188001da705c7cbaa70b1afddac8fcdf15eff7a34a8769e7",
+    "8bc47c5697dce3f7b99862c205e3753d8c2ff7dc82177a33c6a8793790174524",
+    "a2f4e5bcecceecfc9aed28fad84b8c9f46c5e7d224409581235a0e96d299bab1"
+  ],
+  "tables": {
+    "global_account": {
+      "acl": [
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "DELETE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "INSERT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "REFERENCES"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "SELECT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRIGGER"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRUNCATE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "UPDATE"
+        }
+      ],
+      "column_acl": [],
+      "columns": [
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "account_id",
+          "attnotnull": true,
+          "attnum": 1,
+          "default_expr": null,
+          "type": "uuid"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "supplier_id",
+          "attnotnull": true,
+          "attnum": 2,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "fingerprint",
+          "attnotnull": true,
+          "attnum": 3,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "org_id",
+          "attnotnull": true,
+          "attnum": 4,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "project_id",
+          "attnotnull": true,
+          "attnum": 5,
+          "default_expr": null,
+          "type": "text"
+        }
+      ],
+      "constraints": [
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "global_account_fingerprint_check",
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((fingerprint ~ '^[0-9a-f]{64}$'::text))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "global_account_pkey",
+          "contype": "p",
+          "convalidated": true,
+          "definition": "PRIMARY KEY (account_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "global_account_supplier_id_fingerprint_key",
+          "contype": "u",
+          "convalidated": true,
+          "definition": "UNIQUE (supplier_id, fingerprint)"
+        }
+      ],
+      "indexes": [
+        {
+          "definition": "CREATE UNIQUE INDEX global_account_pkey ON aos_capacity_publication_private.global_account USING btree (account_id)",
+          "indisprimary": true,
+          "indisready": true,
+          "indisunique": true,
+          "indisvalid": true,
+          "name": "global_account_pkey"
+        },
+        {
+          "definition": "CREATE UNIQUE INDEX global_account_supplier_id_fingerprint_key ON aos_capacity_publication_private.global_account USING btree (supplier_id, fingerprint)",
+          "indisprimary": false,
+          "indisready": true,
+          "indisunique": true,
+          "indisvalid": true,
+          "name": "global_account_supplier_id_fingerprint_key"
+        }
+      ],
+      "owner": "aos_capacity_publication_owner",
+      "policies": [
+        {
+          "check_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))",
+          "polcmd": "*",
+          "polname": "source_global_owner",
+          "polpermissive": true,
+          "roles": [
+            "aos_capacity_publication_owner"
+          ],
+          "using_expr": "true"
+        }
+      ],
+      "relforcerowsecurity": true,
+      "relkind": "r",
+      "relname": "global_account",
+      "relpersistence": "p",
+      "relrowsecurity": true,
+      "triggers": [
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_8607161\" AFTER DELETE ON aos_capacity_publication_private.global_account FROM aos_capacity_publication_private.global_provider NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+          "function": "\"RI_FKey_noaction_del\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_a_8607161",
+          "tgtype": 9
+        },
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_8607162\" AFTER UPDATE ON aos_capacity_publication_private.global_account FROM aos_capacity_publication_private.global_provider NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+          "function": "\"RI_FKey_noaction_upd\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_a_8607162",
+          "tgtype": 17
+        },
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_8607210\" AFTER DELETE ON aos_capacity_publication_private.global_account FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+          "function": "\"RI_FKey_noaction_del\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_a_8607210",
+          "tgtype": 9
+        },
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_8607211\" AFTER UPDATE ON aos_capacity_publication_private.global_account FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+          "function": "\"RI_FKey_noaction_upd\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_a_8607211",
+          "tgtype": 17
+        },
+        {
+          "definition": "CREATE TRIGGER source_identity_immutable BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.global_account FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()",
+          "function": "aos_capacity_publication_private.refuse_source_publication_mutation()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": false,
+          "tgname": "source_identity_immutable",
+          "tgtype": 27
+        }
+      ]
+    },
+    "global_provider": {
+      "acl": [
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "DELETE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "INSERT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "REFERENCES"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "SELECT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRIGGER"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRUNCATE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "UPDATE"
+        }
+      ],
+      "column_acl": [],
+      "columns": [
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "provider_id",
+          "attnotnull": true,
+          "attnum": 1,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "account_id",
+          "attnotnull": true,
+          "attnum": 2,
+          "default_expr": null,
+          "type": "uuid"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "org_id",
+          "attnotnull": true,
+          "attnum": 3,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "project_id",
+          "attnotnull": true,
+          "attnum": 4,
+          "default_expr": null,
+          "type": "text"
+        }
+      ],
+      "constraints": [
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "global_provider_account_id_fkey",
+          "contype": "f",
+          "convalidated": true,
+          "definition": "FOREIGN KEY (account_id) REFERENCES aos_capacity_publication_private.global_account(account_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "global_provider_pkey",
+          "contype": "p",
+          "convalidated": true,
+          "definition": "PRIMARY KEY (provider_id)"
+        }
+      ],
+      "indexes": [
+        {
+          "definition": "CREATE UNIQUE INDEX global_provider_pkey ON aos_capacity_publication_private.global_provider USING btree (provider_id)",
+          "indisprimary": true,
+          "indisready": true,
+          "indisunique": true,
+          "indisvalid": true,
+          "name": "global_provider_pkey"
+        }
+      ],
+      "owner": "aos_capacity_publication_owner",
+      "policies": [
+        {
+          "check_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))",
+          "polcmd": "*",
+          "polname": "source_global_owner",
+          "polpermissive": true,
+          "roles": [
+            "aos_capacity_publication_owner"
+          ],
+          "using_expr": "true"
+        }
+      ],
+      "relforcerowsecurity": true,
+      "relkind": "r",
+      "relname": "global_provider",
+      "relpersistence": "p",
+      "relrowsecurity": true,
+      "triggers": [
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_8607163\" AFTER INSERT ON aos_capacity_publication_private.global_provider FROM aos_capacity_publication_private.global_account NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+          "function": "\"RI_FKey_check_ins\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_c_8607163",
+          "tgtype": 5
+        },
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_8607164\" AFTER UPDATE ON aos_capacity_publication_private.global_provider FROM aos_capacity_publication_private.global_account NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+          "function": "\"RI_FKey_check_upd\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_c_8607164",
+          "tgtype": 17
+        },
+        {
+          "definition": "CREATE TRIGGER source_identity_immutable BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.global_provider FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()",
+          "function": "aos_capacity_publication_private.refuse_source_publication_mutation()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": false,
+          "tgname": "source_identity_immutable",
+          "tgtype": 27
+        }
+      ]
+    },
+    "source_pending": {
+      "acl": [
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "DELETE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "INSERT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "REFERENCES"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "SELECT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRIGGER"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRUNCATE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "UPDATE"
+        }
+      ],
+      "column_acl": [],
+      "columns": [
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "org_id",
+          "attnotnull": true,
+          "attnum": 1,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "project_id",
+          "attnotnull": true,
+          "attnum": 2,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "maker",
+          "attnotnull": true,
+          "attnum": 3,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "attempt_key",
+          "attnotnull": true,
+          "attnum": 4,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "attempt_id",
+          "attnotnull": true,
+          "attnum": 5,
+          "default_expr": null,
+          "type": "uuid"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "source_asset_id",
+          "attnotnull": true,
+          "attnum": 6,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "account_id",
+          "attnotnull": true,
+          "attnum": 7,
+          "default_expr": null,
+          "type": "uuid"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "request_hash",
+          "attnotnull": true,
+          "attnum": 8,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "native_xid",
+          "attnotnull": true,
+          "attnum": 9,
+          "default_expr": null,
+          "type": "xid8"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "native_pid",
+          "attnotnull": true,
+          "attnum": 10,
+          "default_expr": null,
+          "type": "integer"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "native_session",
+          "attnotnull": true,
+          "attnum": 11,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "command_raw",
+          "attnotnull": true,
+          "attnum": 12,
+          "default_expr": null,
+          "type": "bytea"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "permit_ref",
+          "attnotnull": true,
+          "attnum": 13,
+          "default_expr": null,
+          "type": "jsonb"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "signed_facts",
+          "attnotnull": true,
+          "attnum": 14,
+          "default_expr": null,
+          "type": "jsonb"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "source_raw",
+          "attnotnull": true,
+          "attnum": 15,
+          "default_expr": null,
+          "type": "bytea"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "source_hash",
+          "attnotnull": true,
+          "attnum": 16,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "finalized",
+          "attnotnull": true,
+          "attnum": 17,
+          "default_expr": "false",
+          "type": "boolean"
+        }
+      ],
+      "constraints": [
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_pending_attempt_id_key",
+          "contype": "u",
+          "convalidated": true,
+          "definition": "UNIQUE (attempt_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_pending_attempt_key_check",
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK (((length(attempt_key) >= 1) AND (length(attempt_key) <= 200)))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_pending_check",
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((source_hash = encode(sha256(source_raw), 'hex'::text)))"
+        },
+        {
+          "condeferrable": true,
+          "condeferred": true,
+          "conname": "source_pending_finalized",
+          "contype": "t",
+          "convalidated": true,
+          "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_pending_org_id_check",
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((org_id = 'org-org'::text))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_pending_org_id_project_id_maker_request_hash_key",
+          "contype": "u",
+          "convalidated": true,
+          "definition": "UNIQUE (org_id, project_id, maker, request_hash)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_pending_org_id_project_id_source_asset_id_key",
+          "contype": "u",
+          "convalidated": true,
+          "definition": "UNIQUE (org_id, project_id, source_asset_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_pending_pkey",
+          "contype": "p",
+          "convalidated": true,
+          "definition": "PRIMARY KEY (org_id, project_id, maker, attempt_key)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_pending_project_id_check",
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((project_id = 'dev-project'::text))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_pending_request_hash_check",
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((request_hash ~ '^[0-9a-f]{64}$'::text))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_pending_source_raw_check",
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK (((octet_length(source_raw) >= 1) AND (octet_length(source_raw) <= 2097152)))"
+        }
+      ],
+      "indexes": [
+        {
+          "definition": "CREATE UNIQUE INDEX source_pending_attempt_id_key ON aos_capacity_publication_private.source_pending USING btree (attempt_id)",
+          "indisprimary": false,
+          "indisready": true,
+          "indisunique": true,
+          "indisvalid": true,
+          "name": "source_pending_attempt_id_key"
+        },
+        {
+          "definition": "CREATE UNIQUE INDEX source_pending_org_id_project_id_maker_request_hash_key ON aos_capacity_publication_private.source_pending USING btree (org_id, project_id, maker, request_hash)",
+          "indisprimary": false,
+          "indisready": true,
+          "indisunique": true,
+          "indisvalid": true,
+          "name": "source_pending_org_id_project_id_maker_request_hash_key"
+        },
+        {
+          "definition": "CREATE UNIQUE INDEX source_pending_org_id_project_id_source_asset_id_key ON aos_capacity_publication_private.source_pending USING btree (org_id, project_id, source_asset_id)",
+          "indisprimary": false,
+          "indisready": true,
+          "indisunique": true,
+          "indisvalid": true,
+          "name": "source_pending_org_id_project_id_source_asset_id_key"
+        },
+        {
+          "definition": "CREATE UNIQUE INDEX source_pending_pkey ON aos_capacity_publication_private.source_pending USING btree (org_id, project_id, maker, attempt_key)",
+          "indisprimary": true,
+          "indisready": true,
+          "indisunique": true,
+          "indisvalid": true,
+          "name": "source_pending_pkey"
+        }
+      ],
+      "owner": "aos_capacity_publication_owner",
+      "policies": [
+        {
+          "check_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))",
+          "polcmd": "*",
+          "polname": "source_pending_owner",
+          "polpermissive": true,
+          "roles": [
+            "aos_capacity_publication_owner"
+          ],
+          "using_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))"
+        }
+      ],
+      "relforcerowsecurity": true,
+      "relkind": "r",
+      "relname": "source_pending",
+      "relpersistence": "p",
+      "relrowsecurity": true,
+      "triggers": [
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_8607215\" AFTER DELETE ON aos_capacity_publication_private.source_pending FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+          "function": "\"RI_FKey_noaction_del\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_a_8607215",
+          "tgtype": 9
+        },
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_8607216\" AFTER UPDATE ON aos_capacity_publication_private.source_pending FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+          "function": "\"RI_FKey_noaction_upd\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_a_8607216",
+          "tgtype": 17
+        },
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER source_pending_finalized AFTER INSERT OR UPDATE ON aos_capacity_publication_private.source_pending DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.require_pending_source_finalized()",
+          "function": "aos_capacity_publication_private.require_pending_source_finalized()",
+          "tgdeferrable": true,
+          "tgenabled": "O",
+          "tginitdeferred": true,
+          "tgisinternal": false,
+          "tgname": "source_pending_finalized",
+          "tgtype": 21
+        }
+      ]
+    },
+    "source_provenance": {
+      "acl": [
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "DELETE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "INSERT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "REFERENCES"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "SELECT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRIGGER"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRUNCATE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "UPDATE"
+        }
+      ],
+      "column_acl": [],
+      "columns": [
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "org_id",
+          "attnotnull": true,
+          "attnum": 1,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "project_id",
+          "attnotnull": true,
+          "attnum": 2,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "asset_id",
+          "attnotnull": true,
+          "attnum": 3,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "original_signed_facts",
+          "attnotnull": true,
+          "attnum": 4,
+          "default_expr": null,
+          "type": "jsonb"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "source_signer_root_revision",
+          "attnotnull": true,
+          "attnum": 5,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "native_xid",
+          "attnotnull": true,
+          "attnum": 6,
+          "default_expr": null,
+          "type": "xid8"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "native_pid",
+          "attnotnull": true,
+          "attnum": 7,
+          "default_expr": null,
+          "type": "integer"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "native_session",
+          "attnotnull": true,
+          "attnum": 8,
+          "default_expr": null,
+          "type": "text"
+        }
+      ],
+      "constraints": [
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_provenance_org_id_project_id_asset_id_fkey",
+          "contype": "f",
+          "convalidated": true,
+          "definition": "FOREIGN KEY (org_id, project_id, asset_id) REFERENCES aos_capacity_publication_private.source_publication(org_id, project_id, asset_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_provenance_pkey",
+          "contype": "p",
+          "convalidated": true,
+          "definition": "PRIMARY KEY (org_id, project_id, asset_id)"
+        }
+      ],
+      "indexes": [
+        {
+          "definition": "CREATE UNIQUE INDEX source_provenance_pkey ON aos_capacity_publication_private.source_provenance USING btree (org_id, project_id, asset_id)",
+          "indisprimary": true,
+          "indisready": true,
+          "indisunique": true,
+          "indisvalid": true,
+          "name": "source_provenance_pkey"
+        }
+      ],
+      "owner": "aos_capacity_publication_owner",
+      "policies": [
+        {
+          "check_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))",
+          "polcmd": "*",
+          "polname": "source_provenance_owner",
+          "polpermissive": true,
+          "roles": [
+            "aos_capacity_publication_owner"
+          ],
+          "using_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))"
+        }
+      ],
+      "relforcerowsecurity": true,
+      "relkind": "r",
+      "relname": "source_provenance",
+      "relpersistence": "p",
+      "relrowsecurity": true,
+      "triggers": [
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_8607229\" AFTER INSERT ON aos_capacity_publication_private.source_provenance FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+          "function": "\"RI_FKey_check_ins\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_c_8607229",
+          "tgtype": 5
+        },
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_8607230\" AFTER UPDATE ON aos_capacity_publication_private.source_provenance FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+          "function": "\"RI_FKey_check_upd\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_c_8607230",
+          "tgtype": 17
+        },
+        {
+          "definition": "CREATE TRIGGER source_provenance_immutable BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.source_provenance FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()",
+          "function": "aos_capacity_publication_private.refuse_source_publication_mutation()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": false,
+          "tgname": "source_provenance_immutable",
+          "tgtype": 27
+        }
+      ]
+    },
+    "source_publication": {
+      "acl": [
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "DELETE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "INSERT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "REFERENCES"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "SELECT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRIGGER"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRUNCATE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "UPDATE"
+        }
+      ],
+      "column_acl": [],
+      "columns": [
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "org_id",
+          "attnotnull": true,
+          "attnum": 1,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "project_id",
+          "attnotnull": true,
+          "attnum": 2,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "asset_id",
+          "attnotnull": true,
+          "attnum": 3,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "revision",
+          "attnotnull": true,
+          "attnum": 4,
+          "default_expr": null,
+          "type": "integer"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "content_hash",
+          "attnotnull": true,
+          "attnum": 5,
+          "default_expr": null,
+          "type": "text"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "source_raw",
+          "attnotnull": true,
+          "attnum": 6,
+          "default_expr": null,
+          "type": "bytea"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "signature",
+          "attnotnull": true,
+          "attnum": 7,
+          "default_expr": null,
+          "type": "bytea"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "account_id",
+          "attnotnull": true,
+          "attnum": 8,
+          "default_expr": null,
+          "type": "uuid"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attname": "attempt_id",
+          "attnotnull": true,
+          "attnum": 9,
+          "default_expr": null,
+          "type": "uuid"
+        }
+      ],
+      "constraints": [
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_publication_account_id_fkey",
+          "contype": "f",
+          "convalidated": true,
+          "definition": "FOREIGN KEY (account_id) REFERENCES aos_capacity_publication_private.global_account(account_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_publication_attempt_id_fkey",
+          "contype": "f",
+          "convalidated": true,
+          "definition": "FOREIGN KEY (attempt_id) REFERENCES aos_capacity_publication_private.source_pending(attempt_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_publication_attempt_id_key",
+          "contype": "u",
+          "convalidated": true,
+          "definition": "UNIQUE (attempt_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_publication_check",
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((content_hash = encode(sha256(source_raw), 'hex'::text)))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_publication_org_id_check",
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((org_id = 'org-org'::text))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_publication_pkey",
+          "contype": "p",
+          "convalidated": true,
+          "definition": "PRIMARY KEY (org_id, project_id, asset_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_publication_project_id_check",
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((project_id = 'dev-project'::text))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_publication_revision_check",
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((revision = 1))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "conname": "source_publication_signature_check",
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((octet_length(signature) = 64))"
+        }
+      ],
+      "indexes": [
+        {
+          "definition": "CREATE UNIQUE INDEX source_publication_attempt_id_key ON aos_capacity_publication_private.source_publication USING btree (attempt_id)",
+          "indisprimary": false,
+          "indisready": true,
+          "indisunique": true,
+          "indisvalid": true,
+          "name": "source_publication_attempt_id_key"
+        },
+        {
+          "definition": "CREATE UNIQUE INDEX source_publication_pkey ON aos_capacity_publication_private.source_publication USING btree (org_id, project_id, asset_id)",
+          "indisprimary": true,
+          "indisready": true,
+          "indisunique": true,
+          "indisvalid": true,
+          "name": "source_publication_pkey"
+        }
+      ],
+      "owner": "aos_capacity_publication_owner",
+      "policies": [
+        {
+          "check_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))",
+          "polcmd": "*",
+          "polname": "source_publication_owner",
+          "polpermissive": true,
+          "roles": [
+            "aos_capacity_publication_owner"
+          ],
+          "using_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))"
+        }
+      ],
+      "relforcerowsecurity": true,
+      "relkind": "r",
+      "relname": "source_publication",
+      "relpersistence": "p",
+      "relrowsecurity": true,
+      "triggers": [
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_8607227\" AFTER DELETE ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.source_provenance NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+          "function": "\"RI_FKey_noaction_del\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_a_8607227",
+          "tgtype": 9
+        },
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_8607228\" AFTER UPDATE ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.source_provenance NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+          "function": "\"RI_FKey_noaction_upd\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_a_8607228",
+          "tgtype": 17
+        },
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_8607212\" AFTER INSERT ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.global_account NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+          "function": "\"RI_FKey_check_ins\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_c_8607212",
+          "tgtype": 5
+        },
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_8607213\" AFTER UPDATE ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.global_account NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+          "function": "\"RI_FKey_check_upd\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_c_8607213",
+          "tgtype": 17
+        },
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_8607217\" AFTER INSERT ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.source_pending NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+          "function": "\"RI_FKey_check_ins\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_c_8607217",
+          "tgtype": 5
+        },
+        {
+          "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_8607218\" AFTER UPDATE ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.source_pending NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+          "function": "\"RI_FKey_check_upd\"()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgname": "RI_ConstraintTrigger_c_8607218",
+          "tgtype": 17
+        },
+        {
+          "definition": "CREATE TRIGGER source_publication_immutable BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.source_publication FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()",
+          "function": "aos_capacity_publication_private.refuse_source_publication_mutation()",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": false,
+          "tgname": "source_publication_immutable",
+          "tgtype": 27
+        }
+      ]
+    }
+  }
+}
