@@ -314,6 +314,8 @@ green-r4三个正向PASS32.33s。扩展r1为16PASS/8FAIL226.85s：三revision负
 
 ### 235bdcc6 / AOS-001441：待签原文施工切入
 
+e85f0774/AOS-001442后立即接续完整commit调查：原测试接口实际为public.prepare_capacity_source(bytea,text,text,jsonb)和public.commit_capacity_source(text,bytea,bytea)。最终catalog首次使用了非实际prepare名称，证据不能据此支持实际入口缺失；已在同保留库精确回读两个原接口均不存在并修正catalog/verification hash。既有原生aos_ed25519.verify(bytea,bytea,bytea)为受控C函数、immutable/strict、NOLOGIN owner；仅名称/此属性仍不替代完整安装审计。下一commit须同native pending身份与精确bytes/SHA，重新读全部原锁事实及当前Source签名根，验真后原子写global映射、immutable Source/provenance及pending finalize；rollback和完成replay联验，consumer依赖此真实提交。正式入口安装/全S01及finalCOMMIT TTL依旧不通过。调查冻结full157-native-commit-next-investigation.json，两个已登记候选沿原依赖，无第二写者。
+
 四原同owner活跃Lease已核原source issuer/formal boundary/transaction/157范围，17原private函数catalog与public prepare/commit不存在已回读。两个候选仍完整157写路径与consumer；按依赖先写路径。生产代码仅transaction.py追加未来157私有pending SQL（暂不新增自动安装迁移或issuer公共grant），完整public prepare/commit由全S01安装审计与commit实现齐备后组装。原SQL fullchain RED不重复当新进展。
 
 新增global_account、global_provider和source_pending仅供own保留库演练，Owner-only/FORCE RLS；前二全域唯一约束不带tenant，Owner私有读全域但同scope写，统一错scope拒绝，issuer零私有表权限。prepare在原signed事实锁之后对账户supplier/fingerprint、每Provider原identity及attempt key固定namespace hash64事务锁去重按signed bigint排序；检查已有归属同tenant、Provider全集同一账户，DB生成稳定UUID而不接受candidate alias或自由UUID。prepare不写global映射/Source；nonce、same native xid/PID/session、command bytes/SHA、permit/registry/signed事实、精确Source v2 raw/SHA只写pending。新Source字段全部取DB原facts/登记payload，时间按原UTC规范、deployment取真实permit、issuer context取当前真实事务与原auth hints（仍非JWT权威），复用原canonical签名编码器。待签记录延迟约束读当前行而非过期NEW，未finalized实际COMMIT23514拒绝；future finalize只能由完整commit核签后执行，现不开放任何发布。

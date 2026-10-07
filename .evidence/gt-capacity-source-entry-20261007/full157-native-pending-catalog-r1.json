@@ -4,5 +4,6 @@
   "migration": "a0v_156",
   "pending_and_global_tables": 0,
   "private_new_functions": 0,
-  "public_prepare": null
+  "public_prepare": null,
+  "public_commit": null
 }

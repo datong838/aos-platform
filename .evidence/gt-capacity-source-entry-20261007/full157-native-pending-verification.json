@@ -38,12 +38,12 @@
       "bytes": 303188
     },
     ".evidence/gt-capacity-source-entry-20261007/plan.md": {
-      "sha256": "eb9f392585103df00bf65dd5a77ac136a6917b92a9adbea7563b559c5cf85fb0",
-      "bytes": 119979
+      "sha256": "a4d02c2473b5d92627f4bc19d1658be912f70d45ca070f0fdb6c7c667d38a6d8",
+      "bytes": 120947
     },
     ".evidence/gt-capacity-source-entry-20261007/full157-native-pending-catalog-r1.json": {
-      "sha256": "ca39a5b83a0a5e03eae061d96687b28f1fc4b03338ac601a0bd30514db1ac441",
-      "bytes": 203
+      "sha256": "3be879ac7656d7c284f4628aa3c50fce4f6cd1120b7e2a8e18a7ed13caa6b6e0",
+      "bytes": 228
     },
     ".evidence/gt-capacity-source-publication-20261006/full157-native-pending-expanded-green-r1.log": {
       "sha256": "4eed0d7e609a3a048af9cdf43a72053310bf05b2a4e166d4c3fd9a3d5f285af8",

@@ -1,0 +1,25 @@
+{
+  "authority": "AOS-001442",
+  "database": "aos_test_03a311f2193f_ti4_test",
+  "cluster": "7693564235776004128",
+  "migration": "a0v_156",
+  "actual_public_prepare": null,
+  "actual_public_commit": null,
+  "source_signature_primitive": {
+    "probin": "$libdir/aos_ed25519",
+    "prosrc": "aos_ed25519_verify",
+    "provolatile": "i",
+    "proisstrict": true,
+    "lanname": "c",
+    "owner": "aos_ed25519_owner"
+  },
+  "next_candidate": "Full native signature-checked commit with immutable publication and deferred pending finalize",
+  "dependent_candidate": "Consumer current original facts and signature revalidation requires committed Source",
+  "implementation_constraints": [
+    "Reuse exact current read_source_command_signed_facts prefix, never caller public key or Source body as authority",
+    "Require same pending native xid/PID/session, exact prepared bytes and stored SHA; obtain current signing root key from original signed facts",
+    "Use audited aos_ed25519.verify(signature,source_raw,trusted_key), then publish global account/provider mappings and immutable Source/provenance atomically",
+    "Source publication and pending finalize must rollback together on failed commit; completed replay returns immutable existing result only",
+    "Exact S01 manifest/ACL and actual Source caller COMMIT remain mandatory before public installation; final COMMIT TTL remains unresolved"
+  ]
+}
