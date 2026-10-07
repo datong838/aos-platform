@@ -1,0 +1,97 @@
+{
+  "schema": "aos-capacity-pool-transaction-verification/v1",
+  "base_head": "d032a63996beab59b29bb0e125ef5d2696f57282",
+  "file_sha256": {
+    "services/aos-api/aos_api/aip_model_capacity_reservation.py": "61a3ad63491b4b517c57ffb1a9058be9b44066d23f5beae75d5974df096d53f2",
+    "services/aos-api/tests/aip/test_capacity_pool_transaction_pg.py": "507b1048ba90092ab0985cc13e7507f0f4a284c111d52c2526befb7ca3d59d84"
+  },
+  "original_pool_algorithm_preserved": true,
+  "other_original_methods_ast_unchanged": true,
+  "new_entry_ends_no_transaction": true,
+  "logs": {
+    "pool-caller-transaction-red-r1.log": {
+      "sha256": "d026e0f556a9084bbf67605821f5ac0fa47859487ae013e30c2859b0b65a4b58",
+      "result": "10 failed",
+      "database": "aos_test_0038486b4ade_ti4_test"
+    },
+    "pool-caller-transaction-green-r1.log": {
+      "sha256": "1bb3503c688f5e53e970fe23a574749dac347df238ef4dbcecc8f70698e7a0fd",
+      "result": "24 passed, 2 xfailed",
+      "database": "aos_test_ee9270278656_ti4_test"
+    },
+    "pool-caller-transaction-adjacent-r1.log": {
+      "sha256": "aedbb4d0832475797a5abe86b0b556b453b621702a582b41de09abcdf27a28e7",
+      "result": "65 passed, 2 xfailed",
+      "database": "aos_test_c5f1a3b45144_ti4_test"
+    }
+  },
+  "native_readonly": [
+    {
+      "log": "pool-caller-transaction-red-r1.log",
+      "identity": {
+        "database": "aos_test_0038486b4ade_ti4_test",
+        "cluster": "7693564235776004128"
+      },
+      "pool_reservations": [],
+      "pool_events": 0,
+      "canary": {
+        "reservations": 0,
+        "events": 0
+      },
+      "signed_sources": 0
+    },
+    {
+      "log": "pool-caller-transaction-green-r1.log",
+      "identity": {
+        "database": "aos_test_ee9270278656_ti4_test",
+        "cluster": "7693564235776004128"
+      },
+      "pool_reservations": [
+        {
+          "pool_id": "pool-txn:3317cae9890842f39b0c9dce1ec25d4c",
+          "agent_run_id": "pool-txn-run:857a2996a1f1448ba85ec701e363c6c9",
+          "status": "reserved"
+        }
+      ],
+      "pool_events": 1,
+      "canary": {
+        "reservations": 0,
+        "events": 0
+      },
+      "signed_sources": 0
+    },
+    {
+      "log": "pool-caller-transaction-adjacent-r1.log",
+      "identity": {
+        "database": "aos_test_c5f1a3b45144_ti4_test",
+        "cluster": "7693564235776004128"
+      },
+      "pool_reservations": [
+        {
+          "pool_id": "pool-txn:c90e8c552b7b421db07c36fd5955f570",
+          "agent_run_id": "pool-txn-run:8bd24824dc504e54ae7afea8e6d33244",
+          "status": "reserved"
+        },
+        {
+          "pool_id": "pool-txn:d225a4011386442ab0647b43b6f9a627",
+          "agent_run_id": "pool-replay:45ea9e523adf47dfb39179b767b9d0f6",
+          "status": "reserved"
+        }
+      ],
+      "pool_events": 2,
+      "canary": {
+        "reservations": 0,
+        "events": 0
+      },
+      "signed_sources": 0
+    }
+  ],
+  "actual_tests": "caller rollback/commit/exception, same native xid, uncommitted observer invisibility, lock timeout/release, replay before and after callerCOMMIT,10 connection negatives",
+  "limits": [
+    "Pool transaction kernel only; no Source/physical capacity/Intent authority.",
+    "Fixture READY/pools are negative/transaction fixtures, not legitimate business positives.",
+    "Source role profile/sharedoccupation/budget+Intent/cutover/unknown and COMMITTTL still pending."
+  ],
+  "formal_resources_touched": false,
+  "full_goal_complete": false
+}

@@ -6,6 +6,9 @@ import json
 import uuid
 from datetime import UTC, datetime
 
+import psycopg
+from psycopg.pq import TransactionStatus
+
 from aos_api.aip_agent_registry_store import (
     AipAgentRegistryConflict,
     AipAgentRegistryTransitionBlocked,
@@ -33,96 +36,136 @@ class AipModelCapacityReservationGate:
             raise AipAgentRegistryTransitionBlocked("capacity_exact_resolution_required")
         exact = self._exact_resolution(resolution, scope=scope)
         with self._connect_factory(scope) as conn:
-            pool = conn.execute(
-                """SELECT h.pool_id,h.current_revision,r.max_concurrency,
-                          r.max_token_units,r.token_unit_per_reservation,r.lease_seconds
-                   FROM aip_model_capacity_pool_head h
-                   JOIN aip_model_capacity_pool_revision r
-                     ON r.org_id=h.org_id AND r.project_id=h.project_id
-                    AND r.pool_id=h.pool_id AND r.revision=h.current_revision
-                   WHERE h.org_id=%s AND h.project_id=%s
-                     AND r.route_id=%s AND r.route_revision=%s AND r.route_hash=%s
-                     AND r.model_id=%s AND r.model_revision=%s AND r.model_hash=%s
-                     AND r.provider_id=%s AND r.provider_revision=%s AND r.provider_hash=%s
-                     AND r.lifecycle='active'
-                   FOR UPDATE OF h""",
-                (*scope.key, *exact),
+            reservation_id, wrote = self._reserve_pool(conn, scope, exact, agent_run_id)
+            if wrote:
+                conn.commit()
+            return reservation_id
+
+    def reserve_pool_in_transaction(
+        self,
+        conn: psycopg.Connection,
+        scope: TenantScope,
+        resolution: ModelRouteResolution,
+        agent_run_id: str,
+    ) -> str:
+        """Reserve the ordinary pool quantum without ending the caller transaction.
+
+        This retains the route-pool algorithm only. Physical Source authority,
+        shared occupancy and send permission belong to the future joint gate.
+        """
+        if (type(scope) is not TenantScope or type(agent_run_id) is not str
+            or not 1 <= len(agent_run_id) <= 200
+            or agent_run_id != agent_run_id.strip()):
+            raise AipAgentRegistryTransitionBlocked("capacity_exact_resolution_required")
+        exact = self._exact_resolution(resolution, scope=scope)
+        if (type(conn) is not psycopg.Connection or conn.closed or conn.autocommit
+            or conn.read_only or conn.info.transaction_status != TransactionStatus.INTRANS):
+            raise AipAgentRegistryTransitionBlocked("capacity_caller_transaction_required")
+        identity = conn.execute("""SELECT current_user AS role,
+            current_setting('aos.org_id',true) AS org_id,
+            current_setting('aos.project_id',true) AS project_id,
+            current_setting('transaction_isolation') AS isolation,
+            current_setting('transaction_read_only') AS read_only""").fetchone()
+        if (not isinstance(identity, dict)
+            or (identity.get("role"), identity.get("org_id"), identity.get("project_id"),
+                identity.get("isolation"), identity.get("read_only"))
+            != ("aos_runtime", *scope.key, "serializable", "off")):
+            raise AipAgentRegistryTransitionBlocked("capacity_caller_transaction_required")
+        reservation_id, _ = self._reserve_pool(conn, scope, exact, agent_run_id)
+        return reservation_id
+
+    def _reserve_pool(
+        self, conn, scope: TenantScope, exact: tuple[object, ...], agent_run_id: str,
+    ) -> tuple[str, bool]:
+        pool = conn.execute(
+            """SELECT h.pool_id,h.current_revision,r.max_concurrency,
+                      r.max_token_units,r.token_unit_per_reservation,r.lease_seconds
+               FROM aip_model_capacity_pool_head h
+               JOIN aip_model_capacity_pool_revision r
+                 ON r.org_id=h.org_id AND r.project_id=h.project_id
+                AND r.pool_id=h.pool_id AND r.revision=h.current_revision
+               WHERE h.org_id=%s AND h.project_id=%s
+                 AND r.route_id=%s AND r.route_revision=%s AND r.route_hash=%s
+                 AND r.model_id=%s AND r.model_revision=%s AND r.model_hash=%s
+                 AND r.provider_id=%s AND r.provider_revision=%s AND r.provider_hash=%s
+                 AND r.lifecycle='active'
+               FOR UPDATE OF h""",
+            (*scope.key, *exact),
+        ).fetchone()
+        if pool is None:
+            raise AipAgentRegistryTransitionBlocked("capacity_pool_authority_unavailable")
+        request_hash = self._request_hash(
+            agent_run_id,
+            exact,
+            pool["pool_id"],
+            pool["current_revision"],
+            pool["token_unit_per_reservation"],
+        )
+        replay = conn.execute(
+            """SELECT *,expires_at>NOW() AS is_active FROM aip_model_capacity_reservation
+               WHERE org_id=%s AND project_id=%s AND agent_run_id=%s
+               FOR UPDATE""",
+            (*scope.key, agent_run_id),
+        ).fetchone()
+        if replay is not None:
+            if replay["request_hash"] != request_hash:
+                raise AipAgentRegistryConflict("capacity reservation replay payload drifted")
+            if replay["status"] in {"reserved", "consumed"} and replay["is_active"]:
+                return replay["reservation_id"], False
+        expired = conn.execute(
+            """UPDATE aip_model_capacity_reservation
+               SET status='expired',updated_at=NOW()
+               WHERE org_id=%s AND project_id=%s AND pool_id=%s
+                 AND pool_revision=%s AND status IN ('reserved','consumed') AND expires_at<=NOW()
+               RETURNING reservation_id""",
+            (*scope.key, pool["pool_id"], pool["current_revision"]),
+        ).fetchall()
+        for row in expired:
+            self._event(conn, scope, row["reservation_id"], "expired")
+        usage = conn.execute(
+            """SELECT COUNT(*) AS request_units,COALESCE(SUM(token_units),0) AS token_units
+               FROM aip_model_capacity_reservation
+               WHERE org_id=%s AND project_id=%s AND pool_id=%s
+                 AND pool_revision=%s AND status IN ('reserved','consumed') AND expires_at>NOW()""",
+            (*scope.key, pool["pool_id"], pool["current_revision"]),
+        ).fetchone()
+        next_requests = int(usage["request_units"]) + 1
+        next_tokens = int(usage["token_units"]) + int(pool["token_unit_per_reservation"])
+        if next_requests > int(pool["max_concurrency"]):
+            raise AipAgentRegistryTransitionBlocked("capacity_concurrency_exhausted")
+        if next_tokens > int(pool["max_token_units"]):
+            raise AipAgentRegistryTransitionBlocked("capacity_token_units_exhausted")
+        if replay is None:
+            reservation_id = f"capres-{uuid.uuid4().hex}"
+            row = conn.execute(
+                """INSERT INTO aip_model_capacity_reservation
+               (org_id,project_id,reservation_id,pool_id,pool_revision,agent_run_id,
+                request_hash,request_units,token_units,status,expires_at)
+               VALUES (%s,%s,%s,%s,%s,%s,%s,1,%s,'reserved',
+                       NOW()+(%s * INTERVAL '1 second'))
+               RETURNING reservation_id""",
+                (
+                    *scope.key,
+                    reservation_id,
+                    pool["pool_id"],
+                    pool["current_revision"],
+                    agent_run_id,
+                    request_hash,
+                    pool["token_unit_per_reservation"],
+                    pool["lease_seconds"],
+                ),
             ).fetchone()
-            if pool is None:
-                raise AipAgentRegistryTransitionBlocked("capacity_pool_authority_unavailable")
-            request_hash = self._request_hash(
-                agent_run_id,
-                exact,
-                pool["pool_id"],
-                pool["current_revision"],
-                pool["token_unit_per_reservation"],
-            )
-            replay = conn.execute(
-                """SELECT *,expires_at>NOW() AS is_active FROM aip_model_capacity_reservation
-                   WHERE org_id=%s AND project_id=%s AND agent_run_id=%s
-                   FOR UPDATE""",
-                (*scope.key, agent_run_id),
-            ).fetchone()
-            if replay is not None:
-                if replay["request_hash"] != request_hash:
-                    raise AipAgentRegistryConflict("capacity reservation replay payload drifted")
-                if replay["status"] in {"reserved", "consumed"} and replay["is_active"]:
-                    return replay["reservation_id"]
-            expired = conn.execute(
+        else:
+            row = conn.execute(
                 """UPDATE aip_model_capacity_reservation
-                   SET status='expired',updated_at=NOW()
-                   WHERE org_id=%s AND project_id=%s AND pool_id=%s
-                     AND pool_revision=%s AND status IN ('reserved','consumed') AND expires_at<=NOW()
+                   SET status='reserved',expires_at=NOW()+(%s * INTERVAL '1 second'),
+                       updated_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND reservation_id=%s
                    RETURNING reservation_id""",
-                (*scope.key, pool["pool_id"], pool["current_revision"]),
-            ).fetchall()
-            for row in expired:
-                self._event(conn, scope, row["reservation_id"], "expired")
-            usage = conn.execute(
-                """SELECT COUNT(*) AS request_units,COALESCE(SUM(token_units),0) AS token_units
-                   FROM aip_model_capacity_reservation
-                   WHERE org_id=%s AND project_id=%s AND pool_id=%s
-                     AND pool_revision=%s AND status IN ('reserved','consumed') AND expires_at>NOW()""",
-                (*scope.key, pool["pool_id"], pool["current_revision"]),
+                (pool["lease_seconds"], *scope.key, replay["reservation_id"]),
             ).fetchone()
-            next_requests = int(usage["request_units"]) + 1
-            next_tokens = int(usage["token_units"]) + int(pool["token_unit_per_reservation"])
-            if next_requests > int(pool["max_concurrency"]):
-                raise AipAgentRegistryTransitionBlocked("capacity_concurrency_exhausted")
-            if next_tokens > int(pool["max_token_units"]):
-                raise AipAgentRegistryTransitionBlocked("capacity_token_units_exhausted")
-            if replay is None:
-                reservation_id = f"capres-{uuid.uuid4().hex}"
-                row = conn.execute(
-                    """INSERT INTO aip_model_capacity_reservation
-                   (org_id,project_id,reservation_id,pool_id,pool_revision,agent_run_id,
-                    request_hash,request_units,token_units,status,expires_at)
-                   VALUES (%s,%s,%s,%s,%s,%s,%s,1,%s,'reserved',
-                           NOW()+(%s * INTERVAL '1 second'))
-                   RETURNING reservation_id""",
-                    (
-                        *scope.key,
-                        reservation_id,
-                        pool["pool_id"],
-                        pool["current_revision"],
-                        agent_run_id,
-                        request_hash,
-                        pool["token_unit_per_reservation"],
-                        pool["lease_seconds"],
-                    ),
-                ).fetchone()
-            else:
-                row = conn.execute(
-                    """UPDATE aip_model_capacity_reservation
-                       SET status='reserved',expires_at=NOW()+(%s * INTERVAL '1 second'),
-                           updated_at=NOW()
-                       WHERE org_id=%s AND project_id=%s AND reservation_id=%s
-                       RETURNING reservation_id""",
-                    (pool["lease_seconds"], *scope.key, replay["reservation_id"]),
-                ).fetchone()
-            self._event(conn, scope, row["reservation_id"], "reserved")
-            conn.commit()
-            return row["reservation_id"]
+        self._event(conn, scope, row["reservation_id"], "reserved")
+        return row["reservation_id"], True
 
     def consume(self, scope: TenantScope, reservation_id: str) -> None:
         self._terminal(scope, reservation_id, "consumed")
