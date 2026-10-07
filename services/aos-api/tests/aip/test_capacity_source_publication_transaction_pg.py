@@ -28,6 +28,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_native_current_installation_rechecks_original_registry_tables',
         'test_native_current_installation_rechecks_native_verifier',
         'test_exact_public_source_composition_preserves_original_issuer_checker',
+        'test_controlled_source_signer_binds_original_jwt_pending_and_private_key',
         'test_exact_public_source_rejects_live_issuer_drift',
         'test_exact_public_source_rejects_bad_signature_and_unfinished_commit',
         'test_native_committed_sources_share_one_physical_account',
@@ -4983,3 +4984,102 @@ def test_exact_public_source_rejects_bad_signature_and_unfinished_commit(exact_p
     with isolated_owner() as owner:
         assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.source_pending').fetchone()['n']==0
         assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.source_publication').fetchone()['n']==0
+
+
+@pytest.mark.parametrize('native_original_fact_reader',['shared','distinct'],indirect=True)
+def test_controlled_source_signer_binds_original_jwt_pending_and_private_key(exact_public_source_caller,tmp_path):
+    from aos_api.aip_provider_capacity_source_issuer import (
+        ProviderCapacitySourceSignerConfig,sign_prepared_capacity_source,capacity_source_preparation_bytes,
+        ProviderCapacityIssuanceBlocked)
+    from aos_api.aip_provider_capacity_source_contracts import CapacitySourceDeploymentTarget
+    from aos_api.asset_registry.canonical_json import canonical_json
+    from cryptography.hazmat.primitives.serialization import Encoding,PrivateFormat,NoEncryption
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from psycopg.types.json import Jsonb
+    from pydantic import SecretStr
+    from uuid import uuid4
+    import json,os
+    from dataclasses import replace
+    caller,_,material,_=exact_public_source_caller
+    command,_,_=material['actual_command']()
+    packet=capacity_source_preparation_bytes(command)
+    asset='controlled-source-'+uuid4().hex
+    prepared=caller.execute('SELECT * FROM public.prepare_capacity_source(%s,%s,%s,%s::jsonb)',
+        (packet,command.idempotency_key,asset,Jsonb(material['refs'][-1]))).fetchone()
+    raw=bytes(prepared['source_raw']);doc=json.loads(raw)
+    folder=tmp_path.resolve()/'controlled-signer';folder.mkdir(mode=0o700)
+    key_file=folder/'private.ed25519';key_bytes=material['source_key'].private_bytes(Encoding.Raw,PrivateFormat.Raw,NoEncryption())
+    key_file.write_bytes(key_bytes);key_file.chmod(0o600)
+    root=material['provider'].get_trust_root(publisher=doc['publisher'],key_id=doc['keyId'])
+    config=ProviderCapacitySourceSignerConfig(key_file,material['provider'],
+        CapacitySourceDeploymentTarget.model_validate(doc['deploymentTarget']),doc['publisher'],doc['keyId'],root.revision)
+    def sign(data=raw,cmd=command,cfg=config,permit_body=material['documents'][-1][0],permit_sig=material['documents'][-1][1]):
+        return sign_prepared_capacity_source(caller,cmd,prepared_raw=data,source_asset_id=asset,
+            permit_ref=material['refs'][-1],permit_raw=permit_body,permit_signature=permit_sig,config=cfg)
+    # Native pending stays unchanged; a coherent caller-generated replacement
+    # must not become signing authority even though its JSON profile is valid.
+    for field,value in [('requestHash','0'*64),('physicalAccountId',str(uuid4()))]:
+        altered=dict(doc);altered[field]=value
+        with pytest.raises(ProviderCapacityIssuanceBlocked):sign(canonical_json(altered))
+    altered=dict(doc);altered['issuanceContext']={**doc['issuanceContext'],'makerSubject':'other-maker'}
+    with pytest.raises(ProviderCapacityIssuanceBlocked):sign(canonical_json(altered))
+    with pytest.raises(ProviderCapacityIssuanceBlocked):sign(cmd=command.model_copy(update={'bearer_token':SecretStr('invalid.jwt.token')}))
+    for field,value in [('oidcIssuer','https://other.example.test'),('oidcAudience','other-audience')]:
+        altered=dict(doc);altered['issuanceContext']={**doc['issuanceContext'],field:value}
+        with pytest.raises(ProviderCapacityIssuanceBlocked):sign(canonical_json(altered))
+    key_file.write_bytes(Ed25519PrivateKey.generate().private_bytes(Encoding.Raw,PrivateFormat.Raw,NoEncryption()))
+    with pytest.raises(ProviderCapacityIssuanceBlocked):sign()
+    key_file.write_bytes(key_bytes);key_file.chmod(0o644)
+    with pytest.raises(ProviderCapacityIssuanceBlocked):sign()
+    key_file.chmod(0o600)
+    for field,value in [('transactionId',str(int(doc['issuanceContext']['transactionId'])+1)),
+                        ('backendPid',doc['issuanceContext']['backendPid']+1),('attemptId',str(uuid4()))]:
+        altered=dict(doc);altered['issuanceContext']={**doc['issuanceContext'],field:value}
+        with pytest.raises(ProviderCapacityIssuanceBlocked):
+            with caller.transaction():sign(canonical_json(altered))
+    with pytest.raises(ProviderCapacityIssuanceBlocked):
+        with caller.transaction():sign(cmd=command.model_copy(update={'idempotency_key':'other-original-attempt'}))
+    for cfg in (replace(config,root_revision='sha256:'+'0'*64),
+                replace(config,publisher='other-controlled-signer'),
+                replace(config,deployment_target=config.deployment_target.model_copy(update={'database_oid':config.deployment_target.database_oid+1}))):
+        with pytest.raises(ProviderCapacityIssuanceBlocked):sign(cfg=cfg)
+    with pytest.raises(ProviderCapacityIssuanceBlocked):sign(permit_sig=b'0'*64)
+    changed_permit=json.loads(material['documents'][-1][0]);changed_permit['signerRootRevision']='sha256:'+'0'*64
+    with pytest.raises(ProviderCapacityIssuanceBlocked):sign(permit_body=canonical_json(changed_permit))
+    symbolic=folder/'symbolic.ed25519';symbolic.symlink_to(key_file)
+    with pytest.raises(ProviderCapacityIssuanceBlocked):sign(cfg=replace(config,private_key_file=symbolic))
+    hardlinked=folder/'hardlinked.ed25519';os.link(key_file,hardlinked)
+    with pytest.raises(ProviderCapacityIssuanceBlocked):sign()
+    hardlinked.unlink()  # Own temporary key link only; no DB/volume/backup deletion.
+    folder.chmod(0o755)
+    with pytest.raises(ProviderCapacityIssuanceBlocked):sign()
+    folder.chmod(0o700)
+    root_path=material['provider'].path;original_root_bytes=root_path.read_bytes()
+    for field,value in [('revokedAt',doc['issuedAt']),('notAfter',doc['issuedAt'])]:
+        changed_roots=json.loads(original_root_bytes)
+        for entry in changed_roots['trustRoots']:
+            if (entry['publisher'],entry['keyId'])==(doc['publisher'],doc['keyId']):entry[field]=value
+        try:
+            root_path.write_text(json.dumps(changed_roots))
+            with pytest.raises(ProviderCapacityIssuanceBlocked):sign()
+        finally:root_path.write_bytes(original_root_bytes)
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    with isolated_owner() as owner:
+        assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.source_publication').fetchone()['n']==0
+    class DelegatingConnection:
+        def __getattr__(self,name):return getattr(caller,name)
+    with pytest.raises(ProviderCapacityIssuanceBlocked):
+        sign_prepared_capacity_source(DelegatingConnection(),command,prepared_raw=raw,source_asset_id=asset,
+            permit_ref=material['refs'][-1],permit_raw=material['documents'][-1][0],
+            permit_signature=material['documents'][-1][1],config=config)
+    signature=sign();assert len(signature)==64
+    material['source_key'].public_key().verify(signature,raw)
+    caller.execute('SELECT * FROM public.commit_capacity_source(%s,%s,%s)',
+        (command.idempotency_key,raw,signature)).fetchone();caller.commit()
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    with isolated_owner() as owner:
+        row=owner.execute("SELECT p.content_hash=encode(sha256(p.source_raw),'hex') AS hash_ok,"
+            "aos_ed25519.verify(p.signature,p.source_raw,decode(s.signed_facts->>'sourceSignerPublicKey','base64')) AS signature_ok,s.finalized "
+            "FROM aos_capacity_publication_private.source_publication p JOIN aos_capacity_publication_private.source_pending s "
+            "ON s.attempt_id=p.attempt_id WHERE p.asset_id=%s",(asset,)).fetchone()
+        assert row==dict(hash_ok=True,signature_ok=True,finalized=True)

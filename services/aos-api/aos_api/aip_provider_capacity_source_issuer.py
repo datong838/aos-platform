@@ -187,3 +187,156 @@ def capacity_source_preparation_bytes(command):
             authentication=hint.model_dump(mode='json',by_alias=True)))
     except Exception:
         raise ProviderCapacityIssuanceBlocked('CAPACITY_SOURCE_PREPARATION_AUTHENTICATION_REQUIRED') from None
+
+
+from dataclasses import dataclass, field
+from pathlib import Path
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderCapacitySourceSignerConfig:
+    """Server-controlled configuration; never part of an issuance request.
+
+    A safe file and valid root are not a formal deployment receipt. The service
+    must load this configuration through its separately authorized installation.
+    """
+    private_key_file: Path = field(repr=False)
+    trust_roots: object = field(repr=False)
+    deployment_target: object
+    publisher: str
+    key_id: str
+    root_revision: str
+
+    def __post_init__(self):
+        import re
+        from aos_api.asset_registry.signature import FileTrustRootProvider
+        from aos_api.aip_provider_capacity_source_contracts import CapacitySourceDeploymentTarget, _identifier
+        try:
+            path = Path(self.private_key_file)
+            if (not path.is_absolute() or '..' in path.parts
+                or type(self.trust_roots) is not FileTrustRootProvider
+                or type(self.deployment_target) is not CapacitySourceDeploymentTarget
+                or not re.fullmatch(r'sha256:[0-9a-f]{64}', self.root_revision)):
+                raise ValueError('exact service configuration required')
+            _identifier(self.publisher); _identifier(self.key_id)
+            CapacitySourceDeploymentTarget.model_validate(self.deployment_target.model_dump(mode='python', by_alias=True))
+            object.__setattr__(self, 'private_key_file', path)
+        except (ValueError, TypeError, OSError):
+            raise ProviderCapacityIssuanceBlocked('CAPACITY_SOURCE_SIGNER_CONFIG_REQUIRED') from None
+
+
+def _read_capacity_source_signing_key(path):
+    """Walk pinned directory descriptors; private key bytes never leave here."""
+    import os, stat
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    directory = descriptor = None
+    try:
+        flags = os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW
+        directory = os.open('/', flags | os.O_DIRECTORY)
+        for part in path.parts[1:-1]:
+            next_directory = os.open(part, flags | os.O_DIRECTORY, dir_fd=directory)
+            os.close(directory); directory = next_directory
+        parent = os.fstat(directory)
+        if parent.st_uid != os.geteuid() or stat.S_IMODE(parent.st_mode) != 0o700:
+            raise ValueError('private signer directory required')
+        descriptor = os.open(path.name, flags | os.O_NONBLOCK, dir_fd=directory)
+        info = os.fstat(descriptor)
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid()
+            or info.st_nlink != 1 or stat.S_IMODE(info.st_mode) != 0o600 or info.st_size != 32):
+            raise ValueError('private bounded signing key required')
+        raw = os.read(descriptor, 33)
+        final = os.fstat(descriptor)
+        if (len(raw) != 32 or (final.st_dev, final.st_ino, final.st_size, final.st_mtime_ns, final.st_ctime_ns)
+            != (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)):
+            raise ValueError('stable exact Ed25519 key required')
+        return Ed25519PrivateKey.from_private_bytes(raw)
+    finally:
+        if descriptor is not None: os.close(descriptor)
+        if directory is not None: os.close(directory)
+
+
+def sign_prepared_capacity_source(conn, command, *, prepared_raw, source_asset_id,
+    permit_ref, permit_raw, permit_signature, config):
+    """Sign only current original pending bytes for a freshly authenticated JWT.
+
+    No arbitrary signing callback, caller principal, key or expected digest is
+    accepted. This does not commit, consume a Source or authorize execution.
+    """
+    import base64, hashlib, json
+    import psycopg
+    from datetime import UTC, datetime
+    from psycopg.types.json import Jsonb
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+    from aos_api.asset_registry.signature import is_trust_root_current, verify_ed25519
+    from aos_api.aip_provider_capacity_formal_boundary import require_capacity_issuer_identity
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from aos_api.aip_provider_capacity_publication_contracts import (
+        PublishedProviderCapacitySourceV2, ProviderCapacitySigningPermit, parse_signed_capacity_body)
+    try:
+        if (type(conn) is not psycopg.Connection
+            or type(config) is not ProviderCapacitySourceSignerConfig
+            or type(prepared_raw) is not bytes or type(permit_raw) is not bytes
+            or type(permit_signature) is not bytes or len(permit_signature) != 64):
+            raise ValueError('original signing inputs required')
+        config.__post_init__()
+        # Revalidation occurs here, independently of the preparation caller.
+        command_raw = capacity_source_preparation_bytes(command)
+        packet = json.loads(command_raw)
+        source = parse_signed_capacity_body(prepared_raw, PublishedProviderCapacitySourceV2)
+        permit = parse_signed_capacity_body(permit_raw, ProviderCapacitySigningPermit)
+        ref = FormalExactRef.model_validate(permit_ref)
+        context = source.issuance_context.model_dump(mode='json', by_alias=True)
+        if (source.asset_id != source_asset_id or source.request_hash != packet['requestHash']
+            or source.tenant.model_dump(mode='json', by_alias=True) != {'orgId':'org-org','projectId':'dev-project'}
+            or any(context[key] != value for key, value in packet['authentication'].items())
+            or source.signing_permit_ref != ref
+            or ref.asset_type != 'ProviderCapacitySigningPermitRevision'
+            or (ref.asset_id, ref.revision, ref.content_hash) != (permit.asset_id, permit.revision, hashlib.sha256(permit_raw).hexdigest())
+            or permit.tenant != source.tenant or permit.source_policy_ref != source.source_policy_ref
+            or source.deployment_target != config.deployment_target or permit.deployment_target != config.deployment_target
+            or (source.publisher, source.key_id) != (config.publisher, config.key_id)
+            or (permit.signer_publisher, permit.signer_key_id, permit.signer_root_revision)
+                != (config.publisher, config.key_id, config.root_revision)):
+            raise ValueError('exact authenticated transcript and permit required')
+        require_capacity_issuer_identity(conn, TenantScope('org-org','dev-project'))
+        if (not conn.pgconn.used_password
+            or conn.info.get_parameters().get('require_auth') != 'scram-sha-256'):
+            raise ValueError('original private SCRAM session required')
+        native = conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+        if (context['transactionId'], context['backendPid']) != (native['xid'], native['pid']):
+            raise ValueError('same original pending transaction required')
+        def recheck():
+            if capacity_source_preparation_bytes(command) != command_raw:
+                raise ValueError('current original JWT binding changed')
+            current = conn.execute('SELECT * FROM public.prepare_capacity_source(%s,%s,%s,%s::jsonb)',
+                (command_raw, command.idempotency_key, source_asset_id,
+                 Jsonb(ref.model_dump(mode='json', by_alias=True)))).fetchone()
+            if (not current or bytes(current['source_raw']) != prepared_raw
+                or str(current['account_id']) != source.physical_account_id
+                or str(current['attempt_id']) != context['attemptId']):
+                raise ValueError('exact current pending bytes required')
+            now = datetime.now(UTC)
+            roots = config.trust_roots.snapshot()
+            root = roots.get_trust_root(publisher=config.publisher, key_id=config.key_id)
+            if (not root or root.revision != config.root_revision
+                or not is_trust_root_current(root, publisher=config.publisher, key_id=config.key_id, checked_at=now)
+                or base64.b64encode(root.public_key).decode('ascii') != permit.signer_public_key
+                or not permit.valid_from <= now < permit.valid_until
+                or not source.valid_from <= now < source.valid_until
+                or source.issued_at > now or source.issuance_context.authentication_expires_at <= now
+                or not verify_ed25519(payload=permit_raw,
+                    signature_b64=base64.b64encode(permit_signature).decode('ascii'),
+                    publisher=permit.publisher, key_id=permit.key_id, trust_roots=roots, verified_at=now)):
+                raise ValueError('current original permit and signer root required')
+            return root
+        root = recheck()
+        key = _read_capacity_source_signing_key(config.private_key_file)
+        if key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw) != root.public_key:
+            raise ValueError('configured private key does not match current permit')
+        # Authentication, native pending and roots are checked again after I/O.
+        current_root = recheck()
+        if current_root != root:
+            raise ValueError('signer root changed while reading key')
+        return key.sign(prepared_raw)
+    except Exception:
+        raise ProviderCapacityIssuanceBlocked('CAPACITY_SOURCE_CONTROLLED_SIGNING_REQUIRED') from None

@@ -1,0 +1,111 @@
+{
+  "schema": "aos-controlled-source-signer-next-contract-investigation/v1",
+  "authority": "AOS-001456",
+  "head": "c833b96e68ba1a78d1d5762f8f5ea1a49846e95c",
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_source_issuer.py": {
+      "sha256": "5b9b1e9e9c1a09d2a8a2bf142cd61af0e1325fe33f3102086cab48a79ce13e7e",
+      "top_level_functions": [
+        "authenticate_capacity_issuance_command",
+        "check_signed_capacity_documents",
+        "check_native_capacity_supplier_inputs",
+        "capacity_source_preparation_bytes"
+      ]
+    },
+    "services/aos-api/aos_api/aip_provider_capacity_publication_contracts.py": {
+      "sha256": "ec8206758fdf6d7a519a8cb639887e280bf65d2eed1d5a6fb9f6f78b3a90bf0c",
+      "top_level_functions": [
+        "_refs",
+        "parse_signed_capacity_body",
+        "freeze_capacity_trust_root_snapshot"
+      ]
+    },
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": {
+      "sha256": "209384879cc16ccbe650ac9177adaa05115e8b5e73b1633eeb55c841648ca5ba",
+      "top_level_functions": [
+        "install_original_fact_boundary",
+        "require_original_fact_boundary",
+        "_original_evidence_boundary_sql",
+        "_original_facts_sql",
+        "_original_signed_facts_sql",
+        "_source_transaction_statements",
+        "install_source_transaction_boundary",
+        "source_transaction_function_manifest",
+        "_trusted_function_manifest",
+        "original_registry_function_manifest",
+        "_original_registry_statements",
+        "require_source_transaction_functions",
+        "_source_transaction_table_catalog",
+        "require_source_transaction_tables",
+        "source_private_installation_audit_sql",
+        "_public_source_call_guard_sql",
+        "source_public_entry_statements",
+        "source_public_entry_manifest",
+        "require_source_public_entry_definitions"
+      ]
+    },
+    "services/aos-api/aos_api/oidc.py": {
+      "sha256": "cea60ce57c5c1cf37764941598e1225989aead67353f66c08a185bab3393f89a",
+      "top_level_functions": [
+        "_env",
+        "allow_dev",
+        "external_only",
+        "issuer",
+        "audience",
+        "dev_secret",
+        "jwks_url",
+        "jwks_urls",
+        "issuers",
+        "token_url",
+        "client_id",
+        "client_id_ref",
+        "prefer_rs256",
+        "_ensure_rsa",
+        "local_jwks",
+        "public_config",
+        "issue_password_token",
+        "issue_dev_token",
+        "_verify_hs256",
+        "_verify_local_rs256",
+        "_verify_jwks",
+        "looks_like_jwt",
+        "verify_access_token"
+      ]
+    },
+    "services/aos-api/aos_api/aip_provider_capacity_issuer_connection.py": {
+      "sha256": "585beea2e769fc05ab30b0c6f6e5a39446a908eeb6f926e06794856504f1d6cc",
+      "top_level_functions": [
+        "connect_capacity_issuer"
+      ]
+    }
+  },
+  "candidates": [
+    {
+      "step": "controlled JWT signer and original pending transcript binding",
+      "authorized": "isolated implementation under current source issuer/transaction parent scopes",
+      "depends": "current formal key/deployment receipt for production signing; no production key request or signing now"
+    },
+    {
+      "step": "current consumer and formal installation",
+      "authorized": "design and isolated implementation only",
+      "depends": "authentic controlled signer plus exact deployment gate; current consumer file absent"
+    }
+  ],
+  "observed": [
+    "capacity_source_preparation_bytes authenticates original JWT but emits explicitly untrusted four identity hints; this is not controlled signing authority",
+    "PublishedProviderCapacitySourceV2 binds authentication hints plus issuer role/native xid/backend pid/attempt UUID, requires exp after issuedAt; parser is not identity authority",
+    "prepare_original_source persists exact command bytes/source bytes in native pending, same-key replay requires same raw/permit/xid/PID; complete signer must replay/check exact original transcript before signing",
+    "Existing exact public positive test signs directly using test-only material source_key; it does not independently reverify JWT at signing time",
+    "Controlled Source signer/current consumer absent in current runtime source; do not replace with a free signing callback or bool PASS"
+  ],
+  "required_signer_contract": [
+    "independent original external OIDC JWT revalidation at signing time and correct org-org/dev-project authenticated maker",
+    "exact request hash/refs/attempt/account/native xid/PID/transcript equality against current prepared bytes, no caller-selected facts",
+    "formal private signer key source/current signing permit and root binding, no key/JWT in SQL/receipt/log",
+    "do not sign arbitrary passed raw bytes; no runtime key callback accepted as formal authority",
+    "current permit/root/revocation/time/approval recheck and actual caller transaction COMMIT; unresolved final COMMIT wallclock TTL separate"
+  ],
+  "formal_resources_changed": false,
+  "goal_status": "active",
+  "consumer_file_exists": false
+}

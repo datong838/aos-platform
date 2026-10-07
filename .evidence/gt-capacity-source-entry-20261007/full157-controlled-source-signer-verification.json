@@ -1,0 +1,279 @@
+{
+  "schema": "aos-controlled-source-signer-verification/v1",
+  "head": "c833b96e68ba1a78d1d5762f8f5ea1a49846e95c",
+  "authority": "AOS-001456",
+  "original_functions": 17,
+  "new_functions_unchanged": 41,
+  "native_audited_total": 58,
+  "signer_negatives_per_layout": 23,
+  "public_entry_single_cause_faults": 14,
+  "native_audited_tables": 12,
+  "logs": {
+    ".evidence/gt-capacity-source-publication-20261006/controlled-source-signer-red-r1.log": {
+      "sha256": "2604c8d6ed3f4f98ecd5daa55d58eabc52fb20eed83bca825c575b75bc895193",
+      "summary": "2 failed, 375 deselected, 7 warnings in 27.39s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/controlled-source-signer-green-r1.log": {
+      "sha256": "7daa52456d85b6c7a667faa46e82861666eebc7444157d38c605312349ff218b",
+      "summary": "2 passed, 375 deselected, 7 warnings in 36.16s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/controlled-source-signer-green-r2.log": {
+      "sha256": "6e0258df7d5101c131e0ca8748f3593a5958cf452bbc134a21c719aea5d16ccb",
+      "summary": "2 passed, 375 deselected, 7 warnings in 44.41s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/controlled-source-signer-adjacent-r1.log": {
+      "sha256": "f7684bb809beddc3ead6fc807bfc68e7cd076c0683e52824f44c663aa4a21c36",
+      "summary": "7 passed, 370 deselected, 7 warnings in 108.62s (0:01:48)"
+    }
+  },
+  "readback": [
+    {
+      "database": "aos_test_0152270305d5_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": [
+        {
+          "asset_id": "controlled-source-386607e708524b33b5cc277bbc57a4ac",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true
+        }
+      ]
+    },
+    {
+      "database": "aos_test_0e6f8a47e913_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": [
+        {
+          "asset_id": "source-e3857c05ab4c45a6803845fa54b58bfb",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true
+        }
+      ]
+    },
+    {
+      "database": "aos_test_15fdd9543264_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_1a160b1d6c1a_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_26fdb7bdc3b8_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_562984a0e7b2_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": [
+        {
+          "asset_id": "controlled-source-c40281bfb49743108361e5b0f75d9944",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true
+        }
+      ]
+    },
+    {
+      "database": "aos_test_5bc185985d9b_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": [
+        {
+          "asset_id": "controlled-source-d4b1e0d4972d4d02bfee7e2d605eb0a0",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true
+        }
+      ]
+    },
+    {
+      "database": "aos_test_6a89b357b2ec_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": [
+        {
+          "asset_id": "controlled-source-c4344215c85f494aa4d571f5c48ede1f",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true
+        }
+      ]
+    },
+    {
+      "database": "aos_test_96394ec0ea7e_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_9d3d67c22966_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": [
+        {
+          "asset_id": "controlled-source-1721597f8f6d4edbadc03db0669f4c0e",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true
+        }
+      ]
+    },
+    {
+      "database": "aos_test_a057b6ae620d_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_a3277779f9d8_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_a34ff7d68b83_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_c4411406e240_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_d243cbb84df8_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_dbf34bd9e870_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": [
+        {
+          "asset_id": "source-7fad50812c1547d99e25426e380156c6",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true
+        }
+      ]
+    },
+    {
+      "database": "aos_test_ea579cd4b89c_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": [
+        {
+          "asset_id": "controlled-source-03914a4fd3294d8a92f447423c7d98c5",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true
+        }
+      ]
+    }
+  ],
+  "legacy_function_AST_preserved": true,
+  "legacy_test_AST_preserved_except_registration": true,
+  "expected_not_target_derived": true,
+  "old_issuer_source_prefix_preserved": true,
+  "old_boundary_functions_preserved": true,
+  "public_formal_grants_changed": false,
+  "isolated_temporary_public_entries": true,
+  "default_installation_changed": false,
+  "remaining": [
+    "controlled installation/image/binary integrity",
+    "formal controlled installation and current public entry receipt",
+    "formal signer configuration loading and deployment receipt",
+    "current consumer",
+    "final actual caller COMMIT TTL",
+    "full natural business chain"
+  ],
+  "trusted_extension_files": {
+    "services/aos-api/postgres-extensions/aos_ed25519/aos_ed25519--1.0.sql": "add5aff9bf5ed07b7db16793cc498b210533b9006e180a0c1b405c2b6539bb67",
+    "services/aos-api/postgres-extensions/aos_ed25519/aos_ed25519.control": "b8ed0944fec477a668418ebd4e8f7a8d8528b7a256f1fd9feca6609b2aef9d4f"
+  },
+  "binary_integrity_proved_by_catalog": false,
+  "browser": "N/A: no UI or deployment"
+}
