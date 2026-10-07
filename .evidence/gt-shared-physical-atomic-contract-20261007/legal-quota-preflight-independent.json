@@ -1,0 +1,50 @@
+{
+  "status": "INDEPENDENT_READ_ONLY_QUOTA_PREFLIGHT_VERIFIED",
+  "database": "aos_test_421ea956ac61_ti4_test",
+  "cluster": "7693564235776004128",
+  "heads": [
+    {
+      "version_num": "a0v_157"
+    }
+  ],
+  "activation_receipts": 1,
+  "approval_events": 1,
+  "active_quota": {
+    "revision": 2,
+    "content_hash": "df769060c71d6f1299da9ddae3d038619c07894ce3670dd2ced345c02fc421bf",
+    "lifecycle": "active"
+  },
+  "roles_after_fixture": [
+    {
+      "rolname": "aos_guard_approval_issuer",
+      "rolcanlogin": false,
+      "rolsuper": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_guard_policy_consumer_call",
+      "rolcanlogin": false,
+      "rolsuper": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_guard_policy_consumer_owner",
+      "rolcanlogin": false,
+      "rolsuper": false,
+      "rolbypassrls": false
+    }
+  ],
+  "business_counts": {
+    "aip_agent_run": 0,
+    "aip_model_eval_request": 0,
+    "aip_model_eval_budget_reservation": 0,
+    "aip_model_capacity_reservation": 0
+  },
+  "dev_org_quota": 0,
+  "actual_function_sha256": "9108410751fb5092721dacf39dcfbc64701e4c41e4a32d748944160155e3234f",
+  "verifier_first_attempt": "Assertion failed because verifier incorrectly named issuer aos_guard_policy_issuer_call. Actual original fixture/code uses aos_guard_approval_issuer; corrected only read-only assertion, no replay or database changes.",
+  "limitations": [
+    "Not full Eval creation/joint execution",
+    "Test-owned identities only"
+  ]
+}

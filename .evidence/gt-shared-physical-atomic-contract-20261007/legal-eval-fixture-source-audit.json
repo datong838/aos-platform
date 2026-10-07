@@ -1,0 +1,52 @@
+{
+  "schema": "aos-source-evidence/v1",
+  "observed_at": "2026-10-08T00:17:51.476546+08:00",
+  "head": "f8b0e2bd072d3ea0f19112d69a54280a0bf106cc",
+  "authority": "AOS-001485",
+  "task": "gt-shared-physical-atomic-contract-20261007",
+  "status": "LEGAL_EVAL_FIXTURE_CHAIN_NOT_ESTABLISHED",
+  "sources": {
+    "services/aos-api/tests/aip/test_model_eval_request_pg.py": {
+      "sha256": "36435295f340346e74b1c83ab7bcf23111d6b5e0ad9add16378e682fc6ecaf14",
+      "lines": 492
+    },
+    "services/aos-api/tests/aip/test_quota_policy_activation_pg.py": {
+      "sha256": "e0191218449408bf6505475542f5999ee5572626b3e9b1aad6778f41c81400b5",
+      "lines": 360
+    },
+    "services/aos-api/aos_api/aip_model_runtime_store.py": {
+      "sha256": "ebd1e1ffa38032a069048a5e8c53b3fe3e01f19a6a38fc42f7597d391b3b4c26",
+      "lines": 688
+    },
+    "services/aos-api/aos_api/aip_model_governance_policy_store.py": {
+      "sha256": "152bc3fce3c21c3ed25b64603a921d1fe86f35351e09b37b1822ed653098b60e",
+      "lines": 314
+    },
+    "services/aos-api/aos_api/aip_quota_policy_consumer.py": {
+      "sha256": "c06404e4037bcbc87ab3ba7a569883e463fbe24cd0b91ad605cfcd04be01a9ae",
+      "lines": 7
+    },
+    "services/aos-api/aos_api/aip_quota_policy_consumer.sql": {
+      "sha256": "61350ad13693a3333179b8b40f2f284f616208e3a667862ca16f51bd51d8bcbd",
+      "lines": 262
+    }
+  },
+  "findings": [
+    "Existing seeded_approved_model_eval_request directly inserts validated model and head version 7; formal_sources does not eliminate model/quota synthetic setup.",
+    "publish_model enforces original current price and exact active governance dependencies; active model also needs passed Eval gate.",
+    "Generic active quota/budget publication is rejected; original quota activation is signed proposal plus independent checker plus QuotaPolicyConsumer.",
+    "Original quota PG test establishes a reusable activation path, not a currently executed joint Eval first chain."
+  ],
+  "next": [
+    "Build exact isolated original publication chain with quota activation and real budget/price/provider sources.",
+    "Publish validated model through original store; derive actual returned head version, never copy fixture version 7.",
+    "Create original Eval suite/contract/request/independent approval; wire unique execution Intent and joint owner under separately registered product Lease."
+  ],
+  "not_proven": [
+    "Full legal fixture runtime",
+    "Joint physical ordinary/Eval transaction",
+    "Formal business or external execution"
+  ],
+  "product_modified": false,
+  "database_accessed": false
+}

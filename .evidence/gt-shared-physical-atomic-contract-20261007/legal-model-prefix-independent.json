@@ -1,0 +1,45 @@
+{
+  "status": "READ_ONLY_LEGAL_MODEL_PREFIX_VERIFIED",
+  "database": "aos_test_ff3f78ea18d6_ti4_test",
+  "cluster": "7693564235776004128",
+  "model_hash": "51489e06e26d6883f58e5a8500d5096e00b84ce4d0544ba2b3dc037411fc0183",
+  "model_lifecycle": "validated",
+  "unique_publication_receipt": [
+    {
+      "operation": "registered_model.publish",
+      "result_ref": {
+        "revision": 1,
+        "resourceId": "joint-prefix-model-ebfef6faaf1f434fa43a0b78cf5b897f",
+        "contentHash": "51489e06e26d6883f58e5a8500d5096e00b84ce4d0544ba2b3dc037411fc0183",
+        "resourceType": "RegisteredModelRevision"
+      }
+    }
+  ],
+  "exact_current_quota_budget": true,
+  "roles_restored": [
+    {
+      "rolname": "aos_budget_consumer_call",
+      "rolcanlogin": false
+    },
+    {
+      "rolname": "aos_guard_approval_issuer",
+      "rolcanlogin": false
+    },
+    {
+      "rolname": "aos_guard_policy_consumer_call",
+      "rolcanlogin": false
+    }
+  ],
+  "business_counts": {
+    "aip_model_eval_request": 0,
+    "aip_agent_run": 0,
+    "aip_model_eval_budget_reservation": 0,
+    "aip_model_capacity_reservation": 0
+  },
+  "canary_model": 0,
+  "limitations": [
+    "Original Suite/Contract governance provenance",
+    "Eval request approval and unique execution Intent",
+    "Joint physical transaction"
+  ]
+}

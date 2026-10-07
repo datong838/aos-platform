@@ -94,3 +94,23 @@ Eval：现有 `AipModelEvalRequestStore`持久化一等申请、`ModelEvalAction
 因此精确新增候选文件为aos_api/aip_model_eval_execution_contracts.py、aos_api/aip_model_eval_execution_owner.py及tests/aip/test_model_eval_execution_owner_pg.py；需复用原request/action/budget并接shared physical及一次真实Eval Intent，不把持久申请或hold helper当执行完成。若需公开HTTP/工作台接口，其路由/主app/页面另按实际依赖登记，不能从当前eval-candidates页面推断已接通。这些候选仍未取得代码Lease。
 
 下一实际研发应优先解决受控joint producer的权威来源与合法创建fixture，再取完整代码Scope；不继续重复前轮已通过native primitives，不为维持进展制造无意义提交。formal Source/八facts/效果权限不足只关闭发送，隔离实施和负门仍继续。完整长程Goal不缩减。
+
+## 10. 合法 Eval 前置资料审计（2026-10-08，源码证据）
+
+原 seeded_approved_model_eval_request 并非完整合法创建链：直接 INSERT validated RegisteredModel/head version=7；默认 Provider/Price 直接插入，Quota 使用历史种子和合成 approvalRef。formal_sources 仅替换部分 budget/provider/price，仍保留合成 Quota 与直接写入 Model。原申请/审批测试的局部价值保留，不能据此宣称全部前置来源合法。精确源码 hash 见 legal-eval-fixture-source-audit.json；本次没有运行该 fixture 或访问数据库。
+
+原 publish_model 会核当前 Price 与 exact active Quota/Budget，active Model 另需原已通过 Eval；不能通过绕过 Store 来消除依赖。通用 governance Store 明确拒绝直接发布 active Quota/Budget。已找到原 Quota 合法隔离路径 signed_quota_case/approved_quota：草稿发布→签名提案→独立 checker/Issuer→专用 QuotaPolicyConsumer→exact active 回读，不能复制历史种子代替。隔离身份/bootstrap 本身不授正式运行权。
+
+下一验收资料应复用原 Quota 激活、真实 Budget/Provider/Price 来源，通过原 Store 发布 validated Model，再从实际 head 推导 expectedHeadVersion，创建原 Suite/Contract/Request/独立审批。最后联合 Owner/唯一 Intent 仍需完整新代码 Lease与文件方案；当前尚无整链正向运行证据。优先研究这条创建链，第二候选仍为费用 fence 全入口切换。
+
+### §10 配额前置门原生验证计划
+
+只新增本目录 run_legal_quota_preflight.py、legal-quota-preflight-r1.log/json。复用原 test_quota_policy_activation_pg 三项：signed消费与exact reader、文本审批拒绝、runtime直接active写入拒绝。使用原全迁移隔离fixture新建随机数据库，保留数据库；不改产品/原测试/正式身份，不运行Provider。脚本仅向精确实验admin连接提供现有passfile，禁止全局凭证变量；记录真实pytest终态与实验库名，失败保留并诊断，禁止冒称完整Eval创建链通过。
+
+原配额前置门本次3 passed/7 warnings/7.02s，保留库 aos_test_421ea956ac61_ti4_test。独立SERIAL READ ONLY核唯一activation Receipt/审批事件、exact active revision2、原Consumer/Issuer角色恢复NOLOGIN、四业务表0及dev-org quota0。独立校验首轮角色名称猜错导致断言失败，回读原fixture后修正断言，无重跑审批/消费；详见legal-quota-preflight-independent.json。仍不宣称整条Eval合法创建或联合事务完成。
+
+### 合法 Model 创建前缀验证计划
+
+新增 test_legal_model_creation_prefix.py / run_legal_model_prefix.py / legal-model-prefix-r1.log/json（仅本证据scope）。在新全迁移保留实验库复用原正式Provider fixture、原签名费用提案/独立审批/consume/derive、原签名Quota审批/Consumer；显式构建模型DTO并使用原canonical hash与publish_model，不直接插入model/head/activepolicy。回读actual head/version、唯一publication Receipt与预算/配额exact绑定及canary0。只证明创建前缀；Suite/Contract治理来源及Eval执行Owner未覆盖。失败保持原记录，不重发未知结果。
+
+Model前缀本次1 passed/7 warnings/13.59s，保留库 aos_test_ff3f78ea18d6_ti4_test。实际 original publish_model 输出validated revision1/head version1；独立只读核唯一publication Receipt、exact当前active quota/budget、角色恢复、四业务表0及canary model0。未创建Eval申请/hold/Intent；治理Suite/Contract来源继续待核。结果见legal-model-prefix-result-r1.json与legal-model-prefix-independent.json。

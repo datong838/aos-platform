@@ -1,0 +1,23 @@
+{
+  "observed_at": "2026-10-07T16:20:17.871688+00:00",
+  "database": "aos_test_421ea956ac61_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_quota_policy_activation_pg.py::test_quota_store_still_rejects_text_only_approval",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_quota_policy_activation_pg.py::test_runtime_cannot_insert_unapproved_active_quota",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_quota_policy_activation_pg.py::test_signed_quota_consumes_once_and_original_reader_accepts",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "Original quota preflight gates only; not full Eval or business execution"
+}
