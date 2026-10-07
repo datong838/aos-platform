@@ -1,0 +1,52 @@
+{
+  "status": "OWN_LAB_RECOVERED_AND_REAL_NATIVE_TESTS_GREEN",
+  "authority": "AOS-001444",
+  "backup": "Stopped full50GiB APFS clone; exact source/backup SHA match, 0600; preserved",
+  "disk_GiB": 60,
+  "free_GiB_observed": 10.8,
+  "persistent_shm_bytes": 268435456,
+  "original_container_retained": true,
+  "original_volume_and_image": true,
+  "cluster": "7693564235776004128",
+  "postgres": "16.14",
+  "retained_db_count_observed": 556,
+  "pre_stop_count_not_captured": true,
+  "restart_failure": "Original persisted64MiB shm caused DSM16MiB No space; old container retained stopped and same image/volume/network/env replacement uses persistent256MiB",
+  "recovery_tests": {
+    "passed": 2,
+    "deselected": 305,
+    "warnings": 7,
+    "skipped": 0,
+    "seconds": 25.64
+  },
+  "formal_resources_changed": false,
+  "source_delivery": false,
+  "goal": "ACTIVE",
+  "next": "Full157 exact installation and audit; controlled JWT signer/current consumer and final COMMIT TTL pending",
+  "files": {
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": {
+      "sha256": "ce0584d5b29f9b8ad227e0c08ac08ab4564dafc09c288035f01aaf2d85e93e19",
+      "bytes": 128285
+    },
+    ".evidence/gt-capacity-source-entry-20261007/full157-lab-disk-backup-r1.json": {
+      "sha256": "bba881817e99407e2f203cd69658de08f2db0e243a84a8d372f9f00714d74da6",
+      "bytes": 571
+    },
+    ".evidence/gt-capacity-source-entry-20261007/full157-lab-shm-recovery-r1.json": {
+      "sha256": "61bdbbd477eb43357d835488896808068b376b3078d2a3f182b8f97a76732cbc",
+      "bytes": 632
+    },
+    ".evidence/gt-capacity-source-entry-20261007/full157-lab-recovery-catalog-r1.json": {
+      "sha256": "fb8a72e5b59c26d1baf0a87480ee2908d2f2f30ef7dca3ccd0e134dfc1682e60",
+      "bytes": 21521
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-lab-recovery-native-r1.log": {
+      "sha256": "e350832be3c080f0a5c03c1c3022b23cd92544923be66f75777f256c16fe0965",
+      "bytes": 147554
+    },
+    ".evidence/gt-capacity-source-entry-20261007/full157-installer-next-investigation.json": {
+      "sha256": "dbed622dd8ac6661a78f06520d0e25eef151fc421f8c9c23ff5bfcc31fb4eb0c",
+      "bytes": 2301
+    }
+  }
+}

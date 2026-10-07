@@ -1,0 +1,43 @@
+{
+  "authority": "AOS-001444",
+  "head": "9ae36580bb922f9581d3c1276d075379aac37b19",
+  "status": "FULL157_INSTALLATION_REQUIRED",
+  "existing_migration155": "Original fact boundary only",
+  "store_profiles": [
+    "CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL",
+    "CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL",
+    "CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL",
+    "CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL",
+    "CAPACITY_ORIGINAL_BUILD_PROFILE_SQL",
+    "CAPACITY_ORIGINAL_BUILD_JSON_SQL",
+    "CAPACITY_ORIGINAL_EVIDENCE_PROFILE_SQL",
+    "CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL"
+  ],
+  "transaction_composition": [
+    "CAPACITY_ORIGINAL_SOURCE_FACTS_SQL",
+    "CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL",
+    "CAPACITY_ORIGINAL_SOURCE_SIGNED_FACTS_SQL",
+    "CAPACITY_SOURCE_PENDING_SQL",
+    "CAPACITY_SOURCE_COMMIT_SQL"
+  ],
+  "public_interfaces": [
+    "prepare_capacity_source(bytea,text,text,jsonb)",
+    "commit_capacity_source(text,bytea,bytea)"
+  ],
+  "current_test_strategy": "Temporary functions/harness; not installed full157",
+  "required_audit": [
+    "Exact native function bodies/signatures/Owner/search_path/ACL",
+    "RLS policies/private table constraints and immutable/deferred triggers",
+    "Native audited C signature verifier and a155/a156 controlled original fact/epoch interfaces",
+    "No arbitrary public SECURITY DEFINER grants or caller JWT-verified boolean authority",
+    "Full controlled signer/JWT and consumer currentness linked to actual Source COMMIT",
+    "Final actual COMMIT TTL remains unresolved"
+  ],
+  "sources": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "13682034eaae269ea6e63f34805548b63e0484e5368169882e9c8249aec0ce77",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "fba5ecddb18da7e828815112a815510f5b36db6161fc005dfa44f6ee8d240994",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "cffc1fa1bcd179d59887db864110d7e07d860e1669668a7e58d2f8100a6f39a7",
+    "services/aos-api/alembic/versions/a0v_155_capacity_source_publication.py": "5c0b06c78b76c9c65079b400be92f8dfadcc25915dc23d5aa0669114f46b9b9d",
+    "services/aos-api/alembic/versions/a0v_156_capacity_publication_epoch_locks.py": "7295c3dff81c8d90ea502b1bf02d02a936346a428b4fcc6b1b814b02a5f65b2f"
+  }
+}

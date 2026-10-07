@@ -316,6 +316,18 @@ green-r4三个正向PASS32.33s。扩展r1为16PASS/8FAIL226.85s：三revision负
 
 ### 7659f4d6 / AOS-001443：完整私有提交施工
 
+### 隔离实验资源接续门（9ae36580 / AOS-001444）
+
+所有本轮pytest terminal0、无其他测试。仅own colima profile aos-a0v-test-only、context colima-aos-a0v-test-only、容器aos-capacity-publication-scram-20261006、原named volume aos-capacity-publication-scram-20261006-data、cluster7693564235776004128、image a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8。保留盘50GiB剩1.1GiB，Host APFS剩44GiB。不得删除数据库/卷/备份/prune或触碰default/aos-extension/正式PG。
+
+先干净停止本容器与该VM，再对其专属datadisk做APFS clone到独立0700目录、副本0600并SHA256与原盘一致校验；原datadisk位置不变。用colima支持的disk配置增至60GiB且activate=false，不改全局context；启动后核vdb1 ext4扩大及原卷/container image/cluster/migration/原retained库数不变、PG ready、原单一5434转发可用。仅必要时恢复本lab /dev/shm256MiB原设置；不新建PG卷/不清空库。停止/克隆/扩盘/恢复分别记录；失败保留原盘和副本，先诊断，不把该资源动作或API健康当正式Source/自然首链验收。所有数据敏感值不写日志；未知运行句柄先只读对账。
+
+完整50GiB副本SHA256 b0c259a486e57736a2c2bce32924cd69a577c7165bb4737139814c500469b01a与停止原盘一致，独立副本0600保留。colima原实例增至60GiB、原vdb1在线扩ext4成功约11GiB空余。首次旧容器启动FATAL DSM16MiB No space；原HostConfig64MiB（历史已登记临时256MiB不是持久值），尝试remount时启动过程中挂载不可用，随后原容器terminal exited，无未知存活动作。现场精确inspect原单named卷/镜像/label/entrypoint postgres/仅5434/own网络，旧容器已停止且数据库初始化日志明确复用原目录。修复：保留旧容器rename为retained-shm64-20261007，不删除；以同image/entrypoint/env（仅0600临时envfile，不输出值）/原single卷/原network/port/label建立同名新实验容器，唯一实质配置差异持久shm256MiB。恢复后核同cluster与所有原retained库，镜像和volume不变。仅本lab生命周期修复，不操作正式库或其他VM。
+
+恢复新容器0279d3431cb3b6fc4d4538578b89db03cd7112abded6dbe18e7d4bbf4f3e9ed3同镜像/原named卷；2026-10-07T00:42:34.406754448Z启动，持久shm268435456、实际256MiB，PG16.14 ready、cluster7693564235776004128；旧容器保留stopped。原single5434使用新colima SSH master99259精确恢复转发172.18.0.2:5432，非新增watchdog/施工写者。现回读556个retained库及名称hash、最后测试库a0v_156；停止前未单独记录库总数，因此不宣称逐库数量前后对比已完成，原停止datadisk与副本逐字节SHA相同及同卷恢复是保留证据。恢复后实际SCRAM两项native Source actualCOMMIT/shared及changed-tenant unfinished COMMIT专项PASS，原库/卷/完整磁盘副本均未删除。资源门只恢复本lab研发能力，不是正式重启/发布/首链。
+
+立即接续全157安装调查：a155仅安装original_fact_boundary；当前原facts/signed/pending/commit测试都临时安装，不能凭private函数正向冒充157已安装。已核fixture明确八个store profiles + facts/command/signed/pending/commit组合依赖。下一按exact function body/Owner/search_path/ACL/RLS/triggers/native C及a155/156接口生成冻结安装manifest和完整private installer，随后原public接口/受控JWT signer与consumer分别联验；public grant不因installer出现自动放开。候选一S01完整安装，候选二currentconsumer（依赖installed Source），沿依赖先一，父Tasks及原完整Goal不缩减。
+
 无live pytest，原same-owner ACTIVE Lease至12:00，current投影一致。候选一原生核签commit，候选二current consumer（依赖一），先一。transaction.py追加CAPACITY_SOURCE_COMMIT_SQL：私有immutable Source与provenance两表，Owner-only/FORCE RLS、普通角色零读写；禁止publication/provenance及全域identity覆盖/删除。commit原三参数，不接收自由key/事实：先pending精确key+raw及samexid/PID/session，再全部原signed facts重核及可信Source signer root，核当前permit/root、精确bytes/SHA、原Ed25519真实签名；prepare已持identity锁，原子发布同账户UUID的global账号和完整Provider映射、Source/raw/signature/provenance、finalize pending。签名或原事实失败则无映射/Source残留；完成replay只返同签名同原文immutable行，不重签/改写。当前私有函数仅未来完整157装配，不开放public入口或补迁移；S01完整安装审计与受控signer/JWT仍另验，final actualCOMMIT TTL仍unresolved。
 
 先真实signed prepare后调用原三参数commit临时harness，缺实现SQL42883 RED；临时harness用PL延迟解析，不能用constant缺失或setup失败冒充真实调用。最小实现后真实签名/actual callerCOMMIT/独立Owner回读与Ed25519回验、同事务replay；坏签名/改raw/wrongkey/回滚后新xid拒绝，无效commit SAVEPOINT恢复后pending-only COMMIT仍23514、回滚无残留。新增case注册独立保留数据库，清理仅本次表/函数/harness，恢复原facts checker。隔离盘剩2GiB，首轮先窄RED与正向再选择负门组；不删库卷备份或测试运行中重启。

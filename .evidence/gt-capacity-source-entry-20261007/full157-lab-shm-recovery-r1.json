@@ -1,0 +1,12 @@
+{
+  "old_container_retained": "aos-capacity-publication-scram-20261006-retained-shm64-20261007",
+  "old_id": "4a2af01a0f1c1bb64592f42de4805b80fa210764f15769f718a2ae640ab8fc85",
+  "new_id": "0279d3431cb3b6fc4d4538578b89db03cd7112abded6dbe18e7d4bbf4f3e9ed3",
+  "name": "aos-capacity-publication-scram-20261006",
+  "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+  "volume": "aos-capacity-publication-scram-20261006-data",
+  "network": "aos-capacity-publication-scram-20261006-network",
+  "shm_size": 268435456,
+  "status": "NEW_SAME_VOLUME_CONTAINER_STARTED",
+  "formal_resources_changed": false
+}

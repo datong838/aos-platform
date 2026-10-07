@@ -1,0 +1,12 @@
+{
+  "profile": "aos-a0v-test-only",
+  "source_disk": "/Users/ddt/.colima/_lima/_disks/colima-aos-a0v-test-only/datadisk",
+  "backup": "/Users/ddt/.local/state/aos-isolated-lab-backups/20261007T003734Z-capacity-publication/datadisk-50GiB-apfs-clone",
+  "size": 53687091200,
+  "source_sha256": "b0c259a486e57736a2c2bce32924cd69a577c7165bb4737139814c500469b01a",
+  "backup_sha256": "b0c259a486e57736a2c2bce32924cd69a577c7165bb4737139814c500469b01a",
+  "equal": true,
+  "backup_mode": "0o600",
+  "status": "STOPPED_DISK_CLONE_VERIFIED",
+  "formal_resources_changed": false
+}
