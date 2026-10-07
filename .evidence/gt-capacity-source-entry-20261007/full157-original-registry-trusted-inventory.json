@@ -1,0 +1,210 @@
+{
+  "schema": "aos-original-registry-trusted-installation-inventory/v1",
+  "head": "f58aa5150cdc3e6a1c925fd6115182e862ae3015",
+  "authority": "AOS-001452",
+  "execution": "Installers supplied only list.append; no SQL executed, no catalog learned",
+  "trusted_statements": 84,
+  "statement_sha256": [
+    "241d454fe91c1541185e302682c756f2dcc2cb4baeafd40b64cace671733de3a",
+    "7d2120ce49449e3b9ed8c6d78d0bc16464666c8490f618714ade23a325b5bf3e",
+    "d5f0cab8e18af2aa46ae04356591bdc5d30808e25346eadc6059a19352fff718",
+    "72e6c520b72c64f0036f8449f314afedc7b19c53767be39c755a48d712877995",
+    "be47d0d8c4e06553c13cff3af792c6935f03b52ddf362d7530161a996ff494c1",
+    "7cdc55714075e2c596584d0c8a97a194fbfe02241e83f3c44920feb9fdcd6a9b",
+    "e1b0cc5fdfd5ca6b671b3cc0071955868771f856430afa26143860aa3567784e",
+    "09f8fc4f89b2bfd7fc921f1355ac23cae18665996b16ac807529d4bb54ceb473",
+    "07c793693273d3e89e549b55232aacd0187814fec1826536f7e9086a6e70d138",
+    "4a4377a095784a4e2541172b6772a3b448328b14c05e54c0a576f1c76d3156a3",
+    "6923a86e86842a9bd1d263c7bf86f1fa5caa05aa402953a804f6190d2bef0241",
+    "7461ede75debe499cdb87b0908fa9995b8383d4b29e37ef43f8d377bdfdbeb42",
+    "798e9254162b53a4b59180caa6d115f3ec8bb744b7b4125266948a324b0a76d6",
+    "40cf54c459d4ab5c6a53da8c82652eff6f597362204761e10fd863f16d9a1617",
+    "f94a38bada166291a8e05a408375a23f89886cb10e8ed83ea686d78e3d6734cf",
+    "9ecc5b7d8cd8691a8301f1596985b94b245624d6de104083d53f591f4a2bde76",
+    "1ebe8cf43f361c62088c86367a8b2864f9cf52c9c222c363ec47360564f1ca54",
+    "0c0c935ac7bf143b509898c3528100d6fd6280748b6a3c90a409a58095719854",
+    "7ce97be04d2275e48cad18a49ee78f280655e238276b9ee01c10d992f6772431",
+    "fdd591a615cccbab1c44382cfb01910897897e46e1ffc5e5e4b1be69348dd465",
+    "308d1b0803acf29823f23c8a03ffb6e2bc4c70ef101c81dfe503472fd9aa9b49",
+    "37390bbf159e22e34f2ede9e555df1d788076d8f3873e2175f1e76604f822d34",
+    "983d4affda9d098833f9114b0c5fb7cc6b101f760f8b2f8059a15aad6f1c0fc5",
+    "466e4006116c54a4ab77beb8e6a9c5644ae5b8bcd90a8f8cb822a73fa20e3651",
+    "1a86b4b6c16c913c73e934eeee8c1a604333b1af5345060940f8c7c5703d414c",
+    "08a8edf7921ef9c54bf62a113e3d691f8e938af29bc8f1dd9699114c33829cc2",
+    "798ed32408604c147d78525be6127c743767d0519bdce55834a250be384a7d5f",
+    "6c122c7c0059ff5b7dc9d3995c196e05bea14bce3dec8cc8cded5157f40a1b1e",
+    "f6c5fdd865fc73d8cfbde1cd386ed64a431325c247f5746ba2aa154c36344c41",
+    "0a0ba85befd2524d7cc53a5e667e5ccdcf79700900771cccd96d6fddd6a19b7d",
+    "fdacbd06c389b55790d8e98625a68fd8d57dc39d0f21146443acaaddd8f86903",
+    "f594f6dc64b1c5708768f2a3fb6c7141e55c056446ecd34a044aa0525bedad6c",
+    "5d8f7ce716939fa2ab890f4510a6d4464f83089bbbc539232ecf3ed2ece4cab7",
+    "5889d3290c8156bf9d85f465a60add9d77860878dae9d3b57d72395b0812948d",
+    "6b56bad6c3c2ffd237f599cd6b3c95d062e240b4f5dc54f18655c3665fb75023",
+    "4e332fefc2d01ebdf69e570362feea3e532937e3b943e04e4824a068a220454a",
+    "545a31e5a267d3fc203950c62f7a852f7f430d2b41e5c994c4f53a1dbfe46d4e",
+    "65627b72961f8d0d5b979f1006968ac56ee4408a294897395b7817f57d031b7b",
+    "5632ef10faf7ed27b8337daebcaf5db62a908567c5d083ca4d0ffe0b158c3fca",
+    "3f78f11d1f196b9450e4108bc762b0d554f1e098b4b2b936be5a92e8d128f9a4",
+    "a0b3a492849dbcc667002d8e269e5018ebe87e0bf3dc834472de69b209ec510f",
+    "020afc0dcbb71d648a15ca42abecea610db6dc7b69def5db70484f8a40c28483",
+    "7edc5592ab92987dae46c15b42fb2143c74fb702b3778bfb38ac852104e5be40",
+    "64fc314f9b9bd572dcabf2ab9bc8c15517b79aad7fec05f37e611f2b1464cbeb",
+    "25bbb29c54cb59ecf8685e34e69354727992be89eaa0395800c7e2503dc3732d",
+    "7145b00a26447d4eb3e5619d0715675d45553fed41de69920ebf3d2c5c92384d",
+    "87a992527ea32b25e2d1b2d9b9d5760ceb751667de9a9583e5e50a96e957c09d",
+    "c38ac2271d06d223fa385c2ce08bcb732ad715a1f53992165322e5049b769161",
+    "e1a2ad62eca4a98a8c4dec0230aa80923e359188cee80ca6da0857af06f449e5",
+    "f65656791c27b5c796de20a7c16fd66753ed972d347f36b30ad661294995a8ce",
+    "3df41fd61c4029bb18c69ef087c2601ebf1c3e53a54d51858be6b0ac5b1cdce4",
+    "84968826227e73affc773201e39a65836cebdcc092ac5c0f72b1aac8d693d2e6",
+    "303bd387bffd06e8a843985688024e5879f1c7b16303a4751659edc6a83b8d82",
+    "18e7b5343f275b86c06493f3b628de9ee96d1e914ce4699cca9fa6a5137f813a",
+    "34a9acce74f1372e2d33b2d80cd31d04e8700f3b901971f4d5d8172f8ecfbdca",
+    "516fdbeb9e532dee0da4ed14f4920279c37339b12e2a33ea68f61fdc68acacfd",
+    "8ff1821d9cb7755c1617fb23c2bb53a434f99f203b538f80e49126b8eb35973a",
+    "3ca712de9bb7cfd896a893517701e1524cf0540a414a2bdd3928ba0e6826c68b",
+    "97054dd361848c8effae1cd2741d22f71550b074091d57284a321c7dab6cd022",
+    "dfad6825f15f7336e463f10dbe277c4275e7adc1a4e3d3b093132f9b927dda0e",
+    "65dd2ea462507cc05a006b426359ee5004dd4f41d59d047e30cefce2bf4e6b11",
+    "f0fbe373a125331bfcbafc0c2d1840a596f44fea816a1621d15c6fb0ca961133",
+    "1fe80fae72f6967824710b9f5d875e7d9e9556512efbc0cf5b8bbf41ca064ef9",
+    "13d9bd25417673a67ac926f4478e403e32ba819973c51df788a0f17d55ea0f67",
+    "d4d32f65db693c1301670658b133dea232ac878a6077cba70ee9be7b6ab61770",
+    "a180a709238b97a68f382e9234ea3a69653bd2ffc897c9d189f54180c4ec491a",
+    "9f4a133bb39935f094c78f8033e02d89d055c4962b0dde039638b72ac8861c3b",
+    "0d495e7b3aee5d20766720ab4c4dad2746c4b3afaba40c87ef7b932e4c5c1963",
+    "22787a4bed3542dd0cb533da551982838b3cf1ed7c2a0b80fa5645560f711164",
+    "ef1662f6d1e8c61d7c6f1f559f4fe81b310749402655435bc5c67e7e5c3c9508",
+    "cb3cc628eeaab17eb7751d9970b28c4345ec5d65e5393d8b8374a7e7118f3de4",
+    "8e6ee897104d85c1e5b932b1260fc4a56cf20871a4368c014de1609edf690b70",
+    "d3ef8ca8df7fe046be8499b216e8647b5301f09fe96ce848dcb3bd96c712df23",
+    "69c0ff3a8702832b5bfec4619c885853e04d4b1cc3745ee8378d804ae1dbdfdb",
+    "7139218f3f4c7f0b03bf4089b1d79ad142f2643496af808d968dd2f88de2ea12",
+    "6df9dfd2295228e2d35baa4791f36d863b4b3bb31cfd2261e90466227f5be4fb",
+    "9db114aefe5306fa0c73f86b052fb4d6d46859227525bba0d297568d1f970edb",
+    "5fd41ffef627a315a04d02d807607b00f0ad420f5231f51c4d87c45bf287896d",
+    "00e52a3dab955c2c09b11b5d6520fa947a75d9f75097cf38ac3c6da657a99738",
+    "ed6c47535574748dc59464feedde6a731968fd3b457c7065c4c9e95ea3dbcd61",
+    "7bed3a6363c468158aeb8ee048c42664cf1b86aa9325e90e27dd1d121d240686",
+    "b660b999b85902da46dd96ade5582353c759099b73049af9e40cd20067a8ee67",
+    "397a3c9e9140d7a796aa3e3763ad23b2bf31acb2b028478d222c280a12066c93",
+    "1453113887897ecafe3d99b248cec5a38a96c78c3a4339cd6f736e159097314d"
+  ],
+  "functions": [
+    {
+      "name": "aos_capacity_publication_private.read_root_identifier_literal",
+      "arguments": "p_literal text",
+      "header": "RETURNS integer[] LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path = pg_catalog",
+      "body_sha256": "189b4a56f754a15f00ecc322df1a5ef1a7a2e52d3acbd33bc1e5c10f29dda821"
+    },
+    {
+      "name": "aos_capacity_publication_private.read_root_time_literal",
+      "arguments": "p_literal text",
+      "header": "RETURNS timestamptz LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path = pg_catalog",
+      "body_sha256": "db26752e8b207e9dc8db33b2db50ea3cf83699275f36e2510173994f42eef3cb"
+    },
+    {
+      "name": "aos_capacity_publication_private.read_root_snapshot",
+      "arguments": "p_message bytea",
+      "header": "RETURNS TABLE(root_ordinal integer,publisher_literal text,key_id_literal text, publisher_codepoints integer[],key_id_codepoints integer[],public_key bytea,root_revision text, not_before timestamptz,not_after timestamptz,revoked_at timestamptz,canonical_root bytea) LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path = pg_catalog",
+      "body_sha256": "8ad0a9df61437c99337e5645d33d2b2704e01639b7ec1f43f66d327c117226cb"
+    },
+    {
+      "name": "aos_capacity_publication_private.immutable_registry_row",
+      "arguments": "",
+      "header": "RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog",
+      "body_sha256": "b31aa8e4d0ef40c2c5e98f2a32c0bdc7f706b096164ee1b5c03a83f542818124"
+    },
+    {
+      "name": "aos_capacity_publication_private.canonical_signed_json",
+      "arguments": "p_value json, p_depth integer",
+      "header": "RETURNS text LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path = pg_catalog",
+      "body_sha256": "f350cbf8e8742d181332224583a3cf3b27666269f84007c7e3197b5804f356d3"
+    },
+    {
+      "name": "aos_capacity_publication_private.read_signed_body",
+      "arguments": "p_raw bytea",
+      "header": "RETURNS jsonb LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path = pg_catalog",
+      "body_sha256": "1f0762388656242b7b12c21c9dc8b0d819996fa8f7b6ed042b812037d62c1177"
+    },
+    {
+      "name": "aos_capacity_publication_private.read_identifier",
+      "arguments": "p_value jsonb",
+      "header": "RETURNS text LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path = pg_catalog",
+      "body_sha256": "38219d56402c7a1c05cffa15f3ee8ec81886389e431f04ab3f5e54ebc2af7d7a"
+    },
+    {
+      "name": "aos_capacity_publication_private.read_deployment_target",
+      "arguments": "p_raw bytea",
+      "header": "RETURNS jsonb LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path = pg_catalog",
+      "body_sha256": "0aab0c32f2ef85aa9459ded57fed540b149803571a9dbd1f92de0475955f99db"
+    },
+    {
+      "name": "aos_capacity_publication_private.read_signed_time",
+      "arguments": "p_value jsonb",
+      "header": "RETURNS timestamptz LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path = pg_catalog",
+      "body_sha256": "724b4af83aaea776117e325a695666cb5396c8bfba47410dcfda875858e72bdf"
+    },
+    {
+      "name": "aos_capacity_publication_private.read_signing_permit",
+      "arguments": "p_raw bytea",
+      "header": "RETURNS jsonb LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path = pg_catalog",
+      "body_sha256": "5c72d339eeb7489d57852432351b1a201c04998e064fa7005df44cb4e48ac748"
+    },
+    {
+      "name": "aos_capacity_publication_private.read_origin_bootstrap",
+      "arguments": "p_raw bytea",
+      "header": "RETURNS jsonb LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path = pg_catalog",
+      "body_sha256": "c6276fea17840730c195ea8ec275d902ba95e3998adb43a02941494d896d7c96"
+    },
+    {
+      "name": "aos_capacity_publication_private.register_origin",
+      "arguments": "\n p_body bytea,p_signature bytea,p_roots bytea",
+      "header": "RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog SET work_mem='4MB'",
+      "body_sha256": "950ecc83a03565e890068b657a8f0bab72ed108114ed785df62069df9f39a3e6"
+    },
+    {
+      "name": "aos_capacity_publication_private.read_source_policy",
+      "arguments": "p_raw bytea",
+      "header": "RETURNS jsonb LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path = pg_catalog",
+      "body_sha256": "d646feac8ba780eb9041af9f9eaa2fc87c301167be808eea48439a1d6814001e"
+    },
+    {
+      "name": "aos_capacity_publication_private.read_supplier_attestation",
+      "arguments": "p_raw bytea",
+      "header": "RETURNS jsonb LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path = pg_catalog",
+      "body_sha256": "1c50c016d68e6b591758b5a00c23ea4a5104a9f6210d28380c53ea7a75f5f0dc"
+    },
+    {
+      "name": "aos_capacity_publication_private.register_document",
+      "arguments": "p_kind text,p_body bytea,p_signature bytea",
+      "header": "RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog",
+      "body_sha256": "65e073b053011bfff2902f729ded5063e89c8028bc8a09f660972680a13930f5"
+    },
+    {
+      "name": "aos_capacity_publication_private.read_origin_withdrawal",
+      "arguments": "p_raw bytea",
+      "header": "RETURNS jsonb LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path=pg_catalog",
+      "body_sha256": "7059817e4d7a0d93b5dc6e7f7ab8e1ce5492538823401cf47e253e169532b51b"
+    },
+    {
+      "name": "aos_capacity_publication_private.withdraw_origin",
+      "arguments": "p_body bytea,p_signature bytea",
+      "header": "RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog",
+      "body_sha256": "fee9060b0d09d9a4ac31d2ae3f7e1119aa7c2484d7e7300153e4670136c6c5c6"
+    }
+  ],
+  "duplicate_names": [],
+  "create_count": 17,
+  "tables": [
+    "deployment_anchor",
+    "document",
+    "origin",
+    "origin_withdrawal",
+    "registry_epoch",
+    "root_entry",
+    "root_snapshot"
+  ],
+  "remaining": "Full existing registry function/type/ACL/schema/table integrity and native C verifier current audit before exact public privilege; compiler current coverage42+5 plus original facts/epoch is insufficient for this",
+  "public_grants_changed": false
+}

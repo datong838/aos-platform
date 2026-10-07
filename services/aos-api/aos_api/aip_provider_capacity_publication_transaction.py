@@ -999,11 +999,16 @@ def source_transaction_function_manifest():
     definitions; a new unsupported definition must fail rather than be skipped.
     Table, constraint, policy and trigger contracts require a separate audit.
     """
+    return _trusted_function_manifest(_source_transaction_statements())
+
+
+def _trusted_function_manifest(statements):
+    """Parse every function in fixed installer SQL, failing on unsupported DDL."""
     pattern = re.compile(
         r'CREATE FUNCTION\s+(aos_capacity_publication_private\.\w+)\s*\((.*?)\)\s*'
         r'(.*?)\bAS\s+(\$\w*\$)(.*?)\4', re.S | re.I)
     manifest = []
-    for statement in _source_transaction_statements():
+    for statement in statements:
         matches = list(pattern.finditer(statement))
         if len(matches) != len(re.findall(r'\bCREATE FUNCTION\b', statement, re.I)):
             raise ValueError('CAPACITY_SOURCE_FUNCTION_CONTRACT_UNSUPPORTED')
@@ -1035,6 +1040,20 @@ def source_transaction_function_manifest():
         raise ValueError('CAPACITY_SOURCE_FUNCTION_CONTRACT_DUPLICATED')
     return tuple(manifest)
 
+
+
+def original_registry_function_manifest():
+    """Compile the original 152-154 functions; never execute installer SQL."""
+    from aos_api.aip_provider_capacity_publication_registry import (
+        install_registry_schema, install_origin_registration,
+    )
+    from aos_api.aip_provider_capacity_document_registry import install_document_registry
+    from aos_api.aip_provider_capacity_withdrawal_registry import install_withdrawal_registry
+    statements = []
+    for install in (install_registry_schema, install_origin_registration,
+                    install_document_registry, install_withdrawal_registry):
+        install(statements.append)
+    return _trusted_function_manifest(statements)
 
 def require_source_transaction_functions(conn):
     """Audit exact new functions plus original boundaries; not full S01."""
@@ -1172,12 +1191,12 @@ def require_source_transaction_tables(conn):
 def source_private_installation_audit_sql():
     """Compile a private native current-call audit from trusted code contracts.
 
-    This covers the new private composition only. Future public entries must
+    This covers private functions, Source tables and original live guards. Public entries must
     additionally enforce original authority/issuer boundaries and integrity of
     this audit itself; this function supplies no public privilege or JWT proof.
     All queries are fixed SQL. No target catalog or caller input is compiled.
     """
-    from aos_api.aip_provider_capacity_publication_store import CAPACITY_SIGNED_BODY_PROFILE_SQL
+    from aos_api.aip_provider_capacity_publication_registry import PUBLISHER
 
     def literal(value):
         return "'" + value.replace("'", "''") + "'"
@@ -1195,19 +1214,16 @@ def source_private_installation_audit_sql():
     if tuple(hashlib.sha256(s.encode()).hexdigest() for s in
              (CAPACITY_SOURCE_PENDING_SQL, CAPACITY_SOURCE_COMMIT_SQL)) != _SOURCE_TABLE_SQL_HASHES:
         raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_TABLE_CONTRACT_REVIEW_REQUIRED')
-    # Audit the original canonicalizer before using it to compare reviewed
-    # catalog digests. It is not part of the 41 newly installed functions.
-    canonical = re.search(
-        r'CREATE FUNCTION aos_capacity_publication_private\.canonical_signed_json\('
-        r'p_value json, p_depth integer\).*?AS \$body\$(.*?)\$body\$;',
-        CAPACITY_SIGNED_BODY_PROFILE_SQL, re.S)
-    if canonical is None:
-        raise ValueError('CAPACITY_SOURCE_CANONICAL_CONTRACT_UNSUPPORTED')
-    manifest = [dict(signature='aos_capacity_publication_private.canonical_signed_json(json,integer)',
-        names=['p_value','p_depth'], input_types=['json','integer'], all_types=None, modes=None,
-        return_type='text', returns_set=False, body_sha256=hashlib.sha256(canonical[1].encode()).hexdigest(),
-        strict=True, volatility='i', security_definer=False, config=['search_path=pg_catalog'])]
-    manifest.extend(source_transaction_function_manifest())
+    # Original registry functions include the canonicalizer used below; audit
+    # their definitions and exact registration privileges before invoking them.
+    manifest = [*original_registry_function_manifest(), *source_transaction_function_manifest()]
+    if len({item['signature'] for item in manifest}) != len(manifest):
+        raise ValueError('CAPACITY_SOURCE_FUNCTION_CONTRACT_DUPLICATED')
+    publisher_entries = {
+        'aos_capacity_publication_private.register_origin(bytea,bytea,bytea)',
+        'aos_capacity_publication_private.register_document(text,bytea,bytea)',
+        'aos_capacity_publication_private.withdraw_origin(bytea,bytea)',
+    }
     names = sorted({item['signature'].split('(')[0].split('.')[1] for item in manifest})
     fail = "RAISE EXCEPTION 'CAPACITY_SOURCE_CURRENT_INSTALLATION_DRIFTED' USING ERRCODE='42501';"
     body = [f"""DECLARE v_oid oid; v_table jsonb; v_part jsonb;
@@ -1221,7 +1237,14 @@ BEGIN
      'aos_capacity_publication_private'::regnamespace AND proname=ANY({array(names)}))<>{len(manifest)} THEN
     {fail} END IF;"""]
     for item in manifest:
+        allowed = [OWNER, PUBLISHER] if item['signature'] in publisher_entries else [OWNER]
+        acl = "aclexplode(coalesce(p.proacl,acldefault('f',p.proowner)))"
         checks = [
+            "NOT EXISTS(SELECT 1 FROM " + acl + " a WHERE a.grantee NOT IN ("
+                + ','.join(literal(role) + '::regrole::oid' for role in allowed)
+                + ") OR a.grantor<>p.proowner OR a.privilege_type<>'EXECUTE' OR a.is_grantable)",
+            *["EXISTS(SELECT 1 FROM " + acl + " a WHERE a.grantee="
+                + literal(role) + "::regrole::oid AND a.privilege_type='EXECUTE')" for role in allowed],
             'r.rolname=' + literal(OWNER), "l.lanname='plpgsql'",
             "encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')=" + literal(item['body_sha256']),
             'p.prosecdef=' + str(item['security_definer']).lower(),
@@ -1235,8 +1258,6 @@ BEGIN
             'p.prorettype=' + literal(item['return_type']) + '::regtype::oid',
             'p.proretset=' + str(item['returns_set']).lower(),
             "p.pronargdefaults=0 AND p.prokind='f' AND p.provariadic=0",
-            "NOT EXISTS(SELECT 1 FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a "
-            "WHERE a.grantee<>p.proowner OR a.privilege_type<>'EXECUTE' OR a.is_grantable)",
         ]
         body.append('IF NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_roles r ON r.oid=p.proowner '
             'JOIN pg_language l ON l.oid=p.prolang WHERE p.oid=to_regprocedure('

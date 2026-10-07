@@ -1,0 +1,177 @@
+{
+  "schema": "aos-original-registry-functions-verification/v1",
+  "head": "f58aa5150cdc3e6a1c925fd6115182e862ae3015",
+  "authority": "AOS-001452",
+  "original_functions": 17,
+  "new_functions_unchanged": 41,
+  "native_audited_total": 58,
+  "single_cause_faults": 47,
+  "logs": {
+    ".evidence/gt-capacity-source-publication-20261006/registry-functions-red.log": {
+      "sha256": "e10fe93ba7263091f455af1655769590348eddd1009ca6b5837d99e6b546f558",
+      "summary": "1 failed, 368 deselected, 7 warnings in 13.02s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/registry-functions-green-r1.log": {
+      "sha256": "9ec69e39f3ea74ff2032a145c33327cee6148400a7b994e88420e5fcdf164d3a",
+      "summary": "1 passed, 368 deselected, 7 warnings in 12.79s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/registry-functions-green-r2.log": {
+      "sha256": "761bf8832fc0134b1b1270fe0ade664764713c937b37b4728b5ca70a6b52319d",
+      "summary": "5 passed, 364 deselected, 7 warnings in 55.74s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/registry-functions-checker-adjacent.log": {
+      "sha256": "27f59462ec032af70a1cca721238b5c8c9b41ee51d62e9e35232d7608327e638",
+      "summary": "1 passed, 368 deselected, 7 warnings in 14.83s"
+    }
+  },
+  "readback": [
+    {
+      "database": "aos_test_0eecd0337b00_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_11686503f44a_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_19b70bdf345a_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": [
+        {
+          "asset_id": "committed-source-cf3bae485b8b41519020231ddfba4127",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true
+        }
+      ]
+    },
+    {
+      "database": "aos_test_1a8bc3a1551a_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_4ce9e8ed428a_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_770abd066cab_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_95cb84b9b76a_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_bd5b99c03b72_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_c5635b66ec72_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_d79344f5aa33_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_dfaf3c6b7d6c_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_e53b050c0324_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": [
+        {
+          "asset_id": "committed-source-d2bb585658384ede91f13633deb1205c",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true
+        }
+      ]
+    }
+  ],
+  "legacy_function_AST_preserved": true,
+  "legacy_test_AST_preserved_except_registration": true,
+  "expected_not_target_derived": true,
+  "public_grants_changed": false,
+  "default_installation_changed": false,
+  "remaining": [
+    "seven original registry table catalogs",
+    "native C verifier",
+    "issuer and audit/public self integrity",
+    "controlled JWT signer",
+    "current consumer",
+    "final actual caller COMMIT TTL",
+    "full natural business chain"
+  ]
+}

@@ -24,6 +24,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_migrated_private_source_drift_cannot_rebuild_fragments',
         'test_native_private_installation_audit_rejects_current_drift',
         'test_native_current_installation_rechecks_original_live_boundaries',
+        'test_native_current_installation_rechecks_original_registry_functions',
         'test_native_committed_sources_share_one_physical_account',
         'test_native_committed_source_is_durable_and_signed',
         'test_native_committed_source_refuses_invalid_finalize',
@@ -4687,6 +4688,67 @@ def test_native_current_installation_rechecks_original_live_boundaries(native_si
                             'CAPACITY_EVIDENCE_TRIGGER_DRIFTED',
                             'CAPACITY_EVIDENCE_OWNER_DRIFTED',
                         },(fault,rejected.value.diag.message_primary)
+                        raise RestoreFault()
+                audit()
+            assert _private_source_row_fingerprint(owner)==before
+        finally:
+            owner.execute('DROP FUNCTION aos_capacity_publication_private.require_current_source_installation()')
+        transaction.require_source_transaction_tables(owner)
+
+
+def test_native_current_installation_rechecks_original_registry_functions(native_signed_source):
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    class RestoreFault(Exception):pass
+    prefix='aos_capacity_publication_private.'
+    changes={
+        'root_parser_volatility':'ALTER FUNCTION '+prefix+'read_root_identifier_literal(text) VOLATILE',
+        'root_parser_body':"CREATE OR REPLACE FUNCTION "+prefix+"read_root_identifier_literal(p_literal text) RETURNS integer[] LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path=pg_catalog AS $$ BEGIN RETURN ARRAY[1]; END $$",
+        'publisher_origin_revoked':'REVOKE EXECUTE ON FUNCTION '+prefix+'register_origin(bytea,bytea,bytea) FROM aos_provider_capacity_policy_publisher',
+        'publisher_document_public':'GRANT EXECUTE ON FUNCTION '+prefix+'register_document(text,bytea,bytea) TO PUBLIC',
+        'publisher_withdrawal_runtime':'GRANT EXECUTE ON FUNCTION '+prefix+'withdraw_origin(bytea,bytea) TO aos_runtime',
+        'root_overload':"CREATE FUNCTION "+prefix+"read_root_identifier_literal(bytea) RETURNS text LANGUAGE sql AS 'SELECT NULL::text'",
+    }
+    originals=(
+        'read_root_identifier_literal(text)', 'read_root_time_literal(text)',
+        'read_root_snapshot(bytea)', 'immutable_registry_row()',
+        'canonical_signed_json(json,integer)', 'read_signed_body(bytea)',
+        'read_identifier(jsonb)', 'read_deployment_target(bytea)',
+        'read_signed_time(jsonb)', 'read_signing_permit(bytea)',
+        'read_origin_bootstrap(bytea)', 'register_origin(bytea,bytea,bytea)',
+        'read_source_policy(bytea)', 'read_supplier_attestation(bytea)',
+        'register_document(text,bytea,bytea)', 'read_origin_withdrawal(bytea)',
+        'withdraw_origin(bytea,bytea)',
+    )
+    for signature in originals:
+        changes['body:'+signature]=None
+        changes['path:'+signature]='ALTER FUNCTION '+prefix+signature+' SET search_path=public'
+    for signature in ('register_origin(bytea,bytea,bytea)',
+                      'register_document(text,bytea,bytea)', 'withdraw_origin(bytea,bytea)'):
+        changes['publisher_revoked:'+signature]='REVOKE EXECUTE ON FUNCTION '+prefix+signature+' FROM aos_provider_capacity_policy_publisher'
+        changes['publisher_grant_option:'+signature]='GRANT EXECUTE ON FUNCTION '+prefix+signature+' TO aos_provider_capacity_policy_publisher WITH GRANT OPTION'
+    changes['owner_revoked']='REVOKE EXECUTE ON FUNCTION '+prefix+'read_root_identifier_literal(text) FROM aos_capacity_publication_owner'
+    with isolated_owner() as owner:
+        before=_private_source_row_fingerprint(owner)
+        transaction.require_source_transaction_tables(owner)
+        owner.execute(transaction.source_private_installation_audit_sql())
+        try:
+            def audit():
+                with owner.transaction():
+                    owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                    owner.execute('SELECT aos_capacity_publication_private.require_current_source_installation()')
+                    owner.execute('RESET ROLE')
+            audit()
+            for fault,statement in changes.items():
+                with pytest.raises(RestoreFault):
+                    with owner.transaction():
+                        if fault.startswith('body:'):
+                            definition=owner.execute("SELECT pg_get_functiondef(p.oid) AS ddl,p.prosrc AS body FROM pg_proc p WHERE p.oid=%s::regprocedure",(prefix+fault[5:],)).fetchone()
+                            assert definition['ddl'].count(definition['body'])==1
+                            owner.execute(definition['ddl'].replace(definition['body'],definition['body']+'\n-- injected original registry drift\n'))
+                        else:owner.execute(statement)
+                        with pytest.raises(psycopg.errors.InsufficientPrivilege,match='CAPACITY_SOURCE_CURRENT_INSTALLATION_DRIFTED'):
+                            audit()
                         raise RestoreFault()
                 audit()
             assert _private_source_row_fingerprint(owner)==before
