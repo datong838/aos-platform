@@ -188,3 +188,23 @@ AST首轮完整原测试1PASS/7warnings53.38s，调查仅43函数/414嵌入SQL�
 独立SER READ ONLY复核：54 helper hash未变，两个legacy profile恢复为可信原编译；两个public occupation入口由内层清理，private installation audit由exact_public_source_caller外层finally精确DROP。活跃audit先匹配occupation可信编译，清理来源经原fixture AST核对，缺失不能作当前准入。原Source签名/hash正确、registry epoch2/origin撤回，occupation角色NOLOGIN零membership，AgentRun/容量/普通预算/Eval预算0/canary0。原verifier误期待audit清理后保留，失败未修改数据库，修正仅生命周期断言；独立复核通过。所有实验库卷备份保留。
 
 r1部分AST43函数/414解析失败归档，不抹除失败；r2严格处理PL parseMode=3固定target赋值，非支持语法仍失败透明。此检查点收窄Source helper资料缺口，不冻结完整joint锁图，不实现physical ledger/budget/Intent，不授正式库迁移或业务启动。下一候选是Source发布/撤回和审批/Provider/Price原writer与锁前缀对照，再核旧unknown零执行切换；父Task和完整Goal保持ACTIVE。
+
+## 下一步：实际 writer AST 与 Source reader 候选关系对照
+
+新增writer_lock_candidates.py／writer-lock-candidates.json。只读原r2保留库，SER READ ONLY并核exact cluster/database；读取前轮catalog范围内actual pg_proc及触发器，以同一已验证parser描述函数DML/锁/显式callee，将原Source读关系与实际DML/trigger表候选交集输出。原trigger关联与函数hash有精确catalog来源，但AST关系/锁别名、间接调用/opaque/隐式FK与控制流仍不能宣称运行全序。没有DDL、角色变更或业务调用。下一原生竞争case依候选中未覆盖的writer选择，不把当前盘点宣布完整锁图冻结。
+
+实际只读writer盘点94函数/28候选交集；39个trigger函数均在pglast PLpgSQL JSON序列化阶段失败。独立最小无库语法控制RETURNS void/RETURN成功，RETURNS trigger/RETURN NEW复现同JSONDecodeError，明确是parser覆盖缺口。已解析函数dynamic0不覆盖39失败函数，JSON单列dynamic_coverage_unknown_functions=39；不修写原函数、不靠原始JSON字符替换宣称解析通过。保留候选trigger真实关联；下一步需受控支持trigger AST或以原可信迁移+实际对向writer逐边原生证明，不能依赖本次部分闭包开joint码。此新调查不关闭父Task/Goal，不改变已收口Source59函数证据。
+
+### trigger parser 隔离版本对照方案
+
+上游pglast issue205与最小本地trigger JSON错误一致，报告7.18可正确解析同语法。只在本证据目录.parser-v7安装固定7.18，不改API venv/锁文件/全局依赖、不改SQL或修剪原始JSON。writer脚本显式版本控制并输出版本；r1 8.4失败JSON保留，r2在独立进程PYTHONPATH固定target后先核void/trigger都可解析，再读同保留库actual函数。未知parser版本拒绝，剩余失败明列；版本成功不证明writer运行锁序。并用已通过Source59结构作跨版本闭包比较，所有actual bodyhash仍须匹配。
+
+7.18独立对照实际94函数全部可解析（失败0），完整39trigger支持已补齐，原API环境仍8.4。下一扩大只读actual catalog helper递归：原94候选为roots，同schema精确函数名递归到public/Sourceprivate/Ed verifier，重载保守完整跟进，pg_catalog内建另列非用户SQL实现；显式callee缺失必须记录，不静默排除。然后按精确identity/hash比较Source历史中清理后未变54helper的结构，profile恢复差异明确排除，不能把不同body强求一致。
+
+## 实际 writer 递归 AST 隔离版本检查点
+
+pglast上游issue205（https://github.com/lelit/pglast/issues/205）记录8.x trigger malformed JSON；原8.4最小control及实际39trigger失败归档writer-lock-candidates-r1.json。专属.parser-v7固定7.18/专属.cache，独立进程不改API依赖；第一次uv cache路径已存在非目录，安装未开始，改专属cache后成功。原API parser8.4仍回读确认。只读同r2保留库的原catalog94候选递归显式helper→101函数/29候选交集，parse失败0/未解析显式callee0/已覆盖动态语句0；digest2重载保守解析，3 C函数opaque。独立回读101actual bodyhash与触发器关联、业务计数0，Source原hash相同54helper的操作序列全部相同；16函数control_flow_path因版本block wrapper不同，明确不宣称完整控制流树相等。所有库卷备份保留，版本包不纳入交付Git。
+
+原native cost revoke已证实的隐式UPDATE现在可从actual trigger AST对应aip_budget_cost_runtime_fence；withdrawal bump为epoch INSERT/UPSERT而非显式locking clause，必须连同FK/unique/AFTER顺序审计。Provider健康touch为epoch条件INSERT→FOR UPDATE、bump为UPDATE，实际before/after/truncate关联已记录。Source59闭包不读取health epoch或cost fence，未来joint入口必须组合原健康配置及cost当前性门，不能当作Source已涵盖。
+
+本调查仍只涵盖catalog给定范围与显式schema调用，未证明Python动态writer/所有SQL入口/隐式内核锁或实际运行总序；DML关系候选包含join读关系，不等于精确写对象。新的原生对向验证应按合同补Source批准撤回epoch链与联合健康/费用顺序，旧未决义务零执行切换与合法业务链仍pending。父合同/Goal ACTIVE，无完整业务完成或正式权限新增。

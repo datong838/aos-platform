@@ -1,0 +1,33 @@
+{
+  "status": "WRITER_AST_CATALOG_AND_CROSS_PARSER_VERIFIED_RUNTIME_ORDER_PENDING",
+  "identity": {
+    "database": "aos_test_2807432bd393_ti4_test",
+    "readonly": "on",
+    "cluster": "7693564235776004128"
+  },
+  "actual_function_bodies": 101,
+  "actual_triggers": 488,
+  "source_unchanged_operation_sequences": 54,
+  "parser_control_flow_path_differences": 16,
+  "parser_version": "v7.18",
+  "parser_binary_sha256": {
+    "parser.cpython-311-darwin.so": "930e765faf3d74dd0bd0de8d9244d5e513a06bfcf59a5acd62d3e83e37b91f2b"
+  },
+  "product_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "file_sha256": {
+    "writer_lock_candidates.py": "6fd6ae59e1aa2e5e160914fe005c6fca60554977825960a79e988c4268c317ef",
+    "writer-lock-candidates.json": "7f9f43adc1434f2776722336854b78b5a05c1afe0a915d89f4846d4c5fbd7c27",
+    "writer-lock-candidates-r1.json": "b42a78b2d6314fafaea2b80f1cb53580703fbca0b673356829b835c2c5ffc048",
+    "verify_writer_lock_candidates.py": "944844c591f7bc7fa30098bd2513f5a4cf1a0f7f080c2bd067a84ccfc0adfd70"
+  },
+  "limitations": [
+    "Identical operation sequences omit version-specific control-flow wrapper paths",
+    "Opaque C functions and conservative overloads remain separate",
+    "AST and trigger attachments do not prove a total runtime lock order or joint ledger authority"
+  ]
+}

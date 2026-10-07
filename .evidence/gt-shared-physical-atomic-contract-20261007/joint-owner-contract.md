@@ -50,3 +50,11 @@ inflight_upper_bound 保留所有 held/prepared/submitted/unknown 未决上界�
 独立SER READ ONLY复核：54 helper hash未变，两个legacy profile恢复为可信原编译；两个public occupation入口由内层清理，private installation audit由exact_public_source_caller外层finally精确DROP。活跃audit先匹配occupation可信编译，清理来源经原fixture AST核对，缺失不能作当前准入。原Source签名/hash正确、registry epoch2/origin撤回，occupation角色NOLOGIN零membership，AgentRun/容量/普通预算/Eval预算0/canary0。原verifier误期待audit清理后保留，失败未修改数据库，修正仅生命周期断言；独立复核通过。所有实验库卷备份保留。
 
 r1部分AST43函数/414解析失败归档，不抹除失败；r2严格处理PL parseMode=3固定target赋值，非支持语法仍失败透明。此检查点收窄Source helper资料缺口，不冻结完整joint锁图，不实现physical ledger/budget/Intent，不授正式库迁移或业务启动。下一候选是Source发布/撤回和审批/Provider/Price原writer与锁前缀对照，再核旧unknown零执行切换；父Task和完整Goal保持ACTIVE。
+
+## 实际 writer 递归 AST 隔离版本检查点
+
+pglast上游issue205（https://github.com/lelit/pglast/issues/205）记录8.x trigger malformed JSON；原8.4最小control及实际39trigger失败归档writer-lock-candidates-r1.json。专属.parser-v7固定7.18/专属.cache，独立进程不改API依赖；第一次uv cache路径已存在非目录，安装未开始，改专属cache后成功。原API parser8.4仍回读确认。只读同r2保留库的原catalog94候选递归显式helper→101函数/29候选交集，parse失败0/未解析显式callee0/已覆盖动态语句0；digest2重载保守解析，3 C函数opaque。独立回读101actual bodyhash与触发器关联、业务计数0，Source原hash相同54helper的操作序列全部相同；16函数control_flow_path因版本block wrapper不同，明确不宣称完整控制流树相等。所有库卷备份保留，版本包不纳入交付Git。
+
+原native cost revoke已证实的隐式UPDATE现在可从actual trigger AST对应aip_budget_cost_runtime_fence；withdrawal bump为epoch INSERT/UPSERT而非显式locking clause，必须连同FK/unique/AFTER顺序审计。Provider健康touch为epoch条件INSERT→FOR UPDATE、bump为UPDATE，实际before/after/truncate关联已记录。Source59闭包不读取health epoch或cost fence，未来joint入口必须组合原健康配置及cost当前性门，不能当作Source已涵盖。
+
+本调查仍只涵盖catalog给定范围与显式schema调用，未证明Python动态writer/所有SQL入口/隐式内核锁或实际运行总序；DML关系候选包含join读关系，不等于精确写对象。新的原生对向验证应按合同补Source批准撤回epoch链与联合健康/费用顺序，旧未决义务零执行切换与合法业务链仍pending。父合同/Goal ACTIVE，无完整业务完成或正式权限新增。
