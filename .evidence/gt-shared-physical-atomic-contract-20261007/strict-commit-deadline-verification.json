@@ -1,0 +1,119 @@
+{
+  "status": "CANONICAL_COMMIT_ONLY_TEST_GATE_PRIMITIVE_VERIFIED",
+  "database": "aos_test_strict_deadline_78cd3e64ea24",
+  "template": "aos_test_f2ef54f0da1d_ti4_test",
+  "cluster": "7693564235776004128",
+  "migration_heads": [
+    {
+      "version_num": "a0v_157"
+    }
+  ],
+  "cases": [
+    {
+      "case": "canonical_live_commit",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 173858,
+        "xid": "222737",
+        "isolation": "serializable"
+      },
+      "deadline": 1791388165.336972,
+      "before_commit": {
+        "clock": 1791388164.637874,
+        "xid": "222737"
+      },
+      "committed": true,
+      "sqlstate": null,
+      "message": null,
+      "commit_calls": 1,
+      "retained_rows": 1,
+      "retained_audits": [
+        {
+          "event": "deadline_checked"
+        },
+        {
+          "event": "transaction_witness"
+        }
+      ]
+    },
+    {
+      "case": "canonical_expired_commit",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 173860,
+        "xid": "222738",
+        "isolation": "serializable"
+      },
+      "deadline": 1791388165.351448,
+      "before_commit": {
+        "clock": 1791388165.456575,
+        "xid": "222738"
+      },
+      "committed": false,
+      "sqlstate": "23514",
+      "message": "GT_TEST_DEADLINE_EXPIRED",
+      "commit_calls": 1,
+      "retained_rows": 0,
+      "retained_audits": []
+    },
+    {
+      "case": "early_constraints_immediate",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 173867,
+        "xid": "222739",
+        "isolation": "serializable"
+      },
+      "deadline": 1791388166.173288,
+      "before_commit": {
+        "clock": 1791388165.474097,
+        "xid": "222739"
+      },
+      "committed": false,
+      "sqlstate": "23514",
+      "message": "GT_TEST_COMMIT_COMMAND_REQUIRED",
+      "commit_calls": 0,
+      "retained_rows": 0,
+      "retained_audits": []
+    },
+    {
+      "case": "noncanonical_end",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 173869,
+        "xid": "222740",
+        "isolation": "serializable"
+      },
+      "deadline": 1791388166.187817,
+      "before_commit": {
+        "clock": 1791388165.488571,
+        "xid": "222740"
+      },
+      "committed": false,
+      "sqlstate": "23514",
+      "message": "GT_TEST_COMMIT_COMMAND_REQUIRED",
+      "commit_calls": 1,
+      "retained_rows": 0,
+      "retained_audits": []
+    }
+  ],
+  "product_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "trusted_test_body": "BEGIN\n IF pg_catalog.current_query() IS DISTINCT FROM 'COMMIT' THEN\n  RAISE EXCEPTION 'GT_TEST_COMMIT_COMMAND_REQUIRED' USING ERRCODE='23514';\n END IF;\n IF clock_timestamp()>=NEW.deadline THEN\n  RAISE EXCEPTION 'GT_TEST_DEADLINE_EXPIRED' USING ERRCODE='23514';\n END IF;\n INSERT INTO gt_deferred_probe.audit VALUES(NEW.case_id,'deadline_checked',clock_timestamp());\n RETURN NULL;\nEND",
+  "head": "40e2b55486b7bef31ab2e6d09352aa8fc0ab592c",
+  "probe_sha256": "3b6c1e038b4302ae394d6c6abf9b1ddd85d8acf35a54de9b3323ba0e0179cb95",
+  "limitations": [
+    "New isolated primitive schema and synthetic deadlines, not a product security gate or Source proof",
+    "Strict canonical COMMIT only, protocol/multi-statement/unknown outcome/end-channel coverage pending",
+    "Owned admin SCRAM login with local runtime role, not dedicated occupation identity",
+    "Statement-phase deadline check is not a bound on physical WAL flush/commit completion time"
+  ]
+}

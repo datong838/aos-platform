@@ -1,0 +1,6 @@
+Retained native deferred control database aos_test_deferred_deadline_2dd66332195d
+default_deferred 23514 rows 0
+early_immediate COMMIT rows 1
+immediate_then_deferred_no_dml COMMIT rows 1
+rearmed_update 23514 rows 0
+DEFERRED_DEADLINE_QUEUE_CAN_BE_DRAINED_BEFORE_ACTUAL_COMMIT_VERIFIED

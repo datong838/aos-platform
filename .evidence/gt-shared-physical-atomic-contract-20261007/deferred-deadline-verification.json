@@ -1,0 +1,138 @@
+{
+  "status": "DEFERRED_DEADLINE_QUEUE_CAN_BE_DRAINED_BEFORE_ACTUAL_COMMIT_VERIFIED",
+  "database": "aos_test_deferred_deadline_2dd66332195d",
+  "template": "aos_test_f2ef54f0da1d_ti4_test",
+  "cluster": "7693564235776004128",
+  "migration_heads": [
+    {
+      "version_num": "a0v_157"
+    }
+  ],
+  "cases": [
+    {
+      "case": "default_deferred",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 173143,
+        "xid": "222731",
+        "isolation": "serializable"
+      },
+      "deadline": 1791388042.848707,
+      "early_checks": [],
+      "before_commit": {
+        "clock": 1791388042.966869,
+        "xid": "222731"
+      },
+      "committed": false,
+      "sqlstate": "23514",
+      "commit_calls": 1,
+      "retained_rows": 0,
+      "retained_audits": []
+    },
+    {
+      "case": "early_immediate",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 173150,
+        "xid": "222732",
+        "isolation": "serializable"
+      },
+      "deadline": 1791388043.68555,
+      "early_checks": [
+        {
+          "clock": 1791388042.987495
+        }
+      ],
+      "before_commit": {
+        "clock": 1791388043.802198,
+        "xid": "222732"
+      },
+      "committed": true,
+      "sqlstate": null,
+      "commit_calls": 1,
+      "retained_rows": 1,
+      "retained_audits": [
+        {
+          "event": "deadline_checked"
+        },
+        {
+          "event": "transaction_witness"
+        }
+      ]
+    },
+    {
+      "case": "immediate_then_deferred_no_dml",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 173156,
+        "xid": "222733",
+        "isolation": "serializable"
+      },
+      "deadline": 1791388044.526059,
+      "early_checks": [
+        {
+          "clock": 1791388043.827369
+        }
+      ],
+      "before_commit": {
+        "clock": 1791388044.634062,
+        "xid": "222733"
+      },
+      "committed": true,
+      "sqlstate": null,
+      "commit_calls": 1,
+      "retained_rows": 1,
+      "retained_audits": [
+        {
+          "event": "deadline_checked"
+        },
+        {
+          "event": "transaction_witness"
+        }
+      ]
+    },
+    {
+      "case": "rearmed_update",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 173163,
+        "xid": "222734",
+        "isolation": "serializable"
+      },
+      "deadline": 1791388045.354032,
+      "early_checks": [
+        {
+          "clock": 1791388044.655606
+        }
+      ],
+      "before_commit": {
+        "clock": 1791388045.472136,
+        "xid": "222734"
+      },
+      "committed": false,
+      "sqlstate": "23514",
+      "commit_calls": 1,
+      "retained_rows": 0,
+      "retained_audits": []
+    }
+  ],
+  "product_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "trusted_test_body": "BEGIN\n IF clock_timestamp()>=NEW.deadline THEN\n  RAISE EXCEPTION 'GT_TEST_DEADLINE_EXPIRED' USING ERRCODE='23514';\n END IF;\n INSERT INTO gt_deferred_probe.audit VALUES(NEW.case_id,'deadline_checked',clock_timestamp());\n RETURN NULL;\nEND",
+  "head": "40e2b55486b7bef31ab2e6d09352aa8fc0ab592c",
+  "probe_sha256": "65268e81e9250156f080f38d55b75a0db5f89a2f96fb71159f4930e053b65713",
+  "limitations": [
+    "Isolated test-owned primitive schema and deadline, not JWT/Source or legitimate business authority",
+    "Owned admin SCRAM with local runtime role, not dedicated occupation identity",
+    "No original Source/evaluator function changes or original gate bypass claims",
+    "INITIALLY DEFERRED alone does not prevent caller from firing a time check early"
+  ]
+}

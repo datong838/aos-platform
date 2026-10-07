@@ -1,0 +1,6 @@
+Retained native deferred control database aos_test_strict_deadline_78cd3e64ea24
+canonical_live_commit COMMIT rows 1
+canonical_expired_commit GT_TEST_DEADLINE_EXPIRED rows 0
+early_constraints_immediate GT_TEST_COMMIT_COMMAND_REQUIRED rows 0
+noncanonical_end GT_TEST_COMMIT_COMMAND_REQUIRED rows 0
+CANONICAL_COMMIT_ONLY_TEST_GATE_PRIMITIVE_VERIFIED

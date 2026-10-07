@@ -1,0 +1,63 @@
+{
+  "status": "DEFERRED_QUEUE_DRAIN_AND_CANONICAL_COMMIT_CONTROL_RETAINED_STATE_VERIFIED",
+  "cases_verified": 8,
+  "databases": [
+    {
+      "identity": {
+        "database": "aos_test_deferred_deadline_2dd66332195d",
+        "cluster": "7693564235776004128",
+        "readonly": "on"
+      },
+      "retained_case_rows": {
+        "default_deferred": 0,
+        "early_immediate": 1,
+        "immediate_then_deferred_no_dml": 1,
+        "rearmed_update": 0
+      },
+      "trusted_body_sha256": "b7e4fe9efacebe502788a6e6e673b88e715daca3f084488604083df9a496a363",
+      "product_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_budget_reservation": 0,
+        "aip_model_eval_budget_reservation": 0
+      },
+      "file_sha256": {
+        "deferred_deadline_probe.py": "65268e81e9250156f080f38d55b75a0db5f89a2f96fb71159f4930e053b65713",
+        "deferred-deadline-verification.json": "f2521a58ab4cfd2af977c6c0c5e742743774d6d6b18d392aeccf4e3dfcffe49d",
+        "deferred-deadline-r1.log": "bf79038bdb07ab335da22a22c6ad43b4c5b286b592d7d0bd0b84049c60c86933"
+      }
+    },
+    {
+      "identity": {
+        "database": "aos_test_strict_deadline_78cd3e64ea24",
+        "cluster": "7693564235776004128",
+        "readonly": "on"
+      },
+      "retained_case_rows": {
+        "canonical_live_commit": 1,
+        "canonical_expired_commit": 0,
+        "early_constraints_immediate": 0,
+        "noncanonical_end": 0
+      },
+      "trusted_body_sha256": "09186a5349abc0d74b516f6a6a3ce6fefefbf605841f898a008e214d400f5634",
+      "product_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_budget_reservation": 0,
+        "aip_model_eval_budget_reservation": 0
+      },
+      "file_sha256": {
+        "strict_commit_deadline_probe.py": "3b6c1e038b4302ae394d6c6abf9b1ddd85d8acf35a54de9b3323ba0e0179cb95",
+        "strict-commit-deadline-verification.json": "e510313842f8a522dfc1ba5a9e5184c496f5c7158a98977709d68fb53970e389",
+        "strict-commit-deadline-r1.log": "960da72990d600f55264fac93d5520e3fd7580063500f26aa9f7bcfee89ee322"
+      }
+    }
+  ],
+  "verifier_sha256": "05500752fc6e5236f845d4cea6095ee3020cee31de3d6f3419082fc96f15ade5",
+  "limitations": [
+    "Native test-only schemas and synthetic deadlines; not full joint/source/business authorization",
+    "Retained rows plus original execution assertions, not independent replay of past timing",
+    "Canonical current_query control remains a design candidate requiring complete protocol/end-channel review",
+    "Checks within COMMIT command do not bound physical WAL flush/commit completion time"
+  ]
+}
