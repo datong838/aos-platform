@@ -1,0 +1,26 @@
+{
+  "status": "ORIGINAL_HOST_SQL_END_NATIVE_RESULT_AND_RETAINED_STATE_VERIFIED",
+  "identity": {
+    "database": "aos_test_host_control_b69daa51e90c",
+    "cluster": "7693564235776004128",
+    "readonly": "on"
+  },
+  "cases_verified": 4,
+  "original_product_hashes_unchanged": true,
+  "product_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "file_sha256": {
+    "host_transaction_control_probe.py": "cc00209eb00293afdb1d3cead4ef6394e1b1c09a6d062c2170ff3c6087ac2e83",
+    "host-transaction-control-verification.json": "831498a599e97997bd12da59657c5282c029c1e2ab2f3d6620979ba715c3d700",
+    "host-transaction-control-r1.log": "111e6a54fcc2be084ad8a108bae879fe068376763102ed522f294ed29cf4f81b",
+    "verify_host_transaction_control.py": "a3ae351eff4f16e62e461336f436739e9a8388841466b5229b5b7152f85dfd63"
+  },
+  "limitations": [
+    "Original trusted wrappers on primitive schema only, not full dispatch/Source/business or external-user access",
+    "No product changes; full joint end-control and immutable Intent binding still required"
+  ]
+}

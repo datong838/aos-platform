@@ -1,0 +1,6 @@
+Retained native deferred control database aos_test_host_control_b69daa51e90c
+direct_host_sql_commit SQL COMMIT retained 1
+bound_noop_then_sql_commit SQL COMMIT retained 1
+bound_early_constraints GT_TEST_COMMIT_COMMAND_REQUIRED retained 0
+bound_expired_sql_commit GT_TEST_DEADLINE_EXPIRED retained 0
+ORIGINAL_HOST_AND_BORROWED_SQL_END_CHANNEL_NATIVE_CONTROL_VERIFIED

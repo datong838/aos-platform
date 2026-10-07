@@ -1,0 +1,144 @@
+{
+  "status": "ORIGINAL_HOST_AND_BORROWED_SQL_END_CHANNEL_NATIVE_CONTROL_VERIFIED",
+  "database": "aos_test_host_control_b69daa51e90c",
+  "template": "aos_test_f2ef54f0da1d_ti4_test",
+  "cluster": "7693564235776004128",
+  "migration_heads": [
+    {
+      "version_num": "a0v_157"
+    }
+  ],
+  "cases": [
+    {
+      "case": "direct_host_sql_commit",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 176090,
+        "xid": "222743",
+        "isolation": "serializable"
+      },
+      "deadline": 1791388551.406982,
+      "before_end": {
+        "clock": 1791388550.408363,
+        "xid": "222743"
+      },
+      "committed": true,
+      "sqlstate": null,
+      "message": null,
+      "sql_end_calls": 1,
+      "bound_commit_noop_verified": true,
+      "bound_rollback_denied": true,
+      "cross_tenant_factory_denied": true,
+      "retained_rows": 1,
+      "retained_audits": [
+        {
+          "event": "deadline_checked"
+        },
+        {
+          "event": "transaction_witness"
+        }
+      ]
+    },
+    {
+      "case": "bound_noop_then_sql_commit",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 176092,
+        "xid": "222744",
+        "isolation": "serializable"
+      },
+      "deadline": 1791388551.428345,
+      "before_end": {
+        "clock": 1791388550.429386,
+        "xid": "222744"
+      },
+      "committed": true,
+      "sqlstate": null,
+      "message": null,
+      "sql_end_calls": 1,
+      "bound_commit_noop_verified": true,
+      "bound_rollback_denied": true,
+      "cross_tenant_factory_denied": true,
+      "retained_rows": 1,
+      "retained_audits": [
+        {
+          "event": "deadline_checked"
+        },
+        {
+          "event": "transaction_witness"
+        }
+      ]
+    },
+    {
+      "case": "bound_early_constraints",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 176094,
+        "xid": "222745",
+        "isolation": "serializable"
+      },
+      "deadline": 1791388551.444431,
+      "before_end": {
+        "clock": 1791388550.44544,
+        "xid": "222745"
+      },
+      "committed": false,
+      "sqlstate": "23514",
+      "message": "GT_TEST_COMMIT_COMMAND_REQUIRED",
+      "sql_end_calls": 0,
+      "bound_commit_noop_verified": true,
+      "bound_rollback_denied": true,
+      "cross_tenant_factory_denied": true,
+      "retained_rows": 0,
+      "retained_audits": []
+    },
+    {
+      "case": "bound_expired_sql_commit",
+      "identity": {
+        "login": "aos_app",
+        "role": "aos_runtime",
+        "pid": 176096,
+        "xid": "222746",
+        "isolation": "serializable"
+      },
+      "deadline": 1791388551.462004,
+      "before_end": {
+        "clock": 1791388551.576157,
+        "xid": "222746"
+      },
+      "committed": false,
+      "sqlstate": "23514",
+      "message": "GT_TEST_DEADLINE_EXPIRED",
+      "sql_end_calls": 1,
+      "bound_commit_noop_verified": true,
+      "bound_rollback_denied": true,
+      "cross_tenant_factory_denied": true,
+      "retained_rows": 0,
+      "retained_audits": []
+    }
+  ],
+  "product_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "trusted_test_body": "BEGIN\n IF pg_catalog.current_query() IS DISTINCT FROM 'COMMIT' THEN\n  RAISE EXCEPTION 'GT_TEST_COMMIT_COMMAND_REQUIRED' USING ERRCODE='23514';\n END IF;\n IF clock_timestamp()>=NEW.deadline THEN\n  RAISE EXCEPTION 'GT_TEST_DEADLINE_EXPIRED' USING ERRCODE='23514';\n END IF;\n INSERT INTO gt_deferred_probe.audit VALUES(NEW.case_id,'deadline_checked',clock_timestamp());\n RETURN NULL;\nEND",
+  "head": "56e572c15b970af3ebd62dc62697377db8032187",
+  "probe_sha256": "cc00209eb00293afdb1d3cead4ef6394e1b1c09a6d062c2170ff3c6087ac2e83",
+  "original_product_sha256": {
+    "services/aos-api/aos_api/ecommerce_growth_host_ports.py": "1f32bc3fe0d95830d110d12ce179921eee688bc188baa9e694d23752ebd14a62",
+    "services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py": "86db8d7c55280c8f5ab6127f340090442b389c9a481d3e983939a1cb46584689",
+    "services/aos-api/aos_api/ecommerce_growth_runtime_connection.py": "cfd94cad19bac2373c28f57eddd1cae3629c4c486c73dbef8141baed1da6fa28"
+  },
+  "limitations": [
+    "Original trusted Host wrappers on an isolated primitive schema, not full Host dispatch/lifespan/business",
+    "SQL COMMIT forwarding is not proof that any untrusted package or user can access this trusted interface",
+    "No original product changes, no Source/evaluator/budget/AgentRun or formal authority",
+    "Candidate deadline trigger blocks early SET/expired end only in this synthetic control",
+    "Host end-channel ownership and full joint wiring remain pending"
+  ]
+}

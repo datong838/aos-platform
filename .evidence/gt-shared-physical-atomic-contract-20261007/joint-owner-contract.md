@@ -88,3 +88,9 @@ r2 fresh完整原distinct test 1PASS/7warnings52.25s，实际SCRAM/SERIAL/runtim
 隔离原生4case证明早SET CONSTRAINTS IMMEDIATE会清空检查队列，切回DEFERRED无新DML也不重新排队；这两case在deadline后COMMIT仍持久1row。默认deferred和重新UPDATE排队则实际COMMIT23514整事务回滚。另4case只以pg_catalog.current_query()='COMMIT'限制test-owned gate：live canonical COMMIT成功，late canonical COMMIT/早SET/END均23514及row/audit全回滚。独立回读两新库exactbody/trigger/8case/audit时间/product0，原Source/evaluator/正式身份没有修改或绕过。
 
 因此新ledger实际提交门需要受控结束通道；current_query候选只是可行性资料，协议/多语句/全部结束方式、之后其他trigger及等待跨期仍须原生完整证明。COMMIT内最终检查与物理WAL flush完成时限必须区分，不能虚称物理时限。原Source finalized trigger只保原子资料finalized，不能当JWT实际COMMIT期限门；不得为此冒改其现有Scope。fulljoint与合法业务链仍pending，Goal active。
+
+## 原Host借用事务 SQL 结束通道检查点
+
+原HostTransaction与TransactionBoundConnectFactory在新隔离primitive库中原样使用：bound.commit no-op保留原xid/INTRANS，但Host/bound.execute COMMIT真实提交；cross tenant和bound.rollback原拒绝继续保持。test-owned strictdeadline候选拒绝early SET和expired SQL COMMIT，全回滚。原3产品hash不变、4case/trigger/持久rows/audit/product0独立回读通过。仅可信Host边原生能力，未证明任意外部用户/包可接触接口或完整业务攻击。
+
+因此joint deferred gate必须把同xid/tenant/精确Source+预算+物理hold+唯一Intent+finalized作为整体提交条件，早结束未完成joint应fail-closed。不能把隐藏commit方法当SQL结束隔离，也不能靠加全局regex破坏可信原SQL接口。原Host formal dispatch/lifespan与joint正式接线仍需全链证明，Goal及父Task保持ACTIVE。
