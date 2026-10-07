@@ -29,6 +29,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_native_current_installation_rechecks_native_verifier',
         'test_exact_public_source_composition_preserves_original_issuer_checker',
         'test_controlled_source_signer_binds_original_jwt_pending_and_private_key',
+        'test_current_source_consumer_rechecks_new_transaction',
         'test_exact_public_source_rejects_live_issuer_drift',
         'test_exact_public_source_rejects_bad_signature_and_unfinished_commit',
         'test_native_committed_sources_share_one_physical_account',
@@ -4864,7 +4865,7 @@ def test_native_current_installation_rechecks_native_verifier(native_signed_sour
 
 
 @pytest.fixture
-def exact_public_source_caller(native_full_signed_reader):
+def exact_public_source_caller(native_full_signed_reader,request):
     from aos_api import aip_provider_capacity_publication_transaction as transaction
     from tests.aip._runtime_guard_history_fixture import isolated_owner
     from psycopg import sql
@@ -4876,12 +4877,14 @@ def exact_public_source_caller(native_full_signed_reader):
             assert row['signature'].startswith('publication_')
             revoked.append(row['signature'])
             owner.execute(sql.SQL('REVOKE EXECUTE ON FUNCTION '+row['signature']+' FROM aos_provider_capacity_issuer'))
-        for statement in transaction.source_public_entry_statements():owner.execute(statement)
+        include_consumer=request.node.originalname=='test_current_source_consumer_rechecks_new_transaction'
+        for statement in transaction.source_public_entry_statements(include_consumer=include_consumer):owner.execute(statement)
     _refresh_native_facts_transaction(caller)
     try:yield caller,raw,material,original
     finally:
         caller.rollback()
         with isolated_owner() as owner:
+            if include_consumer:owner.execute('DROP FUNCTION public.read_current_capacity_source(bytea,jsonb)')
             owner.execute('DROP FUNCTION public.prepare_capacity_source(bytea,text,text,jsonb)')
             owner.execute('DROP FUNCTION public.commit_capacity_source(text,bytea,bytea)')
             owner.execute('DROP FUNCTION aos_capacity_publication_private.require_current_source_installation()')
@@ -5077,6 +5080,126 @@ def test_controlled_source_signer_binds_original_jwt_pending_and_private_key(exa
     caller.execute('SELECT * FROM public.commit_capacity_source(%s,%s,%s)',
         (command.idempotency_key,raw,signature)).fetchone();caller.commit()
     from tests.aip._runtime_guard_history_fixture import isolated_owner
+    with isolated_owner() as owner:
+        row=owner.execute("SELECT p.content_hash=encode(sha256(p.source_raw),'hex') AS hash_ok,"
+            "aos_ed25519.verify(p.signature,p.source_raw,decode(s.signed_facts->>'sourceSignerPublicKey','base64')) AS signature_ok,s.finalized "
+            "FROM aos_capacity_publication_private.source_publication p JOIN aos_capacity_publication_private.source_pending s "
+            "ON s.attempt_id=p.attempt_id WHERE p.asset_id=%s",(asset,)).fetchone()
+        assert row==dict(hash_ok=True,signature_ok=True,finalized=True)
+
+
+@pytest.mark.parametrize('native_original_fact_reader',['shared','distinct'],indirect=True)
+def test_current_source_consumer_rechecks_new_transaction(exact_public_source_caller,https_signer):
+    """A durable fixture Source must be consumed in a fresh native transaction."""
+    from uuid import uuid4
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_provider_capacity_source_issuer import capacity_source_preparation_bytes
+    from aos_api.aip_provider_capacity_publication_contracts import (
+        PublishedProviderCapacitySourceV2,parse_signed_capacity_body)
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from pydantic import SecretStr
+    import time,json
+    sign,_=https_signer
+    caller,_,material,original=exact_public_source_caller
+    command,_,_=material['actual_command']()
+    # Actual fixture OIDC signature, not modified unverified authentication
+    # hints: the issuance token expires while the Source remains current.
+    maker=json.loads(capacity_source_preparation_bytes(command))['makerSubject']
+    command=command.model_copy(update=dict(bearer_token=SecretStr(sign(maker,changes={'exp':int(time.time())+20}))))
+    packet=capacity_source_preparation_bytes(command)
+    asset='consumed-source-'+uuid4().hex
+    row=caller.execute('SELECT * FROM public.prepare_capacity_source(%s,%s,%s,%s::jsonb)',
+        (packet,command.idempotency_key,asset,Jsonb(material['refs'][-1]))).fetchone()
+    raw=bytes(row['source_raw']);signature=material['source_key'].sign(raw)
+    publication=caller.execute('SELECT * FROM public.commit_capacity_source(%s,%s,%s)',
+        (command.idempotency_key,raw,signature)).fetchone()
+    caller.commit()
+    published=parse_signed_capacity_body(raw,PublishedProviderCapacitySourceV2)
+    delay=published.issuance_context.authentication_expires_at.timestamp()-time.time()+0.2
+    if delay>0:time.sleep(delay)
+    exact=FormalExactRef(asset_type='ProviderCapacitySourceRevision',asset_id=asset,
+        revision=publication['revision'],content_hash=publication['content_hash'])
+    _refresh_native_facts_transaction(caller)
+    assert str(caller.execute('SELECT pg_current_xact_id()::text AS xid').fetchone()['xid'])!=published.issuance_context.transaction_id
+    current_command,_,_=material['actual_command']()
+    # Import after actual COMMIT: a missing consumer cannot be hidden by fixture
+    # setup failures or a merely parseable candidate document.
+    from aos_api.aip_provider_capacity_source_consumer import read_current_capacity_source,ProviderCapacityConsumptionBlocked
+    with pytest.raises(ProviderCapacityConsumptionBlocked):
+        read_current_capacity_source(caller,command,exact)
+    try:consumed=read_current_capacity_source(caller,current_command,exact)
+    except Exception as error:
+        underlying=error.__context__
+        assert False,dict(type=type(underlying).__name__,
+            native_reason=getattr(getattr(underlying,'diag',None),'message_primary',None))
+    assert type(consumed) is PublishedProviderCapacitySourceV2
+    assert consumed.model_dump(mode='json',by_alias=True)==published.model_dump(mode='json',by_alias=True)
+    assert consumed.execution_allowed is False
+    caller.rollback()
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    with connect_capacity_issuer(original[4],SCOPE) as second:
+        native=second.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+        assert native['xid']!=published.issuance_context.transaction_id
+        assert native['pid']!=published.issuance_context.backend_pid
+        assert read_current_capacity_source(second,current_command,exact).model_dump(mode='json',by_alias=True)==published.model_dump(mode='json',by_alias=True)
+    _refresh_native_facts_transaction(caller)
+    # Exact refs, typed caller identity and fresh real JWT are independent gates.
+    for broken in [exact.model_copy(update={'asset_type':'ProviderCapacityRequest'}),
+        exact.model_copy(update={'revision':2}),exact.model_copy(update={'content_hash':'0'*64}),
+        exact.model_copy(update={'asset_id':'missing-consumer-source'})]:
+        with pytest.raises(ProviderCapacityConsumptionBlocked):
+            with caller.transaction():read_current_capacity_source(caller,current_command,broken)
+    for token in ['invalid-consumer-jwt',sign(maker,wrong_key=True),
+                  sign(maker,changes={'exp':int(time.time())-1}),
+                  sign('unapproved-consumer-maker'),sign(maker,changes={'org_id':'dev-org'})]:
+        with pytest.raises(ProviderCapacityConsumptionBlocked):
+            with caller.transaction():
+                read_current_capacity_source(caller,current_command.model_copy(update={'bearer_token':SecretStr(token)}),exact)
+    from aos_api.aip_provider_capacity_source_issuer import authenticate_capacity_issuance_command
+    with pytest.raises(ProviderCapacityConsumptionBlocked):
+        read_current_capacity_source(caller,authenticate_capacity_issuance_command(current_command),exact)
+    class DelegatingConnection:
+        def __getattr__(self,name):return getattr(caller,name)
+    with pytest.raises(ProviderCapacityConsumptionBlocked):
+        read_current_capacity_source(DelegatingConnection(),current_command,exact)
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    faults=[
+        ('ALTER FUNCTION public.read_current_capacity_source(bytea,jsonb) IMMUTABLE',
+         'ALTER FUNCTION public.read_current_capacity_source(bytea,jsonb) VOLATILE'),
+        ('GRANT EXECUTE ON FUNCTION public.read_current_capacity_source(bytea,jsonb) TO aos_runtime',
+         'REVOKE EXECUTE ON FUNCTION public.read_current_capacity_source(bytea,jsonb) FROM aos_runtime'),
+        ('ALTER FUNCTION public.read_current_capacity_source(bytea,jsonb) SET search_path=public',
+         'ALTER FUNCTION public.read_current_capacity_source(bytea,jsonb) SET search_path=pg_catalog'),
+        ('ALTER FUNCTION public.read_current_capacity_source(bytea,jsonb) SECURITY INVOKER',
+         'ALTER FUNCTION public.read_current_capacity_source(bytea,jsonb) SECURITY DEFINER')]
+    for fault,restore in faults:
+        caller.rollback()
+        with isolated_owner() as owner:owner.execute(fault)
+        _refresh_native_facts_transaction(caller)
+        try:
+            with pytest.raises(ProviderCapacityConsumptionBlocked):
+                with caller.transaction():read_current_capacity_source(caller,current_command,exact)
+        finally:
+            caller.rollback()
+            with isolated_owner() as owner:owner.execute(restore)
+        _refresh_native_facts_transaction(caller)
+        assert read_current_capacity_source(caller,current_command,exact).asset_id==asset
+    # A real signed authority withdrawal persists; the still valid signature
+    # cannot turn the historical Source into current authority afterwards.
+    caller.rollback()
+    withdrawal,withdrawal_signature,withdrawal_hash=_integrated_signed_origin_withdrawal(material)
+    with isolated_owner() as publisher:
+        publisher.execute("SELECT set_config('aos.org_id',%s,false),set_config('aos.project_id',%s,false)",SCOPE.key)
+        publisher.execute('SET SESSION AUTHORIZATION aos_provider_capacity_policy_publisher')
+        publisher.commit()
+        assert publisher.execute('SELECT aos_capacity_publication_private.withdraw_origin(%s,%s) AS digest',
+            (withdrawal,withdrawal_signature)).fetchone()['digest']==withdrawal_hash
+        publisher.commit()
+    _refresh_native_facts_transaction(caller)
+    with pytest.raises(ProviderCapacityConsumptionBlocked):
+        with caller.transaction():read_current_capacity_source(caller,current_command,exact)
+    # No consumer data writes, automatic commit or lasting grants are permitted.
+    caller.rollback()
     with isolated_owner() as owner:
         row=owner.execute("SELECT p.content_hash=encode(sha256(p.source_raw),'hex') AS hash_ok,"
             "aos_ed25519.verify(p.signature,p.source_raw,decode(s.signed_facts->>'sourceSignerPublicKey','base64')) AS signature_ok,s.finalized "

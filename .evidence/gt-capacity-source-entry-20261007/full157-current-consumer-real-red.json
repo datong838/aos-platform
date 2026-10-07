@@ -1,0 +1,47 @@
+{
+  "schema": "aos-current-consumer-real-red/v1",
+  "head": "30b778c6fafa17e074feeb893826e189de25cd53",
+  "authority": "AOS-001458",
+  "task": "gt-capacity-source-publication-20261006",
+  "log_sha256": "9bdbb382c2cd4280019f647825c40deb9e003dfd0cbaa6144813eb632403c50a",
+  "test_file_sha256": "a73410900e80042af9b5bd696b8a0e553baaa6843843a8509776cfbc44cfc86c",
+  "result": "2FAILED_expected_consumer_missing_after_actual_source_COMMIT",
+  "duration_seconds": 150.75,
+  "databases": [
+    {
+      "database": "aos_test_8952bcc0107f_ti4_test",
+      "durable_sources": [
+        {
+          "asset_id": "consumed-source-3360087fc2b24d129f0bdf37dd8b01ab",
+          "content_hash": "b7f48d68d1e1db8588b88ec265ce1fc56b26617fe59a7e548316b49cef69ce65",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_public_entries_removed": true
+    },
+    {
+      "database": "aos_test_8ad78d0bda7c_ti4_test",
+      "durable_sources": [
+        {
+          "asset_id": "consumed-source-ee97db5b3bc64fe7bed853bc25c7211e",
+          "content_hash": "57d43df63736778c4a0b3e7a497425523782f1792fe6b44054a6806e532be1a8",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_public_entries_removed": true
+    },
+    {
+      "database": "aos_test_b9810a7bdcf7_ti4_test",
+      "durable_sources": [],
+      "temporary_public_entries_removed": true
+    }
+  ],
+  "full_consumer_completed": false,
+  "formal_resources_touched": false
+}

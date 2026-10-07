@@ -1,0 +1,322 @@
+{
+  "schema": "aos-current-source-consumer-verification/v1",
+  "head": "30b778c6fafa17e074feeb893826e189de25cd53",
+  "logs": {
+    "current-source-consumer-red-r1.log": {
+      "sha256": "9bdbb382c2cd4280019f647825c40deb9e003dfd0cbaa6144813eb632403c50a",
+      "summary": "2 failed, 377 deselected, 7 warnings in 150.75s (0:02:30)"
+    },
+    "current-source-consumer-green-r1.log": {
+      "sha256": "96ea2d05d7da0dd074dcfdb239481b77490df6eded42717803f9e55c904e9ab6",
+      "summary": "2 failed, 377 deselected, 7 warnings in 120.18s (0:02:00)"
+    },
+    "current-source-consumer-green-r2.log": {
+      "sha256": "ad9045bdae84352587a5b613a952e486b9ccc4f0ab06b1482d03cfbe0d207a70",
+      "summary": "2 failed, 377 deselected, 7 warnings in 153.98s (0:02:33)"
+    },
+    "current-source-consumer-green-r3.log": {
+      "sha256": "068e67c3d7a155f18582782089b49937a348dd4c5c685c1f12f764bfee04e1db",
+      "summary": "2 passed, 377 deselected, 7 warnings in 143.69s (0:02:23)"
+    },
+    "current-source-consumer-expired-auth-r1.log": {
+      "sha256": "9b76caa91322817952213b3bf4d0f120dc98b761e98181a49c4517472e9d8325",
+      "summary": "1 failed, 1 passed, 377 deselected, 7 warnings in 212.42s (0:03:32)"
+    },
+    "current-source-consumer-expired-auth-r2.log": {
+      "sha256": "73ab39bf7db81c049fef1b0f82641aed59c1be2d4dd0970d938f24e41a09bbc1",
+      "summary": "2 passed, 377 deselected, 7 warnings in 136.84s (0:02:16)"
+    },
+    "current-source-consumer-adjacent-r1.log": {
+      "sha256": "27344374b1ed1fcfa9dc7aca0b8b125ea6a5ca34afe1652668ab11782194e9d9",
+      "summary": "7 passed, 372 deselected, 7 warnings in 219.63s (0:03:39)"
+    }
+  },
+  "databases": [
+    {
+      "database": "aos_test_02492a7c246c_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_17cf51a39363_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_23a2d031f4a7_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-b4da33819b0c480e850928f547dc1d27",
+          "content_hash": "372c99d04334e88830b6e1a51546f48fcd6a2d8131cc0923d9eb382a77aec329",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 1
+    },
+    {
+      "database": "aos_test_3958d93125c7_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-3b526e1a79a64661bae3f7620285d6e7",
+          "content_hash": "659900ed0406d6b323d88d1e5a0e294f522bba0d9b79c9843dadf35ec88c9159",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 1
+    },
+    {
+      "database": "aos_test_396844b1b5dd_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_3e0dcf7a62d1_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_5fa43e639b1e_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_68d5f7cb9178_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_75884470f713_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_79492a6ab5f8_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-4bc5e2e20fdd4de88ca9e65a6fc67f58",
+          "content_hash": "849ec4a60e9458f35066e47698b989902e4b94c9eb180f103a8d03297647e917",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_79d6a3342ce6_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_85cf2bf1d628_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-d86518c993624c8d9ece2c8dce22ff83",
+          "content_hash": "4050e49bcab6ffa1fff1645c9713262aab07691774e32a9cfb6992691d20d0cf",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_88775cc930c1_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-6651148aea844ae895c0f403c313acf5",
+          "content_hash": "a191c48127fa995cdd9978d57f6acac3f46efbc78f22339ebfd6c19f8728e75d",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_8952bcc0107f_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-3360087fc2b24d129f0bdf37dd8b01ab",
+          "content_hash": "b7f48d68d1e1db8588b88ec265ce1fc56b26617fe59a7e548316b49cef69ce65",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_8a1aa2d9c3ce_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-7a42c45799d24ed3bb77cac2d31b72bb",
+          "content_hash": "fb9f1c48e662482424eea200d9e188efc8c6dff80cf0c302c073b93b14ff9368",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_8ad78d0bda7c_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-ee97db5b3bc64fe7bed853bc25c7211e",
+          "content_hash": "57d43df63736778c4a0b3e7a497425523782f1792fe6b44054a6806e532be1a8",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_9b902b78dcbf_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-5f498edead43452e8497255612da2fac",
+          "content_hash": "ddd8c68cfab6241d5ea5caae53a7c0b3eee60e5b98b26cd500da7fc737bec805",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_ac84a37c8be4_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_af1e16b01445_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_b9810a7bdcf7_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_c32725c5f2a5_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_cb093a1e4d92_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-806ed80aed504690b7b5e000e1b1ffe2",
+          "content_hash": "ab136de8c2213c6cbc4ea12f5e9cd6e676479119b20962056f204bdc97443f1a",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 1
+    },
+    {
+      "database": "aos_test_d675ad9c5588_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-3ad7c24423c94216825167819376085d",
+          "content_hash": "30b28070ad85576c3d82e2fb48369c2698bf9106048ee994c65d123f4e74dec0",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_d8958415efbe_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-fc55b4ec962d4c95af76251ef2170a87",
+          "content_hash": "dec0a17718368279c141f861cbc7b7bb64a782e76f0d8235711ead168a02d293",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_fb1ea68cca1f_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-238de5e516df4fa78d90527b374be467",
+          "content_hash": "65592ae39ef68aaaa4d70762284fdde03739a0cfb1eb3428583478c779517ae2",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 1
+    },
+    {
+      "database": "aos_test_fdc898193cea_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    }
+  ],
+  "durable_sources_verified": 13,
+  "withdrawn_sources_still_signed": 4,
+  "default9_statements_unchanged": true,
+  "private41_and_original17_manifests_unchanged": true,
+  "old_test_changes": [
+    "registered_database_isolation",
+    "exact_public_source_caller"
+  ],
+  "consumer_service_gate_verified": true,
+  "formal_installation": false,
+  "business_runtime_integration": false,
+  "final_caller_commit_wallclock_gate": false,
+  "full_source_delivery": false
+}

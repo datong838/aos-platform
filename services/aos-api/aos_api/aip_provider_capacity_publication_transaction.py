@@ -1005,7 +1005,7 @@ def source_transaction_function_manifest():
 def _trusted_function_manifest(statements):
     """Parse every function in fixed installer SQL, failing on unsupported DDL."""
     pattern = re.compile(
-        r'CREATE FUNCTION\s+(aos_capacity_publication_private\.\w+|public\.(?:prepare_capacity_source|commit_capacity_source))\s*\((.*?)\)\s*'
+        r'CREATE FUNCTION\s+(aos_capacity_publication_private\.\w+|public\.(?:prepare_capacity_source|commit_capacity_source|read_current_capacity_source))\s*\((.*?)\)\s*'
         r'(.*?)\bAS\s+(\$\w*\$)(.*?)\4', re.S | re.I)
     manifest = []
     for statement in statements:
@@ -1361,7 +1361,7 @@ _PUBLIC_SOURCE_ENTRIES=(('prepare_capacity_source',
     'commit_original_source','p_key,p_raw,p_signature','text,bytea,bytea'))
 
 
-def _public_source_call_guard_sql():
+def _public_source_call_guard_sql(*,include_consumer=False):
     """Compile original issuer constraints; no private privileges for issuer."""
     from aos_api.aip_provider_capacity_formal_boundary import GUARD_HASH
     issuer = "'aos_provider_capacity_issuer'::regrole::oid"
@@ -1371,6 +1371,11 @@ def _public_source_call_guard_sql():
              'public.aos_capacity_withdrawal_epoch_lock(text,text,text)',
              'public.prepare_capacity_source(bytea,text,text,jsonb)',
              'public.commit_capacity_source(text,bytea,bytea)')
+    definitions=_PUBLIC_SOURCE_ENTRIES
+    if include_consumer:
+        from aos_api.aip_provider_capacity_source_consumer import CONSUMER_ENTRY
+        entries+=('public.read_current_capacity_source(bytea,jsonb)',)
+        definitions+=(CONSUMER_ENTRY,)
     function_oids='ARRAY['+','.join(literal(n)+'::regprocedure::oid' for n in entries)+']::oid[]'
     lock_predicate=' OR '.join('(c.oid='+literal('public.'+n)+'::regclass AND x.attname='+literal(col)+')' for n,col in LOCKS.items())
     denied="RAISE EXCEPTION 'CAPACITY_SOURCE_ISSUER_BOUNDARY_DRIFTED' USING ERRCODE='42501';"
@@ -1417,7 +1422,7 @@ def _public_source_call_guard_sql():
      OR EXISTS(SELECT 1 FROM pg_namespace WHERE has_schema_privilege({issuer},oid,'CREATE'))
      OR EXISTS(SELECT 1 FROM pg_database WHERE datname=current_database() AND has_database_privilege({issuer},oid,'CREATE'))""",
     ]
-    for name,args,returns,_callee,_values,types in _PUBLIC_SOURCE_ENTRIES:
+    for name,args,returns,_callee,_values,types in definitions:
         fields=[item.strip().split() for item in (args+','+returns).split(',')]
         names='ARRAY['+','.join(literal(item[0]) for item in fields)+']::text[]'
         all_types='ARRAY['+','.join(literal(item[1])+'::regtype::oid' for item in fields)+']::oid[]'
@@ -1472,9 +1477,9 @@ def _public_source_call_guard_sql():
     return '\n'.join('IF '+check+' THEN '+denied+' END IF;' for check in checks)
 
 
-def source_public_entry_statements():
+def source_public_entry_statements(*,include_consumer=False):
     """Exact approved interfaces, not automatically installed or authorized."""
-    guard=_public_source_call_guard_sql()
+    guard=_public_source_call_guard_sql(include_consumer=include_consumer)
     result=[source_private_installation_audit_sql()]
     for name,args,returns,callee,values,types in _PUBLIC_SOURCE_ENTRIES:
         result.extend([f"""CREATE FUNCTION public.{name}({args}) RETURNS TABLE({returns})
@@ -1485,19 +1490,23 @@ def source_public_entry_statements():
           f'ALTER FUNCTION public.{name}({types}) OWNER TO {OWNER}',
           f'REVOKE ALL ON FUNCTION public.{name}({types}) FROM PUBLIC',
           f'GRANT EXECUTE ON FUNCTION public.{name}({types}) TO aos_provider_capacity_issuer'])
+    if include_consumer:
+        from aos_api.aip_provider_capacity_source_consumer import consumer_entry_statements
+        result.extend(consumer_entry_statements(guard))
     return tuple(result)
 
 
-def source_public_entry_manifest():
-    return _trusted_function_manifest(source_public_entry_statements()[1:])
+def source_public_entry_manifest(*,include_consumer=False):
+    return _trusted_function_manifest(source_public_entry_statements(include_consumer=include_consumer)[1:])
 
 
 def require_source_public_entry_definitions(conn):
     """Allow only both exact definitions; absent installation keeps legacy gates."""
-    manifest=source_public_entry_manifest()
+    consumer=conn.execute("SELECT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname='read_current_capacity_source') AS present").fetchone()['present']
+    manifest=source_public_entry_manifest(include_consumer=consumer)
     rows=conn.execute("SELECT p.*,p.prosupport::oid AS support_oid,r.rolname,l.lanname FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace JOIN pg_roles r ON r.oid=p.proowner JOIN pg_language l ON l.oid=p.prolang WHERE n.nspname='public' AND p.proname=ANY(%s)",([m['signature'].split('(')[0].split('.')[1] for m in manifest],)).fetchall()
     if not rows:return ()
-    if len(rows)!=2:raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_PUBLIC_INSTALLATION_DRIFTED')
+    if len(rows)!=len(manifest):raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_PUBLIC_INSTALLATION_DRIFTED')
     oids=[]
     for m in manifest:
         row=next((r for r in rows if r['proname']==m['signature'].split('(')[0].split('.')[1]),None)
