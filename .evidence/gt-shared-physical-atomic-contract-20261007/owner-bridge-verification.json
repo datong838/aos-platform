@@ -1,0 +1,43 @@
+{
+  "status": "DEDICATED_OWNER_SOURCE_BRIDGE_NATIVE_VERIFIED",
+  "database": "aos_test_fc2688b199ad_ti4_test",
+  "source_hash": "c9e71c0e348d58bdbf6538bac8acb4c33bce778b90e804dafac9cb881feed54f",
+  "actual_caller": {
+    "pid": 125261,
+    "xid": "220954"
+  },
+  "role": "gt_physical_probe_fca6dd9359a7",
+  "private_privileges": {
+    "private_usage": false,
+    "private_read": false,
+    "direct_source": false,
+    "verifier": false,
+    "memberships": 0
+  },
+  "denials": [
+    {
+      "case": "wrong_signature",
+      "stage": "original_client_JWT_guard"
+    },
+    {
+      "case": "expired_authentication_packet",
+      "stage": "native_SQL_bridge",
+      "sqlstate": "22023"
+    },
+    {
+      "case": "wrong_ref",
+      "stage": "native_SQL_bridge",
+      "sqlstate": "22023"
+    },
+    {
+      "case": "ordinary_admin_runtime_session",
+      "sqlstate": "42501"
+    }
+  ],
+  "original_source_definitions_unchanged": true,
+  "limitations": [
+    "Fixed test-owned delegation prototype only; no physical hold/budget/Intent or business execution",
+    "Production needs exact bridge/Owner catalog audit and full joint locking/cutover; not authorized by this test"
+  ],
+  "test_owned_functions_removed": true
+}

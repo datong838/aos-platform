@@ -1,0 +1,56 @@
+{
+  "status": "OWNER_BRIDGE_DURABLE_HISTORY_AND_CLEANUP_VERIFIED",
+  "databases": {
+    "aos_test_fc2688b199ad_ti4_test": {
+      "identity": {
+        "database": "aos_test_fc2688b199ad_ti4_test",
+        "readonly": "on",
+        "cluster": "7693564235776004128"
+      },
+      "source_count": 1,
+      "test_functions": 0,
+      "extra_role_grants": 0,
+      "role_inert": true,
+      "agent_runs": 0,
+      "capacity_reservations": 0,
+      "canary": 0,
+      "migration_heads": [
+        {
+          "version_num": "a0v_157"
+        }
+      ]
+    },
+    "aos_test_6b38fa994717_ti4_test": {
+      "identity": {
+        "database": "aos_test_6b38fa994717_ti4_test",
+        "readonly": "on",
+        "cluster": "7693564235776004128"
+      },
+      "source_count": 0,
+      "test_functions": 0,
+      "extra_role_grants": 0,
+      "role_inert": true,
+      "agent_runs": 0,
+      "capacity_reservations": 0,
+      "canary": 0,
+      "migration_heads": [
+        {
+          "version_num": "a0v_157"
+        }
+      ]
+    }
+  },
+  "file_sha256": {
+    "owner_bridge_probe.py": "50eb385ec2f5d83b91a51d7ece77a80f1a4ab72b6070813c9b561fec1ed864c4",
+    "run_owner_bridge_probe.py": "a01689f003f80b086711e31ecdc6d6657b83a971be1d30ea96947cb01dc3f71f",
+    "verify_owner_bridge.py": "37a92384849ab26d126ef64ee3fcdaf6e7d82d5bd6941da20e583c69e0faf858",
+    "owner-bridge-verification.json": "a8308a484a32f452a799fd2fa0732d03151916e9ae5f609f176b408537c508af",
+    "owner-bridge-r2.log": "6184fc30b94ebbd02df84de70c21e607c9a1bbd7687cb2f614c79646ee363570",
+    "owner-bridge-r1.safe.log": "4b7a7fb58683b93c3bd2fb322e3971e51f74704733e50fc4dd7b07f9488cc200"
+  },
+  "limitations": [
+    "Unchanged original Source definitions/ACL and caller xid/pid are original live-run observations",
+    "Source now withdrawn; signature history is not current admission",
+    "Owner bridge prototype does not implement physical capacity/budget/Intent or authorize formal grants"
+  ]
+}

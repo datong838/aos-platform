@@ -1,0 +1,186 @@
+{
+  "status": "READ_ONLY_EXACT_LEGACY_MAPPING_INVENTORY",
+  "databases": {
+    "aos_test_b6bde5fde605_ti4_test": {
+      "rows": [
+        {
+          "reservation_id": "capres-920b993bf1624d2f82498c2311fbbbd3",
+          "legacy_status": "reserved",
+          "clock_expired": true,
+          "request_units": 1,
+          "token_units": 1,
+          "exact_signed_mapping": true,
+          "physical_account_id": "b591fc6a-adb5-436f-b1d8-e46c8274ef20",
+          "matching_source_hashes": [
+            "1859699142aaa1fff794e06a2dfaf984100a87b0ccb06de1868e38ab51f937fa"
+          ],
+          "actual_agent_run_exists": false,
+          "zero_effect_proven": false,
+          "cutover_disposition": "HOLD_FOR_PROVENANCE_RECONCILIATION"
+        },
+        {
+          "reservation_id": "capres-a5a9011231b241d5be02484c6e828d0e",
+          "legacy_status": "reserved",
+          "clock_expired": true,
+          "request_units": 1,
+          "token_units": 1,
+          "exact_signed_mapping": true,
+          "physical_account_id": "b591fc6a-adb5-436f-b1d8-e46c8274ef20",
+          "matching_source_hashes": [
+            "1859699142aaa1fff794e06a2dfaf984100a87b0ccb06de1868e38ab51f937fa"
+          ],
+          "actual_agent_run_exists": false,
+          "zero_effect_proven": false,
+          "cutover_disposition": "HOLD_FOR_PROVENANCE_RECONCILIATION"
+        },
+        {
+          "reservation_id": "capres-d89e51fa83324c51bdbd790401a35733",
+          "legacy_status": "reserved",
+          "clock_expired": true,
+          "request_units": 1,
+          "token_units": 1,
+          "exact_signed_mapping": true,
+          "physical_account_id": "b591fc6a-adb5-436f-b1d8-e46c8274ef20",
+          "matching_source_hashes": [
+            "1859699142aaa1fff794e06a2dfaf984100a87b0ccb06de1868e38ab51f937fa"
+          ],
+          "actual_agent_run_exists": false,
+          "zero_effect_proven": false,
+          "cutover_disposition": "HOLD_FOR_PROVENANCE_RECONCILIATION"
+        }
+      ],
+      "events": [
+        {
+          "event_type": "reserved",
+          "n": 3
+        }
+      ],
+      "source_count": 1,
+      "canary": 0
+    },
+    "aos_test_1c592b9c2334_ti4_test": {
+      "rows": [
+        {
+          "reservation_id": "capres-96f308b5d6a64cdeba516d9c320f4337",
+          "legacy_status": "reserved",
+          "clock_expired": true,
+          "request_units": 1,
+          "token_units": 10001,
+          "exact_signed_mapping": true,
+          "physical_account_id": "d6b3ac55-9aa6-4e3c-8c38-2fe266befc7a",
+          "matching_source_hashes": [
+            "ae11f864ecd46fe232f743af360408954ba82d56f38dca47d45c38ac93005460"
+          ],
+          "actual_agent_run_exists": false,
+          "zero_effect_proven": false,
+          "cutover_disposition": "HOLD_FOR_PROVENANCE_RECONCILIATION"
+        },
+        {
+          "reservation_id": "capres-f0ff1393885b4e9e84da6b9735d42d91",
+          "legacy_status": "reserved",
+          "clock_expired": true,
+          "request_units": 1,
+          "token_units": 10001,
+          "exact_signed_mapping": true,
+          "physical_account_id": "d6b3ac55-9aa6-4e3c-8c38-2fe266befc7a",
+          "matching_source_hashes": [
+            "ae11f864ecd46fe232f743af360408954ba82d56f38dca47d45c38ac93005460"
+          ],
+          "actual_agent_run_exists": false,
+          "zero_effect_proven": false,
+          "cutover_disposition": "HOLD_FOR_PROVENANCE_RECONCILIATION"
+        }
+      ],
+      "events": [
+        {
+          "event_type": "reserved",
+          "n": 2
+        }
+      ],
+      "source_count": 1,
+      "canary": 0
+    },
+    "aos_test_legacy_ttl_f65022995fae": {
+      "rows": [
+        {
+          "reservation_id": "capres-361e5aa7761a470baeb1a8a8e7e589c7",
+          "legacy_status": "expired",
+          "clock_expired": true,
+          "request_units": 1,
+          "token_units": 10,
+          "exact_signed_mapping": false,
+          "physical_account_id": null,
+          "matching_source_hashes": [],
+          "actual_agent_run_exists": false,
+          "zero_effect_proven": false,
+          "cutover_disposition": "UNMAPPED_BLOCK_NEW_ADMISSION"
+        },
+        {
+          "reservation_id": "capres-7f062fcc552b467a8a54b4ce7818be34",
+          "legacy_status": "reserved",
+          "clock_expired": true,
+          "request_units": 1,
+          "token_units": 10,
+          "exact_signed_mapping": false,
+          "physical_account_id": null,
+          "matching_source_hashes": [],
+          "actual_agent_run_exists": false,
+          "zero_effect_proven": false,
+          "cutover_disposition": "UNMAPPED_BLOCK_NEW_ADMISSION"
+        },
+        {
+          "reservation_id": "capres-c1a4c34156bc49969bb468ceceff55b1",
+          "legacy_status": "reserved",
+          "clock_expired": true,
+          "request_units": 1,
+          "token_units": 10,
+          "exact_signed_mapping": false,
+          "physical_account_id": null,
+          "matching_source_hashes": [],
+          "actual_agent_run_exists": false,
+          "zero_effect_proven": false,
+          "cutover_disposition": "UNMAPPED_BLOCK_NEW_ADMISSION"
+        },
+        {
+          "reservation_id": "capres-ef9e535f70b84cb6a3f5baa99d98eb11",
+          "legacy_status": "expired",
+          "clock_expired": true,
+          "request_units": 1,
+          "token_units": 10,
+          "exact_signed_mapping": false,
+          "physical_account_id": null,
+          "matching_source_hashes": [],
+          "actual_agent_run_exists": false,
+          "zero_effect_proven": false,
+          "cutover_disposition": "UNMAPPED_BLOCK_NEW_ADMISSION"
+        }
+      ],
+      "events": [
+        {
+          "event_type": "consumed",
+          "n": 1
+        },
+        {
+          "event_type": "expired",
+          "n": 2
+        },
+        {
+          "event_type": "reserved",
+          "n": 4
+        }
+      ],
+      "source_count": 0,
+      "canary": 0
+    }
+  },
+  "file_sha256": {
+    "source-pool-counterexample.json": "77f5705d5c67fc5d752e19b766d4c2a086fef94dd3ce9ccc7b025ffbd6677945",
+    "fixed-window-counterexample.json": "3c767c97ae820c46ded7a331680beb1ffbbf94e4bafc6021e9556af291896a24",
+    "legacy-ttl-r2.json": "14d6a577b75d61325b4527f8b1dfc0ad78cd7cd707b180beaffef07a603c3769"
+  },
+  "limitations": [
+    "All rows are retained isolated counterexamples, not legitimate business unknown history",
+    "No import or discharge performed; missing provenance remains a cutover requirement",
+    "Historical signed mapping is not current Source admission or execution permission"
+  ]
+}
