@@ -303,3 +303,19 @@ green-r4三个正向PASS32.33s。扩展r1为16PASS/8FAIL226.85s：三revision负
 资源现场：2026-10-07累计执行中原容器/卷保持，/dev/shm256MiB可用163MiB；原50GiB盘剩4.5GiB。扩大下一实际演练前先只读核剩余和原保留库；不删除库/卷/备份，不在运行中重启VM或更改挂载。
 
 本波最终累计：232PASS/114deselected/7既有warnings/noSKIP1030.91s，exit0。同一retained lab cluster7693564235776004128，回读aos_test_83e3dd94f7e0_ti4_test仍a0v_156，public.prepare不存在，本次临时command/signed私有函数0；原fixtures各自精确清理并复验原checker。凭证扫描、AST、production前缀及原测试保留、非日志whitespace复核通过。代码/方案复审确认固定编译无动态SQL/调用者公钥或文档/PASS、先原锁再新域锁、actual caller身份与samexid/PID保留；新Source窗口/签名根时点只构成当前读取门，非完整COMMIT时效承诺。浏览器N/A（本次无UI/API部署），正式库/服务/Host/worker/Provider/原Run未动。冻结full157-native-signed-suffix-verification.md/json；父Tasks/Lease继续ACTIVE/noSourceDelivery。下一按全157实施包继续，不重复旧RED作为进展。
+
+### 待签复审修正：请求唯一与事务内账户复用
+
+2026-10-07：当前235bdcc6/AOS-001441，同owner两scope Lease至12:00。新增真实RED：同request换attempt key重复准备；两独立原API批准在同caller事务拆账户UUID。pending增加tenant/maker/requestHash唯一与固定request namespace事务锁，按key或request查旧pending，换key拒绝。账户UUID优先全域映射，否则复用同native xid/PID/session、supplier/fingerprint的pending；多UUID拒绝。仍不写global映射/Source。生成V2前核各ID合同与Source/authentication当前期限，不修改旧候选模型；失败COMMIT独立回读零残留。新增测试登记真实保留库；原API批准必须在caller持锁前提交，再刷新快照。专项及相邻后复审冻结证据；完整S01/sign/commit/consumer/最终COMMIT TTL仍待验证。
+
+实测：初次stdin编码失败、测试exit5/无案例仅执行故障；identity-red-r2同request换key DID NOT RAISE实证，第二案例ImportError未触达；修导入和直接原approved_command fixture后identity-red-r3原API两独立批准生成不同UUID实证。最小修复后8PASS86.95s，最终ownership-neighborhood14PASS146.20s（286deselected/7既有warnings/noSKIP）；含全部12pending及两原shared/distinct签名后缀正向。三global故障为真实已提交隔离映射，合法既有UUID复用正向；准备失败及实际COMMIT失败Owner回读零pending、首次准备独立连接读三个表均0。原旧测试byte内容除新registered名称外完整，生产HEAD全部前缀未变。导入清理曾误改旧测试，测试进程结束后精确恢复并复核，旧案例内容无变化。
+
+最终retained aos_test_03a311f2193f_ti4_test/cluster7693564235776004128/a0v_156：本次pending/global三临时表及六私有新函数0、public.prepare不存在。fixture精确恢复原审计并清理；不删库卷备份，不操作正式库/服务/Host/worker/Provider/push。浏览器N/A（无UI/部署）。private pending并非完整Source交付，父Tasks/Goal ACTIVE；现有mapping竞争、全部安装manifest、核签commit/finalize/完成replay/currentconsumer及finalCOMMIT TTL仍必须沿原全157退出条件验证。下一完整commit装配，不能以此检查点关闭SourceTask。
+
+### 235bdcc6 / AOS-001441：待签原文施工切入
+
+四原同owner活跃Lease已核原source issuer/formal boundary/transaction/157范围，17原private函数catalog与public prepare/commit不存在已回读。两个候选仍完整157写路径与consumer；按依赖先写路径。生产代码仅transaction.py追加未来157私有pending SQL（暂不新增自动安装迁移或issuer公共grant），完整public prepare/commit由全S01安装审计与commit实现齐备后组装。原SQL fullchain RED不重复当新进展。
+
+新增global_account、global_provider和source_pending仅供own保留库演练，Owner-only/FORCE RLS；前二全域唯一约束不带tenant，Owner私有读全域但同scope写，统一错scope拒绝，issuer零私有表权限。prepare在原signed事实锁之后对账户supplier/fingerprint、每Provider原identity及attempt key固定namespace hash64事务锁去重按signed bigint排序；检查已有归属同tenant、Provider全集同一账户，DB生成稳定UUID而不接受candidate alias或自由UUID。prepare不写global映射/Source；nonce、same native xid/PID/session、command bytes/SHA、permit/registry/signed事实、精确Source v2 raw/SHA只写pending。新Source字段全部取DB原facts/登记payload，时间按原UTC规范、deployment取真实permit、issuer context取当前真实事务与原auth hints（仍非JWT权威），复用原canonical签名编码器。待签记录延迟约束读当前行而非过期NEW，未finalized实际COMMIT23514拒绝；future finalize只能由完整commit核签后执行，现不开放任何发布。
+
+先真实signed facts正向后的缺常量RED；再同原SCRAM临时Owner harness调用私有真实prepare，核完整V2模型/raw/parent全集/DBUUID/native身份、无global映射/Source，实际prepare-only COMMIT拒绝与保存点回滚零残留、同原事务重读同bytes、错误key/Source参数拒绝、global归属竞争与跨scope负门。仅本次临时table/functions/harness精确清理，原catalog/原checker恢复；不删除库卷备份。全S01/finalize/controlled signer/actualSourceCOMMIT/currentconsumer/finalTTL依旧未验，不交SourceDelivery。后继立即完整安装与提交装配，不以pending helper关闭父Task。

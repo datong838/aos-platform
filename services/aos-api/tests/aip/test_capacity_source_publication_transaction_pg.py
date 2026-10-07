@@ -16,6 +16,13 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
     from tests.conftest import _isolated_postgres_database as database_fixture
 
     registered_cases = {
+        'test_native_pending_source_respects_existing_global_ownership',
+        'test_native_pending_source_rejects_new_key_for_same_request',
+        'test_native_pending_sources_reuse_physical_account_in_same_transaction',
+        'test_native_pending_source_requires_database_derivation',
+        'test_native_pending_source_derives_exact_v2_in_actual_caller',
+        'test_native_pending_source_rejects_unfinished_actual_commit',
+        'test_native_pending_source_savepoint_rollback_has_no_residue',
         'test_native_full_signed_suffix_requires_registered_originals',
         'test_native_full_signed_suffix_composes_registered_originals',
         'test_native_full_signed_suffix_rejects_changed_exact_document_refs',
@@ -3934,3 +3941,177 @@ def test_native_full_signed_suffix_holds_current_registry_and_documents(native_f
         caller.rollback();release.set();thread.join(5)
     assert not thread.is_alive() and not errors
     print('NATIVE_SIGNED_LOCK target='+target+' actual_blocking_pid=true caller_commit_release=true source_issued=false')
+
+
+def test_native_pending_source_requires_database_derivation(native_full_signed_reader):
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    caller,identifier,raw,material,_=native_full_signed_reader
+    assert _call_native_full_signed(caller,identifier,raw,material['refs'][-1])['facts']['session']=='aos_provider_capacity_issuer'
+    assert getattr(transaction,'CAPACITY_SOURCE_PENDING_SQL',None) is not None, \
+        'Complete157 must derive exact Source v2 bytes and pending native attempt in the original caller'
+
+
+@pytest.fixture
+def native_pending_source_reader(native_full_signed_reader):
+    from uuid import uuid4
+    from psycopg import sql
+    from aos_api.aip_provider_capacity_publication_transaction import CAPACITY_SOURCE_PENDING_SQL
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,_,raw,material,original=native_full_signed_reader
+    identifier=sql.Identifier('public','publication_pending_harness_'+uuid4().hex)
+    caller.rollback()
+    with isolated_owner() as owner:
+        owner.execute(CAPACITY_SOURCE_PENDING_SQL)
+        owner.execute(sql.SQL("""CREATE FUNCTION {}(raw bytea,attempt_key text,source_id text,permit jsonb)
+            RETURNS TABLE(source_raw bytea,account_id uuid,attempt_id uuid) LANGUAGE sql SECURITY DEFINER
+            SET search_path=pg_catalog AS $body$
+            SELECT * FROM aos_capacity_publication_private.prepare_original_source(raw,attempt_key,source_id,permit) $body$""").format(identifier))
+        owner.execute(sql.SQL('ALTER FUNCTION {}(bytea,text,text,jsonb) OWNER TO aos_capacity_publication_owner').format(identifier))
+        owner.execute(sql.SQL('REVOKE ALL ON FUNCTION {}(bytea,text,text,jsonb) FROM PUBLIC').format(identifier))
+        owner.execute(sql.SQL('GRANT EXECUTE ON FUNCTION {}(bytea,text,text,jsonb) TO aos_provider_capacity_issuer').format(identifier))
+    _refresh_native_facts_transaction(caller)
+    try:yield caller,identifier,raw,material,original
+    finally:
+        caller.rollback()
+        with isolated_owner() as owner:
+            owner.execute(sql.SQL('DROP FUNCTION {}(bytea,text,text,jsonb)').format(identifier))
+            owner.execute('DROP FUNCTION aos_capacity_publication_private.prepare_original_source(bytea,text,text,jsonb)')
+            owner.execute('DROP TABLE aos_capacity_publication_private.source_pending')
+            owner.execute('DROP FUNCTION aos_capacity_publication_private.require_pending_source_finalized()')
+            owner.execute('DROP TABLE aos_capacity_publication_private.global_provider')
+            owner.execute('DROP TABLE aos_capacity_publication_private.global_account')
+
+
+def _call_native_pending_source(caller,identifier,raw,key,asset,permit):
+    from psycopg import sql
+    from psycopg.types.json import Jsonb
+    return caller.execute(sql.SQL('SELECT * FROM {}(%s,%s,%s,%s::jsonb)').format(identifier),
+        (raw,key,asset,Jsonb(permit))).fetchone()
+
+
+@pytest.mark.parametrize('native_original_fact_reader',['shared','distinct'],indirect=True)
+def test_native_pending_source_derives_exact_v2_in_actual_caller(native_pending_source_reader):
+    import json
+    from uuid import uuid4
+    from aos_api.aip_provider_capacity_publication_contracts import PublishedProviderCapacitySourceV2,parse_signed_capacity_body
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,identifier,raw,material,original=native_pending_source_reader
+    key='pending-'+uuid4().hex;asset='pending-source-'+uuid4().hex
+    native=caller.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+    row=_call_native_pending_source(caller,identifier,raw,key,asset,material['refs'][-1])
+    body=bytes(row['source_raw']);doc=parse_signed_capacity_body(body,PublishedProviderCapacitySourceV2)
+    assert doc.asset_id==asset and doc.physical_account_id==str(row['account_id'])
+    assert doc.issuance_context.attempt_id==str(row['attempt_id'])
+    assert doc.issuance_context.transaction_id==native['xid'] and doc.issuance_context.backend_pid==native['pid']
+    assert doc.request_hash==json.loads(raw)['requestHash']
+    assert doc.account_candidate_ref==original[3].physical_account_ref
+    assert doc.basis_candidate_ref==original[3].basis_ref
+    assert [r.model_dump(mode='json',by_alias=True) for r in doc.provider_refs]==original[0]['attestation']['providerRefs']
+    assert doc.signing_permit_ref.model_dump(mode='json',by_alias=True)==material['refs'][-1]
+    assert doc.execution_allowed is False
+    repeated=_call_native_pending_source(caller,identifier,raw,key,asset,material['refs'][-1])
+    assert bytes(repeated['source_raw'])==body and repeated['account_id']==row['account_id'] and repeated['attempt_id']==row['attempt_id']
+    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+        with caller.transaction():_call_native_pending_source(caller,identifier,raw,key,'different-source',material['refs'][-1])
+    with isolated_owner() as owner:
+        for table in ('global_account','global_provider','source_pending'):
+            assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.'+table).fetchone()['n']==0
+    caller.rollback()
+    with isolated_owner() as owner:
+        assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.source_pending').fetchone()['n']==0
+
+
+@pytest.mark.parametrize('changed_scope',[False,True])
+def test_native_pending_source_rejects_unfinished_actual_commit(native_pending_source_reader,changed_scope):
+    from uuid import uuid4
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,identifier,raw,material,_=native_pending_source_reader
+    _call_native_pending_source(caller,identifier,raw,'pending-'+uuid4().hex,'pending-source-'+uuid4().hex,material['refs'][-1])
+    if changed_scope:caller.execute("SELECT set_config('aos.org_id','dev-org',true)")
+    with pytest.raises(psycopg.errors.CheckViolation,match='CAPACITY_SOURCE_PENDING_NOT_FINALIZED'):
+        caller.commit()
+    caller.rollback()
+    with isolated_owner() as owner:
+        for table in ('global_account','global_provider','source_pending'):
+            assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.'+table).fetchone()['n']==0
+
+
+def test_native_pending_source_savepoint_rollback_has_no_residue(native_pending_source_reader):
+    from uuid import uuid4
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,identifier,raw,material,_=native_pending_source_reader
+    caller.execute('SAVEPOINT pending_source')
+    _call_native_pending_source(caller,identifier,raw,'pending-'+uuid4().hex,'pending-source-'+uuid4().hex,material['refs'][-1])
+    caller.execute('ROLLBACK TO SAVEPOINT pending_source');caller.commit()
+    with isolated_owner() as owner:
+        assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.source_pending').fetchone()['n']==0
+
+
+def test_native_pending_source_rejects_new_key_for_same_request(native_pending_source_reader):
+    from uuid import uuid4
+    caller,identifier,raw,material,_=native_pending_source_reader
+    key='pending-'+uuid4().hex
+    _call_native_pending_source(caller,identifier,raw,key,'pending-source-'+uuid4().hex,material['refs'][-1])
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='CAPACITY_SOURCE_PENDING_BINDING_CONFLICT'):
+        with caller.transaction():
+            _call_native_pending_source(caller,identifier,raw,key+'-changed','pending-source-'+uuid4().hex,material['refs'][-1])
+
+
+def test_native_pending_sources_reuse_physical_account_in_same_transaction(native_pending_source_reader,approved_command):
+    from uuid import uuid4
+    from aos_api.aip_provider_capacity_source_action import propose_provider_capacity_source,decide_provider_capacity_source
+    from aos_api.aip_action_models import DecideActionProposalRequest
+    from aos_api.aip_action_store import canonical_hash
+    from aos_api.aip_provider_capacity_source_issuer import capacity_source_preparation_bytes
+    caller,identifier,raw,material,original=native_pending_source_reader
+    maker,checker=approved_command[:2]
+    source=original[3]
+    caller.rollback()
+    proposed=propose_provider_capacity_source(maker,source,'pending-original-'+uuid4().hex,source.valid_until)
+    approved=decide_provider_capacity_source(checker,proposed.proposal.id,'pending-approved-'+uuid4().hex,
+        DecideActionProposalRequest(expectedProposalVersion=proposed.proposal.version,
+            expectedProposalHash=proposed.proposal.proposal_hash,decision='approved',
+            reason='isolated same physical account pending transaction',approvalExpiresAt=source.valid_until))
+    command,_,_=material['actual_command']()
+    command=command.model_copy(update=dict(
+        approved_proposal=command.approved_proposal.model_copy(update=dict(asset_id=approved.proposal.id,
+            content_hash=approved.proposal.proposal_hash)),
+        approval_event=command.approval_event.model_copy(update=dict(asset_id=approved.approvals[0].id,
+            content_hash=canonical_hash(approved.approvals[0].model_dump(mode='json',by_alias=True))))))
+    second_raw=capacity_source_preparation_bytes(command)
+    _refresh_native_facts_transaction(caller)
+    first=_call_native_pending_source(caller,identifier,raw,'first-'+uuid4().hex,'first-source-'+uuid4().hex,material['refs'][-1])
+    second=_call_native_pending_source(caller,identifier,second_raw,'second-'+uuid4().hex,'second-source-'+uuid4().hex,material['refs'][-1])
+    assert first['attempt_id']!=second['attempt_id']
+    assert first['account_id']==second['account_id']
+
+
+@pytest.mark.parametrize('ownership',['same','account_other_scope','provider_other_scope','provider_other_account'])
+def test_native_pending_source_respects_existing_global_ownership(native_pending_source_reader,ownership):
+    from uuid import uuid4
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,identifier,raw,material,original=native_pending_source_reader
+    account_id=uuid4();other_id=uuid4();attestation=original[0]['attestation']
+    caller.rollback()
+    with isolated_owner() as owner:
+        owner.execute('INSERT INTO aos_capacity_publication_private.global_account VALUES(%s,%s,%s,%s,%s)',
+            (account_id,attestation['supplierId'],attestation['supplierAccountFingerprint'],
+             'dev-org' if ownership=='account_other_scope' else 'org-org','dev-project'))
+        if ownership=='provider_other_account':
+            owner.execute('INSERT INTO aos_capacity_publication_private.global_account VALUES(%s,%s,%s,%s,%s)',
+                (other_id,attestation['supplierId'],'e'*64,'org-org','dev-project'))
+        for ref in attestation['providerRefs']:
+            owner.execute('INSERT INTO aos_capacity_publication_private.global_provider VALUES(%s,%s,%s,%s)',
+                (ref['assetId'],other_id if ownership=='provider_other_account' else account_id,
+                 'dev-org' if ownership=='provider_other_scope' else 'org-org','dev-project'))
+    _refresh_native_facts_transaction(caller)
+    if ownership=='same':
+        prepared=_call_native_pending_source(caller,identifier,raw,'global-'+uuid4().hex,'global-source-'+uuid4().hex,material['refs'][-1])
+        assert prepared['account_id']==account_id
+    else:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege,match='CAPACITY_SOURCE_GLOBAL_OWNERSHIP_CONFLICT'):
+            with caller.transaction():
+                _call_native_pending_source(caller,identifier,raw,'global-'+uuid4().hex,'global-source-'+uuid4().hex,material['refs'][-1])
+    caller.rollback()
+    with isolated_owner() as owner:
+        assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.source_pending').fetchone()['n']==0

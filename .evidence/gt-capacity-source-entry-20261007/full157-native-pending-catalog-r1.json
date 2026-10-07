@@ -1,0 +1,8 @@
+{
+  "database": "aos_test_03a311f2193f_ti4_test",
+  "cluster": "7693564235776004128",
+  "migration": "a0v_156",
+  "pending_and_global_tables": 0,
+  "private_new_functions": 0,
+  "public_prepare": null
+}

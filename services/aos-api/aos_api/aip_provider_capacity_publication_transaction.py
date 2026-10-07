@@ -657,3 +657,188 @@ REVOKE ALL ON FUNCTION aos_capacity_publication_private.read_source_command_sign
 
 
 CAPACITY_ORIGINAL_SOURCE_SIGNED_FACTS_SQL = _original_signed_facts_sql()
+
+
+# Future complete157 composition only. No migration/public issuer grant yet.
+CAPACITY_SOURCE_PENDING_SQL = r"""
+CREATE TABLE aos_capacity_publication_private.global_account(
+ account_id uuid PRIMARY KEY,supplier_id text NOT NULL,fingerprint text NOT NULL CHECK(fingerprint ~ '^[0-9a-f]{64}$'),
+ org_id text NOT NULL,project_id text NOT NULL,UNIQUE(supplier_id,fingerprint));
+CREATE TABLE aos_capacity_publication_private.global_provider(
+ provider_id text PRIMARY KEY,account_id uuid NOT NULL REFERENCES aos_capacity_publication_private.global_account,
+ org_id text NOT NULL,project_id text NOT NULL);
+CREATE TABLE aos_capacity_publication_private.source_pending(
+ org_id text NOT NULL CHECK(org_id='org-org'),project_id text NOT NULL CHECK(project_id='dev-project'),
+ maker text NOT NULL,attempt_key text NOT NULL CHECK(length(attempt_key) BETWEEN 1 AND 200),
+ attempt_id uuid NOT NULL UNIQUE,source_asset_id text NOT NULL,account_id uuid NOT NULL,
+ request_hash text NOT NULL CHECK(request_hash ~ '^[0-9a-f]{64}$'),
+ native_xid xid8 NOT NULL,native_pid integer NOT NULL,native_session text NOT NULL,
+ command_raw bytea NOT NULL,permit_ref jsonb NOT NULL,signed_facts jsonb NOT NULL,
+ source_raw bytea NOT NULL CHECK(octet_length(source_raw) BETWEEN 1 AND 2097152),
+ source_hash text NOT NULL CHECK(source_hash=encode(sha256(source_raw),'hex')),
+ finalized boolean NOT NULL DEFAULT false,
+ PRIMARY KEY(org_id,project_id,maker,attempt_key),UNIQUE(org_id,project_id,source_asset_id),
+ UNIQUE(org_id,project_id,maker,request_hash));
+ALTER TABLE aos_capacity_publication_private.global_account OWNER TO aos_capacity_publication_owner;
+ALTER TABLE aos_capacity_publication_private.global_provider OWNER TO aos_capacity_publication_owner;
+ALTER TABLE aos_capacity_publication_private.source_pending OWNER TO aos_capacity_publication_owner;
+REVOKE ALL ON aos_capacity_publication_private.global_account,aos_capacity_publication_private.global_provider,
+ aos_capacity_publication_private.source_pending FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer,aos_provider_capacity_policy_publisher;
+ALTER TABLE aos_capacity_publication_private.global_account ENABLE ROW LEVEL SECURITY;
+ALTER TABLE aos_capacity_publication_private.global_account FORCE ROW LEVEL SECURITY;
+ALTER TABLE aos_capacity_publication_private.global_provider ENABLE ROW LEVEL SECURITY;
+ALTER TABLE aos_capacity_publication_private.global_provider FORCE ROW LEVEL SECURITY;
+ALTER TABLE aos_capacity_publication_private.source_pending ENABLE ROW LEVEL SECURITY;
+ALTER TABLE aos_capacity_publication_private.source_pending FORCE ROW LEVEL SECURITY;
+-- Only the NOLOGIN private Owner can inspect global collisions. No caller
+-- can read another scope; the derivation routine returns one generic denial.
+CREATE POLICY source_global_owner ON aos_capacity_publication_private.global_account TO aos_capacity_publication_owner
+ USING(true) WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true));
+CREATE POLICY source_global_owner ON aos_capacity_publication_private.global_provider TO aos_capacity_publication_owner
+ USING(true) WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true));
+CREATE POLICY source_pending_owner ON aos_capacity_publication_private.source_pending TO aos_capacity_publication_owner
+ USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+ WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true));
+
+CREATE FUNCTION aos_capacity_publication_private.require_pending_source_finalized()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog
+ SET "aos.org_id"='org-org' SET "aos.project_id"='dev-project' AS $body$
+BEGIN
+ IF EXISTS(SELECT 1 FROM aos_capacity_publication_private.source_pending p
+   WHERE (p.org_id,p.project_id,p.maker,p.attempt_key)=(NEW.org_id,NEW.project_id,NEW.maker,NEW.attempt_key)
+    AND NOT p.finalized) THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_PENDING_NOT_FINALIZED' USING ERRCODE='23514'; END IF;
+ RETURN NULL;
+END $body$;
+ALTER FUNCTION aos_capacity_publication_private.require_pending_source_finalized() OWNER TO aos_capacity_publication_owner;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.require_pending_source_finalized() FROM PUBLIC;
+CREATE CONSTRAINT TRIGGER source_pending_finalized AFTER INSERT OR UPDATE ON aos_capacity_publication_private.source_pending
+ DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.require_pending_source_finalized();
+
+CREATE FUNCTION aos_capacity_publication_private.prepare_original_source(
+ p_raw bytea,p_attempt_key text,p_source_asset_id text,p_permit_ref jsonb)
+RETURNS TABLE(source_raw bytea,account_id uuid,attempt_id uuid)
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $body$
+DECLARE
+ v_input jsonb;v_packet jsonb;v_facts jsonb;v_source jsonb;v_account jsonb;v_basis jsonb;v_permit jsonb;
+ v_origin jsonb;v_attestation jsonb;v_ref jsonb;v_evidence jsonb;v_context jsonb;v_doc jsonb;
+ v_key bigint;v_account_id uuid;v_attempt_id uuid;v_now timestamptz;v_now_text text;v_raw bytea;
+ v_pending_account_id uuid;v_pending_account_count bigint;
+ v_account_row aos_capacity_publication_private.global_account%ROWTYPE;
+ v_provider_row aos_capacity_publication_private.global_provider%ROWTYPE;
+ v_pending aos_capacity_publication_private.source_pending%ROWTYPE;
+BEGIN
+ IF p_attempt_key IS NULL OR length(p_attempt_key) NOT BETWEEN 1 AND 200 OR p_source_asset_id IS NULL THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_PREPARE_INPUT_REQUIRED' USING ERRCODE='22023'; END IF;
+ PERFORM aos_capacity_publication_private.read_identifier(to_jsonb(p_source_asset_id));
+ v_input:=aos_capacity_publication_private.read_source_command_signed_facts(p_raw,p_permit_ref);
+ v_packet:=v_input->'packet';v_facts:=v_input->'facts';v_source:=v_facts->'source';
+ v_account:=v_facts->'account';v_basis:=v_facts->'basis';
+ v_permit:=v_input->'signedDocuments'->'ProviderCapacitySigningPermitRevision';
+ v_attestation:=v_input->'signedDocuments'->'SupplierCapacityAttestationRevision';
+ -- All identity locks follow the full original and signed-material prefix.
+ -- JSON framing prevents key ambiguity; collisions only serialize callers.
+ FOR v_key IN SELECT DISTINCT ('x'||substr(encode(sha256(convert_to(
+   aos_capacity_publication_private.canonical_signed_json(k.value::json,1),'UTF8')),'hex'),1,16))::bit(64)::bigint
+  FROM jsonb_array_elements(jsonb_build_array(
+    jsonb_build_array('aos-capacity-global-account/v1',v_account->>'supplierId',v_account->>'supplierAccountFingerprint'),
+    jsonb_build_array('aos-capacity-source-attempt/v1','org-org','dev-project',v_packet->>'makerSubject',p_attempt_key),
+    jsonb_build_array('aos-capacity-source-request/v1','org-org','dev-project',v_packet->>'makerSubject',v_packet->>'requestHash'))
+    ||(SELECT jsonb_agg(jsonb_build_array('aos-capacity-global-provider/v1',r.value->>'assetId'))
+      FROM jsonb_array_elements(v_account->'providerRefs') r)) k ORDER BY 1 LOOP
+  PERFORM pg_advisory_xact_lock(v_key);
+ END LOOP;
+ SELECT a.* INTO v_account_row FROM aos_capacity_publication_private.global_account a
+  WHERE a.supplier_id=v_account->>'supplierId' AND a.fingerprint=v_account->>'supplierAccountFingerprint' FOR SHARE;
+ IF FOUND THEN
+  IF (v_account_row.org_id,v_account_row.project_id) IS DISTINCT FROM ('org-org'::text,'dev-project'::text) THEN
+   RAISE EXCEPTION 'CAPACITY_SOURCE_GLOBAL_OWNERSHIP_CONFLICT' USING ERRCODE='42501'; END IF;
+  v_account_id:=v_account_row.account_id;
+ END IF;
+ -- Uncommitted preparations in this exact native transaction already own
+ -- one physical identity, although global mappings are published only later.
+ SELECT count(DISTINCT p.account_id),min(p.account_id::text)::uuid
+  INTO v_pending_account_count,v_pending_account_id
+  FROM aos_capacity_publication_private.source_pending p
+  WHERE p.org_id='org-org' AND p.project_id='dev-project'
+   AND p.native_xid=pg_current_xact_id() AND p.native_pid=pg_backend_pid() AND p.native_session=session_user
+   AND p.signed_facts->'facts'->'account'->>'supplierId'=v_account->>'supplierId'
+   AND p.signed_facts->'facts'->'account'->>'supplierAccountFingerprint'=v_account->>'supplierAccountFingerprint';
+ IF v_pending_account_count>1 OR (v_account_id IS NOT NULL AND v_pending_account_id IS NOT NULL
+   AND v_account_id<>v_pending_account_id) THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_GLOBAL_OWNERSHIP_CONFLICT' USING ERRCODE='42501'; END IF;
+ v_account_id:=coalesce(v_account_id,v_pending_account_id,gen_random_uuid());
+ FOR v_ref IN SELECT value FROM jsonb_array_elements(v_account->'providerRefs') ORDER BY value->>'assetId' COLLATE "C" LOOP
+  SELECT m.* INTO v_provider_row FROM aos_capacity_publication_private.global_provider m
+   WHERE m.provider_id=v_ref->>'assetId' FOR SHARE;
+  IF FOUND AND ((v_provider_row.org_id,v_provider_row.project_id) IS DISTINCT FROM ('org-org'::text,'dev-project'::text)
+   OR v_provider_row.account_id IS DISTINCT FROM v_account_id) THEN
+   RAISE EXCEPTION 'CAPACITY_SOURCE_GLOBAL_OWNERSHIP_CONFLICT' USING ERRCODE='42501'; END IF;
+ END LOOP;
+ SELECT p.* INTO v_pending FROM aos_capacity_publication_private.source_pending p
+  WHERE p.org_id='org-org' AND p.project_id='dev-project' AND p.maker=v_packet->>'makerSubject'
+   AND (p.attempt_key=p_attempt_key OR p.request_hash=v_packet->>'requestHash') FOR UPDATE;
+ -- Identity/row waits may cross a deadline. Recheck already-held originals
+ -- after every possible wait, including a same-transaction pending replay.
+ v_input:=aos_capacity_publication_private.read_source_command_signed_facts(p_raw,p_permit_ref);
+ IF v_pending.attempt_id IS NOT NULL THEN
+  IF v_pending.attempt_key<>p_attempt_key OR v_pending.request_hash<>v_packet->>'requestHash' OR v_pending.source_asset_id<>p_source_asset_id
+   OR v_pending.command_raw<>p_raw OR v_pending.permit_ref<>p_permit_ref
+   OR v_pending.native_xid<>pg_current_xact_id() OR v_pending.native_pid<>pg_backend_pid()
+   OR v_pending.native_session<>session_user OR v_pending.finalized THEN
+   RAISE EXCEPTION 'CAPACITY_SOURCE_PENDING_BINDING_CONFLICT' USING ERRCODE='42501'; END IF;
+  RETURN QUERY SELECT v_pending.source_raw,v_pending.account_id,v_pending.attempt_id;RETURN;
+ END IF;
+ SELECT aos_capacity_publication_private.read_origin_bootstrap(o.raw_body) INTO STRICT v_origin
+  FROM aos_capacity_publication_private.origin o WHERE o.org_id='org-org' AND o.project_id='dev-project'
+   AND o.content_hash=v_input->'origin'->>'originHash';
+ SELECT jsonb_agg(e.ref ORDER BY e.ref->>'assetType' COLLATE "C",e.ref->>'assetId' COLLATE "C") INTO v_evidence
+  FROM (SELECT DISTINCT value AS ref FROM jsonb_array_elements(jsonb_build_array(
+   v_facts->'application'->'basisEvidenceRef',v_account->'evidenceRef',v_basis->'evidenceRef'))) e;
+ IF EXISTS(SELECT 1 FROM jsonb_array_elements(v_evidence) e GROUP BY e.value->>'assetType',e.value->>'assetId' HAVING count(*)>1) THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_EVIDENCE_REF_CONFLICT' USING ERRCODE='42501'; END IF;
+ v_now:=clock_timestamp();
+ IF v_now>=(SELECT instant FROM aos_capacity_publication_private.original_source_time(v_source->'validUntil'))
+  OR v_now<(SELECT instant FROM aos_capacity_publication_private.original_source_time(v_source->'validFrom'))
+  OR v_now>=aos_capacity_publication_private.read_signed_time(v_packet->'authentication'->'authenticationExpiresAt') THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_PREPARE_EXPIRED' USING ERRCODE='42501'; END IF;
+ IF aos_capacity_publication_private.read_signed_time(v_attestation->'observedAt')>v_now THEN
+  RAISE EXCEPTION 'CAPACITY_SOURCE_OBSERVATION_NOT_CURRENT' USING ERRCODE='42501'; END IF;
+ v_now_text:=to_char(v_now AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS')||
+  CASE WHEN to_char(v_now AT TIME ZONE 'UTC','US')='000000' THEN '' ELSE '.'||to_char(v_now AT TIME ZONE 'UTC','US') END||'Z';
+ v_attempt_id:=gen_random_uuid();
+ v_context:=(v_packet->'authentication')||jsonb_build_object('issuerRole',session_user,
+   'transactionId',pg_current_xact_id()::text,'backendPid',pg_backend_pid(),'attemptId',v_attempt_id::text);
+ v_doc:=jsonb_build_object('schemaVersion',2,'tenant',v_source->'tenant','assetId',p_source_asset_id,'revision',1,
+  'publisher',v_permit->'signerPublisher','keyId',v_permit->'signerKeyId','purpose','provider_capacity_published_source',
+  'validFrom',v_source->'validFrom','validUntil',v_source->'validUntil','deploymentTarget',v_permit->'deploymentTarget',
+  'physicalAccountId',v_account_id::text,'supplierId',v_account->'supplierId','supplierAccountFingerprint',v_account->'supplierAccountFingerprint',
+  'providerRefs',v_account->'providerRefs','evidenceRefs',v_evidence,
+  'sourceProposalRef',v_packet->'command'->'approvedProposal','sourceApprovalRef',v_packet->'command'->'approvalEvent',
+  'allocationRequestRef',v_source->'allocationRequestRef','allocationApprovalRef',v_source->'allocationApprovalRef',
+  'accountCandidateRef',v_source->'physicalAccountRef','basisCandidateRef',v_source->'basisRef',
+  'sourcePolicyRef',v_packet->'command'->'sourcePolicyRef','supplierAttestationRef',v_packet->'command'->'supplierAttestationRef',
+  'signingPermitRef',p_permit_ref,'originRef',jsonb_build_object('assetType','ProviderCapacityOriginBootstrapRevision',
+   'assetId',v_origin->'assetId','revision',v_origin->'revision','contentHash',v_input->'origin'->'originHash'),
+  'originEpoch',v_input->'origin'->'epoch','sourceWithdrawalEpoch',v_facts->'withdrawalEpochs'->(v_facts->>'sourceProposal'),
+  'allocationWithdrawalEpoch',v_facts->'withdrawalEpochs'->(v_facts->>'allocationProposal'),
+  'requestHash',v_packet->'requestHash','maxConcurrency',v_basis->'maxConcurrency','tokenLimit',v_basis->'tokenLimit',
+  'observedAt',v_attestation->'observedAt','issuedAt',v_now_text,'executionAllowed',false,'issuanceContext',v_context);
+ PERFORM aos_capacity_publication_private.read_identifier(v_doc->'supplierId');
+ FOR v_ref IN SELECT value FROM jsonb_array_elements(
+  v_doc->'providerRefs'||v_doc->'evidenceRefs'||jsonb_build_array(
+   v_doc->'sourceProposalRef',v_doc->'sourceApprovalRef',v_doc->'allocationRequestRef',v_doc->'allocationApprovalRef',
+   v_doc->'accountCandidateRef',v_doc->'basisCandidateRef',v_doc->'sourcePolicyRef',v_doc->'supplierAttestationRef',
+   v_doc->'signingPermitRef',v_doc->'originRef')) LOOP
+  PERFORM aos_capacity_publication_private.read_identifier(v_ref->'assetId');
+ END LOOP;
+ v_raw:=convert_to(aos_capacity_publication_private.canonical_signed_json(v_doc::json,1),'UTF8');
+ INSERT INTO aos_capacity_publication_private.source_pending(org_id,project_id,maker,attempt_key,attempt_id,source_asset_id,
+  account_id,request_hash,native_xid,native_pid,native_session,command_raw,permit_ref,signed_facts,source_raw,source_hash)
+ VALUES('org-org','dev-project',v_packet->>'makerSubject',p_attempt_key,v_attempt_id,p_source_asset_id,v_account_id,
+  v_packet->>'requestHash',pg_current_xact_id(),pg_backend_pid(),session_user,p_raw,p_permit_ref,v_input,v_raw,encode(sha256(v_raw),'hex'));
+ RETURN QUERY SELECT v_raw,v_account_id,v_attempt_id;
+END $body$;
+ALTER FUNCTION aos_capacity_publication_private.prepare_original_source(bytea,text,text,jsonb) OWNER TO aos_capacity_publication_owner;
+REVOKE ALL ON FUNCTION aos_capacity_publication_private.prepare_original_source(bytea,text,text,jsonb) FROM PUBLIC;
+"""

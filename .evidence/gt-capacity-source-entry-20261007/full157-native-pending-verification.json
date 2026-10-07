@@ -1,0 +1,77 @@
+{
+  "status": "PARTIAL_PRIVATE_PENDING_GREEN",
+  "base_head": "235bdcc65ac51513489f157ddbe6161038ae11a8",
+  "authority": "AOS-001441",
+  "specialized": {
+    "passed": 8,
+    "seconds": 86.95
+  },
+  "final_pending_and_signed_neighbor": {
+    "passed": 14,
+    "deselected": 286,
+    "existing_warnings": 7,
+    "skipped": 0,
+    "seconds": 146.2
+  },
+  "source_delivery": false,
+  "parent_tasks": "ACTIVE",
+  "goal": "ACTIVE",
+  "production_head_prefix_preserved": true,
+  "old_tests_preserved_except_new_registered_names": true,
+  "browser": "N/A no UI or deployment",
+  "formal_db_services_changed": false,
+  "remaining": [
+    "Full157 installation S01 audit and exact public interfaces",
+    "Controlled signer and native signature-checked commit/finalize",
+    "Actual Source caller COMMIT and completed replay",
+    "Current consumer integration",
+    "Final actual COMMIT TTL unresolved",
+    "Natural business first chain and full long Goal"
+  ],
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": {
+      "sha256": "2d71a44c445cecd6f0e51f48183738e80a330c3fef5ae1c2f66c936211d89143",
+      "bytes": 59525
+    },
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": {
+      "sha256": "daab6cdf7f6e5717366a2ffaa507e360fbf3b5e18a76f08505577908af8914ff",
+      "bytes": 303188
+    },
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": {
+      "sha256": "eb9f392585103df00bf65dd5a77ac136a6917b92a9adbea7563b559c5cf85fb0",
+      "bytes": 119979
+    },
+    ".evidence/gt-capacity-source-entry-20261007/full157-native-pending-catalog-r1.json": {
+      "sha256": "ca39a5b83a0a5e03eae061d96687b28f1fc4b03338ac601a0bd30514db1ac441",
+      "bytes": 203
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-pending-expanded-green-r1.log": {
+      "sha256": "4eed0d7e609a3a048af9cdf43a72053310bf05b2a4e166d4c3fd9a3d5f285af8",
+      "bytes": 437586
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-pending-green-r1.log": {
+      "sha256": "7da42860f4ddc8a54c56ae4341587f476e00cb994c01604b68020b8081432c4b",
+      "bytes": 340912
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-pending-identity-red-r1.log": {
+      "sha256": "88d8de0c395ae4b97dcf5fa8b1474b6137ae9913c30073b04727c3e7e09ecb65",
+      "bytes": 2533
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-pending-identity-red-r2.log": {
+      "sha256": "90b22eda78bf43a070163bb34df86d48d39f8d57fbd7b52755deec4a48ed0b64",
+      "bytes": 150200
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-pending-identity-red-r3.log": {
+      "sha256": "18570cfd0455e31bd991d5a259726147cfc06d645d0cbda68ad45c0233289aef",
+      "bytes": 102583
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-pending-ownership-neighborhood-r1.log": {
+      "sha256": "8aba4f574dbb57433cbc246e9bb8093173842834e0b57e188bf0959207bb0fe4",
+      "bytes": 727610
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-pending-red-r1.log": {
+      "sha256": "f6228a33cd424e4724dcc91ae6218efb8e3e7cfda1f1dca4094327b96c07f303",
+      "bytes": 100969
+    }
+  }
+}
