@@ -1,0 +1,21 @@
+{
+  "cluster": "7693564235776004128",
+  "database": "aos_test_79c3b0691514_ti4_test",
+  "migration": [
+    {
+      "version_num": "a0v_156"
+    }
+  ],
+  "new_functions": [],
+  "public_entries": {
+    "commit": null,
+    "prepare": null
+  },
+  "tables": {
+    "global_account": null,
+    "global_provider": null,
+    "source_pending": null,
+    "source_provenance": null,
+    "source_publication": null
+  }
+}

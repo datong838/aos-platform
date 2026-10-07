@@ -1,0 +1,51 @@
+{
+  "adjacent": {
+    "deselected": 321,
+    "passed": 13,
+    "seconds": 126.79,
+    "skipped": 0,
+    "warnings": 7
+  },
+  "authority": "AOS-001447",
+  "base_head": "928ceec736516a994622240edae6844368b5c52c",
+  "columns": 43,
+  "constraints": 27,
+  "controlled_production_jwt_signer": false,
+  "current_consumer": false,
+  "drift_cases": 19,
+  "files": {
+    ".evidence/gt-capacity-source-entry-20261007/full157-table-audit-catalog-final.json": "sha256:100993910ce7cdb924140ce699bd9135750a02047c666b7b9f429ca71057e2dc",
+    ".evidence/gt-capacity-source-entry-20261007/full157-table-contract-reviewed.json": "sha256:4bb5578b0dfab0102b5d10197162809e7620598941b3be203a7c293b24c2acc8",
+    ".evidence/gt-capacity-source-entry-20261007/plan.md": "sha256:a422f711434db905919b590388d2729f4cc8f26726793b832d49bba9169ddd7c",
+    ".evidence/gt-capacity-source-publication-20261006/full157-table-audit-adjacent-r1.log": "sha256:c403c4f7ca5209e009b141c68311c9d9139dfe48adb6f0c22a4dd8b036230350",
+    ".evidence/gt-capacity-source-publication-20261006/full157-table-audit-green-r1.log": "sha256:2b9ba19a09178ab2b653fadb86451f4caa4e6a9c5f0c682799f96be1fa06db6a",
+    ".evidence/gt-capacity-source-publication-20261006/full157-table-audit-red-r1.log": "sha256:2b352e981f52e75dafef4ede47cd18cd1316af4c6d046c7bc4d276bf601d08b5",
+    ".evidence/gt-capacity-source-publication-20261006/table_catalog_queries.py": "sha256:69cc6dd30ed0b26577028000398c7765e072a7a16bc4657dd55e28ba7e1f1fca",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "sha256:44f0a5156ac90299550cf2c157d209ad46583137db9b089a043c4155ac90ba61",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "sha256:f0422eb70e1c7669a8e6e8a0a02ff3c55279846e8c141b863106cc53427fd6a9"
+  },
+  "final_actual_commit_ttl": "unresolved",
+  "full157": false,
+  "full_s01": false,
+  "goal": "active",
+  "indexes": 10,
+  "parent_tasks": "ACTIVE",
+  "policies": 5,
+  "red": {
+    "failed": 1,
+    "reason": "native installed Source finalized default changed; missing table audit contract",
+    "seconds": 13.76
+  },
+  "runtime_entry_enforcement": false,
+  "schema": "aos-source-table-audit-verification/v1",
+  "source_delivery": false,
+  "specialized": {
+    "deselected": 314,
+    "passed": 20,
+    "seconds": 181.79,
+    "skipped": 0,
+    "warnings": 7
+  },
+  "tables": 5,
+  "triggers": 21
+}

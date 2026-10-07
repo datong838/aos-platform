@@ -1,0 +1,2029 @@
+{
+  "authority": "AOS-001447",
+  "base_head": "928ceec736516a994622240edae6844368b5c52c",
+  "full_s01": false,
+  "queries_sha256": "69cc6dd30ed0b26577028000398c7765e072a7a16bc4657dd55e28ba7e1f1fca",
+  "rollback_new_tables_absent": true,
+  "rollback_original_catalog_equal": true,
+  "schema": "aos-source-reviewed-table-contract/v1",
+  "source_delivery": false,
+  "table_hashes": {
+    "global_account": "0146c1484cbb7b63f75e1c4ad0a19dde78d619772aa737119098dd2788bd9338",
+    "global_provider": "9f2a9c6306332498800fd3ab3e0da1ec4cb7e420fa2f0af64725af8e9c0b5241",
+    "source_pending": "b540872f86c0b53e9cc1c811dee486a475fb92a88029b2b001f0641ecc480d61",
+    "source_provenance": "4247c46aea460636257f6f9af4cd4a88e684b8cd163e98df4e623da86169c15b",
+    "source_publication": "11d0e5aa0cec62d6109cb2b6eb2e4a6b6582d9290611fd085c494db691abcd46"
+  },
+  "table_sql_sha256": [
+    "8bc47c5697dce3f7b99862c205e3753d8c2ff7dc82177a33c6a8793790174524",
+    "a2f4e5bcecceecfc9aed28fad84b8c9f46c5e7d224409581235a0e96d299bab1"
+  ],
+  "tables": {
+    "global_account": {
+      "acl": [
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "DELETE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "INSERT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "REFERENCES"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "SELECT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRIGGER"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRUNCATE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "UPDATE"
+        }
+      ],
+      "column_acl": [],
+      "columns": [
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "account_id",
+          "attnotnull": true,
+          "attnum": 1,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "uuid",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "supplier_id",
+          "attnotnull": true,
+          "attnum": 2,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "fingerprint",
+          "attnotnull": true,
+          "attnum": 3,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "org_id",
+          "attnotnull": true,
+          "attnum": 4,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "project_id",
+          "attnotnull": true,
+          "attnum": 5,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        }
+      ],
+      "constraints": [
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "global_account_fingerprint_check",
+          "connoinherit": false,
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((fingerprint ~ '^[0-9a-f]{64}$'::text))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "global_account_pkey",
+          "connoinherit": true,
+          "contype": "p",
+          "convalidated": true,
+          "definition": "PRIMARY KEY (account_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "global_account_supplier_id_fingerprint_key",
+          "connoinherit": true,
+          "contype": "u",
+          "convalidated": true,
+          "definition": "UNIQUE (supplier_id, fingerprint)"
+        }
+      ],
+      "indexes": [
+        {
+          "collations": [
+            null
+          ],
+          "definition": "CREATE UNIQUE INDEX global_account_pkey ON aos_capacity_publication_private.global_account USING btree (account_id)",
+          "expressions": null,
+          "indimmediate": true,
+          "indisexclusion": false,
+          "indislive": true,
+          "indisprimary": true,
+          "indisready": true,
+          "indisreplident": false,
+          "indisunique": true,
+          "indisvalid": true,
+          "indnatts": 1,
+          "indnkeyatts": 1,
+          "indnullsnotdistinct": false,
+          "keys": [
+            1
+          ],
+          "method": "btree",
+          "name": "global_account_pkey",
+          "opclasses": [
+            "pg_catalog.uuid_ops"
+          ],
+          "options": [
+            0
+          ],
+          "predicate": null,
+          "reloptions": null,
+          "schema": "aos_capacity_publication_private"
+        },
+        {
+          "collations": [
+            "pg_catalog.default",
+            "pg_catalog.default"
+          ],
+          "definition": "CREATE UNIQUE INDEX global_account_supplier_id_fingerprint_key ON aos_capacity_publication_private.global_account USING btree (supplier_id, fingerprint)",
+          "expressions": null,
+          "indimmediate": true,
+          "indisexclusion": false,
+          "indislive": true,
+          "indisprimary": false,
+          "indisready": true,
+          "indisreplident": false,
+          "indisunique": true,
+          "indisvalid": true,
+          "indnatts": 2,
+          "indnkeyatts": 2,
+          "indnullsnotdistinct": false,
+          "keys": [
+            2,
+            3
+          ],
+          "method": "btree",
+          "name": "global_account_supplier_id_fingerprint_key",
+          "opclasses": [
+            "pg_catalog.text_ops",
+            "pg_catalog.text_ops"
+          ],
+          "options": [
+            0,
+            0
+          ],
+          "predicate": null,
+          "reloptions": null,
+          "schema": "aos_capacity_publication_private"
+        }
+      ],
+      "inheritance": false,
+      "owner": "aos_capacity_publication_owner",
+      "policies": [
+        {
+          "check_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))",
+          "polcmd": "*",
+          "polname": "source_global_owner",
+          "polpermissive": true,
+          "roles": [
+            "aos_capacity_publication_owner"
+          ],
+          "using_expr": "true"
+        }
+      ],
+      "relforcerowsecurity": true,
+      "relhasrules": false,
+      "relhassubclass": false,
+      "relispartition": false,
+      "relkind": "r",
+      "relname": "global_account",
+      "reloptions": null,
+      "relpersistence": "p",
+      "relreplident": "d",
+      "relrowsecurity": true,
+      "schema": "aos_capacity_publication_private",
+      "triggers": [
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": null,
+          "constraint_table": null,
+          "constraint_type": null,
+          "function": "aos_capacity_publication_private.refuse_source_publication_mutation()",
+          "name": "source_identity_immutable",
+          "referenced_table": null,
+          "related_table": null,
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": false,
+          "tgnargs": 0,
+          "tgtype": 27
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "global_provider_account_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.global_provider",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.global_account",
+          "related_table": "aos_capacity_publication_private.global_provider",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 9
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "global_provider_account_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.global_provider",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.global_account",
+          "related_table": "aos_capacity_publication_private.global_provider",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 17
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "source_publication_account_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.source_publication",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.global_account",
+          "related_table": "aos_capacity_publication_private.source_publication",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 9
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "source_publication_account_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.source_publication",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.global_account",
+          "related_table": "aos_capacity_publication_private.source_publication",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 17
+        }
+      ]
+    },
+    "global_provider": {
+      "acl": [
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "DELETE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "INSERT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "REFERENCES"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "SELECT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRIGGER"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRUNCATE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "UPDATE"
+        }
+      ],
+      "column_acl": [],
+      "columns": [
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "provider_id",
+          "attnotnull": true,
+          "attnum": 1,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "account_id",
+          "attnotnull": true,
+          "attnum": 2,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "uuid",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "org_id",
+          "attnotnull": true,
+          "attnum": 3,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "project_id",
+          "attnotnull": true,
+          "attnum": 4,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        }
+      ],
+      "constraints": [
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "global_provider_account_id_fkey",
+          "connoinherit": true,
+          "contype": "f",
+          "convalidated": true,
+          "definition": "FOREIGN KEY (account_id) REFERENCES aos_capacity_publication_private.global_account(account_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "global_provider_pkey",
+          "connoinherit": true,
+          "contype": "p",
+          "convalidated": true,
+          "definition": "PRIMARY KEY (provider_id)"
+        }
+      ],
+      "indexes": [
+        {
+          "collations": [
+            "pg_catalog.default"
+          ],
+          "definition": "CREATE UNIQUE INDEX global_provider_pkey ON aos_capacity_publication_private.global_provider USING btree (provider_id)",
+          "expressions": null,
+          "indimmediate": true,
+          "indisexclusion": false,
+          "indislive": true,
+          "indisprimary": true,
+          "indisready": true,
+          "indisreplident": false,
+          "indisunique": true,
+          "indisvalid": true,
+          "indnatts": 1,
+          "indnkeyatts": 1,
+          "indnullsnotdistinct": false,
+          "keys": [
+            1
+          ],
+          "method": "btree",
+          "name": "global_provider_pkey",
+          "opclasses": [
+            "pg_catalog.text_ops"
+          ],
+          "options": [
+            0
+          ],
+          "predicate": null,
+          "reloptions": null,
+          "schema": "aos_capacity_publication_private"
+        }
+      ],
+      "inheritance": false,
+      "owner": "aos_capacity_publication_owner",
+      "policies": [
+        {
+          "check_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))",
+          "polcmd": "*",
+          "polname": "source_global_owner",
+          "polpermissive": true,
+          "roles": [
+            "aos_capacity_publication_owner"
+          ],
+          "using_expr": "true"
+        }
+      ],
+      "relforcerowsecurity": true,
+      "relhasrules": false,
+      "relhassubclass": false,
+      "relispartition": false,
+      "relkind": "r",
+      "relname": "global_provider",
+      "reloptions": null,
+      "relpersistence": "p",
+      "relreplident": "d",
+      "relrowsecurity": true,
+      "schema": "aos_capacity_publication_private",
+      "triggers": [
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": null,
+          "constraint_table": null,
+          "constraint_type": null,
+          "function": "aos_capacity_publication_private.refuse_source_publication_mutation()",
+          "name": "source_identity_immutable",
+          "referenced_table": null,
+          "related_table": null,
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": false,
+          "tgnargs": 0,
+          "tgtype": 27
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "global_provider_account_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.global_provider",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.global_account",
+          "related_table": "aos_capacity_publication_private.global_account",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 5
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "global_provider_account_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.global_provider",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.global_account",
+          "related_table": "aos_capacity_publication_private.global_account",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 17
+        }
+      ]
+    },
+    "source_pending": {
+      "acl": [
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "DELETE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "INSERT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "REFERENCES"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "SELECT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRIGGER"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRUNCATE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "UPDATE"
+        }
+      ],
+      "column_acl": [],
+      "columns": [
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "org_id",
+          "attnotnull": true,
+          "attnum": 1,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "project_id",
+          "attnotnull": true,
+          "attnum": 2,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "maker",
+          "attnotnull": true,
+          "attnum": 3,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "attempt_key",
+          "attnotnull": true,
+          "attnum": 4,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "attempt_id",
+          "attnotnull": true,
+          "attnum": 5,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "uuid",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "source_asset_id",
+          "attnotnull": true,
+          "attnum": 6,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "account_id",
+          "attnotnull": true,
+          "attnum": 7,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "uuid",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "request_hash",
+          "attnotnull": true,
+          "attnum": 8,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "native_xid",
+          "attnotnull": true,
+          "attnum": 9,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "xid8",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "native_pid",
+          "attnotnull": true,
+          "attnum": 10,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "int4",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "native_session",
+          "attnotnull": true,
+          "attnum": 11,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "command_raw",
+          "attnotnull": true,
+          "attnum": 12,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "bytea",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "permit_ref",
+          "attnotnull": true,
+          "attnum": 13,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "jsonb",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "signed_facts",
+          "attnotnull": true,
+          "attnum": 14,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "jsonb",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "source_raw",
+          "attnotnull": true,
+          "attnum": 15,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "bytea",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "source_hash",
+          "attnotnull": true,
+          "attnum": 16,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "finalized",
+          "attnotnull": true,
+          "attnum": 17,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": "false",
+          "type_name": "bool",
+          "type_schema": "pg_catalog"
+        }
+      ],
+      "constraints": [
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_pending_attempt_id_key",
+          "connoinherit": true,
+          "contype": "u",
+          "convalidated": true,
+          "definition": "UNIQUE (attempt_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_pending_attempt_key_check",
+          "connoinherit": false,
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK (((length(attempt_key) >= 1) AND (length(attempt_key) <= 200)))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_pending_check",
+          "connoinherit": false,
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((source_hash = encode(sha256(source_raw), 'hex'::text)))"
+        },
+        {
+          "condeferrable": true,
+          "condeferred": true,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_pending_finalized",
+          "connoinherit": true,
+          "contype": "t",
+          "convalidated": true,
+          "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_pending_org_id_check",
+          "connoinherit": false,
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((org_id = 'org-org'::text))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_pending_org_id_project_id_maker_request_hash_key",
+          "connoinherit": true,
+          "contype": "u",
+          "convalidated": true,
+          "definition": "UNIQUE (org_id, project_id, maker, request_hash)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_pending_org_id_project_id_source_asset_id_key",
+          "connoinherit": true,
+          "contype": "u",
+          "convalidated": true,
+          "definition": "UNIQUE (org_id, project_id, source_asset_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_pending_pkey",
+          "connoinherit": true,
+          "contype": "p",
+          "convalidated": true,
+          "definition": "PRIMARY KEY (org_id, project_id, maker, attempt_key)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_pending_project_id_check",
+          "connoinherit": false,
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((project_id = 'dev-project'::text))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_pending_request_hash_check",
+          "connoinherit": false,
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((request_hash ~ '^[0-9a-f]{64}$'::text))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_pending_source_raw_check",
+          "connoinherit": false,
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK (((octet_length(source_raw) >= 1) AND (octet_length(source_raw) <= 2097152)))"
+        }
+      ],
+      "indexes": [
+        {
+          "collations": [
+            null
+          ],
+          "definition": "CREATE UNIQUE INDEX source_pending_attempt_id_key ON aos_capacity_publication_private.source_pending USING btree (attempt_id)",
+          "expressions": null,
+          "indimmediate": true,
+          "indisexclusion": false,
+          "indislive": true,
+          "indisprimary": false,
+          "indisready": true,
+          "indisreplident": false,
+          "indisunique": true,
+          "indisvalid": true,
+          "indnatts": 1,
+          "indnkeyatts": 1,
+          "indnullsnotdistinct": false,
+          "keys": [
+            5
+          ],
+          "method": "btree",
+          "name": "source_pending_attempt_id_key",
+          "opclasses": [
+            "pg_catalog.uuid_ops"
+          ],
+          "options": [
+            0
+          ],
+          "predicate": null,
+          "reloptions": null,
+          "schema": "aos_capacity_publication_private"
+        },
+        {
+          "collations": [
+            "pg_catalog.default",
+            "pg_catalog.default",
+            "pg_catalog.default",
+            "pg_catalog.default"
+          ],
+          "definition": "CREATE UNIQUE INDEX source_pending_org_id_project_id_maker_request_hash_key ON aos_capacity_publication_private.source_pending USING btree (org_id, project_id, maker, request_hash)",
+          "expressions": null,
+          "indimmediate": true,
+          "indisexclusion": false,
+          "indislive": true,
+          "indisprimary": false,
+          "indisready": true,
+          "indisreplident": false,
+          "indisunique": true,
+          "indisvalid": true,
+          "indnatts": 4,
+          "indnkeyatts": 4,
+          "indnullsnotdistinct": false,
+          "keys": [
+            1,
+            2,
+            3,
+            8
+          ],
+          "method": "btree",
+          "name": "source_pending_org_id_project_id_maker_request_hash_key",
+          "opclasses": [
+            "pg_catalog.text_ops",
+            "pg_catalog.text_ops",
+            "pg_catalog.text_ops",
+            "pg_catalog.text_ops"
+          ],
+          "options": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "predicate": null,
+          "reloptions": null,
+          "schema": "aos_capacity_publication_private"
+        },
+        {
+          "collations": [
+            "pg_catalog.default",
+            "pg_catalog.default",
+            "pg_catalog.default"
+          ],
+          "definition": "CREATE UNIQUE INDEX source_pending_org_id_project_id_source_asset_id_key ON aos_capacity_publication_private.source_pending USING btree (org_id, project_id, source_asset_id)",
+          "expressions": null,
+          "indimmediate": true,
+          "indisexclusion": false,
+          "indislive": true,
+          "indisprimary": false,
+          "indisready": true,
+          "indisreplident": false,
+          "indisunique": true,
+          "indisvalid": true,
+          "indnatts": 3,
+          "indnkeyatts": 3,
+          "indnullsnotdistinct": false,
+          "keys": [
+            1,
+            2,
+            6
+          ],
+          "method": "btree",
+          "name": "source_pending_org_id_project_id_source_asset_id_key",
+          "opclasses": [
+            "pg_catalog.text_ops",
+            "pg_catalog.text_ops",
+            "pg_catalog.text_ops"
+          ],
+          "options": [
+            0,
+            0,
+            0
+          ],
+          "predicate": null,
+          "reloptions": null,
+          "schema": "aos_capacity_publication_private"
+        },
+        {
+          "collations": [
+            "pg_catalog.default",
+            "pg_catalog.default",
+            "pg_catalog.default",
+            "pg_catalog.default"
+          ],
+          "definition": "CREATE UNIQUE INDEX source_pending_pkey ON aos_capacity_publication_private.source_pending USING btree (org_id, project_id, maker, attempt_key)",
+          "expressions": null,
+          "indimmediate": true,
+          "indisexclusion": false,
+          "indislive": true,
+          "indisprimary": true,
+          "indisready": true,
+          "indisreplident": false,
+          "indisunique": true,
+          "indisvalid": true,
+          "indnatts": 4,
+          "indnkeyatts": 4,
+          "indnullsnotdistinct": false,
+          "keys": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "method": "btree",
+          "name": "source_pending_pkey",
+          "opclasses": [
+            "pg_catalog.text_ops",
+            "pg_catalog.text_ops",
+            "pg_catalog.text_ops",
+            "pg_catalog.text_ops"
+          ],
+          "options": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "predicate": null,
+          "reloptions": null,
+          "schema": "aos_capacity_publication_private"
+        }
+      ],
+      "inheritance": false,
+      "owner": "aos_capacity_publication_owner",
+      "policies": [
+        {
+          "check_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))",
+          "polcmd": "*",
+          "polname": "source_pending_owner",
+          "polpermissive": true,
+          "roles": [
+            "aos_capacity_publication_owner"
+          ],
+          "using_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))"
+        }
+      ],
+      "relforcerowsecurity": true,
+      "relhasrules": false,
+      "relhassubclass": false,
+      "relispartition": false,
+      "relkind": "r",
+      "relname": "source_pending",
+      "reloptions": null,
+      "relpersistence": "p",
+      "relreplident": "d",
+      "relrowsecurity": true,
+      "schema": "aos_capacity_publication_private",
+      "triggers": [
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "source_pending_finalized",
+          "constraint_table": "aos_capacity_publication_private.source_pending",
+          "constraint_type": "t",
+          "function": "aos_capacity_publication_private.require_pending_source_finalized()",
+          "name": "source_pending_finalized",
+          "referenced_table": "-",
+          "related_table": null,
+          "tgdeferrable": true,
+          "tgenabled": "O",
+          "tginitdeferred": true,
+          "tgisinternal": false,
+          "tgnargs": 0,
+          "tgtype": 21
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "source_publication_attempt_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.source_publication",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.source_pending",
+          "related_table": "aos_capacity_publication_private.source_publication",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 9
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "source_publication_attempt_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.source_publication",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.source_pending",
+          "related_table": "aos_capacity_publication_private.source_publication",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 17
+        }
+      ]
+    },
+    "source_provenance": {
+      "acl": [
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "DELETE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "INSERT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "REFERENCES"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "SELECT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRIGGER"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRUNCATE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "UPDATE"
+        }
+      ],
+      "column_acl": [],
+      "columns": [
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "org_id",
+          "attnotnull": true,
+          "attnum": 1,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "project_id",
+          "attnotnull": true,
+          "attnum": 2,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "asset_id",
+          "attnotnull": true,
+          "attnum": 3,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "original_signed_facts",
+          "attnotnull": true,
+          "attnum": 4,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "jsonb",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "source_signer_root_revision",
+          "attnotnull": true,
+          "attnum": 5,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "native_xid",
+          "attnotnull": true,
+          "attnum": 6,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "xid8",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "native_pid",
+          "attnotnull": true,
+          "attnum": 7,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "int4",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "native_session",
+          "attnotnull": true,
+          "attnum": 8,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        }
+      ],
+      "constraints": [
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_provenance_org_id_project_id_asset_id_fkey",
+          "connoinherit": true,
+          "contype": "f",
+          "convalidated": true,
+          "definition": "FOREIGN KEY (org_id, project_id, asset_id) REFERENCES aos_capacity_publication_private.source_publication(org_id, project_id, asset_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_provenance_pkey",
+          "connoinherit": true,
+          "contype": "p",
+          "convalidated": true,
+          "definition": "PRIMARY KEY (org_id, project_id, asset_id)"
+        }
+      ],
+      "indexes": [
+        {
+          "collations": [
+            "pg_catalog.default",
+            "pg_catalog.default",
+            "pg_catalog.default"
+          ],
+          "definition": "CREATE UNIQUE INDEX source_provenance_pkey ON aos_capacity_publication_private.source_provenance USING btree (org_id, project_id, asset_id)",
+          "expressions": null,
+          "indimmediate": true,
+          "indisexclusion": false,
+          "indislive": true,
+          "indisprimary": true,
+          "indisready": true,
+          "indisreplident": false,
+          "indisunique": true,
+          "indisvalid": true,
+          "indnatts": 3,
+          "indnkeyatts": 3,
+          "indnullsnotdistinct": false,
+          "keys": [
+            1,
+            2,
+            3
+          ],
+          "method": "btree",
+          "name": "source_provenance_pkey",
+          "opclasses": [
+            "pg_catalog.text_ops",
+            "pg_catalog.text_ops",
+            "pg_catalog.text_ops"
+          ],
+          "options": [
+            0,
+            0,
+            0
+          ],
+          "predicate": null,
+          "reloptions": null,
+          "schema": "aos_capacity_publication_private"
+        }
+      ],
+      "inheritance": false,
+      "owner": "aos_capacity_publication_owner",
+      "policies": [
+        {
+          "check_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))",
+          "polcmd": "*",
+          "polname": "source_provenance_owner",
+          "polpermissive": true,
+          "roles": [
+            "aos_capacity_publication_owner"
+          ],
+          "using_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))"
+        }
+      ],
+      "relforcerowsecurity": true,
+      "relhasrules": false,
+      "relhassubclass": false,
+      "relispartition": false,
+      "relkind": "r",
+      "relname": "source_provenance",
+      "reloptions": null,
+      "relpersistence": "p",
+      "relreplident": "d",
+      "relrowsecurity": true,
+      "schema": "aos_capacity_publication_private",
+      "triggers": [
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": null,
+          "constraint_table": null,
+          "constraint_type": null,
+          "function": "aos_capacity_publication_private.refuse_source_publication_mutation()",
+          "name": "source_provenance_immutable",
+          "referenced_table": null,
+          "related_table": null,
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": false,
+          "tgnargs": 0,
+          "tgtype": 27
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "source_provenance_org_id_project_id_asset_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.source_provenance",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.source_publication",
+          "related_table": "aos_capacity_publication_private.source_publication",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 5
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "source_provenance_org_id_project_id_asset_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.source_provenance",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.source_publication",
+          "related_table": "aos_capacity_publication_private.source_publication",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 17
+        }
+      ]
+    },
+    "source_publication": {
+      "acl": [
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "DELETE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "INSERT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "REFERENCES"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "SELECT"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRIGGER"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "TRUNCATE"
+        },
+        {
+          "grantee": "aos_capacity_publication_owner",
+          "grantor": "aos_capacity_publication_owner",
+          "is_grantable": false,
+          "privilege_type": "UPDATE"
+        }
+      ],
+      "column_acl": [],
+      "columns": [
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "org_id",
+          "attnotnull": true,
+          "attnum": 1,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "project_id",
+          "attnotnull": true,
+          "attnum": 2,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "asset_id",
+          "attnotnull": true,
+          "attnum": 3,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "revision",
+          "attnotnull": true,
+          "attnum": 4,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "int4",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "content_hash",
+          "attnotnull": true,
+          "attnum": 5,
+          "atttypmod": -1,
+          "collation": "pg_catalog.default",
+          "default_expr": null,
+          "type_name": "text",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "source_raw",
+          "attnotnull": true,
+          "attnum": 6,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "bytea",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "signature",
+          "attnotnull": true,
+          "attnum": 7,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "bytea",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "account_id",
+          "attnotnull": true,
+          "attnum": 8,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "uuid",
+          "type_schema": "pg_catalog"
+        },
+        {
+          "attgenerated": "",
+          "attidentity": "",
+          "attisdropped": false,
+          "attname": "attempt_id",
+          "attnotnull": true,
+          "attnum": 9,
+          "atttypmod": -1,
+          "collation": null,
+          "default_expr": null,
+          "type_name": "uuid",
+          "type_schema": "pg_catalog"
+        }
+      ],
+      "constraints": [
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_publication_account_id_fkey",
+          "connoinherit": true,
+          "contype": "f",
+          "convalidated": true,
+          "definition": "FOREIGN KEY (account_id) REFERENCES aos_capacity_publication_private.global_account(account_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_publication_attempt_id_fkey",
+          "connoinherit": true,
+          "contype": "f",
+          "convalidated": true,
+          "definition": "FOREIGN KEY (attempt_id) REFERENCES aos_capacity_publication_private.source_pending(attempt_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_publication_attempt_id_key",
+          "connoinherit": true,
+          "contype": "u",
+          "convalidated": true,
+          "definition": "UNIQUE (attempt_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_publication_check",
+          "connoinherit": false,
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((content_hash = encode(sha256(source_raw), 'hex'::text)))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_publication_org_id_check",
+          "connoinherit": false,
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((org_id = 'org-org'::text))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_publication_pkey",
+          "connoinherit": true,
+          "contype": "p",
+          "convalidated": true,
+          "definition": "PRIMARY KEY (org_id, project_id, asset_id)"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_publication_project_id_check",
+          "connoinherit": false,
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((project_id = 'dev-project'::text))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_publication_revision_check",
+          "connoinherit": false,
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((revision = 1))"
+        },
+        {
+          "condeferrable": false,
+          "condeferred": false,
+          "coninhcount": 0,
+          "conislocal": true,
+          "conname": "source_publication_signature_check",
+          "connoinherit": false,
+          "contype": "c",
+          "convalidated": true,
+          "definition": "CHECK ((octet_length(signature) = 64))"
+        }
+      ],
+      "indexes": [
+        {
+          "collations": [
+            null
+          ],
+          "definition": "CREATE UNIQUE INDEX source_publication_attempt_id_key ON aos_capacity_publication_private.source_publication USING btree (attempt_id)",
+          "expressions": null,
+          "indimmediate": true,
+          "indisexclusion": false,
+          "indislive": true,
+          "indisprimary": false,
+          "indisready": true,
+          "indisreplident": false,
+          "indisunique": true,
+          "indisvalid": true,
+          "indnatts": 1,
+          "indnkeyatts": 1,
+          "indnullsnotdistinct": false,
+          "keys": [
+            9
+          ],
+          "method": "btree",
+          "name": "source_publication_attempt_id_key",
+          "opclasses": [
+            "pg_catalog.uuid_ops"
+          ],
+          "options": [
+            0
+          ],
+          "predicate": null,
+          "reloptions": null,
+          "schema": "aos_capacity_publication_private"
+        },
+        {
+          "collations": [
+            "pg_catalog.default",
+            "pg_catalog.default",
+            "pg_catalog.default"
+          ],
+          "definition": "CREATE UNIQUE INDEX source_publication_pkey ON aos_capacity_publication_private.source_publication USING btree (org_id, project_id, asset_id)",
+          "expressions": null,
+          "indimmediate": true,
+          "indisexclusion": false,
+          "indislive": true,
+          "indisprimary": true,
+          "indisready": true,
+          "indisreplident": false,
+          "indisunique": true,
+          "indisvalid": true,
+          "indnatts": 3,
+          "indnkeyatts": 3,
+          "indnullsnotdistinct": false,
+          "keys": [
+            1,
+            2,
+            3
+          ],
+          "method": "btree",
+          "name": "source_publication_pkey",
+          "opclasses": [
+            "pg_catalog.text_ops",
+            "pg_catalog.text_ops",
+            "pg_catalog.text_ops"
+          ],
+          "options": [
+            0,
+            0,
+            0
+          ],
+          "predicate": null,
+          "reloptions": null,
+          "schema": "aos_capacity_publication_private"
+        }
+      ],
+      "inheritance": false,
+      "owner": "aos_capacity_publication_owner",
+      "policies": [
+        {
+          "check_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))",
+          "polcmd": "*",
+          "polname": "source_publication_owner",
+          "polpermissive": true,
+          "roles": [
+            "aos_capacity_publication_owner"
+          ],
+          "using_expr": "((org_id = current_setting('aos.org_id'::text, true)) AND (project_id = current_setting('aos.project_id'::text, true)))"
+        }
+      ],
+      "relforcerowsecurity": true,
+      "relhasrules": false,
+      "relhassubclass": false,
+      "relispartition": false,
+      "relkind": "r",
+      "relname": "source_publication",
+      "reloptions": null,
+      "relpersistence": "p",
+      "relreplident": "d",
+      "relrowsecurity": true,
+      "schema": "aos_capacity_publication_private",
+      "triggers": [
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": null,
+          "constraint_table": null,
+          "constraint_type": null,
+          "function": "aos_capacity_publication_private.refuse_source_publication_mutation()",
+          "name": "source_publication_immutable",
+          "referenced_table": null,
+          "related_table": null,
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": false,
+          "tgnargs": 0,
+          "tgtype": 27
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "source_provenance_org_id_project_id_asset_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.source_provenance",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.source_publication",
+          "related_table": "aos_capacity_publication_private.source_provenance",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 9
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "source_provenance_org_id_project_id_asset_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.source_provenance",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.source_publication",
+          "related_table": "aos_capacity_publication_private.source_provenance",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 17
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "source_publication_account_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.source_publication",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.global_account",
+          "related_table": "aos_capacity_publication_private.global_account",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 5
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "source_publication_account_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.source_publication",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.global_account",
+          "related_table": "aos_capacity_publication_private.global_account",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 17
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "source_publication_attempt_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.source_publication",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.source_pending",
+          "related_table": "aos_capacity_publication_private.source_pending",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 5
+        },
+        {
+          "arguments": "",
+          "columns": [],
+          "condition": null,
+          "constraint_name": "source_publication_attempt_id_fkey",
+          "constraint_table": "aos_capacity_publication_private.source_publication",
+          "constraint_type": "f",
+          "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+          "name": null,
+          "referenced_table": "aos_capacity_publication_private.source_pending",
+          "related_table": "aos_capacity_publication_private.source_pending",
+          "tgdeferrable": false,
+          "tgenabled": "O",
+          "tginitdeferred": false,
+          "tgisinternal": true,
+          "tgnargs": 0,
+          "tgtype": 17
+        }
+      ]
+    }
+  }
+}

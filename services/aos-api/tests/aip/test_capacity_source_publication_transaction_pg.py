@@ -18,6 +18,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
     registered_cases = {
         'test_native_source_installer_assembles_complete_private_transaction',
         'test_native_source_function_installation_rejects_catalog_drift',
+        'test_native_source_table_installation_rejects_catalog_drift',
         'test_native_committed_sources_share_one_physical_account',
         'test_native_committed_source_is_durable_and_signed',
         'test_native_committed_source_refuses_invalid_finalize',
@@ -4298,7 +4299,7 @@ def native_complete_source_installation(native_signed_source,tmp_path):
         with isolated_owner() as owner:
             before={r['oid'] for r in owner.execute(catalog).fetchall()}
             transaction.install_source_transaction_boundary(owner.execute)
-            transaction.require_source_transaction_functions(owner)
+            transaction.require_source_transaction_tables(owner)
             installed=[r['signature'] for r in owner.execute(catalog).fetchall() if r['oid'] not in before]
             assert set(installed)=={item['signature'] for item in transaction.source_transaction_function_manifest()}
             owner.execute(sql.SQL("""CREATE FUNCTION {}(raw bytea,attempt_key text,source_id text,permit jsonb)
@@ -4344,7 +4345,7 @@ def test_native_source_installer_assembles_complete_private_transaction(native_c
     assert result['asset_id']==asset and result['content_hash']==hashlib.sha256(raw).hexdigest()
     caller.commit()
     with isolated_owner() as owner:
-        transaction.require_source_transaction_functions(owner)
+        transaction.require_source_transaction_tables(owner)
         durable=owner.execute('SELECT source_raw,signature,account_id FROM aos_capacity_publication_private.source_publication WHERE asset_id=%s',(asset,)).fetchone()
         assert bytes(durable['source_raw'])==raw and bytes(durable['signature'])==signature
         assert durable['account_id']==pending['account_id']
@@ -4375,3 +4376,45 @@ def test_native_source_function_installation_rejects_catalog_drift(native_comple
                     transaction.require_source_transaction_functions(owner)
                 raise RestoreFault()
         transaction.require_source_transaction_functions(owner)
+
+
+@pytest.mark.parametrize('fault',['default','nullable','type','column_extra','table_acl','column_acl','owner','rls','force_rls','policy_using','policy_extra','unique','check','fk_action','index_extra','immutable_trigger','deferred_trigger','ri_trigger','trigger_condition'])
+def test_native_source_table_installation_rejects_catalog_drift(native_complete_source_installation,fault):
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from psycopg import sql
+    class RestoreFault(Exception):pass
+    prefix='aos_capacity_publication_private.'
+    changes={
+        'default':'ALTER TABLE '+prefix+'source_pending ALTER finalized SET DEFAULT true',
+        'nullable':'ALTER TABLE '+prefix+'source_pending ALTER native_session DROP NOT NULL',
+        'type':'ALTER TABLE '+prefix+'source_pending ALTER native_pid TYPE bigint',
+        'column_extra':'ALTER TABLE '+prefix+'source_pending ADD extra text',
+        'table_acl':'GRANT SELECT ON '+prefix+'source_publication TO aos_runtime',
+        'column_acl':'GRANT UPDATE(finalized) ON '+prefix+'source_pending TO aos_provider_capacity_issuer',
+        'owner':'ALTER TABLE '+prefix+'source_publication OWNER TO aos_runtime',
+        'rls':'ALTER TABLE '+prefix+'source_pending DISABLE ROW LEVEL SECURITY',
+        'force_rls':'ALTER TABLE '+prefix+'global_account NO FORCE ROW LEVEL SECURITY',
+        'policy_using':'ALTER POLICY source_pending_owner ON '+prefix+'source_pending USING(true)',
+        'policy_extra':'CREATE POLICY extra_source_policy ON '+prefix+'source_pending TO PUBLIC USING(true)',
+        'unique':'ALTER TABLE '+prefix+'source_pending DROP CONSTRAINT source_pending_org_id_project_id_maker_request_hash_key',
+        'check':'ALTER TABLE '+prefix+'source_publication DROP CONSTRAINT source_publication_signature_check',
+        'fk_action':'ALTER TABLE '+prefix+'source_provenance DROP CONSTRAINT source_provenance_org_id_project_id_asset_id_fkey; ALTER TABLE '+prefix+'source_provenance ADD CONSTRAINT source_provenance_org_id_project_id_asset_id_fkey FOREIGN KEY(org_id,project_id,asset_id) REFERENCES '+prefix+'source_publication ON DELETE CASCADE',
+        'index_extra':'CREATE INDEX extra_source_index ON '+prefix+'source_pending(native_pid)',
+        'immutable_trigger':'ALTER TABLE '+prefix+'source_publication DISABLE TRIGGER source_publication_immutable',
+        'deferred_trigger':'ALTER TABLE '+prefix+'source_pending DISABLE TRIGGER source_pending_finalized',
+        'trigger_condition':'DROP TRIGGER source_publication_immutable ON '+prefix+'source_publication; CREATE TRIGGER source_publication_immutable BEFORE UPDATE OR DELETE ON '+prefix+'source_publication FOR EACH ROW WHEN(false) EXECUTE FUNCTION '+prefix+'refuse_source_publication_mutation()',
+    }
+    with isolated_owner() as owner:
+        audit=transaction.require_source_transaction_tables
+        audit(owner)
+        with pytest.raises(RestoreFault):
+            with owner.transaction():
+                if fault=='ri_trigger':
+                    name=owner.execute("SELECT tgname FROM pg_trigger WHERE tgrelid='aos_capacity_publication_private.source_provenance'::regclass AND tgisinternal ORDER BY tgname LIMIT 1").fetchone()['tgname']
+                    owner.execute(sql.SQL('ALTER TABLE aos_capacity_publication_private.source_provenance DISABLE TRIGGER {}').format(sql.Identifier(name)))
+                else:owner.execute(changes[fault])
+                with pytest.raises(transaction.CapacityPublicationBoundaryBlocked,match='CAPACITY_SOURCE_TABLE_INSTALLATION_DRIFTED'):
+                    audit(owner)
+                raise RestoreFault()
+        audit(owner)
