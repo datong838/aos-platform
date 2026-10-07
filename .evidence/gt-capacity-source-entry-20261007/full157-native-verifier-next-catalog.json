@@ -1,0 +1,52 @@
+{
+  "schema": "aos-native-verifier-next-investigation/v1",
+  "database": "aos_test_0eecd0337b00_ti4_test",
+  "authority": "AOS-001453",
+  "read_only": true,
+  "function": {
+    "signature": "aos_ed25519.verify(bytea,bytea,bytea)",
+    "probin": "$libdir/aos_ed25519",
+    "prosrc": "aos_ed25519_verify",
+    "lanname": "c",
+    "prosecdef": false,
+    "provolatile": "i",
+    "proisstrict": true,
+    "proparallel": "s",
+    "proconfig": null,
+    "proargnames": [
+      "signature",
+      "message",
+      "public_key"
+    ],
+    "prokind": "f",
+    "pronargdefaults": 0,
+    "proretset": false,
+    "provariadic": 0,
+    "result_type": "boolean",
+    "rolname": "aos_ed25519_owner",
+    "rolcanlogin": false,
+    "rolinherit": false,
+    "schema_same_owner": true
+  },
+  "acl": [
+    {
+      "grantee": "aos_capacity_publication_owner",
+      "grantor": "aos_ed25519_owner",
+      "privilege_type": "EXECUTE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_ed25519_owner",
+      "grantor": "aos_ed25519_owner",
+      "privilege_type": "EXECUTE",
+      "is_grantable": false
+    }
+  ],
+  "extension_membership": [
+    {
+      "extname": "aos_ed25519",
+      "extversion": "1.0"
+    }
+  ],
+  "not_allowed_expectations": "Current catalog is only routing evidence. Compile expected native C contract from committed extension SQL and original installers, not this snapshot."
+}

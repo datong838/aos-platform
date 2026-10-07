@@ -25,6 +25,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_native_private_installation_audit_rejects_current_drift',
         'test_native_current_installation_rechecks_original_live_boundaries',
         'test_native_current_installation_rechecks_original_registry_functions',
+        'test_native_current_installation_rechecks_original_registry_tables',
         'test_native_committed_sources_share_one_physical_account',
         'test_native_committed_source_is_durable_and_signed',
         'test_native_committed_source_refuses_invalid_finalize',
@@ -4751,6 +4752,52 @@ def test_native_current_installation_rechecks_original_registry_functions(native
                             audit()
                         raise RestoreFault()
                 audit()
+            assert _private_source_row_fingerprint(owner)==before
+        finally:
+            owner.execute('DROP FUNCTION aos_capacity_publication_private.require_current_source_installation()')
+        transaction.require_source_transaction_tables(owner)
+
+
+def test_native_current_installation_rechecks_original_registry_tables(native_signed_source):
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from psycopg import sql
+    class RestoreFault(Exception):pass
+    prefix='aos_capacity_publication_private.'
+    tables=('deployment_anchor','root_snapshot','origin','root_entry','registry_epoch','document','origin_withdrawal')
+    with isolated_owner() as owner:
+        before=_private_source_row_fingerprint(owner)
+        transaction.require_source_transaction_tables(owner)
+        owner.execute(transaction.source_private_installation_audit_sql())
+        try:
+            def audit():
+                with owner.transaction():
+                    owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                    owner.execute('SELECT aos_capacity_publication_private.require_current_source_installation()')
+                    owner.execute('RESET ROLE')
+            audit()
+            for table in tables:
+                changes=[
+                    'ALTER TABLE '+prefix+table+' DISABLE ROW LEVEL SECURITY',
+                    'ALTER TABLE '+prefix+table+' NO FORCE ROW LEVEL SECURITY',
+                    'GRANT SELECT ON '+prefix+table+' TO aos_runtime',
+                    'CREATE POLICY extra_registry_policy ON '+prefix+table+' TO PUBLIC USING(true)',
+                    'ALTER TABLE '+prefix+table+' ADD extra_registry_column text',
+                    'CREATE INDEX extra_registry_index ON '+prefix+table+'(org_id)',
+                ]
+                constraint=owner.execute("SELECT conname FROM pg_constraint WHERE conrelid=%s::regclass AND contype='c' ORDER BY conname LIMIT 1",(prefix+table,)).fetchone()['conname']
+                changes.append(sql.SQL('ALTER TABLE {}.{} DROP CONSTRAINT {}').format(sql.Identifier('aos_capacity_publication_private'),sql.Identifier(table),sql.Identifier(constraint)))
+                if table!='registry_epoch':
+                    trigger=owner.execute("SELECT tgname FROM pg_trigger WHERE tgrelid=%s::regclass AND NOT tgisinternal ORDER BY tgname LIMIT 1",(prefix+table,)).fetchone()['tgname']
+                    changes.append(sql.SQL('ALTER TABLE {}.{} DISABLE TRIGGER {}').format(sql.Identifier('aos_capacity_publication_private'),sql.Identifier(table),sql.Identifier(trigger)))
+                for statement in changes:
+                    with pytest.raises(RestoreFault):
+                        with owner.transaction():
+                            owner.execute(statement)
+                            with pytest.raises(psycopg.errors.InsufficientPrivilege,match='CAPACITY_SOURCE_CURRENT_INSTALLATION_DRIFTED'):
+                                audit()
+                            raise RestoreFault()
+                    audit()
             assert _private_source_row_fingerprint(owner)==before
         finally:
             owner.execute('DROP FUNCTION aos_capacity_publication_private.require_current_source_installation()')

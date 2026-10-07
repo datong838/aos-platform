@@ -1044,6 +1044,11 @@ def _trusted_function_manifest(statements):
 
 def original_registry_function_manifest():
     """Compile the original 152-154 functions; never execute installer SQL."""
+    return _trusted_function_manifest(_original_registry_statements())
+
+
+def _original_registry_statements():
+    """Capture fixed original installers, without executing their statements."""
     from aos_api.aip_provider_capacity_publication_registry import (
         install_registry_schema, install_origin_registration,
     )
@@ -1053,7 +1058,7 @@ def original_registry_function_manifest():
     for install in (install_registry_schema, install_origin_registration,
                     install_document_registry, install_withdrawal_registry):
         install(statements.append)
-    return _trusted_function_manifest(statements)
+    return tuple(statements)
 
 def require_source_transaction_functions(conn):
     """Audit exact new functions plus original boundaries; not full S01."""
@@ -1188,6 +1193,11 @@ def require_source_transaction_tables(conn):
             raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_TABLE_INSTALLATION_DRIFTED')
 
 
+# Original 152-154 tables reconstructed exclusively from trusted installers
+# in a rollback-only schema. See full157-original-registry-table-contract-reviewed.json.
+_ORIGINAL_REGISTRY_TABLE_HASHES = {'deployment_anchor': 'af48e08595f03facff2e69dd03f4c5abe899071f8c41629b80a2662cd9edf403', 'root_snapshot': '1f7ec404b3de6aec611b9e31aea28f09dc0e26241722c42340e4eeb0f9543823', 'origin': '1fd040bf9a4344d43bab566ff6d28ae248476848785e3f1beecdd33b36420331', 'root_entry': '3ab5bd4c4624ad9061f65a4aedd54e7f9b6546607d2dc58375fe041bf0142953', 'registry_epoch': '9f78aa91dcfac96ae7a9b425035013328dcc80c48234f1fc0a2402a302be7854', 'document': 'acdba63c46b9b1ff2f4b89ba03d1204ce34b25e493f4e4312c59896e58ae9224', 'origin_withdrawal': 'e1fc33c92208755c4c9a2a60770608de4099418ae587e6bd83d8fe7bb5941fad'}
+_ORIGINAL_REGISTRY_STATEMENTS_HASH = '20b8551d18a88f04cbc9b7554cc0c02727134b35327c1750e2f09fd2e34e1144'
+
 def source_private_installation_audit_sql():
     """Compile a private native current-call audit from trusted code contracts.
 
@@ -1213,6 +1223,11 @@ def source_private_installation_audit_sql():
 
     if tuple(hashlib.sha256(s.encode()).hexdigest() for s in
              (CAPACITY_SOURCE_PENDING_SQL, CAPACITY_SOURCE_COMMIT_SQL)) != _SOURCE_TABLE_SQL_HASHES:
+        raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_TABLE_CONTRACT_REVIEW_REQUIRED')
+    original_ddl_hash = hashlib.sha256(json.dumps(
+        [hashlib.sha256(s.encode()).hexdigest() for s in _original_registry_statements()],
+        separators=(',', ':')).encode()).hexdigest()
+    if original_ddl_hash != _ORIGINAL_REGISTRY_STATEMENTS_HASH:
         raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_TABLE_CONTRACT_REVIEW_REQUIRED')
     # Original registry functions include the canonicalizer used below; audit
     # their definitions and exact registration privileges before invoking them.
@@ -1262,7 +1277,7 @@ BEGIN
         body.append('IF NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_roles r ON r.oid=p.proowner '
             'JOIN pg_language l ON l.oid=p.prolang WHERE p.oid=to_regprocedure('
             + literal(item['signature']) + ') AND ' + ' AND '.join(checks) + ') THEN ' + fail + ' END IF;')
-    for name in _SOURCE_TABLE_NAMES:
+    for name, expected_hash in {**_SOURCE_TABLE_HASHES, **_ORIGINAL_REGISTRY_TABLE_HASHES}.items():
         body.append('v_oid:=to_regclass(' + literal('aos_capacity_publication_private.' + name) + '); '
                     'IF v_oid IS NULL THEN ' + fail + ' END IF;')
         if _SOURCE_TABLE_PROPERTIES.count('%s') != 1:
@@ -1276,7 +1291,7 @@ BEGIN
                         + query.replace('%s', 'v_oid') + ') q; '
                         + 'v_table:=v_table||jsonb_build_object(' + literal(key) + ',v_part);')
         body.append("IF encode(sha256(convert_to(aos_capacity_publication_private.canonical_signed_json("
-                    "v_table::json,1),'UTF8')),'hex')<>" + literal(_SOURCE_TABLE_HASHES[name])
+                    "v_table::json,1),'UTF8')),'hex')<>" + literal(expected_hash)
                     + ' THEN ' + fail + ' END IF;')
     # The trusted helper bodies alone do not prove current original ACL/RLS/
     # epoch catalogs. Invoke their existing live audits on every native call.
