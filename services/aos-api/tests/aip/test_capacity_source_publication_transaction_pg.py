@@ -27,6 +27,9 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_native_current_installation_rechecks_original_registry_functions',
         'test_native_current_installation_rechecks_original_registry_tables',
         'test_native_current_installation_rechecks_native_verifier',
+        'test_exact_public_source_composition_preserves_original_issuer_checker',
+        'test_exact_public_source_rejects_live_issuer_drift',
+        'test_exact_public_source_rejects_bad_signature_and_unfinished_commit',
         'test_native_committed_sources_share_one_physical_account',
         'test_native_committed_source_is_durable_and_signed',
         'test_native_committed_source_refuses_invalid_finalize',
@@ -4857,3 +4860,126 @@ def test_native_current_installation_rechecks_native_verifier(native_signed_sour
         finally:
             owner.execute('DROP FUNCTION aos_capacity_publication_private.require_current_source_installation()')
         transaction.require_source_transaction_tables(owner)
+
+
+@pytest.fixture
+def exact_public_source_caller(native_full_signed_reader):
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from psycopg import sql
+    caller,_,raw,material,original=native_full_signed_reader
+    caller.rollback()
+    revoked=[]
+    with isolated_owner() as owner:
+        for row in owner.execute("SELECT p.oid::regprocedure::text AS signature FROM pg_proc p WHERE p.pronamespace='public'::regnamespace AND p.proowner='aos_capacity_publication_owner'::regrole AND has_function_privilege('aos_provider_capacity_issuer',p.oid,'EXECUTE')").fetchall():
+            assert row['signature'].startswith('publication_')
+            revoked.append(row['signature'])
+            owner.execute(sql.SQL('REVOKE EXECUTE ON FUNCTION '+row['signature']+' FROM aos_provider_capacity_issuer'))
+        for statement in transaction.source_public_entry_statements():owner.execute(statement)
+    _refresh_native_facts_transaction(caller)
+    try:yield caller,raw,material,original
+    finally:
+        caller.rollback()
+        with isolated_owner() as owner:
+            owner.execute('DROP FUNCTION public.prepare_capacity_source(bytea,text,text,jsonb)')
+            owner.execute('DROP FUNCTION public.commit_capacity_source(text,bytea,bytea)')
+            owner.execute('DROP FUNCTION aos_capacity_publication_private.require_current_source_installation()')
+            for signature in revoked:
+                owner.execute(sql.SQL('GRANT EXECUTE ON FUNCTION '+signature+' TO aos_provider_capacity_issuer'))
+
+
+@pytest.mark.parametrize('native_original_fact_reader',['shared','distinct'],indirect=True)
+def test_exact_public_source_composition_preserves_original_issuer_checker(exact_public_source_caller):
+    from uuid import uuid4
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,raw,material,original=exact_public_source_caller
+    from aos_api.aip_provider_capacity_formal_boundary import _require_read_boundary
+    _require_read_boundary(caller)
+    command,policy,attestation=material['actual_command']()
+    assert check_native_capacity_supplier_inputs(caller,command,policy,attestation,
+        trust_roots=original[0]['provider']).execution_allowed is False
+    key='public-'+uuid4().hex;asset='source-'+uuid4().hex
+    prepared=caller.execute('SELECT * FROM public.prepare_capacity_source(%s,%s,%s,%s::jsonb)',
+        (raw,key,asset,Jsonb(material['refs'][-1]))).fetchone()
+    body=bytes(prepared['source_raw']);signature=material['source_key'].sign(body)
+    committed=caller.execute('SELECT * FROM public.commit_capacity_source(%s,%s,%s)',(key,body,signature)).fetchone()
+    assert committed['asset_id']==asset and bytes(committed['source_raw'])==body
+    caller.commit()
+    with isolated_owner() as owner:
+        row=owner.execute("""SELECT p.source_raw,p.signature,p.content_hash,s.finalized,
+          aos_ed25519.verify(p.signature,p.source_raw,decode(s.signed_facts->>'sourceSignerPublicKey','base64')) AS valid
+          FROM aos_capacity_publication_private.source_publication p
+          JOIN aos_capacity_publication_private.source_pending s ON s.attempt_id=p.attempt_id WHERE p.asset_id=%s""",(asset,)).fetchone()
+        assert bytes(row['source_raw'])==body and bytes(row['signature'])==signature
+        assert row['valid'] is True and row['finalized'] is True
+
+
+def test_exact_public_source_rejects_live_issuer_drift(exact_public_source_caller):
+    from uuid import uuid4
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_provider_capacity_formal_boundary import _require_read_boundary
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,raw,material,_=exact_public_source_caller
+    faults=(
+        ('GRANT SELECT ON public.twa_org TO aos_provider_capacity_issuer','REVOKE SELECT ON public.twa_org FROM aos_provider_capacity_issuer'),
+        ('GRANT UPDATE(name) ON public.meta_object_type TO aos_provider_capacity_issuer','REVOKE UPDATE(name) ON public.meta_object_type FROM aos_provider_capacity_issuer'),
+        ('GRANT USAGE ON SCHEMA aos_capacity_publication_private TO aos_provider_capacity_issuer','REVOKE USAGE ON SCHEMA aos_capacity_publication_private FROM aos_provider_capacity_issuer'),
+        ('ALTER ROLE aos_provider_capacity_issuer INHERIT','ALTER ROLE aos_provider_capacity_issuer NOINHERIT'),
+        ("ALTER POLICY capacity_issuer_related_a0v150 ON public.aip_action_draft USING(true)",None),
+        ('ALTER TABLE public.meta_object_type DISABLE TRIGGER capacity_issuer_read_lock_only_a0v150','ALTER TABLE public.meta_object_type ENABLE TRIGGER capacity_issuer_read_lock_only_a0v150'),
+        ('GRANT EXECUTE ON FUNCTION public.prepare_capacity_source(bytea,text,text,jsonb) TO PUBLIC','REVOKE EXECUTE ON FUNCTION public.prepare_capacity_source(bytea,text,text,jsonb) FROM PUBLIC'),
+        ('ALTER FUNCTION public.prepare_capacity_source(bytea,text,text,jsonb) SET search_path=public','ALTER FUNCTION public.prepare_capacity_source(bytea,text,text,jsonb) SET search_path=pg_catalog'),
+        ('GRANT EXECUTE ON FUNCTION public.commit_capacity_source(text,bytea,bytea) TO PUBLIC','REVOKE EXECUTE ON FUNCTION public.commit_capacity_source(text,bytea,bytea) FROM PUBLIC'),
+        ('ALTER FUNCTION public.commit_capacity_source(text,bytea,bytea) SET search_path=public','ALTER FUNCTION public.commit_capacity_source(text,bytea,bytea) SET search_path=pg_catalog'),
+        ('ALTER FUNCTION public.commit_capacity_source(text,bytea,bytea) STABLE','ALTER FUNCTION public.commit_capacity_source(text,bytea,bytea) VOLATILE'),
+        ('ALTER FUNCTION public.prepare_capacity_source(bytea,text,text,jsonb) STRICT','ALTER FUNCTION public.prepare_capacity_source(bytea,text,text,jsonb) CALLED ON NULL INPUT'),
+        ('ALTER FUNCTION public.commit_capacity_source(text,bytea,bytea) PARALLEL SAFE','ALTER FUNCTION public.commit_capacity_source(text,bytea,bytea) PARALLEL UNSAFE'),
+        ("CREATE OR REPLACE FUNCTION aos_capacity_publication_private.require_current_source_installation() RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $$ BEGIN RETURN; END $$",None),
+    )
+    with isolated_owner() as owner:
+        before=_private_source_row_fingerprint(owner)
+        policy=owner.execute("SELECT pg_get_expr(polqual,polrelid) AS expression FROM pg_policy WHERE polrelid='public.aip_action_draft'::regclass AND polname='capacity_issuer_related_a0v150'").fetchone()['expression']
+        audit=owner.execute("SELECT pg_get_functiondef('aos_capacity_publication_private.require_current_source_installation()'::regprocedure) AS ddl").fetchone()['ddl']
+    for change,restore in faults:
+        caller.rollback()
+        with isolated_owner() as owner:owner.execute(change)
+        try:
+            _refresh_native_facts_transaction(caller)
+            if not change.startswith(('ALTER ROLE','CREATE OR REPLACE FUNCTION')):
+                with pytest.raises((psycopg.Error,ValueError)):
+                    with caller.transaction():_require_read_boundary(caller)
+            with pytest.raises(psycopg.errors.InsufficientPrivilege,match='CAPACITY_SOURCE_ISSUER_BOUNDARY_DRIFTED'):
+                with caller.transaction():
+                    caller.execute('SELECT * FROM public.prepare_capacity_source(%s,%s,%s,%s::jsonb)',
+                        (raw,'fault-'+uuid4().hex,'source-'+uuid4().hex,Jsonb(material['refs'][-1])))
+        finally:
+            caller.rollback()
+            if restore is None:
+                restore=audit if change.startswith('CREATE OR REPLACE FUNCTION') else 'ALTER POLICY capacity_issuer_related_a0v150 ON public.aip_action_draft USING('+policy+')'
+            with isolated_owner() as owner:owner.execute(restore)
+        _refresh_native_facts_transaction(caller)
+        _require_read_boundary(caller)
+        caller.execute('SELECT * FROM public.prepare_capacity_source(%s,%s,%s,%s::jsonb)',
+            (raw,'restored-'+uuid4().hex,'source-'+uuid4().hex,Jsonb(material['refs'][-1]))).fetchone()
+        caller.rollback()
+    with isolated_owner() as owner:assert _private_source_row_fingerprint(owner)==before
+
+
+def test_exact_public_source_rejects_bad_signature_and_unfinished_commit(exact_public_source_caller):
+    from uuid import uuid4
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    caller,raw,material,_=exact_public_source_caller
+    key='invalid-'+uuid4().hex
+    prepared=caller.execute('SELECT * FROM public.prepare_capacity_source(%s,%s,%s,%s::jsonb)',
+        (raw,key,'source-'+uuid4().hex,Jsonb(material['refs'][-1]))).fetchone()
+    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+        with caller.transaction():
+            caller.execute('SELECT * FROM public.commit_capacity_source(%s,%s,%s)',(key,bytes(prepared['source_raw']),b'x'*64))
+    with pytest.raises(psycopg.errors.CheckViolation,match='CAPACITY_SOURCE_PENDING_NOT_FINALIZED'):caller.commit()
+    caller.rollback()
+    with isolated_owner() as owner:
+        assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.source_pending').fetchone()['n']==0
+        assert owner.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.source_publication').fetchone()['n']==0

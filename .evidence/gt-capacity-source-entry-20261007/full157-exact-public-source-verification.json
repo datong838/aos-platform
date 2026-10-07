@@ -1,0 +1,160 @@
+{
+  "schema": "aos-exact-public-source-composition-verification/v1",
+  "head": "5b11fbacaa486d7041c521f9ca161944f8c17c4a",
+  "authority": "AOS-001455",
+  "original_functions": 17,
+  "new_functions_unchanged": 41,
+  "native_audited_total": 58,
+  "single_cause_faults": 14,
+  "native_audited_tables": 12,
+  "logs": {
+    ".evidence/gt-capacity-source-publication-20261006/exact-public-native-entry-red-r1.log": {
+      "sha256": "9fa0e37650e5c3843b7220340b561038120689ae6683e4f2643fb6ec5aa7fd7d",
+      "summary": "1 failed, 374 deselected, 7 warnings in 20.60s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/exact-public-native-entry-green-r1.log": {
+      "sha256": "937f604c7e59843f92f61d03a77b2d5a72733662a4eb358196139e4a2dc8b101",
+      "summary": "1 passed, 374 deselected, 7 warnings in 21.77s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/exact-public-native-entry-adjacent-r1.log": {
+      "sha256": "5468374e591283c8e54000d41d19dfd706095efe561687c79fa01c0a19224d8e",
+      "summary": "5 passed, 370 deselected, 7 warnings in 70.65s (0:01:10)"
+    }
+  },
+  "readback": [
+    {
+      "database": "aos_test_08a82fe7dc4a_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_0eeab7b7596f_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_3556750d7f75_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_48c7d29931ab_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": [
+        {
+          "asset_id": "source-e1174617368e4bde86f916cc237c994a",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true
+        }
+      ]
+    },
+    {
+      "database": "aos_test_5c5f274243c7_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_953d48144726_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": [
+        {
+          "asset_id": "source-480ee99060a242eda9c27c1cb7850a77",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true
+        }
+      ]
+    },
+    {
+      "database": "aos_test_a634530b7d19_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_e2f193c84cbc_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_fcddbcdcbef3_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    },
+    {
+      "database": "aos_test_fe656d3a20e6_ti4_test",
+      "versions": [
+        "a0v_157"
+      ],
+      "cluster": "7693564235776004128",
+      "private_original_check": true,
+      "temporary_audit_absent": true,
+      "source_rows": []
+    }
+  ],
+  "legacy_function_AST_preserved": true,
+  "legacy_test_AST_preserved_except_registration": true,
+  "expected_not_target_derived": true,
+  "public_formal_grants_changed": false,
+  "isolated_temporary_public_entries": true,
+  "default_installation_changed": false,
+  "remaining": [
+    "controlled installation/image/binary integrity",
+    "formal controlled installation and current public entry receipt",
+    "controlled JWT signer",
+    "current consumer",
+    "final actual caller COMMIT TTL",
+    "full natural business chain"
+  ],
+  "trusted_extension_files": {
+    "services/aos-api/postgres-extensions/aos_ed25519/aos_ed25519--1.0.sql": "add5aff9bf5ed07b7db16793cc498b210533b9006e180a0c1b405c2b6539bb67",
+    "services/aos-api/postgres-extensions/aos_ed25519/aos_ed25519.control": "b8ed0944fec477a668418ebd4e8f7a8d8528b7a256f1fd9feca6609b2aef9d4f"
+  },
+  "binary_integrity_proved_by_catalog": false,
+  "browser": "N/A: no UI or deployment"
+}

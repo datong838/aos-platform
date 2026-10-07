@@ -70,12 +70,19 @@ def _require_read_boundary(conn):
         raise ProviderCapacityFormalBoundaryBlocked('CAPACITY_ISSUER_EFFECTIVE_COLUMN_PERMISSION_DRIFTED')
     from aos_api.aip_capacity_withdrawal_fence import require_withdrawal_fence
     require_withdrawal_fence(conn)
+    from aos_api.aip_provider_capacity_publication_transaction import require_source_public_entry_definitions
+    source_entries=require_source_public_entry_definitions(conn)
+    allowed_functions=[r['oid'] for r in conn.execute(
+        "SELECT to_regprocedure(name)::oid AS oid FROM unnest(%s::text[]) name",
+        (['public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)',
+          'public.aos_capacity_withdrawal_epoch_lock(text,text,text)'],)).fetchall()]
+    allowed_functions.extend(source_entries)
     functions=conn.execute("SELECT p.oid FROM pg_proc p WHERE p.prosecdef AND has_function_privilege(%s,p.oid,'EXECUTE') "
-        "AND p.oid NOT IN ('public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)'::regprocedure,'public.aos_capacity_withdrawal_epoch_lock(text,text,text)'::regprocedure) LIMIT 1",(ISSUER,)).fetchone()
+        "AND NOT(p.oid=ANY(%s::oid[])) LIMIT 1",(ISSUER,allowed_functions)).fetchone()
     if functions:raise ProviderCapacityFormalBoundaryBlocked('CAPACITY_ISSUER_EFFECTIVE_DEFINER_PERMISSION_DRIFTED')
     explicit=conn.execute("SELECT p.oid,a.privilege_type,a.is_grantable FROM pg_proc p,LATERAL aclexplode(p.proacl) a "
-        "WHERE a.grantee=%s::regrole AND (p.oid NOT IN ('public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)'::regprocedure,'public.aos_capacity_withdrawal_epoch_lock(text,text,text)'::regprocedure) "
-        "OR a.privilege_type<>'EXECUTE' OR a.is_grantable)",(ISSUER,)).fetchone()
+        "WHERE a.grantee=%s::regrole AND (NOT(p.oid=ANY(%s::oid[])) "
+        "OR a.privilege_type<>'EXECUTE' OR a.is_grantable)",(ISSUER,allowed_functions)).fetchone()
     schemas=conn.execute("SELECT n.nspname,a.privilege_type,a.is_grantable FROM pg_namespace n,LATERAL aclexplode(n.nspacl) a "
         "WHERE a.grantee=%s::regrole",(ISSUER,)).fetchall()
     if (explicit or schemas!=[{'nspname':'public','privilege_type':'USAGE','is_grantable':False}]

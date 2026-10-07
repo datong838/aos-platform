@@ -1,0 +1,74 @@
+{
+  "schema": "aos-public-source-entry-current-callgraph-investigation/v1",
+  "head": "5b11fbacaa486d7041c521f9ca161944f8c17c4a",
+  "authority": "AOS-001455",
+  "existing_issuer_boundary_sha256": "e299003e1ba4d020b0dec2d6f322ea7ce771288456744a5b84d2fea125706dfe",
+  "current_effective_and_explicit_allowlist": [
+    "public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)",
+    "public.aos_capacity_withdrawal_epoch_lock(text,text,text)"
+  ],
+  "required_entry_signatures": [
+    "public.prepare_capacity_source(bytea,text,text,jsonb)",
+    "public.commit_capacity_source(text,bytea,bytea)"
+  ],
+  "leases": [
+    {
+      "task_id": "gt-provider-capacity-source-20261005",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "status": "ACTIVE",
+      "lease_expires_at": "2026-10-07T12:00:00+08:00",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_contracts.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_authority.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_issuer.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_issuer_connection.py",
+        "aos-platform/services/aos-api/alembic/versions/a0v_147_provider_capacity_source.py",
+        "aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py",
+        "aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_pg.py",
+        "aos-platform/.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-source-20261005"
+      ]
+    },
+    {
+      "task_id": "gt-provider-capacity-formal-boundary-20261005",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "status": "ACTIVE",
+      "lease_expires_at": "2026-10-07T12:00:00+08:00",
+      "scope": [
+        "aos-platform/services/aos-api/alembic/versions/a0v_150_provider_capacity_issuance_boundary.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_formal_boundary.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_action.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_action.py",
+        "aos-platform/services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py",
+        "aos-platform/services/aos-api/tests/aip/test_provider_capacity_evidence_epoch_pg.py",
+        "aos-platform/.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005"
+      ]
+    }
+  ],
+  "not_new_runtime_evidence": "Fresh exact-signature absence confirmed read-only; this is known missing integration, not a new RED or completed Source gate.",
+  "next_constraints": [
+    "Exact Source definitions/types/Owner/config/body and ACL before adding either effective or explicit definer exception",
+    "Issuer keeps zero private schema USAGE/table/helper rights; original native SCRAM session and originalJWT re-authentication retained",
+    "Public entry must validate exact private audit body/config/Owner/ACL derived from fixed compiler, never a caller PASS or catalog-learned hash",
+    "Use original native complete pending/commit functions, not placeholder/argument-only public success",
+    "Controlled signer originalJWT and exactnativepending, durableprovenance consumer and finalactualCOMMIT TTL remain required"
+  ],
+  "read_only_native_current_entry_readback": {
+    "database": "aos_test_1038795025d7_ti4_test",
+    "versions": [
+      {
+        "version_num": "a0v_157"
+      }
+    ],
+    "entries": [
+      {
+        "name": "public.prepare_capacity_source(bytea,text,text,jsonb)",
+        "installed": null
+      },
+      {
+        "name": "public.commit_capacity_source(text,bytea,bytea)",
+        "installed": null
+      }
+    ]
+  }
+}

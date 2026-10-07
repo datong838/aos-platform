@@ -1005,7 +1005,7 @@ def source_transaction_function_manifest():
 def _trusted_function_manifest(statements):
     """Parse every function in fixed installer SQL, failing on unsupported DDL."""
     pattern = re.compile(
-        r'CREATE FUNCTION\s+(aos_capacity_publication_private\.\w+)\s*\((.*?)\)\s*'
+        r'CREATE FUNCTION\s+(aos_capacity_publication_private\.\w+|public\.(?:prepare_capacity_source|commit_capacity_source))\s*\((.*?)\)\s*'
         r'(.*?)\bAS\s+(\$\w*\$)(.*?)\4', re.S | re.I)
     manifest = []
     for statement in statements:
@@ -1350,3 +1350,170 @@ BEGIN
         + '\n'.join(body) + '\n$audit$;\n'
         + 'ALTER FUNCTION aos_capacity_publication_private.require_current_source_installation() OWNER TO ' + OWNER + ';\n'
         + 'REVOKE ALL ON FUNCTION aos_capacity_publication_private.require_current_source_installation() FROM PUBLIC;\n')
+
+
+_PUBLIC_SOURCE_ENTRIES=(('prepare_capacity_source',
+    'p_raw bytea,p_attempt_key text,p_source_asset_id text,p_permit_ref jsonb',
+    'source_raw bytea,account_id uuid,attempt_id uuid','prepare_original_source',
+    'p_raw,p_attempt_key,p_source_asset_id,p_permit_ref','bytea,text,text,jsonb'),
+    ('commit_capacity_source','p_key text,p_raw bytea,p_signature bytea',
+    'asset_id text,revision integer,content_hash text,source_raw bytea,signature bytea',
+    'commit_original_source','p_key,p_raw,p_signature','text,bytea,bytea'))
+
+
+def _public_source_call_guard_sql():
+    """Compile original issuer constraints; no private privileges for issuer."""
+    from aos_api.aip_provider_capacity_formal_boundary import GUARD_HASH
+    issuer = "'aos_provider_capacity_issuer'::regrole::oid"
+    def literal(value):return "'"+value.replace("'","''")+"'"
+    table_oids='ARRAY['+','.join(literal('public.'+n)+'::regclass::oid' for n in TABLES)+']::oid[]'
+    entries=('public.aos_capacity_evidence_epoch_issuer_lock(text,text,text)',
+             'public.aos_capacity_withdrawal_epoch_lock(text,text,text)',
+             'public.prepare_capacity_source(bytea,text,text,jsonb)',
+             'public.commit_capacity_source(text,bytea,bytea)')
+    function_oids='ARRAY['+','.join(literal(n)+'::regprocedure::oid' for n in entries)+']::oid[]'
+    lock_predicate=' OR '.join('(c.oid='+literal('public.'+n)+'::regclass AND x.attname='+literal(col)+')' for n,col in LOCKS.items())
+    denied="RAISE EXCEPTION 'CAPACITY_SOURCE_ISSUER_BOUNDARY_DRIFTED' USING ERRCODE='42501';"
+    checks=[f"""session_user<>'aos_provider_capacity_issuer' OR current_user<>{literal(OWNER)}
+     OR current_setting('transaction_isolation')<>'serializable'
+     OR current_setting('transaction_read_only')<>'off'
+     OR current_setting('session_replication_role')<>'origin' OR current_setting('TimeZone')<>'UTC'
+     OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+     OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project'
+     OR NOT EXISTS(SELECT 1 FROM pg_roles r WHERE r.oid={issuer} AND r.rolcanlogin
+       AND NOT(r.rolinherit OR r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls))
+     OR EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid={issuer} OR member={issuer})
+     OR EXISTS(SELECT 1 FROM pg_class WHERE relowner={issuer})
+     OR EXISTS(SELECT 1 FROM pg_proc WHERE proowner={issuer})
+     OR EXISTS(SELECT 1 FROM pg_namespace WHERE nspowner={issuer})
+     OR EXISTS(SELECT 1 FROM pg_database WHERE datdba={issuer})""",
+     f"""(SELECT count(*) FROM pg_class c,LATERAL aclexplode(c.relacl) a WHERE a.grantee={issuer})<>{len(TABLES)}
+     OR EXISTS(SELECT 1 FROM pg_class c,LATERAL aclexplode(c.relacl) a WHERE a.grantee={issuer}
+       AND (NOT(c.oid=ANY({table_oids})) OR a.privilege_type<>'SELECT' OR a.is_grantable))
+     OR (SELECT count(*) FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid,
+       LATERAL aclexplode(x.attacl) a WHERE a.grantee={issuer})<>{len(LOCKS)}
+     OR EXISTS(SELECT 1 FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid,
+       LATERAL aclexplode(x.attacl) a WHERE a.grantee={issuer}
+       AND (NOT({lock_predicate}) OR a.privilege_type<>'UPDATE' OR a.is_grantable))""",
+     f"""EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+       WHERE n.nspname !~ '^pg_' AND n.nspname<>'information_schema' AND c.relkind IN('r','v','m','p','f')
+       AND (has_table_privilege({issuer},c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER,REFERENCES')
+       OR (NOT(c.oid=ANY({table_oids})) AND (has_table_privilege({issuer},c.oid,'SELECT')
+       OR has_any_column_privilege({issuer},c.oid,'SELECT,INSERT,UPDATE,REFERENCES')))))
+     OR EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+       JOIN pg_attribute x ON x.attrelid=c.oid WHERE n.nspname !~ '^pg_'
+       AND n.nspname<>'information_schema' AND c.relkind IN('r','v','m','p','f') AND x.attnum>0 AND NOT x.attisdropped
+       AND (has_column_privilege({issuer},c.oid,x.attnum,'INSERT,REFERENCES')
+       OR (has_column_privilege({issuer},c.oid,x.attnum,'UPDATE') AND NOT({lock_predicate}))))""",
+     f"""EXISTS(SELECT 1 FROM pg_proc p WHERE p.prosecdef AND has_function_privilege({issuer},p.oid,'EXECUTE')
+       AND NOT(p.oid=ANY({function_oids})))
+     OR EXISTS(SELECT 1 FROM pg_proc p,LATERAL aclexplode(p.proacl) a WHERE a.grantee={issuer}
+       AND (NOT(p.oid=ANY({function_oids})) OR a.privilege_type<>'EXECUTE' OR a.is_grantable))
+     OR (SELECT count(*) FROM pg_namespace n,LATERAL aclexplode(n.nspacl) a WHERE a.grantee={issuer})<>1
+     OR EXISTS(SELECT 1 FROM pg_namespace n,LATERAL aclexplode(n.nspacl) a WHERE a.grantee={issuer}
+       AND (n.nspname<>'public' OR a.privilege_type<>'USAGE' OR a.is_grantable))
+     OR EXISTS(SELECT 1 FROM pg_namespace WHERE nspname !~ '^pg_' AND nspname NOT IN('public','information_schema')
+       AND has_schema_privilege({issuer},oid,'USAGE'))
+     OR EXISTS(SELECT 1 FROM pg_namespace WHERE has_schema_privilege({issuer},oid,'CREATE'))
+     OR EXISTS(SELECT 1 FROM pg_database WHERE datname=current_database() AND has_database_privilege({issuer},oid,'CREATE'))""",
+    ]
+    for name,args,returns,_callee,_values,types in _PUBLIC_SOURCE_ENTRIES:
+        fields=[item.strip().split() for item in (args+','+returns).split(',')]
+        names='ARRAY['+','.join(literal(item[0]) for item in fields)+']::text[]'
+        all_types='ARRAY['+','.join(literal(item[1])+'::regtype::oid' for item in fields)+']::oid[]'
+        modes='ARRAY['+','.join(literal('i' if i<len(types.split(',')) else 't') for i in range(len(fields)))+']::"char"[]'
+        signature=literal('public.'+name+'('+types+')')+'::regprocedure::oid'
+        checks.append(f"""NOT EXISTS(SELECT 1 FROM pg_proc p WHERE p.oid={signature}
+          AND p.proowner={literal(OWNER)}::regrole AND p.prolang=(SELECT oid FROM pg_language WHERE lanname='plpgsql')
+          AND p.prosecdef AND NOT p.proisstrict AND p.provolatile='v' AND p.proparallel='u'
+          AND p.proconfig=ARRAY['search_path=pg_catalog']::text[] AND p.proretset AND p.prorettype='record'::regtype
+          AND p.pronargs={len(types.split(','))} AND p.proallargtypes={all_types}
+          AND p.proargnames={names} AND p.proargmodes={modes}
+          AND p.pronargdefaults=0 AND p.provariadic=0 AND p.prokind='f' AND NOT p.proleakproof AND p.prosupport=0
+          AND (SELECT count(*) FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))))=2
+          AND EXISTS(SELECT 1 FROM aclexplode(p.proacl) a WHERE a.grantee={issuer})
+          AND EXISTS(SELECT 1 FROM aclexplode(p.proacl) a WHERE a.grantee=p.proowner)
+          AND NOT EXISTS(SELECT 1 FROM aclexplode(p.proacl) a
+            WHERE a.grantee NOT IN(p.proowner,{issuer}) OR a.grantor<>p.proowner
+            OR a.privilege_type<>'EXECUTE' OR a.is_grantable))""")
+    for table in (*SCOPED,'aip_action_proposal','aip_action_draft','aip_action_approval_event'):
+        name='capacity_issuer_scope_a0v150' if table in SCOPED else ('capacity_issuer_proposal_a0v150' if table=='aip_action_proposal' else 'capacity_issuer_related_a0v150')
+        oid=literal('public.'+table)+'::regclass'
+        checks.append(f"NOT EXISTS(SELECT 1 FROM pg_class WHERE oid={oid} AND relrowsecurity AND relforcerowsecurity) OR (SELECT count(*) FROM pg_policy WHERE polrelid={oid} AND {issuer}=ANY(polroles))<>2")
+        expression=literal(_normalized(_policy_expression(table)).replace('FROM aip_action_proposal p','FROM public.aip_action_proposal p'))
+        for policy,permissive in ((name,'true'),(name.replace('_a0v150','_restrict_a0v150'),'false')):
+            checks.append(f"""NOT EXISTS(SELECT 1 FROM pg_policy WHERE polrelid={oid} AND polname={literal(policy)}
+             AND polcmd='*' AND polpermissive={permissive} AND polroles=ARRAY[{issuer}]::oid[]
+             AND btrim(regexp_replace(pg_get_expr(polqual,polrelid),'\\s+',' ','g'))={expression}
+             AND btrim(regexp_replace(pg_get_expr(polwithcheck,polrelid),'\\s+',' ','g'))={expression})""")
+    checks.append(f"""NOT EXISTS(SELECT 1 FROM pg_proc p WHERE p.oid='public.capacity_issuer_read_lock_only_a0v150()'::regprocedure
+      AND NOT p.prosecdef AND p.proconfig=ARRAY['search_path=pg_catalog']::text[]
+      AND p.proowner=(SELECT datdba FROM pg_database WHERE datname=current_database())
+      AND encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')={literal(GUARD_HASH)}
+      AND NOT EXISTS(SELECT 1 FROM aclexplode(p.proacl) a WHERE a.grantee<>p.proowner))
+      OR (SELECT count(*) FROM pg_trigger WHERE tgname='capacity_issuer_read_lock_only_a0v150')<>{len(LOCKS)}
+      OR EXISTS(SELECT 1 FROM pg_trigger t WHERE t.tgname='capacity_issuer_read_lock_only_a0v150'
+        AND (NOT(t.tgrelid=ANY(ARRAY[{','.join(literal('public.'+n)+'::regclass::oid' for n in LOCKS)}]::oid[]))
+        OR t.tgfoid<>'public.capacity_issuer_read_lock_only_a0v150()'::regprocedure OR t.tgenabled<>'O'
+        OR t.tgtype<>31 OR t.tgqual IS NOT NULL OR octet_length(t.tgargs)<>0 OR t.tgnargs<>0
+        OR cardinality(t.tgattr::smallint[])<>0))""")
+    audit=source_private_installation_audit_sql()
+    body=re.search(r'AS \$audit\$(.*?)\$audit\$;',audit,re.S)[1]
+    checks.append(f"""NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+      WHERE n.nspname='aos_capacity_publication_private' AND p.proname='require_current_source_installation'
+      AND p.pronargs=0 AND p.prorettype='void'::regtype AND p.proowner={literal(OWNER)}::regrole
+      AND p.prolang=(SELECT oid FROM pg_language WHERE lanname='plpgsql')
+      AND NOT p.prosecdef AND NOT p.proisstrict AND p.provolatile='v' AND p.proparallel='u'
+      AND p.proconfig=ARRAY['search_path=pg_catalog']::text[] AND NOT p.proretset
+      AND p.pronargdefaults=0 AND p.provariadic=0 AND p.prokind='f'
+      AND encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')={literal(hashlib.sha256(body.encode()).hexdigest())}
+      AND NOT EXISTS(SELECT 1 FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
+        WHERE a.grantee<>p.proowner OR a.privilege_type<>'EXECUTE' OR a.is_grantable))""")
+    return '\n'.join('IF '+check+' THEN '+denied+' END IF;' for check in checks)
+
+
+def source_public_entry_statements():
+    """Exact approved interfaces, not automatically installed or authorized."""
+    guard=_public_source_call_guard_sql()
+    result=[source_private_installation_audit_sql()]
+    for name,args,returns,callee,values,types in _PUBLIC_SOURCE_ENTRIES:
+        result.extend([f"""CREATE FUNCTION public.{name}({args}) RETURNS TABLE({returns})
+          LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $entry$
+          BEGIN {guard}
+          PERFORM aos_capacity_publication_private.require_current_source_installation();
+          RETURN QUERY SELECT * FROM aos_capacity_publication_private.{callee}({values}); END $entry$;""",
+          f'ALTER FUNCTION public.{name}({types}) OWNER TO {OWNER}',
+          f'REVOKE ALL ON FUNCTION public.{name}({types}) FROM PUBLIC',
+          f'GRANT EXECUTE ON FUNCTION public.{name}({types}) TO aos_provider_capacity_issuer'])
+    return tuple(result)
+
+
+def source_public_entry_manifest():
+    return _trusted_function_manifest(source_public_entry_statements()[1:])
+
+
+def require_source_public_entry_definitions(conn):
+    """Allow only both exact definitions; absent installation keeps legacy gates."""
+    manifest=source_public_entry_manifest()
+    rows=conn.execute("SELECT p.*,p.prosupport::oid AS support_oid,r.rolname,l.lanname FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace JOIN pg_roles r ON r.oid=p.proowner JOIN pg_language l ON l.oid=p.prolang WHERE n.nspname='public' AND p.proname=ANY(%s)",([m['signature'].split('(')[0].split('.')[1] for m in manifest],)).fetchall()
+    if not rows:return ()
+    if len(rows)!=2:raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_PUBLIC_INSTALLATION_DRIFTED')
+    oids=[]
+    for m in manifest:
+        row=next((r for r in rows if r['proname']==m['signature'].split('(')[0].split('.')[1]),None)
+        expected_types=conn.execute('SELECT ARRAY(SELECT value::regtype::oid FROM unnest(%s::text[]) value) AS value',(m['all_types'],)).fetchone()['value']
+        if (not row or row['rolname']!=OWNER or row['lanname']!='plpgsql' or not row['prosecdef']
+            or row['proisstrict'] or row['provolatile']!='v' or row['proparallel']!='u'
+            or row['proconfig']!=m['config'] or row['proargnames']!=m['names']
+            or row['proallargtypes']!=expected_types or list(row['proargmodes'] or [])!=m['modes']
+            or not row['proretset'] or row['prorettype']!=2249 or row['pronargdefaults']!=0
+            or row['prokind']!='f' or row['provariadic']!=0 or row['proleakproof'] or row['support_oid']!=0
+            or row['pronargs']!=len(m['input_types'])
+            or hashlib.sha256(row['prosrc'].encode()).hexdigest()!=m['body_sha256']):
+            raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_PUBLIC_INSTALLATION_DRIFTED')
+        acl=conn.execute("SELECT a.grantee::regrole::text AS grantee,a.grantor::regrole::text AS grantor,a.privilege_type,a.is_grantable FROM pg_proc p,LATERAL aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE p.oid=%s",(row['oid'],)).fetchall()
+        if ({a['grantee'] for a in acl}!={OWNER,'aos_provider_capacity_issuer'} or len(acl)!=2
+            or any(a['grantor']!=OWNER or a['privilege_type']!='EXECUTE' or a['is_grantable'] for a in acl)):
+            raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_PUBLIC_INSTALLATION_DRIFTED')
+        oids.append(row['oid'])
+    return tuple(oids)
