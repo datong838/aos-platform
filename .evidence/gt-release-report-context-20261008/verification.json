@@ -1,0 +1,26 @@
+{
+  "authority": "AOS-001492",
+  "task": "gt-release-report-context-20261008",
+  "native_database": "aos_test_model_report_gate_6b300207c3ce",
+  "native_denial": "Model/Route signed execution evidence is not supported",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_release_publication_service.py": "3cc4b1e211615476ef1d494a489280a42f627e931dde807ddbbde42705c0ef5d",
+    "services/aos-api/tests/aip/test_release_report_context.py": "57c825589ef29ead4eee10f89284cff31c9d2185c31e04bf96cca5394d9e6ec0",
+    ".evidence/gt-release-report-context-20261008/adjacent-r1.log": "c617701d2fdacee805c1adf846d0c2cf122aaf4bfff2e2800c837508943487c0",
+    ".evidence/gt-release-report-context-20261008/green-r1.log": "4fb1bf79df355fb35eb8685a5142ef96bb62f9e0724aa0207f4aaa145d04b44a",
+    ".evidence/gt-release-report-context-20261008/native-adjacent-r1.log": "30a714ef51eaa787cd2d093c7b3e59176d658faeb8b2aa7649d32695f92de5ea",
+    ".evidence/gt-release-report-context-20261008/native-adjacent-result.json": "5e95bafb54494f40b0a8d3f21dce547f843252c6ae83e5397f60b8e20b7e8c86",
+    ".evidence/gt-release-report-context-20261008/native-target-denial-r1.log": "ac7d9843af84dd106a45a25ecea4195e12e020b78e674fbc5153d18def166d97",
+    ".evidence/gt-release-report-context-20261008/native-target-denial-result.json": "0f6ce012ee19d4b15a1d6d3c8cb7e47e6840b11e3990470cdd94af59bdc031b4",
+    ".evidence/gt-release-report-context-20261008/native-target-denial.py": "9fbd544c47cde583b97c0ab490dd94c83c2bb11d24bd3c9aadcd0625b03b2a5f",
+    ".evidence/gt-release-report-context-20261008/plan.md": "4ad2ba63813d5d0e7964f135c12454afc4fea561e2644357faf9062cbf0d3d71",
+    ".evidence/gt-release-report-context-20261008/red-r1.log": "497802e29788081d24f984ecb6dcfc21a52885780c071d75d736432a4ddbde86",
+    ".evidence/gt-release-report-context-20261008/red-r2.log": "7b465dc2a2eda41950398cf4f477faea8229d4af2512075b0ae9d0b6b9491dab",
+    ".evidence/gt-release-report-context-20261008/run-native-adjacent.py": "2b5eb6ca2418b7694d6230e648bceb1d3d9769dfd2028ca019ac2473ecac5011",
+    ".evidence/gt-release-report-context-20261008/task.json": "7d4db8993fe6afc6f6e4bb357f899204f2af30a6bb2b194be2e7042a37ddded2",
+    ".evidence/gt-release-report-context-20261008/verification.md": "0c1b6f4a27c1fb6091113c478b88b85822e857787984e9f8c66a1a0fe46ae45b"
+  },
+  "business_first_chain": false,
+  "runtime_deployed": false,
+  "provider_calls": 0
+}

@@ -129,6 +129,7 @@ class AipReleasePublicationService:
                     raise AipReleasePublicationIntegrityError(
                         "eval report revision/hash verification failed"
                     )
+                self._require_supported_release_target(report.target)
 
                 run_row = conn.execute(
                     """SELECT * FROM aip_eval_run
@@ -252,6 +253,7 @@ class AipReleasePublicationService:
                 gate = self._gate_from_row(scope, gate_row)
                 if expected_target_type is not None and gate.target.asset_type is not expected_target_type:
                     raise AipReleaseAssetUnsupported("release gate target type does not match route")
+                self._require_supported_release_target(gate.target)
                 if gate.status is not ReleaseGateStatus.PASSED:
                     raise AipReleaseGateRejected("release gate is not passed")
                 checked_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
@@ -394,6 +396,7 @@ class AipReleasePublicationService:
             raise AipReleasePublicationIntegrityError(
                 "release gate eval report exact references drifted"
             )
+        AipReleasePublicationService._require_supported_release_target(report.target)
         if report.target.asset_type is AssetType.SKILL_TEMPLATE:
             AipReleasePublicationService._verify_signed_skill_report(conn, report)
 
@@ -594,6 +597,15 @@ class AipReleasePublicationService:
         )
 
     @staticmethod
+    def _require_supported_release_target(target: AssetRevisionRef) -> None:
+        # Model/Route execution proofs require their own typed contract.  A valid
+        # report hash alone must not open release while that producer is absent.
+        if target.asset_type in {AssetType.REGISTERED_MODEL, AssetType.MODEL_ROUTE}:
+            raise AipReleaseGateRejected(
+                "Model/Route signed execution evidence is not supported"
+            )
+
+    @staticmethod
     def _report_from_row(scope: TenantScope, row: Any) -> EvalReportRevision:
         return EvalReportRevision(
             tenant=AipReleasePublicationService._tenant(scope),
@@ -602,6 +614,11 @@ class AipReleasePublicationService:
             content_hash=row["content_hash"],
             run_id=row["run_id"],
             suite_ref=row["suite_ref"],
+            eval_contract_ref=row.get("eval_contract_ref"),
+            subject_artifact_ref=row.get("subject_artifact_ref"),
+            stage_attempt_ref=row.get("stage_attempt_ref"),
+            gate_policy_ref=row.get("gate_policy_ref"),
+            evidence_cutoff_at=row.get("evidence_cutoff_at"),
             target=row["target_ref"],
             dataset=row["dataset_ref"],
             judge=row["judge_ref"],

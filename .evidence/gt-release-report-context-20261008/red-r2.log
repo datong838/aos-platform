@@ -1,0 +1,246 @@
+.FF.FFFFF                                                                [100%]
+=================================== FAILURES ===================================
+__________ test_context_roundtrip_preserves_canonical_hash[contract] ___________
+
+context = 'contract'
+
+    @pytest.mark.parametrize("context", ["legacy", "contract", "media"])
+    def test_context_roundtrip_preserves_canonical_hash(context):
+        original, row = report_row(context)
+        restored = AipReleasePublicationService._report_from_row(SCOPE, row)
+>       assert restored == original
+E       assert EvalReportRev...timezone.utc)) == EvalReportRev...timezone.utc))
+E         
+E         Use -v to get more diff
+
+services/aos-api/tests/aip/test_release_report_context.py:48: AssertionError
+____________ test_context_roundtrip_preserves_canonical_hash[media] ____________
+
+context = 'media'
+
+    @pytest.mark.parametrize("context", ["legacy", "contract", "media"])
+    def test_context_roundtrip_preserves_canonical_hash(context):
+        original, row = report_row(context)
+        restored = AipReleasePublicationService._report_from_row(SCOPE, row)
+>       assert restored == original
+E       assert EvalReportRev...timezone.utc)) == EvalReportRev...timezone.utc))
+E         
+E         Use -v to get more diff
+
+services/aos-api/tests/aip/test_release_report_context.py:48: AssertionError
+_________ test_partial_media_context_is_rejected_instead_of_discarded __________
+
+    def test_partial_media_context_is_rejected_instead_of_discarded():
+        _, row = report_row("media")
+        row["stage_attempt_ref"] = None
+>       with pytest.raises(ValueError, match="must be bound together"):
+E       Failed: DID NOT RAISE ValueError
+
+services/aos-api/tests/aip/test_release_report_context.py:60: Failed
+_ test_derive_rejects_unsupported_target_before_run_read_or_gate_write[registered_model] _
+
+kind = <AssetType.REGISTERED_MODEL: 'registered_model'>
+
+    @pytest.mark.parametrize("kind", [AssetType.REGISTERED_MODEL, AssetType.MODEL_ROUTE])
+    def test_derive_rejects_unsupported_target_before_run_read_or_gate_write(kind):
+        report, row = report_row("contract", kind)
+        class Connection:
+            def __init__(self):
+                self.queries = []
+            def execute(self, query, params):
+                self.queries.append(query)
+                if "FROM aip_eval_report_revision" not in query:
+                    pytest.fail("unsupported execution source advanced beyond report validation")
+                return self
+            def fetchone(self):
+                return row
+        conn = Connection()
+        @contextmanager
+        def connect(*args, **kwargs):
+            yield conn
+        service = AipReleasePublicationService(connect)
+        service._gate_row = lambda *args: None
+        with pytest.raises(AipReleaseGateRejected, match="signed execution"):
+>           service.derive_gate(SCOPE, actor="unit-only", request=DeriveReleaseGateRequest(
+                report_id=report.report_id, report_revision=1, report_hash=report.content_hash,
+                idempotency_key="unit-only"))
+
+services/aos-api/tests/aip/test_release_report_context.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <aos_api.aip_release_publication_service.AipReleasePublicationService object at 0x11b3ecd50>
+scope = TenantScope(org_id='org-org', project_id='dev-project')
+actor = 'unit-only'
+request = DeriveReleaseGateRequest(report_id='context-unit', report_revision=1, report_hash='1f1493d5953ad4459fbffff568599f70a79ac5cd13fa13aaa105633e1b6f7df9', idempotency_key='unit-only')
+
+    def derive_gate(
+        self,
+        scope: TenantScope,
+        *,
+        actor: str,
+        request: DeriveReleaseGateRequest,
+    ) -> ReleaseGateDecision:
+        actor = self._actor(actor)
+        decision_id = self._stable_id("gate", scope, request.idempotency_key)
+        try:
+            with self._connect(scope, serializable=True) as conn:
+                existing = self._gate_row(conn, scope, decision_id)
+                if existing is not None:
+                    gate = self._gate_from_row(scope, existing)
+                    self._require_gate_replay(gate, actor=actor, request=request)
+                    return gate
+    
+                report_row = conn.execute(
+                    """SELECT * FROM aip_eval_report_revision
+                       WHERE org_id=%s AND project_id=%s
+                         AND report_id=%s AND revision=%s""",
+                    (*scope.key, request.report_id, request.report_revision),
+                ).fetchone()
+                if report_row is None:
+                    raise AipReleasePublicationNotFound("eval report revision not found")
+                report = self._report_from_row(scope, report_row)
+                if (
+                    report.content_hash != request.report_hash
+                    or compute_eval_report_hash(report) != request.report_hash
+                ):
+>                   raise AipReleasePublicationIntegrityError(
+                        "eval report revision/hash verification failed"
+                    )
+E                   aos_api.aip_release_publication_service.AipReleasePublicationIntegrityError: eval report revision/hash verification failed
+
+services/aos-api/aos_api/aip_release_publication_service.py:129: AipReleasePublicationIntegrityError
+_ test_derive_rejects_unsupported_target_before_run_read_or_gate_write[model_route] _
+
+kind = <AssetType.MODEL_ROUTE: 'model_route'>
+
+    @pytest.mark.parametrize("kind", [AssetType.REGISTERED_MODEL, AssetType.MODEL_ROUTE])
+    def test_derive_rejects_unsupported_target_before_run_read_or_gate_write(kind):
+        report, row = report_row("contract", kind)
+        class Connection:
+            def __init__(self):
+                self.queries = []
+            def execute(self, query, params):
+                self.queries.append(query)
+                if "FROM aip_eval_report_revision" not in query:
+                    pytest.fail("unsupported execution source advanced beyond report validation")
+                return self
+            def fetchone(self):
+                return row
+        conn = Connection()
+        @contextmanager
+        def connect(*args, **kwargs):
+            yield conn
+        service = AipReleasePublicationService(connect)
+        service._gate_row = lambda *args: None
+        with pytest.raises(AipReleaseGateRejected, match="signed execution"):
+>           service.derive_gate(SCOPE, actor="unit-only", request=DeriveReleaseGateRequest(
+                report_id=report.report_id, report_revision=1, report_hash=report.content_hash,
+                idempotency_key="unit-only"))
+
+services/aos-api/tests/aip/test_release_report_context.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <aos_api.aip_release_publication_service.AipReleasePublicationService object at 0x119e18510>
+scope = TenantScope(org_id='org-org', project_id='dev-project')
+actor = 'unit-only'
+request = DeriveReleaseGateRequest(report_id='context-unit', report_revision=1, report_hash='b6f38aa4c3d19483ca7893e8197e23d5d78f47c1c2a430310f2627969985cf37', idempotency_key='unit-only')
+
+    def derive_gate(
+        self,
+        scope: TenantScope,
+        *,
+        actor: str,
+        request: DeriveReleaseGateRequest,
+    ) -> ReleaseGateDecision:
+        actor = self._actor(actor)
+        decision_id = self._stable_id("gate", scope, request.idempotency_key)
+        try:
+            with self._connect(scope, serializable=True) as conn:
+                existing = self._gate_row(conn, scope, decision_id)
+                if existing is not None:
+                    gate = self._gate_from_row(scope, existing)
+                    self._require_gate_replay(gate, actor=actor, request=request)
+                    return gate
+    
+                report_row = conn.execute(
+                    """SELECT * FROM aip_eval_report_revision
+                       WHERE org_id=%s AND project_id=%s
+                         AND report_id=%s AND revision=%s""",
+                    (*scope.key, request.report_id, request.report_revision),
+                ).fetchone()
+                if report_row is None:
+                    raise AipReleasePublicationNotFound("eval report revision not found")
+                report = self._report_from_row(scope, report_row)
+                if (
+                    report.content_hash != request.report_hash
+                    or compute_eval_report_hash(report) != request.report_hash
+                ):
+>                   raise AipReleasePublicationIntegrityError(
+                        "eval report revision/hash verification failed"
+                    )
+E                   aos_api.aip_release_publication_service.AipReleasePublicationIntegrityError: eval report revision/hash verification failed
+
+services/aos-api/aos_api/aip_release_publication_service.py:129: AipReleasePublicationIntegrityError
+_ test_existing_execution_sources_keep_their_original_proof_checks[skill_template] _
+
+kind = <AssetType.SKILL_TEMPLATE: 'skill_template'>
+
+    @pytest.mark.parametrize("kind", [AssetType.SKILL_TEMPLATE, AssetType.LOGIC_GRAPH])
+    def test_existing_execution_sources_keep_their_original_proof_checks(kind):
+>       AipReleasePublicationService._require_supported_release_target(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            AssetRevisionRef.model_validate(asset(kind, "target")))
+E       AttributeError: type object 'AipReleasePublicationService' has no attribute '_require_supported_release_target'
+
+services/aos-api/tests/aip/test_release_report_context.py:90: AttributeError
+_ test_existing_execution_sources_keep_their_original_proof_checks[logic_graph] _
+
+kind = <AssetType.LOGIC_GRAPH: 'logic_graph'>
+
+    @pytest.mark.parametrize("kind", [AssetType.SKILL_TEMPLATE, AssetType.LOGIC_GRAPH])
+    def test_existing_execution_sources_keep_their_original_proof_checks(kind):
+>       AipReleasePublicationService._require_supported_release_target(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            AssetRevisionRef.model_validate(asset(kind, "target")))
+E       AttributeError: type object 'AipReleasePublicationService' has no attribute '_require_supported_release_target'
+
+services/aos-api/tests/aip/test_release_report_context.py:90: AttributeError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_release_report_context.py::test_context_roundtrip_preserves_canonical_hash[contract]
+FAILED services/aos-api/tests/aip/test_release_report_context.py::test_context_roundtrip_preserves_canonical_hash[media]
+FAILED services/aos-api/tests/aip/test_release_report_context.py::test_partial_media_context_is_rejected_instead_of_discarded
+FAILED services/aos-api/tests/aip/test_release_report_context.py::test_derive_rejects_unsupported_target_before_run_read_or_gate_write[registered_model]
+FAILED services/aos-api/tests/aip/test_release_report_context.py::test_derive_rejects_unsupported_target_before_run_read_or_gate_write[model_route]
+FAILED services/aos-api/tests/aip/test_release_report_context.py::test_existing_execution_sources_keep_their_original_proof_checks[skill_template]
+FAILED services/aos-api/tests/aip/test_release_report_context.py::test_existing_execution_sources_keep_their_original_proof_checks[logic_graph]
+7 failed, 2 passed, 7 warnings in 0.41s

@@ -1,0 +1,22 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-release-report-context-20261008",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001492",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/aip_release_publication_service.py",
+    "aos-platform/services/aos-api/tests/aip/test_release_report_context.py",
+    "aos-platform/.evidence/gt-release-report-context-20261008"
+  ],
+  "excluded_scope": [
+    "aos-platform/formal-runtime",
+    "aos-platform/services/aos-api/aos_api/aip_eval_runner.py",
+    "aos-platform/services/aos-api/alembic"
+  ],
+  "expected_outputs": [
+    "Original legacy and extended report round trip preserve canonical hash; explicit Model/Route release deny before gate/publish while typed signed proof unavailable; no Provider/DB/schema/Goal changes"
+  ],
+  "lease_expires_at": "2026-10-07T20:34:13.800941+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-08T02:34:14+08:00"
+}

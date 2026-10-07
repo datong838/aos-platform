@@ -1,0 +1,13 @@
+# 报告上下文回读与未支持执行来源发布禁入
+
+产品/231及GT joint方案延续完整自然首链，报告哈希与真实签名执行必须独立校验；局部修复不代替typed Model Owner/真实质量/共享物理容量。原内存RED已确认Release mapper漏合同及subject/stage/policy/cutoff五字段；Runner原mapper能精确回读。
+
+文件：services/aos-api/aos_api/aip_release_publication_service.py，services/aos-api/tests/aip/test_release_report_context.py。本Task独立scope无重叠，当前库157只读。补原Release mapper五字段，兼容旧行缺列或NULL。为避免偶然hash拒绝解除后放行无签名Model/Route，新增窄target guard：derive在精确报告hash通过后、任何Gate写入之前拒绝RegisteredModel/ModelRoute；publication重查报告完整性后亦调用该guard，防消费旧Gate。其他target原行为与Skill签名proof必须保留，不改Runner拒绝、不修改原hash、不拷贝数据库或打开Provider。
+
+RED：legacy/contract/media roundtrip与hash一致；缺列/NULL兼容，半套media上下文仍DTO拒绝；Model/Route guard拒绝且测试derive/publish确切接线，旧Skill与其他target不受影响。最小实现→专项→原Release/报告/Proof/Subject相邻测试→源方案一致性审查→精确提交与上下文。隔离完整业务链与current gate consumer仍独立pending，不从内存测试宣称签名门完整或首链通过。
+
+风险：新增明确拒绝Model/Route属于现有未实现执行来源的fail-closed，未来typed实现须在完整contract/proof/usage/jointIntent验收后替换，不静默开放。当前合法Skill报告行为保持；无DB迁移/写入/真模型调用。本轮前端未更改，已刚完成真实浏览器相邻禁入检查。
+
+专项11项已通过；相邻纯内存97 passed/7 skipped（7项要求原生PG），不把skip当通过。新增本证据目录run-native-adjacent.py，复用已核原SCRAM隔离fixture runner，在5434固定test-only容器创建全迁移随机保留库，执行原Release service/API/签名Skill及proofreader测试；不连接18435当前库、不删除实验库、不传全局凭据。原readonly幂等结果回读和revoke保留，新增Model/Route拒绝针对新derive、新publish及evidence消费，不改变已知结果对账。
+
+原签名Skill发布与撤销原生回归已passed；7 skipped属于固定历史5433/BG-00af测试库，不能改断言或连接它。新增native-target-denial.py：复用已核r4合法申请/hold模板创建新随机保留库，原Store同caller创建明确伪造负报告，原derive_gate须在签名执行支持门拒绝，外层ROLLBACK；独立11表计数/模板未变，Provider0、Gate0新提交。旧r1反例和未知效果不重发。此为trusted隔离admin反例，不是不可信调用到达或真实质量证明。

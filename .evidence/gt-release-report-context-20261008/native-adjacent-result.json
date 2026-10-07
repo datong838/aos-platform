@@ -1,0 +1,118 @@
+{
+  "observed_at": "2026-10-07T18:39:39.588339+00:00",
+  "database": "aos_test_cf97a3d66bc0_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_context_roundtrip_preserves_canonical_hash[legacy]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_context_roundtrip_preserves_canonical_hash[contract]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_context_roundtrip_preserves_canonical_hash[media]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_old_row_without_context_columns_is_compatible",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_partial_media_context_is_rejected_instead_of_discarded",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_derive_rejects_unsupported_target_before_run_read_or_gate_write[registered_model]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_derive_rejects_unsupported_target_before_run_read_or_gate_write[model_route]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_existing_execution_sources_keep_their_original_proof_checks[skill_template]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_existing_execution_sources_keep_their_original_proof_checks[logic_graph]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_publish_existing_gate_rejects_before_clock_or_event_write[registered_model]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_release_report_context.py::test_publish_existing_gate_rejects_before_clock_or_event_write[model_route]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_release_publication_service.py::test_gate_publish_and_revoke_are_derived_and_append_only",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_release_publication_service.py::test_skill_publication_kind_rejects_logic_gate_and_cross_kind_replay",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_release_publication_service.py::test_release_is_tenant_scoped_and_idempotency_conflicts",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_release_publication_service.py::test_failed_gate_cannot_publish_and_duplicate_revoke_is_rejected",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_release_publication_api.py::test_gate_publish_revoke_use_authenticated_scope",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_release_publication_api.py::test_request_cannot_submit_manual_gate_status",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_release_publication_api.py::test_skill_publication_route_forwards_exact_target_kind",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_release_publication_api.py::test_release_errors_fail_closed[error0-422-AIP_RELEASE_GATE_REJECTED]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_release_publication_api.py::test_release_errors_fail_closed[error1-409-AIP_PUBLICATION_ALREADY_REVOKED]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_release_publication_api.py::test_release_api_requires_authentication",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_aip_release_publication_signed_skill_pg.py::test_signed_skill_gate_derives_and_current_revocation_blocks_publish",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "Original release and signed Skill/proof regressions in retained test-only full schema; no formal Model execution"
+}

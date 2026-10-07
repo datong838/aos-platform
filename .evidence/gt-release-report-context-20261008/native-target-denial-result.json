@@ -1,0 +1,52 @@
+{
+  "status": "ORIGINAL_MODEL_RELEASE_EXPLICIT_DENIAL_ROLLED_BACK",
+  "database": "aos_test_model_report_gate_6b300207c3ce",
+  "template": "aos_test_bde66457881c_ti4_test",
+  "baseline": {
+    "heads": [
+      {
+        "version_num": "a0v_157"
+      }
+    ],
+    "counts": {
+      "aip_eval_run": 1,
+      "aip_eval_run_event": 3,
+      "aip_eval_report_revision": 1,
+      "aip_release_gate_decision": 1,
+      "aip_publication_event": 1,
+      "aip_eval_execution_receipt": 0,
+      "aip_eval_case_execution_proof": 0,
+      "aip_model_eval_budget_reservation": 1,
+      "aip_budget_reservation": 0,
+      "aip_agent_run": 0,
+      "aip_model_capacity_reservation": 0
+    }
+  },
+  "after_rollback": {
+    "heads": [
+      {
+        "version_num": "a0v_157"
+      }
+    ],
+    "counts": {
+      "aip_eval_run": 1,
+      "aip_eval_run_event": 3,
+      "aip_eval_report_revision": 1,
+      "aip_release_gate_decision": 1,
+      "aip_publication_event": 1,
+      "aip_eval_execution_receipt": 0,
+      "aip_eval_case_execution_proof": 0,
+      "aip_model_eval_budget_reservation": 1,
+      "aip_budget_reservation": 0,
+      "aip_agent_run": 0,
+      "aip_model_capacity_reservation": 0
+    }
+  },
+  "template_unchanged": true,
+  "rejection": "Model/Route signed execution evidence is not supported",
+  "actual_commit_calls": 0,
+  "provider_calls": 0,
+  "gate_created": false,
+  "model_quality_measured": false,
+  "trusted_test_admin_negative_only": true
+}
