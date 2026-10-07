@@ -30,6 +30,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_exact_public_source_composition_preserves_original_issuer_checker',
         'test_controlled_source_signer_binds_original_jwt_pending_and_private_key',
         'test_current_source_consumer_rechecks_new_transaction',
+        'test_current_source_consumer_accepts_independent_owner',
         'test_exact_public_source_rejects_live_issuer_drift',
         'test_exact_public_source_rejects_bad_signature_and_unfinished_commit',
         'test_native_committed_sources_share_one_physical_account',
@@ -4877,7 +4878,7 @@ def exact_public_source_caller(native_full_signed_reader,request):
             assert row['signature'].startswith('publication_')
             revoked.append(row['signature'])
             owner.execute(sql.SQL('REVOKE EXECUTE ON FUNCTION '+row['signature']+' FROM aos_provider_capacity_issuer'))
-        include_consumer=request.node.originalname=='test_current_source_consumer_rechecks_new_transaction'
+        include_consumer=request.node.originalname in {'test_current_source_consumer_rechecks_new_transaction','test_current_source_consumer_accepts_independent_owner'}
         for statement in transaction.source_public_entry_statements(include_consumer=include_consumer):owner.execute(statement)
     _refresh_native_facts_transaction(caller)
     try:yield caller,raw,material,original
@@ -5206,3 +5207,208 @@ def test_current_source_consumer_rechecks_new_transaction(exact_public_source_ca
             "FROM aos_capacity_publication_private.source_publication p JOIN aos_capacity_publication_private.source_pending s "
             "ON s.attempt_id=p.attempt_id WHERE p.asset_id=%s",(asset,)).fetchone()
         assert row==dict(hash_ok=True,signature_ok=True,finalized=True)
+
+
+@pytest.mark.parametrize('native_original_fact_reader',['shared','distinct'],indirect=True)
+def test_current_source_consumer_accepts_independent_owner(exact_public_source_caller,https_signer):
+    """Consume durable history as another current Owner, without impersonating maker."""
+    import json,time
+    from uuid import uuid4
+    from pydantic import SecretStr
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_provider_capacity_source_issuer import capacity_source_preparation_bytes
+    from aos_api.aip_provider_capacity_publication_contracts import PublishedProviderCapacitySourceV2,parse_signed_capacity_body
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from aos_api.auth import resolve_principal
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    sign,_=https_signer
+    caller,_,material,original=exact_public_source_caller
+    issuance,_,_=material['actual_command']()
+    maker=json.loads(capacity_source_preparation_bytes(issuance))['makerSubject']
+    issuance=issuance.model_copy(update={'bearer_token':SecretStr(sign(maker,changes={'exp':int(time.time())+20}))})
+    packet=capacity_source_preparation_bytes(issuance)
+    asset='independent-consumer-source-'+uuid4().hex
+    pending=caller.execute('SELECT * FROM public.prepare_capacity_source(%s,%s,%s,%s::jsonb)',
+        (packet,issuance.idempotency_key,asset,Jsonb(material['refs'][-1]))).fetchone()
+    raw=bytes(pending['source_raw'])
+    committed=caller.execute('SELECT * FROM public.commit_capacity_source(%s,%s,%s)',
+        (issuance.idempotency_key,raw,material['source_key'].sign(raw))).fetchone()
+    caller.commit()
+    source=parse_signed_capacity_body(raw,PublishedProviderCapacitySourceV2)
+    delay=source.issuance_context.authentication_expires_at.timestamp()-time.time()+0.2
+    if delay>0:time.sleep(delay)
+    exact=FormalExactRef(asset_type='ProviderCapacitySourceRevision',asset_id=asset,
+        revision=committed['revision'],content_hash=committed['content_hash'])
+    with connect_capacity_issuer(original[4],SCOPE) as consumer:
+        native=consumer.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+        assert native['xid']!=source.issuance_context.transaction_id
+        assert native['pid']!=source.issuance_context.backend_pid
+        owners=consumer.execute("SELECT subject FROM public.meta_membership WHERE org_id=%s AND project_id=%s AND lower(role)='owner' AND subject<>%s ORDER BY subject",
+            (*SCOPE.key,maker)).fetchall()
+        assert owners,'Independent current Owner must come from existing approved fixture'
+        subject=owners[0]['subject']
+        token=sign(subject)
+        principal=resolve_principal(token=token,header_org=SCOPE.org_id,header_project=SCOPE.project_id)
+        assert principal.subject==subject and subject!=maker and principal.token_kind=='oidc'
+        # Complete preconditions before missing interface: durable C-signed
+        # Source, expired maker token, new SCRAM xid/PID and distinct real Owner.
+        from aos_api.aip_provider_capacity_source_contracts import ProviderCapacityConsumptionCommand
+        from aos_api.aip_provider_capacity_source_consumer import consume_current_capacity_source
+        request=ProviderCapacityConsumptionCommand(schemaVersion=1,
+            tenant={'orgId':SCOPE.org_id,'projectId':SCOPE.project_id},sourceRef=exact,bearerToken=SecretStr(token))
+        try:result=consume_current_capacity_source(consumer,request)
+        except Exception as error:
+            underlying=error.__context__
+            assert False,dict(type=type(underlying).__name__,native_reason=getattr(getattr(underlying,'diag',None),'message_primary',None))
+        assert type(result) is PublishedProviderCapacitySourceV2
+        assert result.model_dump(mode='json',by_alias=True)==source.model_dump(mode='json',by_alias=True)
+        assert result.execution_allowed is False
+
+        consumer.rollback()
+        from tests.aip._runtime_guard_history_fixture import isolated_owner
+        from aos_api.aip_provider_capacity_source_consumer import ProviderCapacityConsumptionBlocked,_consumption_packet
+        from threading import Event,Thread
+        # This retained lab Owner has a real membership and independently
+        # signed fixture JWT; it is not any original maker/checker identity.
+        independent='consumer-owner-'+uuid4().hex
+        with isolated_owner() as owner:
+            owner.execute("INSERT INTO public.meta_membership(org_id,project_id,subject,role) VALUES(%s,%s,%s,'owner')",(*SCOPE.key,independent))
+            before=_private_source_row_fingerprint(owner)
+        independent_request=request.model_copy(update={'bearer_token':SecretStr(sign(independent))})
+        def current_read(item=independent_request):
+            _refresh_native_facts_transaction(consumer)
+            return consume_current_capacity_source(consumer,item)
+        assert current_read().model_dump(mode='json',by_alias=True)==source.model_dump(mode='json',by_alias=True)
+        consumer.rollback()
+        failures=0
+        for bad_token in [issuance.bearer_token.get_secret_value(),'invalid-consumer-jwt',
+            sign(independent,wrong_key=True),sign(independent,changes={'exp':int(time.time())-1}),
+            sign(independent,changes={'org_id':'dev-org'}),sign('unregistered-consumer-'+uuid4().hex),
+            sign(independent,changes={'aud':'other-audience'}),sign(independent,changes={'iss':'https://wrong.example.test'})]:
+            with pytest.raises(ProviderCapacityConsumptionBlocked):
+                current_read(independent_request.model_copy(update={'bearer_token':SecretStr(bad_token)}))
+            consumer.rollback();failures+=1
+        for broken in [exact.model_copy(update={'asset_type':'ProviderCapacityRequest'}),
+            exact.model_copy(update={'revision':True}),exact.model_copy(update={'revision':2}),
+            exact.model_copy(update={'content_hash':'0'*64}),exact.model_copy(update={'asset_id':'missing-independent-source'})]:
+            with pytest.raises(ProviderCapacityConsumptionBlocked):
+                current_read(independent_request.model_copy(update={'source_ref':broken}))
+            consumer.rollback();failures+=1
+        with pytest.raises(ProviderCapacityConsumptionBlocked):current_read(principal)
+        failures+=1;consumer.rollback()
+        class Facade:
+            def __getattr__(self,name):return getattr(consumer,name)
+        with pytest.raises(ProviderCapacityConsumptionBlocked):consume_current_capacity_source(Facade(),independent_request)
+        failures+=1
+        for role in ['viewer','editor']:
+            with isolated_owner() as owner:
+                owner.execute("UPDATE public.meta_membership SET role=%s WHERE org_id=%s AND project_id=%s AND subject=%s",(role,*SCOPE.key,independent))
+            try:
+                with pytest.raises(ProviderCapacityConsumptionBlocked):current_read()
+                failures+=1
+            finally:
+                consumer.rollback()
+                with isolated_owner() as owner:
+                    owner.execute("UPDATE public.meta_membership SET role='owner' WHERE org_id=%s AND project_id=%s AND subject=%s",(*SCOPE.key,independent))
+            assert current_read().execution_allowed is False;consumer.rollback()
+        # SQL shape/ref checks do not purport to authenticate supplied hints.
+        packet=json.loads(_consumption_packet(independent_request))
+        malformed=[dict(packet,extra=True),dict(packet,sourceRef=exact.model_dump(mode='json',by_alias=True)|{'extra':True}),
+            dict(packet,authentication=packet['authentication']|{'makerSubject':maker}),
+            dict(packet,authentication=packet['authentication']|{'consumerSubject':True})]
+        from aos_api.asset_registry.canonical_json import canonical_json
+        for bad in malformed:
+            _refresh_native_facts_transaction(consumer)
+            with pytest.raises(psycopg.Error):
+                consumer.execute('SELECT * FROM public.read_current_capacity_source(%s,%s::jsonb)',
+                    (canonical_json(bad),Jsonb(exact.model_dump(mode='json',by_alias=True)))).fetchone()
+            consumer.rollback();failures+=1
+        # Real consumer membership lock holds a competing UPDATE until release.
+        assert current_read().execution_allowed is False
+        reader_pid=consumer.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+        waiting=Event();updated=Event();release=Event();pids=[];errors=[]
+        def downgrade_writer():
+            try:
+                with isolated_owner() as owner:
+                    pids.append(owner.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'])
+                    owner.execute("SET LOCAL lock_timeout='8s'");waiting.set()
+                    row=owner.execute("UPDATE public.meta_membership SET role='viewer' WHERE org_id=%s AND project_id=%s AND subject=%s RETURNING subject",(*SCOPE.key,independent)).fetchone()
+                    assert row and row['subject']==independent
+                    updated.set();assert release.wait(8);owner.rollback()
+            except BaseException as error:errors.append(error);waiting.set()
+        thread=Thread(target=downgrade_writer,daemon=True);thread.start()
+        try:
+            assert waiting.wait(3) and pids
+            deadline=time.monotonic()+3
+            with isolated_owner() as observer:
+                while time.monotonic()<deadline:
+                    if reader_pid in observer.execute('SELECT pg_blocking_pids(%s) AS blockers',(pids[0],)).fetchone()['blockers']:break
+                    time.sleep(.03)
+                else:pytest.fail('Actual consumer Owner SHARE did not block UPDATE')
+            assert not updated.is_set()
+            consumer.rollback();assert updated.wait(3),errors
+        finally:
+            consumer.rollback();release.set();thread.join(5)
+        assert not thread.is_alive() and not errors
+        assert current_read().execution_allowed is False;consumer.rollback()
+        # Writer-first: observe actual waiting, then cross authentication expiry.
+        expiry=int(time.time())+10
+        short=independent_request.model_copy(update={'bearer_token':SecretStr(sign(independent,changes={'exp':expiry}))})
+        started=Event();finished=Event();reader_pids=[];results=[];reader_errors=[]
+        with isolated_owner() as owner:
+            owner_pid=owner.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+            owner.execute("SELECT subject FROM public.meta_membership WHERE org_id=%s AND project_id=%s AND subject=%s FOR UPDATE",(*SCOPE.key,independent)).fetchone()
+            def waiting_consumer():
+                try:
+                    with connect_capacity_issuer(original[4],SCOPE) as waiting_reader:
+                        waiting_reader.execute("SET LOCAL lock_timeout='20s'")
+                        waiting_reader.execute("SET LOCAL statement_timeout='20s'")
+                        reader_pids.append(waiting_reader.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']);started.set()
+                        consume_current_capacity_source(waiting_reader,short)
+                        results.append('unexpected-success')
+                except ProviderCapacityConsumptionBlocked as error:
+                    cause=error.__context__
+                    results.append({'native_reason':getattr(getattr(cause,'diag',None),'message_primary',None)})
+                except BaseException as error:reader_errors.append(error)
+                finally:finished.set()
+            thread=Thread(target=waiting_consumer,daemon=True);thread.start()
+            try:
+                assert started.wait(3) and reader_pids
+                deadline=time.monotonic()+3
+                with isolated_owner() as observer:
+                    while time.monotonic()<deadline:
+                        if owner_pid in observer.execute('SELECT pg_blocking_pids(%s) AS blockers',(reader_pids[0],)).fetchone()['blockers']:break
+                        time.sleep(.03)
+                    else:pytest.fail('Consumer did not actually wait on independent Owner writer')
+                delay=expiry-time.time()+.2
+                if delay>0:time.sleep(delay)
+            finally:owner.rollback()
+        assert finished.wait(10);thread.join(5)
+        assert not thread.is_alive() and not reader_errors
+        assert results==[{'native_reason':'CAPACITY_CURRENT_SOURCE_EXPIRED'}],results
+        failures+=1
+        assert current_read().execution_allowed is False;consumer.rollback()
+        with isolated_owner() as owner:assert _private_source_row_fingerprint(owner)==before
+        # Independent consumers still require the original maker's current role.
+        with isolated_owner() as owner:
+            owner.execute("UPDATE public.meta_membership SET role='viewer' WHERE org_id=%s AND project_id=%s AND subject=%s",(*SCOPE.key,maker))
+        try:
+            with pytest.raises(ProviderCapacityConsumptionBlocked):current_read()
+            failures+=1
+        finally:
+            consumer.rollback()
+            with isolated_owner() as owner:
+                owner.execute("UPDATE public.meta_membership SET role='owner' WHERE org_id=%s AND project_id=%s AND subject=%s",(*SCOPE.key,maker))
+        assert current_read().execution_allowed is False;consumer.rollback()
+        withdrawal,withdrawal_signature,withdrawal_hash=_integrated_signed_origin_withdrawal(material)
+        with isolated_owner() as publisher:
+            publisher.execute("SELECT set_config('aos.org_id',%s,false),set_config('aos.project_id',%s,false)",SCOPE.key)
+            publisher.execute('SET SESSION AUTHORIZATION aos_provider_capacity_policy_publisher');publisher.commit()
+            assert publisher.execute('SELECT aos_capacity_publication_private.withdraw_origin(%s,%s) AS digest',
+                (withdrawal,withdrawal_signature)).fetchone()['digest']==withdrawal_hash
+            publisher.commit()
+        with pytest.raises(ProviderCapacityConsumptionBlocked):current_read()
+        failures+=1;consumer.rollback()
+        with isolated_owner() as owner:assert _private_source_row_fingerprint(owner)==before
+        assert failures==24
+        print('Independent current Owner: 24 rejection gates, actual reader/writer locks and expired-wait recovery; Source data unchanged, Origin withdrawn')

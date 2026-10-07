@@ -273,3 +273,24 @@ class CapacitySupplierDocumentCheck:
     execution_allowed: Literal[False]=field(default=False,init=False)
     authorization: Literal['SUPPLIER_DOCUMENT_SIGNATURES_ONLY_NO_CAPACITY_NO_START']=field(
         default='SUPPLIER_DOCUMENT_SIGNATURES_ONLY_NO_CAPACITY_NO_START',init=False)
+
+
+class ProviderCapacityConsumptionCommand(_Candidate):
+    """A current caller and exact Source; historical maker is never an input."""
+    model_config=ConfigDict(revalidate_instances='always',hide_input_in_errors=True)
+    bearer_token: SecretStr
+    source_ref: FormalExactRef
+
+    @field_validator('bearer_token')
+    @classmethod
+    def external_token(cls,value):
+        return ProviderCapacityIssuanceCommand.external_token(value)
+
+    @model_validator(mode='after')
+    def exact_source(self):
+        ref=FormalExactRef.model_validate(self.source_ref.model_dump(mode='python',by_alias=True))
+        if ((self.tenant.org_id,self.tenant.project_id)!=('org-org','dev-project')
+            or ref.asset_type!='ProviderCapacitySourceRevision' or ref.revision!=1):
+            raise ValueError('positive tenant and exact published Source required')
+        _identifier(ref.asset_id)
+        return self

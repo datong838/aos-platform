@@ -1,0 +1,35 @@
+{
+  "schema": "aos-capacity-business-consumer-call-audit/v1",
+  "observed_at": "2026-10-07T06:22:34.269705+00:00",
+  "head": "d1878575a14c151a2b791d040bd96036d9008dba",
+  "authority_revision": "AOS-001460",
+  "runtime_scan": "all aos_api Python AST direct name/attribute calls and from-imports; dynamic loading not proven absent",
+  "runtime_direct_calls": [],
+  "runtime_from_imports": [],
+  "current_reader_authentication": "original issuance command freshly authenticated; original maker binding; controlled SCRAM issuer connection",
+  "pool_fields": [
+    "pool_id",
+    "revision",
+    "route_ref",
+    "model_ref",
+    "provider_ref",
+    "max_concurrency",
+    "max_token_units",
+    "token_unit_per_reservation",
+    "lease_seconds",
+    "lifecycle"
+  ],
+  "formal_source_refs_kind": "EvidenceBundleRevision (License evidence), not ProviderCapacitySourceRevision",
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_source_consumer.py": "1a86d98f8228031fa9edb8568cdf30104a6d064837c3119de4d24c2cb9805ffe",
+    "services/aos-api/aos_api/aip_provider_capacity_source_issuer.py": "df38704f66862e4b3abff8177539ed933fa786bf7c256ba69f82245ead044f78",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "2d80c874f7bb35a7ce4d8f8ea4978b79d9677510d9ec9c6cb08b6867b7968c2b",
+    "services/aos-api/aos_api/aip_model_capacity_authority.py": "66127903fbf59a91050e3cf99a89343c9c9f713b9aa69dfb2d4b2b61d45b9bce",
+    "services/aos-api/aos_api/aip_model_capacity_reservation.py": "6917c6ba108a1d374d05c1cda0714f776c4a1bc2160cdabe6f24f6edd4b9f68b",
+    "services/aos-api/aos_api/aip_binding_formal_evaluator.py": "b849072770842eb28a5da8cb0b5682200996968783d0aabc8a68b0b50a645da0",
+    "services/aos-api/aos_api/aip_binding_formal_evaluator_contracts.py": "fe39e98d935f97727358f09bc0493d4bdc88e96a512cdb263c864d92bf3e8cb6"
+  },
+  "conclusion": "Current issuer reader is not yet business capacity integration; independent consumer identity and exact Source-to-pool/occupation authorization remain required",
+  "full_source_delivery": false,
+  "business_first_chain": false
+}

@@ -8,6 +8,47 @@ class ProviderCapacityConsumptionBlocked(ValueError):
     pass
 
 
+
+def _historical_signed_facts_block():
+    """Reuse trusted complete bodies; history cannot supply current identity."""
+    import re
+    from aos_api.aip_provider_capacity_publication_transaction import (
+        CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL,CAPACITY_ORIGINAL_SOURCE_SIGNED_FACTS_SQL)
+
+    def body(sql,name):
+        matches=re.findall(r'CREATE FUNCTION aos_capacity_publication_private\.'+re.escape(name)
+            +r'\([^;]*?AS \$body\$(.*?)\$body\$;',sql,re.S)
+        if len(matches)!=1:
+            raise ValueError('CAPACITY_CONSUMER_TRUSTED_COMPILER_DRIFTED')
+        return matches[0]
+
+    def replace_once(text,before,after):
+        if text.count(before)!=1:
+            raise ValueError('CAPACITY_CONSUMER_TRUSTED_COMPILER_DRIFTED')
+        return text.replace(before,after)
+
+    history=body(CAPACITY_ORIGINAL_SOURCE_COMMAND_SQL,'read_source_command')
+    history=replace_once(history,
+        "aos_capacity_publication_private.read_signed_time(authentication->'authenticationExpiresAt')<=clock_timestamp()",
+        "aos_capacity_publication_private.read_signed_time(authentication->'authenticationExpiresAt')<=aos_capacity_publication_private.read_signed_time(v_historical->'issuedAt')")
+    history=replace_once(history,' RETURN packet;',' v_historical_packet:=packet;')
+    history=re.sub(r'\bp_raw\b','v_pending.command_raw',history)
+    history=history.rstrip()+';'
+    facts=body(CAPACITY_ORIGINAL_SOURCE_SIGNED_FACTS_SQL,'read_source_command_signed_facts')
+    facts=replace_once(facts,' input:=aos_capacity_publication_private.read_source_command_facts(p_raw);',
+        history+"\n packet:=v_historical_packet;\n facts:=aos_capacity_publication_private.read_original_source_facts(packet->>'makerSubject',"
+        +"packet->'command'->'approvedProposal',packet->'command'->'approvalEvent');"
+        +"\n PERFORM aos_capacity_publication_private.require_original_owner(v_consumer->'authentication'->>'consumerSubject');"
+        +"\n input:=jsonb_build_object('packet',packet,'facts',facts);")
+    facts=replace_once(facts,' PERFORM aos_capacity_publication_private.read_source_command(p_raw);',history)
+    facts=replace_once(facts," RETURN jsonb_build_object('packet',packet,'facts',facts,'signedDocuments',documents,'permitRef',permit_ref,",
+        " v_input:=jsonb_build_object('packet',packet,'facts',facts,'signedDocuments',documents,'permitRef',permit_ref,")
+    # Parameter references in the fixed trusted block are server historical refs.
+    facts=re.sub(r'\bp_permit_ref\b','v_pending.permit_ref',facts)
+    if re.search(r'\bp_raw\b|\bRETURN\b',facts):
+        raise ValueError('CAPACITY_CONSUMER_TRUSTED_COMPILER_DRIFTED')
+    return facts.rstrip()+';'
+
 def consumer_entry_statements(guard):
     """Compile fixed SQL only; neither install nor grant production authority."""
     from aos_api.aip_provider_capacity_publication_transaction import CAPACITY_SOURCE_PENDING_SQL
@@ -18,7 +59,11 @@ def consumer_entry_statements(guard):
     if CAPACITY_SOURCE_PENDING_SQL.count(start)!=1 or CAPACITY_SOURCE_PENDING_SQL.count(end)!=1:
         raise ValueError('CAPACITY_SOURCE_DOCUMENT_COMPILER_DRIFTED')
     document=start+CAPACITY_SOURCE_PENDING_SQL.split(start)[1].split(end)[0]
+    read_current=(" IF v_independent THEN\n"+_historical_signed_facts_block()+"\n ELSE\n"
+        +" v_input:=aos_capacity_publication_private.read_source_command_signed_facts(p_raw,v_pending.permit_ref);\n END IF;\n")
+    recheck=" v_before:=v_input;\n"+read_current+" IF v_input IS DISTINCT FROM v_before THEN\n RAISE EXCEPTION 'CAPACITY_CURRENT_SOURCE_FACTS_REQUIRED' USING ERRCODE='22023'; END IF;\n"
     body=r"""
+#variable_conflict use_column
 DECLARE
  v_ref jsonb;v_public aos_capacity_publication_private.source_publication%ROWTYPE;
  v_pending aos_capacity_publication_private.source_pending%ROWTYPE;
@@ -28,6 +73,8 @@ DECLARE
  v_evidence jsonb;v_context jsonb;v_doc jsonb;v_historical jsonb;
  v_account_id uuid;v_now_text text;v_now timestamptz;p_source_asset_id text;p_permit_ref jsonb;
  v_root aos_capacity_publication_private.root_entry%ROWTYPE;
+ v_consumer jsonb;v_auth jsonb;v_before jsonb;v_independent boolean;
+ v_auth_deadline timestamptz;
 BEGIN
 """ + guard + r"""
  PERFORM aos_capacity_publication_private.require_current_source_installation();
@@ -51,10 +98,35 @@ BEGIN
     IS DISTINCT FROM (v_pending.native_xid,v_pending.native_pid,v_pending.native_session)
   OR v_pending.native_session<>'aos_provider_capacity_issuer' THEN
   RAISE EXCEPTION 'CAPACITY_CURRENT_SOURCE_PROVENANCE_REQUIRED' USING ERRCODE='22023'; END IF;
+ v_consumer:=aos_capacity_publication_private.read_signed_body(p_raw);
+ v_independent:=v_consumer->'protocol'='"aos-provider-capacity-source-consumption/v1"'::jsonb;
+ IF v_independent IS TRUE THEN
+  IF jsonb_typeof(v_consumer) IS DISTINCT FROM 'object'
+   OR (SELECT count(*) FROM jsonb_object_keys(v_consumer))<>4
+   OR v_consumer-ARRAY['protocol','tenant','sourceRef','authentication']<>'{}'::jsonb
+   OR v_consumer->'tenant' IS DISTINCT FROM '{"orgId":"org-org","projectId":"dev-project"}'::jsonb
+   OR v_consumer->'sourceRef' IS DISTINCT FROM p_ref THEN
+   RAISE EXCEPTION 'CAPACITY_CURRENT_CONSUMER_REQUIRED' USING ERRCODE='22023'; END IF;
+  v_auth:=v_consumer->'authentication';
+  IF jsonb_typeof(v_auth) IS DISTINCT FROM 'object'
+   OR (SELECT count(*) FROM jsonb_object_keys(v_auth))<>4
+   OR v_auth-ARRAY['consumerSubject','oidcIssuer','oidcAudience','authenticationExpiresAt']<>'{}'::jsonb THEN
+   RAISE EXCEPTION 'CAPACITY_CURRENT_CONSUMER_REQUIRED' USING ERRCODE='22023'; END IF;
+  IF aos_capacity_publication_private.read_identifier(v_auth->'consumerSubject')='unknown'
+   OR aos_capacity_publication_private.read_identifier(v_auth->'oidcAudience')='unknown' THEN
+   RAISE EXCEPTION 'CAPACITY_CURRENT_CONSUMER_REQUIRED' USING ERRCODE='22023'; END IF;
+  PERFORM aos_capacity_publication_private.read_source_issuer_url(v_auth->'oidcIssuer');
+  v_auth_deadline:=aos_capacity_publication_private.read_signed_time(v_auth->'authenticationExpiresAt');
+  IF v_auth_deadline<=clock_timestamp() THEN
+   RAISE EXCEPTION 'CAPACITY_CURRENT_CONSUMER_REQUIRED' USING ERRCODE='22023'; END IF;
+ END IF;
  v_historical_packet:=aos_capacity_publication_private.read_signed_body(v_pending.command_raw);
  v_historical:=aos_capacity_publication_private.read_signed_body(v_public.source_raw);
  -- History is provenance; ingress independently authenticates the new packet.
- v_input:=aos_capacity_publication_private.read_source_command_signed_facts(p_raw,v_pending.permit_ref);
+""" + read_current + r"""
+ IF v_independent IS NOT TRUE THEN
+  v_auth_deadline:=aos_capacity_publication_private.read_signed_time(v_input->'packet'->'authentication'->'authenticationExpiresAt');
+ END IF;
  IF v_input-ARRAY['packet','facts'] IS DISTINCT FROM v_pending.signed_facts-ARRAY['packet','facts']
   OR (v_input->'facts')-ARRAY['xid','pid'] IS DISTINCT FROM (v_pending.signed_facts->'facts')-ARRAY['xid','pid']
   OR v_pending.signed_facts->'facts'->>'xid' IS DISTINCT FROM v_pending.native_xid::text
@@ -76,8 +148,7 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'CAPACITY_CURRENT_SOURCE_MAPPING_REQUIRED' USING ERRCODE='22023'; END IF;
  END LOOP;
  -- A lock wait can cross expiry; recheck original deadlines/current roots again.
- IF aos_capacity_publication_private.read_source_command_signed_facts(p_raw,v_pending.permit_ref) IS DISTINCT FROM v_input THEN
-  RAISE EXCEPTION 'CAPACITY_CURRENT_SOURCE_FACTS_REQUIRED' USING ERRCODE='22023'; END IF;
+""" + recheck + r"""
  v_packet:=v_historical_packet;v_source:=v_facts->'source';
  v_permit:=v_input->'signedDocuments'->'ProviderCapacitySigningPermitRevision';
  v_attestation:=v_input->'signedDocuments'->'SupplierCapacityAttestationRevision';
@@ -97,8 +168,7 @@ BEGIN
   OR aos_ed25519.verify(v_public.signature,v_public.source_raw,
       decode(v_input->>'sourceSignerPublicKey','base64')) IS NOT TRUE THEN
   RAISE EXCEPTION 'CAPACITY_CURRENT_SOURCE_SIGNATURE_REQUIRED' USING ERRCODE='22023'; END IF;
- IF aos_capacity_publication_private.read_source_command_signed_facts(p_raw,v_pending.permit_ref) IS DISTINCT FROM v_input THEN
-  RAISE EXCEPTION 'CAPACITY_CURRENT_SOURCE_FACTS_REQUIRED' USING ERRCODE='22023'; END IF;
+""" + recheck + r"""
  v_now:=clock_timestamp();
  FOR v_ref IN SELECT value FROM jsonb_each(v_input->'signedDocuments') UNION ALL SELECT v_origin LOOP
   IF v_now<aos_capacity_publication_private.read_signed_time(v_ref->'validFrom')
@@ -118,7 +188,7 @@ BEGIN
  IF v_now<aos_capacity_publication_private.read_signed_time(v_historical->'validFrom')
   OR v_now>=aos_capacity_publication_private.read_signed_time(v_historical->'validUntil')
   OR v_now<aos_capacity_publication_private.read_signed_time(v_historical->'issuedAt')
-  OR v_now>=aos_capacity_publication_private.read_signed_time(v_input->'packet'->'authentication'->'authenticationExpiresAt') THEN
+  OR v_now>=v_auth_deadline THEN
   RAISE EXCEPTION 'CAPACITY_CURRENT_SOURCE_EXPIRED' USING ERRCODE='22023'; END IF;
  RETURN QUERY SELECT v_public.asset_id,1,v_public.content_hash,v_public.source_raw,v_public.signature;
 END
@@ -157,6 +227,76 @@ def read_current_capacity_source(conn,command,source_ref):
             (packet,Jsonb(ref.model_dump(mode='json',by_alias=True)))).fetchone()
         if row is None or capacity_source_preparation_bytes(command)!=packet:
             raise ValueError('current identity required after waits')
+        raw=bytes(row['source_raw'])
+        source=parse_signed_capacity_body(raw,PublishedProviderCapacitySourceV2)
+        if (row['asset_id']!=ref.asset_id or row['revision']!=ref.revision or row['content_hash']!=ref.content_hash
+            or hashlib.sha256(raw).hexdigest()!=ref.content_hash or source.asset_id!=ref.asset_id
+            or source.revision!=ref.revision or source.execution_allowed is not False
+            or (source.tenant.org_id,source.tenant.project_id)!=('org-org','dev-project')):
+            raise ValueError('exact nonexecuting Source required')
+        return source
+    except Exception:
+        raise ProviderCapacityConsumptionBlocked('CAPACITY_CURRENT_SOURCE_REQUIRED') from None
+
+
+def _consumption_packet(command):
+    """Only verified current JWT claims become service authentication hints."""
+    import os
+    from datetime import UTC,datetime
+    from aos_api.aip_provider_capacity_source_contracts import ProviderCapacityConsumptionCommand,_identifier
+    from aos_api.aip_network_issuer_auth import _require_external_oidc_config
+    from aos_api.auth import Principal,resolve_principal
+    from aos_api.oidc import verify_access_token
+    from aos_api.asset_registry.canonical_json import canonical_json
+    if type(command) is not ProviderCapacityConsumptionCommand:
+        raise ValueError('exact independent consumption command required')
+    command=ProviderCapacityConsumptionCommand.model_validate(command.model_dump(mode='python',by_alias=True))
+    _require_external_oidc_config()
+    token=command.bearer_token.get_secret_value()
+    principal=resolve_principal(token=token,header_org=command.tenant.org_id,header_project=command.tenant.project_id)
+    claims=verify_access_token(token)
+    audience=os.environ.get('AOS_OIDC_AUDIENCE','').strip()
+    actual_audience=claims.get('aud')
+    if (type(principal) is not Principal or principal.token_kind!='oidc'
+        or (principal.org_id,principal.project_id)!=('org-org','dev-project')
+        or type(claims.get('sub')) is not str or claims['sub']!=principal.subject
+        or type(claims.get('exp')) is not int or type(claims.get('iss')) is not str
+        or not (actual_audience==audience or (type(actual_audience) is list and audience in actual_audience))):
+        raise ValueError('exact current OIDC claims required')
+    _identifier(principal.subject)
+    deadline=datetime.fromtimestamp(claims['exp'],UTC)
+    if principal.subject=='unknown' or deadline<=datetime.now(UTC):
+        raise ValueError('current consumer authentication required')
+    return canonical_json(dict(protocol='aos-provider-capacity-source-consumption/v1',
+        tenant=command.tenant.model_dump(mode='json',by_alias=True),
+        sourceRef=command.source_ref.model_dump(mode='json',by_alias=True),
+        authentication=dict(consumerSubject=principal.subject,oidcIssuer=claims['iss'],oidcAudience=audience,
+            authenticationExpiresAt=deadline.isoformat().replace('+00:00','Z'))))
+
+
+def consume_current_capacity_source(conn,command):
+    """Recheck a current independent Owner and history; no publication or COMMIT."""
+    import hashlib
+    import psycopg
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_provider_capacity_source_contracts import ProviderCapacityConsumptionCommand
+    from aos_api.aip_provider_capacity_formal_boundary import _require_read_boundary,require_capacity_issuer_identity
+    from aos_api.aip_provider_capacity_publication_contracts import PublishedProviderCapacitySourceV2,parse_signed_capacity_body
+    from aos_api.tenant_scope import TenantScope
+    try:
+        if type(conn) is not psycopg.Connection or type(command) is not ProviderCapacityConsumptionCommand:
+            raise ValueError('exact native caller and independent command required')
+        command=ProviderCapacityConsumptionCommand.model_validate(command.model_dump(mode='python',by_alias=True))
+        ref=command.source_ref
+        packet=_consumption_packet(command)
+        require_capacity_issuer_identity(conn,TenantScope('org-org','dev-project'))
+        if not conn.pgconn.used_password or conn.info.get_parameters().get('require_auth')!='scram-sha-256':
+            raise ValueError('native SCRAM caller required')
+        _require_read_boundary(conn)
+        row=conn.execute('SELECT * FROM public.read_current_capacity_source(%s,%s::jsonb)',
+            (packet,Jsonb(ref.model_dump(mode='json',by_alias=True)))).fetchone()
+        if row is None or _consumption_packet(command)!=packet:
+            raise ValueError('current consumer authentication required after waits')
         raw=bytes(row['source_raw'])
         source=parse_signed_capacity_body(raw,PublishedProviderCapacitySourceV2)
         if (row['asset_id']!=ref.asset_id or row['revision']!=ref.revision or row['content_hash']!=ref.content_hash

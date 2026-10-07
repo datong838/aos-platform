@@ -1,0 +1,345 @@
+{
+  "schema": "aos-independent-owner-consumer-verification/v1",
+  "base_head": "d1878575a14c151a2b791d040bd96036d9008dba",
+  "working_tree_code": true,
+  "logs": {
+    "independent-owner-consumer-red-r1.log": {
+      "sha256": "f823581cc6ce48a25a737247c783f5d06c1cb5ef0c98f12f3f6525846fb378f9",
+      "summary": "2 failed, 379 deselected, 7 warnings in 65.12s (0:01:05)"
+    },
+    "independent-owner-consumer-green-r1.log": {
+      "sha256": "a75cc2a006727cf38b5e8a2520e578d71b19e6906572ff1007f090d99f4ab805",
+      "summary": "2 failed, 379 deselected, 7 warnings in 66.07s (0:01:06)"
+    },
+    "independent-owner-consumer-green-r2.log": {
+      "sha256": "d070025660d3bdec45df67b4f25b59aa481ba535aa4b7a0fcc7d7882012b84d5",
+      "summary": "2 failed, 379 deselected, 7 warnings in 67.81s (0:01:07)"
+    },
+    "independent-owner-consumer-green-r3.log": {
+      "sha256": "f15e95d1febb11b99088c0d67c9c6cfeeedcf69dbb538a65e2779ed1db28c1a4",
+      "summary": "2 passed, 379 deselected, 7 warnings in 65.90s (0:01:05)"
+    },
+    "independent-owner-consumer-negatives-r1.log": {
+      "sha256": "152c924bad401c49a47e7837d3f5e39f511d4fd71fb1696381588b0054c6250c",
+      "summary": "1 failed, 1 passed, 379 deselected, 7 warnings in 108.17s (0:01:48)"
+    },
+    "independent-owner-consumer-negatives-r2.log": {
+      "sha256": "0eba296202e95e83670309ce52a08d3db4663b4d96fb625bade957e036368de8",
+      "summary": "2 passed, 379 deselected, 7 warnings in 113.84s (0:01:53)"
+    },
+    "independent-owner-consumer-adjacent-r1.log": {
+      "sha256": "0797e661cde994c04fde9945e03b83d4427eb41f339f0e0500a17c23280769ff",
+      "summary": "9 passed, 372 deselected, 7 warnings in 272.00s (0:04:32)"
+    }
+  },
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_source_consumer.py": "a22d722ca6f262af612162c14c033773c4fe8553f14698ce00e1fc8d9e65d281",
+    "services/aos-api/aos_api/aip_provider_capacity_source_contracts.py": "13dc6b25750e24fb90a4271e4ef9281a6db97152e3914354ac9b7f575153413c",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "2d80c874f7bb35a7ce4d8f8ea4978b79d9677510d9ec9c6cb08b6867b7968c2b",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "eefa062e90714f70d42df04934066eac7ae3ed4828a3a244a04c114ad4fa9748"
+  },
+  "databases": [
+    {
+      "database": "aos_test_178194789806_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-c7178b5d8eda45ce905881ffa624a18d",
+          "content_hash": "152189fef4caeee773e0ac580ff847238b295d67ee5f67c7282722c9d66f5c13",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_1bc9150312a4_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_28d0c7bf7773_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-b4a7b71cb7f14dffa1ed3247e79037db",
+          "content_hash": "0cd22ec717287ab87324329d2f23199cec615701e08fe97a2282538114fcb05a",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 1
+    },
+    {
+      "database": "aos_test_2daaebf91a60_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-ad1406659bc44ca79c8907f99a09c12c",
+          "content_hash": "4b462326f4c006508ea83afcb7193105bdd5e0f7ed6b104ceb92e78b60d98cff",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_300c10ac1adc_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_31adba22a8c6_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_350bf35b3b46_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_47e21fca08f9_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-265bbdf9ce804fe79b2bda957bd6d438",
+          "content_hash": "b36b3a58c735ab4b59e073f6c901bc3ace32936a0c78aef358ddbd4dbb218386",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_51facddf441f_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 1
+    },
+    {
+      "database": "aos_test_5676d1b2d01f_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_5b2d29af3934_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-dc3472fbcb9c42288ff2455868faa82d",
+          "content_hash": "7e7a81ced57b988a94e8d41491b24073a55f93776e6cda9dbe73fde25a8626c5",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_649adfda632d_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-aee74a82d4e44753869955321ddfdbbe",
+          "content_hash": "c9d2a1b91851154f30f6b235b7369f2e8619ab60d780917dd9deaf200a73b784",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_6cddd8c9ac9d_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_7080115f7e5f_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 1
+    },
+    {
+      "database": "aos_test_70e7a3db9caf_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_7387e0552910_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-21584c1fb5a846d1b28618e0d5d361a1",
+          "content_hash": "210c33b5ac5a6258f86c6de786c054fa086c44723a819ff764d5239cfba77f46",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_75b35a4151cd_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-7b481a7c743b4691900d42b26b325b69",
+          "content_hash": "c5b8139b29a713ef11d6c4ff2f947d9a019f63c93187faa34c03fb00577ca2c9",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 1
+    },
+    {
+      "database": "aos_test_8ab908ca0eca_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-c0c23cad8265432ea03068c3a5a597ad",
+          "content_hash": "6b7cbbdfb877215168a6fc055a827337d643f55bf969754d5cba88038bf981fd",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_8c203be118a7_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-af1f0e9470dc4ba099e5127afd662c8d",
+          "content_hash": "f9448e916892cb6fd609e4f61f7218456a614472fcb9c778c60e136019beb728",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 1
+    },
+    {
+      "database": "aos_test_8cbf8a0cef9e_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_b28a4969b62c_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_bb0bfb508976_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-054cc10472144d238b073a126291a6ac",
+          "content_hash": "a16408705f8bb4fdde50b8b2420245d35339ff9d2f2c12a7a387967933202cd3",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 1
+    },
+    {
+      "database": "aos_test_c7f3d8c03a01_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_ccd99d706e79_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-31cb9235ecdc43599a447755b51cbf7f",
+          "content_hash": "86563f14cebb35e9bc14bc1d44f4c35db9712750e643634d5ad3448fc1f44972",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_da402c635bb0_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_e86635f2c876_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-a717c11e44bb46ddb86c77492b072f28",
+          "content_hash": "26b19a1c990390903ed8618b4d68a9d57284399fed2862b7db3eb3b072b176b9",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_ea2efd0cb705_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    },
+    {
+      "database": "aos_test_ef7fbe6dd9ea_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-d461d1e20f1e4a9880f326c93b18826c",
+          "content_hash": "83d66e1746556628e80a0f8b401b31ad79828e46492ce61124874c49617502ed",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "temporary_functions_absent": true,
+      "actual_origin_withdrawals": 0
+    }
+  ],
+  "durable_sources_verified": 14,
+  "withdrawn_sources_still_signed": 4,
+  "default9_private41_original17_unchanged": true,
+  "legacy_reader_and_contracts_unchanged": true,
+  "independent_owner_currentness_and_locks": "24 negatives/layout with real JWT and native pg_blocking_pids in final tests",
+  "full_source_delivery": false,
+  "business_pool_occupation_integration": false,
+  "actual_commit_ttl_resolved": false
+}

@@ -1,0 +1,53 @@
+{
+  "schema": "aos-independent-owner-consumer-red/v1",
+  "base_head": "d1878575a14c151a2b791d040bd96036d9008dba",
+  "authority_revision": "AOS-001460",
+  "working_tree_test": true,
+  "summary": "2 FAILED 65.12s; missing independent consumption command after all real preconditions",
+  "durable_sources_verified": 2,
+  "databases": [
+    {
+      "database": "aos_test_2daaebf91a60_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-ad1406659bc44ca79c8907f99a09c12c",
+          "content_hash": "4b462326f4c006508ea83afcb7193105bdd5e0f7ed6b104ceb92e78b60d98cff",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true,
+          "history_retained": true
+        }
+      ],
+      "temporary_functions_absent": true
+    },
+    {
+      "database": "aos_test_649adfda632d_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-aee74a82d4e44753869955321ddfdbbe",
+          "content_hash": "c9d2a1b91851154f30f6b235b7369f2e8619ab60d780917dd9deaf200a73b784",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true,
+          "history_retained": true
+        }
+      ],
+      "temporary_functions_absent": true
+    },
+    {
+      "database": "aos_test_70e7a3db9caf_ti4_test",
+      "sources": [],
+      "temporary_functions_absent": true
+    }
+  ],
+  "file_hashes": {
+    ".evidence/gt-capacity-source-publication-20261006/independent-owner-consumer-red-r1.log": "f823581cc6ce48a25a737247c783f5d06c1cb5ef0c98f12f3f6525846fb378f9",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "84c1e5346e4d23645f01a36679edf74a7621454768cbdd6ee5e7a1504cb06c56",
+    ".evidence/gt-capacity-source-entry-20261007/audit-business-consumer-callers.py": "94f8bf1a25785f2fca5e393b9ccc093af63bf40e87391f3f0aa759e4f0ab9720"
+  },
+  "consumer_implemented": false,
+  "full_source_delivery": false,
+  "formal_resources_touched": false
+}

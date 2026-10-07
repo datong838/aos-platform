@@ -479,3 +479,68 @@ RED 已实际执行：current-source-consumer-red-r1.log，shared/distinct 两�
 5. 必须新增实际新连接事务消费的正向证据，Source 签发 JWT 失效但 Source 与消费授权仍有效时可接受；Source/消费认证/原批准/root/permit/Evidence 失效或撤回时拒绝。测试要用不同 native xid/PID 验证历史出处与当前身份的区别。这里只读过期 Source 探针不能代替该正向验收。
 
 候选顺序：完整当前消费者（已登记 schema 父 Task，写前原 owner 续 Lease）；受控签发配置加载与部署凭据（依赖正式配置合同，不自动启用正式环境）。实际 caller COMMIT 时钟缺口独立保留；完整 Source Delivery 和业务自然首链均未通过。
+
+## 2026-10-07 AOS-001460：真实业务消费者调用审计与下一波合同
+
+本次直接检查 m1@d1878575 的全部 aos_api Python AST；可复现脚本 audit-business-consumer-callers.py，结果 business-consumer-callers-audit.json，绑定七个关键文件 SHA256。当前 reader 的正式运行直接调用和 from-import 均为零；动态加载不在此 AST 证据覆盖范围，不据此声称任意运行环境绝无调用。初次审计遇既有文件 UTF-8 BOM，改审计读取为 utf-8-sig 后正常完成；未改既有文件。
+
+确认缺口：CapacityPoolRevisionCreate 只有 route/model/provider 引用和配额/生命周期等字段，没有签名容量 Source 引用；正式 evaluator 的 source_refs 严格是 EvidenceBundleRevision，属于 License Evidence；capacity_ref 指向 ModelCapacityPoolRevision。不能把 License 的既有 Source reader 当本 Source 消费者，也不能只把 Source helper 接到旧 pool 后就宣称容量授权完整。
+
+已登记候选：
+1. 当前 Source 消费主体分离（本 schema/source/transaction 父 Tasks 已登记；仅隔离实现，不依赖正式运行权限）。本轮优先。
+2. 受控签发配置加载与部署凭据（source 父 Task 已登记；正式配置出处合同待完成，现阶段只能隔离实现，禁止启动正式服务）。
+实际 caller COMMIT 墙钟 TTL 缺口仍独立保留。业务 pool/occupation/runtime 接线需另核实际组合锁序及精确 Task 范围，不能在 Source 父范围偷偷修改其他模块。
+
+### 当前消费身份与历史签发出处分离
+
+下一行为 RED 必须以已经实际 COMMIT 的 signed Source 为前置，原签发 JWT 过期后，使用**另一位实际当前 Owner** 的有效 OIDC JWT、不同 native xid/PID 读取同一 Source。不能以 unapproved-consumer-maker 的拒绝测试代替另一名合法 Owner 的正向。Owner 行必须来自原测试身份/批准夹具，当前 membership 在实际消费事务取锁；测试 token 必须真实由既有 https_signer 签发。Source 原 maker/requestHash/旧认证/xid/PID/pending/provenance 原文不变。消费调用绝不能拿历史 maker 的伪造 fresh hints 或改旧 JWT 到期时间冒充本人授权。
+
+消费请求只含固定版本、positive tenant、精确 ProviderCapacitySourceRevision 引用和 SecretStr 当前 bearer token；不能携带 maker、角色、verified、issuer、旧命令、历史认证或可执行权限。当前 subject/issuer/audience/deadline 均每次由现 OIDC 验证取得，并在 SQL 可能等待后再次验证。新的消费协议与现 issuance command 分开，旧 read_current_capacity_source 原接口及默认两入口维持兼容，不放宽原 issuance parser 的期限检查。
+
+SQL 内部只从已验证 immutable pending 取得历史命令，校验完整结构/原 requestHash/历史认证形状及历史出处；旧 token 到期是历史事实，不能成为消费者的新 token。通过共享可信编译构造复用完整原 facts、注册文档组合与签名/重组/期限检查；消费与发行只在认证用途这一处显式区分。原 deployed private41/original17/default9 必须字节保持，不做数据库动态 body/caller SQL 注入，不授 runtime/private table/helper 权限。新的独立消费入口如需新增 public 函数，必须与显式安装、全量可信 manifest、SECDEF/ACL 检查一起冻结和测漂移，不能仅加函数放宽边界。
+
+锁图必须额外包含当前消费者 membership；取锁位置在完整原批准/Owner/Provider/Evidence/withdrawal prefix之后、registry/global suffix之前的候选需同 Action/Owner撤销真实竞争验证，尚未证明无反向组合，不视作已验收。先明确所有相关 writer 顺序再编码；不得改变历史批准 maker/checker 当前性要求来凑正向。
+
+### 下一文件级范围与验证
+
+拟修改：services/aos-api/aos_api/aip_provider_capacity_source_contracts.py（独立消费请求）、aip_provider_capacity_source_consumer.py（新主体入口）、aip_provider_capacity_publication_transaction.py（共享可信编译/显式 public manifest）、services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py（真实不同Owner+不同连接 RED/GREEN与拒绝门），以及本证据目录。代码写前须回读各文件已有 owner Lease，新增 public 安装方式先补完整 SQL 合同。不修改当前迁移或既有正式安装。
+
+验收必须包含真实不同Owner正向、消费者无 membership/降权/跨租户/JWT错误或过期拒绝、原maker/checker撤权拒绝、当前Source/root/permit/origin/批准/Provider/Evidence失效拒绝，锁等待后到期拒绝与真实writer-first/reader-first，错Source原文/签名/出处/映射拒绝；失败事务无新增Source/attempt/mapping，恢复精确原状后正向。旧接口和默认两入口/私有41/原17必须累计回归。Source返回仍 nonexecuting，不生成占用或Start授权。
+
+### 完整目标后继，不用局部消费者替代
+
+完成身份分离后，必须另登记精确 Source→已批准 allocation→Provider精确集合→全域 physicalAccount→同维度/同时间窗口上界→pool/共享occupation 的正式授权合同，并在真实业务评估/占用事务内消费；License→neutral 与 Capacity→Budget、Source原prefix→registry/global的组合锁序须统一验证。不能从独立 issuer 的一个新事务返回值向 runtime 传一个长期有效 verified bool，不能给 runtime 自由 claim Source/pool；新独立连接读Source不能单独证明业务占用事务当前性。正式配置/安装/生产出处门与 actual COMMIT TTL 未关闭前，完整 Source Delivery/八依赖/自然首链均继续未完成。父Tasks及完整Goal继续ACTIVE。
+
+独立主体真实 RED 已执行：test_current_source_consumer_accepts_independent_owner shared/distinct，independent-owner-consumer-red-r1.log 2FAILED/379deselected/7existingwarnings/65.12s，无SKIP。两例都在实际 Source COMMIT、原发行JWT实际过期、新SCRAM连接xid/PID不同、原membership中另一当前Owner及真实OIDC验签断言之后，因缺 ProviderCapacityConsumptionCommand 失败。无需为RED创建虚构Owner或改原Source/认证提示。原测试仅增登记器、新例及owned fixture显式三入口选择；当前留工作树，完整消费者GREEN再精确提交，不用RED提交宣称完成。
+
+独立 verify-independent-owner-consumer-red.py 使用三个保留隔离库 SERIAL READ ONLY 管理回读，其中两条独立消费测试 Source 的 C签名/hash/finalized/历史native出处均一致，原历史 retained，测试临时 public3/privateaudit均已恢复移除。精确 log/test/调用审计脚本 SHA 与 scope 见 independent-owner-consumer-real-red.json。当前业务模块未改；RED是下一实现入口，非消费者验收。原active父Lease到18:00，未夺锁、删库卷或修改正式资源。
+
+### AOS-001461 实施前协议冻结（独立消费主体）
+
+实施沿现显式 public 第三入口 read_current_capacity_source(bytea,jsonb)，不增第四接口/私有函数或变迁移。既有 issuance packet 分支保持原完整读取逻辑；新的协议 aos-provider-capacity-source-consumption/v1 仅包含 protocol/tenant/sourceRef/authentication，authentication 为服务每次验真实OIDC所得 consumerSubject/oidcIssuer/oidcAudience/authenticationExpiresAt，exact SourceRef必须与SQL p_ref一致。不同subject不改历史maker/requestHash。
+
+新分支在可信consumer编译器内静态复用原 read_source_command 完整body：只把历史认证期限的比较基准从当前clock改为**已签Source原issuedAt**（严格 issuedAt < 历史认证expiresAt），不改原storeddeadline，也不重新造旧maker fresh hints。原body的其余严格结构/hash/ref/URL/认证形状保持；历史原命令仅来自immutable pending。在同原生body重组验签之前历史解析只提供线索，不提供当前身份权限。原签发parser及已部署private41不改变。
+
+新分支完整共享原 read_source_command_signed_facts body，原始 facts 仍原 read_original_source_facts(pending maker,原refs)获取；当前consumerOwner复用原 require_original_owner，在整个原事实锁prefix之后、registry/root/document/global锁之前加入。同一旧签发maker/checker已锁Owner仍保持；新consumer另取membership SHARE，角色降权writer单行UPDATE与此SHARE冲突；有无Owner及期限在三次原事实重读和最终clock之后再核，不信JWT role。静态编译从仓库可信SQL常量提取唯一原函数body，并逐项验证替换锚点次数；不从DB取body，不动态执行自由SQL，漂移编译失败。当前Sources/allocation批准/Provider/Evidence/root/permit/origin仍全部原逻辑重验。额外Owner→registry/global为本路径排序；与后继pool/License/occupation组合仍独立待验，不据局部路径推导全局无死锁。
+
+具体本轮运行文件：services/aos-api/aos_api/aip_provider_capacity_source_contracts.py、aip_provider_capacity_source_consumer.py及原transaction_pg测试；现public manifest由可信consumer body自动更新，不需要放宽 transaction 白名单。原默认9/私有41/原17合同必须精确保留。先不同Owner正向GREEN，再加入角色/JWT/ref/历史及current失效反例和真实单行Owner writer协调，最后旧consumer+两入口+signer相邻。业务pool和正式配置不在本轮运行范围。
+
+首轮独立消费GREEN未过：2FAILED66.07s；增加只输出底层类型/固定native message的测试诊断后green-r2为2FAILED67.81s，实际原因 AmbiguousColumn revision。可信原signed selector原函数无OUT变量；嵌入public TABLE函数后与OUT revision/asset_id/content_hash名冲突。最小修复为仅该可信consumer body添加PostgreSQL函数本地 #variable_conflict use_column；所有新增消费者变量均v_前缀，输入p_raw/p_ref、输出RETURN QUERY全部显式v_public列，不依赖同名OUT变量。此规则不改全局设置/原private函数或自由SQL，完整定义hash照常审计；重新正向和旧路径回归。
+
+green-r3不同当前Owner两个布局均2PASS65.90s/noSKIP。下一负门补强会用原已验证fixture同一管理授权建立test-only第三消费Owner（subject与所有原Source/allocation maker/checker不同），通过既有https_signer真实签JWT并在原meta_membership创建Owner行；不造生产用户/不传Principal，自主Owner读取只以此隔离fixture为证据。该新增Owner行留在保留隔离库，不删除。降权临时UPDATE随后精确恢复；原签发数据不改。
+
+新增真实consumerOwner row UPDATE竞争：reader-first必须pg_blocking_pids显示writer被消费conn阻挡，消费rollback后writer可更新并rollback精确恢复；writer-first消费在已锁第三Owner上真实等待，过当前JWT实际到期再释放，必须拒绝，新freshJWT恢复正向。同SERsnapshot的降权/撤权负门不绕过40001。该局部单行writer不代表未来所有业务组合锁序已验收。
+
+扩展negative-r1：shared布局22门+真实writer竞争通过；distinct布局原连接statement_timeout=10000ms先于认证等待结束/末尾检查触发，报canceling statement due to statement timeout（1FAILED1PASS108.17s）。失败不是expiry验收；隔离 waiting_reader 仅本事务设置statement_timeout=20s、lock_timeout=20s，当前真实JWT期限仍10s并实际等过期，生产connect原10000/5000/10000ms配置不改。补原maker真实降权恢复拒绝与原签名Origin实际撤回拒绝，共24门/布局；签名Source与映射五表指纹前后保持，不删旧记录或恢复撤回epoch。
+
+### 本轮最终验证与复审（独立 Owner 消费）
+
+独立消费专项 negative-r2 2PASS113.84s，无SKIP；每布局24拒绝门（JWT8、exactRef5、Principal/代理连接2、独立Owner角色2、native协议形状4、真实等待过期1、原maker降权1、原签名Origin撤回1）。真实另一现Owner及第三test-onlyOwner均正向；native不同xid/PID、原签发JWT实际过期和全部历史Source bytes不变。reader-first实际Owner UPDATE被pg_blocking_pids证明等待，消费rollback后可更新再rollback；writer-first实际锁等待跨JWTdeadline，native固定CAPACITY_CURRENT_SOURCE_EXPIRED拒绝，freshJWT恢复。新Owner数据留在隔离库，不充当生产身份验收。
+
+最终相邻 independent-owner-consumer-adjacent-r1.log 9PASS272.00s/noSKIP/7existingwarnings：新独立Owner2、旧same-maker consumer2、原public prepare/commit2、原14定义漂移1、受控JWT签发器2。原source contracts及真实OIDC合同 independent-owner-consumer-contracts-r1.log 90PASS12.82s/7existingwarnings。没有为刷新计数重复无变化测试。
+
+独立 verify-independent-owner-consumer.py 回读本波所有保留隔离库；14条独立消费测试durableSource的C签名/hash/finalized/历史native出处均一致，其中4条已实际签名撤回Origin，数学签名仍成立但不能当当前授权。所有临时public3/privateaudit均移除；default9/private41/original17 byte级合同保持，旧请求合同全部AST与旧read_current_capacity_source函数AST保持不变。新当前消费运行模块经完整nativebody/hash/ACL检查，SecretStr不进入SQL，logs密码/JWT模式检查通过。具体log/hash/代码SHA绑定 independent-owner-consumer-verification.json。
+
+方案/代码一致性复核：协议只接受currentJWT+positiveTenant+exactSourceRef，不允许传maker/role/verified/history；两次真实OIDC验签点在SQL前后，当前Owner同事务锁在原facts后、新registry/global前。历史parser从受控pending读取全部原结构，旧认证期限仅与已签Source issuedAt比，不伪造或延长原token；currentJWT deadline仍以实际DBclock/客户端实际验证为准。原originalOwner/双批准/currentProvider/Evidence/root/permit/origin、global mapping、fullSource重组/C签名三次currentness均保留。newpublic使用原显式三入口可信manifest，没有新增私有权限、自动部署、COMMIT或Source/attempt写入。函数本地use_column只为inline OUT冲突，legacy路径实际回归通过。
+
+限制继续列明：当前是受控issuer服务中的独立Owner读取，runtime/CapacityPool/共享occupation的同事务真实调用尚未接线；本API不授Start/占用。生产OIDC/配置/可信镜像及SQL安装来源未由隔离夹具证明，后继正式配置和部署receipt必须独立核对。原actual caller COMMIT墙钟TTL缺口未解决，不能把read时的过期拒绝当COMMIT问题已修复。后续业务组合锁图及更全数据当前性反例仍须沿父计划继续。浏览器不适用本纯后端波；正式库/服务/卷/Host/worker/Provider未改，父Tasks/fullGoal保持ACTIVE，不开SourceDelivery/正式放行。
