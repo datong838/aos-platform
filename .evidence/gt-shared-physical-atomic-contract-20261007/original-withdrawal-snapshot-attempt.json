@@ -1,0 +1,19 @@
+{
+  "status": "NEW_NATIVE_WITHDRAWAL_INTENT_NO_REPLAY",
+  "identity": {
+    "database": "aos_test_bf39f06c471f_ti4_test",
+    "cluster": "7693564235776004128"
+  },
+  "proposal_id": "proposal-fe7a022f0fb84785aa10",
+  "original_proposal_id": "proposal-f89003009d394a45b76e",
+  "idempotency_key": "snapshot-withdrawal-3e75762f882846229790e1dbe2f89b30",
+  "reader": {
+    "pid": 164291,
+    "xid": "222259",
+    "snapshot": "222259:222259:",
+    "session": "aos_provider_capacity_issuer",
+    "role": "aos_provider_capacity_issuer",
+    "isolation": "serializable"
+  },
+  "epoch_holder_pid": 164557
+}

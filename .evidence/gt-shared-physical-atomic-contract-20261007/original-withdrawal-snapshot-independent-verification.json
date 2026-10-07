@@ -1,0 +1,32 @@
+{
+  "status": "WRITER_FIRST_COMMIT_TRUSTED_SOURCE_PREFIX_AND_RETAINED_STATE_VERIFIED",
+  "identity": {
+    "database": "aos_test_bf39f06c471f_ti4_test",
+    "readonly": "on",
+    "cluster": "7693564235776004128"
+  },
+  "original_source_proposal_unchanged": true,
+  "withdrawal_events": 1,
+  "product_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "canary": 0,
+  "original_harnesses_removed": true,
+  "trusted_prefix_sha256": "de0c6f09813e736e40e1d567abd52bb416fb45046c122c33ec4f3ccc3f50b058",
+  "trusted_bump_sha256": "666fb5350dab9121e46c2fb21a19a09f82c8165078968140b623757ae9557a38",
+  "file_sha256": {
+    "original_withdrawal_snapshot_probe.py": "2005cc057ecf3aef05a037fc8a27edaaffd5c2c2b5c8956674896e2b8e1c9859",
+    "run_original_withdrawal_snapshot_probe.py": "09978cca45d0228180a7c9bd8be1f84960587434f1c84c5fb63d39fbf4dce07b",
+    "original-withdrawal-snapshot-attempt.json": "c1f945792a1ce01216f5b94c47bca74251025609d1544538d2671e82c486f060",
+    "original-withdrawal-snapshot-verification.json": "2ac2602a1c7638b8932d0fca6c4f09f8a21f5ebb3c1463c18af67764df1174bf",
+    "original-withdrawal-snapshot-r1.log": "e53bce3fbbfa49187620448515b7cc0c47e1a7943cc35103c701238f62aae6c4",
+    "verify_original_withdrawal_snapshot.py": "dbceb5a590f0aa4464e0087061c1ffd2caf907dac1b0424be7a345d36896ce74"
+  },
+  "limitations": [
+    "Retained state verifies commit; past wait and SQLSTATE require the original executed probe",
+    "Original fact prefix and separate proposal, not a complete signed Source or joint business proof"
+  ]
+}

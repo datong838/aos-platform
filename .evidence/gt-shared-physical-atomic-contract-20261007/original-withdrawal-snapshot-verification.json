@@ -1,0 +1,45 @@
+{
+  "status": "NEW_NATIVE_WITHDRAWAL_INTENT_NO_REPLAY",
+  "identity": {
+    "database": "aos_test_bf39f06c471f_ti4_test",
+    "cluster": "7693564235776004128"
+  },
+  "proposal_id": "proposal-fe7a022f0fb84785aa10",
+  "original_proposal_id": "proposal-f89003009d394a45b76e",
+  "idempotency_key": "snapshot-withdrawal-3e75762f882846229790e1dbe2f89b30",
+  "reader": {
+    "pid": 164291,
+    "xid": "222259",
+    "snapshot": "222259:222259:",
+    "session": "aos_provider_capacity_issuer",
+    "role": "aos_provider_capacity_issuer",
+    "isolation": "serializable"
+  },
+  "epoch_holder_pid": 164557,
+  "verdict": "ORIGINAL_API_WRITER_FIRST_STALE_40001_FRESH_SOURCE_PREFIX_REJECTED",
+  "api_pid": 164582,
+  "reader_blockers": [
+    164582
+  ],
+  "old_snapshot_sqlstate": "40001",
+  "fresh_snapshot_sqlstate": "P0002",
+  "committed_state": {
+    "status": "withdrawn",
+    "version": 3,
+    "epoch": 1
+  },
+  "product_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "head": "3830bdf340fcd2175243b8472c9f5529a6a6db9f",
+  "probe_sha256": "2005cc057ecf3aef05a037fc8a27edaaffd5c2c2b5c8956674896e2b8e1c9859",
+  "limitations": [
+    "Original fact prefix, not complete signed occupation Source admission",
+    "Original test harness restored by its fixture, no new ACL grants",
+    "Independent approved proposal not a published Source exact ref",
+    "No app lifespan/restart, legal business AgentRun or joint ledger completion"
+  ]
+}
