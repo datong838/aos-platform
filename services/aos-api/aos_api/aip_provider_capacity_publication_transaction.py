@@ -1167,3 +1167,99 @@ def require_source_transaction_tables(conn):
         digest = hashlib.sha256(json.dumps(actual,sort_keys=True,separators=(',',':')).encode()).hexdigest()
         if digest != _SOURCE_TABLE_HASHES[name]:
             raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_TABLE_INSTALLATION_DRIFTED')
+
+
+def source_private_installation_audit_sql():
+    """Compile a private native current-call audit from trusted code contracts.
+
+    This covers the new private composition only. Future public entries must
+    additionally enforce original authority/issuer boundaries and integrity of
+    this audit itself; this function supplies no public privilege or JWT proof.
+    All queries are fixed SQL. No target catalog or caller input is compiled.
+    """
+    from aos_api.aip_provider_capacity_publication_store import CAPACITY_SIGNED_BODY_PROFILE_SQL
+
+    def literal(value):
+        return "'" + value.replace("'", "''") + "'"
+
+    def array(values, kind='text'):
+        if values is None:
+            return 'NULL::' + kind + '[]'
+        return 'ARRAY[' + ','.join(literal(v) for v in values) + ']::' + kind + '[]'
+
+    def types(values):
+        if values is None:
+            return 'NULL::oid[]'
+        return 'ARRAY[' + ','.join(literal(v) + '::regtype::oid' for v in values) + ']::oid[]'
+
+    if tuple(hashlib.sha256(s.encode()).hexdigest() for s in
+             (CAPACITY_SOURCE_PENDING_SQL, CAPACITY_SOURCE_COMMIT_SQL)) != _SOURCE_TABLE_SQL_HASHES:
+        raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_TABLE_CONTRACT_REVIEW_REQUIRED')
+    # Audit the original canonicalizer before using it to compare reviewed
+    # catalog digests. It is not part of the 41 newly installed functions.
+    canonical = re.search(
+        r'CREATE FUNCTION aos_capacity_publication_private\.canonical_signed_json\('
+        r'p_value json, p_depth integer\).*?AS \$body\$(.*?)\$body\$;',
+        CAPACITY_SIGNED_BODY_PROFILE_SQL, re.S)
+    if canonical is None:
+        raise ValueError('CAPACITY_SOURCE_CANONICAL_CONTRACT_UNSUPPORTED')
+    manifest = [dict(signature='aos_capacity_publication_private.canonical_signed_json(json,integer)',
+        names=['p_value','p_depth'], input_types=['json','integer'], all_types=None, modes=None,
+        return_type='text', returns_set=False, body_sha256=hashlib.sha256(canonical[1].encode()).hexdigest(),
+        strict=True, volatility='i', security_definer=False, config=['search_path=pg_catalog'])]
+    manifest.extend(source_transaction_function_manifest())
+    names = sorted({item['signature'].split('(')[0].split('.')[1] for item in manifest})
+    fail = "RAISE EXCEPTION 'CAPACITY_SOURCE_CURRENT_INSTALLATION_DRIFTED' USING ERRCODE='42501';"
+    body = [f"""DECLARE v_oid oid; v_table jsonb; v_part jsonb;
+BEGIN
+ IF current_user<>{literal(OWNER)} OR NOT EXISTS(SELECT 1 FROM pg_roles r
+    WHERE r.rolname={literal(OWNER)} AND NOT(r.rolcanlogin OR r.rolinherit OR r.rolsuper
+      OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls)
+    AND NOT EXISTS(SELECT 1 FROM pg_auth_members a WHERE a.roleid=r.oid OR a.member=r.oid)) THEN
+    {fail} END IF;
+ IF (SELECT count(*) FROM pg_proc WHERE pronamespace=
+     'aos_capacity_publication_private'::regnamespace AND proname=ANY({array(names)}))<>{len(manifest)} THEN
+    {fail} END IF;"""]
+    for item in manifest:
+        checks = [
+            'r.rolname=' + literal(OWNER), "l.lanname='plpgsql'",
+            "encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')=" + literal(item['body_sha256']),
+            'p.prosecdef=' + str(item['security_definer']).lower(),
+            'p.proconfig IS NOT DISTINCT FROM ' + array(item['config']),
+            'p.proisstrict=' + str(item['strict']).lower(),
+            'p.provolatile=' + literal(item['volatility']), "p.proparallel='u'",
+            'p.proargnames IS NOT DISTINCT FROM ' + array(item['names'] or None),
+            'ARRAY(SELECT unnest(p.proargtypes::oid[]))=' + types(item['input_types']),
+            'p.proallargtypes IS NOT DISTINCT FROM ' + types(item['all_types']),
+            'p.proargmodes::text[] IS NOT DISTINCT FROM ' + array(item['modes']),
+            'p.prorettype=' + literal(item['return_type']) + '::regtype::oid',
+            'p.proretset=' + str(item['returns_set']).lower(),
+            "p.pronargdefaults=0 AND p.prokind='f' AND p.provariadic=0",
+            "NOT EXISTS(SELECT 1 FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a "
+            "WHERE a.grantee<>p.proowner OR a.privilege_type<>'EXECUTE' OR a.is_grantable)",
+        ]
+        body.append('IF NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_roles r ON r.oid=p.proowner '
+            'JOIN pg_language l ON l.oid=p.prolang WHERE p.oid=to_regprocedure('
+            + literal(item['signature']) + ') AND ' + ' AND '.join(checks) + ') THEN ' + fail + ' END IF;')
+    for name in _SOURCE_TABLE_NAMES:
+        body.append('v_oid:=to_regclass(' + literal('aos_capacity_publication_private.' + name) + '); '
+                    'IF v_oid IS NULL THEN ' + fail + ' END IF;')
+        if _SOURCE_TABLE_PROPERTIES.count('%s') != 1:
+            raise ValueError('CAPACITY_SOURCE_TABLE_QUERY_UNSUPPORTED')
+        body.append('SELECT to_jsonb(q) INTO v_table FROM ('
+                    + _SOURCE_TABLE_PROPERTIES.replace('%s', 'v_oid') + ') q;')
+        for key, query in _SOURCE_TABLE_QUERIES.items():
+            if query.count('%s') != 1:
+                raise ValueError('CAPACITY_SOURCE_TABLE_QUERY_UNSUPPORTED')
+            body.append("SELECT coalesce(jsonb_agg(to_jsonb(q)),'[]'::jsonb) INTO v_part FROM ("
+                        + query.replace('%s', 'v_oid') + ') q; '
+                        + 'v_table:=v_table||jsonb_build_object(' + literal(key) + ',v_part);')
+        body.append("IF encode(sha256(convert_to(aos_capacity_publication_private.canonical_signed_json("
+                    "v_table::json,1),'UTF8')),'hex')<>" + literal(_SOURCE_TABLE_HASHES[name])
+                    + ' THEN ' + fail + ' END IF;')
+    body.append('END;')
+    return ('CREATE FUNCTION aos_capacity_publication_private.require_current_source_installation() '
+        'RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $audit$\n'
+        + '\n'.join(body) + '\n$audit$;\n'
+        + 'ALTER FUNCTION aos_capacity_publication_private.require_current_source_installation() OWNER TO ' + OWNER + ';\n'
+        + 'REVOKE ALL ON FUNCTION aos_capacity_publication_private.require_current_source_installation() FROM PUBLIC;\n')

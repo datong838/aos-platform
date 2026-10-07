@@ -1,0 +1,68 @@
+{
+  "schema": "aos-native-current-installation-verification/v1",
+  "base_head": "3d75c7971678ea3c3539fbd4fa29a5133087ab1e",
+  "authority": "AOS-001450",
+  "native_audit": "Owner-only SECURITY INVOKER;42 exact function contracts including trusted canonicalizer and five reviewed full table catalog SHA contracts;no target-learned manifests or dynamic SQL",
+  "tests": {
+    "positive": "1PASS11.84s",
+    "specialized_r2": "28PASS202.32s plus two infrastructure setupERROR",
+    "recovery": "2PASS19.13s, only previously unentered canonical-body/owner-login cases",
+    "unique_specialized_cases_passed": 30,
+    "adjacent": "2PASS24.79s",
+    "warnings": 7,
+    "skips": 0
+  },
+  "logs": {
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-current-install-adjacent-r1.log": {
+      "sha256": "5b3b2bec53f73e3fe91641f043564098adb5b2780600bf6f85f395c7b2e9c9a6",
+      "summary": "2 passed, 365 deselected, 7 warnings in 24.79s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-current-install-green-r1.log": {
+      "sha256": "6e40aa981c0d7474b4b2c8bc890e021328974795f497855e3ff2e746da08d05e",
+      "summary": "1 failed, 346 deselected, 7 warnings in 12.40s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-current-install-green-r2.log": {
+      "sha256": "38a6aeca97225b8b9dca5f7b727e862c016fd3b428300864a81e7470d8d90bed",
+      "summary": "1 passed, 346 deselected, 7 warnings in 11.84s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-current-install-recovery-r1.log": {
+      "sha256": "4080955b6b9741c60389d95727343a47dee3eed4c0fac7480fcb13b4889c2bda",
+      "summary": "2 passed, 365 deselected, 7 warnings in 19.13s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-current-install-red-r1.log": {
+      "sha256": "562e6ca666f2e4fecd028446fd9a4ad77084d940d3573e3d6155ba674a75c749",
+      "summary": "1 failed, 346 deselected, 7 warnings in 12.08s"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-current-install-specialized-r1.log": {
+      "sha256": "c2c0e5c9599fcfe16c2b3f1df24610f81e1571f5291f880909ba1e597118198b",
+      "summary": "3 failed, 27 passed, 337 deselected, 7 warnings in 208.27s (0:03:28)"
+    },
+    ".evidence/gt-capacity-source-publication-20261006/full157-native-current-install-specialized-r2.log": {
+      "sha256": "ea4e526085cc7540a4932eafa51342e9d87233c293924bb13fc4e20b24186296",
+      "summary": "28 passed, 337 deselected, 7 warnings, 2 errors in 202.32s (0:03:22)"
+    }
+  },
+  "redactions": [],
+  "preservation": {
+    "production_old_prefix_sha256": "44f0a5156ac90299550cf2c157d209ad46583137db9b089a043c4155ac90ba61",
+    "old_test_functions_unchanged_except_case_registration": true,
+    "a157_unchanged": true
+  },
+  "readback": "full157-native-current-install-readback.json",
+  "lab_recovery": "full157-native-audit-shm-recovery.json",
+  "no_source_delivery": true,
+  "full_goal_complete": false,
+  "remaining": [
+    "original registry and issuer/full S01 authority",
+    "audit self-integrity and exact public entries",
+    "controlled JWT signer",
+    "final actual caller COMMIT TTL",
+    "current consumer",
+    "natural business chain"
+  ],
+  "browser": "N/A no UI or formal service change",
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "d00a70061b72feecc110f0f3055533536a59fbd09b69e9e3772ac9a8e0c98ebf",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "8ac77a7c6f03e0140a8ce2b616cedbf5dea50fa6cbe723567fcda2d21f0cbdda"
+  }
+}

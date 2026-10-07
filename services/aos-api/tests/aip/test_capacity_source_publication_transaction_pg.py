@@ -22,6 +22,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_native_private_source_installation_preserves_original_checker',
         'test_latest_migration_installs_private_source_boundary',
         'test_migrated_private_source_drift_cannot_rebuild_fragments',
+        'test_native_private_installation_audit_rejects_current_drift',
         'test_native_committed_sources_share_one_physical_account',
         'test_native_committed_source_is_durable_and_signed',
         'test_native_committed_source_refuses_invalid_finalize',
@@ -4546,3 +4547,81 @@ def test_migrated_private_source_drift_cannot_rebuild_fragments(native_signed_so
                 assert owner.execute("SELECT to_regclass('aos_capacity_publication_private.source_provenance')::text AS value").fetchone()['value'] is None
                 raise RestoreFault()
         assert _reuse_migrated_private_source(owner) is True
+
+
+@pytest.mark.parametrize('fault',['none','body','search_path','security','volatility','strict','acl','overload','default','nullable','type','column_extra','table_acl','column_acl','owner','rls','force_rls','policy_using','policy_extra','unique','check','fk_action','index_extra','immutable_trigger','deferred_trigger','ri_trigger','trigger_condition','missing_table','canonical_body','owner_login'])
+def test_native_private_installation_audit_rejects_current_drift(native_signed_source,fault):
+    from aos_api import aip_provider_capacity_publication_transaction as transaction
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from psycopg import sql
+    class RestoreFault(Exception):pass
+    signature='aos_capacity_publication_private.read_source_issuer_url(jsonb)'
+    changes={
+        'body':"CREATE OR REPLACE FUNCTION aos_capacity_publication_private.read_source_issuer_url(p jsonb) RETURNS text LANGUAGE plpgsql IMMUTABLE SECURITY INVOKER SET search_path=pg_catalog AS $body$ BEGIN RETURN 'tampered'; END $body$",
+        'search_path':'ALTER FUNCTION '+signature+' SET search_path=public',
+        'volatility':'ALTER FUNCTION '+signature+' VOLATILE',
+        'strict':'ALTER FUNCTION '+signature+' STRICT',
+        'security':'ALTER FUNCTION '+signature+' SECURITY DEFINER',
+        'acl':'GRANT EXECUTE ON FUNCTION '+signature+' TO PUBLIC',
+        'overload':"CREATE FUNCTION aos_capacity_publication_private.read_source_issuer_url(text) RETURNS text LANGUAGE sql AS 'SELECT $1'",
+        'default':'ALTER TABLE aos_capacity_publication_private.source_pending ALTER finalized SET DEFAULT true',
+        'missing_table':'DROP TABLE aos_capacity_publication_private.source_provenance',
+        'policy_extra':'CREATE POLICY extra_source_policy ON aos_capacity_publication_private.source_pending TO PUBLIC USING(true)',
+        'deferred_trigger':'ALTER TABLE aos_capacity_publication_private.source_pending DISABLE TRIGGER source_pending_finalized',
+        'owner_login':'ALTER ROLE aos_capacity_publication_owner LOGIN',
+    }
+    prefix='aos_capacity_publication_private.'
+    changes.update({
+        'default':'ALTER TABLE '+prefix+'source_pending ALTER finalized SET DEFAULT true',
+        'nullable':'ALTER TABLE '+prefix+'source_pending ALTER native_session DROP NOT NULL',
+        'type':'ALTER TABLE '+prefix+'source_pending ALTER native_pid TYPE bigint',
+        'column_extra':'ALTER TABLE '+prefix+'source_pending ADD extra text',
+        'table_acl':'GRANT SELECT ON '+prefix+'source_publication TO aos_runtime',
+        'column_acl':'GRANT UPDATE(finalized) ON '+prefix+'source_pending TO aos_provider_capacity_issuer',
+        'owner':'ALTER TABLE '+prefix+'source_publication OWNER TO aos_runtime',
+        'rls':'ALTER TABLE '+prefix+'source_pending DISABLE ROW LEVEL SECURITY',
+        'force_rls':'ALTER TABLE '+prefix+'global_account NO FORCE ROW LEVEL SECURITY',
+        'policy_using':'ALTER POLICY source_pending_owner ON '+prefix+'source_pending USING(true)',
+        'policy_extra':'CREATE POLICY extra_source_policy ON '+prefix+'source_pending TO PUBLIC USING(true)',
+        'unique':'ALTER TABLE '+prefix+'source_pending DROP CONSTRAINT source_pending_org_id_project_id_maker_request_hash_key',
+        'check':'ALTER TABLE '+prefix+'source_publication DROP CONSTRAINT source_publication_signature_check',
+        'fk_action':'ALTER TABLE '+prefix+'source_provenance DROP CONSTRAINT source_provenance_org_id_project_id_asset_id_fkey; ALTER TABLE '+prefix+'source_provenance ADD CONSTRAINT source_provenance_org_id_project_id_asset_id_fkey FOREIGN KEY(org_id,project_id,asset_id) REFERENCES '+prefix+'source_publication ON DELETE CASCADE',
+        'index_extra':'CREATE INDEX extra_source_index ON '+prefix+'source_pending(native_pid)',
+        'immutable_trigger':'ALTER TABLE '+prefix+'source_publication DISABLE TRIGGER source_publication_immutable',
+        'deferred_trigger':'ALTER TABLE '+prefix+'source_pending DISABLE TRIGGER source_pending_finalized',
+        'trigger_condition':'DROP TRIGGER source_publication_immutable ON '+prefix+'source_publication; CREATE TRIGGER source_publication_immutable BEFORE UPDATE OR DELETE ON '+prefix+'source_publication FOR EACH ROW WHEN(false) EXECUTE FUNCTION '+prefix+'refuse_source_publication_mutation()',
+    })
+    changes['canonical_body']="CREATE OR REPLACE FUNCTION aos_capacity_publication_private.canonical_signed_json(p_value json,p_depth integer) RETURNS text LANGUAGE plpgsql IMMUTABLE STRICT SECURITY INVOKER SET search_path=pg_catalog AS $body$ BEGIN RETURN 'tampered'; END $body$"
+    with isolated_owner() as owner:
+        transaction.require_source_transaction_tables(owner)
+        owner.execute(transaction.source_private_installation_audit_sql())
+        try:
+            def audit():
+                # Exact same native SQL that a future Owner definer must invoke;
+                # no Python catalog checker is used to make the native verdict.
+                with owner.transaction():
+                    owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+                    owner.execute('SELECT aos_capacity_publication_private.require_current_source_installation()')
+                    # RELEASE SAVEPOINT retains SET LOCAL; restore the test
+                    # manager before injecting privileged catalog faults.
+                    owner.execute('RESET ROLE')
+            audit()
+            for role in ('aos_runtime','aos_provider_capacity_issuer','aos_provider_capacity_policy_publisher'):
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with owner.transaction():
+                        owner.execute(sql.SQL('SET LOCAL ROLE {}').format(sql.Identifier(role)))
+                        owner.execute('SELECT aos_capacity_publication_private.require_current_source_installation()')
+            if fault!='none':
+                with pytest.raises(RestoreFault):
+                    with owner.transaction():
+                        if fault=='ri_trigger':
+                            name=owner.execute("SELECT tgname FROM pg_trigger WHERE tgrelid='aos_capacity_publication_private.source_provenance'::regclass AND tgisinternal ORDER BY tgname LIMIT 1").fetchone()['tgname']
+                            owner.execute(sql.SQL('ALTER TABLE aos_capacity_publication_private.source_provenance DISABLE TRIGGER {}').format(sql.Identifier(name)))
+                        else:owner.execute(changes[fault])
+                        with pytest.raises(psycopg.errors.InsufficientPrivilege,match='CAPACITY_SOURCE_CURRENT_INSTALLATION_DRIFTED'):
+                            audit()
+                        raise RestoreFault()
+                audit()
+        finally:
+            owner.execute('DROP FUNCTION aos_capacity_publication_private.require_current_source_installation()')
+        transaction.require_source_transaction_tables(owner)

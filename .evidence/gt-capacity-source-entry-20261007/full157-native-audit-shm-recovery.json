@@ -1,0 +1,18 @@
+{
+  "phase": "same_cluster_count_owner_verified",
+  "old_id": "0279d3431cb3b6fc4d4538578b89db03cd7112abded6dbe18e7d4bbf4f3e9ed3",
+  "retained_container": "aos-capacity-publication-scram-20261006-retained-shm256-20261007T0208",
+  "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+  "volume": "aos-capacity-publication-scram-20261006-data",
+  "network": "aos-capacity-publication-scram-20261006-network",
+  "ip": "172.18.0.2",
+  "shm_bytes": 1073741824,
+  "formal_resources_changed": false,
+  "no_deletions": true,
+  "new_id": "4be7e2967dfd98ad81a6d9e554c420024e9e4e90cdf5649e19355d940542aad2",
+  "readback": {
+    "cluster": "7693564235776004128",
+    "databases": 739,
+    "owner_login": false
+  }
+}
