@@ -37,7 +37,7 @@
 
 ## 4. 内容链的具体协作决策点
 
-推荐研究路径：保持原capacity claim与ack，扩展其实际启动事务，使Source/physical/pool/原budget/AgentRun CAS/唯一Intent在同caller齐备后才RUNNING；后续budget command阶段只核读同一次联合结果，沿原幂等Receipt完成受控接续，不能重新持有预算或派发未知结果。
+当前收敛候选（2026-10-08原调用回读，细节见§11）：保留原capacity唯一durable claim；联合实际启动事务内复用原AgentRun transition/pool→原capacity ACK→原budget put→原budget claim→原命令构建与trusted Host校验/执行/Receipt→原budget ACK→joint finalize→唯一实际COMMIT。RUNNING、ACK、原预算及唯一Intent必须同事务提交；budget worker后续只读核同次结果，不再独立派发同一命令。候选尚未经过合法原生全链验证，不宣布实现或新执行权限。
 
 这条路径不能直接编码：原ContentGenerateHostService的dispatch/claim权威以及command refs必须从原真实Task/Plan/Review/Logic/ModelRoute来源推导，确认capacity阶段是否已有全部审批及原Intent消费许可。若缺少，不得提前消费budget claim权限。需要原状态机资料证明后选择兼容扩展；不能以移到后面后仍提前RUNNING、伪造budget claimed状态、改用空permission来源等方式硬接。此项是实质实现合同缺口，限制相关动作，不阻止已批准隔离研究或其他安全代码步骤。
 
@@ -156,3 +156,41 @@ r2仍在同helper import失败，库aos_test_0ee455a745a5_ti4_test保留；新�
 后续延迟等锁本次原生2case通过，保留库aos_test_later_wait_5014a31a1e51。check→wait在DB clock期限前检查，真实COMMIT advisory wait跨期限后释放，实际提交row1，audit检查时间<deadline<wait完成时间；wait→check实际23514 GT_TEST_DEADLINE_EXPIRED，row/audit0，整笔rollback。独立SER READ ONLY核exact4 deferred trigger/2函数、已提交xmin等于caller xid、原业务四表0、迁移头未变且剩余advisory lock0。两case均单次COMMIT，有attempt/已知终态，不重发。
 
 方案修订：current_query=COMMIT只收紧结束命令入口，不保证实际完成期限。finalizer必须把必须等锁与所有可能等待的依赖核验放在最终期限决策之前；需审计完整deferred queue及后续SQL/锁，不能仅凭字母名最后触发器证明整个产品最后检查。严格定义当前候选为“最终决策点DB clock未过期”，实际COMMIT/WAL持久化/客户端确认仍不能由本primitive保证；如产品要求期限内完成实际提交，须另行完整协议和失败语义设计，不静默替换需求。Source/approval/budget当前性与唯一Intent仍需原可信入口完整联动，合成实验不证明产品可被调用或越权。
+
+原保留Source实验库aos_test_fc2688b199ad_ti4_test后续READ ONLY核全部public/Source私有deferred目录：application 34，internal RI 105（见original-deferred-final-check-catalog.json，精确定义与function源hash）。每表trigger字母排序不是整个事务事件队列顺序，FK内部C触发器亦可能等待key-share/行锁。原a144 atomic_triple在function入口缓存live_now，随后读proof/binding/receipt/installation；最终方案需核这一取时点与实际调用/锁顺序，不把本目录推断当已原生证明的原产品跨期。完整finalizer不能仅加入一个名字排序最后的trigger就声称全事务最后检查。下一先列真实调用写入顺序、全部deferred event与FK锁依赖，再决定统一trusted结束入口的收敛设计；不改已发布迁移，不重跑已知提交。
+
+## 11. Content原状态机同caller接续候选（AOS-001490之后，取代§4旧推荐与§9过强推断）
+
+### 11.1 原源码证据与可复用路径
+
+精确hash/类/方法/行范围见content-joint-original-call-binding.json。ContentCapacityOwner._transition实际将TransactionBoundConnectFactory传给AgentRunService；其默认CapacityReservationGate继承该factory，因此这一具体路径的旧reserve也在borrowed caller，内部commit被抑制。§1表内AgentRun通用独立连接描述不能机械套用到此Host-bound实例；严格native新接口仍不能接受borrowed wrapper。
+
+原a103 ACK核真实AgentRun running与原live pool reservation；没有要求RUNNING已经独立COMMIT。原a104 put要求真实capacity accepted行xmin=current xid，这是ACK与put同事务要求，并不要求ACK处于后续单独事务。原a104 claim再核current+pending/attempt0/无runtime Receipt，实际推进一次claimed。故之前“必须独立新producer才可接”是未经完整顺序审查的过强推断；可优先验证原ACK/put/claim整体搬入同caller的候选，但不能把静态可行宣布已原生跑通。
+
+候选严格顺序：
+1. 原唯一capacity claim已durable；未知归属/attempt不得重领。
+2. 新exact trusted联合Owner同native caller完成原Source/currentness/费用fence/account guard（全入口锁序另门）。
+3. 原AgentRun transition逻辑与原pool算法同caller，得到真实RUNNING行和exact reservation（尚未提交），失败整笔回滚。
+4. 原a103 ACK真实token/reservation→原a104 put→原a104 claim with server UUID，均同caller；不直接写accepted、不伪造claimed、不改旧迁移。
+5. 原_build_command此时从真实budget claimed intent读取资料、原route/Task/Plan/Review/approval/Price/安装派发重核；before_capacity preflight不充作execute grant。
+6. exact trusted Host同caller路径保留原_lock_and_revalidate→binding.revalidate→binding.execute→strict Receipt→binding.verify_receipt及原Adapter._verify_and_journal/BoundRuntimeStore.put；原ContentExecute持久原budget/journal一次，无Provider调用。joint预算阶段必须协调到此实际reserve点，禁止在step2先hold又在此reserve第二次或用replay掩盖不同xid。
+7. 原a104 budget ACK核实际HELD/PENDING/runtime Receipt，与新private finalize核Source+physical+pool+ordinarybudget+AgentRun+唯一journal/Receipt同xid；未齐全不得实际COMMIT。
+8. 统一trusted结束入口一次实际COMMIT，再独立只读查全链。任何提交未知保留原capacity durable claim及所有可能已提交义务，禁止重跑transition/claim/dispatch；known rollback也不擅自重置原一次attempt，走已授权恢复路径。
+
+### 11.2 精确实现包与权限边界
+
+新增/变更候选仍是§5精确联合包；补tests/aip/test_content_joint_transaction_pg.py（合法原Task/Run/AgentRun、原claim/ACK/put/claim/预算/journal/Receipt真实正向与逐节点故障），以及原Host port/Content capacity/budget worker相邻测试。Host ports新同caller入口仅exact trusted联合Owner允许，沿原固定registry选择唯一Content binding；不向可选package提供rawconn、任意callback/OperationBinding，也不允许其调用普通commit入口结束联合事务。旧commit分支保持原行为。新joint模式原budget worker在已accepted同次Receipt只读消费，pending/claimed/unknown旧记录按切换mapping门而不是自动补发。
+
+原budget/pool接口native严格检查不放宽；可由exact trusted Owner原conn委托原算法，并保持原normal/no-effect版本兼容。新mode不可silent fallback或混用旧bucket→fence锁序。零执行/原Owner签名安装/cutover/历史unknown义务mapping齐全后才启用；当前只设计，不开启Host/Provider。
+
+### 11.3 提交门的收敛约束
+
+本轮原实验目录列34 application deferred与105 internal RI（包含非本联合路径，不能全部当实际队列）。必须以实际新joint写表事件闭包确定队列，而非目录总数或每表字母顺序。候选在trusted结束入口显式执行所有实际相关legacy deferred检查/RI，保证后续相关约束处于IMMEDIATE，再把所有必要锁/当前性核验置于final deadline决策前；仅新joint完整性guard保留COMMIT强制。细粒度constraints选择必须绑定精确catalog与所有可产生的新event，不能未审计直接SET ALL，也不能关trigger、改旧函数、用no-op消除RI等待。错误提前SET必须整体拒绝；任意SQL/结束通道仍须native负矩阵。
+
+这是待验证方案，不声称可由SQL证明不存在后续触发器/等待或WAL时限；若legacy函数不容许提前检查，完整队列不能可靠收敛，则保持该路径拒绝并另设计协议，不降低期限要求。最终decision时间≠实际COMMIT完成时间，严格完成期限须完整业务协议裁决，不静默更换。
+
+### 11.4 仍未收口的真实缺口与下一步
+
+原合法普通Task/Plan/Review/Skill/Logic/ModelRoute/RUNNING positive、Source+八依赖正式来源、ordinary可信预算bridge完整hash/初始event、shared physical历史义务切换、Model typed Eval Owner与真实model-quality dataset仍未完成。无这些正向链，不得宣称fulljoint/首链，不能用fake ReadyResolver/handinsert AgentRun/旧12Run替代。下一从原自然Content TaskRun/AgentRun创建的方案与原fixture逐项核合法来源，列出必须复用的真实创建接口和未合法seed，确认candidate可原生验收资料后才取完整product Lease；第二候选typed Model Eval数据集/执行合同，保持同一完整joint目标，不另起平行任务分母。
+
+Content验收源资料审计见content-full-chain-fixture-source-audit.json：旧extension_runtime TaskRun/AgentRun PG fixture手建缩减schema并直接insert Task/Plan/Run/AgentRun/Review runtime Receipt，teardown含DROP DATABASE；本轮未执行，原局部门价值保留，不改原fixture也不让其清理保留库。原真实Owner已定位create_plan/create_run/start_run与AgentRun创建/原registry Receipt/ACK。完整新测试必须新全迁移保留库，从真正Review/Task/Brief/production assignment/pre-review gate/Skill/Logic/ModelRoute来源走原创建，不能以本source audit算正向通过。

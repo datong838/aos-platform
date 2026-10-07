@@ -1,0 +1,203 @@
+{
+  "status": "CONTENT_FULL_CHAIN_FIXTURE_LIMITS_AND_ORIGINAL_CREATION_SOURCE_BOUND",
+  "files": {
+    "services/aos-api/tests/extension_runtime/test_ecommerce_content_taskrun_owner_pg.py": {
+      "sha256": "dbea714ec6eec4785306b3db2ec94cf7e46aa34be14761abe213a193d139e81a",
+      "evidence": [
+        {
+          "line": 54,
+          "text": "owner.execute(\"\"\"CREATE TABLE extension_runtime_binding("
+        },
+        {
+          "line": 59,
+          "text": "owner.execute(\"\"\"CREATE TABLE extension_operation_dispatch_binding("
+        },
+        {
+          "line": 64,
+          "text": "owner.execute(\"\"\"CREATE TABLE ecommerce_growth_runtime_command_receipt("
+        },
+        {
+          "line": 70,
+          "text": "owner.execute(\"\"\"CREATE TABLE aip_task_brief_revision("
+        },
+        {
+          "line": 73,
+          "text": "owner.execute(\"\"\"CREATE TABLE aip_task("
+        },
+        {
+          "line": 76,
+          "text": "owner.execute(\"\"\"CREATE TABLE aip_plan_revision("
+        },
+        {
+          "line": 80,
+          "text": "owner.execute(\"\"\"CREATE TABLE aip_task_run("
+        },
+        {
+          "line": 97,
+          "text": "admin.execute(sql.SQL(\"DROP DATABASE {}\").format(sql.Identifier(dbname)))"
+        },
+        {
+          "line": 127,
+          "text": "owner.execute(\"\"\"INSERT INTO aip_task_brief_revision VALUES("
+        },
+        {
+          "line": 178,
+          "text": "owner.execute(\"INSERT INTO aip_task VALUES(%s,%s,'task-1','executing')\", SCOPE.key)"
+        },
+        {
+          "line": 179,
+          "text": "owner.execute(\"\"\"INSERT INTO aip_plan_revision VALUES("
+        },
+        {
+          "line": 182,
+          "text": "owner.execute(\"\"\"INSERT INTO aip_task_run VALUES("
+        },
+        {
+          "line": 209,
+          "text": "owner.execute(\"INSERT INTO aip_task VALUES(%s,%s,'task-1','executing')\", SCOPE.key)"
+        },
+        {
+          "line": 210,
+          "text": "owner.execute(\"\"\"INSERT INTO aip_plan_revision VALUES("
+        },
+        {
+          "line": 213,
+          "text": "owner.execute(\"\"\"INSERT INTO aip_task_run VALUES("
+        }
+      ]
+    },
+    "services/aos-api/tests/extension_runtime/test_ecommerce_content_agentrun_owner_pg.py": {
+      "sha256": "159513f4f87b2a2544366b176304d7cd7c47b1fec58499cad14257e4bb76f419",
+      "evidence": [
+        {
+          "line": 27,
+          "text": "owner.execute(\"\"\"CREATE TABLE aip_agent_run("
+        },
+        {
+          "line": 29,
+          "text": "owner.execute(\"\"\"CREATE TABLE aip_agent_registry_receipt("
+        },
+        {
+          "line": 32,
+          "text": "owner.execute(\"\"\"CREATE TABLE aip_model_capacity_reservation("
+        },
+        {
+          "line": 35,
+          "text": "owner.execute(\"\"\"CREATE TABLE aip_budget_reservation("
+        },
+        {
+          "line": 38,
+          "text": "owner.execute(\"\"\"CREATE TABLE ecommerce_content_execution_command("
+        },
+        {
+          "line": 68,
+          "text": "owner.execute(\"INSERT INTO aip_task VALUES(%s,%s,'task-1','executing','plan-1')\", SCOPE.key)"
+        },
+        {
+          "line": 69,
+          "text": "owner.execute(\"\"\"INSERT INTO aip_plan_revision VALUES("
+        },
+        {
+          "line": 72,
+          "text": "owner.execute(\"\"\"INSERT INTO aip_task_run VALUES("
+        },
+        {
+          "line": 115,
+          "text": "owner.execute(\"INSERT INTO aip_agent_run VALUES(%s,%s,'agent-1','task-1','run-1','queued')\", SCOPE.key)"
+        },
+        {
+          "line": 159,
+          "text": "owner.execute(\"INSERT INTO aip_agent_run VALUES(%s,%s,'agent-1','task-1','run-1','queued')\", SCOPE.key)"
+        },
+        {
+          "line": 186,
+          "text": "owner.execute(\"INSERT INTO aip_agent_run VALUES(%s,%s,'agent-1','task-1','run-1','queued')\", SCOPE.key)"
+        },
+        {
+          "line": 226,
+          "text": "owner.execute(\"INSERT INTO aip_agent_run VALUES(%s,%s,'agent-1','task-1','run-1','queued')\", SCOPE.key)"
+        }
+      ]
+    },
+    "services/aos-api/tests/extension_runtime/test_ecommerce_content_capacity_owner.py": {
+      "sha256": "8afc476cad51fffa968b2bb45bc6281c44bca198ab219afe4a46803d67870265",
+      "evidence": [
+        {
+          "line": 47,
+          "text": "monkeypatch.setattr(owner, \"_preflight\", lambda *_, **kw: SimpleNamespace("
+        },
+        {
+          "line": 49,
+          "text": "monkeypatch.setattr(owner, \"_transition\", lambda *_: ("
+        },
+        {
+          "line": 51,
+          "text": "monkeypatch.setattr(owner, \"_admit\", lambda *a, **kw: None)"
+        },
+        {
+          "line": 107,
+          "text": "monkeypatch.setattr(owner, \"_preflight\", lambda *_, **kw: current)"
+        },
+        {
+          "line": 108,
+          "text": "monkeypatch.setattr(owner, \"_transition\", lambda *_: ("
+        },
+        {
+          "line": 110,
+          "text": "monkeypatch.setattr(ContentAgentRunOwner, \"_build_request\", staticmethod("
+        },
+        {
+          "line": 145,
+          "text": "monkeypatch.setattr(owner, \"_preflight\", lambda *_, **kw: ("
+        },
+        {
+          "line": 161,
+          "text": "monkeypatch.setattr(owner, \"_preflight\", deny)"
+        },
+        {
+          "line": 163,
+          "text": "monkeypatch.setattr(owner, \"_preflight\", lambda *a: None)"
+        },
+        {
+          "line": 164,
+          "text": "monkeypatch.setattr(owner, \"_admit\", deny)"
+        }
+      ]
+    },
+    "services/aos-api/aos_api/ecommerce_content_taskrun_owner.py": {
+      "sha256": "30ae61c338e7338938b05409bee0d3800c9ae486c289b7614e55bda7501d5f43",
+      "evidence": [
+        {
+          "line": 319,
+          "text": "plan = store.create_plan("
+        },
+        {
+          "line": 352,
+          "text": "run = store.create_run("
+        },
+        {
+          "line": 358,
+          "text": "store.start_run("
+        }
+      ]
+    },
+    "services/aos-api/aos_api/ecommerce_content_agentrun_owner.py": {
+      "sha256": "4544ef686a8b55401e5134063d9acd23652f63bab5516996224a959b08ade52b",
+      "evidence": []
+    }
+  },
+  "not_executed": [
+    "Existing simplified PostgreSQL fixtures with DROP DATABASE teardown",
+    "Mock Owner/capacity unit tests are not full joint authority proof"
+  ],
+  "required_original_path": [
+    "ReviewAdvance original runtime Receipt and content Task/Brief from original Owner",
+    "ContentTaskRunOwner original production assignment/pre-review gate -> create_plan/create_run/start_run -> original ACK/next intent",
+    "ContentAgentRunOwner exact actual Skill/Logic/Route/current governance -> original AgentRun create -> registry Receipt -> original ACK/next capacity intent",
+    "Original signed Source/all eight dependencies and joint trusted Owner with one original PENDING command/HELD/Receipt"
+  ],
+  "limitations": [
+    "Precise source review, no runtime positive full-chain claimed",
+    "Original isolated legacy tests remain useful within their bounded scope but cannot certify full migration or legal natural first chain"
+  ]
+}

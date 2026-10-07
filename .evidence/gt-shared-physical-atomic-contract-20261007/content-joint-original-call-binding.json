@@ -1,0 +1,434 @@
+{
+  "status": "CONTENT_ORIGINAL_ACK_PUT_CLAIM_AND_TRUSTED_HOST_CALL_GRAPH_SOURCE_BOUND",
+  "head": "c5ec8983eea7a10ec465758586be7533f07cb566",
+  "files": {
+    "services/aos-api/aos_api/ecommerce_content_capacity_owner.py": {
+      "file_sha256": "521627cb25102c0d4e4f052b594057684ffc03893ef59b40e491dbc72eb9bf92",
+      "methods": {
+        "ContentCapacityOwner.claim": {
+          "start_line": 65,
+          "end_line": 100,
+          "source_sha256": "ffd99ce35d360a968b46806952398f0931a2b87b4b6b3848277f8bfc4f78e160",
+          "calls_by_source_line": [
+            {
+              "line": 79,
+              "target": "self._admit",
+              "sql": null
+            },
+            {
+              "line": 82,
+              "target": "conn.execute",
+              "sql": "SELECT public.ecommerce_growth_content_capacity_claim_a0v_103(%s,%s) AS claimed"
+            },
+            {
+              "line": 88,
+              "target": "conn.commit",
+              "sql": null
+            },
+            {
+              "line": 90,
+              "target": "conn.execute",
+              "sql": "SELECT state,attempt,claim_token,agent_run_id\n                     FROM public.ecommerce_growth_content_capacity_intent\n                    WHERE org_id=%s AND project_id=%s AND review_key=%s"
+            }
+          ]
+        },
+        "ContentCapacityOwner._transition": {
+          "start_line": 102,
+          "end_line": 130,
+          "source_sha256": "b3a3d8615410059db6c150fcb519b3693641e9603ee07cf5b8b573736ebb25d5",
+          "calls_by_source_line": [
+            {
+              "line": 105,
+              "target": "self._admit",
+              "sql": null
+            },
+            {
+              "line": 108,
+              "target": "TransactionBoundConnectFactory",
+              "sql": null
+            },
+            {
+              "line": 113,
+              "target": "service.transition",
+              "sql": null
+            },
+            {
+              "line": 118,
+              "target": "conn.execute",
+              "sql": "SELECT e.approval_event_id FROM public.aip_action_approval_event e\n                    JOIN public.aip_action_proposal p\n                      ON p.org_id=e.org_id AND p.project_id=e.project_id AND p.proposal_id=e.proposal_id\n                    WHERE e.org_id=%s AND e.project_id=%s AND e.approval_event_id=%s\n                      AND e.decision='approved' AND p.status='approved'\n                      AND e.expires_at>clock_timestamp() AND p.expires_at>clock_timestamp()"
+            },
+            {
+              "line": 129,
+              "target": "conn.commit",
+              "sql": null
+            }
+          ]
+        },
+        "ContentCapacityOwner.execute_claim": {
+          "start_line": 132,
+          "end_line": 208,
+          "source_sha256": "41d22e1b866b17b353312f393bcf873b190b1ea1b679240b93f65516c796b4d6",
+          "calls_by_source_line": [
+            {
+              "line": 137,
+              "target": "conn.execute",
+              "sql": "SELECT state,attempt,claim_token,agent_run_id\n                     FROM public.ecommerce_growth_content_capacity_intent\n                    WHERE org_id=%s AND project_id=%s AND review_key=%s"
+            },
+            {
+              "line": 160,
+              "target": "conn.execute",
+              "sql": "SELECT r.reservation_id FROM public.aip_model_capacity_reservation r\n                    JOIN public.aip_agent_run a\n                      ON a.org_id=r.org_id AND a.project_id=r.project_id\n                     AND a.agent_run_id=r.agent_run_id\n                    WHERE r.org_id=%s AND r.project_id=%s AND r.agent_run_id=%s\n                      AND a.status='running' AND r.status IN ('reserved','consumed')\n                      AND r.expires_at>clock_timestamp() LIMIT 2"
+            },
+            {
+              "line": 174,
+              "target": "conn.execute",
+              "sql": "SELECT public.ecommerce_growth_content_capacity_ack_a0v_103(%s,%s,%s) AS accepted"
+            },
+            {
+              "line": 180,
+              "target": "conn.execute",
+              "sql": "SELECT public.ecommerce_growth_content_budget_command_put_a0v_104(%s) AS pending"
+            },
+            {
+              "line": 186,
+              "target": "conn.commit",
+              "sql": null
+            },
+            {
+              "line": 188,
+              "target": "conn.execute",
+              "sql": "SELECT c.state,c.attempt,c.claim_token,c.agent_run_id,\n                          c.capacity_reservation_id,n.state AS next_state,\n                          n.attempt AS next_attempt\n                     FROM public.ecommerce_growth_content_capacity_intent c\n                     JOIN public.ecommerce_growth_content_budget_command_intent n\n                       ON n.org_id=c.org_id AND n.project_id=c.project_id\n                      AND n.review_key=c.review_key\n                      AND n.agent_run_id=c.agent_run_id\n                      AND n.capacity_reservation_id=c.capacity_reservation_id\n                    WHERE c.org_id=%s AND c.project_id=%s AND c.review_key=%s"
+            }
+          ]
+        }
+      }
+    },
+    "services/aos-api/aos_api/ecommerce_content_budget_command_owner.py": {
+      "file_sha256": "71b10bc63dd2f18bae9660a8d1156df63074d38bb349454a5b648b6a9b10d94c",
+      "methods": {
+        "ContentBudgetCommandOwner._prepare_sources": {
+          "start_line": 90,
+          "end_line": 334,
+          "source_sha256": "a65098743a5df3a19aeedeea31b54aa8343fe1c14e7b47632602321975589e90",
+          "calls_by_source_line": [
+            {
+              "line": 104,
+              "target": "transaction.execute",
+              "sql": "SELECT state,attempt,claim_token,task_run_id,agent_run_id\n                    FROM public.ecommerce_growth_content_capacity_intent\n                    WHERE org_id=%s AND project_id=%s AND review_key=%s FOR SHARE"
+            },
+            {
+              "line": 111,
+              "target": "transaction.execute",
+              "sql": "SELECT state,attempt,claim_token,task_run_id,agent_run_id,capacity_reservation_id,\n                          command_key,installation_id,generation,execution_epoch\n                     FROM public.ecommerce_growth_content_budget_command_intent\n                    WHERE org_id=%s AND project_id=%s AND review_key=%s FOR SHARE"
+            },
+            {
+              "line": 127,
+              "target": "transaction.execute",
+              "sql": null
+            },
+            {
+              "line": 139,
+              "target": "transaction.execute",
+              "sql": "SELECT reservation_id FROM public.aip_model_capacity_reservation\n                    WHERE org_id=%s AND project_id=%s AND agent_run_id=%s LIMIT 1"
+            },
+            {
+              "line": 149,
+              "target": "transaction.execute",
+              "sql": "SELECT handler_kind,revision,installation_id,generation,execution_epoch,\n                      cutover_group_id,cutover_group_revision\n                 FROM public.extension_operation_dispatch_binding\n                WHERE org_id=%s AND project_id=%s\n                  AND operation_id='ecommerce_growth_content_generate' FOR SHARE"
+            },
+            {
+              "line": 175,
+              "target": "LockedEcommerceGrowthHostPort._lock_and_revalidate",
+              "sql": null
+            },
+            {
+              "line": 184,
+              "target": "TransactionBoundConnectFactory",
+              "sql": null
+            },
+            {
+              "line": 223,
+              "target": "transaction.execute(\"SELECT p.token_unit_per_reservation FROM public.aip_model_capacity_pool_head h\\n                    JOIN public.aip_model_capacity_pool_revision p\\n                      ON p.org_id=h.org_id AND p.project_id=h.project_id\\n                     AND p.pool_id=h.pool_id AND p.revision=h.current_revision\\n                    WHERE h.org_id=%s AND h.project_id=%s AND p.lifecycle='active'\\n                      AND p.route_id=%s AND p.route_revision=%s AND p.route_hash=%s\\n                      AND p.model_id=%s AND p.model_revision=%s AND p.model_hash=%s\\n                      AND p.provider_id=%s AND p.provider_revision=%s AND p.provider_hash=%s\\n                    LIMIT 2 FOR SHARE OF p,h\", (*scope.key, *AipModelCapacityReservationGate._exact_resolution(resolution))).fetchall",
+              "sql": null
+            },
+            {
+              "line": 223,
+              "target": "transaction.execute",
+              "sql": "SELECT p.token_unit_per_reservation FROM public.aip_model_capacity_pool_head h\n                    JOIN public.aip_model_capacity_pool_revision p\n                      ON p.org_id=h.org_id AND p.project_id=h.project_id\n                     AND p.pool_id=h.pool_id AND p.revision=h.current_revision\n                    WHERE h.org_id=%s AND h.project_id=%s AND p.lifecycle='active'\n                      AND p.route_id=%s AND p.route_revision=%s AND p.route_hash=%s\n                      AND p.model_id=%s AND p.model_revision=%s AND p.model_hash=%s\n                      AND p.provider_id=%s AND p.provider_revision=%s AND p.provider_hash=%s\n                    LIMIT 2 FOR SHARE OF p,h"
+            },
+            {
+              "line": 233,
+              "target": "AipModelCapacityReservationGate._exact_resolution",
+              "sql": null
+            },
+            {
+              "line": 239,
+              "target": "transaction.execute(\"SELECT c.request_hash,c.token_units,c.status,c.expires_at\\n                    FROM public.aip_model_capacity_reservation c\\n                    JOIN public.aip_model_capacity_pool_revision p\\n                      ON p.org_id=c.org_id AND p.project_id=c.project_id\\n                     AND p.pool_id=c.pool_id AND p.revision=c.pool_revision\\n                    JOIN public.aip_model_capacity_pool_head h\\n                      ON h.org_id=p.org_id AND h.project_id=p.project_id\\n                     AND h.pool_id=p.pool_id AND h.current_revision=p.revision\\n                    WHERE c.org_id=%s AND c.project_id=%s AND c.reservation_id=%s\\n                      AND c.agent_run_id=%s AND p.lifecycle='active'\\n                      AND p.route_id=%s AND p.route_revision=%s AND p.route_hash=%s\\n                      AND p.model_id=%s AND p.model_revision=%s AND p.model_hash=%s\\n                      AND p.provider_id=%s AND p.provider_revision=%s AND p.provider_hash=%s\\n                    FOR SHARE OF c,p,h\", (*scope.key, intent['capacity_reservation_id'], intent['agent_run_id'], *AipModelCapacityReservationGate._exact_resolution(resolution))).fetchone",
+              "sql": null
+            },
+            {
+              "line": 239,
+              "target": "transaction.execute",
+              "sql": "SELECT c.request_hash,c.token_units,c.status,c.expires_at\n                    FROM public.aip_model_capacity_reservation c\n                    JOIN public.aip_model_capacity_pool_revision p\n                      ON p.org_id=c.org_id AND p.project_id=c.project_id\n                     AND p.pool_id=c.pool_id AND p.revision=c.pool_revision\n                    JOIN public.aip_model_capacity_pool_head h\n                      ON h.org_id=p.org_id AND h.project_id=p.project_id\n                     AND h.pool_id=p.pool_id AND h.current_revision=p.revision\n                    WHERE c.org_id=%s AND c.project_id=%s AND c.reservation_id=%s\n                      AND c.agent_run_id=%s AND p.lifecycle='active'\n                      AND p.route_id=%s AND p.route_revision=%s AND p.route_hash=%s\n                      AND p.model_id=%s AND p.model_revision=%s AND p.model_hash=%s\n                      AND p.provider_id=%s AND p.provider_revision=%s AND p.provider_hash=%s\n                    FOR SHARE OF c,p,h"
+            },
+            {
+              "line": 255,
+              "target": "AipModelCapacityReservationGate._exact_resolution",
+              "sql": null
+            }
+          ]
+        },
+        "ContentBudgetCommandOwner._build_command": {
+          "start_line": 360,
+          "end_line": 387,
+          "source_sha256": "52c8794ad89b698c7beba0f2df5f10ef5828697f0c5ad7040c0a407ed1460720",
+          "calls_by_source_line": [
+            {
+              "line": 364,
+              "target": "cls._prepare_sources",
+              "sql": null
+            },
+            {
+              "line": 384,
+              "target": "ContentGenerateHostService().revalidate",
+              "sql": null
+            }
+          ]
+        },
+        "ContentBudgetCommandOwner.claim": {
+          "start_line": 389,
+          "end_line": 427,
+          "source_sha256": "9ab421c8a86a2c81fc1e021e2beea2748faf9f1ff67ef78660b5276a3c41f846",
+          "calls_by_source_line": [
+            {
+              "line": 401,
+              "target": "self._build_command",
+              "sql": null
+            },
+            {
+              "line": 409,
+              "target": "conn.execute",
+              "sql": "SELECT public.ecommerce_growth_content_budget_command_claim_a0v_104(%s,%s) AS claimed"
+            },
+            {
+              "line": 415,
+              "target": "conn.commit",
+              "sql": null
+            },
+            {
+              "line": 417,
+              "target": "conn.execute",
+              "sql": "SELECT state,attempt,claim_token\n                     FROM public.ecommerce_growth_content_budget_command_intent\n                    WHERE org_id=%s AND project_id=%s AND review_key=%s"
+            }
+          ]
+        },
+        "ContentBudgetCommandOwner._capability_port": {
+          "start_line": 429,
+          "end_line": 436,
+          "source_sha256": "a29bf82ecbef5185529fa43c1748bc9c6de7d40cf7b4550ead254cb50b93c201",
+          "calls_by_source_line": []
+        },
+        "ContentBudgetCommandOwner.execute_claim": {
+          "start_line": 491,
+          "end_line": 529,
+          "source_sha256": "f4db95914a1661b34155b0d2b0b81416c16459f049fa0fd4a7bc1ba51c015255",
+          "calls_by_source_line": [
+            {
+              "line": 497,
+              "target": "self._build_command",
+              "sql": null
+            },
+            {
+              "line": 502,
+              "target": "self._capability_port().commit",
+              "sql": null
+            },
+            {
+              "line": 509,
+              "target": "conn.execute",
+              "sql": "SELECT public.ecommerce_growth_content_budget_command_ack_a0v_104(%s,%s,%s) AS accepted"
+            },
+            {
+              "line": 515,
+              "target": "conn.commit",
+              "sql": null
+            },
+            {
+              "line": 517,
+              "target": "conn.execute",
+              "sql": "SELECT state,attempt,claim_token,budget_reservation_id\n                     FROM public.ecommerce_growth_content_budget_command_intent\n                    WHERE org_id=%s AND project_id=%s AND review_key=%s"
+            }
+          ]
+        }
+      }
+    },
+    "services/aos-api/aos_api/ecommerce_growth_host_ports.py": {
+      "file_sha256": "1f32bc3fe0d95830d110d12ce179921eee688bc188baa9e694d23752ebd14a62",
+      "methods": {
+        "HostTransaction.execute": {
+          "start_line": 155,
+          "end_line": 158,
+          "source_sha256": "449f104a489cb1c44b7864721f1a2c7d41a17d66e1745d1002930d6bf1e6ec1e",
+          "calls_by_source_line": [
+            {
+              "line": 158,
+              "target": "self.__connection.execute",
+              "sql": null
+            }
+          ]
+        },
+        "LockedEcommerceGrowthHostPort.commit": {
+          "start_line": 272,
+          "end_line": 333,
+          "source_sha256": "e464ab90c495e7f0a9a90d4cf30ff4406a6a648bf0b03f890fbf165a6f37ba50",
+          "calls_by_source_line": [
+            {
+              "line": 290,
+              "target": "self._lock_and_revalidate",
+              "sql": null
+            },
+            {
+              "line": 292,
+              "target": "binding.revalidate",
+              "sql": null
+            },
+            {
+              "line": 302,
+              "target": "binding.execute",
+              "sql": null
+            },
+            {
+              "line": 315,
+              "target": "binding.verify_receipt",
+              "sql": null
+            },
+            {
+              "line": 328,
+              "target": "conn.commit",
+              "sql": null
+            }
+          ]
+        }
+      }
+    },
+    "services/aos-api/aos_api/aip_agent_run_service.py": {
+      "file_sha256": "a1bd917852b34b7b22f4f5ca0efc228e38bfd89c8f9f0cc6687e96d121c9969f",
+      "methods": {
+        "AipAgentRunService.__init__": {
+          "start_line": 51,
+          "end_line": 58,
+          "source_sha256": "21672fa66941accfb24469cf51e6579d0fefccd93fc905a0f36ae6e4443ea923",
+          "calls_by_source_line": [
+            {
+              "line": 57,
+              "target": "AipModelCapacityReservationGate",
+              "sql": null
+            }
+          ]
+        },
+        "AipAgentRunService.transition": {
+          "start_line": 159,
+          "end_line": 210,
+          "source_sha256": "a69837a22f0b78a06116642363872cb225fd807ffc4f8495fe8545f9c519404f",
+          "calls_by_source_line": [
+            {
+              "line": 173,
+              "target": "self._capacity_gate.reserve",
+              "sql": null
+            },
+            {
+              "line": 176,
+              "target": "conn.execute",
+              "sql": "UPDATE aip_agent_run SET status=%s,version=version+1,updated_at=%s\n                WHERE org_id=%s AND project_id=%s AND agent_run_id=%s AND version=%s AND status=%s RETURNING *"
+            },
+            {
+              "line": 184,
+              "target": "conn.commit",
+              "sql": null
+            }
+          ]
+        }
+      }
+    },
+    "services/aos-api/aos_api/aip_model_capacity_reservation.py": {
+      "file_sha256": "61a3ad63491b4b517c57ffb1a9058be9b44066d23f5beae75d5974df096d53f2",
+      "methods": {
+        "AipModelCapacityReservationGate.reserve": {
+          "start_line": 27,
+          "end_line": 42,
+          "source_sha256": "c24281f6ca36f02bef8026b0538fd5eed244b0ef3487d1496379bf2e11283ab1",
+          "calls_by_source_line": [
+            {
+              "line": 41,
+              "target": "conn.commit",
+              "sql": null
+            }
+          ]
+        },
+        "AipModelCapacityReservationGate.reserve_pool_in_transaction": {
+          "start_line": 44,
+          "end_line": 75,
+          "source_sha256": "ae8030e4cc880e7f4fbcd49df507a1ba1d7988efbf5a49dc463d6011ddb5e27d",
+          "calls_by_source_line": [
+            {
+              "line": 64,
+              "target": "conn.execute",
+              "sql": "SELECT current_user AS role,\n            current_setting('aos.org_id',true) AS org_id,\n            current_setting('aos.project_id',true) AS project_id,\n            current_setting('transaction_isolation') AS isolation,\n            current_setting('transaction_read_only') AS read_only"
+            }
+          ]
+        }
+      }
+    },
+    "services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py": {
+      "file_sha256": "86db8d7c55280c8f5ab6127f340090442b389c9a481d3e983939a1cb46584689",
+      "methods": {
+        "ContentGenerateHostService.execute": {
+          "start_line": 5926,
+          "end_line": 5982,
+          "source_sha256": "b916cd95f865165ac5dc1980b641931791f24c140bb700828ac0e41b4f2b5987",
+          "calls_by_source_line": [
+            {
+              "line": 5936,
+              "target": "self.verify_receipt",
+              "sql": null
+            },
+            {
+              "line": 5953,
+              "target": "store.reserve",
+              "sql": null
+            },
+            {
+              "line": 5959,
+              "target": "transaction.enqueue_content_command",
+              "sql": null
+            }
+          ]
+        },
+        "_ExplicitRuntimeAdapter._verify_and_journal": {
+          "start_line": 4029,
+          "end_line": 4074,
+          "source_sha256": "7ce15ce5062e37169fab72ac0792f9cdd118daab8a2cb2287af57dbdcfc465eb",
+          "receipt_write": "Original BoundEcommerceGrowthRuntimeStore.put must remain inside same caller"
+        }
+      }
+    },
+    "services/aos-api/alembic/versions/a0v_103_ecommerce_content_capacity_intent.py": {
+      "file_sha256": "fd3f721d4849feae91d3318b22b0f8469d26916aa0b4240bdc7292f4adb3ef37"
+    },
+    "services/aos-api/alembic/versions/a0v_104_ecommerce_content_budget_command_intent.py": {
+      "file_sha256": "97d3bc0bd57b729cbcff097eaa5f160d57ae56d3b1f9066db037ce0ca1dcfe49"
+    }
+  },
+  "decisions": [
+    "ContentCapacityOwner supplies TransactionBoundConnectFactory to AgentRun service; default capacity gate inherits that same factory. Do not claim this particular capacity gate always opens a separate physical connection.",
+    "Original ACK needs actual running AgentRun and live original reservation, but no separate committed start check. Original put requires capacity accepted row xmin equal current xid.",
+    "Candidate: same caller original running transition -> ACK -> put -> claim -> original build/revalidate -> exact trusted adapter execute/verify_and_journal -> original budget ACK -> joint finalize -> actual outer COMMIT.",
+    "LockedEcommerceGrowthHostPort.commit currently owns outer COMMIT; it cannot be called unchanged by a joint owner. Need exact trusted same-caller entry, without arbitrary bindings/callback/connection export.",
+    "Original ContentGenerateHostService uses old reserve API with a borrowed wrapper. Native joint budget method is a separate strict interface; same caller injection must reuse original algorithm without a second reserve."
+  ],
+  "limitations": [
+    "Static AST source line ordering is not executed ordering or legal full-chain evidence",
+    "No current Source/ModelRoute/Eval/readiness or natural business authority inferred",
+    "Whole locks/receipt/unknown/all-entry cutover remain part of full joint design; no product code changed"
+  ]
+}
