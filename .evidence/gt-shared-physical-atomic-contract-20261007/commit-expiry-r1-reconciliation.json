@@ -1,0 +1,39 @@
+{
+  "status": "R1_EVIDENCE_QUERY_WRONG_EVAL_TABLE_FAILURE_RECONCILED_NO_REPLAY",
+  "databases": [
+    {
+      "identity": {
+        "database": "aos_test_f1958bdc4d95_ti4_test",
+        "cluster": "7693564235776004128"
+      },
+      "product_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_budget_reservation": 0,
+        "aip_model_eval_budget_reservation": 0
+      },
+      "signed_source_count": 1,
+      "other_connections": 0
+    },
+    {
+      "identity": {
+        "database": "aos_test_ecb5d219aef7_ti4_test",
+        "cluster": "7693564235776004128"
+      },
+      "product_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_budget_reservation": 0,
+        "aip_model_eval_budget_reservation": 0
+      },
+      "signed_source_count": 0,
+      "other_connections": 0
+    }
+  ],
+  "probe_sha256": "df170b4740acac8c726d6c17b08645ac71dfb47b3aa4cc609d8687e3a65e1b89",
+  "log_sha256": "7d80135922ac7e210e9fe04b7ce0b7e86853ff6eba4ce99cc6c259c3ed2bc057",
+  "limitations": [
+    "No persisted r1 timing/commit result, failure stack does not substitute complete evidence",
+    "Fresh r2 fixture required, never repeat r1 transaction"
+  ]
+}

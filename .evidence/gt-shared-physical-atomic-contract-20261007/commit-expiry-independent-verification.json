@@ -1,0 +1,37 @@
+{
+  "status": "POST_EXPIRY_COMMIT_EXECUTION_AND_RETAINED_NONEXECUTING_STATE_VERIFIED",
+  "identity": {
+    "database": "aos_test_15623fde18e6_ti4_test",
+    "cluster": "7693564235776004128",
+    "readonly": "on"
+  },
+  "clocks_from_original_probe": true,
+  "current_read_only_verification": true,
+  "product_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "canary_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "source_signature_hash_valid": true,
+  "original_functions_cleaned": true,
+  "occupation_role_inert": true,
+  "file_sha256": {
+    "commit_expiry_probe.py": "fafc1c8f9d820a5bc002309612d001dc77f75278996ce0eb468e435aec6b436c",
+    "run_commit_expiry_probe_r2.py": "f650ed0dcbe0e1df685dc2be34bf5e7af04d617e7e339a9fcf7b85f51bfdcce2",
+    "commit-expiry-r2.log": "808c29228ca31146da9aa2e28d084cb740e1a7d116300bd70d95cfc389db2f38",
+    "commit-expiry-verification.json": "a928f29a694ea54d28efca092ba1f56f3eef95db0a79b93471bfea8e641b5881",
+    "verify_commit_expiry.py": "8b27f38dc64bec529e171e76dff3f2bd2595a5e6d2e8d8c19e9af20d0e72b33e"
+  },
+  "limitations": [
+    "Successful expired read-transaction COMMIT is not a business admission or send",
+    "Full joint finalize must attach an actual-COMMIT deadline gate; it remains unimplemented",
+    "Retained state cannot independently reproduce the past clocks or COMMIT"
+  ]
+}

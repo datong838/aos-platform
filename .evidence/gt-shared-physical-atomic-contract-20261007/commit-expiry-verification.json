@@ -1,0 +1,57 @@
+{
+  "status": "NONEXECUTING_SOURCE_READ_COMMIT_AFTER_JWT_EXPIRY_OBSERVED",
+  "identity": {
+    "database": "aos_test_15623fde18e6_ti4_test",
+    "login": "aos_provider_capacity_occupation",
+    "role": "aos_runtime",
+    "pid": 170752,
+    "xid": "222670",
+    "isolation": "serializable"
+  },
+  "cluster": "7693564235776004128",
+  "authentication_expiry": 1791387659,
+  "read_return": {
+    "clock": 1791387655.811026,
+    "xid": "222670",
+    "pid": 170752
+  },
+  "before_commit": {
+    "clock": 1791387659.119398,
+    "xid": "222670",
+    "pid": 170752
+  },
+  "after_commit": {
+    "clock": 1791387659.125095
+  },
+  "commit_calls": 1,
+  "commit_returned_idle": true,
+  "expired_fresh_read_rejected": true,
+  "fresh_authentication_restored": true,
+  "execution_allowed": false,
+  "source_ref": {
+    "assetType": "ProviderCapacitySourceRevision",
+    "assetId": "occupation-source-cc8e63f2c8b94f16ab8819a0532a4dc4",
+    "revision": 1,
+    "contentHash": "35d6d618616b13ce3ceee00903f2b9cb725565dd90d6aee56cfc6d1b20279b55"
+  },
+  "product_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_budget_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "head": "91ec67ead8c69443d50cff8d20c3a5a721fbba3e",
+  "probe_sha256": "fafc1c8f9d820a5bc002309612d001dc77f75278996ce0eb468e435aec6b436c",
+  "product_sha256": {
+    "services/aos-api/aos_api/aip_provider_capacity_occupation_source.py": "e6b46538babab94fb56a5aca005cee0aae6190d3e7958c57ba7c10b66846686d",
+    "services/aos-api/aos_api/aip_provider_capacity_source_consumer.py": "a22d722ca6f262af612162c14c033773c4fe8553f14698ce00e1fc8d9e65d281",
+    "services/aos-api/tests/aip/test_capacity_occupation_source_pg.py": "80794df030f61edb6dcac1765166e9b344c0c56f55b1ed46b34a3bff004aa398"
+  },
+  "limitations": [
+    "Nonexecuting Source fact read only, no business hold/budget/Intent or send",
+    "Original reader promises currentness at return; joint actual-COMMIT deadline gate remains required",
+    "Historical timing evidence belongs to this executed probe; retained state alone cannot prove it"
+  ],
+  "original_full_test_exitstatus": 0,
+  "original_full_test_cleanup_passed": true
+}

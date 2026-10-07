@@ -240,3 +240,21 @@ r1等待观察未成立且撤回原fixture提案导致teardown再验失败（1FA
 独立SER READ ONLY核新事件1/新提案3/epoch1、原Source引用提案仍approved2/epoch0、Source签名hash有效及Origin撤回；原Sourceprefix body精确匹配可信CAPACITY_ORIGINAL_SOURCE_FACTS_SQL、bump精确匹配a0v151 BUMP_BODY，原fact/signed harness全部清理、occupation role惰性零membership。AgentRun/普通预算/Eval预算/容量0/canary0，库aos_test_bf39f06c471f_ti4_test与bootstrap aos_test_4ef0e3d90cc0_ti4_test均保留。
 
 该测试的目标是原Source fact prefix与真实withdrawal writer；新独立提案不是已发布Source exact ref，不覆盖完整签名occupation Source准入、joint ledger、合法AgentRun或app lifespan。即时wait/SQLSTATE证据归本次执行，独立持久回读不冒充过去阻塞观察。父合同/Goal保持ACTIVE，业务gates不变。原Source proposal/epoch有序边现在有实际reader-first原API提交及writer-first过时snapshot终止证据；费用fence/物理guard/预算桶/Intent全入口共同序列和旧unknown切换仍需完整联合门。
+
+## 下一已登记原生边：原 occupation Source 返回后 JWT 到期与实际 COMMIT
+
+2026-10-07 23:36 CST，基线91ec67ea/AOS-001481，父Task同owner Lease至10-08 01:00，无重叠证据Scope。候选一为实际COMMIT期限，候选二为旧unknown历史映射；后者缺合法AgentRun/不可变reconcile资料，先执行候选一。复习231与产品总纲后，本波仅新增commit_expiry_probe.py、run_commit_expiry_probe.py、commit-expiry-r1.log、commit-expiry-verification.json、verify_commit_expiry.py、commit-expiry-independent-verification.json并更新本方案/合同。原Source/Profile产品文件不修改。
+
+复用fresh完整原distinct测试，在原实际SCRAM/SERIAL/runtime consumer完成正向及权限负门后、原epoch竞争前，增加有限probe：原https_signer签发短期JWT，原consume_capacity_source_for_occupation成功并核exact Source/execution_allowed=false、同pid/xid与DB clock未过期；不写budget/hold/Intent。以DB clock轮询最多8秒自然跨过JWT期限，不修改时钟/过期字段/Source/批准；记录原事务在过期后的实际COMMIT结果。若成功，只证明现有非执行事实读取没有自动挂载提交期限门，不称产品已发送或已准入错误。新事务同过期命令必须被原客户端拒绝，fresh JWT正向恢复，再原完整epoch/Owner/Origin负门及全部cleanup继续。任何失败保留库/log，未知提交结果只读对账，不重试提交。
+
+独立SER READ ONLY回读exactcluster/new retained DB、signedSource hash/signature/禁止执行、product/canary0、原harness和occupation入口清理/角色归还；过去DB clock和COMMIT结果只由执行probe证明，不以持久状态倒推。代码/runner/log/hash精确绑定。原生deferred joint finalize仍待实现；该反例不修改原只读consumer契约。无前端改动，浏览器不适用；正式迁移、服务、业务自然首链仍未获本证据通过。
+
+r1完整测试1FAIL/7warnings40.45s，证据计数误写不存在的aip_model_eval_budget_hold，真实表为aip_model_eval_budget_reservation。失败发生在自然expiry/COMMIT/过期fresh拒绝/fresh恢复之后，但r1没有落盘这些即时值，不能将栈到达当完整PASS。冻结r1脚本与0600原log，独立只读最新两fixture库证明无其他连接/业务记录0，保留全部库及签名历史。修正仅父Scope证据查询表名；r2使用新随机完整fixture，绝不重试r1提交；原epoch/Owner负门须本次真实继续通过。
+
+## 原生提交期限边检查点
+
+r2完整原distinct测试1PASS/7warnings52.25s，原SCRAM/SERIAL/runtime caller同pid/xid成功读取exact signed nonexecuting Source，DB clock读返回时未过期，自然跨过原https_signer JWT exp后只执行一次实际COMMIT并返回IDLE。新事务同expired命令被原客户端拒绝，fresh JWT原读取恢复；随后原epoch/Owner/Origin竞争和全部fixture清理通过。主库aos_test_15623fde18e6_ti4_test保留；无budget/hold/Intent/AgentRun写入，无发出动作。
+
+独立SER READ ONLY核exactcluster/Source签名hash/禁止执行、可信原facts prefix正文一致、registry epoch2/Origin撤回、原harness及occupation临时入口清理、角色NOLOGIN零membership、四类业务计数0及dev-org canary0。即时clock/COMMIT来自本次probe，独立持久回读不能倒推过去时序。原consumer契约仅返回当前非执行资料，不把该成功只读提交描述为已发送或产品业务缺陷；joint finalize实际COMMIT期限门为已证实不能依赖原consumer自动提供的缺口。r1错误日志和所有库保留；不对r1重试COMMIT。
+
+下一已登记安全候选：在本父证据Scope完成actual-COMMIT gate可行性调查，先核原ordinary/Eval/Intent写入接口与原事务结束位置，再明确deferred row-trigger适用条件（必须随hold/Intent数据写入才能触发，纯read不能假定注册），列出所有入口与Lease文件清单；完整原生joint实现仍须同时解决统一锁序/旧unknown切换/合法业务来源，不能只做一个deferred helper便宣布冻结。第二候选仍为合法历史旧unknown映射，从原创建/Receipt/reconcile入口调查，不从现有synthetic记录伪造合法history。父Task不交付关闭，Goal保持active，业务gates不变。
