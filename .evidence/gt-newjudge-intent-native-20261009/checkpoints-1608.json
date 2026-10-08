@@ -1,0 +1,22 @@
+{
+  "gt-atomic-model-admission-20261008": {
+    "status": "PASS",
+    "step": "Source-newJudge-pending-Intent-native-green-actual-input-joint-finalizer-pending"
+  },
+  "gt-model-typed-proof-20261008": {
+    "status": "PASS",
+    "step": "Source-newJudge-pending-Intent-native-green-actual-input-joint-finalizer-pending"
+  },
+  "gt-judge-call-authority-20261008": {
+    "status": "PASS",
+    "step": "Source-newJudge-pending-Intent-native-green-actual-input-joint-finalizer-pending"
+  },
+  "gt-judge-budget-parent-20261008": {
+    "status": "PASS",
+    "step": "Source-newJudge-pending-Intent-native-green-actual-input-joint-finalizer-pending"
+  },
+  "gt-shared-budget-fence-order-20261008": {
+    "status": "PASS",
+    "step": "Source-newJudge-pending-Intent-native-green-actual-input-joint-finalizer-pending"
+  }
+}

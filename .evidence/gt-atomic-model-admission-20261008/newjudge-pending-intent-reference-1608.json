@@ -1,0 +1,347 @@
+{
+  "authority_revision": "AOS-001608",
+  "head": "dad8f2576a7d314d16fcc4307f06acf09e19d3d1",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-native-reference-1607.json",
+      "sha256": "a44b52c6461b3d124d7b7f7498a2a9fbf36a4dc26bfe2002c27c48665fcfc08f"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/run_native_r1.py",
+      "sha256": "961d5051431dbdb7c738d94e892a4a00d1a035daa8f09aa26f9ec9e3723a3244"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/r2-newjudge-source-proof-1607.json",
+      "sha256": "171f3cd436d5c91349b71b4d53bc34129749c3582382ae2889c1d3d17ab3f446"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/log-safety.json",
+      "sha256": "5ed1f4ceef4c6d615dc6e16708972c6ef6db29652d6c9d76b17d8642793ce123"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/native-r1-result.json",
+      "sha256": "75fe90be5d87da3c49ac7eeee6f21fc127e1d30262f111289c2e2060eab7f960"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/run_default_judge_r1.py",
+      "sha256": "3db52aea353652d203b1da5f2386d2cb6535d0ec9382ed4640b12eceee4f8731"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/default-judge-r2-attempt.json",
+      "sha256": "a534d41bf7a7681737c993c326b766c38289f7c039683678eb18016476f9f1e5"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/r2-newjudge-pending-intent-native-1607.json",
+      "sha256": "e990f5a2092a0419db4196c5644ecb7c45c9e0efcfb927ad5b200ff98f97255c"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/static.json",
+      "sha256": "d715a9644d72f34e48321bde1f963eb38686e7dd16812edca2c909c06810ea76"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/delivery.json",
+      "sha256": "2ea3d8e3d9733313eaa45a5ce4893bcee458d84e8bd1d1d12fdcca94be077270"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/stage-files.json",
+      "sha256": "e94700cf8b4bc4ec931d0fec0e5914a67eba709d583285b90ddc0f608a6a6e12"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/native-r2-attempt.json",
+      "sha256": "a534d41bf7a7681737c993c326b766c38289f7c039683678eb18016476f9f1e5"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/task.json",
+      "sha256": "7d2d3bca9e2df1ad491d8b08a170035f7bb0a85afae050467d57653e6f59e778"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/default-judge-r1.log",
+      "sha256": "97d5bd0e203da62f8c6b710c6ebc1bfe98684e9cb4179b91c0502df48e47e073"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/sync_checkpoint.py",
+      "sha256": "1c7a68f2144f63e150ed54075fe867bfdeaf50dc75def1927a315890b453cf26"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/default-judge-r2-result.json",
+      "sha256": "b69f72075327e5f764883294b3f5d8801a3b6e2f9dabcf68d6ed83a7ab953c03"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/default-judge-r2.log",
+      "sha256": "c015e548ea47d0d28dbadec6f84445f2ef7933809c23bb411808e4672861b7cd"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/native-r3-attempt.json",
+      "sha256": "a534d41bf7a7681737c993c326b766c38289f7c039683678eb18016476f9f1e5"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/native-r1.log",
+      "sha256": "448ed660aa5eb50a0ca1a96417d6e2427002fa3f20335615848ca0a46abbae8b"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/adjacent.log",
+      "sha256": "aeb865aa96787d54ed79411939b277ef281c636bbd5a41babe5a9c34b2b31614"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/static-final.json",
+      "sha256": "3360c0f8c2f9c5fe04c81239e93d5db1cf42feceda0f76874d610b0d2f23e7ca"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/native-r2-result.json",
+      "sha256": "ae1044b43dc1f8428c01e23280eb768c1b5096e6a92a65ddce18c0d7f0be377e"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/native-r2.log",
+      "sha256": "415e0462d4a483443caf7f9cec5a6176ba0fca01aad6cc0824d871fdba80e7a4"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/native-r3.log",
+      "sha256": "dbb5a3a0d31316a1ccd41a7f2f3d82591ceb0251e2cc7671b64e06641b0b7f51"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/native-r1-attempt.json",
+      "sha256": "a534d41bf7a7681737c993c326b766c38289f7c039683678eb18016476f9f1e5"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/verify_native_r3.py",
+      "sha256": "ad5f4040b41b1e4a5d71fa30f6b8d714de5a74b917ebe86e4ed9c4eec8da86da"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/native-r3-result.json",
+      "sha256": "d6aa5c27c8faabc46dbbace799aa08b978e7ce0d228126c76536905deb1ac8d9"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/run_native_r3.py",
+      "sha256": "979b37dd3dd649d19cc02d2f42c50d92d376a4ef7e8fbe18eaccae7f80f18947"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/review.md",
+      "sha256": "78fe897ed0fb9ce6f54f11321d302efaaaf1e08179aba61e8abe12ef412ab032"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/run_native_r2.py",
+      "sha256": "2d15577c9a830871b8054f77f58d69dd5830ccd3baff7da81615bc69a9cbfaee"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/run_default_judge_r2.py",
+      "sha256": "3a89f5e653b66148b775a837622ffc1f4338b7b8f03a97cefa28e50d8cd80fc7"
+    },
+    {
+      "path": ".evidence/gt-newjudge-intent-native-20261009/native-r3-independent.json",
+      "sha256": "b463ecc113a70b3ba4e49eca900fba33d6a1ec0fb714a01fe665f2832bb895a2"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/newjudge-intent-implementation-plan-1607.md",
+      "sha256": "4b7fd78caa7382e449fc82baf2cbb28f187d63aa6e241c96876f2bae5c0cc3e7"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/newjudge-pending-intent-native-1607.json",
+      "sha256": "3553847c2da0f5c09065cf030d1980952db4165a72db74e206c843cf864bd3f1"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/newjudge-source-proof-1607.json",
+      "sha256": "bdd9bd56e8796ccc01dba1bad4b025faec9f0874825ac143d0ac2bf1d0688867"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r1-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r1-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r1-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r1-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r1-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-budget-fact.json",
+      "sha256": "b123a8654de3fa0fee3474996655943a28ad03aefd00e03801a137b80a5807ed"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-case-binding.json",
+      "sha256": "4f9968b8e60e01a8eb5598087de00684095c6670bb6308c42e50bdb4757c196e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-guard-race.json",
+      "sha256": "b03cee93120dedd39d812eef15364b90b7c423f61f5ec3d84faeb837c3d5b085"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-input-binding.json",
+      "sha256": "1c5a5e69d0c528e5494b7858943741c57580eda3d9937c4ba58d9467af890701"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-input.json",
+      "sha256": "a305a4932b809de0658940a8429ba76e1f28c7a67152ffb68a23959d28bb30c5"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-intent-existing-row-negative.json",
+      "sha256": "0e93545b9d561a16e8668b843d6fc1853218ad2199222b48645ad0b85cb3d06b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-intent.json",
+      "sha256": "aee2a5e7428ae26602ec3e695cce0d866fac8efdd6ecb15a832b5d2dc76b6330"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-parent-debit.json",
+      "sha256": "2f172ed6b9dd7357576d240cf6930208babe16bc3fa46b5afff811403fa805a5"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-preparation.json",
+      "sha256": "83efd9e6373642227725197272cac721b6e86a0304604f4abb0383bc21320e55"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-whole-source-plan-input.json",
+      "sha256": "9aa4e289817630c0f1f2b7c7eb40ac029ec416eb57d158251ab52f29b59da55d"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r2-whole-source-plan-verification.json",
+      "sha256": "69eb68fde0ed14dd571371717b4d84e65ecb73c07fdf5640b739e260c621af86"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-budget-fact.json",
+      "sha256": "6819161c5a3e092e40cefa55a370a63b6ff0ffa7e46af89d19304ee78df63fbd"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-case-binding.json",
+      "sha256": "dd8b06d878e67ac236371a5c1f591f0342b03c218f453b376a7fb3e52e7fe79a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-guard-race.json",
+      "sha256": "516f8c15c09778f80b207d69ee343001ea1b1d04d97f0647b42ae11c1b305364"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-input-binding.json",
+      "sha256": "cfb2500fdde227afbe9b04f84511cb23a7c23907ff9b1c9c00bc629e6e883744"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-input.json",
+      "sha256": "9f31dd05f0e80f7a48185b2eddc6a791ba7a0ca6aa41dcf348a6839d09f83646"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-intent-existing-row-negative.json",
+      "sha256": "78418447004e82f99deb79562a0c3dd9da6ae3490ad0c6f276a484ad671ead19"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-intent.json",
+      "sha256": "7649ece56d2eaea5d480335abd5f1e049f823b8f68e76875ef14db6a4c2a9f99"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-parent-debit.json",
+      "sha256": "5e4b3b800c4eebfbc1226c8135d8023b978904aa0880fd7884345911bfaaa69b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-preparation.json",
+      "sha256": "86a8bb1dfbb919eb85a48ae852b367f1f9634ff3445bc737b7c483fb3675119b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-whole-source-plan-input.json",
+      "sha256": "c6a23c0ce74d3e17a73616775c1cad91bce1c24d22edf20c9c042dcf71149ca3"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-judge-intent-r3-whole-source-plan-verification.json",
+      "sha256": "a9c187a614d062d81cd10dcb079ddd6c8c668828f7744cc183356dcd4fcfbe3e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source_newjudge_native_trial_1606.py",
+      "sha256": "a36a806c627dba4afcdc758cae7e40d5da68e5c397a96ba019765886b4a608df"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/default-judge-r2-whole-plan-proof.json",
+      "sha256": "7b3532a6947a03b786eaae4e30f8bc2854d7d7ce4562c1bb4ed24d4270958dad"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/judge-intent-r1-whole-plan-proof.json",
+      "sha256": "aead1f356d59b175f83dad5b0940351ee705ca7c322e51657dad2f8b0548525e"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/judge-intent-r2-whole-plan-proof.json",
+      "sha256": "84f42c92792c34016f9e3f2e20709825e7e7ce45f192da6013813967b8d3864d"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/judge-intent-r3-whole-plan-proof.json",
+      "sha256": "ad9f4b479f96b9bbf31566a66049f95e1f520a3cb1648acea9ceddc823352c7d"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py",
+      "sha256": "e6af3593a9408198691b5fc68c3db8ac9cdb17d1ea937151cd5582c0734701c1"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py",
+      "sha256": "4910b9df433cf5849bfb0bae866a3e67a99b4ba92f2cabc1666d232b96c1d1f5"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py",
+      "sha256": "27e65edfba2ee880cb09338c8886cab1e29f545ba4fa3d75bc652bacd5c0a949"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/joint-finalizer-plan-1608.md",
+      "sha256": "6148920cad757009472937b321298d320fef104d61efb1a0d5525512b6d1aa3a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/probe_joint_finalizer_gap_1608.py",
+      "sha256": "3339780da0c582021990bef1be761a34b9c0c688c856b1f9887cdeedfa96846d"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/joint-finalizer-gap-1608.json",
+      "sha256": "e5afd5820ada39b99967982b564dc20f9d46b1833ec26998b773c72a10c83b0a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/joint-finalizer-gap-red-1608.log",
+      "sha256": "94a57fdba6cdeaabeb15be64ac48ba5f43cec86b8eafe0a39cddca17ae31613b"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "authority_revision": "AOS-001608",
+  "module_sha256": "e6af3593a9408198691b5fc68c3db8ac9cdb17d1ea937151cd5582c0734701c1",
+  "joint_finalizer_compiler_present": false,
+  "commit_rejection_implemented": true,
+  "actual_caller_transaction": "2767",
+  "actual_transaction_status": "aborted",
+  "prepared_rows": {
+    "account_guard": 1,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0,
+    "prepared_judge_intent": 0
+  },
+  "current_prepared_judge_state": "awaiting_target_result",
+  "source_purpose": "model-judge-call",
+  "no_database_write": true,
+  "execution_allowed": false,
+  "natural_firstchain": false
+}

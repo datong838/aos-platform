@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-atomic-model-admission-20261008/probe_joint_finalizer_gap_1608.py", line 13, in <module>
+    assert result['joint_finalizer_compiler_present'],'joint finalizer producer absent; actual native caller COMMIT rejected and xid aborted, pending Intent cannot grant execution'
+           ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: joint finalizer producer absent; actual native caller COMMIT rejected and xid aborted, pending Intent cannot grant execution

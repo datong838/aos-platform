@@ -1,0 +1,11 @@
+# 原四腿共同终结与真实结果晚绑定：后继调查计划
+
+基线 dad8f257 / AOS-001608，五父Task ACTIVE。已有原Source/实际SCRAM/同事务原Target和newJudge共享风险准备、原case及等待Target结果Intent；实际COMMIT23514拒绝已验证。未满足真实费用、四腿终结、跨窗口占用竞争或实际Judge输入。
+
+已登记候选①全共同终结/占用累计竞争（atomic原Scope）；②Target原真实结果生成newJudge实际输入（atomic与Model/Judge原依赖，旧reader仅旧manifest）。本轮先只读调查①并RED确认原compiler仍无共同finalizer；候选②依赖①形成实际可提交Target执行与可信结果receipt。不得复制原Judge input算法或把原Target输入当Judge实际输出。
+
+拟后继具体目录：services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py、aip_physical_capacity_occupation.py、aip_physical_capacity_occupation_contracts.py；原测试 tests/aip/test_physical_capacity_occupation_pg.py，隔离原生窗口必须另开合法Task/Lease，旧窗口已Delivery。先冻结完整协议再修改代码：四腿原Source/两Model治理/currentActor/checker/Rule/独立批准/父hold/费用三桶、物理accountguard、Target与Judge不同purpose独立parent、唯一case/attempt/Intent，同xid/pid与临界截止重验；不得独立释放某一腿或以waitingInput授Judge transport。
+
+现所有prepared表以deferred无条件拒绝COMMIT；先定义可信private finalized receipt和一次事务所有风险占用，明确Target可执行与Judge等待后续输入两类权限，实际签名结果receipt晚绑定及未知结果只读对账。None价格费用不可用0替代；原测试Target1minor只是批准风险测试额，不是实价推导。竞争必须至少两真实caller同物理账户、不同purpose、可观测数据库阻塞/事务结果和独立回读，无凭API200或Lease授执行。
+
+本轮不安装finalizer、不修改原deferred拒绝门、不迁移正式库/启transport/Host/Provider。业务最终门仍为自然首链真实证据。
