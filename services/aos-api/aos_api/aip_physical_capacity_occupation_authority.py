@@ -970,3 +970,112 @@ def occupation_judge_intent_statements():
         f'REVOKE ALL ON FUNCTION {JUDGE_INTENT} FROM PUBLIC',
         f'GRANT EXECUTE ON FUNCTION {JUDGE_INTENT} TO aos_runtime',
     )
+
+
+PLAN_FACT = 'public.capacity_occupation_plan_risk_fact(bytea,jsonb,uuid,text,text,uuid,text,text)'
+PLAN_RISK = 'public.prepare_capacity_plan_risk(bytea,jsonb,uuid,text,text,uuid,text,text,uuid)'
+
+
+def occupation_plan_risk_statements():
+    """Complete original case coverage, separate from actual inflight admission.
+
+    Explicit isolated artifact; reserves no extra money and grants no call.
+    The two original held parent caps remain the only risk authority here.
+    """
+    table = SCHEMA + '.prepared_plan_risk'
+    args = 'p_raw bytea,p_source jsonb,p_target uuid,p_tr text,p_th text,p_judge uuid,p_jr text,p_jh text'
+    bridge = f'''CREATE FUNCTION {PLAN_FACT.split('(')[0]}({args}) RETURNS jsonb
+      LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $planfact$
+      DECLARE t jsonb; j jsonb; cases jsonb; suite_hash text;
+      BEGIN
+        t:=public.capacity_occupation_eval_fact(p_raw,p_source,p_target,p_tr,p_th);
+        j:=public.capacity_occupation_judge_fact(p_raw,p_source,p_judge,p_jr,p_jh);
+        IF p_target IS NOT DISTINCT FROM p_judge OR p_tr IS NOT DISTINCT FROM p_jr
+          OR j->'application'->'targetApplication'->>'requestId' IS DISTINCT FROM p_tr
+          OR j->'application'->'targetApplication'->>'requestHash' IS DISTINCT FROM p_th
+          OR j->'application'->'targetApplication'->'request' IS DISTINCT FROM t->'application'
+          OR t->>'physicalAccountId' IS DISTINCT FROM j->>'physicalAccountId'
+          OR t->>'xid' IS DISTINCT FROM j->>'xid' OR t->>'pid' IS DISTINCT FROM j->>'pid' THEN
+          RAISE EXCEPTION 'CAPACITY_PLAN_ORIGINAL_PAIR_REQUIRED' USING ERRCODE='23514'; END IF;
+        SELECT v.cases,v.content_hash INTO cases,suite_hash FROM public.aip_eval_suite_revision v
+          WHERE v.org_id='org-org' AND v.project_id='dev-project'
+            AND v.suite_id=t->'application'->'suiteRef'->>'assetId'
+            AND v.revision=(t->'application'->'suiteRef'->>'revision')::integer FOR SHARE;
+        IF cases IS NULL OR jsonb_typeof(cases)<>'array' OR jsonb_array_length(cases)=0
+          OR suite_hash IS DISTINCT FROM t->'application'->'suiteRef'->>'contentHash'
+          OR cases IS DISTINCT FROM j->'application'->'cases'
+          OR (SELECT count(DISTINCT item->>'caseId') FROM jsonb_array_elements(cases) item)
+              <>jsonb_array_length(cases) THEN
+          RAISE EXCEPTION 'CAPACITY_PLAN_COMPLETE_CASES_REQUIRED' USING ERRCODE='23514'; END IF;
+        RETURN jsonb_build_object('target',t-'checkedAt','judge',j-'checkedAt','cases',cases);
+      END $planfact$'''
+    producer = f'''CREATE FUNCTION {PLAN_RISK.split('(')[0]}({args},p_plan uuid) RETURNS jsonb
+      LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $planrisk$
+      DECLARE facts jsonb; after_facts jsonb; item jsonb; legs jsonb:='[]'; body jsonb; digest text;
+        prior {table}%ROWTYPE;
+      BEGIN
+        IF p_plan IS NULL THEN RAISE EXCEPTION 'CAPACITY_PLAN_ID_REQUIRED' USING ERRCODE='23514'; END IF;
+        facts:=public.capacity_occupation_plan_risk_fact(p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh);
+        FOR item IN SELECT value FROM jsonb_array_elements(facts->'cases') LOOP
+          legs:=legs||jsonb_build_array(
+            jsonb_build_object('case',item,'purpose','target','parentHold',p_target,
+              'state','awaiting_input_binding'),
+            jsonb_build_object('case',item,'purpose','judge','parentHold',p_judge,
+              'state','awaiting_target_result'));
+        END LOOP;
+        body:=jsonb_build_object('schemaVersion','aos.capacity-complete-plan-risk/v1','planId',p_plan,
+          'tenant',jsonb_build_object('orgId','org-org','projectId','dev-project'),
+          'originalFacts',facts,'legs',legs,'riskMode','original_shared_parent_caps',
+          'parentRisks',jsonb_build_array(
+            jsonb_build_object('purpose','target','parentHold',p_target,'parentHash',facts->'target'->>'contentHash',
+              'upperBoundMinor',facts->'target'->'upperBoundMinor','currency',facts->'target'->'currency'),
+            jsonb_build_object('purpose','judge','parentHold',p_judge,'parentHash',facts->'judge'->>'contentHash',
+              'upperBoundMinor',facts->'judge'->'upperBoundMinor','currency',facts->'judge'->'currency')),
+          'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),
+          'state','prepared_risk_only','executionAllowed',false);
+        digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
+        SELECT * INTO prior FROM {table} WHERE org_id='org-org' AND project_id='dev-project'
+          AND target_request=p_tr AND judge_request=p_jr;
+        IF FOUND AND prior.plan_id IS DISTINCT FROM p_plan THEN
+          RAISE EXCEPTION 'CAPACITY_PLAN_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+        SELECT * INTO prior FROM {table} WHERE plan_id=p_plan;
+        IF FOUND THEN
+          IF prior.immutable IS DISTINCT FROM body OR prior.content_hash IS DISTINCT FROM digest
+            OR prior.origin_xid IS DISTINCT FROM pg_current_xact_id() OR prior.origin_pid IS DISTINCT FROM pg_backend_pid() THEN
+            RAISE EXCEPTION 'CAPACITY_PLAN_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+        ELSE
+          INSERT INTO {table}(org_id,project_id,plan_id,target_request,judge_request,immutable,content_hash,origin_xid,origin_pid)
+            VALUES('org-org','dev-project',p_plan,p_tr,p_jr,body,digest,pg_current_xact_id(),pg_backend_pid());
+        END IF;
+        after_facts:=public.capacity_occupation_plan_risk_fact(p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh);
+        IF after_facts IS DISTINCT FROM facts THEN
+          RAISE EXCEPTION 'CAPACITY_PLAN_CURRENT_AFTER_WAITS_REQUIRED' USING ERRCODE='23514'; END IF;
+        RETURN jsonb_build_object('planId',p_plan,'immutable',body,'contentHash',digest,'executionAllowed',false,
+          'physicalPreparedRequests',(SELECT count(*) FROM {SCHEMA}.prepared_parent_debit
+            WHERE physical_account_id=(facts->'target'->>'physicalAccountId')::uuid),
+          'physicalPreparedTokens',(SELECT coalesce(sum(token_units),0) FROM {SCHEMA}.prepared_parent_debit
+            WHERE physical_account_id=(facts->'target'->>'physicalAccountId')::uuid));
+      END $planrisk$'''
+    return (
+        f'''CREATE TABLE {table}(org_id text NOT NULL,project_id text NOT NULL,plan_id uuid PRIMARY KEY,
+          target_request text NOT NULL,judge_request text NOT NULL,immutable jsonb NOT NULL,content_hash text NOT NULL,
+          origin_xid xid8 NOT NULL,origin_pid integer NOT NULL,UNIQUE(org_id,project_id,target_request,judge_request))''',
+        f'ALTER TABLE {table} OWNER TO {OWNER}',
+        f'ALTER TABLE {table} ENABLE ROW LEVEL SECURITY',
+        f'ALTER TABLE {table} FORCE ROW LEVEL SECURITY',
+        f'''CREATE POLICY exact_scope ON {table} TO {OWNER}
+          USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+          WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))''',
+        f'REVOKE ALL ON {table} FROM PUBLIC,aos_runtime',
+        f'CREATE TRIGGER immutable_plan_risk BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION {SCHEMA}.immutable_prepared_intent()',
+        f'CREATE TRIGGER no_truncate_plan_risk BEFORE TRUNCATE ON {table} FOR EACH STATEMENT EXECUTE FUNCTION {SCHEMA}.immutable_prepared_intent()',
+        f'CREATE CONSTRAINT TRIGGER no_unfinalized_plan_risk AFTER INSERT ON {table} DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION {SCHEMA}.reject_unfinalized_parent_debit()',
+        bridge,
+        f'ALTER FUNCTION {PLAN_FACT} OWNER TO aos_runtime',
+        f'REVOKE ALL ON FUNCTION {PLAN_FACT} FROM PUBLIC',
+        f'GRANT EXECUTE ON FUNCTION {PLAN_FACT} TO {OWNER}',
+        producer,
+        f'ALTER FUNCTION {PLAN_RISK} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {PLAN_RISK} FROM PUBLIC',
+        f'GRANT EXECUTE ON FUNCTION {PLAN_RISK} TO aos_runtime',
+    )

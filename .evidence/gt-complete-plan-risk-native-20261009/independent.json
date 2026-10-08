@@ -1,0 +1,42 @@
+{
+  "database": "aos_test_d8047e76fe2d_ti4_test",
+  "xid": "3889",
+  "status": "aborted",
+  "counts": {
+    "account_guard": 1,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0,
+    "prepared_plan_risk": 0
+  },
+  "private_catalog": {
+    "relrowsecurity": true,
+    "relforcerowsecurity": true,
+    "owner": "aos_physical_capacity_occupation_owner",
+    "runtime_privilege": false
+  },
+  "triggers": [
+    {
+      "tgname": "immutable_plan_risk",
+      "tgdeferrable": false,
+      "tginitdeferred": false
+    },
+    {
+      "tgname": "no_truncate_plan_risk",
+      "tgdeferrable": false,
+      "tginitdeferred": false
+    },
+    {
+      "tgname": "no_unfinalized_plan_risk",
+      "tgdeferrable": true,
+      "tginitdeferred": true
+    }
+  ],
+  "source_retained": 1,
+  "role": {
+    "login": false,
+    "memberships": 0
+  },
+  "old_resources_unchanged": true,
+  "actual_inflight_added": 0,
+  "full_goal": false
+}

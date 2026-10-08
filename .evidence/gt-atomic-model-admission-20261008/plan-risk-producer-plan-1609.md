@@ -1,0 +1,9 @@
+# 完整四腿计划风险 producer 最小实施
+
+AOS-001609 / c7154693。当前atomic文件权限及五父Task仍有效至22:12。新增仅 services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py 末尾独立compiler occupation_plan_risk_statements，不改原prepared debit或容量限制。隔离安装另Task独立窗口。
+
+服务端读取原Target+newJudge当前事实与原Suite完整case集合，严格匹配newJudge targetApplication的requestId/hash/request；所有case同时产生Target待输入绑定与Judge等待结果依赖。一个计划完整绑定两个原parent fullcap（实际10各一个父风险hold）及原价格/批准/hash，不接受client每腿金额、不均分、不把None当0。不把完整计划风险表接入旧physical count。这里只登记原父风险义务和完整case覆盖，不能视为每腿已完成预算分配、实际费用、唯一Intent/actual occupation或finalized权限。
+
+私表同NOLOGIN无membership Owner/FORCE RLS/无runtimeDML，immutable拒绝修改删除truncate，独立deferred原CAPACITY_PARENT_FINALIZE_REQUIRED。原runtime桥仅Owner EXEC、固定search_path、原Source/SCRAM/事实核验先于私有查写；桥使用runtime原SELECT权限读完整Suite，不给Owner普通表权限。公开窄producer仅runtime EXEC，原两parent不同，完整申请/Source/provider/physical/currentActor及caseSet绑定；精确UUID replay仅同xid/pid完整body相同，不同UUID同originalpair拒绝。写后再读所有current facts，canonical immutable排除易变checkedAt但保留原批准/actor/Rule/application/hash/xid/pid。Plan记录所有腿且runtime physical账本仍0。
+
+原生RED先hasattr缺producer；GREEN在原Source/真实SCRAM/原两approved父及完整2case调用producer，4腿完整/2parentcap10/无clientamount、精确重放/换UUID/错parent/hash/private读取拒绝/early约束及实际COMMIT23514；原fullReader相邻负门不跳过。原默认Source测试继续执行证明旧容量门保持，独立回读prepared plan和所有prepared ledger0、Source1/角色关闭/旧服务不变。进一步实际风险分配、全局锁图、真实joint finalizer及Target结果晚绑定仍沿总协议完成，不替换原长期目标。
