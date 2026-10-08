@@ -1,0 +1,7 @@
+# 实际占用与共同终结：下一安全步骤
+
+AOS-001610 / a94fbe1c完整4leg风险准备GREEN、实际inflight0。新保留159数据库原Target/Judge价格exactref/hash只读回读，三种单价全部null，developmentCostAuthorization保留；不是零费用/current formal authority。证据original-price-readback-1610.json。原budget_cost_runtime.py:139强制upper_bound等于per_request_risk_minor，且父hold累计计原申请数；尚须核每个实际Model调用对该批准申请/共享cap的责任，不能以计划风险记录完整就承诺任意call预算。
+
+后继①原费用授权语义及实际占用账本/完整finalizer（已有atomic scope），先冻结每call占用与原parent/plan/精确Input-Intent关系，跨purpose physical guard累计及unknown持有、全锁图/实际COMMIT最后期限；②原Target真实结果→newJudge输入（Model/Judge原scope，依实际执行准入和可信executor结果）。第一项可继续安全本机隔离代码/RED，正式库/Host/Provider不变，不以局部正式权限缺口阻断此项。
+
+旧prepared_parent_debit直接四腿路径仍正确容量拒绝，不改它伪装4legGREEN。新full risk表只是必要准备；完整退出仍需合法joint receipt/actual occupancy/knownCOMMIT/一次transport/Usage/费用最终来源/完整report/自然首链，所有原case与unknown义务不得省略。

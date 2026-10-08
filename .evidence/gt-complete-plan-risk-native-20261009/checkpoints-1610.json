@@ -1,0 +1,42 @@
+{
+  "gt-atomic-model-admission-20261008": {
+    "task_id": "gt-atomic-model-admission-20261008",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "authority_revision": "AOS-001610",
+    "step": "complete-four-leg-risk-native-green-actual-occupation-joint-finalizer-pending",
+    "fingerprint": "0de6dfbc72b36f1b15faa2054082723409408982515f6210c49fa942d7854312",
+    "task_base_revision": "AOS-001537"
+  },
+  "gt-model-typed-proof-20261008": {
+    "task_id": "gt-model-typed-proof-20261008",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "authority_revision": "AOS-001610",
+    "step": "complete-four-leg-risk-native-green-actual-occupation-joint-finalizer-pending",
+    "fingerprint": "cc4c5b911caa44469b1f4d3ab711f04047b45f2ac2d8483011509649176927a6",
+    "task_base_revision": "AOS-001513"
+  },
+  "gt-judge-call-authority-20261008": {
+    "task_id": "gt-judge-call-authority-20261008",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "authority_revision": "AOS-001610",
+    "step": "complete-four-leg-risk-native-green-actual-occupation-joint-finalizer-pending",
+    "fingerprint": "9527f1aa3621ccaeb1b63066d2d27c8907f262aabe3314a609824ba1dbbb865b",
+    "task_base_revision": "AOS-001578"
+  },
+  "gt-judge-budget-parent-20261008": {
+    "task_id": "gt-judge-budget-parent-20261008",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "authority_revision": "AOS-001610",
+    "step": "complete-four-leg-risk-native-green-actual-occupation-joint-finalizer-pending",
+    "fingerprint": "7a0b75fed9a8f17a646598a3818600c4c97d0b9fce3d8731022323ae908d7042",
+    "task_base_revision": "AOS-001588"
+  },
+  "gt-shared-budget-fence-order-20261008": {
+    "task_id": "gt-shared-budget-fence-order-20261008",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "authority_revision": "AOS-001610",
+    "step": "complete-four-leg-risk-native-green-actual-occupation-joint-finalizer-pending",
+    "fingerprint": "713492bf0fbecbb7a94c36ff0d6e7798d470495f5e18f2547340fa07d7262e66",
+    "task_base_revision": "AOS-001588"
+  }
+}

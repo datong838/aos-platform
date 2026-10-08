@@ -1,0 +1,23 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "gt-complete-plan-risk-native-20261009",
+  "base_revision": "AOS-001609",
+  "completed_revision": "AOS-001609",
+  "result": "COMPLETE_ORIGINAL_PLAN_RISK_PREPARATION_NATIVE_GREEN_FULL_FINALIZER_PENDING",
+  "changed_files": [
+    "aos-platform/.evidence/gt-complete-plan-risk-native-20261009"
+  ],
+  "commits": [
+    "a94fbe1c668751ed603149427c464a007169638c"
+  ],
+  "verification": [
+    "actual originalSource/SCRAM/Target+newJudge complete2case4leg plan risk producer native1PASS70.44s; actualphysical0requests0tokens;247adjacentPASS0.67s",
+    "actual COMMIT23514 denied,independent aborted/planRisk0/debit0/Intent0/Source1/NOLOGIN/privateFORCERLS/oldresources unchanged"
+  ],
+  "risks": [
+    "original parent risk preparation only; per-leg price and allocation not derived",
+    "full actual occupation/unknown retention/lock graph/trusted jointCOMMIT/real Target output/newJudge input/natural firstchain pending"
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-09T06:08:05+08:00"
+}

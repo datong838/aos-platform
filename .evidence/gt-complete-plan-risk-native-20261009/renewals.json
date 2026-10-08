@@ -1,0 +1,134 @@
+{
+  "gt-atomic-model-admission-20261008": {
+    "base_revision": "AOS-001537",
+    "created_at": "2026-10-08T11:49:04+08:00",
+    "excluded_scope": [
+      "formal-DB-Host-worker-Provider",
+      "existing-Source-budget-Host-AgentRun-files",
+      "published-and-unpublished-migrations"
+    ],
+    "expected_outputs": [
+      "Complete original-caller Source/physical-account/ordinary-or-Eval-budget/parent-allocation/unique-Intent/finalize native actual COMMIT rollback replay and competition; no primitive-only Delivery",
+      "Model-specific Owner from actual original application, independent approval and typed proof; maintain original runtime denial until full formally authorized natural evidence"
+    ],
+    "lease_expires_at": "2026-10-08T23:12:18.820894+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation.py",
+      "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py",
+      "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_owner.py",
+      "aos-platform/services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py",
+      "aos-platform/services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py",
+      "aos-platform/.evidence/gt-atomic-model-admission-20261008"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-atomic-model-admission-20261008"
+  },
+  "gt-model-typed-proof-20261008": {
+    "base_revision": "AOS-001513",
+    "created_at": "2026-10-08T07:38:32+08:00",
+    "excluded_scope": [
+      "formal-DB-Host-worker-Provider",
+      "old-Skill-v1-and-old-migrations",
+      "existing-joint-and-budget-Leases",
+      "Route-execution-and-natural-first-chain"
+    ],
+    "expected_outputs": [
+      "Integrated strict Model manifest/private NOLOGIN Owner/signed case-obligation-report proof reader with actual isolated native COMMIT rollback replay and negative matrices; no DTO/table-only Delivery",
+      "Original approved source/joint bridge dependencies fail closed; preserve Skill signatures and Model/Route runtime denial until separate full natural positive authority"
+    ],
+    "lease_expires_at": "2026-10-08T23:12:18.820894+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_authority.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_reader.py",
+      "aos-platform/services/aos-api/alembic/versions/a0v_158_model_eval_execution_authority.py",
+      "aos-platform/services/aos-api/tests/aip/test_model_eval_execution_contracts.py",
+      "aos-platform/services/aos-api/tests/aip/test_model_eval_execution_authority_pg.py",
+      "aos-platform/.evidence/gt-model-typed-proof-20261008"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-model-typed-proof-20261008"
+  },
+  "gt-judge-call-authority-20261008": {
+    "base_revision": "AOS-001578",
+    "created_at": "2026-10-08T21:52:33+08:00",
+    "excluded_scope": [
+      "formal-DB-Host-worker-Provider",
+      "old-ModelEval-quality-eval-permission",
+      "unreleased-budget-risk-and-joint-Leases",
+      "all-existing-migrations"
+    ],
+    "expected_outputs": [
+      "Full Judge-call original request producer and independent checker/current dependency native matrix; no DTO-only Delivery",
+      "Same-caller original budget/Target committed bytes/expected authority/Intent/joint origin wiring before real dispatch; preserve existing Model and Skill behavior"
+    ],
+    "lease_expires_at": "2026-10-08T23:12:18.820894+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_action_policy.py",
+      "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+      "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_authorization.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_request_store.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_action.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_authority.py",
+      "aos-platform/services/aos-api/tests/aip/test_model_eval_judge_action_boundary.py",
+      "aos-platform/services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py",
+      "aos-platform/.evidence/gt-judge-call-authority-20261008"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-judge-call-authority-20261008"
+  },
+  "gt-judge-budget-parent-20261008": {
+    "base_revision": "AOS-001588",
+    "created_at": "2026-10-09T00:40:40+08:00",
+    "excluded_scope": [
+      "formal-DB-Host-worker-Provider",
+      "old-quality-eval-permission",
+      "natural-first-chain"
+    ],
+    "expected_outputs": [
+      "Original current new-purpose approval and native same-caller dedicated Judge budget parent/three original shared buckets/cost risk/replay/rollback/actual COMMIT; no helper-only Delivery",
+      "Full coupled Source/physical/parent allocation/Intent/finalizer remains required before dispatch; exact fee totals include new hold; original semantics retained"
+    ],
+    "lease_expires_at": "2026-10-08T23:12:18.820894+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_budget.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py",
+      "aos-platform/services/aos-api/alembic/versions/a0v_159_model_judge_budget.py",
+      "aos-platform/services/aos-api/aos_api/aip_budget_reservation_store.py",
+      "aos-platform/.evidence/gt-judge-budget-parent-20261008"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-judge-budget-parent-20261008"
+  },
+  "gt-shared-budget-fence-order-20261008": {
+    "base_revision": "AOS-001588",
+    "created_at": "2026-10-09T00:54:04+08:00",
+    "excluded_scope": [
+      "formal-DB-Host-worker-Provider",
+      "old-quality-eval-permission-expansion"
+    ],
+    "expected_outputs": [
+      "Original fee fence before all shared buckets for existing Model holds, retaining original after-wait revalidation/approval/amount/hash/replay; actual native wait/free-bucket and ordinary/Eval/Judge adjacent verification",
+      "Part of full purpose-budget joint closure, no standalone authority or first-chain claim"
+    ],
+    "lease_expires_at": "2026-10-08T23:12:18.820894+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_budget_reservation.py",
+      "aos-platform/.evidence/gt-shared-budget-fence-order-20261008"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-shared-budget-fence-order-20261008"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "database": "aos_test_d8047e76fe2d_ti4_test",
+  "cluster": "7694410316620488728",
+  "original_prices": {
+    "target": {
+      "ref": {
+        "assetId": "cost-price-81c9e809bd0e3e1ca5b18b1954d760f34887918139f18203fcf90083d34d0f4b",
+        "revision": 1,
+        "assetType": "ModelPriceSnapshotRevision",
+        "contentHash": "6a8710c595c4a5cbf6f26ceb022eb97ad8bd76040c4f86b62e8e1d49cb1b4297"
+      },
+      "payload": {
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "currency": "CNY",
+        "revision": 1,
+        "createdAt": "2026-10-08T22:05:43.120627Z",
+        "createdBy": "test-maker-aa2ad21a25554a2c99004de219c9232a",
+        "lifecycle": "active",
+        "tokenUnit": 1000,
+        "contentHash": "6a8710c595c4a5cbf6f26ceb022eb97ad8bd76040c4f86b62e8e1d49cb1b4297",
+        "effectiveFrom": "2026-10-08T22:04:43.061682Z",
+        "effectiveUntil": "2026-11-07T22:05:43.061682Z",
+        "inputTokenPrice": null,
+        "priceSnapshotId": "cost-price-81c9e809bd0e3e1ca5b18b1954d760f34887918139f18203fcf90083d34d0f4b",
+        "cachedTokenPrice": null,
+        "outputTokenPrice": null,
+        "developmentCostAuthorization": {
+          "tenant": {
+            "orgId": "org-org",
+            "projectId": "dev-project"
+          },
+          "provider": {
+            "assetId": "capacity-provider-d528924baf0e4895b76092b98b5288d4",
+            "revision": 1,
+            "assetType": "ProviderInstanceRevision",
+            "contentHash": "effcd59847bf6b948d81ec026f0d7d42ee92723232b4060a0adccb9323833fff"
+          },
+          "approvalRef": "budget-cost-decision-d4d747c58b404fb19c5d40d40302b43e",
+          "environment": "development",
+          "effectiveFrom": "2026-10-08T22:04:43.061682Z",
+          "effectiveUntil": "2026-11-07T22:05:43.061682Z",
+          "providerModelId": "candidate-model"
+        }
+      },
+      "same_original_hash": true
+    },
+    "judge": {
+      "ref": {
+        "assetId": "cost-price-faeae803b1d9ad7fb65eea5c178e7dd434300d621e5f7515c997810b00454d4f",
+        "revision": 1,
+        "assetType": "ModelPriceSnapshotRevision",
+        "contentHash": "106215d2c1feecac1a65d5184fc30e3c9ff6f0ec61f63e1ba386894b6f41e210"
+      },
+      "payload": {
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "currency": "CNY",
+        "revision": 1,
+        "createdAt": "2026-10-08T22:05:42.358745Z",
+        "createdBy": "test-maker-9419d929ab744210a304674454b81100",
+        "lifecycle": "active",
+        "tokenUnit": 1000,
+        "contentHash": "106215d2c1feecac1a65d5184fc30e3c9ff6f0ec61f63e1ba386894b6f41e210",
+        "effectiveFrom": "2026-10-08T22:04:42.280282Z",
+        "effectiveUntil": "2026-11-07T22:05:42.280282Z",
+        "inputTokenPrice": null,
+        "priceSnapshotId": "cost-price-faeae803b1d9ad7fb65eea5c178e7dd434300d621e5f7515c997810b00454d4f",
+        "cachedTokenPrice": null,
+        "outputTokenPrice": null,
+        "developmentCostAuthorization": {
+          "tenant": {
+            "orgId": "org-org",
+            "projectId": "dev-project"
+          },
+          "provider": {
+            "assetId": "capacity-provider-d528924baf0e4895b76092b98b5288d4",
+            "revision": 1,
+            "assetType": "ProviderInstanceRevision",
+            "contentHash": "effcd59847bf6b948d81ec026f0d7d42ee92723232b4060a0adccb9323833fff"
+          },
+          "approvalRef": "budget-cost-decision-c24cdd9676754b0080f733226567f142",
+          "environment": "development",
+          "effectiveFrom": "2026-10-08T22:04:42.280282Z",
+          "effectiveUntil": "2026-11-07T22:05:42.280282Z",
+          "providerModelId": "candidate-model"
+        }
+      },
+      "same_original_hash": true
+    }
+  },
+  "read_only": true,
+  "admission_allowed": false
+}
