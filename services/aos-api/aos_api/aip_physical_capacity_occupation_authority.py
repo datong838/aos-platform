@@ -1119,3 +1119,121 @@ def occupation_prepared_call_statements():
           DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
           EXECUTE FUNCTION {SCHEMA}.reject_unfinalized_parent_debit()''',
     )
+
+
+TARGET_CALL = 'public.prepare_capacity_target_call(bytea,jsonb,uuid,uuid,uuid)'
+
+
+def occupation_target_call_statements():
+    """Bind an original Target Intent to its complete plan; never admit a call.
+
+    Explicit isolated installation only. No fee allocation, counter change,
+    transport, state transition or legal COMMIT is introduced here.
+    """
+    table = SCHEMA + '.prepared_call_occupation'
+    producer = f'''CREATE FUNCTION {TARGET_CALL.split('(')[0]}(p_raw bytea,p_source jsonb,
+      p_plan uuid,p_intent uuid,p_call uuid) RETURNS jsonb
+      LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $targetcall$
+      DECLARE plan {SCHEMA}.prepared_plan_risk%ROWTYPE;
+        intent {SCHEMA}.prepared_execution_intent%ROWTYPE;
+        binding {SCHEMA}.case_input_binding%ROWTYPE;
+        debit {SCHEMA}.prepared_parent_debit%ROWTYPE;
+        prior {table}%ROWTYPE; facts jsonb; again jsonb; original jsonb;
+        body jsonb; digest text; case_value jsonb; n integer; physical uuid; tokens bigint;
+      BEGIN
+        IF p_plan IS NULL OR p_intent IS NULL OR p_call IS NULL
+          OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+          OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' THEN
+          RAISE EXCEPTION 'CAPACITY_TARGET_CALL_ID_SCOPE_REQUIRED' USING ERRCODE='23514'; END IF;
+        SELECT * INTO plan FROM {SCHEMA}.prepared_plan_risk
+          WHERE org_id='org-org' AND project_id='dev-project' AND plan_id=p_plan;
+        IF NOT FOUND OR plan.origin_xid IS DISTINCT FROM pg_current_xact_id()
+          OR plan.origin_pid IS DISTINCT FROM pg_backend_pid()
+          OR plan.immutable->>'callerLogin' IS DISTINCT FROM session_user
+          OR plan.immutable->>'state' IS DISTINCT FROM 'prepared_risk_only'
+          OR plan.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(
+            public.canonical_asset_registry_jsonb(plan.immutable),'UTF8')),'hex') THEN
+          RAISE EXCEPTION 'CAPACITY_TARGET_CALL_ORIGINAL_PLAN_REQUIRED' USING ERRCODE='23514'; END IF;
+        original:=plan.immutable->'originalFacts';
+        facts:=public.capacity_occupation_plan_risk_fact(p_raw,p_source,
+          (original->'target'->>'reservationId')::uuid,plan.target_request,
+          original->'target'->>'requestHash',(original->'judge'->>'reservationId')::uuid,
+          plan.judge_request,original->'judge'->>'requestHash');
+        IF facts IS DISTINCT FROM original THEN
+          RAISE EXCEPTION 'CAPACITY_TARGET_CALL_CURRENT_PLAN_REQUIRED' USING ERRCODE='23514'; END IF;
+        SELECT * INTO intent FROM {SCHEMA}.prepared_execution_intent
+          WHERE org_id=plan.org_id AND project_id=plan.project_id AND intent_id=p_intent;
+        IF NOT FOUND OR intent.origin_xid IS DISTINCT FROM pg_current_xact_id()
+          OR intent.origin_pid IS DISTINCT FROM pg_backend_pid()
+          OR intent.immutable->>'callerLogin' IS DISTINCT FROM session_user
+          OR intent.purpose IS DISTINCT FROM 'target' OR intent.state IS DISTINCT FROM 'prepared'
+          OR intent.request_id IS DISTINCT FROM plan.target_request
+          OR intent.immutable->>'requestHash' IS DISTINCT FROM facts->'target'->>'requestHash'
+          OR intent.immutable->'application' IS DISTINCT FROM facts->'target'->'application'
+          OR intent.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(
+            public.canonical_asset_registry_jsonb(intent.immutable),'UTF8')),'hex') THEN
+          RAISE EXCEPTION 'CAPACITY_TARGET_CALL_ORIGINAL_INTENT_REQUIRED' USING ERRCODE='23514'; END IF;
+        SELECT * INTO STRICT binding FROM {SCHEMA}.case_input_binding WHERE debit_id=intent.debit_id;
+        SELECT * INTO STRICT debit FROM {SCHEMA}.prepared_parent_debit WHERE debit_id=intent.debit_id;
+        IF binding.org_id IS DISTINCT FROM plan.org_id OR binding.project_id IS DISTINCT FROM plan.project_id
+          OR debit.org_id IS DISTINCT FROM plan.org_id OR debit.project_id IS DISTINCT FROM plan.project_id
+          OR binding.origin_xid IS DISTINCT FROM pg_current_xact_id() OR debit.origin_xid IS DISTINCT FROM pg_current_xact_id()
+          OR binding.origin_pid IS DISTINCT FROM pg_backend_pid() OR debit.origin_pid IS DISTINCT FROM pg_backend_pid()
+          OR binding.case_id IS DISTINCT FROM intent.case_id OR binding.purpose IS DISTINCT FROM 'target'
+          OR binding.parent_hold IS DISTINCT FROM (facts->'target'->>'reservationId')::uuid
+          OR debit.parent_hold IS DISTINCT FROM binding.parent_hold
+          OR intent.immutable->'caseBinding' IS DISTINCT FROM binding.immutable
+          OR intent.immutable->>'caseBindingHash' IS DISTINCT FROM binding.content_hash
+          OR intent.immutable->'debit' IS DISTINCT FROM debit.immutable
+          OR binding.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(binding.immutable),'UTF8')),'hex')
+          OR debit.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(debit.immutable),'UTF8')),'hex') THEN
+          RAISE EXCEPTION 'CAPACITY_TARGET_CALL_ORIGINAL_INPUT_REQUIRED' USING ERRCODE='23514'; END IF;
+        SELECT count(*),jsonb_agg(value)->0 INTO n,case_value FROM jsonb_array_elements(facts->'cases')
+          WHERE value->>'caseId'=intent.case_id;
+        physical:=(facts->'target'->>'physicalAccountId')::uuid;
+        tokens:=(facts->'target'->>'tokenUpperBound')::bigint;
+        IF n<>1 OR intent.immutable->>'inputHash' IS DISTINCT FROM case_value->'inputArtifact'->>'contentHash'
+          OR binding.immutable->>'inputHash' IS DISTINCT FROM intent.immutable->>'inputHash'
+          OR binding.immutable->'inputRef' IS DISTINCT FROM case_value->'inputArtifact'
+          OR debit.physical_account_id IS DISTINCT FROM physical OR debit.token_units IS DISTINCT FROM tokens
+          OR debit.immutable->'sourceRef' IS DISTINCT FROM p_source
+          OR debit.immutable->>'requestHash' IS DISTINCT FROM facts->'target'->>'requestHash'
+          OR debit.immutable->>'parentHash' IS DISTINCT FROM facts->'target'->>'contentHash' THEN
+          RAISE EXCEPTION 'CAPACITY_TARGET_CALL_EXACT_CASE_REQUIRED' USING ERRCODE='23514'; END IF;
+        body:=jsonb_build_object('schemaVersion','aos.capacity-target-call-preparation/v1',
+          'callId',p_call,'planId',p_plan,'planHash',plan.content_hash,'intentId',p_intent,
+          'intentHash',intent.content_hash,'caseBindingHash',binding.content_hash,
+          'tenant',jsonb_build_object('orgId',plan.org_id,'projectId',plan.project_id),
+          'caseId',intent.case_id,'purpose','target','parentHold',binding.parent_hold,
+          'physicalAccountId',physical,'tokenUpperBound',tokens,'inputHash',intent.immutable->>'inputHash',
+          'originalFacts',facts,'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,
+          'callerPid',pg_backend_pid(),'state','prepared_only','executionAllowed',false);
+        digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
+        SELECT * INTO prior FROM {table} WHERE intent_id=p_intent
+          OR (org_id=plan.org_id AND project_id=plan.project_id AND plan_id=p_plan AND purpose='target' AND case_id=intent.case_id);
+        IF FOUND AND prior.call_id IS DISTINCT FROM p_call THEN
+          RAISE EXCEPTION 'CAPACITY_TARGET_CALL_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+        SELECT * INTO prior FROM {table} WHERE call_id=p_call;
+        IF FOUND THEN
+          IF prior.immutable IS DISTINCT FROM body OR prior.content_hash IS DISTINCT FROM digest
+            OR prior.origin_xid IS DISTINCT FROM pg_current_xact_id() OR prior.origin_pid IS DISTINCT FROM pg_backend_pid() THEN
+            RAISE EXCEPTION 'CAPACITY_TARGET_CALL_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+        ELSE
+          INSERT INTO {table}(org_id,project_id,call_id,plan_id,case_id,purpose,parent_hold,intent_id,
+            physical_account_id,token_upper_bound,input_hash,state,immutable,content_hash,origin_xid,origin_pid)
+            VALUES(plan.org_id,plan.project_id,p_call,p_plan,intent.case_id,'target',binding.parent_hold,p_intent,
+              physical,tokens,intent.immutable->>'inputHash','prepared_only',body,digest,pg_current_xact_id(),pg_backend_pid());
+        END IF;
+        again:=public.capacity_occupation_plan_risk_fact(p_raw,p_source,
+          (original->'target'->>'reservationId')::uuid,plan.target_request,original->'target'->>'requestHash',
+          (original->'judge'->>'reservationId')::uuid,plan.judge_request,original->'judge'->>'requestHash');
+        IF again IS DISTINCT FROM facts THEN
+          RAISE EXCEPTION 'CAPACITY_TARGET_CALL_CURRENT_AFTER_WAITS_REQUIRED' USING ERRCODE='23514'; END IF;
+        RETURN jsonb_build_object('callId',p_call,'immutable',body,'contentHash',digest,'executionAllowed',false);
+      END $targetcall$'''
+    return (
+        producer,
+        f'ALTER FUNCTION {TARGET_CALL} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {TARGET_CALL} FROM PUBLIC',
+        f'GRANT EXECUTE ON FUNCTION {TARGET_CALL} TO aos_runtime',
+    )

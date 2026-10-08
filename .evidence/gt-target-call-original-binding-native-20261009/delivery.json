@@ -1,0 +1,19 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "gt-target-call-original-binding-native-20261009",
+  "base_revision": "AOS-001612",
+  "completed_revision": "AOS-001612",
+  "result": "ORIGINAL_TARGET_INPUT_INTENT_SAME_TRANSACTION_GREEN_TRUSTED_CALL_PRODUCER_RED",
+  "changed_files": [
+    "aos-platform/.evidence/gt-target-call-original-binding-native-20261009"
+  ],
+  "commits": [],
+  "verification": [
+    "native1PASS78.43s; original input drift refused; missingproducer42883; independent aborted/prepared0/Source1/NOLOGIN/31 old resources unchanged"
+  ],
+  "risks": [
+    "readiness only, no call producer/admission/transport"
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-09T07:19:00+08:00"
+}

@@ -1,0 +1,20 @@
+{
+  "intent_id": "5a9a4cab-fcbb-4f03-ba66-3ded9153c58f",
+  "caller_xid": "5296",
+  "caller_pid": 8742,
+  "probes": [
+    {
+      "operation": "update",
+      "sqlstate": "42501",
+      "content_hash": "sha256:98086c590a63b7f10b0022dc4e9558097813ed6156512a4a0274a42d62659272",
+      "existing_row_verified": true
+    },
+    {
+      "operation": "delete",
+      "sqlstate": "42501",
+      "content_hash": "sha256:98086c590a63b7f10b0022dc4e9558097813ed6156512a4a0274a42d62659272",
+      "existing_row_verified": true
+    }
+  ],
+  "execution_allowed": false
+}

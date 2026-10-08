@@ -1,0 +1,9 @@
+# Target可信调用准备审查
+
+前置原Target输入/Intent与完整plan同xid实测78.43秒PASS，缺producer实际42883 RED。实现仅追加显式SQL安装artifact到原authority文件，原模块字节前缀保持一致，不改默认migration、原正常功能或正式数据。参数只有Source packet/ref、plan/Intent/call UUID。
+
+新producer验证原plan/current two-parent facts、Intent/Input-binding/debit同tenant/xid/pid/original application与canonical内容hash，再从当前事实派生case/input/physical/token；写后再读current facts。prepared_only继续deferred实际COMMIT拒绝，没有额度/费用/占用计数写入，没有执行权限。Judge仍awaiting_target_result。现有任意1minor是原准备producer试验值，不能解释为价格或真实预算分配。
+
+首实现原生R1正向与重放完成后，畸形签名字节被原签名reader按22023拒绝，但验证脚本错误期待23514，51.80秒FAIL保留；独立连接四准备表0、原Source1，修正仅验证脚本精确错误类，产品不改。R2原生1PASS101.68秒，独立xid aborted、四准备表0、原Source1、原身份NOLOGIN/member0、31旧资源完整保留。相邻318纯测试0.75秒PASS；不是原生DB证据。
+
+覆盖范围仅Target可信准备producer：同call replay；不同call/空call/未知plan/未知Intent/畸形Source/canary拒绝，原运行身份无private DML，实际callerCOMMIT拒绝与独立零残留。没有宣称竞争/所有等待漂移矩阵已经完成。后续原事实等待后current性更多专门负门、实际账本/风险分配/unknown生命周期/最后COMMIT期限/一次transport与Usage仍待实现；全Goal和五parent Task不收口。浏览器不适用于无运行接入的显式SQLartifact，不作页面验收结论。

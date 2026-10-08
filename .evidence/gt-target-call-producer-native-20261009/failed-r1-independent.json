@@ -1,0 +1,12 @@
+{
+  "database": "aos_test_448279bddf13_ti4_test",
+  "prepared_counts": {
+    "prepared_call_occupation": 0,
+    "prepared_plan_risk": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "source_count": 1,
+  "diagnosis": "original malformed signed packet correctly rejects22023; negative harness wrongly expected23514; product positive/replay passed before diagnostic failure",
+  "external_effect": false
+}

@@ -1,0 +1,24 @@
+{
+  "database": "aos_test_88cc4629bf66_ti4_test",
+  "cluster": "7694410316620488728",
+  "xid": "5853",
+  "xact_state": "aborted",
+  "prepared_counts": {
+    "prepared_call_occupation": 0,
+    "prepared_plan_risk": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "source_count": 1,
+  "roles": [
+    {
+      "rolname": "aos_provider_capacity_occupation",
+      "rolcanlogin": false
+    }
+  ],
+  "members": 0,
+  "producer_removed_after_trial": true,
+  "old_resource_count": 31,
+  "old_resources_unchanged": true,
+  "formal_execution_allowed": false
+}

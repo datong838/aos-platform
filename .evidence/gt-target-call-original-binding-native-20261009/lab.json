@@ -1,0 +1,12 @@
+{
+  "name": "aos-source-newjudge-native-20261009",
+  "context": "colima-aos-extension",
+  "container_id": "bcd0d503f9903e9f8eabea7d2d9d00ac7fb33df47e4e2318300eb8c34eeac4c7",
+  "image": "sha256:1a726528ec4ec3dfebf104148d3c6ae329828bfd228c305bb3e0e1e582ee074b",
+  "cluster": "7694410316620488728",
+  "port": 5436,
+  "volume": "aos-source-newjudge-native-20261009-data",
+  "passfile": "/Users/ddt/.aos-lab-secrets/aos-source-newjudge-native-20261009/pgpass",
+  "memory_bytes": 805306368,
+  "old_resources_unchanged": true
+}

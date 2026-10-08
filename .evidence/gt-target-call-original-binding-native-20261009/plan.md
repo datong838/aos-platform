@@ -1,0 +1,5 @@
+# 原Target同事务输入绑定调查与RED
+
+沿已登记trusted-target-call-next-plan-1612，候选一为完整plan/原Target Input-Intent可信调用准备；候选二为Target真实结果到Judge输入，依赖实际准入与executor。选择候选一。只改本目录原生验证脚本，不改产品代码、正式库或保留库。
+
+复用原Source/SCRAM/独立批准/两case四腿完整计划，在同xid/pid用原Suite序列化字节和原pack原输入字节调用已有Intent producer，核对原case/inputHash/request/parent与完整计划。唯一新call接口尚缺时，以SAVEPOINT捕获UndefinedFunction记录RED；完整原Source回归与实际COMMIT拒绝继续验证。Source和保留资源独立只读复核。不得把准备态、RED或测试PASS当实际准入。

@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-08T23:16:24.934327+00:00",
+  "database": "aos_test_66e465631080_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_physical_capacity_occupation_pg.py::test_source_model_preparation_original_native_caller[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "original same-transaction Input Intent readiness and missing trusted call producer RED; no transport"
+}
