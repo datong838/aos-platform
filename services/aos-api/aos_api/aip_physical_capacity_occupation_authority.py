@@ -1098,7 +1098,7 @@ def occupation_prepared_call_statements():
           parent_hold uuid NOT NULL,intent_id uuid NOT NULL,
           physical_account_id uuid NOT NULL REFERENCES {SCHEMA}.account_guard(physical_account_id),
           token_upper_bound bigint NOT NULL CHECK(token_upper_bound>0),
-          input_hash text NOT NULL CHECK(input_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          input_hash text NOT NULL CHECK(input_hash ~ '^[0-9a-f]{{64}}$'),
           state text NOT NULL CHECK(state='prepared_only'),
           immutable jsonb NOT NULL CHECK(jsonb_typeof(immutable)='object'),
           content_hash text NOT NULL CHECK(content_hash ~ '^sha256:[0-9a-f]{{64}}$'),

@@ -1,0 +1,7 @@
+# 可信Target调用准备：下一已登记入口
+
+原atomic authority范围，只拟新增显式nonexecuting producer，默认migration不接入。参数只原Source packet/ref、当前完整planId、原prepared Target IntentId、唯一callId；拒绝任何客户端费用/配额/input hash/物理容量或finalized布尔。先回读同tenant/samecaller/xid/pid的原完整plan与Target Intent、case input binding/debit，再原必要fact读取当前Source及原批准application/两parent，服务端派生case/purpose/parent/physical/token/input/bodyhash并复核同xid原件。不得用prefix修正掩盖错误input bytes，也不以原任意p_minor准备量授执行。
+
+仅准备态表无实际inflight准入，不能同旧prepared debit重复计为实际占用。prepared_only无新call合法COMMIT，旧拒绝门保留；精确同call replay与同Intent/case不同call拒绝。同plan hash/currentSource/原Input-Intent漂移/跨租户/未知结果/earlyconstraint/实际COMMIT负门需原生。Judge awaiting_target_result没有已验证Input，不能借Target inputHash填充；候选②原Target结果→Judge输入继续依可信executor和已知实际提交。
+
+后续实际占用账本、跨purpose未知持有、原风险上界服务端来源、全入口锁图/实际最后COMMIT期限、一次transport/Usage/最终费用仍按完整协议单独实现；不把本producer准备态GREEN替代最终Goal。

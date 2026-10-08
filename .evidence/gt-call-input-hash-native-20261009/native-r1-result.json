@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-08T22:57:13.013178+00:00",
+  "database": "aos_test_d41e27f56293_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_physical_capacity_occupation_pg.py::test_source_model_preparation_original_native_caller[shared]",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "actual original four-leg budget preparation vs inflight capacity split RED; no transport"
+}

@@ -1,0 +1,10 @@
+{
+  "database": "aos_test_d41e27f56293_ti4_test",
+  "test_probe_failed_before_CHECK": "runtime schema access denied as intended",
+  "prepared_counts": {
+    "prepared_call_occupation": 0,
+    "prepared_plan_risk": 0,
+    "prepared_parent_debit": 0
+  },
+  "role_closed": true
+}

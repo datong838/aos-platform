@@ -1,0 +1,5 @@
+{
+  "original_input_hash": "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de",
+  "installed_constraint": "(input_hash ~ '^sha256:[0-9a-f]{64}$'::text)",
+  "accepted": false
+}

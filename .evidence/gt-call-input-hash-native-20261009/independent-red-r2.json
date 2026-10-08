@@ -1,0 +1,10 @@
+{
+  "database": "aos_test_e834db53fa0d_ti4_test",
+  "counts": {
+    "prepared_call_occupation": 0,
+    "prepared_plan_risk": 0,
+    "prepared_parent_debit": 0
+  },
+  "source_retained": 1,
+  "role_closed": true
+}

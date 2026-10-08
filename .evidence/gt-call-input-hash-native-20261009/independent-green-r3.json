@@ -1,0 +1,18 @@
+{
+  "database": "aos_test_858917ed5f33_ti4_test",
+  "xid": "5012",
+  "state": "aborted",
+  "counts": {
+    "prepared_call_occupation": 0,
+    "prepared_plan_risk": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "role": {
+    "login": false,
+    "members": 0
+  },
+  "source_retained": 1,
+  "old_containers_unchanged": 31,
+  "execution_allowed": false
+}
