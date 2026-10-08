@@ -1,0 +1,75 @@
+{
+  "functions": [
+    {
+      "signature": "public.capacity_occupation_eval_fact(bytea,jsonb,uuid,text,text)",
+      "owner": "aos_runtime",
+      "body_sha256": "000ffcb5d54d55a40f1dbf170205696be32c99106088f46a1d0559793b889a82",
+      "acl": [
+        {
+          "grantee": "aos_runtime",
+          "privilege_type": "EXECUTE",
+          "is_grantable": false
+        },
+        {
+          "grantee": "aos_physical_capacity_occupation_owner",
+          "privilege_type": "EXECUTE",
+          "is_grantable": false
+        }
+      ]
+    },
+    {
+      "signature": "public.read_capacity_occupation_eval_fact(bytea,jsonb,uuid,text,text)",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "body_sha256": "ec7ac36116e9843b87a8031afed748c032f709a44c919acc8fa7c5b35a302ab3",
+      "acl": [
+        {
+          "grantee": "aos_physical_capacity_occupation_owner",
+          "privilege_type": "EXECUTE",
+          "is_grantable": false
+        },
+        {
+          "grantee": "aos_runtime",
+          "privilege_type": "EXECUTE",
+          "is_grantable": false
+        }
+      ]
+    },
+    {
+      "signature": "public.capacity_occupation_source_fact(bytea,jsonb)",
+      "owner": "aos_runtime",
+      "body_sha256": "ad2b82a372ad7263ddfefe41771caf8567abac7a4e8ea4a49ca3993be7004b80",
+      "acl": [
+        {
+          "grantee": "aos_runtime",
+          "privilege_type": "EXECUTE",
+          "is_grantable": false
+        },
+        {
+          "grantee": "aos_physical_capacity_occupation_owner",
+          "privilege_type": "EXECUTE",
+          "is_grantable": false
+        }
+      ]
+    },
+    {
+      "signature": "public.prepare_capacity_occupation_account_guard(bytea,jsonb)",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "body_sha256": "bb49a54d652e8d0646e32d2053f03ecd7d5f7f0cc774d84d4a6ee4825427a5c0",
+      "acl": [
+        {
+          "grantee": "aos_physical_capacity_occupation_owner",
+          "privilege_type": "EXECUTE",
+          "is_grantable": false
+        },
+        {
+          "grantee": "aos_runtime",
+          "privilege_type": "EXECUTE",
+          "is_grantable": false
+        }
+      ]
+    }
+  ],
+  "source_original_unchanged": true,
+  "owner_memberships": 0,
+  "old_table_read": false
+}

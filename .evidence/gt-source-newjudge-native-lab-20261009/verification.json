@@ -1,0 +1,13 @@
+{
+  "native_joint": "1 passed/108.31s",
+  "default_judge": "1 passed/64.46s",
+  "adjacent": "293 passed/0.77s",
+  "file_hashes": {
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": "3ab4785527d1f345102f2ab7a44df7bf9516df50285662b97ac09c5f80fc74bd",
+    "services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py": "3976fcf68e8edb91e6755434549e77b4d502a5ba751c80f2ff4d898f01ff5f09",
+    ".evidence/gt-atomic-model-admission-20261008/source_newjudge_native_trial_1606.py": "0f7f7aa4bf403b3fd45b1792f47fc34fc76680ed67b1ee2a8336f9385e4bf8ce"
+  },
+  "AST": "PASS",
+  "formal_firstchain": false,
+  "whole_four_leg_commit": false
+}

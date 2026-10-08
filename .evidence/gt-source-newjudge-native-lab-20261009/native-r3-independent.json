@@ -1,0 +1,21 @@
+{
+  "database": "aos_test_4a449d82b60d_ti4_test",
+  "cluster": "7694410316620488728",
+  "migration": "a0v_159",
+  "source_count": 1,
+  "occupation_role": {
+    "login": false,
+    "memberships": 0
+  },
+  "private_prepared_rows": {
+    "account_guard": 1,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "account_guard_reason": "original actual guard-race writer COMMIT retained; newJudge caller aborted",
+  "newjudge_transaction": "1443",
+  "transaction_status": "aborted",
+  "trial_function_removed": true,
+  "old_containers_unchanged": true,
+  "business_firstchain": false
+}

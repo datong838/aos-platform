@@ -1,0 +1,506 @@
+{
+  "available_kib": 2237816,
+  "old_containers": [
+    {
+      "Id": "0ce36684e3e7ecbdc4a8f0976d19c0593c15ebe90eee4c42c1a963d2cd3b8d06",
+      "name": "/current157-current-step-157-0317c057b330",
+      "started": "2026-10-07T18:10:01.369955577Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "735994df7e4e1f895b317bfc3fbd86742dd922d1f16be598e942ca79d2878a39",
+      "name": "/current157-current-step-156-c19293d41af2",
+      "started": "2026-10-07T18:09:58.829341826Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "3aed9d3cf0caf5dc045b900506ebb19f7ac035837e3071b509c37263ad3e2518",
+      "name": "/current157-current-step-155-1aa1d4d7e74a",
+      "started": "2026-10-07T18:09:56.18764395Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "7993507d80a30c053a4266ba7343dc9744cdf7217cb045a6d50dbe0e54fa82f1",
+      "name": "/current157-current-step-154-0c92627b9b35",
+      "started": "2026-10-07T18:09:53.595211282Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "57439e119c4166c9b0c84c7b6fbd6e1a08b5334f3e95716deb1505138b2896e4",
+      "name": "/current157-current-step-153-1c86327aa08e",
+      "started": "2026-10-07T18:09:51.01079278Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "a33653ac2b0464887762416ab37ba64f01faff8bcc31e7b864e91765fc00d2f3",
+      "name": "/current157-current-step-152-ceece5659099",
+      "started": "2026-10-07T18:09:48.339024446Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "9e04be6778d8a1a326b4ad382b4fb9700531fc1d8ed95a654d25efa21672e121",
+      "name": "/current157-step-157-fb31486f3a32",
+      "started": "2026-10-07T18:09:36.211470982Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/86a1b3429b14e36275ea523719ace4caba5ae204dfcdd827aa4ec9b244ec81f8/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "a56788541ca41657e19378690b687b089d779259581403b13781113a1097fc4b",
+      "name": "/current157-step-156-89b7fb9e2a83",
+      "started": "2026-10-07T18:09:34.150285272Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/86a1b3429b14e36275ea523719ace4caba5ae204dfcdd827aa4ec9b244ec81f8/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "069f0718170e6a1a3a5d9ce20a8e2cd0efc33632af9b233e0d4bf62d075d4738",
+      "name": "/current157-step-155-9a860582aeee",
+      "started": "2026-10-07T18:09:31.969535355Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/86a1b3429b14e36275ea523719ace4caba5ae204dfcdd827aa4ec9b244ec81f8/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "7cd37b395d5174d52325bfc429fd6397126ad08b725c60dd43b0483eae2f4fd2",
+      "name": "/current157-step-154-a277a77d9e63",
+      "started": "2026-10-07T18:09:29.862836312Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/86a1b3429b14e36275ea523719ace4caba5ae204dfcdd827aa4ec9b244ec81f8/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "b47693ccb6256d734adb5b92b38db319680e995824d5e65405a24054cd00e4ce",
+      "name": "/current157-step-153-fb07da214863",
+      "started": "2026-10-07T18:09:27.684096144Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/86a1b3429b14e36275ea523719ace4caba5ae204dfcdd827aa4ec9b244ec81f8/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "744569b453b61f670c551f9a1cd475345a9ba675994bc13209e57e358472452e",
+      "name": "/current157-step-152-ba173f5eb6a0",
+      "started": "2026-10-07T18:09:25.379347102Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/86a1b3429b14e36275ea523719ace4caba5ae204dfcdd827aa4ec9b244ec81f8/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "e73b7286809baa094637c87bc65403db485e392fd90f862b30d1b3f0e0cf3db0",
+      "name": "/current157-socket-pg-bc373b36cf89",
+      "started": "2026-10-07T18:09:15.95647593Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "current157-socket-pg-bc373b36cf89-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/current157-socket-pg-bc373b36cf89-data/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "9e7323da71206d4ad1e7e348972b1cd2c97cb65cfbe9761ce510b8891bb20614",
+      "name": "/current157-negative-bf6d078ccbf0",
+      "started": "2026-10-07T18:08:40.972520789Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "382b996087cd7894f2eabc7467a4229f57092488dfe4b5a4bf6196b2d9a06111",
+      "name": "/current157-negative-6349ed64ee4c",
+      "started": "2026-10-07T18:08:40.546110789Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "acc8ba44154bc5fd0166848f2e0a4715cac8a0b24ae01dd2879a6dc7e64777b7",
+      "name": "/current157-step-157-670b8030e12f",
+      "started": "2026-10-07T18:00:04.959634709Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "6a55e6e035f281e246a75738e1709c6fb8517a4ce1145eb4a2b03977f92c6780",
+      "name": "/current157-step-156-b5b0fab5eb76",
+      "started": "2026-10-07T18:00:02.860233292Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "708f7edf8ac080f86daa1cc1a58ab15cd8c492b7bc9bb7a6fa1ac3e6eb32ecd1",
+      "name": "/current157-step-155-c17029d113ca",
+      "started": "2026-10-07T18:00:00.674026082Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "1b75cbe1fe944cdb24b2753c001292b50cb4c4d315ec7a176602faf1e818ad4c",
+      "name": "/current157-step-154-64386ee84110",
+      "started": "2026-10-07T17:59:58.496946873Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "43f5f5152381397b2b97e7d0ac6deb9497b9aa897c41497fa6fccb160aba0294",
+      "name": "/current157-step-153-57bfbe79ea9b",
+      "started": "2026-10-07T17:59:56.319478039Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "6c680d49595f3725d28af4087f1b3bd9e76a0c08494589c2e1e27ac9dae2a8c9",
+      "name": "/current157-step-152-37467cfc8351",
+      "started": "2026-10-07T17:59:54.189120246Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "386a052b3fa99c03893c63e357e7ab3d136a69e47d13896003c1c59cd3004da0",
+      "name": "/current157-socket-pg-adce8ec152af",
+      "started": "2026-10-07T17:59:44.827672616Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "current157-socket-pg-adce8ec152af-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/current157-socket-pg-adce8ec152af-data/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "41767f883691c645d8a72a3896f7f2fc638c4ab5c731399050635a37e0aa5ad2",
+      "name": "/current157-current-readonly-973690a78471",
+      "started": "2026-10-07T17:54:16.181486376Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "cfcdadcc74468b52a7943b92ca87041e633f0143b55592537448d02061332fae",
+      "name": "/current157-current-readonly-23cbc8460ab0",
+      "started": "2026-10-07T17:51:59.442984811Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "980c0e4bede822b9174dfeafced6df21d35026c5cc0399fd0e0baaaa19ba3c0c",
+      "name": "/inspiring_hertz",
+      "started": "2026-10-07T17:41:40.951926058Z",
+      "mounts": [],
+      "ports": null
+    },
+    {
+      "Id": "85ff2124c1dfdddc879a882cd1a667adc851571aa767e60a64a8b1bf30a62fb9",
+      "name": "/a0v-candidate-registry-42f290f833b54ee9be10f4b62c3fe786",
+      "started": "2026-10-02T00:23:41.66452266Z",
+      "mounts": [],
+      "ports": {
+        "5000/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18438"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "6ae9ca475dec466169048ce13c105e8e4d1a5e4ec2ec89bd1a01c9f1a8413522",
+      "name": "/a0v-candidate-registry-5d5f175cd315435485df3eae3891fa2a",
+      "started": "2026-09-27T04:08:37.847537208Z",
+      "mounts": [],
+      "ports": {
+        "5000/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18436"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "2e1673dfb688655377000cfcf4852f2787bc31517bf44db5c1a1675702c97a04",
+      "name": "/a0v-candidate-registry-05d51ddc2e68423195cee63574b56195",
+      "started": "2026-09-27T03:50:10.090010138Z",
+      "mounts": [],
+      "ports": {
+        "5000/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18436"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+      "name": "/aos-a0v-recovery-pg",
+      "started": "2026-10-08T01:10:23.54830361Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260910/backups",
+          "Destination": "/backup",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "volume",
+          "Name": "aos-a0v-recovery-pg-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/aos-a0v-recovery-pg-data/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18435"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "dd182a2cd268206c43066baf3fb5e8abb784eb201d131c3562f5173c41517f52",
+      "name": "/aos-ar2-validation-20260909",
+      "started": "2026-09-24T04:48:31.448795385Z",
+      "mounts": [],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18434"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "b5baa23cd07479859cfcf26bb72588ab6d9a0196ca311c0fbd4f88b51f0f2a06",
+      "name": "/aos-ar1c-pg",
+      "started": "2026-10-03T02:36:57.944221435Z",
+      "mounts": [],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18432"
+          }
+        ]
+      }
+    }
+  ],
+  "image": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+  "port": 5436,
+  "new_volume": "aos-source-newjudge-native-20261009-data"
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-source-newjudge-native-lab-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001606",
+  "scope": [
+    "aos-platform/.evidence/gt-source-newjudge-native-lab-20261009",
+    "test-only-runtime/colima-aos-extension/aos-source-newjudge-native-20261009/5436"
+  ],
+  "excluded_scope": [
+    "all-existing-containers-databases-volumes",
+    "formal-services-migration-Host-worker-Provider",
+    "global-VM-config-or-restart",
+    "second-writer"
+  ],
+  "expected_outputs": [
+    "Newbounded isolated5436 exactcachedimage/privateauth/newnamedvolume/full159/originalC bootstrap;original freshSource-newJudge shareddebit positive and native negative/rollback proofs, retain data and all existing services unchanged"
+  ],
+  "lease_expires_at": "2026-10-08T22:12:18.820894+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T05:14:10+08:00"
+}

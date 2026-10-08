@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-08T21:22:55.081432+00:00",
+  "database": "aos_test_14f68098c98d_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_physical_capacity_occupation_pg.py::test_source_model_preparation_original_native_caller[shared]",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "unmodified original isolated Source/Model physical caller fullhead159, not newJudge joint or business firstchain"
+}

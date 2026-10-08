@@ -1,0 +1,8 @@
+{
+  "source_oci_manifest": "sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8",
+  "loaded_docker_config": "sha256:1a726528ec4ec3dfebf104148d3c6ae329828bfd228c305bb3e0e1e582ee074b",
+  "archive_sha256": "ebc544bb9976d8fbdc464cf3bb2e1f4b8d1b232d2da7499bb310a3277cbffcf6",
+  "config_and_rootfs_exact": true,
+  "original_load_effect_reconciled": true,
+  "no_volume_container_or_secret_before_resume": true
+}

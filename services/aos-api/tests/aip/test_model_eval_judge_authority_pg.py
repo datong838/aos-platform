@@ -365,6 +365,7 @@ def test_published_judge_rule_source_original_registry(tmp_path):
 
 def test_exact_signed_rule_new_original_suite(
     caller,issuer_factory,https_signer,guard_issuer_factory,guard_consumer_factory,tmp_path,
+    *, source_provider=None,whole_caller_factory=None,source_prefix=None,source_probe=None,
 ):
     import os
     from aos_api.db import connect,connect_serializable,get_dsn
@@ -381,7 +382,7 @@ def test_exact_signed_rule_new_original_suite(
         module=importlib.util.module_from_spec(spec);sys.modules[name]=module;spec.loader.exec_module(module)
     create=sys.modules['legal_eval_application_fixture_r4'].create_application
     scope=TenantScope('org-org','dev-project');judge_path=tmp_path/'governance';judge_path.mkdir()
-    create(caller,issuer_factory,https_signer,guard_issuer_factory,guard_consumer_factory,judge_path)
+    create(caller,issuer_factory,https_signer,guard_issuer_factory,guard_consumer_factory,judge_path,source_provider=source_provider)
     judge=json.loads((base/'legal-eval-application-result-r4.json').read_text())
     with connect(scope) as conn:
         request=conn.execute('SELECT request_json FROM aip_model_eval_request WHERE request_id=%s',(judge['request_id'],)).fetchone()['request_json']
@@ -570,7 +571,7 @@ def test_exact_signed_rule_new_original_suite(
     from aos_api.aip_model_eval_execution_owner import ModelEvalExecutionOwner, ModelEvalOwnerRejected
     assert hasattr(ModelEvalExecutionOwner, '_prepare_dual_purpose_bucket_fences'), 'global Target/newJudge original bucket prefix missing'
     assert hasattr(ModelEvalExecutionOwner, 'validate_original_target_judge_manifest'), 'whole new-purpose Manifest original native consumer missing'
-    with connect_serializable(scope) as hold_conn:
+    with (whole_caller_factory or connect_serializable)(scope) as hold_conn:
         hold_rollback_identity=hold_conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
         native_owner=ModelEvalExecutionOwner()
         spec=importlib.util.spec_from_file_location('whole_native_plan_missing_1602',base/'build_whole_native_plan_1602.py')
@@ -582,6 +583,7 @@ def test_exact_signed_rule_new_original_suite(
                 native_owner.validate_original_target_judge_manifest(hold_conn,scope,missing_plan,release_policy=policy,artifact_bytes=files)
             after_missing_buckets=hold_conn.execute('SELECT count(*) AS n FROM aip_budget_bucket WHERE org_id=%s AND project_id=%s',scope.key).fetchone()['n']
             assert after_missing_buckets==before_missing_buckets,'whole reader must reject absent parents before preparing any bucket'
+        if source_prefix is not None:source_prefix(hold_conn)
         native_owner._prepare_dual_purpose_bucket_fences(hold_conn,scope,budget_pending['request_id'],be['approval_event_id'],release_policy=policy,artifact_bytes=files)
         from aos_api.aip_model_eval_budget_reservation import AipModelEvalBudgetReservationStore
         native_target_hold=AipModelEvalBudgetReservationStore().hold(hold_conn,scope,target['request_id'],ids[0])
@@ -597,6 +599,7 @@ def test_exact_signed_rule_new_original_suite(
         spec=importlib.util.spec_from_file_location('whole_native_plan_1602',base/'build_whole_native_plan_1602.py')
         whole_builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(whole_builder)
         native_body=whole_builder.build(native_target,native_judge)
+        source_trial=None if source_probe is None else source_probe(hold_conn,native_body,native_target,native_judge)
         assert native_owner.validate_original_target_judge_manifest(hold_conn,scope,native_body,release_policy=policy,artifact_bytes=files) is None
         native_negatives=[]
         for fault in ('request_body','judge_parent_hash','target_parent_hash','revoked_rule','canary'):
@@ -624,6 +627,9 @@ def test_exact_signed_rule_new_original_suite(
             'manifest':native_body,'negative_cases':native_negatives,'execution_allowed':False,
             'missing_parent_denied_no_bucket_write':after_missing_buckets==before_missing_buckets,
             'limitations':'necessary original rows only; Source/account/allocation/Intent/joint/executor refs remain descriptive'}
+        if source_trial is not None:
+            native_whole_proof['source_newjudge_allocation']=source_trial
+            native_whole_proof['limitations']='actual Source/account refs and prepared newJudge debit; full four-leg allocation/Intent/joint/executor refs remain descriptive'
         counted=shared_risk_totals(hold_conn,scope,held['budget_revision_ref']['resourceId'])
         assert counted==(1,10)
         hold_conn.rollback()

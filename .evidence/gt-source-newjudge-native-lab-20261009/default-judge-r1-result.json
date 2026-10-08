@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-08T21:28:16.539597+00:00",
+  "database": "aos_test_62a134e19612_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_model_eval_judge_authority_pg.py::test_exact_signed_rule_new_original_suite",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "default original newJudge native fixture regression; no Source joint or business firstchain"
+}
