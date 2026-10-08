@@ -87,7 +87,7 @@ class CheckpointSafetyTest(unittest.TestCase):
         (repo/'scripts').mkdir();(repo/'scripts/a.py').write_text('value=1')
         evidence=repo/'.evidence'/task;evidence.mkdir(parents=True)
         context=root/'context';m=context/'memory';(m/'receipts/tasks').mkdir(parents=True)
-        receipt={'task_id':task,'owner':'owner','base_revision':'AOS-001329',
+        receipt={'task_id':task,'owner':'owner','base_revision':'AOS-001329','status':'ACTIVE',
                  'lease_expires_at':(datetime.now(timezone.utc)+timedelta(hours=1)).isoformat(),
                  'scope':['aos-platform/scripts'],'excluded_scope':[]}
         (m/'authority.json').write_text(json.dumps({'project_revision':'AOS-001329'}))
@@ -107,6 +107,55 @@ class CheckpointSafetyTest(unittest.TestCase):
             b=checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
             self.assertNotEqual(a['fingerprint'],b['fingerprint'])
             self.assertEqual(json.loads(file.read_text()),cp)
+
+    def test_explicit_original_task_base_survives_authority_advance(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo,context,cp,file=self.setup_context(Path(d))
+            cp.update(authority_revision='AOS-001330', task_base_revision='AOS-001329')
+            (context/'memory/authority.json').write_text(json.dumps({'project_revision':'AOS-001330'}))
+            file.write_text(json.dumps(cp))
+            before={p:p.read_bytes() for p in (file,context/'memory/leases.json',
+                context/'memory/receipts/tasks/task.json',context/'memory/authority.json')}
+            result=checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
+            self.assertEqual(result['task_base_revision'],'AOS-001329')
+            self.assertTrue(all(p.read_bytes()==raw for p,raw in before.items()))
+
+    def test_task_base_does_not_replace_current_authority_or_receipt(self):
+        for change in ('missing_base','wrong_base','future_base','stale_authority'):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as d:
+                repo,context,cp,file=self.setup_context(Path(d))
+                cp.update(authority_revision='AOS-001330',task_base_revision='AOS-001329')
+                (context/'memory/authority.json').write_text(json.dumps({'project_revision':'AOS-001330'}))
+                if change=='missing_base':cp.pop('task_base_revision')
+                elif change=='wrong_base':cp['task_base_revision']='AOS-001328'
+                elif change=='stale_authority':cp['authority_revision']='AOS-001329'
+                else:
+                    cp['task_base_revision']='AOS-001331'
+                    receipt=json.loads((context/'memory/receipts/tasks/task.json').read_text())
+                    receipt['base_revision']='AOS-001331'
+                    (context/'memory/receipts/tasks/task.json').write_text(json.dumps(receipt))
+                    (context/'memory/leases.json').write_text(json.dumps({'leases':[receipt]}))
+                file.write_text(json.dumps(cp))
+                with self.assertRaises(ValueError):
+                    checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
+
+    def test_advanced_authority_still_requires_active_exact_owned_lease(self):
+        for change in ('owner', 'expired', 'status', 'out_of_scope', 'malformed_base'):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as d:
+                repo,context,cp,file=self.setup_context(Path(d))
+                cp.update(authority_revision='AOS-001330',task_base_revision='AOS-001329')
+                (context/'memory/authority.json').write_text(json.dumps({'project_revision':'AOS-001330'}))
+                receipt=json.loads((context/'memory/receipts/tasks/task.json').read_text())
+                if change=='owner':cp['owner']='other'
+                elif change=='expired':receipt['lease_expires_at']=(datetime.now(timezone.utc)-timedelta(seconds=1)).isoformat()
+                elif change=='status':receipt['status']='COMPLETE'
+                elif change=='out_of_scope':receipt['scope']=['aos-platform/apps']
+                else:cp['task_base_revision']='AOS-1329'
+                (context/'memory/receipts/tasks/task.json').write_text(json.dumps(receipt))
+                (context/'memory/leases.json').write_text(json.dumps({'leases':[receipt]}))
+                file.write_text(json.dumps(cp))
+                with self.assertRaises(ValueError):
+                    checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
 
     def test_bad_owner_and_missing_lease_fail_closed(self):
         with tempfile.TemporaryDirectory() as d:

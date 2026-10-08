@@ -1,0 +1,20 @@
+{
+  "status": "REAL_ORIGINAL_TASK1513_CURRENT_AUTHORITY1522_READONLY_CHECKPOINT_ACCEPTED",
+  "observation": {
+    "task_id": "gt-model-typed-proof-20261008",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "authority_revision": "AOS-001522",
+    "step": "case-signing-input-green-full-model-proof-pending",
+    "fingerprint": "2ca664b1f7203bd0611da3fb8a73a53353bf412de7e65b3dbbf8e07cdc922e3b",
+    "task_base_revision": "AOS-001513"
+  },
+  "source_state_unchanged": {
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/authority.json": "dad50dd92e53c510290dc9449ef5ae92ff7d5d458fbd7c420887139290902310",
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/leases.json": "be323199d8e6926d0fae21cf4bde634894477a7d492850933418b1ab92f2f052",
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/receipts/tasks/gt-model-typed-proof-20261008.json": "013aea5476081c0d361bdfba62c94abacd23700fa3bef7df607eaab43edc36cf"
+  },
+  "bindings": {
+    "scripts/long-task-watchdog/aos_wake_progress.py": "456cd5c193ad4d96b9c8e77d225cc77d5184607d2f8590ab05786e9c8ecee363",
+    "scripts/long-task-watchdog/test_aos_wake_progress.py": "fadaaa52aa52c74d4517603db72a2cf4e58c232895dc544a1c1c679b0ded4ebd"
+  }
+}

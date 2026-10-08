@@ -1,0 +1,9 @@
+# 原Task创建版本与当前Authority分离绑定
+
+已批准机制01/02 checkpoint合同及上一Model Task实际拒绝证据为依据，AOS-001522/m1 e7bb9bac。独立Task由原唯一Owner登记，精确脚本/测试/本证据三scope无重叠。产品/231八步与本机制只读观察边界保持；不改Goal、Task/Lease内容或业务权限。
+
+原checkpoint强制receipt.base_revision==当前authority，导致合法长任务在一次Authority推进后永远不能使用检查点。增加可选task_base_revision：提供时必须逐字等于原Task.base_revision，并为规范AOS六位版本且不晚于最新authority；不提供保留旧行为（Task基线必须等于authority）。authority_revision仍严格等于实时authority，原Owner/活跃Lease唯一/Receipt逐字一致/未过期/精确代码范围/排除范围/secret/symlink/traversal均原样保留。新增输出task_base_revision纳入指纹，不把跨Task/重绑Owner或过期版本当可接续。
+
+精确文件scripts/long-task-watchdog/aos_wake_progress.py与test_aos_wake_progress.py。先复现Task1329/Authority1330的显式base合法检查点RED，再最小改校验，增加错base、未来base、缺显式base、过期authority及原Owner/Lease负门；整个watchdog专项及相邻review测试。真实已有Model Task1513与最新Authority原样只读回读，核Task/Lease/authority文件hash前后一致（观察只生成摘要不改源）。不重发同一heartbeat观察，不刷新提交年龄，代码提交仅真实修复并精确Delivery。无UI/DB/服务/外部模型调用，本机制通过不授业务权限。
+
+实施复审：原指纹仅由精确文件hash组成，保持此逻辑，task_base_revision仅增加为返回绑定元数据；版本推进不能被算成文件进展。最初补丁因误以为返回语句形式不同而整体未应用，修正匹配后才改代码，无半写。新增原安全矩阵发现两份一致的COMPLETE Receipt/Lease可被旧入口接收，真实active-status RED；增加显式Receipt.status==ACTIVE（实际正式Task已有该字段），不是恢复或改写Task，不仅凭租约文件存在接受“活跃”。其余scope/Owner/到期/版本负门保留。

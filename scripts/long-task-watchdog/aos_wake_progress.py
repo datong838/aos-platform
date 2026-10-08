@@ -6,6 +6,7 @@ import fcntl
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -126,8 +127,16 @@ def checkpoint_snapshot(repo, thread, checkpoint, context):
     receipt = json.loads((context / 'memory/receipts/tasks' / (cp['task_id'] + '.json')).read_text()) if Path(cp['task_id']).name == cp['task_id'] else {}
     leases = json.loads((context / 'memory/leases.json').read_text())['leases']
     matches = [l for l in leases if l['task_id'] == cp['task_id']]
+    # Preserve the original Task baseline while separately binding the latest
+    # Authority. Omitted task_base_revision retains the legacy equality rule.
+    task_base = cp.get('task_base_revision', cp['authority_revision'])
+    if (any(type(value) is not str or re.fullmatch(r'AOS-[0-9]{6}', value) is None
+            for value in (task_base, cp['authority_revision']))
+            or task_base > cp['authority_revision']):
+        raise ValueError('invalid checkpoint task baseline')
     if (authority['project_revision'] != cp['authority_revision'] or receipt.get('owner') != cp['owner']
-            or receipt.get('base_revision') != cp['authority_revision'] or len(matches) != 1
+            or receipt.get('status') != 'ACTIVE'
+            or receipt.get('base_revision') != task_base or len(matches) != 1
             or matches[0] != receipt or datetime.fromisoformat(receipt['lease_expires_at']).timestamp() <= time.time()):
         raise ValueError('checkpoint has no current owned lease')
     hashes = {}
@@ -151,6 +160,7 @@ def checkpoint_snapshot(repo, thread, checkpoint, context):
     if not hashes:
         raise ValueError('checkpoint must reference evidence or code')
     result = dict((k, cp[k]) for k in required) | {'fingerprint': hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest()}
+    result['task_base_revision'] = task_base
     if 'steps' in cp:
         result['next_step'] = step_navigation(repo, cp, hashes)
     if 'command' in cp:

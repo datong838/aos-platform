@@ -1,0 +1,11 @@
+# 检查点基线兼容实际验收
+
+原Task创建版本与当前Authority分离：checkpoint新增可选task_base_revision必须等于不可变Receipt.base_revision且规范六位AOS版本、不晚于当前版本；authority_revision仍必须精确最新。缺显式base保留原相等规则，Owner/唯一Receipt-Lease/到期/范围/排除/秘密/路径门保持。新增真实ACTIVE状态检查，COMPLETE即使与Lease逐字一致也拒绝。不改原Task/Lease/Goal。
+
+RED-r1原专项40tests有2ERROR（继承测试重复覆盖），均为明确合法旧Task检查点遭拒；基线修复初次全125之前123tests/2.419s通过。新增五负门发现COMPLETE状态旧入口未拒，active-status-red-r1有2FAIL。最终watchdog/review全部125tests/2.085s通过，py_compile/diff check通过，无跳过、无网络模型调用、无DB/服务/UI动作。第一次源码补丁匹配返回语句失败整体未应用，按实际代码重做；不是半写或未知效果重试。
+
+真实Model Task1513/最新Authority1522、原Owner/ACTIVE未到期Lease/精确代码与证据文件检查点被checkpoint_snapshot接受，source_state_unchanged核Authority、Task Receipt、全部Lease文件前后hash一致。检查点旧候选与失败证据保留，不重发本heartbeat观察；读取结果只是任务文件指纹，不能证明业务完成。指纹保持只看文件内容，不把版本变化算进展。
+
+方案自查：可选字段向后兼容旧规范checkpoint；状态字段是实际正式Task既有ACTIVE，测试fixture补齐真实字段。新base只消除不必要的当前版本==创建版本，不替代原权限/归属。Task只精确交付两个脚本及本验收目录，不提交Model未收口实现或其他dirty；无push/Goal状态操作。上下文推进后合法Model检查点须重新绑定最新Authority再只读复验，不篡改创建版本。
+
+收口后回原gt-model-typed-proof-20261008，继续专用Model证书/Issuer撤回与签名消费协议。完整Model正向可信证明、原joint/真实Usage/Report、正式自然首链仍pending。
