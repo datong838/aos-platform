@@ -1,0 +1,13 @@
+# 实际占用账本实施前约束
+
+依据 fee-risk-semantics-readback-1610.json 与 actual-occupation-schema-readback-1610.json，原R2完整计划事务已回滚，父reservation当前零行不是缺失批准证据（批准原件另已回读），不创建或重放旧父hold。当前私表均准备态，新实际占用账本尚不存在；无条件CAPACITY_PARENT_FINALIZE_REQUIRED仍保留。
+
+已登记候选①实际占用与完整共同终结：atomic文件范围已有授权，现安全步骤完成只读schema/原风险语义调查。候选②真实Target结果→Judge输入：Judge/Model范围已有授权，依已知提交与可信executor实际结果，不能用任意raw代替。
+
+实现顺序：先独立准备态actual occupation表及精确原plan/case/purpose/Intent/Source/physical/parent/input绑定，不开放finalizer；再原生逐个验证两类旧准备接口与新账本跨purpose累计、unknown保留与唯一call。新表本身不授调用，不能部署到默认migration或正式库。原Target/Judge父reservation的实际CHECK均只允许held；新submitted/unknown状态不能写进旧父表或放宽其约束，需由新调用账本表达，并保持原父风险义务。金额来源必须原预算责任：父cap10保留，禁止凭null价格均分或定价；没有服务端认可的单腿风险上界来源时该动作拒绝，独立主线继续。
+
+占用状态必须区分准备未提交、已知提交待发送、已发送、结果未知、已知完成；每次转换需要可信原记录与不可变事件，不靠客户端状态或TTL删除。已知完成不自动等于费用已知；物理释放与费用结算分开证明。固定search_path/NOLOGIN无membership Owner/FORCE RLS/runtime窄函数保持。全锁图及实际COMMIT最后期限尚需原生证明，在此之前沿用原拒绝门。
+
+拟改文件仅 services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py、aip_physical_capacity_occupation_contracts.py、aip_physical_capacity_occupation.py、tests/aip/test_physical_capacity_occupation_pg.py；原budget_cost_runtime不在当前scope，不修改。Native安装/试验需新独立Task/Lease，原已关闭lab窗口不重用；只用同已授权5436容器的新独立库，不能复用保留库执行。测试必须涵盖私表DML/跨租户/重复leg/旧plan/容量冲突/unknown保留/实际COMMIT拒绝及旧接口回归。
+
+本轮调查脚本首次IndentationError发生于解析阶段，未连接数据库；修正后只读回读成功。没有产品代码修改、Provider调用、正式库写入或重启；Goal阻塞状态未主动修改，不构成此设计或业务完成证明。

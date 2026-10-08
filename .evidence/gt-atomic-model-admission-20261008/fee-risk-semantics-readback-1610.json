@@ -1,0 +1,59 @@
+{
+  "database": "aos_test_d8047e76fe2d_ti4_test",
+  "cluster": "7694410316620488728",
+  "read_only": true,
+  "original_approved_risk": {
+    "target": {
+      "decision_id": "budget-cost-decision-d4d747c58b404fb19c5d40d40302b43e",
+      "proposal_hash": "01e7841783488417a1e7dd3952f292fe4fd3684f80d1d5e8c85af9ca94d3cfa1",
+      "basis": {
+        "kind": "development_risk_proposal",
+        "provider": {
+          "assetId": "capacity-provider-d528924baf0e4895b76092b98b5288d4",
+          "revision": 1,
+          "assetType": "ProviderInstanceRevision",
+          "contentHash": "effcd59847bf6b948d81ec026f0d7d42ee92723232b4060a0adccb9323833fff"
+        },
+        "maxRequests": 10,
+        "totalRiskMinor": 100,
+        "providerModelId": "candidate-model",
+        "perRequestRiskMinor": 10
+      },
+      "plan_legs": 2,
+      "price_unknown": true
+    },
+    "judge": {
+      "decision_id": "budget-cost-decision-c24cdd9676754b0080f733226567f142",
+      "proposal_hash": "48f043c85c2c2642c9a2e4f65d0d956467fb99c4e9a2e9a06c876eaa0774f1ef",
+      "basis": {
+        "kind": "development_risk_proposal",
+        "provider": {
+          "assetId": "capacity-provider-d528924baf0e4895b76092b98b5288d4",
+          "revision": 1,
+          "assetType": "ProviderInstanceRevision",
+          "contentHash": "effcd59847bf6b948d81ec026f0d7d42ee92723232b4060a0adccb9323833fff"
+        },
+        "maxRequests": 10,
+        "totalRiskMinor": 100,
+        "providerModelId": "candidate-model",
+        "perRequestRiskMinor": 10
+      },
+      "plan_legs": 2,
+      "price_unknown": true
+    }
+  },
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_budget_cost_runtime.py": "30ff850dc1bbc6d03298f68bd12c6184ecad8d0e3896da9a20a1ffbcc9b58be0",
+    "services/aos-api/aos_api/aip_budget_cost_basis.py": "af995c18d7f4f56fd35d8b46e36b3ee828dc3f5a59ab1c4ef1cbae0f095b2684",
+    "services/aos-api/aos_api/aip_development_cost_authorization.py": "22bbaba6526ac645de4ae36f82fd849d7aad68d40cf8d1f6a2fbcd122e3081cb",
+    "services/aos-api/aos_api/aip_model_eval_budget_reservation.py": "70ebb534ac5f21e968470b6ab797184ff7ea59ab35822a9482d3574c8df1cbc2",
+    "services/aos-api/aos_api/aip_model_eval_judge_budget.py": "3c8e6dbe0b15f3aebbb720aaca1e3d754b86c60c8f63a0bce660b115b9b5a84f"
+  },
+  "conclusion": {
+    "parent_unit": "approved application reservation",
+    "actual_call_allocation": "not derived by existing parent gate",
+    "null_price_is_zero": false,
+    "provider_execution_authorized": false,
+    "next_safe_step": "derive and validate per-leg bounded risk under original parent cap, preserve unknown cost and all original case obligations"
+  }
+}

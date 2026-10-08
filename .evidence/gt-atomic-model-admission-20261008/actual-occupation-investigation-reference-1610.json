@@ -1,0 +1,18 @@
+{
+  "authority_revision": "AOS-001610",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/fee-risk-investigation-reference-1610.json",
+      "sha256": "af34ae5703874fc086a40ebe5303bedcd899519c1547fd5e0a66219db096874a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/actual-occupation-ledger-design-1610.md",
+      "sha256": "de446eda5ce8e429974cbd90269f06e2f9c01e9c0c82def3ba4a4a779e253535"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/actual-occupation-schema-readback-1610.json",
+      "sha256": "586a9ed165e75b159920769740a0a5416dbae1935dac2d95ca05a910b1ff928e"
+    }
+  ]
+}

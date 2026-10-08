@@ -1,0 +1,9 @@
+# 调用占用准备schema专项验收
+
+基线c729da4a/AOS-001610。原atomic authority末尾追加occupation_prepared_call_statements，旧全部compiler字节不变，默认安装/migration/API未接入。prepared_call_occupation仅prepared_only，不接收费用参数，无runtime producer；全原plan/physical FK与case/purpose/parent/Intent/input/token/body/hash/xid/pid存储约束、同plan-purpose-case及Intent唯一；原Owner/FORCE RLS/runtime无DML、immutable及原deferred无条件拒绝门保留。表字段不是可信调用事实，其未来producer/原件核查/实际风险分配与finalizer均未实现。
+
+RED确认compiler缺失。新增独立全bootstrap159数据库aos_test_4d88bf4f8260_ti4_test，沿原签名Source/SCRAM/两原approvedparent/2case4leg完整风险准备与旧Source全部测试，1PASS69.69s；新表SELECT/INSERT/UPDATE/DELETE/TRUNCATE运行时42501，catalog核Owner/FORCE RLS/零runtime权限/三trigger。原实际COMMIT拒绝继续通过，但本轮未生成新call行，不能宣称新call producer/转换/提交正向已验收。独立回读新旧准备表0、Source1、occupationNOLOGIN零membership、31旧容器ID/启动/卷/端口不变。
+
+相邻首次命令解释器路径错误未执行，改正后误走默认5433数据库夹具并连接失败，318setup errors，未创建测试库；不归因产品代码。改用selected纯契约节点跳过DB夹具并DSN指向不可用9端口，318PASS0.70s，7既有warnings。这是纯契约相邻回归，不能替代上述真实独立PG专项。独立核对初次诊断KeyError来自基线字段name/started/mounts/ports，发生在连接前，按原实际键修正后只读成功，未重发数据库操作。
+
+范围是必要schema与旧完整准备流程回归，父Task仍ACTIVE，不作执行准入或自然首链完成。产品无UI改动，浏览器不适用。本轮Goal既有blocked仍未主动改；能力缺口已通知不重复申请。后继可信原case/精确Input-Intent producer、物理累计/unknown保留、父风险语义/全部锁图、真实jointCOMMIT/Usage/费用最终来源仍需完成。

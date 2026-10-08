@@ -1,0 +1,246 @@
+{
+  "database": "aos_test_d8047e76fe2d_ti4_test",
+  "cluster": "7694410316620488728",
+  "read_only": true,
+  "original_parent_state_constraints": {
+    "aip_model_eval_budget_reservation": {
+      "states": [],
+      "constraints": [
+        {
+          "conname": "aip_model_eval_budget_reserva_org_id_project_id_approval_e_fkey",
+          "definition": "FOREIGN KEY (org_id, project_id, approval_event_id) REFERENCES aip_action_approval_event(org_id, project_id, approval_event_id)"
+        },
+        {
+          "conname": "aip_model_eval_budget_reserva_org_id_project_id_approval_ev_key",
+          "definition": "UNIQUE (org_id, project_id, approval_event_id)"
+        },
+        {
+          "conname": "aip_model_eval_budget_reserva_org_id_project_id_request_id_fkey",
+          "definition": "FOREIGN KEY (org_id, project_id, request_id) REFERENCES aip_model_eval_request(org_id, project_id, request_id)"
+        },
+        {
+          "conname": "aip_model_eval_budget_reservat_org_id_project_id_request_id_key",
+          "definition": "UNIQUE (org_id, project_id, request_id)"
+        },
+        {
+          "conname": "aip_model_eval_budget_reservation_check",
+          "definition": "CHECK (((request_hash ~ '^[0-9a-f]{64}$'::text) AND (proposal_hash ~ '^[0-9a-f]{64}$'::text)))"
+        },
+        {
+          "conname": "aip_model_eval_budget_reservation_check1",
+          "definition": "CHECK (((jsonb_typeof(budget_policy_ref) = 'object'::text) AND (jsonb_typeof(budget_revision_ref) = 'object'::text) AND (jsonb_typeof(price_ref) = 'object'::text)))"
+        },
+        {
+          "conname": "aip_model_eval_budget_reservation_content_hash_check",
+          "definition": "CHECK ((content_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+        },
+        {
+          "conname": "aip_model_eval_budget_reservation_currency_check",
+          "definition": "CHECK ((currency = 'CNY'::text))"
+        },
+        {
+          "conname": "aip_model_eval_budget_reservation_pkey",
+          "definition": "PRIMARY KEY (org_id, project_id, reservation_id)"
+        },
+        {
+          "conname": "aip_model_eval_budget_reservation_state_check",
+          "definition": "CHECK ((state = 'held'::text))"
+        },
+        {
+          "conname": "aip_model_eval_budget_reservation_upper_bound_minor_check",
+          "definition": "CHECK (((upper_bound_minor >= 1) AND (upper_bound_minor <= 100000000)))"
+        }
+      ]
+    },
+    "aip_model_judge_budget_reservation": {
+      "states": [],
+      "constraints": [
+        {
+          "conname": "aip_model_judge_budget_reserv_org_id_project_id_approval_e_fkey",
+          "definition": "FOREIGN KEY (org_id, project_id, approval_event_id) REFERENCES aip_action_approval_event(org_id, project_id, approval_event_id)"
+        },
+        {
+          "conname": "aip_model_judge_budget_reserv_org_id_project_id_approval_ev_key",
+          "definition": "UNIQUE (org_id, project_id, approval_event_id)"
+        },
+        {
+          "conname": "aip_model_judge_budget_reserva_org_id_project_id_request_id_key",
+          "definition": "UNIQUE (org_id, project_id, request_id)"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_check",
+          "definition": "CHECK (((request_hash ~ '^[0-9a-f]{64}$'::text) AND (proposal_hash ~ '^[0-9a-f]{64}$'::text)))"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_check1",
+          "definition": "CHECK (((jsonb_typeof(approval_ref) = 'object'::text) AND (jsonb_typeof(budget_policy_ref) = 'object'::text) AND (jsonb_typeof(budget_revision_ref) = 'object'::text) AND (jsonb_typeof(price_ref) = 'object'::text)))"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_content_hash_check",
+          "definition": "CHECK ((content_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_currency_check",
+          "definition": "CHECK ((currency = 'CNY'::text))"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_pkey",
+          "definition": "PRIMARY KEY (org_id, project_id, reservation_id)"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_purpose_check",
+          "definition": "CHECK ((purpose = 'model-judge-call'::text))"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_state_check",
+          "definition": "CHECK ((state = 'held'::text))"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_upper_bound_minor_check",
+          "definition": "CHECK (((upper_bound_minor >= 1) AND (upper_bound_minor <= 100000000)))"
+        }
+      ]
+    }
+  },
+  "private_tables": [
+    {
+      "relname": "account_guard",
+      "columns": [
+        "physical_account_id",
+        "org_id",
+        "project_id",
+        "supplier_id",
+        "supplier_account_fingerprint",
+        "version"
+      ]
+    },
+    {
+      "relname": "case_input_binding",
+      "columns": [
+        "org_id",
+        "project_id",
+        "debit_id",
+        "parent_hold",
+        "case_id",
+        "purpose",
+        "immutable",
+        "content_hash",
+        "origin_xid",
+        "origin_pid"
+      ]
+    },
+    {
+      "relname": "parent_debit_guard",
+      "columns": [
+        "org_id",
+        "project_id",
+        "parent_hold",
+        "request_hash",
+        "parent_hash",
+        "cap_minor",
+        "allocated_minor",
+        "version"
+      ]
+    },
+    {
+      "relname": "prepared_execution_intent",
+      "columns": [
+        "org_id",
+        "project_id",
+        "intent_id",
+        "debit_id",
+        "request_id",
+        "case_id",
+        "purpose",
+        "attempt",
+        "state",
+        "immutable",
+        "content_hash",
+        "origin_xid",
+        "origin_pid"
+      ]
+    },
+    {
+      "relname": "prepared_parent_debit",
+      "columns": [
+        "org_id",
+        "project_id",
+        "debit_id",
+        "parent_hold",
+        "immutable",
+        "content_hash",
+        "upper_bound_minor",
+        "physical_account_id",
+        "token_units",
+        "origin_xid",
+        "origin_pid"
+      ]
+    },
+    {
+      "relname": "prepared_plan_risk",
+      "columns": [
+        "org_id",
+        "project_id",
+        "plan_id",
+        "target_request",
+        "judge_request",
+        "immutable",
+        "content_hash",
+        "origin_xid",
+        "origin_pid"
+      ]
+    }
+  ],
+  "private_triggers": [
+    {
+      "relname": "prepared_execution_intent",
+      "tgname": "immutable_prepared_intent",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "proname": "immutable_prepared_intent",
+      "definition": "CREATE OR REPLACE FUNCTION aos_physical_capacity_occupation_private.immutable_prepared_intent()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$\n          BEGIN RAISE EXCEPTION 'CAPACITY_INTENT_IMMUTABLE' USING ERRCODE='42501'; END $function$\n"
+    },
+    {
+      "relname": "prepared_execution_intent",
+      "tgname": "no_truncate_prepared_intent",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "proname": "immutable_prepared_intent",
+      "definition": "CREATE OR REPLACE FUNCTION aos_physical_capacity_occupation_private.immutable_prepared_intent()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$\n          BEGIN RAISE EXCEPTION 'CAPACITY_INTENT_IMMUTABLE' USING ERRCODE='42501'; END $function$\n"
+    },
+    {
+      "relname": "prepared_parent_debit",
+      "tgname": "require_joint_finalization",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "proname": "reject_unfinalized_parent_debit",
+      "definition": "CREATE OR REPLACE FUNCTION aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog'\nAS $function$\n          BEGIN RAISE EXCEPTION 'CAPACITY_PARENT_FINALIZE_REQUIRED' USING ERRCODE='23514'; END $function$\n"
+    },
+    {
+      "relname": "prepared_plan_risk",
+      "tgname": "immutable_plan_risk",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "proname": "immutable_prepared_intent",
+      "definition": "CREATE OR REPLACE FUNCTION aos_physical_capacity_occupation_private.immutable_prepared_intent()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$\n          BEGIN RAISE EXCEPTION 'CAPACITY_INTENT_IMMUTABLE' USING ERRCODE='42501'; END $function$\n"
+    },
+    {
+      "relname": "prepared_plan_risk",
+      "tgname": "no_truncate_plan_risk",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "proname": "immutable_prepared_intent",
+      "definition": "CREATE OR REPLACE FUNCTION aos_physical_capacity_occupation_private.immutable_prepared_intent()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$\n          BEGIN RAISE EXCEPTION 'CAPACITY_INTENT_IMMUTABLE' USING ERRCODE='42501'; END $function$\n"
+    },
+    {
+      "relname": "prepared_plan_risk",
+      "tgname": "no_unfinalized_plan_risk",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "proname": "reject_unfinalized_parent_debit",
+      "definition": "CREATE OR REPLACE FUNCTION aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog'\nAS $function$\n          BEGIN RAISE EXCEPTION 'CAPACITY_PARENT_FINALIZE_REQUIRED' USING ERRCODE='23514'; END $function$\n"
+    }
+  ],
+  "execution_allowed": false,
+  "conclusion": "Verified preparation schema has no actual_occupation table; finalization unconditionally rejected. Preserve original parent state machines; unknown obligations cannot be released by TTL."
+}

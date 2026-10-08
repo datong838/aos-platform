@@ -1,0 +1,19 @@
+{
+  "database": "aos_test_4d88bf4f8260_ti4_test",
+  "cluster": "7694410316620488728",
+  "prepared_counts": {
+    "prepared_call_occupation": 0,
+    "prepared_parent_debit": 0,
+    "prepared_plan_risk": 0,
+    "prepared_execution_intent": 0
+  },
+  "role": {
+    "login": false,
+    "members": 0
+  },
+  "source_retained": 1,
+  "old_containers_unchanged": 31,
+  "new_call_producer": false,
+  "schema_only": true,
+  "execution_allowed": false
+}

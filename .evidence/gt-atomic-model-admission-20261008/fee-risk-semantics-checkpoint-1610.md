@@ -1,0 +1,7 @@
+# 原费用风险责任调查
+
+当前m1 c729da4a / AOS-001610，独立只读回读完整计划R2保留库，精确cluster7694410316620488728。Target/Judge各有原approved decision与同hash proposal：perRequestRiskMinor10、maxRequests10、totalRiskMinor100；各覆盖原2case，三种价格均null。原require_cost_risk强制parent hold=10，shared_risk_totals按原普通/Eval/Judge申请reservation计数，实际case调用并未各自计作风险请求。DevelopmentCostAuthorization只限定原tenant/provider/model/approval/window，无每case价格或分配授权。
+
+结论：这证明原申请父风险义务及其数量，不能直接推导每个实际调用10minor、任意1minor或均分5minor，更不证明免费。实际占用与完整共同终结必须保留两个原parent cap与全部四腿，绑定原case/input/Intent；若无每腿风险上界来源，保守保留共享父上界及unknown费用，不以null结算0。后继需要设计可原生验证的父cap内累计风险分配及未知占用账本；原预算逻辑不改。另一已登记候选是Target真实结果→Judge输入，依赖可信实际结果和提交准入，暂不能以任意raw替代。
+
+证据fee-risk-semantics-readback-1610.json绑定五个当前代码hash。本轮无产品代码改动，无正式库写入/Provider/重启，未声称完整Task或自然首链完成。

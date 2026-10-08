@@ -1,0 +1,22 @@
+{
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "heartbeat_event": "2026-10-08T22:10:32.443Z",
+  "observed_goal_state": "blocked",
+  "goal_updated_at_unix": 1791497346,
+  "failed_turn": {
+    "id": "01a11d88-8ef7-7293-91df-6114a17b9884",
+    "started_at": 1791496851,
+    "completed_at": 1791497346,
+    "error": "Selected model is at capacity. Please try a different model."
+  },
+  "correlation": "failed turn end equals Goal updatedAt; writer component unconfirmed",
+  "correction": "prior active claim was not backed by fresh get_goal",
+  "recovery_capability": {
+    "update_goal_can_resume": false,
+    "native_ui_access": "Computer Use denied access to com.openai.codex",
+    "private_storage_modified": false,
+    "goal_recreated": false,
+    "model_switched": false
+  },
+  "safe_work_continues": true
+}

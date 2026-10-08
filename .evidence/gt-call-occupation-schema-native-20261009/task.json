@@ -1,0 +1,22 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-call-occupation-schema-native-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001610",
+  "scope": [
+    "aos-platform/.evidence/gt-call-occupation-schema-native-20261009",
+    "test-only-runtime/colima-aos-extension/aos-source-newjudge-native-20261009/5436"
+  ],
+  "excluded_scope": [
+    "formal-DB-Host-worker-Provider",
+    "all-retained-databases",
+    "old-services-and-volumes",
+    "second-writer"
+  ],
+  "expected_outputs": [
+    "Original Source and complete four-leg preparation regression with private prepared-call schema native ACL/RLS/immutable/deferred deny; no call producer/admission/finalizer or parent Task completion"
+  ],
+  "lease_expires_at": "2026-10-08T23:12:18.820894+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T06:42:18+08:00"
+}

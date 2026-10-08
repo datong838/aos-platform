@@ -1,0 +1,5 @@
+# 调用占用准备态schema原生回归
+
+原atomic Task exact authority.py追加独立occupation_prepared_call_statements，默认不安装。新私有prepared_call_occupation只有prepared_only状态；绑定plan/原case/purpose/parent/Intent/physical/保守tokenUpperBound/精确input hash、同xid/pid和不可变body/hash。该表无runtime写入口，无预算/占用准入producer/状态转换/transport，无条件原deferred COMMIT拒绝。NOLOGIN原Owner/FORCE RLS/immutable update-delete-truncate保持。新表不代替原prepared_parent_debit、parent表held约束或完整plan风险。
+
+先RED不存在compiler，然后追加DDL；仅在新独立全量bootstrap库，用原真实签名Source/原批准两parent/原2case4leg测试，核catalog与runtime表权限拒绝，再跑原Source全测试及COMMIT拒绝。只证明必要schema安装和原功能回归，不能作原父Task或自然首链Delivery。后继可信producer仍须原plan/currentSource/input/Intent/风险来源、全锁图及unknown义务核对；prepared表不可提前宣称active账本。

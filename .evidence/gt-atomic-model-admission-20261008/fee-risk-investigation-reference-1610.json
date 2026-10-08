@@ -1,0 +1,22 @@
+{
+  "authority_revision": "AOS-001610",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/complete-plan-risk-reference-1610.json",
+      "sha256": "4b6f750c65c8222c3270b9ad021d133ce486e5519772f08c63b1decbecde338b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/fee-risk-semantics-readback-1610.json",
+      "sha256": "55aa9aa0b1fd9be8b88054bc251961eefc7b4b9982ccc7da2496adbb94079521"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/fee-risk-semantics-checkpoint-1610.md",
+      "sha256": "88681bbeff04ba0df7b394801ff9fe7a402d5872151b17e57ed38361ea531dd7"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/goal-capacity-stop-diagnostic-20261009.json",
+      "sha256": "c12f520b50f7ac59a3588940a39e1da72939997d69397c40b7b1cb661eed478e"
+    }
+  ]
+}

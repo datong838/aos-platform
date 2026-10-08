@@ -1079,3 +1079,43 @@ def occupation_plan_risk_statements():
         f'REVOKE ALL ON FUNCTION {PLAN_RISK} FROM PUBLIC',
         f'GRANT EXECUTE ON FUNCTION {PLAN_RISK} TO aos_runtime',
     )
+
+
+def occupation_prepared_call_statements():
+    """Private preparation storage only; no admission or state transition.
+
+    Explicit installation artifact. Runtime has no producer or DML permission;
+    the original unconditional commit rejection remains in force. A future
+    trusted producer must verify all original plan/input/Intent facts first.
+    """
+    table = SCHEMA + '.prepared_call_occupation'
+    return (
+        f'''CREATE TABLE {table} (
+          org_id text NOT NULL,project_id text NOT NULL,call_id uuid PRIMARY KEY,
+          plan_id uuid NOT NULL REFERENCES {SCHEMA}.prepared_plan_risk(plan_id),
+          case_id text NOT NULL CHECK(length(case_id)>0),
+          purpose text NOT NULL CHECK(purpose IN ('target','judge')),
+          parent_hold uuid NOT NULL,intent_id uuid NOT NULL,
+          physical_account_id uuid NOT NULL REFERENCES {SCHEMA}.account_guard(physical_account_id),
+          token_upper_bound bigint NOT NULL CHECK(token_upper_bound>0),
+          input_hash text NOT NULL CHECK(input_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          state text NOT NULL CHECK(state='prepared_only'),
+          immutable jsonb NOT NULL CHECK(jsonb_typeof(immutable)='object'),
+          content_hash text NOT NULL CHECK(content_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          origin_xid xid8 NOT NULL,origin_pid integer NOT NULL CHECK(origin_pid>0),
+          UNIQUE(org_id,project_id,plan_id,purpose,case_id),UNIQUE(intent_id))''',
+        f'ALTER TABLE {table} OWNER TO {OWNER}',
+        f'ALTER TABLE {table} ENABLE ROW LEVEL SECURITY',
+        f'ALTER TABLE {table} FORCE ROW LEVEL SECURITY',
+        f'''CREATE POLICY exact_scope ON {table} TO {OWNER}
+          USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+          WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))''',
+        f'REVOKE ALL ON {table} FROM PUBLIC,aos_runtime',
+        f'''CREATE TRIGGER immutable_prepared_call BEFORE UPDATE OR DELETE ON {table}
+          FOR EACH ROW EXECUTE FUNCTION {SCHEMA}.immutable_prepared_intent()''',
+        f'''CREATE TRIGGER no_truncate_prepared_call BEFORE TRUNCATE ON {table}
+          FOR EACH STATEMENT EXECUTE FUNCTION {SCHEMA}.immutable_prepared_intent()''',
+        f'''CREATE CONSTRAINT TRIGGER require_joint_finalization AFTER INSERT OR UPDATE ON {table}
+          DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+          EXECUTE FUNCTION {SCHEMA}.reject_unfinalized_parent_debit()''',
+    )
