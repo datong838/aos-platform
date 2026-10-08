@@ -1,0 +1,13 @@
+# 新 Judge allocation artifact 阶段复核
+
+真实缺失RED：导入原authority并断言occupation_judge_parent_debit_statements存在，实际exit1/AssertionError；随后追加4条安装语句，原全部compiler bytes保持。未修改旧布局、默认迁移、Source/预算runtime文件、正式服务或数据。
+
+原生BEGIN创建新函数，函数body/Owner/SECURITY DEFINER/search_path与ACL（仅Owner+runtime EXECUTE，无grant option）精确核对；runtime、private Owner、canary三种非occupation原session均原生42501/CAPACITY_JUDGE_DEBIT_CALLER_REQUIRED。ROLLBACK后独立确认新function不存在、原private function body/ACL及共享账本和历史Source1指纹不变。未stub Source或Judge原fact，没有伪造parent正向。
+
+新代码读取原Source/newJudge必要fact、原Suite唯一case、新purpose/freshparent/xid/pid、sharedphysical guard；分配复用旧parent_debit_guard/prepared_parent_debit，累计风险和physical count/token共用旧账本，原prepared_parent_debit不可提交的trigger保留。每case不同debit冲突、exact同caller重放、累计cap在代码中实现，但这些内部正向/竞争路径尚未原生触达，不能标为已验收。
+
+完整共同Owner须先验证签名Rule/Registry/费用fence、Source/physical顺序及原case数据；此函数未独立提供完整Rule/价格权限。审批风险分配不是actual amount。尚缺newJudge input依赖/唯一Intent、完整共同caller、真实Source联合正向、cap竞争、不可绕过finalizer/COMMIT/一次transport/Usage/report统一验证；只关闭本安装拒绝门验证Task，五施工parent及Goal仍ACTIVE。
+
+相邻293PASS，7个既有warnings；git diff check通过。后台compiler无页面变动，浏览器不适用。下一已登记安全步骤：新Source正向实验窗口与全链fixture，或共同allocation/Intent协议实现；不能用旧过期Source和旧zero-Source runner补正向。
+
+实验资源归属核对修正：原lab Task有Delivery且Lease已释放，虽然原task文件仍显示ACTIVE，精确续租断言拒绝。没有改旧Task/Delivery/Lease；按支持机制建立新的限界安装验证Task拥有5435实验窗口，未夺锁或删历史记录。

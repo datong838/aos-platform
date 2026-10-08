@@ -1,0 +1,62 @@
+{
+  "authority": "AOS-001605",
+  "cluster": "7694371626696531992",
+  "migration": "a0v_159",
+  "compiler_installed_in_rollback_only_transaction": true,
+  "function_disappeared": true,
+  "original_private_functions_unchanged": true,
+  "ledger_and_source_unchanged": {
+    "aos_physical_capacity_occupation_private.account_guard": {
+      "n": 1,
+      "hash": "7ecb23ff4176eb67f468b435847226ea"
+    },
+    "aos_physical_capacity_occupation_private.parent_debit_guard": {
+      "n": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "aos_physical_capacity_occupation_private.prepared_parent_debit": {
+      "n": 0,
+      "hash": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "aos_capacity_publication_private.source_publication": {
+      "n": 1,
+      "hash": "f00a50c0712f57093b27c8f58040a804"
+    }
+  },
+  "acl": [
+    {
+      "grantee": "aos_physical_capacity_occupation_owner",
+      "privilege_type": "EXECUTE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_runtime",
+      "privilege_type": "EXECUTE",
+      "is_grantable": false
+    }
+  ],
+  "denied": [
+    {
+      "role": "aos_runtime",
+      "org": "org-org",
+      "sqlstate": "42501"
+    },
+    {
+      "role": "aos_physical_capacity_occupation_owner",
+      "org": "org-org",
+      "sqlstate": "42501"
+    },
+    {
+      "role": "aos_runtime",
+      "org": "dev-org",
+      "sqlstate": "42501"
+    }
+  ],
+  "sql_body_sha256": "fe1c25b818b934e7f1c5abc2a3e8e4cf2ee2f55cfe00f6e62c2112e8e3759a53",
+  "execution_allowed": false,
+  "limitations": [
+    "Actual Source/newJudge positive allocation and concurrent cap remain unverified",
+    "No input/Intent/finalizer or joint COMMIT; old deferred deny kept",
+    "No original fact stub or fake Source/parent"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "old_prefix_bytes_exact": true,
+  "old_sha256": "adc52aa831bcd70a48293233ed58d9fd5c7021503f7598574668a52812c67e43",
+  "current_sha256": "ad357054f9b77ba3eb6643f693086f53d0308c6556fa75c98606cbdab2b33d01",
+  "old_sql_compilers_unchanged": true,
+  "default_migrations_changed": false
+}

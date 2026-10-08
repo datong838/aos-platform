@@ -736,3 +736,123 @@ def occupation_eval_fact_statements():
         f'REVOKE ALL ON FUNCTION {ENTRY} FROM PUBLIC',
         f'GRANT EXECUTE ON FUNCTION {ENTRY} TO aos_runtime',
     )
+
+
+JUDGE_DEBIT = 'public.prepare_capacity_judge_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint,text)'
+
+
+def occupation_judge_parent_debit_statements():
+    """Prepare a Judge case in the original shared ledger; never finalization.
+
+    Requires the joint caller's original Source/Rule/risk prefix. Necessary
+    fact readers alone are insufficient for execution. The original deferred
+    rejection on prepared_parent_debit remains in force for these rows too.
+    """
+    return (
+        f'''CREATE FUNCTION {JUDGE_DEBIT.split('(')[0]}(p_raw bytea,p_source jsonb,p_hold uuid,
+          p_request text,p_hash text,p_debit uuid,p_minor bigint,p_case text) RETURNS jsonb
+          LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $judgedebit$
+          DECLARE fact jsonb; source_body jsonb; after_fact jsonb; selected jsonb;
+            g {SCHEMA}.parent_debit_guard%ROWTYPE;
+            prior {SCHEMA}.prepared_parent_debit%ROWTYPE;
+            body jsonb; digest text; used_requests bigint; used_tokens numeric;
+            xid_value xid8:=pg_current_xact_id(); pid_value integer:=pg_backend_pid();
+          BEGIN
+            IF current_user<>'{OWNER}' OR session_user<>'aos_provider_capacity_occupation'
+              OR current_setting('transaction_isolation')<>'serializable'
+              OR current_setting('transaction_read_only')<>'off'
+              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' THEN
+              RAISE EXCEPTION 'CAPACITY_JUDGE_DEBIT_CALLER_REQUIRED' USING ERRCODE='42501';
+            END IF;
+            IF p_debit IS NULL OR p_minor IS NULL OR p_minor<=0 OR p_case IS NULL OR p_case='' THEN
+              RAISE EXCEPTION 'CAPACITY_JUDGE_DEBIT_INPUT_REQUIRED' USING ERRCODE='23514';
+            END IF;
+            fact:=public.capacity_occupation_judge_fact(p_raw,p_source,p_hold,p_request,p_hash);
+            source_body:=public.capacity_occupation_source_fact(p_raw,p_source);
+            SELECT jsonb_agg(item) INTO selected
+              FROM jsonb_array_elements(fact->'application'->'cases') item WHERE item->>'caseId'=p_case;
+            IF fact->>'purpose' IS DISTINCT FROM 'model-judge-call'
+              OR fact->>'requestId' IS DISTINCT FROM p_request OR fact->>'requestHash' IS DISTINCT FROM p_hash
+              OR fact->>'reservationId' IS DISTINCT FROM p_hold::text
+              OR fact->>'xid' IS DISTINCT FROM xid_value::text
+              OR (fact->>'pid')::integer IS DISTINCT FROM pid_value
+              OR selected IS NULL OR jsonb_array_length(selected)<>1
+              OR source_body->'tokenLimit'->>'mode' IS DISTINCT FROM 'inflight_upper_bound'
+              OR source_body->>'physicalAccountId' IS DISTINCT FROM fact->>'physicalAccountId'
+              OR (fact->>'tokenUpperBound')::bigint IS NULL OR (fact->>'tokenUpperBound')::bigint<=0
+              OR (source_body->>'maxConcurrency')::bigint IS NULL OR (source_body->>'maxConcurrency')::bigint<=0
+              OR (source_body->'tokenLimit'->>'maxTokens')::numeric IS NULL
+              OR (source_body->'tokenLimit'->>'maxTokens')::numeric<=0 THEN
+              RAISE EXCEPTION 'CAPACITY_JUDGE_DEBIT_ORIGINAL_FACTS_REQUIRED' USING ERRCODE='23514';
+            END IF;
+            PERFORM 1 FROM {SCHEMA}.account_guard
+              WHERE physical_account_id=(fact->>'physicalAccountId')::uuid
+                AND org_id='org-org' AND project_id='dev-project'
+                AND xmin::text::numeric=(xid_value::text::numeric % 4294967296) FOR UPDATE;
+            IF NOT FOUND THEN
+              RAISE EXCEPTION 'CAPACITY_JUDGE_DEBIT_CURRENT_PHYSICAL_GUARD_REQUIRED' USING ERRCODE='23514';
+            END IF;
+            INSERT INTO {SCHEMA}.parent_debit_guard AS d
+              (org_id,project_id,parent_hold,request_hash,parent_hash,cap_minor,allocated_minor,version)
+              VALUES('org-org','dev-project',p_hold,p_hash,fact->>'contentHash',
+                (fact->>'upperBoundMinor')::bigint,0,1)
+              ON CONFLICT(parent_hold) DO UPDATE SET version=d.version+1
+                WHERE d.org_id='org-org' AND d.project_id='dev-project'
+                  AND d.request_hash=p_hash AND d.parent_hash=fact->>'contentHash'
+                  AND d.cap_minor=(fact->>'upperBoundMinor')::bigint RETURNING * INTO g;
+            IF NOT FOUND THEN RAISE EXCEPTION 'CAPACITY_JUDGE_DEBIT_PARENT_BINDING_REQUIRED' USING ERRCODE='23514'; END IF;
+            body:=jsonb_build_object('debitId',p_debit,'parentHold',p_hold,'requestId',p_request,
+              'requestHash',p_hash,'parentHash',fact->>'contentHash','sourceRef',p_source,
+              'physicalAccountId',fact->>'physicalAccountId','upperBoundMinor',p_minor,
+              'currency',fact->>'currency','purpose','model-judge-preparation','caseId',p_case,
+              'originalCase',selected->0,'caseSetHash',fact->>'caseSetHash',
+              'approvalEventId',fact->>'approvalEventId','quotaRef',fact->'quotaRef',
+              'tokenUnits',fact->'tokenUpperBound');
+            digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
+            IF EXISTS(SELECT 1 FROM {SCHEMA}.prepared_parent_debit
+              WHERE org_id='org-org' AND project_id='dev-project'
+                AND immutable->>'purpose'='model-judge-preparation'
+                AND immutable->>'requestId'=p_request AND immutable->>'caseId'=p_case
+                AND debit_id<>p_debit) THEN
+              RAISE EXCEPTION 'CAPACITY_JUDGE_CASE_ALLOCATION_CONFLICT' USING ERRCODE='23514';
+            END IF;
+            SELECT * INTO prior FROM {SCHEMA}.prepared_parent_debit WHERE debit_id=p_debit;
+            IF FOUND THEN
+              IF prior.immutable IS DISTINCT FROM body OR prior.content_hash IS DISTINCT FROM digest
+                OR prior.origin_xid IS DISTINCT FROM xid_value OR prior.origin_pid IS DISTINCT FROM pid_value THEN
+                RAISE EXCEPTION 'CAPACITY_JUDGE_DEBIT_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+            ELSE
+              IF p_minor>g.cap_minor-g.allocated_minor THEN
+                RAISE EXCEPTION 'CAPACITY_PARENT_CAP_EXCEEDED' USING ERRCODE='23514'; END IF;
+              SELECT count(*),coalesce(sum(token_units),0) INTO used_requests,used_tokens
+                FROM {SCHEMA}.prepared_parent_debit WHERE physical_account_id=(fact->>'physicalAccountId')::uuid;
+              IF used_requests>=(source_body->>'maxConcurrency')::bigint
+                OR used_tokens+(fact->>'tokenUpperBound')::bigint>(source_body->'tokenLimit'->>'maxTokens')::numeric THEN
+                RAISE EXCEPTION 'CAPACITY_PHYSICAL_CAPACITY_EXCEEDED' USING ERRCODE='23514'; END IF;
+              UPDATE {SCHEMA}.parent_debit_guard SET allocated_minor=allocated_minor+p_minor
+                WHERE parent_hold=p_hold RETURNING * INTO g;
+              INSERT INTO {SCHEMA}.prepared_parent_debit(org_id,project_id,debit_id,parent_hold,
+                immutable,content_hash,upper_bound_minor,physical_account_id,token_units,origin_xid,origin_pid)
+                VALUES('org-org','dev-project',p_debit,p_hold,body,digest,p_minor,
+                  (fact->>'physicalAccountId')::uuid,(fact->>'tokenUpperBound')::bigint,xid_value,pid_value);
+            END IF;
+            -- All original time/currentness checks follow the possible guard waits.
+            after_fact:=public.capacity_occupation_judge_fact(p_raw,p_source,p_hold,p_request,p_hash);
+            IF after_fact->>'contentHash' IS DISTINCT FROM fact->>'contentHash'
+              OR after_fact->>'caseSetHash' IS DISTINCT FROM fact->>'caseSetHash'
+              OR after_fact->>'physicalAccountId' IS DISTINCT FROM fact->>'physicalAccountId'
+              OR after_fact->>'xid' IS DISTINCT FROM xid_value::text
+              OR (after_fact->>'pid')::integer IS DISTINCT FROM pid_value
+              OR (source_body->>'validUntil')::timestamptz IS NULL
+              OR (source_body->>'validUntil')::timestamptz<=clock_timestamp() THEN
+              RAISE EXCEPTION 'CAPACITY_JUDGE_DEBIT_CURRENT_AFTER_WAITS_REQUIRED' USING ERRCODE='23514';
+            END IF;
+            RETURN jsonb_build_object('debitId',p_debit,'contentHash',digest,'immutable',body,
+              'allocatedMinor',g.allocated_minor,'parentCapMinor',g.cap_minor,
+              'xid',xid_value::text,'pid',pid_value,'executionAllowed',false);
+          END $judgedebit$''',
+        f'ALTER FUNCTION {JUDGE_DEBIT} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {JUDGE_DEBIT} FROM PUBLIC',
+        f'GRANT EXECUTE ON FUNCTION {JUDGE_DEBIT} TO aos_runtime',
+    )

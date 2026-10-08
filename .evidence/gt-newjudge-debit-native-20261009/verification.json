@@ -1,0 +1,41 @@
+{
+  "result": "NEW_JUDGE_SHARED_DEBIT_ARTIFACT_NATIVE_INSTALL_DENIAL_VERIFIED",
+  "authority": "AOS-001605",
+  "execution_allowed": false,
+  "native_positive_allocation_verified": false,
+  "source_parent_tasks_close": false,
+  "files": [
+    {
+      "path": ".evidence/gt-newjudge-debit-native-20261009/verify_native.py",
+      "sha256": "6d9e170b3db2948ba61d942d75300563a8a004b0caf5cf97a9778a41f7763ade"
+    },
+    {
+      "path": ".evidence/gt-newjudge-debit-native-20261009/native-result.json",
+      "sha256": "652d9bae72aaf4282fc07414dd41ee5e994512289e021aab46303a2e296a6f20"
+    },
+    {
+      "path": ".evidence/gt-newjudge-debit-native-20261009/native-r1.log",
+      "sha256": "1137e1edfd02c087bef37be627eb96f6b64e9542e329b23bc1e1b3c51ae92d60"
+    },
+    {
+      "path": ".evidence/gt-newjudge-debit-native-20261009/preservation.json",
+      "sha256": "2f04bbc6a3507498e8b58fb55c78c3ee67ff1089f1a14ce5b538b35578b37e13"
+    },
+    {
+      "path": ".evidence/gt-newjudge-debit-native-20261009/adjacent.log",
+      "sha256": "60fad05a4d6b14c1920318d5abf94c602b00df4da96c398e48ff3c83a3b4df03"
+    },
+    {
+      "path": ".evidence/gt-newjudge-debit-native-20261009/review.md",
+      "sha256": "de716c0ac834052d92f79f2ab57e795edac022b5fc280f21046d4638e67a2ed5"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/newjudge-shared-debit-plan-1605.md",
+      "sha256": "b88d75e349f0892e31694deb1c4076c28f27410bb0c5355078b8732be6df73b7"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py",
+      "sha256": "ad357054f9b77ba3eb6643f693086f53d0308c6556fa75c98606cbdab2b33d01"
+    }
+  ]
+}

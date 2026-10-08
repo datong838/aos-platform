@@ -1,0 +1,13 @@
+# 新 Judge 共享累计 allocation 入口
+
+基线fc9f25f50d638c305b583ef571ad34d1387b9d81/AOS-001605；本原Task拥有authority.py、physical测试与本证据目录，租约至22:12UTC有效。规则为231及原atomic-allocation-owner-contract；仅隔离研发，五父Task/完整Goal不收口。
+
+候选①实际新Judge parent分配入口（本步）；候选②新Source+newJudge真实联合正向（保留5435库已有历史Source1、旧runner要求0，不得重放，需真正新实验窗口/资源门）。先实现①，不修改旧function/table bytes、不装入默认迁移/正式服务。
+
+精确文件services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py追加独立compiler occupation_judge_parent_debit_statements；本Task证据文件新增原生RED/安装拒绝门runner。共享原parent_debit_guard、prepared_parent_debit与原physical account guard，不能创建并行累计账本。Source原C验证+新Judge原purpose/held/hash/3桶current-xid是必要前置；每case须原完整Suite cases中的唯一项。调用方p_minor仅为批准parent内风险分配，非报价；累计不得超parent cap。原physical count/token累计包含旧Target和新Judge。
+
+函数仅准备：原session occupation/SERIAL/RW/正租户、同caller freshparent及原account guard，purpose/case/debit不可变与exact重放；不同debit重复同case拒绝；所有期限在可能等待之后再原fact复核。所有newJudge debit沿原无finalizer不可COMMIT约束，禁止在本步解除。独立Rule签名/费用fence仍由原共同Owner验证，必要fact不授完整执行权；完整Intent/target-result binding/finalizer仍须后续一次整合验证。
+
+实际安装检查选原5435/cluster7694371626696531992/a159/f70639库，已有原private共享账本，Source1保留。原lab Task文件虽然显示ACTIVE，但Delivery已存在且Lease已释放，续租断言在写入前拒绝；按Delivery核对，不改旧记录。新增同owner限界验证Task gt-newjudge-debit-native-20261009拥有独立证据目录和已释放5435实验资源，至22:12UTC。这里只BEGIN新函数DDL和拒绝门后ROLLBACK，不重跑旧zero-Source fixture，不关闭原施工父Task。
+
+原生RED验证compiler缺失，随后在精确原5434/cluster7693564235776004128/a159保留库中BEGIN安装artifact，核函数Owner/security/search_path/ACL，错误caller原生42501，ROLLBACK后函数不存在、original函数hash不变、业务ledger计数不变。原base库无private occupation tables时使用声明先完整核现存5435私人空账本，不另造Source/parent/审批；不得stub originalSource/Judge事实以伪造正向。共享cap/同case竞争/真实Source正向明确未验收。源码旧prefix完全保持、相邻纯测试需重验。
