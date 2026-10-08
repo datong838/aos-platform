@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-atomic-model-admission-20261008/probe_newjudge_intent_gap_1607.py", line 17, in <module>
+    assert result['newJudge_Intent_producer_present'],'original newJudge own-parent/input dependency Intent producer is absent; target-only compiler cannot authorize it'
+           ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: original newJudge own-parent/input dependency Intent producer is absent; target-only compiler cannot authorize it

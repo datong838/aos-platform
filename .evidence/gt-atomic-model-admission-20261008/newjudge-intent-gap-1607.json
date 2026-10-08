@@ -1,0 +1,17 @@
+{
+  "old_intent_compiler_sha256": "16750052bec7101683d90611fc8c009b3dcb39e1a2dcced3981655b806cbb452",
+  "old_Intent_target_only": true,
+  "actual_newJudge_purpose": "model-judge-call",
+  "case_fields": [
+    "caseId",
+    "expectedArtifact",
+    "inputArtifact",
+    "kind",
+    "required",
+    "timeoutMs"
+  ],
+  "newJudge_Intent_producer_present": false,
+  "no_database_write": true,
+  "no_fake_target_output": true,
+  "business_firstchain": false
+}

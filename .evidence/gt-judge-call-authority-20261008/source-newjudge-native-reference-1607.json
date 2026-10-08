@@ -1,0 +1,215 @@
+{
+  "authority_revision": "AOS-001607",
+  "head": "9a96b85c2f55754511afd3fdfe58c7be0fcd24f3",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/newjudge-shared-debit-reference-1606.json",
+      "sha256": "d0730589a660c8e0b5820bbf0815044641b9bfbd0b63a40c73a93993914604c0"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/verifier-install.log",
+      "sha256": "c305b6b8a6356ecc1f01fe91f2d6ef0490fcc4e20fd31dd936933a01acf4844b"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/run_native_source_newjudge_r1.py",
+      "sha256": "f105afccd8a0b36a7fec7b1ef1e0259eafc88615c03a7f538c525fc063e5774d"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/native-r1-result.json",
+      "sha256": "5f40cca14af69e037a70795cb99deaa20b6e66339462d5b9eb788c11478a3f86"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/verifier-install-attempt.json",
+      "sha256": "e779c66e19987f831aa1c73d68636ca7f73b0a3a889bb0b9179265a13651f923"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/create-file-copy.log",
+      "sha256": "aefb2355fff231d000848f717bdf6bb49e8c3c06be17772036b94329ae90c173"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/run_default_judge_r1.py",
+      "sha256": "fae24a38e0ce6fba7ad9fc7c789ce119e3b6e002bce8e97ded4f784c02790980"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/resume_create_lab.py",
+      "sha256": "d8b295ad50646b0f516af7e267ee23e634acc4d7032dc72ca193981d89155561"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/credential-log-scan.json",
+      "sha256": "332a9c4b8fa1388ab5ab39c19b80c80e5359bc2594ba7627b50ee6186d60d299"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/volume-permission-repair-attempt.json",
+      "sha256": "d7b8fcb4aefeb11f5d6b2b6d7c92d12c854c05cd2f166c2f9d30f50196d6a3d9"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/create-resume-attempt.json",
+      "sha256": "fa8872f115dd0000a79d8f135405b38dfa79d61be64271a672f9279610f96c6c"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/default-judge-r1-result.json",
+      "sha256": "3b11e3a45522787c068c282a8bfee95077455129bd42ce535c53a13482aa453b"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/image-copy.json",
+      "sha256": "d44358ed511b72218ec1ef74e2236fb466bac01503c4c8b63f7e2f7c1e026f03"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/delivery.json",
+      "sha256": "3795258780b828c29a0ba6f55afbe42311fe9a6b95747731f4384b9b3d43a555"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/create_file_copy.py",
+      "sha256": "ae74cc71eb6aa8e7fd03029728ef73c7fda149ab4fb7721aaecdf687f8a66d42"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/native-r2-attempt.json",
+      "sha256": "322ca66a97ab02c67c6f655f7af73691ea36ee77ae9183f727aeb3f96269349d"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/task.json",
+      "sha256": "f8d5cdfdda71867b4441c472a7d106af1039941140e3139bc762ab62b1ec0288"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/default-judge-r1.log",
+      "sha256": "ed0d28f6583988664001b3f0a7200a0c98d39e41c6245367e9489182d2cf320c"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/create_lab.py",
+      "sha256": "fb1a54eaa61a7d60f0bd9019cdd28b0fb6a6108fe7384bfd2f1c34486fbfb736"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/native-r3-attempt.json",
+      "sha256": "322ca66a97ab02c67c6f655f7af73691ea36ee77ae9183f727aeb3f96269349d"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/native-r1.log",
+      "sha256": "a678797c1bfe06f845e31b7922d52651ea7aa88e2360916fe3ccf6f680b11e6b"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/adjacent.log",
+      "sha256": "e35738859fd9c6c9807ff9bfa2d5608c87159fa6d70a26fe03a9c53628ad9fdb"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/native-r2-result.json",
+      "sha256": "2a5f97e74723052fef6c1316e8c5da2c040901c8069da43f9d48c34da14e2390"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/create-attempt.json",
+      "sha256": "720ad53c570cac46b711964b428bc48fe762775a428cb845cec5616f4bdf78ab"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/native-r2.log",
+      "sha256": "c05fcb8d426c53afea3865375aaeef0ee43a65cdf76fa02ac44266cfd8e68873"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/create-file-copy-attempt.json",
+      "sha256": "755e96a11280391c065b5dc2599587bf478eb37fd4b1f6e3462203f66e9d8187"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/native-r3.log",
+      "sha256": "be60518d486bc6225cc9046139c3c3c9228e62adbfd200a2c7956af848b1fefe"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/native-r1-attempt.json",
+      "sha256": "322ca66a97ab02c67c6f655f7af73691ea36ee77ae9183f727aeb3f96269349d"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/old-container-comparison.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/verify_native_r3.py",
+      "sha256": "466b846b0b74e1cdb20c924318f1a8ab0becbbe735bd974e6eda7f7b9bbff77d"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/create-resume.log",
+      "sha256": "225c0b32ffbdddd19ca770689fb93db5d0665f4975fce326b2277eb250104a7d"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/verifier-install.json",
+      "sha256": "a26432757cd61fcd529f0fc7c90ec338682f13e5b451f08b0ddf907436e61142"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/create.log",
+      "sha256": "bd2e64654ecd7410b92f20d6b1c0d41754fd479104f0a0406157d33ed6d67f3d"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/run_native_source_newjudge_r3.py",
+      "sha256": "efcd8aaf48114db467f437e368c37206e39c496b87fb43457e8bfca72c46380e"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/verification.json",
+      "sha256": "767d4e900a2356f443eb584733785f3f8bc6b74bf75d32258a078e44af147508"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/container-id.json",
+      "sha256": "4aeb6a05bda0a0d8dcc32ecb9f701f59132bb5faf950decaa749d7d16e403432"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/native-r3-result.json",
+      "sha256": "9dc169b4ae783e728fdae0f767f7d0988a6bbad749d5657769c290e4beb1075f"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/review.md",
+      "sha256": "ee02d999b3c7f66374c735e08dcfced7dbbda51b2f61ce67a82a2713549ee813"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/reconcile_started_lab.py",
+      "sha256": "325736592fccf4aae4c5c048752f6dfea9374ddc53d9ab3e618f77ea577d4a31"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/reconcile-started.log",
+      "sha256": "0b864d244767fe3b31272b27edae5930b11382d020a65833d5672afac4107ed0"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/image-provenance-reconciliation.json",
+      "sha256": "484cba28e5fe4745cd29f3ed4cc24d4ac666e2ccc0f43fff82a22fbc46033b6a"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/preflight.json",
+      "sha256": "fc48c1b319d83b596e9d44ee946b0d6fc4a0df840b0139a737e021f63da8d51f"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/install_verifier.py",
+      "sha256": "704238490e003d3b97b1bc3d9a324e2957b25db7e16ea5518b9f63ad5e393e77"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/default-judge-r1-attempt.json",
+      "sha256": "322ca66a97ab02c67c6f655f7af73691ea36ee77ae9183f727aeb3f96269349d"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/run_native_source_newjudge_r2.py",
+      "sha256": "dd18d2c68a19ff9dd6daa84673f390abde6d95c0150206503ce53aa825b73a42"
+    },
+    {
+      "path": ".evidence/gt-source-newjudge-native-lab-20261009/native-r3-independent.json",
+      "sha256": "415af8ef51984465bb044799a3503a8687277cb31b4a444653e15f6b6b0ccfa1"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py",
+      "sha256": "3ab4785527d1f345102f2ab7a44df7bf9516df50285662b97ac09c5f80fc74bd"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py",
+      "sha256": "3976fcf68e8edb91e6755434549e77b4d502a5ba751c80f2ff4d898f01ff5f09"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source_newjudge_native_trial_1606.py",
+      "sha256": "0f7f7aa4bf403b3fd45b1792f47fc34fc76680ed67b1ee2a8336f9385e4bf8ce"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-native-positive-1606.json",
+      "sha256": "7d997cd68fc6eca008fc0e1da8f3519c4188a8feb7c571ffd872fad513ec7f2c"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-joint-plan-1606.md",
+      "sha256": "11551095a4799d27a9fb38fb4363a49637ccbbca3c1a1decece7575a4bbfc3a5"
+    }
+  ]
+}

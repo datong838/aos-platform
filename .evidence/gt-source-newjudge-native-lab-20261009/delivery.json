@@ -1,0 +1,25 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "gt-source-newjudge-native-lab-20261009",
+  "base_revision": "AOS-001606",
+  "completed_revision": "AOS-001606",
+  "result": "OWNED_LAB_SOURCE_NEWJUDGE_NATIVE_PREPARATION_GREEN_FULL_JOINT_COMMIT_PENDING",
+  "changed_files": [
+    "aos-platform/.evidence/gt-source-newjudge-native-lab-20261009"
+  ],
+  "commits": [
+    "9a96b85c2f55754511afd3fdfe58c7be0fcd24f3"
+  ],
+  "verification": [
+    "actual signed Source/occupation SCRAM/newJudge parent/case allocation replay cap and unfinalized deny: native1PASS108.31s",
+    "default Judge native1PASS64.46s; adjacent293PASS0.77s",
+    "independent aborted caller/prepared debit Intent0/NOLOGIN memberships0/retained Source1; old resources unchanged"
+  ],
+  "risks": [
+    "test-only original Source/root identity not formal authority",
+    "full four-leg Intent/finalizer/transport/Usage and natural firstchain pending",
+    "parallel physical upper-bound competition pending"
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-09T05:30:52+08:00"
+}
