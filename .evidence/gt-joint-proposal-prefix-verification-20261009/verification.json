@@ -1,0 +1,16 @@
+{
+  "authority_revision": "AOS-001598",
+  "result": "ORIGINAL_REGISTRY_PREFIX_COMPOSITION_OBSERVED",
+  "verification": [
+    "original full native node + actual 2 original prefix calls and Target hold composition1PASS53.60s",
+    "actual Registry advisory228,1 wait with firstcaller blocker; both original transactionsABORTED independently; Targethold0; nootheractiveclients",
+    "R1 observerqueryfailure21.99s preserved; no deadlock claim; no production file changed",
+    "Original Source-compiler absenceRED1FAIL0.08s retained; next separate original newJudge fact/compiler/Manifest/privatefinalizer pending"
+  ],
+  "risks": [
+    "one composition with original Registry lock; not general all-entry proof",
+    "all5production parents remainACTIVE",
+    "isolated fixture updates only, no formalDB/Provider/mallSource"
+  ],
+  "execution_allowed": false
+}

@@ -1,0 +1,20 @@
+{
+  "observed": {
+    "pid": 943893,
+    "wait_event_type": "Lock",
+    "wait_event": "advisory",
+    "query": "SELECT pg_advisory_xact_lock(228,1)",
+    "blockers": [
+      943884
+    ]
+  },
+  "results": [],
+  "first": {
+    "xid": "285571",
+    "pid": 943884
+  },
+  "second": {
+    "xid": "285572",
+    "pid": 943893
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "authority_revision": "AOS-001598",
+  "head": "2e330ca7f2e10ae595dd99025ec2d1b38c122ab3",
+  "database": "aos_test_379975a6f96d_ti4_test",
+  "cluster": "7693564235776004128",
+  "transactions": {
+    "first": "aborted",
+    "second": "aborted"
+  },
+  "target_request_id": "model-eval-request-9aff1ffe68cc42378bdb",
+  "target_holds": 0,
+  "other_active_clients": [],
+  "native_result": "1PASS53.60s original full node plus exact original-method concurrency probe",
+  "finding": "original Registry xact advisory lock serializes this tested composition; no proposal upgrade deadlock reproduced",
+  "limits": [
+    "Registry prefix dependency remains necessary; bypass/global removal not approved",
+    "No physical Source, whole newJudge Manifest, private finalizer or natural first-chain proof"
+  ],
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/joint-proposal-upgrade-native-red-r2-proof.json",
+      "sha256": "26198b7e73c9df200d3204dce61359bef7f532c59899c6c9d43ea9e1ab7facdf"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/joint-proposal-upgrade-native-red-r2.py",
+      "sha256": "70abe1ab68248386379508a11e5ad29a84d171440f390cbcfd959d01e8a1348a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/joint-proposal-upgrade-probe-fragment-r2.py",
+      "sha256": "16aa6503039b04bbb56e71742ee2634018cbad7fa55ddd1cc0aaf04ab4e2e5c0"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/joint-proposal-upgrade-native-red-r2.log",
+      "sha256": "0e0dc453629c1f4b41777799f24bf62d5ad18831bd4177b3c8d1e1cf064c8f88"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/joint-proposal-upgrade-native-red-r2-result.json",
+      "sha256": "84382bb3fc5293ae33f10e0dcb837d9f4411e249f69232bb4f24c227cb24624b"
+    }
+  ]
+}

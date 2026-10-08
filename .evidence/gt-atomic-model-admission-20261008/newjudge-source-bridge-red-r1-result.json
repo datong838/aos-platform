@@ -1,0 +1,11 @@
+{
+  "authority_revision": "AOS-001598",
+  "head": "2e330ca7f2e10ae595dd99025ec2d1b38c122ab3",
+  "status": "EXPECTED_RED_MISSING_NEW_JUDGE_SOURCE_COMPILER",
+  "failed": 1,
+  "duration_seconds": 0.08,
+  "scope": "pure compiler entry check; no database operation",
+  "execution_allowed": false,
+  "next": "Implement separate original newJudge fact bridge with native Source and joint locking prerequisite; DB acceptance remains pending",
+  "log_sha256": "03f788614b544893e7102c877bda7bf840363cf6ddf88881b1505c2621f3b259"
+}

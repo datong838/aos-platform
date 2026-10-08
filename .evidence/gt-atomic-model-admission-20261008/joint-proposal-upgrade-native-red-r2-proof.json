@@ -1,0 +1,34 @@
+{
+  "first": {
+    "xid": "285571",
+    "pid": 943884
+  },
+  "second": {
+    "xid": "285572",
+    "pid": 943893
+  },
+  "observed": {
+    "pid": 943893,
+    "wait_event_type": "Lock",
+    "wait_event": "advisory",
+    "query": "SELECT pg_advisory_xact_lock(228,1)",
+    "blockers": [
+      943884
+    ]
+  },
+  "outcomes": [
+    {
+      "caller": "first",
+      "outcome": "rolled-back"
+    },
+    {
+      "caller": "second",
+      "outcome": "rolled-back"
+    }
+  ],
+  "threads_terminal": true,
+  "new_target_holds": 0,
+  "original_judge_holds": 1,
+  "execution_allowed": false,
+  "scope": "actual original budget prefix followed by Target hold; no physical Source joint claim"
+}

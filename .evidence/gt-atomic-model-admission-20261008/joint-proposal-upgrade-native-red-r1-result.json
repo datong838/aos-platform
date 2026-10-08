@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-08T19:45:13.508239+00:00",
+  "database": "aos_test_379975a6f96d_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_model_eval_judge_authority_pg.py::test_exact_signed_rule_new_original_suite",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "original legal sources then pending request; no transport"
+}

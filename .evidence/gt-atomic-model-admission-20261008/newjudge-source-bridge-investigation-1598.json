@@ -1,0 +1,36 @@
+{
+  "authority_revision": "AOS-001598",
+  "head": "2e330ca7f2e10ae595dd99025ec2d1b38c122ab3",
+  "execution_allowed": false,
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py",
+      "sha256": "94862046c224ace30425c69dd5f8508056e8cee6a2db02d034520ada5d521b83"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_model_eval_execution_contracts.py",
+      "sha256": "90759456b4647a8a15cc13bc9970595a0890a9d0ccff43c9ab1df0a93f5ce7dd"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_model_eval_judge_request_store.py",
+      "sha256": "0d1118809494b9fa537a1445f2f68fb584c653e84b37e465146e23e6d499ae6e"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_model_eval_judge_action.py",
+      "sha256": "5bae612a05961102b815fca5a2a41e96f5d97194219be0a656d502187dfe7ed8"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_model_eval_budget_reservation.py",
+      "sha256": "70ebb534ac5f21e968470b6ab797184ff7ea59ab35822a9482d3574c8df1cbc2"
+    }
+  ],
+  "findings": {
+    "source_fact": "old Model only; no new Judge compiler entry",
+    "manifest": "Literal[1], parent_budget_limits only ModelEvalParentBudgetLimit",
+    "proposal_locks": "graph SHARE followed by ordinary hold UPDATE; possible shared lock upgrade requires actual concurrent test, not confirmed deadlock",
+    "registered_candidates": [
+      "newJudge original Source fact bridge",
+      "whole Manifest purpose and newJudge parent union"
+    ]
+  }
+}
