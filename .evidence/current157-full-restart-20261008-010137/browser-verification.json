@@ -1,0 +1,12 @@
+{
+  "event": "2026-10-08T01:01:37.490Z",
+  "control": "cua browser 2 tab 1",
+  "tenant_selected": "org-org/dev-project",
+  "routes": ["cockpit", "content-campaign", "operations", "creator-growth", "media-studio", "analyst", "price-governance", "customer"],
+  "all_eight_observed": "当前工作台入口不可用 当前目录没有此工作台的可见入口",
+  "readonly_interaction": "cockpit 重新读取目录 clicked; denial preserved",
+  "application_list": "当前有效安装0; 模块未安装",
+  "final_url": "http://127.0.0.1:8434/workshop",
+  "retained": true,
+  "business_first_chain": false
+}

@@ -1,0 +1,130 @@
+{
+  "status": "FULL_RESTART_CURRENT157_LATEST8658_BROWSER_DENIAL_AND_TENANT_ISOLATION_GREEN",
+  "event": "2026-10-08T01:01:37.490Z",
+  "head": "8658a3fcb75d280eb454bc342629af8a9fb72c80",
+  "pg_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+  "pg_started": "2026-10-08T01:10:23.54830361Z",
+  "volume": "aos-a0v-recovery-pg-data",
+  "services": [
+    {
+      "pid": 26897,
+      "ppid": 1,
+      "uid": 501,
+      "started": "Thu Oct  8 09:10:26 2026",
+      "argv_sha256": "3881fe213875a9231b36ec0dc4bf6649efe4ddb01f7593e33a8c3b5dac6e1eac",
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+      "children": [],
+      "listener_ports": [
+        8080
+      ]
+    },
+    {
+      "pid": 27312,
+      "ppid": 1,
+      "uid": 501,
+      "started": "Thu Oct  8 09:12:12 2026",
+      "argv_sha256": "4cd8ae42f94933c4fa6fceeb4cda83e16c8940a1509321db6ef2f849bd771270",
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-recovery/current157-full-restart-20261008-010137/apps/web",
+      "children": [
+        {
+          "pid": 27313,
+          "ppid": 27312,
+          "uid": 501,
+          "started": "Thu Oct  8 09:12:12 2026",
+          "argv_sha256": "d76592cffd7f6b7d2e96cda9fcb2b8bd908f96f5181122e60faa399aabea545e"
+        }
+      ],
+      "listener_ports": [
+        8434
+      ]
+    }
+  ],
+  "http": [
+    {
+      "org": "org-org",
+      "project": "dev-project",
+      "route": "ecommerce-workshop",
+      "status": 200,
+      "body_sha256": "0d6153b523227b74bcc51cdfe9f0984355ed98ca3a714036e0b1df7172556b41",
+      "response": {
+        "schemaVersion": "aos.ecommerce-workshop/v1",
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "evaluatedAt": "2026-10-08T01:18:24.493938Z",
+        "dataCutoff": null,
+        "items": [],
+        "count": 0
+      }
+    },
+    {
+      "org": "org-org",
+      "project": "dev-project",
+      "route": "runtime-workshop",
+      "status": 200,
+      "body_sha256": "33bec9db2a360741afe02066a50bd22e1923777bd2165caf345b8879bd18c49b",
+      "response": {
+        "schemaVersion": "aos.runtime-workshop-catalog/v1",
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "evaluatedAt": "2026-10-08T01:18:24.575687Z",
+        "dataCutoff": null,
+        "items": [],
+        "count": 0
+      }
+    },
+    {
+      "org": "dev-org",
+      "project": "dev-project",
+      "route": "ecommerce-workshop",
+      "status": 403,
+      "body_sha256": "d8ffd8899b6184243666f7147e15f521a9041e30a8a1cae8522e25d3f27b2871",
+      "response": {
+        "code": "AUTH_TENANT_UNKNOWN",
+        "message": "organization/workspace scope is not registered",
+        "details": null,
+        "traceId": "6894dd06-858d-4561-8eb3-ab7da1cc0523"
+      }
+    },
+    {
+      "org": "dev-org",
+      "project": "dev-project",
+      "route": "runtime-workshop",
+      "status": 403,
+      "body_sha256": "d22a2f57a00457c109705df96662b92bd40089ffe1a9af58a2c0bd0f4f5d7a5f",
+      "response": {
+        "code": "AUTH_TENANT_UNKNOWN",
+        "message": "organization/workspace scope is not registered",
+        "details": null,
+        "traceId": "33af29f2-67a8-4269-939d-ee6634bc9fcf"
+      }
+    }
+  ],
+  "all_user_tables": 615,
+  "unchanged": true,
+  "browser": {
+    "event": "2026-10-08T01:01:37.490Z",
+    "control": "cua browser 2 tab 1",
+    "tenant_selected": "org-org/dev-project",
+    "routes": [
+      "cockpit",
+      "content-campaign",
+      "operations",
+      "creator-growth",
+      "media-studio",
+      "analyst",
+      "price-governance",
+      "customer"
+    ],
+    "all_eight_observed": "\u5f53\u524d\u5de5\u4f5c\u53f0\u5165\u53e3\u4e0d\u53ef\u7528 \u5f53\u524d\u76ee\u5f55\u6ca1\u6709\u6b64\u5de5\u4f5c\u53f0\u7684\u53ef\u89c1\u5165\u53e3",
+    "readonly_interaction": "cockpit \u91cd\u65b0\u8bfb\u53d6\u76ee\u5f55 clicked; denial preserved",
+    "application_list": "\u5f53\u524d\u6709\u6548\u5b89\u88c50; \u6a21\u5757\u672a\u5b89\u88c5",
+    "final_url": "http://127.0.0.1:8434/workshop",
+    "retained": true,
+    "business_first_chain": false
+  },
+  "business_first_chain": false
+}
