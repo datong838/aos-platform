@@ -1,0 +1,243 @@
+{
+  "authority_revision": "AOS-001614",
+  "head": "26e5bb433cb22bf236a7650e109245e946983fc1",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/trusted-target-call-reference-1613.json",
+      "sha256": "1e4d780f55ad2581506d6827b7f799ca8fba09c04d2ea254a68c8890159177be"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r1-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r1-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r1-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r1-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r1-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r2-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r2-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r2-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r2-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r2-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-budget-fact.json",
+      "sha256": "0d5e0c5f05ff66f70c7312413ea4f1fded11579de5204b792eb633bec7d71507"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-case-binding.json",
+      "sha256": "11e71b6bc1886cea064cc377ad5d2f88c93f15cae220defdbc1b75aab3c5752c"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-guard-race.json",
+      "sha256": "5349c6fb9af7626cb933f82e2e415e8de164ce951a24b883d04b8031874fca5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-input-binding.json",
+      "sha256": "494e56fcfacb4840a12d5255dcb24dd68557c33f1032c03df53325ec2cd90eb6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-input.json",
+      "sha256": "b2cab61a728490528db5e265708ce89a14c0500f81541821d6d78218001c1892"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-intent-existing-row-negative.json",
+      "sha256": "0a5eebc79fc84521c953e9fee06368cec073ecf053ad195d24b3b863e33a4fea"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-intent.json",
+      "sha256": "1deb319d0bd573029a91994df3dd4448a3f9d9cee09de5e5733d5954669f7d78"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-parent-debit.json",
+      "sha256": "74327afd652f50bd40590732a1ff1444fe1d6581dc3adab3e9eda9040ae9d7c6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-preparation.json",
+      "sha256": "dc00f3d0ab8dbb75e3497e0f30216b44cf5dbbb21e87b28ffaa3fd1d47d20d77"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-whole-source-plan-input.json",
+      "sha256": "7a53a8d2cad38b844c2235347ee35c6ea178dcd153d64c0fd217d24f7a7be849"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-immutable-r3-whole-source-plan-verification.json",
+      "sha256": "462cf523195527932a75ed45718405d0695614c86c5e387524e2dfe89f360eed"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/target-call-immutable-r3-whole-plan-proof.json",
+      "sha256": "213e8558bb60f9fccba68c4c31a5fab868880fe080608b8df35746690f402837"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/actual-ledger-next.md",
+      "sha256": "450a1412f4cf40cff80f96ce432d3cd721814fabb5ff940b6f2cf49ff02adc17"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/catalog.json",
+      "sha256": "f6299bac1ac076606c8cded3b5d68362b639a40c2477ed9b8b9f6b4be6269afd"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/complete-plan-risk.json",
+      "sha256": "8e688685a6c28a0c303532857329c21f872fde64e07a2336c75d5bce8b2e84ce"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/empty-call-truncate.json",
+      "sha256": "23b34b5be81370d3fafb488d9e84e6b5e9b78fa4431b059599910cd21ad014d6"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/existing-call-immutability.json",
+      "sha256": "b019a0e3edc3acf361942671450fbbc8704ea6551df45e16147a49159e172c4e"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/failed-r1-independent.json",
+      "sha256": "26ac245e1a577386d492f40dc486f9be5bf8781c93ff85106d75105c3ee6a2e1"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/failed-r2-independent.json",
+      "sha256": "68aa5185fda030df4b8d8430de6302bec06a203374ba6adce348c6b9626bd989"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/finalize_wave.py",
+      "sha256": "448451f2ac1c0fbaccf57115c9f6f122af2dfea228b635c5afbc0a80e86cc405"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/hash-check.json",
+      "sha256": "0183e783b7fe33594eb47b5916b31000f23d01c0b5dc293fae220efb84a96764"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/independent-readback.json",
+      "sha256": "e7fd5607fa31ce013ba80dff0784e2b9e619f85e79ebca192e58816435377456"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/independent_audit.py",
+      "sha256": "74e1d0f4d0a5dffa1925c565e87a2806f4483294e45e9d26f9ba5881495890ff"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/native-r1-attempt.json",
+      "sha256": "cca279608946c66d7a93f153c275d71bef8bdcc9e1a5f5690c464f622314eb6a"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/native-r1-result.json",
+      "sha256": "76b9087ad1ac5672d32ce85e4b10355ba7eb54b97b373d4abbc3162127e4a3c2"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/native-r1.log",
+      "sha256": "d653c97479cf5ad4c029f489eec2674155219fb55402097b35f3f409ec307db7"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/native-r2-attempt.json",
+      "sha256": "cca279608946c66d7a93f153c275d71bef8bdcc9e1a5f5690c464f622314eb6a"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/native-r2-result.json",
+      "sha256": "beb0ad5d97e4c0bfda14a1f07218da81c631a1da52b5ee1eb084c2b6b8aca4c0"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/native-r2.log",
+      "sha256": "4632564b015425060b5dc51a7973823171a47f72d1910a6c251ebe0287971a5a"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/native-r3-attempt.json",
+      "sha256": "15545d7b5366aa09b0b8442fa5e6baf7a1dbcd832a043f20c6e4ea09af335a71"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/native-r3-result.json",
+      "sha256": "17700b79f244c88dc98bda4c7211417933b94b1bcd33e08b7f7a6f321ee6842e"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/native-r3.log",
+      "sha256": "163ac9d660674092a5cce259049995090df9de9b597d3e1839b3b248b43c6f39"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/plan.md",
+      "sha256": "d0e303f641ae4374bd4366d0d557692715ecd465737567e9bbfee65247a229bf"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/product-unchanged.json",
+      "sha256": "a5e148092f0e92bc22025b436d40fec407ebef93cf1c65fd273c5b8c427777c1"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/review.md",
+      "sha256": "10610b2b200f32619d1502cd77622f4bb7788bd17851afd2e882c0684d67903d"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/run_native_r1.py",
+      "sha256": "2291bc19c63e0d085a2c6c4aaead3bcbeddb506a3acab03b4cf17929cc6b8d7d"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/run_native_r2.py",
+      "sha256": "5f04e03108c380fa2fdb6ae8987937ba93c9bed09a399c6e06b2b49856f557e3"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/run_native_r3.py",
+      "sha256": "e2d5e64bf02fd769708c701bc3631bfe32e29d0e0301b83e8afa42acf6d14520"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/source_newjudge_native_trial_1606.py",
+      "sha256": "bf02a5952e047f7d1fb7665afc02f1c2204295091fdd610bfedf067a5d1a06b5"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/source_trial_failed_r2.py",
+      "sha256": "a2a5cd7ca8e7383a12469e5dd2c7663d08ec636bc07c547068d7ac74d0c83a4d"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/task.json",
+      "sha256": "0dae92d6a5ea17468d206f62c4cdf5900ead7df8f19ff57edf3da7a05556c136"
+    },
+    {
+      "path": ".evidence/gt-target-call-immutability-native-20261009/trusted-target-call-green.json",
+      "sha256": "6e37dd910e50a0fa99369e1d07040a2dcc010b0e2a80212320f2831d5a8eb8ca"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "gt-target-call-immutability-native-20261009",
+  "base_revision": "AOS-001613",
+  "completed_revision": "AOS-001613",
+  "result": "TARGET_CALL_IMMUTABILITY_AND_DEDICATED_COMMIT_GATE_NATIVE_GREEN_ADMISSION_PENDING",
+  "changed_files": [
+    "aos-platform/.evidence/gt-target-call-immutability-native-20261009"
+  ],
+  "commits": [
+    "26e5bb433cb22bf236a7650e109245e946983fc1"
+  ],
+  "verification": [
+    "Actual original Source/SCRAM/current approved Target/newJudge/complete plan/Target Intent and call; existing UPDATE DELETE42501, pending-eventTRUNCATE55006, empty-table customTRUNCATE42501, exact newcall joint_constraint23514",
+    "Full original native1PASS92.62s regression; actualcallerCOMMIT rejected, independent aborted/prepared0/Source1/NOLOGIN/member0/no temporary probes/31old resources unchanged"
+  ],
+  "risks": [
+    "No product code changes, actual inflight ledger/risk allocation/unknown/final deadline/transport/Usage still pending",
+    "R1 exact truncate error mismatch and R2 original50s deadline failures retained; no deadline expansion or formal effects"
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-09T07:34:31+08:00"
+}
