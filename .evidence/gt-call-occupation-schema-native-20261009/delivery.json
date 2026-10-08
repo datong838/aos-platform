@@ -1,0 +1,23 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "gt-call-occupation-schema-native-20261009",
+  "base_revision": "AOS-001610",
+  "completed_revision": "AOS-001610",
+  "result": "PRIVATE_CALL_PREPARATION_SCHEMA_NATIVE_GREEN_FULL_ADMISSION_PENDING",
+  "changed_files": [
+    "aos-platform/.evidence/gt-call-occupation-schema-native-20261009"
+  ],
+  "commits": [
+    "4b52462afbf510a22d99e8d66f7c5522ab3d1442"
+  ],
+  "verification": [
+    "original full Source/SCRAM/complete four-leg preparation native1PASS69.69s; private call table FORCE RLS/runtime five DML gates/old actual COMMIT rejection preserved",
+    "318 pure adjacent PASS0.70s; independent zero preparation rows/Source1/NOLOGIN/31 old resources unchanged"
+  ],
+  "risks": [
+    "schema only: no trusted call producer, actual occupation, unknown transition or admission/finalizer",
+    "original parent held-only constraints retained; price unknown is not zero; full risk allocation/lock graph/actual COMMIT deadline and natural firstchain pending"
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-09T06:46:38+08:00"
+}

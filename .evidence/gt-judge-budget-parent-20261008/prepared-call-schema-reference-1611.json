@@ -1,0 +1,171 @@
+{
+  "authority_revision": "AOS-001611",
+  "head": "4b52462afbf510a22d99e8d66f7c5522ab3d1442",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/complete-plan-risk-reference-1610.json",
+      "sha256": "888daa4148b4e0f6046f0e43f681847132e500f1360a2dd9a3ddd3b4eb083c75"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/run_native_r1.py",
+      "sha256": "743328cffd94e4c2672567d9cc78f75730bcc880178efa55c005c5865da6156f"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/native-r1-result.json",
+      "sha256": "c1a68595ee4676de390df2ef613635bcf9cda942d8d9c54bb735ec0ccad203bb"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/red.json",
+      "sha256": "0030d081357561ce3404ab0731530b66b805f5985316fdf501a023e1ec59efa3"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/static.json",
+      "sha256": "ef0b41cb3a950a0f12d0b75ba05ae5c38cbf862f3a820977ee17a536487a180a"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/source_newjudge_native_trial_1606.py",
+      "sha256": "bdfde7e35144fe4e5332b3e7bfef2b1e5bd83844af4ddc75c5c2b4b7f7b7a32e"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/task.json",
+      "sha256": "10cacaf6c7674c8ef372673055bfbfc75cb3097f6c9f7abe720f280744d43cbb"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/adjacent-r2.log",
+      "sha256": "61c935ce5ba818f8a70c022d3608d558ae9b54cc9851f8daa5642aa913e650bd"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/native-r1.log",
+      "sha256": "3a0672d96abfaebbdc2d9bbfd3bb5fd6738021995d476b903918ad25881edca9"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/native-r1-attempt.json",
+      "sha256": "1291df2cab0c61ee10624f4d8b2fea88f2041b17ec79637676580f4911e63350"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/plan.md",
+      "sha256": "5cc86fd89da286ab0dc0b6b9b4f16c4a37977475ac3ce8df49a33bc1fe812de8"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/catalog.json",
+      "sha256": "c9fa9fdffaba0068ed215c60f6a1845f7a86e71cbda19551f065e65dd93f6275"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/review.md",
+      "sha256": "5851923055c7520891bcc48cd0aa96d73c3b29b1da656ab489800f366688f6ed"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/complete-plan-risk.json",
+      "sha256": "8387a5c4ecb86eb34bacdcdc9bf43a549a030aac71b14bb5ff16d9fbcacae84c"
+    },
+    {
+      "path": ".evidence/gt-call-occupation-schema-native-20261009/independent.json",
+      "sha256": "98a205f77e20560aab4ac62869f502c4bbbbdc34256e9a54b0c3742ac688a6a4"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py",
+      "sha256": "f1766131d62475ec67080f41550ce9de947a7dda36902af71df0fcd07c2d1d45"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/fee-risk-semantics-readback-1610.json",
+      "sha256": "55aa9aa0b1fd9be8b88054bc251961eefc7b4b9982ccc7da2496adbb94079521"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/fee-risk-semantics-checkpoint-1610.md",
+      "sha256": "88681bbeff04ba0df7b394801ff9fe7a402d5872151b17e57ed38361ea531dd7"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/goal-capacity-stop-diagnostic-20261009.json",
+      "sha256": "c12f520b50f7ac59a3588940a39e1da72939997d69397c40b7b1cb661eed478e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/fee-risk-investigation-reference-1610.json",
+      "sha256": "af34ae5703874fc086a40ebe5303bedcd899519c1547fd5e0a66219db096874a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/actual-occupation-schema-readback-1610.json",
+      "sha256": "586a9ed165e75b159920769740a0a5416dbae1935dac2d95ca05a910b1ff928e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/actual-occupation-ledger-design-1610.md",
+      "sha256": "de446eda5ce8e429974cbd90269f06e2f9c01e9c0c82def3ba4a4a779e253535"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/actual-occupation-investigation-reference-1610.json",
+      "sha256": "34204be7876415cc3c207397a4e77f3ae0eb7991cf9b2d19d099ced5fd6db27b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-budget-fact.json",
+      "sha256": "c540c00d173ec6da169176e1b14068d4cd544e6173e47b660906041a0c03f140"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-input-binding.json",
+      "sha256": "07525b1c28f7c85fa08bdb632f51f36e17e94bdf722d73d28d54758d2ed76032"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-intent-existing-row-negative.json",
+      "sha256": "5e1a5ce5f77b97fa369c088d2e072ba76412e55f98f1a5e6f892c1eb613cae9b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-whole-source-plan-verification.json",
+      "sha256": "6fa2ef1550e4b06cd979cc72e755bb9d7295d1da70a0c06473bad21f98c326f3"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-parent-debit.json",
+      "sha256": "65a735ec05b62203493d9c814f252bfbe4749be6431e8a219bef6175fb508b29"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-whole-source-plan-input.json",
+      "sha256": "a65f14471e9000e37184974cee6e86340bef475d6e43478a43072e199e5a35b8"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-preparation.json",
+      "sha256": "b5135bee4e3ff8a5641ab6a49a9f96a9bcc7ffe637d6f1b0cb0791e3019ba3af"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-case-binding.json",
+      "sha256": "21fb78c0f11f57ea63a9daed0ada69c51cea5d4949e434cb36f04de8d9760d80"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-input.json",
+      "sha256": "b59ea354c54c1f4a3867e617aa8fe8160321e5996255d4778068778474ee1699"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-intent.json",
+      "sha256": "7d296c4ca20520bfc0b0aad6a7532bc123f0f4b8cf481944dfb828241e2d69e7"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-guard-race.json",
+      "sha256": "d0a01adb9c4632fca0b7e56c3222f6c5a167838eb2e8a9eafcbe92e2ece42d92"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-call-schema-r1-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/call-schema-r1-whole-plan-proof.json",
+      "sha256": "07e7cbc698acb113061bfa4efe2e8ee7edbdcda897e32b76dee64c852552d292"
+    }
+  ]
+}
