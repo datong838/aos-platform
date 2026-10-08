@@ -1,0 +1,22 @@
+{
+  "authority_revision": "AOS-001599",
+  "head": "6cc3fcc97372212747079137f25be3a1027ab6d3",
+  "source_sha256": "adc52aa831bcd70a48293233ed58d9fd5c7021503f7598574668a52812c67e43",
+  "result": "NEW_JUDGE_NECESSARY_SOURCE_FACT_ARTIFACT_NATIVE_COMPILE_AND_CALLER_NEGATIVE_VERIFIED",
+  "verification": [
+    "missing compiler entry expectedRED1FAIL0.08s→present;196contract+entryPASS0.59s",
+    "original PostgreSQL159 compiles2functions, exactOwner/volatile/securitydefiner/search_path/ACL;3wrongcaller42501;allDDLrolledback confirmed absent",
+    "actual compiled approval hash expression matches23original Judge holds; original space datetime hash semantics preserved",
+    "all preexisting authority.py bytes and old Model compiled SQL exact after removing newsection; no existing code modified",
+    "entry is SQL generation artifact only: no migration/route/finalizer consumes it"
+  ],
+  "risks": [
+    "New full function Source/parent/graph/quota/bucket positive path UNVERIFIED",
+    "Original Rule signature/Registry/risk fullgraph still future jointOwner prerequisite; never alone admission",
+    "NewSource resource/singleprocess fixture required; oldexpiredSource notextended",
+    "R3 reportUUIDserializationfailed after known rollback; retained log; r4 fixed reportencoding only",
+    "Earlier untracked authority prototype included under originalTask ownership; standalonecheckout dependency closure notclaimed"
+  ],
+  "next": "Singleprocess full Source/newJudge positive and joint Manifest/finalizer native gate",
+  "execution_allowed": false
+}

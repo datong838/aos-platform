@@ -1,0 +1,72 @@
+{
+  "authority_revision": "AOS-001599",
+  "head": "6cc3fcc97372212747079137f25be3a1027ab6d3",
+  "source_sha256": "adc52aa831bcd70a48293233ed58d9fd5c7021503f7598574668a52812c67e43",
+  "stage": "native compilation+ACL+caller negative only",
+  "execution_allowed": false,
+  "database": "aos_test_379975a6f96d_ti4_test",
+  "cluster": "7693564235776004128",
+  "catalog": [
+    {
+      "function": "capacity_occupation_judge_fact(bytea,jsonb,uuid,text,text)",
+      "owner": "aos_runtime",
+      "prosecdef": true,
+      "provolatile": "v",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_runtime=X/aos_runtime,aos_physical_capacity_occupation_owner=X/aos_runtime}"
+    },
+    {
+      "function": "read_capacity_occupation_judge_fact(bytea,jsonb,uuid,text,text)",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "provolatile": "v",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner,aos_runtime=X/aos_physical_capacity_occupation_owner}"
+    }
+  ],
+  "grants": {
+    "runtime_entry": true,
+    "owner_fact": true
+  },
+  "public_execute": 0,
+  "negative_checks": [
+    {
+      "role": "aos_app",
+      "tenant": [
+        "org-org",
+        "dev-project"
+      ],
+      "sqlstate": "42501",
+      "reason": "strict session-user rejection"
+    },
+    {
+      "role": "aos_runtime",
+      "tenant": [
+        "org-org",
+        "dev-project"
+      ],
+      "sqlstate": "42501",
+      "reason": "strict session-user rejection"
+    },
+    {
+      "role": "aos_runtime",
+      "tenant": [
+        "dev-org",
+        "dev-project"
+      ],
+      "sqlstate": "42501",
+      "reason": "strict session-user rejection"
+    }
+  ],
+  "ddl_rollback_verified": true,
+  "limitations": [
+    "No actual SCRAM occupation login positive",
+    "New Judge Source/parent graph SQL body remains positive-unverified",
+    "Rule trust/currentness and original full fee guard remain joint Owner prerequisites",
+    "No finalizer/Intent integration or formal installation"
+  ]
+}

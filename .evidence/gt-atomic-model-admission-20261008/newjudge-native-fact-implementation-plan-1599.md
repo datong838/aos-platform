@@ -1,0 +1,6 @@
+# 原新 Judge 必要 Source 事实编译器实现
+
+原Task gt-atomic-model-admission-20261008独占 authority.py；当前1599五父Task有效。独立编译器 occupation_judge_fact_statements，新增独立FACT/ENTRY，旧SQL和所有已有方法字节不改。文件 services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py；原missing-entry RED保留。
+函数先严格session/current角色、SERIALIZABLE、正租户；调用原Source认证；查原newJudge current-XID新parent并重算snakecase immutable hash，原request hash/schema2/两申请原图与原独立审批、新purpose审批、原quota和budgethead/policy/3bucket当前性、caseSet与原Suite、Source provider对应。最终DB clock重核最短截止，返回明确必要事实schema，approvalAllowed/executionAllowed=false。不创建hold/Intent，不修改parent/bucket，不读取expected内容，不安装正式库。
+这是原表绑定的必要桥，不能单独证明Rule签名/原Registry授权/风险完整图；后续联合Owner仍必须先走原ModelJudgeCallActionGuard/费用权限与Source同caller原生序列，再以native桥复核当前新parent。不给finalizer接上不完整桥；未通过Rule全面负门+wholeManifest+私有finalizer前不能部署自然链。
+先编译器RED→最小SQL→隔离159原PG编译与严格caller拒绝/ACL/旧SQL字节回归；有效Source+原newJudge freshparent正向需新单进程资源计划。当前旧Source过期，不能延时签名或替换旧原事实为新用途。编译/ACL负门通过只标artifact stage，不报原newJudge联合首链通过。

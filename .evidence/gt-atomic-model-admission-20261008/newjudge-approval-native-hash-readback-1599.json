@@ -1,0 +1,123 @@
+{
+  "count": 23,
+  "exact": true,
+  "rows": [
+    {
+      "reservation_id": "0bf1b3da-4794-4b64-ac93-13b9e420e2b4",
+      "expected": "sha256:3caea907c1a9458e060a932be189464cdad3b1434e9496c609d5f81caa5d3e7a",
+      "actual": "sha256:3caea907c1a9458e060a932be189464cdad3b1434e9496c609d5f81caa5d3e7a"
+    },
+    {
+      "reservation_id": "b0b2b7bf-c1dc-4fad-b577-ce3a22f6aa28",
+      "expected": "sha256:af7421370ae337aba50c77ccf63d6e3b2d817fbe7f76658afbb9b0e599dee3d4",
+      "actual": "sha256:af7421370ae337aba50c77ccf63d6e3b2d817fbe7f76658afbb9b0e599dee3d4"
+    },
+    {
+      "reservation_id": "5734c954-42d5-4221-b5cf-dce093cc2056",
+      "expected": "sha256:e363e50aa0edd2f2a070c9a1c247e0e912182f3a1f1552936ce619420ba4b030",
+      "actual": "sha256:e363e50aa0edd2f2a070c9a1c247e0e912182f3a1f1552936ce619420ba4b030"
+    },
+    {
+      "reservation_id": "6155bd60-2bcd-4032-93c4-ababeaa8de6f",
+      "expected": "sha256:7815b3b33c810d321602a37f0a936c939f4561469b96bef18a5a99fec279e6bb",
+      "actual": "sha256:7815b3b33c810d321602a37f0a936c939f4561469b96bef18a5a99fec279e6bb"
+    },
+    {
+      "reservation_id": "05ed601d-7898-4cf5-ad78-7db7f9e4d695",
+      "expected": "sha256:c0fb20e392fcd86d6087230bf284946ba5d70e7530b37aa386ab64df45600749",
+      "actual": "sha256:c0fb20e392fcd86d6087230bf284946ba5d70e7530b37aa386ab64df45600749"
+    },
+    {
+      "reservation_id": "7df99a3e-a876-4b2b-b78c-05a96c9945b1",
+      "expected": "sha256:f8b9154e6178d85fea8f8f538576aeedbabf731042c8f9667a99a860bd8dcd54",
+      "actual": "sha256:f8b9154e6178d85fea8f8f538576aeedbabf731042c8f9667a99a860bd8dcd54"
+    },
+    {
+      "reservation_id": "c1a61a30-224e-43c5-a224-f6a86e14430a",
+      "expected": "sha256:98513d3a07973369869e34d203e4b0f38e274185b4160a6de84e78e656b78050",
+      "actual": "sha256:98513d3a07973369869e34d203e4b0f38e274185b4160a6de84e78e656b78050"
+    },
+    {
+      "reservation_id": "836d1d85-080b-44ac-bb79-934f2e774c48",
+      "expected": "sha256:8205819aee5fcdb2b2aa74ee538bb47ce9b3e89acd9586e4bb5b98d4e0cda64f",
+      "actual": "sha256:8205819aee5fcdb2b2aa74ee538bb47ce9b3e89acd9586e4bb5b98d4e0cda64f"
+    },
+    {
+      "reservation_id": "591f8c3d-e328-4003-a083-cf0db46807fb",
+      "expected": "sha256:68867278e6427707ae57920a8eb773be1d58554a63fa6782393ef94e5e454600",
+      "actual": "sha256:68867278e6427707ae57920a8eb773be1d58554a63fa6782393ef94e5e454600"
+    },
+    {
+      "reservation_id": "4f0f5a0c-97db-41a7-a8f9-6d27eb3bf254",
+      "expected": "sha256:ee03bba844b7cd8b6e42f8e695d77e95cb8eb045d9e0a3375cc69ab8fe769405",
+      "actual": "sha256:ee03bba844b7cd8b6e42f8e695d77e95cb8eb045d9e0a3375cc69ab8fe769405"
+    },
+    {
+      "reservation_id": "a78b5d9c-8406-4cbf-8fd6-02cf0d6c6615",
+      "expected": "sha256:61b86a6cdf09cfe9cd9d7bcf9598cb645371a1645d0483fea5b36b655b7999a0",
+      "actual": "sha256:61b86a6cdf09cfe9cd9d7bcf9598cb645371a1645d0483fea5b36b655b7999a0"
+    },
+    {
+      "reservation_id": "9417be93-55c3-4042-b2e8-8be8b3ace6a8",
+      "expected": "sha256:2e92c4d50f23e08a96be3f4f987be0a98cc610495690155f3e04307c9836698f",
+      "actual": "sha256:2e92c4d50f23e08a96be3f4f987be0a98cc610495690155f3e04307c9836698f"
+    },
+    {
+      "reservation_id": "8f948bef-7e25-4592-947f-22a01a4f2bfe",
+      "expected": "sha256:5cdf311633f2383d89877811d30af2f0a0ef5861b0f48285c2e09ab4f8d63c15",
+      "actual": "sha256:5cdf311633f2383d89877811d30af2f0a0ef5861b0f48285c2e09ab4f8d63c15"
+    },
+    {
+      "reservation_id": "02d0cc86-9996-425b-a255-aa69fc01868d",
+      "expected": "sha256:326bbf2dd18f42ede42ab847722a4304909984668a30d504167a3f435bb94679",
+      "actual": "sha256:326bbf2dd18f42ede42ab847722a4304909984668a30d504167a3f435bb94679"
+    },
+    {
+      "reservation_id": "474def55-d819-4f6b-9438-e721f3d036e1",
+      "expected": "sha256:012661b2e0bc95190401e2f756ca0906e1ac43e56c60b01be391bfbc788a6f58",
+      "actual": "sha256:012661b2e0bc95190401e2f756ca0906e1ac43e56c60b01be391bfbc788a6f58"
+    },
+    {
+      "reservation_id": "e48f24ce-ed8c-4b98-934a-ed9fde894fb9",
+      "expected": "sha256:b0d07e87f091a4c5898682d4556bcb917769e74a00d6fb7e6a9af0591a2c4bc7",
+      "actual": "sha256:b0d07e87f091a4c5898682d4556bcb917769e74a00d6fb7e6a9af0591a2c4bc7"
+    },
+    {
+      "reservation_id": "bcc83e90-fb54-4749-8e69-49dafb4b1507",
+      "expected": "sha256:b8bb5965bc0cd9a9d619f17f907d0c7a7fd21cc9ea84a09bfa7c32f7d2571c1f",
+      "actual": "sha256:b8bb5965bc0cd9a9d619f17f907d0c7a7fd21cc9ea84a09bfa7c32f7d2571c1f"
+    },
+    {
+      "reservation_id": "b6a89462-efdf-423d-a00a-189244dd6e29",
+      "expected": "sha256:ab646f00ce3391194d09b2b969c5a1f6c91624de4cd0e021af2ae2ce2cf5b18c",
+      "actual": "sha256:ab646f00ce3391194d09b2b969c5a1f6c91624de4cd0e021af2ae2ce2cf5b18c"
+    },
+    {
+      "reservation_id": "65657f16-0445-4ad2-ae6b-0b698af35311",
+      "expected": "sha256:56f034fcb2daad6b32666ba2d9cd6192692a7f6d2170c75380c39d7a9d26722b",
+      "actual": "sha256:56f034fcb2daad6b32666ba2d9cd6192692a7f6d2170c75380c39d7a9d26722b"
+    },
+    {
+      "reservation_id": "4eb9367d-1fc9-40aa-be3d-8d7ffda1b332",
+      "expected": "sha256:754d3611bc117c36ac63b19682a50b8cdfc1a1dc8e49a912074a7b5af112fa28",
+      "actual": "sha256:754d3611bc117c36ac63b19682a50b8cdfc1a1dc8e49a912074a7b5af112fa28"
+    },
+    {
+      "reservation_id": "0d999f72-2e9f-4254-8270-d820593bb54f",
+      "expected": "sha256:474cfea6700403d7f1bf034513b4813bf0b147f7a2ca67cc7bcfa20d4f69adf9",
+      "actual": "sha256:474cfea6700403d7f1bf034513b4813bf0b147f7a2ca67cc7bcfa20d4f69adf9"
+    },
+    {
+      "reservation_id": "dd558bd5-13ee-4ab4-adac-8cba469bbe01",
+      "expected": "sha256:25c37946e3b4ee41398240b686d547cd6cfd42016bded04391efe4fb27ee27ba",
+      "actual": "sha256:25c37946e3b4ee41398240b686d547cd6cfd42016bded04391efe4fb27ee27ba"
+    },
+    {
+      "reservation_id": "62cd220d-4012-430c-a0eb-59caed8d2b8c",
+      "expected": "sha256:8bd05517ca9fdd4dd2a54689285973e7dee9b7ba0b8207a33ee2ad82694f6f6e",
+      "actual": "sha256:8bd05517ca9fdd4dd2a54689285973e7dee9b7ba0b8207a33ee2ad82694f6f6e"
+    }
+  ],
+  "sql": "SELECT h.reservation_id,h.approval_ref->>'contentHash' AS expected,\n 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(jsonb_build_object(\n 'approval_event_id',a.approval_event_id,'proposal_id',a.proposal_id,'proposal_version',a.proposal_version,\n 'proposal_hash',a.proposal_hash,'decision',a.decision,'actor_id',a.actor_id,'reason',a.reason,\n 'expires_at',to_char(a.expires_at AT TIME ZONE 'UTC','YYYY-MM-DD HH24:MI:SS') || CASE WHEN extract(microseconds FROM a.expires_at)::bigint%1000000=0 THEN '' ELSE '.'||to_char(a.expires_at,'US') END || '+00:00',\n 'created_at',to_char(a.created_at AT TIME ZONE 'UTC','YYYY-MM-DD HH24:MI:SS') || CASE WHEN extract(microseconds FROM a.created_at)::bigint%1000000=0 THEN '' ELSE '.'||to_char(a.created_at,'US') END || '+00:00',\n 'action_binding_hash',a.action_binding_hash)),'UTF8')),'hex') AS actual\n FROM aip_model_judge_budget_reservation h JOIN aip_action_approval_event a USING(org_id,project_id,approval_event_id)",
+  "initial_iso_T_mismatch_retained": "23/23 mismatch; original default=str uses space"
+}
