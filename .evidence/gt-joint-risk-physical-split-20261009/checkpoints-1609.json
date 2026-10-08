@@ -1,0 +1,42 @@
+{
+  "gt-atomic-model-admission-20261008": {
+    "task_id": "gt-atomic-model-admission-20261008",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "authority_revision": "AOS-001609",
+    "step": "complete-four-leg-risk-inflight-conflict-native-RED-plan-risk-ledger-next",
+    "fingerprint": "1d802217361da7d61815e1e08e00946779cc96ab4d71ac47f85814d8f601bcc6",
+    "task_base_revision": "AOS-001537"
+  },
+  "gt-model-typed-proof-20261008": {
+    "task_id": "gt-model-typed-proof-20261008",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "authority_revision": "AOS-001609",
+    "step": "complete-four-leg-risk-inflight-conflict-native-RED-plan-risk-ledger-next",
+    "fingerprint": "2403d9a9ce3dc5840dfb7449944b641c6ae6787b49fc8f4ee4e9192969442cbd",
+    "task_base_revision": "AOS-001513"
+  },
+  "gt-judge-call-authority-20261008": {
+    "task_id": "gt-judge-call-authority-20261008",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "authority_revision": "AOS-001609",
+    "step": "complete-four-leg-risk-inflight-conflict-native-RED-plan-risk-ledger-next",
+    "fingerprint": "70d7849827e69029e1e5df201ca0bdedd3b81cfe6a8ff3a9ba1d61eeee417987",
+    "task_base_revision": "AOS-001578"
+  },
+  "gt-judge-budget-parent-20261008": {
+    "task_id": "gt-judge-budget-parent-20261008",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "authority_revision": "AOS-001609",
+    "step": "complete-four-leg-risk-inflight-conflict-native-RED-plan-risk-ledger-next",
+    "fingerprint": "c4684be3566b92631bbee4c6c5cbe61c613c93674708f34fdb3c93662072eafb",
+    "task_base_revision": "AOS-001588"
+  },
+  "gt-shared-budget-fence-order-20261008": {
+    "task_id": "gt-shared-budget-fence-order-20261008",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "authority_revision": "AOS-001609",
+    "step": "complete-four-leg-risk-inflight-conflict-native-RED-plan-risk-ledger-next",
+    "fingerprint": "bab400b461ff7c3f8544fe10cb18f9ceeecb49f59df8b6cd31d4b68329a56076",
+    "task_base_revision": "AOS-001588"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "authority_revision": "AOS-001609",
+  "head": "8aab0967570194136ea569774827e7733d9eb33b",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/newjudge-pending-intent-reference-1608.json",
+      "sha256": "b7d88666d0836c927059efd1451412ce0efc4e1824a04bbdb13b6ae618b1203a"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/run_native_r1.py",
+      "sha256": "712fb804bc56edeade429db84f3b4451085c968b8a0b82dc3b0adafcc20ea5ec"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/native-r1-result.json",
+      "sha256": "2abd37e648f28341041ea8a9feb748be3ee857a0dc597facd04184b939e1a465"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/source_newjudge_native_trial_1606.py",
+      "sha256": "142cdeb83209a85adc08dc9936ef9838dbbd6ebdc5d7cf776fe25877766b8735"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/native-r2-attempt.json",
+      "sha256": "1503422159229265b8faeb7f8fc053407d31cfe8bd2439b66096150ba9b709d0"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/task.json",
+      "sha256": "ea86c060cf37a63487950760d717d9575f6c9641a22166835b9cbcc91f49b04b"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/native-r1.log",
+      "sha256": "31d12f3796ea1c555b07b44f94158dfc6f4d48d1b5dc309d01d8f2b945690c07"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/native-r2-result.json",
+      "sha256": "57bcb46c97b88d990aa294bb1388a59257cf0a9b1167b3108127c270b9c42a22"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/independent-red.json",
+      "sha256": "dd0783fa51211d93c53aaeab3a7438bb01c6c92c03f0330ea6e5941aa1f71bcf"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/native-r2.log",
+      "sha256": "3b6c84ddfa44d88e3633de728f868c0d30844ae710130cb9f62681d11058b17d"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/native-r1-attempt.json",
+      "sha256": "1503422159229265b8faeb7f8fc053407d31cfe8bd2439b66096150ba9b709d0"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/plan.md",
+      "sha256": "af0c71a7a3f6f37d327cc8a78d7fe0f757705816b0569a014dbc947b71fc83bd"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/r1-reconciled.json",
+      "sha256": "545bb758b644e4cfa2ccc257be000e1360a68dfd86147df70751e6e3262d56f3"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/review.md",
+      "sha256": "a43170bba4d2a7084c95a7a9eabb5b194a0b591c4337897b6da89b9cad0a8485"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/four-leg-red.json",
+      "sha256": "1675b5b8ccabaa127c6de2f52de6c6220733404bd14d3b8cf384804d3173113b"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/verify_red.py",
+      "sha256": "876f3a4c8daef71433168f81fbd04074eb5836376a5c199855828e22bf080bb4"
+    },
+    {
+      "path": ".evidence/gt-joint-risk-physical-split-20261009/run_native_r2.py",
+      "sha256": "4bef1c467f2f95e24ca551135c24ba9ac237f2f81eaaa14f57b2ea67ee0c0d40"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/joint-risk-active-protocol-1608.md",
+      "sha256": "bdc148be9e5c2bc8586dc5f5ac9b8e0d62ea3558d861ce149e7406b184536896"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-four-leg-split-r2-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-four-leg-split-r2-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-four-leg-split-r1-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-four-leg-split-r2-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-four-leg-split-r1-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-four-leg-split-r1-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-four-leg-split-r1-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-four-leg-split-r2-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-four-leg-split-r1-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-four-leg-split-r2-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    }
+  ]
+}

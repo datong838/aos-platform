@@ -1,0 +1,25 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "gt-joint-risk-physical-split-20261009",
+  "base_revision": "AOS-001608",
+  "completed_revision": "AOS-001608",
+  "result": "ORIGINAL_FOUR_LEG_RISK_INFLIGHT_CONFLICT_RED_REPRODUCED",
+  "changed_files": [
+    "aos-platform/.evidence/gt-joint-risk-physical-split-20261009"
+  ],
+  "commits": [
+    "8aab0967570194136ea569774827e7733d9eb33b"
+  ],
+  "verification": [
+    "native original Source/SCRAM/two approved parents/two cases: actual third leg23514 PHYSICAL_CAPACITY while parents1/10 each; expected fullplan preparation RED1FAILED25.91s",
+    "independent xid3328 aborted,allprepared0/Source1/NOLOGIN memberships0,old containers unchanged",
+    "R1 diagnostic helper NameError26.24s retained and independently reconciled; R2 fresh DB, no original replay"
+  ],
+  "risks": [
+    "test1minor allocations are not actual price or execution authority",
+    "plan body still descriptive refs, not final canonical joint receipt",
+    "full plan risk vs actual inflight separation and price semantics/lock graph/joint finalizer/true Target result/Judge input/natural firstchain pending"
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-09T06:00:18+08:00"
+}

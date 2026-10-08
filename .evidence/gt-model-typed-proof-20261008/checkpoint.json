@@ -4,8 +4,8 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-model-typed-proof-20261008",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001608",
-  "step": "Source-newJudge-pending-Intent-native-green-actual-input-joint-finalizer-pending",
+  "authority_revision": "AOS-001609",
+  "step": "complete-four-leg-risk-inflight-conflict-native-RED-plan-risk-ledger-next",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_execution_contracts.py",
     "services/aos-api/tests/aip/test_model_eval_execution_contracts.py",
@@ -46,7 +46,7 @@
     ".evidence/gt-model-typed-proof-20261008/judge-input-binding-checkpoint.md",
     ".evidence/gt-model-typed-proof-20261008/judge-input-binding-cumulative-r2-result.json",
     ".evidence/gt-model-typed-proof-20261008/judge-input-binding-independent-r2.json",
-    ".evidence/gt-model-typed-proof-20261008/newjudge-pending-intent-reference-1608.json"
+    ".evidence/gt-model-typed-proof-20261008/joint-risk-inflight-red-reference-1609.json"
   ],
   "task_base_revision": "AOS-001513"
 }
