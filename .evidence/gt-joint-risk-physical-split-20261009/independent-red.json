@@ -1,0 +1,20 @@
+{
+  "database": "aos_test_18d23eeed874_ti4_test",
+  "cluster": "7694410316620488728",
+  "xid": "3328",
+  "status": "aborted",
+  "prepared_counts": {
+    "account_guard": 0,
+    "parent_debit_guard": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "retained_source": 1,
+  "occupation_role": [
+    false,
+    0
+  ],
+  "old_resources_unchanged": true,
+  "complete_four_leg_RED_reproduced": true,
+  "formal_execution": false
+}

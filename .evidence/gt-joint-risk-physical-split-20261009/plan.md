@@ -1,0 +1,7 @@
+# 原四腿完整预算与物理占用分离 RED 实施合同
+
+37160adf/AOS-001608。只使用新fresh159数据库、原C verifier、原签名Source并发2/token20k、实际SCRAM、原Target/newJudge独立批准父各10minor和2case Suite。已登记共同finalizer与真实输入晚绑定主线的必要前置，禁止缩小为只执行第一case。
+
+原四腿case/purpose必须完整保留。现prepared_parent_debit同时累计budgetRisk与inflight；若四个合法准备风险各1minor（测试批准风险量，不是实价/真实费用），两父各2<=10，但第三条即phys拒绝。先新原生试验精确证明budget尚余、物理限制来自原Source与实际quota，并独立确认回滚；不能把四腿强行并发或提高Source上限。该RED决定后续完整joint manifest账本需区分计划预算准备与待提交实际占用，Judge仍等待Target输出。价格None未知义务保留，全joint finalizer实际提交/预算/一次transport/Usage仍待后继实现。
+
+本窗口只有本目录脚本/证据，原authority/旧安全门和默认服务不改；复用闭合旧窗口的原5436容器/卷，Task独立Lease，不动先前数据库。纯研究补丁通过本次runner优先sys.path加载本目录的helper副本，原测试节点及所有Source/Owner/SCRAM/proposal构造不变。copy的source_probe按原case序先Target0/Judge0再Target1/Judge1，每条通过原case compiler/newJudge compiler真实分配。遇到server23514先保存原Fact/两条实际结果/原计划/原Source上界/failedleg，然后重新抛出形成RED，不捕获为PASS。不伪造共同终结或actual output，未知效果只读核对。

@@ -1,0 +1,14 @@
+{
+  "database": "aos_test_7f77c609b447_ti4_test",
+  "prepared_counts": {
+    "account_guard": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "occupation_role": [
+    false,
+    0
+  ],
+  "retained_source": 1,
+  "reason": "diagnostic helper lacked Path import; no native replay, next attempt uses fresh database"
+}

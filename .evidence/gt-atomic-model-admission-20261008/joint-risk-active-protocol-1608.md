@@ -1,0 +1,19 @@
+# 完整共同终结协议：计划风险与实际占用分离
+
+基线37160adf/AOS-001608。原生证据 gt-joint-risk-physical-split-20261009/four-leg-red.json：实际原签名Source、SCRAM、两个独立approved parent各10、2case/4leg；每个case/purpose以原case/Judge函数分配1minor（测试风险量，不是实价/实际费用）。Target0/Judge0已准备，各父allocated1，Source并发2/token20000用尽；Target1在父budget仍有9余量时实际23514 PHYSICAL_CAPACITY拒绝。xid3328独立aborted，全部准备0，Source1保留，旧资源不变。首轮诊断Path导入错误是测试脚本故障，不是业务原因，保留26.24s；修正后真实RED25.91s。
+
+这不是应扩大并发或绕过Source的故障。当前prepared_parent_debit同时代表计划风险与inflight；它不能直接用作完整四腿budget plan ledger。原目标必须保留两个case的Target/Judge全部腿，依实际结果串行排程。编译器不应因可串行四腿总token40000>inflight20000而拒绝整个计划，也不能同时授四腿占用。当前四腿description仍不是已认证完整提交receipt；RED中各实际函数重新读取其原申请/parent/case/Source，但body尚有描述refs，不能宣称已完整canonical共同plan验证通过。
+
+## 后继实现顺序和精确范围
+
+现有atomic Task scope内：services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py、aip_physical_capacity_occupation.py、aip_physical_capacity_occupation_contracts.py、tests/aip/test_physical_capacity_occupation_pg.py。Judge必要fact新增规则只能在其原Task scope核对，不改budget_cost_runtime.py（不属当前scope）。原prepared debit与实际COMMIT拒绝门必须继续保持，直到完整新协议及全入口审计原生验收。原默认migration/正式安装不接入未完成协议。
+
+1. 新私有完整plan风险账本独立于inflight表。原所有case×purpose完整恰好覆盖、唯一Intent/风险义务、Source/provider/physical exact、每purpose独立原approved parent/application/Rule/Suite、samecaller/xid/pid及费用三桶必须由原reader/fact复核；服务端 canonical planhash与原来源绑定，不接受自由finalized/client allocation布尔。不可沿用旧表的总count/sum作为计划腿数上限，旧接口行为保持不变。
+2. 预算上界由原价格与开发费用授权推导，并核对原per_request_risk_minor语义是批准申请风险还是实际调用次数。现10minor exact父要求不证明任意每腿1minor可执行，不可均分为5或补0。所有价格null维持deferred及未知费用义务，不结算为零；后续必须读取费用最终来源。即使full plan风险账本已准备，也不授transport。
+3. 新私有actual occupation账本只计已实际提交准入的调用腿以及所有unknown/submitted持有；一条call的count和quota保守tokenUnits来自原Source/Quota/Model硬限制（8000上下文与8000+2000quota边界必须区分）。串行Target先进入，Judge是等待输入依赖；其他腿仍有计划风险但无actual occupation。一次一个可最小调度，但完整case集合和全部风险仍共同登记，不能缩减Goal。
+4. actual占用准入重新验证原当前身份/Source/两Model治理/批准/plan风险/精确Intent，锁原全局physical accountguard并对跨purpose/Provider既有active/unknown累计，服务端时钟在所有锁等待后复核。必须与普通budget/AgentRun及所有占用入口锁图对账；现仅局部Source→accountguard→预算序不证明全闭合，无完整图不得宣称finalizer安全。原历史unknown不按TTL删或忘记。
+5. 可信private joint receipt不可由runtime DML伪造，NOLOGIN无membership Owner、FORCE RLS、固定search_path、runtime只能窄函数。真实finalizer须原生核完整canonical plan及风险和当前待提交腿的输入原件、actual占用、临界identity/source/approval/price/quota期限；实际caller COMMIT最后拒绝触发器必须覆盖任意直接SQL与提前SET CONSTRAINTS，不只Python最后if。
+6. 完整plan已知提交且精确receipt可回读后，只授满足输入的Target一次transport。Target结果由原可信executor签名/实际hash/expected artifact复核并生成Judge输入，不接受任意inputRaw/hash；Judge申请自己的originalparent/Source与实际占用再次准入。新晚绑定receipt追加不可变，不改已冻结等待Intent内容。提交或发送未知时仅只读对账，不重发、不释放占用。
+7. 释放/结算必须由真实已知结果、Usage/费用最终来源及原签名结算入口，费用未知/发送未知持续保留风险和实际持有；失败可只影响该腿，但完整评测报告不可READY。跨purpose并发竞争、case集合遗漏/重复、旧parent、Source替换、实际deadline等待、Owner/runtime直接写入、提前约束/实际COMMIT全部要RED→GREEN独立回读。
+
+原deferred拒绝现仍保留，完整finalizer尚未实现。此调查没有Provider调用、真实费用结算、自然首链或完整Task完成；不能以准备态GREEN替代最终Goal。下一安全施工入口是原完整plan风险ledger producer与原费用语义核对，依完整风险及锁序再安装actual occupation/finalizer；另一候选原Target真实结果/newJudge输入生产者仍依真实提交及可信结果来源。
