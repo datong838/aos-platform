@@ -1,0 +1,11 @@
+# 隔离原安装缺行恢复合同
+
+上位231/AOS工程交付、保留库修复交付1b35760e/AOS-001595。候选A本轮按已登记独立恢复Task处理原安装缺行；候选B原五Task新Judge完整Manifest/private事实桥仍独立可推进，不用整体blocked。
+
+唯一库aos_test_965e5441744f_ti4_test@a0v_158，SCRAM lab5434/cluster7693564235776004128/container4be7，唯一现有0600admin passfile，不读正式库。执行前Task/Lease/Owner/authority和无并行写者验证。
+
+明确缺失的原对象仅ModelEvalRequest/ProviderCapacityRequest/ProviderCapacitySourceReview。原Action均存在必须逐列等于原Guard原定义；原迁移函数和两个表触发器必须存在、完整函数内容对应冻结原迁移源码，不修改ACL/角色/LOGIN/迁移头或已存在对象。不能把回放整份upgrade（会冲突）当恢复；从固定原文件AST提取唯一单条原INSERT，按原列检查，与原Guard完整对象定义独立比较。已经存在不同定义就拒绝、禁止UPDATE/DELETE/ON CONFLICT覆盖。
+
+先原runtime三Guard读缺行得到RED；恢复在独立SERIALIZABLE事务锁定meta两表，核准确scope/cluster/head/无其他写者；所有protected表原行以稳定排序JSON/hash保存（请求/申请/审批/Source/旧Model父/物理账户/Intent等实际存在表），元数据全表精确差异只能三条原定义。演练执行3INSERT，三Guard真实aos_runtime读成功，事务rollback；独立连接核恢复前完全一致。然后新的原同Owner事务再核冻结基线，O_EXCL操作attempt只一次，3INSERT原Guard/全表状态验证后COMMIT。落盘结果未知必须只读对账不重发。
+
+负门：事务Savepoint内各对象改坏name，原Guard应拒绝；rollback不留漂移；错误existingAction/非空对象不能修复。外部真实作用无权；此恢复只修原隔离安装事实，不产Supplier证明/Source/执行批准。恢复后新Source joint独立fresh试验另走原五Task，不混用过期原申请：保留最初r1已保存申请和所有证据，新UUID原inputs是明确新测试，不重放旧申请、旧12Run或未知调用。

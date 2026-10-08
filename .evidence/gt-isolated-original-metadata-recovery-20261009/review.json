@@ -1,0 +1,69 @@
+{
+  "head": "1b35760e26faf9c9c4905973a179922a0ef47ac8",
+  "authority": "AOS-001595",
+  "database": "aos_test_965e5441744f_ti4_test",
+  "original_scope": "Missing-only original metadata133/146/148 recovery, three INSERTs, never authority for Source or real business",
+  "actual_commit": true,
+  "checks": {
+    "original_guard_red": 3,
+    "original_guard_green": 3,
+    "drift_rejections": 3,
+    "all_other_table_hashes_unchanged": 614,
+    "existing_metadata_rows_unchanged": true,
+    "rollback_exact615tables": true,
+    "original_function_bodies_and_trigger_installation": true,
+    "original_actions_exact": true
+  },
+  "limitations": [
+    "Native current-transaction Guards only, no new request/approval/Source during recovery",
+    "615 table preservation applies at pre-Source recovery boundary; later separate original test can create its own records",
+    "Formal database, roles, migration head, production files untouched"
+  ],
+  "references": [
+    {
+      "path": ".evidence/gt-isolated-original-metadata-recovery-20261009/plan.md",
+      "sha256": "458d06f5cc504f349a81358e8cb287a459c66626103c5f4b151c6da5c1b48ea8"
+    },
+    {
+      "path": ".evidence/gt-isolated-original-metadata-recovery-20261009/recover.py",
+      "sha256": "67958ff8958f469267d5e314708b4f3887b2e58f6054f60005bc3ae51708c09e"
+    },
+    {
+      "path": ".evidence/gt-isolated-original-metadata-recovery-20261009/red.json",
+      "sha256": "833e47ce0ca06c603a7a54788b99837eda272a5bc9aba9320bed02d358768df8"
+    },
+    {
+      "path": ".evidence/gt-isolated-original-metadata-recovery-20261009/rehearse.json",
+      "sha256": "b1422164f4c617b18fb676e1721144d3064fbb6e4360745c10ff6623417ea80f"
+    },
+    {
+      "path": ".evidence/gt-isolated-original-metadata-recovery-20261009/rollback.json",
+      "sha256": "23a5d55f19b34e1819eee173e34135206a8f8f5ab10324cac0f26a49571df616"
+    },
+    {
+      "path": ".evidence/gt-isolated-original-metadata-recovery-20261009/apply-attempt.json",
+      "sha256": "1ba8a1102dfc238629fe6566acdc730464395932c43aa65079d2f0895bd1aa17"
+    },
+    {
+      "path": ".evidence/gt-isolated-original-metadata-recovery-20261009/apply.json",
+      "sha256": "b30e18b279a4d9f17e9ee19eaf2ed8b315e605d493e40b10f25315434d829d4a"
+    },
+    {
+      "path": ".evidence/gt-isolated-original-metadata-recovery-20261009/verify.json",
+      "sha256": "d82620afa8259b2e7dd702d4a37c3e98039da44ce46574723d4d16751bdef4ee"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/source-joint-fixture-r2-result.json",
+      "sha256": "76ae82c5dc00fe6f590a3cbf221481f743c48e3d7f9780d6e8ba1ef10374f048"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-joint-fixture-r2-independent.json",
+      "sha256": "56250947567fd36dc190c214a7cc609bdbc0c473d718bc34ff289717e90bf9e2"
+    },
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/source-recovery-joint-checkpoint.md",
+      "sha256": "cde37701d243b1ebe0401a1c104f5493f2df05f38a553c2a4c431a19772e6b25"
+    }
+  ],
+  "post_recovery_source_boundary": "Separate original parentTasks fresh r2 native1PASS48.32s; independent signed Source hash/key proof; expired at final read, never current next-step authority"
+}
