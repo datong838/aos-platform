@@ -1,0 +1,62 @@
+{
+  "authority_revision": "AOS-001604",
+  "native_node": "1PASS59.54s",
+  "adjacent": "293PASS0.76s",
+  "actual_wait": {
+    "pid": 986126,
+    "xid": "286804",
+    "wait_event_type": "Timeout",
+    "wait_event": "PgSleep",
+    "observed_at": "2026-10-08 20:57:33.533666+00:00"
+  },
+  "deadline": {
+    "caller": {
+      "xid": "286804",
+      "pid": 986126
+    },
+    "before": "2026-10-08T20:57:33.480330+00:00",
+    "approval_deadline": "2026-10-08T20:57:34.416750+00:00",
+    "after": "2026-10-08T20:57:34.520640+00:00",
+    "before_accepted": true,
+    "after_rejected": true,
+    "independent_xact_status": "aborted",
+    "dual_parent_rows": 0,
+    "actual_budget_lock_wait_claimed": false
+  },
+  "two_trial_callers_aborted": true,
+  "trial_parent_rows_zero": true,
+  "other_active_clients_zero": true,
+  "original_test_preserved": {
+    "old_test_bytes_exact_after_removing_addition": true,
+    "old_sha256": "612577e42e6229ca6cd0a7f7bdc48ef25ac590f600f2f6927d7fc01c27b83dae",
+    "current_sha256": "084a797d2edf634280cbb314b1c8099a12711be16fe7bb115969f2057674a033",
+    "production_owner_unchanged": true
+  },
+  "execution_allowed": false,
+  "limits": [
+    "Necessary reader only; no commit-time admission guarantee",
+    "Source/actual allocation/Usage/finalizer/trusted joint COMMIT pending"
+  ],
+  "files": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/whole-reader-deadline-r2-1604-whole-plan-proof.json",
+      "sha256": "06877c5df125bceeda62e20d3d512e1001d0dfa083f64ac4f847bc53faa31065"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/whole-reader-deadline-r2-1604-result.json",
+      "sha256": "f27bf3c0b4b7de8731f000d938792f94c151a61e9d63716edcb020e5c0587d99"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/whole-reader-deadline-r2-1604.log",
+      "sha256": "230eac65645c6c92be52b1517b85def04fdd0bde91a634c407bc719663587449"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/whole-reader-deadline-adjacent-r2-1604.log",
+      "sha256": "53ef106cb3c48932d4aa1b8168bec0605558f5e2f4b5b1dffd61b26808ba5e4b"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py",
+      "sha256": "084a797d2edf634280cbb314b1c8099a12711be16fe7bb115969f2057674a033"
+    }
+  ]
+}

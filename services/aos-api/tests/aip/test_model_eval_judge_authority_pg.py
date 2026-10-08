@@ -1126,6 +1126,57 @@ def test_exact_signed_rule_new_original_suite(
         assert parent_postread.execute('SELECT count(*) AS n FROM aip_model_judge_budget_reservation WHERE request_id=%s',(budget_pending['request_id'],)).fetchone()['n']==1
         assert parent_postread.execute('SELECT count(*) AS n FROM aip_model_judge_budget_reservation_bucket WHERE reservation_id=%s',(committed_hold['reservation_id'],)).fetchone()['n']==3
         assert shared_risk_totals(parent_postread,scope,committed_hold['budget_revision_ref']['resourceId'])==(1,10)
+    # Fresh dual parents inherit their original locks. Verify DB-clock expiry
+    # on the actual whole reader without claiming a synthetic lock competition.
+    with connect_serializable(scope) as deadline_create:
+        deadline_pending=store.create_with_rule(deadline_create,maker,'whole-deadline-request-'+attempt_suffix,
+            budget_body,release_policy=policy,artifact_bytes=files)
+    deadline_proposal=propose_model_judge_request(maker,deadline_pending['request_id'],
+        'whole-deadline-proposal-'+attempt_suffix,datetime.now(UTC)+timedelta(seconds=5),
+        release_policy=policy,artifact_bytes=files,connect_factory=connect_serializable)
+    with connect(scope) as deadline_read:
+        dp=deadline_read.execute('SELECT * FROM aip_action_proposal WHERE proposal_id=%s',
+            (deadline_proposal.proposal.id,)).fetchone()
+    decide_model_judge_request(checker,dp['proposal_id'],'whole-deadline-checker-'+attempt_suffix,
+        DecideActionProposalRequest(decision='approved',expectedProposalVersion=dp['version'],expectedProposalHash=dp['proposal_hash']),
+        release_policy=policy,artifact_bytes=files,connect_factory=connect_serializable)
+    with connect(scope) as deadline_read:
+        de=deadline_read.execute("SELECT * FROM aip_action_approval_event WHERE proposal_id=%s AND decision='approved'",
+            (dp['proposal_id'],)).fetchone()
+    with connect_serializable(scope) as deadline_conn:
+        deadline_identity=deadline_conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+        native_owner._prepare_dual_purpose_bucket_fences(deadline_conn,scope,deadline_pending['request_id'],
+            de['approval_event_id'],release_policy=policy,artifact_bytes=files)
+        AipModelEvalBudgetReservationStore().hold(deadline_conn,scope,target['request_id'],ids[0])
+        judge_budget.hold(deadline_conn,scope,deadline_pending['request_id'],deadline_pending['request_hash'],de['approval_event_id'])
+        dt=native_owner.prepare_model_application(deadline_conn,scope,target['request_id'],ids[0])
+        dj=native_owner.prepare_judge_application(deadline_conn,scope,deadline_pending['request_id'],
+            de['approval_event_id'],release_policy=policy,artifact_bytes=files)
+        deadline_manifest=whole_builder.build(dt,dj)
+        assert native_owner.validate_original_target_judge_manifest(deadline_conn,scope,deadline_manifest,
+            release_policy=policy,artifact_bytes=files) is None
+        before_deadline=deadline_conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+        assert before_deadline < de['expires_at']
+        # The database clock determines the wait; no expiry field is rewritten.
+        deadline_conn.execute('SELECT pg_sleep(greatest(0,extract(epoch FROM (%s::timestamptz-clock_timestamp())))+0.1)',
+            (de['expires_at'],))
+        after_deadline=deadline_conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+        assert after_deadline > de['expires_at']
+        with pytest.raises(ModelEvalOwnerRejected):
+            native_owner.validate_original_target_judge_manifest(deadline_conn,scope,deadline_manifest,
+                release_policy=policy,artifact_bytes=files)
+        deadline_conn.rollback()
+    with psycopg.connect(get_dsn()) as deadline_audit:
+        deadline_audit.execute('SET TRANSACTION READ ONLY')
+        assert deadline_audit.execute('SELECT pg_xact_status(%s::xid8)',(deadline_identity['xid'],)).fetchone()[0]=='aborted'
+        for table,parent_id in [('aip_model_eval_budget_reservation',dt.parent_limit.parent_hold_ref.resource_id),
+                               ('aip_model_judge_budget_reservation',dj.parent_limit.parent_hold_ref.resource_id)]:
+            assert deadline_audit.execute('SELECT count(*) FROM '+table+' WHERE reservation_id=%s',(parent_id,)).fetchone()[0]==0
+    native_whole_proof['reader_database_clock_deadline']={'caller':deadline_identity,
+        'before':before_deadline.isoformat(),'approval_deadline':de['expires_at'].isoformat(),
+        'after':after_deadline.isoformat(),'before_accepted':True,'after_rejected':True,
+        'independent_xact_status':'aborted','dual_parent_rows':0,'actual_budget_lock_wait_claimed':False}
+    (repo/'.evidence/gt-judge-call-authority-20261008'/(native_label+'-whole-plan-proof.json')).write_text(json.dumps(native_whole_proof,default=str,indent=2)+'\n')
     from psycopg.conninfo import conninfo_to_dict
     out=repo/'.evidence/gt-judge-call-authority-20261008'/(os.environ['AOS_JUDGE_NATIVE_EVIDENCE_LABEL']+'-full-proof.json' if 'AOS_JUDGE_NATIVE_EVIDENCE_LABEL' in os.environ else 'exact-signed-rule-suite-native-r1.json')
     out.write_text(json.dumps({'database':conninfo_to_dict(get_dsn())['dbname'],'judge_application':judge,

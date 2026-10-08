@@ -1,0 +1,7 @@
+{
+  "pid": 986126,
+  "xid": "286804",
+  "wait_event_type": "Timeout",
+  "wait_event": "PgSleep",
+  "observed_at": "2026-10-08 20:57:33.533666+00:00"
+}
