@@ -1,0 +1,39 @@
+{
+  "observed_at": "2026-10-08T19:11:45.403346+00:00",
+  "database": "aos_test_f70639ea0633_ti4_test",
+  "readonly": true,
+  "source_ref": {
+    "assetType": "ProviderCapacitySourceRevision",
+    "assetId": "occupation-source-7f93a2d8244f438b9a09b0ddf9840b36",
+    "revision": 1,
+    "contentHash": "7adfb55cf82dd7ef9c15b3bb42d348b6e9955e81a366ed2b362317767f2835e1"
+  },
+  "source_raw_sha256": "7adfb55cf82dd7ef9c15b3bb42d348b6e9955e81a366ed2b362317767f2835e1",
+  "source_signature_matches_original_registered_key": true,
+  "registry_count": 1,
+  "publication_count": 1,
+  "same_caller": {
+    "xid": "1153",
+    "pid": 931
+  },
+  "cases": 2,
+  "legs": 4,
+  "physical_debit_commit_rejected": "23514",
+  "debit_private_rows_after_abort": 0,
+  "roles_closed": [
+    {
+      "rolname": "aos_provider_capacity_issuer",
+      "rolcanlogin": false,
+      "rolsuper": false
+    },
+    {
+      "rolname": "aos_provider_capacity_occupation",
+      "rolcanlogin": false,
+      "rolsuper": false
+    }
+  ],
+  "other_active_sessions": 0,
+  "source_valid_until": "2026-10-08T19:15:39.341257+00:00",
+  "source_in_half_open_window_at_read": true,
+  "scope": "original old-purpose isolated Source/physical boundary only; newJudge whole joint and real firstchain pending"
+}

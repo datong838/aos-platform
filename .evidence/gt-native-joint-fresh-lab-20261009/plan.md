@@ -1,0 +1,28 @@
+# 新Judge原事实桥独立新鲜试验沙箱
+
+231总控/Goalactive/AOS-001596/HEAD986bf81e。候选A：直接现有159库新增Judge native fact，但原Source expired且无原私钥，不能篡改旧Source有效期或用stub通门；候选B：独立新鲜PG沙箱按原真实发行入口取得新Source并验证组合。本轮选择B前置，A具体bridge开发仍原五Task登记范围。既有原实验卷inode剩1106不足原fullclone；VM MemAvailable约1.1GiB；不清库、不删卷、重启或扩容原环境。
+
+创建唯一test-only容器aos-native-joint-memory-20261009，仅127.0.0.1:5435，原已缓存Postgres image sha256:a0eb61b312f90f7c5891afc088edc2824ae8eae1dd21ab8ba0e3ef78b1027eb8，无pull；内存数据挂载256MiB、容器memory384MiB、shared_buffers16MiB。数据目录tmpfs与原正式/实验卷无关系，保留容器不删、不自行重启；其数据仅存活于本次容器运行，必须落盘原证据/备份后才可后续清理，不把临时库当权威或供应商证明。原cached image下额外kernelTmpfs不是原卷扩容，先exact无同名容器/无端口占用、VM可用memory门。无能力时诊断该动作，继续原任务安全RED，不改Goal。
+
+秘密：全新本地测试随机密码，专用0700目录下0600secret文件，通过只读文件挂载+PASSWORD_FILE，不输出/提交明文、不复制旧密码。容器以当前用户UID/GID运行，tmpfs精确同UID/GID0700，无admin系统目录chown。独立0600pgpass只用于5435新aos_meta/aos_test_；原Role专用passwordFixture独立保留，无全局PGPASSWORD。
+
+每次创建操作O_EXCL attempt，unknown只inspect不重发docker run。资源验证Image/运行状态/端口/tmpfs/limits/PG版本/cluster新身份、只读health后原test bootstrap创建全新aos_test_*_ti4_test并迁移到代码头。保持USE_SHARED=0/RETAIN=1，原metadata保护保留。本轮先基础可用；下一代码波新Judge fact actualSource/newparent/full3buckets/xmin/provider/quota/currentapproval/withdrawal/Source expiry/namespace角色/同caller全部真实门，不能用空台表或DTO替代。
+
+## 原签名验证器安装前置（r2失败后）
+
+原完整159迁移已在新cluster成功，r2登记origin被原CAPACITY_ORIGIN_VERIFIER_REQUIRED拒绝；失败库aos_test_4abf2ec5e78c_ti4_test保留，不复用其Anchor/原申请。cached image带原C扩展文件，但DB template1尚未安装原扩展。按既有scripts/tests/test_capacity_sql_ed25519.py的原CREATE EXTENSION安装方式，只在这个全新试验cluster的template1一次安装原aos_ed25519；核image/controlSQL原hash、C/IMMUTABLE/STRICT/INVOKER/extension成员/NOLOGIN owner等原合同，真实Ed25519签名正反验证，明确不产Source信任。未来原CREATE DATABASE继承template1真实C扩展，原迁移grant publicationOwner沿原代码执行，不手工放宽role/ACL。已失败库数据保持，新的独立r3仅在原count/identity核对后创建新UUID DB及inputs，显式保存全部尝试，不claim r2成功。
+
+## r3执行门
+原C验证器已单次安装template1，真实签名正反与catalog符合原定义；r2库4abf完整保留。r3先精确核对唯一旧失败库、cluster、template原ext及当前Task/Lease/authority/HEAD，再由原fresh bootstrap新建不同UUID库和全新inputs。只运行原既有Source/Model physical test；不声称新Judge全链或自然首链。执行文件：aos-platform/.evidence/gt-native-joint-fresh-lab-20261009/run_native_source_r3.py，证据同目录native-r3-*。
+
+## r3 OOM最小恢复
+实际cgroup oom_kill=1、peak402653184且PG日志同刻SIGKILL，磁盘仍75.8MiB，根因新沙箱384MiB内存与tmpfs共享预算。只提高同一新container memory/memory-swap至768MiB（VM当前945012KiB available、增量384MiB），不改tmpfs256、不重启/换cluster、不改旧卷或正式服务。不重放r3业务输入；先关闭所有本新cluster非admin残余LOGIN（原fixture teardown因recovery失败），确认无其他client sessions，再分别pg_dump保留两库一致备份至0700秘密目录，文件0600不进Git。后续新Judge原事实桥方案研究与RED可独立继续；本轮native失败不得报GREEN。
+
+## 修复后独立r4验证
+两失败库均保留并已各自pg_dump落盘hash，archive目录有效但未作完整恢复，不宣称备份验收通过。r4为已知OOM且修复后新建UUID库/新申请，不复用或重放r3已发布Source。前置同container/cluster、768MiB限额、tmpfs至少64MiB free（预计此前完整bootstrap新增约52MiB）、两原失败库列表精确不变、template1原C扩展、TaskLease。只运行原唯一native node一次；失败不自动重复，不扩大沙箱数据。
+
+## r4原fixture清理缺口与r5
+r4完整fresh159成功但setup被原guardIssuer no_password断言拒绝，原因r3 OOM后遗留随机密码；此前NOLOGIN只禁止登录，未复原原fixture NOLOGIN PASSWORD NULL合同。只在此新cluster对已登记6临时角色清除密码，并撤回r3occupation fixture独有runtime membership（其余迁移原成员不动）。r4库f706未产生Source登记/发布且所有任务已退出，可只读核对0 registry/0 publication/159/元对象3，再原受支持USE_SHARED=1复用这已完整迁移库作全新UUIDinputs r5，无额外clone或旧Source重放，不改test body，不假称全fresh迁移重跑。
+
+## r5模式误用纠正
+USE_SHARED=1虽为session bootstrap选项，但原isolated_owner明确拒绝此模式，r5在任何Source写入前失败，前段称此模式受支持用于本node不准确。r6采用已登记并成功用于旧965@158原node的ClonedIsolatedBootstrap测试专用适配，仅重用精确full159隔离库f706，不移除原Owner/fixture安全断言；USE_SHARED=0、suffix/cluster/159/0Source/0其他active检查全部保留。适配仅session建库前置，原source/Owner/node逻辑完全不变，不是正式DB能力。

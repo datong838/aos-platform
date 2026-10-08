@@ -1,0 +1,12 @@
+{
+  "closed_and_password_null": [
+    "aos_budget_consumer_call",
+    "aos_budget_cost_issuer",
+    "aos_provider_capacity_occupation",
+    "aos_guard_approval_issuer",
+    "aos_guard_policy_consumer_call",
+    "aos_provider_capacity_issuer"
+  ],
+  "occupation_runtime_membership_revoked": true,
+  "committed": true
+}

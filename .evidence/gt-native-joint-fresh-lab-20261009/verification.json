@@ -1,0 +1,147 @@
+{
+  "result": "ISOLATED_FULL159_ORIGINAL_SOURCE_PHYSICAL_NATIVE_GREEN",
+  "native_result": {
+    "observed_at": "2026-10-08T19:11:24.183069+00:00",
+    "database": "aos_test_f70639ea0633_ti4_test",
+    "pytest_exit": 0,
+    "results": [
+      {
+        "nodeid": "tests/aip/test_physical_capacity_occupation_pg.py::test_source_model_preparation_original_native_caller[shared]",
+        "phase": "call",
+        "outcome": "passed"
+      }
+    ],
+    "scope": "unmodified original isolated Source/Model physical caller fullhead159, not newJudge joint or business firstchain"
+  },
+  "independent": {
+    "observed_at": "2026-10-08T19:11:45.403346+00:00",
+    "database": "aos_test_f70639ea0633_ti4_test",
+    "readonly": true,
+    "source_ref": {
+      "assetType": "ProviderCapacitySourceRevision",
+      "assetId": "occupation-source-7f93a2d8244f438b9a09b0ddf9840b36",
+      "revision": 1,
+      "contentHash": "7adfb55cf82dd7ef9c15b3bb42d348b6e9955e81a366ed2b362317767f2835e1"
+    },
+    "source_raw_sha256": "7adfb55cf82dd7ef9c15b3bb42d348b6e9955e81a366ed2b362317767f2835e1",
+    "source_signature_matches_original_registered_key": true,
+    "registry_count": 1,
+    "publication_count": 1,
+    "same_caller": {
+      "xid": "1153",
+      "pid": 931
+    },
+    "cases": 2,
+    "legs": 4,
+    "physical_debit_commit_rejected": "23514",
+    "debit_private_rows_after_abort": 0,
+    "roles_closed": [
+      {
+        "rolname": "aos_provider_capacity_issuer",
+        "rolcanlogin": false,
+        "rolsuper": false
+      },
+      {
+        "rolname": "aos_provider_capacity_occupation",
+        "rolcanlogin": false,
+        "rolsuper": false
+      }
+    ],
+    "other_active_sessions": 0,
+    "source_valid_until": "2026-10-08T19:15:39.341257+00:00",
+    "source_in_half_open_window_at_read": true,
+    "scope": "original old-purpose isolated Source/physical boundary only; newJudge whole joint and real firstchain pending"
+  },
+  "verifier": {
+    "cluster": "7694371626696531992",
+    "database": "template1",
+    "original_control_SQL_match": {
+      "aos_ed25519--1.0.sql": "add5aff9bf5ed07b7db16793cc498b210533b9006e180a0c1b405c2b6539bb67",
+      "aos_ed25519.control": "b8ed0944fec477a668418ebd4e8f7a8d8528b7a256f1fd9feca6609b2aef9d4f"
+    },
+    "image_binary_sha256": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+    "catalog": {
+      "prosrc": "aos_ed25519_verify",
+      "probin": "$libdir/aos_ed25519",
+      "proisstrict": true,
+      "prosecdef": false,
+      "provolatile": "i",
+      "proparallel": "s",
+      "lanname": "c",
+      "extname": "aos_ed25519",
+      "same_owner": true
+    },
+    "owner_role": {
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    "real_signature_positive": true,
+    "tampered_signature_rejected": true,
+    "committed": true,
+    "no_source_trust_or_business_authority": true
+  },
+  "resource_recovery": {
+    "cluster": "7694371626696531992",
+    "container_id": "a5dbda0436e096132483ededcd1750465b1771b5a793e0e39a4ec3ca2e4976c3",
+    "memory_bytes": 805306368,
+    "data_tmpfs": {
+      "/var/lib/postgresql/data": "rw,size=256m,uid=501,gid=20,mode=0700"
+    },
+    "closed_temporary_logins": [
+      "aos_budget_consumer_call",
+      "aos_budget_cost_issuer",
+      "aos_provider_capacity_occupation",
+      "aos_guard_approval_issuer",
+      "aos_guard_policy_consumer_call",
+      "aos_provider_capacity_issuer"
+    ],
+    "backups": [
+      {
+        "database": "aos_test_014da5b585b6_ti4_test",
+        "path": "/Users/ddt/.aos-lab-secrets/aos-native-joint-memory-20261009/aos_test_014da5b585b6_ti4_test.dump",
+        "bytes": 6202505,
+        "sha256": "0c974ee029a7c284b56e9a9cdf151fc2b42a7cc23b615cf578e19580d48524ae",
+        "archive_list_valid": true,
+        "full_restore_not_tested": true
+      },
+      {
+        "database": "aos_test_4abf2ec5e78c_ti4_test",
+        "path": "/Users/ddt/.aos-lab-secrets/aos-native-joint-memory-20261009/aos_test_4abf2ec5e78c_ti4_test.dump",
+        "bytes": 5072827,
+        "sha256": "ce0fc0f4478564bbcf773c498c7ce9c261be1ed29d5bf0751564388f63f6fd9a",
+        "archive_list_valid": true,
+        "full_restore_not_tested": true
+      }
+    ],
+    "no_restart_or_source_replay": true,
+    "native_result": "FAILED_OOM_NOT_GREEN"
+  },
+  "final_backup": {
+    "path": "/Users/ddt/.aos-lab-secrets/aos-native-joint-memory-20261009/aos_test_f70639ea0633_ti4_test.dump",
+    "bytes": 5147090,
+    "sha256": "30311a82ccd850d14f5945d2dc3e2a725e0e7139f738bbc6b56c760d66f11e1e",
+    "archive_list_valid": true,
+    "full_restore_not_tested": true
+  },
+  "prior_failures_preserved": [
+    "r1 hookspec before fixtures",
+    "r2 original C verifier absent",
+    "r3 cgroup OOM and failed teardown",
+    "r4 leftover fixture password",
+    "r5 shared mode rejected by original isolated_owner"
+  ],
+  "production_code_changed": false,
+  "no_formal_volume_or_service_change": true,
+  "no_push": true,
+  "limitations": [
+    "Isolated original v1 Source/Model physical only; new Judge joint pending",
+    "Resource tmpfs256MiB retains three databases; no additional bootstrap until capacity reviewed",
+    "Source current only at frozen independent observation; expiry not extended",
+    "Backup archive list validation is not full restore acceptance"
+  ]
+}
