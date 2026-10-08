@@ -1,0 +1,12 @@
+# 两用途共享预算桶统一排序施工（原事实桥前置）
+
+原事实桥计划1597中登记的锁排序依赖。候选1是直接新Judge原SQL桥，尚缺统一桶前置；候选2是原Owner内部两用途桶锁集合，授权scope已有Owner和Judge native测试，依赖两原申请及审批而无需新Source发行；选择候选2。不将此前Source proof泛化为新Judge联合许可。
+
+维护services/aos-api/aos_api/aip_model_eval_execution_owner.py，新增内部 `_prepare_dual_purpose_bucket_fences`：严格原native SERIAL tenant/caller（复用两费用前缀）；原newJudge批准facts导出targetApplication.requestId与完整request；原current policy/budget/price/provider/read DBclock；原桶算法分别生成Target/model-eval任务桶及newJudge/model-judge任务桶，同budget daily/pilot去重必须定义完全相等；按原kind/account/period_start/currency全局排序，一次调用原_prepare_and_lock_buckets；在所有锁完成后核原实际row定义、重读originalapprovedsource与政策/head/ref并重推所有period/limit，最后DBclock查完整半开时窗。只内部预算保护原语，不造hold/Intent、不结束事务/dispatch、不接API，不替代Source物理锁。未来唯一联合入口须先Source前缀+两费用→物理account→本全局桶原语→两parent→唯一Intent/finalizer；该后续集成未完成。
+
+维护services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py原signed rule/fullSuite/newApproval test：先缺失method RED；原159隔离库全新UUID输入，两费用+6桶原prepare显式提交仅桶metadata（held counters不变、无新parent/Run）；另一原caller阻塞于排序最后的桶，独立NOWAIT确认5个前置桶全部持有（包括不同Target/Judge预算）和两费用全部持有，再释放等待线程终结并rollback；原rowlimit单值真实改动+SAVEPOINT拒绝/恢复；全部现有Judge审批/parent/费用/expiry负门继续同node累计。
+
+验证：真实PG并发不可用时不得用mock代替声称锁顺序；保留RED、精确hash和test结果；专项及原node累计、原旧Owner相邻纯合同测试；涉及后端无页面变化，本步不做浏览器验收。m1精确提交和authority CAS/five CP sync，五parent继续ACTIVE，组件交付不作为自然首链通过。原SQLv1不动、正式库只读、无Source续期/新库clone/凭证全局变量。
+
+## 两次验证失败后的修正
+green-r1真实等待线程不终止，但restricted runtime不能读其他session的pg_stat_activity query；改原isolated admin observer（执行caller仍原runtime），green-r2锁顺序已走到后续negative，但原guard_ar2_budget_bucket_update先拒绝limit修改。原计划称reader可观察到limit drift不准确；不禁原trigger制造非法表。改为证明原producer拒绝单值定义变化、SAVEPOINT恢复后原prefix仍可用，明确未证明损坏物理row进入reader后拒绝。两失败留存，原native保护和Source范围不变。

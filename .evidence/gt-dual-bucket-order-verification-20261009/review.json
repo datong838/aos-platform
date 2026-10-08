@@ -1,0 +1,10 @@
+{
+  "plan_consistent": true,
+  "new_method_only_owner_bytes": true,
+  "canonical_CNY_sort_matches_original_store": true,
+  "no_API_or_hold_or_transaction_end_or_admission_added": true,
+  "native_OBSERVER_and_original_guard_negative_corrections_documented": true,
+  "no_fixture_guard_disabled": true,
+  "five_parent_tasks_remain_active": true,
+  "source_and_newJudge_joint_still_pending": true
+}

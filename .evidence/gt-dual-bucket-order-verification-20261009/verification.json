@@ -1,0 +1,35 @@
+{
+  "stage": "ORIGINAL_TWO_PURPOSE_GLOBAL_BUDGET_BUCKET_PREFIX_GREEN",
+  "authority_revision": "AOS-001597",
+  "parent_code_tasks": [
+    "gt-atomic-model-admission-20261008",
+    "gt-judge-call-authority-20261008"
+  ],
+  "native": "1PASS53.53s noSKIP, complete existing signedRule/Suite/newApproval/hold/expiry/fee/ACL/canary node plus new real global6bucket union",
+  "adjacent": "195PASS0.54s pure original Model execution contracts; no DB/bootstrap or business claim",
+  "independent": "Original exact rows6/metadata callerCOMMITTED/waiterABORTED/actual5priorNOWAIT+2fees/producerlimitguard refusal, nativeold158 riskfallback verified",
+  "code_files": {
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": "3f5dd3be9c64d694408527e1dd736faa28076285091b43d1fb2c7f0cf06518ef",
+    "services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py": "48707a19260302c5104faeb48a63dd4adcdad283275de0b2629035a3739f8dc0"
+  },
+  "preexisting_owner_bytes_exact": "6126e56f5197ba60a4e4d1689c39ae1f0f08f86087b04d5afba2b727e21dc89c",
+  "proof": {
+    "path": ".evidence/gt-atomic-model-admission-20261008/judge-dual-bucket-independent-r3.json",
+    "sha256": "8e8e35ff3d5f8f22ad1aa68dc70ee5224e71280ce9d8b45cbfb0fe48cb72950f"
+  },
+  "preserved_failures": [
+    "RED missing original global prefix",
+    "green-r1 restricted observer query visibility",
+    "green-r2 original bucket definition guard rejected mutation before reader"
+  ],
+  "limitations": [
+    "Internal budget-only method returnsNone; no Source/physical lock authority or joint parent/Intent/finalizer",
+    "6 distinct buckets proven. Same-budget4bucket dedup branch and direct corrupted-row reader rejection not proven native",
+    "Original expiry/withdrawal tests retained; new prefix-specific expiry lockwait still future joint acceptance",
+    "New module and test files were already untracked prototypes; this commit includes preserved earlier bytes under original parent scopes; standalone checkout dependency closure not claimed",
+    "Broader historical fixed fixture collisions60PASS31FAIL1ERROR retained, not whole regression green"
+  ],
+  "execution_allowed": false,
+  "formal_resources_unchanged": true,
+  "Goal": "active"
+}
