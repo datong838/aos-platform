@@ -1,0 +1,26 @@
+{
+  "observed_at": "2026-10-08T18:26:31.031623+00:00",
+  "readonly": true,
+  "database": "aos_test_965e5441744f_ti4_test",
+  "cluster": "7693564235776004128",
+  "head": "a0v_158",
+  "provider_object": [],
+  "provider_action": [
+    {
+      "id": "aip_request_provider_capacity",
+      "name": "申请Provider容量配置",
+      "object_type": "ProviderCapacityRequest"
+    }
+  ],
+  "remaining_cleanup_candidates": [],
+  "aos_capacity_publication_private.registry_epoch": 0,
+  "aos_capacity_publication_private.source_publication": 0,
+  "aip_provider_capacity_request": 1,
+  "aip_action_proposal": 25,
+  "other_active_sessions": 0,
+  "file_sha256": {
+    "services/aos-api/tests/conftest.py": "63e662d9e5dc4650cf5ec646717c49ffc503e1da1b6b06c62c5d1066b6f990a8",
+    "services/aos-api/tests/test_retained_fixture_protection.py": "eddbf158c24cf2c8b27b11e21e1e50d8ee2432272c4d4a683c234c5cf74a2ca8",
+    "services/aos-api/alembic/versions/a0v_146_provider_capacity_action.py": "dad16389f49a76375cc9da554ba59287f8e6428b90af94352628bb764d3f7bad"
+  }
+}

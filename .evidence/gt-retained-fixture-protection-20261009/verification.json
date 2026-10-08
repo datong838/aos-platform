@@ -1,0 +1,18 @@
+{
+  "authority": "AOS-001594",
+  "head_before": "eb982a9d3d2184a0c4b403b6561d6410c09dfbe5",
+  "tests": "6 passed, 7 warnings, 0.33s",
+  "red": "5 missing-entry failures, 0.39s; earlier setup network failure retained separately",
+  "old_disposable_SQL_exact": true,
+  "compile": "PASS",
+  "review": "retained=1 skips only legacy global ontology cleanup; original client wired once; default cleanup unchanged; production, migrations and approval guards unchanged",
+  "limitations": [
+    "Pure tests and readonly reconciliation, not full PG Source caller pass",
+    "Existing missing metadata not restored",
+    "Retained fixtures must use unique inputs, remaining unrelated client mutations unchanged"
+  ],
+  "file_sha256": {
+    "services/aos-api/tests/conftest.py": "63e662d9e5dc4650cf5ec646717c49ffc503e1da1b6b06c62c5d1066b6f990a8",
+    "services/aos-api/tests/test_retained_fixture_protection.py": "eddbf158c24cf2c8b27b11e21e1e50d8ee2432272c4d4a683c234c5cf74a2ca8"
+  }
+}

@@ -141,6 +141,15 @@ def _isolated_postgres_database():
                 conn.execute(sql.SQL("DROP DATABASE {}").format(sql.Identifier(database_name)))
 
 
+def _cleanup_ontology_test_data(conn):
+    """Preserve ontology history and installed definitions in retained test DBs."""
+    if os.getenv("AOS_TEST_RETAIN_DATABASE") == "1":
+        return
+    conn.execute("DELETE FROM obj_instance WHERE props->>'source' IS NOT NULL")
+    conn.execute("DELETE FROM meta_object_type WHERE id NOT IN ('WorkOrder','Site','Order','OrderItem','EgressPolicyRevision','DataClassificationPolicyRevision','NetworkPolicyRevision','QuotaPolicyRevision')")
+    conn.commit()
+
+
 @pytest.fixture()
 def client():
     idempotency_store.clear()
@@ -217,9 +226,7 @@ def client():
                 )
             _c.commit()
         with _connect() as _c:
-            _c.execute("DELETE FROM obj_instance WHERE props->>'source' IS NOT NULL")
-            _c.execute("DELETE FROM meta_object_type WHERE id NOT IN ('WorkOrder','Site','Order','OrderItem','EgressPolicyRevision','DataClassificationPolicyRevision','NetworkPolicyRevision','QuotaPolicyRevision')")
-            _c.commit()
+            _cleanup_ontology_test_data(_c)
         with _connect(TenantScope("dev-org", "dev-project")) as _c:
             _c.execute("DELETE FROM meta_aip_kv WHERE key='apollo_ops_assets'")
             _c.commit()
