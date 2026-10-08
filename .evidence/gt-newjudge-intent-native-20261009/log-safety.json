@@ -1,0 +1,20 @@
+{
+  "default-judge-r1.log": {
+    "jwt_like_count": 0
+  },
+  "default-judge-r2.log": {
+    "jwt_like_count": 0
+  },
+  "native-r1.log": {
+    "jwt_like_count": 0
+  },
+  "adjacent.log": {
+    "jwt_like_count": 0
+  },
+  "native-r2.log": {
+    "jwt_like_count": 0
+  },
+  "native-r3.log": {
+    "jwt_like_count": 0
+  }
+}

@@ -856,3 +856,117 @@ def occupation_judge_parent_debit_statements():
         f'REVOKE ALL ON FUNCTION {JUDGE_DEBIT} FROM PUBLIC',
         f'GRANT EXECUTE ON FUNCTION {JUDGE_DEBIT} TO aos_runtime',
     )
+
+
+JUDGE_INTENT = 'public.prepare_capacity_judge_execution_intent(bytea,jsonb,uuid,text,text,uuid,bigint,text,uuid,uuid)'
+
+
+def occupation_judge_intent_statements():
+    """Original new-purpose Intent awaiting an original Target result.
+
+    Explicit isolated artifact only. A pending dependency is never actual
+    Judge input or execution authority; both old and new commit-denial gates
+    remain unconditional until the complete joint finalizer is implemented.
+    """
+    table = SCHEMA + '.prepared_judge_intent'
+    return (
+        f'''CREATE TABLE {table} (
+          org_id text NOT NULL,project_id text NOT NULL,intent_id uuid PRIMARY KEY,
+          debit_id uuid NOT NULL UNIQUE REFERENCES {SCHEMA}.prepared_parent_debit(debit_id),
+          target_intent_id uuid NOT NULL REFERENCES {SCHEMA}.prepared_execution_intent(intent_id),
+          request_id text NOT NULL,case_id text NOT NULL,
+          purpose text NOT NULL CHECK(purpose='judge'),attempt integer NOT NULL CHECK(attempt=1),
+          state text NOT NULL CHECK(state='awaiting_target_result'),
+          immutable jsonb NOT NULL,content_hash text NOT NULL,origin_xid xid8 NOT NULL,origin_pid integer NOT NULL,
+          UNIQUE(org_id,project_id,request_id,case_id,purpose,attempt))''',
+        f'ALTER TABLE {table} OWNER TO {OWNER}',
+        f'ALTER TABLE {table} ENABLE ROW LEVEL SECURITY',
+        f'ALTER TABLE {table} FORCE ROW LEVEL SECURITY',
+        f'''CREATE POLICY exact_scope ON {table} TO {OWNER}
+          USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+          WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))''',
+        f'REVOKE ALL ON {table} FROM PUBLIC,aos_runtime',
+        f'CREATE TRIGGER immutable_prepared_judge_intent BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION {SCHEMA}.immutable_prepared_intent()',
+        f'CREATE TRIGGER no_truncate_prepared_judge_intent BEFORE TRUNCATE ON {table} FOR EACH STATEMENT EXECUTE FUNCTION {SCHEMA}.immutable_prepared_intent()',
+        f'CREATE CONSTRAINT TRIGGER no_unfinalized_judge_intent AFTER INSERT ON {table} DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION {SCHEMA}.reject_unfinalized_parent_debit()',
+        f'''CREATE FUNCTION {JUDGE_INTENT.split('(')[0]}(p_raw bytea,p_source jsonb,p_hold uuid,
+          p_request text,p_hash text,p_debit uuid,p_minor bigint,p_case text,p_target uuid,p_intent uuid)
+          RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $judgeintent$
+          DECLARE fact jsonb; original_case jsonb; debit jsonb; debit_body jsonb; body jsonb; digest text;
+            target {SCHEMA}.prepared_execution_intent%ROWTYPE;
+            old {table}%ROWTYPE;
+          BEGIN
+            IF p_intent IS NULL OR p_target IS NULL THEN
+              RAISE EXCEPTION 'CAPACITY_JUDGE_INTENT_ID_REQUIRED' USING ERRCODE='23514'; END IF;
+            -- This original native reader authenticates the occupation caller
+            -- before any private Target/Intent lookup or mutation.
+            fact:=public.capacity_occupation_judge_fact(p_raw,p_source,p_hold,p_request,p_hash);
+            SELECT jsonb_agg(item) INTO original_case
+              FROM jsonb_array_elements(fact->'application'->'cases') item WHERE item->>'caseId'=p_case;
+            IF original_case IS NULL OR jsonb_array_length(original_case)<>1
+              OR fact->'application'->'ruleFacts'->'rule'->>'inputProtocol'
+                 IS DISTINCT FROM 'aos.model-eval-judge-input/v1' THEN
+              RAISE EXCEPTION 'CAPACITY_JUDGE_INTENT_ORIGINAL_CASE_REQUIRED' USING ERRCODE='23514'; END IF;
+            original_case:=original_case->0;
+            SELECT * INTO target FROM {SCHEMA}.prepared_execution_intent
+              WHERE intent_id=p_target AND org_id='org-org' AND project_id='dev-project' FOR SHARE;
+            IF NOT FOUND OR target.origin_xid IS DISTINCT FROM pg_current_xact_id()
+              OR target.origin_pid IS DISTINCT FROM pg_backend_pid()
+              OR target.purpose IS DISTINCT FROM 'target' OR target.attempt IS DISTINCT FROM 1
+              OR target.state IS DISTINCT FROM 'prepared' OR target.case_id IS DISTINCT FROM p_case
+              OR target.request_id IS DISTINCT FROM fact->'application'->'targetApplication'->>'requestId'
+              OR target.immutable->>'requestHash' IS DISTINCT FROM fact->'application'->'targetApplication'->>'requestHash'
+              OR target.immutable->'application' IS DISTINCT FROM fact->'application'->'targetApplication'->'request'
+              OR target.immutable->>'inputHash' IS DISTINCT FROM original_case->'inputArtifact'->>'contentHash'
+              OR target.immutable->>'callerLogin' IS DISTINCT FROM session_user
+              OR target.immutable->>'intentId' IS DISTINCT FROM p_target::text
+              OR target.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(
+                   public.canonical_asset_registry_jsonb(target.immutable),'UTF8')),'hex') THEN
+              RAISE EXCEPTION 'CAPACITY_JUDGE_INTENT_ORIGINAL_TARGET_REQUIRED' USING ERRCODE='23514'; END IF;
+            SELECT * INTO old FROM {table} WHERE org_id='org-org' AND project_id='dev-project'
+              AND request_id=p_request AND case_id=p_case AND purpose='judge' AND attempt=1;
+            IF FOUND AND old.intent_id IS DISTINCT FROM p_intent THEN
+              RAISE EXCEPTION 'CAPACITY_JUDGE_INTENT_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+            SELECT * INTO old FROM {table} WHERE intent_id=p_intent;
+            IF FOUND AND (old.debit_id IS DISTINCT FROM p_debit OR old.target_intent_id IS DISTINCT FROM p_target
+              OR old.request_id IS DISTINCT FROM p_request OR old.case_id IS DISTINCT FROM p_case) THEN
+              RAISE EXCEPTION 'CAPACITY_JUDGE_INTENT_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+            debit:=public.prepare_capacity_judge_parent_debit(p_raw,p_source,p_hold,p_request,p_hash,p_debit,p_minor,p_case);
+            SELECT immutable INTO STRICT debit_body FROM {SCHEMA}.prepared_parent_debit WHERE debit_id=p_debit;
+            body:=jsonb_build_object('intentId',p_intent,'state','awaiting_target_result',
+              'tenant',jsonb_build_object('orgId','org-org','projectId','dev-project'),
+              'requestId',p_request,'requestHash',p_hash,'requestMaker',fact->>'requestMaker',
+              'approvalChecker',fact->>'approvalChecker','approvalSnapshot',fact->'approvalSnapshot',
+              'proposalId',fact->'approvalSnapshot'->>'proposal_id','proposalHash',fact->'approvalSnapshot'->>'proposal_hash',
+              'approvalIdempotencyKey',fact->'approvalSnapshot'->>'idempotency_key','application',fact->'application',
+              'originalCase',original_case,'debit',debit_body,'debitHash',debit->>'contentHash',
+              'targetIntentId',p_target,'targetIntentHash',target.content_hash,
+              'inputDependency',jsonb_build_object('protocol','aos.model-eval-judge-input/v1',
+                'state','awaiting_target_result','targetIntentId',p_target,
+                'targetIntentHash',target.content_hash,'expectedArtifact',original_case->'expectedArtifact'),
+              'purpose','judge','attempt',1,'callerLogin',session_user,
+              'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid());
+            digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
+            IF old.intent_id IS NOT NULL THEN
+              IF old.immutable IS DISTINCT FROM body OR old.content_hash IS DISTINCT FROM digest
+                OR old.origin_xid IS DISTINCT FROM pg_current_xact_id() OR old.origin_pid IS DISTINCT FROM pg_backend_pid() THEN
+                RAISE EXCEPTION 'CAPACITY_JUDGE_INTENT_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+            ELSE
+              INSERT INTO {table}(org_id,project_id,intent_id,debit_id,target_intent_id,request_id,
+                case_id,purpose,attempt,state,immutable,content_hash,origin_xid,origin_pid)
+                VALUES('org-org','dev-project',p_intent,p_debit,p_target,p_request,p_case,'judge',1,
+                  'awaiting_target_result',body,digest,pg_current_xact_id(),pg_backend_pid()) RETURNING * INTO old;
+            END IF;
+            fact:=public.capacity_occupation_judge_fact(p_raw,p_source,p_hold,p_request,p_hash);
+            IF fact->>'contentHash' IS DISTINCT FROM debit_body->>'parentHash'
+              OR fact->>'xid' IS DISTINCT FROM pg_current_xact_id()::text THEN
+              RAISE EXCEPTION 'CAPACITY_JUDGE_INTENT_CURRENT_AFTER_WAITS_REQUIRED' USING ERRCODE='23514'; END IF;
+            -- Allocation performs the original currentness recheck after waits;
+            -- no future Target result or arbitrary input is asserted here.
+            RETURN jsonb_build_object('intentId',old.intent_id,'state',old.state,'immutable',old.immutable,
+              'contentHash',old.content_hash,'executionAllowed',false);
+          END $judgeintent$''',
+        f'ALTER FUNCTION {JUDGE_INTENT} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {JUDGE_INTENT} FROM PUBLIC',
+        f'GRANT EXECUTE ON FUNCTION {JUDGE_INTENT} TO aos_runtime',
+    )

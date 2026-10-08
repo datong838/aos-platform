@@ -366,6 +366,7 @@ def test_published_judge_rule_source_original_registry(tmp_path):
 def test_exact_signed_rule_new_original_suite(
     caller,issuer_factory,https_signer,guard_issuer_factory,guard_consumer_factory,tmp_path,
     *, source_provider=None,whole_caller_factory=None,source_prefix=None,source_probe=None,
+    source_finish=None,source_native_only=False,
 ):
     import os
     from aos_api.db import connect,connect_serializable,get_dsn
@@ -632,6 +633,7 @@ def test_exact_signed_rule_new_original_suite(
             native_whole_proof['limitations']='actual Source/account refs and prepared newJudge debit; full four-leg allocation/Intent/joint/executor refs remain descriptive'
         counted=shared_risk_totals(hold_conn,scope,held['budget_revision_ref']['resourceId'])
         assert counted==(1,10)
+        if source_finish is not None:native_whole_proof['source_commit_denial']=source_finish(hold_conn)
         hold_conn.rollback()
     with connect(scope) as rollback_read:
         assert rollback_read.execute('SELECT count(*) AS n FROM aip_model_judge_budget_reservation WHERE request_id=%s',(budget_pending['request_id'],)).fetchone()['n']==0
@@ -643,6 +645,9 @@ def test_exact_signed_rule_new_original_suite(
         native_whole_proof['independent_xact_status']='aborted'
     native_label=os.environ.get('AOS_JUDGE_NATIVE_EVIDENCE_LABEL','whole-manifest-native-current')
     (repo/'.evidence/gt-judge-call-authority-20261008'/(native_label+'-whole-plan-proof.json')).write_text(json.dumps(native_whole_proof,default=str,indent=2)+'\n')
+    if source_native_only:
+        assert source_trial is not None and source_finish is not None
+        return
     # The returned hold is not proof of COMMIT: independently read it after
     # the actual caller context commits, then keep it as an open obligation.
     with connect_serializable(scope) as committing_hold:

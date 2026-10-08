@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-newjudge-intent-native-20261009/run_default_judge_r1.py", line 27, in <module>
+    assert c.execute("SELECT datname FROM pg_database WHERE datname LIKE 'aos_test_%' ORDER BY datname").fetchall()==[('aos_test_14f68098c98d_ti4_test',),('aos_test_48cb82e0fea9_ti4_test',),('aos_test_4a449d82b60d_ti4_test',),('aos_test_62a134e19612_ti4_test',),('aos_test_c2a1c2de2db6_ti4_test',),('aos_test_7818fc629997_ti4_test',)]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-08T21:37:45.149793+00:00",
+  "database": "aos_test_c2a1c2de2db6_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_physical_capacity_occupation_pg.py::test_source_model_preparation_original_native_caller[shared]",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "original signed Source plus native newJudge shared-debit trial; four-leg jointCOMMIT and business firstchain pending"
+}

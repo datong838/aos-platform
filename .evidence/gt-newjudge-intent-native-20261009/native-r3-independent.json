@@ -1,0 +1,45 @@
+{
+  "judge_catalog": {
+    "relrowsecurity": true,
+    "relforcerowsecurity": true,
+    "owner": "aos_physical_capacity_occupation_owner",
+    "runtime_privilege": false
+  },
+  "triggers": [
+    {
+      "tgname": "immutable_prepared_judge_intent",
+      "tgdeferrable": false,
+      "tginitdeferred": false
+    },
+    {
+      "tgname": "no_truncate_prepared_judge_intent",
+      "tgdeferrable": false,
+      "tginitdeferred": false
+    },
+    {
+      "tgname": "no_unfinalized_judge_intent",
+      "tgdeferrable": true,
+      "tginitdeferred": true
+    }
+  ],
+  "database": "aos_test_bc8172e66192_ti4_test",
+  "cluster": "7694410316620488728",
+  "migration": "a0v_159",
+  "source_count": 1,
+  "occupation_role": {
+    "login": false,
+    "memberships": 0
+  },
+  "private_prepared_rows": {
+    "account_guard": 1,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0,
+    "prepared_judge_intent": 0
+  },
+  "account_guard_reason": "original actual guard-race writer COMMIT retained; newJudge caller aborted",
+  "newjudge_transaction": "2767",
+  "transaction_status": "aborted",
+  "trial_function_removed": true,
+  "old_containers_unchanged": true,
+  "business_firstchain": false
+}

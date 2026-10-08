@@ -421,6 +421,9 @@ def test_source_model_preparation_original_native_caller(exact_public_source_cal
             from aos_api.aip_physical_capacity_occupation_authority import SOURCE_FACT,GUARD,SCHEMA
             if os.environ.get('AOS_SOURCE_NEW_JUDGE_NATIVE') == '1':
                 from aos_api.aip_physical_capacity_occupation_authority import JUDGE_DEBIT, JUDGE_ENTRY, JUDGE_FACT
+                if os.environ.get('AOS_NEW_JUDGE_INTENT_NATIVE') == '1':
+                    from aos_api.aip_physical_capacity_occupation_authority import JUDGE_INTENT
+                    admin.execute('DROP FUNCTION IF EXISTS '+JUDGE_INTENT)
                 for signature in (JUDGE_DEBIT, JUDGE_ENTRY, JUDGE_FACT):
                     admin.execute('DROP FUNCTION IF EXISTS '+signature)
             for operation in ('update','delete'):

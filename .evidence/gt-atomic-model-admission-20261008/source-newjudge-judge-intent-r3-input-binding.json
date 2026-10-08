@@ -1,0 +1,72 @@
+{
+  "fact": {
+    "pid": 3432,
+    "xid": "2773",
+    "debitId": "c0e3da77-b1cc-4516-8162-3d6585f6d421",
+    "inputHash": "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de",
+    "inputValue": {
+      "caseId": "content-subject"
+    },
+    "caseBinding": {
+      "caseId": "content-subject-0",
+      "attempt": 1,
+      "debitId": "c0e3da77-b1cc-4516-8162-3d6585f6d421",
+      "purpose": "target",
+      "inputRef": {
+        "revision": "1",
+        "artifactId": "ecommerce.content.pre-review.subject.v1.content-subject.input",
+        "contentHash": "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de",
+        "artifactType": "eval_input"
+      },
+      "judgeRef": {
+        "judgeId": "isolated-model-judge-22f12f6766064c22afbe9d83be414558",
+        "revision": 1,
+        "modelRoute": {
+          "assetId": "joint-prefix-model-857833419b79411bae4aeb202bcb8578",
+          "revision": "1",
+          "assetType": "registered_model",
+          "contentHash": "7b3aebf6caf46ce42503ab583fb9046066fd9a0546e94150ef6751f121ecb345"
+        },
+        "contentHash": "1c9d0a96f2b10cf4f225157624abbabd7f836b02a3bdb1ccd53c6d7432064373"
+      },
+      "suiteRef": {
+        "assetId": "model-suite-22f12f6766064c22afbe9d83be414558-two",
+        "revision": 1,
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "dede32d542f32749f3159aa09027d18b1fd0551fe2082d9ac75508e4c0be391f"
+      },
+      "debitHash": "sha256:30f69920a76993a2bd5ffb1a0400f95d6db786f217d38ae1497c707b1b275201",
+      "inputHash": "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de",
+      "targetRef": {
+        "assetId": "joint-prefix-model-81f73c58ed0644039503133395388145",
+        "revision": 2,
+        "assetType": "RegisteredModelRevision",
+        "contentHash": "13f7c1c04b6117bd02a77710f0221406467a1e831feae81b2d8ece11a54cd35e"
+      },
+      "parentHold": "1842d200-22a3-4977-8350-425642c229b6",
+      "expectedRef": {
+        "revision": "1",
+        "artifactId": "ecommerce.content.pre-review.subject.v1.content-subject.expected",
+        "contentHash": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+        "artifactType": "eval_expected"
+      },
+      "requestHash": "eaffc4609d1a89afa1948a4706322ebcdcf1d26c8feb65dd0a786c1200758929"
+    },
+    "contentHash": "sha256:30f69920a76993a2bd5ffb1a0400f95d6db786f217d38ae1497c707b1b275201",
+    "allocatedMinor": 10,
+    "parentCapMinor": 10,
+    "physicalTokens": 20000,
+    "caseBindingHash": "sha256:46a1f7f6f74ea9f210d1fc9308c83e88f25d2ce7a294815534c0a11cdda9dcef",
+    "executionAllowed": false,
+    "physicalRequests": 2,
+    "verifiedInputHash": "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de"
+  },
+  "input_raw": "{\"caseId\":\"content-subject\"}",
+  "input_ref": {
+    "artifactId": "ecommerce.content.pre-review.subject.v1.content-subject.input",
+    "artifactType": "eval_input",
+    "revision": "1",
+    "contentHash": "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de"
+  },
+  "execution_allowed": false
+}

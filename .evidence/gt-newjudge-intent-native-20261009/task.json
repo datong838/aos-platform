@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-newjudge-intent-native-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001607",
+  "scope": [
+    "aos-platform/.evidence/gt-newjudge-intent-native-20261009",
+    "test-only-runtime/colima-aos-extension/aos-source-newjudge-native-20261009/5436"
+  ],
+  "excluded_scope": [
+    "all prior databases and containers",
+    "formal services and real Provider",
+    "second writer"
+  ],
+  "expected_outputs": [
+    "actual originalSource/newJudge pending Intent binds original TargetIntent and shared debit on native caller; replay/negative/commit deny; old resources and data preserved"
+  ],
+  "lease_expires_at": "2026-10-08T22:12:18.820894+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T05:34:40+08:00"
+}

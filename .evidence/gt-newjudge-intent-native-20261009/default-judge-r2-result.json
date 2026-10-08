@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-08T21:47:02.940214+00:00",
+  "database": "aos_test_f3c5df7f369b_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_model_eval_judge_authority_pg.py::test_exact_signed_rule_new_original_suite",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "default original full native Judge regression; no Source integration or business execution"
+}

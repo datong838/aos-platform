@@ -1,0 +1,9 @@
+{
+  "AST": "PASS",
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": "e6af3593a9408198691b5fc68c3db8ac9cdb17d1ea937151cd5582c0734701c1",
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": "27e65edfba2ee880cb09338c8886cab1e29f545ba4fa3d75bc652bacd5c0a949",
+    "services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py": "4910b9df433cf5849bfb0bae866a3e67a99b4ba92f2cabc1666d232b96c1d1f5",
+    ".evidence/gt-atomic-model-admission-20261008/source_newjudge_native_trial_1606.py": "a36a806c627dba4afcdc758cae7e40d5da68e5c397a96ba019765886b4a608df"
+  }
+}
