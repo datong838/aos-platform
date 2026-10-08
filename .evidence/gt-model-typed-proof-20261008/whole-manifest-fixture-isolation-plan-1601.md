@@ -1,0 +1,3 @@
+# AOS-001601 治理负门夹具复审
+
+仅本Task测试文件修改：对原Application request内的治理ref做深复制，避免fault同时改变原request并提前落在hash负门。先保留现有错误夹具事实，再新断言原Judge请求hash保持不变且拒绝必须来自per-purpose治理与parent绑定。此为已登记wholeManifest专项的证据质量修复，无业务代码/DB/运行时变化；专项累计后新增证据/精确提交和权威同步，父Task保持ACTIVE。

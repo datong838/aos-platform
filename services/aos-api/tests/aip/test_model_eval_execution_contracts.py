@@ -751,8 +751,8 @@ def _whole_newjudge_body():
         for purpose, app in [('target', target_app), ('judge', request['judgeGovernanceApplication'])]:
             leg = case[purpose]
             for field in ('providerRef', 'priceRef', 'quotaPolicyRef', 'budgetPolicyRef'):
-                leg[field] = app['request'][field]
-            leg['modelRef'] = app['request']['sourceRef']
+                leg[field] = json.loads(json.dumps(app['request'][field]))
+            leg['modelRef'] = json.loads(json.dumps(app['request']['sourceRef']))
             for field in ('intentRef', 'budgetAllocationRef'):
                 leg[field]['resourceId'] += '-'+str(i)
             if purpose == 'target':
@@ -856,3 +856,14 @@ def test_whole_newjudge_cannot_enter_legacy_certificate_signer():
     body = _whole_newjudge_body()
     with pytest.raises(ValidationError):
         module.canonical_model_certificate_signing_bytes(body, _signing_inputs()[1])
+
+
+@pytest.mark.parametrize('purpose,field', [('target','priceRef'),('judge','quotaPolicyRef')])
+def test_whole_newjudge_governance_fault_reaches_leg_binding_with_original_hash_intact(purpose,field):
+    module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+    body = _whole_newjudge_body()
+    original_hash = canonical_hash(body['judgeRequest'])
+    body['cases'][0][purpose][field]['contentHash'] = 'f'*64
+    assert canonical_hash(body['judgeRequest']) == original_hash == body['judgeRequestHash']
+    with pytest.raises(ValidationError,match='exact per-purpose original governance and parent required'):
+        module.ModelEvalTargetJudgeExecutionManifest.model_validate(body)

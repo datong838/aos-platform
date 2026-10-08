@@ -1,0 +1,21 @@
+{
+  "authority_revision": "AOS-001601",
+  "head": "7a604022d5ee36c2f9f22197e67a535e90d9d1f2",
+  "result": "FIXTURE_ISOLATION_AND_EXACT_GOVERNANCE_REJECTION_VERIFIED",
+  "file": "services/aos-api/tests/aip/test_model_eval_execution_contracts.py",
+  "before_sha256": "dd402b0af5d4518338a72243070d4d93232524fa9de4fc35c3b9b2acb7f04edf",
+  "after_sha256": "1af1c814a4ad2658d42fb10a48237265c4d2cf5f0f511ecdbd7a48fef1d2c506",
+  "verification": [
+    "Original fixture alias mutation reproduced2RED0.42s;failure is preserved",
+    "Deepcopied original governance refs in synthetic leg fixture only",
+    "2new exacterror tests preserve original frozenrequest canonicalhash and reach per-purpose governance refusal",
+    "230cumulativePASS0.64s;195original testsbytesexact;no productioncodechange",
+    "BrowserNA noAPI/UI;no DBconnection or servicechanges"
+  ],
+  "risks": [
+    "Native Source newJudge positive/fullfinalizer/jointCOMMIT remainpending",
+    "Frozen expiredrequest and syntheticexecutionrefs cannotauthorize execution",
+    "Verification stage only; originalparentTaskACTIVE"
+  ],
+  "execution_allowed": false
+}
