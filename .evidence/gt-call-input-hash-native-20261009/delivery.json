@@ -1,0 +1,23 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "gt-call-input-hash-native-20261009",
+  "base_revision": "AOS-001611",
+  "completed_revision": "AOS-001611",
+  "result": "ORIGINAL_INPUT_HASH_CALL_SCHEMA_COMPATIBILITY_NATIVE_GREEN_ADMISSION_PENDING",
+  "changed_files": [
+    "aos-platform/.evidence/gt-call-input-hash-native-20261009"
+  ],
+  "commits": [
+    "10acb69035ab566ead84a387871d48f4a1ef8e12"
+  ],
+  "verification": [
+    "actual installed raw-input CHECK RED25.84s then minimal fix full original Source native1PASS69.83s; prefix short uppercase denied; runtime DML and actual COMMIT rejection preserved",
+    "318 pure adjacent PASS0.72s; independent zero preparation rows/Source1/NOLOGIN/31 old resources unchanged"
+  ],
+  "risks": [
+    "schema only: no trusted call producer, actual occupation, unknown transition or admission/finalizer",
+    "original parent held-only constraints retained; price unknown is not zero; full risk allocation/lock graph/actual COMMIT deadline and natural firstchain pending"
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-09T07:02:01+08:00"
+}
