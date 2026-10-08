@@ -1,0 +1,107 @@
+{
+  "observed_at": "2026-10-08T20:52:02.264701+00:00",
+  "execution_allowed": false,
+  "source_sha256": "b0c011e0ce0f985906c08819833e7e789cd9e33640225a7ba05d0469ee45d941",
+  "sides": [
+    {
+      "purpose": "targetParentBudget",
+      "budget_ref": {
+        "assetId": "test:activation:ec275f28d0804d41acbdd490344fadaa",
+        "revision": 2,
+        "assetType": "BudgetRevision",
+        "contentHash": "e332601ab24b630c181da92fef4fdc08bdc530ec960dc9c337044310cf470d5e"
+      },
+      "price_ref": {
+        "assetType": "ModelPriceSnapshotRevision",
+        "assetId": "cost-price-00a1d6c6ea32d5b374a629bc1f974baad1b966f9a31829fb91e32b58a2042751",
+        "revision": 1,
+        "contentHash": "e859721274d1ce6a17cf9d2a30bc12dba3a2f8df571b7066d4d861929f9bbf0a"
+      },
+      "proposal_hash": "3abdf7ed944fbbaa8732503e48e68c333fd68bb2501c12095743456e19fccb7d",
+      "risk_basis": {
+        "kind": "development_risk_proposal",
+        "provider": {
+          "assetType": "ProviderInstanceRevision",
+          "assetId": "joint-prefix-provider-8cf71797f5e042ce8c4a39d94621fa18",
+          "revision": 1,
+          "contentHash": "065276e82b3e29daffd32b98ef6b019f96b995a072252f38d39289da7d08957f"
+        },
+        "providerModelId": "candidate-model",
+        "perRequestRiskMinor": 10,
+        "totalRiskMinor": 100,
+        "maxRequests": 10
+      },
+      "numeric_prices_absent": true,
+      "actual_cost_minor": null,
+      "ledger_totals": [
+        {
+          "n": 0,
+          "risk": 0
+        },
+        {
+          "n": 0,
+          "risk": 0
+        },
+        {
+          "n": 0,
+          "risk": 0
+        }
+      ],
+      "exact_proposal_and_price_hashes_verified": true
+    },
+    {
+      "purpose": "judgeParentBudget",
+      "budget_ref": {
+        "assetId": "test:activation:a57a3c8c8dd64a87bc068a1ce415b1c1",
+        "revision": 2,
+        "assetType": "BudgetRevision",
+        "contentHash": "ecd4133ac4efd159d9877692ae50ba27e1ebd0fc67968b9587af7d9cf4a6ad3d"
+      },
+      "price_ref": {
+        "assetType": "ModelPriceSnapshotRevision",
+        "assetId": "cost-price-8477abf8de32128706ba02c7f2dbd1bede6f00b96e1225e3e79b5c6f9376662d",
+        "revision": 1,
+        "contentHash": "3485ac6a5d829760b0d4c20fa8e7b92a34956b3aff55bc6532ad389e82d1680c"
+      },
+      "proposal_hash": "41f68770d314ec4f5cf9fdcb009a1acd1d1a18e94836650c18a04f51764a50bc",
+      "risk_basis": {
+        "kind": "development_risk_proposal",
+        "provider": {
+          "assetType": "ProviderInstanceRevision",
+          "assetId": "joint-prefix-provider-8cf71797f5e042ce8c4a39d94621fa18",
+          "revision": 1,
+          "contentHash": "065276e82b3e29daffd32b98ef6b019f96b995a072252f38d39289da7d08957f"
+        },
+        "providerModelId": "candidate-model",
+        "perRequestRiskMinor": 10,
+        "totalRiskMinor": 100,
+        "maxRequests": 10
+      },
+      "numeric_prices_absent": true,
+      "actual_cost_minor": null,
+      "ledger_totals": [
+        {
+          "n": 0,
+          "risk": 0
+        },
+        {
+          "n": 0,
+          "risk": 0
+        },
+        {
+          "n": 1,
+          "risk": 10
+        }
+      ],
+      "exact_proposal_and_price_hashes_verified": true
+    }
+  ],
+  "read_only": true,
+  "limitations": [
+    "Historical fixture windows do not grant current authority",
+    "Risk request count is reservation-row count, not demonstrated Provider-call count",
+    "Per-leg 1 minor in manifest is synthetic; neither a known quote nor a held allocation",
+    "Real transport, Usage, allocation and trusted finalizer remain pending"
+  ],
+  "independent_after_totals_unchanged": true
+}
