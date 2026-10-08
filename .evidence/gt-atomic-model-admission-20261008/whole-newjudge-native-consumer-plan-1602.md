@@ -1,0 +1,13 @@
+# AOS-001602 whole 新 Judge 原生必要事实 consumer
+
+候选一：独立新 Source+新Judge正向联合，当前VM可用900200KiB低于1048576门，既有tmpfs余量不足原全库bootstrap且不能删除历史库/卷。候选二：已登记wholeManifest原生consumer，复用准确隔离原PG159，不建库、不部署正式服务，先推进。
+
+具体文件：services/aos-api/aos_api/aip_model_eval_execution_owner.py（本atomicTask）；services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py（原judgecallTask）；两Task自己的证据目录。先完整原生RED缺失validate_original_target_judge_manifest方法，随后仅追加该必要事实reader，不改旧method字节；新合同已通过230pure检查，不重复旧schema或重放旧attempt。
+
+reader必须走原Registry/fees和union桶前缀，同原SERIAL/runtime/tenant调用回读Target与新Judge parent、两审批、完整Suite/Rule请求与canonical hash。两parent row xmin必须是当前callerxid，plan parent与准备回读exact，原完整Judge request字典与hash exact，Target原request/ref exact。Target锁可能等待后再回读原Judge guard+Rule+费用和Source上下游必要事实有效期，最后核XID/PID和时钟。返回None，不创建hold/Intent、不签发、不承诺Source或finalizer、不COMMIT、不执行。
+
+真实fixture复用原完整signedRule+两原Model+独立新用途审批，预算union先取，然后分别原Store建立freshTarget与freshJudge parent，在同连接构造完整v2计划。新Source refs/identity/allocation/Intent/joint只是合成必要描述，明确未验证Source。正向reader通过，负门用原自报hash重算后仍拒DB原body差异、parenthash/审批/治理、freshxmin、caller/租户；退出caller rollback并独立读0rows/aborted。完整原native节点需专项/相邻累计，旧observer与延迟门保留。
+
+不关闭父Task；browserNA后台内部无API；资源不足只限制新Source全库实验，不设置blocked。通过后精确提交、只读阶段Delivery和AOS/Prime/5CP同步，再继续Source联合+trustedfinalizer。
+
+复审：原桶前缀会准备不存在的桶，因此新consumer在该前缀之前先对原两parent做无行锁读取，核精确ID/hash/当前xmin；无parent、已提交parent或伪造parent必须在任何桶准备前拒绝。此读取不替代后续原Guard，等待后仍重复新鲜caller与exact parent检查。新增负门应核错误parent/空缺parent拒绝且桶总数保持不变，不能把reader当budget producer。原Registry行锁顺序不变。

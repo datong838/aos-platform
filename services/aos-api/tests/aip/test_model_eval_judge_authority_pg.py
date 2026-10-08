@@ -366,6 +366,7 @@ def test_published_judge_rule_source_original_registry(tmp_path):
 def test_exact_signed_rule_new_original_suite(
     caller,issuer_factory,https_signer,guard_issuer_factory,guard_consumer_factory,tmp_path,
 ):
+    import os
     from aos_api.db import connect,connect_serializable,get_dsn
     from aos_api.tenant_scope import TenantScope
     from aos_api.aip_model_runtime_store import AipModelRuntimeStore
@@ -566,10 +567,24 @@ def test_exact_signed_rule_new_original_suite(
         release_policy=policy,artifact_bytes=files,connect_factory=connect_serializable)
     with connect(scope) as read:
         be=read.execute("SELECT * FROM aip_action_approval_event WHERE proposal_id=%s AND decision='approved'",(bp['proposal_id'],)).fetchone()
-    from aos_api.aip_model_eval_execution_owner import ModelEvalExecutionOwner
+    from aos_api.aip_model_eval_execution_owner import ModelEvalExecutionOwner, ModelEvalOwnerRejected
     assert hasattr(ModelEvalExecutionOwner, '_prepare_dual_purpose_bucket_fences'), 'global Target/newJudge original bucket prefix missing'
+    assert hasattr(ModelEvalExecutionOwner, 'validate_original_target_judge_manifest'), 'whole new-purpose Manifest original native consumer missing'
     with connect_serializable(scope) as hold_conn:
         hold_rollback_identity=hold_conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+        native_owner=ModelEvalExecutionOwner()
+        spec=importlib.util.spec_from_file_location('whole_native_plan_missing_1602',base/'build_whole_native_plan_1602.py')
+        missing_builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(missing_builder)
+        missing_plan=missing_builder.missing_parent_description(budget_pending,be['approval_event_id'])
+        before_missing_buckets=hold_conn.execute('SELECT count(*) AS n FROM aip_budget_bucket WHERE org_id=%s AND project_id=%s',scope.key).fetchone()['n']
+        with hold_conn.transaction(force_rollback=True):
+            with pytest.raises(ModelEvalOwnerRejected):
+                native_owner.validate_original_target_judge_manifest(hold_conn,scope,missing_plan,release_policy=policy,artifact_bytes=files)
+            after_missing_buckets=hold_conn.execute('SELECT count(*) AS n FROM aip_budget_bucket WHERE org_id=%s AND project_id=%s',scope.key).fetchone()['n']
+            assert after_missing_buckets==before_missing_buckets,'whole reader must reject absent parents before preparing any bucket'
+        native_owner._prepare_dual_purpose_bucket_fences(hold_conn,scope,budget_pending['request_id'],be['approval_event_id'],release_policy=policy,artifact_bytes=files)
+        from aos_api.aip_model_eval_budget_reservation import AipModelEvalBudgetReservationStore
+        native_target_hold=AipModelEvalBudgetReservationStore().hold(hold_conn,scope,target['request_id'],ids[0])
         held=judge_budget.hold(hold_conn,scope,budget_pending['request_id'],budget_pending['request_hash'],be['approval_event_id'])
         replayed_hold=judge_budget.hold(hold_conn,scope,budget_pending['request_id'],budget_pending['request_hash'],be['approval_event_id'])
         assert str(held['reservation_id'])==str(replayed_hold['reservation_id'])
@@ -577,11 +592,51 @@ def test_exact_signed_rule_new_original_suite(
         buckets=hold_conn.execute('SELECT * FROM aip_model_judge_budget_reservation_bucket WHERE org_id=%s AND project_id=%s AND reservation_id=%s',(*scope.key,held['reservation_id'])).fetchall()
         assert len(buckets)==3 and all(b['reserved_minor']==10 for b in buckets)
         assert next(b for b in buckets if b['bucket_kind']=='task')['account_id']=='model-judge/'+budget_pending['request_id']
+        native_target=native_owner.prepare_model_application(hold_conn,scope,target['request_id'],ids[0])
+        native_judge=native_owner.prepare_judge_application(hold_conn,scope,budget_pending['request_id'],be['approval_event_id'],release_policy=policy,artifact_bytes=files)
+        spec=importlib.util.spec_from_file_location('whole_native_plan_1602',base/'build_whole_native_plan_1602.py')
+        whole_builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(whole_builder)
+        native_body=whole_builder.build(native_target,native_judge)
+        assert native_owner.validate_original_target_judge_manifest(hold_conn,scope,native_body,release_policy=policy,artifact_bytes=files) is None
+        native_negatives=[]
+        for fault in ('request_body','judge_parent_hash','target_parent_hash','revoked_rule','canary'):
+            wrong=json.loads(json.dumps(native_body))
+            if fault=='request_body':
+                wrong['judgeRequest']['createdBy']+='-forged'
+                wrong['judgeRequestHash']=canonical_hash(wrong['judgeRequest'])
+                wrong['judgeParentBudget']['requestHash']=wrong['judgeRequestHash']
+            elif fault in ('judge_parent_hash','target_parent_hash'):
+                purpose='judge' if fault.startswith('judge') else 'target'
+                key=purpose+'ParentBudget';wrong[key]['parentHoldRef']['contentHash']='sha256:'+'0'*64
+                for c in wrong['cases']:c[purpose]['budgetHoldRef']['contentHash']='sha256:'+'0'*64
+            with hold_conn.transaction(force_rollback=True):
+                with pytest.raises(ModelEvalOwnerRejected):
+                    native_owner.validate_original_target_judge_manifest(hold_conn,
+                        TenantScope('dev-org','dev-project') if fault=='canary' else scope,wrong,
+                        release_policy=revoked_policy if fault=='revoked_rule' else policy,artifact_bytes=files)
+            native_negatives.append(fault)
+        native_final=hold_conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid,clock_timestamp() AS now').fetchone()
+        assert (native_final['xid'],native_final['pid'])==(hold_rollback_identity['xid'],hold_rollback_identity['pid'])
+        assert native_target.parent_row_xmin==native_judge.parent_row_xmin==native_final['xid']
+        native_whole_proof={'caller':hold_rollback_identity,'checkedAt':native_final['now'].isoformat(),
+            'target_parent_xmin':native_target.parent_row_xmin,'judge_parent_xmin':native_judge.parent_row_xmin,
+            'target_parent_id':str(native_target_hold['reservation_id']),'judge_parent_id':str(held['reservation_id']),
+            'manifest':native_body,'negative_cases':native_negatives,'execution_allowed':False,
+            'missing_parent_denied_no_bucket_write':after_missing_buckets==before_missing_buckets,
+            'limitations':'necessary original rows only; Source/account/allocation/Intent/joint/executor refs remain descriptive'}
         counted=shared_risk_totals(hold_conn,scope,held['budget_revision_ref']['resourceId'])
         assert counted==(1,10)
         hold_conn.rollback()
     with connect(scope) as rollback_read:
         assert rollback_read.execute('SELECT count(*) AS n FROM aip_model_judge_budget_reservation WHERE request_id=%s',(budget_pending['request_id'],)).fetchone()['n']==0
+        assert rollback_read.execute('SELECT count(*) AS n FROM aip_model_eval_budget_reservation WHERE request_id=%s',(target['request_id'],)).fetchone()['n']==0
+        native_whole_proof['dual_parent_rollback_zero']=True
+    with psycopg.connect(get_dsn()) as native_independent:
+        native_independent.execute('SET TRANSACTION READ ONLY')
+        assert native_independent.execute('SELECT pg_xact_status(%s::xid8)',(hold_rollback_identity['xid'],)).fetchone()[0]=='aborted'
+        native_whole_proof['independent_xact_status']='aborted'
+    native_label=os.environ.get('AOS_JUDGE_NATIVE_EVIDENCE_LABEL','whole-manifest-native-current')
+    (repo/'.evidence/gt-judge-call-authority-20261008'/(native_label+'-whole-plan-proof.json')).write_text(json.dumps(native_whole_proof,default=str,indent=2)+'\n')
     # The returned hold is not proof of COMMIT: independently read it after
     # the actual caller context commits, then keep it as an open obligation.
     with connect_serializable(scope) as committing_hold:
@@ -630,6 +685,13 @@ def test_exact_signed_rule_new_original_suite(
         judge_owner.prepare_dual_purpose_fee_fences(parent_caller,scope,budget_pending['request_id'],be['approval_event_id'],release_policy=policy,artifact_bytes=files)
         owner_preparation=judge_owner.prepare_judge_application(parent_caller,scope,
             budget_pending['request_id'],be['approval_event_id'],release_policy=policy,artifact_bytes=files)
+        judge_owner._prepare_dual_purpose_bucket_fences(parent_caller,scope,budget_pending['request_id'],be['approval_event_id'],release_policy=policy,artifact_bytes=files)
+        AipModelEvalBudgetReservationStore().hold(parent_caller,scope,target['request_id'],ids[0])
+        parent_target=judge_owner.prepare_model_application(parent_caller,scope,target['request_id'],ids[0])
+        stale_body=whole_builder.build(parent_target,owner_preparation)
+        with parent_caller.transaction(force_rollback=True):
+            with pytest.raises(ModelEvalOwnerRejected,match='fresh dual parent rows'):
+                judge_owner.validate_original_target_judge_manifest(parent_caller,scope,stale_body,release_policy=policy,artifact_bytes=files)
         assert owner_preparation.parent_limit==parent
         assert (owner_preparation.caller_xid,owner_preparation.caller_pid)==(parent_caller_identity['xid'],parent_caller_identity['pid'])
         assert owner_preparation.request==budget_pending['request_json'] and owner_preparation.execution_allowed is False
@@ -689,6 +751,8 @@ def test_exact_signed_rule_new_original_suite(
     with pytest.raises(ModelEvalOwnerRejected):
         judge_owner.prepare_judge_application(object(),scope,budget_pending['request_id'],be['approval_event_id'],
             release_policy=policy,artifact_bytes=files)
+    with pytest.raises(ModelEvalOwnerRejected,match='exact native whole newJudge caller'):
+        native_owner.validate_original_target_judge_manifest(object(),scope,native_body,release_policy=policy,artifact_bytes=files)
     with connect(scope) as wrong_isolation:
         with pytest.raises(ModelExecutionPlanRejected):
             validate_judge_parent_hold(wrong_isolation,expected_tenant=parent.tenant,parent_limit=parent,
@@ -696,6 +760,8 @@ def test_exact_signed_rule_new_original_suite(
         with pytest.raises(ModelEvalOwnerRejected):
             judge_owner.prepare_judge_application(wrong_isolation,scope,budget_pending['request_id'],be['approval_event_id'],
                 release_policy=policy,artifact_bytes=files)
+        with pytest.raises(ModelEvalOwnerRejected,match='original runtime SERIAL whole caller'):
+            native_owner.validate_original_target_judge_manifest(wrong_isolation,scope,native_body,release_policy=policy,artifact_bytes=files)
         wrong_isolation.rollback()
     with connect(TenantScope('dev-org','dev-project')) as wrong_tenant:
         with pytest.raises(ModelExecutionPlanRejected):
@@ -704,9 +770,13 @@ def test_exact_signed_rule_new_original_suite(
         with pytest.raises(ModelEvalOwnerRejected):
             judge_owner.prepare_judge_application(wrong_tenant,TenantScope('dev-org','dev-project'),budget_pending['request_id'],be['approval_event_id'],
                 release_policy=policy,artifact_bytes=files)
+        with pytest.raises(ModelEvalOwnerRejected,match='exact native whole newJudge caller'):
+            native_owner.validate_original_target_judge_manifest(wrong_tenant,TenantScope('dev-org','dev-project'),native_body,release_policy=policy,artifact_bytes=files)
         wrong_tenant.rollback()
     with psycopg.connect(get_dsn(),row_factory=__import__('psycopg.rows',fromlist=['dict_row']).dict_row) as wrong_admin:
         wrong_admin.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+        with pytest.raises(ModelEvalOwnerRejected,match='original runtime SERIAL whole caller'):
+            native_owner.validate_original_target_judge_manifest(wrong_admin,scope,native_body,release_policy=policy,artifact_bytes=files)
         with pytest.raises(ModelEvalOwnerRejected):
             judge_owner.prepare_judge_application(wrong_admin,scope,budget_pending['request_id'],be['approval_event_id'],
                 release_policy=policy,artifact_bytes=files)
@@ -1057,7 +1127,7 @@ def test_exact_signed_rule_new_original_suite(
         assert parent_postread.execute('SELECT count(*) AS n FROM aip_model_judge_budget_reservation_bucket WHERE reservation_id=%s',(committed_hold['reservation_id'],)).fetchone()['n']==3
         assert shared_risk_totals(parent_postread,scope,committed_hold['budget_revision_ref']['resourceId'])==(1,10)
     from psycopg.conninfo import conninfo_to_dict
-    out=repo/'.evidence/gt-judge-call-authority-20261008/exact-signed-rule-suite-native-r1.json'
+    out=repo/'.evidence/gt-judge-call-authority-20261008'/(os.environ['AOS_JUDGE_NATIVE_EVIDENCE_LABEL']+'-full-proof.json' if 'AOS_JUDGE_NATIVE_EVIDENCE_LABEL' in os.environ else 'exact-signed-rule-suite-native-r1.json')
     out.write_text(json.dumps({'database':conninfo_to_dict(get_dsn())['dbname'],'judge_application':judge,
         'target_application':target,'source':source.model_dump(mode='json',by_alias=True),'rule_facts':facts,
         'new_suite':dict(suite),'target_request':dict(target_request),'target_approval':dict(approval),

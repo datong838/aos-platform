@@ -1,0 +1,59 @@
+{
+  "authority_revision": "AOS-001602",
+  "result": "NECESSARY_NATIVE_WHOLE_MANIFEST_READER_STAGE_VERIFIED",
+  "scope": "Samecaller fresh dualparent originalgraph/Rule/fee necessary reader only",
+  "native": {
+    "authority_revision": "AOS-001602",
+    "exact_isolated_cluster": "7693564235776004128",
+    "xact_status": "aborted",
+    "dual_parent_counts": [
+      0,
+      0
+    ],
+    "other_active_clients": 0,
+    "caller": {
+      "xid": "286438",
+      "pid": 973681
+    },
+    "both_fresh_xmin_match": true,
+    "cases": 2,
+    "negative_cases": [
+      "request_body",
+      "judge_parent_hash",
+      "target_parent_hash",
+      "revoked_rule",
+      "canary",
+      "committed_parent_xmin",
+      "non_native",
+      "non_SERIAL",
+      "admin",
+      "missing_parent_no_bucket_write"
+    ],
+    "execution_allowed": false,
+    "old_owner_bytes_exact": true,
+    "old_owner_sha256": "3f5dd3be9c64d694408527e1dd736faa28076285091b43d1fb2c7f0cf06518ef",
+    "current_owner_sha256": "12c5e22e9f7dc84c95fb19fb10935911ce414def511d6e3058bd13e7e8080344",
+    "current_test_sha256": "612577e42e6229ca6cd0a7f7bdc48ef25ac590f600f2f6927d7fc01c27b83dae",
+    "limits": [
+      "Necessary original row reader only; no authenticatedSource/physical account proof or finalizer",
+      "Per-call allocation/Intent/joint/executor refs synthetic; cumulative actual call fees and held allocations not proven",
+      "No SCRAM occupation identity or natural firstchain",
+      "New reader specific deadline wait proof pending; original adjacent waits passed"
+    ]
+  },
+  "verification": [
+    "Original full native PG159 node1PASS53.93s including fresh2parent/2cases/5factnegative+committedxmin/caller/nonSER/admin/missingparent no bucketwrite",
+    "230adjacentPASS0.62s;all originalOwnerbytesexact;latestexactsource/testhashbound",
+    "MissingparentRED temporary6bucketcreation183vs177 fixed by pre-prefix exactfreshparentread; knownrollback, no effectsretained from failedreader",
+    "R1 local import variable/R2 missingos report errors retained; both knownrollback and freshnew attempts",
+    "BrowserNA noAPI/UI/deployment, original5parentTasksACTIVE"
+  ],
+  "risks": [
+    "Necessary original row reader only; no authenticatedSource/physical account proof or finalizer",
+    "Per-call allocation/Intent/joint/executor refs synthetic; cumulative actual call fees and held allocations not proven",
+    "No SCRAM occupation identity or natural firstchain",
+    "New reader specific deadline wait proof pending; original adjacent waits passed",
+    "Standalonecheckout full dependency closure notclaimed; earlier prototypes remainuntracked"
+  ],
+  "execution_allowed": false
+}

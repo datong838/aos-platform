@@ -581,3 +581,75 @@ class ModelEvalExecutionOwner:
             return ModelEvalApplicationPreparation(schemaVersion='aos.model-eval-application-preparation/v1',
                 requestId=request_id,requestHash=row['request_hash'],request=request,parentLimit=parent,
                 parentRowXmin=hold['origin_xid'],callerXid=ctx['xid'],callerPid=ctx['pid'],checkedAt=now,executionAllowed=False)
+
+    def validate_original_target_judge_manifest(self, conn, scope, manifest, *,
+                                               release_policy, artifact_bytes) -> None:
+        """Read original fresh dual parents and whole request on this caller.
+
+        Internal necessary reader only. Authenticated Source/account guard must
+        precede the eventual joint caller; this method provides neither Source
+        proof, held per-call allocations/Intents nor finalization or execution.
+        """
+        from aos_api.aip_model_eval_execution_contracts import ModelEvalTargetJudgeExecutionManifest
+        try:
+            plan = ModelEvalTargetJudgeExecutionManifest.model_validate(manifest)
+            if (type(conn) is not psycopg.Connection or type(scope) is not TenantScope
+                    or scope.key != ('org-org','dev-project')
+                    or plan.tenant != TenantContext(orgId=scope.org_id,projectId=scope.project_id)
+                    or conn.info.transaction_status != TransactionStatus.INTRANS
+                    or conn.row_factory is not dict_row):
+                raise ModelEvalOwnerRejected('exact native whole newJudge caller required')
+            identity = conn.execute("""SELECT current_user AS role,
+                current_setting('aos.org_id',true) AS org,current_setting('aos.project_id',true) AS project,
+                current_setting('transaction_isolation') AS isolation,
+                pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid""").fetchone()
+            if (identity['role'],identity['org'],identity['project'],identity['isolation']) != (
+                    'aos_runtime',*scope.key,'serializable'):
+                raise ModelEvalOwnerRejected('original runtime SERIAL whole caller required')
+            # Reject absent/stale/forged parents before the bucket preparer can
+            # produce metadata. No row-lock upgrade precedes original Registry.
+            for table, parent_limit in (
+                    ('aip_model_eval_budget_reservation',plan.target_parent_budget),
+                    ('aip_model_judge_budget_reservation',plan.judge_parent_budget)):
+                original = conn.execute('SELECT content_hash,xmin::text AS origin_xid FROM '+table+
+                    ' WHERE org_id=%s AND project_id=%s AND request_id=%s AND approval_event_id=%s AND reservation_id=%s',
+                    (*scope.key,parent_limit.request_id,parent_limit.approval_ref.resource_id,
+                     parent_limit.parent_hold_ref.resource_id)).fetchone()
+                if (original is None or original['origin_xid'] != identity['xid']
+                        or original['content_hash'] != parent_limit.parent_hold_ref.content_hash):
+                    raise ModelEvalOwnerRejected('fresh dual parent rows on exact caller required')
+            parent = plan.judge_parent_budget
+            # Retain original global Registry -> fees -> union buckets ordering.
+            self._prepare_dual_purpose_bucket_fences(conn,scope,plan.judge_request_id,
+                parent.approval_ref.resource_id,release_policy=release_policy,artifact_bytes=artifact_bytes)
+            target_parent = plan.target_parent_budget
+            target = self.prepare_model_application(conn,scope,target_parent.request_id,
+                target_parent.approval_ref.resource_id)
+            # Target preparation can wait. Re-read new-purpose approval, Rule,
+            # governance and fee guards afterward; never trust a caller cache.
+            judge = self.prepare_judge_application(conn,scope,plan.judge_request_id,
+                parent.approval_ref.resource_id,release_policy=release_policy,artifact_bytes=artifact_bytes)
+            if (judge.request != plan.judge_request or judge.request_hash != plan.judge_request_hash
+                    or judge.parent_limit != parent or target.parent_limit != target_parent
+                    or target.request.model_dump(mode='json',by_alias=True) != plan.judge_request['targetApplication']['request']):
+                raise ModelEvalOwnerRejected('exact database original whole Manifest facts required')
+            if any((p.caller_xid,p.caller_pid,p.parent_row_xmin) != (
+                    identity['xid'],identity['pid'],identity['xid']) for p in (target,judge)):
+                raise ModelEvalOwnerRejected('fresh dual parent rows on exact caller required')
+            final = conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid,clock_timestamp() AS now').fetchone()
+            ids = [p.parent_limit.approval_ref.resource_id for p in (target,judge)]
+            approvals = conn.execute('''SELECT approval_event_id,expires_at FROM aip_action_approval_event
+                WHERE org_id=%s AND project_id=%s AND approval_event_id=ANY(%s)''',(*scope.key,ids)).fetchall()
+            now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+            deadlines = [target.request.expires_at,datetime.fromisoformat(judge.request['expiresAt'])]
+            rule_end = judge.request['ruleFacts']['validUntil']
+            if rule_end is not None:
+                deadlines.append(datetime.fromisoformat(rule_end))
+            if ((final['xid'],final['pid']) != (identity['xid'],identity['pid'])
+                    or len(approvals) != 2 or any(a['expires_at'] is None or a['expires_at'] <= now for a in approvals)
+                    or any(d <= now for d in deadlines)):
+                raise ModelEvalOwnerRejected('current whole Manifest after all original waits required')
+        except (KeyError,TypeError,ValueError,RuntimeError,psycopg.Error) as exc:
+            if isinstance(exc,ModelEvalOwnerRejected):
+                raise
+            raise ModelEvalOwnerRejected('original whole newJudge Manifest unavailable or drifted') from exc
