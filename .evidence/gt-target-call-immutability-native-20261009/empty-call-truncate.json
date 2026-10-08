@@ -1,0 +1,5 @@
+{
+  "sqlstate": "42501",
+  "custom_before_truncate_trigger_tested": true,
+  "existing_rows": 0
+}

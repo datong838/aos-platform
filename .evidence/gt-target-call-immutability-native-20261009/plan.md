@@ -1,0 +1,11 @@
+# 新Target调用准备行的原生不可变性与独立提交门
+
+复习231唯一写者与原producer1613报告。候选一为已登记prepared call可信绑定/不可变门，依新准备producer且已具原Source/独立批准/同xid原Intent；候选二Target结果到Judge输入依实际准入及executor，当前未具备。先选一。
+
+仅本目录新增隔离验证脚本，不修改产品代码。用5436新独立全库、原签名Source/SCRAM/两case四腿plan与真正Target call行；在原NOLOGIN Owner下只安装本新库test-only窄probe，逐一尝试已存在行UPDATE、DELETE、TRUNCATE，必须由原immutable trigger拒绝，保存点后窄producer精确重放结果不变。单独SET新调用require_joint_finalization IMMEDIATE，证明拒绝由新call constraint触发，而非只依赖旧parent触发器。最终实际callerCOMMIT拒绝并独立读取事务aborted/四准备表0/Source1/原身份NOLOGIN/member0/31旧资源不变。清除所有临时窄probe，不写正式库/保留库、不授生产工具或执行权限。
+
+不以此证明所有等待漂移/竞争/实际占用/费用/unknown生命周期/最后期限/transport/Usage或完整Goal；五父Task保持ACTIVE。浏览器不适用于未接运行入口的隔离SQLartifact。
+
+原生R1发现PostgreSQL先以55006拒绝有待触发事件表的TRUNCATE（不是42501自定义trigger）。验证拆成空表42501自定义no-truncate trigger与真实已有行55006引擎保护两项，保留R1失败及独立零残留证据；产品无需修改。
+
+R2正确命中原Judge50秒deadline，不延长授权期限；本波删除1613已冻结通过的六项producer负门重复，只保留本波新不可变/独立call constraint和正向replay核验，原完整Source回归保留。R2失败及独立零残留证据保留。R3绑定精确helper SHA，不重发任何外部效果。

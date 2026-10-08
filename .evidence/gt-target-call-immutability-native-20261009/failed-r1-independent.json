@@ -1,0 +1,12 @@
+{
+  "database": "aos_test_8c277b14bd4f_ti4_test",
+  "prepared_counts": {
+    "prepared_call_occupation": 0,
+    "prepared_plan_risk": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "source_count": 1,
+  "diagnosis": "existing-row TRUNCATE rejected by PostgreSQL pending deferred-trigger protection55006 before custom BEFORE TRUNCATE trigger; update/delete had correct42501; add empty-table trigger test and exact existing-row55006 expectation",
+  "external_effect": false
+}

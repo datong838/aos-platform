@@ -1,0 +1,9 @@
+# 接续：实际占用账本，仍不开放执行
+
+原atomic任务及actual-occupation-ledger-design-1610登记范围内继续。候选一实际占用账本/不可变状态事件；候选二真实Target结果绑定Judge输入。前者可安全准备，后者仍依实际准入、共同终结及可信executor，不用任意raw制造结果。
+
+拟改产品文件仅 `/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py`，必要合同变更仍须先详细登记文件及RED。先明确当前prepared_call与后续actual occupation不是双计数：前者只可信准备；后者从同一call/plan/Intent/Source/physical/parent/Input原件建立被窄producer控制的状态与不可变事件，不把准备量直接视为inflight。prepared、已知准入待发送、已发送、unknown、已知结果需不同证明；不得凭客户端状态或TTL释放unknown。
+
+费用与物理占用分开。原两个held parent cap10仍是整体风险责任；原null输入输出价格不能视为0，不把任意准备1minor或均分5minor作为合法执行金额，不扩父批准或改原held-only CHECK。服务端具体风险上界未证明则该call拒绝；不停止独立安全主线。物理已知释放不意味着费用已结算。完整全入口锁图及实际最后COMMIT期限仍须专项原生证明。
+
+原Owner内部dual bucket prefix明确要求在此前已获取当前认证Source与physical guard；未来整段实际admission必须依原顺序，并重查前后权威，不凭方法存在或调用测试PASS判锁图闭合。显式隔离artifact、NOLOGIN/no membership、FORCE RLS、运行身份无private DML、默认migration不安装和原实际COMMIT拒绝保持。正式库与Host/worker/Provider未授权不动。

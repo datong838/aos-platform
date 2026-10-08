@@ -1,0 +1,31 @@
+{
+  "checks": [
+    {
+      "operation": "update",
+      "sqlstate": "42501",
+      "message": "CAPACITY_INTENT_IMMUTABLE",
+      "existing_row_unchanged": true
+    },
+    {
+      "operation": "delete",
+      "sqlstate": "42501",
+      "message": "CAPACITY_INTENT_IMMUTABLE",
+      "existing_row_unchanged": true
+    },
+    {
+      "operation": "truncate",
+      "sqlstate": "55006",
+      "message": "pending trigger events",
+      "existing_row_unchanged": true
+    },
+    {
+      "operation": "joint_constraint",
+      "sqlstate": "23514",
+      "message": "CAPACITY_PARENT_FINALIZE_REQUIRED",
+      "existing_row_unchanged": true
+    }
+  ],
+  "call_hash": "sha256:47ee1fc353518351d94a949f512a1a776eacc551e6d5444dcbdb6cfd537c01e6",
+  "direct_target_call_constraint_tested": true,
+  "execution_allowed": false
+}

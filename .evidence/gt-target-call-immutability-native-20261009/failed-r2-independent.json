@@ -1,0 +1,13 @@
+{
+  "database": "aos_test_74ed8a83ca18_ti4_test",
+  "prepared_counts": {
+    "prepared_call_occupation": 0,
+    "prepared_plan_risk": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "source_count": 1,
+  "diagnosis": "original Judge50s deadline correctly rejected during repeated replay verification; do not extend deadline; remove prior already-proven 6negative repetition from new specialized wave",
+  "failed_helper_sha256": "a2a5cd7ca8e7383a12469e5dd2c7663d08ec636bc07c547068d7ac74d0c83a4d",
+  "external_effect": false
+}

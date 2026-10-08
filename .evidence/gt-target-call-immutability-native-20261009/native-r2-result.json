@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-08T23:30:20.123012+00:00",
+  "database": "aos_test_74ed8a83ca18_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_physical_capacity_occupation_pg.py::test_source_model_preparation_original_native_caller[shared]",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "actual existing Target call immutable row and dedicated deferred call constraint, original Source regression; no admission"
+}

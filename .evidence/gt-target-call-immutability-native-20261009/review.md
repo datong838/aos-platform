@@ -1,0 +1,11 @@
+# 原Target调用准备记录不可变性与独立门验收
+
+沿1613已通过原producer，新增本波隔离原生验证，无产品代码变更。复用原签名Source、真实SCRAM、原独立批准的Target/newJudge、原两case四腿plan、原Input字节和同xid的Target Intent，实际插入准备调用行；不由直接private INSERT伪造正向。临时窄test-only probe只安装于本波新独立库，固定search_path、原NOLOGIN Owner，无PUBLIC EXEC，终结后全部删除。
+
+真实已有调用行UPDATE与DELETE均42501/CAPACITY_INTENT_IMMUTABLE；有待触发事件的已有行TRUNCATE由PostgreSQL先55006拒绝，空表TRUNCATE另42501证明原BEFORE TRUNCATE自定义门。每个保存点后原producer精确重放结果及内容hash不变。单独SET新调用require_joint_finalization IMMEDIATE产生23514/CAPACITY_PARENT_FINALIZE_REQUIRED，证明新调用约束本身生效，不只借旧parent触发器的拒绝。
+
+R1测试错误期待已有行TRUNCATE42501，真实数据库返回55006，62.56秒FAIL；R2重复已冻结producer六负门再做新验证，命中原Judge50秒有效期，66.65秒FAIL。两次独立回读四准备表0、原Source1，原失败日志保留。未改产品/扩大有效期。R3删除旧六负门重复，仅验证新关切并保留原完整Source回归，原生1PASS92.62秒（7已知警告），无SKIP；R3 attempt绑定精确helper SHA。
+
+最终实际callerCOMMIT仍拒绝，独立连接xid aborted、四准备表0、原Source1、原消费身份NOLOGIN/member0、临时probe0、31旧资源起始时间/mount/ports均不变。五父Task保持ACTIVE；本Delivery仅收口本窄验证窗口，不代表实际占用、费用分配、unknown生命周期、所有等待竞争、最后实际COMMIT期限、执行/Usage或完整首链。产品未改，不重复上一波318纯相邻测试；本原生node包含原Source相邻回归。浏览器不适用于未运行接入的显式artifact。
+
+下一已登记安全入口见actual-ledger-next.md；不得用任意准备1minor/null价格/客户端状态/TTL获得实际调用或释放unknown。Goal状态不主动改写。
