@@ -1,0 +1,23 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "gt-target-call-producer-native-20261009",
+  "base_revision": "AOS-001612",
+  "completed_revision": "AOS-001612",
+  "result": "ORIGINAL_TARGET_CALL_TRUSTED_PREPARATION_NATIVE_GREEN_ACTUAL_ADMISSION_PENDING",
+  "changed_files": [
+    "aos-platform/.evidence/gt-target-call-producer-native-20261009"
+  ],
+  "commits": [
+    "df0b259a85531c170d3e2261f571791f61dd896f"
+  ],
+  "verification": [
+    "Original plan/Input/Intent same-xid readiness1PASS78.43s and missingproducer42883; trusted Target call native1PASS101.68s actual positive/replay/6negatives and actualCOMMIT rejection",
+    "318 pure adjacent PASS0.75s; independent zero preparation rows/Source1/NOLOGIN/31 old resources unchanged"
+  ],
+  "risks": [
+    "Trusted Target prepare-only producer: no actual occupation, unknown transition or admission/finalizer",
+    "original parent held-only constraints retained; price unknown is not zero; full risk allocation/lock graph/actual COMMIT deadline and natural firstchain pending"
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-09T07:23:15+08:00"
+}

@@ -1,0 +1,335 @@
+{
+  "authority_revision": "AOS-001613",
+  "head": "df0b259a85531c170d3e2261f571791f61dd896f",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/call-input-hash-reference-1612.json",
+      "sha256": "22e4f8572b8bc3ef96d46ff14fa90df9f384635defa481179720b94a3b1d3922"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/renewals-trusted-target-1612.json",
+      "sha256": "2226eb6f998db115873f5fd07ca664f3ef8069a14ee5564ec8ba50e4e63114e4"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-budget-fact.json",
+      "sha256": "3333f887b4663c7c3d62d7cfe34307a7f519b15384d07a08dc9996a7fe068309"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-case-binding.json",
+      "sha256": "1d8b613a950996a83e4542ce186fda74353e774702f1e42683046c1f5988c8a1"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-guard-race.json",
+      "sha256": "d941cd8322c31874d2a6cceb0dbc2a44195da5fbf01ab889308148c7252887e4"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-input-binding.json",
+      "sha256": "53dd3b53f023aeed93364dbef88798fe89a35de7c8fc1608e48baf4fe85fd5b4"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-input.json",
+      "sha256": "c315985894e8b309b8f75d98a0b1bf04f3fbfad1b04d7481bb06f1848cb1b5f9"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-intent-existing-row-negative.json",
+      "sha256": "d25c8fd55edd2cad302f2e4b0edfc2319b5ceb93a46320038484b0eef05898b6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-intent.json",
+      "sha256": "8a51b2c00c5cbec84db3507c1f64eab5fcc034a3914bf9181c9afa2367da896c"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-parent-debit.json",
+      "sha256": "ff67ee971bc6b622f12486c3562eb8bfe02e51b2b4ab25f7add5237eca43a5b9"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-preparation.json",
+      "sha256": "4d15bc33103c8ce048f060d06d11f589fab75d47437d17b796af5936da21066d"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-whole-source-plan-input.json",
+      "sha256": "ba890cb2d137586a76080e43da24299d3845d7dbc8668d46a2e28af6b4544db8"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-binding-r1-whole-source-plan-verification.json",
+      "sha256": "1958d1989d0ed865191681522353d3c4b67cd3c27d4bb8b2e7a5a903bcba3329"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r1-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r1-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r1-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r1-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r1-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-budget-fact.json",
+      "sha256": "f035cd1f0273bc13ede5d0efef3b434c8e5705dbe31cbae4df0bcabfdf1f1699"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-case-binding.json",
+      "sha256": "def13e8e4015e44a6ffcd424033c81710656ea2932163c56f2a915bded424f83"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-guard-race.json",
+      "sha256": "8e43a7440e95694fb76b4d6cb22b5c757b948abfdd1a7e61aa3af793aa944dd9"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-input-binding.json",
+      "sha256": "2201be9e1c40fadc99cd5f9cc55e561ed78667b04d5c043eb7efc98fb47b219e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-input.json",
+      "sha256": "4813490037fe58fdd566960a6a69a28f803514bf9d552a3697cf048241b7eed9"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-intent-existing-row-negative.json",
+      "sha256": "fca6b6f9804041745fe26054e51271cedf21dbb870dd8f9d2b33041fbd207a3d"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-intent.json",
+      "sha256": "b3e0d2bc4881b147f1aa903d11b06fac41bf58da68aeff9004d0a0ffd8dc1e34"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-parent-debit.json",
+      "sha256": "faced0fd960f9e4fa8e1d530689fa796e1dccdddd14d45bb1a46e04ad8658832"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-preparation.json",
+      "sha256": "4411bc94e0b3c89b670b3fe5e235ca6b6b117b30f88bcab9871506d409edba51"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-whole-source-plan-input.json",
+      "sha256": "f47073f89c89374505d13ad9167c23af9ddcdbb97b7dbea11938e355507c1e6b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-target-call-r2-whole-source-plan-verification.json",
+      "sha256": "3bacc01797614616553b4de6ee2ecbc74c6333a07fd89239385c2f445b756668"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/target-binding-r1-whole-plan-proof.json",
+      "sha256": "149c558d35cf52dc12221213484195144065fb8737566b7b3329b3b68c7317f0"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/target-call-r2-whole-plan-proof.json",
+      "sha256": "36ffe45a2221d8b009ceb1a2475378295f468dd7c6522590d6d390343b0af30f"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/catalog.json",
+      "sha256": "f6299bac1ac076606c8cded3b5d68362b639a40c2477ed9b8b9f6b4be6269afd"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/complete-plan-risk.json",
+      "sha256": "10f7b52e00aa787129825f82e63f696cfa0222bd567fdee60398676043c5c40d"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/delivery.json",
+      "sha256": "521cc6e51c0acfe26e8afbb71839f9986fca2f2db6527d162cc7204a4f5905db"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/hash-check.json",
+      "sha256": "0183e783b7fe33594eb47b5916b31000f23d01c0b5dc293fae220efb84a96764"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/independent-readback.json",
+      "sha256": "37ed8abddf7febc36bac9d014a82520af350e91565af488bf51c9fbd36b3f4c1"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/independent_audit.py",
+      "sha256": "28590370879699c5c637ae48272924e3e8adcca4700e111b7209e3966ef38fe2"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/native-r1-attempt.json",
+      "sha256": "cb3548a49a8f05d9e930a62e7ab052bc57c9db5df5ac238830318a37b3810827"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/native-r1-result.json",
+      "sha256": "52447655b2f77f51b086e072a5066657c278ad77765c3e5ae6d96e07eceb8eb7"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/native-r1.log",
+      "sha256": "234a58646bf96d8ef4c1d970c4143acbb7f8f305ad07d51ddb8bad77a0663de0"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/plan.md",
+      "sha256": "12eb5b8ea4eaf11de3b8e4be3344df3be4f9a77bf6c20c2f77b9a5fcfd56eceb"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/producer-design.md",
+      "sha256": "4534553cc18f36121350ee5345fe8ce347691926ae83a41b1a6d9f06e1439969"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/run_native_r1.py",
+      "sha256": "c834e4e261c8b137e3911365cdd26d15f25eb3b8c76682aefd30c04092b7731f"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/source_newjudge_native_trial_1606.py",
+      "sha256": "a55c769f6eeb62a0361044a2105e8945b9293fe856df36b185ed60cfb9b8cfb5"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/task.json",
+      "sha256": "d1aaea474a2e9d594a338f57495cdda54826195528ab20230550aef0b5ab7148"
+    },
+    {
+      "path": ".evidence/gt-target-call-original-binding-native-20261009/trusted-target-call-red.json",
+      "sha256": "330744b1c7f70e1230f82c581ab6ddb074f5983ea3234ecdc83e143376fad557"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/adjacent-r1.log",
+      "sha256": "575150762584b7e45227bc7037067aab8db26e01689011aae25aefd3a6705fdb"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/catalog.json",
+      "sha256": "f6299bac1ac076606c8cded3b5d68362b639a40c2477ed9b8b9f6b4be6269afd"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/complete-plan-risk.json",
+      "sha256": "2c5c88abc590623eb5276de585322727508f8a6664e406e87a47e2338c641997"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/failed-r1-independent.json",
+      "sha256": "a42dd73dfabb659ca55ad0ec20c6d578d7e28854e63615f8f07cb1fb91298c1c"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/hash-check.json",
+      "sha256": "0183e783b7fe33594eb47b5916b31000f23d01c0b5dc293fae220efb84a96764"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/independent-readback.json",
+      "sha256": "49deafa6d7e43e86ff083d56b5cd9559cae51d4e55d82b843cb1db68105866a0"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/independent_audit.py",
+      "sha256": "85843f2faa243d085f39e3c03b06a11adcda6f12223e1d0f3509f4ec16f2fa34"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/native-r1-attempt.json",
+      "sha256": "cb3548a49a8f05d9e930a62e7ab052bc57c9db5df5ac238830318a37b3810827"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/native-r1-result.json",
+      "sha256": "7a3d4c9ef507a33398b380c52b983c1f0ddfa693390528b568b292b918db4439"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/native-r1.log",
+      "sha256": "6326e80fa67fba5a525e3b00ce65e68b5b58ea5803d9bb8ae4979c71fd2c7769"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/native-r2-attempt.json",
+      "sha256": "cb3548a49a8f05d9e930a62e7ab052bc57c9db5df5ac238830318a37b3810827"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/native-r2-result.json",
+      "sha256": "409928937cf165553c01d28cda7da019de6261d049f886682cdf7a4d5e556b03"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/native-r2.log",
+      "sha256": "e4c1c8ea25c5d9bb2b5405a6e56406c682c491267faebe99527d7b9dce188ed4"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/plan.md",
+      "sha256": "4534553cc18f36121350ee5345fe8ce347691926ae83a41b1a6d9f06e1439969"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/review.md",
+      "sha256": "54dd28fcc38312ac018efee3d9896b877a4abcb46aa02ca069328dc2702d0213"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/run_native_r1.py",
+      "sha256": "1d53121e0ba2bba2ae5e76765ce298b5522d9a59028e83fa1dcbfb0aa769d297"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/run_native_r2.py",
+      "sha256": "52dfd45f6e52d13bddf3ceb186a91cfc32a010b593bd7f9d5927a87240988ba9"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/source_newjudge_native_trial_1606.py",
+      "sha256": "5f140fcd42a1d9861e9b233caa5a35dc154fca539d5471e968213fd799c9e92c"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/stage_verified.py",
+      "sha256": "c0a9e515ce215f95e7e4cad43499735d876ee4733dca94747935765707478c1c"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/static-review.json",
+      "sha256": "0300305e276c4775843c46c48cafc1775af64acb00030af0dbff7b9112df7be9"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/sync_checkpoint.py",
+      "sha256": "a6d52ef3e27dac8694df910c2cf2bb6a86d0868138046095673aa3e436cda455"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/task.json",
+      "sha256": "cac839787bfb49b5bc3dd7a8a0db3fa706d6a55d87448383679a391531aff1e6"
+    },
+    {
+      "path": ".evidence/gt-target-call-producer-native-20261009/trusted-target-call-green.json",
+      "sha256": "29194e18f3e1aa15aaa972e7bdc4e6f3e19f7f500c962d95dafc6bb8ff6ab120"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py",
+      "sha256": "53d2c7ec76dc44f94f3c2ca85473915a9a83cf92f76327b50e8a82bbc1ac772f"
+    }
+  ]
+}
