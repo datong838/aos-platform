@@ -1,0 +1,36 @@
+{
+  "authority_revision": "AOS-001600",
+  "head": "8c13fe53d72f05bea260fdb075164f2577ea2531",
+  "scope": "description-only whole Target/newJudge Manifest stage, no complete parentDelivery",
+  "checks": [
+    {
+      "path": "services/aos-api/aos_api/aip_model_eval_execution_contracts.py",
+      "before_sha256": "90759456b4647a8a15cc13bc9970595a0890a9d0ccff43c9ab1df0a93f5ce7dd",
+      "after_sha256": "0da9585c402ec108fed7df9253a92da3385e90a9141d7cad2880c1e6568fe6de",
+      "all_preexisting_bytes_exact": true,
+      "added_bytes": 13314
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_model_eval_execution_contracts.py",
+      "before_sha256": "fd7d7015ad8cbe192b918538eddec010c05573e1e361e70c2c783d4c13d0c5f6",
+      "after_sha256": "dd402b0af5d4518338a72243070d4d93232524fa9de4fc35c3b9b2acb7f04edf",
+      "all_preexisting_bytes_exact": true,
+      "added_bytes": 8270
+    }
+  ],
+  "plan_consistency": [
+    "Distinctv2 andnewleg;oldv1allbytesexact+legacy signer rejection",
+    "Actual frozen originalnative Judge request from retained proof, hash/body/Rule/Suite/twooriginal applications/orderedcases/2parent/uniqueIntent+allocation/totals bound",
+    "32new contract tests plus195old+1compilerentry=228PASS0.64s; malformedRoot/signature/release/expiry reviewRED fixed",
+    "FormalDB/services/leasesotherowners unaffected, no Route/Provider/newsigner/finalizer;browserNA"
+  ],
+  "risks": [
+    "Synthetic execution references are not held authority",
+    "All native currentness, Rule signature trust and Source/account mapping remain independent DBreader gates",
+    "Frozen original request is expired and cannot authorize new execution; pure contract intentionally does not supply clock/current admission",
+    "New-purpose Source positive, native dualparent+allocation+Intent private finalizer/knownjointCOMMIT and signed report proofs pending",
+    "Preexisting untracked prototype now included under original parent scope; standalonecheckout dependency closure notclaimed"
+  ],
+  "execution_allowed": false,
+  "result": "DESCRIPTION_CONTRACT_STAGE_VERIFIED"
+}

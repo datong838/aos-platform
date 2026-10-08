@@ -1,0 +1,7 @@
+{
+  "authority_revision": "AOS-001600",
+  "result": "228_PASS_OLD_BYTES_EXACT_NEW_PURPOSE_DESCRIPTION_ONLY",
+  "review_path": ".evidence/gt-model-typed-proof-20261008/whole-manifest-review-1600.json",
+  "review_sha256": "fc33ed6d5b4c1b43d9893f6f12a454cec65fe488c4b7dab6b15979e313a20e9d",
+  "execution_allowed": false
+}
