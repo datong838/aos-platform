@@ -1,0 +1,41 @@
+{
+  "authority_revision": "AOS-001674",
+  "task": "gt-atomic-model-admission-20261008",
+  "head": "52d5e6cd80acc848b369700bd375e02d89f00253",
+  "execution_allowed": false,
+  "executors_authenticated": false,
+  "issuer_metadata_current": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-shared-risk-description-reference-1673.json",
+      "sha256": "2fc586506450ec1b975c7f00656a2c2782edeec00a95e706f4575dc5d4bd55b8"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/shared-certificate-review-1673.md",
+      "sha256": "4815b1cfc270426994fca3901c87bfac23a9488fc22e812083df9c1913bafa48"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/shared-certificate-old-definitions-1673.json",
+      "sha256": "8e228b07b0576901afb04780c910b3e6ff927436334ddb77b457286ae744de71"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/shared-certificate-pure-result-1673.json",
+      "sha256": "012110a6a5f09e24dbaab15c6f3d7968849a38661f369c8a70ec5ab296983313"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-certificate-native-1673-r3/independent-readback.json",
+      "sha256": "01764aa6b1d8c3bbbc132777b6beae92efb2ed43276c544c19e3a58354c84353"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-certificate-native-1673-r3/native-certificate-proof.json",
+      "sha256": "8ea95f2c899004c9a708b12cf6873f5c8639ebd34a336c37be21a951b3399583"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-certificate-native-1673-r3/result-r3.json",
+      "sha256": "a07c009bf5c86905679f15552184b9495b05823326e9250ff901a0ab6e4eb1e3"
+    }
+  ]
+}

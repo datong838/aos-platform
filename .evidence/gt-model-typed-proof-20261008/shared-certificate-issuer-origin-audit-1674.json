@@ -1,0 +1,22 @@
+{
+  "head": "52d5e6cd80acc848b369700bd375e02d89f00253",
+  "authority_revision": "AOS-001674",
+  "identity": {
+    "database": "aos_test_5b5aea11eb1d_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "issuer_table_counts": {
+    "authority_withdrawal": 0,
+    "certificate_epoch": 0,
+    "executor_certificate": 0,
+    "issuer_epoch": 0,
+    "issuer_root": 0
+  },
+  "signed_certificates_in_evidence": 4,
+  "descriptive_signatures_do_not_establish_persisted_root": true,
+  "root_provenance_verified": false,
+  "issuer_metadata_current": false,
+  "execution_allowed": false,
+  "next_required": "Independent v3 identity binding and original persisted issuer/certificate/withdrawal current-head reconciliation; lab roots do not confer production trust"
+}
