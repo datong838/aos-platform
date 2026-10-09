@@ -1,0 +1,8 @@
+{
+  "old_definitions_unchanged": true,
+  "new_function": "prepare_shared_parent_risk_plan",
+  "sha256": "09abdbe4c552d624f977d74d9ca2fe3093c295b9bef45da1cc600e5eb8ed7bfc",
+  "source_expiry_rechecked_after_last_owner": true,
+  "historical_fixture_overwrite_unrestored": true,
+  "full_delivery": false
+}

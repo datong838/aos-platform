@@ -173,6 +173,118 @@ def validate_original_source_model_plan(conn,scope,manifest,*,source_commands) -
             raise ModelEvalOwnerRejected('all original Model and Source windows must remain current on same caller after waits')
 
 
+def prepare_shared_parent_risk_plan(conn, scope, source_command, manifest, *,
+                                    release_policy, artifact_bytes):
+    """Bind all original v3 obligations to the native private risk producer.
+
+    The result remains caller-owned prepared risk. This function neither
+    commits nor signs, admits, dispatches or releases an actual call.
+    """
+    from uuid import UUID
+    from psycopg.pq import TransactionStatus
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_provider_capacity_source_consumer import _consumption_packet
+    from aos_api.aip_model_eval_execution_contracts import ModelEvalTargetJudgeSharedRiskManifest
+
+    try:
+        if (type(conn) is not psycopg.Connection or conn.closed or conn.autocommit
+                or conn.read_only or conn.info.transaction_status != TransactionStatus.INTRANS
+                or not conn.pgconn.used_password or conn.row_factory is not dict_row
+                or conn.info.get_parameters().get('require_auth') != 'scram-sha-256'
+                or type(scope) is not TenantScope or scope.key != ('org-org', 'dev-project')
+                or type(source_command) is not ProviderCapacityConsumptionCommand):
+            raise ValueError('native original shared-parent caller required')
+        plan = ModelEvalTargetJudgeSharedRiskManifest.model_validate(manifest)
+        plan_id = UUID(plan.execution_id)
+        if str(plan_id) != plan.execution_id:
+            raise ValueError('canonical native plan UUID required')
+        command = ProviderCapacityConsumptionCommand.model_validate(source_command)
+
+        def identity():
+            return conn.execute("""SELECT session_user AS login,current_user AS role,
+              current_setting('aos.org_id',true) AS org_id,current_setting('aos.project_id',true) AS project_id,
+              current_setting('transaction_isolation') AS isolation,current_setting('transaction_read_only') AS readonly,
+              current_setting('TimeZone') AS timezone,current_setting('session_replication_role') AS replication,
+              pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid""").fetchone()
+
+        before = identity()
+        if tuple(before[k] for k in ('login', 'role', 'org_id', 'project_id',
+                                     'isolation', 'readonly', 'timezone', 'replication')) != (
+                'aos_provider_capacity_occupation', 'aos_runtime', *scope.key,
+                'serializable', 'off', 'UTC', 'origin'):
+            raise ValueError('exact native occupation session required')
+        source = consume_capacity_source_for_occupation(conn, command)
+        def key(ref):
+            return (str(ref.asset_type), ref.asset_id, str(ref.revision), ref.content_hash)
+        for case in plan.cases:
+            for leg in (case.target, case.judge):
+                if (key(leg.source_ref) != key(command.source_ref)
+                        or key(leg.physical_account_ref) != key(source.account_candidate_ref)
+                        or not any(key(leg.provider_ref) == key(ref) for ref in source.provider_refs)):
+                    raise ValueError('complete original Source binding required for every leg')
+        owner = ModelEvalExecutionOwner()
+        owner.validate_original_target_judge_shared_risk_manifest(conn, scope, plan,
+            release_policy=release_policy, artifact_bytes=artifact_bytes)
+        target, judge = plan.target_parent_budget, plan.judge_parent_budget
+        packet = _consumption_packet(command)
+        row = conn.execute('''SELECT public.prepare_capacity_plan_risk(
+          %s,%s::jsonb,%s::uuid,%s,%s,%s::uuid,%s,%s,%s::uuid) AS fact''',
+            (packet, Jsonb(command.source_ref.model_dump(mode='json', by_alias=True)),
+             UUID(target.parent_hold_ref.resource_id), target.request_id, target.request_hash,
+             UUID(judge.parent_hold_ref.resource_id), judge.request_id, judge.request_hash, plan_id)).fetchone()
+        if row is None:
+            raise ValueError('native complete risk row required')
+        result = row['fact']
+        body = result['immutable']
+        facts = body['originalFacts']
+        expected_risks = []
+        for purpose, parent, application in (
+                ('target', target, plan.judge_request['targetApplication']['request']),
+                ('judge', judge, plan.judge_request)):
+            fact = facts[purpose]
+            if (fact['application'] != application
+                    or (fact['reservationId'], fact['contentHash'], fact['requestId'], fact['requestHash'],
+                        fact['approvalEventId'], fact['upperBoundMinor'], fact['currency']) != (
+                        parent.parent_hold_ref.resource_id, parent.parent_hold_ref.content_hash,
+                        parent.request_id, parent.request_hash, parent.approval_ref.resource_id,
+                        parent.upper_bound_minor, parent.currency)
+                    or (fact['xid'], fact['pid'], fact['physicalAccountId']) != (
+                        before['xid'], before['pid'], source.physical_account_id)
+                    or fact['sourceRef'] != command.source_ref.model_dump(mode='json', by_alias=True)):
+                raise ValueError('exact native parent risk and original application required')
+            expected_risks.append(dict(purpose=purpose, parentHold=parent.parent_hold_ref.resource_id,
+                parentHash=parent.parent_hold_ref.content_hash, upperBoundMinor=parent.upper_bound_minor,
+                currency=parent.currency))
+        expected_legs = [dict(case=case, purpose=purpose,
+            parentHold=parent.parent_hold_ref.resource_id, state=state)
+            for case in plan.judge_request['cases']
+            for purpose, parent, state in (
+                ('target', target, 'awaiting_input_binding'), ('judge', judge, 'awaiting_target_result'))]
+        if (body['schemaVersion'] != 'aos.capacity-complete-plan-risk/v1'
+                or body['riskMode'] != 'original_shared_parent_caps'
+                or body['tenant'] != plan.tenant.model_dump(mode='json', by_alias=True)
+                or body['state'] != 'prepared_risk_only'
+                or body['executionAllowed'] is not False or result['executionAllowed'] is not False
+                or result['planId'] != plan.execution_id or body['planId'] != plan.execution_id
+                or (body['callerLogin'], body['callerXid'], body['callerPid']) != (
+                    before['login'], before['xid'], before['pid'])
+                or facts['cases'] != plan.judge_request['cases']
+                or body['parentRisks'] != expected_risks or body['legs'] != expected_legs
+                or result['contentHash'] != 'sha256:' + canonical_hash(body)):
+            raise ValueError('whole native risk body must bind the complete v3 plan')
+        if consume_capacity_source_for_occupation(conn, command) != source:
+            raise ValueError('current original Source after native waits required')
+        owner.validate_original_target_judge_shared_risk_manifest(conn, scope, plan,
+            release_policy=release_policy, artifact_bytes=artifact_bytes)
+        now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+        if (not source.valid_from <= now < source.valid_until
+                or identity() != before or _consumption_packet(command) != packet):
+            raise ValueError('same caller and command after original waits required')
+        return result
+    except Exception:
+        raise ModelEvalOwnerRejected('CAPACITY_SHARED_PARENT_NATIVE_PLAN_REQUIRED') from None
+
+
 def prepare_target_occupation(conn, scope, source_command, plan_id, intent_id, call_id):
     """Prepare on the original caller connection; never commit or dispatch."""
     from uuid import UUID

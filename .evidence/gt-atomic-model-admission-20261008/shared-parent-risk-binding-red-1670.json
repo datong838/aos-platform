@@ -1,0 +1,7 @@
+{
+  "failed": true,
+  "reason": "prepare_shared_parent_risk_plan missing",
+  "exit_code": 1,
+  "source": "current tool invocation",
+  "database_effects": 0
+}

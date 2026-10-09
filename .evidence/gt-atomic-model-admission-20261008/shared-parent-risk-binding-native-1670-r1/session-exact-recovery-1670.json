@@ -1,0 +1,5 @@
+{
+  "sources": {},
+  "restored_exact": false,
+  "scope": "read own public session tool outputs only, no private Goal storage mutation"
+}

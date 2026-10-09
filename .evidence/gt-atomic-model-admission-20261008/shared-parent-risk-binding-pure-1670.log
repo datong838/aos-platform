@@ -1,0 +1,13 @@
+4 invalid native callers rejected with database connections disabled
+........................................................................ [ 24%]
+........................................................................ [ 48%]
+........................................................................ [ 72%]
+........................................................................ [ 97%]
+........                                                                 [100%]
+=============================== warnings summary ===============================
+services/aos-api/.venv/lib/python3.11/site-packages/_pytest/config/__init__.py:1345
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/_pytest/config/__init__.py:1345: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; anyio
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+296 passed, 1 warning in 0.56s

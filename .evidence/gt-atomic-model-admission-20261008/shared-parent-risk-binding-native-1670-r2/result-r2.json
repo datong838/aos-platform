@@ -1,0 +1,22 @@
+{
+  "pytest_exit": 0,
+  "databases": [
+    "aos_test_63dd80dad1bf_ti4_test"
+  ],
+  "reports": [
+    {
+      "nodeid": "tests/aip/test_physical_capacity_occupation_pg.py::test_source_model_preparation_original_native_caller[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "old_files_unchanged": true,
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_physical_capacity_occupation.py": "09abdbe4c552d624f977d74d9ca2fe3093c295b9bef45da1cc600e5eb8ed7bfc",
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": "e1384ab91c03099203d56fe814c588483d7915ee0e418a2cb39d08b5c5e68eb2",
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": "8132a2677858cc491a28d0b211215706f7b64cbb2652446ca3334ab573ec84fb",
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": "41356488500495d4abc7d7e64d9dc024eef4849f0214d22ed77748b8c920c64f"
+  },
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

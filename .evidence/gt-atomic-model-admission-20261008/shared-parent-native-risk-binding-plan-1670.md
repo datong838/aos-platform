@@ -1,0 +1,13 @@
+# 原完整共享父风险计划接入原 private producer
+
+基线 eb8f683c5 / AOS-001670。候选一为prepared_plan_risk与v3完整计划绑定（本波）；候选二为新签名/实际调用链（依赖完整原件/可信root/token/currentSource共同提交）。先做一，仍完整两case四腿。
+
+精确修改 `services/aos-api/aos_api/aip_physical_capacity_occupation.py`，在原atomic Task范围新增samecaller Source+v3完整计划的producer入口。证据及独立native trial均新增到该Task目录；原SQL producer/DDL、旧签名、旧测试与已生成原件不改。
+
+入口只接受真实已进入SERIALIZABLE、UTC、positiveTenant、SCRAM occupation session、aos_runtime的原连接；新v3 executionId须canonical UUID直接对应native planId。复用原Source consumer，先Source后原Registry/fee/bucket与Owner双父reader。每个case的Target/Judge Source/Provider/physical引用必须完整匹配该Source；再次解析manifest，禁止任何每腿amount/allocation。
+
+调用原prepare_capacity_plan_risk，在同一caller由原facts读取两parent/批准/申请/Source/Rule/Suite生成private完整风险行。桥逐字段绑定返回的原case×purpose、两parent风险/申请/hash、caller、Source与physical。canonical完整body hash以及原shared父risk模式相等才返回；Source与原Owner再次核验锁等待后的currentness，caller状态不变。无COMMIT、无transport、无新增每腿预算或actual inflight。
+
+RED先验证入口不存在；native采用最新Desktop5441 fresh retained DB/159迁移，原真实签名Source+SCRAM+两独立approved父与原Suite。正向调用桥，exact replay返回同一原风险行；错Source/旧v2/错planId/未绑定leg/伪造金额拒绝；runtime私表DML拒绝、提前约束和实际COMMIT继续CAPACITY_PARENT_FINALIZE_REQUIRED。独立回读精确plan与两parent0、xidABORTED及Source存活，不重放旧attempt。
+
+退出仅完整风险producer桥接验收；v3持久签名/准入终结/Source提交尾部/实际token与调用链仍后继，不把helper或prepared_risk_only当首链完成。本波不访问正式库或Provider。

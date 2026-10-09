@@ -1,0 +1,10 @@
+{
+  "historical_r1_overwrite_unrestored": true,
+  "historical_recovery_exact_copies_found": 0,
+  "r2_protection_baseline": "current bytes after recorded r1 unintended overwrite, not historical original",
+  "changes": [
+    "collection hook patches actual pytest module",
+    "Source clock after final original Owner wait"
+  ],
+  "formal_delivery": false
+}

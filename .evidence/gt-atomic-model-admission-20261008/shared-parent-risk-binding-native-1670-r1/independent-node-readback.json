@@ -1,0 +1,17 @@
+{
+  "identity": {
+    "database": "aos_test_23e3cbbc32df_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on",
+    "status": "aborted"
+  },
+  "counts": {
+    "prepared_plan_risk": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "source": 1,
+  "business_node_pass": true,
+  "runner_acceptance": false,
+  "historical_fixture_protection_failed": true
+}
