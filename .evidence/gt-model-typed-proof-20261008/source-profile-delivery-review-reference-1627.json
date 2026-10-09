@@ -1,0 +1,107 @@
+{
+  "authority_revision": "AOS-001627",
+  "head": "d93c9c2aafd68a87f1f5ad3fba6b6223e23e023d",
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/direct-source-command-fix-stage-reference-1626.json",
+      "sha256": "550c380514ee8e0d5350af7e3485799b55dcd4c852fe938bfda8f21893760991"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/12c01c4726c8d6638c5ef35d0fbb9e5c4b18dec8c36bac42c48cb5bcc5ce3a75.attempt.json",
+      "sha256": "bed3d3ba96aaf749ffc9adbe57a0c10d55e6ec4011ab9a125e207677cc615c99"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/adjacent-r1.log",
+      "sha256": "4a4940d7219acfbaed29ebd25d2396a7652aa611e90b29bde448ae7d93beb7df"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/aip_provider_capacity_occupation_epoch_profile.py.txt",
+      "sha256": "e326f0e61e653d1f826972960c6d40a36d899a4ce706a8661d4460174b486241"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/aip_provider_capacity_occupation_source.py.txt",
+      "sha256": "a26d32cb2f0dc9a796332e37beb0b5c015586a5876cdebb2c77d95308dec4a50"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/epoch-task-renewal.json",
+      "sha256": "b629f9c67496aa492b04beeefdb73525cd030b5330a9ef4bcf75c5dd6527eae9"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/independent-adjacent-verification.json",
+      "sha256": "45b79433198276cd24b008cfd55b4d54118d6326388754c9f1696d9ca386a43d"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/legacy-dependency-lease-reconciliation.json",
+      "sha256": "d3c51d6b1e464846898648085a09d7b541a73fdcf522decc11b1e63a08df033d"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/native-source-profile-adjacent-r1-attempt.json",
+      "sha256": "ad5b810f57e46ecf69eeda2a0e1c8080387e7c12edfc737feda686efebc3bcac"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/native-source-profile-adjacent-r1-result.json",
+      "sha256": "45db00946f380c0167543ece3c4606c663b0d9948905ac7a72b9cd1a384163b8"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/next-original-dependency-contracts.json",
+      "sha256": "766ca082cd2024037a1525013335d3a11acf7c6aa2175cf7561a50942b857be3"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/original-file-bindings.json",
+      "sha256": "bbaf9028b1946fba35ee3465431f2ce9b05ee09e0b2307802b245be6b10d42d5"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/plan.md",
+      "sha256": "03c73ac98961499efd7c0bcad25ed46ebaddbad206c1d4f54b767a4d60074ea9"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/protected-legacy-diff.patch",
+      "sha256": "9a0273ab353cc7b83f07d8aad7b949d092ae0423463728b814bcf34b88e0cc5d"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/quality-r1.log",
+      "sha256": "1419b802add1e8366a5795376b153711a5ba097946c93ff1f069bfb7d949cdfc"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/quality-request-r1.json",
+      "sha256": "257db0985ce5b585d3c9e129cb36b38b8c00158412af85b896efd11dc4268cc4"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/quality-result-r1.transport.json",
+      "sha256": "2d961ed1312a5c005aa7d906c0936fb51f6039f6f8edc91b0166ca736b1640c8"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/review-context.md",
+      "sha256": "f6ee6dbeb474dd8dc1cf9ebe0e8d0f6db09e8408c646f56e02e42c6b7ac4f2ed"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/run_adjacent.py",
+      "sha256": "6ad8c885d7e22b36b6a141bdb5dc49b0b0bb8e88392b7a860cd92db6b7816c7f"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/source-review-stage.md",
+      "sha256": "7de39d96da92fd85c7cb283d004f80cc4318d4e984534d672312d25d4c09a1cb"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/task.json",
+      "sha256": "67776fdca61cd1934469516d51e1e3b9aa86332b97bcc19e00e0506110f3e4d3"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/test_capacity_occupation_epoch_profile_pg.py.txt",
+      "sha256": "305fb9b911ff63d6f9b0891d07d5e3544800eb8a9c987b303dbf58f48070dc1a"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/test_capacity_occupation_source_pg.py.txt",
+      "sha256": "fe5f886ead523fb4b562a9faaff49674285441b568e8e2733c5ae857c49bdc60"
+    },
+    {
+      "path": ".evidence/gt-source-profile-delivery-review-20261009/verify_adjacent.py",
+      "sha256": "d3d5a2860396b9a8b37c0bf3adc54341c3e66137b2d6359bdc5658d229791fad"
+    }
+  ],
+  "execution_allowed": false
+}
