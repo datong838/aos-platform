@@ -1,0 +1,28 @@
+{
+  "table": "aos_physical_capacity_occupation_private.prepared_call_occupation",
+  "acl": {
+    "relrowsecurity": true,
+    "relforcerowsecurity": true,
+    "owner": "aos_physical_capacity_occupation_owner",
+    "runtime_privilege": false
+  },
+  "triggers": [
+    {
+      "tgname": "immutable_prepared_call",
+      "tgdeferrable": false,
+      "tginitdeferred": false
+    },
+    {
+      "tgname": "no_truncate_prepared_call",
+      "tgdeferrable": false,
+      "tginitdeferred": false
+    },
+    {
+      "tgname": "require_joint_finalization",
+      "tgdeferrable": true,
+      "tginitdeferred": true
+    }
+  ],
+  "input_constraint": "(input_hash ~ '^[0-9a-f]{64}$'::text)",
+  "execution_allowed": false
+}

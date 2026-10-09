@@ -1,0 +1,21 @@
+--- a/services/aos-api/tests/aip/test_capacity_occupation_source_pg.py
++++ b/services/aos-api/tests/aip/test_capacity_occupation_source_pg.py
+@@ -327,6 +327,18 @@
+             assert type(result) is PublishedProviderCapacitySourceV2
+             assert result.model_dump(mode='json',by_alias=True) == source.model_dump(mode='json',by_alias=True)
+             assert result.execution_allowed is False
++            mutated_commands = [
++                command.model_copy(update={'unexpected_execution_allowed': True}),
++                command.model_copy(update={'source_ref': command.source_ref.model_copy(
++                    update={'unexpected_execution_allowed': True})}),
++                command.model_copy(update={'tenant': command.tenant.model_copy(
++                    update={'unexpected_execution_allowed': True})}),
++            ]
++            for mutated in mutated_commands:
++                with pytest.raises(ProviderCapacityConsumptionBlocked,
++                                   match='^CAPACITY_OCCUPATION_SOURCE_REQUIRED$'):
++                    consume_capacity_source_for_occupation(caller, mutated)
++            assert consume_capacity_source_for_occupation(caller, command) == source
+             assert caller.execute('SELECT pg_current_xact_id()::text AS xid').fetchone()['xid'] == identity['xid']
+             caller.rollback()
+             # Each committed fault must be visible to a fresh caller snapshot.

@@ -1,0 +1,106 @@
+{
+  "schema": "aos-occupation-privilege-verification/v1",
+  "head": "be78533ee852050213761783593709ebb7fdbd04",
+  "cases_per_layout": [
+    "table_select",
+    "column_select",
+    "schema_create",
+    "database_create",
+    "database_temp",
+    "connect_grant_option",
+    "direct_execute",
+    "default_acl",
+    "default_acl_grantee",
+    "inherit",
+    "createdb",
+    "membership_admin",
+    "membership_inherit",
+    "runtime_login",
+    "runtime_inherit",
+    "runtime_createdb",
+    "runtime_createrole",
+    "runtime_replication",
+    "runtime_bypassrls",
+    "runtime_super"
+  ],
+  "native_rejections": 40,
+  "restored_positive_after_each_rejection": true,
+  "native_reader_writer_and_actual_waited_JWT_proven": true,
+  "independent_owner_and_real_signed_origin_withdrawal_proven": true,
+  "signed_origin_writer_first_and_old_snapshot_denial_proven": true,
+  "durable_origin_withdrawals": 2,
+  "nontransferable_CONNECT_positive": true,
+  "container": "bcd0d503f9903e9f8eabea7d2d9d00ac7fb33df47e4e2318300eb8c34eeac4c7",
+  "databases": [
+    {
+      "database": "aos_test_0ef448213c0f_ti4_test",
+      "sources": [],
+      "withdrawals": [],
+      "exact_privilege_and_profile_restoration": true
+    },
+    {
+      "database": "aos_test_8034be3b6856_ti4_test",
+      "sources": [
+        {
+          "asset_id": "occupation-source-277e15d9742f43e7b530247419387d25",
+          "content_hash": "40cddffbe4d59b164bb77937c28ae557bf6d88f9d28c1cf71fc047a0bfdef624",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "withdrawals": [
+        {
+          "content_hash": "6b4cf55d4ed2fe07a2fff3ad32d8b5032b154e0e55b14216600eef13ace40de6",
+          "prior_epoch": 1,
+          "new_epoch": 2,
+          "hash_ok": true,
+          "signature_ok": true,
+          "head_withdrawn": true
+        }
+      ],
+      "exact_privilege_and_profile_restoration": true
+    },
+    {
+      "database": "aos_test_b5ae08a418bc_ti4_test",
+      "sources": [
+        {
+          "asset_id": "occupation-source-4186ffae14a74c509272a5bab5d0831e",
+          "content_hash": "905b8f860ce85c1d2520904eb08e2be1c00436405bb86b395032bfa8de1afdf0",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "withdrawals": [
+        {
+          "content_hash": "2ce51d9ee4f1075b128e2ec9c5c28c4b3398f17d31cdae40cb1004fc87937cb4",
+          "prior_epoch": 1,
+          "new_epoch": 2,
+          "hash_ok": true,
+          "signature_ok": true,
+          "head_withdrawn": true
+        }
+      ],
+      "exact_privilege_and_profile_restoration": true
+    }
+  ],
+  "durable_occupation_sources": 2,
+  "sha256": {
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/source-regression-r1.log": "ac87cad31705797de2a91d06de2d0d950c6dc8a297d66922bae25b7aac2d989b",
+    "services/aos-api/aos_api/aip_provider_capacity_occupation_source.py": "a26d32cb2f0dc9a796332e37beb0b5c015586a5876cdebb2c77d95308dec4a50",
+    "services/aos-api/tests/aip/test_capacity_occupation_source_pg.py": "fe5f886ead523fb4b562a9faaff49674285441b568e8e2733c5ae857c49bdc60",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/verify_source_regression.py": "91d44b800107df49fae1f9a0337ae7f47cac213d63fa64a95f2402db6e17b1a6"
+  },
+  "formal_resources_changed": false,
+  "delivery": false,
+  "full_goal_complete": false,
+  "pending": [
+    "additional effective/indirect authority surfaces",
+    "samecaller shared physical occupation/budget/Intent",
+    "formal identity/deployment",
+    "actual COMMIT TTL"
+  ]
+}

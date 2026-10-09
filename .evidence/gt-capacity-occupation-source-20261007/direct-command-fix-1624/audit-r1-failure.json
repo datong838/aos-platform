@@ -1,0 +1,8 @@
+{
+  "phase": "resource list comparison",
+  "database_checks_passed_before_initial_resource_assertion": true,
+  "followup_readonly_no_semantic_resource_difference": true,
+  "second_audit_during_regression_role_login": true,
+  "second_audit_not_counted": true,
+  "unknown_restart_not_claimed": true
+}
