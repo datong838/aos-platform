@@ -1,0 +1,6 @@
+{
+  "error": "AmbiguousColumn: common org_id occurs twice on left JOIN",
+  "phase": "read-only Source provenance query",
+  "side_effects": false,
+  "product_changed": false
+}

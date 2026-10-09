@@ -1,0 +1,10 @@
+[
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py",
+    "sha256": "cd9564e8c37d0bdac9af7fa8311a0db7febc09a1ee1af6346245fc9ae2d61cc7"
+  },
+  {
+    "path": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+    "sha256": "4aa91d9ac8ab0e0733087a91a42b7fc4ef657b03775ce3f95117f09193d1e967"
+  }
+]

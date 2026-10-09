@@ -1,0 +1,20 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-source-post-finalize-expiry-native-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001627",
+  "scope": [
+    "aos-platform/.evidence/gt-source-post-finalize-expiry-native-20261009",
+    "isolatedDocker:colima-aos-extension/aos-source-newjudge-native-20261009/post-finalize-expiry-diagnostic"
+  ],
+  "excluded_scope": [
+    "product code/time semantics/full Source Delivery/current DB/runtime/Provider/restart"
+  ],
+  "expected_outputs": [
+    "Real signed fixture issuance JWT valid at native finalize, expired before actual caller COMMIT; exact per-layout observed result and Source validity distinction",
+    "Independent retained database signed Source hash/provenance/transaction outcome and role/interface/resource restoration; next original final-COMMIT contract decision evidence only"
+  ],
+  "lease_expires_at": "2026-10-09T04:43:06.780533+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T10:43:07+08:00"
+}

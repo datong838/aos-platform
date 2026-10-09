@@ -1,0 +1,12 @@
+{
+  "database": "aos_test_06bde093f182_ti4_test",
+  "counts": {
+    "global_account": 0,
+    "global_provider": 0,
+    "source_pending": 0,
+    "source_publication": 0,
+    "source_provenance": 0
+  },
+  "retained_fixture_registry": 1,
+  "publication_never_committed": true
+}

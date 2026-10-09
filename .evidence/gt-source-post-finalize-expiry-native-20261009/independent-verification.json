@@ -1,0 +1,53 @@
+{
+  "observations": [
+    {
+      "database": "aos_test_62013be4972b_ti4_test",
+      "outcome": {
+        "outcome": "committed"
+      },
+      "original_xact_state": "committed",
+      "sources": [
+        {
+          "asset_id": "post-finalize-expiry-b00ab73d15784b29b03bd37987e0684e",
+          "content_hash": "459ac9eb6e4e8361fc1578175b74be02aeffbb46636ce72039139ba80368ecbc",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "original_xid": "13587",
+          "original_pid": 27354,
+          "original_session": "aos_provider_capacity_issuer",
+          "provenance_ok": true
+        }
+      ],
+      "temporary_public_interfaces_removed": true,
+      "issuer_login_restored": true
+    },
+    {
+      "database": "aos_test_84b90e262cff_ti4_test",
+      "outcome": {
+        "outcome": "committed"
+      },
+      "original_xact_state": "committed",
+      "sources": [
+        {
+          "asset_id": "post-finalize-expiry-ef96fc60f5a741458e83e64d6bf0fe6a",
+          "content_hash": "bd09edc4e578d805e764ecf7c8409d8f5890b33b78c7f5d1733c1bec4b8b073e",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "original_xid": "13696",
+          "original_pid": 27540,
+          "original_session": "aos_provider_capacity_issuer",
+          "provenance_ok": true
+        }
+      ],
+      "temporary_public_interfaces_removed": true,
+      "issuer_login_restored": true
+    }
+  ],
+  "original_products_unchanged": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 31,
+  "final_commit_authentication_semantics_decided": false,
+  "formal_execution_allowed": false
+}

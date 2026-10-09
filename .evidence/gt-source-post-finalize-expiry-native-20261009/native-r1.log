@@ -1,0 +1,30 @@
+EE
+==================================== ERRORS ====================================
+_ ERROR at setup of test_post_finalize_expiry_observes_actual_caller_commit[shared] _
+file /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-post-finalize-expiry-native-20261009/test_post_finalize_expiry.py, line 21
+  @pytest.mark.parametrize('native_original_fact_reader', ['shared', 'distinct'], indirect=True)
+  def test_post_finalize_expiry_observes_actual_caller_commit(
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py, line 12
+  @pytest.fixture(autouse=True)
+  def registered_database_isolation(request, _isolated_postgres_database, monkeypatch):
+E       fixture '_isolated_postgres_database' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, approved_command, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, drafted, exact_public_source_caller, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, native_commit_source_reader, native_complete_source_installation, native_full_signed_reader, native_original_command_reader, native_original_fact_reader, native_pending_source_reader, native_signed_source, original_inputs, private_database, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, registered_database_isolation, signed_capacity_documents, source_inputs, source_proposal, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py:12
+_ ERROR at setup of test_post_finalize_expiry_observes_actual_caller_commit[distinct] _
+file /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-post-finalize-expiry-native-20261009/test_post_finalize_expiry.py, line 21
+  @pytest.mark.parametrize('native_original_fact_reader', ['shared', 'distinct'], indirect=True)
+  def test_post_finalize_expiry_observes_actual_caller_commit(
+file /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py, line 12
+  @pytest.fixture(autouse=True)
+  def registered_database_isolation(request, _isolated_postgres_database, monkeypatch):
+E       fixture '_isolated_postgres_database' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, approved_command, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, drafted, exact_public_source_caller, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, native_commit_source_reader, native_complete_source_installation, native_full_signed_reader, native_original_command_reader, native_original_fact_reader, native_pending_source_reader, native_signed_source, original_inputs, private_database, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, registered_database_isolation, signed_capacity_documents, source_inputs, source_proposal, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py:12
+=========================== short test summary info ============================
+ERROR .evidence/gt-source-post-finalize-expiry-native-20261009/test_post_finalize_expiry.py::test_post_finalize_expiry_observes_actual_caller_commit[shared]
+ERROR .evidence/gt-source-post-finalize-expiry-native-20261009/test_post_finalize_expiry.py::test_post_finalize_expiry_observes_actual_caller_commit[distinct]
+2 errors in 0.41s
