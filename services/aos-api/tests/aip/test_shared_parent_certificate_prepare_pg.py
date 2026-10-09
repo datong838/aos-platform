@@ -62,18 +62,56 @@ def verify_native_same_transaction_prepare(conn, command, manifest, description,
                     (manifest['executionId'],description.immutable.manifest_hash,description.content_hash,description.immutable.original_risk_hash))
         negatives.append(dict(name=name,sqlstate=rejected.value.sqlstate,message=rejected.value.diag.message_primary))
     cleanup=None
+    replay_proofs=[]
     if fresh_certificate_proof is not None:
         from aos_api.aip_model_eval_execution_owner import ModelEvalOwnerRejected
         certificates=fresh_certificate_proof()['certificates']
         reached=[]
         def postwrite_failure(*unused,**ignored):
             reached.append(True)
+            metadata=conn.execute('SELECT public.read_model_shared_parent_executor_set_facts(%s,%s,%s,%s) AS fact',
+                (manifest['executionId'],description.immutable.manifest_hash,description.content_hash,description.immutable.original_risk_hash)).fetchone()['fact']
+            # Actual same-caller original metadata, not an epoch-only projection.
+            versions=[item['identityVersion'] for item in metadata['certificates']]
+            assert all(type(v) is int and v>=1 for v in versions)
+            original_certificates=[json.loads(base64.b64decode(item['certificateBody'],validate=True))
+                for item in metadata['certificates']]
+            replay=conn.execute('SELECT public.prepare_model_shared_parent_certificate_set(%s,%s::jsonb,%s::uuid,%s,%s) AS fact',
+                (packet,source,description.plan_id,description.content_hash,encode(original_certificates))).fetchone()['fact']
+            assert replay['executionAllowed'] is False and replay['rootProvenanceVerified'] is False
+            assert replay['metadata']['certificates']==metadata['certificates']
+            boundaries=[]
+            with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SHARED_CERTIFICATE_NATIVE_CALLER_REQUIRED'):
+                with conn.transaction():
+                    conn.execute("SET LOCAL aos.org_id='dev-org'")
+                    conn.execute('SELECT public.prepare_model_shared_parent_certificate_set(%s,%s::jsonb,%s::uuid,%s,%s)',
+                        (packet,source,description.plan_id,description.content_hash,encode(original_certificates)))
+            boundaries.append('canary_scope_before_writes')
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with conn.transaction():
+                    conn.execute('SELECT public.verify_model_shared_parent_certificate_signature(%s,%s,%s)',
+                        (bytes(64),b'AOS-MODEL-EVAL-SHARED-PARENT-CERTIFICATE-SIGNING-INPUT-v3\n{}',bytes(32)))
+            boundaries.append('runtime_direct_verifier_denied')
+            after=conn.execute('SELECT public.read_model_shared_parent_executor_set_facts(%s,%s,%s,%s) AS fact',
+                (manifest['executionId'],description.immutable.manifest_hash,description.content_hash,description.immutable.original_risk_hash)).fetchone()['fact']
+            assert after['certificates']==metadata['certificates']
+            assert (after['callerXid'],after['callerPid'])==(metadata['callerXid'],metadata['callerPid'])
+            replay_proofs.append(dict(identity_versions_before=versions,
+                identity_versions_after=[item['identityVersion'] for item in after['certificates']],
+                same_original_certificate_set_replayed=True,boundaries_rejected=boundaries,
+                same_caller_and_current_metadata_unchanged=True))
             raise ModelEvalOwnerRejected('ISOLATED_POSTWRITE_FAILURE')
         with pytest.MonkeyPatch.context() as patch:
             patch.setattr(api,'read_shared_parent_executor_set',postwrite_failure)
             with pytest.raises(ModelEvalOwnerRejected,match='SHARED_CERTIFICATE_NATIVE_PREPARATION_REQUIRED'):
                 api.prepare_shared_parent_certificate_set(conn,scope,command,manifest,certificates,**args)
         assert reached==[True]  # The real SQL staging completed before the fault.
+        # Product error wrapping must not turn a failed test assertion into success.
+        assert len(replay_proofs)==1
+        assert replay_proofs[0]['identity_versions_before']==replay_proofs[0]['identity_versions_after']
+        live=conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+        assert (live['xid'],live['pid'])==(description.immutable.caller_xid,description.immutable.caller_pid)
+        assert conn.info.transaction_status==psycopg.pq.TransactionStatus.INTRANS
         with pytest.raises(psycopg.errors.CheckViolation,match='SHARED_EXECUTOR_MANIFEST_REQUIRED'):
             with conn.transaction():
                 conn.execute('SELECT public.read_model_shared_parent_executor_set_facts(%s,%s,%s,%s)',
@@ -92,5 +130,5 @@ def verify_native_same_transaction_prepare(conn, command, manifest, description,
             conn.execute('SELECT * FROM aos_model_eval_issuer_private.executor_certificate')
     (Path(evidence_dir)/'native-same-transaction-prepare-proof.json').open('x').write(json.dumps(dict(
         exact_original_description_hash=description.content_hash,native_caller=dict(xid=metadata['callerXid'],pid=metadata['callerPid']),
-        certificate_count=len(metadata['certificates']),metadata=metadata,negative_cases=negatives,postwrite_savepoint_cleanup=cleanup,
+        certificate_count=len(metadata['certificates']),metadata=metadata,negative_cases=negatives,postwrite_savepoint_cleanup=cleanup,replay_verification=replay_proofs[0] if replay_proofs else None,
         same_native_caller_observed=True,root_provenance_verified=False,execution_allowed=False,full_task_delivered=False),indent=2,default=str)+'\n')

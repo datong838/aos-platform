@@ -95,7 +95,7 @@ def shared_parent_executor_set_statements():
               'caseId',x.case_id,'purpose',x.purpose,'attempt',x.attempt,'issuerId',x.issuer_id,'issuerKeyId',x.key_id,
               'rootHash',root.content_hash,'rootBody',replace(encode(root.body,'base64'),E'\\n',''),
               'rootEpoch',re.epoch,'certificateEpoch',ce.epoch,'identityEpoch',i.epoch,
-              'identityId',i.identity_id,'identityPurpose',i.purpose,'identityKeyHash',i.key_hash,'identityActive',i.active)
+              'identityVersion',i.version,'identityId',i.identity_id,'identityPurpose',i.purpose,'identityKeyHash',i.key_hash,'identityActive',i.active)
               ORDER BY x.content_hash) INTO packed FROM {s}.executor_certificate x
               JOIN {s}.issuer_root root USING(org_id,project_id,issuer_id,key_id)
               JOIN {s}.issuer_epoch re USING(org_id,project_id,issuer_id,key_id)
@@ -161,7 +161,7 @@ def read_shared_parent_executor_set(conn, scope, source_command, manifest, *,
                 signed.leg.identity_id, signed.purpose, signed.leg.identity_key_hash):
                 raise ValueError('exact original certificate columns and full leg set required')
             if item['identityActive'] is not True or any(type(item[k]) is not int or item[k]<1
-                    for k in ('rootEpoch','certificateEpoch','identityEpoch')):
+                    for k in ('rootEpoch','certificateEpoch','identityEpoch','identityVersion')):
                 raise ValueError('current original metadata heads required')
             now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
             validate_shared_parent_certificate_signature(description,cert,issuer_input=root,

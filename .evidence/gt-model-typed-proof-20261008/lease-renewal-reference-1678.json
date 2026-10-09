@@ -1,0 +1,32 @@
+{
+  "authority": "AOS-001678",
+  "task": {
+    "base_revision": "AOS-001513",
+    "created_at": "2026-10-08T07:38:32+08:00",
+    "excluded_scope": [
+      "formal-DB-Host-worker-Provider",
+      "old-Skill-v1-and-old-migrations",
+      "existing-joint-and-budget-Leases",
+      "Route-execution-and-natural-first-chain"
+    ],
+    "expected_outputs": [
+      "Integrated strict Model manifest/private NOLOGIN Owner/signed case-obligation-report proof reader with actual isolated native COMMIT rollback replay and negative matrices; no DTO/table-only Delivery",
+      "Original approved source/joint bridge dependencies fail closed; preserve Skill signatures and Model/Route runtime denial until separate full natural positive authority"
+    ],
+    "lease_expires_at": "2026-10-10T01:07:40.935919+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_authority.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_reader.py",
+      "aos-platform/services/aos-api/alembic/versions/a0v_158_model_eval_execution_authority.py",
+      "aos-platform/services/aos-api/tests/aip/test_model_eval_execution_contracts.py",
+      "aos-platform/services/aos-api/tests/aip/test_model_eval_execution_authority_pg.py",
+      "aos-platform/.evidence/gt-model-typed-proof-20261008"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-model-typed-proof-20261008"
+  },
+  "execution_allowed": false
+}

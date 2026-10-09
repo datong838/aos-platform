@@ -1,0 +1,58 @@
+{
+  "authority": "AOS-001678",
+  "records": [
+    {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "before": "2026-10-09T23:17:48.811262+00:00",
+      "after": "2026-10-10T01:07:40.935919+00:00"
+    },
+    {
+      "task_id": "gt-model-typed-proof-20261008",
+      "before": "2026-10-09T23:17:48.811262+00:00",
+      "after": "2026-10-10T01:07:40.935919+00:00"
+    },
+    {
+      "task_id": "gt-judge-call-authority-20261008",
+      "before": "2026-10-09T23:17:48.811262+00:00",
+      "after": "2026-10-10T01:07:40.935919+00:00"
+    },
+    {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "before": "2026-10-09T23:17:48.811262+00:00",
+      "after": "2026-10-10T01:07:40.935919+00:00"
+    },
+    {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "before": "2026-10-09T23:17:48.811262+00:00",
+      "after": "2026-10-10T01:07:40.935919+00:00"
+    },
+    {
+      "task_id": "gt-original-target-persisted-reader-20261010",
+      "before": "2026-10-09T23:17:48.811262+00:00",
+      "after": "2026-10-10T01:07:40.935919+00:00"
+    },
+    {
+      "task_id": "gt-shared-parent-certificate-identity-20261010",
+      "before": "2026-10-09T23:17:48.811262+00:00",
+      "after": "2026-10-10T01:07:40.935919+00:00"
+    },
+    {
+      "task_id": "gt-shared-description-origin-reader-20261010",
+      "before": "2026-10-09T23:35:56.076951+00:00",
+      "after": "2026-10-10T01:07:40.935919+00:00"
+    },
+    {
+      "task_id": "gt-shared-parent-native-executor-set-20261010",
+      "before": "2026-10-10T00:13:09.754164+00:00",
+      "after": "2026-10-10T01:07:40.935919+00:00"
+    },
+    {
+      "task_id": "gt-shared-parent-native-certificate-prepare-20261010",
+      "before": "2026-10-10T00:25:21.774640+00:00",
+      "after": "2026-10-10T01:07:40.935919+00:00"
+    }
+  ],
+  "same_owner": true,
+  "no_scope_overlap": true,
+  "execution_allowed": false
+}

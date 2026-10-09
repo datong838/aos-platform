@@ -1,0 +1,6 @@
+{
+  "signature": "public.prepare_capacity_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint)",
+  "owner": "aos_physical_capacity_occupation_owner",
+  "body_sha256": "e9d0fa1cf6f095161b355f250e3bc81be0e089876671cd468f17251c009d46e3",
+  "runtime_table_dml": false
+}

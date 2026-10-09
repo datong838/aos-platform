@@ -1,0 +1,31 @@
+{
+  "authority": "AOS-001678",
+  "task": {
+    "base_revision": "AOS-001537",
+    "created_at": "2026-10-08T11:49:04+08:00",
+    "excluded_scope": [
+      "formal-DB-Host-worker-Provider",
+      "existing-Source-budget-Host-AgentRun-files",
+      "published-and-unpublished-migrations"
+    ],
+    "expected_outputs": [
+      "Complete original-caller Source/physical-account/ordinary-or-Eval-budget/parent-allocation/unique-Intent/finalize native actual COMMIT rollback replay and competition; no primitive-only Delivery",
+      "Model-specific Owner from actual original application, independent approval and typed proof; maintain original runtime denial until full formally authorized natural evidence"
+    ],
+    "lease_expires_at": "2026-10-10T01:07:40.935919+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation.py",
+      "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py",
+      "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_owner.py",
+      "aos-platform/services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py",
+      "aos-platform/services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py",
+      "aos-platform/.evidence/gt-atomic-model-admission-20261008"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-atomic-model-admission-20261008"
+  },
+  "execution_allowed": false
+}

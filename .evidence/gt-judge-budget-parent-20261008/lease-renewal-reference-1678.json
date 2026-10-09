@@ -1,0 +1,29 @@
+{
+  "authority": "AOS-001678",
+  "task": {
+    "base_revision": "AOS-001588",
+    "created_at": "2026-10-09T00:40:40+08:00",
+    "excluded_scope": [
+      "formal-DB-Host-worker-Provider",
+      "old-quality-eval-permission",
+      "natural-first-chain"
+    ],
+    "expected_outputs": [
+      "Original current new-purpose approval and native same-caller dedicated Judge budget parent/three original shared buckets/cost risk/replay/rollback/actual COMMIT; no helper-only Delivery",
+      "Full coupled Source/physical/parent allocation/Intent/finalizer remains required before dispatch; exact fee totals include new hold; original semantics retained"
+    ],
+    "lease_expires_at": "2026-10-10T01:07:40.935919+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_budget.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py",
+      "aos-platform/services/aos-api/alembic/versions/a0v_159_model_judge_budget.py",
+      "aos-platform/services/aos-api/aos_api/aip_budget_reservation_store.py",
+      "aos-platform/.evidence/gt-judge-budget-parent-20261008"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-judge-budget-parent-20261008"
+  },
+  "execution_allowed": false
+}
