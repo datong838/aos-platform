@@ -1,0 +1,10 @@
+{
+  "command": "pytest --noconftest test_model_eval_execution_contracts.py -k shared_parent",
+  "exit_code": 1,
+  "failed": 11,
+  "deselected": 285,
+  "reason": "ModelEvalTargetJudgeSharedRiskManifest missing",
+  "duration_seconds": 0.41,
+  "output_source": "current tool invocation, not replay",
+  "database_calls": 0
+}

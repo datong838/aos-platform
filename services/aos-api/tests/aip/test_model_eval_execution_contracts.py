@@ -1054,3 +1054,48 @@ def test_original_target_case_wrong_signature_reaches_real_crypto_rejection():
     with pytest.raises(ValueError,match='invalid original Target executor case signature'):
         module.validate_original_target_case_signature(plan,case,certificate_envelope=cert,
             issuer_input=root,checked_at=at,revoked_identity_ids=frozenset(),input_bytes=wire,output_bytes=output)
+
+
+def _shared_parent_body():
+    body = _whole_newjudge_body()
+    body['schemaVersion'] = 'aos.model-eval-target-judge-shared-risk-manifest/v3'
+    for case in body['cases']:
+        for purpose in ('target', 'judge'):
+            del case[purpose]['allocationUpperBoundMinor']
+            del case[purpose]['budgetAllocationRef']
+    return body
+
+
+def test_shared_parent_full_plan_keeps_original_risk_without_leg_money():
+    module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+    plan = module.ModelEvalTargetJudgeSharedRiskManifest.model_validate(_shared_parent_body())
+    assert len(plan.cases) == 2
+    assert (plan.target_parent_budget.upper_bound_minor, plan.judge_parent_budget.upper_bound_minor) == (10, 10)
+    dumped = plan.model_dump(mode='json', by_alias=True)
+    assert all('allocationUpperBoundMinor' not in c[p] and 'budgetAllocationRef' not in c[p]
+               for c in dumped['cases'] for p in ('target', 'judge'))
+    with pytest.raises(ValidationError):
+        module.ModelEvalTargetJudgeExecutionManifest.model_validate(plan)
+
+
+@pytest.mark.parametrize('fault', ['amount', 'allocation', 'missing_case', 'reordered',
+    'duplicate_intent', 'wrong_parent', 'wrong_model', 'allowed', 'bool_attempt', 'copied_amount'])
+def test_shared_parent_full_plan_rejects_unbound_obligations(fault):
+    module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+    body = _shared_parent_body()
+    leg = body['cases'][0]['target']
+    if fault == 'amount': leg['allocationUpperBoundMinor'] = 1
+    elif fault == 'allocation': leg['budgetAllocationRef'] = _whole_newjudge_body()['cases'][0]['target']['budgetAllocationRef']
+    elif fault == 'missing_case': body['cases'].pop()
+    elif fault == 'reordered': body['cases'].reverse()
+    elif fault == 'duplicate_intent': body['cases'][1]['target']['intentRef'] = leg['intentRef']
+    elif fault == 'wrong_parent': leg['budgetHoldRef'] = body['cases'][0]['judge']['budgetHoldRef']
+    elif fault == 'wrong_model': leg['modelRef'] = body['cases'][0]['judge']['modelRef']
+    elif fault == 'allowed': body['executionAllowed'] = True
+    elif fault == 'bool_attempt': leg['attempt'] = True
+    elif fault == 'copied_amount':
+        plan = module.ModelEvalTargetJudgeSharedRiskManifest.model_validate(body)
+        plan.cases[0].target = plan.cases[0].target.model_copy(update={'allocation_upper_bound_minor': 1})
+        body = plan
+    with pytest.raises(ValidationError):
+        module.ModelEvalTargetJudgeSharedRiskManifest.model_validate(body)

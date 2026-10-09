@@ -1,0 +1,28 @@
+{
+  "sources": {
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": {
+      "changed_original_methods": [],
+      "sha256": "e1384ab91c03099203d56fe814c588483d7915ee0e418a2cb39d08b5c5e68eb2"
+    },
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": {
+      "changed_original_methods": [
+        "ModelEvalTargetJudgeExecutionManifest._whole_original_binding"
+      ],
+      "sha256": "8132a2677858cc491a28d0b211215706f7b64cbb2652446ca3334ab573ec84fb"
+    },
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": {
+      "changed_original_methods": [
+        "ModelEvalExecutionOwner.validate_original_target_judge_manifest"
+      ],
+      "sha256": "41356488500495d4abc7d7e64d9dc024eef4849f0214d22ed77748b8c920c64f"
+    },
+    "services/aos-api/tests/aip/test_model_eval_execution_contracts.py": {
+      "changed_original_methods": [],
+      "sha256": "e80d403ecd0b3d08eb9508020e313623339f9a69023117ea72a50a1a29ad1eb2"
+    }
+  },
+  "review_keying": "qualified class and method names, replaces earlier ambiguous method-name comparison",
+  "old_native_tests_unchanged": true,
+  "old_contract_tests_unchanged": true,
+  "formal_release": false
+}

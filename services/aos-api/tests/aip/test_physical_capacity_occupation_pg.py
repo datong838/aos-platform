@@ -27,6 +27,46 @@ SCOPE=TenantScope('org-org','dev-project')
 ROLE='aos_provider_capacity_occupation'
 
 
+def test_original_shared_parent_plan_on_complete_native_caller(
+        caller, issuer_factory, https_signer, guard_issuer_factory,
+        guard_consumer_factory, tmp_path, monkeypatch):
+    from aos_api.aip_model_eval_execution_owner import ModelEvalExecutionOwner, ModelEvalOwnerRejected
+    from aos_api.aip_model_eval_execution_contracts import ModelEvalTargetJudgeSharedRiskManifest
+    original = ModelEvalExecutionOwner.validate_original_target_judge_manifest
+    proofs = []
+
+    def observe(self, conn, scope, manifest, **kwargs):
+        result = original(self, conn, scope, manifest, **kwargs)
+        if not proofs:
+            body = manifest.model_dump(mode='json', by_alias=True) if hasattr(manifest, 'model_dump') else json.loads(json.dumps(manifest))
+            body['schemaVersion'] = 'aos.model-eval-target-judge-shared-risk-manifest/v3'
+            for case in body['cases']:
+                for purpose in ('target', 'judge'):
+                    del case[purpose]['allocationUpperBoundMinor']
+                    del case[purpose]['budgetAllocationRef']
+            shared = ModelEvalTargetJudgeSharedRiskManifest.model_validate(body)
+            assert len(shared.cases) == 2
+            self.validate_original_target_judge_shared_risk_manifest(conn, scope, shared, **kwargs)
+            with pytest.raises(ModelEvalOwnerRejected):
+                original(self, conn, scope, shared, **kwargs)
+            with pytest.raises(ModelEvalOwnerRejected):
+                self.validate_original_target_judge_shared_risk_manifest(conn, scope, manifest, **kwargs)
+            identity = conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+            proofs.append({**identity, 'manifest': body, 'case_count': 2, 'leg_count': 4,
+                'parent_bounds': [shared.target_parent_budget.upper_bound_minor, shared.judge_parent_budget.upper_bound_minor],
+                'old_domain_rejected': True, 'execution_allowed': False})
+        return result
+
+    monkeypatch.setattr(ModelEvalExecutionOwner, 'validate_original_target_judge_manifest', observe)
+    test_original_dual_parent_lifecycle_is_not_ordinary_settlement(caller, issuer_factory,
+        https_signer, guard_issuer_factory, guard_consumer_factory, tmp_path)
+    assert len(proofs) == 1 and proofs[0]['parent_bounds'] == [10, 10]
+    root = os.environ.get('AOS_PARENT_LIFECYCLE_EVIDENCE')
+    if root:
+        with (Path(root) / 'shared-plan-native-proof.json').open('x') as stream:
+            json.dump(proofs[0], stream, ensure_ascii=False, indent=2)
+
+
 def test_original_dual_parent_lifecycle_is_not_ordinary_settlement(
         caller, issuer_factory, https_signer, guard_issuer_factory,
         guard_consumer_factory, tmp_path):

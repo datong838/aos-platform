@@ -812,14 +812,90 @@ class ModelEvalTargetJudgeExecutionManifest(_ModelExecutionContract):
                         or leg.approval_ref != parent.approval_ref
                         or leg.price_ref != parent.price_ref or leg.budget_policy_ref != parent.budget_policy_ref):
                     raise ValueError('exact per-purpose original governance and parent required')
-                intent, allocation = leg.intent_ref.resource_id, leg.budget_allocation_ref.resource_id
-                if intent in intents or allocation in allocations:
+                intent = leg.intent_ref.resource_id
+                shared = self.schema_version == 'aos.model-eval-target-judge-shared-risk-manifest/v3'
+                allocation = None if shared else leg.budget_allocation_ref.resource_id
+                if intent in intents or (not shared and allocation in allocations):
                     raise ValueError('unique per-call Intent and allocation required')
-                intents.add(intent); allocations.add(allocation)
-                totals[leg.purpose] += leg.allocation_upper_bound_minor
-                if totals[leg.purpose] > parent.upper_bound_minor:
-                    raise ValueError('case allocations exceed independent parent upper bound')
+                intents.add(intent)
+                if not shared:
+                    allocations.add(allocation)
+                    totals[leg.purpose] += leg.allocation_upper_bound_minor
+                    if totals[leg.purpose] > parent.upper_bound_minor:
+                        raise ValueError('case allocations exceed independent parent upper bound')
         return self
+
+
+class ModelSharedParentRiskLeg(_ModelExecutionContract):
+    """A complete plan obligation referencing a parent, never per-leg money."""
+    tenant: TenantContext
+    purpose: Literal['target', 'judge']
+    model_ref: VersionedAssetRef
+    provider_ref: VersionedAssetRef
+    price_ref: VersionedAssetRef
+    quota_policy_ref: VersionedAssetRef
+    budget_policy_ref: VersionedAssetRef
+    source_ref: VersionedAssetRef
+    physical_account_ref: VersionedAssetRef
+    approval_ref: BudgetExactRef
+    budget_hold_ref: BudgetExactRef
+    joint_receipt_ref: BudgetExactRef
+    intent_ref: BudgetExactRef
+    identity_id: str = Field(min_length=1, max_length=200)
+    identity_key_hash: str = Field(pattern=SHA256)
+    attempt: Literal[1]
+
+    @field_validator('identity_id')
+    @classmethod
+    def _identity(cls, value):
+        return ModelEvalExecutionLeg._exact_identity_id(value)
+
+    @field_validator('attempt', mode='before')
+    @classmethod
+    def _attempt(cls, value):
+        return ModelEvalExecutionLeg._exact_attempt(value)
+
+    @model_validator(mode='after')
+    def _reference_kinds(self):
+        for field, kind in (
+            ('model_ref', 'RegisteredModelRevision'), ('provider_ref', 'ProviderInstanceRevision'),
+            ('price_ref', 'ModelPriceSnapshotRevision'), ('quota_policy_ref', 'QuotaPolicyRevision'),
+            ('budget_policy_ref', 'BudgetPolicyRevision'), ('source_ref', 'ProviderCapacitySourceRevision'),
+            ('physical_account_ref', 'ProviderPhysicalAccountCandidateRevision')):
+            if getattr(self, field).asset_type != kind:
+                raise ValueError('exact shared-parent leg asset kinds required')
+        for field, kind in (
+            ('approval_ref', 'ActionApprovalEvent'),
+            ('budget_hold_ref', 'ModelEvalBudgetReservation' if self.purpose == 'target' else 'ModelJudgeBudgetReservation'),
+            ('joint_receipt_ref', 'ModelEvalJointAdmissionReceipt'), ('intent_ref', 'ModelEvalExecutionIntent')):
+            if getattr(self, field).resource_type != kind:
+                raise ValueError('exact shared-parent leg fact kinds required')
+        return self
+
+
+class ModelSharedParentRiskCase(_ModelExecutionContract):
+    case_id: str = Field(min_length=1, max_length=200)
+    input_hash: str = Field(pattern=SHA256)
+    expected_hash: str | None = Field(default=None, pattern=SHA256)
+    target: ModelSharedParentRiskLeg
+    judge: ModelSharedParentRiskLeg
+
+    @model_validator(mode='after')
+    def _purposes(self):
+        if self.case_id != self.case_id.strip() or self.target.purpose != 'target' or self.judge.purpose != 'judge':
+            raise ValueError('exact original case and independent leg purposes required')
+        return self
+
+
+class ModelEvalTargetJudgeSharedRiskManifest(ModelEvalTargetJudgeExecutionManifest):
+    """Complete shared-parent risk description; no signed or committed grant.
+
+    The common whole-request validator reads the same original governance and
+    ordered cases as v2. Only v3 omits unproven per-leg allocation declarations.
+    Old parsers and signing domains reject this new version.
+    """
+    schema_version: Literal['aos.model-eval-target-judge-shared-risk-manifest/v3']
+    cases: list[ModelSharedParentRiskCase] = Field(min_length=1, max_length=10000)
 
 
 class ModelOriginalTargetCaseSigningInput(ModelEvalCaseSigningInput):

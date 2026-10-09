@@ -1,0 +1,11 @@
+# 共享父风险原生接入复审
+
+产品实现：新增v3完整共享父风险计划（两parent及完整case×purpose），每腿不再接受金额/预算allocation引用；保留原批准、治理、Suite、Rule、案例顺序与唯一Intent描述。v2共同原件校验只新增明确v3分支；旧v2金额累计、分配唯一性原行为保持。原Owner方法抽取共同DB校验，新公开读者严格只收v3，旧方法只收v2；相同native事务原申请/parent/批准/费用/锁后时间核对继续执行。
+
+验证：新增入口缺失时纯测试11失败/285未选（0.41秒），保留真实工具结果摘要，不伪称提前落盘完整日志。最小实现后累计296通过0.82秒；禁止所有psycopg.connect的相邻累计296通过0.89秒。原native完整Suite接入1通过64.38秒，8条既有warnings。原生fresh保留库aos_test_97973a12832e_ti4_test，cluster7694680278363095064；新计划及原双parent共同xid29059，父风险10/10、两case四腿、三桶各10、价格三null；原ordinaryReader与runtimeDML负门继续通过，旧新描述域互拒。独立只读连接再次核xid ABORTED及精确两parent各0。
+
+文件级review：当前四产品文件哈希与native预冻结attempt相等；原native测试及原契约测试函数AST全部未改。初次方法AST比较按短名有同名类方法碰撞，随后按class.method纠正；实际旧方法仅v2wholeBinding新增v3风险分支和Owner原方法抽取。除新增parser选择，DB校验未删除、未改锁顺序。源码旧签名函数第一步强制v2parse，v3不能跨入旧签名域。
+
+本波不涉及前端，浏览器不适用。没有新增真实执行、收费结算或数据库迁移；正式真库/Host/worker/Provider未打开。新v3joint/Intent/identity引用仍描述；下一步必须以private prepared_plan_risk完整原件绑定新计划，并建立新签名域/可信持久来源；实际token证明/占用/currentSource共同finalizer/提交尾部协议与正式首链仍待验收。原Source尾部语义与Prime恢复问题继续局部待用户，独立Prime未知attempt不重发。
+
+相邻原authority/reader与三原helper哈希保持；若原未跟踪依赖未整体收口，不宣称本提交可作为clean-checkout正式安装包或完整Task Delivery。Goal保持完整active。

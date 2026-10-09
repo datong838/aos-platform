@@ -782,9 +782,27 @@ class ModelEvalExecutionOwner:
         precede the eventual joint caller; this method provides neither Source
         proof, held per-call allocations/Intents nor finalization or execution.
         """
-        from aos_api.aip_model_eval_execution_contracts import ModelEvalTargetJudgeExecutionManifest
+        return self._validate_original_target_judge_manifest(conn, scope, manifest,
+            release_policy=release_policy, artifact_bytes=artifact_bytes, shared_parent_risk=False)
+
+    def validate_original_target_judge_shared_risk_manifest(self, conn, scope, manifest, *,
+                                                           release_policy, artifact_bytes) -> None:
+        """Read the original full dual-parent risk without inventing leg amounts.
+
+        This necessary same-caller reader issues no Source, joint, signature,
+        per-leg allocation, physical occupation or transport authority.
+        """
+        return self._validate_original_target_judge_manifest(conn, scope, manifest,
+            release_policy=release_policy, artifact_bytes=artifact_bytes, shared_parent_risk=True)
+
+    def _validate_original_target_judge_manifest(self, conn, scope, manifest, *,
+                                               release_policy, artifact_bytes, shared_parent_risk) -> None:
+        from aos_api.aip_model_eval_execution_contracts import (
+            ModelEvalTargetJudgeExecutionManifest, ModelEvalTargetJudgeSharedRiskManifest,
+        )
         try:
-            plan = ModelEvalTargetJudgeExecutionManifest.model_validate(manifest)
+            contract = ModelEvalTargetJudgeSharedRiskManifest if shared_parent_risk else ModelEvalTargetJudgeExecutionManifest
+            plan = contract.model_validate(manifest)
             if (type(conn) is not psycopg.Connection or type(scope) is not TenantScope
                     or scope.key != ('org-org','dev-project')
                     or plan.tenant != TenantContext(orgId=scope.org_id,projectId=scope.project_id)

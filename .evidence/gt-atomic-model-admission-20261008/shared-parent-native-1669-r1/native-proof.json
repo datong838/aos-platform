@@ -1,0 +1,51 @@
+{
+  "proof": {
+    "xid": "29059",
+    "parents": [
+      {
+        "purpose": "target",
+        "reservation": "06b7596e-0cbf-4480-880c-b1f36bb8861c",
+        "content_hash": "sha256:452ec1aad0cd2425ec360854851760c2a2b9f4f2a48636ac9b577f82d786c987",
+        "upper_bound_minor": 10,
+        "origin_xid": "29059",
+        "bucket_count": 3,
+        "numeric_prices": false,
+        "ordinary_reader_rejected": true,
+        "runtime_transition_rejected": true
+      },
+      {
+        "purpose": "judge",
+        "reservation": "74e12d32-d3d3-4ea7-933f-f250f34d156f",
+        "content_hash": "sha256:90b613d10528d43d9e63b4912a175f455c606bc487634eb11e2192bfe26b2f2d",
+        "upper_bound_minor": 10,
+        "origin_xid": "29059",
+        "bucket_count": 3,
+        "numeric_prices": false,
+        "ordinary_reader_rejected": true,
+        "runtime_transition_rejected": true
+      }
+    ],
+    "complete_legs": [
+      [
+        "content-subject-0",
+        "target"
+      ],
+      [
+        "content-subject-0",
+        "judge"
+      ],
+      [
+        "content-subject-1",
+        "target"
+      ],
+      [
+        "content-subject-1",
+        "judge"
+      ]
+    ],
+    "execution_allowed": false
+  },
+  "independent_xact_status": "aborted",
+  "original_parent_rows_after_rollback": 0,
+  "provider_calls": 0
+}

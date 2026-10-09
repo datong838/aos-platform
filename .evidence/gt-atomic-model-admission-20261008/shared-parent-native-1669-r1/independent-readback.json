@@ -1,0 +1,21 @@
+{
+  "identity": {
+    "database": "aos_test_97973a12832e_ti4_test",
+    "cluster": "7694680278363095064",
+    "read_only": "on",
+    "status": "aborted",
+    "observed_at": "2026-10-09 19:54:38.811383+00:00"
+  },
+  "exact_parent_counts": [
+    {
+      "purpose": "target",
+      "rows": 0
+    },
+    {
+      "purpose": "judge",
+      "rows": 0
+    }
+  ],
+  "files_match_frozen_attempt": true,
+  "execution_allowed": false
+}
