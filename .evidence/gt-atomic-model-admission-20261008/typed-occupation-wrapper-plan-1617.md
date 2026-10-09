@@ -1,0 +1,9 @@
+# 原SQL非执行包装：下一文件级方案
+
+原consumer consume_capacity_source_for_occupation在当前psycopg caller连接使用原_consumption_packet，重复序列化检查命令未变；packet函数重验证ProviderCapacityConsumptionCommand并保留SecretStr，无需新认证或复制凭证。wrapper必须复用原packet/ref及窄prepare_capacity_target_occupation，不复制协议/哈希/私表访问，不将DTO当authority。
+
+拟修改仅 services/aos-api/aos_api/aip_physical_capacity_occupation.py，追加 prepare_target_occupation(conn,scope,source_command,plan_id,intent_id,call_id)。参数必须原类型、正向固定scope与UUID；前置核真实psycopg conn已有事务、原SCRAM会话/role/serializable/UTC/tenant和xid/pid，原消费事实仍在同一conn。执行原窄SQL后解析PhysicalOccupationPreparation，再与原现场tenant/login/xid/pid及传入plan/intent/call精确核对；不能commit、rollback、retry、dispatch或安装DDL。局部异常由caller原事务处理，未知结果只读对账。
+
+验证顺序：新独立原生Task/Lease，全新全库、原Source与两正式批准/四腿计划/Target Input Intent。缺包装接口真实RED→最小实现→实际DTO与DB源绑定正向、伪造scope/错误连接/跨事务或引用负向、原消费链及实际COMMIT拒绝/独立回滚六表零/Source1/旧资源保留。mock不作原生正向证据。原Judge仍awaiting_target_result，不能填伪Judge输入。现有318+31契约累计继续保留。
+
+本次已实际只读检查原consumer和packet定义，未读取或打印token、未连接DB、未发请求、未改产品。真实SQL包装/原生RED尚待后续实施，不视为完成。actual admission、unknown、费用/Usage/finalizer及自然首链另需完整证据。

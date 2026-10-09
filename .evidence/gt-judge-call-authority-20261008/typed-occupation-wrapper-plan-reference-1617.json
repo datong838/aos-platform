@@ -1,0 +1,14 @@
+{
+  "authority_revision": "AOS-001617",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/occupation-preparation-types-reference-1617.json",
+      "sha256": "2c093fd415b445cc70acdfa8c38a7e855d71b94434d5672d9104f00764677580"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/typed-occupation-wrapper-plan-1617.md",
+      "sha256": "1a7a40a935c4d3b18b6a97de2f9e7464e416fab8a4f64eeaa3c6bb2390e09052"
+    }
+  ]
+}

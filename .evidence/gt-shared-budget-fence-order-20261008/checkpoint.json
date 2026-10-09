@@ -6,13 +6,13 @@
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "authority_revision": "AOS-001617",
   "task_base_revision": "AOS-001588",
-  "step": "occupation-preparation-types-green-original-sql-wrapper-pending",
+  "step": "occupation-types-green-native-sql-wrapper-plan-ready",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_budget_reservation.py"
   ],
   "evidence_files": [
     ".evidence/gt-shared-budget-fence-order-20261008/implementation-plan.md",
     ".evidence/gt-shared-budget-fence-order-20261008/task-readback.json",
-    ".evidence/gt-shared-budget-fence-order-20261008/occupation-preparation-types-reference-1617.json"
+    ".evidence/gt-shared-budget-fence-order-20261008/typed-occupation-wrapper-plan-reference-1617.json"
   ]
 }
