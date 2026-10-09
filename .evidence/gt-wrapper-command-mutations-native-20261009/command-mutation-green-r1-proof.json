@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "label": "tenant-canary",
+      "denied": true
+    },
+    {
+      "label": "source-type",
+      "denied": true
+    },
+    {
+      "label": "source-id",
+      "denied": true
+    },
+    {
+      "label": "source-revision-type",
+      "denied": true
+    },
+    {
+      "label": "source-hash",
+      "denied": true
+    },
+    {
+      "label": "unknown-field",
+      "denied": true
+    }
+  ],
+  "execution_allowed": false
+}

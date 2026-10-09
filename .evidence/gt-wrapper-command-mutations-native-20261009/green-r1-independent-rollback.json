@@ -1,0 +1,13 @@
+{
+  "database": "aos_test_5df898f3abd9_ti4_test",
+  "counts": {
+    "prepared_call_occupation": 0,
+    "prepared_plan_risk": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0,
+    "call_occupation": 0,
+    "call_occupation_event": 0
+  },
+  "source1": true,
+  "whole_result": "FAIL69.51s fixed wrapper rejection after six denials; inner cause unconfirmed"
+}

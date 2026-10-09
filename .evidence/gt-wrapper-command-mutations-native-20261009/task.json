@@ -1,0 +1,20 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-wrapper-command-mutations-native-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001620",
+  "scope": [
+    "aos-platform/.evidence/gt-wrapper-command-mutations-native-20261009",
+    "aos-platform/isolated-native-source-newjudge-5436"
+  ],
+  "excluded_scope": [
+    "current-preview18435",
+    "formal-Host-worker-Provider"
+  ],
+  "expected_outputs": [
+    "six original command model_copy mutations rejected; original native regression, actualCOMMIT reject and independent rollback"
+  ],
+  "lease_expires_at": "2026-10-09T03:27:10.068484+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T09:27:11+08:00"
+}

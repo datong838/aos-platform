@@ -191,8 +191,7 @@ def prepare_target_occupation(conn, scope, source_command, plan_id, intent_id, c
                 or type(source_command) is not ProviderCapacityConsumptionCommand
                 or any(type(value) is not UUID for value in (plan_id, intent_id, call_id))):
             raise ValueError('native same-caller occupation preparation required')
-        command = ProviderCapacityConsumptionCommand.model_validate(
-            source_command.model_dump(mode='python', by_alias=True))
+        command = ProviderCapacityConsumptionCommand.model_validate(source_command)
 
         def identity():
             return conn.execute("""SELECT session_user AS login,current_user AS role,

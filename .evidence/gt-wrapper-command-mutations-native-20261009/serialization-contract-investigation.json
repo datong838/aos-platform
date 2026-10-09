@@ -1,0 +1,8 @@
+{
+  "results": {
+    "original_dump_path": "accepted",
+    "instance_revalidation": "rejected"
+  },
+  "scope": "pure transport shape only; no Source/authentication/DB authority",
+  "secret_emitted": false
+}

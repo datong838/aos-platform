@@ -1,0 +1,24 @@
+{
+  "batch": "A",
+  "results": [
+    {
+      "label": "tenant-canary",
+      "denied": true
+    },
+    {
+      "label": "source-type",
+      "denied": true
+    },
+    {
+      "label": "source-revision-type",
+      "denied": true
+    },
+    {
+      "label": "unknown-field",
+      "denied": true
+    }
+  ],
+  "caller_xid": "10344",
+  "caller_pid": 19676,
+  "execution_allowed": false
+}

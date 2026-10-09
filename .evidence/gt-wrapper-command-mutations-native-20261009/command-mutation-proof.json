@@ -1,0 +1,16 @@
+{
+  "batch": "B",
+  "results": [
+    {
+      "label": "source-id",
+      "denied": true
+    },
+    {
+      "label": "source-hash",
+      "denied": true
+    }
+  ],
+  "caller_xid": "10624",
+  "caller_pid": 20234,
+  "execution_allowed": false
+}

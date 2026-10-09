@@ -1,0 +1,26 @@
+[
+  {
+    "attempt": "native-command-red-r1-attempt.json",
+    "helper": "source_trial_green_r1.py",
+    "sha256": "096e03046a3e8a42679bd7b298c04046c29df111a99fc9988fcf7235ddac9b99",
+    "product_sha256": "db39cc33b3d3b8f96ca6d2a7dff5bc798d49d707791c61e7033ca43cb2378259"
+  },
+  {
+    "attempt": "native-command-green-r1-attempt.json",
+    "helper": "source_trial_green_r1.py",
+    "sha256": "096e03046a3e8a42679bd7b298c04046c29df111a99fc9988fcf7235ddac9b99",
+    "product_sha256": "7ee8b9e6c0c3a65196174276be992634ba85acd0914a6d9e0a9520b20f7e2488"
+  },
+  {
+    "attempt": "native-command-green-a-r2-attempt.json",
+    "helper": "source_newjudge_native_trial_1606.py",
+    "sha256": "e14782af7ed5c5ece4f51f9f7c858eb8d3788da5242db54db272175b464752ce",
+    "product_sha256": "7ee8b9e6c0c3a65196174276be992634ba85acd0914a6d9e0a9520b20f7e2488"
+  },
+  {
+    "attempt": "native-command-green-b-r2-attempt.json",
+    "helper": "source_newjudge_native_trial_1606.py",
+    "sha256": "e14782af7ed5c5ece4f51f9f7c858eb8d3788da5242db54db272175b464752ce",
+    "product_sha256": "7ee8b9e6c0c3a65196174276be992634ba85acd0914a6d9e0a9520b20f7e2488"
+  }
+]
