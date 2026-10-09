@@ -1,0 +1,76 @@
+{
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-body-expiry-commit-native-20261009",
+    "base_revision": "AOS-001628",
+    "completed_revision": "AOS-001628",
+    "result": "SOURCE_BODY_EXPIRY_COMMIT_OBSERVATION_COMPLETE_WITH_TEARDOWN_ERROR",
+    "changed_files": [
+      "aos-platform/.evidence/gt-source-body-expiry-commit-native-20261009"
+    ],
+    "commits": [
+      "4350f3381a7e46cea52d31e89833d97e552ceea0"
+    ],
+    "verification": [
+      "Shared native SCRAM original xid13812/pid27985 finalized before expiry; actual Source body deadline crossed with JWT live; one actual COMMIT succeeded",
+      "Independent committed xid/exact Source hash/native C signature/provenance/NOLOGIN/temporary interfaces absent/31 resources unchanged; products unchanged"
+    ],
+    "risks": [
+      "Pytest exit1: call passed, teardown error retained; complete test is NOT GREEN",
+      "Only bounded observation closed; Source/epoch/legacy feature delivery and final COMMIT semantics unresolved; distinct layout and current consumer expiry pending; no formal execution"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T11:02:17+08:00"
+  },
+  "revision": "AOS-001629",
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/01-当前项目状态.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/06-当前执行检查点.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001629-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001629"
+  },
+  "validation": "GREEN",
+  "strong_projections": "CURRENT",
+  "complete_test_pass": false
+}

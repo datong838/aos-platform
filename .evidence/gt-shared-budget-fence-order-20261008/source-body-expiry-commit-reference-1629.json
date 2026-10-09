@@ -1,0 +1,83 @@
+{
+  "authority_revision": "AOS-001629",
+  "head": "4350f3381a7e46cea52d31e89833d97e552ceea0",
+  "references": [
+    {
+      "path": ".evidence/gt-shared-budget-fence-order-20261008/source-post-finalize-expiry-review-reference-1628.json",
+      "sha256": "d39e8c63f34617e945fc49cd7a5512d3ea0479bd7b06e9231687cfb2fc213273"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/baseline-files.json",
+      "sha256": "59a414fa58b4ddd3ca5fbe257a4536c7df6f6dd980eb7de5fb57beb43a8c3307"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/finalize_diagnostic.py",
+      "sha256": "add1b1eadf2d211c306f6d560717c7ebe199b98920000663495c721e04125061"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/independent-live-wait.json",
+      "sha256": "5d2f7d5229e13f248b2a54644eee8357495d3532b8be28848a2163bc3eb7c47f"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/independent-verification.json",
+      "sha256": "17cc88e4bb9e693c212b7d94e86d7361c64cec87a5ef62b7e014fcf18cbb4003"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/live-deadline-wait.json",
+      "sha256": "88634ca9b95d36b6dc5821dd8db40b8735deb26214f9701173e80b840d1ec1f3"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/live-tool-session.json",
+      "sha256": "78f4ad05ebbc559c1e029991c21cdfa701a96246b5cb5db9438386d6d3da9078"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/native-body-expiry-commit-r1-attempt.json",
+      "sha256": "00bf09db1dc113ee136dcf81f38de2d5bd95d43dba01715c1a4a1e2da2b02087"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/native-body-expiry-commit-r1-result.json",
+      "sha256": "672a66c550cc7c3b10e9b1e76b6fe4c6a62cbcacae509b51fd757f7e4ccd07f7"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/native-r1.log",
+      "sha256": "f3dd89c24340317a2dd97b8f90e70b55cc802fd6821b625822007f9fc24141db"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/observation-body-expiry-commit-f52178055e3b4a65b35373b086cb341e.json",
+      "sha256": "384741d41ef795f832aa9011756edd1a4390af2cfd39a5dd073859716fe0344f"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/plan.md",
+      "sha256": "e1fe6409950843dfd808afac44ea1ae4a2202a9264d97ad6e621942374874693"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/review.md",
+      "sha256": "8b06c853d9d17c119a3585561fe57a47316ed7ad2245302fff1806c998c0106b"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/run_native.py",
+      "sha256": "84f25dac45b044b71955873ccd8dd5ee712d346a87ca0eb2c41d66a17ec6c0f2"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/task.json",
+      "sha256": "5dfeaa37a62348f4cd9d97542c05302053993057c065db037b9d07e0baaf0c43"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/test_body_expiry_commit.py",
+      "sha256": "480e59c09e9c4070c4ec45f98a365c9d0d97d7d251ae96beb99650b3df2ce525"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/verify-r1.py.txt",
+      "sha256": "fcd430b8e812962d54b8d046c65fd22b7a18aeea12b430b6d15282a860eb56de"
+    },
+    {
+      "path": ".evidence/gt-source-body-expiry-commit-native-20261009/verify_native.py",
+      "sha256": "86cdf875a1974381c8c957d534265a3de6ded81d1990ed3993dc0e29e0abc91c"
+    }
+  ],
+  "execution_allowed": false
+}
