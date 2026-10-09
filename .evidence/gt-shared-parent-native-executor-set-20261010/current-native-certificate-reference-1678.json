@@ -1,0 +1,48 @@
+{
+  "authority_revision": "AOS-001678",
+  "task": "gt-shared-parent-native-executor-set-20261010",
+  "head": "a605664f66bcb90023920ef43e51fae01e863d04",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "same_caller_metadata_necessary_verified": true,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-shared-parent-native-executor-set-20261010/pure-artifact-result.json",
+      "sha256": "d19d01a8facab949b627524b25ec2f4f93833e7b3a6cb3c08a9a7704185f2197"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/review-1677.md",
+      "sha256": "12498d54ecde9ac1e7d7acda9c6dabf35c3d9c1e1f604f93d2b9fedde94d251d"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/implementation-plan.md",
+      "sha256": "8a0f4d5ba8621945e180293f8abed8aecc11eefabf5fb4b89bbad3a25d6ad32f"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r8/result-r8.json",
+      "sha256": "f7bcc762aac62ce620b7076c847b370e8d3aad30e3ccad24942bb1b6221804c5"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r8/native-same-transaction-prepare-proof.json",
+      "sha256": "da0595d0b1f10cae215b5baf322b3663e71288fb5d4261a99b0e85d6bb0c6cd4"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r8/native-description-proof.json",
+      "sha256": "c3a6db48c1de3719b9f70f1c5254776fb73ea884e6f7c11bf90eb0cc2ea74104"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/independent-core-readback-r8.json",
+      "sha256": "7e7f21aee7e0323a8e10cc0982cb12f85548cbd4aabbdb47d6ed4bfdde366087"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/pure-result-r4.json",
+      "sha256": "576ef3033b3f393ee47b936b39a1fe2af0595164057ce16bb0278a0bb28eb1f9"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/source-verifier-acl-root-cause-r7.json",
+      "sha256": "351278bd0a517e9e8b3f07873238d31e35299e4590ad8950fd6d197b85f50c9c"
+    }
+  ]
+}
