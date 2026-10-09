@@ -1,0 +1,14 @@
+{
+  "database": "aos_test_69f48981fd97_ti4_test",
+  "counts": {
+    "call_occupation": 0,
+    "call_occupation_event": 0,
+    "prepared_call_occupation": 0,
+    "prepared_plan_risk": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "temp_probes": 0,
+  "root_single_truncate_sqlstate": "0A000",
+  "product_changed": false
+}

@@ -1,0 +1,36 @@
+{
+  "checks": [
+    {
+      "table": "call_occupation",
+      "operation": "update",
+      "sqlstate": "42501"
+    },
+    {
+      "table": "call_occupation",
+      "operation": "delete",
+      "sqlstate": "42501"
+    },
+    {
+      "table": "call_occupation",
+      "operation": "truncate",
+      "sqlstate": "55006"
+    },
+    {
+      "table": "call_occupation_event",
+      "operation": "update",
+      "sqlstate": "42501"
+    },
+    {
+      "table": "call_occupation_event",
+      "operation": "delete",
+      "sqlstate": "42501"
+    },
+    {
+      "table": "call_occupation_event",
+      "operation": "truncate",
+      "sqlstate": "55006"
+    }
+  ],
+  "exact_readback_after_each": true,
+  "execution_allowed": false
+}

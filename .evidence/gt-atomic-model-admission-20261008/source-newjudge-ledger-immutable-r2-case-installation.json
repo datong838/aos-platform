@@ -1,0 +1,12 @@
+[
+  {
+    "signature": "public.capacity_occupation_eval_case_fact(bytea,jsonb,uuid,text,text,bytea,text)",
+    "owner": "aos_runtime",
+    "body_sha256": "ee12d3638c8a8f0c24badee5043efacfc1c176780789d0bbb9b71537a1e59b5a"
+  },
+  {
+    "signature": "public.prepare_capacity_case_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint,bytea,text)",
+    "owner": "aos_physical_capacity_occupation_owner",
+    "body_sha256": "4ab87d54bf28184d0176176da517895aa438b5d421ab44870b3790c9a287963b"
+  }
+]

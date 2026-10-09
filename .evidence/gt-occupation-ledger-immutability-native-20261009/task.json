@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-occupation-ledger-immutability-native-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001615",
+  "scope": [
+    "aos-platform/.evidence/gt-occupation-ledger-immutability-native-20261009",
+    "test-only-runtime/colima-aos-extension/aos-source-newjudge-native-20261009/5436"
+  ],
+  "excluded_scope": [
+    "formal-DB-Host-worker-Provider",
+    "retained-original-databases",
+    "second-writer"
+  ],
+  "expected_outputs": [
+    "Actual original occupation root/event mutation and truncation resistance; no product change or admission"
+  ],
+  "lease_expires_at": "2026-10-09T01:12:51.220049+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T08:27:52+08:00"
+}

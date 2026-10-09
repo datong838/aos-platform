@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-09T00:28:20.513533+00:00",
+  "database": "aos_test_69f48981fd97_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_physical_capacity_occupation_pg.py::test_source_model_preparation_original_native_caller[shared]",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "initial occupation root and first immutable event from original trusted Target call; zero actual inflight; no admission"
+}

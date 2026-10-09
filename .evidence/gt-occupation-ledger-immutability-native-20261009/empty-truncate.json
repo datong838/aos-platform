@@ -1,0 +1,10 @@
+[
+  {
+    "table": "call_occupation",
+    "sqlstate": "42501"
+  },
+  {
+    "table": "call_occupation_event",
+    "sqlstate": "42501"
+  }
+]
