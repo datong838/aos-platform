@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-wrapper-nested-command-native-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001621",
+  "scope": [
+    "aos-platform/.evidence/gt-wrapper-nested-command-native-20261009",
+    "isolatedDocker:colima-aos-extension/aos-source-newjudge-native-20261009/nested-command-native"
+  ],
+  "excluded_scope": [
+    "current authoritative DB18435",
+    "runtime/Host/worker/Provider",
+    "other branches/mall source/old12Run"
+  ],
+  "expected_outputs": [
+    "Original native nested extras denied and unchanged command replay; full manifest COMMIT denial; independent rollback and resource verification"
+  ],
+  "lease_expires_at": "2026-10-09T03:43:50.829635+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T09:43:53+08:00"
+}
