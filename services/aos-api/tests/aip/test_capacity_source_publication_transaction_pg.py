@@ -782,7 +782,8 @@ def test_original_source_binding_uses_typed_normalization_in_private_reader(nati
     with isolated_owner() as owner:
         owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
         owner.execute("SET LOCAL TimeZone='UTC'")
-        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         import json
         from psycopg.types.json import Jsonb
@@ -836,7 +837,8 @@ def test_original_source_time_profile_matches_original_datetime_oracle(native_si
     ]
     mismatches = []
     with isolated_owner() as owner:
-        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         rows = owner.execute("""SELECT p.provolatile,p.prosecdef,p.proisstrict,
             r.rolname,p.proconfig FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
             JOIN pg_roles r ON r.oid=p.proowner
@@ -867,7 +869,8 @@ def test_original_source_time_profile_matches_original_datetime_oracle(native_si
         assert owner.execute("""SELECT count(*) AS n FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
             WHERE n.nspname='aos_capacity_publication_private'
             AND p.proname IN ('original_source_field','original_source_ref',
-                'original_source_time','read_original_source_candidate')""").fetchone()['n'] == 0
+                'original_source_time','read_original_source_candidate')""").fetchone()['n'] == 4
+        require_source_transaction_functions(owner)
         owner.rollback()
     assert not mismatches, f'Original datetime/native SQL incompatibilities: {mismatches!r}'
 
@@ -903,7 +906,8 @@ def test_original_source_candidate_profile_matches_original_shape_oracle(native_
         cases.append((label, candidate))
     mismatches = []
     with isolated_owner() as owner:
-        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         assert owner.execute("""SELECT count(*) AS n FROM pg_proc p
             JOIN pg_namespace n ON n.oid=p.pronamespace,
             LATERAL aclexplode(COALESCE(p.proacl,acldefault('f',p.proowner))) a

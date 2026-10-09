@@ -1,0 +1,58 @@
+{
+  "observed_at": "2026-10-09T05:41:34.587266+00:00",
+  "database": "aos_test_1e72f43dbc16_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[nested_alias]",
+      "phase": "database_binding",
+      "database": "aos_test_1e72f43dbc16_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[nested_alias]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[offset_space]",
+      "phase": "database_binding",
+      "database": "aos_test_1e72f43dbc16_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[offset_space]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[epoch_string]",
+      "phase": "database_binding",
+      "database": "aos_test_1e72f43dbc16_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[epoch_string]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_time_profile_matches_original_datetime_oracle",
+      "phase": "database_binding",
+      "database": "aos_test_1e72f43dbc16_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_time_profile_matches_original_datetime_oracle",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_candidate_profile_matches_original_shape_oracle",
+      "phase": "database_binding",
+      "database": "aos_test_1e72f43dbc16_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_candidate_profile_matches_original_shape_oracle",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "full original Source file selected, maxfail1 actual first failure; unexecuted nodes not acceptance"
+}

@@ -1,0 +1,21 @@
+{
+  "observed_at": "2026-10-09T05:38:24.622763+00:00",
+  "head": "938c5209c90f7cacd9cffd08998aaff9a812979f",
+  "authority": "AOS-001639",
+  "source_commit_sql_sha256": "a2f4e5bcecceecfc9aed28fad84b8c9f46c5e7d224409581235a0e96d299bab1",
+  "same_commit_sql_as_actual_body_expiry_counterexample": true,
+  "counterexample_review": {
+    "path": ".evidence/gt-source-body-expiry-commit-native-20261009/review.md",
+    "sha256": "8b06c853d9d17c119a3585561fe57a47316ed7ad2245302fff1806c998c0106b"
+  },
+  "counterexample_proof": {
+    "path": ".evidence/gt-source-body-expiry-commit-native-20261009/independent-verification.json",
+    "sha256": "17cc88e4bb9e693c212b7d94e86d7361c64cec87a5ef62b7e014fcf18cbb4003"
+  },
+  "native_verifier_has_xact_callback": false,
+  "completion_requirement": "Actual caller COMMIT currentness cannot be inferred from earlier finalize statement or current consumer rejection",
+  "completion_proven": false,
+  "current_full_suite_result_can_override_clock_counterexample": false,
+  "product_changed": false,
+  "unknown_effect_replayed": false
+}

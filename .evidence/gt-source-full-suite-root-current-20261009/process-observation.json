@@ -1,0 +1,14 @@
+{
+  "observed_at": "2026-10-09T05:35:31.560016+00:00",
+  "tool_session": 9895,
+  "pid": 3930,
+  "ps_exact": "3930 Fri Oct  9 13:34:04 2026     01:27 services/aos-api/.venv/bin/python .evidence/gt-source-full-suite-root-current-20261009/run_whole_r1.py",
+  "head": "938c5209c90f7cacd9cffd08998aaff9a812979f",
+  "authority": "AOS-001639",
+  "process_live_verified": true,
+  "terminal_result_present": false,
+  "whole_functions": 101,
+  "whole_nodes": 386,
+  "replay_allowed": false,
+  "next_action": "Poll same exec session9895/PID3930, never launch duplicate; then read actual result and first failure, reconcile retained DBs read-only."
+}

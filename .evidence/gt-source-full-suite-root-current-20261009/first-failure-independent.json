@@ -1,0 +1,17 @@
+{
+  "failed_node": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[nested_alias]",
+  "database": "aos_test_ac43734bfaba_ti4_test",
+  "whole_nodes": 386,
+  "passed_nodes": 50,
+  "unexecuted_nodes": 335,
+  "exact_existing_function_acl_lock_audit": true,
+  "publication_counts": {
+    "source_pending": 0,
+    "source_publication": 0,
+    "source_provenance": 0,
+    "global_account": 0,
+    "global_provider": 0
+  },
+  "root_cause": "Old explicit CREATE profile duplicates permanent a0v157 functions before private typed reader assertion",
+  "goal_completion_proven": false
+}
