@@ -1,0 +1,12 @@
+{
+  "path": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+  "before_sha256": "873acbad701159170d304dd48a377aea82c3bfadaa24c0c7d88f50f9a3c2421c",
+  "after_sha256": "23b07970f1838c08dbac7587d546fd5cc61a7001e37b603dbf1af6186916ccfd",
+  "test_only": true,
+  "changed_functions": [
+    "test_native_signed_supplier_combination_keeps_original_approved_terms",
+    "test_native_source_window_requires_original_request_allocation_and_basis"
+  ],
+  "original_assertions_preserved": true,
+  "window_isolation_registered": true
+}

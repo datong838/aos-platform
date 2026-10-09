@@ -54,6 +54,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_complete_native_publication_requires_actual_caller_commit',
         'test_native_registered_signed_document_current_rows_require_exact_originals',
         'test_native_signed_supplier_combination_keeps_original_approved_terms',
+        'test_native_source_window_requires_original_request_allocation_and_basis',
         'test_native_signing_permit_binds_exact_policy_and_controlled_source_root',
         'test_native_current_signed_document_single_field_faults_restore_exact_originals',
         'test_native_current_signed_exact_scope_matrix_and_ordinary_role_denial',
@@ -2792,8 +2793,8 @@ def test_native_signed_supplier_combination_keeps_original_approved_terms(native
     with isolated_owner() as owner:
         owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
         owner.execute("SET LOCAL TimeZone='UTC'")
-        for profile in (native.CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,native.CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL):
-            owner.execute(profile)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         # Both documents must independently pass S17: refusal must come from
         # the cross-contract comparison, not invalid signatures/registration.
@@ -2891,8 +2892,8 @@ def test_native_source_window_requires_original_request_allocation_and_basis(nat
     with isolated_owner() as owner:
         owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
         owner.execute("SET LOCAL TimeZone='UTC'")
-        for profile in (native.CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,native.CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL,
-                        native.CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL):owner.execute(profile)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         row=owner.execute(statement,params).fetchone()
         assert row is not None and row['source']==source.model_dump(mode='json',by_alias=True)

@@ -1,0 +1,13 @@
+{
+  "task": "gt-source-signed-domains-current-20261009",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority": "AOS-001633",
+  "head": "94a8182b5e8bd5c7fc8ddc753d7779d707080094",
+  "tool_session": 84350,
+  "observed_process_rows": [
+    "97684 Fri Oct  9 12:40:19 2026     services/aos-api/.venv/bin/python .evidence/gt-source-signed-domains-current-20261009/run_native_domains_r3.py"
+  ],
+  "inputs": "input-bindings-r3.json",
+  "no_unknown_replay": true
+}

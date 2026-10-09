@@ -1,0 +1,7 @@
+{
+  "full_parameter_result": "27 passed, 197.47s",
+  "node_count": 27,
+  "database_count": 24,
+  "window_four_nodes_share_session_database": true,
+  "acceptance_limit": "not 27 independent databases; final r3 reruns all nodes with exact original window isolation registration"
+}

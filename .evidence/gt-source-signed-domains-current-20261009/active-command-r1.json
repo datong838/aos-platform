@@ -1,0 +1,12 @@
+{
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "task": "gt-source-signed-domains-current-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority": "AOS-001633",
+  "head": "94a8182b5e8bd5c7fc8ddc753d7779d707080094",
+  "pid": 96848,
+  "lstart": "Fri Oct 9 12:29:01 2026",
+  "tool_session": 26652,
+  "scope": "three original full functions/all parameters/no product edits",
+  "diagnostic_deadline_minutes": 20
+}

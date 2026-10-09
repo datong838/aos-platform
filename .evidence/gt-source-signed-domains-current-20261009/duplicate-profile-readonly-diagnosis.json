@@ -1,0 +1,16 @@
+{
+  "r1": "26failed 1passed",
+  "cause": "original tests reinstall strict profiles already installed by current a0v157 migration; DuplicateFunction before tested SQL",
+  "samples": [
+    {
+      "database": "aos_test_9fa869fb5f68_ti4_test",
+      "complete_original_functions_exact": true
+    },
+    {
+      "database": "aos_test_cc4e758a89de_ti4_test",
+      "complete_original_functions_exact": true
+    }
+  ],
+  "product_change_required": false,
+  "unknown_replay": false
+}

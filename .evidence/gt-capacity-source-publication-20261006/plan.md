@@ -48,3 +48,8 @@ registered-inputs-green-r2 preserved1FAIL7.20s: psycopg infers ASCII codepoint l
 # Original legacy consumer reference regression at AOS-001631
 
 Same-owner current exact Source Task scope confirmed/no overlap. Native actual Source publication/COMMIT/new-transaction consumer accepted extra-key FormalExactRef, independently committed/signature/provenance verified. Publication-schema Task owns one-line original-instance validation fix. This Task adds only persistent extra-key reference fixed rejection and unchanged legal reference replay in test_current_source_consumer_rechecks_new_transaction, then runs its full original shared/distinct cases. Retain preexisting fixture whitelist6addition1deletion unstaged; selective index contains only new regression. Preserve all Source SQL/old expiry/native locks/current authority/transaction tests and complete parent exits; isolated diagnostic is not full Source Delivery. No browser applies, no formal DB/runtime change.
+
+## 当前S17–S19原累计测试迁移兼容
+AOS-001633下三原函数全参数r1为1passed/26failed，全部26在重复CREATE原候选函数时DuplicateFunction。a0v157已严格安装全部函数，两个失败库只读完整require_source_transaction_functions审计通过。原Source Task owns同原测试文件；仅两个供应商/窗口测试的重复profile安装改为现有完整函数/ACL/lock审计，保留其全部参数和SQL/Python/正向负向原断言。严格迁移安装不改为CREATE OR REPLACE/不放宽产品或权限；既有fixture6/1保护不入提交。整轮27项重新全参数，旧失败完整保留。产品/正式库/运行时不改。
+
+原window函数未列入registered_database_isolation白名单，r1四窗口节点共用session库；原计划要求逐节点独立。待r2实际终端退出后，在同原测试文件仅新增该窗口函数白名单1行，保留已有5行fixture差异与consumer差异。然后r3整轮三原函数全部27参数，新库逐节点独立，输入hash重新冻结；r2完整结果仍保留不冒称独立27库。此为隔离修复，不改产品/断言或grant。

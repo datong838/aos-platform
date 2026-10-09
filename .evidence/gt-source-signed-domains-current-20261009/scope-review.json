@@ -1,0 +1,11 @@
+{
+  "head": "94a8182b5e8bd5c7fc8ddc753d7779d707080094",
+  "authority": "AOS-001633",
+  "previous_core_evidence": ".evidence/gt-source-full-contract-current-20261009/independent-core-verification.json",
+  "previous_public_fields_evidence": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/independent-public-fault-verification.json",
+  "original_S17_S19_contract": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/sql-approval-equivalence-plan.md",
+  "read_test_scope": "original current signed scope, supplier SQL combination and original request/allocation/basis window; not full actual public prepare for these mutations",
+  "full_parent_source_delivery": false,
+  "final_commit_wallclock": "unresolved_real_counterexample",
+  "product_edits": false
+}

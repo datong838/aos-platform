@@ -1,0 +1,31 @@
+{
+  "call_nodes": 27,
+  "passed": 1,
+  "failed": 26,
+  "duplicate_function_occurrences": 26,
+  "unique_databases": 24,
+  "window_nodes": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_window_requires_original_request_allocation_and_basis[utc]",
+      "phase": "database_binding",
+      "database": "aos_test_cc4e758a89de_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_window_requires_original_request_allocation_and_basis[accepted_offset]",
+      "phase": "database_binding",
+      "database": "aos_test_cc4e758a89de_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_window_requires_original_request_allocation_and_basis[allocation_shorter]",
+      "phase": "database_binding",
+      "database": "aos_test_cc4e758a89de_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_window_requires_original_request_allocation_and_basis[basis_shorter]",
+      "phase": "database_binding",
+      "database": "aos_test_cc4e758a89de_ti4_test"
+    }
+  ],
+  "failure_before_target_sql": true,
+  "r1_green": false
+}
