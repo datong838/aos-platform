@@ -1,0 +1,8 @@
+{
+  "head": "52712242b840ba080ff7d1a698569fd41ba84987",
+  "authority": "AOS-001617",
+  "product_before_hash": "432af3d789ab8a36b0b4d44c3d181d3ba750b9cb8354250298dbdd7a97cd358b",
+  "all_overlapping_leases_same_owner": true,
+  "no_active_native_window": true,
+  "no_active_other_runner": true
+}

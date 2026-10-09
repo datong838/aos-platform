@@ -1,0 +1,118 @@
+[
+  {
+    "table": "call_occupation",
+    "acl": {
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "runtime_privilege": false
+    },
+    "triggers": [
+      {
+        "tgname": "immutable_occupation",
+        "tgdeferrable": false,
+        "tginitdeferred": false
+      },
+      {
+        "tgname": "no_truncate_occupation",
+        "tgdeferrable": false,
+        "tginitdeferred": false
+      },
+      {
+        "tgname": "require_occupation_finalization",
+        "tgdeferrable": true,
+        "tginitdeferred": true
+      }
+    ],
+    "checks": [
+      {
+        "conname": "call_occupation_case_id_check",
+        "expr": "(length(case_id) > 0)"
+      },
+      {
+        "conname": "call_occupation_content_hash_check",
+        "expr": "(content_hash ~ '^sha256:[0-9a-f]{64}$'::text)"
+      },
+      {
+        "conname": "call_occupation_counts_as_inflight_check",
+        "expr": "(counts_as_inflight = false)"
+      },
+      {
+        "conname": "call_occupation_immutable_check",
+        "expr": "(jsonb_typeof(immutable) = 'object'::text)"
+      },
+      {
+        "conname": "call_occupation_initial_state_check",
+        "expr": "(initial_state = 'prepared_only'::text)"
+      },
+      {
+        "conname": "call_occupation_origin_pid_check",
+        "expr": "(origin_pid > 0)"
+      },
+      {
+        "conname": "call_occupation_prepared_call_hash_check",
+        "expr": "(prepared_call_hash ~ '^sha256:[0-9a-f]{64}$'::text)"
+      },
+      {
+        "conname": "call_occupation_purpose_check",
+        "expr": "(purpose = 'target'::text)"
+      },
+      {
+        "conname": "call_occupation_token_upper_bound_check",
+        "expr": "(token_upper_bound > 0)"
+      }
+    ]
+  },
+  {
+    "table": "call_occupation_event",
+    "acl": {
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "runtime_privilege": false
+    },
+    "triggers": [
+      {
+        "tgname": "immutable_occupation_event",
+        "tgdeferrable": false,
+        "tginitdeferred": false
+      },
+      {
+        "tgname": "no_truncate_occupation_event",
+        "tgdeferrable": false,
+        "tginitdeferred": false
+      },
+      {
+        "tgname": "require_occupation_event_finalization",
+        "tgdeferrable": true,
+        "tginitdeferred": true
+      }
+    ],
+    "checks": [
+      {
+        "conname": "call_occupation_event_content_hash_check",
+        "expr": "(content_hash ~ '^sha256:[0-9a-f]{64}$'::text)"
+      },
+      {
+        "conname": "call_occupation_event_event_seq_check",
+        "expr": "(event_seq = 1)"
+      },
+      {
+        "conname": "call_occupation_event_immutable_check",
+        "expr": "(jsonb_typeof(immutable) = 'object'::text)"
+      },
+      {
+        "conname": "call_occupation_event_origin_pid_check",
+        "expr": "(origin_pid > 0)"
+      },
+      {
+        "conname": "call_occupation_event_previous_event_hash_check",
+        "expr": "(previous_event_hash IS NULL)"
+      },
+      {
+        "conname": "call_occupation_event_state_check",
+        "expr": "(state = 'prepared_only'::text)"
+      }
+    ]
+  }
+]

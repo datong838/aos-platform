@@ -1,0 +1,7 @@
+{
+  "original_product_prefix_unchanged": true,
+  "original_before_hash": "432af3d789ab8a36b0b4d44c3d181d3ba750b9cb8354250298dbdd7a97cd358b",
+  "product_after_hash": "db39cc33b3d3b8f96ca6d2a7dff5bc798d49d707791c61e7033ca43cb2378259",
+  "default_migration_changed": false,
+  "no_commit_rollback_retry_ddl_dispatch": true
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "attempt": "native-red-r1-attempt.json",
+    "frozen_helper": "source_trial_red_r1.py",
+    "sha256": "9c0d22535f06d5fe2c5b0d13f227af0b21403c0d959762b8e6c0fccec77b8ce9",
+    "match": true
+  },
+  {
+    "attempt": "native-green-r1-attempt.json",
+    "frozen_helper": "source_trial_green_r1.py",
+    "sha256": "a5e8e1cec420d7876a87e9c99fd64f60e7c61a6aa8d0be217d31f01a5b92841c",
+    "match": true
+  },
+  {
+    "attempt": "native-green-r2-attempt.json",
+    "frozen_helper": "source_newjudge_native_trial_1606.py",
+    "sha256": "e255a6abd01c1ba56a19d72be16ae04ff686e908b9b45c4e8cbb8fb818a73c5b",
+    "match": true
+  }
+]
