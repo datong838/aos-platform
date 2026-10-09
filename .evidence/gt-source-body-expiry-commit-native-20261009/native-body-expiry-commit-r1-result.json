@@ -1,0 +1,18 @@
+{
+  "observed_at": "2026-10-09T02:57:59.660996+00:00",
+  "database": "aos_test_fb1458a08eca_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": ".evidence/gt-source-body-expiry-commit-native-20261009/test_body_expiry_commit.py::test_post_finalize_expiry_observes_actual_caller_commit[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-source-body-expiry-commit-native-20261009/test_body_expiry_commit.py::test_post_finalize_expiry_observes_actual_caller_commit[shared]",
+      "phase": "teardown",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "actual Source issuer caller COMMIT after Source body expires while authentic JWT still valid, observational timing only; no business execution"
+}

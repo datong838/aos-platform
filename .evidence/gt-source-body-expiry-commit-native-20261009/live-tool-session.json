@@ -1,0 +1,8 @@
+{
+  "thread_id": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "task_id": "gt-source-body-expiry-commit-native-20261009",
+  "session_id": 25865,
+  "status": "RUNNING_FROM_EXEC_COMMAND",
+  "log": ".evidence/gt-source-body-expiry-commit-native-20261009/native-r1.log",
+  "rule": "Poll original handle and live process; no restart or COMMIT replay after observation timeout"
+}

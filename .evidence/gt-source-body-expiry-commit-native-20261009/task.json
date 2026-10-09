@@ -1,0 +1,20 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-source-body-expiry-commit-native-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001628",
+  "scope": [
+    "aos-platform/.evidence/gt-source-body-expiry-commit-native-20261009",
+    "isolatedDocker:colima-aos-extension/aos-source-newjudge-native-20261009/body-expiry-commit-diagnostic"
+  ],
+  "excluded_scope": [
+    "product code/expiry semantics/current DB/runtime/Provider/restart/full Source Delivery"
+  ],
+  "expected_outputs": [
+    "Original native Source valid_until actually crossed while authentic issuance JWT still current; actual samecaller COMMIT outcome without time mocks/deadline edits",
+    "Independent durable Source signature/hash/provenance/xact outcome or complete rollback, no execution/resource effects; bounded observation only"
+  ],
+  "lease_expires_at": "2026-10-09T04:52:35.036211+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T10:52:36+08:00"
+}

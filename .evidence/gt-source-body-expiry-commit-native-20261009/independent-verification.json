@@ -1,0 +1,34 @@
+{
+  "observations": [
+    {
+      "database": "aos_test_fb1458a08eca_ti4_test",
+      "outcome": {
+        "outcome": "committed"
+      },
+      "original_xact_state": "committed",
+      "sources": [
+        {
+          "asset_id": "body-expiry-commit-f52178055e3b4a65b35373b086cb341e",
+          "content_hash": "83ccd1230b49b62bc4cbc0f181dc92d3c65b63fef47b33959235fad4aa80b066",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "original_xid": "13812",
+          "original_pid": 27985,
+          "original_session": "aos_provider_capacity_issuer",
+          "provenance_ok": true
+        }
+      ],
+      "temporary_public_interfaces_removed": true,
+      "issuer_login_restored": true
+    }
+  ],
+  "original_products_unchanged": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 31,
+  "pytest_exit": 1,
+  "teardown_assertion_failed": true,
+  "complete_test_pass": false,
+  "final_commit_authentication_semantics_decided": false,
+  "formal_execution_allowed": false
+}

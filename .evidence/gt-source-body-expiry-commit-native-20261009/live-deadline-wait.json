@@ -1,0 +1,14 @@
+{
+  "database": "aos_test_fb1458a08eca_ti4_test",
+  "asset": "body-expiry-commit-f52178055e3b4a65b35373b086cb341e",
+  "identity": {
+    "xid": "13812",
+    "pid": 27985,
+    "login": "aos_provider_capacity_issuer",
+    "role": "aos_provider_capacity_issuer"
+  },
+  "authentication_deadline": "2026-10-09T03:04:40+00:00",
+  "source_valid_until": "2026-10-09T02:57:57.635277+00:00",
+  "finalized_at": "2026-10-09T02:53:01.302384+00:00",
+  "execution_allowed": false
+}
