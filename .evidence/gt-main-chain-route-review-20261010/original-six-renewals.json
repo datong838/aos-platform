@@ -1,0 +1,44 @@
+[
+  {
+    "task_id": "gt-atomic-model-admission-20261008",
+    "before": "2026-10-09T19:36:28.385625+00:00",
+    "after": "2026-10-09T21:37:31.958805+00:00",
+    "base_revision": "AOS-001537",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2"
+  },
+  {
+    "task_id": "gt-model-typed-proof-20261008",
+    "before": "2026-10-09T19:36:29.361051+00:00",
+    "after": "2026-10-09T21:37:31.958805+00:00",
+    "base_revision": "AOS-001513",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2"
+  },
+  {
+    "task_id": "gt-judge-call-authority-20261008",
+    "before": "2026-10-09T19:36:29.668910+00:00",
+    "after": "2026-10-09T21:37:31.958805+00:00",
+    "base_revision": "AOS-001578",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2"
+  },
+  {
+    "task_id": "gt-judge-budget-parent-20261008",
+    "before": "2026-10-09T19:36:29.961205+00:00",
+    "after": "2026-10-09T21:37:31.958805+00:00",
+    "base_revision": "AOS-001588",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2"
+  },
+  {
+    "task_id": "gt-shared-budget-fence-order-20261008",
+    "before": "2026-10-09T19:36:30.255574+00:00",
+    "after": "2026-10-09T21:37:31.958805+00:00",
+    "base_revision": "AOS-001588",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2"
+  },
+  {
+    "task_id": "gt-original-target-persisted-reader-20261010",
+    "before": "2026-10-09T20:48:52.148875+00:00",
+    "after": "2026-10-09T21:37:31.958805+00:00",
+    "base_revision": "AOS-001664",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2"
+  }
+]

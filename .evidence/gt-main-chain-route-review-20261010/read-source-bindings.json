@@ -1,0 +1,9 @@
+{
+  "source_files": {
+    "/Users/ddt/work/projects/ai_agent/prime-agent/packages/coding-agent/src/main.ts": "5348d283195779920722607117ffe6c88e6e45d8dd51cb8ffdb8cee35c06381f",
+    "/Users/ddt/work/projects/ai_agent/prime-agent/packages/coding-agent/src/cli/public-command.ts": "cea6db947c02acb38450ad907bf7229288e8fc8ceb8bd801455ee974c496ea9b",
+    "/Users/ddt/work/projects/ai_agent/prime-agent/packages/coding-agent/src/modes/daemon/daemon-supervisor.ts": "d278e90f032838b391c7521e83b62562a04c4226a5222b4813d6c392ea6794d0",
+    "scripts/long-task-watchdog/aos_review.py": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+  },
+  "note": "Read-only current source audit, not proof both existing processes execute identical source. No private registry mutation."
+}

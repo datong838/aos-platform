@@ -1,0 +1,24 @@
+{
+  "read_only_list": true,
+  "daemon_started": false,
+  "observations": [
+    {
+      "socketPath": "/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/prime-agent-501/daemon.sock",
+      "pid": 1844,
+      "status": "current",
+      "isDefault": true,
+      "returncode": 1,
+      "stderr": "Error: Daemon supervisor generation 318852be-93b7-4e88-b88c-ce7b5d8af2cd no longer owns its registry entry\n",
+      "stdout": ""
+    },
+    {
+      "socketPath": "/tmp/prime-agent-501/daemon.sock",
+      "pid": 51811,
+      "status": "current",
+      "isDefault": false,
+      "returncode": 1,
+      "stderr": "Error: Daemon supervisor generation 898b4b6d-152c-461f-8a55-c6f536156e0e no longer owns its registry entry\n",
+      "stdout": ""
+    }
+  ]
+}

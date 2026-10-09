@@ -1,0 +1,26 @@
+[
+  {
+    "socketPath": "/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/prime-agent-501/daemon.sock",
+    "pid": 1844,
+    "version": "0.7.1",
+    "protocolVersion": 7,
+    "schemaId": "protocol-7-schema-14-816309b1cd50",
+    "buildId": "beta-1-gee254c81-dirty",
+    "executablePath": "/Users/ddt/work/projects/ai_agent/prime-agent/packages/coding-agent/dist/bundle/cli.js",
+    "pidSource": "listener",
+    "status": "current",
+    "isDefault": true
+  },
+  {
+    "socketPath": "/tmp/prime-agent-501/daemon.sock",
+    "pid": 51811,
+    "version": "0.7.1",
+    "protocolVersion": 7,
+    "schemaId": "protocol-7-schema-14-816309b1cd50",
+    "buildId": "beta-1-gee254c81-dirty",
+    "executablePath": "/Users/ddt/work/projects/ai_agent/prime-agent/packages/coding-agent/dist/bundle/cli.js",
+    "pidSource": "listener",
+    "status": "current",
+    "isDefault": false
+  }
+]
