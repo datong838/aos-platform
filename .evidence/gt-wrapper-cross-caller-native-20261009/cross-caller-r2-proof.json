@@ -1,0 +1,14 @@
+{
+  "second_identity": {
+    "pid": 17492,
+    "xid": "9239"
+  },
+  "first_identity": {
+    "pid": 17471,
+    "xid": "9237"
+  },
+  "source_consumed": true,
+  "plan_origin_reached": true,
+  "sqlstate": "23514",
+  "wrapper_denied": true
+}

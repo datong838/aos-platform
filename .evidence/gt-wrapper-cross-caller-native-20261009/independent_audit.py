@@ -1,0 +1,23 @@
+from pathlib import Path
+import json,subprocess
+import psycopg
+from psycopg.rows import dict_row
+B=Path(__file__).resolve().parent;R=B.parents[1];lab=json.loads((B/'lab.json').read_text());result=json.loads((B/'native-cross-r3-result.json').read_text());red=json.loads((B/'ledger-green.json').read_text());assert result['pytest_exit']==0
+with psycopg.connect(host='127.0.0.1',port=5436,user='aos_app',dbname=result['database'],passfile=lab['passfile'],row_factory=dict_row) as c:
+ c.execute('SET TRANSACTION READ ONLY')
+ cluster=c.execute('SELECT system_identifier::text AS id FROM pg_control_system()').fetchone()['id'];assert cluster==lab['cluster']
+ xid=red['plan']['immutable']['callerXid'];status=c.execute('SELECT pg_xact_status(%s::xid8) AS state',(xid,)).fetchone()['state'];assert status=='aborted'
+ counts={name:c.execute('SELECT count(*) AS n FROM aos_physical_capacity_occupation_private.'+name).fetchone()['n'] for name in ('prepared_call_occupation','prepared_plan_risk','prepared_parent_debit','prepared_execution_intent','call_occupation','call_occupation_event')};assert set(counts.values())=={0}
+ source=c.execute('SELECT count(*) AS n FROM aos_capacity_publication_private.source_publication').fetchone()['n'];assert source==1
+ roles=c.execute("SELECT rolname,rolcanlogin FROM pg_roles WHERE rolname='aos_provider_capacity_occupation'").fetchall();assert len(roles)==1 and not roles[0]['rolcanlogin']
+ members=c.execute("SELECT count(*) AS n FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname='aos_provider_capacity_occupation')").fetchone()['n'];assert members==0
+ probe_count=c.execute("SELECT count(*) AS n FROM pg_proc WHERE proname LIKE 'test_ledger_%'").fetchone()['n'];assert probe_count==0
+ missing=c.execute("SELECT to_regprocedure('public.prepare_capacity_target_occupation(bytea,jsonb,uuid,uuid,uuid)') AS f").fetchone()['f'];assert missing is None
+baseline=json.loads((R/'.evidence/gt-source-newjudge-native-lab-20261009/preflight.json').read_text())['old_containers']
+for item in baseline:
+ if item['Id']=='9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde':
+  item=dict(item);item['started']=json.loads((R/'.evidence/current157-full-restart-20261009-010759/final-independent-verification.json').read_text())['pg_started']
+ now=json.loads(subprocess.check_output(['docker','--context','colima-aos-extension','inspect',item['Id']],text=True))[0]
+ assert now['Id']==item['Id'] and now['Name'].lstrip('/')==item['name'].lstrip('/') and now['State']['StartedAt']==item['started'] and now['Mounts']==item['mounts'] and now['HostConfig']['PortBindings']==item['ports']
+(B/'independent-readback.json').write_text(json.dumps(dict(database=result['database'],cluster=cluster,xid=xid,xact_state=status,prepared_counts=counts,source_count=source,roles=roles,members=members,producer_removed_after_trial=True,test_only_probe_count=probe_count,old_resource_count=len(baseline),old_resources_unchanged=True,formal_execution_allowed=False),indent=2)+'\n')
+print('Independent rollback, original Source and old resources PASS')

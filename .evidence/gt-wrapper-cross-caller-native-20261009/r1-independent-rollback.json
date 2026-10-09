@@ -1,0 +1,14 @@
+{
+  "database": "aos_test_2377e31efbfa_ti4_test",
+  "counts": {
+    "prepared_call_occupation": 0,
+    "prepared_plan_risk": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0,
+    "call_occupation": 0,
+    "call_occupation_event": 0
+  },
+  "source1": true,
+  "caller_nologin": true,
+  "known_failure": "test helper TARGET_CALL import missing; Source succeeded, original SQL not called; full result FAIL51.52s"
+}

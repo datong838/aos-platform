@@ -1,0 +1,9 @@
+# 下一波真实跨调用方隔离负门
+
+复习已登记1618调查与1619重启交付。候选一第二真实SCRAM连接借第一未提交plan；候选二实际准入/费用/Judge输入需真实风险和结果。选择一。新增仅本目录plan/helper/runner/audit及原parent已授权evidence，产品不改。原5436容器新独立全迁移库，不使用权威18435。
+
+在原完整manifest的同caller正向typed准备后开第二原凭据SCRAM连接，SERIALIZABLE/UTC/相同tenant/原role，核PID/XID不同，lock_timeout1000ms statement_timeout2000ms。先原Source消费，分别记录Source拒绝或锁timeout，不伪称origin已达；若成功，原TARGET_CALL直接借第一未提交plan必须23514 CAPACITY_TARGET_CALL_ORIGINAL_PLAN_REQUIRED，包装必须固定拒绝。两连接rollback；不伪造row、不提交、不释放第一原锁、无Provider/外部调用。完整原回归/actualCOMMIT拒绝/独立六表零与Source1/身份复原。原31资源比较仅允许本轮正式重启的9cc启动时间对应1619证据，其余30精确不变。
+
+R1完整FAIL51.52秒：第二SCRAM连接原Source消费已成功，测试helper未绑定TARGET_CALL常量，尚未调用SQL计划门；不能宣称跨caller origin验收。独立六表零/Source1/身份NOLOGIN。R2仅在probe导入原TARGET_CALL，不改产品或期限；新独立库和独立attempt/result，保留R1helper/hash/log/result。
+
+R2新增跨caller正向Source、不同PID/XID、原SQL23514 ORIGINAL_PLAN_REQUIRED及包装拒绝均实际达到；整轮后段旧十项重复负门后的包装replay拒绝，完整FAIL65.67秒，原因未从安全固定错误里进一步归因，不能宣称整轮通过或确定TTL根因。独立xid aborted/六表零/Source1/原身份/其余30旧资源精确不变，9cc仅按1619正式重启启动时间对账。R3只取消1618已封存旧10项负门重复；新跨caller及同caller正向/replay/原完整Source manifest回归/actualCOMMIT拒绝保持，原期限不变。

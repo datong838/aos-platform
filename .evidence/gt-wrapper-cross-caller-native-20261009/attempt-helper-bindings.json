@@ -1,0 +1,17 @@
+[
+  {
+    "attempt": "native-green-r2-attempt.json",
+    "helper": "source_trial_r1.py",
+    "sha256": "c01912666bdac564dd8e31ceace35b350166b3e44a70fd72b3d821139efa3b3a"
+  },
+  {
+    "attempt": "native-cross-r2-attempt.json",
+    "helper": "source_trial_r2.py",
+    "sha256": "c3f21e7cea55f262c1c677b16c959a73214037ab11790b308f3de07e44147c59"
+  },
+  {
+    "attempt": "native-cross-r3-attempt.json",
+    "helper": "source_newjudge_native_trial_1606.py",
+    "sha256": "2ef231c8225d1300f8daf804d1aea897ecf4b98498ecf171d19e57491585f103"
+  }
+]

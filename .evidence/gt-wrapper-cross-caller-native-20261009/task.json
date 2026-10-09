@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-wrapper-cross-caller-native-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001619",
+  "scope": [
+    "aos-platform/.evidence/gt-wrapper-cross-caller-native-20261009",
+    "aos-platform/isolated-native-source-newjudge-5436"
+  ],
+  "excluded_scope": [
+    "current-preview18435",
+    "product-code",
+    "formal-Host-worker-Provider"
+  ],
+  "expected_outputs": [
+    "real second SCRAM caller source/plan-origin refusal with bounded waits and original full native regression; independent rollback"
+  ],
+  "lease_expires_at": "2026-10-09T03:18:22.405353+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T09:18:23+08:00"
+}

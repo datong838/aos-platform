@@ -1,0 +1,175 @@
+{
+  "state": "prepared",
+  "intentId": "15fc458a-7521-4371-a9e7-8a9f92a643c3",
+  "immutable": {
+    "debit": {
+      "debitId": "fb77101a-2c46-4e2c-a906-fba63fcb4c84",
+      "purpose": "model-eval-preparation",
+      "currency": "CNY",
+      "quotaRef": {
+        "assetId": "gp-10584c7ef18a4090b3b87904a3cf4758",
+        "revision": 2,
+        "assetType": "QuotaPolicyRevision",
+        "contentHash": "e54c6ad1f6e7f949c7c47d81123f32942ea8972ff8a3afe2c577197b43d7d56f"
+      },
+      "requestId": "model-eval-request-3dd2204d65484ba7a997",
+      "sourceRef": {
+        "assetId": "occupation-source-9c86edba8c934f3cb8e58baa522fed1a",
+        "revision": 1,
+        "assetType": "ProviderCapacitySourceRevision",
+        "contentHash": "b787a9536f7e1e62303f1fcba5195306080885fe4d77fb6e7d1b5988819257f5"
+      },
+      "parentHash": "sha256:5ec32f3d05b608d064120aec17b5edfa33ab40be8185609a7a0c389f6e0483ac",
+      "parentHold": "f2211a49-6f3d-4ffa-8492-87f2e61b7460",
+      "tokenUnits": 10000,
+      "requestHash": "fec888de6e9da80f47f8d585fbb55b0019f990d5a1ebc93341a1df14363d3057",
+      "upperBoundMinor": 6,
+      "physicalAccountId": "e28f65fd-a6b3-4099-ad99-50721c2506eb"
+    },
+    "state": "prepared",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "attempt": 1,
+    "purpose": "target",
+    "intentId": "15fc458a-7521-4371-a9e7-8a9f92a643c3",
+    "callerPid": 18021,
+    "callerXid": "9531",
+    "inputHash": "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de",
+    "requestId": "model-eval-request-3dd2204d65484ba7a997",
+    "proposalId": "proposal-cc0485ecde594718a15b",
+    "application": {
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "purpose": "quality-eval",
+      "currency": "CNY",
+      "priceRef": {
+        "assetId": "cost-price-f3b0e01290fc47bc22bbf40e8b9b9a1510c8544f63619dde9495687802649f16",
+        "revision": 1,
+        "assetType": "ModelPriceSnapshotRevision",
+        "contentHash": "002d843a89629df5a57fcf163a415c2d82f363496f9af198a6514e433b06399c"
+      },
+      "suiteRef": {
+        "assetId": "model-suite-bf4bd9bb40aa456587dd41822ecde26c-two",
+        "revision": 1,
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "dcbff1c42cfec9a2071ad05cf3fbb3d63ea595b64a3c267034598f5bf673fbac"
+      },
+      "expiresAt": "2026-10-09T01:32:47.689758Z",
+      "sourceRef": {
+        "assetId": "joint-prefix-model-b6e351b788a845b2aff9b1baca1bde28",
+        "revision": 1,
+        "assetType": "RegisteredModelRevision",
+        "contentHash": "a73fbcc0e78e2e298208f04707db4d7fc4686d565d7eaa13845e607d9a613d78"
+      },
+      "targetRef": {
+        "assetId": "joint-prefix-model-b6e351b788a845b2aff9b1baca1bde28",
+        "revision": 2,
+        "assetType": "RegisteredModelRevision",
+        "contentHash": "795a1609c4fb252f0103d2a23ddfbc16541d6c334b4a28b637dc257c0d373de9"
+      },
+      "providerRef": {
+        "assetId": "capacity-provider-1555fffb177c4ff992be96c9880d323d",
+        "revision": 1,
+        "assetType": "ProviderInstanceRevision",
+        "contentHash": "11c3e26d1cfcc3117aa00c908f5450d9f7942eaeec08a087a35deb4acc315e2a"
+      },
+      "quotaPolicyRef": {
+        "assetId": "gp-10584c7ef18a4090b3b87904a3cf4758",
+        "revision": 2,
+        "assetType": "QuotaPolicyRevision",
+        "contentHash": "e54c6ad1f6e7f949c7c47d81123f32942ea8972ff8a3afe2c577197b43d7d56f"
+      },
+      "budgetPolicyRef": {
+        "assetId": "cost-policy-f3b0e01290fc47bc22bbf40e8b9b9a1510c8544f63619dde9495687802649f16",
+        "revision": 1,
+        "assetType": "BudgetPolicyRevision",
+        "contentHash": "7dc47da2972d84395908148d8d28a72045880946f3d2b87bca70999d56714042"
+      },
+      "evalContractRef": {
+        "assetId": "eval-contract-51f66f871494424eb6d2",
+        "revision": 2,
+        "assetType": "EvalContractRevision",
+        "contentHash": "81dbecef68094e6d696308fd6002aaad7d12c746a4484e0011558bc734ba9b85"
+      },
+      "upperBoundMinor": 10,
+      "expectedHeadVersion": 1
+    },
+    "callerLogin": "aos_provider_capacity_occupation",
+    "caseBinding": {
+      "caseId": "content-subject-0",
+      "attempt": 1,
+      "debitId": "fb77101a-2c46-4e2c-a906-fba63fcb4c84",
+      "purpose": "target",
+      "inputRef": {
+        "revision": "1",
+        "artifactId": "ecommerce.content.pre-review.subject.v1.content-subject.input",
+        "contentHash": "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de",
+        "artifactType": "eval_input"
+      },
+      "judgeRef": {
+        "judgeId": "isolated-model-judge-bf4bd9bb40aa456587dd41822ecde26c",
+        "revision": 1,
+        "modelRoute": {
+          "assetId": "joint-prefix-model-74148711c8424d168c67cc0f884fae39",
+          "revision": "1",
+          "assetType": "registered_model",
+          "contentHash": "0f3c9c7f22b4da22ca479c7d0f0fd1810d5154f50fa4caec42711e5a5647f367"
+        },
+        "contentHash": "87345e3bb9391bc8df10bc9e2a47ce9ad0c5eb0fc37c6dc085586f7d5f8db76b"
+      },
+      "suiteRef": {
+        "assetId": "model-suite-bf4bd9bb40aa456587dd41822ecde26c-two",
+        "revision": 1,
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "dcbff1c42cfec9a2071ad05cf3fbb3d63ea595b64a3c267034598f5bf673fbac"
+      },
+      "debitHash": "sha256:54dbc5dcab3a2823c615af22db369a410775b2e363a81ae5f0fe8b445b4a34ad",
+      "inputHash": "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de",
+      "targetRef": {
+        "assetId": "joint-prefix-model-b6e351b788a845b2aff9b1baca1bde28",
+        "revision": 2,
+        "assetType": "RegisteredModelRevision",
+        "contentHash": "795a1609c4fb252f0103d2a23ddfbc16541d6c334b4a28b637dc257c0d373de9"
+      },
+      "parentHold": "f2211a49-6f3d-4ffa-8492-87f2e61b7460",
+      "expectedRef": {
+        "revision": "1",
+        "artifactId": "ecommerce.content.pre-review.subject.v1.content-subject.expected",
+        "contentHash": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+        "artifactType": "eval_expected"
+      },
+      "requestHash": "fec888de6e9da80f47f8d585fbb55b0019f990d5a1ebc93341a1df14363d3057"
+    },
+    "requestHash": "fec888de6e9da80f47f8d585fbb55b0019f990d5a1ebc93341a1df14363d3057",
+    "proposalHash": "8833b144bb05d09cb8aa33d1fad2332a92f3a3bf7560d0fa0ad023fbb7bbb5ac",
+    "requestMaker": "test-maker-f39f112e09bf434186c1c18e034ca41f",
+    "approvalChecker": "test-checker-f39f112e09bf434186c1c18e034ca41f",
+    "caseBindingHash": "sha256:eaa6d7ecd1c1161d185eb8b0072c040a02e3159700df35632c646af557c7e203",
+    "approvalSnapshot": {
+      "org_id": "org-org",
+      "reason": "isolated application, no execution",
+      "slot_id": "checker.1",
+      "actor_id": "test-checker-f39f112e09bf434186c1c18e034ca41f",
+      "decision": "approved",
+      "created_at": "2026-10-09T01:22:47.800873+00:00",
+      "expires_at": "2026-10-09T01:32:47.689758+00:00",
+      "project_id": "dev-project",
+      "proposal_id": "proposal-cc0485ecde594718a15b",
+      "request_hash": "31e4eae1a2e9f4529ece183aa8e54f479a8919c73fbeba5e2647d40e72944957",
+      "proposal_hash": "8833b144bb05d09cb8aa33d1fad2332a92f3a3bf7560d0fa0ad023fbb7bbb5ac",
+      "idempotency_key": "checker-bf4bd9bb40aa456587dd41822ecde26c",
+      "proposal_version": 1,
+      "approval_event_id": "approval-03a2358e75dd4837ab74",
+      "action_binding_hash": "337c4d92583755a6386e4ee287a37844b4e5cf9a047f77263b622e5794d66a7f",
+      "approval_policy_hash": "7f060f88e233511e79289efefdeca25aed57a307aa9476e7ed5ba4af0e70fa67",
+      "eligibility_snapshot_hash": "35804d097acb2dad857a2628fe484f3f6e7252c534a327cd41a7a3ae770d5883"
+    },
+    "originalIdempotencyKey": "legal-eval-bf4bd9bb40aa456587dd41822ecde26c"
+  },
+  "contentHash": "sha256:5753be91a85b48ed0b03ad2c56d6d09702bacd2459a7c0b635b85ec9d78973fb",
+  "executionAllowed": false
+}
