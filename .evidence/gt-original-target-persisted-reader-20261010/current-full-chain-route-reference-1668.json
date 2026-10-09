@@ -1,0 +1,25 @@
+{
+  "authority_revision": "AOS-001668",
+  "task": "gt-original-target-persisted-reader-20261010",
+  "head": "20cda001f09a4e71e086f507e1e60cc077880eb0",
+  "execution_allowed": false,
+  "independent_review_pass": false,
+  "references": [
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/current-parent-lifecycle-native-reference-1667.json",
+      "sha256": "562f9ce41e9989f1ff53dfb3df894b0280bb7258be1e5a3f3d3cd71679cda5d9"
+    },
+    {
+      "path": ".evidence/gt-main-chain-route-review-20261010/diagnosis-and-current-route.md",
+      "sha256": "894ef985a6109e2dbb2e62b4e9f23a9a22c40c3dae32a2249345aa422cab9d4f"
+    },
+    {
+      "path": ".evidence/gt-main-chain-route-review-20261010/prime-list-readonly.json",
+      "sha256": "cba9a003d0857be19c7a21ded871b4a815af0ec5aa1a1e47c887b1db24a9b5e2"
+    },
+    {
+      "path": ".evidence/gt-main-chain-route-review-20261010/original-six-renewals.json",
+      "sha256": "b5cdeb94e5294a862874ed920ba2db83f2dd462b2275ae1dfd9cc631119f71f9"
+    }
+  ]
+}
