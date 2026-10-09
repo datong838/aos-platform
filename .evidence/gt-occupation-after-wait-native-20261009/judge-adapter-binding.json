@@ -1,0 +1,10 @@
+{
+  "original_sha256": "4910b9df433cf5849bfb0bae866a3e67a99b4ba92f2cabc1666d232b96c1d1f5",
+  "adapted_sha256": "edb9f8a44c560b492a02fc030e3349f010f2404543e7b49fac20981dad62ff86",
+  "changes": [
+    "Only original source_probe ordering moves after full native manifest positive/five negatives",
+    "Only __file__ parent depth updated for evidence directory"
+  ],
+  "production_test_unchanged": true,
+  "execution_allowed": false
+}

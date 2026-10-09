@@ -1,0 +1,9 @@
+# 首次root真实等待后期限验收
+
+R1完整138.46s失败+fixture收尾error，真实INSERT锁等待已观测，但测试选错Target约十分钟期限；80秒观察超限后原consumer22023，不能计入本门GREEN。原失败helper/proof/attempt哈希冻结，独立xid aborted/六表0/Source1/NOLOGIN/member0/producer-probes清理/31资源通过。
+
+R2只修复隔离测试deadline绑定到原Judge50秒审批，原任何期限均未改变；新独立全迁移库完整1PASS111.84s，7既有warning。原完整manifest正向及五负门在等待前通过，原Source/SCRAM/四腿Plan/Target Intent/call/root typed正向在保存点内回滚。首次root INSERT真实RowExclusiveLock未授予，pg_blocking_pids含22863，38次连续观察跨原deadline：02:08:50.900917UTC首次阻塞，02:08:54.738010期限，02:08:54.838976才释放。业务caller22832/xid11475；原SQL准确23514 CAPACITY_JUDGE_CURRENT_DEADLINES_REQUIRED，原包装固定拒绝，保存点root/event无残留、同xid/PID恢复。锁持有约3.94秒，跨过已存在原50秒审批窗口，不声称等待50秒。
+
+原actualCOMMIT由finalize门拒绝；独立全回滚/六表0/Source1/NOLOGIN/member0/临时producer-probes0/31旧资源按1619重启来源通过。原Judge测试仅冻结副本将source_probe移到原manifest之后以及文件路径层级适配，原生产测试/产品/签名权限不变；准确副本hash对账。无浏览器/运行路由/defaultmigration/真库修改/重启/Provider/Goal变更；无产品变更不重复388pure。范围prepared_only，不是实际准入费用Judge执行或自然首链。
+
+下一已登记Source直接消费者运输重验证一致性：原consumer仍先model_dump再model_validate，纯原合同路径三类extra被dump丢弃而接受，直接实例拒绝；仅形状调查，不证明真实签名Source消费者接受，也不授业务权限。先原Source Task同owner续约与精确文件计划，原native RED再最小实现和完整旧Source相邻。

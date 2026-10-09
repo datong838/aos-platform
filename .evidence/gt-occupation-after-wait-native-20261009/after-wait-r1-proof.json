@@ -1,0 +1,19 @@
+{
+  "caller_xid": "11200",
+  "caller_pid": 22115,
+  "deadline": "2026-10-09T02:11:14.526152+00:00",
+  "before_wait": "2026-10-09T02:01:57.352515+00:00",
+  "positive_root_rollback": true,
+  "test_only_relation_lock": true,
+  "execution_allowed": false,
+  "holder_pid": 22144,
+  "first_blocked_at": "2026-10-09T02:02:00.195996+00:00",
+  "actual": {
+    "sqlstate": "22023",
+    "message": "CAPACITY_CURRENT_CONSUMER_REQUIRED"
+  },
+  "holder_errors": [
+    "AssertionError: Actual insert blocker not observed through original expiry"
+  ],
+  "holder_done": true
+}

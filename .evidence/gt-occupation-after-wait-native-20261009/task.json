@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-occupation-after-wait-native-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001622",
+  "scope": [
+    "aos-platform/.evidence/gt-occupation-after-wait-native-20261009",
+    "isolatedDocker:colima-aos-extension/aos-source-newjudge-native-20261009/occupation-after-wait"
+  ],
+  "excluded_scope": [
+    "current authoritative DB18435",
+    "product/runtime/Host/worker/Provider",
+    "other branches/mallsource/old12Run"
+  ],
+  "expected_outputs": [
+    "Real root INSERT blocker spans original approval expiry; exact original rejection, positive beforewait, fullmanifest, COMMIT denial and independent rollback"
+  ],
+  "lease_expires_at": "2026-10-09T04:00:04.627480+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T10:00:05+08:00"
+}

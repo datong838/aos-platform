@@ -1,0 +1,7 @@
+{
+  "attempt": "native-occupation-after-wait-r1-attempt.json",
+  "helper": "source_trial_failed_r1.py.txt",
+  "sha256": "a32258255ee990230ffb190f8f6e09816f90e6da9d6327308e6b6b5b4f12e070",
+  "failure": "Target ten-minute deadline chosen; actual wait reached but holder80s horizon failed; consumer22023 and fixture teardown error preserved",
+  "independent_rollback": "r1-independent-rollback.json"
+}

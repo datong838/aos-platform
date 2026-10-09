@@ -1,0 +1,11 @@
+# 首次root写入的原等待后期限负门
+
+基线91c2899a/AOS-001622，复习231/机制08及after-wait-fence-investigation1622。候选等待后事实围栏与Source直接合同，选前者；原atomic/typed隔离授权，产品不改。文件仅本目录plan、Task、runner、原native helper/原Judge测试冻结适配、独立审计、日志与结果。5436原容器/命名卷/cluster新独立全迁移保留库，禁止当前库18435/Provider/其他分支。
+
+先原完整manifest正向与五项负门，再原Source/四腿Plan/TargetIntent/call正向；一次root/typed正向在SAVEPOINT内精确回滚，使原首次INSERT分支为空。隔离Owner线程LOCK TABLE call_occupation IN EXCLUSIVE MODE；原caller新首次INSERT必须真实阻塞，独立pg_blocking_pids和pg_locks RowExclusiveLock未授予证明。holder线程查询DBclock，原target approvalSnapshot.expires_at越过后才释放，原期限不改，非pg_sleep替代等待。断言原SQL23514 CAPACITY_EVAL_FACT_CURRENT_DEADLINES_REQUIRED；同caller保存点回滚后root/event仍空；包装固定异常另验证。原实际COMMIT仍由既有finalize拒绝，整个xid回滚。
+
+原Judge函数仅隔离冻结副本将source_probe移到原manifest矩阵之后，原生产测试和函数不改；原manifest期间期限有效，不能把到期覆盖的五负门算原原因。保留副本SHA/精确差异。任何前置失败和未知结果先独立回读，不重发旧库；有已证明无未知外部效果才能新库修复重试。无页面变化，不重复浏览器；无产品变更不重跑388pure。独立六表0/Source1/callerNOLOGIN member0/probes与producer清理/31旧资源按1619重启记录核验。
+
+编译预检发现冻结副本目录层级与原测试不同，执行前只调整副本__file__父路径4→2，保留原文件/全部其他逻辑及精确hash差异。无外部效果。
+
+R1失败138.46s另fixture收尾error：实际root INSERT blocker已证明；测试误取Target约十分钟审批作为等待期限，80秒保护上限未跨过期限，后置原consumer返回22023 CAPACITY_CURRENT_CONSUMER_REQUIRED，不算预期期限GREEN。独立R1 aborted/六表0/Source1/NOLOGIN/member0/probes0/producer0/31资源通过，无未知结果重放。根因期限绑定错：原Judge审批才是原50秒；R2只把期限绑定到原plan.originalFacts.judge.approvalSnapshot.expires_at，精确预期原CAPACITY_JUDGE_CURRENT_DEADLINES_REQUIRED。原两个审批/Token/Source期限均不修改。R1 helper和实际proof冻结hash，不重用旧数据库。

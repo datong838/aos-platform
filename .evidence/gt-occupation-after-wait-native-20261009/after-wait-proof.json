@@ -1,0 +1,29 @@
+{
+  "caller_xid": "11475",
+  "caller_pid": 22832,
+  "deadline": "2026-10-09T02:08:54.738010+00:00",
+  "before_wait": "2026-10-09T02:08:47.830764+00:00",
+  "positive_root_rollback": true,
+  "test_only_relation_lock": true,
+  "execution_allowed": false,
+  "holder_pid": 22863,
+  "first_blocked_at": "2026-10-09T02:08:50.900917+00:00",
+  "release_after_deadline": "2026-10-09T02:08:54.838976+00:00",
+  "blockers": [
+    22863
+  ],
+  "wait_event": "relation",
+  "insert_lock_mode": "RowExclusiveLock",
+  "blocking_observations": 38,
+  "holder_released": true,
+  "actual": {
+    "sqlstate": "23514",
+    "message": "CAPACITY_JUDGE_CURRENT_DEADLINES_REQUIRED"
+  },
+  "holder_errors": [],
+  "holder_done": true,
+  "after_root": null,
+  "after_event": null,
+  "samecaller_restored": true,
+  "wrapper_fixed_denial": true
+}
