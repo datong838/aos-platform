@@ -1,0 +1,14 @@
+{
+  "denied": false,
+  "same_source": true,
+  "asset_id": "consumed-source-8f4b17dbb26b41dba0c6b2643e391787",
+  "content_hash": "25fd06a0f7f81a2cb479dcfd56973d2f4210c2a662e7a44d5835a1410b3047f3",
+  "legal_native_consumption": true,
+  "original_reference_extra_keys": [
+    "asset_type",
+    "asset_id",
+    "revision",
+    "content_hash",
+    "unexpected_ref_field"
+  ]
+}

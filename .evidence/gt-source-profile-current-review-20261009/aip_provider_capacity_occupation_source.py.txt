@@ -1,0 +1,165 @@
+"""Nonexecuting capacity facts for a dedicated caller-owned business transaction."""
+import hashlib
+import re
+
+import psycopg
+from psycopg.pq import TransactionStatus
+from psycopg.types.json import Jsonb
+
+from aos_api import aip_provider_capacity_publication_transaction as transaction
+from aos_api.aip_provider_capacity_source_consumer import (
+    ProviderCapacityConsumptionBlocked, _consumption_packet, consumer_entry_statements,
+)
+from aos_api.aip_provider_capacity_source_contracts import ProviderCapacityConsumptionCommand
+from aos_api.aip_provider_capacity_publication_contracts import PublishedProviderCapacitySourceV2, parse_signed_capacity_body
+from aos_api.aip_provider_capacity_occupation_epoch_profile import occupation_epoch_profile_statements
+
+SESSION = 'aos_provider_capacity_occupation'
+OWNER = 'aos_capacity_publication_owner'
+READER = 'public.read_capacity_source_for_occupation(bytea,jsonb)'
+AUDITOR = 'public.require_capacity_occupation_source_installation()'
+
+
+def _replace(text, before, after, count=1):
+    if text.count(before) != count:
+        raise ValueError('CAPACITY_OCCUPATION_TRUSTED_COMPILER_DRIFTED')
+    return text.replace(before, after)
+
+
+def _context_checks():
+    return f"""session_user<>'{SESSION}' OR current_user<>'{OWNER}'
+      OR current_setting('transaction_isolation')<>'serializable'
+      OR current_setting('transaction_read_only')<>'off'
+      OR current_setting('session_replication_role')<>'origin'
+      OR current_setting('TimeZone')<>'UTC'
+      OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+      OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project'
+      OR NOT EXISTS(SELECT 1 FROM pg_roles r WHERE r.rolname='{SESSION}' AND r.rolcanlogin
+        AND NOT(r.rolinherit OR r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls))
+      OR (SELECT count(*) FROM pg_auth_members WHERE member='{SESSION}'::regrole OR roleid='{SESSION}'::regrole)<>1
+      OR NOT EXISTS(SELECT 1 FROM pg_auth_members WHERE member='{SESSION}'::regrole
+        AND roleid='aos_runtime'::regrole AND NOT admin_option AND NOT inherit_option AND set_option)
+      OR NOT EXISTS(SELECT 1 FROM pg_roles r WHERE r.rolname='aos_runtime'
+        AND NOT(r.rolcanlogin OR r.rolinherit OR r.rolsuper OR r.rolcreatedb
+          OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls))
+      OR EXISTS(SELECT 1 FROM pg_class WHERE relowner='{SESSION}'::regrole)
+      OR EXISTS(SELECT 1 FROM pg_proc WHERE proowner='{SESSION}'::regrole)
+      OR EXISTS(SELECT 1 FROM pg_namespace WHERE nspowner='{SESSION}'::regrole)
+      OR EXISTS(SELECT 1 FROM pg_database WHERE datdba='{SESSION}'::regrole)
+      OR EXISTS(SELECT 1 FROM pg_class p CROSS JOIN LATERAL aclexplode(p.relacl) a
+        WHERE a.grantee='{SESSION}'::regrole)
+      OR EXISTS(SELECT 1 FROM pg_attribute p CROSS JOIN LATERAL aclexplode(p.attacl) a
+        WHERE a.grantee='{SESSION}'::regrole)
+      OR EXISTS(SELECT 1 FROM pg_proc p CROSS JOIN LATERAL aclexplode(p.proacl) a
+        WHERE a.grantee='{SESSION}'::regrole)
+      OR EXISTS(SELECT 1 FROM pg_namespace p CROSS JOIN LATERAL aclexplode(p.nspacl) a
+        WHERE a.grantee='{SESSION}'::regrole)
+      OR EXISTS(SELECT 1 FROM pg_database p CROSS JOIN LATERAL aclexplode(p.datacl) a
+        WHERE a.grantee='{SESSION}'::regrole AND
+          (p.datname<>current_database() OR a.privilege_type<>'CONNECT'
+           OR a.is_grantable OR a.grantor<>p.datdba))
+      OR EXISTS(SELECT 1 FROM pg_default_acl p WHERE p.defaclrole='{SESSION}'::regrole
+        OR EXISTS(SELECT 1 FROM aclexplode(p.defaclacl) a WHERE a.grantee='{SESSION}'::regrole))"""
+
+
+def occupation_source_statements():
+    """Compile an explicit test/deployment artifact; never install on import."""
+    matches = re.findall(r'CREATE FUNCTION aos_capacity_publication_private\.read_original_source_facts\([^;]*?AS \$body\$(.*?)\$body\$;',
+                         transaction.CAPACITY_ORIGINAL_SOURCE_FACTS_SQL, re.S)
+    if len(matches) != 1:
+        raise ValueError('CAPACITY_OCCUPATION_TRUSTED_COMPILER_DRIFTED')
+    facts = _replace(matches[0], 'DECLARE\n', "DECLARE\n p_maker text:=packet->>'makerSubject';\n"
+        " p_source_ref jsonb:=packet->'command'->'approvedProposal';\n p_event_ref jsonb:=packet->'command'->'approvalEvent';\n")
+    facts = _replace(facts, "session_user IS DISTINCT FROM 'aos_provider_capacity_issuer'", f"session_user IS DISTINCT FROM '{SESSION}'")
+    facts = _replace(facts, 'public.aos_capacity_evidence_epoch_issuer_lock(', 'public.aos_capacity_evidence_epoch_lock(')
+    facts = _replace(facts, " RETURN jsonb_build_object('source',source_value", " facts:=jsonb_build_object('source',source_value")
+    guard = f"IF {_context_checks()} THEN RAISE EXCEPTION 'CAPACITY_OCCUPATION_CONTEXT_REQUIRED' USING ERRCODE='42501'; END IF;\nPERFORM {AUDITOR};"
+    ddl = consumer_entry_statements(guard)[0]
+    ddl = _replace(ddl, 'public.read_current_capacity_source(', 'public.read_capacity_source_for_occupation(')
+    call = "facts:=aos_capacity_publication_private.read_original_source_facts(packet->>'makerSubject',packet->'command'->'approvedProposal',packet->'command'->'approvalEvent');"
+    ddl = _replace(ddl, call, facts.rstrip()+';', 3)
+    ddl = _replace(ddl, "v_independent:=v_consumer->'protocol'='\"aos-provider-capacity-source-consumption/v1\"'::jsonb;",
+        "v_independent:=v_consumer->'protocol'='\"aos-provider-capacity-source-consumption/v1\"'::jsonb;\n"
+        " IF v_independent IS DISTINCT FROM true THEN RAISE EXCEPTION 'CAPACITY_OCCUPATION_PROTOCOL_REQUIRED' USING ERRCODE='22023'; END IF;")
+    ddl = _replace(ddl, "(v_input->'facts')-ARRAY['xid','pid'] IS DISTINCT FROM (v_pending.signed_facts->'facts')-ARRAY['xid','pid']",
+        f"v_input->'facts'->>'session' IS DISTINCT FROM '{SESSION}'\n"
+        "  OR (v_input->'facts')-ARRAY['xid','pid','session'] IS DISTINCT FROM (v_pending.signed_facts->'facts')-ARRAY['xid','pid','session']")
+    body = re.search(r'AS \$consumer\$(.*?)\$consumer\$;', ddl, re.S)[1]
+    digest = hashlib.sha256(body.encode()).hexdigest()
+    profile_audit = re.search(r'AS \$profile\$(.*?)\$profile\$;', occupation_epoch_profile_statements()[3], re.S)[1]
+    audit = f"""BEGIN
+ IF {_context_checks()} THEN RAISE EXCEPTION 'CAPACITY_OCCUPATION_CONTEXT_REQUIRED' USING ERRCODE='42501'; END IF;
+ IF (SELECT count(*) FROM pg_proc WHERE pronamespace='public'::regnamespace
+      AND proname IN('read_capacity_source_for_occupation','require_capacity_occupation_source_installation'))<>2
+ OR NOT EXISTS(SELECT 1 FROM pg_proc p WHERE p.oid='{READER}'::regprocedure
+  AND p.proowner='{OWNER}'::regrole AND p.prosecdef AND NOT p.proisstrict
+  AND p.prolang=(SELECT oid FROM pg_language WHERE lanname='plpgsql')
+  AND p.proconfig=ARRAY['search_path=pg_catalog']::text[] AND p.provolatile='v' AND p.proparallel='u'
+  AND p.prokind='f' AND p.proretset AND p.prorettype=2249 AND p.pronargdefaults=0 AND p.provariadic=0
+  AND p.proargtypes='17 3802'::oidvector
+  AND p.proallargtypes=ARRAY[17,3802,25,23,25,17,17]::oid[]
+  AND p.proargmodes=ARRAY['i','i','t','t','t','t','t']::\"char\"[]
+  AND p.proargnames=ARRAY['p_raw','p_ref','asset_id','revision','content_hash','source_raw','signature']::text[]
+  AND encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')='{digest}'
+  AND (SELECT count(*) FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))))=2
+  AND EXISTS(SELECT 1 FROM aclexplode(p.proacl) a WHERE a.grantee='aos_runtime'::regrole)
+  AND NOT EXISTS(SELECT 1 FROM aclexplode(p.proacl) a WHERE a.grantee NOT IN(p.proowner,'aos_runtime'::regrole)
+    OR a.grantor<>p.proowner OR a.privilege_type<>'EXECUTE' OR a.is_grantable))
+ OR NOT EXISTS(SELECT 1 FROM pg_proc p WHERE p.oid='{AUDITOR}'::regprocedure
+  AND p.proowner='{OWNER}'::regrole AND NOT p.prosecdef AND NOT p.proisstrict
+  AND p.proconfig=ARRAY['search_path=pg_catalog']::text[] AND p.provolatile='v' AND p.proparallel='u'
+  AND p.prolang=(SELECT oid FROM pg_language WHERE lanname='plpgsql')
+  AND p.prokind='f' AND NOT p.proretset AND p.prorettype=2278 AND p.pronargs=0 AND p.pronargdefaults=0 AND p.provariadic=0
+  AND NOT EXISTS(SELECT 1 FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
+    WHERE a.grantee<>p.proowner OR a.grantor<>p.proowner OR a.privilege_type<>'EXECUTE' OR a.is_grantable))
+ OR NOT EXISTS(SELECT 1 FROM pg_proc p WHERE p.oid='aos_capacity_publication_private.require_current_source_installation()'::regprocedure
+  AND encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')='{hashlib.sha256(profile_audit.encode()).hexdigest()}')
+ THEN RAISE EXCEPTION 'CAPACITY_OCCUPATION_INSTALLATION_REQUIRED' USING ERRCODE='42501'; END IF;
+ PERFORM aos_capacity_publication_private.require_current_source_installation();
+END"""
+    auditor_ddl = f'CREATE FUNCTION {AUDITOR} RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $occupation${audit}$occupation$;'
+    return (ddl, f'ALTER FUNCTION {READER} OWNER TO {OWNER}', f'REVOKE ALL ON FUNCTION {READER} FROM PUBLIC',
+            f'GRANT EXECUTE ON FUNCTION {READER} TO aos_runtime', auditor_ddl,
+            f'ALTER FUNCTION {AUDITOR} OWNER TO {OWNER}', f'REVOKE ALL ON FUNCTION {AUDITOR} FROM PUBLIC')
+
+
+def _require_definitions(conn):
+    statements = occupation_source_statements()
+    for ddl, signature, delimiter in ((statements[0], READER, 'consumer'), (statements[4], AUDITOR, 'occupation')):
+        expected = re.search(r'AS \$'+delimiter+r'\$(.*?)\$'+delimiter+r'\$;', ddl, re.S)[1]
+        row = conn.execute('SELECT prosrc FROM pg_proc WHERE oid=to_regprocedure(%s)', (signature,)).fetchone()
+        if row is None or row['prosrc'] != expected:
+            raise ValueError('CAPACITY_OCCUPATION_INSTALLATION_REQUIRED')
+
+
+def consume_capacity_source_for_occupation(conn, command):
+    """Return exact current nonexecuting Source, retaining the caller transaction."""
+    try:
+        if (type(conn) is not psycopg.Connection or conn.closed or conn.autocommit or conn.read_only
+            or conn.info.transaction_status != TransactionStatus.INTRANS
+            or not conn.pgconn.used_password or conn.info.get_parameters().get('require_auth') != 'scram-sha-256'
+            or type(command) is not ProviderCapacityConsumptionCommand):
+            raise ValueError('native occupation caller required')
+        command = ProviderCapacityConsumptionCommand.model_validate(command)
+        identity = conn.execute("""SELECT session_user AS login,current_user AS role,
+          current_setting('aos.org_id',true) AS org_id,current_setting('aos.project_id',true) AS project_id,
+          current_setting('transaction_isolation') AS isolation,current_setting('transaction_read_only') AS readonly""").fetchone()
+        if identity != {'login':SESSION,'role':'aos_runtime','org_id':'org-org','project_id':'dev-project','isolation':'serializable','readonly':'off'}:
+            raise ValueError('exact occupation caller required')
+        _require_definitions(conn)
+        packet = _consumption_packet(command)
+        ref = command.source_ref
+        row = conn.execute('SELECT * FROM public.read_capacity_source_for_occupation(%s,%s::jsonb)',
+                           (packet, Jsonb(ref.model_dump(mode='json',by_alias=True)))).fetchone()
+        if row is None or _consumption_packet(command) != packet:
+            raise ValueError('current authentication required')
+        raw = bytes(row['source_raw'])
+        source = parse_signed_capacity_body(raw, PublishedProviderCapacitySourceV2)
+        if (row['asset_id'] != ref.asset_id or row['revision'] != 1 or row['content_hash'] != ref.content_hash
+            or hashlib.sha256(raw).hexdigest() != ref.content_hash or source.asset_id != ref.asset_id
+            or source.revision != 1 or source.execution_allowed is not False
+            or (source.tenant.org_id,source.tenant.project_id) != ('org-org','dev-project')):
+            raise ValueError('exact nonexecuting Source required')
+        return source
+    except Exception:
+        raise ProviderCapacityConsumptionBlocked('CAPACITY_OCCUPATION_SOURCE_REQUIRED') from None

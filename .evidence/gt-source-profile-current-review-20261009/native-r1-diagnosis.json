@@ -1,0 +1,1 @@
+{"actual_failure":"UndefinedFunction: original fixture only installs consumer for registered originalname; diagnostic wrapper name was outside whitelist", "product_defect_proven":false,"next":"Use original registered test name; no product or fixture grant change; new isolated DB"}

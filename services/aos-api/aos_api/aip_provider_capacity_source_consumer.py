@@ -215,7 +215,7 @@ def read_current_capacity_source(conn,command,source_ref):
     try:
         if type(conn) is not psycopg.Connection or type(source_ref) is not FormalExactRef:
             raise ValueError('exact caller and Source required')
-        ref=FormalExactRef.model_validate(source_ref.model_dump(mode='python',by_alias=True))
+        ref=FormalExactRef.model_validate(source_ref)
         if ref.asset_type!='ProviderCapacitySourceRevision' or ref.revision!=1:
             raise ValueError('published Source required')
         packet=capacity_source_preparation_bytes(command)

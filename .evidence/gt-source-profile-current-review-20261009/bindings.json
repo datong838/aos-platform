@@ -1,0 +1,29 @@
+[
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_occupation_source.py",
+    "sha256": "a26d32cb2f0dc9a796332e37beb0b5c015586a5876cdebb2c77d95308dec4a50",
+    "frozen": ".evidence/gt-source-profile-current-review-20261009/aip_provider_capacity_occupation_source.py.txt"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_occupation_epoch_profile.py",
+    "sha256": "e326f0e61e653d1f826972960c6d40a36d899a4ce706a8661d4460174b486241",
+    "frozen": ".evidence/gt-source-profile-current-review-20261009/aip_provider_capacity_occupation_epoch_profile.py.txt"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_source_consumer.py",
+    "sha256": "53d01185001447482305c2ff3aeb37cac31bffb97c0121fb6a8766c3c8d72b0f",
+    "frozen": ".evidence/gt-source-profile-current-review-20261009/aip_provider_capacity_source_consumer.py.txt"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py",
+    "sha256": "047c4b301036bbfb5dd036531d0002c6eb1e257ceb6a31515d5765cd01bc42ab"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_publication_lock_boundary.py",
+    "sha256": "30229822a7e5bf20eb77b015dcc411864edf3fdca905512354c6080dcc1d9d15"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py",
+    "sha256": "cd9564e8c37d0bdac9af7fa8311a0db7febc09a1ee1af6346245fc9ae2d61cc7"
+  }
+]

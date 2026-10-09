@@ -1,0 +1,13 @@
+--- a/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py
++++ b/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py
+@@ -5136,6 +5136,10 @@
+     assert type(consumed) is PublishedProviderCapacitySourceV2
+     assert consumed.model_dump(mode='json',by_alias=True)==published.model_dump(mode='json',by_alias=True)
+     assert consumed.execution_allowed is False
++    # Validate the original exact-reference instance before serialization.
++    with pytest.raises(ProviderCapacityConsumptionBlocked,match='^CAPACITY_CURRENT_SOURCE_REQUIRED$'):
++        read_current_capacity_source(caller,current_command,exact.model_copy(update={'unexpected_ref_field':'reject'}))
++    assert read_current_capacity_source(caller,current_command,exact)==consumed
+     caller.rollback()
+     from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+     with connect_capacity_issuer(original[4],SCOPE) as second:

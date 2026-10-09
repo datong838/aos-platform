@@ -1,0 +1,83 @@
+{
+  "databases": [
+    {
+      "database": "aos_test_68ece701cfd0_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-a3274c3cc24f4b09b09a5a51019532a8",
+          "content_hash": "9d84cef277b89fc350fe3aeb5372fe89159cf1f9d8d1632a4a273e001f00772a",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "xid": "15428",
+          "provenance_ok": true
+        }
+      ],
+      "occupation_counts": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "database": "aos_test_71b6233c11bc_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-152502abb2b747eabfa5d8addfb4f9c7",
+          "content_hash": "655736217ec38bea2e4b7ecd87e1eec8ac51295586e7a2b976c10847d0085849",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "xid": "15554",
+          "provenance_ok": true
+        }
+      ],
+      "occupation_counts": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "database": "aos_test_b11b02a93c93_ti4_test",
+      "sources": [],
+      "occupation_counts": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    }
+  ],
+  "original_cases": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_rechecks_new_transaction[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_rechecks_new_transaction[distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "source_count": 2,
+  "exact_changes_only": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 31,
+  "full_source_delivery": false
+}

@@ -1,0 +1,46 @@
+"""Original full Source native consumer exact-reference diagnostic."""
+import json
+from pathlib import Path
+import pytest
+pytest_plugins = ('tests.conftest', 'tests.aip.test_capacity_source_publication_transaction_pg')
+B = Path(__file__).resolve().parent
+
+@pytest.fixture(autouse=True)
+def registered_database_isolation(_isolated_postgres_database, monkeypatch):
+    from tests.conftest import _isolated_postgres_database as bootstrap
+    from aos_api import tenant_catalog, data_os_store
+    with monkeypatch.context() as local:
+        local.setattr(tenant_catalog, '_schema_ready', False)
+        local.setattr(data_os_store, '_schema_ready', False)
+        gen = bootstrap.__wrapped__()
+        next(gen)
+        try:
+            yield
+        finally:
+            gen.close()
+
+@pytest.mark.parametrize('native_original_fact_reader', ['shared'], indirect=True)
+def test_current_source_consumer_rechecks_new_transaction(exact_public_source_caller, https_signer, monkeypatch):
+    from aos_api import aip_provider_capacity_source_consumer as consumer
+    from tests.aip.test_capacity_source_publication_transaction_pg import test_current_source_consumer_rechecks_new_transaction as original_test
+    original = consumer.read_current_capacity_source
+    checked = []
+    def observed(conn, command, ref):
+        legal = original(conn, command, ref)
+        if not checked:
+            mutated = ref.model_copy(update={'unexpected_ref_field': 'reject'})
+            try:
+                actual = original(conn, command, mutated)
+            except consumer.ProviderCapacityConsumptionBlocked as error:
+                result = dict(denied=True, error=str(error))
+            else:
+                result = dict(denied=False, same_source=actual == legal)
+            result.update(asset_id=legal.asset_id, content_hash=ref.content_hash,
+                          legal_native_consumption=True, original_reference_extra_keys=list(mutated.__dict__.keys()))
+            (B / 'exact-ref-native-proof.json').write_text(json.dumps(result, indent=2))
+            checked.append(result)
+            assert result['denied'], 'original native consumer accepted extra-key FormalExactRef instance'
+        return legal
+    monkeypatch.setattr(consumer, 'read_current_capacity_source', observed)
+    original_test(exact_public_source_caller, https_signer)
+    assert checked

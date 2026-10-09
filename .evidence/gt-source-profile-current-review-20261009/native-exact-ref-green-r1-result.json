@@ -1,0 +1,18 @@
+{
+  "observed_at": "2026-10-09T03:55:57.323338+00:00",
+  "database": "aos_test_71b6233c11bc_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_rechecks_new_transaction[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_rechecks_new_transaction[distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "original full native Source current-reference instance diagnostic; no business execution"
+}

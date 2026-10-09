@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-09T03:53:12.865144+00:00",
+  "database": "aos_test_b54d6af3420d_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": ".evidence/gt-source-profile-current-review-20261009/test_exact_ref_native.py::test_current_source_consumer_rechecks_new_transaction[shared]",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "original full native Source current-reference instance diagnostic; no business execution"
+}

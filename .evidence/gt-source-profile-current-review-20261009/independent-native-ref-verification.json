@@ -1,0 +1,20 @@
+{
+  "database": "aos_test_b54d6af3420d_ti4_test",
+  "source": {
+    "asset_id": "consumed-source-8f4b17dbb26b41dba0c6b2643e391787",
+    "content_hash": "25fd06a0f7f81a2cb479dcfd56973d2f4210c2a662e7a44d5835a1410b3047f3",
+    "hash_ok": true,
+    "signature_ok": true,
+    "finalized": true,
+    "xid": "15322",
+    "provenance_ok": true
+  },
+  "source_committed": true,
+  "reference_extra_key_accepted": true,
+  "temporary_interfaces_removed": true,
+  "roles_nologin": true,
+  "original_product_hashes_unchanged": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 31,
+  "business_execution_allowed": false
+}
