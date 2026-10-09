@@ -1,0 +1,48 @@
+{
+  "authority_revision": "AOS-001679",
+  "task": "gt-original-target-persisted-reader-20261010",
+  "head": "9eab46f1898e810afee93fb634d3ed3828bd0b51",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "same_caller_metadata_necessary_verified": true,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/current-native-certificate-reference-1678.json",
+      "sha256": "fc917d892408f1e61f9d48e8d5810cab097fa047f368c1227ac7e07720887c64"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/review-1678.md",
+      "sha256": "0f3f15e44e62e9da798cbad6fc85eee8794c951d746c141a006d2e2a318bb983"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/implementation-plan.md",
+      "sha256": "8a0f4d5ba8621945e180293f8abed8aecc11eefabf5fb4b89bbad3a25d6ad32f"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r11/result-r11.json",
+      "sha256": "670e3e6b51d8bcb17b6b86cc900ba2bd1c6790e4c96e375d0dddf51f2057959d"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r11/native-same-transaction-prepare-proof.json",
+      "sha256": "2db2d3c527545446ce324238046a3455b0bfd1927199b7971fc041e23c1c8e2c"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r11/native-description-proof.json",
+      "sha256": "dd5736992e3285aabb05abd05c3e5b799f38d2c87fff3aa26b4007e7a1d01bc5"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/independent-core-readback-r11.json",
+      "sha256": "7f9e154369e9c754c753db680183f3634f5ce8c63bc37e2787af08ac66de6860"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/pure-result-r6.json",
+      "sha256": "c85142c6e9ef45f455607c1993cf398e6182f42cc4814139dce2d9ea0519a568"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/lease-renewal-1678.json",
+      "sha256": "4fbcf75493416450f72ab4671c18e24126f315774e81e4606d7858838ccaddc9"
+    }
+  ]
+}

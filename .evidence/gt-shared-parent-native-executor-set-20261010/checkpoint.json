@@ -4,16 +4,16 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-native-executor-set-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001678",
+  "authority_revision": "AOS-001679",
   "task_base_revision": "AOS-001677",
-  "step": "same-native-v3-certificate-metadata-necessary-green-replay-canary-withdrawal-final-expiry-matrix-next",
+  "step": "native-replay-version-boundaries-necessary-green-dedicated-real-final-expiry-next",
   "evidence_files": [
     ".evidence/gt-shared-parent-native-executor-set-20261010/implementation-plan.md",
     ".evidence/gt-shared-parent-native-executor-set-20261010/task.json",
     ".evidence/gt-shared-parent-native-executor-set-20261010/same-caller-routing-red.json",
     ".evidence/gt-shared-parent-native-executor-set-20261010/serial-snapshot-dependency-red.json",
     ".evidence/gt-shared-parent-native-executor-set-20261010/compile-bridge-result-r1.json",
-    ".evidence/gt-shared-parent-native-executor-set-20261010/current-native-certificate-reference-1678.json"
+    ".evidence/gt-shared-parent-native-executor-set-20261010/current-native-certificate-reference-1679.json"
   ],
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_executor_set_reader.py",
