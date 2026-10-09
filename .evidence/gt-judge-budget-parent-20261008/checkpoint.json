@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001663",
+  "authority_revision": "AOS-001664",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_judge_budget.py",
     "services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py",
@@ -9,12 +9,12 @@
   "evidence_files": [
     ".evidence/gt-judge-budget-parent-20261008/implementation-plan.md",
     ".evidence/gt-judge-budget-parent-20261008/task-readback.json",
-    ".evidence/gt-judge-budget-parent-20261008/current-original-target-crypto-reference-1663.json"
+    ".evidence/gt-judge-budget-parent-20261008/current-cross-phase-protocol-reference-1664.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "original-target-native-intent-source-joint-and-committed-producer",
+  "step": "original-v2-target-persistent-producer-consumer-file-protocol",
   "task_base_revision": "AOS-001588",
   "task_id": "gt-judge-budget-parent-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"

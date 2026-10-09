@@ -1,0 +1,24 @@
+{
+  "authority_revision": "AOS-001664",
+  "task": "gt-shared-budget-fence-order-20261008",
+  "head": "11ca8b0711bd02e5ccdd73b816713292eb41a3d6",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-shared-budget-fence-order-20261008/current-original-target-crypto-reference-1663.json",
+      "sha256": "08fb42095b07734f3e3414ec49af7631acff528b7d2882e2242b0fdbd9f72929"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/cross-phase-protocol-plan-1663.md",
+      "sha256": "2dec1290b8dd2e774b0a557898432dd3e12a975c9a2462c484452d3f0cd6693b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/cross-phase-native-result-r2-1663.json",
+      "sha256": "31a0a4e551eebdc4a8193e4d4ba9c8aa64afcab8226c16bd8271232d8ff8a382"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/cross-phase-review-1663.md",
+      "sha256": "a5e61436d6b2ac901c387070b77bff5f5a2cd76561acaa8804514c11e2823550"
+    }
+  ]
+}
