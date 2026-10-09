@@ -867,3 +867,79 @@ def test_whole_newjudge_governance_fault_reaches_leg_binding_with_original_hash_
     assert canonical_hash(body['judgeRequest']) == original_hash == body['judgeRequestHash']
     with pytest.raises(ValidationError,match='exact per-purpose original governance and parent required'):
         module.ModelEvalTargetJudgeExecutionManifest.model_validate(body)
+
+
+def _original_target_signing_inputs():
+    module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+    assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+    assert hasattr(module, 'canonical_original_target_case_signing_bytes'), 'original v2 Target signing domain missing'
+    plan = module.ModelEvalTargetJudgeExecutionManifest.model_validate(_whole_newjudge_body())
+    original = plan.judge_request['targetApplication']
+    wire, output = b'{"messages":[{"role":"user","content":"test-only"}]}', ' 测试Target🙂\n'.encode()
+    claim = dict(schemaVersion='aos.model-eval-original-target-case-signing-input/v2',
+        tenant=plan.tenant.model_dump(mode='json', by_alias=True), executionId=plan.execution_id,
+        manifestHash=canonical_hash(plan.model_dump(mode='json', by_alias=True)),
+        requestHash=original['requestHash'], caseId=plan.cases[0].case_id, purpose='target',
+        candidateRef=original['request']['targetRef'],
+        leg=plan.cases[0].target.model_dump(mode='json', by_alias=True),
+        caseInputHash=plan.cases[0].input_hash, inputHash=hashlib.sha256(wire).hexdigest(),
+        outputHash=hashlib.sha256(output).hexdigest(),
+        occurredAt=datetime.fromisoformat(plan.judge_request['expiresAt'])-timedelta(seconds=1))
+    return module, plan, claim, wire, output
+
+
+def test_original_target_case_signing_domain_preserves_full_newjudge_and_actual_wire():
+    module, plan, claim, wire, output = _original_target_signing_inputs()
+    encoded = module.canonical_original_target_case_signing_bytes(plan, claim,
+        input_bytes=wire, output_bytes=output)
+    prefix = b'AOS-MODEL-EVAL-ORIGINAL-TARGET-CASE-SIGNING-INPUT-v2\n'
+    assert encoded.startswith(prefix)
+    frozen = module.ModelOriginalTargetCaseSigningInput.model_validate(claim)
+    assert encoded[len(prefix):] == json.dumps(frozen.model_dump(mode='json',by_alias=True),
+        sort_keys=True,ensure_ascii=False,separators=(',', ':'),allow_nan=False).encode()
+    assert claim['caseInputHash'] != claim['inputHash']
+    with pytest.raises(ValueError):
+        module.canonical_model_case_signing_bytes(plan, frozen, input_bytes=wire, output_bytes=output)
+
+
+@pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+    'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+    'expired','naive','extra','legacy_domain','copied','tenant','execution','leg','deep_copied'])
+def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+    module, plan, claim, wire, output = _original_target_signing_inputs()
+    if fault=='manifest': claim['manifestHash']='f'*64
+    elif fault=='request': claim['requestHash']=plan.judge_request_hash
+    elif fault=='candidate': claim['candidateRef']=plan.judge_request['targetApplication']['request']['sourceRef']
+    elif fault=='case': claim['caseId']='not-original'
+    elif fault=='case_input': claim['caseInputHash']='f'*64
+    elif fault=='wire_hash': claim['inputHash']=claim['caseInputHash']
+    elif fault=='output_hash': claim['outputHash']='f'*64
+    elif fault=='wire_bytes': wire+=b' '
+    elif fault=='output_bytes': output+=b' '
+    elif fault=='mutable': wire=bytearray(wire)
+    elif fault=='oversized': output=b'x'*1048577;claim['outputHash']=hashlib.sha256(output).hexdigest()
+    elif fault=='purpose': claim['purpose']='judge'
+    elif fault=='judge_fields': claim['passed']=True
+    elif fault=='expired': claim['occurredAt']=plan.judge_request['expiresAt']
+    elif fault=='naive': claim['occurredAt']=datetime(2026,10,8)
+    elif fault=='extra': claim['producerCommitted']=True
+    elif fault=='legacy_domain': claim['schemaVersion']='aos.model-eval-case-signing-input/v1'
+    elif fault=='tenant': claim['tenant']={'orgId':'dev-org','projectId':'dev-project'}
+    elif fault=='execution': claim['executionId']='borrowed-execution'
+    elif fault=='leg': claim['leg']['identityKeyHash']='f'*64
+    elif fault=='deep_copied':
+        frozen=module.ModelOriginalTargetCaseSigningInput.model_validate(claim)
+        claim=frozen.model_copy(update={'leg':frozen.leg.model_copy(update={'budget_hold_ref':frozen.leg.budget_hold_ref.model_copy(update={'content_hash':'sha256:'+'f'*64})})})
+    elif fault=='copied':
+        claim=module.ModelOriginalTargetCaseSigningInput.model_validate(claim).model_copy(update={'request_hash':'f'*64})
+    with pytest.raises(ValueError):
+        module.canonical_original_target_case_signing_bytes(plan, claim, input_bytes=wire, output_bytes=output)
+
+
+def test_original_target_signing_each_original_case_keeps_distinct_parent_leg():
+    module, plan, claim, wire, output = _original_target_signing_inputs()
+    for case in plan.cases:
+        item = dict(claim, caseId=case.case_id, caseInputHash=case.input_hash,
+            leg=case.target.model_dump(mode='json',by_alias=True))
+        assert module.canonical_original_target_case_signing_bytes(plan,item,
+            input_bytes=wire,output_bytes=output).startswith(b'AOS-MODEL-EVAL-ORIGINAL-TARGET-CASE-SIGNING-INPUT-v2\n')

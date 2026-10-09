@@ -820,3 +820,41 @@ class ModelEvalTargetJudgeExecutionManifest(_ModelExecutionContract):
                 if totals[leg.purpose] > parent.upper_bound_minor:
                     raise ValueError('case allocations exceed independent parent upper bound')
         return self
+
+
+class ModelOriginalTargetCaseSigningInput(ModelEvalCaseSigningInput):
+    """Original v2 Target signing description; never proof of transport or commit."""
+    schema_version: Literal['aos.model-eval-original-target-case-signing-input/v2']
+    purpose: Literal['target']
+    # Dataset bytes and actual transport bytes have distinct hashes.
+    case_input_hash: str = Field(pattern=SHA256, strict=True)
+
+
+def canonical_original_target_case_signing_bytes(manifest, claim, *,
+        input_bytes: bytes, output_bytes: bytes) -> bytes:
+    """Bind the complete original v2 plan to raw wire/output hash witnesses.
+
+    Original artifacts, rendered wire provenance, certificates, trusted issuer,
+    current native admission and committed producer remain independent checks.
+    This pure function never authenticates an actual Provider result.
+    """
+    plan = ModelEvalTargetJudgeExecutionManifest.model_validate(manifest)
+    item = ModelOriginalTargetCaseSigningInput.model_validate(claim)
+    original = plan.judge_request['targetApplication']
+    request = ModelEvalRequestCreate.model_validate(original['request'])
+    case = next((c for c in plan.cases if c.case_id == item.case_id), None)
+    if (case is None or item.tenant != plan.tenant or item.execution_id != plan.execution_id
+            or item.manifest_hash != canonical_hash(plan.model_dump(mode='json', by_alias=True))
+            or item.request_hash != original['requestHash']
+            or item.candidate_ref != request.target_ref or item.leg != case.target
+            or item.case_input_hash != case.input_hash
+            or item.occurred_at >= datetime.fromisoformat(plan.judge_request['expiresAt'])):
+        raise ValueError('original v2 Target claim must bind complete case and original application')
+    if (type(input_bytes) is not bytes or type(output_bytes) is not bytes
+            or len(input_bytes) > 1048576 or len(output_bytes) > 1048576
+            or hashlib.sha256(input_bytes).hexdigest() != item.input_hash
+            or hashlib.sha256(output_bytes).hexdigest() != item.output_hash):
+        raise ValueError('exact bounded original v2 Target wire/output bytes required')
+    payload = json.dumps(item.model_dump(mode='json', by_alias=True), ensure_ascii=False,
+        sort_keys=True, separators=(',', ':'), allow_nan=False).encode('utf-8')
+    return b'AOS-MODEL-EVAL-ORIGINAL-TARGET-CASE-SIGNING-INPUT-v2\n' + payload

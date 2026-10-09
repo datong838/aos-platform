@@ -1,0 +1,11 @@
+# 原 v2 Target 签名原文桥接
+
+Rules：231、typed Task原范围/同owner有效Lease、m1单写；原批准Model评测隔离实现，先方案后码。复习原typed实施计划、上一target-origin-bridge审计与独立Judge whole原合同；完整Task不Delivery。
+
+候选一Sourceactual-end依可信终态仍未证；候选二原v2 Target→newpurposeJudge signed output接线已登记。选择二，首个必要部分独立canonical签名原文，不先制造真实Target结果。
+
+精确修改 services/aos-api/aos_api/aip_model_eval_execution_contracts.py、services/aos-api/tests/aip/test_model_eval_execution_contracts.py；证据本目录。旧类/函数/domain严格不改，新增 ModelOriginalTargetCaseSigningInput 从旧完整claim复用标识/tenant/purpose/time禁止Judge字段的校验，schema aos.model-eval-original-target-case-signing-input/v2、purpose仅target、新caseInputHash；canonical_original_target_case_signing_bytes严格重新解析完整原v2Manifest/claim，绑定原Target requestHash/targetRef、全v2manifestHash（含独立Judge原请求/原rule/双parent/全case）、精确Targetleg/inputCase摘要/实际input+output原始bytes摘要。occurredAt在原Target申请createdAt及本Judge expiresAt有效区间；createdAt原Model申请并无此字段时仅用可用原expiresAt，不能造下界。实际签名证书/原clock/currentness检查留trustedreader，pure接口不冒充。
+
+关键：Dataset案例inputHash不是httpx实际wireHash；新增caseInputHash绑定case原hash，inputHash绑定actualwirebytes。禁止用数据hash代替wirehash，原wire-policy/currentness/原Artifact读取及实际transport消费仍Owner/可信证书桥前置。完整claim和v2wholehash保留Source/account/allocation/Intent描述，不当实权。domain独立 AOS-MODEL-EVAL-ORIGINAL-TARGET-CASE-SIGNING-INPUT-v2。原Target候选targetRef不得借当前sourceRef。
+
+RED先新增正向/负门测试实际缺类/函数；GREEN合法原v2完整body构造两case pure signing原文，strict tuple非本接口，bytes原生且1MiB上限、错候选/原requestHash/manifestHash/leg/caseHash/wire/output/purpose/Judge字段/时间/typedcopy/domain/extra拒绝。pure测试用--noconftest和psycopg.connect拒绝所有连接，不碰默认autouse库。相邻全旧typed纯矩阵必须通过，AST旧声明全等。此次字节来自测试文本，无签名/证书/真实Target/COMMIT断言；下一trustedv2 issuer/case读取/原同caller两Owner接线继续，完整包不缩小退出。

@@ -1,0 +1,436 @@
+FFFFFFFFFFFFFFFFFFF                                                      [100%]
+=================================== FAILURES ===================================
+_ test_original_target_case_signing_domain_preserves_full_newjudge_and_actual_wire _
+
+    def test_original_target_case_signing_domain_preserves_full_newjudge_and_actual_wire():
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:892: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[manifest] _
+
+fault = 'manifest'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[request] _
+
+fault = 'request'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[candidate] _
+
+fault = 'candidate'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[case] _
+
+fault = 'case'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[case_input] _
+
+fault = 'case_input'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[wire_hash] _
+
+fault = 'wire_hash'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[output_hash] _
+
+fault = 'output_hash'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[wire_bytes] _
+
+fault = 'wire_bytes'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[output_bytes] _
+
+fault = 'output_bytes'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[mutable] _
+
+fault = 'mutable'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[oversized] _
+
+fault = 'oversized'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[purpose] _
+
+fault = 'purpose'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[judge_fields] _
+
+fault = 'judge_fields'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[expired] _
+
+fault = 'expired'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[naive] _
+
+fault = 'naive'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[extra] _
+
+fault = 'extra'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[legacy_domain] _
+
+fault = 'legacy_domain'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+_ test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[copied] _
+
+fault = 'copied'
+
+    @pytest.mark.parametrize('fault', ['manifest','request','candidate','case','case_input','wire_hash',
+        'output_hash','wire_bytes','output_bytes','mutable','oversized','purpose','judge_fields',
+        'expired','naive','extra','legacy_domain','copied'])
+    def test_original_target_case_signing_rejects_borrowed_or_incomplete_origin(fault):
+>       module, plan, claim, wire, output = _original_target_signing_inputs()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:909: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_signing_inputs():
+        module = importlib.import_module('aos_api.aip_model_eval_execution_contracts')
+>       assert hasattr(module, 'ModelOriginalTargetCaseSigningInput'), 'original v2 Target signing claim missing'
+E       AssertionError: original v2 Target signing claim missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCaseSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:874: AssertionError
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_domain_preserves_full_newjudge_and_actual_wire
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[manifest]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[request]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[candidate]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[case]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[case_input]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[wire_hash]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[output_hash]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[wire_bytes]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[output_bytes]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[mutable]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[oversized]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[purpose]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[judge_fields]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[expired]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[naive]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[extra]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[legacy_domain]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[copied]
+19 failed, 229 deselected in 0.56s

@@ -1,0 +1,9 @@
+# 原 v2 Target 签名原文必要桥复审
+
+新增ModelOriginalTargetCaseSigningInput和canonical_original_target_case_signing_bytes，全部旧顶层AST不变。精确full原v2 wholehash、原Target申请hash/候选targetRef、tenant/execution/case/Targetleg与caseInputHash；实际请求wire与output各自原byteshash独立。原时间只能早于原Judge expiresAt，不能以pure字段作为可信发生时间。原case_datasetinputHash不替代渲染后的wirehash，不改旧域/旧Skill/预算/Provider。
+
+RED19失败均实际缺新增class；初GREEN19项通过，随后补tenant/execution/leg/深层typedcopy与全case正向，共新24项；全部253pure相邻通过0.64s。runner --noconftest且psycopg.connect显式拒绝并计数，实际零数据库连接。typedcopy/deepcopy强制重解析，额外执权字段/错purpose/Judge结论/错误rawbyte/容量/期限均拒绝。输出domain专用v2，不接受旧canonical输入，新canonical也不接受旧schema。
+
+限制：仅签名前原文准备，未签发证书、未注册信任根/身份/DDL/真实Target结果、无真实transport输入来源或当前native审批消费证明。输入/output为测试文本。Source/account/allocation/Intent在完整whole描述内，但尚未变成可信执权。未证明发生时间下界或trustedclock，留真实证书currentness/issuer。同case并未单独赋予transportauthority。浏览器不适用。
+
+下一主线已登记于typed完整实施计划与Judge合同：新增原v2签名证书/Case envelope的独立类型/domain，可信issuer原root/原currentepoch与COMMITTED producer消费链；必须绑定完整v2原申请和原Target所有字段，不把Judge budget类型改成旧Model hold。随后原native同caller Owner+实际COMMITTED结果消费真实RED/GREEN，四腿Intent/实际wire/token/Sourceactualend仍并列待完。本Task不Delivery，不把pure helper缩为整个退出。
