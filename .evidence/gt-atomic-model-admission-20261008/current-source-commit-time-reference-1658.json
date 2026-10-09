@@ -1,0 +1,21 @@
+{
+  "authority_revision": "AOS-001658",
+  "task": "gt-atomic-model-admission-20261008",
+  "head": "0d8bf12b64f4e49d2919fdb93c2ce5d9e13ea2b4",
+  "result": "COMMIT_TIMESTAMP_IS_NOT_ACTUAL_END",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-model-input-measure-reference-1657.json",
+      "sha256": "e9915abef06c13c89db7f1f007e0ed518617f6e2f0409f34a8c91de6311e633e"
+    },
+    {
+      "path": ".evidence/gt-source-commit-time-origin-20261010/audit-result.json",
+      "sha256": "db55f789d0d33135b07e997afa716473b37cf5e2e3b0563ebfff0fe61b0c9ecf"
+    },
+    {
+      "path": ".evidence/gt-source-commit-time-origin-20261010/review.md",
+      "sha256": "ff4ee12477b1a0bc622f9461eed1cd6637ae41e4ea22d5105bb90daf3ea6b607"
+    }
+  ]
+}

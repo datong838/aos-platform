@@ -1,0 +1,91 @@
+{
+  "authority_revision": "AOS-001658",
+  "audit_delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-commit-time-origin-20261010",
+    "base_revision": "AOS-001657",
+    "completed_revision": "AOS-001657",
+    "result": "READONLY_ORIGINAL_COMMIT_TIME_CANDIDATE_REJECTED_STRICT_ACTUAL_END_PENDING",
+    "changed_files": [
+      ".evidence/gt-source-commit-time-origin-20261010/plan.md",
+      ".evidence/gt-source-commit-time-origin-20261010/task.json",
+      ".evidence/gt-source-commit-time-origin-20261010/audit.py",
+      ".evidence/gt-source-commit-time-origin-20261010/audit-result.json",
+      ".evidence/gt-source-commit-time-origin-20261010/review.md"
+    ],
+    "commits": [
+      "0d8bf12b64f4e49d2919fdb93c2ce5d9e13ea2b4"
+    ],
+    "verification": [
+      "Original signed Source/C verifier/hash/provenance and COMMITTED xid READ ONLY",
+      "Native disabled commit-time query 55000 with read-only savepoint",
+      "Exact PG16.14 stored timestamp-before-WAL/CLOG/syncrep sequence",
+      "Audit AST literal read-only SQL and unchanged original product/evidence hashes"
+    ],
+    "risks": [
+      "Strict actual-end gate remains RED; no new durability-delay attack, installation, source issuance, or execution permission"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-10T01:54:17+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/01-当前项目状态.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/06-当前执行检查点.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001658-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001658"
+  },
+  "installation": {
+    "status": "GREEN",
+    "project_revision": "AOS-001658",
+    "projection_count": 8,
+    "schema_count": 9,
+    "task_receipt_count": 1980,
+    "delivery_receipt_count": 1958,
+    "event_count": 5658
+  },
+  "five_checkpoints_valid": true,
+  "full_source_delivered": false,
+  "full_goal_complete": false,
+  "execution_allowed": false
+}
