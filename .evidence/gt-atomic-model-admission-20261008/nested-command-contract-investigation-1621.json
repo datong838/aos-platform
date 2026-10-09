@@ -1,0 +1,10 @@
+{
+  "results": {
+    "root-extra": "rejected",
+    "source-ref-extra": "rejected",
+    "tenant-extra": "rejected"
+  },
+  "scope": "pure actual transport contract shape; no Source signature/login/SQL or execution proof",
+  "secret_emitted": false,
+  "execution_allowed": false
+}

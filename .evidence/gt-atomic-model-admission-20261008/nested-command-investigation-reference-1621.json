@@ -1,0 +1,18 @@
+{
+  "authority_revision": "AOS-001621",
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/command-mutation-native-reference-1621.json",
+      "sha256": "e9bf2b9f569bcf43677701f737ec24458934eb7c945176de9c427ae7aa0bd26b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/nested-command-investigation-1621.md",
+      "sha256": "181523f941f2536bb86351a3b53fbd7ede276b6ad08c27268ead9ce439008f64"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/nested-command-contract-investigation-1621.json",
+      "sha256": "758da1d622ad318b03d9df4b9aa0271efbc30c475f377dc2ef78b4ec3390b91c"
+    }
+  ],
+  "execution_allowed": false
+}

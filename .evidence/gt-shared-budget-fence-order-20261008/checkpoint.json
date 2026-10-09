@@ -6,13 +6,13 @@
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "authority_revision": "AOS-001621",
   "task_base_revision": "AOS-001588",
-  "step": "command-mutation-native-green-nested-boundary-next",
+  "step": "command-mutation-native-green-nested-command-contract-investigated",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_budget_reservation.py"
   ],
   "evidence_files": [
     ".evidence/gt-shared-budget-fence-order-20261008/implementation-plan.md",
     ".evidence/gt-shared-budget-fence-order-20261008/task-readback.json",
-    ".evidence/gt-shared-budget-fence-order-20261008/command-mutation-native-reference-1621.json"
+    ".evidence/gt-shared-budget-fence-order-20261008/nested-command-investigation-reference-1621.json"
   ]
 }

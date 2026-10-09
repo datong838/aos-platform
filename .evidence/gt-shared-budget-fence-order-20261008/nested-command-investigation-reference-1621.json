@@ -1,0 +1,18 @@
+{
+  "authority_revision": "AOS-001621",
+  "references": [
+    {
+      "path": ".evidence/gt-shared-budget-fence-order-20261008/command-mutation-native-reference-1621.json",
+      "sha256": "55541aecc45fd35f41b327075f84c7f472bb28db265b7bff0a31df48d7695ddb"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/nested-command-investigation-1621.md",
+      "sha256": "181523f941f2536bb86351a3b53fbd7ede276b6ad08c27268ead9ce439008f64"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/nested-command-contract-investigation-1621.json",
+      "sha256": "758da1d622ad318b03d9df4b9aa0271efbc30c475f377dc2ef78b4ec3390b91c"
+    }
+  ],
+  "execution_allowed": false
+}
