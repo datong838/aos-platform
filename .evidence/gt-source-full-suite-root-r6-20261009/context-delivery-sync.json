@@ -1,0 +1,159 @@
+{
+  "authority_revision": "AOS-001645",
+  "evidence_commit": "1901279f04ddebf2e7b28dd540d2839be61b4dcc",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-full-suite-root-r6-20261009",
+    "base_revision": "AOS-001644",
+    "completed_revision": "AOS-001644",
+    "result": "WHOLE_SOURCE_OFFSET_SIGNING_PERMIT_ORACLES_REPAIRED_FULL_PENDING",
+    "changed_files": [
+      ".evidence/gt-source-full-suite-root-r6-20261009/current-clock-completion-audit.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/first-failure-independent.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/independent-final-verification.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/input-bindings-r1.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/input-bindings-r2.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/lab.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/native-normalization-r2-attempt.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/native-normalization-r2-result.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/native-normalization-r2.log",
+      ".evidence/gt-source-full-suite-root-r6-20261009/native-normalization-r3-attempt.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/native-normalization-r3-result.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/native-normalization-r3.log",
+      ".evidence/gt-source-full-suite-root-r6-20261009/native-whole-r1-attempt.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/native-whole-r1-result.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/native-whole-r1.log",
+      ".evidence/gt-source-full-suite-root-r6-20261009/normalization-r2-collection.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/normalization-r2-process.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/normalization-r3-collection.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/normalization-r3-process.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/normalization-selection.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/original-controls-ast-audit.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/plan.md",
+      ".evidence/gt-source-full-suite-root-r6-20261009/process-observation.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/process.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/register_stage.py",
+      ".evidence/gt-source-full-suite-root-r6-20261009/remaining-direct-profile-preflight.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/repair.patch",
+      ".evidence/gt-source-full-suite-root-r6-20261009/repaired-functions.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/review.md",
+      ".evidence/gt-source-full-suite-root-r6-20261009/run_normalization_r2.py",
+      ".evidence/gt-source-full-suite-root-r6-20261009/run_normalization_r3.py",
+      ".evidence/gt-source-full-suite-root-r6-20261009/run_whole_r1.py",
+      ".evidence/gt-source-full-suite-root-r6-20261009/session-options-independent.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/shared-memory-failure-independent.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/task-lease-before-repair.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/task-lease-preflight.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/task.json",
+      ".evidence/gt-source-full-suite-root-r6-20261009/verify_normalization_r2.py",
+      ".evidence/gt-source-full-suite-root-r6-20261009/verify_normalization_r3.py",
+      ".evidence/gt-source-full-suite-root-r6-20261009/whole-r1-collection.json"
+    ],
+    "commits": [
+      "1901279f04ddebf2e7b28dd540d2839be61b4dcc"
+    ],
+    "verification": [
+      "Whole386nodes164PASS1FAIL591.45s221unexecuted; exactoffsetpermanentprofile duplicate independentlydiagnosed",
+      "Original26functions50nodes first49PASS1SETUPERROR185.95s retained andread-onlyreconciled; owned connection parallelism-only repair, all safety controls unchanged",
+      "Entire50nodes50PASS191.78s; independent11retainedDBs1963inputs zeroSource exactACL/lock/role/tempcleanup/durability/protected32resources"
+    ],
+    "risks": [
+      "Full Source suite and actual final COMMIT expiry counterexample pending",
+      "No modelreview or formal firstchain acceptance"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T14:50:33+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001645-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001645"
+  },
+  "checkpoints": {
+    "gt-atomic-model-admission-20261008": {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001645",
+      "step": "whole-source-offset-signing-permit-oracles-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "ab0f07f2b3e99ef1b4b6d1b23a043d6518b7ae8b2e4a39130664082ca58ca5db",
+      "task_base_revision": "AOS-001537"
+    },
+    "gt-model-typed-proof-20261008": {
+      "task_id": "gt-model-typed-proof-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001645",
+      "step": "whole-source-offset-signing-permit-oracles-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "918dfaf6ade948fd332e10ef7dcadc8de24cc6b34710924b8be227a035cfce95",
+      "task_base_revision": "AOS-001513"
+    },
+    "gt-judge-call-authority-20261008": {
+      "task_id": "gt-judge-call-authority-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001645",
+      "step": "whole-source-offset-signing-permit-oracles-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "38d52bcb72671d67472251210d60c0be21a341fdce731985e859529da2a4401d",
+      "task_base_revision": "AOS-001578"
+    },
+    "gt-judge-budget-parent-20261008": {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001645",
+      "step": "whole-source-offset-signing-permit-oracles-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "0aeea2a154191e16e9c53a6765094f92e11234b25e4a0f648b6ed6336f24e81c",
+      "task_base_revision": "AOS-001588"
+    },
+    "gt-shared-budget-fence-order-20261008": {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001645",
+      "step": "whole-source-offset-signing-permit-oracles-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "d0833e46a6f68a5447b667de50396cf80fa2c5b60a1968d51945f751d35f7602",
+      "task_base_revision": "AOS-001588"
+    }
+  },
+  "original_source_task": "ACTIVE",
+  "full_source_delivery": false,
+  "goal_status_changed": false
+}

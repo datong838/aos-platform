@@ -1,0 +1,35 @@
+{
+  "authority_revision": "AOS-001645",
+  "head": "1901279f04ddebf2e7b28dd540d2839be61b4dcc",
+  "references": [
+    {
+      "path": ".evidence/gt-shared-budget-fence-order-20261008/current-source-build-evidence-reference-1644.json",
+      "sha256": "2a23decaca82211146eef7ca03513660dc16f451f4b446ca21739747bf8a9c95"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r6-20261009/review.md",
+      "sha256": "299ebe0fa06315b62eb7b345f8788785d71782f26e6957c4354d8c544ac63f0e"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r6-20261009/independent-final-verification.json",
+      "sha256": "79d589ded7dfb7efb70bf1b2e2476fac845407d7f112f38581ec643a7732b6a8"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r6-20261009/first-failure-independent.json",
+      "sha256": "b897dab731b6a80348644b7cd7763c3493d98ffc7d1c4c70ff45993cc4ea5492"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r6-20261009/current-clock-completion-audit.json",
+      "sha256": "66a55d4227b8d0ea76ce76edb580556e389a94ffe899950600f6366e12cbcbc3"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r6-20261009/shared-memory-failure-independent.json",
+      "sha256": "2989d7259bfac97316bc480dd5579af8e8df87486fdc6badeebfa9cbd52d0976"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r6-20261009/session-options-independent.json",
+      "sha256": "3f0a8a95dd5d456e6116ce3988ebbc4e40f455fdc4d8bd6a884106e339d40bca"
+    }
+  ],
+  "execution_allowed": false
+}
