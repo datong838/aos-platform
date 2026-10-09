@@ -1,0 +1,36 @@
+{
+  "head": "a3cade5682abface68e20026312c4ad2fddf8067",
+  "authority_revision": "AOS-001671",
+  "original_full_manifest_hash": "1469a745f2664fdad76c90ae5e1324d63b20e6d487cfd24cd7fea89efc2048ce",
+  "source_proof_sha256": "638985ce980a46a5d6480c5a7f3cf3d32fce69c767504e5783f9a0f9d010668f",
+  "risk_sql_sha256": "06ea84e67ed1e2b6ecb33aa43e1f287d3aa4a8ff65f70237acfc5ce439ebd8ad",
+  "pure_changes": [
+    {
+      "field": "identityId",
+      "v3_description_valid": true,
+      "whole_manifest_hash_changed": true,
+      "native_original_risk_inputs_unchanged": true,
+      "native_modified_plan_executed": false
+    },
+    {
+      "field": "intentRef",
+      "v3_description_valid": true,
+      "whole_manifest_hash_changed": true,
+      "native_original_risk_inputs_unchanged": true,
+      "native_modified_plan_executed": false
+    },
+    {
+      "field": "jointReceiptRef",
+      "v3_description_valid": true,
+      "whole_manifest_hash_changed": true,
+      "native_original_risk_inputs_unchanged": true,
+      "native_modified_plan_executed": false
+    }
+  ],
+  "old_parsers_reject_v3": true,
+  "database_connections_forbidden": true,
+  "finding": "RED_FULL_V3_PERSISTENT_PROVENANCE_NOT_BOUND",
+  "native_modified_plan_executed": false,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}
