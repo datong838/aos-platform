@@ -1,0 +1,56 @@
+{
+  "authority_revision": "AOS-001663",
+  "task": "gt-atomic-model-admission-20261008",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "head": "dc4c914d7be5ee224f4ee8c6998d5c5f6d228294",
+  "file_hashes": {
+    ".evidence/gt-judge-call-authority-20261008/judge-expected-bytes-green-1659-r1/judge-expected-bytes-green-1659-r1-whole-plan-proof.json": "11c221fac24d56e2d4f5119b87323f8ef3c618745f692b2ebb0390a113ca83fe",
+    ".evidence/gt-judge-call-authority-20261008/judge-expected-bytes-green-1659-r1-result.json": "cf2d6b7be5b28a04880dd5565f4cc076abf462826f6b88c38d6207a4ff5ddd17",
+    ".evidence/gt-source-desktop-shm-lab-20261009/lab.json": "fc55fd8f7ab796a7f2eee4846691dd99985d9d59f6f3170d80768b9be9aaffa3",
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": "40a3c6eacd13de6a3185c1f106f035cec7308e01ea3df72d25b0f8e1c2224d0b",
+    "services/aos-api/aos_api/aip_model_eval_execution_authority.py": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27",
+    "services/aos-api/aos_api/aip_model_eval_execution_reader.py": "1b61a8d0df28743065c3facff18363c0847d68e3b64b7e68657052b90b2e69fa",
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": "ee4eb61a0218e10f057209eb532ed9675a80d0efcd9576c929a1a6b29f400cf1",
+    ".evidence/gt-atomic-model-admission-20261008/cross-phase-native-audit-1663.py": "6ce77127535e14003646b0b06ccb22d9a14823a1869fb99dddf8533c7d1a4ba4",
+    ".evidence/gt-atomic-model-admission-20261008/cross-phase-protocol-plan-1663.md": "2dec1290b8dd2e774b0a557898432dd3e12a975c9a2462c484452d3f0cd6693b"
+  },
+  "cluster": "7694680278363095064",
+  "caller": {
+    "xid": "27900",
+    "pid": 79541,
+    "database": "aos_test_bcd5c43891be_ti4_test",
+    "read_only": "on",
+    "isolation": "serializable",
+    "now": "2026-10-09T18:42:33.403965+00:00"
+  },
+  "read_only_caller_end_status": "aborted",
+  "original_whole_prepare_xid": "27485",
+  "original_whole_prepare_status": "aborted",
+  "original_whole_parent_rows": {
+    "aip_model_eval_budget_reservation": 0,
+    "aip_model_judge_budget_reservation": 0
+  },
+  "independent_committed_holds": [
+    {
+      "table": "aip_model_judge_budget_reservation",
+      "reservation_id": "9d7f1c87-679c-4cd6-8472-c44ed6cd3449",
+      "request_id": "model-judge-request-1d22630940804d009f3ae6169a153827",
+      "content_hash": "sha256:d232e20ed6a6937962746ae23e84f28cf9407f66ef51be7bef1a0273f90877ff",
+      "origin_xid": "27487",
+      "native_status": "committed",
+      "passes_fresh_xid_predicate": false
+    }
+  ],
+  "inventory": {
+    "aos_model_eval_execution_private.manifest": 0,
+    "aos_model_eval_execution_private.case_result": 0,
+    "aos_model_eval_issuer_private.executor_certificate": 0,
+    "aos_model_eval_issuer_private.target_result_origin": null
+  },
+  "result": "NATIVE_FRESH_PREPARE_VERSUS_DURABLE_CONSUME_PHASE_BOUNDARY",
+  "product_bug_claimed": false,
+  "actual_v2_cross_phase_admission_tested": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "limitations": "Independent committed legacy holds prove xid mismatch only. Original v2 whole preparation was aborted; no durable whole plan/result exists. No role/function/install/write/transport/replay/COMMIT performed; future durable consumer remains required."
+}
