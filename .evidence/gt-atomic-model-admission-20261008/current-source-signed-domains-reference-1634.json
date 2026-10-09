@@ -1,0 +1,31 @@
+{
+  "authority_revision": "AOS-001634",
+  "head": "3b0d1f69b6be608e993d0925f6ef2416b6ffe9f9",
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-source-full-core-reference-1633.json",
+      "sha256": "1b8000c6425bb2e5f368700a7ee0303d15973a5fe2882b2372428eb73dfc2cbe"
+    },
+    {
+      "path": ".evidence/gt-source-signed-domains-current-20261009/review.md",
+      "sha256": "0456fc5964e3a1997c98cc1fc35cf5dc1608c64ecb02da2d2b8dca676ad2f429"
+    },
+    {
+      "path": ".evidence/gt-source-signed-domains-current-20261009/independent-domains-verification.json",
+      "sha256": "fdcfbdbd61bad545549b03519581ec221600df1bb54ace5ade95e0c9e06e3df9"
+    },
+    {
+      "path": ".evidence/gt-source-signed-domains-current-20261009/test-changes.json",
+      "sha256": "fb6190f1b5bc406cb6185bce3d50ccb4ac4ed6a1350bd90e892562a4d1b94b56"
+    },
+    {
+      "path": ".evidence/gt-source-signed-domains-current-20261009/duplicate-profile-readonly-diagnosis.json",
+      "sha256": "8498d0006a94ba748450c636dbbcee9a737c1be61ff0b13b31f16d8ce4738cb0"
+    },
+    {
+      "path": ".evidence/gt-source-signed-domains-current-20261009/scope-review.json",
+      "sha256": "51c6a266407ae06d074d8f3b1f7a914385adef8657935e2c6fa2acab3f2fd08f"
+    }
+  ],
+  "execution_allowed": false
+}

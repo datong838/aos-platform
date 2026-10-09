@@ -1,0 +1,153 @@
+{
+  "authority_revision": "AOS-001634",
+  "evidence_commit": "3b0d1f69b6be608e993d0925f6ef2416b6ffe9f9",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-signed-domains-current-20261009",
+    "base_revision": "AOS-001633",
+    "completed_revision": "AOS-001633",
+    "result": "BOUNDED_SIGNED_DOMAIN_MATRIX_NATIVE_VERIFIED_FULL_SOURCE_PENDING",
+    "changed_files": [
+      ".evidence/gt-source-signed-domains-current-20261009/active-command-r1.json",
+      ".evidence/gt-source-signed-domains-current-20261009/active-command-r2.json",
+      ".evidence/gt-source-signed-domains-current-20261009/active-command-r3.json",
+      ".evidence/gt-source-signed-domains-current-20261009/duplicate-profile-readonly-diagnosis.json",
+      ".evidence/gt-source-signed-domains-current-20261009/independent-domains-verification.json",
+      ".evidence/gt-source-signed-domains-current-20261009/input-bindings-r2.json",
+      ".evidence/gt-source-signed-domains-current-20261009/input-bindings-r3.json",
+      ".evidence/gt-source-signed-domains-current-20261009/input-bindings.json",
+      ".evidence/gt-source-signed-domains-current-20261009/lab.json",
+      ".evidence/gt-source-signed-domains-current-20261009/native-domains-r1-attempt.json",
+      ".evidence/gt-source-signed-domains-current-20261009/native-domains-r1-result.json",
+      ".evidence/gt-source-signed-domains-current-20261009/native-domains-r1.log",
+      ".evidence/gt-source-signed-domains-current-20261009/native-domains-r2-attempt.json",
+      ".evidence/gt-source-signed-domains-current-20261009/native-domains-r2-result.json",
+      ".evidence/gt-source-signed-domains-current-20261009/native-domains-r2.log",
+      ".evidence/gt-source-signed-domains-current-20261009/native-domains-r3-attempt.json",
+      ".evidence/gt-source-signed-domains-current-20261009/native-domains-r3-result.json",
+      ".evidence/gt-source-signed-domains-current-20261009/native-domains-r3.log",
+      ".evidence/gt-source-signed-domains-current-20261009/original-test-task-reconciliation.json",
+      ".evidence/gt-source-signed-domains-current-20261009/plan.md",
+      ".evidence/gt-source-signed-domains-current-20261009/r1-node-diagnosis.json",
+      ".evidence/gt-source-signed-domains-current-20261009/r2-isolation-limit.json",
+      ".evidence/gt-source-signed-domains-current-20261009/register_stage.py",
+      ".evidence/gt-source-signed-domains-current-20261009/review.md",
+      ".evidence/gt-source-signed-domains-current-20261009/run_native_domains.py",
+      ".evidence/gt-source-signed-domains-current-20261009/run_native_domains_r2.py",
+      ".evidence/gt-source-signed-domains-current-20261009/run_native_domains_r3.py",
+      ".evidence/gt-source-signed-domains-current-20261009/scope-review.json",
+      ".evidence/gt-source-signed-domains-current-20261009/selection.json",
+      ".evidence/gt-source-signed-domains-current-20261009/task.json",
+      ".evidence/gt-source-signed-domains-current-20261009/test-changes.json",
+      ".evidence/gt-source-signed-domains-current-20261009/verify_domains.py",
+      ".evidence/gt-source-signed-domains-current-20261009/verify_domains_r2.py",
+      ".evidence/gt-source-signed-domains-current-20261009/verify_domains_r3.py"
+    ],
+    "commits": [
+      "3b0d1f69b6be608e993d0925f6ef2416b6ffe9f9"
+    ],
+    "verification": [
+      "Final full original three-function matrix 27 passes/27 independent retained databases, original exact signed scope/supplier/window positive and negative assertions",
+      "Independent unchanged product hashes, original role/interface cleanup and all31 old resources checked"
+    ],
+    "risks": [
+      "Full Source public issuance/COMMIT/current-consumer all exit requirements remain separate",
+      "Actual final COMMIT wall-clock counterexample unresolved",
+      "No independent model review result"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T12:45:02+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001634-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001634"
+  },
+  "checkpoints": {
+    "gt-atomic-model-admission-20261008": {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001634",
+      "step": "original-signed-domain-matrix-native-verified-full-source-and-final-clock-pending",
+      "fingerprint": "4a53efd009ba5c30828c414c2a817fc6a898468c2e440a42d947615fbc84973f",
+      "task_base_revision": "AOS-001537"
+    },
+    "gt-model-typed-proof-20261008": {
+      "task_id": "gt-model-typed-proof-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001634",
+      "step": "original-signed-domain-matrix-native-verified-full-source-and-final-clock-pending",
+      "fingerprint": "592cc7f310cd58910739198d29b33ed39fe2f9093930ee978bd6f4ad55eb39b6",
+      "task_base_revision": "AOS-001513"
+    },
+    "gt-judge-call-authority-20261008": {
+      "task_id": "gt-judge-call-authority-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001634",
+      "step": "original-signed-domain-matrix-native-verified-full-source-and-final-clock-pending",
+      "fingerprint": "f2a6b88f558e774c62bfd0e9cfef602567b6c57baac524e4e1e370ebc404027c",
+      "task_base_revision": "AOS-001578"
+    },
+    "gt-judge-budget-parent-20261008": {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001634",
+      "step": "original-signed-domain-matrix-native-verified-full-source-and-final-clock-pending",
+      "fingerprint": "c2968b47c2cdb58435b36fe7e794e2715433f8e9c79edea894a3c0c8730c161c",
+      "task_base_revision": "AOS-001588"
+    },
+    "gt-shared-budget-fence-order-20261008": {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001634",
+      "step": "original-signed-domain-matrix-native-verified-full-source-and-final-clock-pending",
+      "fingerprint": "c7be74cf3779103b7f53abc4c4a085fb969268fde19e7ae12c94d7a852ca816e",
+      "task_base_revision": "AOS-001588"
+    }
+  },
+  "original_source_task": "ACTIVE",
+  "full_source_delivery": false,
+  "goal_status_changed": false
+}
