@@ -1,0 +1,14 @@
+{
+  "changed_definitions": [
+    "test_native_original_build_request_reads_actual_original_provenance",
+    "test_native_original_build_request_canonical_domain_and_acl",
+    "test_native_original_build_json_matches_original_decoded_hash_input",
+    "_install_original_evidence_profile",
+    "test_native_evidence_contract_rejects_coherently_rehashed_bad_metadata"
+  ],
+  "all_noninstallation_test_controls_ast_equal": true,
+  "helper_original_contains_only_six_profile_installs": true,
+  "helper_all_six_calling_tests_preserved": true,
+  "all_assertion_counts_unchanged": true,
+  "production_changed": false
+}

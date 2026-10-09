@@ -1,0 +1,81 @@
+{
+  "schema": "aos-original-three-origin-genuine-revokes-independent-readback/v1",
+  "database": "aos_test_8ca55207b545_ti4_test",
+  "cluster": "7694534063495901208",
+  "receipts_revokes_epochs": [
+    {
+      "receipt_id": "w2r-be7156e4d2494b369940",
+      "idempotency_key": "native-three-revoke-18729af6300946faadce9041ca745687",
+      "result_ref": {
+        "revision": 1,
+        "resourceId": "evidence-bundle-5773f63a4da04700a271",
+        "contentHash": "54bafb7d706e62f7655b99cc96505e081b171f9227267ddb24b0c6603f69f25c",
+        "resourceType": "EvidenceBundleRevision"
+      },
+      "event_id": "bundle-revoke-f9c94df9dd7343d392bc",
+      "reason": "isolated genuine original origin revoke",
+      "actor": "test:b85",
+      "bundle_id": "evidence-bundle-5773f63a4da04700a271",
+      "revision": 1,
+      "content_hash": "54bafb7d706e62f7655b99cc96505e081b171f9227267ddb24b0c6603f69f25c",
+      "epoch": 1,
+      "receipt_xid": "21940",
+      "revoke_xid": "21940",
+      "epoch_xid": "21940",
+      "receipt_state": "committed",
+      "revoke_state": "committed",
+      "epoch_state": "committed"
+    },
+    {
+      "receipt_id": "w2r-600db31c827441b39a63",
+      "idempotency_key": "native-three-revoke-242d475b8d74402cacf5ea81ddcbb0e5",
+      "result_ref": {
+        "revision": 1,
+        "resourceId": "evidence-bundle-5d18aefb9388462cbd38",
+        "contentHash": "0309cad4f7e47c7a48293339e87a50ff75038eed12e228bef849ea629c807604",
+        "resourceType": "EvidenceBundleRevision"
+      },
+      "event_id": "bundle-revoke-e92dd2ed86994caab930",
+      "reason": "isolated genuine original origin revoke",
+      "actor": "test:b85",
+      "bundle_id": "evidence-bundle-5d18aefb9388462cbd38",
+      "revision": 1,
+      "content_hash": "0309cad4f7e47c7a48293339e87a50ff75038eed12e228bef849ea629c807604",
+      "epoch": 1,
+      "receipt_xid": "22053",
+      "revoke_xid": "22053",
+      "epoch_xid": "22053",
+      "receipt_state": "committed",
+      "revoke_state": "committed",
+      "epoch_state": "committed"
+    },
+    {
+      "receipt_id": "w2r-e743e307ec494e3da8a1",
+      "idempotency_key": "native-three-revoke-9be1a2680b30488582679eb8be2c4ad5",
+      "result_ref": {
+        "revision": 1,
+        "resourceId": "evidence-bundle-c3c72c2b807e420c8021",
+        "contentHash": "7f0b404fd64b6788a4110bf0676400ab27bc072b328be041b46371bcf58968b8",
+        "resourceType": "EvidenceBundleRevision"
+      },
+      "event_id": "bundle-revoke-d40ba1fd2ad24e46a8db",
+      "reason": "isolated genuine original origin revoke",
+      "actor": "test:b85",
+      "bundle_id": "evidence-bundle-c3c72c2b807e420c8021",
+      "revision": 1,
+      "content_hash": "7f0b404fd64b6788a4110bf0676400ab27bc072b328be041b46371bcf58968b8",
+      "epoch": 1,
+      "receipt_xid": "21996",
+      "revoke_xid": "21996",
+      "epoch_xid": "21996",
+      "receipt_state": "committed",
+      "revoke_state": "committed",
+      "epoch_state": "committed"
+    }
+  ],
+  "same_caller_actual_committed": true,
+  "canary_zero": true,
+  "sources_zero": true,
+  "effects_replayed": false,
+  "formal_business_execution": false
+}

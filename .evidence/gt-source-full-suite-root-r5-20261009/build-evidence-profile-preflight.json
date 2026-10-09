@@ -1,0 +1,128 @@
+{
+  "rows": [
+    {
+      "function": "test_native_original_build_request_reads_actual_original_provenance",
+      "start": 1726,
+      "end": 1743,
+      "sha256": "db80a44657f4c06ee3b7cafe5aaed1b050dfc7d324747228a28ee06f1f8f8495",
+      "assert_count": 1,
+      "uses_helper": false,
+      "direct_original_build_oracle": true,
+      "decorators": [],
+      "scope": "original real builds/canonical decoding/hash/equality/full evidence facts/three distinct origins/genuine revoke/no Source issuance"
+    },
+    {
+      "function": "test_native_original_build_request_canonical_domain_and_acl",
+      "start": 1746,
+      "end": 1829,
+      "sha256": "bf9d02d8a4885b8147cd46456ac69164c9c586a4b1e834a933018c77d1a0e355",
+      "assert_count": 6,
+      "uses_helper": false,
+      "direct_original_build_oracle": true,
+      "decorators": [],
+      "scope": "original real builds/canonical decoding/hash/equality/full evidence facts/three distinct origins/genuine revoke/no Source issuance"
+    },
+    {
+      "function": "test_native_original_build_json_matches_original_decoded_hash_input",
+      "start": 1832,
+      "end": 1869,
+      "sha256": "14f46d41675eec8947fb2b62e44f2d2a41d8950f1d652fa7e78acbcbaa6ddfc1",
+      "assert_count": 6,
+      "uses_helper": false,
+      "direct_original_build_oracle": true,
+      "decorators": [],
+      "scope": "original real builds/canonical decoding/hash/equality/full evidence facts/three distinct origins/genuine revoke/no Source issuance"
+    },
+    {
+      "function": "test_native_original_evidence_row_reads_real_verified_build",
+      "start": 1872,
+      "end": 1892,
+      "sha256": "ca54fab72e64c5162ffa4804a4e7ec2f4da41b7c6da54241e57ab3527be9a3aa",
+      "assert_count": 3,
+      "uses_helper": true,
+      "direct_original_build_oracle": false,
+      "decorators": [],
+      "scope": "original real builds/canonical decoding/hash/equality/full evidence facts/three distinct origins/genuine revoke/no Source issuance"
+    },
+    {
+      "function": "test_native_original_build_equality_matches_original_decoder",
+      "start": 1895,
+      "end": 1915,
+      "sha256": "5d86d8337c0dbcdaf201218469c265279b09f6d44253660800d1fcbdd1f55e32",
+      "assert_count": 2,
+      "uses_helper": true,
+      "direct_original_build_oracle": false,
+      "decorators": [],
+      "scope": "original real builds/canonical decoding/hash/equality/full evidence facts/three distinct origins/genuine revoke/no Source issuance"
+    },
+    {
+      "function": "_install_original_evidence_profile",
+      "start": 1918,
+      "end": 1923,
+      "sha256": "33738e997b139e213f6bd74edd21ff954c2ff952f6769b4f7eddacbfde4bbfff",
+      "assert_count": 0,
+      "uses_helper": false,
+      "direct_original_build_oracle": false,
+      "decorators": [],
+      "scope": "original real builds/canonical decoding/hash/equality/full evidence facts/three distinct origins/genuine revoke/no Source issuance"
+    },
+    {
+      "function": "test_native_evidence_query_preserves_original_row_domains_and_faults",
+      "start": 1948,
+      "end": 2007,
+      "sha256": "67588ac7d65be9feb4e33faaf7b661decdabbde8be3de4cad6999169c8d2ffa2",
+      "assert_count": 7,
+      "uses_helper": true,
+      "direct_original_build_oracle": false,
+      "decorators": [],
+      "scope": "original real builds/canonical decoding/hash/equality/full evidence facts/three distinct origins/genuine revoke/no Source issuance"
+    },
+    {
+      "function": "test_native_evidence_query_checks_three_distinct_original_source_origins",
+      "start": 2011,
+      "end": 2093,
+      "sha256": "9bc35d1a6f4b2c8e9b74e1f45855b2c5dccb1efc7c408e5b935107d1daa644e5",
+      "assert_count": 11,
+      "uses_helper": true,
+      "direct_original_build_oracle": false,
+      "decorators": [
+        "pytest.mark.parametrize('target', ['request', 'account', 'basis'])"
+      ],
+      "scope": "original real builds/canonical decoding/hash/equality/full evidence facts/three distinct origins/genuine revoke/no Source issuance"
+    },
+    {
+      "function": "test_native_evidence_contract_rejects_coherently_rehashed_bad_metadata",
+      "start": 2096,
+      "end": 2136,
+      "sha256": "adc78d912b1c81319c5dac84baabd66ff45ac3a155796d5f9ea01ceed7c1bed4",
+      "assert_count": 6,
+      "uses_helper": true,
+      "direct_original_build_oracle": false,
+      "decorators": [],
+      "scope": "original real builds/canonical decoding/hash/equality/full evidence facts/three distinct origins/genuine revoke/no Source issuance"
+    },
+    {
+      "function": "test_native_evidence_query_preserves_genuine_build_cutoff_and_numeric_hash",
+      "start": 2140,
+      "end": 2162,
+      "sha256": "2380cf2c22a5617ffc0ce7713cead3754c4be8a586ab6cf6de90663f2dabd9f5",
+      "assert_count": 4,
+      "uses_helper": true,
+      "direct_original_build_oracle": false,
+      "decorators": [
+        "pytest.mark.parametrize('offset', [None, 1439])"
+      ],
+      "scope": "original real builds/canonical decoding/hash/equality/full evidence facts/three distinct origins/genuine revoke/no Source issuance"
+    }
+  ],
+  "mutation_allowed_while_process_live": false,
+  "helper_callers": [
+    "test_native_original_evidence_row_reads_real_verified_build",
+    "test_native_original_build_equality_matches_original_decoder",
+    "test_native_evidence_query_preserves_original_row_domains_and_faults",
+    "test_native_evidence_query_checks_three_distinct_original_source_origins",
+    "test_native_evidence_contract_rejects_coherently_rehashed_bad_metadata",
+    "test_native_evidence_query_preserves_genuine_build_cutoff_and_numeric_hash"
+  ],
+  "all_helper_callers_require_full_function_verification": true
+}

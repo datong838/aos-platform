@@ -1,0 +1,17 @@
+{
+  "failed_node": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_build_request_reads_actual_original_provenance",
+  "database": "aos_test_24dfd0843927_ti4_test",
+  "whole_nodes": 386,
+  "passed_nodes": 77,
+  "unexecuted_nodes": 308,
+  "exact_existing_function_acl_lock_audit": true,
+  "publication_counts": {
+    "source_pending": 0,
+    "source_publication": 0,
+    "source_provenance": 0,
+    "global_account": 0,
+    "global_provider": 0
+  },
+  "root_cause": "Original build provenance oracle repeats permanent157 profiles before model/native equality assertions",
+  "goal_completion_proven": false
+}

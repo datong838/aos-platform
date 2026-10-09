@@ -1,0 +1,104 @@
+diff --git a/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py b/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py
+index 4b3e98443..30dae186c 100644
+--- a/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py
++++ b/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py
+@@ -34,6 +34,11 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
+         'test_controlled_source_signer_binds_original_jwt_pending_and_private_key',
+         'test_current_source_consumer_rechecks_new_transaction',
+         'test_current_source_consumer_accepts_independent_owner',
++        'test_occupation_source_consumption_uses_actual_business_caller',
++        'test_occupation_epoch_profile_requires_complete_native_audits',
++        'test_occupation_epoch_profile_keeps_issuer_publication_usable',
++        'test_occupation_epoch_profile_keeps_original_python_audits',
++        'test_occupation_epoch_profile_keeps_existing_consumer_usable',
+         'test_exact_public_source_rejects_live_issuer_drift',
+         'test_exact_public_source_rejects_bad_signature_and_unfinished_commit',
+         'test_native_committed_sources_share_one_physical_account',
+@@ -1726,9 +1731,8 @@ def test_native_original_build_request_reads_actual_original_provenance(native_s
+         CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,
+         CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL,CAPACITY_ORIGINAL_BUILD_PROFILE_SQL)
+     with isolated_owner() as owner:
+-        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,
+-                        CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL,CAPACITY_ORIGINAL_BUILD_PROFILE_SQL):
+-            owner.execute(profile)
++        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
++        require_source_transaction_functions(owner)
+         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+         owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+         raw=owner.execute('SELECT request_payload FROM public.aip_evidence_bundle_build_provenance WHERE org_id=%s AND project_id=%s LIMIT 1',SCOPE.key).fetchone()['request_payload']
+@@ -1783,8 +1787,8 @@ def test_native_original_build_request_canonical_domain_and_acl(native_signed_so
+         ref=copy.deepcopy(resource);del ref['revision'];changed('resource-missing-revision',['subjectRefs'],[ref])
+         changed('license-arbitrary-numbers',['licenseSummary'],{'nested':[1,1.0,1e15,1e-5,True,None,'中文']})
+         changed('license-not-object',['licenseSummary'],[])
+-        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,
+-                        CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL,CAPACITY_ORIGINAL_BUILD_PROFILE_SQL):owner.execute(profile)
++        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
++        require_source_transaction_functions(owner)
+         names=['original_build_exact_ref','original_build_resource_ref','read_original_build_request']
+         rows=owner.execute("""SELECT p.proname,p.provolatile,p.proisstrict,p.prosecdef,p.proconfig,
+             pg_get_userbyid(p.proowner) AS owner,
+@@ -1820,7 +1824,8 @@ def test_native_original_build_request_canonical_domain_and_acl(native_signed_so
+         assert not mismatches,mismatches
+         print('BUILD_CANONICAL_DOMAIN',len(cases),'accepted',accepted)
+         owner.rollback()
+-        assert owner.execute("SELECT count(*) AS count FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)",(names,)).fetchone()['count']==0
++        assert owner.execute("SELECT count(*) AS count FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)",(names,)).fetchone()['count']==3
++        require_source_transaction_functions(owner)
+         owner.rollback()
+ 
+ 
+@@ -1830,7 +1835,8 @@ def test_native_original_build_json_matches_original_decoded_hash_input(native_s
+     from tests.aip._runtime_guard_history_fixture import isolated_owner
+     from aos_api.aip_provider_capacity_publication_store import CAPACITY_ORIGINAL_BUILD_JSON_SQL
+     with isolated_owner() as owner:
+-        owner.execute(CAPACITY_ORIGINAL_BUILD_JSON_SQL)
++        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
++        require_source_transaction_functions(owner)
+         flags=owner.execute("""SELECT p.provolatile,p.proisstrict,p.prosecdef,p.proconfig,
+             pg_get_userbyid(p.proowner) AS owner,
+             has_function_privilege('aos_runtime',p.oid,'EXECUTE') AS runtime_execute,
+@@ -1860,7 +1866,8 @@ def test_native_original_build_json_matches_original_decoded_hash_input(native_s
+         assert not mismatches,mismatches
+         print('BUILD_JSON_DOMAIN',len(samples)+6)
+         owner.rollback()
+-        assert owner.execute("SELECT to_regprocedure('aos_capacity_publication_private.original_build_json(jsonb)') AS fn").fetchone()['fn'] is None
++        assert owner.execute("SELECT to_regprocedure('aos_capacity_publication_private.original_build_json(jsonb)') AS fn").fetchone()['fn'] is not None
++        require_source_transaction_functions(owner)
+         owner.rollback()
+ 
+ 
+@@ -1911,11 +1918,9 @@ def test_native_original_build_equality_matches_original_decoder(native_signed_s
+ 
+ 
+ def _install_original_evidence_profile(owner):
+-    from aos_api import aip_provider_capacity_publication_store as publication
+-    for name in ('CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL','CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL',
+-                 'CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL','CAPACITY_ORIGINAL_BUILD_PROFILE_SQL',
+-                 'CAPACITY_ORIGINAL_BUILD_JSON_SQL','CAPACITY_ORIGINAL_EVIDENCE_PROFILE_SQL'):
+-        owner.execute(getattr(publication,name))
++    """Audit the complete migrated private foundation; keep old caller harness."""
++    from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
++    require_source_transaction_functions(owner)
+ 
+ 
+ def _native_evidence_read(owner,ref):
+@@ -2127,7 +2132,9 @@ def test_native_evidence_contract_rejects_coherently_rehashed_bad_metadata(nativ
+                 assert _native_evidence_read(owner,ref) is None,field
+             finally:owner.execute('ROLLBACK TO SAVEPOINT coherent_evidence_model_fault')
+         owner.rollback()
+-        assert owner.execute("SELECT count(*) AS count FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)",(names,)).fetchone()['count']==0
++        assert owner.execute("SELECT count(*) AS count FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)",(names,)).fetchone()['count']==3
++        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
++        require_source_transaction_functions(owner)
+         owner.rollback()
+ 
+ 
+@@ -4911,7 +4918,7 @@ def exact_public_source_caller(native_full_signed_reader,request):
+             assert row['signature'].startswith('publication_')
+             revoked.append(row['signature'])
+             owner.execute(sql.SQL('REVOKE EXECUTE ON FUNCTION '+row['signature']+' FROM aos_provider_capacity_issuer'))
+-        include_consumer=request.node.originalname in {'test_current_source_consumer_rechecks_new_transaction','test_current_source_consumer_accepts_independent_owner'}
++        include_consumer=request.node.originalname in {'test_current_source_consumer_rechecks_new_transaction','test_current_source_consumer_accepts_independent_owner','test_occupation_source_consumption_uses_actual_business_caller','test_occupation_epoch_profile_keeps_existing_consumer_usable'}
+         for statement in transaction.source_public_entry_statements(include_consumer=include_consumer):owner.execute(statement)
+     _refresh_native_facts_transaction(caller)
+     try:yield caller,raw,material,original
