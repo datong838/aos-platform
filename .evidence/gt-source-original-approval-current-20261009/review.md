@@ -1,0 +1,4 @@
+# 原运输鉴权与批准行完整矩阵
+Rules：用户AGENTS、AOS工程交付、231、原Source S01–S20。基线fb9ca886/AOS-001638。此波无产品/原测试代码改动，完整选择三原函数：OIDC真实verified authentication原maker/request/issuer/audience/exp字段、bearer不入SQL且不泄漏错误；实际签名篡改拒绝；source/allocation两个原批准SQL的action_metadata/object_metadata/maker_role/checker_role/draft_payload/draft_status/policy/eligibility全部8x2原故障与恢复。18passed35.46s，无skip/xfail/deselect。
+原默认session fixture合法共用一个新保留native测试库，不声称18独立库。独立只读回读七输入hash、cluster7694534063495901208、完整函数定义ACL锁审计、五Source/publication表0、角色NOLOGIN/nohighprivileges、临时接口不存在、occupation无效果、fsync/full_page_writes/synchronous_commit on、独占root卷及旧32container身份/start/mounts/ports全部不变。
+本有限原矩阵通过，原Source仍ACTIVE。全部原测试套件尚未同轮全文件完成，最终实际COMMIT过期反例未解决，正式业务首链/Host权限/模型review不由此证明。浏览器无界面变化不适用。原fixture6/1和所有原用户/产品差异保护、不push、不动真库、Goal active。下一已登记全原Source文件原参数完整选择maxfail1，优先发现下一个真实缺口；有2.5GB+80MB节点资源门，未执行项必须保留，不把收集当通过。

@@ -1,0 +1,5 @@
+[
+  "test_preparation_transport_uses_verified_authentication_without_sql_secret",
+  "test_preparation_transport_rejects_actual_signature_drift",
+  "test_original_approval_sql_rechecks_native_approval_facts_without_client_guard"
+]

@@ -1,0 +1,13 @@
+{
+  "name": "aos-source-root-native-20261009",
+  "context": "colima-aos-extension",
+  "container_id": "8384eef7b29dabf3629ba31c8ab18beab011a2f86cddffe96c0907be73024ec5",
+  "image": "sha256:1a726528ec4ec3dfebf104148d3c6ae329828bfd228c305bb3e0e1e582ee074b",
+  "cluster": "7694534063495901208",
+  "port": 5437,
+  "volume": "aos-source-root-native-20261009-data",
+  "passfile": "/Users/ddt/.aos-lab-secrets/aos-source-root-native-20261009/pgpass",
+  "memory_bytes": 805306368,
+  "old_resources_unchanged": true,
+  "root_directory": "/var/lib/aos-test-labs/aos-source-root-native-20261009"
+}
