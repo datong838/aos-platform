@@ -1,0 +1,271 @@
+{
+  "authority_revision": "AOS-001615",
+  "head": "40301f6e385850e173247dc30a05f6dbc4b2b547",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/target-call-immutability-reference-1614.json",
+      "sha256": "0aeb8b30534c0100d6e90a9a497284f5d2b58096c7ce84a7ff5899a16a31a0ad"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/renewals-ledger-1614.json",
+      "sha256": "61e53858e93766807d4b5f2beabe7118bdafcb9ed272721b9a578000642b05d8"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-budget-fact.json",
+      "sha256": "a11d9e0d161adcf42e0e8f1ac135f3d82f21ce80205fbf1f93ba5c80951239e4"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-case-binding.json",
+      "sha256": "8bd838f61e14dedd35233f95119989e4aa0651f6a3a9d9fb7dbb4265bc95d541"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-guard-race.json",
+      "sha256": "5461f687dbb231d4a7803d85c91422a863f06271823291daf89f814281db31d9"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-input-binding.json",
+      "sha256": "2750394a6d3161deafb4876d59a3e549937d3c1b4dbd9640af27f86712e1ea17"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-input.json",
+      "sha256": "fd3214bb842aefb9bb2e07eef7fd7ac8738296a4b22e3443b421e8c596060b8b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-intent-existing-row-negative.json",
+      "sha256": "634e7a09b79d4f92a28a14fbec4950ed85bcfb2c979f006828c553b9c2f63c62"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-intent.json",
+      "sha256": "9b080c27793feff3a135467d8d344aa3905bbe745ecf2be38d885e62bf2000b2"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-parent-debit.json",
+      "sha256": "2692a6adac88e4925e62f040b7d525986756e95753c962263e0e9ca529b675c8"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-preparation.json",
+      "sha256": "2900de1b37ee5d69172b6774307335081ebd07272de1727c5255d09653eefe23"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-whole-source-plan-input.json",
+      "sha256": "e35c793b8392c44bcfd50e505e3c5c317bb2a9cf1e8a41dc6aec28ba63bf2ec5"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-green-r1-whole-source-plan-verification.json",
+      "sha256": "5f56914ee9afbb1efd2baa95cf1104a6ce3343a0d9614befd7687ee5ddd099a6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-budget-fact.json",
+      "sha256": "01b37860e6420742315810f1c49dad0b3977a4d781774acd408fe757ec81925b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-case-binding.json",
+      "sha256": "8151ab92263b9ef439e81a313d26c98a12f9576b0f62a325d20fb14a9507a67c"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-guard-race.json",
+      "sha256": "5d1e5d3a6ba21f27dcd371832e0f3495e2e0225d2800082310a0c52080fa8c53"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-input-binding.json",
+      "sha256": "145d0e94419f9cb8efa0bffbfa663526f7beca754c685b5f2cd540b6720c8a69"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-input.json",
+      "sha256": "8b274d04c97570d18acd26412b5c47b676f528f7a904d74e4e07e8fbf1efaff9"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-intent-existing-row-negative.json",
+      "sha256": "63c48473735345d675f3d0a6ec2a0224fffb60010baaaab52a6e054786d7eb63"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-intent.json",
+      "sha256": "3b96cd11b93960f70cb531e3089db9653afacd0d6e90e4929f5c8c91e829b13b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-parent-debit.json",
+      "sha256": "0633fd9d9c982a779226a2e86c542720a89fcc71d86301ce737dd45cc0a21070"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-preparation.json",
+      "sha256": "2afe886f53ceab7ba112c9e984a0eca356cde37a3372b667b1a79c51228c72d8"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-whole-source-plan-input.json",
+      "sha256": "1ded5d541ce63a890a5caea137fa533045af3af647b4710cef8dda7ea8b545ed"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-red-r1-whole-source-plan-verification.json",
+      "sha256": "1609203a36610fabddd4d25f3edc4d85f2635e48dbb96c1c7da4651d8e0f2984"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/ledger-green-r1-whole-plan-proof.json",
+      "sha256": "8108baf49f29b0ef94a9a0318a2215e68586d9f91d9e7d66c7301c5ac58f6b1a"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/ledger-red-r1-whole-plan-proof.json",
+      "sha256": "0b3a958d979919522cfee90c68282a9f895926b8a43ffbd028d6a9bbf48b871c"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/adjacent-r1.log",
+      "sha256": "28a71615fd4ad7f26d41e9077d3855c4674dac2f44a61ed6e208c332cf09e4ac"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/catalog.json",
+      "sha256": "f6299bac1ac076606c8cded3b5d68362b639a40c2477ed9b8b9f6b4be6269afd"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/complete-plan-risk.json",
+      "sha256": "75669a7fff1a0f4ed809ccaed3ad14ae5ce39692adce4f716e1e868b2e3ee628"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/finalize_wave.py",
+      "sha256": "15aef6fc28e819ba3daab5a51f0eef5919af552ec00a44c730dab1fa219ab45b"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/hash-check.json",
+      "sha256": "0183e783b7fe33594eb47b5916b31000f23d01c0b5dc293fae220efb84a96764"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/independent-readback.json",
+      "sha256": "92debfc2b6f47487dad77e31144ab75d80ac697d717d983af1bc60831d1e9289"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/independent_audit.py",
+      "sha256": "ac2e91a3512c72a9df71449ea164a81fcb91287409cd90ee6f1cd306e37a4bed"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/ledger-candidate.py.txt",
+      "sha256": "5270bf5b8fff5e6a0d6a3b7d2fce4477595d47be332694c64665d0735ba20a3c"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/ledger-catalog.json",
+      "sha256": "f3dd4d6994052f853bc363ee475ee43a79094b70eb9b6010594e13fb41e7eb50"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/ledger-green.json",
+      "sha256": "cc22845fe9cdaf0122d6bc819fcc1f47a0b96feb4c8474a5759e55f89e1d3b83"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/ledger-red.json",
+      "sha256": "ae22aafceff39a2fce8bedb2fb2bd93ab7d5676e9d564fdaf532da6de33b9d97"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/native-green-r1-attempt.json",
+      "sha256": "61c09038cfababcf7f37ad349fe20f6c8719e51498c3d62186f3008219b4f234"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/native-green-r1-result.json",
+      "sha256": "62a41519cec7befffd5634bf5d453a13b637e16188a7320c99109bd710b3bc35"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/native-green-r1.log",
+      "sha256": "b5ac4dc537e53c5eca0d15618b6562fca8d7b77c20c5e308ebda6a8b8968024c"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/native-red-r1-attempt.json",
+      "sha256": "ef092f61bb3a9f208e78f9009ee3c366421bbed516678531f66bd1790309c908"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/native-red-r1-result.json",
+      "sha256": "964c5366b4c1f51b58458c58f8b768ec33d8ccb6f4790e0ddeea388ecfbd92b7"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/native-red-r1.log",
+      "sha256": "b42c59a93ef16563e703e37054e277d99cd7b3f5592dde51d9680f97b29933d0"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/next-admission-plan.md",
+      "sha256": "ae1a31e556747e1c07e3cb8840b0ca26c9db4b49ea5b0edb99b9ea13ad134cbe"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/plan.md",
+      "sha256": "3449f4dfb475186c690042bb1bdd51fb434f553d0ce1047c31bd03597c864f7e"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/red-independent.json",
+      "sha256": "85319c595ec66c9e5b02c23349dc7545ca316ef2eddf273b62eaa787a3b98562"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/review.md",
+      "sha256": "ec5eb19e23bc272990f0e087062df07c23d4013b1c955aa345e43da7464c246d"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/run_native_green_r1.py",
+      "sha256": "fe3070c67a3b9caf21d56f9e0b6daaf3f1c25ea08adc8b1b4f10d64f804f9a6d"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/run_native_red_r1.py",
+      "sha256": "da1c414f0ed64242c04396b40c258496704b74c6e79afaa2074c70117c28eee7"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/source_newjudge_native_trial_1606.py",
+      "sha256": "9ec55c5d5afd07f8a88427c2a0838bf42e9f3d580de4f6f5a11ff96df0975158"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/source_trial_red_r1.py",
+      "sha256": "691f949f1f9a76c4d96b1348ecbc3f6fe91ac44bd5d680ef36fb8450a1da4588"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/static-review.json",
+      "sha256": "08857dde7cced7c3101d5f3ebdfed2abf9dd6b898ed91662ce4af36e46beabdd"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/task.json",
+      "sha256": "cc5af1d5da50d9b0384f2e81dff883d6ca7711acbffe3dd2e07004aa567231f2"
+    },
+    {
+      "path": ".evidence/gt-target-occupation-ledger-native-20261009/trusted-target-call-green.json",
+      "sha256": "33813a247f40ca407b5254fda5f2089482372de0a3c2ebe9ffd1574b6c135635"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py",
+      "sha256": "134ae1bebf21aa704f17a3901e6f952164dadf1909f42b6efbf4735774df5a87"
+    }
+  ]
+}
