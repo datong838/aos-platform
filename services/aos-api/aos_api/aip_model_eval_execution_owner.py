@@ -437,6 +437,57 @@ class ModelEvalExecutionOwner:
                 raise ModelEvalOwnerRejected('exact original Model input byte hash required')
         self.validate_original_model_plan_suite(conn, scope, plan)
 
+    def prepare_original_model_plan_prompt_bytes(self, conn: psycopg.Connection,
+                                                scope: TenantScope, manifest, *, inputs: tuple) -> tuple:
+        """Derive fixed prompt bytes from the original approved format only.
+
+        This is a nonexecuting producer preparation, not a Model identity,
+        tokenizer proof, messages/wire envelope or Source/joint admission.
+        No caller renderer, normalization or implicit legacy format is used.
+        """
+        import json
+        from aos_api.aip_production_contract_store import AipProductionContractStore
+
+        plan = ModelEvalExecutionManifest.model_validate(manifest)
+        self.validate_original_model_plan_input_bytes(conn, scope, plan, inputs=inputs)
+        schema = {'type': 'object', 'properties': {'prompt': {'type': 'string', 'minLength': 1}},
+                  'required': ['prompt'], 'additionalProperties': False}
+        expected = {'schemaVersion': 'aos.model-eval.single-user-prompt/v1',
+                    'inputSchemaHash': canonical_hash(schema),
+                    'renderer': 'aos.model-eval.single-user-prompt/v1'}
+
+        def require_format():
+            ref = plan.request.eval_contract_ref
+            original = AipProductionContractStore().get_eval_contract(
+                scope, ref.asset_id, ref.revision, conn=conn)
+            policy = original.gate_policy
+            # Original Suite/request validation holds the current Contract head;
+            # compare the exact frozen revision, never upgrade an old Contract.
+            if (original.content_hash != ref.content_hash or original.lifecycle.value != 'frozen'
+                    or policy.get('subjectKind') != 'model_eval'
+                    or policy.get('executionAllowed') is not False
+                    or type(policy.get('modelInputFormat')) is not dict
+                    or canonical_hash(policy['modelInputFormat']) != canonical_hash(expected)):
+                raise ModelEvalOwnerRejected('Model prompt format must match original frozen Contract')
+
+        require_format()
+        prompts = []
+        for case_id, raw in inputs:
+            # The prior exact-byte gate already validated strict immutable JSON.
+            value = json.loads(raw.decode('utf-8'))
+            if (type(value) is not dict or set(value) != {'prompt'}
+                    or type(value['prompt']) is not str or not value['prompt'].strip()):
+                raise ModelEvalOwnerRejected('Model prompt input requires only a nonblank prompt string')
+            try:
+                prompt = value['prompt'].encode('utf-8')
+            except UnicodeError as exc:
+                raise ModelEvalOwnerRejected('Model prompt input requires exact UTF8 text') from exc
+            # Preserve leading/trailing whitespace and Unicode exactly.
+            prompts.append((case_id, prompt))
+        require_format()
+        self.validate_original_model_plan_input_bytes(conn, scope, plan, inputs=inputs)
+        return tuple(prompts)
+
     def validate_original_model_judge_binding(self, conn: psycopg.Connection,
                                               scope: TenantScope, manifest) -> None:
         """Necessary original Suite Model Judge binding, never dispatch authority.

@@ -1,0 +1,79 @@
+{
+  "caller": {
+    "xid": "24729",
+    "pid": 54946
+  },
+  "applications": [
+    {
+      "status": "ORIGINAL_NONEXECUTABLE_EVAL_APPLICATION_APPROVED",
+      "database": "aos_test_f9bc99907219_ti4_test",
+      "model_id": "joint-prefix-model-5300a7166a59425793ce6c7fb2e7661e",
+      "model_hash": "aba00ddd5e5a17d0e45d1cc247e5311c754ef431e001839406b2d63739eafc46",
+      "request_id": "model-eval-request-4365a50c7fe14348a988",
+      "request_hash": "0c8f400b17e359aa5413399ca57741f655de9e5cc7ca0db5e7a86ffc3bd09f80",
+      "proposal_id": "proposal-5d6c4c499d6241ce8b68",
+      "maker": "test-maker-cf02363a1f3648eaa26a2a188b7cfc50",
+      "checker": "test-checker-cf02363a1f3648eaa26a2a188b7cfc50",
+      "expected_head_version": 1,
+      "suite_id": "model-prompt-cbc51ec2c7b04f39bcdc87af1465ca74-suite",
+      "contract_id": "eval-contract-9dd7a22f5b9d4a2fb8c7",
+      "execution_allowed": false,
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0
+      },
+      "count_scope": "Eval hold count is this exact request; AgentRun/capacity remain database-wide",
+      "limitations": [
+        "Test-owned dataset/redaction artifacts and actual deterministic Graph governance gate",
+        "Model-target Suite remains unexecuted; no Model quality gate",
+        "No budget hold, shared physical joint, unique execution Intent or formal business"
+      ]
+    },
+    {
+      "status": "ORIGINAL_NONEXECUTABLE_EVAL_APPLICATION_APPROVED",
+      "database": "aos_test_f9bc99907219_ti4_test",
+      "model_id": "joint-prefix-model-de426bd6cb6e415aad0e3bc484dd7197",
+      "model_hash": "95222afc7064f9f610f0e57cde4380b0e1534131ed8b087afc41c1f2a5627949",
+      "request_id": "model-eval-request-e68c9ccfb0504e4886b4",
+      "request_hash": "b3a240a56c981eab98629b2d7814b91d5813352e1956d5f86d2971b7a2fbc480",
+      "proposal_id": "proposal-dfff5b5589164aa3b972",
+      "maker": "test-maker-46e3b92227a14de9b1bfb6997952209f",
+      "checker": "test-checker-46e3b92227a14de9b1bfb6997952209f",
+      "expected_head_version": 1,
+      "suite_id": "model-prompt-3f19145ac1f747399d869006939a12bf-suite",
+      "contract_id": "eval-contract-25826ffad9dd40af9f22",
+      "execution_allowed": false,
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0
+      },
+      "count_scope": "Eval hold count is this exact request; AgentRun/capacity remain database-wide",
+      "limitations": [
+        "Test-owned dataset/redaction artifacts and actual deterministic Graph governance gate",
+        "Model-target Suite remains unexecuted; no Model quality gate",
+        "No budget hold, shared physical joint, unique execution Intent or formal business"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "purpose": "target",
+      "checker": "test-checker-cf02363a1f3648eaa26a2a188b7cfc50",
+      "deleted_roles": [
+        "admin"
+      ],
+      "restored_positive": true
+    },
+    {
+      "purpose": "judge",
+      "checker": "test-checker-46e3b92227a14de9b1bfb6997952209f",
+      "deleted_roles": [
+        "admin"
+      ],
+      "restored_positive": true
+    }
+  ],
+  "execution_allowed": false
+}

@@ -1,0 +1,17 @@
+{
+  "caller": {
+    "xid": "24160",
+    "pid": 53830
+  },
+  "manifest_hash": "3a16e7da0d846ab213dda3ca06f5c4bba3ee914753738d609b4e62daa5eba3e2",
+  "certificate_count": 4,
+  "output_count": 0,
+  "function_metadata": {
+    "owner": "aos_model_eval_issuer_owner",
+    "prosecdef": true,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ]
+  },
+  "execution_allowed": false
+}

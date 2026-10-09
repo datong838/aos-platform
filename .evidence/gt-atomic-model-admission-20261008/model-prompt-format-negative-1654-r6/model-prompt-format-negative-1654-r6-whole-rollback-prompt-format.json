@@ -1,0 +1,12 @@
+{
+  "caller": {
+    "xid": "24729",
+    "pid": 54946
+  },
+  "variant": "surrogate",
+  "input_hash": "d64ad6d12157bf5f0eda7ceb0a6fbf960963a6487ce48b286bc8b1d1d102d6ed",
+  "prompts": [],
+  "rejected": true,
+  "execution_allowed": false,
+  "tokenizer_certified": false
+}

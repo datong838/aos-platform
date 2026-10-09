@@ -1,0 +1,12 @@
+{
+  "caller": {
+    "xid": "24160",
+    "pid": 53830
+  },
+  "variant": "missing",
+  "input_hash": "17da12b42a00e995115026e72462b2f817c68cfe49ad94a275ed52bad08dc5b9",
+  "prompts": [],
+  "rejected": true,
+  "execution_allowed": false,
+  "tokenizer_certified": false
+}

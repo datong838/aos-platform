@@ -1,0 +1,709 @@
+{
+  "result": "ORIGINAL_APPROVED_FIXED_PROMPT_PRODUCER_NECESSARY_STAGE_VERIFIED",
+  "reports": [
+    {
+      "attempt": "model-prompt-format-red-1654-r1",
+      "database": "aos_test_999446d269c5_ti4_test",
+      "pytest_exit": 1,
+      "caller_aborted": false,
+      "originals": [],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-red-1654-r2",
+      "database": "aos_test_937829ad7a2e_ti4_test",
+      "pytest_exit": 1,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-ca118c291dfc4b5c80d6",
+          "request_hash": "91ba36e382f57c6978f46679a339f0a38bacf3b20f81fba8e48a95d23c33508b",
+          "contract_hash": "a5ab055a84727e6168b26f3bbc78db6da613a578c40a63bbf835848fbbd476a0",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "0ae7b04c808ef5d1970cf2dd5549af632237dfb200fe2e42ebdfd842b1b37237",
+          "input_hashes": [
+            "2310be317ac0db436f04d2ab890321387b3513748cb2715ce7fff58e86133534"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-fb26247155ed45748a93",
+          "request_hash": "0a52191717005a284db4ca2df5d5c6824ab6d12d615504fde68cfb33d425b120",
+          "contract_hash": "17ad7fd2e1771b9cacd730b3a81ac0ceffc137417199711bf41e74549dfdcdaf",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "3eadb031e4475bafff204c489e502acab0b15cda040d9e049957cbca3918d3d4",
+          "input_hashes": [
+            "2310be317ac0db436f04d2ab890321387b3513748cb2715ce7fff58e86133534"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-green-1654-r1",
+      "database": "aos_test_203c1be53a03_ti4_test",
+      "pytest_exit": 1,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-b769103f08c945229e77",
+          "request_hash": "1586ecd9ccbd885d49f41e7f34cce86c2ec712cbd1746694c40748b68fba42c8",
+          "contract_hash": "d854bd15ce374fda810628ca37e3f8f0251a626fb675326dd5d6fc1f1bbc4bba",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "050a7591f51b2666f032e0603cbf66308e8cb8cf67f2207736e14fa31ba05750",
+          "input_hashes": [
+            "2310be317ac0db436f04d2ab890321387b3513748cb2715ce7fff58e86133534"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-26a14a1de5b24624875d",
+          "request_hash": "a2e121b70c3260803563596e2eb6fe9629cdf11e0037ffecdace0bbd4b7db7e0",
+          "contract_hash": "5b9a7f570a30e27abf0a1c79fdf3d28eabc41426c1195cc857798808ac1d9b73",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "a33534a161eee50baa236a1be8fcb9e9ef4fc5000b93f6cbde655b9291853b9c",
+          "input_hashes": [
+            "2310be317ac0db436f04d2ab890321387b3513748cb2715ce7fff58e86133534"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-green-1654-r2",
+      "database": "aos_test_c3e12344859b_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-31493d4d42844c9ca7b4",
+          "request_hash": "71de0e60ca896f5fd23de42f58f6646d14ce898fc47e1944d5fbe10f1c41ac8e",
+          "contract_hash": "6352d2972392647154b4496e69ba1c085c4eaf81d0fea48cdd3cce362cea7764",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "a0b932a89b125ea5e73a2f6ade5eec752362ad53403d15dc03e5ec610417ed6e",
+          "input_hashes": [
+            "2310be317ac0db436f04d2ab890321387b3513748cb2715ce7fff58e86133534",
+            "2310be317ac0db436f04d2ab890321387b3513748cb2715ce7fff58e86133534"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-99c6fa2b426a46e19b6e",
+          "request_hash": "ca1b435e2dd56134d2858f81ea81b9348b810f42c61897c70ee80a36320dd381",
+          "contract_hash": "8d011435d62894d71e75561504a62007c457fa735df8befd637583d11d542782",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "054561599ae7f13e57969d3d103c1a2c19c07a28f965e0d272bce4862b4b78e9",
+          "input_hashes": [
+            "2310be317ac0db436f04d2ab890321387b3513748cb2715ce7fff58e86133534",
+            "2310be317ac0db436f04d2ab890321387b3513748cb2715ce7fff58e86133534"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-negative-1654-r1",
+      "database": "aos_test_c49c58088afb_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-2b9fa78a91fb4b3aa883",
+          "request_hash": "e32355a6ce600899cf793783cfff7117e78fdf76c60697e111c4dfc66bce234b",
+          "contract_hash": "00221acc61417ff25f43f2e034ed597990c32b0c6697d02d321a968a22e5b1df",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "f1299228489755b1acdd1e36fa8ed23636cb2aa38eeebd9c1e4faa05b3fc71f4",
+          "input_hashes": [
+            "445944f3c150ad49f1cf43ae9b644bad5f2252eae49e10153287c572c43eb299",
+            "445944f3c150ad49f1cf43ae9b644bad5f2252eae49e10153287c572c43eb299"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-eb24b30ea62748a1b789",
+          "request_hash": "8478aaf054930c544e5ef103b87e68db05bdbf255c6dfca0afce609dd8928f7f",
+          "contract_hash": "8b3998d3b5108a618d01167f0cc38c9c60a1823dca429bb673bb6dce5161c5f6",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "403b9a604e624eca65f95171ecc9d7148accb5117bb0ea147e4c18ca93cc80e7",
+          "input_hashes": [
+            "445944f3c150ad49f1cf43ae9b644bad5f2252eae49e10153287c572c43eb299",
+            "445944f3c150ad49f1cf43ae9b644bad5f2252eae49e10153287c572c43eb299"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-negative-1654-r2",
+      "database": "aos_test_e1e491b2cecc_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-a9857183cde947a1949a",
+          "request_hash": "dba43f5ba4a43864c52430925ec750c1c61e47a1fd87714c22f8cdbe1b8b1cac",
+          "contract_hash": "acb71767b41ddcf609a49d6eafc9cc3d397681258a4337d95f5ffae9ed1ebd69",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "73b3297bf47819b2c0f5f2038a392b55f2d74abc8d282fa953e1fbd3f0c206e5",
+          "input_hashes": [
+            "17da12b42a00e995115026e72462b2f817c68cfe49ad94a275ed52bad08dc5b9",
+            "17da12b42a00e995115026e72462b2f817c68cfe49ad94a275ed52bad08dc5b9"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-1a9bc14218694b458265",
+          "request_hash": "49ed73c704469fbc4e57f14653475c29f4047036c4055f9088a33bd29727cbbc",
+          "contract_hash": "44f6959400b4a7f7807c9c35e405512f45486b8fe6b703fe923e1c42ccea3d36",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "9433f4588676df4dfd7dc390f913057ef246abf66235925e150a6988b4c89135",
+          "input_hashes": [
+            "17da12b42a00e995115026e72462b2f817c68cfe49ad94a275ed52bad08dc5b9",
+            "17da12b42a00e995115026e72462b2f817c68cfe49ad94a275ed52bad08dc5b9"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-negative-1654-r3",
+      "database": "aos_test_1cf96e5e7700_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-5ae1521c071a47e5a7f7",
+          "request_hash": "abdfc5034956c99a2668f1d2b4877f440ff76a628d2cfdeac8ced1a8f1e1c4b7",
+          "contract_hash": "9538a0506ae9a7ddc12d57b7d1b06129ad9795232ad7023dd034af1e5423022c",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "951bb1db5dd747ac4bcb90a094cfc09d10cf1f0dbdbf449df5bb1a94b003c795",
+          "input_hashes": [
+            "570d1f935c1273235eca1604f5200bf0f06acd814a6dcc6776d5fd0d7257ed01",
+            "570d1f935c1273235eca1604f5200bf0f06acd814a6dcc6776d5fd0d7257ed01"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-5a74ee1e45264e27b6c0",
+          "request_hash": "deb94cbd1d8e42214ad319af3762758032b06e9f641d19657e83c0cc64151f09",
+          "contract_hash": "816aca67dfbcd9e9bd74bd27c2311ca41829be760683a329f8524c6d825ce2ec",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "51d25dcfa1dc640f001ecb7dd0f103cc782f80cd56b20593de66592c5af13ca8",
+          "input_hashes": [
+            "570d1f935c1273235eca1604f5200bf0f06acd814a6dcc6776d5fd0d7257ed01",
+            "570d1f935c1273235eca1604f5200bf0f06acd814a6dcc6776d5fd0d7257ed01"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-negative-1654-r4",
+      "database": "aos_test_9589c14b350e_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-79b0f4eebf0246b89a52",
+          "request_hash": "acceb35a0332e9610b2454ba23276a7555832b8e2a78d88f78c0dbfea65d7c9b",
+          "contract_hash": "0eadd76d826bf0830cd6b0d4ffc5ccd135c70e593d744340c038b4bb7f29edd6",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "3aa8275a8de36a14bb6f752a1892f474b9b741ebed5c52d29d69a5c1e206e07c",
+          "input_hashes": [
+            "08c40fabb3729729dc79e478bb91ffcd858df1fe404140a492661363c4584b06",
+            "08c40fabb3729729dc79e478bb91ffcd858df1fe404140a492661363c4584b06"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-ac7fe57c39934508922f",
+          "request_hash": "024f8e8968720de05fd1495d9a5830c1cb7acc087e71b66fe85159c3cc9cc271",
+          "contract_hash": "e25988eea47bdf8ab3c6d81a31a049ce031c555fec2b0d4576dc7a29900cd105",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "fe29475a114ad52dbe9a477c54189fba5cc68ddf22699b4116d287328b581929",
+          "input_hashes": [
+            "08c40fabb3729729dc79e478bb91ffcd858df1fe404140a492661363c4584b06",
+            "08c40fabb3729729dc79e478bb91ffcd858df1fe404140a492661363c4584b06"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-negative-1654-r5",
+      "database": "aos_test_58e69fdb74db_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-253067149e8542daa8de",
+          "request_hash": "80025490ac104d935f6ed3ab4754da64369c38d9122216e5ac18d30a4089ba83",
+          "contract_hash": "5e7995858cf26a6a97f4d87397b13159d8b470ce042c60cc2355abc341a7558e",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "74ca4fd243e1eeb1c5b4a12d73553de18a18608b86df869becbc4b04df847bc3",
+          "input_hashes": [
+            "42bfd490e9719b75bb8a8e795f526e9489dc1b36e26d916f0ae87f76a83085ee",
+            "42bfd490e9719b75bb8a8e795f526e9489dc1b36e26d916f0ae87f76a83085ee"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-9ea8627b56e44103abb7",
+          "request_hash": "741b802ad39023c9917b10946d62252c7b94444ebb9fa47fc859cb89158ba756",
+          "contract_hash": "12188d0dfb7e05f9b82b50eb8e4d3e59fdedd3f2a446cd670107b26aa23a1ac7",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "0454d76d6cbe3eaae4919bfa5ba5e2988f12e49f732850975189a854eb657ce6",
+          "input_hashes": [
+            "42bfd490e9719b75bb8a8e795f526e9489dc1b36e26d916f0ae87f76a83085ee",
+            "42bfd490e9719b75bb8a8e795f526e9489dc1b36e26d916f0ae87f76a83085ee"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-negative-1654-r6",
+      "database": "aos_test_f9bc99907219_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-4365a50c7fe14348a988",
+          "request_hash": "0c8f400b17e359aa5413399ca57741f655de9e5cc7ca0db5e7a86ffc3bd09f80",
+          "contract_hash": "c4fc9c4086d947462a16e70dcd9657259daa117161337aa35c382d872f726ad9",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "5021b70f64f8136379e965b6a2389240602929c4a8532e68f0e54f89adc87dbe",
+          "input_hashes": [
+            "d64ad6d12157bf5f0eda7ceb0a6fbf960963a6487ce48b286bc8b1d1d102d6ed",
+            "d64ad6d12157bf5f0eda7ceb0a6fbf960963a6487ce48b286bc8b1d1d102d6ed"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-e68c9ccfb0504e4886b4",
+          "request_hash": "b3a240a56c981eab98629b2d7814b91d5813352e1956d5f86d2971b7a2fbc480",
+          "contract_hash": "739edd8dc0d21a3749574a504da4e8be57d4b2a6c8d16859fc807b33bced1cf0",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "e2d5c160cb2dcd0da4c5b70509aabc5d30635c9a539ad736bf77cbf1391515a2",
+          "input_hashes": [
+            "d64ad6d12157bf5f0eda7ceb0a6fbf960963a6487ce48b286bc8b1d1d102d6ed",
+            "d64ad6d12157bf5f0eda7ceb0a6fbf960963a6487ce48b286bc8b1d1d102d6ed"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-negative-1654-r7",
+      "database": "aos_test_e1fb1371fd22_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-f8370c2da0f544f4967d",
+          "request_hash": "1f6433e21de1c9057c27c19b64088ec186fd900775d2992a57cc85554eb38900",
+          "contract_hash": "3dbdbd4b419da32cedfb2180f98a95682ac8a3d11d9be98aae66c83464f2a76c",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v2",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "e75dc0f37089778f4b689d8fa6503ff2a8ed39d2ed835f8f9a2ea8b2806c3aa6",
+          "input_hashes": [
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2",
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-74604a0982174e229e77",
+          "request_hash": "4ae9580a5331e966ec9631575073c9dac79faf0f6fc46ca12559f7653c21928c",
+          "contract_hash": "ba6373d19ccf523ac6beb4b7c94f233cb23617ebf9dcbb18f499f09a405554eb",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v2",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "adfb3d086d7b004d1a7d6914446e2ea8e94b595dfdbd3286324813c99f51c847",
+          "input_hashes": [
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2",
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-negative-1654-r8",
+      "database": "aos_test_6f516f4be466_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-13aec67a5ab64e4e81e5",
+          "request_hash": "17336fcb56bc059a2d8a394fec52b7aaf0cc2d2fb0f7d64c1c4dc1f5b35d98d5",
+          "contract_hash": "2ae166f44a796892bda59fd901ced2b3b722c04182a35e180d0649b5d78edb6d",
+          "format": null,
+          "suite_hash": "8fd4f3a589573e5cb9bb40187ee89adbad9cb278ddd092f89e19a2e146582471",
+          "input_hashes": [
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2",
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-001b390045bd4dd58afb",
+          "request_hash": "293057aea8a08d8d8384a6eb74bd28ea81cbd6326eba66cfe0e26bf48d292cb0",
+          "contract_hash": "7fa9eec44aea23d0ce010c0d949bf980d9a8a343b8b1964be8e62b2b1e2742cf",
+          "format": null,
+          "suite_hash": "430f0a2bc057b951fc2f74e02ce37080b39d0d4495c8ac65b2cf31e10b17716a",
+          "input_hashes": [
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2",
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-negative-1654-r9",
+      "database": "aos_test_81c11b8bdf07_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-941cd7bd0ee349da94d7",
+          "request_hash": "0544a9d5d76e600e7c625c3e0d6271c44c058d327faf2266a52f20f30baf9e12",
+          "contract_hash": "d7f1cfc7d98d6cf6b2027b350102113fbc0130932f92e982be95732fdea2e04c",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "ae4999bc75fe53b1687a79e4892ec5e893938009ecd15ce7e19ea824b4356c47",
+          "input_hashes": [
+            "cd65ea2c2ad99e94a85b1b6df72efef9cb2ed0ae933a60c32ce16317f7d7d6aa",
+            "cd65ea2c2ad99e94a85b1b6df72efef9cb2ed0ae933a60c32ce16317f7d7d6aa"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-6a745b7fa23342eebc33",
+          "request_hash": "f690bfe848e28060df2906c2159d9bf1798aea8c8a1352a577ee0610a9172c6e",
+          "contract_hash": "16bfe6b2cc2b7b98ebadcf827af779d76cd5e5e39d15cb6acd99d1da3dc36566",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "f523190caf3871f44c38e00165ea5536647c09864a16401f01f70d7604e5c211",
+          "input_hashes": [
+            "cd65ea2c2ad99e94a85b1b6df72efef9cb2ed0ae933a60c32ce16317f7d7d6aa",
+            "cd65ea2c2ad99e94a85b1b6df72efef9cb2ed0ae933a60c32ce16317f7d7d6aa"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-negative-1654-r10",
+      "database": "aos_test_835486b49935_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-eee2d83417704c13b76e",
+          "request_hash": "71003536381d06f3fe5590dc8b02f981adbc8721629e5957853d5c08bbfb9cbc",
+          "contract_hash": "4d95854734dc35e24982c973b3501dbbecf8c51f156fe0e5dae5aaca1273ffec",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          },
+          "suite_hash": "6d4e49815b801ca0805a1be83a2c7701008e005a16965abbdd911fd6c9d3ef7f",
+          "input_hashes": [
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2",
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-7a934b53a928447490b1",
+          "request_hash": "2b5e898f5ebe213b69c43d372fb14ec20b3dd6eeca24958a70ee6321aea701e9",
+          "contract_hash": "c6224a2634092c747b0566282c4660b430b367d97e8ca42f4687ef3fdb2ad3ed",
+          "format": {
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          },
+          "suite_hash": "cf1c4df8a3ad3754b3cbab6431a50c0c57e1d97c91e6617db5cb30076189a497",
+          "input_hashes": [
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2",
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-negative-1654-r11",
+      "database": "aos_test_4b1adcff0a8f_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-f6428d0412d7404289f5",
+          "request_hash": "e7a81283965a2958e92bed53cda855a41abb8f70b0338aab8400d4eca90eed61",
+          "contract_hash": "adcf78ce7964343d980884dbd3b395f5fb1668c45777680f5ff88a1d299f90b5",
+          "format": {
+            "renderer": "caller-renderer",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "b8e3b8f47272f080ebce3e18bd4f9c89d5b610c2233801b2b51edbf7c9a6f226",
+          "input_hashes": [
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2",
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-d69785758c514420b5e9",
+          "request_hash": "5a509a902fb819bb3c4c30bc5c453c2a1eeaa65dab6c4bbd50f2098d3777e800",
+          "contract_hash": "ef0371d87a95788cb2496489b3199896a2b335f031b148d1b90558dc0eeb1e32",
+          "format": {
+            "renderer": "caller-renderer",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "49246ede7c3cbba2b6478a32cb0a30c35221ec4f272496b85bf3e39dee7d6a12",
+          "input_hashes": [
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2",
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-negative-1654-r12",
+      "database": "aos_test_cfd0f3fcc632_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-de6eabcd796c41f7a67f",
+          "request_hash": "566898e36981d4419861efb7d015dee086382143284ba065e8d719c27fbc104d",
+          "contract_hash": "440c657ade30bc45110ffbc9829d5414d40abb98d0c25db1a1aa1981a115f210",
+          "format": {
+            "system": "hidden",
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "a6e72d0a38447746df967612c74d2f19fee4e5006eb7a4f9aa257f965b0da6fe",
+          "input_hashes": [
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2",
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-52e86483a00749bda587",
+          "request_hash": "38f08c04ecd957f7d9e2bbf017777d0da115ac785d970b04f1dd45d8f488fabd",
+          "contract_hash": "1667605cf50bff4958d065d3ba5a876846fe173c9180d8253def803659bbb0eb",
+          "format": {
+            "system": "hidden",
+            "renderer": "aos.model-eval.single-user-prompt/v1",
+            "schemaVersion": "aos.model-eval.single-user-prompt/v1",
+            "inputSchemaHash": "f23bf89d064976b98d8869716bdb89730f29b89594fdfb88b4a7b35c6b1a5174"
+          },
+          "suite_hash": "b018d8bd2ffe0363240d1245dfbac9fd81a16cefb465249043372376c828a285",
+          "input_hashes": [
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2",
+            "b2c6fa432c7431184bb3a2e6a832348f92d09418f9dafb8f08bca2d429282ce2"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-prompt-format-adjacent-native-1654-r1",
+      "database": "aos_test_9a58e70d0817_ti4_test",
+      "pytest_exit": 0,
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-10fb0a0d38f4425781c3",
+          "request_hash": "4440d08571deafa030b3bf7f6d122c7f660516e787a3ac868f7c404ffa4f7a5c",
+          "contract_hash": "35f9f7d45acfbd669a32fd6dce91db5930d4d385962369f29c6c7ee5007ed421",
+          "format": null,
+          "suite_hash": "bef77d2a261a0aa001823f1ff2182325784c703fb662b642d0fee6626f6c2aae",
+          "input_hashes": [
+            "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de",
+            "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de"
+          ]
+        },
+        {
+          "request_id": "model-eval-request-bfcd42a9a8b94ba08885",
+          "request_hash": "1e35c3a5b4255871430c331827bb9731859b28c78aed5bae2ad2dd022447ecad",
+          "contract_hash": "9e1af7b9244251a76f97a71b44e3e96e4198d8b679fa0622ae6b1e9ff5e108f4",
+          "format": null,
+          "suite_hash": "4adb86b595b839c09eca6c09bb10a09acbd18aefbf9a86c91feff0c0884e8f5e",
+          "input_hashes": [
+            "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de"
+          ]
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    }
+  ],
+  "source_verifier_unchanged": true,
+  "old_evidence_unchanged": true,
+  "method_no_direct_effects": true,
+  "execution_allowed": false,
+  "full_model_admission": false,
+  "limitations": "Isolated new prompt Dataset and original signed approvals only. No Model quality/Judge-input/tokenizer/wire/Source-completion/executor identity grant."
+}

@@ -132,7 +132,8 @@ def test_whole_model_plan_binds_each_original_approved_application(
         sys.modules['legal_eval_application_fixture_r4'].create_application(
             caller,issuer_factory,https_signer,guard_issuer_factory,guard_consumer_factory,leg_path,
             expires_after=timedelta(seconds=6) if tail_mode!='rollback' and index==1 else None,
-            suite_case_copies=2 if index==0 else 1,judge_model_ref=selected_judge if index==0 else None)
+            suite_case_copies=2 if index==0 and os.environ.get('AOS_MODEL_PROMPT_FORMAT_PROBE')!='1' else 1,
+            judge_model_ref=selected_judge if index==0 else None)
         application=json.loads((base/'legal-eval-application-result-r4.json').read_text())
         if model_judge and index==1:
             with connect(TenantScope('org-org','dev-project')) as read:
@@ -185,6 +186,27 @@ def test_whole_model_plan_binds_each_original_approved_application(
         (base/(label+'-suite-input.json')).write_text(json.dumps(dict(manifest=suite_plan.model_dump(mode='json',by_alias=True),suite=suite.model_dump(mode='json',by_alias=True)),indent=2)+'\n')
         assert hasattr(owner,'validate_original_model_plan_suite'), 'complete original Suite case bridge missing'
         assert owner.validate_original_model_plan_suite(conn,scope,suite_plan) is None
+        if os.environ.get('AOS_MODEL_PROMPT_FORMAT_PROBE') == '1':
+            import hashlib
+            from aos_api.aip_model_eval_execution_owner import ModelEvalOwnerRejected
+            variant = os.environ['AOS_MODEL_PROMPT_VARIANT']
+            fixture = sys.modules['registered_model_prompt_fixture_1654']
+            raw = fixture.raw_json(fixture.TEST_VALUE)
+            inputs = tuple((case.case_id, raw) for case in suite_plan.cases)
+            assert all(hashlib.sha256(raw).hexdigest() == case.input_hash for case in suite_plan.cases)
+            assert hasattr(owner, 'prepare_original_model_plan_prompt_bytes'), 'original approved Model prompt producer missing'
+            if variant == 'valid':
+                prepared = owner.prepare_original_model_plan_prompt_bytes(conn, scope, suite_plan, inputs=inputs)
+                expected = tuple((case.case_id, fixture.TEST_VALUE['prompt'].encode('utf-8')) for case in suite_plan.cases)
+                assert prepared == expected
+            else:
+                with pytest.raises(ModelEvalOwnerRejected, match='Model prompt (format|input)'):
+                    owner.prepare_original_model_plan_prompt_bytes(conn, scope, suite_plan, inputs=inputs)
+                prepared = ()
+            assert conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone() == identity
+            (base/(label+'-prompt-format.json')).write_text(json.dumps(dict(caller=identity, variant=variant,
+                input_hash=hashlib.sha256(raw).hexdigest(), prompts=[dict(caseId=cid, sha256=hashlib.sha256(p).hexdigest(), bytesLength=len(p)) for cid,p in prepared],
+                rejected=variant!='valid', execution_allowed=False, tokenizer_certified=False),indent=2)+'\n')
         if os.environ.get('AOS_MODEL_INPUT_BYTES_PROBE') == '1':
             from aos_api.ecommerce_content_pre_review_pack import build_content_pre_review_eval_packs
             from aos_api.aip_eval_contracts import AssetRevisionRef
@@ -344,3 +366,21 @@ def test_whole_model_plan_binds_each_original_approved_application(
         with pytest.raises(ValueError,match='caller'):
             owner.validate_original_model_plan_requests(conn,TenantScope('dev-org','dev-project'),plan)
     (base/(label+'-result.json')).write_text(json.dumps(dict(request_ids=[a['request_id'] for a in apps],caller=identity,actual_rollback=True,execution_allowed=False),indent=2)+'\n')
+
+
+@pytest.mark.skipif(os.environ.get('AOS_MODEL_PROMPT_FORMAT_PROBE') != '1', reason='explicit isolated Model prompt probe only')
+def test_model_owner_new_original_prompt_format(
+    caller, issuer_factory, https_signer, guard_issuer_factory, guard_consumer_factory, tmp_path, monkeypatch,
+):
+    base = _model_owner_fixture_base(whole=True)
+    filename = 'registered_model_prompt_fixture_1654.py'
+    original = Path(__file__).resolve().parents[4]/'.evidence/gt-atomic-model-admission-20261008'/filename
+    copied = base/filename
+    assert copied.is_file() and not copied.is_symlink() and copied.read_bytes() == original.read_bytes()
+    spec = importlib.util.spec_from_file_location('registered_model_prompt_fixture_1654', copied)
+    fixture = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = fixture
+    spec.loader.exec_module(fixture)
+    fixture.install(monkeypatch, os.environ['AOS_MODEL_PROMPT_VARIANT'])
+    test_whole_model_plan_binds_each_original_approved_application(
+        caller, issuer_factory, https_signer, guard_issuer_factory, guard_consumer_factory, tmp_path, 'rollback')
