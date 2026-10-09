@@ -1,0 +1,163 @@
+{
+  "authority_revision": "AOS-001648",
+  "evidence_commit": "f5ae3523a5d3aff153ad90cd43003076204d51de",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-desktop-native-lab-20261009",
+    "base_revision": "AOS-001647",
+    "completed_revision": "AOS-001647",
+    "result": "DESKTOP_NATIVE_SOURCE_LAB_BOTH_LAYOUT_PREPARATION_GREEN_FULL_SOURCE_PENDING",
+    "changed_files": [
+      ".evidence/gt-source-desktop-native-lab-20261009/container-id-r3.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/container-id.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/create-attempt-r2.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/create-attempt.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/create-r1.log",
+      ".evidence/gt-source-desktop-native-lab-20261009/create-r2.log",
+      ".evidence/gt-source-desktop-native-lab-20261009/create_lab.py",
+      ".evidence/gt-source-desktop-native-lab-20261009/create_lab_r2.py",
+      ".evidence/gt-source-desktop-native-lab-20261009/creation-readonly-reconciliation.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/image-equivalence.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/image-transfer.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/independent-final-verification.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/independent-preparation.log",
+      ".evidence/gt-source-desktop-native-lab-20261009/input-bindings-r1.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/install_verifier.py",
+      ".evidence/gt-source-desktop-native-lab-20261009/lab.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/native-preparation-r1.log",
+      ".evidence/gt-source-desktop-native-lab-20261009/native-preparation-r2-attempt.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/native-preparation-r2-result.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/native-preparation-r2.log",
+      ".evidence/gt-source-desktop-native-lab-20261009/plan.md",
+      ".evidence/gt-source-desktop-native-lab-20261009/preflight.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/preparation-r2-collection.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/preparation-r2-connections.jsonl",
+      ".evidence/gt-source-desktop-native-lab-20261009/process.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/recover-attempt-r3.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/recover-r3.log",
+      ".evidence/gt-source-desktop-native-lab-20261009/recover_lab_r3.py",
+      ".evidence/gt-source-desktop-native-lab-20261009/recovery-postcheck-differences.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/register_stage.py",
+      ".evidence/gt-source-desktop-native-lab-20261009/resource-baseline.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/review.md",
+      ".evidence/gt-source-desktop-native-lab-20261009/run_preparation_r1.py",
+      ".evidence/gt-source-desktop-native-lab-20261009/run_preparation_r2.py",
+      ".evidence/gt-source-desktop-native-lab-20261009/storage-probe.log",
+      ".evidence/gt-source-desktop-native-lab-20261009/task.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/verifier-install-attempt.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/verifier-install.json",
+      ".evidence/gt-source-desktop-native-lab-20261009/verifier-install.log",
+      ".evidence/gt-source-desktop-native-lab-20261009/verify_preparation_r1.py",
+      ".evidence/gt-source-desktop-native-lab-20261009/verify_preparation_r2.py",
+      ".evidence/gt-source-desktop-native-lab-20261009/volume-created.json"
+    ],
+    "commits": [
+      "f5ae3523a5d3aff153ad90cd43003076204d51de"
+    ],
+    "verification": [
+      "Exact original C image config and13layer identity across Docker engines; nativeC catalog/NOLOGIN real signature positive tamperednegative andSCRAM PG16.14 cluster verified",
+      "Actual original both layouts2PASS26.00s, independent2retainedDB zeroSource/fullfoundationACLlock/roles/tempcleanup/occupation0/durability/1963inputs;71originalcontainers unchanged and436.37GBvolume free",
+      "Known imageaddress and emptyvolume permission failures reconciled withoutunknown replay/deletion; first preparation readonly0database guard corrected"
+    ],
+    "risks": [
+      "Full386 Source cumulative and actualfinalCOMMIT expiry/joint/naturalfirstchain still pending",
+      "Docker diskimage physical path fromuser statement; protected settings not bypassed; actual test volume capacity independentlymeasured"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T19:58:38+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001648-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001648"
+  },
+  "checkpoints": {
+    "gt-atomic-model-admission-20261008": {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001648",
+      "step": "desktop-native-lab-preparation-green-full386-cumulative-next-final-clock-pending",
+      "fingerprint": "e0d06fe41d9c75fdb95ddd31de118adade0a4af4b856921b0ece480dda3f411a",
+      "task_base_revision": "AOS-001537"
+    },
+    "gt-model-typed-proof-20261008": {
+      "task_id": "gt-model-typed-proof-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001648",
+      "step": "desktop-native-lab-preparation-green-full386-cumulative-next-final-clock-pending",
+      "fingerprint": "e5846462b9fdbf72e43bce922e999e147816e8d53d3fec9fd3bbdd863589f35d",
+      "task_base_revision": "AOS-001513"
+    },
+    "gt-judge-call-authority-20261008": {
+      "task_id": "gt-judge-call-authority-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001648",
+      "step": "desktop-native-lab-preparation-green-full386-cumulative-next-final-clock-pending",
+      "fingerprint": "fefc0a127c807083995eac7019d8f7bf7103d519554f313455ec7508536c0450",
+      "task_base_revision": "AOS-001578"
+    },
+    "gt-judge-budget-parent-20261008": {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001648",
+      "step": "desktop-native-lab-preparation-green-full386-cumulative-next-final-clock-pending",
+      "fingerprint": "f521775818967c4018a2b2e280bb7a77b31c6f061182bf01bd39ec8a620bcc74",
+      "task_base_revision": "AOS-001588"
+    },
+    "gt-shared-budget-fence-order-20261008": {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001648",
+      "step": "desktop-native-lab-preparation-green-full386-cumulative-next-final-clock-pending",
+      "fingerprint": "e9a716323c2c8324069c0a2ff860cbf29139ee385e05629c1883b98815af18c9",
+      "task_base_revision": "AOS-001588"
+    }
+  },
+  "original_source_task": "ACTIVE",
+  "full_source_delivery": false,
+  "goal_status_changed": false,
+  "user_pause_requested": false,
+  "goal_active": true
+}

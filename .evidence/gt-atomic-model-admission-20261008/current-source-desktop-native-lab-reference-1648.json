@@ -1,0 +1,35 @@
+{
+  "authority_revision": "AOS-001648",
+  "head": "f5ae3523a5d3aff153ad90cd43003076204d51de",
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-source-tail44-migration-head-reference-1647.json",
+      "sha256": "7ae0aad3a98af2510b3b16c5913e0038a9e69799c309ff25fe7992ef001a4e5e"
+    },
+    {
+      "path": ".evidence/gt-source-desktop-native-lab-20261009/review.md",
+      "sha256": "c9da7ece7ec2f1fe9fa8adc7427394296225cbacf528a93d636ae84d63c7e9a0"
+    },
+    {
+      "path": ".evidence/gt-source-desktop-native-lab-20261009/independent-final-verification.json",
+      "sha256": "a082a3becb7ff4af339ebff076a7a6e46f9557659dd96e46d5b5d097b942ff23"
+    },
+    {
+      "path": ".evidence/gt-source-desktop-native-lab-20261009/image-equivalence.json",
+      "sha256": "e73e5d739eb61fb550f319f55619a8c0650ed61ad6c6e0f20c48ee9534fa5c5b"
+    },
+    {
+      "path": ".evidence/gt-source-desktop-native-lab-20261009/verifier-install.json",
+      "sha256": "aac48dc663efd8bd5c836ed80ec3e56dd57f603e6077c466a50fd97674cfbd81"
+    },
+    {
+      "path": ".evidence/gt-source-desktop-native-lab-20261009/creation-readonly-reconciliation.json",
+      "sha256": "64fa0e63a32d0996438b2afd362d7669a5e948d878c1df4a4d3ad71138354eed"
+    },
+    {
+      "path": ".evidence/gt-source-desktop-native-lab-20261009/lab.json",
+      "sha256": "ee1320c378dac61a20a36f8d1e9711a943be5316827b17cdc519936d58a32751"
+    }
+  ],
+  "execution_allowed": false
+}
