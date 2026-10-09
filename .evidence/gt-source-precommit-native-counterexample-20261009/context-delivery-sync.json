@@ -1,0 +1,147 @@
+{
+  "authority_revision": "AOS-001651",
+  "evidence_head": "654c39bed0477bff557083873200baa7c47ea89b",
+  "deliveries": [
+    {
+      "schema": "aos-memory-delivery-receipt/v1",
+      "task_id": "gt-source-precommit-native-counterexample-20261009",
+      "base_revision": "AOS-001650",
+      "completed_revision": "AOS-001650",
+      "result": "PRECOMMIT_SINGLE_CALLBACK_STRICT_COMPLETION_CANDIDATE_REJECTED_NATIVE_COUNTEREXAMPLE",
+      "changed_files": [
+        ".evidence/gt-source-precommit-native-counterexample-20261009/17ec6c4b8b4228934eb6115ceeb27cdd62b8d5bbf6faa0b387c200f526d015ce.attempt.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/Dockerfile",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/build-attempt-r2.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/build-attempt.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/check_then_wait-attempt.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/check_then_wait-result.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/container-id.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/create-attempt.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/create-r2.log",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/create.log",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/create_lab.py",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/finalize.py",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/image-id.txt",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/independent-verification.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/install-attempt.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/installation.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/lab.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/leases-before.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/plan.md",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/prepare_review.py",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/probe-r1.log",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/probe.c",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/quality-r1.log",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/quality-request-r1.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/quality-result-r1.transport.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/register.py",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/resource-baseline.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/results.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/review-reconciliation.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/review.md",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/run_probe.py",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/task.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/verify-r1.log",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/verify_probe.py",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/wait_then_check-attempt.json",
+        ".evidence/gt-source-precommit-native-counterexample-20261009/wait_then_check-result.json"
+      ],
+      "commits": [
+        "654c39bed0477bff557083873200baa7c47ea89b"
+      ],
+      "verification": [
+        "Compiled native C, known committed/aborted xids, one retained row, 92 old containers unchanged"
+      ],
+      "risks": [
+        "Strict completion deadline and Source full delivery remain unproven",
+        "Independent model review unavailable: daemon ownership failure preserved, no resend or PASS",
+        "Prototype synthetic callback only; not installed in any old or formal database"
+      ],
+      "blockers": [],
+      "completed_at": "2026-10-10T00:03:54+08:00"
+    },
+    {
+      "schema": "aos-memory-delivery-receipt/v1",
+      "task_id": "gt-source-trusted-end-protocol-20261009",
+      "base_revision": "AOS-001650",
+      "completed_revision": "AOS-001650",
+      "result": "READONLY_TRUST_AUDIT_AND_PROTOCOL_DRAFT_COMPLETE_NOT_IMPLEMENTED",
+      "changed_files": [
+        ".evidence/gt-source-trusted-end-protocol-20261009/audit-r1.log",
+        ".evidence/gt-source-trusted-end-protocol-20261009/audit_trust.py",
+        ".evidence/gt-source-trusted-end-protocol-20261009/checkpoint-validation.json",
+        ".evidence/gt-source-trusted-end-protocol-20261009/checkpoint.json",
+        ".evidence/gt-source-trusted-end-protocol-20261009/leases-before.json",
+        ".evidence/gt-source-trusted-end-protocol-20261009/plan.md",
+        ".evidence/gt-source-trusted-end-protocol-20261009/protocol-contract.md",
+        ".evidence/gt-source-trusted-end-protocol-20261009/register.py",
+        ".evidence/gt-source-trusted-end-protocol-20261009/task.json",
+        ".evidence/gt-source-trusted-end-protocol-20261009/trust-audit.json"
+      ],
+      "commits": [
+        "654c39bed0477bff557083873200baa7c47ea89b"
+      ],
+      "verification": [
+        "Verifier/roles/ACL/preload native READ ONLY audit; trusted-end protocol and negative matrix drafted"
+      ],
+      "risks": [
+        "Strict completion deadline and Source full delivery remain unproven",
+        "Independent model review unavailable: daemon ownership failure preserved, no resend or PASS",
+        "Prototype synthetic callback only; not installed in any old or formal database"
+      ],
+      "blockers": [],
+      "completed_at": "2026-10-10T00:03:55+08:00"
+    }
+  ],
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001651-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001651"
+  },
+  "goal_changed": false,
+  "model_review_available": false,
+  "source_full_delivery": false,
+  "formal_execution": false
+}

@@ -1,0 +1,27 @@
+{
+  "authority_revision": "AOS-001651",
+  "head": "654c39bed0477bff557083873200baa7c47ea89b",
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/current-source-final-commit-boundary-reference-1650.json",
+      "sha256": "7f699557b889149207861cf0cf08ee43ea0b829aa1e6b0d2ac76bb20046b674c"
+    },
+    {
+      "path": ".evidence/gt-source-precommit-native-counterexample-20261009/review.md",
+      "sha256": "56202c6ad38ae60462eee5bf303496cb78096cad38edc56ca5c26a33b4390323"
+    },
+    {
+      "path": ".evidence/gt-source-precommit-native-counterexample-20261009/independent-verification.json",
+      "sha256": "ad3842f9cca00674e28a072336ee4edcdbb2cbae9811071deaa0f9f2656b6710"
+    },
+    {
+      "path": ".evidence/gt-source-precommit-native-counterexample-20261009/review-reconciliation.json",
+      "sha256": "354b399f115f574bb1d9d2047ee6a3cdd6b86746bdeb10690f5b0243511255a7"
+    },
+    {
+      "path": ".evidence/gt-source-trusted-end-protocol-20261009/protocol-contract.md",
+      "sha256": "f6169719ea80b2040c46c84de1b02b06a84d4c1a95a00f7033fee62ede693c96"
+    }
+  ],
+  "execution_allowed": false
+}
