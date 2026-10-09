@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-atomic-model-admission-20261008",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001655",
+  "authority_revision": "AOS-001656",
   "task_base_revision": "AOS-001537",
-  "step": "original-approved-fixed-prompt-producer-native-verified-continue-model-quota-token-wire",
+  "step": "original-target-wire-native-verified-continue-trusted-token-and-joint-actual-end",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_execution_owner.py",
     "services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py",
@@ -47,6 +47,6 @@
     ".evidence/gt-atomic-model-admission-20261008/original-source-whole-plan-checkpoint.md",
     ".evidence/gt-atomic-model-admission-20261008/original-source-whole-plan-cumulative-r2-result.json",
     ".evidence/gt-atomic-model-admission-20261008/original-source-whole-plan-independent-r2.json",
-    ".evidence/gt-atomic-model-admission-20261008/current-model-prompt-format-reference-1655.json"
+    ".evidence/gt-atomic-model-admission-20261008/current-model-target-wire-reference-1656.json"
   ]
 }

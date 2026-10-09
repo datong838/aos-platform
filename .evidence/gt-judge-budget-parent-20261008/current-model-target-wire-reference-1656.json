@@ -1,0 +1,41 @@
+{
+  "authority_revision": "AOS-001656",
+  "head": "38dd69c276b28c3c23b54a44beac4e14048a0d5b",
+  "task": "gt-judge-budget-parent-20261008",
+  "result": "ORIGINAL_TARGET_FIXED_WIRE_PREPARATION_VERIFIED",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/current-model-prompt-format-reference-1655.json",
+      "sha256": "6d9cdf7d85587eb1714549eb945473763efb020d4cf09deb2cbc421873e8ad1c"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-target-wire-plan-1655.md",
+      "sha256": "3da2b36f310ed8e77b6bbfd2570d5b34d899b76903112c44bea61a3834ba7acb"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/registered_model_target_wire_fixture_1655.py",
+      "sha256": "a2eaedd95a07a92b0df4659fe4eb9e979a6bdf71e00f85e20472e00bf2678167"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-target-wire-independent-1655.json",
+      "sha256": "1149bea7d3b5a5987b10a0a84383a6529b8ab131e925a57f9d55af34eb9b83d2"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/verify-model-target-wire-1655.py",
+      "sha256": "04f2bb8b30b7bc116a04be0bc987cd643f95b7227572eedafd01e71eda214060"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-target-wire-review-1655.md",
+      "sha256": "b9291744102e808b613bdfb8da8732b504826bfedcbb552571254ad93d4f9e3e"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_model_eval_execution_owner.py",
+      "sha256": "793dde325a6131c71e393a96811fcffb92ed062e84d84f02a30b3953b46383a8"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py",
+      "sha256": "8d3603a39630c3e84427cc72e505b542281be83d832deac33a5bdbcb7d80fc4a"
+    }
+  ]
+}
