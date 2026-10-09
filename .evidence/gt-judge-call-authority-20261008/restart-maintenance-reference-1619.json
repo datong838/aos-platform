@@ -1,0 +1,159 @@
+{
+  "authority_revision": "AOS-001619",
+  "head": "0156994f5b43f8abe3189b860ea99c0adfa5fd3d",
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/wrapper-cross-caller-investigation-reference-1618.json",
+      "sha256": "bbb884e59e73e96776e8596d05f71bdcdae9adbb742af4e27425aaa4253eba89"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/after-data.json",
+      "sha256": "348d721a147c6f4b5076d171045a026ebbef2665c4a25819cc8595e0936db154"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/before-data.json",
+      "sha256": "348d721a147c6f4b5076d171045a026ebbef2665c4a25819cc8595e0936db154"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/browser-verification.json",
+      "sha256": "01e242ad647e8d162f69cc1095fd47c03d70f809e9e38cd53f3765075d03fcb3"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/claim.json",
+      "sha256": "fa5e2f5ccb79c3f7201b7e1931e338cea03fcc21fd24df43809df6cf934c7407"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/failure-r2.json",
+      "sha256": "7e8050167de8f3372024b0786b302c422ebda0ddc2252f5ec3af8e15400898e1"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/failure.json",
+      "sha256": "8877bb4c96471b2e6cb439749762b9c084c52c86b704160c9beba9ece2ea6c93"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/final-independent-data.json",
+      "sha256": "348d721a147c6f4b5076d171045a026ebbef2665c4a25819cc8595e0936db154"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/final-independent-verification.json",
+      "sha256": "2e7b33685ad4bc23ed376dcb227be7e71a45e2d07730b0be8c723d9785161422"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/frozen-source.json",
+      "sha256": "2d8f7895be40d9e7e054c7fa5fd7efe507c83f358fa59f17be1c8ebcfecff4a3"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/lease-preflight.json",
+      "sha256": "dd1eb0c4ea32c67694fe034d157c2e3d642c5edbf8dfaf9521543846a0ed3799"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/original-services.json",
+      "sha256": "ae55243726264272ffc8f9a4ed0d1529259939ea424b93f9494cbc03d3d32d9f"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/plan.md",
+      "sha256": "5949e1792f86fed9158c96d8079aa07ef0c50a123b33e3491b3998b31f72ff00"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/preflight.json",
+      "sha256": "9320c2cb90650fbf227fdfdf7e057322b958da07aee1f94f335fa091fbf4a730"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/restart-pg-done.json",
+      "sha256": "0d1056e34140a8e55278218a512d5d730a24d7015017880f6379442703da32b1"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/restart-pg-intent.json",
+      "sha256": "a42700f6799035454f72e65ff0e3085dc148af155ddb0efebf1beae334e0595b"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/restart-pg-terminal.json",
+      "sha256": "d61422532d1187d1eb4f737001f674929c9fd9135720d3e199a958084eb90a15"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/restart-r1.log",
+      "sha256": "f7fc2404825adc176cf2aeb9b1693618d63a48745b516dad8e4c664ed4984697"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/restart-r2.log",
+      "sha256": "de3acf5e30aeaf210a1219ba142ad311d2dbd74cf1555ee4d071c1392a1f019b"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/restart-r2.py",
+      "sha256": "9bc35799df262829cb86207edf1d7af6ed1e4897fa30fe0e8c9b88b18a346796"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/restart-r3.log",
+      "sha256": "f6664b1505e458f5e986f0e8f41e46a77f4e7a3797287a8be4d6f5bc879f079f"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/restart-r3.py",
+      "sha256": "1698b1173ff6fb3485d19d7f1ddda22b28239bf285c83f20c170657590a0bc01"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/restart.py",
+      "sha256": "546d1ff5d4a775f1df0324e9d096846eef37282d7dde945fcbea7c132dcd7013"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/result.json",
+      "sha256": "b3ecc875a52b7eb74364f2f782389fad4d48b21dd6ffbd00632027071867f1e0"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/review.md",
+      "sha256": "b227ed812952f4973865d381f58826da1ad0b7dfce140ea101dd1fd92e4e80e1"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/signed-preflight-after-pg.json",
+      "sha256": "bb39fb794935bf139c2640fd5fcf0efa2cc7063f863c70b61b9d68d0f65631b7"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/signed-preflight-before.json",
+      "sha256": "bb39fb794935bf139c2640fd5fcf0efa2cc7063f863c70b61b9d68d0f65631b7"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/start-8080-done.json",
+      "sha256": "e911256324377919cf16d3acd6d44f81315dcc352d61cab5cdc1593cc9c855e7"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/start-8080-intent.json",
+      "sha256": "2a0a8ed94af992ca64973bd96f009d5cb277ffa4f01d760dc735576440b2dc64"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/start-8080-pid.json",
+      "sha256": "c6a896c6845ea1388ecdba44e0773abb07a63bf4cb8a55084c2f60b7a47684c3"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/start-8434-done.json",
+      "sha256": "99da44f59fa6151bc537e21e2ed73c6700d5afeb14fb1cb1b7d0b72270d2659a"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/start-8434-intent.json",
+      "sha256": "a9118ec49a26c25f04247189e87d838e66ec77dfc6cb584aeb0d925de20a5a51"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/start-8434-pid.json",
+      "sha256": "dadc0e557bc748afa5f326a1b168472595264fe58c55db5ebcfe87d641590c04"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/stop-8080-done.json",
+      "sha256": "299ab98ff00491f69380f9ee9ec5dd3f3b88d5f3da5e4549f98fd48d3b94369f"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/stop-8080-intent.json",
+      "sha256": "b7e67917c23300cff00a41667d3cc847867f38f2d10b8b7eee5fb5c90170e70e"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/stop-8434-done.json",
+      "sha256": "1ef3ed68c413123572a81ba274ea32fb23235bf1b62318fc13fe5b2763f13c55"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/stop-8434-intent.json",
+      "sha256": "9b8b28193f49a3c99a3d60f2f063e155ab265311d2a319f9b37e56b3c69278d8"
+    },
+    {
+      "path": ".evidence/current157-full-restart-20261009-010759/task.json",
+      "sha256": "ee618f2a0d5e6042e7da48fd4fdd9ce8193734e8019d127109ba1d08b3147307"
+    }
+  ],
+  "execution_allowed": false
+}

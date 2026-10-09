@@ -4,7 +4,7 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-budget-fence-order-20261008",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001618",
+  "authority_revision": "AOS-001619",
   "task_base_revision": "AOS-001588",
   "step": "typed-wrapper-native-green-cross-caller-original-source-boundary-investigated",
   "code_files": [
@@ -13,6 +13,6 @@
   "evidence_files": [
     ".evidence/gt-shared-budget-fence-order-20261008/implementation-plan.md",
     ".evidence/gt-shared-budget-fence-order-20261008/task-readback.json",
-    ".evidence/gt-shared-budget-fence-order-20261008/wrapper-cross-caller-investigation-reference-1618.json"
+    ".evidence/gt-shared-budget-fence-order-20261008/restart-maintenance-reference-1619.json"
   ]
 }

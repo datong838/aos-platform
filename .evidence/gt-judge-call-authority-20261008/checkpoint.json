@@ -4,7 +4,7 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-judge-call-authority-20261008",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001618",
+  "authority_revision": "AOS-001619",
   "task_base_revision": "AOS-001578",
   "step": "typed-wrapper-native-green-cross-caller-original-source-boundary-investigated",
   "code_files": [
@@ -50,6 +50,6 @@
     ".evidence/gt-judge-call-authority-20261008/published-rule-reader-reference.json",
     ".evidence/gt-judge-call-authority-20261008/published-rule-currentness-reference.json",
     ".evidence/gt-judge-call-authority-20261008/exact-signed-rule-suite-reference.json",
-    ".evidence/gt-judge-call-authority-20261008/wrapper-cross-caller-investigation-reference-1618.json"
+    ".evidence/gt-judge-call-authority-20261008/restart-maintenance-reference-1619.json"
   ]
 }

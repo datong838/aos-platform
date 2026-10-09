@@ -4,7 +4,7 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-atomic-model-admission-20261008",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001618",
+  "authority_revision": "AOS-001619",
   "task_base_revision": "AOS-001537",
   "step": "typed-wrapper-native-green-cross-caller-original-source-boundary-investigated",
   "code_files": [
@@ -47,6 +47,6 @@
     ".evidence/gt-atomic-model-admission-20261008/original-source-whole-plan-checkpoint.md",
     ".evidence/gt-atomic-model-admission-20261008/original-source-whole-plan-cumulative-r2-result.json",
     ".evidence/gt-atomic-model-admission-20261008/original-source-whole-plan-independent-r2.json",
-    ".evidence/gt-atomic-model-admission-20261008/wrapper-cross-caller-investigation-reference-1618.json"
+    ".evidence/gt-atomic-model-admission-20261008/restart-maintenance-reference-1619.json"
   ]
 }
