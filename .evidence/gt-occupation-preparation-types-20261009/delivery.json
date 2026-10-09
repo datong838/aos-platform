@@ -1,0 +1,24 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "gt-occupation-preparation-types-20261009",
+  "base_revision": "AOS-001616",
+  "completed_revision": "AOS-001616",
+  "result": "NONEXECUTING_OCCUPATION_TYPES_GREEN_SQL_WRAPPER_PENDING",
+  "changed_files": [
+    "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py",
+    "aos-platform/.evidence/gt-occupation-preparation-types-20261009"
+  ],
+  "commits": [
+    "5960d1195009f68dde5d2b18fe5e0d51eb516051"
+  ],
+  "verification": [
+    "Native fixture exact hash/reference; missing classRED31 then31PASS0.23s, adjacent349PASS0.72s",
+    "Original guard prefix/hash exact registered baseline; reused original canonical/revalidation semantics"
+  ],
+  "risks": [
+    "DTO descriptive only; no SQL wrapper/runtime authority/admission/Judge results/fees/transport/finalizer",
+    "Preexisting untracked guard file incorporated under original Task scope; original preserved"
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-09T08:44:41+08:00"
+}

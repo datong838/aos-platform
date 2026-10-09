@@ -1,0 +1,63 @@
+{
+  "authority_revision": "AOS-001617",
+  "head": "5960d1195009f68dde5d2b18fe5e0d51eb516051",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/occupation-type-investigation-reference-1616.json",
+      "sha256": "15579dfa791416870c800e1aefbfc6629ab1336082696946d62107726c420626"
+    },
+    {
+      "path": ".evidence/gt-occupation-preparation-types-20261009/adjacent-r1.log",
+      "sha256": "270f50f4e4dd374c1abcb66f310200b7a0aee5f0c663c95df9c22ba5088d44bb"
+    },
+    {
+      "path": ".evidence/gt-occupation-preparation-types-20261009/finalize_wave.py",
+      "sha256": "4bffe37fa1f012acd855578c8237d2f11cb2209e1497a3318fd283bb6a53695a"
+    },
+    {
+      "path": ".evidence/gt-occupation-preparation-types-20261009/fixture-reference.json",
+      "sha256": "40a6794f2422cd779df51151a5b9d240cf36b3d581990df25953efec9d242b32"
+    },
+    {
+      "path": ".evidence/gt-occupation-preparation-types-20261009/green-r1.log",
+      "sha256": "101c5ac678c1fd3db7b990d2a244609ea23aa12aa3d559e991c13460b5dd373b"
+    },
+    {
+      "path": ".evidence/gt-occupation-preparation-types-20261009/original-contract.py.txt",
+      "sha256": "91c65673e848269ade9f9c967b61f0a94f67f04ef8a5d62e29afd93c0cd3b638"
+    },
+    {
+      "path": ".evidence/gt-occupation-preparation-types-20261009/plan.md",
+      "sha256": "98c9a02a471dab2e3f5c5e50b27838e299306553b939ebab349dfe23b43fd4e6"
+    },
+    {
+      "path": ".evidence/gt-occupation-preparation-types-20261009/red-r1.log",
+      "sha256": "6d8c73873d752be122569735b5c5ece65ca4228e05cfd345c050b70b3335b67d"
+    },
+    {
+      "path": ".evidence/gt-occupation-preparation-types-20261009/review.md",
+      "sha256": "cc1449dd2d3f5ea32ea53fb197499335684121b43414876cabbce6313cec4327"
+    },
+    {
+      "path": ".evidence/gt-occupation-preparation-types-20261009/static-review.json",
+      "sha256": "a73a9265588b6b492eff7a5eae15152ac0e362a91373169d9f3dd96aea110b09"
+    },
+    {
+      "path": ".evidence/gt-occupation-preparation-types-20261009/task.json",
+      "sha256": "92405c671231b28d1ede4a46653a22458d0a0a81173ff033bdd2bff6f5edbcbb"
+    },
+    {
+      "path": ".evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py",
+      "sha256": "00ea82dc85c40a11c0eeddb5a28102f7220e8bba4607ccd6162a5c3971527a4f"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py",
+      "sha256": "5cd7df6f5f941cc97dac3fc2e346f81e9865a3b75a534eff70d952a304e0f77a"
+    },
+    {
+      "path": ".evidence/gt-occupation-preparation-types-20261009/stage-files.json",
+      "sha256": "6b28c9d4ece1e0cb3b301ea835f6cc0d50a6463a3e5e0d17cbdf2c6c2936748a"
+    }
+  ]
+}
