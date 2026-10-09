@@ -1,0 +1,79 @@
+{
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-current-source-command-native-20261009",
+    "base_revision": "AOS-001630",
+    "completed_revision": "AOS-001630",
+    "result": "CURRENT_SOURCE_EXTRA_KEY_NATIVE_DIAGNOSTIC_COMPLETE",
+    "changed_files": [
+      "aos-platform/.evidence/gt-current-source-command-native-20261009"
+    ],
+    "commits": [
+      "7f22a144c246cb5f691a1f0ce8671e19dd5aa8c9"
+    ],
+    "verification": [
+      "Authentic current independent Owner/native Source positive and unchanged replay; three extra-key variants accepted before fix (native RED27.45s), fixed denials after two-line instance revalidation (native GREEN23.75s)",
+      "Original shared/distinct old and independent consumers 4PASS184.42s; persistent three-key original Owner regression both layouts2PASS111.16s/noSKIP",
+      "Independent RED/GREEN Source signature/provenance and six regression retained DBs/roles/interfaces/31resources; selective13line test index excludes original6addition1deletion fixture changes"
+    ],
+    "risks": [
+      "Bounded diagnostic Delivery only; exact product fix belongs original ACTIVE publication-schema and regression Source-publication Tasks; no full Source/epoch/legacy Delivery",
+      "Independent model reviewer previously daemon ownership failure; no model PASS claimed. Original current Source expiry namedSQL22023 assertion was not an original contract requirement and prior RED retained, no SQL/error/TTL change",
+      "Formal deployment/identity/COMMIT temporal semantics/first business chain/Goal acceptance remain pending"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T11:41:18+08:00"
+  },
+  "revision": "AOS-001631",
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/01-当前项目状态.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/06-当前执行检查点.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001631-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001631"
+  },
+  "validation": "GREEN",
+  "strong_projections": "CURRENT",
+  "original_feature_tasks": "ACTIVE",
+  "protected_test_fixture_diff": "6 additions/1 deletion unstaged"
+}
