@@ -1,0 +1,28 @@
+{
+  "authority_revision": "AOS-001665",
+  "task": "gt-judge-call-authority-20261008",
+  "head": "1b6a4210c16cf56ede52c4831193e9e60e2e98bc",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/current-cross-phase-protocol-reference-1664.json",
+      "sha256": "89de1a03275b13619b836ba85759e5dfd15c3d3fa1d65b68ac88a8ea88ace85b"
+    },
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/review.md",
+      "sha256": "23b4865bc1c18f35f6ee16952dcb27e59fa868c0ca42dffdf7a193cbe816c96a"
+    },
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/result-r3.json",
+      "sha256": "42042c07552b300860418abe4ab3cb7bdcbe3a53a7fa15ac8b21e7db64fcc06c"
+    },
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/independent-final.json",
+      "sha256": "a7cd0ba9b6956ad3fb5b5d9e45f0390c268148116ebe8e18fe04bfc611dca203"
+    },
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/domain-boundary-native-result-r2.json",
+      "sha256": "c6391fadf551c194ef4c0eb75bf593f8a89c640fb33c6b2429cb08cf438ad20f"
+    }
+  ]
+}
