@@ -16,6 +16,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
     from tests.conftest import _isolated_postgres_database as database_fixture
 
     registered_cases = {
+        'test_registered_original_inputs_prepare_native_v2_before_signing',
         'test_private_native_publication_rejects_missing_original_bytes',
         'test_native_source_installer_assembles_complete_private_transaction',
         'test_native_source_function_installation_rejects_catalog_drift',
@@ -388,7 +389,8 @@ def _registered_publication_inputs(native_signed_source,tmp_path,*,signed_fault=
         origin_hash=origin_hash,snapshot_hash=transport.content_hash,source_key=source_key,anchor_key=anchor_key,origin_payload=origin.model_dump(mode='json',by_alias=True))
 
 
-def test_registered_original_inputs_prepare_native_v2_before_signing(native_signed_source,tmp_path):
+@pytest.mark.parametrize('native_original_fact_reader',['shared','distinct'],indirect=True)
+def test_registered_original_inputs_prepare_native_v2_before_signing(exact_public_source_caller):
     """Preparation dependency only; full sign/COMMIT/consumer still required."""
     import json
     from uuid import uuid4
@@ -397,7 +399,7 @@ def test_registered_original_inputs_prepare_native_v2_before_signing(native_sign
     from aos_api.aip_provider_capacity_publication_contracts import (
         PublishedProviderCapacitySourceV2,parse_signed_capacity_body)
     from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
-    material=_registered_publication_inputs(native_signed_source,tmp_path)
+    conn, _, material, _ = exact_public_source_caller
     command,_,_=material['actual_command']()
     principal=authenticate_capacity_issuance_command(command)
     request_hash=capacity_issuance_binding(SCOPE,principal.subject,command).content_hash
@@ -405,7 +407,8 @@ def test_registered_original_inputs_prepare_native_v2_before_signing(native_sign
     # No JWT/secret reaches SQL, including hidden SecretStr placeholders.
     assert b'bearerToken' not in raw and b'bearer_token' not in raw
     asset_id='native-source-'+uuid4().hex
-    with connect_capacity_issuer(material['config'],SCOPE) as conn:
+    with conn.transaction(force_rollback=True):
+        assert conn.info.dbname == material['config'].database
         assert conn.pgconn.used_password is True
         native=conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
         row=conn.execute('SELECT * FROM public.prepare_capacity_source(%s::bytea,%s::text,%s::text,%s::jsonb)',
@@ -416,7 +419,7 @@ def test_registered_original_inputs_prepare_native_v2_before_signing(native_sign
         assert prepared.issuance_context.transaction_id==native['xid']
         assert prepared.issuance_context.backend_pid==native['pid']
         assert prepared.execution_allowed is False
-        conn.rollback()  # Pending prepare is never committed as a Source.
+        # force_rollback preserves the original no-committed-Source preparation contract.
 
 
 @pytest.mark.parametrize('outcome',['committed','invalid_signature','unfinished'])

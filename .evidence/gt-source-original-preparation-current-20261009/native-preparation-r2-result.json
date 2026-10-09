@@ -1,0 +1,18 @@
+{
+  "observed_at": "2026-10-09T05:14:31.735018+00:00",
+  "database": "aos_test_4c9b8d6be734_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_registered_original_inputs_prepare_native_v2_before_signing[shared]",
+      "phase": "database_binding",
+      "database": "aos_test_4c9b8d6be734_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_registered_original_inputs_prepare_native_v2_before_signing[shared]",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "two complete original registration/preparation functions, maxfail1 bounded diagnostic; not full Source acceptance"
+}

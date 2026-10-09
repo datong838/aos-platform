@@ -1,0 +1,19 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-source-original-preparation-current-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001635",
+  "scope": [
+    "aos-platform/.evidence/gt-source-original-preparation-current-20261009"
+  ],
+  "excluded_scope": [
+    "aos-platform/services",
+    "aos-platform/apps"
+  ],
+  "expected_outputs": [
+    "Original registered document and native pending preparation first-gate result, preserve failure and no Source completion inference"
+  ],
+  "lease_expires_at": "2026-10-09T07:12:59.823476+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T13:13:00+08:00"
+}

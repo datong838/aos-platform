@@ -1,0 +1,1 @@
+Rules: AGENTS、AOS工程交付、231、原Source S01–S20。基线28e0f919/AOS-001635。候选①原registered origin与native v2待签准备两个原函数；②最终COMMIT时钟修复，需要保留未解真实反例。选择①完整两函数、maxfail1，使用现有独占native lab、原session fixture和2.5GB逐节点余量门，不删除/重放保留库。新增目录仅本.evidence目录，产品/原测试本波先不改。若旧public安装fixture再次RED，仅诊断，不自动开放产品public接口。全Source/正式首链/模型review不由本Task交付。

@@ -1,0 +1,9 @@
+{
+  "available_bytes": 2514800640,
+  "reserve_bytes": 2500000000,
+  "next_database_estimate_bytes": 80000000,
+  "next_database_allowed": false,
+  "distinct_layout": "NOT_EXECUTED",
+  "sources_committed": 0,
+  "goal_changed": false
+}
