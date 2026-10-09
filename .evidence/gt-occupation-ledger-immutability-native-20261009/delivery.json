@@ -1,0 +1,23 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "gt-occupation-ledger-immutability-native-20261009",
+  "base_revision": "AOS-001615",
+  "completed_revision": "AOS-001615",
+  "result": "OCCUPATION_ROOT_EVENT_IMMUTABILITY_NATIVE_GREEN_ACTUAL_ADMISSION_PENDING",
+  "changed_files": [
+    "aos-platform/.evidence/gt-occupation-ledger-immutability-native-20261009"
+  ],
+  "commits": [
+    "652cf305c40568dae924eaf9f3c91aedd506eb99"
+  ],
+  "verification": [
+    "Original actual root/event UPDATE/DELETE42501, pending-event TRUNCATE55006, empty root+event explicit TRUNCATE and event-alone custom trigger42501; exact readback after every savepoint",
+    "Full original native regression PASS; independent xidaborted/six preparation tables0/Source1/NOLOGIN/member0/temp probes0/31old resources unchanged"
+  ],
+  "risks": [
+    "No product code changes or actual admission/fees/Usage/Judge result/transport/finalizer",
+    "R1 single root TRUNCATE hit original FK0A000 before trigger; only explicit two-table test changed, no CASCADE/TTL expansion; failure retained"
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-09T08:31:17+08:00"
+}

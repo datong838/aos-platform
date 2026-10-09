@@ -1,0 +1,207 @@
+{
+  "authority_revision": "AOS-001616",
+  "head": "652cf305c40568dae924eaf9f3c91aedd506eb99",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/actual-admission-investigation-reference-1615.json",
+      "sha256": "026d98d431a0d02262274c46ae63e67ae683ae8197d2bda685fd23099ac54f61"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r1-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r1-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r1-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r1-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r1-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-budget-fact.json",
+      "sha256": "f1a3ab7f6f6c7166bbe6c6b293b5ff8239877e07fd0a8179954726591deb990b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-case-binding.json",
+      "sha256": "75fd2361d442d519a1bbdb6cfacf39a4fa533efd75cc3fc7bfff02638fcc7f49"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-guard-race.json",
+      "sha256": "fd58cb186e6aa85e3d4747848ce27358df067d9b6787ccfd4a41e483bc40f593"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-input-binding.json",
+      "sha256": "590295afaf69a94c9337e8f26376870b72b9d1db0fdb72536792bf4b2637c4ec"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-input.json",
+      "sha256": "b476f9965b77266b094710fbec91f83133042e66637842d6220eac7957c289a5"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-intent-existing-row-negative.json",
+      "sha256": "ac7a07f7425016b990f1ee1f2c9717ca03ecc16aa18f67aff438404c260e0d38"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-intent.json",
+      "sha256": "07c6fc4e86c73c394e79cb1a480a48a6a419d0e7964f1d7a7213cce7939e1710"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-parent-debit.json",
+      "sha256": "501376574d1ef464e203b7cbf0264b862321d04dfd8da94c97be55acd80390c9"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-preparation.json",
+      "sha256": "ace9172abb767e23a145471ca5d7872b925e736bd8b053af80a715ef1d761646"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-whole-source-plan-input.json",
+      "sha256": "e9fe3af11467fd0f4e1fe0b75c385717fdd1c78465729244d5e8bc30197a8bec"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-ledger-immutable-r2-whole-source-plan-verification.json",
+      "sha256": "b248ac01a9d9fe72c0224d8a3c101b7bf9d4f6f915651c87abd426acd61dfae5"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/ledger-immutable-r2-whole-plan-proof.json",
+      "sha256": "53776d02f717d9e2db7dfb3ad4e2c1c369b3b767346e68a4bc6c84ea46e1c354"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/catalog.json",
+      "sha256": "f6299bac1ac076606c8cded3b5d68362b639a40c2477ed9b8b9f6b4be6269afd"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/complete-plan-risk.json",
+      "sha256": "8ea03b8ef6059264573076688e3975e79df600b78d184889cbd992bec8c565f4"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/empty-truncate.json",
+      "sha256": "c691fda84145be5b7a3ce385323dfc67a03f5fee4c759e7fca0756a24b9e0f78"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/existing-ledger-immutability.json",
+      "sha256": "dc33d2b1b99bae332ea8188ae982ca5c067061fab0490fda875b2dbeb3e23c9f"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/finalize_wave.py",
+      "sha256": "7bfe01277f819f1773d8fbe5fbf7a9c740c2adce8cd23c617235ec117f14a44c"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/hash-check.json",
+      "sha256": "0183e783b7fe33594eb47b5916b31000f23d01c0b5dc293fae220efb84a96764"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/independent-readback.json",
+      "sha256": "9ca00110aed340d1969bef5e1b588c671320bdc0271b31a6e1236af0036d322b"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/independent_audit.py",
+      "sha256": "4143d7889efb458741a7a5ba21961232be5d2a9ab214f245b3ac7f906c47897c"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/ledger-catalog.json",
+      "sha256": "f3dd4d6994052f853bc363ee475ee43a79094b70eb9b6010594e13fb41e7eb50"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/ledger-green.json",
+      "sha256": "12feb7b94aa18b355aff57279aa0b35e05b004c578dbcf4b16e458e9a45351b6"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/native-green-r1-attempt.json",
+      "sha256": "b76bb95a79fa6ed8905bce8e43fd737affb20f1536ade23b8130202dc853b90b"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/native-green-r1-result.json",
+      "sha256": "6b67d643a8ad99129a4de6af5fcd5b34ef32a325c378d09477a074e2abd09f2a"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/native-green-r1.log",
+      "sha256": "b70cebca8f647ec634aaa4a1333c2f55c542afe4f2a6a795dbdd16a8e196d537"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/native-green-r2-attempt.json",
+      "sha256": "a96c6724003e476690a34b705877ac4bc70964e03b3bd23c6db6b80a330e984a"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/native-green-r2-result.json",
+      "sha256": "5fb504d400a2685cebda0799c713c88eec5f577832ab05b05926a67e315105c1"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/native-green-r2.log",
+      "sha256": "9d3430b26a8520546eb3d150b4db03036420dd59d08c848cacf1164c8760f330"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/next-step-design.md",
+      "sha256": "f7d2d08c2711a270a59b45453190f6de20f5150e8526b506ee2b8a8acce144b6"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/plan.md",
+      "sha256": "67b61933e231b54ddea72662efdd3a51eeb01b799446e3d0f35b7f30be6e6150"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/r1-failure-readback.json",
+      "sha256": "e015636e3fb924cb42bbbc37d43aaa3d06ada726cca094023aa95ab17d8ade74"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/review.md",
+      "sha256": "a1c5fa4d563b5c6b5873ef6b2db9fa85cbde0182e76c581aa328387e1e099b28"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/run_native_green_r1.py",
+      "sha256": "60a0a1ddcc2e74be987cc791737317ab072ec837cd45546697bb7efc7338a145"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/run_native_green_r2.py",
+      "sha256": "3d8fd6c7bcbcf5fcbfcaf3f515912a813366145197c3afe9b3e969c2c471431d"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/source_newjudge_native_trial_1606.py",
+      "sha256": "a36be255dae3922fa4721e4c5bb80939acb1e9213098835807f1c2f56f4741cf"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/source_trial_r1.py",
+      "sha256": "0fc7f36fbcfba418a6d0d4658d10530ce3905ed5a7e3ace66a52d142ea4647d9"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/task.json",
+      "sha256": "62aa18fd2e8f7fe73fbc5e1acace8558e571b0f2e533d5612a39300adfa6a58a"
+    },
+    {
+      "path": ".evidence/gt-occupation-ledger-immutability-native-20261009/trusted-target-call-green.json",
+      "sha256": "1e810fa3d4c35394bd585e838153864ab91b6c52ebe7b74a18f13c5c7d24a40b"
+    }
+  ]
+}
