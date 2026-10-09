@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-judge-budget-parent-20261008",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001634",
+  "authority_revision": "AOS-001635",
   "task_base_revision": "AOS-001588",
-  "step": "original-signed-domain-matrix-native-verified-full-source-and-final-clock-pending",
+  "step": "whole-source-first-gates-native-repaired-full-suite-and-final-clock-pending",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_judge_budget.py",
     "services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py",
@@ -16,6 +16,6 @@
   "evidence_files": [
     ".evidence/gt-judge-budget-parent-20261008/implementation-plan.md",
     ".evidence/gt-judge-budget-parent-20261008/task-readback.json",
-    ".evidence/gt-judge-budget-parent-20261008/current-source-signed-domains-reference-1634.json"
+    ".evidence/gt-judge-budget-parent-20261008/current-source-whole-suite-first-gates-reference-1635.json"
   ]
 }

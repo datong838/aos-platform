@@ -1,0 +1,193 @@
+{
+  "authority_revision": "AOS-001635",
+  "evidence_commit": "13574946fbfe8cbc8e99d6883b52abf0bccee0df",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-whole-suite-current-20261009",
+    "base_revision": "AOS-001634",
+    "completed_revision": "AOS-001634",
+    "result": "WHOLE_SUITE_FIRST_GATES_NATIVE_REPAIRED_FULL_SOURCE_PENDING",
+    "changed_files": [
+      ".evidence/gt-source-whole-suite-current-20261009/adjacent-r8-collection.json",
+      ".evidence/gt-source-whole-suite-current-20261009/adjacent-r9-collection.json",
+      ".evidence/gt-source-whole-suite-current-20261009/adjacent-selection.json",
+      ".evidence/gt-source-whole-suite-current-20261009/collect-whole-r1.log",
+      ".evidence/gt-source-whole-suite-current-20261009/collect_whole.py",
+      ".evidence/gt-source-whole-suite-current-20261009/entry-r2-collection.json",
+      ".evidence/gt-source-whole-suite-current-20261009/entry-r3-collection.json",
+      ".evidence/gt-source-whole-suite-current-20261009/entry-r4-collection.json",
+      ".evidence/gt-source-whole-suite-current-20261009/final-selection.json",
+      ".evidence/gt-source-whole-suite-current-20261009/independent-entry-verification.json",
+      ".evidence/gt-source-whole-suite-current-20261009/independent-final-verification.json",
+      ".evidence/gt-source-whole-suite-current-20261009/input-bindings-r2.json",
+      ".evidence/gt-source-whole-suite-current-20261009/input-bindings-r3.json",
+      ".evidence/gt-source-whole-suite-current-20261009/input-bindings-r4.json",
+      ".evidence/gt-source-whole-suite-current-20261009/input-bindings-r7.json",
+      ".evidence/gt-source-whole-suite-current-20261009/input-bindings-r9.json",
+      ".evidence/gt-source-whole-suite-current-20261009/input-bindings.json",
+      ".evidence/gt-source-whole-suite-current-20261009/lab.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-adjacent-r8-attempt.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-adjacent-r8-result.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-adjacent-r8.log",
+      ".evidence/gt-source-whole-suite-current-20261009/native-adjacent-r9-attempt.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-adjacent-r9-result.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-adjacent-r9.log",
+      ".evidence/gt-source-whole-suite-current-20261009/native-collect-r1-attempt.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-collect-r1-result.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-entry-r2-attempt.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-entry-r2-result.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-entry-r2.log",
+      ".evidence/gt-source-whole-suite-current-20261009/native-entry-r3-attempt.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-entry-r3-result.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-entry-r3.log",
+      ".evidence/gt-source-whole-suite-current-20261009/native-entry-r4-attempt.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-entry-r4-result.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-entry-r4.log",
+      ".evidence/gt-source-whole-suite-current-20261009/native-owner-r7-attempt.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-owner-r7-result.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-owner-r7.log",
+      ".evidence/gt-source-whole-suite-current-20261009/native-whole-r1-attempt.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-whole-r1-result.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-whole-r1.log",
+      ".evidence/gt-source-whole-suite-current-20261009/native-whole-r5-attempt.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-whole-r5-result.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-whole-r5.log",
+      ".evidence/gt-source-whole-suite-current-20261009/native-whole-r6-attempt.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-whole-r6-result.json",
+      ".evidence/gt-source-whole-suite-current-20261009/native-whole-r6.log",
+      ".evidence/gt-source-whole-suite-current-20261009/original-test-task-reconciliation.json",
+      ".evidence/gt-source-whole-suite-current-20261009/owner-r7-collection.json",
+      ".evidence/gt-source-whole-suite-current-20261009/plan.md",
+      ".evidence/gt-source-whole-suite-current-20261009/r1-independent-diagnosis.json",
+      ".evidence/gt-source-whole-suite-current-20261009/r6-next-gate-diagnosis.json",
+      ".evidence/gt-source-whole-suite-current-20261009/register_stage.py",
+      ".evidence/gt-source-whole-suite-current-20261009/review.md",
+      ".evidence/gt-source-whole-suite-current-20261009/run_adjacent_r8.py",
+      ".evidence/gt-source-whole-suite-current-20261009/run_adjacent_r9.py",
+      ".evidence/gt-source-whole-suite-current-20261009/run_entry_r2.py",
+      ".evidence/gt-source-whole-suite-current-20261009/run_entry_r3.py",
+      ".evidence/gt-source-whole-suite-current-20261009/run_entry_r4.py",
+      ".evidence/gt-source-whole-suite-current-20261009/run_owner_r7.py",
+      ".evidence/gt-source-whole-suite-current-20261009/run_whole.py",
+      ".evidence/gt-source-whole-suite-current-20261009/run_whole_r4.py",
+      ".evidence/gt-source-whole-suite-current-20261009/run_whole_r5.py",
+      ".evidence/gt-source-whole-suite-current-20261009/run_whole_r6.py",
+      ".evidence/gt-source-whole-suite-current-20261009/selection.json",
+      ".evidence/gt-source-whole-suite-current-20261009/task.json",
+      ".evidence/gt-source-whole-suite-current-20261009/test-changes.json",
+      ".evidence/gt-source-whole-suite-current-20261009/verify_entry_r3.py",
+      ".evidence/gt-source-whole-suite-current-20261009/verify_entry_r4.py",
+      ".evidence/gt-source-whole-suite-current-20261009/verify_entry_r4_final.py",
+      ".evidence/gt-source-whole-suite-current-20261009/verify_final.py",
+      ".evidence/gt-source-whole-suite-current-20261009/whole-collection.json",
+      ".evidence/gt-source-whole-suite-current-20261009/whole-r5-collection.json",
+      ".evidence/gt-source-whole-suite-current-20261009/whole-r6-collection.json"
+    ],
+    "commits": [
+      "13574946fbfe8cbc8e99d6883b52abf0bccee0df"
+    ],
+    "verification": [
+      "Whole original suite inventory 101 functions/381 initial nodes,382 after explicit first-test layouts; full selection failed first missing public installation then next duplicated audit helper; failures and unexecuted nodes retained",
+      "Final 44 original entry/withdrawal adjacent nodes plus earlier unchanged Owner15 nodes, precise input versions; independent publication rollback/roles/interfaces/current definitions/protected31 resources"
+    ],
+    "risks": [
+      "Full Source public issuance/COMMIT/current-consumer all exit requirements remain separate",
+      "Actual final COMMIT wall-clock counterexample unresolved",
+      "No independent model review result"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T13:11:54+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001635-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001635"
+  },
+  "checkpoints": {
+    "gt-atomic-model-admission-20261008": {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001635",
+      "step": "whole-source-first-gates-native-repaired-full-suite-and-final-clock-pending",
+      "fingerprint": "5054a793f73b9f8c3efe8371361818174fec1ef32dd28937577fd57e32141b49",
+      "task_base_revision": "AOS-001537"
+    },
+    "gt-model-typed-proof-20261008": {
+      "task_id": "gt-model-typed-proof-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001635",
+      "step": "whole-source-first-gates-native-repaired-full-suite-and-final-clock-pending",
+      "fingerprint": "009cd38bd23af02970f15b4b7fe4cc58f915fcb321492b201eef8e9c178ed26a",
+      "task_base_revision": "AOS-001513"
+    },
+    "gt-judge-call-authority-20261008": {
+      "task_id": "gt-judge-call-authority-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001635",
+      "step": "whole-source-first-gates-native-repaired-full-suite-and-final-clock-pending",
+      "fingerprint": "9b8f0e64ba8f19de8771a8b84210b4efd6c2e628b5458cacf4409b41145812d6",
+      "task_base_revision": "AOS-001578"
+    },
+    "gt-judge-budget-parent-20261008": {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001635",
+      "step": "whole-source-first-gates-native-repaired-full-suite-and-final-clock-pending",
+      "fingerprint": "7e4982ba094c1b38933dfc3e6dc46afb023e07d7c1f19897eab081e856dace5b",
+      "task_base_revision": "AOS-001588"
+    },
+    "gt-shared-budget-fence-order-20261008": {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001635",
+      "step": "whole-source-first-gates-native-repaired-full-suite-and-final-clock-pending",
+      "fingerprint": "7e3d19be53f3ebd96550d5ac1b2753105dfe13634b442b48b04350b66b2cf988",
+      "task_base_revision": "AOS-001588"
+    }
+  },
+  "original_source_task": "ACTIVE",
+  "full_source_delivery": false,
+  "goal_status_changed": false
+}

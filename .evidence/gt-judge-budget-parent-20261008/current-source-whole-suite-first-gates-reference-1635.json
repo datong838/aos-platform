@@ -1,0 +1,31 @@
+{
+  "authority_revision": "AOS-001635",
+  "head": "13574946fbfe8cbc8e99d6883b52abf0bccee0df",
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/current-source-signed-domains-reference-1634.json",
+      "sha256": "e1c7e771586a33f7d5272872208a71ca2d3d1bcdb3df3229fff4b75aed45982f"
+    },
+    {
+      "path": ".evidence/gt-source-whole-suite-current-20261009/review.md",
+      "sha256": "f5b4ca3f1b42ac397aea92d727b55e1e5d732750438151f880edccbed320485e"
+    },
+    {
+      "path": ".evidence/gt-source-whole-suite-current-20261009/independent-final-verification.json",
+      "sha256": "1fa0d3e55c1573db40689a31a8437902e8ada1efd2e302531c13f852e745766d"
+    },
+    {
+      "path": ".evidence/gt-source-whole-suite-current-20261009/test-changes.json",
+      "sha256": "192e8c42b116b0557277e7876ff2c2b8b1d304c92d5bb798135c6daac460edb5"
+    },
+    {
+      "path": ".evidence/gt-source-whole-suite-current-20261009/r1-independent-diagnosis.json",
+      "sha256": "a69154cfec21197ec2eda08a2485dd13ddb32a46495676a46fae0073d4926330"
+    },
+    {
+      "path": ".evidence/gt-source-whole-suite-current-20261009/r6-next-gate-diagnosis.json",
+      "sha256": "60b8def40ae2264dba6468830a2b7944d3ca7c81e6595508ad9f3be6a515680d"
+    }
+  ],
+  "execution_allowed": false
+}
