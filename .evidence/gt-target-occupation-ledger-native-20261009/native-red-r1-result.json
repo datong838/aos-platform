@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-09T00:16:58.023091+00:00",
+  "database": "aos_test_f82d9dd124bc_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_physical_capacity_occupation_pg.py::test_source_model_preparation_original_native_caller[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "original Target call prefix and missing occupation ledger producer42883 RED; no actual admission"
+}

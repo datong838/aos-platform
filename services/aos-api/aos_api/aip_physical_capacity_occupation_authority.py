@@ -1237,3 +1237,122 @@ def occupation_target_call_statements():
         f'REVOKE ALL ON FUNCTION {TARGET_CALL} FROM PUBLIC',
         f'GRANT EXECUTE ON FUNCTION {TARGET_CALL} TO aos_runtime',
     )
+
+
+TARGET_OCCUPATION = 'public.prepare_capacity_target_occupation(bytea,jsonb,uuid,uuid,uuid)'
+
+
+def occupation_target_ledger_statements():
+    """Initial occupation root/event only, without actual inflight admission.
+
+    Future immutable lifecycle events require separate trusted evidence and
+    implementation. This explicit artifact never installs a runtime finalizer.
+    """
+    root = SCHEMA + '.call_occupation'
+    event = SCHEMA + '.call_occupation_event'
+    statements = [
+        f'''CREATE TABLE {root} (
+          org_id text NOT NULL,project_id text NOT NULL,
+          call_id uuid PRIMARY KEY REFERENCES {SCHEMA}.prepared_call_occupation(call_id),
+          plan_id uuid NOT NULL REFERENCES {SCHEMA}.prepared_plan_risk(plan_id),
+          intent_id uuid NOT NULL UNIQUE REFERENCES {SCHEMA}.prepared_execution_intent(intent_id),
+          purpose text NOT NULL CHECK(purpose='target'),case_id text NOT NULL CHECK(length(case_id)>0),
+          parent_hold uuid NOT NULL,physical_account_id uuid NOT NULL REFERENCES {SCHEMA}.account_guard(physical_account_id),
+          token_upper_bound bigint NOT NULL CHECK(token_upper_bound>0),
+          prepared_call_hash text NOT NULL CHECK(prepared_call_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          initial_state text NOT NULL CHECK(initial_state='prepared_only'),
+          counts_as_inflight boolean NOT NULL CHECK(counts_as_inflight=false),
+          immutable jsonb NOT NULL CHECK(jsonb_typeof(immutable)='object'),
+          content_hash text NOT NULL CHECK(content_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          origin_xid xid8 NOT NULL,origin_pid integer NOT NULL CHECK(origin_pid>0),
+          UNIQUE(call_id,content_hash),UNIQUE(org_id,project_id,plan_id,purpose,case_id))''',
+        f'''CREATE TABLE {event} (
+          org_id text NOT NULL,project_id text NOT NULL,call_id uuid NOT NULL,
+          occupation_hash text NOT NULL,event_seq integer NOT NULL CHECK(event_seq=1),
+          previous_event_hash text CHECK(previous_event_hash IS NULL),
+          state text NOT NULL CHECK(state='prepared_only'),
+          immutable jsonb NOT NULL CHECK(jsonb_typeof(immutable)='object'),
+          content_hash text NOT NULL CHECK(content_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          origin_xid xid8 NOT NULL,origin_pid integer NOT NULL CHECK(origin_pid>0),
+          PRIMARY KEY(call_id,event_seq),
+          FOREIGN KEY(call_id,occupation_hash) REFERENCES {root}(call_id,content_hash))''',
+    ]
+    for table, tag in ((root, 'occupation'), (event, 'occupation_event')):
+        statements.extend((
+            f'ALTER TABLE {table} OWNER TO {OWNER}',
+            f'ALTER TABLE {table} ENABLE ROW LEVEL SECURITY',
+            f'ALTER TABLE {table} FORCE ROW LEVEL SECURITY',
+            f'''CREATE POLICY exact_scope ON {table} TO {OWNER}
+              USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+              WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))''',
+            f'REVOKE ALL ON {table} FROM PUBLIC,aos_runtime',
+            f'''CREATE TRIGGER immutable_{tag} BEFORE UPDATE OR DELETE ON {table}
+              FOR EACH ROW EXECUTE FUNCTION {SCHEMA}.immutable_prepared_intent()''',
+            f'''CREATE TRIGGER no_truncate_{tag} BEFORE TRUNCATE ON {table}
+              FOR EACH STATEMENT EXECUTE FUNCTION {SCHEMA}.immutable_prepared_intent()''',
+            f'''CREATE CONSTRAINT TRIGGER require_{tag}_finalization AFTER INSERT ON {table}
+              DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+              EXECUTE FUNCTION {SCHEMA}.reject_unfinalized_parent_debit()''',
+        ))
+    statements.append(f'''CREATE FUNCTION {TARGET_OCCUPATION.split('(')[0]}(
+      p_raw bytea,p_source jsonb,p_plan uuid,p_intent uuid,p_call uuid) RETURNS jsonb
+      LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $occupation$
+      DECLARE prepared jsonb; call_body jsonb; body jsonb; digest text; first_body jsonb; first_hash text;
+        prior {root}%ROWTYPE; prior_event {event}%ROWTYPE; facts jsonb; original jsonb;
+      BEGIN
+        prepared:=public.prepare_capacity_target_call(p_raw,p_source,p_plan,p_intent,p_call);
+        call_body:=prepared->'immutable';
+        body:=jsonb_build_object('schemaVersion','aos.actual-call-occupation-preparation/v1',
+          'callId',p_call,'planId',p_plan,'intentId',p_intent,'preparedCallHash',prepared->>'contentHash',
+          'tenant',call_body->'tenant','purpose',call_body->>'purpose','caseId',call_body->>'caseId',
+          'parentHold',call_body->>'parentHold','physicalAccountId',call_body->>'physicalAccountId',
+          'tokenUpperBound',call_body->'tokenUpperBound','initialState','prepared_only',
+          'countsAsInflight',false,'executionAllowed',false,'callerLogin',session_user,
+          'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid());
+        digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
+        SELECT * INTO prior FROM {root} WHERE call_id=p_call;
+        IF FOUND THEN
+          IF prior.immutable IS DISTINCT FROM body OR prior.content_hash IS DISTINCT FROM digest
+            OR prior.origin_xid IS DISTINCT FROM pg_current_xact_id() OR prior.origin_pid IS DISTINCT FROM pg_backend_pid() THEN
+            RAISE EXCEPTION 'CAPACITY_OCCUPATION_ROOT_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+        ELSE
+          INSERT INTO {root}(org_id,project_id,call_id,plan_id,intent_id,purpose,case_id,parent_hold,
+            physical_account_id,token_upper_bound,prepared_call_hash,initial_state,counts_as_inflight,
+            immutable,content_hash,origin_xid,origin_pid)
+            VALUES('org-org','dev-project',p_call,p_plan,p_intent,'target',call_body->>'caseId',
+              (call_body->>'parentHold')::uuid,(call_body->>'physicalAccountId')::uuid,
+              (call_body->>'tokenUpperBound')::bigint,prepared->>'contentHash','prepared_only',false,
+              body,digest,pg_current_xact_id(),pg_backend_pid());
+        END IF;
+        first_body:=jsonb_build_object('schemaVersion','aos.actual-call-occupation-initial-event/v1',
+          'callId',p_call,'occupationHash',digest,'eventSeq',1,'previousEventHash',NULL,
+          'state','prepared_only','tenant',call_body->'tenant','countsAsInflight',false,
+          'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid());
+        first_hash:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(first_body),'UTF8')),'hex');
+        SELECT * INTO prior_event FROM {event} WHERE call_id=p_call AND event_seq=1;
+        IF FOUND THEN
+          IF prior_event.immutable IS DISTINCT FROM first_body OR prior_event.content_hash IS DISTINCT FROM first_hash
+            OR prior_event.occupation_hash IS DISTINCT FROM digest
+            OR prior_event.origin_xid IS DISTINCT FROM pg_current_xact_id() OR prior_event.origin_pid IS DISTINCT FROM pg_backend_pid() THEN
+            RAISE EXCEPTION 'CAPACITY_OCCUPATION_INITIAL_EVENT_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+        ELSE
+          INSERT INTO {event}(org_id,project_id,call_id,occupation_hash,event_seq,previous_event_hash,
+            state,immutable,content_hash,origin_xid,origin_pid)
+            VALUES('org-org','dev-project',p_call,digest,1,NULL,'prepared_only',first_body,first_hash,
+              pg_current_xact_id(),pg_backend_pid());
+        END IF;
+        original:=call_body->'originalFacts';
+        facts:=public.capacity_occupation_plan_risk_fact(p_raw,p_source,
+          (original->'target'->>'reservationId')::uuid,original->'target'->>'requestId',original->'target'->>'requestHash',
+          (original->'judge'->>'reservationId')::uuid,original->'judge'->>'requestId',original->'judge'->>'requestHash');
+        IF facts IS DISTINCT FROM original THEN
+          RAISE EXCEPTION 'CAPACITY_OCCUPATION_CURRENT_AFTER_WAITS_REQUIRED' USING ERRCODE='23514'; END IF;
+        RETURN jsonb_build_object('callId',p_call,'immutable',body,'occupationHash',digest,
+          'initialEvent',first_body,'eventHash',first_hash,'countsAsInflight',false,'executionAllowed',false);
+      END $occupation$''')
+    statements.extend((
+        f'ALTER FUNCTION {TARGET_OCCUPATION} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {TARGET_OCCUPATION} FROM PUBLIC',
+        f'GRANT EXECUTE ON FUNCTION {TARGET_OCCUPATION} TO aos_runtime',
+    ))
+    return tuple(statements)

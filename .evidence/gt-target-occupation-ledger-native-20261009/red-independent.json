@@ -1,0 +1,13 @@
+{
+  "database": "aos_test_f82d9dd124bc_ti4_test",
+  "xid": "6972",
+  "xact_state": "aborted",
+  "prepared_counts": {
+    "prepared_call_occupation": 0,
+    "prepared_plan_risk": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "ledger_tables_absent": true,
+  "source_count": 1
+}

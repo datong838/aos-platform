@@ -1,0 +1,10 @@
+{
+  "original_module_prefix_byte_equal": true,
+  "python_ast_parse": "PASS",
+  "added_lines": 119,
+  "source_sha256": "134ae1bebf21aa704f17a3901e6f952164dadf1909f42b6efbf4735774df5a87",
+  "default_migration_changed": false,
+  "actual_counter_update_added": false,
+  "fee_allocation_added": false,
+  "execution_allowed": false
+}
