@@ -1,0 +1,11 @@
+# 包装跨caller原生负门：下一步骤调查
+
+实际复查原Source consumer与Target SQL：Python包装先复用原consume_current_source，原consumer后缀对supplier/account映射FOR SHARE，注释要求等待后重核期限；epoch profile复用原中立lock，完整锁图尚未在此证明。Target SQL取得私有plan后强制origin_xid/origin_pid/callerLogin及canonicalhash，跨txn未提交plan不可见/不满足原origin，无客户端引用替代权限。
+
+两个已登记候选：①新独立原生跨caller/command变异负门，依现有严格包装和原SCRAM profile；②实际准入/费用/Judge真实输入链，依单腿risk与真实Target结果。先①，不改产品。
+
+拟测试目录 .evidence/gt-wrapper-cross-caller-native-20261009，原5436容器新全库与单独Lease。同caller原正向链保持；第二真实SCRAM caller严格设置UTC/serializable/tenant/role，与第一PID和xid不同，有限lock/statement timeout防测试互等。先分别验证原Source消费是否可用，再尝试借用第一未提交plan/Intent/call，必须拒绝且两连接均没有实际inflight。若受Source锁或绑定限制，只如实区分Source拒绝/timeout与plan-origin拒绝，不伪称已测到后者；不释放原caller锁或重发未知结果。
+
+命令变异另用model_copy在同caller构造canary tenant/wrong Source ref/未知字段，由原command重验证或原reader拒绝；不读取token值、不发外部请求。无需产品变更；要求原full manifest仍current、实际COMMIT拒绝、独立rollback六表零/Source1/临时身份关闭/31旧资源保留。矩阵按剩余批准时间划小，不能延长Judge50秒或重复已封存矩阵。
+
+本次仅代码调查与测试方案，没有新DB操作/Provider调用/并行写者/Goal变更。完整actual admission、unknown、费用/Usage、真实Judge输入和最终COMMIT仍待后续。

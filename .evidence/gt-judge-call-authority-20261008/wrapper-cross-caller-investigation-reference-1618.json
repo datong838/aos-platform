@@ -1,0 +1,14 @@
+{
+  "authority_revision": "AOS-001618",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/typed-occupation-wrapper-reference-1618.json",
+      "sha256": "e4485280fc365c5182826973a6de7f439664905e5fea2ebb91e6957bd4d2cbdc"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/wrapper-cross-caller-investigation-1618.md",
+      "sha256": "d0f3f7d29020414c6275276e16965a0bcc19c3fdde2b1e2d89a8afd964ab11c6"
+    }
+  ]
+}

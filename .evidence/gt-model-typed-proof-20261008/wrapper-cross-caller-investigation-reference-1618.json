@@ -1,0 +1,14 @@
+{
+  "authority_revision": "AOS-001618",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/typed-occupation-wrapper-reference-1618.json",
+      "sha256": "f7ca2e13d00d3a2269896253e03e800d095abcb28ff306675668d6b58d3fe469"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/wrapper-cross-caller-investigation-1618.md",
+      "sha256": "d0f3f7d29020414c6275276e16965a0bcc19c3fdde2b1e2d89a8afd964ab11c6"
+    }
+  ]
+}
