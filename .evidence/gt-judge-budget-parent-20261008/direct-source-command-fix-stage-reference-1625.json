@@ -1,0 +1,131 @@
+{
+  "authority_revision": "AOS-001625",
+  "head": "600893313afcdc35d7502059615e8e8ae2097b03",
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/direct-source-command-native-red-reference-1624.json",
+      "sha256": "e7fca1aab9e91e0da2c5da2749e7ac72761dabee74435e89585ead9084040937"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/audit-green-r1.py.txt",
+      "sha256": "ebf24ce0f699cb66667459ac26f9831dd22a3f86f0951d0a21a30658b009aa47"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/audit-r1-failure.json",
+      "sha256": "2dbd203f1c3d8762c53e72ea6b9c6cfa7e2961119c08ad7502e19115ed54a484"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/audit_green.py",
+      "sha256": "968d0f27c0ce612c5694c00a7beca7358b3abba75236b90b428f6900898b0fa8"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/catalog.json",
+      "sha256": "f6299bac1ac076606c8cded3b5d68362b639a40c2477ed9b8b9f6b4be6269afd"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/command-mutation-proof.json",
+      "sha256": "4354b3be3a9e2c99748bb934fed1794f61db88238ee2f04132688e9bffa4c13d"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/complete-plan-risk.json",
+      "sha256": "18ce5549fb93104f582d8ee09a8a413218cd7388741bfe6711bd8f19ecf0aac3"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/hash-check.json",
+      "sha256": "0183e783b7fe33594eb47b5916b31000f23d01c0b5dc293fae220efb84a96764"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/independent-readback.json",
+      "sha256": "91b77f0793b412b8616ac9b4b7b3af351d349198067288641ed5be9af6c19876"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/ledger-catalog.json",
+      "sha256": "f3dd4d6994052f853bc363ee475ee43a79094b70eb9b6010594e13fb41e7eb50"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/ledger-green.json",
+      "sha256": "077723b52566752094bc79acb3df9556c5ba34184334473320e2ac5f555d3516"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/native-direct-source-command-green-r1-attempt.json",
+      "sha256": "ebecd15a87762c49bd1060303adf7b817d6cf4b5f9059730a597ce6c3504235a"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/native-direct-source-command-green-r1-result.json",
+      "sha256": "729024bd2015f2dd43a600d7a06572095944c72886a78da8bc55d3011c2f78db"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/native-direct-source-command-regression-r1-attempt.json",
+      "sha256": "ebecd15a87762c49bd1060303adf7b817d6cf4b5f9059730a597ce6c3504235a"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/native-direct-source-command-regression-r1-result.json",
+      "sha256": "1fa9d78c36dce2ea3e4c73fc82b40ef639c293bb2f81764e05b2f9fabf2b8d5f"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/native-green-r1.log",
+      "sha256": "46606e64ff3bbe795646e87c9e87cbb77ec0d632d5564912ebe303f43a20c731"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/pre-fix-source.py.txt",
+      "sha256": "e6b46538babab94fb56a5aca005cee0aae6190d3e7958c57ba7c10b66846686d"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/pre-fix-test.py.txt",
+      "sha256": "80794df030f61edb6dcac1765166e9b344c0c56f55b1ed46b34a3bff004aa398"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/record_stage.py",
+      "sha256": "36781a92fde8f972af9b0dce825406a85532346541b77a0ff1adba94ccc3256a"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/review.md",
+      "sha256": "c6d70a4352406ad999672db3c2ebeb5523ff306a9c202df98e0b1af05b2f6569"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/run_native_green.py",
+      "sha256": "a3f10860abaf04307f84b1870f56bfebaa9fbfaa2319057436c9ed78002ff6e5"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/run_source_regression.py",
+      "sha256": "a576e366760f04d3c1c907c1493554942c5e82f5e821a37097b11b7984ef2d6a"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/signed-origin-race-verification.json",
+      "sha256": "920829a13a7c6917d5cc76245110f2c529848c95dd9a618ab874af681427287b"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/source-fix.patch",
+      "sha256": "e6c2f815279f1eb699df8fd7e38630ec3906b93ffe1d835dedcf4008494e8bd0"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/source-regression-r1.log",
+      "sha256": "ac87cad31705797de2a91d06de2d0d950c6dc8a297d66922bae25b7aac2d989b"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/source_newjudge_native_trial_1606.py",
+      "sha256": "b2279e905c72714fe4eebdb51cf33f7ddc3ac129bb482ac58092edbe6b728723"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/test-fix.patch",
+      "sha256": "577a74e7e7f82286a4d095193aa71b90b71fc6dfc56cf85ee6b52adf076c3966"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/trusted-target-call-green.json",
+      "sha256": "3a83188cf4b64078ec5cbdd88cc9c8f2d92b63bf834710887f087693d185e933"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/verify_source_regression.py",
+      "sha256": "91d44b800107df49fae1f9a0337ae7f47cac213d63fa64a95f2402db6e17b1a6"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/wrapper-green.json",
+      "sha256": "b3e2727598e3d1368a064cfd2af80d488b3b8daa05a327fa38e3da3d5bf51092"
+    }
+  ],
+  "execution_allowed": false
+}
