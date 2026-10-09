@@ -26,6 +26,85 @@ pytest_plugins=('tests.aip.test_capacity_source_publication_transaction_pg',)
 SCOPE=TenantScope('org-org','dev-project')
 ROLE='aos_provider_capacity_occupation'
 
+
+def test_original_dual_parent_lifecycle_is_not_ordinary_settlement(
+        caller, issuer_factory, https_signer, guard_issuer_factory,
+        guard_consumer_factory, tmp_path):
+    """A complete approved suite keeps both unknown-cost parent liabilities.
+
+    Ordinary invocation receipts must never identify Eval/Judge parents. This
+    is an original native isolation gate, not a new settlement authorization.
+    """
+    from aos_api.aip_budget_reservation_store import (
+        AipBudgetReservationStore, BudgetReservationNotFound,
+    )
+    from tests.aip.test_model_eval_judge_authority_pg import test_exact_signed_rule_new_original_suite
+    proofs = []
+
+    def probe(conn, body, target, judge):
+        assert len(body['cases']) == 2
+        xid = conn.execute('SELECT pg_current_xact_id()::text AS xid').fetchone()['xid']
+        parents = []
+        ordinary = AipBudgetReservationStore()
+        for purpose, table, parent in (
+                ('target', 'aip_model_eval_budget_reservation', target.parent_limit),
+                ('judge', 'aip_model_judge_budget_reservation', judge.parent_limit)):
+            reservation = parent.parent_hold_ref.resource_id
+            query = ('SELECT *,xmin::text AS origin_xid FROM ' + table +
+                     ' WHERE org_id=%s AND project_id=%s AND reservation_id=%s')
+            args = (*SCOPE.key, reservation)
+            before = conn.execute(query, args).fetchone()
+            assert before['state'] == 'held' and before['upper_bound_minor'] == 10
+            assert before['origin_xid'] == xid
+            assert before['content_hash'] == parent.parent_hold_ref.content_hash
+            buckets = conn.execute('SELECT * FROM ' + table + '_bucket'
+                ' WHERE org_id=%s AND project_id=%s AND reservation_id=%s', args).fetchall()
+            assert len(buckets) == 3 and all(b['reserved_minor'] == 10 for b in buckets)
+            # The original private reader must resolve its own invocation row,
+            # never a same-tenant foreign-purpose parent UUID.
+            with conn.transaction(force_rollback=True):
+                with pytest.raises(BudgetReservationNotFound):
+                    ordinary._reservation_by_id(conn, SCOPE, reservation, lock=True)
+            with conn.transaction(force_rollback=True):
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    conn.execute('UPDATE ' + table + " SET state='cost_pending'"
+                        ' WHERE org_id=%s AND project_id=%s AND reservation_id=%s', args)
+            assert conn.execute(query, args).fetchone() == before
+            assert conn.execute('SELECT * FROM ' + table + '_bucket'
+                ' WHERE org_id=%s AND project_id=%s AND reservation_id=%s', args).fetchall() == buckets
+            price = before['price_ref']
+            payload = conn.execute('SELECT payload FROM aip_model_price_snapshot_revision'
+                ' WHERE org_id=%s AND project_id=%s AND model_price_snapshot_id=%s AND revision=%s',
+                (*SCOPE.key, price['resourceId'], price['revision'])).fetchone()['payload']
+            assert all(payload.get(k) is None for k in
+                       ('inputTokenPrice', 'outputTokenPrice', 'cachedTokenPrice'))
+            parents.append({'purpose': purpose, 'reservation': reservation,
+                'content_hash': before['content_hash'], 'upper_bound_minor': 10,
+                'origin_xid': xid, 'bucket_count': 3, 'numeric_prices': False,
+                'ordinary_reader_rejected': True, 'runtime_transition_rejected': True})
+        proofs.append({'xid': xid, 'parents': parents,
+            'complete_legs': [(c['caseId'], p) for c in body['cases'] for p in ('target', 'judge')],
+            'execution_allowed': False})
+        return proofs[-1]
+
+    test_exact_signed_rule_new_original_suite(caller, issuer_factory, https_signer,
+        guard_issuer_factory, guard_consumer_factory, tmp_path, source_probe=probe)
+    assert len(proofs) == 1
+    from aos_api.db import connect
+    with connect(SCOPE) as independent:
+        assert independent.execute('SELECT pg_xact_status(%s::xid8) AS status',
+            (proofs[0]['xid'],)).fetchone()['status'] == 'aborted'
+        for p in proofs[0]['parents']:
+            table = 'aip_model_eval_budget_reservation' if p['purpose'] == 'target' else 'aip_model_judge_budget_reservation'
+            assert independent.execute('SELECT count(*) AS n FROM ' + table +
+                ' WHERE org_id=%s AND project_id=%s AND reservation_id=%s',
+                (*SCOPE.key, p['reservation'])).fetchone()['n'] == 0
+    root = os.environ.get('AOS_PARENT_LIFECYCLE_EVIDENCE')
+    if root:
+        with (Path(root) / 'native-proof.json').open('x') as stream:
+            json.dump({'proof': proofs[0], 'independent_xact_status': 'aborted',
+                'original_parent_rows_after_rollback': 0, 'provider_calls': 0}, stream, indent=2)
+
 @pytest.mark.parametrize('native_original_fact_reader',['shared'],indirect=True)
 def test_source_model_preparation_original_native_caller(exact_public_source_caller,https_signer,caller,issuer_factory,guard_issuer_factory,guard_consumer_factory,tmp_path):
     business_fixture_caller = caller

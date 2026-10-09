@@ -1,0 +1,23 @@
+{
+  "identity": {
+    "database": "aos_test_708cc4b0d400_ti4_test",
+    "cluster": "7694680278363095064",
+    "read_only": "on"
+  },
+  "xid": "28846",
+  "status": "aborted",
+  "parents": [
+    {
+      "purpose": "target",
+      "parent_rows": 0
+    },
+    {
+      "purpose": "judge",
+      "parent_rows": 0
+    }
+  ],
+  "read_only": true,
+  "execution_allowed": false,
+  "provider_calls": 0,
+  "full_task_delivered": false
+}

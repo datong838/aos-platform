@@ -1,0 +1,9 @@
+# 原双父生命周期接入负门复审
+
+新增回归test_original_dual_parent_lifecycle_is_not_ordinary_settlement，精确文件 services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py。原现有函数AST逐一未改；产品模块未改。沿原signedRule、新独立Target/Judge批准和两case/四leg完整原申请，在原native SERIALIZABLE caller中检查两父hold/hash/xmin=当前xid，各父10及三桶risk10；普通私有reservation读者不能把原Eval/Judge父UUID认成普通invocation，runtime不能改为cost_pending；失败后两父及所有bucket rows精确未变。两个实际price三价null未被转为零。
+
+r1 1FAIL/13.34s：测试预期BudgetReservationConflict，原实际契约为BudgetReservationNotFound，真实隔离拒绝正确，未归因为产品故障。保留失败、attempt/filehash、按attempt hash验证的事后源码重建（明确不是运行前冻结）。r2只改新测试的预期异常，fresh另库1PASS64.06s/8旧warning。原完整suite测试被真实执行，含后继原wholevalidator和既有负门，未缩suite。没有为刷GREEN放宽接口。
+
+独立read-only：aos_test_708cc4b0d400_ti4_test@cluster7694680278363095064，xid28846 ABORTED，精确本wholeplan两父0。相邻fixture另外held/approval不能混认成fulljoint；未删库/资源、无Provider。旧helpers及原untracked reader/authority hash前后未变。无需浏览器，未取得新的Prime PASS。
+
+本轮完成的是接入隔离回归，尚未实现可信费用终结或fullparent状态转换。现有wholeplan immutable parentcaps并非实际每leg金额来源；不为缺少原trust事实编造producer或unusedhelper。后继仍须完成parent liability与actual occupation分离、真正receipt绑定和风险保留，并保留全Goal。Source严格WAL/确认截止所需协议裁决已请求，未收到回复即维持原严格要求；该动作待裁决不停止安全主线，不能自动换成提交前截止。真实token来源、joint/transport/root来源仍未证明；正式执行仍off。

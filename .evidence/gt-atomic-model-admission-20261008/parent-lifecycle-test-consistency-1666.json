@@ -1,0 +1,9 @@
+{
+  "old_test_ast_unchanged": true,
+  "new_test_only": [
+    "test_original_dual_parent_lifecycle_is_not_ordinary_settlement"
+  ],
+  "failed_test_reconstruction_hash_matches_attempt": true,
+  "products_modified": false,
+  "formal_effects": false
+}

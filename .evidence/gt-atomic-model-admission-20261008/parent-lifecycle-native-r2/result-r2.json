@@ -1,0 +1,19 @@
+{
+  "pytest_exit": 0,
+  "databases": [
+    "aos_test_708cc4b0d400_ti4_test"
+  ],
+  "reports": [
+    {
+      "nodeid": "tests/aip/test_physical_capacity_occupation_pg.py::test_original_dual_parent_lifecycle_is_not_ordinary_settlement",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "old_files_unchanged": true,
+  "file_hashes": {
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": "d766c530c951445fb66879c0661543b31d0dbef61e868f2497f876e74047f69f"
+  },
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

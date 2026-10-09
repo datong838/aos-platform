@@ -1,0 +1,15 @@
+{
+  "cluster": "7694680278363095064",
+  "head": "96b02d10b6ee2b54d1c28392c2ba8c97197c06d7",
+  "file_hashes": {
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": "1867181705294bc512091fa622780a2195a0702f5a1170d478befeb47f5644dc"
+  },
+  "old_hashes": {
+    ".evidence/gt-atomic-model-admission-20261008/legal-model-prefix-application-r4.json": "e2a28678a1be1618e844d4a054a57eed3e6670b0e546eaacb5f87c5ff12ba491",
+    ".evidence/gt-atomic-model-admission-20261008/legal-eval-application-result-r4.json": "915aade40bac5e6797bbace08e6440c70dcb00830a0e3b9f58c05d93831caea7",
+    "services/aos-api/aos_api/aip_model_eval_execution_reader.py": "1b61a8d0df28743065c3facff18363c0847d68e3b64b7e68657052b90b2e69fa",
+    "services/aos-api/aos_api/aip_model_eval_execution_authority.py": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27"
+  },
+  "free_bytes": 419090894848,
+  "execution_allowed": false
+}
