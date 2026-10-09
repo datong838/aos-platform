@@ -1,0 +1,7 @@
+{
+  "function": "test_native_provider_query_holds_original_head_share_fence",
+  "root_cause": "helper imported only in nested reader, not outer postrollback audit",
+  "business_lock_controls_unchanged": true,
+  "prior_result": "21PASS1FAIL58.79s",
+  "prior_failure_retained": true
+}

@@ -1,0 +1,11 @@
+{
+  "observed_at": "2026-10-09T06:01:42.691693+00:00",
+  "tool_session": 96637,
+  "pid": 7187,
+  "actual_ps": "7187 Fri Oct  9 14:01:24 2026     00:18 services/aos-api/.venv/bin/python .evidence/gt-source-full-suite-root-r4-20261009/run_whole_r1.py",
+  "head": "2e670f9fe72f2a1ab929dab64ae9136c2437a29b",
+  "all_1963_inputs_unchanged": true,
+  "terminal_result_present": false,
+  "state": "ACTIVE_SAME_PROCESS",
+  "replay_allowed": false
+}

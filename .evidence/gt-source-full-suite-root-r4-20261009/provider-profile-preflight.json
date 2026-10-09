@@ -1,0 +1,57 @@
+[
+  {
+    "function": "test_native_original_provider_profile_preserves_actual_business_hash",
+    "start": 1420,
+    "end": 1445,
+    "assert_count": 6,
+    "profile_loop": "for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):\n            owner.execute(profile)",
+    "profile_connection": "owner",
+    "function_sha256": "0527d2341d34fe768146e75d9bc01af6532a9b8c29b3049bff3f2a4a4c631f91",
+    "intent": "Original Provider equality/current row/full account set/real head locks; duplicated migrated installation is setup only, preserve original controls",
+    "mutation_allowed_while_current_process_live": false
+  },
+  {
+    "function": "test_native_original_provider_profile_matches_original_model_domain",
+    "start": 1448,
+    "end": 1546,
+    "assert_count": 6,
+    "profile_loop": "for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):\n            owner.execute(profile)",
+    "profile_connection": "owner",
+    "function_sha256": "5b98474a818cb57c348f8e59d8d59b9585ea415ad530a1c0578f948db11ef5e2",
+    "intent": "Original Provider equality/current row/full account set/real head locks; duplicated migrated installation is setup only, preserve original controls",
+    "mutation_allowed_while_current_process_live": false
+  },
+  {
+    "function": "test_native_original_provider_current_row_rejects_coherent_payload_faults",
+    "start": 1549,
+    "end": 1587,
+    "assert_count": 5,
+    "profile_loop": "for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):\n            owner.execute(profile)",
+    "profile_connection": "owner",
+    "function_sha256": "e5e10392ed0df7551cd16b750ad8451140884c06683aa2509887872f57aeca71",
+    "intent": "Original Provider equality/current row/full account set/real head locks; duplicated migrated installation is setup only, preserve original controls",
+    "mutation_allowed_while_current_process_live": false
+  },
+  {
+    "function": "test_native_provider_query_holds_original_head_share_fence",
+    "start": 1591,
+    "end": 1656,
+    "assert_count": 11,
+    "profile_loop": "for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):conn.execute(profile)",
+    "profile_connection": "conn",
+    "function_sha256": "b526cc670d73ea64c69bf97cdb36eb09a3765504494b77690204d6d27d2ee483",
+    "intent": "Original Provider equality/current row/full account set/real head locks; duplicated migrated installation is setup only, preserve original controls",
+    "mutation_allowed_while_current_process_live": false
+  },
+  {
+    "function": "test_native_provider_query_checks_real_full_original_account_set",
+    "start": 1660,
+    "end": 1718,
+    "assert_count": 4,
+    "profile_loop": "for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):owner.execute(profile)",
+    "profile_connection": "owner",
+    "function_sha256": "bece1e26495bf512a6e8219f46893a63ff08b97629d129a6390e276ae9037bf4",
+    "intent": "Original Provider equality/current row/full account set/real head locks; duplicated migrated installation is setup only, preserve original controls",
+    "mutation_allowed_while_current_process_live": false
+  }
+]

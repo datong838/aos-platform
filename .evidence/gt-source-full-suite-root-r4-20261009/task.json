@@ -1,0 +1,19 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-source-full-suite-root-r4-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001642",
+  "scope": [
+    "aos-platform/.evidence/gt-source-full-suite-root-r4-20261009"
+  ],
+  "excluded_scope": [
+    "aos-platform/services",
+    "aos-platform/apps"
+  ],
+  "expected_outputs": [
+    "Entire original101function386node Source cumulative after six application/candidate oracle repair; preserve actual first failure and unexecuted scope; no finalclock/business falseGREEN"
+  ],
+  "lease_expires_at": "2026-10-09T10:01:24.457488+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T14:01:25+08:00"
+}

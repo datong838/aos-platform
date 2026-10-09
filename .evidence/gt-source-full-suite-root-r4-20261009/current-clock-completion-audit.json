@@ -1,0 +1,8 @@
+{
+  "head": "2e670f9fe72f2a1ab929dab64ae9136c2437a29b",
+  "source_commit_sql_sha256": "a2f4e5bcecceecfc9aed28fad84b8c9f46c5e7d224409581235a0e96d299bab1",
+  "identical_to_actual_expired_source_commit_counterexample": true,
+  "counterexample": ".evidence/gt-source-body-expiry-commit-native-20261009",
+  "full_suite_cannot_prove_final_clock": true,
+  "external_effect_replayed": false
+}

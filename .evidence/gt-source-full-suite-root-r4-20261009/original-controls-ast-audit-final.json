@@ -1,0 +1,12 @@
+{
+  "functions": [
+    "test_native_original_provider_profile_preserves_actual_business_hash",
+    "test_native_original_provider_profile_matches_original_model_domain",
+    "test_native_original_provider_current_row_rejects_coherent_payload_faults",
+    "test_native_provider_query_holds_original_head_share_fence",
+    "test_native_provider_query_checks_real_full_original_account_set"
+  ],
+  "all_noninstallation_controls_ast_equal": true,
+  "includes_outer_import_scope_fix": true,
+  "comparison": "current five test functions to actual HEAD original five tests, only migrated setup and explicit rollback installation assertions excluded"
+}

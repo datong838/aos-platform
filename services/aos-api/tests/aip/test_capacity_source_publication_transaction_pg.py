@@ -1426,8 +1426,8 @@ def test_native_original_provider_profile_preserves_actual_business_hash(native_
         row=owner.execute("SELECT r.payload,r.content_hash FROM public.aip_provider_instance_head h JOIN public.aip_provider_instance_revision r USING(org_id,project_id,provider_instance_id) WHERE h.org_id=%s AND h.project_id=%s AND r.revision=h.current_revision LIMIT 1",SCOPE.key).fetchone()
         assert row is not None
         expected=ProviderInstanceRevision.model_validate(row['payload']).model_dump(mode='json',by_alias=True)
-        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):
-            owner.execute(profile)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         actual=owner.execute('SELECT aos_capacity_publication_private.read_original_provider(%s) AS value',(Jsonb(row['payload']),)).fetchone()['value']
         assert actual==expected
@@ -1436,7 +1436,8 @@ def test_native_original_provider_profile_preserves_actual_business_hash(native_
         assert owner.execute(CAPACITY_NATIVE_PROVIDER_ROW_SQL,params).fetchone()['normalized_provider']==expected
         assert owner.execute(CAPACITY_NATIVE_PROVIDER_ROW_SQL,{**params,'org_id':'dev-org'}).fetchone() is None
         owner.rollback()
-        assert owner.execute("SELECT to_regprocedure('aos_capacity_publication_private.read_original_provider(jsonb)') AS fn").fetchone()['fn'] is None
+        assert owner.execute("SELECT to_regprocedure('aos_capacity_publication_private.read_original_provider(jsonb)') AS fn").fetchone()['fn'] is not None
+        require_source_transaction_functions(owner)
         owner.rollback()
 
 
@@ -1496,8 +1497,8 @@ def test_native_original_provider_profile_matches_original_model_domain(native_s
             v=deepcopy(raw);v['revision']=chr(point)+'1'+chr(point);cases.append(('revision_whitespace_'+str(point),v))
         v=deepcopy(raw);v['provider_instance_id']=raw['providerInstanceId'];cases.append(('duplicate_alias',v))
         v=deepcopy(raw);del v['createdBy'];cases.append(('missing',v))
-        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):
-            owner.execute(profile)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         names=['original_provider_string','original_provider_integer','original_provider_ref','original_provider_time','read_original_provider']
         flags=owner.execute("""SELECT p.provolatile,p.proisstrict,p.prosecdef,p.proconfig,r.rolname,
             has_function_privilege('aos_runtime',p.oid,'EXECUTE') AS runtime_exec,
@@ -1536,7 +1537,8 @@ def test_native_original_provider_profile_matches_original_model_domain(native_s
                 assert error.sqlstate=='22023';actual=None
             if expected!=actual:mismatches.append(('raw_decimal_'+number,expected is not None,actual is not None))
         owner.rollback()
-        assert owner.execute("SELECT count(*) AS n FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)",(names,)).fetchone()['n']==0
+        assert owner.execute("SELECT count(*) AS n FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)",(names,)).fetchone()['n']==5
+        require_source_transaction_functions(owner)
         owner.rollback()
     assert not mismatches, f'Original Provider/native incompatibilities: {mismatches!r}'
 
@@ -1555,8 +1557,8 @@ def test_native_original_provider_current_row_rejects_coherent_payload_faults(na
         owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
         row=owner.execute('SELECT r.* FROM public.aip_provider_instance_head h JOIN public.aip_provider_instance_revision r USING(org_id,project_id,provider_instance_id) WHERE h.org_id=%s AND h.project_id=%s AND r.revision=h.current_revision LIMIT 1',SCOPE.key).fetchone()
         params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,provider_id=row['provider_instance_id'],revision=row['revision'],content_hash=row['content_hash'])
-        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):
-            owner.execute(profile)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         assert owner.execute(CAPACITY_NATIVE_PROVIDER_ROW_SQL,params).fetchone() is not None
         for fault,field,value in [('wrong_id','provider_id','absent-provider'),('wrong_revision','revision',row['revision']+1),('wrong_hash','content_hash','f'*64),('canary','org_id','dev-org')]:
@@ -1585,6 +1587,7 @@ def test_native_original_provider_current_row_rejects_coherent_payload_faults(na
 @pytest.mark.parametrize('order',['reader_first','writer_first'])
 def test_native_provider_query_holds_original_head_share_fence(native_signed_source,order):
     from threading import Event,Thread
+    from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
     import time
     from tests.aip._runtime_guard_history_fixture import isolated_owner
     from aos_api.aip_provider_capacity_publication_store import (
@@ -1599,7 +1602,7 @@ def test_native_provider_query_holds_original_head_share_fence(native_signed_sou
         try:
             with isolated_owner() as conn:
                 conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
-                for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):conn.execute(profile)
+                require_source_transaction_functions(conn)
                 conn.execute('SET LOCAL ROLE aos_capacity_publication_owner')
                 results['reader_pid']=conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
                 if order=='writer_first':reader_ready.set()
@@ -1646,7 +1649,8 @@ def test_native_provider_query_holds_original_head_share_fence(native_signed_sou
     assert not rt.is_alive() and not wt.is_alive()
     assert results.get('reader_rolled_back') and results.get('writer_rolled_back'),results
     with isolated_owner() as owner:
-        assert owner.execute("SELECT to_regprocedure('aos_capacity_publication_private.read_original_provider(jsonb)') AS fn").fetchone()['fn'] is None
+        assert owner.execute("SELECT to_regprocedure('aos_capacity_publication_private.read_original_provider(jsonb)') AS fn").fetchone()['fn'] is not None
+        require_source_transaction_functions(owner)
         assert owner.execute('SELECT current_revision FROM public.aip_provider_instance_head WHERE org_id=%s AND project_id=%s AND provider_instance_id=%s',(*SCOPE.key,params['provider_id'])).fetchone()['current_revision']==row['revision']
         owner.rollback()
 
@@ -1684,7 +1688,8 @@ def test_native_provider_query_checks_real_full_original_account_set(source_inpu
     assert approved.proposal.status.value=='approved'
     with isolated_owner() as owner:
         owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
-        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL,CAPACITY_ORIGINAL_PROVIDER_PROFILE_SQL):owner.execute(profile)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         def native_results():
             return [owner.execute(CAPACITY_NATIVE_PROVIDER_ROW_SQL,dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,
                 provider_id=ref.asset_id,revision=ref.revision,content_hash=ref.content_hash)).fetchone() is not None

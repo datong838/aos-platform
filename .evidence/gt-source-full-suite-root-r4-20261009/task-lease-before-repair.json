@@ -1,0 +1,598 @@
+{
+  "tasks": [
+    {
+      "base_revision": "AOS-001642",
+      "created_at": "2026-10-09T14:01:25+08:00",
+      "excluded_scope": [
+        "aos-platform/services",
+        "aos-platform/apps"
+      ],
+      "expected_outputs": [
+        "Entire original101function386node Source cumulative after six application/candidate oracle repair; preserve actual first failure and unexecuted scope; no finalclock/business falseGREEN"
+      ],
+      "lease_expires_at": "2026-10-09T10:01:24.457488+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/.evidence/gt-source-full-suite-root-r4-20261009"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-source-full-suite-root-r4-20261009"
+    },
+    {
+      "base_revision": "AOS-001414",
+      "created_at": "2026-10-06T22:33:54+08:00",
+      "excluded_scope": [
+        "current formal DB/services/Host/worker/real Provider/mall source/old Runs/manual execution/230 L0",
+        "Existing parent Source/publication/formalBoundary scopes and occupied migrations",
+        "Formal role LOGIN/external credentials or final caller COMMIT TTL authority"
+      ],
+      "expected_outputs": [
+        "Complete server-derived Source preparation/signing/commit/native caller COMMIT/current consumer, coupled with original parent tasks; no helper-only Delivery",
+        "Direct SQL bypass/ACL/original approvals/signed registered provenance/global mapping/native xid and deferred unfinished attempts/rollback/replay/unknown reconciliation/concurrency actual evidence",
+        "Source final COMMIT TTL unresolved boundary retained; no formal supplier or natural first chain claim"
+      ],
+      "lease_expires_at": "2026-10-09T08:17:49.048491+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py",
+        "aos-platform/services/aos-api/alembic/versions/a0v_155_capacity_source_publication.py",
+        "aos-platform/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+        "aos-platform/.evidence/gt-capacity-source-publication-20261006"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-capacity-source-publication-20261006"
+    }
+  ],
+  "all_leases": [
+    {
+      "base_revision": "AOS-001343",
+      "created_at": "2026-10-05T18:00:25+08:00",
+      "excluded_scope": [
+        "\u5f53\u524d142\u771f\u5e93\u3001\u6b63\u5f0fIdP/LOGIN\u914d\u7f6e\u3001Host/worker/Provider/\u5546\u57ce\u6e90/\u65e7Run/\u624b\u5de5\u6267\u884c/\u5916\u90e8\u6548\u679c"
+      ],
+      "expected_outputs": [
+        "\u5b8c\u6574\u516bfacts+Source/\u4e24Owner/\u7b7e\u540d\u5b89\u88c5/\u9884\u7b97\u540c\u8c03\u7528\u65b9\u4e8b\u52a1\u539fReceipt-CAS-proof\u3001a144\u9ed8\u8ba4NOLOGIN\u6700\u5c0fACL\u4e0e\u5b9e\u9645COMMIT\u9a8c\u8bc1\uff1b\u4e0d\u5f97\u4ee5\u5206\u6bb5helper\u6216DTO\u66ff\u4ee3\u5b8c\u6574\u9000\u51fa",
+        "Continuation of expired unfinished original Task; original signed eight-fact positive and actual three-write COMMIT, not helper-only completion"
+      ],
+      "lease_expires_at": "2026-10-08T17:47:03.378195+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_binding_formal_evaluator_contracts.py",
+        "aos-platform/services/aos-api/aos_api/aip_binding_formal_evaluator.py",
+        "aos-platform/services/aos-api/aos_api/aip_binding_evaluator_connection.py",
+        "aos-platform/services/aos-api/aos_api/aip_license_source_proposal.py",
+        "aos-platform/services/aos-api/aos_api/aip_license_source_authority.py",
+        "aos-platform/services/aos-api/aos_api/aip_budget_cost_runtime.py",
+        "aos-platform/services/aos-api/alembic/versions/a0v_144_binding_evaluator_boundary.py",
+        "aos-platform/services/aos-api/aos_api/aip_capability_binding_service.py",
+        "aos-platform/services/aos-api/aos_api/routers/aip_bindings.py",
+        "aos-platform/services/aos-api/tests/aip/test_binding_formal_evaluator_pg.py",
+        "aos-platform/services/aos-api/tests/aip/test_binding_formal_evaluator_contracts.py",
+        "aos-platform/services/aos-api/tests/aip/test_binding_formal_evaluator_api.py",
+        "aos-platform/services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py",
+        "aos-platform/services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py",
+        "aos-platform/.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-e17-s3owaob90/implementation"
+      ],
+      "status": "ACTIVE",
+      "task_id": "w5cb4-e17-b90-full-evaluator-continuation-20261005"
+    },
+    {
+      "base_revision": "AOS-001348",
+      "created_at": "2026-10-05T19:33:52+08:00",
+      "excluded_scope": [
+        "Current database and real supplier calls or credentials",
+        "Shared ledger activation/cutover or ordinary runtime changes",
+        "Existing license Source permissions and roles expansion",
+        "Unverified supplier claims as production capacity grants"
+      ],
+      "expected_outputs": [
+        "Strict physical Source/basis and stable Provider account mapping contract; missing real evidence fail-closed",
+        "Original independent approval/provenance/Source epoch/private database identity bound issuance and nonexecuting revision in disposable PG",
+        "Exact negative/RLS/ACL/replay/concurrency and adjacent evidence; never claim supplier basis or shared ledger from Owner allocation"
+      ],
+      "lease_expires_at": "2026-10-07T18:00:00+08:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_contracts.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_authority.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_issuer.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_issuer_connection.py",
+        "aos-platform/services/aos-api/alembic/versions/a0v_147_provider_capacity_source.py",
+        "aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_contracts.py",
+        "aos-platform/services/aos-api/tests/aip/test_provider_capacity_source_pg.py",
+        "aos-platform/.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-source-20261005"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-provider-capacity-source-20261005"
+    },
+    {
+      "base_revision": "AOS-001352",
+      "created_at": "2026-10-05T21:34:52+08:00",
+      "excluded_scope": [
+        "Current database migration/read/restart and real supplier credentials or calls",
+        "Existing License Source purpose/permissions or role expansion",
+        "Shared occupation activation/cutover and runtime business effects"
+      ],
+      "expected_outputs": [
+        "Additive isolated formal capacity issuance roles/private immutable registry and stable supplier/account global uniqueness; never promote runtime candidate or approval as supplier proof",
+        "Dedicated issuer Evidence epoch boundary and reusable original approval dependency checks retaining runtime behavior",
+        "Actual private identity/ACL/RLS/duplicate/concurrency/revoke/rollback tests; acceptance coupled to ACTIVE full Source issuer actual COMMIT, not helper/table green alone"
+      ],
+      "lease_expires_at": "2026-10-07T18:00:00+08:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/alembic/versions/a0v_150_provider_capacity_issuance_boundary.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_formal_boundary.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_action.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_action.py",
+        "aos-platform/services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py",
+        "aos-platform/services/aos-api/tests/aip/test_provider_capacity_evidence_epoch_pg.py",
+        "aos-platform/.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-provider-capacity-formal-boundary-20261005"
+    },
+    {
+      "base_revision": "AOS-001354",
+      "created_at": "2026-10-05T23:07:24+08:00",
+      "excluded_scope": [
+        "current real DB migration/write/restart",
+        "Host/worker/real Provider/Secret/\u5546\u57ce\u6e90/old12Run/manual/230L0/external effects",
+        "retroactive a147/a150 migration changes",
+        "borrow License purpose/roles",
+        "closing fullSource on table/helper-only"
+      ],
+      "expected_outputs": [
+        "fully specified private owner/function/ACL/trusted cluster and root-policy coordination additive schema",
+        "global stable supplier/fingerprint and bidirectional Provider mapping actual concurrency/reject tests",
+        "original private native approved+signed inputs atomic nonexecuting signed Source COMMIT/rollback/replay with immutable provenance and current consumer",
+        "fullSource/formalBoundary coupled exit remains pending until actual complete issuance and consumer"
+      ],
+      "lease_expires_at": "2026-10-09T05:29:47.915208+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/alembic/versions/a0v_151_provider_capacity_publication.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_contracts.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_consumer.py",
+        "aos-platform/services/aos-api/tests/aip/test_provider_capacity_publication_pg.py",
+        "aos-platform/.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-provider-capacity-publication-schema-20261005"
+    },
+    {
+      "base_revision": "AOS-001356",
+      "created_at": "2026-10-05T23:48:24+08:00",
+      "excluded_scope": [
+        "current source DB writes/migration/restart in this restore-only Task",
+        "Host/worker/real Provider/\u5546\u57ce\u6e90/oldRun/manual/230L0/external effects",
+        "old142 executor modifications",
+        "backup/volume deletion"
+      ],
+      "expected_outputs": [
+        "fresh source142 repeatable snapshot full backup and exact independent full restore",
+        "stepwise actual143..150 rehearsal old rows preserved and exact permission delta/new noLOGIN roles/backfill",
+        "separate current maintenance Task remains required after rehearsal"
+      ],
+      "lease_expires_at": "2026-10-06T12:00:00+08:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/scripts/a0v_current_150_restore_gate.py",
+        "aos-platform/scripts/tests/test_a0v_current_150_restore_gate.py",
+        "aos-platform/.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/current150-heartbeat-20261005-154201",
+        "aos-recovery/current150-*",
+        "isolatedDocker:colima-aos-a0v-test-only/current150-*"
+      ],
+      "status": "ACTIVE",
+      "task_id": "w5cb4-current150-restore-gate-20261005-154201"
+    },
+    {
+      "base_revision": "AOS-001408",
+      "created_at": "2026-10-06T19:36:28+08:00",
+      "excluded_scope": [
+        "current authoritative DB migration/restart",
+        "real Provider/Host/worker/Secrets/mall source/old12Run/manual/unknown resend/230L0",
+        "parent publication source files and occupied a0v_151",
+        "Source prepare/commit consumer authorization"
+      ],
+      "expected_outputs": [
+        "additive a152 private owner/independent publisher isolated empty schema with exact ACL/RLS/immutable metadata; no root trust or execution default",
+        "anchored signed bootstrap with actual deployment and current registry epoch, complete root snapshot authoritative derivation; positive and bypass/rollback/replay/currentness matrices before full child Delivery",
+        "preserve original issuer fifteen tables/five lock columns and old guards; signed Source final COMMIT/consumer remains parent exit"
+      ],
+      "lease_expires_at": "2026-10-07T12:00:00+08:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/alembic/versions/a0v_152_provider_capacity_publication_registry.py",
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_registry.py",
+        "aos-platform/services/aos-api/tests/aip/test_capacity_publication_registry_pg.py",
+        "aos-platform/.evidence/gt-capacity-publication-registry-20261006"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-capacity-publication-registry-20261006"
+    },
+    {
+      "base_revision": "AOS-001414",
+      "created_at": "2026-10-06T22:33:54+08:00",
+      "excluded_scope": [
+        "current formal DB/services/Host/worker/real Provider/mall source/old Runs/manual execution/230 L0",
+        "Existing parent Source/publication/formalBoundary scopes and occupied migrations",
+        "Formal role LOGIN/external credentials or final caller COMMIT TTL authority"
+      ],
+      "expected_outputs": [
+        "Complete server-derived Source preparation/signing/commit/native caller COMMIT/current consumer, coupled with original parent tasks; no helper-only Delivery",
+        "Direct SQL bypass/ACL/original approvals/signed registered provenance/global mapping/native xid and deferred unfinished attempts/rollback/replay/unknown reconciliation/concurrency actual evidence",
+        "Source final COMMIT TTL unresolved boundary retained; no formal supplier or natural first chain claim"
+      ],
+      "lease_expires_at": "2026-10-09T08:17:49.048491+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py",
+        "aos-platform/services/aos-api/alembic/versions/a0v_155_capacity_source_publication.py",
+        "aos-platform/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+        "aos-platform/.evidence/gt-capacity-source-publication-20261006"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-capacity-source-publication-20261006"
+    },
+    {
+      "base_revision": "AOS-001417",
+      "created_at": "2026-10-06T23:52:11+08:00",
+      "excluded_scope": [
+        "current authoritative DB/services/migration/restart",
+        "formal LOGIN/Host/worker/Provider/mall/oldRuns/manual/230L0/external effect",
+        "existing migrations149/150/151/155 rewrites or second writer"
+      ],
+      "expected_outputs": [
+        "Full Source transaction dependency: minimally audited pair of original epoch function EXECUTE for controlled publication Owner and legacy compatibility, no generic definer exception",
+        "Native actual SCRAM nested Owner lock/session/scope/drift/table-denial and caller COMMIT lock retention; full Source prepare/commit/consumer remains required by parent exit",
+        "No helper-only Source Delivery, formal trust/first-chain/final TTL claim"
+      ],
+      "lease_expires_at": "2026-10-07T18:00:00+08:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_lock_boundary.py",
+        "aos-platform/services/aos-api/alembic/versions/a0v_156_capacity_publication_epoch_locks.py",
+        "aos-platform/services/aos-api/aos_api/aip_capacity_withdrawal_fence.py",
+        "aos-platform/services/aos-api/tests/aip/test_capacity_publication_epoch_locks_pg.py",
+        "aos-platform/.evidence/gt-capacity-publication-epoch-locks-20261006"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-capacity-publication-epoch-locks-20261006"
+    },
+    {
+      "base_revision": "AOS-001417",
+      "created_at": "2026-10-07T00:16:39+08:00",
+      "excluded_scope": [
+        "aos-platform/services/aos-api/alembic/versions/a0v_151_capacity_withdrawal_epoch.py"
+      ],
+      "expected_outputs": [
+        "Original six nonempty historical backfill cases preserve actual current fixture head, exact150-to151 Alembic and native failure rollback; original rows and full current schema retained",
+        "Adjacent publication/Evidence/withdrawal regression; no Source authority or formal DB"
+      ],
+      "lease_expires_at": "2026-10-07T12:00:00+08:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/tests/aip/test_capacity_withdrawal_epoch_pg.py",
+        "aos-platform/.evidence/gt-capacity-withdrawal-drill-head-20261007"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-capacity-withdrawal-drill-head-20261007"
+    },
+    {
+      "base_revision": "AOS-001418",
+      "created_at": "2026-10-07T00:29:13+08:00",
+      "excluded_scope": [
+        "aos-platform/services/aos-api/alembic/versions/a0v_149_capacity_evidence_epoch.py",
+        "aos-platform/services/aos-api/alembic/versions/a0v_150_provider_capacity_issuance_boundary.py",
+        "aos-platform/services/aos-api/alembic/versions/a0v_151_capacity_withdrawal_epoch.py"
+      ],
+      "expected_outputs": [
+        "Complete same native private Source prepare/controlled signing/commit/actual callerCOMMIT/currentconsumer S01-S20 under original independently approved rows and controlled sameDB registered originals; no helper-only Source Delivery",
+        "New157 migration exact originalfact/epoch dependencies, private attempts/global mappings/immutableSource provenance and exact interfaces; parent active leases own shared source modules/test/contracts",
+        "All direct SQL single-field bypass, pending/fault rollback, original lock competition, signedv2 native xid/PID/session/permit/root/deployment/currentness and consumer tests; no runtime activation/formal release"
+      ],
+      "lease_expires_at": "2026-10-07T18:00:00+08:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/alembic/versions/a0v_157_capacity_source_publication_transaction.py",
+        "aos-platform/.evidence/gt-capacity-source-entry-20261007"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-capacity-source-entry-20261007"
+    },
+    {
+      "base_revision": "AOS-001464",
+      "created_at": "2026-10-07T15:36:52+08:00",
+      "excluded_scope": [
+        "old issuer/private41/original17/Source schemas and their ACL expansion",
+        "formal login/config/DB/services/Provider/source execution grant",
+        "full sharedoccupation/cutover/budget+Intent closure"
+      ],
+      "expected_outputs": [
+        "Complete independent runtime-purpose samecaller nonexecuting Source reader with exact native identity/manifest/current original facts/signature/authentication",
+        "Actual signed Source callerCOMMIT then dedicated SCRAM purpose-session SERIAL runtime consumer RED/GREEN; source bytes/history unchanged",
+        "Original legacy interface/definition/role permissions retained; full physical ledger and atomic Intent remain pending"
+      ],
+      "lease_expires_at": "2026-10-09T04:15:33.414684+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_occupation_source.py",
+        "aos-platform/services/aos-api/tests/aip/test_capacity_occupation_source_pg.py",
+        "aos-platform/.evidence/gt-capacity-occupation-source-20261007"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-capacity-occupation-source-20261007"
+    },
+    {
+      "base_revision": "AOS-001466",
+      "created_at": "2026-10-07T16:04:20+08:00",
+      "excluded_scope": [
+        "formal DB/migration/services/LOGIN/Provider/Host/worker/external effects",
+        "old issuer epoch function body and identity restriction",
+        "old default SQL definitions and arbitrary grant/manifest exceptions"
+      ],
+      "expected_outputs": [
+        "Explicit trusted occupation installation profile using original neutral Evidence lock with exact SourceOwner third EXECUTE; original default layout preserved",
+        "Full native Source private audit and negative grant/body/owner/unknown function gates in retained isolated PG; no helper-only Source Delivery",
+        "Explicit restoration of changed test functions and grants; samecaller Source reader integration and original role compatibility remain required"
+      ],
+      "lease_expires_at": "2026-10-09T04:31:22.680657+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_provider_capacity_occupation_epoch_profile.py",
+        "aos-platform/services/aos-api/tests/aip/test_capacity_occupation_epoch_profile_pg.py",
+        "aos-platform/.evidence/gt-capacity-occupation-epoch-profile-20261007"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-capacity-occupation-epoch-profile-20261007"
+    },
+    {
+      "base_revision": "AOS-001471",
+      "created_at": "2026-10-07T19:46:24+08:00",
+      "excluded_scope": [
+        "formal DB/services/Provider/Host/worker",
+        "old Source/profile scope before same-owner lease reconciliation",
+        "business execution or TTL release of unknown obligations"
+      ],
+      "expected_outputs": [
+        "Current exact physicalAccount Source and original ordinary/Eval/pool/Intent joint contract, file-level inventory and native counterexamples",
+        "Account-global lock order and old active/unknown cutover authority before ledger implementation"
+      ],
+      "lease_expires_at": "2026-10-08T01:37:43.343444+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/.evidence/gt-shared-physical-atomic-contract-20261007"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-shared-physical-atomic-contract-20261007"
+    },
+    {
+      "base_revision": "AOS-001513",
+      "created_at": "2026-10-08T07:38:32+08:00",
+      "excluded_scope": [
+        "formal-DB-Host-worker-Provider",
+        "old-Skill-v1-and-old-migrations",
+        "existing-joint-and-budget-Leases",
+        "Route-execution-and-natural-first-chain"
+      ],
+      "expected_outputs": [
+        "Integrated strict Model manifest/private NOLOGIN Owner/signed case-obligation-report proof reader with actual isolated native COMMIT rollback replay and negative matrices; no DTO/table-only Delivery",
+        "Original approved source/joint bridge dependencies fail closed; preserve Skill signatures and Model/Route runtime denial until separate full natural positive authority"
+      ],
+      "lease_expires_at": "2026-10-09T09:34:05.836742+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_authority.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_reader.py",
+        "aos-platform/services/aos-api/alembic/versions/a0v_158_model_eval_execution_authority.py",
+        "aos-platform/services/aos-api/tests/aip/test_model_eval_execution_contracts.py",
+        "aos-platform/services/aos-api/tests/aip/test_model_eval_execution_authority_pg.py",
+        "aos-platform/.evidence/gt-model-typed-proof-20261008"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-model-typed-proof-20261008"
+    },
+    {
+      "base_revision": "AOS-001537",
+      "created_at": "2026-10-08T11:49:04+08:00",
+      "excluded_scope": [
+        "formal-DB-Host-worker-Provider",
+        "existing-Source-budget-Host-AgentRun-files",
+        "published-and-unpublished-migrations"
+      ],
+      "expected_outputs": [
+        "Complete original-caller Source/physical-account/ordinary-or-Eval-budget/parent-allocation/unique-Intent/finalize native actual COMMIT rollback replay and competition; no primitive-only Delivery",
+        "Model-specific Owner from actual original application, independent approval and typed proof; maintain original runtime denial until full formally authorized natural evidence"
+      ],
+      "lease_expires_at": "2026-10-09T09:34:04.890894+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation.py",
+        "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py",
+        "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_owner.py",
+        "aos-platform/services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py",
+        "aos-platform/services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py",
+        "aos-platform/.evidence/gt-atomic-model-admission-20261008"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-atomic-model-admission-20261008"
+    },
+    {
+      "base_revision": "AOS-001578",
+      "created_at": "2026-10-08T21:52:33+08:00",
+      "excluded_scope": [
+        "formal-DB-Host-worker-Provider",
+        "old-ModelEval-quality-eval-permission",
+        "unreleased-budget-risk-and-joint-Leases",
+        "all-existing-migrations"
+      ],
+      "expected_outputs": [
+        "Full Judge-call original request producer and independent checker/current dependency native matrix; no DTO-only Delivery",
+        "Same-caller original budget/Target committed bytes/expected authority/Intent/joint origin wiring before real dispatch; preserve existing Model and Skill behavior"
+      ],
+      "lease_expires_at": "2026-10-09T09:34:06.159897+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_action_policy.py",
+        "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+        "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_authorization.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_request_store.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_action.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_authority.py",
+        "aos-platform/services/aos-api/tests/aip/test_model_eval_judge_action_boundary.py",
+        "aos-platform/services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py",
+        "aos-platform/.evidence/gt-judge-call-authority-20261008"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-judge-call-authority-20261008"
+    },
+    {
+      "base_revision": "AOS-001588",
+      "created_at": "2026-10-09T00:40:40+08:00",
+      "excluded_scope": [
+        "formal-DB-Host-worker-Provider",
+        "old-quality-eval-permission",
+        "natural-first-chain"
+      ],
+      "expected_outputs": [
+        "Original current new-purpose approval and native same-caller dedicated Judge budget parent/three original shared buckets/cost risk/replay/rollback/actual COMMIT; no helper-only Delivery",
+        "Full coupled Source/physical/parent allocation/Intent/finalizer remains required before dispatch; exact fee totals include new hold; original semantics retained"
+      ],
+      "lease_expires_at": "2026-10-09T09:34:06.431607+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_budget.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py",
+        "aos-platform/services/aos-api/alembic/versions/a0v_159_model_judge_budget.py",
+        "aos-platform/services/aos-api/aos_api/aip_budget_reservation_store.py",
+        "aos-platform/.evidence/gt-judge-budget-parent-20261008"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-judge-budget-parent-20261008"
+    },
+    {
+      "base_revision": "AOS-001588",
+      "created_at": "2026-10-09T00:54:04+08:00",
+      "excluded_scope": [
+        "formal-DB-Host-worker-Provider",
+        "old-quality-eval-permission-expansion"
+      ],
+      "expected_outputs": [
+        "Original fee fence before all shared buckets for existing Model holds, retaining original after-wait revalidation/approval/amount/hash/replay; actual native wait/free-bucket and ordinary/Eval/Judge adjacent verification",
+        "Part of full purpose-budget joint closure, no standalone authority or first-chain claim"
+      ],
+      "lease_expires_at": "2026-10-09T09:34:06.700307+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_budget_reservation.py",
+        "aos-platform/.evidence/gt-shared-budget-fence-order-20261008"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-shared-budget-fence-order-20261008"
+    },
+    {
+      "base_revision": "AOS-001626",
+      "created_at": "2026-10-09T10:31:23+08:00",
+      "excluded_scope": [
+        "current DB/runtime/Provider/product mutation/full original Source or profile Delivery"
+      ],
+      "expected_outputs": [
+        "Frozen complete Source/profile code and legacy dependency diffs; original native two-layout audit/issuer/consumer regression",
+        "Tools-disabled independent frozen material review, precise no-full-delivery dependency conclusion and next registered safe step"
+      ],
+      "lease_expires_at": "2026-10-09T04:31:23.633768+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/.evidence/gt-source-profile-delivery-review-20261009"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-source-profile-delivery-review-20261009"
+    },
+    {
+      "base_revision": "AOS-001629",
+      "created_at": "2026-10-09T11:04:42+08:00",
+      "excluded_scope": [
+        "product/currentDB/runtime/Provider/restart/full Source Delivery"
+      ],
+      "expected_outputs": [
+        "Current independent authenticated Owner consumes exact Source before original deadline then is denied after same deadline with still valid JWT",
+        "Independent Source unchanged/six occupation tables zero/native cause/current caller/role/resources restoration; bounded shared evidence only"
+      ],
+      "lease_expires_at": "2026-10-09T05:04:41.897674+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/.evidence/gt-source-current-body-expiry-native-20261009",
+        "isolatedDocker:colima-aos-extension/aos-source-newjudge-native-20261009/current-body-expiry-diagnostic"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-source-current-body-expiry-native-20261009"
+    },
+    {
+      "base_revision": "AOS-001631",
+      "created_at": "2026-10-09T11:48:30+08:00",
+      "excluded_scope": [
+        "aos-platform/services",
+        "aos-platform/apps"
+      ],
+      "expected_outputs": [
+        "Current exact full Source/profile/consumer and protected legacy frozen review; no full original feature Delivery or business authority",
+        "Independent tools-disabled review result or honest local failure plus manual complete dependency reconciliation"
+      ],
+      "lease_expires_at": "2026-10-09T05:48:29.219711+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/.evidence/gt-source-profile-current-review-20261009"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-source-profile-current-review-20261009"
+    },
+    {
+      "base_revision": "AOS-001642",
+      "created_at": "2026-10-09T14:01:25+08:00",
+      "excluded_scope": [
+        "aos-platform/services",
+        "aos-platform/apps"
+      ],
+      "expected_outputs": [
+        "Entire original101function386node Source cumulative after six application/candidate oracle repair; preserve actual first failure and unexecuted scope; no finalclock/business falseGREEN"
+      ],
+      "lease_expires_at": "2026-10-09T10:01:24.457488+00:00",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/.evidence/gt-source-full-suite-root-r4-20261009"
+      ],
+      "status": "ACTIVE",
+      "task_id": "gt-source-full-suite-root-r4-20261009"
+    }
+  ]
+}

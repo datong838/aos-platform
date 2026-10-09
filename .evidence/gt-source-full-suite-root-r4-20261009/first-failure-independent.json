@@ -1,0 +1,17 @@
+{
+  "failed_node": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_provider_profile_preserves_actual_business_hash",
+  "database": "aos_test_737bd8bd738e_ti4_test",
+  "whole_nodes": 386,
+  "passed_nodes": 68,
+  "unexecuted_nodes": 317,
+  "exact_existing_function_acl_lock_audit": true,
+  "publication_counts": {
+    "source_pending": 0,
+    "source_publication": 0,
+    "source_provenance": 0,
+    "global_account": 0,
+    "global_provider": 0
+  },
+  "root_cause": "Original Provider oracle repeats permanent157 profile installation before actual business hash/native assertions",
+  "goal_completion_proven": false
+}
