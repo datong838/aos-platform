@@ -1,0 +1,15 @@
+{
+  "database": "aos_test_6864f699be6d_ti4_test",
+  "asset": "current-body-expiry-c3567f385c3e478e8a9f1b51ebc94cc6",
+  "source_valid_until": "2026-10-09T03:19:01.287101+00:00",
+  "authentication_deadline": 1791516343,
+  "positive_at": "2026-10-09T03:14:05.609138+00:00",
+  "consumer_identity": {
+    "xid": "14125",
+    "pid": 29679,
+    "login": "aos_provider_capacity_issuer"
+  },
+  "independent_owner": true,
+  "source_sha256": "fce55fe552ed2db8ae4511f3f7e9e6d498923d005cef980558b18d23e0257e9e",
+  "execution_allowed": false
+}

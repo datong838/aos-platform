@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-09T03:19:04.033300+00:00",
+  "database": "aos_test_6864f699be6d_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": ".evidence/gt-source-current-body-expiry-native-20261009/test_current_body_expiry.py::test_current_source_consumer_accepts_independent_owner[shared]",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "independent current Owner real consumer denial after unchanged Source expiry while current JWT valid; no business execution"
+}

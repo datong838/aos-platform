@@ -1,0 +1,17 @@
+{
+  "observed_at": "2026-10-09T03:15:37.496246+00:00",
+  "source": {
+    "asset_id": "current-body-expiry-c3567f385c3e478e8a9f1b51ebc94cc6",
+    "content_hash": "fce55fe552ed2db8ae4511f3f7e9e6d498923d005cef980558b18d23e0257e9e",
+    "hash_ok": true,
+    "xid": "14124",
+    "pid": 29670,
+    "xact_state": "committed"
+  },
+  "exact_independent_consumer": {
+    "xid": "14125",
+    "pid": 29679,
+    "login": "aos_provider_capacity_issuer"
+  },
+  "replay_performed": false
+}

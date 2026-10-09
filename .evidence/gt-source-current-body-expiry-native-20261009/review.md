@@ -1,0 +1,13 @@
+# 原消费者到期拒绝诊断 RED
+
+使用用户 AGENTS.md、aos-engineering-delivery、231、原 Source/current Owner 合同。上一轮为实质进展，本轮新Task独立注册，所有真实调用仅新全迁移保留库；m1单写，产品未修改，当前权威库与runtime未接触。
+
+r1在调用前导入错误22.81秒，Source0、接口撤销、issuer NOLOGIN独立读回；诊断导入改正。r2真实正向和原Source期限等待成立，但319.46秒后因rollback未恢复事务设置，Python边界拒绝、SQL42501 CAPACITY_SOURCE_ISSUER_BOUNDARY_DRIFTED；不算到期证据。只补原_refresh_native_facts_transaction后新r3重新完整正向和真实等待。
+
+r3：保留库aos_test_6864f699be6d_ti4_test，当前独立Owner不同原生xid/PID，Source正向消费时间03:14:05.609138 UTC，原Source valid_until03:19:01.287101，真实消费JWT覆盖至03:25:43。测试319.03秒后，Python固定CAPACITY_CURRENT_SOURCE_REQUIRED，其内部SQL与直接SQL均P0002/query returned no rows，故具名22023到期门断言RED。不能把这次拒绝升级为全部到期门通过。
+
+静态调查：CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL先过滤proposal.expires_at/current_event.expires_at，read_original_source_facts在具名CAPACITY_ORIGINAL_APPROVAL_EXPIRED检查之前SELECT INTO STRICT；这是P0002的重要定位线索，下一步须核对应原合同与拒绝语义。不重放旧COMMIT，也不通过接受任意拒绝修绿。
+
+独立读回：原Source committed、精确hash/原生C签名/finalized/provenance未变；独立consumer与原签发xid/PID不同。临时四接口撤销、两角色NOLOGIN、原31资源身份启动卷端口未变。原Source-only fixture没有安装occupation六表，独立核验逐表记ABSENT，不虚写六表0；初次audit错误UndefinedTable保存后仅改独立audit的缺表表达。原产品和测试hash仍一致。
+
+本Task保持ACTIVE，无Delivery。预备成功finalizer不运行，independent-verification.json未生成；独立事实核验文件为independent-red-verification.json，明确named_expiry_gate_pass=false。独立model review入口仍此前daemon局部失败；不宣称模型评审通过。下一候选：原消费者到期具名拒绝合同核对与最小修复范围、另入口额外键真实诊断、distinct提交时间观察。完整Source/epoch/legacy交付、最终COMMIT时间语义、正式配置/身份、自然首链及八工作台仍按原长期目标待验。

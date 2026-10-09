@@ -1,0 +1,10 @@
+{
+  "database": "aos_test_01730dc78203_ti4_test",
+  "source": {
+    "content_hash": "4ece7e5a5bcb32542bd1668757868004eda7b58870caf30123046417043d1c40",
+    "hash_ok": true
+  },
+  "temporary_interfaces_absent": true,
+  "issuer_nologin": true,
+  "expiry_denial_proved": false
+}

@@ -1,0 +1,5 @@
+{
+  "session_id": 93532,
+  "state": "running",
+  "recovery": "Only poll original handle; no replay or retained database reuse"
+}

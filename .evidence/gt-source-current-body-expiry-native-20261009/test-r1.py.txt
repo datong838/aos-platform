@@ -1,0 +1,110 @@
+"""Real current Owner denial after the unchanged original Source deadline."""
+import hashlib,json,time
+from pathlib import Path
+from uuid import uuid4
+import psycopg,pytest
+from pydantic import SecretStr
+from psycopg.types.json import Jsonb
+from aos_api.aip_provider_capacity_source_issuer import capacity_source_preparation_bytes
+from aos_api.aip_provider_capacity_publication_contracts import PublishedProviderCapacitySourceV2,parse_signed_capacity_body
+pytest_plugins=('tests.conftest','tests.aip.test_capacity_source_publication_transaction_pg')
+B=Path(__file__).resolve().parent
+
+@pytest.fixture(autouse=True)
+def registered_database_isolation(_isolated_postgres_database,monkeypatch):
+    from tests.conftest import _isolated_postgres_database as bootstrap
+    from aos_api import tenant_catalog,data_os_store
+    import os
+    assert os.environ['AOS_TEST_RETAIN_DATABASE']=='1' and os.environ['AOS_TEST_USE_SHARED_DATABASE']=='0'
+    with monkeypatch.context() as local:
+        local.setattr(tenant_catalog,'_schema_ready',False);local.setattr(data_os_store,'_schema_ready',False)
+        gen=bootstrap.__wrapped__();next(gen)
+        try:yield
+        finally:gen.close()
+
+@pytest.fixture
+def native_original_fact_reader(request,native_signed_source,approved_command):
+    from tests.aip.test_capacity_source_publication_transaction_pg import native_original_fact_reader as original
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from aos_api.aip_provider_capacity_source_issuer import ProviderCapacityIssuanceBlocked
+    gen=original.__wrapped__(request,native_signed_source,approved_command)
+    value=next(gen)
+    try:yield value
+    finally:
+        try:next(gen)
+        except StopIteration:pass
+        except ProviderCapacityIssuanceBlocked as error:
+            assert str(error)=='CAPACITY_NATIVE_SIGNED_SUPPLIER_INPUTS_REQUIRED'
+            with isolated_owner() as owner:
+                now=owner.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+            assert now>value[-1][3].valid_until
+            (B/'teardown-original-expired-refusal.json').write_text(json.dumps(dict(
+                reason=str(error),observed_at=now.isoformat(),original_valid_until=value[-1][3].valid_until.isoformat(),
+                original_generator_cleanup_executed=True),indent=2))
+
+@pytest.mark.parametrize('native_original_fact_reader',['shared'],indirect=True)
+def test_current_source_consumer_accepts_independent_owner(exact_public_source_caller,https_signer):
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_contracts import ProviderCapacityConsumptionCommand
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from aos_api.aip_provider_capacity_source_consumer import consume_current_capacity_source,ProviderCapacityConsumptionBlocked,_consumption_packet
+    from aos_api.auth import resolve_principal
+    from aos_api.tenant_catalog import TenantScope
+    scope=TenantScope('org-org','dev-project');sign,_=https_signer
+    caller,_,material,original=exact_public_source_caller
+    issuance,_,_=material['actual_command']()
+    maker=json.loads(capacity_source_preparation_bytes(issuance))['makerSubject']
+    expiry=int(time.time())+700
+    issuance=issuance.model_copy(update={'bearer_token':SecretStr(sign(maker,changes={'exp':expiry}))})
+    packet=capacity_source_preparation_bytes(issuance);asset='current-body-expiry-'+uuid4().hex
+    row=caller.execute('SELECT * FROM public.prepare_capacity_source(%s,%s,%s,%s::jsonb)',
+        (packet,issuance.idempotency_key,asset,Jsonb(material['refs'][-1]))).fetchone()
+    raw=bytes(row['source_raw']);source=parse_signed_capacity_body(raw,PublishedProviderCapacitySourceV2)
+    committed=caller.execute('SELECT * FROM public.commit_capacity_source(%s,%s,%s)',
+        (issuance.idempotency_key,raw,material['source_key'].sign(raw))).fetchone();caller.commit()
+    ref=FormalExactRef(asset_type='ProviderCapacitySourceRevision',asset_id=asset,
+        revision=committed['revision'],content_hash=committed['content_hash'])
+    with connect_capacity_issuer(original[4],scope) as consumer:
+        identity=consumer.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid,session_user AS login').fetchone()
+        assert consumer.pgconn.used_password and identity['login']=='aos_provider_capacity_issuer'
+        assert identity['xid']!=source.issuance_context.transaction_id and identity['pid']!=source.issuance_context.backend_pid
+        owners=consumer.execute("SELECT subject FROM public.meta_membership WHERE org_id=%s AND project_id=%s AND lower(role)='owner' AND subject<>%s ORDER BY subject",(*scope.key,maker)).fetchall()
+        assert owners;subject=owners[0]['subject'];token=sign(subject,changes={'exp':expiry})
+        principal=resolve_principal(token=token,header_org=scope.org_id,header_project=scope.project_id)
+        assert principal.subject==subject and principal.token_kind=='oidc'
+        command=ProviderCapacityConsumptionCommand(schemaVersion=1,tenant={'orgId':scope.org_id,'projectId':scope.project_id},sourceRef=ref,bearerToken=SecretStr(token))
+        positive=consume_current_capacity_source(consumer,command)
+        assert positive.model_dump(mode='json',by_alias=True)==source.model_dump(mode='json',by_alias=True)
+        positive_at=consumer.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+        assert positive_at<source.valid_until and not positive.execution_allowed
+        consumer.rollback()
+        live=dict(database=consumer.info.dbname,asset=asset,source_valid_until=source.valid_until.isoformat(),authentication_deadline=expiry,
+            positive_at=positive_at.isoformat(),consumer_identity=identity,independent_owner=True,source_sha256=hashlib.sha256(raw).hexdigest(),execution_allowed=False)
+        (B/'live-deadline-wait.json').write_text(json.dumps(live,indent=2))
+        stop=time.monotonic()+360;times=[]
+        while True:
+            now=consumer.execute('SELECT clock_timestamp() AS now').fetchone()['now'];times.append(now.isoformat());consumer.rollback()
+            if now.timestamp()>source.valid_until.timestamp()+.1:break
+            assert time.monotonic()<stop
+            time.sleep(min(1,max(.02,source.valid_until.timestamp()+.1-now.timestamp())))
+        assert now.timestamp()<expiry
+        denials=[]
+        try:
+            with consumer.transaction():consume_current_capacity_source(consumer,command)
+        except ProviderCapacityConsumptionBlocked as error:
+            cause=error.__context__;denials.append(dict(entry='python',reason=str(error),
+                sqlstate=getattr(cause,'sqlstate',None),native_reason=getattr(getattr(cause,'diag',None),'message_primary',None)))
+        else:pytest.fail('Expired Source was accepted by current consumer')
+        consumer.rollback()
+        try:
+            with consumer.transaction():
+                consumer.execute('SELECT * FROM public.read_current_capacity_source(%s,%s::jsonb)',
+                    (_consumption_packet(command),Jsonb(ref.model_dump(mode='json',by_alias=True))))
+        except psycopg.Error as error:
+            denials.append(dict(entry='native',sqlstate=error.sqlstate,native_reason=error.diag.message_primary))
+        else:pytest.fail('Expired Source was accepted by native current consumer')
+        consumer.rollback()
+        assert len(denials)==2 and all(d['sqlstate']=='22023' and d['native_reason'] in
+            ('CAPACITY_ORIGINAL_APPROVAL_EXPIRED','CAPACITY_CURRENT_SOURCE_EXPIRED') for d in denials),denials
+        live.update(after_expiry_at=now.isoformat(),denials=denials,observed_database_times=times)
+        with (B/('observation-'+asset+'.json')).open('x') as h:json.dump(live,h,indent=2)

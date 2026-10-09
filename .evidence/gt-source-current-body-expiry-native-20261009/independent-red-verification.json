@@ -1,0 +1,56 @@
+{
+  "observations": [
+    {
+      "database": "aos_test_6864f699be6d_ti4_test",
+      "source": [
+        {
+          "asset_id": "current-body-expiry-c3567f385c3e478e8a9f1b51ebc94cc6",
+          "content_hash": "fce55fe552ed2db8ae4511f3f7e9e6d498923d005cef980558b18d23e0257e9e",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "original_xid": "14124",
+          "original_pid": 29670,
+          "original_session": "aos_provider_capacity_issuer",
+          "provenance_ok": true
+        }
+      ],
+      "occupation_counts": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "original_source_committed": true,
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true,
+      "denials": [
+        {
+          "entry": "python",
+          "sqlstate": "P0002",
+          "native_reason": "query returned no rows"
+        },
+        {
+          "entry": "native",
+          "sqlstate": "P0002",
+          "native_reason": "query returned no rows"
+        }
+      ]
+    }
+  ],
+  "original_products_unchanged": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 31,
+  "named_expiry_gate_pass": false,
+  "pytest_exit": 1,
+  "teardown_expected_expired_input_refusal": {
+    "reason": "CAPACITY_NATIVE_SIGNED_SUPPLIER_INPUTS_REQUIRED",
+    "observed_at": "2026-10-09T03:19:02.789621+00:00",
+    "original_valid_until": "2026-10-09T03:19:01.287101+00:00",
+    "original_generator_cleanup_executed": true
+  },
+  "full_feature_delivery": false,
+  "formal_execution_allowed": false
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_source_consumer.py",
+    "sha256": "a22d722ca6f262af612162c14c033773c4fe8553f14698ce00e1fc8d9e65d281"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_source_contracts.py",
+    "sha256": "13dc6b25750e24fb90a4271e4ef9281a6db97152e3914354ac9b7f575153413c"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_source_issuer.py",
+    "sha256": "df38704f66862e4b3abff8177539ed933fa786bf7c256ba69f82245ead044f78"
+  }
+]
