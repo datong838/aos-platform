@@ -1,0 +1,9 @@
+{
+  "observed_at": "2026-10-09T05:20:02.338548+00:00",
+  "name": "aos-source-root-native-20261009",
+  "volume": "aos-source-root-native-20261009-data",
+  "context": "colima-aos-extension",
+  "memory": 805306368,
+  "no_swap": true,
+  "no_old_resources_modified": true
+}

@@ -1,0 +1,17 @@
+time="2026-10-09T13:20:02+08:00" level=fatal msg="exit status 1"
+docker: Error response from daemon: invalid mount config for type "bind": bind source path does not exist: /Users/ddt/.aos-lab-secrets/aos-source-root-native-20261009/postgres-password
+
+Run 'docker run --help' for more information
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-root-native-lab-20261009/create_lab.py", line 38, in <module>
+    identity=call(D+['run','-d','--name',NAME,'--label','aos.scope=test-only','--user',f'{os.getuid()}:{os.getgid()}',
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-root-native-lab-20261009/create_lab.py", line 12, in call
+    def call(args):return subprocess.check_output(args,text=True).strip()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/subprocess.py", line 466, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['docker', '--context', 'colima-aos-extension', 'run', '-d', '--name', 'aos-source-root-native-20261009', '--label', 'aos.scope=test-only', '--user', '501:20', '--cpus', '1', '--memory', '768m', '--memory-swap', '768m', '--pids-limit', '128', '--mount', 'type=volume,src=aos-source-root-native-20261009-data,dst=/var/lib/postgresql/data', '--mount', 'type=bind,src=/Users/ddt/.aos-lab-secrets/aos-source-root-native-20261009/postgres-password,dst=/run/aos-postgres-password,readonly', '-e', 'POSTGRES_USER=aos_app', '-e', 'POSTGRES_DB=aos_meta', '-e', 'POSTGRES_PASSWORD_FILE=/run/aos-postgres-password', '-e', 'POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256', '-p', '127.0.0.1:5437:5432', 'sha256:1a726528ec4ec3dfebf104148d3c6ae329828bfd228c305bb3e0e1e582ee074b', 'postgres', '-c', 'shared_buffers=16MB', '-c', 'max_connections=30']' returned non-zero exit status 125.

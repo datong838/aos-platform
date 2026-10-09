@@ -1,0 +1,28 @@
+{
+  "observed_at": "2026-10-09T05:23:35.124379+00:00",
+  "database": "aos_test_a0ec7add7911_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_registered_original_inputs_prepare_native_v2_before_signing[shared]",
+      "phase": "database_binding",
+      "database": "aos_test_0002b6032ace_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_registered_original_inputs_prepare_native_v2_before_signing[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_registered_original_inputs_prepare_native_v2_before_signing[distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_a0ec7add7911_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_registered_original_inputs_prepare_native_v2_before_signing[distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "two complete original registration/preparation functions, maxfail1 bounded diagnostic; not full Source acceptance"
+}

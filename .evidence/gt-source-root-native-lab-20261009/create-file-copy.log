@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-root-native-lab-20261009/create_file_copy.py", line 26, in <module>
+    else:raise RuntimeError('new lab unavailable; reconcile exact container, do not recreate')
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: new lab unavailable; reconcile exact container, do not recreate

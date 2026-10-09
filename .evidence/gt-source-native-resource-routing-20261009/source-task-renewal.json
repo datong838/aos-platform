@@ -1,0 +1,25 @@
+{
+  "base_revision": "AOS-001414",
+  "created_at": "2026-10-06T22:33:54+08:00",
+  "excluded_scope": [
+    "current formal DB/services/Host/worker/real Provider/mall source/old Runs/manual execution/230 L0",
+    "Existing parent Source/publication/formalBoundary scopes and occupied migrations",
+    "Formal role LOGIN/external credentials or final caller COMMIT TTL authority"
+  ],
+  "expected_outputs": [
+    "Complete server-derived Source preparation/signing/commit/native caller COMMIT/current consumer, coupled with original parent tasks; no helper-only Delivery",
+    "Direct SQL bypass/ACL/original approvals/signed registered provenance/global mapping/native xid and deferred unfinished attempts/rollback/replay/unknown reconciliation/concurrency actual evidence",
+    "Source final COMMIT TTL unresolved boundary retained; no formal supplier or natural first chain claim"
+  ],
+  "lease_expires_at": "2026-10-09T08:17:49.048491+00:00",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "schema": "aos-memory-task-receipt/v1",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py",
+    "aos-platform/services/aos-api/alembic/versions/a0v_155_capacity_source_publication.py",
+    "aos-platform/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+    "aos-platform/.evidence/gt-capacity-source-publication-20261006"
+  ],
+  "status": "ACTIVE",
+  "task_id": "gt-capacity-source-publication-20261006"
+}

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-root-native-lab-20261009/run_preparation_r1.py", line 8, in <module>
+    assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=REPO,text=True).strip()=='28e0f9194565e5b7215abe303cd3ab0635e61788'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

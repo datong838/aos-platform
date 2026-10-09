@@ -1,0 +1,132 @@
+{
+  "head": "455b74ea10487e5fa1be0392d14ef6ef4499cb9c",
+  "authority": "AOS-001636",
+  "colima_profiles": [
+    {
+      "name": "default",
+      "status": "Stopped",
+      "arch": "aarch64",
+      "cpus": 2,
+      "memory": 2147483648,
+      "disk": 107374182400,
+      "runtime": "docker"
+    },
+    {
+      "name": "aos-a0v-test-only",
+      "status": "Running",
+      "arch": "aarch64",
+      "cpus": 2,
+      "memory": 2147483648,
+      "disk": 85899345920,
+      "runtime": "docker"
+    },
+    {
+      "name": "aos-extension",
+      "status": "Running",
+      "arch": "aarch64",
+      "cpus": 2,
+      "memory": 3221225472,
+      "disk": 21474836480,
+      "runtime": "docker"
+    }
+  ],
+  "public_prepare_callers": [
+    {
+      "function": "test_private_native_publication_rejects_missing_original_bytes",
+      "fixtures": [
+        "exact_public_source_caller"
+      ],
+      "line": 94
+    },
+    {
+      "function": "test_registered_original_inputs_prepare_native_v2_before_signing",
+      "fixtures": [
+        "exact_public_source_caller"
+      ],
+      "line": 398
+    },
+    {
+      "function": "test_complete_native_publication_requires_actual_caller_commit",
+      "fixtures": [
+        "native_signed_source",
+        "tmp_path",
+        "outcome"
+      ],
+      "line": 431
+    },
+    {
+      "function": "test_native_private_source_installation_preserves_original_checker",
+      "fixtures": [
+        "native_signed_source",
+        "tmp_path"
+      ],
+      "line": 4477
+    },
+    {
+      "function": "test_latest_migration_installs_private_source_boundary",
+      "fixtures": [
+        "native_signed_source"
+      ],
+      "line": 4519
+    },
+    {
+      "function": "exact_public_source_caller",
+      "fixtures": [
+        "native_full_signed_reader",
+        "request"
+      ],
+      "line": 4892
+    },
+    {
+      "function": "test_exact_public_source_composition_preserves_original_issuer_checker",
+      "fixtures": [
+        "exact_public_source_caller"
+      ],
+      "line": 4920
+    },
+    {
+      "function": "test_exact_public_source_rejects_live_issuer_drift",
+      "fixtures": [
+        "exact_public_source_caller"
+      ],
+      "line": 4947
+    },
+    {
+      "function": "test_exact_public_source_rejects_bad_signature_and_unfinished_commit",
+      "fixtures": [
+        "exact_public_source_caller"
+      ],
+      "line": 4998
+    },
+    {
+      "function": "test_controlled_source_signer_binds_original_jwt_pending_and_private_key",
+      "fixtures": [
+        "exact_public_source_caller",
+        "tmp_path"
+      ],
+      "line": 5017
+    },
+    {
+      "function": "test_current_source_consumer_rechecks_new_transaction",
+      "fixtures": [
+        "exact_public_source_caller",
+        "https_signer"
+      ],
+      "line": 5116
+    },
+    {
+      "function": "test_current_source_consumer_accepts_independent_owner",
+      "fixtures": [
+        "exact_public_source_caller",
+        "https_signer"
+      ],
+      "line": 5240
+    }
+  ],
+  "old_profile_capacity_bytes": 21474836480,
+  "available_bytes": 2514800640,
+  "reserve_bytes": 2500000000,
+  "next_test_db_allowed": false,
+  "shared_profiles_reusable_without_authority": false,
+  "goal_changed": false
+}

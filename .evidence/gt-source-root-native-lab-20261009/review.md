@@ -1,0 +1,6 @@
+# 独占根 ext4 native资源与原待签两布局验收
+Rules：用户AGENTS、AOS工程交付、231、原Source合同；基线455b74ea/AOS-001636。原数据盘容量门被遵守，无删除保留测试库，无旧服务/虚拟机重启。
+只读资源路由确认根ext4余量18.28GB与VM可用内存2.06GB，创建新独占root目录、local-bind命名卷、原精确镜像、新端口5437及768MiB/no swap资源上限。首次secret bind错误125未创建PGcontainer，沿原已登记0600 copy方法创建stopped container，再按确切结果启动。Docker VOLUME ownership覆盖导致首次exit1，确认目录空/无PG_VERSION，仅修新空卷owner501:20，重启同一精确新container；失败证据保留，不重放未知创建。
+cluster7694534063495901208与旧cluster独立；镜像原aos_ed25519 control/sql hash、native C binary hash一致，template1真实签名阳性与篡改阴性通过，固定catalog/owner NOLOGIN/no高权限。仅隔离模板安装，不授任何正式业务权限。
+原完整待签测试无代码新增，两布局2passed27.13s；原始失败r1脚本HEAD陈旧断言只读阶段止步保留，更新本次精确head/authority后r2实际新库验证。独立verify_preparation_r2对两个独立保留DB七输入hash、完整函数定义/ACL/lock、五publication表零Source、临时接口撤销、角色NOLOGIN、occupation零/不存在、fsync/full_page_writes/synchronous_commit全on，新local卷Options精确root目录，根余量及所有旧32container ID/start/mounts/ports不变进行回读，全部通过。
+此有界资源Task及路由Task交付；上一波待签distinct容量限制已解除，两布局本轮真实完整pass。原Source仍ACTIVE，原完整真实COMMIT三outcome及最终COMMIT过期真实反例/全Source/正式首链/独立Model review未完成。原fixture6/1不提交、不push、不修改当前权威库。下一已登记原完整commit出口，按现受控公有fixture先RED与最小测试兼容修复，不为通过改产品默认public权限。

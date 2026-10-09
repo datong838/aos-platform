@@ -1,0 +1,18 @@
+[
+    {
+        "CreatedAt": "2026-10-09T13:20:02+08:00",
+        "Driver": "local",
+        "Labels": {
+            "aos.scope": "test-only",
+            "aos.task": "gt-source-root-native-lab-20261009"
+        },
+        "Mountpoint": "/var/lib/docker/100000.100000/volumes/aos-source-root-native-20261009-data/_data",
+        "Name": "aos-source-root-native-20261009-data",
+        "Options": {
+            "device": "/var/lib/aos-test-labs/aos-source-root-native-20261009",
+            "o": "bind",
+            "type": "none"
+        },
+        "Scope": "local"
+    }
+]

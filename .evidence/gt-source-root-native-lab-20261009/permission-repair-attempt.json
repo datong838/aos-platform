@@ -1,0 +1,6 @@
+{
+  "container": "8384eef7b29dabf3629ba31c8ab18beab011a2f86cddffe96c0907be73024ec5",
+  "cause": "Docker image VOLUME copied ownership70 into new empty volume after init helper, same documented old lab cause",
+  "directory_empty": true,
+  "only_new_volume": true
+}
