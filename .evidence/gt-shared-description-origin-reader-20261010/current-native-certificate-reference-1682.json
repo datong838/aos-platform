@@ -1,0 +1,72 @@
+{
+  "authority_revision": "AOS-001682",
+  "task": "gt-shared-description-origin-reader-20261010",
+  "head": "aa40aa1bff2078a4ea6e79aec2f2e3b1ecf6fe4d",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "same_caller_metadata_necessary_verified": true,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/current-native-certificate-reference-1681.json",
+      "sha256": "c0976bc2f111f6bcce2a0c7d5577231e3a8b4c1ab62ecfd736ffe4750e01be9e"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/visible-withdrawal-review-1681.md",
+      "sha256": "c1509edd5b4de8bc57f1401884320aa5fb69026c8a8f8b4b3710957704165045"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/implementation-plan.md",
+      "sha256": "8a0f4d5ba8621945e180293f8abed8aecc11eefabf5fb4b89bbad3a25d6ad32f"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r20/result-r20.json",
+      "sha256": "b22f2cdf6fb17e186a7eca4df194d6288d64bcf6fd91c21d273e6ac11f155730"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r20/native-same-transaction-prepare-proof.json",
+      "sha256": "4bfb54937055665ad63c40e40615dc85995d4ddab2325c386cced12ade40c51f"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r20/native-description-proof.json",
+      "sha256": "418ed3812c31691563baac12d9e5e5a8c3e9e4cfb30aff0fc3b3bfa42afd7bbb"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/independent-core-readback-r20.json",
+      "sha256": "40605c74dc56e816be2ca2faea8336272e8c727e24938df736c26ebc793feb2d"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/pure-result-r6.json",
+      "sha256": "c85142c6e9ef45f455607c1993cf398e6182f42cc4814139dce2d9ea0519a568"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/caller-domain-plan-1680.md",
+      "sha256": "687cbff3bca008563f27cca6fba59f512818d50c504e1ecbf3560532d2b3fcdf"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r20/caller-domain-proof.json",
+      "sha256": "cf873ef27b57878c00a296071a86f3eab242c925b9a8ecf837b9902e3361a27f"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/visible-withdrawal-plan-1681.md",
+      "sha256": "97e801cc0ac69f5edb567baafb44afda88cd6ce9a0b9ff7c96dd0154e7879765"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r19/published-identity-withdrawal.json",
+      "sha256": "77c796db2920bbfede39ed0148ed71fc7d303ee0868b0f0e21dedee5bc635d46"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r19/visible-withdrawal-v3-proof.json",
+      "sha256": "5e226681d05b0377667916aec0c8ef2da2ded32b1552d3988d83ae46177059c7"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/independent-visible-withdrawal-readback-r19.json",
+      "sha256": "d3f5c58cdc2164585e5e6b49fd78609c5524ec76789d8a4c290adc3420e958dc"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/old-domain-causal-evidence-correction-1681.json",
+      "sha256": "b14aeba65810fbfa926b0d28beab9747370fca2882a3fe9e374f145833351cc8"
+    }
+  ]
+}

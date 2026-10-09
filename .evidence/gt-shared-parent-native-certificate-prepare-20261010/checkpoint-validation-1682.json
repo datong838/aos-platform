@@ -1,0 +1,17 @@
+{
+  "authority": "AOS-001682",
+  "valid_current_task_lease_checkpoints": [
+    "gt-shared-budget-fence-order-20261008",
+    "gt-shared-description-origin-reader-20261010",
+    "gt-judge-budget-parent-20261008",
+    "gt-model-typed-proof-20261008",
+    "gt-judge-call-authority-20261008",
+    "gt-original-target-persisted-reader-20261010",
+    "gt-shared-parent-native-certificate-prepare-20261010",
+    "gt-shared-parent-native-executor-set-20261010",
+    "gt-shared-parent-certificate-identity-20261010",
+    "gt-atomic-model-admission-20261008"
+  ],
+  "execution_allowed": false,
+  "full_task_delivered": false
+}
