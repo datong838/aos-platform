@@ -1,0 +1,24 @@
+{
+  "authority_revision": "AOS-001659",
+  "task": "gt-judge-budget-parent-20261008",
+  "head": "46dd487547dbc8e9861bf7ad0029250522e269ed",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/current-source-commit-time-reference-1658.json",
+      "sha256": "d1d1feaa1073980ae03658adab0665373f64a408c9a63215c7884495f8f8c35e"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/judge-evidence-isolation-review-1658.md",
+      "sha256": "6acd612cec513475a1296e640b60220b47279de316348b807cb017f61256ab2d"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/judge-evidence-isolation-independent-1658.json",
+      "sha256": "01ce981118d87966b4234bf5e72c6b3b35973867d9b755e7a5cc46e0d0af9814"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/judge-evidence-isolation-ast-1658.json",
+      "sha256": "1d2cef826995c9dc6ce3eff2c56d7f5640de494f823b4549e313769fdd06f2b4"
+    }
+  ]
+}
