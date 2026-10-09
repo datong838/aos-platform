@@ -1,0 +1,23 @@
+{
+  "authority_revision": "AOS-001636",
+  "head": "7e6dfcfa5ac81f20e173892c095ff239af32e1c3",
+  "references": [
+    {
+      "path": ".evidence/gt-shared-budget-fence-order-20261008/current-source-whole-suite-first-gates-reference-1635.json",
+      "sha256": "575d7dd62f5e9d1885dc32dcc27383536b9715bd9769041cf1ba36e3b87d28ce"
+    },
+    {
+      "path": ".evidence/gt-source-original-preparation-current-20261009/review.md",
+      "sha256": "76c07a606f72b1060760aa0b4d981f26c7da26f4cad61d8a21c8d80c4aa21ec6"
+    },
+    {
+      "path": ".evidence/gt-source-original-preparation-current-20261009/independent-final-verification.json",
+      "sha256": "911cc2e9b839b8f1ca6f93e4b332054fc70d3d9030b4844d58b193d246231370"
+    },
+    {
+      "path": ".evidence/gt-source-original-preparation-current-20261009/resource-boundary.json",
+      "sha256": "ee6a1438e276edac42df8ad669129fe34d37619a7fd0943c0ffa6af507315c0f"
+    }
+  ],
+  "execution_allowed": false
+}
