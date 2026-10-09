@@ -1,0 +1,74 @@
+{
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-occupation-after-wait-native-20261009",
+    "base_revision": "AOS-001622",
+    "completed_revision": "AOS-001622",
+    "result": "ORIGINAL_OCCUPATION_AFTER_WAIT_NATIVE_GREEN",
+    "changed_files": [
+      "aos-platform/.evidence/gt-occupation-after-wait-native-20261009"
+    ],
+    "commits": [
+      "a52bc462b857e8f5181c40958ee1f8eedfabada9"
+    ],
+    "verification": [
+      "Original native full manifest before expiry; root typed positive then savepoint rollback; actual first INSERT relation blocker until original approval expiry; exact SQL23514 original deadline rejection; fixed wrapper deny and samecaller restored",
+      "Full manifest and actual COMMIT refusal; independent aborted/six0/Source1/NOLOGIN/member0/probes0/31resources with1619 original restart reconciled"
+    ],
+    "risks": [
+      "Isolated preparation only; no product change/defaultmigration/actual admission/fees/realJudge/Provider/formal firstchain"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T10:10:46+08:00"
+  },
+  "revision": "AOS-001623",
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/01-当前项目状态.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/06-当前执行检查点.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001623-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001623"
+  },
+  "validation": "GREEN",
+  "strong_projections": "CURRENT"
+}
