@@ -1,0 +1,48 @@
+{
+  "original_caller": {
+    "xid": "40170",
+    "pid": 67095,
+    "session_user": "aos_provider_capacity_occupation",
+    "role": "aos_runtime",
+    "isolation": "serializable",
+    "timezone": "UTC",
+    "org_id": "org-org",
+    "project_id": "dev-project"
+  },
+  "rejections": [
+    {
+      "name": "other_native_backend_original_origin",
+      "sqlstate": "23514",
+      "message": "SHARED_DESCRIPTION_RISK_ORIGIN_REQUIRED",
+      "caller": {
+        "xid": "40172",
+        "pid": 67185,
+        "session_user": "aos_provider_capacity_occupation",
+        "role": "aos_runtime",
+        "isolation": "serializable",
+        "timezone": "UTC",
+        "org_id": "org-org",
+        "project_id": "dev-project"
+      },
+      "scram_password_used": true,
+      "manifest_absent": true,
+      "transaction_rolled_back": true
+    },
+    {
+      "name": "valid_old_domain_signature",
+      "sqlstate": "23514",
+      "message": "SHARED_CERTIFICATE_SIGNATURE_OR_TIME_REQUIRED",
+      "old_domain_crypto_valid": true,
+      "v3_domain_crypto_invalid": true,
+      "before_clock": "2026-10-09T23:34:13.214476+00:00",
+      "after_clock": "2026-10-09T23:34:16.458864+00:00",
+      "certificate_until": "2026-10-09T23:34:53.159024+00:00",
+      "certificate_set_sha256": "3fe333bcd920efac2ca26b9ae16a2d11efbeb1d727e81b706d320b2fecb38615"
+    }
+  ],
+  "original_caller_unchanged": true,
+  "manifest_absent_after_negatives": true,
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false
+}

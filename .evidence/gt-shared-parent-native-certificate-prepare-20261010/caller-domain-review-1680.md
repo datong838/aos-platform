@@ -1,0 +1,9 @@
+# 非原caller与旧域复审 / AOS-001680
+
+方案caller-domain-plan-1680先登记；仅Task10隔离helper/driver证据及Task3合法新prefix，产品和现有tests十二hash不变。R16完整native1 PASS150.28秒/8warnings。原caller xid40170/pid67095，另实际SCRAM连接xid40172/pid67185，session occupation/runtime/SERIAL/UTC/org-org/dev-project完全一致；其尝试原SQL入口严格23514 SHARED_DESCRIPTION_RISK_ORIGIN_REQUIRED，不以权限错误替代caller绑定。同另一caller Manifest缺失、实际rollback，未写第二Task、未扩大授予或Commit风险。
+
+旧域反例保持v3 envelope/claim/schema/原件/caller及key，正确RootKey签署v2消息，实际Ed25519旧域验证成功/新域InvalidSignature；真实SQL入口严格23514 SHARED_CERTIFICATE_SIGNATURE_OR_TIME_REQUIRED，前后PGclock在certificate/root/原Request范围内，不把超时归因域错。保存点回滚后原caller完整身份与INTRANS不变、Manifest缺失。后续独立即时新40秒签名用于原完整Python正向和原邻接/COMMIT拒绝，旧原件未延长。
+
+独立READONLY核对DB aos_test_a24e435b9e05_ti4_test/cluster7694680278363095064：风险ABORTED/九表0/Root实验xid COMMITTED，四函数精确正文owner/path/PUBLIC0、原C ACL仅两Owner，Model直接C/schema及runtime委托false，十二当前hash匹配。之前337纯验为同精确产品/testhash，未无谓重复。无UI改动，浏览器不适用。本Task仍ACTIVE，无Delivery；Root正式谱系/可见身份撤回竞争/finaljoint/WALACK/经营首链未完成，HostworkerProvider未启用。Prime UNKNOWN与历史摘要beforeimage未解决，不重发。
+
+下一登记候选：可见已发布identity的合法撤回终止，必须先复习现有identity_withdrawal不可变原件合同和snapshot/lock时序，不能借owner任意篡改当前head伪撤回；另finaljoint原件/实际COMMIT门仍可独立调查。Root、身份和预算授权边界不被测试PASS扩大。
