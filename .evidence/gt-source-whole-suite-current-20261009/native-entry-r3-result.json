@@ -1,0 +1,28 @@
+{
+  "observed_at": "2026-10-09T04:52:42.497678+00:00",
+  "database": "aos_test_694bdd003eb1_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[shared]",
+      "phase": "database_binding",
+      "database": "aos_test_28e1c00ccd25_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_694bdd003eb1_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[distinct]",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "complete original Source suite selected, maxfail1 first-failure diagnostic; unexecuted nodes not acceptance"
+}

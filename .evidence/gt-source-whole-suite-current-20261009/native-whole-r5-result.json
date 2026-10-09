@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-09T04:55:09.874997+00:00",
+  "database": null,
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "complete original Source suite selected, maxfail1 first-failure diagnostic; unexecuted nodes not acceptance"
+}

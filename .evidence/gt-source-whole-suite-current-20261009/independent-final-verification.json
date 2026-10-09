@@ -1,0 +1,190 @@
+{
+  "schema": "aos-source-complete-entry-owner-withdrawal-compatibility-verification/v1",
+  "head": "463b466ee2b0aea169894f7cf141d13a323ad3e8",
+  "authority_revision": "AOS-001634",
+  "summary": "44 passed, 7 warnings in 101.99s (0:01:41)",
+  "all_selected_passed": true,
+  "node_count": 44,
+  "database_count": 3,
+  "sources": 0,
+  "databases": [
+    {
+      "database": "aos_test_12d6a069867d_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[shared]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_occupation",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_24c6c5760a9a_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[distinct]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_occupation",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_39aa097f5a20_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER ROLE aos_capacity_withdrawal_epoch_owner LOGIN-WITHDRAWAL_OWNER_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER ROLE aos_capacity_withdrawal_epoch_owner INHERIT-WITHDRAWAL_OWNER_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_capacity_withdrawal_epoch DISABLE ROW LEVEL SECURITY-WITHDRAWAL_TABLE_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_capacity_withdrawal_epoch NO FORCE ROW LEVEL SECURITY-WITHDRAWAL_TABLE_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[GRANT SELECT ON public.aip_capacity_withdrawal_epoch TO aos_runtime-WITHDRAWAL_TABLE_ACL_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[GRANT SELECT(epoch) ON public.aip_capacity_withdrawal_epoch TO aos_runtime-WITHDRAWAL_TABLE_ACL_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_capacity_withdrawal_epoch ALTER COLUMN epoch SET DEFAULT 1-WITHDRAWAL_TABLE_STRUCTURE_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_capacity_withdrawal_epoch ADD CONSTRAINT isolated_extra_check CHECK (true)-WITHDRAWAL_TABLE_STRUCTURE_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER POLICY capacity_withdrawal_epoch_scope ON public.aip_capacity_withdrawal_epoch USING (true)-WITHDRAWAL_POLICY_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER FUNCTION public.aos_capacity_withdrawal_epoch_init() SECURITY INVOKER-WITHDRAWAL_FUNCTION_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[CREATE OR REPLACE FUNCTION public.aos_capacity_withdrawal_epoch_bump() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$ BEGIN RETURN NEW; END $$-WITHDRAWAL_FUNCTION_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_init() TO aos_runtime-WITHDRAWAL_FUNCTION_ACL_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_action_proposal DISABLE TRIGGER zz_capacity_withdrawal_epoch_init_a0v151-WITHDRAWAL_TRIGGER_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_action_withdrawal_event DISABLE TRIGGER zz_capacity_withdrawal_epoch_bump_a0v151-WITHDRAWAL_TRIGGER_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_rejects_extra_neutral_owner_function",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_boundary_requires_implemented_audit",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[REVOKE EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) FROM aos_capacity_publication_owner]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[REVOKE EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) FROM aos_capacity_publication_owner]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[GRANT EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) TO aos_capacity_publication_owner WITH GRANT OPTION]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) TO aos_capacity_publication_owner WITH GRANT OPTION]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[GRANT EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) TO PUBLIC]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) TO PUBLIC]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[CREATE OR REPLACE FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(p_org text,p_project text,p_id text) RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$ BEGIN RETURN 0; END $$]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[ALTER FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) SECURITY INVOKER]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_rejects_effective_foreign_definer[False]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_rejects_effective_foreign_definer[True]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[GRANT aos_runtime TO aos_capacity_withdrawal_epoch_owner-WITHDRAWAL_OWNER_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[ALTER TABLE public.aip_capacity_withdrawal_epoch OWNER TO aos_runtime-WITHDRAWAL_TABLE_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[ALTER TABLE public.aip_capacity_withdrawal_epoch ADD COLUMN unexpected text-WITHDRAWAL_TABLE_STRUCTURE_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[CREATE POLICY isolated_extra ON public.aip_capacity_withdrawal_epoch USING(true)-WITHDRAWAL_POLICY_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[ALTER POLICY capacity_withdrawal_epoch_scope ON public.aip_capacity_withdrawal_epoch TO aos_runtime-WITHDRAWAL_POLICY_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[ALTER FUNCTION public.aos_capacity_withdrawal_epoch_init() SET search_path=public-WITHDRAWAL_FUNCTION_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_bump() TO PUBLIC-WITHDRAWAL_PUBLICATION_CALLER_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_init() TO aos_capacity_withdrawal_epoch_owner WITH GRANT OPTION-WITHDRAWAL_FUNCTION_ACL_DRIFT]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[GRANT USAGE ON SCHEMA public TO aos_capacity_withdrawal_epoch_owner WITH GRANT OPTION-WITHDRAWAL_OWNER_EXTRA_PERMISSION]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[disabled_fk]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[deferred_fk]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[extra_owned_table]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[unvalidated_check]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[legacy_no_pair]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_audit_denied_to_ordinary_callers[aos_runtime]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_audit_denied_to_ordinary_callers[aos_provider_capacity_issuer]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_occupation",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    }
+  ],
+  "exact_inputs_unchanged": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 31,
+  "full_source_delivery": false,
+  "formal_business_execution": false
+}

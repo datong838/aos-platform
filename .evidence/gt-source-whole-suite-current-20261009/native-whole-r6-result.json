@@ -1,0 +1,58 @@
+{
+  "observed_at": "2026-10-09T04:57:18.451933+00:00",
+  "database": "aos_test_046385a7c9d0_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[shared]",
+      "phase": "database_binding",
+      "database": "aos_test_9dff59c2113e_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_54df81105a33_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_verifier_and_private_scram_share_one_isolated_database",
+      "phase": "database_binding",
+      "database": "aos_test_046385a7c9d0_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_verifier_and_private_scram_share_one_isolated_database",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_publication_owner_reads_original_approved_rows_without_mutation",
+      "phase": "database_binding",
+      "database": "aos_test_046385a7c9d0_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_publication_owner_reads_original_approved_rows_without_mutation",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[extra_select]",
+      "phase": "database_binding",
+      "database": "aos_test_046385a7c9d0_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[extra_select]",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "complete original Source suite selected, maxfail1 first-failure diagnostic; unexecuted nodes not acceptance"
+}

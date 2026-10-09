@@ -1,0 +1,16 @@
+{
+  "whole_nodes_collected": 381,
+  "whole_functions_collected": 101,
+  "executed_failed_nodes": 1,
+  "unexecuted_nodes": 380,
+  "database": "aos_test_149b17c47b05_ti4_test",
+  "default_private_migration_public_entry_absent": true,
+  "publication_counts": {
+    "source_pending": 0,
+    "source_publication": 0,
+    "source_provenance": 0,
+    "global_account": 0,
+    "global_provider": 0
+  },
+  "not_product_auto_install_authorization": true
+}

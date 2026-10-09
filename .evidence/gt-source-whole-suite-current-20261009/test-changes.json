@@ -1,0 +1,13 @@
+{
+  "path": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+  "before_sha256": "23b07970f1838c08dbac7587d546fd5cc61a7001e37b603dbf1af6186916ccfd",
+  "after_sha256": "4f868043a6ea832d4218850974a03ab605a6e56526e0fcacbeb341cd87a7a683",
+  "original_missing_bytes_22023_assertion_preserved": true,
+  "actual_public_positive_control": true,
+  "independent_database_registered": true,
+  "both_layouts_explicit": true,
+  "original_layout_binding_corrected": true,
+  "withdrawal_shared_helper_reuses_complete_migrated_audit": true,
+  "missing_bytes_uses_valid_permit": true,
+  "migrated_guards_survive_rollback_and_full_audit": true
+}

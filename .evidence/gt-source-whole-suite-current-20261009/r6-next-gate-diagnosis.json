@@ -1,0 +1,14 @@
+{
+  "collected_nodes": 382,
+  "executed_calls": 5,
+  "passed": 4,
+  "failed": {
+    "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[extra_select]",
+    "phase": "call",
+    "outcome": "failed"
+  },
+  "database": "aos_test_046385a7c9d0_ti4_test",
+  "existing_complete_functions_exact_audit": true,
+  "cause": "old shared withdrawal-audit helper recreates a0v157 strict existing functions before fault injection; no Owner drift assertion reached",
+  "whole_source_green": false
+}

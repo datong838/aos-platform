@@ -1,0 +1,30 @@
+[
+  {
+    "path": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+    "sha256": "0094c70a457e5cdbf2b764a54dc60526db097f865434506261e50162efc4323d"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py",
+    "sha256": "cd9564e8c37d0bdac9af7fa8311a0db7febc09a1ee1af6346245fc9ae2d61cc7"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_source_consumer.py",
+    "sha256": "0da7eb8ae3134d7239b7f217ebc48be16162ab17d9a539f9c1d48954998defdd"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_publication_lock_boundary.py",
+    "sha256": "30229822a7e5bf20eb77b015dcc411864edf3fdca905512354c6080dcc1d9d15"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py",
+    "sha256": "047c4b301036bbfb5dd036531d0002c6eb1e257ceb6a31515d5765cd01bc42ab"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_occupation_epoch_profile.py",
+    "sha256": "e326f0e61e653d1f826972960c6d40a36d899a4ce706a8661d4460174b486241"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_publication_store.py",
+    "sha256": "13682034eaae269ea6e63f34805548b63e0484e5368169882e9c8249aec0ce77"
+  }
+]

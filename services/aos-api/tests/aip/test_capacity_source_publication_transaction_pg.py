@@ -16,6 +16,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
     from tests.conftest import _isolated_postgres_database as database_fixture
 
     registered_cases = {
+        'test_private_native_publication_rejects_missing_original_bytes',
         'test_native_source_installer_assembles_complete_private_transaction',
         'test_native_source_function_installation_rejects_catalog_drift',
         'test_native_source_table_installation_rejects_catalog_drift',
@@ -83,23 +84,35 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
             database.close()
 
 
-def test_private_native_publication_rejects_missing_original_bytes(native_signed_source):
-    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+@pytest.mark.parametrize('native_original_fact_reader',['shared','distinct'],indirect=True)
+def test_private_native_publication_rejects_missing_original_bytes(exact_public_source_caller):
+    from psycopg.types.json import Jsonb
     from aos_api.aip_provider_capacity_source_issuer import check_native_capacity_supplier_inputs
 
-    material, actual_command, _, _, config = native_signed_source
-    command, policy, attestation = actual_command()
-    with connect_capacity_issuer(config, SCOPE) as conn:
+    conn, raw, registered, original = exact_public_source_caller
+    material, _, _, _, config = original
+    command, policy, attestation = registered['actual_command']()
+    assert conn.info.dbname == config.database
+    with conn.transaction():
         assert conn.pgconn.used_password is True
         checked = check_native_capacity_supplier_inputs(
             conn, command, policy, attestation, trust_roots=material['provider'])
         assert checked.authorization == 'SUPPLIER_DOCUMENT_SIGNATURES_ONLY_NO_CAPACITY_NO_START'
         before = conn.execute('SELECT count(*) AS n FROM public.aip_action_approval_event').fetchone()['n']
+        conn.execute('SAVEPOINT valid_publication_control')
+        try:
+            row = conn.execute(
+                'SELECT * FROM public.prepare_capacity_source(%s,%s,%s,%s::jsonb)',
+                (raw, 'valid-original-publication', 'valid-original-source', Jsonb(registered['refs'][-1]))).fetchone()
+            assert row and bytes(row['source_raw'])
+        finally:
+            conn.execute('ROLLBACK TO SAVEPOINT valid_publication_control')
+            conn.execute('RELEASE SAVEPOINT valid_publication_control')
         conn.execute('SAVEPOINT incomplete_publication')
         try:
             conn.execute(
                 'SELECT public.prepare_capacity_source(%s::bytea,%s::text,%s::text,%s::jsonb)',
-                (b'{}', 'missing-original-publication', 'missing-original-source', '{}'))
+                (b'{}', 'missing-original-publication', 'missing-original-source', Jsonb(registered['refs'][-1])))
         except psycopg.Error as error:
             sqlstate = error.sqlstate
         else:
@@ -2127,8 +2140,8 @@ def test_native_evidence_query_preserves_genuine_build_cutoff_and_numeric_hash(n
 
 
 def _install_original_withdrawal_audit(owner):
-    from aos_api.aip_provider_capacity_publication_store import CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL
-    owner.execute(CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL)
+    from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+    require_source_transaction_functions(owner)
 
 
 def _assert_native_withdrawal_rejects(owner,reason):
@@ -2220,7 +2233,8 @@ def test_native_original_withdrawal_boundary_requires_implemented_audit(native_s
         assert len(rows)==3 and all(r['provolatile']=='v' and not r['prosecdef'] and r['proconfig']==['search_path=pg_catalog']
             and r['owner']=='aos_capacity_publication_owner' and not r['runtime_execute'] and not r['issuer_execute'] and not r['public_grant'] for r in rows)
         owner.rollback()
-        assert owner.execute("SELECT count(*) AS n FROM pg_proc WHERE pronamespace='aos_capacity_publication_private'::regnamespace AND proname=ANY(%s)",(names,)).fetchone()['n']==0
+        assert owner.execute("SELECT count(*) AS n FROM pg_proc WHERE pronamespace='aos_capacity_publication_private'::regnamespace AND proname=ANY(%s)",(names,)).fetchone()['n']==3
+        _install_original_withdrawal_audit(owner)
         owner.rollback()
 
 

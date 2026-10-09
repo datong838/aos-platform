@@ -1,0 +1,17 @@
+[
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[extra_select]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[public_select]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[extra_column]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[public_column]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[login]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[membership]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[default_acl]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[schema_create]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[database_create]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[policy]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[extra_policy]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[rls]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[disabled_trigger]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[guard_body]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[guard_public_execute]"
+]

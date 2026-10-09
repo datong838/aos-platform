@@ -1,0 +1,103 @@
+{
+  "schema": "aos-source-entry-missing-bytes-native-verification/v1",
+  "head": "463b466ee2b0aea169894f7cf141d13a323ad3e8",
+  "authority_revision": "AOS-001634",
+  "summary": "2 passed, 7 warnings in 27.77s",
+  "all_selected_passed": true,
+  "node_count": 2,
+  "database_count": 2,
+  "sources": 0,
+  "databases": [
+    {
+      "database": "aos_test_74b01274db1a_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[distinct]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_occupation",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true
+    },
+    {
+      "database": "aos_test_958fc75a34d7_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[shared]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_occupation",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true
+    }
+  ],
+  "exact_inputs_unchanged": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 31,
+  "full_source_delivery": false,
+  "formal_business_execution": false
+}

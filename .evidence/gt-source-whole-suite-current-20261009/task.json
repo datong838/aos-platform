@@ -1,0 +1,20 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-source-whole-suite-current-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001634",
+  "scope": [
+    "aos-platform/.evidence/gt-source-whole-suite-current-20261009"
+  ],
+  "excluded_scope": [
+    "aos-platform/services",
+    "aos-platform/apps"
+  ],
+  "expected_outputs": [
+    "Complete original101-function node inventory and bounded first-failure native diagnostic; no hidden selections",
+    "Exact current inputs/resource/Task scope reconciliation, retain failures and incomplete original exits"
+  ],
+  "lease_expires_at": "2026-10-09T07:48:14.233090+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T12:48:15+08:00"
+}

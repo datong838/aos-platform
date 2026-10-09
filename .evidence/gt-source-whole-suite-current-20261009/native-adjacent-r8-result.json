@@ -1,0 +1,448 @@
+{
+  "observed_at": "2026-10-09T05:03:49.751118+00:00",
+  "database": "aos_test_fbf0b9c2a3e7_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[shared]",
+      "phase": "database_binding",
+      "database": "aos_test_3ec241d787bc_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_64a9fdfe50cc_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER ROLE aos_capacity_withdrawal_epoch_owner LOGIN-WITHDRAWAL_OWNER_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER ROLE aos_capacity_withdrawal_epoch_owner LOGIN-WITHDRAWAL_OWNER_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER ROLE aos_capacity_withdrawal_epoch_owner INHERIT-WITHDRAWAL_OWNER_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER ROLE aos_capacity_withdrawal_epoch_owner INHERIT-WITHDRAWAL_OWNER_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_capacity_withdrawal_epoch DISABLE ROW LEVEL SECURITY-WITHDRAWAL_TABLE_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_capacity_withdrawal_epoch DISABLE ROW LEVEL SECURITY-WITHDRAWAL_TABLE_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_capacity_withdrawal_epoch NO FORCE ROW LEVEL SECURITY-WITHDRAWAL_TABLE_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_capacity_withdrawal_epoch NO FORCE ROW LEVEL SECURITY-WITHDRAWAL_TABLE_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[GRANT SELECT ON public.aip_capacity_withdrawal_epoch TO aos_runtime-WITHDRAWAL_TABLE_ACL_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[GRANT SELECT ON public.aip_capacity_withdrawal_epoch TO aos_runtime-WITHDRAWAL_TABLE_ACL_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[GRANT SELECT(epoch) ON public.aip_capacity_withdrawal_epoch TO aos_runtime-WITHDRAWAL_TABLE_ACL_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[GRANT SELECT(epoch) ON public.aip_capacity_withdrawal_epoch TO aos_runtime-WITHDRAWAL_TABLE_ACL_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_capacity_withdrawal_epoch ALTER COLUMN epoch SET DEFAULT 1-WITHDRAWAL_TABLE_STRUCTURE_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_capacity_withdrawal_epoch ALTER COLUMN epoch SET DEFAULT 1-WITHDRAWAL_TABLE_STRUCTURE_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_capacity_withdrawal_epoch ADD CONSTRAINT isolated_extra_check CHECK (true)-WITHDRAWAL_TABLE_STRUCTURE_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_capacity_withdrawal_epoch ADD CONSTRAINT isolated_extra_check CHECK (true)-WITHDRAWAL_TABLE_STRUCTURE_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER POLICY capacity_withdrawal_epoch_scope ON public.aip_capacity_withdrawal_epoch USING (true)-WITHDRAWAL_POLICY_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER POLICY capacity_withdrawal_epoch_scope ON public.aip_capacity_withdrawal_epoch USING (true)-WITHDRAWAL_POLICY_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER FUNCTION public.aos_capacity_withdrawal_epoch_init() SECURITY INVOKER-WITHDRAWAL_FUNCTION_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER FUNCTION public.aos_capacity_withdrawal_epoch_init() SECURITY INVOKER-WITHDRAWAL_FUNCTION_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[CREATE OR REPLACE FUNCTION public.aos_capacity_withdrawal_epoch_bump() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$ BEGIN RETURN NEW; END $$-WITHDRAWAL_FUNCTION_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[CREATE OR REPLACE FUNCTION public.aos_capacity_withdrawal_epoch_bump() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$ BEGIN RETURN NEW; END $$-WITHDRAWAL_FUNCTION_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_init() TO aos_runtime-WITHDRAWAL_FUNCTION_ACL_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_init() TO aos_runtime-WITHDRAWAL_FUNCTION_ACL_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_action_proposal DISABLE TRIGGER zz_capacity_withdrawal_epoch_init_a0v151-WITHDRAWAL_TRIGGER_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_action_proposal DISABLE TRIGGER zz_capacity_withdrawal_epoch_init_a0v151-WITHDRAWAL_TRIGGER_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_action_withdrawal_event DISABLE TRIGGER zz_capacity_withdrawal_epoch_bump_a0v151-WITHDRAWAL_TRIGGER_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_fault_oracle[ALTER TABLE public.aip_action_withdrawal_event DISABLE TRIGGER zz_capacity_withdrawal_epoch_bump_a0v151-WITHDRAWAL_TRIGGER_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_rejects_extra_neutral_owner_function",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_withdrawal_catalog_rejects_extra_neutral_owner_function",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_boundary_requires_implemented_audit",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_boundary_requires_implemented_audit",
+      "phase": "call",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[REVOKE EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) FROM aos_capacity_publication_owner]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[REVOKE EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) FROM aos_capacity_publication_owner]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[REVOKE EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) FROM aos_capacity_publication_owner]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[REVOKE EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) FROM aos_capacity_publication_owner]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[GRANT EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) TO aos_capacity_publication_owner WITH GRANT OPTION]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[GRANT EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) TO aos_capacity_publication_owner WITH GRANT OPTION]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) TO aos_capacity_publication_owner WITH GRANT OPTION]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) TO aos_capacity_publication_owner WITH GRANT OPTION]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[GRANT EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) TO PUBLIC]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[GRANT EXECUTE ON FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(text,text,text) TO PUBLIC]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) TO PUBLIC]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) TO PUBLIC]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[CREATE OR REPLACE FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(p_org text,p_project text,p_id text) RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$ BEGIN RETURN 0; END $$]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[CREATE OR REPLACE FUNCTION public.aos_capacity_evidence_epoch_issuer_lock(p_org text,p_project text,p_id text) RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$ BEGIN RETURN 0; END $$]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[ALTER FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) SECURITY INVOKER]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_checks_complete_original_epoch_pair[ALTER FUNCTION public.aos_capacity_withdrawal_epoch_lock(text,text,text) SECURITY INVOKER]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_rejects_effective_foreign_definer[False]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_rejects_effective_foreign_definer[False]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_rejects_effective_foreign_definer[True]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_withdrawal_audit_rejects_effective_foreign_definer[True]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[GRANT aos_runtime TO aos_capacity_withdrawal_epoch_owner-WITHDRAWAL_OWNER_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[GRANT aos_runtime TO aos_capacity_withdrawal_epoch_owner-WITHDRAWAL_OWNER_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[ALTER TABLE public.aip_capacity_withdrawal_epoch OWNER TO aos_runtime-WITHDRAWAL_TABLE_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[ALTER TABLE public.aip_capacity_withdrawal_epoch OWNER TO aos_runtime-WITHDRAWAL_TABLE_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[ALTER TABLE public.aip_capacity_withdrawal_epoch ADD COLUMN unexpected text-WITHDRAWAL_TABLE_STRUCTURE_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[ALTER TABLE public.aip_capacity_withdrawal_epoch ADD COLUMN unexpected text-WITHDRAWAL_TABLE_STRUCTURE_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[CREATE POLICY isolated_extra ON public.aip_capacity_withdrawal_epoch USING(true)-WITHDRAWAL_POLICY_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[CREATE POLICY isolated_extra ON public.aip_capacity_withdrawal_epoch USING(true)-WITHDRAWAL_POLICY_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[ALTER POLICY capacity_withdrawal_epoch_scope ON public.aip_capacity_withdrawal_epoch TO aos_runtime-WITHDRAWAL_POLICY_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[ALTER POLICY capacity_withdrawal_epoch_scope ON public.aip_capacity_withdrawal_epoch TO aos_runtime-WITHDRAWAL_POLICY_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[ALTER FUNCTION public.aos_capacity_withdrawal_epoch_init() SET search_path=public-WITHDRAWAL_FUNCTION_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[ALTER FUNCTION public.aos_capacity_withdrawal_epoch_init() SET search_path=public-WITHDRAWAL_FUNCTION_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_bump() TO PUBLIC-WITHDRAWAL_PUBLICATION_CALLER_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_bump() TO PUBLIC-WITHDRAWAL_PUBLICATION_CALLER_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_init() TO aos_capacity_withdrawal_epoch_owner WITH GRANT OPTION-WITHDRAWAL_FUNCTION_ACL_DRIFT]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[GRANT EXECUTE ON FUNCTION public.aos_capacity_withdrawal_epoch_init() TO aos_capacity_withdrawal_epoch_owner WITH GRANT OPTION-WITHDRAWAL_FUNCTION_ACL_DRIFT]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[GRANT USAGE ON SCHEMA public TO aos_capacity_withdrawal_epoch_owner WITH GRANT OPTION-WITHDRAWAL_OWNER_EXTRA_PERMISSION]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_extended_catalog_faults[GRANT USAGE ON SCHEMA public TO aos_capacity_withdrawal_epoch_owner WITH GRANT OPTION-WITHDRAWAL_OWNER_EXTRA_PERMISSION]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[disabled_fk]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[disabled_fk]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[deferred_fk]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[deferred_fk]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[extra_owned_table]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[extra_owned_table]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[unvalidated_check]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[unvalidated_check]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[legacy_no_pair]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_structural_and_legacy_controls[legacy_no_pair]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_audit_denied_to_ordinary_callers[aos_runtime]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_audit_denied_to_ordinary_callers[aos_runtime]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_audit_denied_to_ordinary_callers[aos_provider_capacity_issuer]",
+      "phase": "database_binding",
+      "database": "aos_test_fbf0b9c2a3e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_withdrawal_audit_denied_to_ordinary_callers[aos_provider_capacity_issuer]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "complete original Source suite selected, maxfail1 first-failure diagnostic; unexecuted nodes not acceptance"
+}

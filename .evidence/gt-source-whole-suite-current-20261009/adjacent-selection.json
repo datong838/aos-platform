@@ -1,0 +1,11 @@
+[
+  "test_private_native_publication_rejects_missing_original_bytes",
+  "test_original_withdrawal_catalog_fault_oracle",
+  "test_original_withdrawal_catalog_rejects_extra_neutral_owner_function",
+  "test_native_original_withdrawal_boundary_requires_implemented_audit",
+  "test_native_withdrawal_audit_checks_complete_original_epoch_pair",
+  "test_native_withdrawal_audit_rejects_effective_foreign_definer",
+  "test_native_original_withdrawal_extended_catalog_faults",
+  "test_native_original_withdrawal_structural_and_legacy_controls",
+  "test_native_original_withdrawal_audit_denied_to_ordinary_callers"
+]
