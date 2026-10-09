@@ -16,6 +16,7 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
     from tests.conftest import _isolated_postgres_database as database_fixture
 
     registered_cases = {
+        'test_complete_native_publication_requires_actual_caller_commit',
         'test_registered_original_inputs_prepare_native_v2_before_signing',
         'test_private_native_publication_rejects_missing_original_bytes',
         'test_native_source_installer_assembles_complete_private_transaction',
@@ -423,9 +424,11 @@ def test_registered_original_inputs_prepare_native_v2_before_signing(exact_publi
 
 
 @pytest.mark.parametrize('outcome',['committed','invalid_signature','unfinished'])
-def test_complete_native_publication_requires_actual_caller_commit(native_signed_source,tmp_path,outcome):
+@pytest.mark.parametrize('native_original_fact_reader',['shared','distinct'],indirect=True)
+def test_complete_native_publication_requires_actual_caller_commit(exact_public_source_caller,outcome):
     """Real transaction contract; fixture signing alone is not signer acceptance."""
     import hashlib,json
+    from contextlib import nullcontext
     from uuid import uuid4
     from tests.aip._runtime_guard_history_fixture import isolated_owner
     from aos_api.aip_provider_capacity_source_issuer import (
@@ -433,16 +436,16 @@ def test_complete_native_publication_requires_actual_caller_commit(native_signed
     from aos_api.aip_provider_capacity_source_contracts import capacity_issuance_binding
     from aos_api.aip_provider_capacity_publication_contracts import (
         PublishedProviderCapacitySourceV2,parse_signed_capacity_body)
-    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
 
-    material=_registered_publication_inputs(native_signed_source,tmp_path)
+    conn, _, material, _ = exact_public_source_caller
     command,_,_=material['actual_command']()
     principal=authenticate_capacity_issuance_command(command)
     request_hash=capacity_issuance_binding(SCOPE,principal.subject,command).content_hash
     command_raw=capacity_source_preparation_bytes(command)
     assert command.bearer_token.get_secret_value().encode() not in command_raw
     asset_id='native-commit-'+uuid4().hex
-    with connect_capacity_issuer(material['config'],SCOPE) as conn:
+    with nullcontext(conn):
+        assert conn.info.dbname == material['config'].database
         assert conn.pgconn.used_password is True
         native=conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
         prepared_row=conn.execute('SELECT * FROM public.prepare_capacity_source(%s::bytea,%s::text,%s::text,%s::jsonb)',

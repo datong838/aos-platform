@@ -1,0 +1,8 @@
+[
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[shared-committed]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[shared-invalid_signature]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[shared-unfinished]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[distinct-committed]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[distinct-invalid_signature]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[distinct-unfinished]"
+]

@@ -1,0 +1,288 @@
+{
+  "schema": "aos-source-original-caller-commit-six-exits-root-native-verification/v1",
+  "head": "bf30b0cb438222f8295ec0ae8336b22337b89e34",
+  "authority_revision": "AOS-001637",
+  "summary": "6 passed, 7 warnings in 69.01s (0:01:09)",
+  "all_selected_passed": true,
+  "node_count": 6,
+  "database_count": 6,
+  "sources": 2,
+  "databases": [
+    {
+      "database": "aos_test_1f4a7153a789_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[shared-committed]"
+      ],
+      "sources": [
+        {
+          "asset_id": "native-commit-51cb68c1b88f4971bc9563b460d887aa",
+          "account_id": "da26d6a0-b7c7-4ba3-adf5-a5067c866c5c",
+          "content_hash": "8f0abfb9fb6e828b4c66314f974990d991d3d8728c2bb3b7c2fecabe0306c210",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "xid": "1126",
+          "native_session": "aos_provider_capacity_issuer",
+          "provenance_ok": true,
+          "account_present": true
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 1,
+        "source_publication": 1,
+        "source_provenance": 1,
+        "global_account": 1,
+        "global_provider": 1
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_59525aa8133c_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[distinct-committed]"
+      ],
+      "sources": [
+        {
+          "asset_id": "native-commit-4d5a0496a1584d4e8ba886f50c4e69bb",
+          "account_id": "739599f9-d500-4ec8-b89d-2ef479c07f3e",
+          "content_hash": "af6f2627bfbac60b8750f4334ac8cf1719deea2e244bca16d293e6c6b35c2f91",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "xid": "1382",
+          "native_session": "aos_provider_capacity_issuer",
+          "provenance_ok": true,
+          "account_present": true
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 1,
+        "source_publication": 1,
+        "source_provenance": 1,
+        "global_account": 1,
+        "global_provider": 3
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_9645a8a91c2b_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[shared-invalid_signature]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_b645a7c0b78d_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[distinct-invalid_signature]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_edb6e487953a_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[shared-unfinished]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_fbb99a5c6fbc_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[distinct-unfinished]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    }
+  ],
+  "exact_inputs_unchanged": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 35,
+  "full_source_delivery": false,
+  "formal_business_execution": false,
+  "root_volume": {
+    "CreatedAt": "2026-10-09T13:20:02+08:00",
+    "Driver": "local",
+    "Labels": {
+      "aos.scope": "test-only",
+      "aos.task": "gt-source-root-native-lab-20261009"
+    },
+    "Mountpoint": "/var/lib/docker/100000.100000/volumes/aos-source-root-native-20261009-data/_data",
+    "Name": "aos-source-root-native-20261009-data",
+    "Options": {
+      "device": "/var/lib/aos-test-labs/aos-source-root-native-20261009",
+      "o": "bind",
+      "type": "none"
+    },
+    "Scope": "local"
+  },
+  "root_available_bytes": 17426657280
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-source-original-commit-current-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001637",
+  "scope": [
+    "aos-platform/.evidence/gt-source-original-commit-current-20261009"
+  ],
+  "excluded_scope": [
+    "aos-platform/services",
+    "aos-platform/apps"
+  ],
+  "expected_outputs": [
+    "Original complete native caller COMMIT committed/invalid_signature/unfinished exits actual RED and bounded repair verification, original durable signed Source readback"
+  ],
+  "lease_expires_at": "2026-10-09T08:26:10.792131+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T13:26:11+08:00"
+}

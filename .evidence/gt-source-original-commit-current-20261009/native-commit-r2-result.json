@@ -1,0 +1,68 @@
+{
+  "observed_at": "2026-10-09T05:28:25.790541+00:00",
+  "database": "aos_test_fbb99a5c6fbc_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[shared-committed]",
+      "phase": "database_binding",
+      "database": "aos_test_1f4a7153a789_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[shared-committed]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[shared-invalid_signature]",
+      "phase": "database_binding",
+      "database": "aos_test_9645a8a91c2b_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[shared-invalid_signature]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[shared-unfinished]",
+      "phase": "database_binding",
+      "database": "aos_test_edb6e487953a_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[shared-unfinished]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[distinct-committed]",
+      "phase": "database_binding",
+      "database": "aos_test_59525aa8133c_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[distinct-committed]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[distinct-invalid_signature]",
+      "phase": "database_binding",
+      "database": "aos_test_b645a7c0b78d_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[distinct-invalid_signature]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[distinct-unfinished]",
+      "phase": "database_binding",
+      "database": "aos_test_fbb99a5c6fbc_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[distinct-unfinished]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "two complete original registration/preparation functions, maxfail1 bounded diagnostic; not full Source acceptance"
+}

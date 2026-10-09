@@ -1,0 +1,5 @@
+[
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[committed]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[invalid_signature]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_complete_native_publication_requires_actual_caller_commit[unfinished]"
+]
