@@ -1,0 +1,15 @@
+{
+  "authority_revision": "AOS-001615",
+  "head": "4b08bf2b",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/occupation-ledger-preparation-reference-1615.json",
+      "sha256": "7d0d18e59720fd1901fee1ba93208128806660c41eb83b39ca5f57498adddf9a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/actual-admission-investigation-1615.md",
+      "sha256": "cfcaf2fc90d54f7e2fecb15b8e90948e824973c5c22977bb07b50e21221b7379"
+    }
+  ]
+}
