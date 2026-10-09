@@ -1,0 +1,17 @@
+# 已提交可见全局身份撤回 → 新v3原风险终止
+
+Rules：231、Task9/10/Task3原合法同owner scope、正式库只读、仅独立新隔离库、原件不可变/不直接改epoch。
+
+已登记候选：一、可见已提交身份撤回后的新v3风险终止，依赖现有global identity原件合同/合法privateOwner隔离fixture和R16完整实际Source；二、联合finalizer缺口调查，当前四类风险deferred trigger无条件拒绝COMMIT，不能仅关闭trigger或凭实验Root给出合法finalization。先实现一。
+
+文件仅本Tasknative-r17新helper/driver以及Task3 shared-native-visible-withdrawal-1681-r17前缀。产品源码和十二hash不变。先于物理风险首快照：在原实验Root下以新随机executionId构造原v1 typed元数据Manifest和正确Ed25519证书，其legacy预算/审批字段沿用明确synthetic纯夹具，不代表真实批准或业务执行；当前新证书窗口在现有新Root内，不延旧证书。使用原register_persisted_model_identity实际验证persisted字节/hash/签名/time/root/certificate后由原trigger产生identity(1,1,true)，身份target-identity和publickey与后续新v3风险共享。
+
+身份发布独立实际COMMIT；其后由原private IssuerOwner追加精确canonical identity_withdrawal/v1 event，实际COMMIT，trigger仅合规转换为epoch2/version2/activefalse。严禁直接UPDATE/insert identity_epoch、改trigger、给runtime表权或借runtime SETROLE。两个隔离COMMIT为已授权metadata实验，不是风险Commit、正式Rootbootstrap或批准请求。保留所有原件、hash与实际xid，并在物理风险首snapshot实测两xid visible。模型私钥内存，密码不输出。
+
+后续原actualSource/双parent批准风险产生v3 description、同key新四证书，在当前完整v3 native SQL入口必须原42501 MODEL_IDENTITY_BOUND_OR_REVOKED。包装外精确错误、窗口内、samecallerINTRANS、manifest缺失，保存点清理。保持原Source/parent/debit/input/Intent/guard相邻与actual风险COMMIT拒绝。该节点是撤回终止整节点，不要求已撤回identity能正向；完整未撤回邻接保留R16同产品hash证明，不延旧事件。读回风险ABORTED、四风险表与当前v3execution metadata0；已发布legacy身份/证书/withdrawal应保留原hash和合法head，不能错误期待全九表0。
+
+本波仅writer已提交→新reader顺序。reader先持锁/withdrawal等待与旧snapshot40001仍需下一独立竞争，不能以此门替代。正式Root谱系、finaljoint/WALACK/运输与经营链未通过，Task9/10仍ACTIVE无Delivery。缺夹具/原错误/窗口超时真实失败保留再诊断。
+
+R17真实登记器拒绝：发布连接READ COMMITTED不满足exact private Issuer SERIAL，未完成identity发布。R18新库显式SERIAL/UTC，准确v3 trigger错误为SHARED_PARENT_IDENTITY_BOUND_OR_REVOKED；不放宽登记器或角色权限，旧失败保留。
+
+R18成功提交legacy identity与withdrawal原件，但native直接SQL envelope使用+00:00而签名canonical为Z，触达签名拒绝而非撤回；整节点FAILED，旧库保留。R19新库typed规范化原件与产品wrapper一致。对上一R16旧域反例相同编码复审，旧域密码学有效和SQL拒绝已发生，但尚不能证明仅域不同；另独立R20补规范v3正向控制和仅签名域反例，不保留无因果支撑的全通过结论。

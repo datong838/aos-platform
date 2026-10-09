@@ -11,3 +11,5 @@ Rules：231、AOS-001680、Task9/10与Task3合法同owner Lease、m1单写、正
 旧域：原v3 envelope schema、原claim/description/caller/hash/key/interval不变，替换签名输入domain v3为v2，用同原RootKey签署；在内存先真实Ed25519验证v2消息成功、v3验证InvalidSignature。原caller当前SQL入口严格23514 SHARED_CERTIFICATE_SIGNATURE_OR_TIME_REQUIRED，savepoint rollback后同xid/pid/live以及Manifest缺失。读取PGclock确保仍在证书/Root/Request窗口，不能把时间失败算域失败。独立fresh证书用于后续完整Python与相邻原完整节点，无旧窗口延长。
 
 验收：两种负门实际原错误及caller事实、正确旧域签名/错误新域、clock界内/原件hash、保存点清理。之后完整native及独立READONLY风险ABORTED/九表0/四函数owner/body/path/PUBLIC0/原C ACL/十二hash。不把负门与实验Root/测试当正式首链，不Delivery，失败保留后修复。
+
+AOS-001681复审纠正：R16 raw时间+00:00与canonical签名Z存在额外差异，因此保留R16旧域密码学与SQL拒绝事实，不声称仅域因果全通过。新的native-r20规范原件，先同caller实际v3 SQL四项正向/保存点rollback/manifest缺失控制，再仅替换签名为同payload旧域签名，前后时间界内及准确拒绝；之后独立即时新签名全Python与原邻接。不改产品。两实验与r19不得并发，共用隔离cluster的occupation fixture角色。

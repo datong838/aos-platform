@@ -1,0 +1,148 @@
+{
+  "identity": {
+    "database": "aos_test_08f93e4fd62e_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "whole_termination_node_passed": true,
+  "withdrawal_v3": {
+    "published": {
+      "identity_xid": "40867",
+      "withdrawal_xid": "40868",
+      "execution_id": "isolated-visible-1a21d801-1c0c-4026-bdee-bf7853f23567",
+      "manifest_hash": "18c569dcd1b1611408aeab0c760e5c8bf940be95d9c685eb5e7f9dfa1698a4c1",
+      "certificate_hash": "162101dc045628aa41daff76f8e9e455438614aa590611d0cf038325dd07cb40",
+      "root_hash": "e682bd3e1e7061cd753e2a94598b6db8528118c4d4fe4168f2e6257575dee88b",
+      "withdrawal_event": {
+        "schemaVersion": "aos.model-eval-identity-withdrawal/v1",
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "identityId": "target-identity",
+        "eventId": "isolated-withdraw-dca38cef-e559-4228-9b06-50755574208e"
+      },
+      "withdrawal_hash": "cc1ff8d7fa59bf258b25d9b9a5c6af3a4521688f8d335377f1a1a9e2a1f5fb26",
+      "before": {
+        "epoch": 1,
+        "version": 1,
+        "active": true
+      },
+      "after": {
+        "epoch": 2,
+        "version": 2,
+        "active": false
+      },
+      "legacy_manifest_synthetic_not_approval": true,
+      "root_provenance_verified": false,
+      "execution_allowed": false
+    },
+    "risk_execution": "00ecde04-48a0-41d2-9f23-e3cfb78e2fbf",
+    "same_caller": {
+      "xid": "40959",
+      "pid": 71835
+    },
+    "before_clock": "2026-10-09T23:47:36.727791+00:00",
+    "after_clock": "2026-10-09T23:47:39.907868+00:00",
+    "certificate_until": "2026-10-09T23:48:16.710217+00:00",
+    "sqlstate": "42501",
+    "message": "SHARED_PARENT_IDENTITY_BOUND_OR_REVOKED",
+    "manifest_absent_after_savepoint": true,
+    "outer_transaction_live": true,
+    "execution_allowed": false,
+    "root_provenance_verified": false,
+    "full_task_delivered": false
+  },
+  "statuses": {
+    "risk": "aborted",
+    "root": "committed",
+    "identity": "committed",
+    "withdrawal": "committed"
+  },
+  "risk_counts": {
+    "prepared_plan_risk": 0,
+    "prepared_shared_risk_description": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "legacy_counts": {
+    "aos_model_eval_execution_private.manifest": 1,
+    "aos_model_eval_issuer_private.executor_certificate": 1,
+    "aos_model_eval_issuer_private.certificate_identity_binding": 1,
+    "aos_model_eval_issuer_private.certificate_epoch": 1,
+    "aos_model_eval_issuer_private.identity_epoch": 1,
+    "aos_model_eval_issuer_private.identity_withdrawal": 1
+  },
+  "published_head": {
+    "epoch": 2,
+    "version": 2,
+    "active": false
+  },
+  "exact_original_metadata_hashes": true,
+  "current_frozen_hashes": {
+    "services/aos-api/aos_api/aip_physical_capacity_occupation.py": true,
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": true,
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": true,
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": true,
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": true,
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_description_origin_reader.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_description_origin_reader_pg.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_executor_set_reader.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_executor_set_reader_pg.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py": true
+  },
+  "functions": {
+    "public.prepare_model_shared_parent_manifest_origin(bytea,jsonb,uuid,text)": {
+      "body_sha256": "5c0c42bce5877ba2e652dfb793c97d53afee5a42012907687b99f041bfad2755",
+      "owner": "aos_model_eval_execution_owner",
+      "public_execute": 0
+    },
+    "public.verify_model_shared_parent_certificate_signature(bytea,bytea,bytea)": {
+      "body_sha256": "c74a9bb51b574c8a008f479dbff0cbf58a91895aaff678236e350460889c85b2",
+      "owner": "aos_capacity_publication_owner",
+      "public_execute": 0
+    },
+    "public.prepare_model_shared_parent_certificate_set(bytea,jsonb,uuid,text,bytea)": {
+      "body_sha256": "035e87c437fe0afbbedea05165f5582475effef42ba9417e6273a8449c06d99a",
+      "owner": "aos_model_eval_issuer_owner",
+      "public_execute": 0
+    },
+    "public.read_model_shared_parent_executor_set_facts(text,text,text,text)": {
+      "body_sha256": "0954bccd631cd92303693694cff25105c55f063653c39f5b032ecd57511971cf",
+      "owner": "aos_model_eval_issuer_owner",
+      "public_execute": 0
+    }
+  },
+  "original_c_acl": [
+    {
+      "grantee": "aos_capacity_publication_owner",
+      "privilege_type": "EXECUTE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_ed25519_owner",
+      "privilege_type": "EXECUTE",
+      "is_grantable": false
+    }
+  ],
+  "verifier_permissions": {
+    "direct_c": false,
+    "direct_schema": false,
+    "runtime_delegate": false,
+    "issuer_delegate": true
+  },
+  "runtime_table_permissions": {
+    "aos_model_eval_execution_private.manifest": false,
+    "aos_model_eval_issuer_private.executor_certificate": false,
+    "aos_model_eval_issuer_private.certificate_identity_binding": false,
+    "aos_model_eval_issuer_private.certificate_epoch": false,
+    "aos_model_eval_issuer_private.identity_epoch": false,
+    "aos_model_eval_issuer_private.identity_withdrawal": false
+  },
+  "root_provenance_verified": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "reader_first_race_verified": false
+}

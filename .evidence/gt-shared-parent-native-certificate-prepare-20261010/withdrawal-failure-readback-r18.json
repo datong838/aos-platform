@@ -1,0 +1,33 @@
+{
+  "identity": {
+    "database": "aos_test_130436872a2e_ti4_test",
+    "cluster": "7694680278363095064"
+  },
+  "read_only": true,
+  "risk_counts": {
+    "prepared_plan_risk": 0,
+    "prepared_shared_risk_description": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "metadata_counts": {
+    "aos_model_eval_execution_private.manifest": 1,
+    "aos_model_eval_issuer_private.executor_certificate": 1,
+    "aos_model_eval_issuer_private.identity_epoch": 1,
+    "aos_model_eval_issuer_private.identity_withdrawal": 1
+  },
+  "published": {
+    "statuses": {
+      "identity_xid": "committed",
+      "withdrawal_xid": "committed"
+    },
+    "head": {
+      "epoch": 2,
+      "version": 2,
+      "active": false
+    }
+  },
+  "whole_node_passed": false,
+  "withdrawal_v3_verified": false,
+  "execution_allowed": false
+}

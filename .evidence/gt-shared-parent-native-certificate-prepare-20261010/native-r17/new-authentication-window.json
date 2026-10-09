@@ -1,0 +1,8 @@
+{
+  "new_independent_default_seconds": 300,
+  "original_default_seconds": 120,
+  "old_token_extended": false,
+  "explicit_negative_expiry_preserved": true,
+  "clock_mocked": false,
+  "execution_allowed": false
+}

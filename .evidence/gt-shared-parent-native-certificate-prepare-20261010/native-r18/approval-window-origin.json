@@ -1,0 +1,9 @@
+{
+  "original_function_sha256": "c4afccbae9bf108515beda05ff8857406f0e21f8a43bce43f98701939653ae87",
+  "experiment_function_sha256": "c026c15ffd7813d2982d89129bfc4ec6093856b725e9b9ed439fac7261e13470",
+  "new_independent_approval_seconds": 110,
+  "original_on_disk_unchanged": true,
+  "original_request_and_signed_rule_deadlines_unchanged": true,
+  "clock_mocked": false,
+  "previous_expired_approval_extended": false
+}

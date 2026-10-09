@@ -1,0 +1,8 @@
+{
+  "result": "FAILED",
+  "cause": "direct raw envelope +00:00 differs from typed signing canonical Z; signature rejected before withdrawal",
+  "withdrawal_gate_entered": false,
+  "published_identity_withdrawal_committed": true,
+  "repair": "fresh r19 normalize original typed envelopes exactly like product wrapper",
+  "execution_allowed": false
+}

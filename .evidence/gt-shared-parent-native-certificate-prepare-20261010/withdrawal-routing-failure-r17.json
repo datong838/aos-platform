@@ -1,0 +1,8 @@
+{
+  "result": "FAILED",
+  "cause": "experiment publication connection default READ COMMITTED rejected by exact private Issuer SERIAL gate",
+  "identity_publication_completed": false,
+  "product_gate_relaxed": false,
+  "execution_allowed": false,
+  "repair": "fresh r18 SERIAL publication; v3 exact SHARED_PARENT_IDENTITY_BOUND_OR_REVOKED"
+}

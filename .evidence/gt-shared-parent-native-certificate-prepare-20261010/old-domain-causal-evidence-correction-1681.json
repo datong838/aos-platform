@@ -1,0 +1,11 @@
+{
+  "earlier": "R16",
+  "old_domain_crypto_valid": true,
+  "sql_rejection_observed": true,
+  "sole_domain_causality_proven": false,
+  "cause": "raw envelope +00:00 vs signing canonical Z also differs; no original canonical SQL positive control",
+  "correction": "separate fresh r20 normalized original canonical v3 SQL positive control, then only-signature old-domain replacement",
+  "whole_r16_pass_not_changed": true,
+  "other_native_backend_gate_not_changed": true,
+  "execution_allowed": false
+}

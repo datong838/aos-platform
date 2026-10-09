@@ -1,0 +1,23 @@
+{
+  "identity": {
+    "database": "aos_test_45d953898f15_ti4_test",
+    "cluster": "7694680278363095064"
+  },
+  "read_only": true,
+  "risk_counts": {
+    "prepared_plan_risk": null,
+    "prepared_shared_risk_description": null,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "metadata_counts": {
+    "aos_model_eval_execution_private.manifest": 0,
+    "aos_model_eval_issuer_private.executor_certificate": 0,
+    "aos_model_eval_issuer_private.identity_epoch": 0,
+    "aos_model_eval_issuer_private.identity_withdrawal": 0
+  },
+  "published": null,
+  "whole_node_passed": false,
+  "withdrawal_v3_verified": false,
+  "execution_allowed": false
+}

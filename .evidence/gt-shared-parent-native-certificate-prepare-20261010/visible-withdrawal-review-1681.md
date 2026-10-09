@@ -1,0 +1,13 @@
+# 可见撤回终止与旧域因果补验复审
+
+Rules及方案：231，visible-withdrawal-plan-1681.md/caller-domain-plan-1680.md，既有Task9/10及Task3 scope，单m1写者。产品/现有测试十二hash不变，纯337沿用该samehash最终结果。无UI修改，浏览器不适用。
+
+R17实际失败：实验identity发布连接READ COMMITTED被原private Issuer SERIAL门拒绝，未完成发布；R18已提交legacy身份与撤回，但直接+00:00 envelope与签名canonical Z不符，签名拒绝未触达withdrawal。失败数据库只读对账、原件保留，不未知重发、不延旧窗口、不降产品门。
+
+R19规范化原v3 envelope，完整撤回终止节点1 PASS84.43秒/8warnings。独立库aos_test_08f93e4fd62e_ti4_test/cluster7694680278363095064。实验Root真实COMMIT后，原typed登记器验证当前原件字节/hash/signature/time，合法trigger产生identity(1,1,true)；合法immutable identity_withdrawal event实际独立COMMIT→(2,2,false)。物理prefix实际pg_visible_in_snapshot两xid均true，随后真实原Source/审批/parent风险生成新v3 signedclaims，同purpose/key/identity被原SHARED_PARENT_IDENTITY_BOUND_OR_REVOKED准确42501拒绝，时间仍界内、samecallerLive/保存点Manifest缺失。旧v1 Manifest申请字段仅synthetic元数据，未称自然批准；新v3风险是原完整Source/批准suite。无direct epoch UPDATE、runtime表权或物理caller角色修补。
+
+独立READONLY核三metadata事务COMMITTED、风险ABORTED、四风险表0、当前风险execution Manifest及v3binding0；旧legacyManifest/certificate/binding/certEpoch/globalidentity/withdrawal各1合法保留，三原件body hashes准确，head2/2/false。四SQL正文owner/path/PUBLIC0、原C两Owner封闭ACL、Model直接C/schema与runtime委托false、十二hash一致。不得用全九表零误删应保留withdrawal history。
+
+R16旧域证据因果范围纠正：其密码学旧域有效、SQL拒绝与完整整节点PASS事实不变，但直接raw envelope存在+00:00额外差异，不证明仅域不同。old-domain-causal-evidence-correction-1681.json明确降级。R20独立新库规范原件v3 SQL正向四证书成功后保存点回滚/Manifest缺失；保持claim/schema/key/time字节不变只替换旧域签名（旧域验证成功，v3 InvalidSignature），实际原SQL准确拒绝且前后clock界内。独立即时新签名完整Python/相邻/COMMIT门1 PASS151.44秒，独立库aos_test_62540f5b835b_ti4_test风险ABORTED/九表零/封闭ACL/十二hash一致。此次才补齐旧域因果门。
+
+Task9/10仍ACTIVE无Delivery，reader先持锁/withdraw writer等待的真实v3竞争未做；已有旧v1竞争不能代替v3新风险。Rootbootstrap信任、finaljoint/WALACK/Transport和经营首链未完成，HostworkerProvider未开启。Prime旧UNKNOWN不重发，历史两个摘要beforeimage仍未恢复。下一候选：已发布activeidentity+真实v3暂存锁住→原immutablewithdraw writer pg_blocking_pids真实等待→原风险COMMIT拒绝/ABORT→writer提交合法撤回→fresh当前消费者拒绝；另一候选finalizer原件合同调查。不能通过关闭deferred trigger或实验Root放行COMMIT。

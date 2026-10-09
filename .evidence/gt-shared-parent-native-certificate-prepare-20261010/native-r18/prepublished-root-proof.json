@@ -1,0 +1,21 @@
+{
+  "root": {
+    "schemaVersion": "aos.model-eval-issuer-verification-input/v1",
+    "purpose": "model-eval-execution",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "issuerId": "isolated-v3-presented-issuer",
+    "issuerKeyId": "isolated-v3-root-key",
+    "publicKeyBase64": "Mzr/4hempSN4TrQEEoRUS4bwEymJtw0FUbupUamqHhs=",
+    "validFrom": "2026-10-09T23:45:16.620981Z",
+    "validUntil": "2026-10-09T23:50:17.620981Z",
+    "revokedAt": null
+  },
+  "root_xid": "40579",
+  "root_hash": "0d75af38f9b95111e337fa6f912098f3c7a902bda93bcdad3e53d24cf8132531",
+  "root_provenance_verified": false,
+  "prepublished_before_native_factory": true,
+  "execution_allowed": false
+}

@@ -1,0 +1,31 @@
+{
+  "identity_xid": "40867",
+  "withdrawal_xid": "40868",
+  "execution_id": "isolated-visible-1a21d801-1c0c-4026-bdee-bf7853f23567",
+  "manifest_hash": "18c569dcd1b1611408aeab0c760e5c8bf940be95d9c685eb5e7f9dfa1698a4c1",
+  "certificate_hash": "162101dc045628aa41daff76f8e9e455438614aa590611d0cf038325dd07cb40",
+  "root_hash": "e682bd3e1e7061cd753e2a94598b6db8528118c4d4fe4168f2e6257575dee88b",
+  "withdrawal_event": {
+    "schemaVersion": "aos.model-eval-identity-withdrawal/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "identityId": "target-identity",
+    "eventId": "isolated-withdraw-dca38cef-e559-4228-9b06-50755574208e"
+  },
+  "withdrawal_hash": "cc1ff8d7fa59bf258b25d9b9a5c6af3a4521688f8d335377f1a1a9e2a1f5fb26",
+  "before": {
+    "epoch": 1,
+    "version": 1,
+    "active": true
+  },
+  "after": {
+    "epoch": 2,
+    "version": 2,
+    "active": false
+  },
+  "legacy_manifest_synthetic_not_approval": true,
+  "root_provenance_verified": false,
+  "execution_allowed": false
+}
