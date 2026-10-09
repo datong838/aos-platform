@@ -1,0 +1,41 @@
+{
+  "authority_revision": "AOS-001655",
+  "head": "da40afe540a5675d1a42f3c41d4d3b64ca8e711c",
+  "task": "gt-shared-budget-fence-order-20261008",
+  "result": "ORIGINAL_APPROVED_FIXED_PROMPT_PRODUCER_NECESSARY_STAGE_VERIFIED",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-shared-budget-fence-order-20261008/current-model-producer-origin-reference-1654.json",
+      "sha256": "43a8cbc7f117ed00e921714eacd5ca26c08711b5752ce48e8964a3eb542b555b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-prompt-format-plan-1654.md",
+      "sha256": "0b2c31152d241f269e32e3ddbec645ba8f5cd740e1b90efec15b18afcd5c9ee7"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/registered_model_prompt_fixture_1654.py",
+      "sha256": "45185ce0d2888cc72cbacc3e21705104924de4a1d99b255f61ed427e29394a9b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-prompt-format-independent-1654.json",
+      "sha256": "c8a057f45cbe7e8be29f65b71b4a858315eb0ccba101547d10e6ab454a652e64"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/verify-model-prompt-format-1654.py",
+      "sha256": "13f6204d7962663c00dc40ec565ff6457a1a0719f4e57510634614b7c8b982c7"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-prompt-format-review-1654.md",
+      "sha256": "3fe7f5cceac5f5029c0c3398db0182cf8484c9d5a687460896a80f543d111cf5"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_model_eval_execution_owner.py",
+      "sha256": "e0c7845d0ad26c9fdb8da845a3b9220221ab8a7aacc86674bb2c8e557c898833"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py",
+      "sha256": "2c84887d355c9ab19dfaca9c12be95a5138575d6483efd1eb553ae20cbf73f11"
+    }
+  ]
+}
