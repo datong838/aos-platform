@@ -1,0 +1,20 @@
+{
+  "authority_revision": "AOS-001666",
+  "task": "gt-original-target-persisted-reader-20261010",
+  "head": "4d7508a910975a61eefde2f0b8cf1d1288b83b10",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/domain-boundary-native-result-r2.json",
+      "sha256": "c6391fadf551c194ef4c0eb75bf593f8a89c640fb33c6b2429cb08cf438ad20f"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/parent-cost-lifecycle-review-1665.md",
+      "sha256": "6f862e7d6eb70a8e7df3e7b1c6acbbf66e520c39d7ad9b53898ca785b256a715"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/parent-cost-lifecycle-result-1665.json",
+      "sha256": "a19321358042a71e57e3c2eac8b2f82dc80d0aa8ab3b527e868e71239db2efc9"
+    }
+  ]
+}

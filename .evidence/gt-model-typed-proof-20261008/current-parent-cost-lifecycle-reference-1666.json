@@ -1,0 +1,20 @@
+{
+  "authority_revision": "AOS-001666",
+  "task": "gt-model-typed-proof-20261008",
+  "head": "4d7508a910975a61eefde2f0b8cf1d1288b83b10",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/current-original-target-persisted-reference-1665.json",
+      "sha256": "f4aac1096558b9431cc66e19d3d0887e27f39804fcf5eaeda5ff8929a75efdee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/parent-cost-lifecycle-review-1665.md",
+      "sha256": "6f862e7d6eb70a8e7df3e7b1c6acbbf66e520c39d7ad9b53898ca785b256a715"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/parent-cost-lifecycle-result-1665.json",
+      "sha256": "a19321358042a71e57e3c2eac8b2f82dc80d0aa8ab3b527e868e71239db2efc9"
+    }
+  ]
+}

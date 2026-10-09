@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001665",
+  "authority_revision": "AOS-001666",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_execution_contracts.py",
     "services/aos-api/tests/aip/test_model_eval_execution_contracts.py",
@@ -40,12 +40,12 @@
     ".evidence/gt-model-typed-proof-20261008/judge-input-binding-checkpoint.md",
     ".evidence/gt-model-typed-proof-20261008/judge-input-binding-cumulative-r2-result.json",
     ".evidence/gt-model-typed-proof-20261008/judge-input-binding-independent-r2.json",
-    ".evidence/gt-model-typed-proof-20261008/current-original-target-persisted-reference-1665.json"
+    ".evidence/gt-model-typed-proof-20261008/current-parent-cost-lifecycle-reference-1666.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "original-v2-target-narrow-producer-joint-transport-root-provenance",
+  "step": "whole-parent-append-only-lifecycle-native-red-next",
   "task_base_revision": "AOS-001513",
   "task_id": "gt-model-typed-proof-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
