@@ -1,0 +1,28 @@
+{
+  "authority_revision": "AOS-001669",
+  "task": "gt-judge-call-authority-20261008",
+  "head": "16c0b708ef32fdd2b14f91465e4b96d268b46e06",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/current-full-chain-route-reference-1668.json",
+      "sha256": "8c23d3e131c90f6a904667f1e77bda038b0e4e598f887fca823c4776acdfc93b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-manifest-plan-1668.md",
+      "sha256": "49b31c8ad5b2104ed6bc25d7cb41489e925897e35d28a28ad250549437523029"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-manifest-audit-1668.py",
+      "sha256": "ada648998280f9efb1ebfa804863a68c047bbf46b7c54815d70114d14ddd1763"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-manifest-result-1668.json",
+      "sha256": "e24e4136ed11d4b10aae5c0fbafbf74b4e09919c3a2c022b58f33ffd27b6f806"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-manifest-review-1668.md",
+      "sha256": "7639ede791ee2fa901009b7d0effb79383b4e940cadafbf2e1a5befab9f45da1"
+    }
+  ]
+}
