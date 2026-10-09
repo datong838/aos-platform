@@ -1,0 +1,9 @@
+{
+  "all_old_contract_top_level_ast_unchanged": true,
+  "new_declarations": 9,
+  "original_untracked_reader_unchanged": true,
+  "reader_sha256": "1b61a8d0df28743065c3facff18363c0847d68e3b64b7e68657052b90b2e69fa",
+  "final_product_sha256": "ee4eb61a0218e10f057209eb532ed9675a80d0efcd9576c929a1a6b29f400cf1",
+  "new_crypto_reader_dependency": false,
+  "execution_allowed": false
+}

@@ -1,0 +1,9 @@
+# 原 v2 Target 证书与case真实Ed25519必要门
+
+新增独立v2 certificate/case payload/envelope/domain与pure两级验签，完整原v2Judge Manifest/Target原申请/candidate/leg/case/inputwire/output绑定，半开containedinterval/current awarecheckedAt/不可变撤回集合/精确issuer与key、公钥hash、canonical64bytessignature、真实Ed25519.verify。没有私钥落盘、信任root注册、DB/Provider请求/执权返回。原v1和旧AST全部不变。
+
+RED20项实际缺原v2证书class，初GREEN20项通过；补11直接证书负门（含实际旧域Ed25519签名）及executor签名精确crypto拒绝，新32/总285pure全通过。最终r3 285PASS0.80s附近以actual日志为准，runner禁全部psycopg连接并--noconftest，实际0连接。r1/r2结果保留：初crypto放既有未提交reader，随后保护旧包，原reader精确恢复先前只读审计hash，最终tracked纯合同自含错误helper，不依赖未提交reader。r1冻结合同及测试hash精确匹配原结果。最终产品仅contracts.py/tests，两文件归typed原Lease。
+
+限界：presented root与本地临时testkeys不是trusted/current正式root；checkedAt为测试历史时钟，非实际库时钟。原Manifest Source/Intent/allocation还描述性，不由签名成真。未证明真实wire来自原frozenContract/actualtransport、Targetproducer COMMITTED或Usage/费用结算/正式身份。原trustedv2持久消费与原native四腿Intent联合准入仍下一；完整typed/Judge Task不Delivery。浏览器不适用，Prime未知审阅不重发。
+
+下一计划必须回到实际原生事实：核Target Intent/allocation/source→实际caller COMMIT→真实结果原producer边界所需退出条件，再实施v2原typed证书和case持久reader，不能只靠管理员合成签名结果完成first-chain，也不能把旧legacy证书复制成newpurpose。保留Source实际结束与真实token来源缺口，继续安全独立主线。

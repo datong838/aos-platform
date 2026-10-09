@@ -1,0 +1,12 @@
+{
+  "pytest_exit": 0,
+  "database_connections": 0,
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": "d9daff89d8e3b1ca4f86d7745421337748ffd92fce848c7196b0023d8b0d52e9",
+    "services/aos-api/tests/aip/test_model_eval_execution_contracts.py": "ea6e56d3954bce319228ec7d3bea2ab18fa3e0686f09444e31f97ae1d5dc3a17",
+    "services/aos-api/aos_api/aip_model_eval_execution_reader.py": "1e61aa1d9e223512f80bbb0432109ceb96b97aef6e36f7543af0a50615f563bc"
+  },
+  "execution_allowed": false,
+  "actual_target_certified": false,
+  "full_task_delivered": false
+}

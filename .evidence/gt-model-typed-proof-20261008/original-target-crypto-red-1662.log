@@ -1,0 +1,538 @@
+FFFFFFFFFFFFFFFFFFFF                                                     [100%]
+=================================== FAILURES ===================================
+_ test_original_target_crypto_chain_verifies_actual_ed25519_without_authority __
+
+    def test_original_target_crypto_chain_verifies_actual_ed25519_without_authority():
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:980: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[cert_signature] _
+
+fault = 'cert_signature'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[case_signature] _
+
+fault = 'case_signature'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[issuer] __
+
+fault = 'issuer'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[root_key] _
+
+fault = 'root_key'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[revoked] _
+
+fault = 'revoked'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[root_end] _
+
+fault = 'root_end'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[cert_end] _
+
+fault = 'cert_end'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+__ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[naive] __
+
+fault = 'naive'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[mutable_revocations] _
+
+fault = 'mutable_revocations'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[case_hash] _
+
+fault = 'case_hash'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[case_time] _
+
+fault = 'case_time'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[case_leg] _
+
+fault = 'case_leg'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+__ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[wire] ___
+
+fault = 'wire'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[output] __
+
+fault = 'output'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[copied] __
+
+fault = 'copied'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[legacy_domain] _
+
+fault = 'legacy_domain'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[cert_request] _
+
+fault = 'cert_request'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+_ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[cert_interval] _
+
+fault = 'cert_interval'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+__ test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[extra] __
+
+fault = 'extra'
+
+    @pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+        'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+        'legacy_domain','cert_request','cert_interval','extra'])
+    def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+        import base64
+>       module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:993: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _original_target_crypto_inputs():
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        module, plan, claim, wire, output = _original_target_signing_inputs()
+>       assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+E       AssertionError: original Target certificate missing
+E       assert False
+E        +  where False = hasattr(<module 'aos_api.aip_model_eval_execution_contracts' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py'>, 'ModelOriginalTargetCertificateSigningInput')
+
+services/aos-api/tests/aip/test_model_eval_execution_contracts.py:953: AssertionError
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_chain_verifies_actual_ed25519_without_authority
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[cert_signature]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[case_signature]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[issuer]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[root_key]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[revoked]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[root_end]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[cert_end]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[naive]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[mutable_revocations]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[case_hash]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[case_time]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[case_leg]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[wire]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[output]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[copied]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[legacy_domain]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[cert_request]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[cert_interval]
+FAILED services/aos-api/tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[extra]
+20 failed, 253 deselected in 0.70s

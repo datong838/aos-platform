@@ -858,3 +858,127 @@ def canonical_original_target_case_signing_bytes(manifest, claim, *,
     payload = json.dumps(item.model_dump(mode='json', by_alias=True), ensure_ascii=False,
         sort_keys=True, separators=(',', ':'), allow_nan=False).encode('utf-8')
     return b'AOS-MODEL-EVAL-ORIGINAL-TARGET-CASE-SIGNING-INPUT-v2\n' + payload
+
+
+class ModelOriginalTargetCertificateSigningInput(ModelEvalExecutorCertificateSigningInput):
+    """Unsigned original v2 Target certificate; not a registered issuer grant."""
+    schema_version: Literal['aos.model-eval-original-target-certificate-signing-input/v2']
+    purpose: Literal['target']
+
+
+class ModelOriginalTargetSignedCertificateEnvelope(ModelEvalSignedCertificateEnvelope):
+    schema_version: Literal['aos.model-eval-original-target-signed-certificate-envelope/v2']
+    certificate: ModelOriginalTargetCertificateSigningInput
+
+
+class ModelOriginalTargetCaseSignaturePayload(ModelEvalCaseSignaturePayload):
+    schema_version: Literal['aos.model-eval-original-target-case-signature-payload/v2']
+    claim: ModelOriginalTargetCaseSigningInput
+
+
+class ModelOriginalTargetSignedCaseEnvelope(ModelEvalSignedCaseEnvelope):
+    schema_version: Literal['aos.model-eval-original-target-signed-case-envelope/v2']
+    payload: ModelOriginalTargetCaseSignaturePayload
+
+
+def canonical_original_target_certificate_signing_bytes(manifest, certificate) -> bytes:
+    """Bind original v2 Target certificate descriptions in their own domain."""
+    plan = ModelEvalTargetJudgeExecutionManifest.model_validate(manifest)
+    claim = ModelOriginalTargetCertificateSigningInput.model_validate(certificate)
+    original = plan.judge_request['targetApplication']
+    request = ModelEvalRequestCreate.model_validate(original['request'])
+    case = next((c for c in plan.cases if c.case_id == claim.case_id), None)
+    if (case is None or claim.tenant != plan.tenant or claim.execution_id != plan.execution_id
+            or claim.manifest_hash != canonical_hash(plan.model_dump(mode='json', by_alias=True))
+            or claim.request_hash != original['requestHash'] or claim.candidate_ref != request.target_ref
+            or claim.leg != case.target
+            or claim.valid_until > datetime.fromisoformat(plan.judge_request['expiresAt'])):
+        raise ValueError('original v2 Target certificate must bind complete original plan')
+    raw = json.dumps(claim.model_dump(mode='json', by_alias=True), sort_keys=True,
+        ensure_ascii=False, separators=(',', ':'), allow_nan=False).encode('utf-8')
+    return b'AOS-MODEL-EVAL-ORIGINAL-TARGET-CERTIFICATE-SIGNING-INPUT-v2\n' + raw
+
+
+def canonical_original_target_signed_case_bytes(manifest, payload, *,
+        input_bytes: bytes, output_bytes: bytes) -> bytes:
+    """Bind raw witnesses to the complete certificate envelope hash, no trust."""
+    item = ModelOriginalTargetCaseSignaturePayload.model_validate(payload)
+    canonical_original_target_case_signing_bytes(manifest, item.claim,
+        input_bytes=input_bytes, output_bytes=output_bytes)
+    raw = json.dumps(item.model_dump(mode='json', by_alias=True), sort_keys=True,
+        ensure_ascii=False, separators=(',', ':'), allow_nan=False).encode('utf-8')
+    return b'AOS-MODEL-EVAL-ORIGINAL-TARGET-SIGNED-CASE-v2\n' + raw
+
+
+def _original_target_signature_require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def validate_original_target_certificate_signature(manifest, certificate, *,
+        issuer_input, signature_base64: str, checked_at: datetime,
+        revoked_identity_ids: frozenset[str]) -> None:
+    """Presented original v2 certificate crypto only; no trusted root or grant."""
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+    from cryptography.exceptions import InvalidSignature
+    from aos_api.aip_model_eval_execution_contracts import (
+        ModelOriginalTargetCertificateSigningInput,
+        canonical_original_target_certificate_signing_bytes)
+    claim = ModelOriginalTargetCertificateSigningInput.model_validate(certificate)
+    root = ModelEvalIssuerVerificationInput.model_validate(issuer_input)
+    raw = canonical_original_target_certificate_signing_bytes(manifest, claim)
+    _original_target_signature_require(type(checked_at) is datetime and checked_at.utcoffset() is not None,
+             'aware original Target check time required')
+    _original_target_signature_require(type(revoked_identity_ids) is frozenset
+             and all(type(v) is str and v and v == v.strip() for v in revoked_identity_ids),
+             'exact immutable original Target identity revocations required')
+    _original_target_signature_require((root.tenant, root.issuer_id, root.issuer_key_id) ==
+             (claim.tenant, claim.issuer_id, claim.issuer_key_id),
+             'exact original Target issuer tenant and key required')
+    _original_target_signature_require(root.valid_from <= claim.valid_from < claim.valid_until <= root.valid_until
+             and claim.valid_from <= checked_at < claim.valid_until
+             and root.valid_from <= checked_at < root.valid_until,
+             'current contained original Target certificate interval required')
+    _original_target_signature_require((root.revoked_at is None or checked_at < root.revoked_at)
+             and claim.leg.identity_id not in revoked_identity_ids,
+             'original Target issuer or executor revoked')
+    from aos_api.aip_model_eval_execution_contracts import ModelEvalSignedCertificateEnvelope
+    ModelEvalSignedCertificateEnvelope._canonical_signature(signature_base64)
+    try:
+        Ed25519PublicKey.from_public_bytes(base64.b64decode(root.public_key_base64, validate=True)).verify(
+            base64.b64decode(signature_base64, validate=True), raw)
+    except (InvalidSignature, binascii.Error, ValueError) as exc:
+        raise ValueError('invalid original Target certificate signature') from exc
+
+
+def validate_original_target_case_signature(manifest, envelope, *,
+        certificate_envelope, issuer_input, checked_at: datetime,
+        revoked_identity_ids: frozenset[str], input_bytes: bytes, output_bytes: bytes) -> None:
+    """Exact v2 original Target crypto; not proof of transport or committed origin."""
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+    from cryptography.exceptions import InvalidSignature
+    from aos_api.aip_model_eval_execution_contracts import (
+        ModelOriginalTargetSignedCaseEnvelope, ModelOriginalTargetSignedCertificateEnvelope,
+        canonical_original_target_signed_case_bytes)
+    signed = ModelOriginalTargetSignedCaseEnvelope.model_validate(envelope)
+    certificate = ModelOriginalTargetSignedCertificateEnvelope.model_validate(certificate_envelope)
+    cert, claim = certificate.certificate, signed.payload.claim
+    _original_target_signature_require(signed.payload.certificate_hash == canonical_hash(
+        certificate.model_dump(mode='json', by_alias=True)), 'complete original Target certificate envelope required')
+    validate_original_target_certificate_signature(manifest, cert, issuer_input=issuer_input,
+        signature_base64=certificate.signature_base64, checked_at=checked_at,
+        revoked_identity_ids=revoked_identity_ids)
+    _original_target_signature_require((claim.tenant, claim.execution_id, claim.manifest_hash, claim.request_hash,
+              claim.case_id, claim.purpose, claim.candidate_ref, claim.leg) ==
+             (cert.tenant, cert.execution_id, cert.manifest_hash, cert.request_hash,
+              cert.case_id, cert.purpose, cert.candidate_ref, cert.leg),
+             'case must bind complete original Target executor certificate')
+    _original_target_signature_require(cert.valid_from <= claim.occurred_at < cert.valid_until
+             and claim.occurred_at <= checked_at, 'original Target case time outside certificate')
+    raw = canonical_original_target_signed_case_bytes(manifest, signed.payload,
+        input_bytes=input_bytes, output_bytes=output_bytes)
+    try:
+        Ed25519PublicKey.from_public_bytes(base64.b64decode(cert.public_key_base64, validate=True)).verify(
+            base64.b64decode(signed.signature_base64, validate=True), raw)
+    except (InvalidSignature, binascii.Error, ValueError) as exc:
+        raise ValueError('invalid original Target executor case signature') from exc

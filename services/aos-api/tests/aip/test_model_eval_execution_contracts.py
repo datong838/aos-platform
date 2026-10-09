@@ -943,3 +943,114 @@ def test_original_target_signing_each_original_case_keeps_distinct_parent_leg():
             leg=case.target.model_dump(mode='json',by_alias=True))
         assert module.canonical_original_target_case_signing_bytes(plan,item,
             input_bytes=wire,output_bytes=output).startswith(b'AOS-MODEL-EVAL-ORIGINAL-TARGET-CASE-SIGNING-INPUT-v2\n')
+
+
+def _original_target_crypto_inputs():
+    import base64
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+    module, plan, claim, wire, output = _original_target_signing_inputs()
+    assert hasattr(module,'ModelOriginalTargetCertificateSigningInput'), 'original Target certificate missing'
+    reader=importlib.import_module('aos_api.aip_model_eval_execution_reader')
+    issuer, executor=Ed25519PrivateKey.generate(),Ed25519PrivateKey.generate()
+    pub=executor.public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)
+    body=plan.model_dump(mode='json',by_alias=True)
+    body['cases'][0]['target']['identityKeyHash']=hashlib.sha256(pub).hexdigest()
+    plan=module.ModelEvalTargetJudgeExecutionManifest.model_validate(body)
+    claim.update(manifestHash=canonical_hash(plan.model_dump(mode='json',by_alias=True)),leg=body['cases'][0]['target'])
+    at=claim['occurredAt'];end=datetime.fromisoformat(plan.judge_request['expiresAt'])
+    cert=dict(schemaVersion='aos.model-eval-original-target-certificate-signing-input/v2',
+        **{k:claim[k] for k in ('tenant','executionId','manifestHash','requestHash','caseId','purpose','candidateRef','leg')},
+        issuerId='test-original-issuer',issuerKeyId='test-original-issuer-key',publicKeyBase64=base64.b64encode(pub).decode(),
+        validFrom=at-timedelta(seconds=1),validUntil=end)
+    root=dict(schemaVersion='aos.model-eval-issuer-verification-input/v1',purpose='model-eval-execution',
+        tenant=claim['tenant'],issuerId=cert['issuerId'],issuerKeyId=cert['issuerKeyId'],
+        publicKeyBase64=base64.b64encode(issuer.public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)).decode(),
+        validFrom=at-timedelta(seconds=2),validUntil=end+timedelta(seconds=1),revokedAt=None)
+    signature=base64.b64encode(issuer.sign(module.canonical_original_target_certificate_signing_bytes(plan,cert))).decode()
+    envelope=dict(schemaVersion='aos.model-eval-original-target-signed-certificate-envelope/v2',certificate=cert,signatureBase64=signature)
+    payload=dict(schemaVersion='aos.model-eval-original-target-case-signature-payload/v2',
+        certificateHash=canonical_hash(module.ModelOriginalTargetSignedCertificateEnvelope.model_validate(envelope).model_dump(mode='json',by_alias=True)),claim=claim)
+    raw=module.canonical_original_target_signed_case_bytes(plan,payload,input_bytes=wire,output_bytes=output)
+    case=dict(schemaVersion='aos.model-eval-original-target-signed-case-envelope/v2',payload=payload,signatureBase64=base64.b64encode(executor.sign(raw)).decode())
+    return module, reader, plan, envelope, root, case, at, wire, output
+
+
+def test_original_target_crypto_chain_verifies_actual_ed25519_without_authority():
+    module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+    assert module.validate_original_target_case_signature(plan,case,certificate_envelope=cert,
+        issuer_input=root,checked_at=at,revoked_identity_ids=frozenset(),input_bytes=wire,output_bytes=output) is None
+    with pytest.raises(ValueError):
+        reader.validate_model_case_signature(plan,case,certificate_envelope=cert,issuer_input=root,
+            checked_at=at,revoked_identity_ids=frozenset(),input_bytes=wire,output_bytes=output)
+
+
+@pytest.mark.parametrize('fault',['cert_signature','case_signature','issuer','root_key','revoked','root_end',
+    'cert_end','naive','mutable_revocations','case_hash','case_time','case_leg','wire','output','copied',
+    'legacy_domain','cert_request','cert_interval','extra'])
+def test_original_target_crypto_rejects_forgery_expiry_and_cross_domain(fault):
+    import base64
+    module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+    revoked=frozenset()
+    if fault=='cert_signature':cert['signatureBase64']=base64.b64encode(b'x'*64).decode()
+    elif fault=='case_signature':case['signatureBase64']=base64.b64encode(b'x'*64).decode()
+    elif fault=='issuer':root['issuerId']='borrowed'
+    elif fault=='root_key':root['publicKeyBase64']=base64.b64encode(b'x'*32).decode()
+    elif fault=='revoked':revoked=frozenset({cert['certificate']['leg']['identityId']})
+    elif fault=='root_end':root['revokedAt']=at
+    elif fault=='cert_end':at=cert['certificate']['validUntil']
+    elif fault=='naive':at=at.replace(tzinfo=None)
+    elif fault=='mutable_revocations':revoked=set()
+    elif fault=='case_hash':case['payload']['certificateHash']='f'*64
+    elif fault=='case_time':case['payload']['claim']['occurredAt']=at+timedelta(microseconds=1)
+    elif fault=='case_leg':case['payload']['claim']['leg']['identityId']='borrowed'
+    elif fault=='wire':wire+=b' '
+    elif fault=='output':output+=b' '
+    elif fault=='copied':
+        value=module.ModelOriginalTargetSignedCaseEnvelope.model_validate(case)
+        case=value.model_copy(update={'payload':value.payload.model_copy(update={'certificate_hash':'f'*64})})
+    elif fault=='legacy_domain':case['schemaVersion']='aos.model-eval-signed-case-envelope/v1'
+    elif fault=='cert_request':cert['certificate']['requestHash']=plan.judge_request_hash
+    elif fault=='cert_interval':cert['certificate']['validUntil']+=timedelta(seconds=1)
+    elif fault=='extra':case['executionAllowed']=True
+    with pytest.raises(ValueError):
+        module.validate_original_target_case_signature(plan,case,certificate_envelope=cert,
+            issuer_input=root,checked_at=at,revoked_identity_ids=revoked,input_bytes=wire,output_bytes=output)
+
+
+@pytest.mark.parametrize('fault',['signature','issuer_key','issuer_id','revoked_root','revoked_identity',
+    'end','naive','mutable','request','copied','legacy_signed_domain'])
+def test_original_target_certificate_directly_rejects_invalid_crypto_and_authority_inputs(fault):
+    import base64
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding,PublicFormat
+    module,reader,plan,envelope,root,case,at,wire,output=_original_target_crypto_inputs()
+    cert=envelope['certificate'];signature=envelope['signatureBase64'];revoked=frozenset()
+    if fault=='signature':signature=base64.b64encode(b'x'*64).decode()
+    elif fault=='issuer_key':root['publicKeyBase64']=base64.b64encode(b'x'*32).decode()
+    elif fault=='issuer_id':root['issuerId']='borrowed'
+    elif fault=='revoked_root':root['revokedAt']=at
+    elif fault=='revoked_identity':revoked=frozenset({cert['leg']['identityId']})
+    elif fault=='end':at=cert['validUntil']
+    elif fault=='naive':at=at.replace(tzinfo=None)
+    elif fault=='mutable':revoked=set()
+    elif fault=='request':cert['requestHash']=plan.judge_request_hash
+    elif fault=='copied':cert=module.ModelOriginalTargetCertificateSigningInput.model_validate(cert).model_copy(update={'issuer_key_id':'borrowed'})
+    elif fault=='legacy_signed_domain':
+        key=Ed25519PrivateKey.generate()
+        root['publicKeyBase64']=base64.b64encode(key.public_key().public_bytes(Encoding.Raw,PublicFormat.Raw)).decode()
+        raw=module.canonical_original_target_certificate_signing_bytes(plan,cert)
+        old=raw.replace(b'AOS-MODEL-EVAL-ORIGINAL-TARGET-CERTIFICATE-SIGNING-INPUT-v2',b'AOS-MODEL-EVAL-EXECUTOR-CERTIFICATE-SIGNING-INPUT-v1',1)
+        signature=base64.b64encode(key.sign(old)).decode()
+    with pytest.raises(ValueError):
+        module.validate_original_target_certificate_signature(plan,cert,issuer_input=root,
+            signature_base64=signature,checked_at=at,revoked_identity_ids=revoked)
+
+
+def test_original_target_case_wrong_signature_reaches_real_crypto_rejection():
+    import base64
+    module,reader,plan,cert,root,case,at,wire,output=_original_target_crypto_inputs()
+    case['signatureBase64']=base64.b64encode(b'x'*64).decode()
+    with pytest.raises(ValueError,match='invalid original Target executor case signature'):
+        module.validate_original_target_case_signature(plan,case,certificate_envelope=cert,
+            issuer_input=root,checked_at=at,revoked_identity_ids=frozenset(),input_bytes=wire,output_bytes=output)
