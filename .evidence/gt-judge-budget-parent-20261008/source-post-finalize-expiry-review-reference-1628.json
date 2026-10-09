@@ -1,0 +1,14 @@
+{
+  "authority_revision": "AOS-001628",
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/source-post-finalize-expiry-reference-1628.json",
+      "sha256": "a854c5a9d1b638ee8cf35a4b715a93ca1f47f6a1dde2b157d36ce64c8d683ee1"
+    },
+    {
+      "path": ".evidence/gt-source-post-finalize-expiry-native-20261009/review.md",
+      "sha256": "8723a4ea27ec1513b5fb2087b0b72dc5f3ccef4dd6090d1daf025e9fc16633f1"
+    }
+  ],
+  "execution_allowed": false
+}

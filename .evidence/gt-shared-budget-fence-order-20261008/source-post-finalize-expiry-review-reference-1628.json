@@ -1,0 +1,14 @@
+{
+  "authority_revision": "AOS-001628",
+  "references": [
+    {
+      "path": ".evidence/gt-shared-budget-fence-order-20261008/source-post-finalize-expiry-reference-1628.json",
+      "sha256": "3114ce99e6775d8b46bdaf0fc4f385a2cce2dc77d859ccead81cf8676ee920b9"
+    },
+    {
+      "path": ".evidence/gt-source-post-finalize-expiry-native-20261009/review.md",
+      "sha256": "8723a4ea27ec1513b5fb2087b0b72dc5f3ccef4dd6090d1daf025e9fc16633f1"
+    }
+  ],
+  "execution_allowed": false
+}

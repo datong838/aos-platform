@@ -1,0 +1,14 @@
+{
+  "authority_revision": "AOS-001628",
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/source-post-finalize-expiry-reference-1628.json",
+      "sha256": "88b950be8b0da824bc563c72a04e49e18a5e43e3f7b775f13618266c27e66c29"
+    },
+    {
+      "path": ".evidence/gt-source-post-finalize-expiry-native-20261009/review.md",
+      "sha256": "8723a4ea27ec1513b5fb2087b0b72dc5f3ccef4dd6090d1daf025e9fc16633f1"
+    }
+  ],
+  "execution_allowed": false
+}

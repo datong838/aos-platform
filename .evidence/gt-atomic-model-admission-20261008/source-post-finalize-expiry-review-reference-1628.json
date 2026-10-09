@@ -1,0 +1,14 @@
+{
+  "authority_revision": "AOS-001628",
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-post-finalize-expiry-reference-1628.json",
+      "sha256": "a5f96f31187dcb59c4d2bc20527b4f7c08ee53fdc8f4894362b82d9137dbb48a"
+    },
+    {
+      "path": ".evidence/gt-source-post-finalize-expiry-native-20261009/review.md",
+      "sha256": "8723a4ea27ec1513b5fb2087b0b72dc5f3ccef4dd6090d1daf025e9fc16633f1"
+    }
+  ],
+  "execution_allowed": false
+}
