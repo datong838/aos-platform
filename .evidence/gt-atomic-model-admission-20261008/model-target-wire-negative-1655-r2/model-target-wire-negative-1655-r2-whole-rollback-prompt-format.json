@@ -1,0 +1,23 @@
+{
+  "caller": {
+    "xid": "26358",
+    "pid": 60779
+  },
+  "variant": "valid",
+  "input_hash": "2310be317ac0db436f04d2ab890321387b3513748cb2715ce7fff58e86133534",
+  "prompts": [
+    {
+      "caseId": "prompt-only-0",
+      "sha256": "b5f09563ea749179ddd061c2cc3aa7aef230484a42f74990757d5e4c601daa30",
+      "bytesLength": 36
+    },
+    {
+      "caseId": "prompt-only-1",
+      "sha256": "b5f09563ea749179ddd061c2cc3aa7aef230484a42f74990757d5e4c601daa30",
+      "bytesLength": 36
+    }
+  ],
+  "rejected": false,
+  "execution_allowed": false,
+  "tokenizer_certified": false
+}

@@ -1,0 +1,12 @@
+{
+  "request_ids": [
+    "model-eval-request-142bb9592a2642c28d3e",
+    "model-eval-request-58d7f3aaffd1486e8305"
+  ],
+  "caller": {
+    "xid": "26798",
+    "pid": 61652
+  },
+  "actual_rollback": true,
+  "execution_allowed": false
+}

@@ -1,0 +1,514 @@
+{
+  "result": "ORIGINAL_TARGET_FIXED_WIRE_PREPARATION_VERIFIED",
+  "reports": [
+    {
+      "attempt": "model-target-wire-red-1655-r1",
+      "database": "aos_test_cfff1db4c735_ti4_test",
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-364c7114393742c3b490",
+          "request_hash": "5e84445bb4bdf456d2d650c40f2752ca570ec0d09e92a79b174ce63521924e98",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-f572044d8ce44085b1ee2d496fab164b",
+            "revision": 1,
+            "contentHash": "c7c6e01c7a6f0b49e47177fae73cd0ea23daae20c1de6af2affb8dfa2d4c088c"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-f572044d8ce44085b1ee2d496fab164b",
+            "revision": 2,
+            "contentHash": "7ff8e2453798f3ffd9b95c6ef93d9efc82e1e77f124a0f81ecb6fb95f20efbaa"
+          },
+          "contract_hash": "57ee74336ccb826baf5475bdc93243c242bce2a2a238a71cfeb45272328cf69e",
+          "wire_policy": {
+            "role": "user",
+            "codec": "httpx-json-v1",
+            "schemaVersion": "aos.model-eval.chat-json-target/v1",
+            "outputLimitField": "max_tokens"
+          },
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        },
+        {
+          "request_id": "model-eval-request-78daf8e8bd374816a65f",
+          "request_hash": "7c7fc384de45524a818c51132d0b604d17eadc6a0d7229d10e56efc36a8e4753",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-0ec0423af55e4944934342995afb3eb2",
+            "revision": 1,
+            "contentHash": "d1c13b883d9c71a58f6f63612c64c4068d7a610f0e7e7e94da7fa6054d89e557"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-0ec0423af55e4944934342995afb3eb2",
+            "revision": 2,
+            "contentHash": "fa27becdb9d8de2d9eb794cfb3d546575c65ceb1ea282119b9f39434b1384661"
+          },
+          "contract_hash": "5c9c532022d2eac2dc801a1099e8d31a2e67437f0ac6f109f796c71b03f5bb64",
+          "wire_policy": {
+            "role": "user",
+            "codec": "httpx-json-v1",
+            "schemaVersion": "aos.model-eval.chat-json-target/v1",
+            "outputLimitField": "max_tokens"
+          },
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-target-wire-green-1655-r1",
+      "database": "aos_test_9f7e075e13ca_ti4_test",
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-688bda527bd64e748846",
+          "request_hash": "19ba4fa09bac974273f05ee0f7f0b3bb24d9a177fc4fac7e0c74a3e293ba6b1b",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-c57463a9b2ee42e0be6775dfc162ce49",
+            "revision": 1,
+            "contentHash": "0720e05d7b63af583ebe8087353fee81b10c7f027c850da008db149dfa9481b8"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-c57463a9b2ee42e0be6775dfc162ce49",
+            "revision": 2,
+            "contentHash": "b9288ec9154939efc423cffe20b0d368ef49f75e39efcdbb866a95b567a220fa"
+          },
+          "contract_hash": "07965206e6e35e301db3a6e21994839fda4d290e50c1f277b0fc13c3d52cd74d",
+          "wire_policy": {
+            "role": "user",
+            "codec": "httpx-json-v1",
+            "schemaVersion": "aos.model-eval.chat-json-target/v1",
+            "outputLimitField": "max_tokens"
+          },
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        },
+        {
+          "request_id": "model-eval-request-3602722564894082b423",
+          "request_hash": "49e1700170c39cbd20465c7e12fbd9f8704f42f1dcae32a7175bc297d531bb6e",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-e86d61c7cd954beead39194f6c95cc46",
+            "revision": 1,
+            "contentHash": "753ab8883458e1741bf662949f0489bc9ddbc625ec6d090234339da0345c47f5"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-e86d61c7cd954beead39194f6c95cc46",
+            "revision": 2,
+            "contentHash": "2c1ab8d36e0b7bc4b6d65eb5c8ce5918574548986f696942818543da9b944fe7"
+          },
+          "contract_hash": "03545416f0512f89b620386b6c843ae22b672cff8ef30853488b55de87c85fe4",
+          "wire_policy": {
+            "role": "user",
+            "codec": "httpx-json-v1",
+            "schemaVersion": "aos.model-eval.chat-json-target/v1",
+            "outputLimitField": "max_tokens"
+          },
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-target-wire-negative-1655-r1",
+      "database": "aos_test_38c7c12d4c11_ti4_test",
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-23b519aac19849738ef4",
+          "request_hash": "1be43bc92fb80115a2452a7ac20f114939da59850654460e39ab39c2c34b9c6c",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-8a72c0e03eda4738acd6a81bb973276d",
+            "revision": 1,
+            "contentHash": "58a8bc99cb1d604de44f9c636f2bdfd241015289290c7df70a96f35b323cbe55"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-8a72c0e03eda4738acd6a81bb973276d",
+            "revision": 2,
+            "contentHash": "7d593021733ee03fb99065c93b91ee5358dfc3dae69b4f806a7dd2cb7b8db5fc"
+          },
+          "contract_hash": "01aa091ec89ef96519e67fd2e09894bb75212303a6cf1a78936e844c32490f0a",
+          "wire_policy": null,
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        },
+        {
+          "request_id": "model-eval-request-5cdd23123b8045ea8b4c",
+          "request_hash": "3f008caf6d2fdc830a37fadcf3a3776fd36f949547a2f1e192035be38220a94a",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-92d84e70a15a430c960f75b6f6ce1139",
+            "revision": 1,
+            "contentHash": "0bd5e2e1384071d73aab31813697c0b189f7f94f4459af135e2d35add8ae6af1"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-92d84e70a15a430c960f75b6f6ce1139",
+            "revision": 2,
+            "contentHash": "3bcfabfbccc7f8d11c73346a42dce637df820b2c00cb44f89ae365686990044b"
+          },
+          "contract_hash": "bb23caa6135f262919ea9bee30f7d3b97a209be9e47cdde33f43d2930a972218",
+          "wire_policy": null,
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-target-wire-negative-1655-r2",
+      "database": "aos_test_ef2bffe32da4_ti4_test",
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-f312bff308ff474c9464",
+          "request_hash": "47407c125c54df6d4216ca25e8cfaf7168de018119fabff17a46412420a718f5",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-79b5c66fd7504980a462d472158ddd0e",
+            "revision": 1,
+            "contentHash": "57d7a3524bb3567eb10ae8b54aca7786ebec14b8ad4f1bf4ffca97a33a2e043d"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-79b5c66fd7504980a462d472158ddd0e",
+            "revision": 2,
+            "contentHash": "f406d5474ccf8a10b776bfe670616d866cae252a86d5847ba8e573645a4749fa"
+          },
+          "contract_hash": "e7f114dc386509b3cd55136962e00e839bf6de9d3d45754b4801feefeb42d59c",
+          "wire_policy": {
+            "role": "system",
+            "codec": "httpx-json-v1",
+            "schemaVersion": "aos.model-eval.chat-json-target/v1",
+            "outputLimitField": "max_tokens"
+          },
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        },
+        {
+          "request_id": "model-eval-request-fa3fe23549f3437087b2",
+          "request_hash": "a3a7118eefc224b185c0450c3545a8e1e82c18c4ab8dd6152005bbe6f340d193",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-888417e1ff76450d96693ef2dd88a836",
+            "revision": 1,
+            "contentHash": "a0c727e06b0453a8e2e906e2a6ec9490a6742e81cf6b327a739ae09f70bd32f0"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-888417e1ff76450d96693ef2dd88a836",
+            "revision": 2,
+            "contentHash": "f046931a364dd0eda46201f8e95ef0c602d2874d96a799cf43471e2f53a62aba"
+          },
+          "contract_hash": "41a9692f6e07563fde0b48c717998164039eac54fe2a25d812e3cad4f798822e",
+          "wire_policy": {
+            "role": "system",
+            "codec": "httpx-json-v1",
+            "schemaVersion": "aos.model-eval.chat-json-target/v1",
+            "outputLimitField": "max_tokens"
+          },
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-target-wire-negative-1655-r3",
+      "database": "aos_test_22aa07f451b9_ti4_test",
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-4a655e7f913c48619fb7",
+          "request_hash": "8e334586eac33f75c87b36a73e98620428126b21b24cef1fc38cf3139b42b0be",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-91eecf0b35ce4d40b1a74f38b24a8e40",
+            "revision": 1,
+            "contentHash": "91141d5b374b56e2884dc23dcd148e00e799a29349dd2b198328acbd359736e4"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-91eecf0b35ce4d40b1a74f38b24a8e40",
+            "revision": 2,
+            "contentHash": "f0612ef70df108bcf18dd92ed5b97d681c5b78701fe9ed8f701f5371087239a0"
+          },
+          "contract_hash": "19c11778e05f76faedc004d8a11107c3f160137aa11623b4a31d20fc05aec8e2",
+          "wire_policy": {
+            "role": "user",
+            "codec": "httpx-json-v1",
+            "schemaVersion": "aos.model-eval.chat-json-target/v2",
+            "outputLimitField": "max_tokens"
+          },
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        },
+        {
+          "request_id": "model-eval-request-cbd3ba65a8224a49827b",
+          "request_hash": "db2031a05ae8040b10da642897bec887cc4a572c43df06aa649a4957aee7f053",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-b39116f5d6cf43d28d90868a6dcec96a",
+            "revision": 1,
+            "contentHash": "eb2cf28c464f3440653d197f15a7bfcc6dd0bc27d3ab11a17faa36e77ae57072"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-b39116f5d6cf43d28d90868a6dcec96a",
+            "revision": 2,
+            "contentHash": "58fe998576e2e829a084bd83faafbae5fc7d417d43d731c11ba0a76fe32091ca"
+          },
+          "contract_hash": "71bd84c185540a0859a15a87a0aabcd34a7b6a5eabc1e66a91ec6aa3ed99dbcd",
+          "wire_policy": {
+            "role": "user",
+            "codec": "httpx-json-v1",
+            "schemaVersion": "aos.model-eval.chat-json-target/v2",
+            "outputLimitField": "max_tokens"
+          },
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-target-wire-negative-1655-r4",
+      "database": "aos_test_86ac1f585340_ti4_test",
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-96271c2e1eb24910a02b",
+          "request_hash": "d041006f0b4d4e3e3bf354983a5d4aa937dd05afb08284434cc575f3361fcf9d",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-f1fe53a5795844808bbf420160ab5c34",
+            "revision": 1,
+            "contentHash": "6b3fdc93f8a22c82985cae9fbba915d696aac3dcd710d4054b3138b97c656356"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-f1fe53a5795844808bbf420160ab5c34",
+            "revision": 2,
+            "contentHash": "e0623f40ca10a3f67aa91c87c2cb5c5788331436530d87525a07bb606d65ed40"
+          },
+          "contract_hash": "b3b7c27a5faad27872408b12f21bfbd5ecded7a8ec5ec15219d52f387449ce7c",
+          "wire_policy": {
+            "role": "user",
+            "codec": "httpx-json-v1",
+            "system": "unapproved",
+            "schemaVersion": "aos.model-eval.chat-json-target/v1",
+            "outputLimitField": "max_tokens"
+          },
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        },
+        {
+          "request_id": "model-eval-request-167b357ecece46839e82",
+          "request_hash": "a7191b5e2b7db9082fa3a9cd9b7a51b53964ffc9c287c15ed57a288f3d536b2f",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-85721390e54543138d56503f2cdc926e",
+            "revision": 1,
+            "contentHash": "ffa9e05cdd4a44b66a43fee366db7ac59478236b33e4f1f1b818c134080ad56a"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-85721390e54543138d56503f2cdc926e",
+            "revision": 2,
+            "contentHash": "0493088c599ed1b80cf9a6447e20eee0d1a0fd95763d45a4c6debcffce2653df"
+          },
+          "contract_hash": "18f6f04428726173d8236d3013c33eb288735c083eb8c8fa85d3a479576b3d55",
+          "wire_policy": {
+            "role": "user",
+            "codec": "httpx-json-v1",
+            "system": "unapproved",
+            "schemaVersion": "aos.model-eval.chat-json-target/v1",
+            "outputLimitField": "max_tokens"
+          },
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-target-wire-negative-1655-r5",
+      "database": "aos_test_ab9647b93313_ti4_test",
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-142bb9592a2642c28d3e",
+          "request_hash": "cc866fe455c8ee50a1cb13ecff89ece02a5bb2a4a991b6ba01771ff1fd70a93f",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-57474023fed54cec949aecb1bee2430b",
+            "revision": 1,
+            "contentHash": "b4d0647bc457a44483a8184c4423aef6b30c235d4262ac362b45439c8c4507dc"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-57474023fed54cec949aecb1bee2430b",
+            "revision": 2,
+            "contentHash": "142b6745aded9e3b3f05738dcfa17c1879b4a2ef30892b7e5a2255e2908fc5dc"
+          },
+          "contract_hash": "a83959f1726fe6797dda9ccf7dbccf96e556ec0c604d07ea21bccde40e43f646",
+          "wire_policy": {
+            "role": "user",
+            "codec": "httpx-json-v1",
+            "schemaVersion": "aos.model-eval.chat-json-target/v1",
+            "outputLimitField": "max_tokens"
+          },
+          "model_context": 2000,
+          "quota_output": 2000,
+          "input_capacity": 0
+        },
+        {
+          "request_id": "model-eval-request-58d7f3aaffd1486e8305",
+          "request_hash": "d950ecb5245ba8ec7471972bd32f534c5fe7ef884f4246093f7b58881f2f2cfe",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-87f40ef34963464b8902eaefe06f9af5",
+            "revision": 1,
+            "contentHash": "f3a09fe37fc263bd44f205a9355b11e8015cb7552a4b07d608a5d4594455e5b2"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-87f40ef34963464b8902eaefe06f9af5",
+            "revision": 2,
+            "contentHash": "03310723b4a0e3d481e60982f5b9c897de0cef702b04f5929ae4fbed67ea0406"
+          },
+          "contract_hash": "088cbb5f6ef5f4f3d1de475d6fb6806ddec69e9f365e49c42157e41657be119e",
+          "wire_policy": {
+            "role": "user",
+            "codec": "httpx-json-v1",
+            "schemaVersion": "aos.model-eval.chat-json-target/v1",
+            "outputLimitField": "max_tokens"
+          },
+          "model_context": 2000,
+          "quota_output": 2000,
+          "input_capacity": 0
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-target-wire-adjacent-native-1655-r1",
+      "database": "aos_test_124b5110af13_ti4_test",
+      "caller_aborted": true,
+      "originals": [
+        {
+          "request_id": "model-eval-request-58dd7e5989454270b448",
+          "request_hash": "3ec7bf5d2dd18b5c4b04dddb21699847442f2662172f5d5b2e7bab929371bf5d",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-810da19c780744dea6321c08a16efb72",
+            "revision": 1,
+            "contentHash": "241156a52ebc0c5c6e9c47915cb05cda3be9ea534b53c9640c53f25211f57f1c"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-810da19c780744dea6321c08a16efb72",
+            "revision": 2,
+            "contentHash": "366b11fb0d25a3812249c164a0ebd55c79a33801d5c9b39a1fa3b7cb6d447712"
+          },
+          "contract_hash": "5eaa03b63ff1ab6b58c4bce482d6fa3817547ed8fb2138315d60013b661095b7",
+          "wire_policy": null,
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        },
+        {
+          "request_id": "model-eval-request-dd10f42137b24de09633",
+          "request_hash": "f9bf74e23f7b1ae06cdc07ddd638749bdf939e4632586d53d4a386fbb99fcbdd",
+          "source_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-46754373cae7478584e31dea7ede16af",
+            "revision": 1,
+            "contentHash": "85e3a2a51640a9f8d2258f6e80688a75eced4846308f7f3969dc5e42bcb4d763"
+          },
+          "candidate_ref": {
+            "assetType": "RegisteredModelRevision",
+            "assetId": "joint-prefix-model-46754373cae7478584e31dea7ede16af",
+            "revision": 2,
+            "contentHash": "9b8867246f943a075b61116dd1b77c442484f02cc96f33e7dd0f60f24745521f"
+          },
+          "contract_hash": "ec409e5d695b8ac4a3ae0396e6397debf56e58e34c72532630dfcf1dd8039579",
+          "wire_policy": null,
+          "model_context": 8000,
+          "quota_output": 2000,
+          "input_capacity": 6000
+        }
+      ],
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    }
+  ],
+  "old_evidence_unchanged": true,
+  "source_verifier_unchanged": true,
+  "direct_sql_read_only": true,
+  "execution_allowed": false,
+  "actual_token_count_known": false,
+  "full_model_admission": false,
+  "limitations": "Pure actual body encoding only, not Provider compatibility, token proof, Judge output, Model quality, Source completion or execution identity/permission."
+}

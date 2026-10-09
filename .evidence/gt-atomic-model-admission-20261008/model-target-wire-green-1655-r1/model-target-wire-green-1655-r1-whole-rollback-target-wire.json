@@ -1,0 +1,22 @@
+{
+  "caller": {
+    "xid": "26068",
+    "pid": 59756
+  },
+  "variant": "valid",
+  "wire_hashes": [
+    {
+      "caseId": "prompt-only-0",
+      "sha256": "36fe86a1a346e5a281a5b6105d266b07d160f1a4a0764ada3acb70e3fff53db4",
+      "bytesLength": 124
+    },
+    {
+      "caseId": "prompt-only-1",
+      "sha256": "36fe86a1a346e5a281a5b6105d266b07d160f1a4a0764ada3acb70e3fff53db4",
+      "bytesLength": 124
+    }
+  ],
+  "rejected": false,
+  "execution_allowed": false,
+  "tokenizer_certified": false
+}

@@ -488,6 +488,64 @@ class ModelEvalExecutionOwner:
         self.validate_original_model_plan_input_bytes(conn, scope, plan, inputs=inputs)
         return tuple(prompts)
 
+    def prepare_original_model_target_wire_bytes(self, conn: psycopg.Connection,
+                                                scope: TenantScope, manifest, *, inputs: tuple) -> tuple:
+        """Prepare exact Target chat body bytes, never dispatch or token proof.
+
+        The approved next candidate uses its original source's governed
+        Provider/model semantics. This does not publish that candidate or
+        grant a READY resolution. Judge input remains a separate contract.
+        """
+        import httpx
+        from aos_api.aip_production_contract_store import AipProductionContractStore
+        from aos_api.aip_model_runtime_contracts import RegisteredModelRevision, ModelModality
+        from aos_api.aip_model_runtime_store import AipModelRuntimeStore
+        from aos_api.aip_model_governance_policy_contracts import QuotaPolicyRevision
+
+        plan = ModelEvalExecutionManifest.model_validate(manifest)
+        prompts = self.prepare_original_model_plan_prompt_bytes(conn, scope, plan, inputs=inputs)
+        request = plan.request
+        ref = request.eval_contract_ref
+        original = AipProductionContractStore().get_eval_contract(scope, ref.asset_id, ref.revision, conn=conn)
+        expected = {'schemaVersion': 'aos.model-eval.chat-json-target/v1', 'codec': 'httpx-json-v1',
+                    'role': 'user', 'outputLimitField': 'max_tokens'}
+        policy = original.gate_policy.get('modelTargetWireFormat')
+        if type(policy) is not dict or canonical_hash(policy) != canonical_hash(expected):
+            raise ModelEvalOwnerRejected('original Model Target wire format must be frozen and exact')
+        with conn.cursor(row_factory=dict_row) as cur:
+            model_row = cur.execute('''SELECT payload,content_hash FROM aip_registered_model_revision
+                WHERE org_id=%s AND project_id=%s AND registered_model_id=%s AND revision=%s''',
+                (*scope.key, request.source_ref.asset_id, request.source_ref.revision)).fetchone()
+            quota_row = cur.execute('''SELECT payload,content_hash FROM aip_model_governance_policy_revision
+                WHERE org_id=%s AND project_id=%s AND policy_id=%s AND revision=%s AND policy_kind='quota' ''',
+                (*scope.key, request.quota_policy_ref.asset_id, request.quota_policy_ref.revision)).fetchone()
+        if model_row is None or quota_row is None:
+            raise ModelEvalOwnerRejected('original Model Target wire governance required')
+        model = RegisteredModelRevision.model_validate(model_row['payload'])
+        quota = QuotaPolicyRevision.model_validate(quota_row['payload'])
+        for obj, row, ref, excluded in (
+            (model, model_row, request.source_ref, AipModelRuntimeStore._META_FIELDS),
+            (quota, quota_row, request.quota_policy_ref, {'tenant', 'contentHash', 'createdBy', 'createdAt'})):
+            body = obj.model_dump(mode='json', by_alias=True)
+            if ((obj.tenant.org_id, obj.tenant.project_id) != scope.key
+                    or obj.content_hash != row['content_hash'] or obj.content_hash != ref.content_hash
+                    or canonical_hash({k: v for k, v in body.items() if k not in excluded}) != ref.content_hash):
+                raise ModelEvalOwnerRejected('original Model Target wire governance hash required')
+        if ModelModality.TEXT not in model.input_modalities or ModelModality.TEXT not in model.output_modalities:
+            raise ModelEvalOwnerRejected('original Model Target wire text modality required')
+        # This is capacity, not the actual prompt token count. A trustworthy
+        # tokenizer and the full joint admission are still mandatory later.
+        if min(quota.max_input_tokens, model.context_window - quota.max_output_tokens) <= 0:
+            raise ModelEvalOwnerRejected('original Model Target wire context capacity required')
+        prepared = tuple((case_id, httpx.Request('POST', 'https://no-dispatch.invalid', json={
+            'model': model.provider_model_id,
+            'messages': [{'role': 'user', 'content': prompt.decode('utf-8')}],
+            'max_tokens': quota.max_output_tokens}).content) for case_id, prompt in prompts)
+        # Retain the original candidate/head/dependency locks and recheck every
+        # original parent and deadline after the actual byte encoding.
+        self.prepare_original_model_plan_prompt_bytes(conn, scope, plan, inputs=inputs)
+        return prepared
+
     def validate_original_model_judge_binding(self, conn: psycopg.Connection,
                                               scope: TenantScope, manifest) -> None:
         """Necessary original Suite Model Judge binding, never dispatch authority.

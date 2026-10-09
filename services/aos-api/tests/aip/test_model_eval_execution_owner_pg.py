@@ -207,6 +207,28 @@ def test_whole_model_plan_binds_each_original_approved_application(
             (base/(label+'-prompt-format.json')).write_text(json.dumps(dict(caller=identity, variant=variant,
                 input_hash=hashlib.sha256(raw).hexdigest(), prompts=[dict(caseId=cid, sha256=hashlib.sha256(p).hexdigest(), bytesLength=len(p)) for cid,p in prepared],
                 rejected=variant!='valid', execution_allowed=False, tokenizer_certified=False),indent=2)+'\n')
+            if os.environ.get('AOS_MODEL_TARGET_WIRE_PROBE') == '1':
+                wire_variant = os.environ['AOS_MODEL_WIRE_VARIANT']
+                assert hasattr(owner, 'prepare_original_model_target_wire_bytes'), 'original approved Model Target wire producer missing'
+                if wire_variant == 'valid':
+                    wire_bytes = owner.prepare_original_model_target_wire_bytes(conn, scope, suite_plan, inputs=inputs)
+                    model = conn.execute('SELECT payload FROM aip_registered_model_revision WHERE org_id=%s AND project_id=%s AND registered_model_id=%s AND revision=%s',
+                        (*scope.key, suite_plan.request.source_ref.asset_id, suite_plan.request.source_ref.revision)).fetchone()['payload']
+                    quota = conn.execute("SELECT payload FROM aip_model_governance_policy_revision WHERE org_id=%s AND project_id=%s AND policy_id=%s AND revision=%s AND policy_kind='quota'",
+                        (*scope.key, suite_plan.request.quota_policy_ref.asset_id, suite_plan.request.quota_policy_ref.revision)).fetchone()['payload']
+                    expected_payload = {'model': model['providerModelId'], 'messages': [{'role': 'user', 'content': fixture.TEST_VALUE['prompt']}],
+                        'max_tokens': quota['maxOutputTokens']}
+                    expected_wire = json.dumps(expected_payload, ensure_ascii=False, separators=(',', ':'), allow_nan=False).encode('utf-8')
+                    assert wire_bytes == tuple((case.case_id, expected_wire) for case in suite_plan.cases)
+                    wire_hashes = [dict(caseId=cid, sha256=hashlib.sha256(raw).hexdigest(), bytesLength=len(raw)) for cid,raw in wire_bytes]
+                else:
+                    pattern = ('original Model Target wire context capacity' if wire_variant == 'no-input-window'
+                               else 'original Model Target wire format')
+                    with pytest.raises(ModelEvalOwnerRejected, match=pattern):
+                        owner.prepare_original_model_target_wire_bytes(conn, scope, suite_plan, inputs=inputs)
+                    wire_hashes = []
+                (base/(label+'-target-wire.json')).write_text(json.dumps(dict(caller=identity, variant=wire_variant,
+                    wire_hashes=wire_hashes, rejected=wire_variant!='valid', execution_allowed=False, tokenizer_certified=False),indent=2)+'\n')
         if os.environ.get('AOS_MODEL_INPUT_BYTES_PROBE') == '1':
             from aos_api.ecommerce_content_pre_review_pack import build_content_pre_review_eval_packs
             from aos_api.aip_eval_contracts import AssetRevisionRef
@@ -382,5 +404,24 @@ def test_model_owner_new_original_prompt_format(
     sys.modules[spec.name] = fixture
     spec.loader.exec_module(fixture)
     fixture.install(monkeypatch, os.environ['AOS_MODEL_PROMPT_VARIANT'])
+    test_whole_model_plan_binds_each_original_approved_application(
+        caller, issuer_factory, https_signer, guard_issuer_factory, guard_consumer_factory, tmp_path, 'rollback')
+
+
+@pytest.mark.skipif(os.environ.get('AOS_MODEL_TARGET_WIRE_PROBE') != '1', reason='explicit isolated Model Target wire probe only')
+def test_model_owner_new_original_target_wire(
+    caller, issuer_factory, https_signer, guard_issuer_factory, guard_consumer_factory, tmp_path, monkeypatch,
+):
+    base = _model_owner_fixture_base(whole=True)
+    root = Path(__file__).resolve().parents[4]/'.evidence/gt-atomic-model-admission-20261008'
+    for filename in ('registered_model_prompt_fixture_1654.py', 'registered_model_target_wire_fixture_1655.py'):
+        copied = base/filename
+        assert copied.is_file() and not copied.is_symlink() and copied.read_bytes() == (root/filename).read_bytes()
+        spec = importlib.util.spec_from_file_location(filename[:-3], copied)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+    sys.modules['registered_model_prompt_fixture_1654'].install(monkeypatch, 'valid')
+    sys.modules['registered_model_target_wire_fixture_1655'].install(monkeypatch, os.environ['AOS_MODEL_WIRE_VARIANT'])
     test_whole_model_plan_binds_each_original_approved_application(
         caller, issuer_factory, https_signer, guard_issuer_factory, guard_consumer_factory, tmp_path, 'rollback')

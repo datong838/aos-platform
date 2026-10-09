@@ -1,0 +1,11 @@
+{
+  "caller": {
+    "xid": "26219",
+    "pid": 60489
+  },
+  "variant": "missing",
+  "wire_hashes": [],
+  "rejected": true,
+  "execution_allowed": false,
+  "tokenizer_certified": false
+}

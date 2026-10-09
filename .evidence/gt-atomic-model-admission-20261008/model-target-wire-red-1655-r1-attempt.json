@@ -1,0 +1,22 @@
+{
+  "authority": "AOS-001655",
+  "head": "f16f0fbd58c8e3a2487148f12c23cea9e03cebe1",
+  "container": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+  "started_at": "2026-10-09T14:49:21.803403129Z",
+  "file_hashes": {
+    "services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py": "5dfe4c6e63acfeacd25862d7bacd5b724a57b3e545649c9a8ec79662c8e2f744",
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": "e0c7845d0ad26c9fdb8da845a3b9220221ab8a7aacc86674bb2c8e557c898833",
+    ".evidence/gt-atomic-model-admission-20261008/model-target-wire-red-1655-r1/legal_model_prefix_for_application_r4.py": "86c056756595ad97ad1355ff4c5da4a22bcb5d466dcc96e3453603c8781ff9e2",
+    ".evidence/gt-atomic-model-admission-20261008/model-target-wire-red-1655-r1/legal_eval_application_fixture_r4.py": "2e147c5a01e17f7c13666f9d460f16d783e7904adb6d1aab8e4b63960b2621a7",
+    ".evidence/gt-atomic-model-admission-20261008/model-target-wire-red-1655-r1/original_plan_certificate_fixture_r1.py": "02a1e80b65fb1d291afaa1e3a2358e67c238bfe219eef1c5521f7d7bec64a6e9",
+    ".evidence/gt-atomic-model-admission-20261008/model-target-wire-red-1655-r1/registered_model_prompt_fixture_1654.py": "45185ce0d2888cc72cbacc3e21705104924de4a1d99b255f61ed427e29394a9b",
+    ".evidence/gt-atomic-model-admission-20261008/model-target-wire-red-1655-r1/registered_model_target_wire_fixture_1655.py": "c0f9cc78db43c179a61235fa67ab98c0c0db12ceb77870f3e245c99b588d3331"
+  },
+  "free_bytes": 419506651136,
+  "volume": "aos-source-desktop-shm-20261009-data",
+  "old_evidence_hashes": {
+    ".evidence/gt-atomic-model-admission-20261008/legal-model-prefix-application-r4.json": "e2a28678a1be1618e844d4a054a57eed3e6670b0e546eaacb5f87c5ff12ba491",
+    ".evidence/gt-atomic-model-admission-20261008/legal-eval-application-result-r4.json": "915aade40bac5e6797bbace08e6440c70dcb00830a0e3b9f58c05d93831caea7"
+  },
+  "scope": "one fresh isolated original Model application, no Provider or formal execution"
+}
