@@ -1,0 +1,18 @@
+{
+  "authority": "AOS-001651",
+  "head": "e3952f681fdec4f74d8386917e1fae5230af56ee",
+  "container": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+  "started_at": "2026-10-09T14:49:21.803403129Z",
+  "file_hashes": {
+    "services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py": "5ba1444b08f9cb0ee345087f6e7a9cccc5d35448e36b5ffeac04f222214d5b38",
+    ".evidence/gt-atomic-model-admission-20261008/model-owner-fixture-isolation-native-1651-r2/legal_model_prefix_for_application_r4.py": "86c056756595ad97ad1355ff4c5da4a22bcb5d466dcc96e3453603c8781ff9e2",
+    ".evidence/gt-atomic-model-admission-20261008/model-owner-fixture-isolation-native-1651-r2/legal_eval_application_fixture_r4.py": "2e147c5a01e17f7c13666f9d460f16d783e7904adb6d1aab8e4b63960b2621a7"
+  },
+  "free_bytes": 420284141568,
+  "volume": "aos-source-desktop-shm-20261009-data",
+  "old_evidence_hashes": {
+    ".evidence/gt-atomic-model-admission-20261008/legal-model-prefix-application-r4.json": "e2a28678a1be1618e844d4a054a57eed3e6670b0e546eaacb5f87c5ff12ba491",
+    ".evidence/gt-atomic-model-admission-20261008/legal-eval-application-result-r4.json": "915aade40bac5e6797bbace08e6440c70dcb00830a0e3b9f58c05d93831caea7"
+  },
+  "scope": "one fresh isolated original Model application, no Provider or formal execution"
+}

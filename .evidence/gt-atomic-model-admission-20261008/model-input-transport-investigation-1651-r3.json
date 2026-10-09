@@ -1,0 +1,91 @@
+{
+  "observed_at": "2026-10-09T16:19:41.773407+00:00",
+  "authority": "AOS-001651",
+  "head": "e3952f681fdec4f74d8386917e1fae5230af56ee",
+  "source_hashes": {
+    "aip_exact_provider_invoker.py": "8b83b6c85066f33841c2d604831627bc59a76cb7c77182efda897850e30f2c9d",
+    "aip_llm_adapter.py": "94ad9245b3a84143da2a74dacd6fb35055c8b565a6be3a59fb6c20c51af28d1c",
+    "aip_model_eval_execution_owner.py": "12c5e22e9f7dc84c95fb19fb10935911ce414def511d6e3058bd13e7e8080344",
+    "aip_eval_runner.py": "3b4c54d1e2f12dd320d15aafaf25daa1b92893b9e8114e1d241c548ed1f9d3cf",
+    "aip_physical_capacity_occupation_authority.py": "134ae1bebf21aa704f17a3901e6f952164dadf1909f42b6efbf4735774df5a87"
+  },
+  "database": "aos_test_b6e266c45981_ti4_test",
+  "read_only": "on",
+  "before_counts": {
+    "aip_model_eval_budget_reservation": 8,
+    "aos_physical_capacity_occupation_private.prepared_execution_intent": 0,
+    "aos_model_eval_execution_private.case_result": 20
+  },
+  "after_counts": {
+    "aip_model_eval_budget_reservation": 8,
+    "aos_physical_capacity_occupation_private.prepared_execution_intent": 0,
+    "aos_model_eval_execution_private.case_result": 20
+  },
+  "original_parents": [
+    {
+      "request_id": "model-eval-request-1ee53002e0684a838b2f",
+      "request_hash": "ae032bddc8420349e358a9d02faea4b959c990e2848ce552ad66794598461dce",
+      "model_ref": {
+        "assetType": "RegisteredModelRevision",
+        "assetId": "joint-prefix-model-d6996309b4ad4f158f40f7b8928c1b83",
+        "revision": 1,
+        "contentHash": "f6956fac535f6f37f6a7e84dbed12f82cae661655422acea079bc69b0fec836e"
+      },
+      "quota_ref": {
+        "assetType": "QuotaPolicyRevision",
+        "assetId": "gp-98ca84a1a02541399c7aac6c146308ed",
+        "revision": 2,
+        "contentHash": "5cc7d7ab9a62f72904e7b6d6f454fe7e18fa65db957753147f380ec7fe23d55c"
+      },
+      "context_window": 8000,
+      "max_input_tokens": 8000,
+      "max_output_tokens": 2000,
+      "conservative_occupation_tokens": 10000,
+      "wire_bytes_length": 117,
+      "wire_sha256": "12f61309987ab5f31cb4b5964440e634527154d616f91633f17f15f33028eccb",
+      "artifact_value_hash": "511597e107401323e828b58997fdbc67845b498d0c117a108005838171c30ab8",
+      "output_limit_maps_to": "max_tokens",
+      "omitted_output_limit_is_unbounded_by_payload": true,
+      "tokenizer_used": false,
+      "sample_is_synthetic": true
+    },
+    {
+      "request_id": "model-eval-request-f7604fe1809b454cb1b5",
+      "request_hash": "f040ceb5a620d29795c93667f390ef19199012d1c75fc84ab50e52c525a149ba",
+      "model_ref": {
+        "assetType": "RegisteredModelRevision",
+        "assetId": "joint-prefix-model-f208bd3486c2442abb8bf6680ebe372a",
+        "revision": 1,
+        "contentHash": "26141e95c3611367a539dc85027eba5b6e880cb1c08abe2645a6af149e5720d6"
+      },
+      "quota_ref": {
+        "assetType": "QuotaPolicyRevision",
+        "assetId": "gp-2aeee383bf7f48b991d95117e7f972be",
+        "revision": 2,
+        "contentHash": "ac9afc74701223282e92d8c0b5b3cced8dce3fc4cf1b04c866f013025b036df1"
+      },
+      "context_window": 8000,
+      "max_input_tokens": 8000,
+      "max_output_tokens": 2000,
+      "conservative_occupation_tokens": 10000,
+      "wire_bytes_length": 117,
+      "wire_sha256": "12f61309987ab5f31cb4b5964440e634527154d616f91633f17f15f33028eccb",
+      "artifact_value_hash": "511597e107401323e828b58997fdbc67845b498d0c117a108005838171c30ab8",
+      "output_limit_maps_to": "max_tokens",
+      "omitted_output_limit_is_unbounded_by_payload": true,
+      "tokenizer_used": false,
+      "sample_is_synthetic": true
+    }
+  ],
+  "adapter_passes_output_limit": false,
+  "owner_token_transport_identifiers": [],
+  "provider_calls": 0,
+  "execution_allowed": false,
+  "result": "NATIVE_HISTORICAL_MODEL_QUOTA_AND_CURRENT_ENCODER_RECONCILED_NOT_ADMITTED",
+  "limitations": [
+    "Historical approvals are expired and not execution authority.",
+    "Pure HTTPX encoding is actual current encoder output but no request was sent.",
+    "Byte length is not token count; no tokenizer or context admission is certified.",
+    "Owner identifier scan is routing evidence, not proof of all transitive behavior."
+  ]
+}

@@ -1,0 +1,43 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+____________ test_outside_directory_rejected_before_helper_loading _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10a41a010>
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-1351/test_outside_directory_rejecte0')
+
+    def test_outside_directory_rejected_before_helper_loading(monkeypatch,tmp_path):
+        monkeypatch.setenv('AOS_MODEL_OWNER_FIXTURE_EVIDENCE_ROOT',str(tmp_path))
+        with pytest.raises(ValueError,match='isolated Model evidence'):
+>           load()._model_owner_fixture_base()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'owner_fixture_under_test' has no attribute '_model_owner_fixture_base'
+
+.evidence/gt-atomic-model-admission-20261008/test_model_owner_fixture_isolation_1651.py:17: AttributeError
+_______________ test_original_directory_rejected_as_new_attempt ________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10f143e10>
+
+    def test_original_directory_rejected_as_new_attempt(monkeypatch):
+        monkeypatch.setenv('AOS_MODEL_OWNER_FIXTURE_EVIDENCE_ROOT',str(Path(__file__).parent))
+        with pytest.raises(ValueError,match='isolated Model evidence'):
+>           load()._model_owner_fixture_base()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'owner_fixture_under_test' has no attribute '_model_owner_fixture_base'
+
+.evidence/gt-atomic-model-admission-20261008/test_model_owner_fixture_isolation_1651.py:22: AttributeError
+_________________ test_default_original_fixture_path_preserved _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10f174e10>
+
+    def test_default_original_fixture_path_preserved(monkeypatch):
+        monkeypatch.delenv('AOS_MODEL_OWNER_FIXTURE_EVIDENCE_ROOT',raising=False)
+>       assert load()._model_owner_fixture_base()==Path(__file__).parent
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'owner_fixture_under_test' has no attribute '_model_owner_fixture_base'
+
+.evidence/gt-atomic-model-admission-20261008/test_model_owner_fixture_isolation_1651.py:26: AttributeError
+=========================== short test summary info ============================
+FAILED .evidence/gt-atomic-model-admission-20261008/test_model_owner_fixture_isolation_1651.py::test_outside_directory_rejected_before_helper_loading
+FAILED .evidence/gt-atomic-model-admission-20261008/test_model_owner_fixture_isolation_1651.py::test_original_directory_rejected_as_new_attempt
+FAILED .evidence/gt-atomic-model-admission-20261008/test_model_owner_fixture_isolation_1651.py::test_default_original_fixture_path_preserved
+3 failed in 1.33s

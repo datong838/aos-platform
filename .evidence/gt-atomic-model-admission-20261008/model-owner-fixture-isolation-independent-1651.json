@@ -1,0 +1,42 @@
+{
+  "result": "FRESH_ORIGINAL_OWNER_AND_WHOLE_PLAN_ROLLBACK_VERIFIED",
+  "databases": [
+    {
+      "database": "aos_test_573db67ab34a_ti4_test",
+      "head": "a0v_159",
+      "read_only": "on",
+      "caller_xid": "22601",
+      "caller_state": "committed",
+      "original_applications_verified": 1,
+      "legacy_fixture_hold_count": 1,
+      "budget_holds_rolled_back": false,
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "database": "aos_test_956ec02c5f3b_ti4_test",
+      "head": "a0v_159",
+      "read_only": "on",
+      "caller_xid": "22728",
+      "caller_state": "aborted",
+      "original_applications_verified": 2,
+      "legacy_fixture_hold_count": 0,
+      "budget_holds_rolled_back": true,
+      "business_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    }
+  ],
+  "old_evidence_unchanged": true,
+  "source_verifier_sha256": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+  "container_restarted": false,
+  "execution_allowed": false,
+  "full_model_admission": false,
+  "failed_colima_attempt_retained": true,
+  "limitations": "Original governance fixtures only, not Model-quality inputs, transport admission, tokenizer or formal Source completion."
+}

@@ -1,0 +1,8 @@
+{
+  "verifier_sha256": "120c3c8978b51392fd70089cc0d301eee233833978aa2f278a2acd4f2f142a7b",
+  "stage": "first fixture xid status",
+  "failure": "incorrect blanket aborted expectation",
+  "reconciled_contract": "Original single Owner node explicitly commits legacy budget fixture; whole rollback node aborts. Neither grants joint admission.",
+  "queries_read_only": true,
+  "database_mutation": false
+}
