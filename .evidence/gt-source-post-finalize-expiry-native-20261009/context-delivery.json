@@ -1,0 +1,72 @@
+{
+  "authority_revision": "AOS-001628",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-post-finalize-expiry-native-20261009",
+    "base_revision": "AOS-001627",
+    "completed_revision": "AOS-001627",
+    "result": "POST_FINALIZE_AUTH_EXPIRY_NATIVE_OBSERVATION_VERIFIED",
+    "changed_files": [
+      "aos-platform/.evidence/gt-source-post-finalize-expiry-native-20261009"
+    ],
+    "commits": [
+      "7acb2f76bd595fed781c0350cd5cbcf0e592fb79"
+    ],
+    "verification": [
+      "Two original native layouts actually finalize while authentic20sJWT valid; database clock crosses original JWT expiry before actualcallerCOMMIT; both Source bodies still within valid_until, both COMMIT succeed",
+      "Independent original xid committed/SourceCsignature/hash/nativepid/session/provenance/temporaryinterfaces removed/rolesNOLOGIN/31resources unchanged; product hashes unchanged"
+    ],
+    "risks": [
+      "Observational diagnostics only, not final Sourcebody validity crossing or semantics decision/fullSourceDelivery/formalfirstchain"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T10:50:08+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/01-当前项目状态.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/06-当前执行检查点.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001628-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001628"
+  }
+}
