@@ -1,0 +1,263 @@
+{
+  "authority_revision": "AOS-001620",
+  "head": "fee81564e27041b7ca1466a054eb15295a7137df",
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/restart-maintenance-reference-1619.json",
+      "sha256": "6dc1f67a380b96429c36ed8c3b861c8ecb5b52b73fee64193bb9a5aec0494f93"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/attempt-helper-bindings.json",
+      "sha256": "8a4282fd395daaa49adeacdccf5a4ad7fc709f78581a700b73d49aafc92e989e"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/catalog.json",
+      "sha256": "f6299bac1ac076606c8cded3b5d68362b639a40c2477ed9b8b9f6b4be6269afd"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/complete-plan-risk.json",
+      "sha256": "a13efac7f4c2c27ae434a9351a4e72a677fe25f86a21107fba4c25d832f85345"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/cross-caller-proof.json",
+      "sha256": "23c326454ee57741084afa5d895ee478b583edd7bd2b469be1e60dc56792709a"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/cross-caller-r2-proof.json",
+      "sha256": "fb46dc401326025f1e1d6f349f08202dcb0cee109e43bd880573c083accdd4b0"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/finalize_wave.py",
+      "sha256": "1d3d7fbc56d5a2d86a9c56fab4334ffe60e2f3c907dc4ff2437754593cc5209c"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/hash-check.json",
+      "sha256": "0183e783b7fe33594eb47b5916b31000f23d01c0b5dc293fae220efb84a96764"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/independent-readback.json",
+      "sha256": "68d4e7dfbf43a6eb7a32630467561475009967ee9ece834cb7d7ff348515c2ed"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/independent_audit.py",
+      "sha256": "868264ff0429e30db42b04d1532b322bdf57fa765402c6266a63c9bafa27f9ec"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/ledger-catalog.json",
+      "sha256": "f3dd4d6994052f853bc363ee475ee43a79094b70eb9b6010594e13fb41e7eb50"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/ledger-green.json",
+      "sha256": "3901b84a5b4a9f4bed30a3a4fc6c744a8c96502ffd201de2f455b5df7d6b4798"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/native-cross-r2-attempt.json",
+      "sha256": "50ce9135687621fed342469b34fa17be727b13353f1def052c974e31371d6816"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/native-cross-r2-result.json",
+      "sha256": "7224f26f0f20369ca4502dc12918bfffb1ebea6348d52553981cec3f9d4aea59"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/native-cross-r3-attempt.json",
+      "sha256": "b03349c5afc4a59619386f89fc7eb8e796536ddc5a51d794c7de1e4ffa5f8a37"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/native-cross-r3-result.json",
+      "sha256": "7d0f35c0e4cc68307fe3aa2346cf789d7ca8024a36e19dfda189c223fcb54948"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/native-green-r2-attempt.json",
+      "sha256": "e7a953284edc5ebf80289c1714e80f566343935e95a0d1d64959787162628378"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/native-green-r2-result.json",
+      "sha256": "507aeb423502cba9a06603b5ac971d0203a4d7d49f126bb47845c3b7d9c5ec96"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/native-r1.log",
+      "sha256": "f0fc181ee859e6ff0f36bfd285e360028f5fbcf63ca33ce3c80a618f99bf76db"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/native-r2.log",
+      "sha256": "f66b625241290c4f6b0966730cdc4db447f4bac0cfe793de087ab226fb8bc6c3"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/native-r3.log",
+      "sha256": "ba8baf4db09343904c5e273e097093da8a0eb92369b732697bf21eef1c93ea6b"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/plan.md",
+      "sha256": "e24e644ee4c9126770b578e4ff1f9331c76120346ee4d8d49604fcc292f0ee3d"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/r1-independent-rollback.json",
+      "sha256": "b6b3abe44ea2a1791ccc0cb8c29730e72ddbe86842dbb4571773120b0e15c0cd"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/r2-independent-readback.json",
+      "sha256": "1d73d7b685591e8926fb7ec7cf0fb8856aadd0d86e18c34491c938bebab8edbb"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/r2_audit.py",
+      "sha256": "67fd9a2617e35f696f11ff14aee154e8499d5f204c526423df3408330c432817"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/review.md",
+      "sha256": "b01f5f71c74b401705c7f318c2c4e83684a5b8c3da258c400f50b8b909d64fe2"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/run_native.py",
+      "sha256": "fc38573ce307ff2c616c802c06bfbaeefd9bab4116ac22b3520e90df90855398"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/run_native_r1.py",
+      "sha256": "fc38573ce307ff2c616c802c06bfbaeefd9bab4116ac22b3520e90df90855398"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/run_native_r2.py",
+      "sha256": "da4f7fa66c607b6c3db710736dec85bc93d5c5a57f00109e25fd326e181a0315"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/run_native_r3.py",
+      "sha256": "8db18617f828af08cbd1d7a9e04fec73e13e66e8a6df04ac62a69076c9798f43"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/source_newjudge_native_trial_1606.py",
+      "sha256": "2ef231c8225d1300f8daf804d1aea897ecf4b98498ecf171d19e57491585f103"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/source_trial_r1.py",
+      "sha256": "c01912666bdac564dd8e31ceace35b350166b3e44a70fd72b3d821139efa3b3a"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/source_trial_r2.py",
+      "sha256": "c3f21e7cea55f262c1c677b16c959a73214037ab11790b308f3de07e44147c59"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/task.json",
+      "sha256": "6fc98131aacf54dfbbde85a3a7925c5f3de60626f109d37adc6b74fbae787e90"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/trusted-target-call-green.json",
+      "sha256": "58f81cb488e06fcece4f8072fc1d3e9e6f9d6f2327e7dc2eecb09521e420bba7"
+    },
+    {
+      "path": ".evidence/gt-wrapper-cross-caller-native-20261009/wrapper-green.json",
+      "sha256": "e41fefcd04309e04671cc126150b44a3b84d563d716bf418090119c62d0b8907"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r1-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r1-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r1-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r1-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r1-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r2-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r2-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r2-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r2-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r2-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-budget-fact.json",
+      "sha256": "3de04058959cd040825e7c7d9df162fe8e2b70d35f24a748540893833e374837"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-case-binding.json",
+      "sha256": "9ef2d4b276731cb3ca336b94974854d05df449beb5de15512637c6f3ef0add0f"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-guard-race.json",
+      "sha256": "0142ea58eec3d7b99a301fba54855826a97b4b40841158f674684518ae2dd948"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-input-binding.json",
+      "sha256": "6531ab46bf06eae4b22350023ae44effc5a5f60f03630730d75b9461a923ca54"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-input.json",
+      "sha256": "2861430d8df74785498178c0980fdf603d50670f49ca7e10116b09be7b6a8319"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-intent-existing-row-negative.json",
+      "sha256": "7dcce5f572292920dc3271ef19580f7e3ce2d589f399680fccbb44153e45da21"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-intent.json",
+      "sha256": "539806c2fe1d3d6e2e1c295c632f645a8f3af598c63bddca27096a1f1ed3f092"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-parent-debit.json",
+      "sha256": "b7dc7ea5dfe030ba3422ea90c8d7a8fb0c11a6982960f06e72ac7fdfbecee88a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-preparation.json",
+      "sha256": "5fd1968ed942af5736ff78517aeb0b8a7b8f4e2882976e33f9fa9f910be1d8b0"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-whole-source-plan-input.json",
+      "sha256": "f3a2288c92aa4b48071c67e6c981ed244eb1dc2331a6a41fb4a85f9585648972"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-cross-caller-r3-whole-source-plan-verification.json",
+      "sha256": "a9c2770fa1eeb205fcd52fd84b7aa6ba3afd63bc571133df71d98c0d86ac9840"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/cross-caller-r3-whole-plan-proof.json",
+      "sha256": "243b95a344b7c9dbd79817496fbe3bdca504135cd19d081ef643eaa2a5983d0e"
+    }
+  ],
+  "execution_allowed": false
+}
