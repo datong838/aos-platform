@@ -1,0 +1,5 @@
+{
+  "services/aos-api/aos_api/aip_physical_capacity_occupation.py": "db39cc33b3d3b8f96ca6d2a7dff5bc798d49d707791c61e7033ca43cb2378259",
+  "services/aos-api/aos_api/aip_provider_capacity_occupation_source.py": "e6b46538babab94fb56a5aca005cee0aae6190d3e7958c57ba7c10b66846686d",
+  "services/aos-api/aos_api/aip_provider_capacity_source_contracts.py": "13dc6b25750e24fb90a4271e4ef9281a6db97152e3914354ac9b7f575153413c"
+}

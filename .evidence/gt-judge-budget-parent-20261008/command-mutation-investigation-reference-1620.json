@@ -1,0 +1,18 @@
+{
+  "authority_revision": "AOS-001620",
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/cross-caller-native-reference-1620.json",
+      "sha256": "c95735335f75b63c68dbe53d1eb1d4c59156c76db5be96b7b54ce6488fe23194"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/command-mutation-investigation-1620.md",
+      "sha256": "adce9d6a173abff2c56d4bf8c19ec142752e6c36ee111deb5f4a0d5004f8ca09"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/command-mutation-source-hashes-1620.json",
+      "sha256": "a0cd028e2a14ef97065521f565dd7271237245c4704f2f3c740d4474bf7d6796"
+    }
+  ],
+  "execution_allowed": false
+}
