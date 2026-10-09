@@ -1,0 +1,133 @@
+{
+  "authority_revision": "AOS-001633",
+  "evidence_commit": "ef34f395299e98f4cb034b60382e5f7e42d020bd",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-full-contract-current-20261009",
+    "base_revision": "AOS-001632",
+    "completed_revision": "AOS-001632",
+    "result": "BOUNDED_ORIGINAL_CORE_NATIVE_VERIFIED_FULL_PARENT_SOURCE_PENDING",
+    "changed_files": [
+      ".evidence/gt-source-full-contract-current-20261009/full-contract-coverage-navigation.json",
+      ".evidence/gt-source-full-contract-current-20261009/independent-core-verification.json",
+      ".evidence/gt-source-full-contract-current-20261009/input-bindings.json",
+      ".evidence/gt-source-full-contract-current-20261009/lab.json",
+      ".evidence/gt-source-full-contract-current-20261009/native-core-r1-attempt.json",
+      ".evidence/gt-source-full-contract-current-20261009/native-core-r1-result.json",
+      ".evidence/gt-source-full-contract-current-20261009/native-core-r1.log",
+      ".evidence/gt-source-full-contract-current-20261009/plan.md",
+      ".evidence/gt-source-full-contract-current-20261009/protected-working-diff.patch",
+      ".evidence/gt-source-full-contract-current-20261009/register_stage.py",
+      ".evidence/gt-source-full-contract-current-20261009/review.md",
+      ".evidence/gt-source-full-contract-current-20261009/run_native_core.py",
+      ".evidence/gt-source-full-contract-current-20261009/selection.json",
+      ".evidence/gt-source-full-contract-current-20261009/task.json",
+      ".evidence/gt-source-full-contract-current-20261009/verify_core.py"
+    ],
+    "commits": [
+      "ef34f395299e98f4cb034b60382e5f7e42d020bd"
+    ],
+    "verification": [
+      "Original core 24 passed/369.99s/no hidden deselection; retained 24 databases/10 signed actual COMMIT Sources independently checked including after isolated PG recovery",
+      "Original public field follow-up 20 passed/4 setup environment errors plus four new-node passes; 24 independently reconciled, no single whole green claim"
+    ],
+    "risks": [
+      "Final actual COMMIT wall-clock counterexample unresolved",
+      "Full S01-S20/Source/profile/epoch/formalBoundary and model review remain incomplete",
+      "Isolated PG backend signal11 recovered; incident retained"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T12:26:16+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001633-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001633"
+  },
+  "checkpoints": {
+    "gt-atomic-model-admission-20261008": {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001633",
+      "step": "original-source-core-native-verified-full-parent-and-commit-wallclock-pending",
+      "fingerprint": "33ba4bdb84e7e69207a568db07f1a26592725f3883ee7bc76f99de1d04588a66",
+      "task_base_revision": "AOS-001537"
+    },
+    "gt-model-typed-proof-20261008": {
+      "task_id": "gt-model-typed-proof-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001633",
+      "step": "original-source-core-native-verified-full-parent-and-commit-wallclock-pending",
+      "fingerprint": "bfa8dc0d3770eef1e5e06cff2a411bf2a7ab9f5b757472256b227a9b7ba07627",
+      "task_base_revision": "AOS-001513"
+    },
+    "gt-judge-call-authority-20261008": {
+      "task_id": "gt-judge-call-authority-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001633",
+      "step": "original-source-core-native-verified-full-parent-and-commit-wallclock-pending",
+      "fingerprint": "676ce0414699bb4439e592fa0de0b6c5e43902201475a87c11f70fab5ca22573",
+      "task_base_revision": "AOS-001578"
+    },
+    "gt-judge-budget-parent-20261008": {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001633",
+      "step": "original-source-core-native-verified-full-parent-and-commit-wallclock-pending",
+      "fingerprint": "dbb8ffdd2ae0d0830520b7380c93e1074cb03cd3e6affc06e3665c80b8c58621",
+      "task_base_revision": "AOS-001588"
+    },
+    "gt-shared-budget-fence-order-20261008": {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001633",
+      "step": "original-source-core-native-verified-full-parent-and-commit-wallclock-pending",
+      "fingerprint": "24c0ec2018d41b921fa7a74ed9a7995c2b4a90c0a12d44c5a27ec9bacaf9449a",
+      "task_base_revision": "AOS-001588"
+    }
+  },
+  "full_parent_source_delivery": false,
+  "goal_status_changed": false
+}

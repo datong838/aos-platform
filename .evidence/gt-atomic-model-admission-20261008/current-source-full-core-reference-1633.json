@@ -1,0 +1,35 @@
+{
+  "authority_revision": "AOS-001633",
+  "head": "ef34f395299e98f4cb034b60382e5f7e42d020bd",
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-source-exact-ref-fix-reference-1632.json",
+      "sha256": "6e478ae04bb613c18177bdc3b06356032b733040e1bed9ff303b099b332c3db3"
+    },
+    {
+      "path": ".evidence/gt-source-full-contract-current-20261009/review.md",
+      "sha256": "bfd17798abc40cf6287d9300cb5cfa36d1bd7ad08991f6455246fbd4cdd3396c"
+    },
+    {
+      "path": ".evidence/gt-source-full-contract-current-20261009/independent-core-verification.json",
+      "sha256": "05c505d5ac5208bcdfc0343b82c2b84069bb8f3f653b5f70af998bb7f2c28017"
+    },
+    {
+      "path": ".evidence/gt-source-full-contract-current-20261009/full-contract-coverage-navigation.json",
+      "sha256": "f2f21dd486faa0a4d508627e3c25f234112cea4b55485f24120f6f67ac2c24f5"
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/review.md",
+      "sha256": "e03e86d59af3b7b281448f07cb8582703975313745d605824160f95af856b2d3"
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/independent-public-fault-verification.json",
+      "sha256": "cca47037aa48a953922185228bcc5aae5ecb8b3ca78cfdf9e9dea692f28a7580"
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/native-r2-diagnosis.json",
+      "sha256": "af0a70925e85602f6587fdce5d627da8e0c5276961c8309fca0903fd119627b2"
+    }
+  ],
+  "execution_allowed": false
+}
