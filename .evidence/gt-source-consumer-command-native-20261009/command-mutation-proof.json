@@ -1,0 +1,20 @@
+{
+  "batch": "nested",
+  "results": [
+    {
+      "label": "root-extra",
+      "denied": false
+    },
+    {
+      "label": "source-ref-extra",
+      "denied": false
+    },
+    {
+      "label": "tenant-extra",
+      "denied": false
+    }
+  ],
+  "caller_xid": "11765",
+  "caller_pid": 23607,
+  "execution_allowed": false
+}

@@ -1,0 +1,24 @@
+{
+  "base_revision": "AOS-001464",
+  "created_at": "2026-10-07T15:36:52+08:00",
+  "excluded_scope": [
+    "old issuer/private41/original17/Source schemas and their ACL expansion",
+    "formal login/config/DB/services/Provider/source execution grant",
+    "full sharedoccupation/cutover/budget+Intent closure"
+  ],
+  "expected_outputs": [
+    "Complete independent runtime-purpose samecaller nonexecuting Source reader with exact native identity/manifest/current original facts/signature/authentication",
+    "Actual signed Source callerCOMMIT then dedicated SCRAM purpose-session SERIAL runtime consumer RED/GREEN; source bytes/history unchanged",
+    "Original legacy interface/definition/role permissions retained; full physical ledger and atomic Intent remain pending"
+  ],
+  "lease_expires_at": "2026-10-09T04:15:33.414684+00:00",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "schema": "aos-memory-task-receipt/v1",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/aip_provider_capacity_occupation_source.py",
+    "aos-platform/services/aos-api/tests/aip/test_capacity_occupation_source_pg.py",
+    "aos-platform/.evidence/gt-capacity-occupation-source-20261007"
+  ],
+  "status": "ACTIVE",
+  "task_id": "gt-capacity-occupation-source-20261007"
+}

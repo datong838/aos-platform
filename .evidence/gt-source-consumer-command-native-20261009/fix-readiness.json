@@ -1,0 +1,16 @@
+{
+  "source_sha256": "e6b46538babab94fb56a5aca005cee0aae6190d3e7958c57ba7c10b66846686d",
+  "product_unchanged": true,
+  "patch_applied": false,
+  "original_source_task": "gt-capacity-occupation-source-20261007",
+  "required_native_layouts": [
+    "shared",
+    "isolated"
+  ],
+  "required_regression": [
+    "actual three extra-key denials with real Source SCRAM caller",
+    "original Source/ACL/concurrency/signature withdrawal",
+    "legacy issuer-consumer compatibility"
+  ],
+  "source_full_delivery": false
+}

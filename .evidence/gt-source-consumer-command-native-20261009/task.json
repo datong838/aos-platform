@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-source-consumer-command-native-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001623",
+  "scope": [
+    "aos-platform/.evidence/gt-source-consumer-command-native-20261009",
+    "isolatedDocker:colima-aos-extension/aos-source-newjudge-native-20261009/direct-source-command-diagnostic"
+  ],
+  "excluded_scope": [
+    "existing untracked Source full delivery/product mutation",
+    "current DB18435/runtime/Provider/other branches"
+  ],
+  "expected_outputs": [
+    "Real original native direct consumer command mutation acceptance/rejection diagnosis with all3 results, exact Source and caller equality",
+    "Independent rollback and original identity/resource proof; bounded RED only, proposed minimal patch and full Source followup scope"
+  ],
+  "lease_expires_at": "2026-10-09T04:15:33.414684+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T10:15:34+08:00"
+}

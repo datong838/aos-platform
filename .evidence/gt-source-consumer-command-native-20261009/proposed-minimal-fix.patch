@@ -1,0 +1,11 @@
+--- a/services/aos-api/aos_api/aip_provider_capacity_occupation_source.py
++++ b/services/aos-api/aos_api/aip_provider_capacity_occupation_source.py
+@@ -140,7 +140,7 @@
+             or not conn.pgconn.used_password or conn.info.get_parameters().get('require_auth') != 'scram-sha-256'
+             or type(command) is not ProviderCapacityConsumptionCommand):
+             raise ValueError('native occupation caller required')
+-        command = ProviderCapacityConsumptionCommand.model_validate(command.model_dump(mode='python',by_alias=True))
++        command = ProviderCapacityConsumptionCommand.model_validate(command)
+         identity = conn.execute("""SELECT session_user AS login,current_user AS role,
+           current_setting('aos.org_id',true) AS org_id,current_setting('aos.project_id',true) AS project_id,
+           current_setting('transaction_isolation') AS isolation,current_setting('transaction_read_only') AS readonly""").fetchone()
