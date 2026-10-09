@@ -1,0 +1,10 @@
+{
+  "dedicated_termination_passed": true,
+  "whole_node_passed": false,
+  "whole_failure": "CAPACITY_JUDGE_CURRENT_DEADLINES_REQUIRED",
+  "dedicated_proof_path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r14/dedicated-final-expiry-proof.json",
+  "proof_sha256": "0838323536d474f8c212b84f8fabb1e95a64208abccc703502b797e5c90c0f87",
+  "separate_fresh_adjacent": "native-r15",
+  "old_approval_extended": false,
+  "execution_allowed": false
+}

@@ -1,0 +1,58 @@
+[
+  {
+    "type": "ValueError",
+    "sqlstate": null,
+    "message": "current contained v3 certificate interval and presented issuer required",
+    "function": "read_shared_parent_executor_set",
+    "line": 182
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "read_shared_parent_executor_set",
+    "line": 186
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 233
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 235
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 233
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 235
+  },
+  {
+    "type": "CheckViolation",
+    "sqlstate": "23514",
+    "message": "CAPACITY_JUDGE_CURRENT_DEADLINES_REQUIRED",
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 229
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 235
+  }
+]

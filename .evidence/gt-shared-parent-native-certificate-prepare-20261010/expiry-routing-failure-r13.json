@@ -1,0 +1,9 @@
+{
+  "result": "FAILED",
+  "cause": "test expected legacy expiry message; actual v3 validator uses contained interval error",
+  "terminal_fifth_validation_entered": true,
+  "final_pass_claimed": false,
+  "product_changed": false,
+  "repair": "exact current v3 message plus external real clock bounds; preserve R13",
+  "execution_allowed": false
+}

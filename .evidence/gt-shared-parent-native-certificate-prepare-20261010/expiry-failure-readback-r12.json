@@ -1,0 +1,27 @@
+{
+  "identity": {
+    "database": "aos_test_2ebbac29ea19_ti4_test",
+    "cluster": "7694680278363095064"
+  },
+  "read_only": true,
+  "tables": {
+    "aos_physical_capacity_occupation_private.prepared_plan_risk": {
+      "exists": false,
+      "count": null
+    },
+    "aos_physical_capacity_occupation_private.prepared_shared_risk_description": {
+      "exists": false,
+      "count": null
+    },
+    "aos_model_eval_execution_private.manifest": {
+      "exists": true,
+      "count": 0
+    },
+    "aos_model_eval_issuer_private.executor_certificate": {
+      "exists": true,
+      "count": 0
+    }
+  },
+  "whole_node_passed": false,
+  "execution_allowed": false
+}

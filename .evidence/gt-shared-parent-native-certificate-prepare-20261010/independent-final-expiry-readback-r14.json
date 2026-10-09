@@ -1,0 +1,86 @@
+{
+  "identity": {
+    "database": "aos_test_2fc6fa0a3aa9_ti4_test",
+    "cluster": "7694680278363095064"
+  },
+  "dedicated_termination_passed": true,
+  "whole_node_passed": false,
+  "whole_failure": "original Judge deadline after dedicated termination",
+  "proof": {
+    "certificate_set_sha256": "c837992e9b41ee7bbc93d621ba551d703ad00d8e8bac9336f369d42c5624fad8",
+    "first_validations": [
+      {
+        "call": 1,
+        "checked_at": "2026-10-09T23:25:59.667607+00:00",
+        "certificate_until": "2026-10-09T23:26:15.459930+00:00"
+      },
+      {
+        "call": 2,
+        "checked_at": "2026-10-09T23:25:59.670826+00:00",
+        "certificate_until": "2026-10-09T23:26:15.459930+00:00"
+      },
+      {
+        "call": 3,
+        "checked_at": "2026-10-09T23:25:59.674042+00:00",
+        "certificate_until": "2026-10-09T23:26:15.459930+00:00"
+      },
+      {
+        "call": 4,
+        "checked_at": "2026-10-09T23:25:59.677168+00:00",
+        "certificate_until": "2026-10-09T23:26:15.459930+00:00"
+      }
+    ],
+    "real_clock_wait": {
+      "before": "2026-10-09T23:25:59.679867+00:00",
+      "after": "2026-10-09T23:26:15.473282+00:00",
+      "certificate_until": "2026-10-09T23:26:15.459930+00:00",
+      "root_until": "2026-10-09T23:30:11.791489+00:00",
+      "request_until": "2026-10-09T23:27:13.316090+00:00",
+      "clock_mocked": false,
+      "checked_at_overridden": false
+    },
+    "terminal_validation": {
+      "call": 5,
+      "checked_at": "2026-10-09T23:26:24.214483+00:00",
+      "reason": "current contained v3 certificate interval and presented issuer required"
+    },
+    "same_caller": {
+      "xid": "39571",
+      "pid": 63926
+    },
+    "manifest_absent_after_savepoint": true,
+    "outer_transaction_live": true,
+    "root_provenance_verified": false,
+    "execution_allowed": false,
+    "full_task_delivered": false
+  },
+  "read_only": true,
+  "risk_xid_status": "aborted",
+  "counts": {
+    "aos_physical_capacity_occupation_private.prepared_plan_risk": 0,
+    "aos_physical_capacity_occupation_private.prepared_shared_risk_description": 0,
+    "aos_physical_capacity_occupation_private.prepared_parent_debit": 0,
+    "aos_physical_capacity_occupation_private.prepared_execution_intent": 0,
+    "aos_model_eval_execution_private.manifest": 0,
+    "aos_model_eval_issuer_private.executor_certificate": 0,
+    "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding": 0,
+    "aos_model_eval_issuer_private.certificate_epoch": 0,
+    "aos_model_eval_issuer_private.identity_epoch": 0
+  },
+  "current_source_hashes": {
+    "services/aos-api/aos_api/aip_physical_capacity_occupation.py": true,
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": true,
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": true,
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": true,
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": true,
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_description_origin_reader.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_description_origin_reader_pg.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_executor_set_reader.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_executor_set_reader_pg.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py": true
+  },
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

@@ -1,0 +1,17 @@
+# 专属真实证书最终到期终止门
+
+Rules：231，Task9/10现有同owner合法Lease，Source正式库只读，隔离原件签名与同caller，不改实际时钟/有效期。
+
+两个已登记候选：一、证书最终到期真实终止矩阵，依赖R11当前完整native必要门，可独立使用现有实验Root及40秒新证书，已获隔离Model实现授权；二、撤回/非native caller/旧域矩阵，撤回需要可见发布head及合法竞争时序，不能假称未COMMIT元数据可被外writer撤回。先选一。
+
+目录：仅 .evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r12/ 新实验helper/driver和本Task方案/证据，以及Task3现有授权 shared-native-final-expiry-1679-r12 prefix。产品源码不改，沿用最终R11精确hash，不写正式库/Source源码/旧实验摘要。
+
+在同物理风险caller内SQL暂存独立新40秒签名证书，调用真实完整reader；测试钩子仅包裹原validate_shared_parent_certificate_signature，在第4次原validator已成功返回后、原Origin与SQLfacts末尾再读之前记录真实clock、certificateUntil、Source/Root/原Request期限与原件hash。用真实PG clock分段等待当前证书有效期终止后返回第4次调用；由产品重新读取实际final_now并在第5次调用原validator，要求原拒绝expired。保持原Source/Root/审批范围有效，不延任何旧原件、不mockclock；包装外断言钩子完整证据且真实5次调用，防止错误包装吞掉断言产生假PASS。
+
+wrapper savepoint回滚后，实际same xid/pid与INTRANS，Manifest缺失证明清理。专属终止不被当作完整正向；再立即独立mint新40秒证书供原完整邻接、重放边界与COMMIT拒绝节点，验证产品正常路径。fresh实验总时间须小于原Source/Root/审批现有窗口，窗口不足真实失败记录后另独立新实验，不延旧窗口。
+
+证据要求：真实前后PG clock、原cert/root/request期限及hash、首四次验证与末尾第五次、expired原因、实际保存点清理/外caller；最终完整node与独立只读九表0/风险ABORTED/源码hash/SQLbody封闭ACL。Rootbootstrap信任、最终joint/WALACK及自然经营首链仍未通过，Task9/10不Delivery。
+
+R12缺实验夹具，未进入专项；R13真实四次正向后等待并触达第五次ValueError，但测试误期望旧expired文案。当前v3源码1127为current contained v3 certificate interval and presented issuer required；R14绑定该准确文案并用真实clock≥certificateUntil、clock<Root/RequestUntil与前四次同原件成功隔离到期原因，包装外硬断言不降级。失败原件保留，不声明R13全通过。
+
+R14专属最终到期真实门通过，保存点实际清理且外层同caller仍live；但追加同风险完整邻接触达原Judge审批到期，整节点FAILED。依据方案分开终止与fresh完整正向：保留R14两种结论不混淆，R15独立新库/新Source/Root/原审批/证书运行未插等待的完整R11邻接，不延R14任何原件。

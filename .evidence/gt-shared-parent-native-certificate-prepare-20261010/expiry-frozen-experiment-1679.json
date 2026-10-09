@@ -1,0 +1,17 @@
+{
+  "head": "fa123fa78bf20b821e68f51afc6d6bdb14b385c1",
+  "authority": "AOS-001679",
+  "files": {
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r12/source_newjudge_native_trial_1606.py": "a20d5fda8c7cb8d13748e60877432174109e0d38dbb17c9c5943615878a953a4",
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r12/final_expiry_trial.py": "5a93c721210618902ca960f41f9efe73e54efe4409382168084ad2a9b0cb5b1c",
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r12/shared_identity_certificate_fixture.py": "b7674e9ce6cb1a4ca0d3289b13defaf4b499b80398fa6edd3bd26977f02f4111",
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r12/new_approval_window_fixture.py": "c026c15ffd7813d2982d89129bfc4ec6093856b725e9b9ed439fac7261e13470",
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r12/run-native-r12.py": "7fc13fdde88e0685f2a5d9b9459c73b701e3afd6daaf5e4cfe76d2c5732939c6",
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r12/original_source_plan_fixture_r1.py": "b2db09ab5b2386a4c3cd6e8eb5f5574c28e9354709588a289be20f65abfb5119"
+  },
+  "product_changed": false,
+  "formal_database_read_only": true,
+  "clock_mocked": false,
+  "old_certificate_extended": false,
+  "execution_allowed": false
+}

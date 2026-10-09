@@ -1,0 +1,8 @@
+{
+  "result": "FAILED",
+  "cause": "missing experiment-local legal_model_prefix_for_application_r4.py",
+  "expiry_node_entered": false,
+  "unknown_effect_replayed": false,
+  "repair": "fresh r13 cloned complete original experiment Python fixtures",
+  "execution_allowed": false
+}
