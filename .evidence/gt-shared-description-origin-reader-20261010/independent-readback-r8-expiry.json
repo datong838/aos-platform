@@ -1,0 +1,37 @@
+{
+  "identity": {
+    "database": "aos_test_8eb453b71d1c_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "original_xid_status": "aborted",
+  "risk_counts": {
+    "prepared_plan_risk": 0,
+    "prepared_shared_risk_description": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "function": {
+    "prosecdef": true,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "owner": "aos_physical_capacity_occupation_owner",
+    "body_hash": "2c34720fc06aaefe8c5111e4e3b7205352b0a3b1b9d31b7bd9e8c2ccf0440ccf"
+  },
+  "public_execute": 0,
+  "runtime_table_access": {
+    "read": false,
+    "write": false
+  },
+  "source": 1,
+  "frozen_hashes_match": true,
+  "original_native_row_observed": true,
+  "post_row_auth_expiry_rejected": true,
+  "pg_row_lock_wait_claimed": false,
+  "root_provenance_verified": false,
+  "identity_same_caller_verified": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false
+}

@@ -1,0 +1,13 @@
+# 原件读取后认证到期必要门验收
+
+Rules：231八步、单写m1、正式库只读、精确原件和未知结果对账。修改仅 services/aos-api/tests/aip/test_shared_parent_description_origin_reader_pg.py；产品原件reader未变。方案先补，覆盖RED先落盘；屏障调用真实SQL返回值的原Pydantic解析，用实际数据库时间和同xid/pid证明跨到期。此为读取后真实时间等待，明确不是PG行锁等待。
+
+334项禁DB纯验通过1.24秒；fresh原生R8完整节点通过159.66秒（8项既有warnings）。原7负门加认证到期共8项。初次Source消费成功，实际SQL原件解析后跨8秒JWT到期，最终真实Source消费拒绝；异常链精确为ModelEvalOwnerRejected→ProviderCapacityConsumptionBlocked→ApiError→ExpiredSignatureError。负门后原长认证实际Source消费与初次对象相同。前段完整reader正向和后段原Owner/描述反例/debit/input/Intent/guard累计未删除。新实验独立批准110秒在原Request120秒/Rule180秒内，新默认认证300秒；旧原件没有延长，时钟和产品到期检查未改。
+
+独立只读回查 aos_test_8eb453b71d1c_ti4_test、cluster7694680278363095064：原风险事务ABORTED、四风险表0，Source1；原SQL体逐字匹配、hash2c34720fc06aaefe8c5111e4e3b7205352b0a3b1b9d31b7bd9e8c2ccf0440ccf；固定pg_catalog、正确Owner、PUBLIC执行0、runtime表读写false，冻结8文件hash一致，历史保护文件未改变。
+
+R3/R4专项认证到期子步通过但整个节点随后审批到期失败，保留失败和只读回查，不计完整绿。R5/R6运行器误改历史路径在native启动前失败；R7缺隔离helper，独立Source1、风险表尚未安装，已只读对账。R8修正运行器预检和完整helper克隆，fresh实验，不重放失败DB。运行器错误由本轮修正，产品未变。
+
+代码与方案一致；安全边界仍闭合。独立督导Prime旧UNKNOWN未重发，不宣称其独立PASS；无UI改动，浏览器不适用。SourceTTL/审批撤回竞争、v3身份同caller原件桥、root可信来源/finaljoint/WAL-ACK/Transport/经营首链仍待验。历史两摘要缺beforeimage未恢复。Task保持ACTIVE无Delivery，所有execution/fulltask/roottrust标记false。
+
+下一已登记候选：一、v3身份元数据同原SCRAM调用者只读桥（先新Task/Lease、方案及RED，禁止role修复/替换连接/旧v1冒充）；二、专属SourceTTL/审批撤回真实竞争（依原生产者持锁和独立新原件，不把本次认证屏障代替PG锁）。选首个安全独立接线步骤；Root谱系和正式Host等授权另行保留。

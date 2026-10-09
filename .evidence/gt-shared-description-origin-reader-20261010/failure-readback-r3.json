@@ -1,0 +1,19 @@
+{
+  "identity": {
+    "database": "aos_test_21ad220dc771_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "origin_xid_status": "aborted",
+  "risk_counts": {
+    "prepared_plan_risk": 0,
+    "prepared_shared_risk_description": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "auth_expiry_substep_passed": true,
+  "complete_native_node_passed": false,
+  "later_joint_approval_expired": true,
+  "old_files_unchanged": true,
+  "execution_allowed": false
+}

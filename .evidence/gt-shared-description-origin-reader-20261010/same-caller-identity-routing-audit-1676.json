@@ -1,0 +1,16 @@
+{
+  "head": "ba6b40a14e9adb29baed463b89714e0d82b2c935",
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_model_eval_execution_authority.py": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27",
+    "services/aos-api/aos_api/aip_model_eval_execution_reader.py": "1b61a8d0df28743065c3facff18363c0847d68e3b64b7e68657052b90b2e69fa",
+    "services/aos-api/aos_api/aip_model_shared_parent_certificate_identity.py": "4a5eb36ab7fcded7e256ca7270f88e6b6c9e064fc921da88a418aaa929e35101",
+    "services/aos-api/aos_api/aip_shared_parent_description_origin_reader.py": "92aa9d11a58a27a86d3a0848503e96d0c17a083157ad71ff7d3ffc7898e9c63a"
+  },
+  "legacy_set_bridge_uses_only_v1_binding": true,
+  "v3_private_reader_requires_issuer_owner": true,
+  "native_description_reader_requires_original_occupation_session": true,
+  "same_caller_bridge_present": false,
+  "next_action": "Separate v3 bounded metadata read bridge plus wrapper that re-reads original native description on same runtime SCRAM caller; no role repair or second-connection result substitution",
+  "root_provenance_verified": false,
+  "execution_allowed": false
+}

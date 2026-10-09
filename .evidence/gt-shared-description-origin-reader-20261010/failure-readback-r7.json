@@ -1,0 +1,11 @@
+{
+  "database": "aos_test_5354f2560d2b_ti4_test",
+  "cluster": "7694680278363095064",
+  "read_only": true,
+  "source": 1,
+  "risk_counts": {},
+  "missing_risk_tables_means_not_installed": true,
+  "old_files_unchanged": true,
+  "full_node_passed": false,
+  "execution_allowed": false
+}

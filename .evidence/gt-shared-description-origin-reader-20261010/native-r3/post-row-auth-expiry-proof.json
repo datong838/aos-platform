@@ -1,0 +1,57 @@
+{
+  "observations": {
+    "source_calls": [
+      {
+        "now": "2026-10-09T21:54:48.618024+00:00",
+        "xid": "35091",
+        "pid": 34195,
+        "succeeded": true
+      },
+      {
+        "now": "2026-10-09T21:54:58.200415+00:00",
+        "xid": "35091",
+        "pid": 34195,
+        "succeeded": false,
+        "exception_class": "ProviderCapacityConsumptionBlocked"
+      }
+    ],
+    "barrier_entered": true,
+    "before": {
+      "now": "2026-10-09T21:54:53.786169+00:00",
+      "xid": "35091",
+      "pid": 34195
+    },
+    "after": {
+      "now": "2026-10-09T21:54:56.211121+00:00",
+      "xid": "35091",
+      "pid": 34195
+    }
+  },
+  "authentication_expires_at": "2026-10-09T21:54:56+00:00",
+  "description_hash": "sha256:85b09fd3f5b1eb426db700acf5507f1135bc0e9a089fc5875a60df93565dd270",
+  "rejection_chain": [
+    {
+      "exception_class": "ModelEvalOwnerRejected",
+      "sqlstate": null
+    },
+    {
+      "exception_class": "ProviderCapacityConsumptionBlocked",
+      "sqlstate": null
+    },
+    {
+      "exception_class": "ApiError",
+      "sqlstate": null
+    },
+    {
+      "exception_class": "ExpiredSignatureError",
+      "sqlstate": null
+    }
+  ],
+  "actual_original_row_parsed": true,
+  "original_long_authentication_still_reads": true,
+  "clock_mocked": false,
+  "pg_row_lock_wait_claimed": false,
+  "signed_authentication_expired": true,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

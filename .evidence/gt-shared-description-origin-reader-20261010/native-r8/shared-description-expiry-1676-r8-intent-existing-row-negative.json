@@ -1,0 +1,20 @@
+{
+  "intent_id": "ff89fd72-c771-4f35-aac3-09b07e297702",
+  "caller_xid": "35769",
+  "caller_pid": 39170,
+  "probes": [
+    {
+      "operation": "update",
+      "sqlstate": "42501",
+      "content_hash": "sha256:0ef021f6db8ef3ad923c238b6a42db4b3738f9a3057a9158ce4992d47ea82a7f",
+      "existing_row_verified": true
+    },
+    {
+      "operation": "delete",
+      "sqlstate": "42501",
+      "content_hash": "sha256:0ef021f6db8ef3ad923c238b6a42db4b3738f9a3057a9158ce4992d47ea82a7f",
+      "existing_row_verified": true
+    }
+  ],
+  "execution_allowed": false
+}

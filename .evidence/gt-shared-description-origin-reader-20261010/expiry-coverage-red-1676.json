@@ -1,0 +1,17 @@
+{
+  "head": "ba6b40a14e9adb29baed463b89714e0d82b2c935",
+  "previous_test_sha256": "677ec397cb69e7a337899792cc75a8396d6986c1ef6009220675e8ba66ab6b3f",
+  "previous_full_native_passed": true,
+  "previous_negative_cases": [
+    "wrong_hash",
+    "hash_bool",
+    "canary",
+    "complete_manifest_drift",
+    "absent_native_plan",
+    "different_actual_scram_caller",
+    "administrator_is_not_native_occupation"
+  ],
+  "post_row_read_authentication_expiry_proven": false,
+  "product_failure_claimed": false,
+  "execution_allowed": false
+}

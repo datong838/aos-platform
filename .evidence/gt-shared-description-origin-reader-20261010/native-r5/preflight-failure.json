@@ -1,0 +1,6 @@
+{
+  "status": "FAILED_BEFORE_NATIVE_PYTEST",
+  "reason": "protected historical result-r4 pathname inadvertently changed to result-r5",
+  "database_attempt_started": false,
+  "unknown_effect_replayed": false
+}

@@ -1,0 +1,26 @@
+{
+  "pytest_exit": 1,
+  "databases": [
+    "aos_test_164f52915e83_ti4_test"
+  ],
+  "reports": [
+    {
+      "nodeid": "tests/aip/test_physical_capacity_occupation_pg.py::test_source_model_preparation_original_native_caller[shared]",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "old_files_unchanged": true,
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_physical_capacity_occupation.py": "fb682207bf165f442d305fc0d25e7603d1746910dcf081ce2edfce83998f1e78",
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": "e1384ab91c03099203d56fe814c588483d7915ee0e418a2cb39d08b5c5e68eb2",
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": "b7ee2c4d5a1f2a4aeee90e8925639af16c9d68ee54db115736d672a48db2158f",
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": "41356488500495d4abc7d7e64d9dc024eef4849f0214d22ed77748b8c920c64f",
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": "a71944ef653421b7e38038fdf99de3b244cc3a793ebf0f606c0e66d63e8c6bb0",
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py": "b169f8e5f3d8025ba4e2459fb2b7160aa3ebc8b6468f130ef8785b6f37fd18fc",
+    "services/aos-api/aos_api/aip_shared_parent_description_origin_reader.py": "92aa9d11a58a27a86d3a0848503e96d0c17a083157ad71ff7d3ffc7898e9c63a",
+    "services/aos-api/tests/aip/test_shared_parent_description_origin_reader_pg.py": "8ac22dabaa2dab36af9bb020ba0821fa5154578111613c5c770371a6feff5dc9"
+  },
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

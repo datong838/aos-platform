@@ -1,0 +1,20 @@
+{
+  "database": "aos_test_164f52915e83_ti4_test",
+  "readonly": "on",
+  "risk_status": "aborted",
+  "risk_counts": {
+    "prepared_plan_risk": 0,
+    "prepared_shared_risk_description": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "original_deadlines": {
+    "approval_end": "2026-10-09T21:59:21.277134+00:00",
+    "proposal_end": "2026-10-09T21:59:21.277134+00:00",
+    "request_end": "2026-10-09T21:59:30.736656+00:00"
+  },
+  "auth_expiry_substep_passed": true,
+  "complete_native_node_passed": false,
+  "old_files_unchanged": true,
+  "execution_allowed": false
+}

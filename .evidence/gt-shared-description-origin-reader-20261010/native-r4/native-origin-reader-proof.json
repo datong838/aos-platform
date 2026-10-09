@@ -1,0 +1,31 @@
+{
+  "actual_origin": {
+    "xid": "35381",
+    "pid": 35576
+  },
+  "foreign_origin": {
+    "xid": "35396",
+    "pid": 35802
+  },
+  "description_hash": "sha256:bcd33210f5c68f9b7a4d8ce6f1821f010c59a31a522c4ef379f0735336600b4d",
+  "exact_original_row": true,
+  "cases": 2,
+  "negative_cases": [
+    "wrong_hash",
+    "hash_bool",
+    "canary",
+    "complete_manifest_drift",
+    "absent_native_plan",
+    "different_actual_scram_caller",
+    "administrator_is_not_native_occupation",
+    "post_row_read_authentication_expiry"
+  ],
+  "runtime_table_access": {
+    "read": false,
+    "write": false
+  },
+  "root_provenance_verified": false,
+  "identity_same_caller_verified": false,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}
