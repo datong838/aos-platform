@@ -1,0 +1,51 @@
+{
+  "observed_at": "2026-10-09T12:05:57.919001+00:00",
+  "reason": "User pause after prior wave not explicitly withdrawn by Docker migration statement",
+  "test_exit": 2,
+  "passed_calls": 20,
+  "full386_pass": false,
+  "other_client_backends": [],
+  "all_retained_test_databases": [
+    [
+      "aos_test_00d7019c1269_ti4_test"
+    ],
+    [
+      "aos_test_47202f39581b_ti4_test"
+    ],
+    [
+      "aos_test_82251a5a887b_ti4_test"
+    ],
+    [
+      "aos_test_864de3d801fb_ti4_test"
+    ],
+    [
+      "aos_test_97b1e6f7fc83_ti4_test"
+    ],
+    [
+      "aos_test_ae4c316a389e_ti4_test"
+    ],
+    [
+      "aos_test_b576dab71d54_ti4_test"
+    ],
+    [
+      "aos_test_f8e7dd1f944a_ti4_test"
+    ]
+  ],
+  "global_roles": [
+    [
+      "aos_provider_capacity_issuer",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_provider_capacity_policy_publisher",
+      false,
+      false,
+      false
+    ]
+  ],
+  "occupation_role": "ABSENT",
+  "independent_readback": "independent-interruption-verification.json",
+  "unknown_replay_allowed": false
+}

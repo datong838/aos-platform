@@ -1,0 +1,198 @@
+{
+  "schema": "aos-source-entire-original386nodes-terminal-readonly-verification/v1",
+  "head": "6723f686dc4d052d9fe5262fd57fb8ca3ac79b2f",
+  "authority_revision": "AOS-001648",
+  "summary": "20 passed, 7 warnings in 69.74s (0:01:09)",
+  "all_selected_passed": false,
+  "node_count": 20,
+  "database_count": 4,
+  "sources": 0,
+  "databases": [
+    {
+      "database": "aos_test_00d7019c1269_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_registered_origin_documents_and_original_private_approval_share_database"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_97b1e6f7fc83_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[distinct]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_b576dab71d54_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_verifier_and_private_scram_share_one_isolated_database",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_publication_owner_reads_original_approved_rows_without_mutation",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[extra_select]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[public_select]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[extra_column]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[public_column]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[login]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[membership]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[default_acl]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[schema_create]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[database_create]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[policy]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[extra_policy]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[rls]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[disabled_trigger]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[guard_body]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_fact_owner_boundary_rejects_effective_drift[guard_public_execute]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_f8e7dd1f944a_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_private_native_publication_rejects_missing_original_bytes[shared]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    }
+  ],
+  "exact_inputs_unchanged": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 77,
+  "full_source_delivery": false,
+  "formal_business_execution": false,
+  "root_volume": {
+    "CreatedAt": "2026-10-09T11:47:50Z",
+    "Driver": "local",
+    "Labels": {
+      "aos.scope": "test-only",
+      "aos.task": "gt-source-desktop-native-lab-20261009"
+    },
+    "Mountpoint": "/var/lib/docker/volumes/aos-source-desktop-native-20261009-data/_data",
+    "Name": "aos-source-desktop-native-20261009-data",
+    "Options": null,
+    "Scope": "local"
+  },
+  "root_available_bytes": 436126928896
+}
