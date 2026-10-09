@@ -1,0 +1,60 @@
+{
+  "authority_revision": "AOS-001680",
+  "task": "gt-shared-description-origin-reader-20261010",
+  "head": "48f0b27b3d37ba4fe8540e46b18fc7ab65c8f3fb",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "same_caller_metadata_necessary_verified": true,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/current-native-certificate-reference-1679.json",
+      "sha256": "7beee198e7950fc5ff3e76a9a57563c5a7e9e9cc43b903196b66416895a23d61"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/final-expiry-review-1679.md",
+      "sha256": "f17ce48ea989f01a309beb7b5babe7b603385dec9f5e7ddc5cddf245be61b51e"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/implementation-plan.md",
+      "sha256": "8a0f4d5ba8621945e180293f8abed8aecc11eefabf5fb4b89bbad3a25d6ad32f"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r15/result-r15.json",
+      "sha256": "d5f1c9607311a9e11b490d3ab6153941123cee6b8fad4fe0a13679e584b34201"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r15/native-same-transaction-prepare-proof.json",
+      "sha256": "38bfe4eaa7588c17501435b5eb750528909809cc048d466b67e2a4c91699003a"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r15/native-description-proof.json",
+      "sha256": "f3b529c6a0c2f54b0670e8ba8471368e328cdc097ecae46c345cb04d1527df77"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/independent-core-readback-r15.json",
+      "sha256": "5d493e3d3becfd9d6eb1c05725bd4c752663e482d253c593a7518585c3dbbec9"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/pure-result-r6.json",
+      "sha256": "c85142c6e9ef45f455607c1993cf398e6182f42cc4814139dce2d9ea0519a568"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/independent-final-expiry-readback-r14.json",
+      "sha256": "b8cb2975dad0b57107803ec6ba9e8274975227fc6a46b1a2af07b47904a330b1"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/final-expiry-plan-1679.md",
+      "sha256": "3bc0cd5953c8b39ec2d1d59b604f63322049261b932254a4725ddf1abbee09bc"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r14/dedicated-final-expiry-proof.json",
+      "sha256": "0838323536d474f8c212b84f8fabb1e95a64208abccc703502b797e5c90c0f87"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/expiry-terminal-and-adjacent-boundary-r14.json",
+      "sha256": "20a8444794a78066f8ad229139187735f967d8f4f0a20a4e27bbcd8b185afaca"
+    }
+  ]
+}
