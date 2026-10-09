@@ -1,0 +1,32 @@
+{
+  "authority_revision": "AOS-001670",
+  "task": "gt-atomic-model-admission-20261008",
+  "head": "3456f167a78f583b5e569118afeba4e722b98147",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-shared-parent-semantic-reference-1669.json",
+      "sha256": "3ad419fb22e8c7d2e396e369b050b99ae602db3eaf20880e2c929841a627ff83"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-implementation-review-1669.md",
+      "sha256": "f7a2c1457f8af61681f4adf3515c2028720d9d46d2a80a8ec6283072648c21a4"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-native-1669-r1/result-r1.json",
+      "sha256": "263d647fcace2569e709c31084bc78e3f6219177b14e315c00b93b2ea96a0a5a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-native-1669-r1/shared-plan-native-proof.json",
+      "sha256": "4d28129700f13074eba8a4070dfbfc086a4d0a0fc4c7ac66125f485f3c8caafb"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-native-1669-r1/independent-readback.json",
+      "sha256": "96f8c0b047541669c176e8ec6d73365d8b0a4b514e0cc61fe9e04b1983f6ac9d"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-code-review-1669.json",
+      "sha256": "dffed01f3632ca8e4a7acf9c562ed1478957f71a9a363a8408a699cb3a52e4ab"
+    }
+  ]
+}
