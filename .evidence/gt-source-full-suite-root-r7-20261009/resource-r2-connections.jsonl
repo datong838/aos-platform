@@ -1,0 +1,2 @@
+{"database": "aos_meta", "session": "aos_app", "pid": 79276, "settings": ["0", "0", "off", "1MB", "1", "on", "on", "on"], "startup_readonly_probe": true, "known_read_rollback": true}
+{"database": "aos_test_e27a4d6b7ce5_ti4_test", "session": "aos_app", "pid": 79277, "settings": ["0", "0", "off", "1MB", "1", "on", "on", "on"], "startup_readonly_probe": true, "known_read_rollback": true}

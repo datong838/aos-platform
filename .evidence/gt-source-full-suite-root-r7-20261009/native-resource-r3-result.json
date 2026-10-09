@@ -1,0 +1,18 @@
+{
+  "observed_at": "2026-10-09T07:31:44.768250+00:00",
+  "database": "aos_test_8b0e4f473202_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_table_installation_rejects_catalog_drift[ri_trigger]",
+      "phase": "database_binding",
+      "database": "aos_test_8b0e4f473202_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_table_installation_rejects_catalog_drift[ri_trigger]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "Exact original failedri_trigger one-node environmentrecoveryprobe; never full386nodeSource acceptance"
+}

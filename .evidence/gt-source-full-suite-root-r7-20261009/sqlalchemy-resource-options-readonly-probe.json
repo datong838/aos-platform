@@ -1,0 +1,23 @@
+{
+  "observed": [
+    {
+      "user": "aos_app",
+      "host": "127.0.0.1",
+      "port": "5437",
+      "database": "aos_meta",
+      "owned_wrapper_called": true
+    }
+  ],
+  "settings": {
+    "max_parallel_workers_per_gather": "0",
+    "max_parallel_maintenance_workers": "0",
+    "work_mem": "4MB",
+    "hash_mem_multiplier": "2",
+    "fsync": "on",
+    "full_page_writes": "on",
+    "synchronous_commit": "on"
+  },
+  "wrapper_covers_normal_alembic_sqlalchemy_path": true,
+  "no_data_effect": true,
+  "failed_connection_settings_not_previously_captured": true
+}

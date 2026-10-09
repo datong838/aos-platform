@@ -1,0 +1,3 @@
+[
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_table_installation_rejects_catalog_drift[ri_trigger]"
+]

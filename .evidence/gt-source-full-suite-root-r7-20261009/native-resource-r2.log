@@ -1,0 +1,141 @@
+{"ts": "2026-10-09T07:29:43.376375+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 6cd2ca0eff8f, Core-schema baseline migration asset for Wave 0.
+INFO  [alembic.runtime.migration] Running upgrade 6cd2ca0eff8f -> 228ec02oauth, Add tenant-scoped encrypted OAuth token store.
+INFO  [alembic.runtime.migration] Running upgrade 228ec02oauth -> b7e2c4a92283, Add tenant-safe ecommerce core objects, links and sync state.
+INFO  [alembic.runtime.migration] Running upgrade b7e2c4a92283 -> 228ec03linkguard, Add database guards for ecommerce Link tenant and endpoint shape.
+INFO  [alembic.runtime.migration] Running upgrade 228ec03linkguard -> 228logicgraph, Add tenant-scoped canonical AIP Logic graph snapshots and revisions.
+INFO  [alembic.runtime.migration] Running upgrade 228logicgraph -> 228logicrun, Add immutable tenant-scoped AIP Logic dry-run history.
+INFO  [alembic.runtime.migration] Running upgrade 228logicrun -> 228logiceval, Add tenant-scoped Evals suites and immutable Logic report evidence.
+INFO  [alembic.runtime.migration] Running upgrade 228logiceval -> 228logicpublish, Add immutable tenant-scoped AIP Logic publications.
+INFO  [alembic.runtime.migration] Running upgrade 228logicpublish -> a93c7e1b4f20, Add the canonical asset bundle registry.
+INFO  [alembic.runtime.migration] Running upgrade a93c7e1b4f20 -> 228assetsecurity, Add atomic asset bundle lifecycle audit events.
+INFO  [alembic.runtime.migration] Running upgrade 228assetsecurity -> 228assetinvariants, Seal asset registry status and projection invariants.
+INFO  [alembic.runtime.migration] Running upgrade 228assetinvariants -> 228assetevidence, Persist immutable evidence snapshots with lifecycle events.
+INFO  [alembic.runtime.migration] Running upgrade 228assetevidence -> 228assetinstall, Add immutable bundle composition and installation control-plane storage.
+INFO  [alembic.runtime.migration] Running upgrade 228assetinstall -> 228assetintegration, Add immutable Integration Case, Evidence, and projection storage.
+Retained isolated test database: aos_test_e27a4d6b7ce5_ti4_test
+E
+==================================== ERRORS ====================================
+_ ERROR at setup of test_native_source_table_installation_rejects_catalog_drift[ri_trigger] _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+        with psycopg.connect(admin_dsn, autocommit=True) as conn:
+            conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database_name)))
+    
+        previous_dsn = os.environ.get("AOS_DATABASE_URL")
+        previous_twa_store = os.environ.get("AOS_TWA_STORE")
+        os.environ["AOS_DATABASE_URL"] = test_dsn
+        config = Config(os.path.join(os.path.dirname(__file__), "..", "alembic.ini"))
+        config.set_main_option(
+            "script_location", os.path.join(os.path.dirname(__file__), "..", "alembic")
+        )
+        config.set_main_option("sqlalchemy.url", test_dsn)
+        try:
+            os.environ["AOS_TWA_STORE"] = "pg"
+            from aos_api import twa_pg
+            from aos_api.data_os_store import ensure_data_os_schema
+            from aos_api.db import init_schema
+            from aos_api.tenant_catalog import ensure_tenant_catalog_schema
+    
+            twa_pg.clear_mode_cache()
+            command.upgrade(config, "228assetintegration")
+            init_schema()
+>           ensure_tenant_catalog_schema()
+
+services/aos-api/tests/conftest.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/aos_api/tenant_catalog.py:61: in ensure_tenant_catalog_schema
+    with connect(inherit_scope=False) as conn:
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+services/aos-api/aos_api/db.py:41: in _connect
+    with psycopg.connect(dsn, row_factory=dict_row) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('postgresql://aos_app@127.0.0.1:5437/aos_test_e27a4d6b7ce5_ti4_test',)
+kwargs = {'row_factory': <function dict_row at 0x10b8b9e40>, 'passfile': '/Users/ddt/.aos-lab-secrets/aos-source-root-native-20...r_gather=0 -c max_parallel_maintenance_workers=0 -c enable_parallel_hash=off -c work_mem=1MB -c hash_mem_multiplier=1'}
+
+    def owned_connect(*args,**kwargs):
+     assert len(args)<=1
+     params=conninfo_to_dict(args[0] if args else kwargs.get('conninfo',''))
+     for key in ('user','host','port','dbname'):
+      if key in kwargs:params[key]=kwargs[key]
+     if params.get('user')=='aos_app':
+      assert params.get('host')=='127.0.0.1' and str(params.get('port'))=='5437'
+      assert params.get('dbname')=='aos_meta' or params.get('dbname','').startswith('aos_test_')
+      kwargs['passfile']=str(PASS)
+      assert not kwargs.get('options') and not params.get('options')
+      kwargs['options']='-c max_parallel_workers_per_gather=0 -c max_parallel_maintenance_workers=0 -c enable_parallel_hash=off -c work_mem=1MB -c hash_mem_multiplier=1'
+     conn=original(*args,**kwargs)
+     if params.get('user')=='aos_app':
+      with conn.cursor() as cur:
+       cur.execute("SELECT current_database(),session_user,pg_backend_pid(),current_setting('max_parallel_workers_per_gather'),current_setting('max_parallel_maintenance_workers'),current_setting('enable_parallel_hash'),current_setting('work_mem'),current_setting('hash_mem_multiplier'),current_setting('fsync'),current_setting('full_page_writes'),current_setting('synchronous_commit')")
+       row=cur.fetchone();values=list(row.values()) if isinstance(row,dict) else list(row)
+>     assert values[3:]==['0','0','off','1MB','1','on','on','on']
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     AssertionError
+
+.evidence/gt-source-full-suite-root-r7-20261009/run_resource_r2.py:30: AssertionError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_table_installation_rejects_catalog_drift[ri_trigger]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+7 warnings, 1 error in 1.13s

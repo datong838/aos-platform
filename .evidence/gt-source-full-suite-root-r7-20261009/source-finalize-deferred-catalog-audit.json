@@ -1,0 +1,638 @@
+{
+  "observed_at": "2026-10-09T06:55:47.398742+00:00",
+  "head": "75d287f50b255864b28df9d9404a3e749fffdc00",
+  "authority": "AOS-001645",
+  "database": "aos_test_12d464ae495b_ti4_test",
+  "cluster": "7694534063495901208",
+  "read_only": true,
+  "table_counts": {
+    "global_account": 0,
+    "global_provider": 0,
+    "source_pending": 0,
+    "source_publication": 0,
+    "source_provenance": 0
+  },
+  "triggers": [
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "global_account",
+      "tgname": "RI_ConstraintTrigger_a_2118153",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2118153\" AFTER DELETE ON aos_capacity_publication_private.global_account FROM aos_capacity_publication_private.global_provider NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_signature": "\"RI_FKey_noaction_del\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_noaction_del\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_noaction_del$function$\n",
+      "function_acl": null,
+      "constraint_name": "global_provider_account_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "global_account",
+      "tgname": "RI_ConstraintTrigger_a_2118154",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2118154\" AFTER UPDATE ON aos_capacity_publication_private.global_account FROM aos_capacity_publication_private.global_provider NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_signature": "\"RI_FKey_noaction_upd\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_noaction_upd\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_noaction_upd$function$\n",
+      "function_acl": null,
+      "constraint_name": "global_provider_account_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "global_account",
+      "tgname": "RI_ConstraintTrigger_a_2118202",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2118202\" AFTER DELETE ON aos_capacity_publication_private.global_account FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_signature": "\"RI_FKey_noaction_del\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_noaction_del\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_noaction_del$function$\n",
+      "function_acl": null,
+      "constraint_name": "source_publication_account_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "global_account",
+      "tgname": "RI_ConstraintTrigger_a_2118203",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2118203\" AFTER UPDATE ON aos_capacity_publication_private.global_account FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_signature": "\"RI_FKey_noaction_upd\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_noaction_upd\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_noaction_upd$function$\n",
+      "function_acl": null,
+      "constraint_name": "source_publication_account_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "global_account",
+      "tgname": "source_identity_immutable",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE TRIGGER source_identity_immutable BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.global_account FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()",
+      "function_signature": "aos_capacity_publication_private.refuse_source_publication_mutation()",
+      "function_definition": "CREATE OR REPLACE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$\nBEGIN RAISE EXCEPTION 'CAPACITY_SOURCE_PUBLICATION_IMMUTABLE' USING ERRCODE='42501'; END $function$\n",
+      "function_acl": "{aos_capacity_publication_owner=X/aos_capacity_publication_owner}",
+      "constraint_name": "",
+      "constraint_deferrable": null,
+      "constraint_deferred": null,
+      "function_sha256": "61f26551d117b5d2e331a780c6d02d1c1fc954f1efa64f41bbf9f7dd25171071"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "global_provider",
+      "tgname": "RI_ConstraintTrigger_c_2118155",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2118155\" AFTER INSERT ON aos_capacity_publication_private.global_provider FROM aos_capacity_publication_private.global_account NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_signature": "\"RI_FKey_check_ins\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_check_ins\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_check_ins$function$\n",
+      "function_acl": null,
+      "constraint_name": "global_provider_account_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "global_provider",
+      "tgname": "RI_ConstraintTrigger_c_2118156",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2118156\" AFTER UPDATE ON aos_capacity_publication_private.global_provider FROM aos_capacity_publication_private.global_account NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_signature": "\"RI_FKey_check_upd\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_check_upd\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_check_upd$function$\n",
+      "function_acl": null,
+      "constraint_name": "global_provider_account_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "global_provider",
+      "tgname": "source_identity_immutable",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE TRIGGER source_identity_immutable BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.global_provider FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()",
+      "function_signature": "aos_capacity_publication_private.refuse_source_publication_mutation()",
+      "function_definition": "CREATE OR REPLACE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$\nBEGIN RAISE EXCEPTION 'CAPACITY_SOURCE_PUBLICATION_IMMUTABLE' USING ERRCODE='42501'; END $function$\n",
+      "function_acl": "{aos_capacity_publication_owner=X/aos_capacity_publication_owner}",
+      "constraint_name": "",
+      "constraint_deferrable": null,
+      "constraint_deferred": null,
+      "function_sha256": "61f26551d117b5d2e331a780c6d02d1c1fc954f1efa64f41bbf9f7dd25171071"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "source_pending",
+      "tgname": "RI_ConstraintTrigger_a_2118207",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2118207\" AFTER DELETE ON aos_capacity_publication_private.source_pending FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_signature": "\"RI_FKey_noaction_del\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_noaction_del\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_noaction_del$function$\n",
+      "function_acl": null,
+      "constraint_name": "source_publication_attempt_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "source_pending",
+      "tgname": "RI_ConstraintTrigger_a_2118208",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2118208\" AFTER UPDATE ON aos_capacity_publication_private.source_pending FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_signature": "\"RI_FKey_noaction_upd\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_noaction_upd\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_noaction_upd$function$\n",
+      "function_acl": null,
+      "constraint_name": "source_publication_attempt_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "source_pending",
+      "tgname": "source_pending_finalized",
+      "tgisinternal": false,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER source_pending_finalized AFTER INSERT OR UPDATE ON aos_capacity_publication_private.source_pending DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.require_pending_source_finalized()",
+      "function_signature": "aos_capacity_publication_private.require_pending_source_finalized()",
+      "function_definition": "CREATE OR REPLACE FUNCTION aos_capacity_publication_private.require_pending_source_finalized()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog'\n SET \"aos.org_id\" TO 'org-org'\n SET \"aos.project_id\" TO 'dev-project'\nAS $function$\nBEGIN\n IF EXISTS(SELECT 1 FROM aos_capacity_publication_private.source_pending p\n   WHERE (p.org_id,p.project_id,p.maker,p.attempt_key)=(NEW.org_id,NEW.project_id,NEW.maker,NEW.attempt_key)\n    AND NOT p.finalized) THEN\n  RAISE EXCEPTION 'CAPACITY_SOURCE_PENDING_NOT_FINALIZED' USING ERRCODE='23514'; END IF;\n RETURN NULL;\nEND $function$\n",
+      "function_acl": "{aos_capacity_publication_owner=X/aos_capacity_publication_owner}",
+      "constraint_name": "source_pending_finalized",
+      "constraint_deferrable": true,
+      "constraint_deferred": true,
+      "function_sha256": "5ad495b758e3bb97bc0f9fd0b85b3980038377a6d3910e6825304f694af6e786"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "source_provenance",
+      "tgname": "RI_ConstraintTrigger_c_2118221",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2118221\" AFTER INSERT ON aos_capacity_publication_private.source_provenance FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_signature": "\"RI_FKey_check_ins\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_check_ins\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_check_ins$function$\n",
+      "function_acl": null,
+      "constraint_name": "source_provenance_org_id_project_id_asset_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "source_provenance",
+      "tgname": "RI_ConstraintTrigger_c_2118222",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2118222\" AFTER UPDATE ON aos_capacity_publication_private.source_provenance FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_signature": "\"RI_FKey_check_upd\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_check_upd\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_check_upd$function$\n",
+      "function_acl": null,
+      "constraint_name": "source_provenance_org_id_project_id_asset_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "source_provenance",
+      "tgname": "source_provenance_immutable",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE TRIGGER source_provenance_immutable BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.source_provenance FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()",
+      "function_signature": "aos_capacity_publication_private.refuse_source_publication_mutation()",
+      "function_definition": "CREATE OR REPLACE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$\nBEGIN RAISE EXCEPTION 'CAPACITY_SOURCE_PUBLICATION_IMMUTABLE' USING ERRCODE='42501'; END $function$\n",
+      "function_acl": "{aos_capacity_publication_owner=X/aos_capacity_publication_owner}",
+      "constraint_name": "",
+      "constraint_deferrable": null,
+      "constraint_deferred": null,
+      "function_sha256": "61f26551d117b5d2e331a780c6d02d1c1fc954f1efa64f41bbf9f7dd25171071"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "source_publication",
+      "tgname": "RI_ConstraintTrigger_a_2118219",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2118219\" AFTER DELETE ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.source_provenance NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_signature": "\"RI_FKey_noaction_del\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_noaction_del\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_noaction_del$function$\n",
+      "function_acl": null,
+      "constraint_name": "source_provenance_org_id_project_id_asset_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "source_publication",
+      "tgname": "RI_ConstraintTrigger_a_2118220",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2118220\" AFTER UPDATE ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.source_provenance NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_signature": "\"RI_FKey_noaction_upd\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_noaction_upd\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_noaction_upd$function$\n",
+      "function_acl": null,
+      "constraint_name": "source_provenance_org_id_project_id_asset_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "source_publication",
+      "tgname": "RI_ConstraintTrigger_c_2118204",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2118204\" AFTER INSERT ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.global_account NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_signature": "\"RI_FKey_check_ins\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_check_ins\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_check_ins$function$\n",
+      "function_acl": null,
+      "constraint_name": "source_publication_account_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "source_publication",
+      "tgname": "RI_ConstraintTrigger_c_2118205",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2118205\" AFTER UPDATE ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.global_account NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_signature": "\"RI_FKey_check_upd\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_check_upd\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_check_upd$function$\n",
+      "function_acl": null,
+      "constraint_name": "source_publication_account_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "source_publication",
+      "tgname": "RI_ConstraintTrigger_c_2118209",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2118209\" AFTER INSERT ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.source_pending NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_signature": "\"RI_FKey_check_ins\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_check_ins\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_check_ins$function$\n",
+      "function_acl": null,
+      "constraint_name": "source_publication_attempt_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "source_publication",
+      "tgname": "RI_ConstraintTrigger_c_2118210",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2118210\" AFTER UPDATE ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.source_pending NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_signature": "\"RI_FKey_check_upd\"()",
+      "function_definition": "CREATE OR REPLACE FUNCTION pg_catalog.\"RI_FKey_check_upd\"()\n RETURNS trigger\n LANGUAGE internal\n PARALLEL SAFE STRICT\nAS $function$RI_FKey_check_upd$function$\n",
+      "function_acl": null,
+      "constraint_name": "source_publication_attempt_id_fkey",
+      "constraint_deferrable": false,
+      "constraint_deferred": false,
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "table_name": "source_publication",
+      "tgname": "source_publication_immutable",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgenabled": "O",
+      "trigger_definition": "CREATE TRIGGER source_publication_immutable BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.source_publication FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()",
+      "function_signature": "aos_capacity_publication_private.refuse_source_publication_mutation()",
+      "function_definition": "CREATE OR REPLACE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$\nBEGIN RAISE EXCEPTION 'CAPACITY_SOURCE_PUBLICATION_IMMUTABLE' USING ERRCODE='42501'; END $function$\n",
+      "function_acl": "{aos_capacity_publication_owner=X/aos_capacity_publication_owner}",
+      "constraint_name": "",
+      "constraint_deferrable": null,
+      "constraint_deferred": null,
+      "function_sha256": "61f26551d117b5d2e331a780c6d02d1c1fc954f1efa64f41bbf9f7dd25171071"
+    }
+  ],
+  "deferred_count": 1,
+  "source_completion_guard_count": 1,
+  "completion_guard_finalized_only": true,
+  "completion_guard_checks_final_deadline": false,
+  "test_sha256": "11b03db935ab48104bd2cc57b683e83f40fedc7badd61dc17dab4f7e928f7369",
+  "original_test_commit_endpoints": [
+    {
+      "function": "test_complete_native_publication_requires_actual_caller_commit",
+      "line": 433,
+      "commit_calls": [
+        {
+          "line": 469,
+          "receiver": "conn",
+          "method": "commit"
+        },
+        {
+          "line": 484,
+          "receiver": "conn",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_native_allocation_binding_preserves_original_unicode_acceptance",
+      "line": 667,
+      "commit_calls": [
+        {
+          "line": 689,
+          "receiver": "runtime",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_native_candidate_combination_preserves_real_original_private_approval",
+      "line": 1282,
+      "commit_calls": [
+        {
+          "line": 1325,
+          "receiver": "runtime",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_native_current_signed_actual_withdrawal_commit_rollback_and_replay",
+      "line": 2596,
+      "commit_calls": [
+        {
+          "line": 2604,
+          "receiver": "publisher",
+          "method": "commit"
+        },
+        {
+          "line": 2615,
+          "receiver": "publisher",
+          "method": "commit"
+        },
+        {
+          "line": 2617,
+          "receiver": "publisher",
+          "method": "commit"
+        },
+        {
+          "line": 2618,
+          "receiver": "publisher",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_native_current_signed_withdrawal_serializable_epoch_competition",
+      "line": 2633,
+      "commit_calls": [
+        {
+          "line": 2678,
+          "receiver": "conn",
+          "method": "commit"
+        },
+        {
+          "line": 2659,
+          "receiver": "conn",
+          "method": "commit"
+        },
+        {
+          "line": 2677,
+          "receiver": "conn",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_native_original_fact_prefix_holds_real_locks_until_caller_commit",
+      "line": 3354,
+      "commit_calls": [
+        {
+          "line": 3394,
+          "receiver": "caller",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_native_full_signed_suffix_holds_current_registry_and_documents",
+      "line": 3973,
+      "commit_calls": [
+        {
+          "line": 4007,
+          "receiver": "caller",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_native_pending_source_rejects_unfinished_actual_commit",
+      "line": 4095,
+      "commit_calls": [
+        {
+          "line": 4102,
+          "receiver": "caller",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_native_pending_source_savepoint_rollback_has_no_residue",
+      "line": 4109,
+      "commit_calls": [
+        {
+          "line": 4115,
+          "receiver": "caller",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_native_committed_source_is_durable_and_signed",
+      "line": 4232,
+      "commit_calls": [
+        {
+          "line": 4245,
+          "receiver": "caller",
+          "method": "commit"
+        },
+        {
+          "line": 4248,
+          "receiver": "caller",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_native_committed_source_refuses_invalid_finalize",
+      "line": 4284,
+      "commit_calls": [
+        {
+          "line": 4299,
+          "receiver": "caller",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_native_committed_sources_share_one_physical_account",
+      "line": 4306,
+      "commit_calls": [
+        {
+          "line": 4337,
+          "receiver": "caller",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_native_source_installer_assembles_complete_private_transaction",
+      "line": 4406,
+      "commit_calls": [
+        {
+          "line": 4417,
+          "receiver": "caller",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_exact_public_source_composition_preserves_original_issuer_checker",
+      "line": 4938,
+      "commit_calls": [
+        {
+          "line": 4955,
+          "receiver": "caller",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_exact_public_source_rejects_bad_signature_and_unfinished_commit",
+      "line": 5016,
+      "commit_calls": [
+        {
+          "line": 5027,
+          "receiver": "caller",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_controlled_source_signer_binds_original_jwt_pending_and_private_key",
+      "line": 5035,
+      "commit_calls": [
+        {
+          "line": 5123,
+          "receiver": "caller",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_current_source_consumer_rechecks_new_transaction",
+      "line": 5134,
+      "commit_calls": [
+        {
+          "line": 5158,
+          "receiver": "caller",
+          "method": "commit"
+        },
+        {
+          "line": 5240,
+          "receiver": "publisher",
+          "method": "commit"
+        },
+        {
+          "line": 5243,
+          "receiver": "publisher",
+          "method": "commit"
+        }
+      ]
+    },
+    {
+      "function": "test_current_source_consumer_accepts_independent_owner",
+      "line": 5258,
+      "commit_calls": [
+        {
+          "line": 5281,
+          "receiver": "caller",
+          "method": "commit"
+        },
+        {
+          "line": 5464,
+          "receiver": "publisher",
+          "method": "commit"
+        },
+        {
+          "line": 5467,
+          "receiver": "publisher",
+          "method": "commit"
+        }
+      ]
+    }
+  ],
+  "scope": "Source five finalize write tables only; not full joint protocol closure",
+  "actual_expired_source_commit_counterexample": ".evidence/gt-source-body-expiry-commit-native-20261009",
+  "no_effect_replayed": true,
+  "full_suite_cannot_close_actual_final_deadline": true
+}

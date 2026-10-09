@@ -1,0 +1,19 @@
+{
+  "observed_at": "2026-10-09T07:14:34.869771+00:00",
+  "process": {
+    "pid": 11812,
+    "started_at": "2026-10-09T06:51:34.521804+00:00",
+    "head": "75d287f50b255864b28df9d9404a3e749fffdc00",
+    "authority": "AOS-001645",
+    "state": "RUNNING",
+    "replay_allowed": false
+  },
+  "tool_session": 9429,
+  "os_status": "  PID STARTED                      ELAPSED STAT\n11812 Fri Oct  9 14:51:34 2026       23:00 Ss  \n",
+  "state": "LIVE",
+  "log_size": 3986851,
+  "log_sha256": "1c5d8fe9baafae1b6c4a31c8417a1b2926d4c25a55a8f95b3aae01f7d2ea58ca",
+  "exact1963inputs_unchanged": true,
+  "replay_allowed": false,
+  "full_source_delivery": false
+}

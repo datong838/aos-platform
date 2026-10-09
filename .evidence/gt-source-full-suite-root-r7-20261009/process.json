@@ -1,0 +1,8 @@
+{
+  "pid": 16156,
+  "started_at": "2026-10-09T07:31:19.292210+00:00",
+  "head": "75d287f50b255864b28df9d9404a3e749fffdc00",
+  "authority": "AOS-001645",
+  "state": "RUNNING",
+  "replay_allowed": false
+}

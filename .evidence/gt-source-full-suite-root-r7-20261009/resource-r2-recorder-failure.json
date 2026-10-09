@@ -1,0 +1,8 @@
+{
+  "result": "1SETUPERROR1.13s",
+  "cause": "Startup SELECT repeated current_setting column label collapsed dictionary row; expected11values not present",
+  "fix": "Unique SQL column aliases, original exact11value assertions unchanged",
+  "business_node_entered": false,
+  "data_effect": false,
+  "failed_attempt_preserved": true
+}

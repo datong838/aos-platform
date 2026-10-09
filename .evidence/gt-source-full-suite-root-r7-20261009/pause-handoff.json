@@ -1,0 +1,11 @@
+{
+  "user_intent": "finish current wave then pause; user preparingrestart",
+  "next_wave_authorized_now": false,
+  "goal_pause_tool_readback_pending": true,
+  "whole_attempt": "337PASS1SETUPERROR1849.82s48unexecuted",
+  "resource_probe": "1PASS17.52s93ownedconnections",
+  "full_source_delivery": false,
+  "original_source_task": "ACTIVE",
+  "protected_fixture_diff": "6additions1deletion unstaged",
+  "unknown_effect_replay_allowed": false
+}

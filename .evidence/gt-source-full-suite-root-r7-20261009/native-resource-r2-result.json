@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-09T07:29:45.090034+00:00",
+  "database": null,
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_table_installation_rejects_catalog_drift[ri_trigger]",
+      "phase": "setup",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "Exact original failedri_trigger one-node environmentrecoveryprobe; never full386nodeSource acceptance"
+}
