@@ -1,0 +1,63 @@
+{
+  "authority_revision": "AOS-001677",
+  "task": "gt-atomic-model-admission-20261008",
+  "head": "6c66ab40a684a479dacd08168cc2372b8830bf9e",
+  "execution_allowed": false,
+  "executors_authenticated": false,
+  "issuer_metadata_current": false,
+  "root_provenance_verified": false,
+  "original_native_row_observed": true,
+  "physical_description_origin_authenticated": false,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-shared-origin-reference-1676.json",
+      "sha256": "678a68dfd7698810826174e27af42c40b94d5ab7519b1b107f0b7273481a4b0a"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/expiry-review-1676.md",
+      "sha256": "809ec23665280dcb20ff3fb5c88c69acdf2e794d01a70fc02bdc92a10088ee75"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/expiry-pure-result-r5-1676.json",
+      "sha256": "ab05a0366f76db2dca2536e7af8e1eed0cdbf133dd064cdce2365b67ca196bdb"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/native-r8/result-r8.json",
+      "sha256": "5b7a357d67e5bb18fb3b6c5923ee3a10340f1e8206fde709c41a34b5f2b6e1ca"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/native-r8/post-row-auth-expiry-proof.json",
+      "sha256": "d7067d9887c00d84ba6eee5229010f49c9eeb3118e4185a86e53b4127e9a5f6c"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/native-r8/native-origin-reader-proof.json",
+      "sha256": "654be3b148d80b9b5bdb5209a06052edb8abd4ecca3fd879c6db56918f329ed5"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/independent-readback-r8-expiry.json",
+      "sha256": "66350aa0302b4dea1d50eca40f1345df89613a7767246892e7666d8e9122b600"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/failure-readback-r3.json",
+      "sha256": "817a7cc4ee8ea96c4c7eb0b9624542eeb1149e60a1e6fbbfabd5b30774a8cb7d"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/failure-readback-r4.json",
+      "sha256": "084ae92967d979726bdb71a7bc3b97fdf928a1b25c96504aa64414a6da10057e"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/failure-readback-r7.json",
+      "sha256": "231362e26c45bf9addf6b07f7c8e804b41397047108fd141bec83fb02cb24f35"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/native-r5/preflight-failure.json",
+      "sha256": "86a4e3db3b7a9043be86e6575449d474874f66910b69a41fa6f719a7b5baf910"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/same-caller-identity-routing-audit-1676.json",
+      "sha256": "bfa17a6f3f3edf052f73169c3b49ecf8fd49b8d0cd647e366f2824907858a5ba"
+    }
+  ]
+}
