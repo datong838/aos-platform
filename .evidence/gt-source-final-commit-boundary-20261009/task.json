@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-source-final-commit-boundary-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001649",
+  "scope": [
+    "aos-platform/.evidence/gt-source-final-commit-boundary-20261009"
+  ],
+  "excluded_scope": [
+    "aos-platform/services",
+    "aos-platform/apps",
+    "isolatedDocker",
+    "authoritativeDB"
+  ],
+  "expected_outputs": [
+    "Frozen upstream commit pipeline and retained Source read-only audit; strict completion deadline remains RED unless independently proven"
+  ],
+  "lease_expires_at": "2026-10-09T19:43:07.342236+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T23:43:08+08:00"
+}

@@ -1,0 +1,540 @@
+{
+  "observed_at": "2026-10-09T15:44:37.282898+00:00",
+  "head": "5861fd9fd9a2679456339423a204eca1afa0a3bb",
+  "authority_revision": "AOS-001649",
+  "upstream_url": "https://raw.githubusercontent.com/postgres/postgres/REL_16_14/src/backend/access/transam/xact.c",
+  "upstream_sha256": "792fdf26fb7fb2fa5c30862b4ca83754ca7502dceb284b85fbdbe9ed539a8d24",
+  "commit_pipeline": [
+    {
+      "anchor": "AfterTriggerFireDeferred();",
+      "line": 2196
+    },
+    {
+      "anchor": "PreCommit_Portals(false)",
+      "line": 2203
+    },
+    {
+      "anchor": "XACT_EVENT_PRE_COMMIT",
+      "line": 2215
+    },
+    {
+      "anchor": "AtEOXact_Parallel(true)",
+      "line": 2219
+    },
+    {
+      "anchor": "PreCommit_on_commit_actions();",
+      "line": 2228
+    },
+    {
+      "anchor": "smgrDoPendingSyncs(true",
+      "line": 2235
+    },
+    {
+      "anchor": "PreCommit_Notify();",
+      "line": 2246
+    },
+    {
+      "anchor": "PreCommit_CheckForSerializationFailure();",
+      "line": 2256
+    },
+    {
+      "anchor": "HOLD_INTERRUPTS();",
+      "line": 2259
+    },
+    {
+      "anchor": "RecordTransactionCommit();",
+      "line": 2277
+    },
+    {
+      "anchor": "XACT_EVENT_COMMIT",
+      "line": 2320
+    }
+  ],
+  "wal_pipeline": [
+    {
+      "anchor": "START_CRIT_SECTION();",
+      "line": 1404
+    },
+    {
+      "anchor": "XactLogCommitRecord(GetCurrentTransactionStopTimestamp()",
+      "line": 1410
+    },
+    {
+      "anchor": "XLogFlush(XactLastRecEnd);",
+      "line": 1470
+    },
+    {
+      "anchor": "TransactionIdCommitTree(xid",
+      "line": 1476
+    },
+    {
+      "anchor": "SyncRepWaitForLSN(XactLastRecEnd, true)",
+      "line": 1525
+    }
+  ],
+  "callback_registration": [
+    {
+      "anchor": "item->next = Xact_callbacks;",
+      "line": 3668
+    },
+    {
+      "anchor": "Xact_callbacks = item;",
+      "line": 3669
+    }
+  ],
+  "callback_order": "LIFO; another earlier-registered callback can run after deadline callback",
+  "prepare_requires_separate_gate": true,
+  "native_database": "aos_test_2ac00c0e0559_ti4_test",
+  "native_cluster": "7694680278363095064",
+  "settings": {
+    "transaction_read_only": "on",
+    "transaction_isolation": "serializable",
+    "server_version": "16.14",
+    "fsync": "on",
+    "full_page_writes": "on",
+    "synchronous_commit": "on",
+    "shared_preload_libraries": "",
+    "session_preload_libraries": "",
+    "local_preload_libraries": "",
+    "max_prepared_transactions": "0",
+    "synchronous_standby_names": "",
+    "commit_delay": "0"
+  },
+  "retained_sources": [
+    {
+      "asset_id": "consumed-source-fc38528ea01a48ebbf0993c626eec7c5",
+      "content_hash": "706fe509b7034e9abf2005727141f0fe705074b7d2d7acbd3b98ec6deecebcf7",
+      "hash_ok": true,
+      "signature_ok": true,
+      "finalized": true,
+      "xid": "22251",
+      "native_session": "aos_provider_capacity_issuer",
+      "provenance_ok": true,
+      "xid_status": "committed"
+    }
+  ],
+  "source_triggers": [
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633200",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633200\" AFTER DELETE ON aos_capacity_publication_private.deployment_anchor FROM aos_capacity_publication_private.origin NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633201",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633201\" AFTER UPDATE ON aos_capacity_publication_private.deployment_anchor FROM aos_capacity_publication_private.origin NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633244",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633244\" AFTER DELETE ON aos_capacity_publication_private.deployment_anchor FROM aos_capacity_publication_private.registry_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633245",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633245\" AFTER UPDATE ON aos_capacity_publication_private.deployment_anchor FROM aos_capacity_publication_private.registry_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "tgname": "immutable_registry_row",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE TRIGGER immutable_registry_row BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.deployment_anchor FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.immutable_registry_row()",
+      "function_sha256": "b083d36f831ab812ddd7a7a8f762e4f2bec7b99739f1b78128ca2905af32ab8f"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633305",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633305\" AFTER INSERT ON aos_capacity_publication_private.document FROM aos_capacity_publication_private.origin NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633306",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633306\" AFTER UPDATE ON aos_capacity_publication_private.document FROM aos_capacity_publication_private.origin NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633310",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633310\" AFTER INSERT ON aos_capacity_publication_private.document FROM aos_capacity_publication_private.root_entry NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633311",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633311\" AFTER UPDATE ON aos_capacity_publication_private.document FROM aos_capacity_publication_private.root_entry NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "tgname": "immutable_document",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE TRIGGER immutable_document BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.document FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.immutable_registry_row()",
+      "function_sha256": "b083d36f831ab812ddd7a7a8f762e4f2bec7b99739f1b78128ca2905af32ab8f"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633466",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633466\" AFTER DELETE ON aos_capacity_publication_private.global_account FROM aos_capacity_publication_private.global_provider NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633467",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633467\" AFTER UPDATE ON aos_capacity_publication_private.global_account FROM aos_capacity_publication_private.global_provider NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633515",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633515\" AFTER DELETE ON aos_capacity_publication_private.global_account FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633516",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633516\" AFTER UPDATE ON aos_capacity_publication_private.global_account FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "tgname": "source_identity_immutable",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE TRIGGER source_identity_immutable BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.global_account FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()",
+      "function_sha256": "61f26551d117b5d2e331a780c6d02d1c1fc954f1efa64f41bbf9f7dd25171071"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633468",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633468\" AFTER INSERT ON aos_capacity_publication_private.global_provider FROM aos_capacity_publication_private.global_account NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633469",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633469\" AFTER UPDATE ON aos_capacity_publication_private.global_provider FROM aos_capacity_publication_private.global_account NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "tgname": "source_identity_immutable",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE TRIGGER source_identity_immutable BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.global_provider FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()",
+      "function_sha256": "61f26551d117b5d2e331a780c6d02d1c1fc954f1efa64f41bbf9f7dd25171071"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633249",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633249\" AFTER DELETE ON aos_capacity_publication_private.origin FROM aos_capacity_publication_private.registry_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633250",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633250\" AFTER UPDATE ON aos_capacity_publication_private.origin FROM aos_capacity_publication_private.registry_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633303",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633303\" AFTER DELETE ON aos_capacity_publication_private.origin FROM aos_capacity_publication_private.document NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633304",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633304\" AFTER UPDATE ON aos_capacity_publication_private.origin FROM aos_capacity_publication_private.document NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633344",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633344\" AFTER DELETE ON aos_capacity_publication_private.origin FROM aos_capacity_publication_private.origin_withdrawal NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633345",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633345\" AFTER UPDATE ON aos_capacity_publication_private.origin FROM aos_capacity_publication_private.origin_withdrawal NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633202",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633202\" AFTER INSERT ON aos_capacity_publication_private.origin FROM aos_capacity_publication_private.deployment_anchor NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633203",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633203\" AFTER UPDATE ON aos_capacity_publication_private.origin FROM aos_capacity_publication_private.deployment_anchor NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633207",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633207\" AFTER INSERT ON aos_capacity_publication_private.origin FROM aos_capacity_publication_private.root_snapshot NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633208",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633208\" AFTER UPDATE ON aos_capacity_publication_private.origin FROM aos_capacity_publication_private.root_snapshot NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "tgname": "immutable_registry_row",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE TRIGGER immutable_registry_row BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.origin FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.immutable_registry_row()",
+      "function_sha256": "b083d36f831ab812ddd7a7a8f762e4f2bec7b99739f1b78128ca2905af32ab8f"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633346",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633346\" AFTER INSERT ON aos_capacity_publication_private.origin_withdrawal FROM aos_capacity_publication_private.origin NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633347",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633347\" AFTER UPDATE ON aos_capacity_publication_private.origin_withdrawal FROM aos_capacity_publication_private.origin NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "tgname": "immutable_origin_withdrawal",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE TRIGGER immutable_origin_withdrawal BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.origin_withdrawal FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.immutable_registry_row()",
+      "function_sha256": "b083d36f831ab812ddd7a7a8f762e4f2bec7b99739f1b78128ca2905af32ab8f"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633246",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633246\" AFTER INSERT ON aos_capacity_publication_private.registry_epoch FROM aos_capacity_publication_private.deployment_anchor NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633247",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633247\" AFTER UPDATE ON aos_capacity_publication_private.registry_epoch FROM aos_capacity_publication_private.deployment_anchor NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633251",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633251\" AFTER INSERT ON aos_capacity_publication_private.registry_epoch FROM aos_capacity_publication_private.origin NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633252",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633252\" AFTER UPDATE ON aos_capacity_publication_private.registry_epoch FROM aos_capacity_publication_private.origin NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633308",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633308\" AFTER DELETE ON aos_capacity_publication_private.root_entry FROM aos_capacity_publication_private.document NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633309",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633309\" AFTER UPDATE ON aos_capacity_publication_private.root_entry FROM aos_capacity_publication_private.document NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633230",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633230\" AFTER INSERT ON aos_capacity_publication_private.root_entry FROM aos_capacity_publication_private.root_snapshot NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633231",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633231\" AFTER UPDATE ON aos_capacity_publication_private.root_entry FROM aos_capacity_publication_private.root_snapshot NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "tgname": "immutable_registry_row",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE TRIGGER immutable_registry_row BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.root_entry FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.immutable_registry_row()",
+      "function_sha256": "b083d36f831ab812ddd7a7a8f762e4f2bec7b99739f1b78128ca2905af32ab8f"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633205",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633205\" AFTER DELETE ON aos_capacity_publication_private.root_snapshot FROM aos_capacity_publication_private.origin NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633206",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633206\" AFTER UPDATE ON aos_capacity_publication_private.root_snapshot FROM aos_capacity_publication_private.origin NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633228",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633228\" AFTER DELETE ON aos_capacity_publication_private.root_snapshot FROM aos_capacity_publication_private.root_entry NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633229",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633229\" AFTER UPDATE ON aos_capacity_publication_private.root_snapshot FROM aos_capacity_publication_private.root_entry NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "tgname": "immutable_registry_row",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE TRIGGER immutable_registry_row BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.root_snapshot FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.immutable_registry_row()",
+      "function_sha256": "b083d36f831ab812ddd7a7a8f762e4f2bec7b99739f1b78128ca2905af32ab8f"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633520",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633520\" AFTER DELETE ON aos_capacity_publication_private.source_pending FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633521",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633521\" AFTER UPDATE ON aos_capacity_publication_private.source_pending FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "tgname": "source_pending_finalized",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "definition": "CREATE CONSTRAINT TRIGGER source_pending_finalized AFTER INSERT OR UPDATE ON aos_capacity_publication_private.source_pending DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.require_pending_source_finalized()",
+      "function_sha256": "5ad495b758e3bb97bc0f9fd0b85b3980038377a6d3910e6825304f694af6e786"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633534",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633534\" AFTER INSERT ON aos_capacity_publication_private.source_provenance FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633535",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633535\" AFTER UPDATE ON aos_capacity_publication_private.source_provenance FROM aos_capacity_publication_private.source_publication NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "tgname": "source_provenance_immutable",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE TRIGGER source_provenance_immutable BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.source_provenance FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()",
+      "function_sha256": "61f26551d117b5d2e331a780c6d02d1c1fc954f1efa64f41bbf9f7dd25171071"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633532",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633532\" AFTER DELETE ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.source_provenance NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "function_sha256": "0ea378155aad58c22fc0bfd63c717f36bd7743ac15acd40b922e53cf34e5ad40"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_a_2633533",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_2633533\" AFTER UPDATE ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.source_provenance NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "function_sha256": "da6531c61156e0102d6a65e2c79cb331a434da43d803bff2982434c96018c6e1"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633517",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633517\" AFTER INSERT ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.global_account NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633518",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633518\" AFTER UPDATE ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.global_account NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633522",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633522\" AFTER INSERT ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.source_pending NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "function_sha256": "1fb27f5e28adb2459b50710e06e589994dbce63be44d164630b1c0e929b5f0b7"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_2633523",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_2633523\" AFTER UPDATE ON aos_capacity_publication_private.source_publication FROM aos_capacity_publication_private.source_pending NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "function_sha256": "f7bc324f04c13acc429da6d04d030ffe2a97edd2c30373425893448a5e6fd977"
+    },
+    {
+      "tgname": "source_publication_immutable",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "definition": "CREATE TRIGGER source_publication_immutable BEFORE DELETE OR UPDATE ON aos_capacity_publication_private.source_publication FOR EACH ROW EXECUTE FUNCTION aos_capacity_publication_private.refuse_source_publication_mutation()",
+      "function_sha256": "61f26551d117b5d2e331a780c6d02d1c1fc954f1efa64f41bbf9f7dd25171071"
+    }
+  ],
+  "temporary_interfaces_absent": {
+    "public.prepare_capacity_source(bytea,text,text,jsonb)": true,
+    "public.commit_capacity_source(text,bytea,bytea)": true
+  },
+  "read_only": true,
+  "inputs_unchanged": true,
+  "strict_completion_deadline": "RED_UNPROVEN",
+  "precommit_callback_installed": false,
+  "source_or_business_delivery": false
+}

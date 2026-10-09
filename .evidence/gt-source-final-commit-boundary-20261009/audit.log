@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-final-commit-boundary-20261009/audit_boundary.py", line 30, in <module>
+    callbacks=body('CallXactCallbacks');assert 'item = Xact_callbacks' in callbacks and 'item = item->next' in callbacks and 'item->callback(event, item->arg);' in callbacks
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
