@@ -1,0 +1,43 @@
+{
+  "authority_revision": "AOS-001632",
+  "head": "3146cb017db0a6a46a82daa8dddc5ac00ac47ff7",
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/current-source-command-fix-reference-1631.json",
+      "sha256": "86db51cbbf78cb50d44336edd2b92777033134407eb188f2825451ee65957885"
+    },
+    {
+      "path": ".evidence/gt-source-profile-current-review-20261009/review.md",
+      "sha256": "41dab3009a8193148007478616645673073dc129bb797608e3a2c0ec6f514ee0"
+    },
+    {
+      "path": ".evidence/gt-source-profile-current-review-20261009/expected-changes.json",
+      "sha256": "90daec81cf3b11e60ef38bfe2583622689644b1b282443ed3b2e7d20b485d7ee"
+    },
+    {
+      "path": ".evidence/gt-source-profile-current-review-20261009/independent-native-ref-verification.json",
+      "sha256": "d32b0a45b31b0768c31a7d59375ea7067cd3700ae829277240095e05c508edda"
+    },
+    {
+      "path": ".evidence/gt-source-profile-current-review-20261009/independent-original-green-verification.json",
+      "sha256": "1c0274386821055d4ad475c4f2bc925727249028a96d40c6144ba922a17cd1c9"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_provider_capacity_source_consumer.py",
+      "sha256": "0da7eb8ae3134d7239b7f217ebc48be16162ab17d9a539f9c1d48954998defdd"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+      "sha256": "873acbad701159170d304dd48a377aea82c3bfadaa24c0c7d88f50f9a3c2421c"
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/plan.md",
+      "sha256": "4690e646fe022fbcb97160488760ae9cc68f4bb5467d01a58a9e65621d6ebb59"
+    },
+    {
+      "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/plan.md",
+      "sha256": "0ebdde7640d56975760dc2b1dd21be4e43889bff609c7c354aef0eeecbb44dc9"
+    }
+  ],
+  "execution_allowed": false
+}
