@@ -1,0 +1,167 @@
+{
+  "authority_revision": "AOS-001630",
+  "head": "252962e3578d909b16a6ae35cf07079024a323c3",
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-body-expiry-commit-reference-1629.json",
+      "sha256": "b3a3d234cc58fd4f68f463b3669ea71110cba711c2bbc6b06c6bdf5649fe2021"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/audit-r1-failure.json",
+      "sha256": "07f6a29d8257c3571ba01449fcb961b966962b6336b7b8ffc4238d6f28964988"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/baseline-files.json",
+      "sha256": "59a414fa58b4ddd3ca5fbe257a4536c7df6f6dd980eb7de5fb57beb43a8c3307"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/consumer-baseline-files.json",
+      "sha256": "00bf6af9fe2a3a70987e40b1d6df7025342be5422c6c9ef41673d1fe385ccd7e"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/finalize_diagnostic.py",
+      "sha256": "bc92eb11a06e3c565a6508cea73b54610d0c7e1e59e436212b39e45b953edded"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/followup-investigation.md",
+      "sha256": "fa99f05a008feb6dd12cdb38a05d28b02f47b3790fc2c466ba8d3990deab3e72"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/independent-positive-live-readback-r3.json",
+      "sha256": "6ecb6ec5910748957f49b4fa6119bb73f0d013129886272a3481598057f75b04"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/independent-positive-live-readback.json",
+      "sha256": "119fb137fdd70948ac6f3121ecde1609393d3763d213b7d2a7d31a94a661f6f6"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/independent-red-verification.json",
+      "sha256": "e848ee3d3ec3c0786e0b65715f8bef2bc33545776bbae11efa0663235461427a"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/lease-preflight.json",
+      "sha256": "d5c75cdb8cde8bef4a589be13535e7cc3cce2853ec0ff11851c5813bddf410cd"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/live-deadline-wait-r2.json",
+      "sha256": "74d5ef41dd7467444e950e14472d41ff93ae1d36a7dfa613574c99bb83d1ac02"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/live-deadline-wait.json",
+      "sha256": "364dfb5583c7150c26c7d1e1ce50e4f74914cb0a8fc098dcab357926536b74fb"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/live-tool-session-r3.json",
+      "sha256": "c20ebddbd78c4ac0a8997e3a1733239eb6b272425e863f1811f8d1fb460370be"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/live-tool-session.json",
+      "sha256": "b35521601d009a7c3222f2677dcc5fa690d3f434428ccf0aff157e8bd90b859f"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/native-current-body-expiry-r1-attempt.json",
+      "sha256": "8f961c77bdbceaf3bcf867e3486a3954490219524a017bcf354c71c74244f8ad"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/native-current-body-expiry-r1-result.json",
+      "sha256": "e28d714fcff064e75232920985a8e681a87b288d50914296b1f368884a82b7ce"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/native-current-body-expiry-r2-attempt.json",
+      "sha256": "1db4658f717d3607044936a5fb243292c2d6047287b7b37d485e366fb968b4c0"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/native-current-body-expiry-r2-result.json",
+      "sha256": "287ab4d52e49280d6061b226242cf26b1435baa13deaf76e05f26824198546b7"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/native-current-body-expiry-r3-attempt.json",
+      "sha256": "0e836706983caa60e6017275f86ed186335d781d1cbafc66ba7d9c25b759a0d6"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/native-current-body-expiry-r3-result.json",
+      "sha256": "8cc030a3ab716f9ccb97e81bc30790b287fcf51468dc9b4cb6ba0c88b61aebae"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/native-r1.log",
+      "sha256": "651fc3eaf51c24b3082903b279086096f802bfc519d8d51c549b21c61b5cc3d5"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/native-r2.log",
+      "sha256": "dd2d2c0be9be72495d07a32ecf7c17a74ac85eebfbed87f8f7d46f03ec97339b"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/native-r3.log",
+      "sha256": "85577641942ce429c386690eff601eb88795a8183e3656a885064b39cc9f4cca"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/plan.md",
+      "sha256": "3046143ad52788c519b1eb6ae0dbc898e7a1e9b384faa57a8a437514f50b53f9"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/r1-independent-no-publication.json",
+      "sha256": "36c7afc34416d910397d60b6d07703d813d252a55acc5805289da2034dd4df6d"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/r2-independent-readback.json",
+      "sha256": "be7688d7de99d8389fe60fb51a145134d5caba6022fd7aeb547b3f7a1e8abbfd"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/record_stage.py",
+      "sha256": "c323d92a0b04cad7ae4bb93e9276ded1e2c4d9c1efd92884da3aecdd2ca2a5df"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/review.md",
+      "sha256": "eff0ba53ffe4160e512670b058d3bc8f541ae0340218a20d11ebb4629835e59e"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/run_native.py",
+      "sha256": "b59585ec614259167a41852bf4a5e2ece33c6b484d6290b2b40fb8b9f1ccdc49"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/run_native_r2.py",
+      "sha256": "18549a0e32c3582c850a7cf15f265253d775176d530a984f00a2c9eaa1595539"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/run_native_r3.py",
+      "sha256": "f80541afc956af232c7fbafdd9a2aec9cdbe6b9447062199697063925ac0c90e"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/task.json",
+      "sha256": "8a19682a1b0588fa39837b7bcad544a595547899b5c20800f8672c40f6580658"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/teardown-original-expired-refusal-r2.json",
+      "sha256": "f0d1e4cfe2dd802d6cfb42b8b74709bd08deecff47a22d821978818b59fd767f"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/teardown-original-expired-refusal.json",
+      "sha256": "8dc8db1b53342661047d10bc42d325e31e57c6d6859d68a77ee2701a9b30c84c"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/test-r1.py.txt",
+      "sha256": "dab82ee618483cc1097de98118c12bd915c83c2ab1dab24f16a903461a558849"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/test-r2.py.txt",
+      "sha256": "a1ba1c323b820a1e964e8c5f3bc872645d2a1b015e34a110e2866b42bc044796"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/test_current_body_expiry.py",
+      "sha256": "caa75cb79b92d869077de0497b1b200319997fcfb4211c95f3b40c8a2002817c"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/verify_native.py",
+      "sha256": "634b1e770d16944087d851a627fa7f9ba35f483a8256689ebe93025705a7af21"
+    },
+    {
+      "path": ".evidence/gt-source-current-body-expiry-native-20261009/verify_red.py",
+      "sha256": "d32d50968de08616391ee96f69597bd35af106f54a9c2fdf1ef6be76784d24e4"
+    }
+  ],
+  "execution_allowed": false
+}
