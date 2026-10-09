@@ -1,0 +1,27 @@
+{
+  "caller": {
+    "xid": "31430",
+    "pid": 10578
+  },
+  "checked_at": "2026-10-09T20:37:31.753249+00:00",
+  "cases": 2,
+  "legs": 4,
+  "distinct_sources": 1,
+  "same_original_source": true,
+  "original_suite_model_judge_verified": true,
+  "original_judge_ref": {
+    "judgeId": "isolated-model-judge-78a0f94fad6c41fcab3ff492d1f9d0be",
+    "revision": 1,
+    "contentHash": "048a6323384da2550b21090c65dafd36f1a03048735c8755648732a5c294c6e0",
+    "modelRoute": {
+      "assetType": "registered_model",
+      "assetId": "joint-prefix-model-f3898b40e1ff42958f4e04d433a5d474",
+      "revision": "1",
+      "contentHash": "ce0619964effdeb27af0d446129ab3a7e6f7c3f50a792a4cfd861f23abcb0183"
+    }
+  },
+  "wrong_source_physical_provider_rejected": true,
+  "empty_duplicate_extra_commands_rejected": true,
+  "canary_rejected": true,
+  "execution_allowed": false
+}

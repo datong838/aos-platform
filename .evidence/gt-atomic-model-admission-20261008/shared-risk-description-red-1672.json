@@ -1,0 +1,9 @@
+{
+  "missing_required_entries": {
+    "prepare_shared_parent_risk_description": true,
+    "occupation_shared_risk_description_statements": true,
+    "SharedParentRiskDescriptionPreparation": true
+  },
+  "red": true,
+  "database_effects": false
+}

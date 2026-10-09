@@ -1,0 +1,9 @@
+{
+  "class": "CheckViolation",
+  "sqlstate": "23514",
+  "message": "CAPACITY_JUDGE_CURRENT_DEADLINES_REQUIRED\nCONTEXT:  PL/pgSQL function public.capacity_occupation_judge_fact(bytea,jsonb,uuid,text,text) line 199 at RAISE\nPL/pgSQL function public.capacity_occupation_plan_risk_fact(bytea,jsonb,uuid,text,text,uuid,text,text) line 5 at assignment\nPL/pgSQL function public.prepare_capacity_shared_risk_description(bytea,jsonb,uuid,jsonb,text) line 20 at assignment",
+  "source_valid_from": "2026-10-09 20:27:56.015647+00:00",
+  "source_valid_until": "2026-10-09 20:32:55.924250+00:00",
+  "nested_class": "NoneType",
+  "nested_message": "None"
+}

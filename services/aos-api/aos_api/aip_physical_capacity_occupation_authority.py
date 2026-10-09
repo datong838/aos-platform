@@ -1356,3 +1356,133 @@ def occupation_target_ledger_statements():
         f'GRANT EXECUTE ON FUNCTION {TARGET_OCCUPATION} TO aos_runtime',
     ))
     return tuple(statements)
+
+
+SHARED_RISK_DESCRIPTION = 'public.prepare_capacity_shared_risk_description(bytea,jsonb,uuid,jsonb,text)'
+
+
+def occupation_shared_risk_description_statements():
+    """Closed complete description binding; no identity, Intent or call grant."""
+    table = SCHEMA + '.prepared_shared_risk_description'
+    producer = f'''CREATE FUNCTION {SHARED_RISK_DESCRIPTION.split('(')[0]}(
+      p_raw bytea,p_source jsonb,p_plan uuid,p_manifest jsonb,p_hash text) RETURNS jsonb
+      LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $shared$
+      DECLARE risk {SCHEMA}.prepared_plan_risk%ROWTYPE; prior {table}%ROWTYPE;
+        facts jsonb; after_facts jsonb; body jsonb; digest text; item jsonb; original_case jsonb;
+        leg jsonb; parent jsonb; fact jsonb; source_doc jsonb; purpose text; idx integer:=0;
+      BEGIN
+        IF session_user<>'aos_provider_capacity_occupation'
+          OR current_setting('transaction_isolation')<>'serializable'
+          OR current_setting('transaction_read_only')<>'off'
+          OR current_setting('TimeZone')<>'UTC'
+          OR current_setting('session_replication_role')<>'origin'
+          OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+          OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' THEN
+          RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+        SELECT * INTO risk FROM {SCHEMA}.prepared_plan_risk WHERE plan_id=p_plan FOR SHARE;
+        IF NOT FOUND OR risk.org_id<>'org-org' OR risk.project_id<>'dev-project'
+          OR risk.origin_xid IS DISTINCT FROM pg_current_xact_id()
+          OR risk.origin_pid IS DISTINCT FROM pg_backend_pid() THEN
+          RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_ORIGIN_REQUIRED' USING ERRCODE='23514'; END IF;
+        source_doc:=public.capacity_occupation_source_fact(p_raw,p_source);
+        SELECT * INTO prior FROM {table} WHERE plan_id=p_plan;
+        IF FOUND AND (prior.immutable->'manifest' IS DISTINCT FROM p_manifest
+          OR prior.immutable->>'manifestHash' IS DISTINCT FROM p_hash
+          OR prior.origin_xid IS DISTINCT FROM pg_current_xact_id()
+          OR prior.origin_pid IS DISTINCT FROM pg_backend_pid()) THEN
+          RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+        facts:=public.capacity_occupation_plan_risk_fact(p_raw,p_source,
+          (risk.immutable->'originalFacts'->'target'->>'reservationId')::uuid,risk.target_request,
+          risk.immutable->'originalFacts'->'target'->>'requestHash',
+          (risk.immutable->'originalFacts'->'judge'->>'reservationId')::uuid,risk.judge_request,
+          risk.immutable->'originalFacts'->'judge'->>'requestHash');
+        IF facts IS DISTINCT FROM risk.immutable->'originalFacts'
+          OR jsonb_typeof(p_manifest) IS DISTINCT FROM 'object'
+          OR p_manifest->>'schemaVersion' IS DISTINCT FROM 'aos.model-eval-target-judge-shared-risk-manifest/v3'
+          OR p_manifest->>'executionId' IS DISTINCT FROM p_plan::text
+          OR p_manifest->'tenant' IS DISTINCT FROM risk.immutable->'tenant'
+          OR p_manifest->'executionAllowed' IS DISTINCT FROM 'false'::jsonb
+          OR p_manifest->'judgeRequest' IS DISTINCT FROM facts->'judge'->'application'
+          OR p_manifest->>'judgeRequestId' IS DISTINCT FROM risk.judge_request
+          OR p_manifest->>'judgeRequestHash' IS DISTINCT FROM facts->'judge'->>'requestHash'
+          OR jsonb_typeof(p_manifest->'cases') IS DISTINCT FROM 'array'
+          OR jsonb_array_length(p_manifest->'cases') IS DISTINCT FROM jsonb_array_length(facts->'cases')
+          OR p_manifest->>'caseSetHash' IS DISTINCT FROM encode(sha256(convert_to(
+            public.canonical_asset_registry_jsonb((SELECT jsonb_agg(jsonb_build_object(
+              'caseId',c->>'caseId','inputHash',c->'inputArtifact'->>'contentHash',
+              'expectedHash',c->'expectedArtifact'->>'contentHash') ORDER BY ord)
+              FROM jsonb_array_elements(facts->'cases') WITH ORDINALITY AS cases(c,ord))),'UTF8')),'hex')
+          OR p_hash IS DISTINCT FROM encode(sha256(convert_to(
+            public.canonical_asset_registry_jsonb(p_manifest),'UTF8')),'hex') THEN
+          RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_ORIGINAL_REQUIRED' USING ERRCODE='23514'; END IF;
+        FOREACH purpose IN ARRAY ARRAY['target','judge'] LOOP
+          fact:=facts->purpose; parent:=p_manifest->(purpose||'ParentBudget');
+          IF parent->>'requestId' IS DISTINCT FROM fact->>'requestId'
+            OR parent->>'requestHash' IS DISTINCT FROM fact->>'requestHash'
+            OR parent->'parentHoldRef'->>'resourceId' IS DISTINCT FROM fact->>'reservationId'
+            OR parent->'parentHoldRef'->>'contentHash' IS DISTINCT FROM fact->>'contentHash'
+            OR parent->'approvalRef'->>'resourceId' IS DISTINCT FROM fact->>'approvalEventId'
+            OR parent->'upperBoundMinor' IS DISTINCT FROM fact->'upperBoundMinor'
+            OR parent->'currency' IS DISTINCT FROM fact->'currency' THEN
+            RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_PARENT_REQUIRED' USING ERRCODE='23514'; END IF;
+        END LOOP;
+        FOR item IN SELECT value FROM jsonb_array_elements(p_manifest->'cases') LOOP
+          original_case:=facts->'cases'->idx; idx:=idx+1;
+          IF item->>'caseId' IS DISTINCT FROM original_case->>'caseId'
+            OR item->>'inputHash' IS DISTINCT FROM original_case->'inputArtifact'->>'contentHash'
+            OR item->>'expectedHash' IS DISTINCT FROM original_case->'expectedArtifact'->>'contentHash' THEN
+            RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_CASE_REQUIRED' USING ERRCODE='23514'; END IF;
+          FOREACH purpose IN ARRAY ARRAY['target','judge'] LOOP
+            leg:=item->purpose; parent:=p_manifest->(purpose||'ParentBudget');
+            IF jsonb_typeof(leg) IS DISTINCT FROM 'object'
+              OR leg->>'purpose' IS DISTINCT FROM purpose OR leg->'tenant' IS DISTINCT FROM risk.immutable->'tenant'
+              OR leg ? 'allocationUpperBoundMinor' OR leg ? 'budgetAllocationRef'
+              OR leg->'budgetHoldRef' IS DISTINCT FROM parent->'parentHoldRef'
+              OR leg->'approvalRef' IS DISTINCT FROM parent->'approvalRef'
+              OR leg->'sourceRef' IS DISTINCT FROM p_source
+              OR leg->'physicalAccountRef' IS DISTINCT FROM source_doc->'accountCandidateRef'
+              OR NOT (source_doc->'providerRefs' @> jsonb_build_array(leg->'providerRef')) THEN
+              RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_LEG_REQUIRED' USING ERRCODE='23514'; END IF;
+          END LOOP;
+        END LOOP;
+        body:=jsonb_build_object('schemaVersion','aos.shared-parent-risk-description-preparation/v1',
+          'planId',p_plan,'tenant',risk.immutable->'tenant','originalRiskHash',risk.content_hash,
+          'manifest',p_manifest,'manifestHash',p_hash,'callerLogin',session_user,
+          'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),
+          'state','prepared_description_only','executorsAuthenticated',false,'executionAllowed',false);
+        digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
+        SELECT * INTO prior FROM {table} WHERE plan_id=p_plan;
+        IF FOUND THEN
+          IF prior.immutable IS DISTINCT FROM body OR prior.content_hash IS DISTINCT FROM digest
+            OR prior.origin_xid IS DISTINCT FROM pg_current_xact_id() OR prior.origin_pid IS DISTINCT FROM pg_backend_pid() THEN
+            RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+        ELSE
+          INSERT INTO {table}(org_id,project_id,plan_id,immutable,content_hash,origin_xid,origin_pid)
+            VALUES('org-org','dev-project',p_plan,body,digest,pg_current_xact_id(),pg_backend_pid());
+        END IF;
+        after_facts:=public.capacity_occupation_plan_risk_fact(p_raw,p_source,
+          (facts->'target'->>'reservationId')::uuid,risk.target_request,facts->'target'->>'requestHash',
+          (facts->'judge'->>'reservationId')::uuid,risk.judge_request,facts->'judge'->>'requestHash');
+        IF after_facts IS DISTINCT FROM facts THEN
+          RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_CURRENT_REQUIRED' USING ERRCODE='23514'; END IF;
+        RETURN jsonb_build_object('planId',p_plan,'immutable',body,'contentHash',digest,'executionAllowed',false);
+      END $shared$'''
+    return (
+        f'''CREATE TABLE {table}(org_id text NOT NULL,project_id text NOT NULL,
+          plan_id uuid PRIMARY KEY REFERENCES {SCHEMA}.prepared_plan_risk(plan_id),
+          immutable jsonb NOT NULL,content_hash text NOT NULL,origin_xid xid8 NOT NULL,origin_pid integer NOT NULL)''',
+        f'ALTER TABLE {table} OWNER TO {OWNER}',
+        f'ALTER TABLE {table} ENABLE ROW LEVEL SECURITY',
+        f'ALTER TABLE {table} FORCE ROW LEVEL SECURITY',
+        f'''CREATE POLICY exact_scope ON {table} TO {OWNER}
+          USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+          WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))''',
+        f'REVOKE ALL ON {table} FROM PUBLIC,aos_runtime',
+        f'CREATE TRIGGER immutable_shared_description BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION {SCHEMA}.immutable_prepared_intent()',
+        f'CREATE TRIGGER no_truncate_shared_description BEFORE TRUNCATE ON {table} FOR EACH STATEMENT EXECUTE FUNCTION {SCHEMA}.immutable_prepared_intent()',
+        f'CREATE CONSTRAINT TRIGGER no_unfinalized_shared_description AFTER INSERT ON {table} DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION {SCHEMA}.reject_unfinalized_parent_debit()',
+        producer,
+        f'ALTER FUNCTION {SHARED_RISK_DESCRIPTION} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {SHARED_RISK_DESCRIPTION} FROM PUBLIC',
+        f'GRANT EXECUTE ON FUNCTION {SHARED_RISK_DESCRIPTION} TO aos_runtime',
+    )

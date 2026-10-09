@@ -1,0 +1,15 @@
+# 完整v3描述持久绑定实施
+
+依据1671调查与方案，精确新增原atomic scope下三文件：services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py 的显式隔离安装artifact；aip_physical_capacity_occupation.py 的新samecaller入口；aip_physical_capacity_occupation_contracts.py 的prepared描述DTO。旧定义不改，不安装正式库、不改迁移、不启Provider。
+
+新增private prepared_shared_risk_description，FK原prepared_plan_risk。producer只在正向原SCRAM occupation caller同SERIAL/UTC/xid/pid下，重新调用原Source/两parent原facts，核原risk不可变body及完整v3的申请/父/case/每legSourcephysical关联，再生成包括整份manifest和riskHash的native canonical body/hash。只固定描述，executorsAuthenticated=false、executionAllowed=false；identity/Intent/joint真实授权后继不可假充。sameplan exact replay相等，任何描述字段漂移冲突；RLS/no DML/immutable/no truncate/deferred COMMIT拒绝保持。
+
+新Python入口复用已验证原桥，调用新producer、typed核rawmanifest和原riskHash，末次再复用原桥复核等待后Source与双父。原入口返回不变。原table/producer签名不变。
+
+RED入口/SQLartifact/DTO不存在；纯契约包括三描述漂移hash、金额/旧域/伪bool拒；fresh Desktop5441原完整Source+双parent+四legs native保存及replay/漂移负门、private禁读/提交拒，独立ABORTED/新旧row0。所有测试写新目录并备份原可写摘要，patch实际collected模块，禁止借R2基线宣旧摘要恢复。无浏览器适用项。Task全退出仍需正式原件和joint/token/签名，不发Delivery。
+
+复验R3确认原Judge deadline拒绝，Source尚有效；未放宽任何期限。新入口末次冗余整套风险producer重放改为原Source consumer+原Owner+最后clock/同caller复核。SQL已同caller前后重读原facts，风险不可变；保留所有最后等待后的currentness必要门。当前专项移除上一波已经覆盖的独立risk两次重放，将测量聚焦新description的精确replay与三描述漂移，避免在原50秒申请窗内重复已收口的旧专项。
+
+R4新描述正向及精确重放通过，后继负门因Judge过期先拒而未到描述冲突。新SQL对已存在原件的描述/hash/origin漂移，在原Source消费后、昂贵原父重读前直接拒冲突；同描述重放仍完整重读原父/currentness，因此不能复活过期原件。新Python末次同时复核原command packet未变。
+
+R5在原50秒新目的审批样例进入新probe前已经JUDGE_CURRENT_APPROVAL_REQUIRED，绝不作为描述成功。R6仅在新实验目录编译原完整native test函数的副本，将其新建、独立批准的新目的审批窗口从50秒设置100秒；原request仍2分钟、签名Rule仍3分钟，原Store/审批Checker原件检查不替换，不改旧test源/旧原件/产品规则/clock。保存原函数及改后函数hash；100秒若超出原申请/Rule，自然拒绝。旧50秒过期反例保留。

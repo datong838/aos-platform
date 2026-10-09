@@ -116,3 +116,54 @@ class PhysicalOccupationPreparation(_ModelExecutionContract):
             if actual != expected:
                 raise ValueError('original native occupation content hash required')
         return self
+
+
+from aos_api.aip_model_eval_execution_contracts import ModelEvalTargetJudgeSharedRiskManifest
+
+
+class SharedParentRiskDescriptionBody(_ModelExecutionContract):
+    """Complete persisted description; presented executor references are untrusted."""
+    schema_version: Literal['aos.shared-parent-risk-description-preparation/v1']
+    plan_id: _OccupationUUID
+    tenant: _OccupationTenant
+    original_risk_hash: _OccupationHash
+    manifest: ModelEvalTargetJudgeSharedRiskManifest
+    manifest_hash: Annotated[str, Field(strict=True, pattern=r'^[0-9a-f]{64}$')]
+    caller_login: Literal['aos_provider_capacity_occupation']
+    caller_xid: str = Field(strict=True, pattern=r'^[1-9][0-9]*$')
+    caller_pid: int = Field(strict=True, gt=0)
+    state: Literal['prepared_description_only']
+    executors_authenticated: Literal[False]
+    execution_allowed: Literal[False]
+
+    @field_validator('executors_authenticated', 'execution_allowed', mode='before')
+    @classmethod
+    def _nonexecuting(cls, value):
+        return PhysicalAccountGuardPreparation._false(value)
+
+    @model_validator(mode='after')
+    def _whole_manifest(self):
+        if (self.plan_id != self.manifest.execution_id
+                or self.tenant.model_dump() != self.manifest.tenant.model_dump()
+                or self.manifest_hash != canonical_hash(self.manifest.model_dump(mode='json', by_alias=True))):
+            raise ValueError('complete canonical shared-risk description required')
+        return self
+
+
+class SharedParentRiskDescriptionPreparation(_ModelExecutionContract):
+    plan_id: _OccupationUUID
+    immutable: SharedParentRiskDescriptionBody
+    content_hash: _OccupationHash
+    execution_allowed: Literal[False]
+
+    @field_validator('execution_allowed', mode='before')
+    @classmethod
+    def _nonexecuting(cls, value):
+        return PhysicalAccountGuardPreparation._false(value)
+
+    @model_validator(mode='after')
+    def _native_body(self):
+        if (self.plan_id != self.immutable.plan_id or self.content_hash !=
+                'sha256:' + canonical_hash(self.immutable.model_dump(mode='json', by_alias=True))):
+            raise ValueError('exact native shared-risk description hash required')
+        return self

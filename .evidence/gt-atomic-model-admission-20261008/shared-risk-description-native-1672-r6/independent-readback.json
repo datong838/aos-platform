@@ -1,0 +1,33 @@
+{
+  "identity": {
+    "database": "aos_test_133e58edcce8_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on",
+    "status": "aborted"
+  },
+  "counts": {
+    "prepared_plan_risk": 0,
+    "prepared_shared_risk_description": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "source": 1,
+  "runtime_table_acl": {
+    "insert_allowed": false,
+    "select_allowed": false
+  },
+  "native_function": {
+    "owner": "aos_physical_capacity_occupation_owner",
+    "prosecdef": true,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "body_hash": "3b2f935a8c5c9eea85ba7c9f164b181ead779ae3e65351dfd024adb1de8265b4"
+  },
+  "frozen_product_hashes_match": true,
+  "new_independent_approval_seconds": 100,
+  "original_50_second_expiry_failures_preserved": true,
+  "historical_fixture_restored": false,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

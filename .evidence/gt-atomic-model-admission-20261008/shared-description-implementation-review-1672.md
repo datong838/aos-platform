@@ -1,0 +1,13 @@
+# 完整共享父风险描述绑定复审
+
+产品精确三文件，旧函数/类AST未变：显式隔离closed存储artifact、samecaller描述入口、严格非执行DTO。完整v3 canonical描述/hash与原private riskHash及origin绑定。原Source/双父/currentness重读，末次原Owner/Source/currentclock和原packet同caller复核；三类既存描述漂移先拒冲突，同描述依旧完整currentness，不能恢复过期申请。没有修改旧风险producer/表/迁移或正式库，没有新签名/实际调用权。
+
+308纯累计通过且禁止数据库连接。Native R6 fresh原签名Source、SCRAM、原两独立批准父及完整两case四腿：新描述正向与精确replay、identity/Intent/joint三类直接原生漂移冲突、runtime私表读取拒绝、提前finalize及真实COMMIT拒绝，1PASS118.44s/8既有warning。独立只读回读xid31413 aborted；风险、新描述、扣款、Intent均0，Source1；runtime新表SELECT/INSERT均false，native函数Owner/SECURITY DEFINER/search_path与冻结产品hash匹配。
+
+不能隐去失败：R1入口直接Source reader路径与原权限边界不符，首轮失败后改原Source fact桥；事后只读精确reader查验因fixture teardown报UndefinedFunction，未冒称捕获R1真实底层原因。R2/R3第二description因CAPACITY_JUDGE_CURRENT_DEADLINES_REQUIRED拒绝。R4正向replay通过，后继漂移被expiry先拒；R5原50秒审批进入新probe之前已过期。R5 launcher有一次仅本地baseline文件名错误，native尚未开始，修正后新attempt运行；日志/诊断保留。
+
+R6在新实验目录编译原完整native test函数的副本，仅新建独立审批窗口设100秒，仍受原2分钟request、3分钟签名Rule约束。原磁盘test/旧50秒审批/clock/产品deadline规则没有修改；原Store和独立Checker仍实际执行。原50秒失败保留，不能宣旧50秒样例全通过。Fixture原/改函数hash可复核。
+
+新存储只固定未经认证的完整描述，executorsAuthenticated=false/executionAllowed=false；没有可信identity/Intent/joint或durable共同COMMIT授权。运行器保护仅事故后baseline；上一波两旧摘要仍未恢复，不使用当前副本证明历史验收。本波后端边界无浏览器适用项，Task整体ACTIVE，无Delivery。额外canary/跨origin竞争及完整签名/joint/native调用链仍不能由本必要节点替代。
+
+后继两个登记候选：closed完整v3描述与新签名域/当前issuer+身份撤回原件的必要绑定（优先原件路径调查）；actual token producer与最终joint协议（依赖真实token权威及WAL/ACK语义待裁决）。继续原合同安全主线，不调整Goal或重复未知Prime请求。

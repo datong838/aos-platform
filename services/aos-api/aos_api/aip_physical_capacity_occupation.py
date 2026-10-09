@@ -343,3 +343,51 @@ def prepare_target_occupation(conn, scope, source_command, plan_id, intent_id, c
     except Exception:
         # Preserve caller-owned transaction handling; suppress credential inputs.
         raise ModelEvalOwnerRejected('CAPACITY_TYPED_OCCUPATION_PREPARATION_REQUIRED') from None
+
+
+def prepare_shared_parent_risk_description(conn, scope, source_command, manifest, *,
+                                          release_policy, artifact_bytes):
+    """Persist whole v3 description against original risk; never authenticate calls."""
+    from uuid import UUID
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_provider_capacity_source_consumer import _consumption_packet
+    from aos_api.aip_model_eval_execution_contracts import ModelEvalTargetJudgeSharedRiskManifest
+    from aos_api.aip_physical_capacity_occupation_contracts import SharedParentRiskDescriptionPreparation
+    try:
+        packet = _consumption_packet(source_command)
+        risk = prepare_shared_parent_risk_plan(conn, scope, source_command, manifest,
+            release_policy=release_policy, artifact_bytes=artifact_bytes)
+        plan = ModelEvalTargetJudgeSharedRiskManifest.model_validate(manifest)
+        body = plan.model_dump(mode='json', by_alias=True)
+        result = conn.execute('''SELECT public.prepare_capacity_shared_risk_description(
+          %s,%s::jsonb,%s::uuid,%s::jsonb,%s) AS fact''',
+            (_consumption_packet(source_command),
+             Jsonb(source_command.source_ref.model_dump(mode='json', by_alias=True)),
+             UUID(plan.execution_id), Jsonb(body), canonical_hash(body))).fetchone()
+        if result is None:
+            raise ValueError('original persisted description required')
+        parsed = SharedParentRiskDescriptionPreparation.model_validate(result['fact'])
+        if (parsed.immutable.manifest != plan
+                or parsed.immutable.original_risk_hash != risk['contentHash']
+                or (parsed.immutable.caller_xid, parsed.immutable.caller_pid) != (
+                    risk['immutable']['callerXid'], risk['immutable']['callerPid'])
+):
+            raise ValueError('same current original risk and full manifest required')
+        source = consume_capacity_source_for_occupation(conn, source_command)
+        ModelEvalExecutionOwner().validate_original_target_judge_shared_risk_manifest(
+            conn, scope, plan, release_policy=release_policy, artifact_bytes=artifact_bytes)
+        current = conn.execute("""SELECT clock_timestamp() AS now,pg_current_xact_id()::text AS xid,
+          pg_backend_pid() AS pid,session_user AS login,current_user AS role,
+          current_setting('aos.org_id',true) AS org,current_setting('aos.project_id',true) AS project,
+          current_setting('transaction_isolation') AS isolation,current_setting('transaction_read_only') AS readonly,
+          current_setting('TimeZone') AS timezone,current_setting('session_replication_role') AS replication""").fetchone()
+        if (_consumption_packet(source_command) != packet
+                or not source.valid_from <= current['now'] < source.valid_until
+                or (current['xid'],current['pid'],current['login'],current['role'],current['org'],
+                    current['project'],current['isolation'],current['readonly'],current['timezone'],current['replication']) !=
+                   (parsed.immutable.caller_xid,parsed.immutable.caller_pid,
+                    'aos_provider_capacity_occupation','aos_runtime',*scope.key,'serializable','off','UTC','origin')):
+            raise ValueError('same current caller after all description waits required')
+        return parsed
+    except Exception:
+        raise ModelEvalOwnerRejected('CAPACITY_SHARED_DESCRIPTION_REQUIRED') from None

@@ -1,0 +1,14 @@
+{
+  "aip_physical_capacity_occupation.py": {
+    "old_definitions_unchanged": true,
+    "sha256": "fb682207bf165f442d305fc0d25e7603d1746910dcf081ce2edfce83998f1e78"
+  },
+  "aip_physical_capacity_occupation_authority.py": {
+    "old_definitions_unchanged": true,
+    "sha256": "a71944ef653421b7e38038fdf99de3b244cc3a793ebf0f606c0e66d63e8c6bb0"
+  },
+  "aip_physical_capacity_occupation_contracts.py": {
+    "old_definitions_unchanged": true,
+    "sha256": "b169f8e5f3d8025ba4e2459fb2b7160aa3ebc8b6468f130ef8785b6f37fd18fc"
+  }
+}

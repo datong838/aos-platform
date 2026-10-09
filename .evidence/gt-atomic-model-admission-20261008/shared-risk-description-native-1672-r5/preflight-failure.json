@@ -1,0 +1,7 @@
+{
+  "failure": "launcher filename replacement accidentally renamed protected read-only baseline path",
+  "native_request_started": false,
+  "database_created": false,
+  "attempt_file_exists": false,
+  "fix": "restore exact existing protected baseline filename before first native request"
+}

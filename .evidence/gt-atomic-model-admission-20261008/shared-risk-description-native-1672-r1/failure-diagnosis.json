@@ -1,0 +1,9 @@
+{
+  "native_exit": 1,
+  "old_files_unchanged": true,
+  "readonly_diagnostic": "UndefinedFunction: Source reader already removed by original fixture teardown",
+  "static_acl_finding": "Source reader grants runtime only; existing capacity_occupation_source_fact bridges to private Owner",
+  "fix": "use original Source fact bridge instead of private Owner directly calling runtime reader; no grants changed",
+  "exact_runtime_failure_context_not_captured": true,
+  "formal_db_effects": false
+}
