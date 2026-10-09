@@ -1,0 +1,14 @@
+{
+  "fingerprint": {
+    "pid": 74578,
+    "ppid": 74534,
+    "uid": 501,
+    "started": "Fri Oct  9 09:12:59 2026",
+    "argv_sha256": "699718f7d0c45dac3bc61e310b51abe88e0e50de1124d527ce18f306d9914696",
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+    "children": [],
+    "listener_ports": [
+      8080
+    ]
+  }
+}

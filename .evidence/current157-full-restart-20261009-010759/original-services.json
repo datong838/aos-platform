@@ -1,0 +1,63 @@
+[
+  {
+    "argv": [
+      "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+      "/Users/ddt/work/projects/ai_agent/aos-recovery/current157-full-restart-20261008-010137/scripts/a0v_current_preview_http.py",
+      "--signed-receipt",
+      "/Users/ddt/work/projects/ai_agent/.aos-current-build-pyGkqQ/signing-receipt.json",
+      "--serve"
+    ],
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+    "port": 8080,
+    "fingerprint": {
+      "pid": 26897,
+      "ppid": 1,
+      "uid": 501,
+      "started": "Thu Oct  8 09:10:26 2026",
+      "argv_sha256": "3881fe213875a9231b36ec0dc4bf6649efe4ddb01f7593e33a8c3b5dac6e1eac",
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+      "children": [],
+      "listener_ports": [
+        8080
+      ]
+    },
+    "helper_argv": null
+  },
+  {
+    "fingerprint": {
+      "pid": 27312,
+      "ppid": 1,
+      "uid": 501,
+      "started": "Thu Oct  8 09:12:12 2026",
+      "argv_sha256": "4cd8ae42f94933c4fa6fceeb4cda83e16c8940a1509321db6ef2f849bd771270",
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-recovery/current157-full-restart-20261008-010137/apps/web",
+      "children": [
+        {
+          "pid": 27313,
+          "ppid": 27312,
+          "uid": 501,
+          "started": "Thu Oct  8 09:12:12 2026",
+          "argv_sha256": "d76592cffd7f6b7d2e96cda9fcb2b8bd908f96f5181122e60faa399aabea545e"
+        }
+      ],
+      "listener_ports": [
+        8434
+      ]
+    },
+    "argv": [
+      "/Users/ddt/.codex-runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "/Users/ddt/work/projects/ai_agent/aos-platform/node_modules/.pnpm/vite@5.4.21/node_modules/vite/bin/vite.js",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "8434"
+    ],
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-recovery/current157-full-restart-20261008-010137/apps/web",
+    "port": 8434,
+    "helper_argv": [
+      "/Users/ddt/work/projects/ai_agent/aos-platform/node_modules/.pnpm/@esbuild+darwin-arm64@0.21.5/node_modules/@esbuild/darwin-arm64/bin/esbuild",
+      "--service=0.21.5",
+      "--ping"
+    ]
+  }
+]

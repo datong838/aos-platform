@@ -1,0 +1,23 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "current157-full-restart-20261009-010759",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001618",
+  "scope": [
+    "aos-platform/.evidence/current157-full-restart-20261009-010759",
+    "aos-platform/maintenance/current-preview-database",
+    "aos-platform/maintenance/current-preview-api",
+    "aos-platform/maintenance/current-preview-web",
+    "aos-recovery/current157-full-restart-20261009-010759"
+  ],
+  "excluded_scope": [
+    "uncommitted158159",
+    "formal-Host-worker-Provider"
+  ],
+  "expected_outputs": [
+    "original-volume PG latest committed API Web journal restart; all-user-table equality; eight actual browser readonly gates"
+  ],
+  "lease_expires_at": "2026-10-09T03:10:52.742105+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T09:10:53+08:00"
+}

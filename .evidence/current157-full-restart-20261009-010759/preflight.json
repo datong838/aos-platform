@@ -1,0 +1,22 @@
+{
+  "signed": {
+    "codeVersion": "a0v_157",
+    "database": "aos_current_preview_20260927",
+    "databaseHost": "127.0.0.1",
+    "databasePort": 18435,
+    "installationId": "ccdcb0f0-1040-4bc6-aa0c-d045f5689813",
+    "installationState": "approved",
+    "outcome": "CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN",
+    "publishedVersions": 4,
+    "runtimeBindings": 0,
+    "signedRoot": "/Users/ddt/work/projects/ai_agent/.aos-current-build-pyGkqQ/signing-state/signed-bundles",
+    "trustRoots": "/Users/ddt/work/projects/ai_agent/.aos-current-build-pyGkqQ/signing-state/trust-roots.json",
+    "version": "a0v_157"
+  },
+  "source_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+  "source_started": "2026-10-08T01:10:23.54830361Z",
+  "volume": "aos-a0v-recovery-pg-data",
+  "all_user_table_count": 615,
+  "migration_needed": false,
+  "uncommitted_158_excluded": true
+}

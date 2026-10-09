@@ -1,0 +1,12 @@
+{
+  "pid": 26897,
+  "ppid": 1,
+  "uid": 501,
+  "started": "Thu Oct  8 09:10:26 2026",
+  "argv_sha256": "3881fe213875a9231b36ec0dc4bf6649efe4ddb01f7593e33a8c3b5dac6e1eac",
+  "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "children": [],
+  "listener_ports": [
+    8080
+  ]
+}

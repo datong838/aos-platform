@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/Users/ddt/.codex-runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/node_modules/.pnpm/vite@5.4.21/node_modules/vite/bin/vite.js",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8434"
+  ],
+  "cwd": "/Users/ddt/work/projects/ai_agent/aos-recovery/current157-full-restart-20261009-010759/apps/web",
+  "port": 8434
+}

@@ -1,0 +1,22 @@
+{
+  "fingerprint": {
+    "pid": 74616,
+    "ppid": 74534,
+    "uid": 501,
+    "started": "Fri Oct  9 09:13:07 2026",
+    "argv_sha256": "4cd8ae42f94933c4fa6fceeb4cda83e16c8940a1509321db6ef2f849bd771270",
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-recovery/current157-full-restart-20261009-010759/apps/web",
+    "children": [
+      {
+        "pid": 74623,
+        "ppid": 74616,
+        "uid": 501,
+        "started": "Fri Oct  9 09:13:07 2026",
+        "argv_sha256": "d76592cffd7f6b7d2e96cda9fcb2b8bd908f96f5181122e60faa399aabea545e"
+      }
+    ],
+    "listener_ports": [
+      8434
+    ]
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "status": "FULL_RESTART_ORIGINAL157_LATEST0706_READONLY_BROWSER_DENIAL_GREEN_BUSINESS_PENDING",
+  "head": "0706f359ec344bf202bd155231d718fc01805e7c",
+  "event": "2026-10-09T01:07:59.537Z",
+  "services": [
+    {
+      "pid": 74578,
+      "ppid": 1,
+      "uid": 501,
+      "started": "Fri Oct  9 09:12:59 2026",
+      "argv_sha256": "699718f7d0c45dac3bc61e310b51abe88e0e50de1124d527ce18f306d9914696",
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+      "children": [],
+      "listener_ports": [
+        8080
+      ]
+    },
+    {
+      "pid": 74616,
+      "ppid": 1,
+      "uid": 501,
+      "started": "Fri Oct  9 09:13:07 2026",
+      "argv_sha256": "4cd8ae42f94933c4fa6fceeb4cda83e16c8940a1509321db6ef2f849bd771270",
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-recovery/current157-full-restart-20261009-010759/apps/web",
+      "children": [
+        {
+          "pid": 74623,
+          "ppid": 74616,
+          "uid": 501,
+          "started": "Fri Oct  9 09:13:07 2026",
+          "argv_sha256": "d76592cffd7f6b7d2e96cda9fcb2b8bd908f96f5181122e60faa399aabea545e"
+        }
+      ],
+      "listener_ports": [
+        8434
+      ]
+    }
+  ],
+  "pg_started": "2026-10-09T01:12:56.936918256Z",
+  "volume": "aos-a0v-recovery-pg-data",
+  "http": [
+    {
+      "path": "/v1/health",
+      "org": "org-org",
+      "status": 200,
+      "body_sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288"
+    },
+    {
+      "path": "/v1/ready",
+      "org": "org-org",
+      "status": 200,
+      "body_sha256": "31bf75f4c0a97cc1f7b60df824fa390b3be9ba014f29b63c87c698ba63d9a9fd"
+    },
+    {
+      "path": "/v1/ecommerce-workshop/modules",
+      "org": "org-org",
+      "status": 200,
+      "body_sha256": "2d6bd658850676fec4d976156005bb63bfc7749670cd93f834e4a56ed6345a40"
+    },
+    {
+      "path": "/v1/ecommerce-workshop/modules",
+      "org": "dev-org",
+      "status": 403,
+      "body_sha256": "c0cab02e84ecfaedc89dd8df67f6406f4b5ec5d5bdf4c01b1d68fb6a43630960"
+    },
+    {
+      "path": "/v1/runtime-workshop/modules",
+      "org": "org-org",
+      "status": 200,
+      "body_sha256": "5dbc4fa04d9edfa6314727536898aa46d65a53f211f041a945edf2dced540753"
+    },
+    {
+      "path": "/v1/runtime-workshop/modules",
+      "org": "dev-org",
+      "status": 403,
+      "body_sha256": "d3fc4245b8c9fd17a8366dad757afcb5f68b4fb6565a3706cea8df2cf8ea91e2"
+    }
+  ],
+  "all_user_tables": 615,
+  "all_data_and_catalog_unchanged": true,
+  "host_worker_provider_off": true,
+  "business_first_chain": false,
+  "first_http_readback": "missing existing Bearer dev header produced401; authenticated readonly checks all expected"
+}

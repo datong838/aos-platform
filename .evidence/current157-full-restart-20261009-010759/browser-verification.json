@@ -1,0 +1,20 @@
+{
+  "control": "cua browser2 tab1",
+  "routes": [
+    "cockpit",
+    "content-campaign",
+    "operations",
+    "creator-growth",
+    "media-studio",
+    "analyst",
+    "price-governance",
+    "customer"
+  ],
+  "all_eight_observed": "当前工作台入口不可用",
+  "readonly_retry": "cockpit重新读取目录;denial retained",
+  "tenant": "org-org/dev-project selected",
+  "installation_count": 0,
+  "retained": true,
+  "business_first_chain": false,
+  "operations_diff_note": "diff lacked unchanged denial text; separate full AX recheck confirmed"
+}

@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "/Users/ddt/work/projects/ai_agent/aos-recovery/current157-full-restart-20261009-010759/scripts/a0v_current_preview_http.py",
+    "--signed-receipt",
+    "/Users/ddt/work/projects/ai_agent/.aos-current-build-pyGkqQ/signing-receipt.json",
+    "--serve"
+  ],
+  "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "port": 8080
+}
