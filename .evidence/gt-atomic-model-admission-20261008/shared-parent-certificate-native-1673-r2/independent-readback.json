@@ -1,0 +1,29 @@
+{
+  "identity": {
+    "database": "aos_test_8aea820b2cb3_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on",
+    "status": "aborted"
+  },
+  "counts": {
+    "prepared_plan_risk": 0,
+    "prepared_shared_risk_description": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "source": 1,
+  "runtime_table_acl": {
+    "select_allowed": false,
+    "insert_allowed": false
+  },
+  "frozen_product_hashes_match": true,
+  "certificate_count": 4,
+  "whole_node_passed": false,
+  "adjacent_fixture_missing": true,
+  "presented_root_only": true,
+  "issuer_metadata_current": false,
+  "executors_authenticated": false,
+  "historical_fixture_restored": false,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

@@ -1058,3 +1058,75 @@ def validate_original_target_case_signature(manifest, envelope, *,
             base64.b64decode(signed.signature_base64, validate=True), raw)
     except (InvalidSignature, binascii.Error, ValueError) as exc:
         raise ValueError('invalid original Target executor case signature') from exc
+
+
+class ModelSharedParentRiskCertificateSigningInput(ModelEvalExecutorCertificateSigningInput):
+    """Unsigned v3 identity description; not an issuer or joint admission grant."""
+    schema_version: Literal['aos.model-eval-shared-parent-certificate-signing-input/v3']
+    leg: ModelSharedParentRiskLeg
+    description_hash: str = Field(strict=True, pattern=r'^sha256:[0-9a-f]{64}$')
+    original_risk_hash: str = Field(strict=True, pattern=r'^sha256:[0-9a-f]{64}$')
+    caller_xid: str = Field(strict=True, pattern=r'^[1-9][0-9]*$')
+    caller_pid: int = Field(strict=True, gt=0)
+
+
+class ModelSharedParentRiskSignedCertificateEnvelope(ModelEvalSignedCertificateEnvelope):
+    schema_version: Literal['aos.model-eval-shared-parent-signed-certificate-envelope/v3']
+    certificate: ModelSharedParentRiskCertificateSigningInput
+
+
+def canonical_shared_parent_certificate_signing_bytes(description, certificate) -> bytes:
+    """Bind full prepared description and original origin; never assert DB or trust."""
+    from aos_api.aip_physical_capacity_occupation_contracts import SharedParentRiskDescriptionPreparation
+    prepared = SharedParentRiskDescriptionPreparation.model_validate(description)
+    plan = prepared.immutable.manifest
+    claim = ModelSharedParentRiskCertificateSigningInput.model_validate(certificate)
+    case = next((c for c in plan.cases if c.case_id == claim.case_id), None)
+    app_key = 'targetApplication' if claim.purpose == 'target' else 'judgeGovernanceApplication'
+    app = plan.judge_request[app_key]
+    candidate = ModelEvalRequestCreate.model_validate(app['request']).target_ref
+    request_hash = app['requestHash'] if claim.purpose == 'target' else plan.judge_request_hash
+    if (case is None or claim.tenant != plan.tenant or claim.execution_id != plan.execution_id
+            or claim.manifest_hash != prepared.immutable.manifest_hash
+            or claim.description_hash != prepared.content_hash
+            or claim.original_risk_hash != prepared.immutable.original_risk_hash
+            or (claim.caller_xid, claim.caller_pid) != (
+                prepared.immutable.caller_xid, prepared.immutable.caller_pid)
+            or claim.request_hash != request_hash or claim.candidate_ref != candidate
+            or claim.leg != getattr(case, claim.purpose)
+            or claim.valid_until > datetime.fromisoformat(plan.judge_request['expiresAt'])):
+        raise ValueError('complete original v3 description/case/request/origin binding required')
+    raw = json.dumps(claim.model_dump(mode='json', by_alias=True), sort_keys=True,
+        ensure_ascii=False, separators=(',', ':'), allow_nan=False).encode('utf-8')
+    return b'AOS-MODEL-EVAL-SHARED-PARENT-CERTIFICATE-SIGNING-INPUT-v3\n' + raw
+
+
+def validate_shared_parent_certificate_signature(description, envelope, *, issuer_input,
+        checked_at: datetime, revoked_identity_ids: frozenset[str]) -> None:
+    """Necessary crypto/time only. Presented root/withdrawals confer no authority.
+
+    Stored current issuer/certificate/identity heads, root provenance, original
+    approval, Source and final joint admission remain independent requirements.
+    """
+    from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+    signed = ModelSharedParentRiskSignedCertificateEnvelope.model_validate(envelope)
+    claim = signed.certificate
+    root = ModelEvalIssuerVerificationInput.model_validate(issuer_input)
+    raw = canonical_shared_parent_certificate_signing_bytes(description, claim)
+    if (type(checked_at) is not datetime or checked_at.utcoffset() is None
+            or type(revoked_identity_ids) is not frozenset
+            or any(type(v) is not str or not v or v != v.strip() for v in revoked_identity_ids)
+            or root.tenant != claim.tenant or root.issuer_id != claim.issuer_id
+            or root.issuer_key_id != claim.issuer_key_id
+            or not root.valid_from <= claim.valid_from < claim.valid_until <= root.valid_until
+            or not claim.valid_from <= checked_at < claim.valid_until
+            or not root.valid_from <= checked_at < root.valid_until
+            or (root.revoked_at is not None and checked_at >= root.revoked_at)
+            or claim.leg.identity_id in revoked_identity_ids):
+        raise ValueError('current contained v3 certificate interval and presented issuer required')
+    try:
+        Ed25519PublicKey.from_public_bytes(base64.b64decode(root.public_key_base64, validate=True)).verify(
+            base64.b64decode(signed.signature_base64, validate=True), raw)
+    except (InvalidSignature, ValueError, binascii.Error) as exc:
+        raise ValueError('invalid v3 shared-parent certificate signature') from exc

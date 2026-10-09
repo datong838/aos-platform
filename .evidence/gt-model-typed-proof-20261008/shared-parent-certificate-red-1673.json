@@ -1,0 +1,9 @@
+{
+  "missing": [
+    "ModelSharedParentRiskCertificateSigningInput",
+    "canonical_shared_parent_certificate_signing_bytes",
+    "validate_shared_parent_certificate_signature"
+  ],
+  "red": true,
+  "database_effects": false
+}
