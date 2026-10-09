@@ -1,0 +1,24 @@
+{
+  "authority_revision": "AOS-001661",
+  "task": "gt-atomic-model-admission-20261008",
+  "head": "80fceb4410831006bd259d9e49bf23ac6de53718",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-judge-expected-bytes-reference-1660.json",
+      "sha256": "9e38b52689bb8f8dd5875d8a1aed5b631bc9fa639a79562fb23cc7a40dd59a3b"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/target-origin-bridge-plan-1660.md",
+      "sha256": "6a811ea901f0fabbf0f17fbca55bf66f2bcef6655100fc921774d87cd9215b99"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/target-origin-bridge-result-1660.json",
+      "sha256": "61ac9e504a70d8abcfbb3afd5d6e5178dbe723892f87089431cd7163d85ad246"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/target-origin-bridge-review-1660.md",
+      "sha256": "e94c150bea8909f1439d3ca0626ba18137f41a3d0987b5c22014d45a296ed6b0"
+    }
+  ]
+}
