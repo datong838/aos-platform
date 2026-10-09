@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-judge-call-authority-20261008",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001636",
+  "authority_revision": "AOS-001637",
   "task_base_revision": "AOS-001578",
-  "step": "source-original-preparation-shared-green-distinct-resource-and-final-clock-pending",
+  "step": "source-root-native-both-layouts-green-actual-commit-next-final-clock-pending",
   "code_files": [
     "services/aos-api/aos_api/aip_action_policy.py",
     "services/aos-api/aos_api/aip_action_store.py",
@@ -50,6 +50,6 @@
     ".evidence/gt-judge-call-authority-20261008/published-rule-reader-reference.json",
     ".evidence/gt-judge-call-authority-20261008/published-rule-currentness-reference.json",
     ".evidence/gt-judge-call-authority-20261008/exact-signed-rule-suite-reference.json",
-    ".evidence/gt-judge-call-authority-20261008/current-source-original-preparation-reference-1636.json"
+    ".evidence/gt-judge-call-authority-20261008/current-source-root-native-reference-1637.json"
   ]
 }

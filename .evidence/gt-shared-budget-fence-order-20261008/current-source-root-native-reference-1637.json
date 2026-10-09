@@ -1,0 +1,23 @@
+{
+  "authority_revision": "AOS-001637",
+  "head": "f72f1fc53d63f3b415fcc67c680fa9f8623020d6",
+  "references": [
+    {
+      "path": ".evidence/gt-shared-budget-fence-order-20261008/current-source-original-preparation-reference-1636.json",
+      "sha256": "da9c09ba1b4da177c341678136400f00aba484bb2ec0c3839c46c1f4c834d90f"
+    },
+    {
+      "path": ".evidence/gt-source-root-native-lab-20261009/review.md",
+      "sha256": "fff5bd1b1b75d6cbe2edd98b3716b5dc860bee776191ae0524c642042d3e395c"
+    },
+    {
+      "path": ".evidence/gt-source-root-native-lab-20261009/independent-final-verification.json",
+      "sha256": "7f0f8d605bae6b39ecee25248c09251506f880e3c0638bb0d1093e0979ae5f68"
+    },
+    {
+      "path": ".evidence/gt-source-root-native-lab-20261009/verifier-install.json",
+      "sha256": "acca5489441cefb0ff439b9934f62733c8cbec6102231b8bcee4aeebf15510dc"
+    }
+  ],
+  "execution_allowed": false
+}

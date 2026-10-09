@@ -1,0 +1,148 @@
+{
+  "authority_revision": "AOS-001637",
+  "evidence_commit": "f72f1fc53d63f3b415fcc67c680fa9f8623020d6",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-root-native-lab-20261009",
+    "base_revision": "AOS-001636",
+    "completed_revision": "AOS-001636",
+    "result": "ROOT_NATIVE_LAB_AND_ORIGINAL_PREPARATION_TWO_LAYOUTS_GREEN",
+    "changed_files": [
+      ".evidence/gt-source-root-native-lab-20261009/container-id.json",
+      ".evidence/gt-source-root-native-lab-20261009/create-attempt.json",
+      ".evidence/gt-source-root-native-lab-20261009/create-file-copy-attempt.json",
+      ".evidence/gt-source-root-native-lab-20261009/create-file-copy.log",
+      ".evidence/gt-source-root-native-lab-20261009/create.log",
+      ".evidence/gt-source-root-native-lab-20261009/create_file_copy.py",
+      ".evidence/gt-source-root-native-lab-20261009/create_lab.py",
+      ".evidence/gt-source-root-native-lab-20261009/independent-final-verification.json",
+      ".evidence/gt-source-root-native-lab-20261009/input-bindings-r1.json",
+      ".evidence/gt-source-root-native-lab-20261009/install_verifier.py",
+      ".evidence/gt-source-root-native-lab-20261009/lab.json",
+      ".evidence/gt-source-root-native-lab-20261009/native-preparation-r1.log",
+      ".evidence/gt-source-root-native-lab-20261009/native-preparation-r2-attempt.json",
+      ".evidence/gt-source-root-native-lab-20261009/native-preparation-r2-result.json",
+      ".evidence/gt-source-root-native-lab-20261009/native-preparation-r2.log",
+      ".evidence/gt-source-root-native-lab-20261009/permission-repair-attempt.json",
+      ".evidence/gt-source-root-native-lab-20261009/plan.md",
+      ".evidence/gt-source-root-native-lab-20261009/preflight.json",
+      ".evidence/gt-source-root-native-lab-20261009/preparation-r2-collection.json",
+      ".evidence/gt-source-root-native-lab-20261009/reconcile_started_lab.py",
+      ".evidence/gt-source-root-native-lab-20261009/register_stage.py",
+      ".evidence/gt-source-root-native-lab-20261009/review.md",
+      ".evidence/gt-source-root-native-lab-20261009/root-directory-created.json",
+      ".evidence/gt-source-root-native-lab-20261009/run_preparation_r1.py",
+      ".evidence/gt-source-root-native-lab-20261009/run_preparation_r2.py",
+      ".evidence/gt-source-root-native-lab-20261009/task.json",
+      ".evidence/gt-source-root-native-lab-20261009/verifier-install-attempt.json",
+      ".evidence/gt-source-root-native-lab-20261009/verifier-install.json",
+      ".evidence/gt-source-root-native-lab-20261009/verify_preparation_r2.py",
+      ".evidence/gt-source-root-native-lab-20261009/volume-created.json"
+    ],
+    "commits": [
+      "f72f1fc53d63f3b415fcc67c680fa9f8623020d6"
+    ],
+    "verification": [
+      "New root ext4 local-bind owned named volume/exact native image/isolated cluster SCRAM verifier positive and tamper-negative",
+      "Original preparation two independent layouts2passed27.13s; exact inputs/native zero Source/fsync and protected32 old container identities unchanged"
+    ],
+    "risks": [
+      "Original full Source and actual final COMMIT clock pending",
+      "No independent model review result or formal first-chain acceptance"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T13:24:59+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001637-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001637"
+  },
+  "checkpoints": {
+    "gt-atomic-model-admission-20261008": {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001637",
+      "step": "source-root-native-both-layouts-green-actual-commit-next-final-clock-pending",
+      "fingerprint": "149af79010e8f9e62debf9135ae7f236a59b2d612d18c3484e35116f093a0e41",
+      "task_base_revision": "AOS-001537"
+    },
+    "gt-model-typed-proof-20261008": {
+      "task_id": "gt-model-typed-proof-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001637",
+      "step": "source-root-native-both-layouts-green-actual-commit-next-final-clock-pending",
+      "fingerprint": "df8fe24290cd2b63161f031d837824bc7b1eaeb3430ba5aedeb4c2bb514d1845",
+      "task_base_revision": "AOS-001513"
+    },
+    "gt-judge-call-authority-20261008": {
+      "task_id": "gt-judge-call-authority-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001637",
+      "step": "source-root-native-both-layouts-green-actual-commit-next-final-clock-pending",
+      "fingerprint": "98f00cd8ef82b83c20a153509621a529094b588e13d02bf9a476f904814bfa68",
+      "task_base_revision": "AOS-001578"
+    },
+    "gt-judge-budget-parent-20261008": {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001637",
+      "step": "source-root-native-both-layouts-green-actual-commit-next-final-clock-pending",
+      "fingerprint": "ed87a8bc927221996c073731c1ca043d309f31fc1f97fde5843f4bc2710787c8",
+      "task_base_revision": "AOS-001588"
+    },
+    "gt-shared-budget-fence-order-20261008": {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001637",
+      "step": "source-root-native-both-layouts-green-actual-commit-next-final-clock-pending",
+      "fingerprint": "a6189623a94210e5ff4d88a8c532909d9b5c3be16628094ca2c916e0826191bf",
+      "task_base_revision": "AOS-001588"
+    }
+  },
+  "original_source_task": "ACTIVE",
+  "full_source_delivery": false,
+  "goal_status_changed": false
+}
