@@ -1,0 +1,35 @@
+{
+  "authority_revision": "AOS-001646",
+  "head": "b21d4bda8f5e9e51ba3b3204d619a962cd02c26b",
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/current-source-offset-signing-permit-reference-1645.json",
+      "sha256": "9a0a24218fcaefa6b7c368707198aae5483f1655f496474eded57cb99bad8eae"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r7-20261009/review.md",
+      "sha256": "bdf3f9e4a51226534ca7f4d60530c457a0fabf0538d40bfa572a584aa5dde64a"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r7-20261009/independent-partial-terminal-verification.json",
+      "sha256": "5e7d5edfb7e096ce6d0df3c18e30db19a4cf6949a91a58165da9e7cd75661013"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r7-20261009/independent-resource-final-verification.json",
+      "sha256": "c11b7b8c5dbb114a501000acb29860df5c9951eb0df450007a3c26d89359d009"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r7-20261009/current-clock-completion-audit.json",
+      "sha256": "8ff6323287fcac59cc8e3f1ca0815da0fc5feac5541d1b9d5ec653c3e3a7f8f4"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r7-20261009/source-finalize-deferred-catalog-audit.json",
+      "sha256": "a8c2525dc4d357d00c68e5fb0963e996187956cfea47eb15c15552c06f262082"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r7-20261009/pause-handoff.json",
+      "sha256": "1ae2aad1fddd6a0a6f9ae7f81447ae89c07b6e6f01201fd20c28f9de14b714be"
+    }
+  ],
+  "execution_allowed": false
+}
