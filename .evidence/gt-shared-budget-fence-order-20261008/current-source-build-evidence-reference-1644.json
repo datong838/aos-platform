@@ -1,0 +1,31 @@
+{
+  "authority_revision": "AOS-001644",
+  "head": "073680f0f8f64363814a7b8d8651f9c9bffbea76",
+  "references": [
+    {
+      "path": ".evidence/gt-shared-budget-fence-order-20261008/current-source-provider-real-locks-reference-1643.json",
+      "sha256": "125cd8f56baceead992b4e91be441e5d7b32a488d640ff00639a12809da12099"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r5-20261009/review.md",
+      "sha256": "202d79b9de00468f684ad7218d0834b7f6f50ed7029a1792ca8d6d96021afc0e"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r5-20261009/independent-final-verification.json",
+      "sha256": "084b8f9c1ebf2881063b41b5676a31591d3787d6cbf3b4b915c1bf7d70b04003"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r5-20261009/first-failure-independent.json",
+      "sha256": "d56fae6a93bcccc170d841ecc73ed252935cba775765fe0bab4f48a1cad13a0e"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r5-20261009/current-clock-completion-audit.json",
+      "sha256": "add12b1bb9f08140ea5d011575da28b8e72b70f6dd233df82f1b969d5f39d8e7"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r5-20261009/actual-original-revokes-independent.json",
+      "sha256": "77620389a12b154ea0098e04b01eb51a2b39f84f984fadee53fafbfb31e7242b"
+    }
+  ],
+  "execution_allowed": false
+}

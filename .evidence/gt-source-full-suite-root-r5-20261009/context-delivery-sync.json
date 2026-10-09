@@ -1,0 +1,154 @@
+{
+  "authority_revision": "AOS-001644",
+  "evidence_commit": "073680f0f8f64363814a7b8d8651f9c9bffbea76",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-full-suite-root-r5-20261009",
+    "base_revision": "AOS-001643",
+    "completed_revision": "AOS-001643",
+    "result": "WHOLE_SOURCE_BUILD_EVIDENCE_ORACLES_REPAIRED_FULL_PENDING",
+    "changed_files": [
+      ".evidence/gt-source-full-suite-root-r5-20261009/actual-original-revokes-independent.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/affected-test-functions.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/build-evidence-profile-preflight.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/current-clock-completion-audit.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/diagnose_and_plan.py",
+      ".evidence/gt-source-full-suite-root-r5-20261009/first-failure-independent.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/independent-final-verification.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/input-bindings-r1.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/input-bindings-r2.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/lab.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/native-normalization-r2-attempt.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/native-normalization-r2-result.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/native-normalization-r2.log",
+      ".evidence/gt-source-full-suite-root-r5-20261009/native-whole-r1-attempt.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/native-whole-r1-result.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/native-whole-r1.log",
+      ".evidence/gt-source-full-suite-root-r5-20261009/normalization-r2-collection.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/normalization-r2-process.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/normalization-selection.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/original-controls-ast-audit.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/plan.md",
+      ".evidence/gt-source-full-suite-root-r5-20261009/prepare_stage.py",
+      ".evidence/gt-source-full-suite-root-r5-20261009/process-observation.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/process.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/register_stage.py",
+      ".evidence/gt-source-full-suite-root-r5-20261009/repair.patch",
+      ".evidence/gt-source-full-suite-root-r5-20261009/repaired-functions.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/review.md",
+      ".evidence/gt-source-full-suite-root-r5-20261009/run_normalization_r2.py",
+      ".evidence/gt-source-full-suite-root-r5-20261009/run_whole_r1.py",
+      ".evidence/gt-source-full-suite-root-r5-20261009/task-lease-before-repair.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/task.json",
+      ".evidence/gt-source-full-suite-root-r5-20261009/verify_actual_original_revokes.py",
+      ".evidence/gt-source-full-suite-root-r5-20261009/verify_normalization_r2.py",
+      ".evidence/gt-source-full-suite-root-r5-20261009/whole-r1-collection.json"
+    ],
+    "commits": [
+      "073680f0f8f64363814a7b8d8651f9c9bffbea76"
+    ],
+    "verification": [
+      "Whole386nodes77PASS1FAIL259.24s308unexecuted; permanent profile repeat before actual Build provenance oracle independentlydiagnosed",
+      "Entire9BuildEvidence tests12nodes plus15adjacenttests27nodes39PASS97.40s; fulloriginal domain/hash/fault/cutoff/control preserved; independent1963inputs zeroSource protected32resources",
+      "Independent original3genuine revoke receipt/event/neutralepoch triplets eachsame actual committedxid epoch1 canary0 Source0, noreplay"
+    ],
+    "risks": [
+      "Full Source suite and actual final COMMIT expiry counterexample pending",
+      "No modelreview or formal firstchain acceptance"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T14:24:58+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001644-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001644"
+  },
+  "checkpoints": {
+    "gt-atomic-model-admission-20261008": {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001644",
+      "step": "whole-source-build-evidence-oracles-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "b81b6ab821f6398787767df0a33a74300c8cc6d3f76fb06b547883f53c8fcbe0",
+      "task_base_revision": "AOS-001537"
+    },
+    "gt-model-typed-proof-20261008": {
+      "task_id": "gt-model-typed-proof-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001644",
+      "step": "whole-source-build-evidence-oracles-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "4bb7adf391ac3540ec9e29226faeb4bfe7fc09e1ab0eadaad426f253c064c3ce",
+      "task_base_revision": "AOS-001513"
+    },
+    "gt-judge-call-authority-20261008": {
+      "task_id": "gt-judge-call-authority-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001644",
+      "step": "whole-source-build-evidence-oracles-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "21867c94f5217ff99b5bbc0f7e3ae40bb305c93faf5c483671c1f40fe14c1228",
+      "task_base_revision": "AOS-001578"
+    },
+    "gt-judge-budget-parent-20261008": {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001644",
+      "step": "whole-source-build-evidence-oracles-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "dc2c58a8e6e9dd4c5fe0026db51376321b40742617b5db365a9d4940224126b5",
+      "task_base_revision": "AOS-001588"
+    },
+    "gt-shared-budget-fence-order-20261008": {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001644",
+      "step": "whole-source-build-evidence-oracles-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "03eba497e5162e778ae6e4b075efc303943b89e34e7e8c868e1ec9bd6bd02b09",
+      "task_base_revision": "AOS-001588"
+    }
+  },
+  "original_source_task": "ACTIVE",
+  "full_source_delivery": false,
+  "goal_status_changed": false
+}
