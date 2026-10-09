@@ -1,0 +1,23 @@
+{
+  "authority_revision": "AOS-001639",
+  "head": "e11b60025dc72d683a4d4c100be418373b73d324",
+  "references": [
+    {
+      "path": ".evidence/gt-shared-budget-fence-order-20261008/current-source-original-commit-reference-1638.json",
+      "sha256": "d80789a7c5931da1aa89f23866323cbcb7aeac7d27da240a33d3d854e30172cb"
+    },
+    {
+      "path": ".evidence/gt-source-original-approval-current-20261009/review.md",
+      "sha256": "3f6e3b7b0ce521766b9bcd4bc0cf569c87e62a9ee4ad9e2de5a83e2f9e7283db"
+    },
+    {
+      "path": ".evidence/gt-source-original-approval-current-20261009/independent-final-verification.json",
+      "sha256": "907430ac0f9dac156b54427a259ed5e2982228b609cc33ad82f3628954003b22"
+    },
+    {
+      "path": ".evidence/gt-source-original-approval-current-20261009/native-approval-r1-result.json",
+      "sha256": "15340749bc58b6b1f8786e4eff4057e183b8a9c81e0f4e7c7fb44a8424acf672"
+    }
+  ],
+  "execution_allowed": false
+}

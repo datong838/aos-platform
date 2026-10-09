@@ -1,0 +1,132 @@
+{
+  "authority_revision": "AOS-001639",
+  "evidence_commit": "e11b60025dc72d683a4d4c100be418373b73d324",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-original-approval-current-20261009",
+    "base_revision": "AOS-001638",
+    "completed_revision": "AOS-001638",
+    "result": "ORIGINAL_TRANSPORT_AND_APPROVAL_EIGHTEEN_GREEN",
+    "changed_files": [
+      ".evidence/gt-source-original-approval-current-20261009/approval-r1-collection.json",
+      ".evidence/gt-source-original-approval-current-20261009/independent-final-verification.json",
+      ".evidence/gt-source-original-approval-current-20261009/input-bindings-r1.json",
+      ".evidence/gt-source-original-approval-current-20261009/lab.json",
+      ".evidence/gt-source-original-approval-current-20261009/native-approval-r1-attempt.json",
+      ".evidence/gt-source-original-approval-current-20261009/native-approval-r1-result.json",
+      ".evidence/gt-source-original-approval-current-20261009/native-approval-r1.log",
+      ".evidence/gt-source-original-approval-current-20261009/plan.md",
+      ".evidence/gt-source-original-approval-current-20261009/register_stage.py",
+      ".evidence/gt-source-original-approval-current-20261009/review.md",
+      ".evidence/gt-source-original-approval-current-20261009/run_approval_r1.py",
+      ".evidence/gt-source-original-approval-current-20261009/selection.json",
+      ".evidence/gt-source-original-approval-current-20261009/task.json",
+      ".evidence/gt-source-original-approval-current-20261009/verify_approval_r1.py"
+    ],
+    "commits": [
+      "e11b60025dc72d683a4d4c100be418373b73d324"
+    ],
+    "verification": [
+      "Original3functions18complete nodes passed35.46s; authentication2 plus native8faults x2 original approved kinds, restoration retained",
+      "Independent shared originalsession newDB exact inputs/fullfunctionACL/nativezeroSource and protected32resources"
+    ],
+    "risks": [
+      "Full original suite and final COMMIT expiry counterexample pending",
+      "No modelreview or formal firstchain acceptance"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T13:32:51+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001639-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001639"
+  },
+  "checkpoints": {
+    "gt-atomic-model-admission-20261008": {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001639",
+      "step": "original-transport-approval-eighteen-green-full-suite-next-final-clock-pending",
+      "fingerprint": "62429f4d7fe5a428b1b780047a95a943a6cd0ea04929f28423ab9d5bb50595a5",
+      "task_base_revision": "AOS-001537"
+    },
+    "gt-model-typed-proof-20261008": {
+      "task_id": "gt-model-typed-proof-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001639",
+      "step": "original-transport-approval-eighteen-green-full-suite-next-final-clock-pending",
+      "fingerprint": "ca654a86f1c84738609cac8c5523e4fe6493f2851c6734f4aaaf9e784720ee3b",
+      "task_base_revision": "AOS-001513"
+    },
+    "gt-judge-call-authority-20261008": {
+      "task_id": "gt-judge-call-authority-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001639",
+      "step": "original-transport-approval-eighteen-green-full-suite-next-final-clock-pending",
+      "fingerprint": "c685fc84998a92ae611e637bdbe2277798660c1fca5f8360fb05890757b20069",
+      "task_base_revision": "AOS-001578"
+    },
+    "gt-judge-budget-parent-20261008": {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001639",
+      "step": "original-transport-approval-eighteen-green-full-suite-next-final-clock-pending",
+      "fingerprint": "771fb072366451c1b0beb01dde553340b798a979aa2620d0f259bf4f5786055c",
+      "task_base_revision": "AOS-001588"
+    },
+    "gt-shared-budget-fence-order-20261008": {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001639",
+      "step": "original-transport-approval-eighteen-green-full-suite-next-final-clock-pending",
+      "fingerprint": "65229801808c6992ba232a9437280c9bd9ee92aaef473bd835882d0991d10a05",
+      "task_base_revision": "AOS-001588"
+    }
+  },
+  "original_source_task": "ACTIVE",
+  "full_source_delivery": false,
+  "goal_status_changed": false
+}
