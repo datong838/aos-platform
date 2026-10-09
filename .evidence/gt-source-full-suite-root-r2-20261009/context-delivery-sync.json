@@ -1,0 +1,147 @@
+{
+  "authority_revision": "AOS-001641",
+  "evidence_commit": "d2c9972e765f574a5ea87bf0986ef36912879f08",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-full-suite-root-r2-20261009",
+    "base_revision": "AOS-001640",
+    "completed_revision": "AOS-001640",
+    "result": "WHOLE_SOURCE_COHERENT_HASH_ORACLE_REPAIRED_FULL_PENDING",
+    "changed_files": [
+      ".evidence/gt-source-full-suite-root-r2-20261009/diagnose_and_plan_r2.py",
+      ".evidence/gt-source-full-suite-root-r2-20261009/first-failure-independent.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/independent-final-verification.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/input-bindings-r1.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/input-bindings-r2.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/lab.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/native-normalization-r2-attempt.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/native-normalization-r2-result.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/native-normalization-r2.log",
+      ".evidence/gt-source-full-suite-root-r2-20261009/native-whole-r1-attempt.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/native-whole-r1-result.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/native-whole-r1.log",
+      ".evidence/gt-source-full-suite-root-r2-20261009/normalization-process.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/normalization-r2-collection.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/normalization-selection.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/plan.md",
+      ".evidence/gt-source-full-suite-root-r2-20261009/prepare_stage.py",
+      ".evidence/gt-source-full-suite-root-r2-20261009/process-observation.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/process.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/register_stage.py",
+      ".evidence/gt-source-full-suite-root-r2-20261009/remaining-profile-callsite-inventory.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/repair.patch",
+      ".evidence/gt-source-full-suite-root-r2-20261009/review.md",
+      ".evidence/gt-source-full-suite-root-r2-20261009/run_normalization_r2.py",
+      ".evidence/gt-source-full-suite-root-r2-20261009/run_whole_r1.py",
+      ".evidence/gt-source-full-suite-root-r2-20261009/task-lease-before-repair.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/task.json",
+      ".evidence/gt-source-full-suite-root-r2-20261009/verify_normalization_r2.py",
+      ".evidence/gt-source-full-suite-root-r2-20261009/whole-r1-collection.json"
+    ],
+    "commits": [
+      "d2c9972e765f574a5ea87bf0986ef36912879f08"
+    ],
+    "verification": [
+      "Original101function386node full selection55pass1fail214.13s,330unexecuted; duplicate migrated source field profile before coherent wrong-hash assertions independently diagnosed",
+      "Original coherent wrong-hash and3normalization functions6nodes pass23.42s; complete positive/coherent corruption/native negative/rollback plus date/shape/type controls retained; independent1963inputs zeroSource/protected32resources"
+    ],
+    "risks": [
+      "Full Source suite and actual final COMMIT expiry counterexample pending",
+      "No modelreview or formal firstchain acceptance"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T13:52:08+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001641-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001641"
+  },
+  "checkpoints": {
+    "gt-atomic-model-admission-20261008": {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001641",
+      "step": "whole-source-coherent-hash-oracle-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "af2c265f107adb410d01f41225d7f9816f0d17fb78d4933eec6e0fafebec3096",
+      "task_base_revision": "AOS-001537"
+    },
+    "gt-model-typed-proof-20261008": {
+      "task_id": "gt-model-typed-proof-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001641",
+      "step": "whole-source-coherent-hash-oracle-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "93d7ea04bb2be5daec2108a12aafbcf5fa9508024134185ad9fa1cf3419c23ad",
+      "task_base_revision": "AOS-001513"
+    },
+    "gt-judge-call-authority-20261008": {
+      "task_id": "gt-judge-call-authority-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001641",
+      "step": "whole-source-coherent-hash-oracle-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "6de46fc789f8f9295edaf4b2cbc30ce8fd7c0bec26dfdaf921632c00e5169885",
+      "task_base_revision": "AOS-001578"
+    },
+    "gt-judge-budget-parent-20261008": {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001641",
+      "step": "whole-source-coherent-hash-oracle-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "e341c5cd6b01eb299fbd159719f10bd0c86080635cfb7f5b2c628ebf3d472454",
+      "task_base_revision": "AOS-001588"
+    },
+    "gt-shared-budget-fence-order-20261008": {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001641",
+      "step": "whole-source-coherent-hash-oracle-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "73157a78d3f4b5dfaa94800cf9b2b2b0c9bdfeeda0db08390f49cd55e7840e1a",
+      "task_base_revision": "AOS-001588"
+    }
+  },
+  "original_source_task": "ACTIVE",
+  "full_source_delivery": false,
+  "goal_status_changed": false
+}

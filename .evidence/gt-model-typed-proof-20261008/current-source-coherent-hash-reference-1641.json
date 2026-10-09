@@ -1,0 +1,23 @@
+{
+  "authority_revision": "AOS-001641",
+  "head": "d2c9972e765f574a5ea87bf0986ef36912879f08",
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/current-source-normalization-reference-1640.json",
+      "sha256": "7279645333962a6ee993634ae17412580ab0c29379e7f3dda961eb1c20f730a6"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r2-20261009/review.md",
+      "sha256": "24c32b124f44da55e276ff9c433734314498020ff9f33816a871e6cbaa42084f"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r2-20261009/independent-final-verification.json",
+      "sha256": "8b36cb0e5cf5a2edff1c386d64f5bb8c08b7af5ae611174f4efa75b9c4219f50"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r2-20261009/first-failure-independent.json",
+      "sha256": "33ab1daa0716725ab1a5b1e1fa87f65040e63056e135e438e41c67637d7989b1"
+    }
+  ],
+  "execution_allowed": false
+}
