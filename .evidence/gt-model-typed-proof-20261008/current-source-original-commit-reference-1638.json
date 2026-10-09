@@ -1,0 +1,23 @@
+{
+  "authority_revision": "AOS-001638",
+  "head": "7138be363c1fcb5c00ada601acfdf7a3efc13bb0",
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/current-source-root-native-reference-1637.json",
+      "sha256": "44291b414267b012465ab0a87ff5ea80bc6a3b2963fee71929037e4c491f5ac5"
+    },
+    {
+      "path": ".evidence/gt-source-original-commit-current-20261009/review.md",
+      "sha256": "ba63e071cdfffad1e0cbf3a41564062a5a908859871d0851aa960c6ba64e69a1"
+    },
+    {
+      "path": ".evidence/gt-source-original-commit-current-20261009/independent-final-verification.json",
+      "sha256": "f7e1ef75a5fe76bc311f94a09710ab62658020364fc0b529662fb8e4bec50300"
+    },
+    {
+      "path": ".evidence/gt-source-original-commit-current-20261009/native-commit-r2-result.json",
+      "sha256": "8a1c50a1c9bd413270b91ade7b4bce4ce9ac5e3653cc2ab36e826671bbf7193b"
+    }
+  ],
+  "execution_allowed": false
+}

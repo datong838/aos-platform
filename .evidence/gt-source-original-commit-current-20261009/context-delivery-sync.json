@@ -1,0 +1,137 @@
+{
+  "authority_revision": "AOS-001638",
+  "evidence_commit": "7138be363c1fcb5c00ada601acfdf7a3efc13bb0",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-original-commit-current-20261009",
+    "base_revision": "AOS-001637",
+    "completed_revision": "AOS-001637",
+    "result": "ORIGINAL_ACTUAL_CALLER_COMMIT_SIX_EXITS_GREEN",
+    "changed_files": [
+      ".evidence/gt-source-original-commit-current-20261009/commit-r1-collection.json",
+      ".evidence/gt-source-original-commit-current-20261009/commit-r2-collection.json",
+      ".evidence/gt-source-original-commit-current-20261009/independent-final-verification.json",
+      ".evidence/gt-source-original-commit-current-20261009/input-bindings-r1.json",
+      ".evidence/gt-source-original-commit-current-20261009/input-bindings-r2.json",
+      ".evidence/gt-source-original-commit-current-20261009/lab.json",
+      ".evidence/gt-source-original-commit-current-20261009/native-commit-r1-attempt.json",
+      ".evidence/gt-source-original-commit-current-20261009/native-commit-r1-result.json",
+      ".evidence/gt-source-original-commit-current-20261009/native-commit-r1.log",
+      ".evidence/gt-source-original-commit-current-20261009/native-commit-r2-attempt.json",
+      ".evidence/gt-source-original-commit-current-20261009/native-commit-r2-result.json",
+      ".evidence/gt-source-original-commit-current-20261009/native-commit-r2.log",
+      ".evidence/gt-source-original-commit-current-20261009/plan.md",
+      ".evidence/gt-source-original-commit-current-20261009/register_stage.py",
+      ".evidence/gt-source-original-commit-current-20261009/review.md",
+      ".evidence/gt-source-original-commit-current-20261009/run_commit_r1.py",
+      ".evidence/gt-source-original-commit-current-20261009/run_commit_r2.py",
+      ".evidence/gt-source-original-commit-current-20261009/task.json",
+      ".evidence/gt-source-original-commit-current-20261009/verify_commit_r2.py"
+    ],
+    "commits": [
+      "7138be363c1fcb5c00ada601acfdf7a3efc13bb0"
+    ],
+    "verification": [
+      "Original committed first exit RED42883 preserved; same actual completepublic fixture and signed command,6outcomes both layouts passed69.01s",
+      "Independent6DB exact frozen inputs/native signed durable2Sources committed xids and4negative DB zero publication rows,32oldresources unchanged"
+    ],
+    "risks": [
+      "Actual final COMMIT clock counterexample unresolved; no full Source delivery",
+      "No independent model review result or formal firstchain"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T13:29:48+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001638-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001638"
+  },
+  "checkpoints": {
+    "gt-atomic-model-admission-20261008": {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001638",
+      "step": "original-caller-commit-six-green-final-clock-full-source-pending",
+      "fingerprint": "0b292da31ca3dac86607b517295795f59f4ff7d64329cfc250b2bf5fd473af3d",
+      "task_base_revision": "AOS-001537"
+    },
+    "gt-model-typed-proof-20261008": {
+      "task_id": "gt-model-typed-proof-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001638",
+      "step": "original-caller-commit-six-green-final-clock-full-source-pending",
+      "fingerprint": "345005adeedd4141901d4e07de043e2bba8011dc7eaef7b2e97fd23a06541ee2",
+      "task_base_revision": "AOS-001513"
+    },
+    "gt-judge-call-authority-20261008": {
+      "task_id": "gt-judge-call-authority-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001638",
+      "step": "original-caller-commit-six-green-final-clock-full-source-pending",
+      "fingerprint": "2a5f6abbc688dc660cd451ebecc3135c1160bb667bdbc94cd8fe2e120904e69f",
+      "task_base_revision": "AOS-001578"
+    },
+    "gt-judge-budget-parent-20261008": {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001638",
+      "step": "original-caller-commit-six-green-final-clock-full-source-pending",
+      "fingerprint": "939259445714f161dcd2de44444a2444919d74c1aa8de0a7cb58b5ffd11135ff",
+      "task_base_revision": "AOS-001588"
+    },
+    "gt-shared-budget-fence-order-20261008": {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001638",
+      "step": "original-caller-commit-six-green-final-clock-full-source-pending",
+      "fingerprint": "10077fdf633398574d12c4fbf497ee7f07646b79a96bcef0c31fa94393d541ff",
+      "task_base_revision": "AOS-001588"
+    }
+  },
+  "original_source_task": "ACTIVE",
+  "full_source_delivery": false,
+  "goal_status_changed": false
+}
