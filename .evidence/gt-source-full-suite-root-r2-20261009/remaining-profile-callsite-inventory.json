@@ -1,0 +1,169 @@
+{
+  "head": "8b238c737d266ae8cc11dac58ea2a554d39d6408",
+  "authority": "AOS-001640",
+  "original_scope": "same original Source file, no automatic bulk changes",
+  "callsites": [
+    {
+      "function": "test_original_approval_sql_rechecks_native_approval_facts_without_client_guard",
+      "line": 598,
+      "execute_argument": "CAPACITY_APPROVAL_EVENT_PROJECTION_SQL",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_allocation_binding_rejects_coherent_wrong_hash",
+      "line": 654,
+      "execute_argument": "CAPACITY_APPROVAL_EVENT_PROJECTION_SQL",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_source_binding_rejects_coherent_wrong_hash",
+      "line": 961,
+      "execute_argument": "CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_source_binding_rejects_coherent_wrong_hash",
+      "line": 991,
+      "execute_argument": "CAPACITY_APPROVAL_EVENT_PROJECTION_SQL",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_original_capacity_application_profile_matches_original_model",
+      "line": 1058,
+      "execute_argument": "CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_original_capacity_application_profile_matches_original_model",
+      "line": 1059,
+      "execute_argument": "CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_original_capacity_request_rechecks_exact_row_expiry",
+      "line": 1105,
+      "execute_argument": "CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_original_capacity_request_rechecks_exact_row_expiry",
+      "line": 1106,
+      "execute_argument": "CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_original_candidate_profile_matches_original_model",
+      "line": 1215,
+      "execute_argument": "CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_original_candidate_profile_matches_original_model",
+      "line": 1216,
+      "execute_argument": "CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_original_candidate_rows_and_combination_keep_original_claims",
+      "line": 1264,
+      "execute_argument": "profile",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_candidate_combination_preserves_real_original_private_approval",
+      "line": 1346,
+      "execute_argument": "profile",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_candidate_combination_rejects_rehashed_original_row_term_faults",
+      "line": 1387,
+      "execute_argument": "profile",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_original_provider_profile_preserves_actual_business_hash",
+      "line": 1432,
+      "execute_argument": "profile",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_original_provider_profile_matches_original_model_domain",
+      "line": 1502,
+      "execute_argument": "profile",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_original_provider_current_row_rejects_coherent_payload_faults",
+      "line": 1561,
+      "execute_argument": "profile",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_provider_query_holds_original_head_share_fence",
+      "line": 1604,
+      "execute_argument": "profile",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_provider_query_checks_real_full_original_account_set",
+      "line": 1689,
+      "execute_argument": "profile",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_original_build_request_reads_actual_original_provenance",
+      "line": 1728,
+      "execute_argument": "profile",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_original_build_request_canonical_domain_and_acl",
+      "line": 1784,
+      "execute_argument": "profile",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_original_request_large_offset_storage_boundary_is_not_source_authority",
+      "line": 2998,
+      "execute_argument": "native.CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_original_request_large_offset_storage_boundary_is_not_source_authority",
+      "line": 2999,
+      "execute_argument": "native.CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    },
+    {
+      "function": "test_native_signing_permit_binds_exact_policy_and_controlled_source_root",
+      "line": 3052,
+      "execute_argument": "native.CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL",
+      "intent": "UNREVIEWED_OLD_INSTALL_OR_DELIBERATE_CONTROL",
+      "repair_authorized_by_inventory_only": false
+    }
+  ],
+  "current_loaded_file_changed": false
+}

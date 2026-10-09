@@ -1,0 +1,9 @@
+# Original Source coherent wrong-hash oracle review
+
+AOS-001640/m1 8b238c737d266ae8cc11dac58ea2a554d39d6408. Full original101function386nodes cumulative r2 terminated55passed1failed214.13s;330unexecuted. The failure duplicated permanent157 profile CREATE, before the coherent wrong-hash assertions. Retained failed DB complete function/ACL/lock read-only audit and five publication tables zero.
+
+Original Source plan amended before editing exactly test_native_source_binding_rejects_coherent_wrong_hash. Replaced repeated CREATE with strict exact installed-function/body/owner/ACL/lock audit, removed unused import and corrected rollback comment. Preserved authentication, native typed positive, all three coherent stored hash corruptions, historical-query positive control, typed-native negative, savepoint rollback and restored positive; assertion count unchanged. Production code and SQL unchanged. Original protected fixture6additions1deletion remains unstaged.
+
+Actual complete target plus original three normalization functions6passed23.42s. Independent fresh retained original-session DB: exact1963inputs unchanged, five publication tables zeroSource, native cluster identity, role/temporary interface/occupation cleanup, fsync/full-page/synchronous commit and32oldresources unchanged, rootlab volume/reserve validated. Test-only browser not applicable. No model review verdict, full Source Delivery or Goal completion. Actual final callerCOMMIT expiry counterexample remains unresolved; no current authoritative DB/runtime/Provider changes.
+
+Remaining profile inventory23calls18functions is unreviewed routing only; deliberate installation controls must not be blanket-replaced. Next registered step: new full original386node cumulative attempt after precise stage; diagnose actual first failure. Final actualCOMMIT clock protocol and original business firstchain remain separate pending gates.

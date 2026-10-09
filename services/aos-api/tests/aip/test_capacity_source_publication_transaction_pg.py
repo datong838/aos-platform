@@ -942,7 +942,7 @@ def test_native_source_binding_rejects_coherent_wrong_hash(native_signed_source)
     from aos_api.aip_provider_capacity_source_issuer import authenticate_capacity_issuance_command
     from aos_api.aip_provider_capacity_publication_store import (
         CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL,CAPACITY_APPROVED_SOURCE_ROW_SQL,
-        CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_APPROVAL_EVENT_PROJECTION_SQL)
+        CAPACITY_APPROVAL_EVENT_PROJECTION_SQL)
     _,actual_command,_,source,_=native_signed_source
     command,_,_=actual_command()
     params=dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,
@@ -953,7 +953,8 @@ def test_native_source_binding_rejects_coherent_wrong_hash(native_signed_source)
     with isolated_owner() as owner:
         owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
         owner.execute("SET LOCAL TimeZone='UTC'")
-        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         original=owner.execute(CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL,params).fetchone()
         assert original is not None

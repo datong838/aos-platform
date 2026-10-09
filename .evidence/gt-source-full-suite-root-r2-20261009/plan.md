@@ -1,0 +1,1 @@
+Rules：用户AGENTS/AOS交付/231/Source S01–S20。基线8b238c73/AOS-001640，原完整Source尚未交付。候选①全原101函数386节点修复后全文件累计maxfail1，②最终COMMIT时钟原合同设计调查；选择①，原3oracle5节点已实际通过，原50旧节点历史结果不拼成当前全套。root5437独占native资源、80MB节点预算与2.5GB余量；1963inputs精确hash冻结，保留全部DB/首失败及未执行项。当前Task只证据目录，测试改动仍须原Source精确Task/Lease先方案。同一live工具保持，观察timeout不重启。不push/不改Goal/不改产品规范，clock SQL仍与真实过期提交反例同内容，全suite绿色不能封clock/正式自然首链。
