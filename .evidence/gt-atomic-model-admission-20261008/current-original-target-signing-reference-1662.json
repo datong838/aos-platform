@@ -1,0 +1,28 @@
+{
+  "authority_revision": "AOS-001662",
+  "task": "gt-atomic-model-admission-20261008",
+  "head": "ddf9271c4091c8ed121f23d57373209470e0e506",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-target-origin-bridge-reference-1661.json",
+      "sha256": "47b5ed2895a2cf920295a4bed0646472a10f238b41a959574c7115c218bfcccc"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/original-target-signing-plan-1661.md",
+      "sha256": "ec6b3e8f184ddf689562ee55b108e0b3512ee19b0276d142eeac0edad48af02b"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/original-target-signing-pure-result-1661.json",
+      "sha256": "393260beabeb9c0bdb6583447eecd5f1aa35a43d97efd81be5b86dcf7b5d19b7"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/original-target-signing-review-1661.md",
+      "sha256": "190ed4f2577983576828b5f70ceef680db9622eef717c7400d95a159f62c2f2b"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/original-target-signing-ast-1661.json",
+      "sha256": "1076e3cd112a7e8a05be5fca237be7899a3428803924cb63bd9d7167f44c6a0f"
+    }
+  ]
+}
