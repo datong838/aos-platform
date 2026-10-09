@@ -185,6 +185,46 @@ def test_whole_model_plan_binds_each_original_approved_application(
         (base/(label+'-suite-input.json')).write_text(json.dumps(dict(manifest=suite_plan.model_dump(mode='json',by_alias=True),suite=suite.model_dump(mode='json',by_alias=True)),indent=2)+'\n')
         assert hasattr(owner,'validate_original_model_plan_suite'), 'complete original Suite case bridge missing'
         assert owner.validate_original_model_plan_suite(conn,scope,suite_plan) is None
+        if os.environ.get('AOS_MODEL_INPUT_BYTES_PROBE') == '1':
+            from aos_api.ecommerce_content_pre_review_pack import build_content_pre_review_eval_packs
+            from aos_api.aip_eval_contracts import AssetRevisionRef
+            original_pack = conn.execute('''SELECT target_ref FROM aip_eval_suite_revision
+                WHERE org_id=%s AND project_id=%s AND dataset_ref=%s::jsonb
+                  AND target_ref->>'assetType'='logic_graph' ORDER BY suite_id LIMIT 1''',
+                (*scope.key, json.dumps(suite.dataset.model_dump(mode='json', by_alias=True)))).fetchone()
+            assert original_pack is not None
+            _, input_pack = build_content_pre_review_eval_packs(AssetRevisionRef.model_validate(original_pack['target_ref']))
+            encoded_inputs = tuple((case.case_id, json.dumps(
+                input_pack.artifacts[(case.input_artifact.artifact_id, case.input_artifact.revision)],
+                ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False).encode('utf-8'))
+                for case in suite.cases)
+            import hashlib
+            assert [hashlib.sha256(raw).hexdigest() for _, raw in encoded_inputs] == [case.input_hash for case in suite_plan.cases]
+            assert hasattr(owner, 'validate_original_model_plan_input_bytes'), 'original Model input bytes consumer missing'
+            assert owner.validate_original_model_plan_input_bytes(conn, scope, suite_plan, inputs=encoded_inputs) is None
+            first_id, first_raw = encoded_inputs[0]
+            invalid_sets = [list(encoded_inputs), encoded_inputs[:-1], encoded_inputs + (('extra', first_raw),),
+                (encoded_inputs[0], encoded_inputs[0]), tuple(reversed(encoded_inputs)),
+                ((first_id, first_raw+b' '),)+encoded_inputs[1:],
+                ((first_id, first_raw.decode()),)+encoded_inputs[1:],
+                ((first_id, b'x'*1048577),)+encoded_inputs[1:],
+                ((first_id, b'{"x":1,"x":2}'),)+encoded_inputs[1:],
+                ((first_id, b'NaN'),)+encoded_inputs[1:],
+                ((first_id, b'Infinity'),)+encoded_inputs[1:],
+                ((first_id, b'\xff'),)+encoded_inputs[1:],
+                ((first_id, b'1e9999'),)+encoded_inputs[1:],
+                ((first_id, b'{"outer":{"x":1,"x":2}}'),)+encoded_inputs[1:]]
+            for index, invalid in enumerate(invalid_sets):
+                with pytest.raises(ValueError, match='strict original Model input UTF8 JSON' if index >= 8 else None):
+                    owner.validate_original_model_plan_input_bytes(conn, scope, suite_plan, inputs=invalid)
+            with pytest.raises(ValueError, match='caller'):
+                owner.validate_original_model_plan_input_bytes(object(), scope, suite_plan, inputs=encoded_inputs)
+            assert owner.validate_original_model_plan_input_bytes(conn, scope, suite_plan, inputs=encoded_inputs) is None
+            assert conn.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone() == identity
+            (base/(label+'-original-input-bytes.json')).write_text(json.dumps(dict(
+                caller=identity, case_hashes=[dict(caseId=case_id, sha256=hashlib.sha256(raw).hexdigest(), bytesLength=len(raw)) for case_id,raw in encoded_inputs],
+                rejected_sets=len(invalid_sets), execution_allowed=False, tokenizer_used=False,
+                limitations='Original content governance input bytes only; not Model prompt/schema/quality or transport.'),indent=2)+'\n')
         assert hasattr(owner,'validate_original_model_judge_binding'),'original Suite-to-Model Judge binding missing'
         if original_tail_mode=='judge-mismatch':
             with pytest.raises(ValueError,match='original Suite Model Judge differs'):

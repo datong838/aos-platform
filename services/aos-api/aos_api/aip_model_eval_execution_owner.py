@@ -385,6 +385,58 @@ class ModelEvalExecutionOwner:
         # deadline check. Recheck every original parent after those waits.
         self.validate_original_model_plan_requests(conn,scope,plan)
 
+    def validate_original_model_plan_input_bytes(self, conn: psycopg.Connection,
+                                                 scope: TenantScope, manifest, *, inputs: tuple) -> None:
+        """Consume exact original case bytes, never a prompt or token proof.
+
+        Current original request/Suite authority is read on the same caller
+        before and after parsing. No arbitrary artifact resolver is invoked;
+        supplied bytes must match every approved case exactly once in order.
+        Source/joint commit, Model formatting, tokenizer and execution remain
+        independent prerequisites. This method creates no persisted fact.
+        """
+        import hashlib
+        import json
+        import math
+
+        plan = ModelEvalExecutionManifest.model_validate(manifest)
+        if (type(inputs) is not tuple or len(inputs) != len(plan.cases)
+                or any(type(item) is not tuple or len(item) != 2
+                       or type(item[0]) is not str or type(item[1]) is not bytes
+                       or not 0 < len(item[1]) <= 1048576 for item in inputs)
+                or tuple(item[0] for item in inputs) != tuple(case.case_id for case in plan.cases)):
+            raise ModelEvalOwnerRejected('complete immutable original Model input byte set required')
+        self.validate_original_model_plan_suite(conn, scope, plan)
+
+        def unique_object(pairs):
+            value = {}
+            for key, item in pairs:
+                if key in value:
+                    raise ValueError('duplicate JSON member')
+                value[key] = item
+            return value
+
+        def finite_constant(_value):
+            raise ValueError('nonfinite JSON constant')
+
+        def finite_number(text):
+            value = float(text)
+            if not math.isfinite(value):
+                raise ValueError('nonfinite JSON number')
+            return value
+
+        for case, (_, raw) in zip(plan.cases, inputs):
+            try:
+                json.loads(raw.decode('utf-8'), object_pairs_hook=unique_object,
+                           parse_constant=finite_constant, parse_float=finite_number)
+            except (ValueError, RecursionError) as exc:
+                raise ModelEvalOwnerRejected('strict original Model input UTF8 JSON required') from exc
+            # Do not normalize/re-serialize: even valid trailing whitespace
+            # changes the registered Artifact bytes and must be rejected.
+            if hashlib.sha256(raw).hexdigest() != case.input_hash:
+                raise ModelEvalOwnerRejected('exact original Model input byte hash required')
+        self.validate_original_model_plan_suite(conn, scope, plan)
+
     def validate_original_model_judge_binding(self, conn: psycopg.Connection,
                                               scope: TenantScope, manifest) -> None:
         """Necessary original Suite Model Judge binding, never dispatch authority.

@@ -1,0 +1,87 @@
+{
+  "result": "ORIGINAL_MODEL_COMPLETE_INPUT_BYTES_NECESSARY_GATE_VERIFIED",
+  "reports": [
+    {
+      "attempt": "model-original-input-bytes-red-1652-r1",
+      "database": "aos_test_63faf82c21a9_ti4_test",
+      "pytest_exit": 1,
+      "caller_xid": "22867",
+      "caller_state": "aborted",
+      "approved_original_applications": 2,
+      "read_only": "on",
+      "counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-original-input-bytes-red-1652-r2",
+      "database": "aos_test_2e9545a12658_ti4_test",
+      "pytest_exit": 1,
+      "caller_xid": "22992",
+      "caller_state": "aborted",
+      "approved_original_applications": 2,
+      "read_only": "on",
+      "counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-original-input-bytes-green-1652-r1",
+      "database": "aos_test_2b935e22236d_ti4_test",
+      "pytest_exit": 0,
+      "caller_xid": "23117",
+      "caller_state": "aborted",
+      "approved_original_applications": 2,
+      "read_only": "on",
+      "counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-original-input-bytes-red-1652-r3",
+      "database": "aos_test_50f7b7766d10_ti4_test",
+      "pytest_exit": 1,
+      "caller_xid": "23256",
+      "caller_state": "aborted",
+      "approved_original_applications": 2,
+      "read_only": "on",
+      "counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    },
+    {
+      "attempt": "model-original-input-bytes-green-1652-r2",
+      "database": "aos_test_841069306b60_ti4_test",
+      "pytest_exit": 0,
+      "caller_xid": "23372",
+      "caller_state": "aborted",
+      "approved_original_applications": 2,
+      "read_only": "on",
+      "counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aip_model_eval_budget_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      }
+    }
+  ],
+  "owner_sha256": "472e4f501fb7da961d9818f4b90af62ed72988da05c0ebb0662b994f5c1ab14b",
+  "method_has_no_direct_sql_or_effect": true,
+  "old_evidence_unchanged": true,
+  "source_verifier_unchanged": true,
+  "execution_allowed": false,
+  "full_model_admission": false,
+  "limitations": "Content governance fixture inputs only; no trusted Model formatting/producer/tokenizer/transport or Source completion proof."
+}

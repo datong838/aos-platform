@@ -1,0 +1,22 @@
+{
+  "caller": {
+    "xid": "23117",
+    "pid": 47220
+  },
+  "case_hashes": [
+    {
+      "caseId": "content-subject-0",
+      "sha256": "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de",
+      "bytesLength": 28
+    },
+    {
+      "caseId": "content-subject-1",
+      "sha256": "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de",
+      "bytesLength": 28
+    }
+  ],
+  "rejected_sets": 12,
+  "execution_allowed": false,
+  "tokenizer_used": false,
+  "limitations": "Original content governance input bytes only; not Model prompt/schema/quality or transport."
+}
