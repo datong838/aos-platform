@@ -1,0 +1,27 @@
+{
+  "authority_revision": "AOS-001640",
+  "head": "bd3274c391635432860f40c052f097920bae314b",
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-source-original-approval-reference-1639.json",
+      "sha256": "354752b4f3b41af0808389564a4612fbb6ad9830523ce30e1d2ec698f81f47d9"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-current-20261009/review.md",
+      "sha256": "79df22348e06572939370e8f5600d14adda267e4fec228e1ac4112f82d4b41a0"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-current-20261009/independent-final-verification.json",
+      "sha256": "f86533648163c8249a83886889845503889bdcc76f450fa0d9ac7e99c253febe"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-current-20261009/first-failure-independent.json",
+      "sha256": "0320bccfbd3dbb6fd61db18c8c1bafbe7fabbe06fe768f98d2e48db7bbd8c32a"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-current-20261009/clock-completion-audit.json",
+      "sha256": "82d43e771f2f1f5a923d59176f2f07beca162448bc7cba3500167609c7e81743"
+    }
+  ],
+  "execution_allowed": false
+}

@@ -1,0 +1,144 @@
+{
+  "authority_revision": "AOS-001640",
+  "evidence_commit": "bd3274c391635432860f40c052f097920bae314b",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-full-suite-root-current-20261009",
+    "base_revision": "AOS-001639",
+    "completed_revision": "AOS-001639",
+    "result": "WHOLE_SOURCE_FIRST_NORMALIZATION_GAP_REPAIRED_FULL_PENDING",
+    "changed_files": [
+      ".evidence/gt-source-full-suite-root-current-20261009/clock-completion-audit.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/first-failure-independent.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/independent-final-verification.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/input-bindings-r1.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/input-bindings-r2.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/lab.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/native-normalization-r2-attempt.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/native-normalization-r2-result.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/native-normalization-r2.log",
+      ".evidence/gt-source-full-suite-root-current-20261009/native-whole-r1-attempt.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/native-whole-r1-result.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/native-whole-r1.log",
+      ".evidence/gt-source-full-suite-root-current-20261009/normalization-process.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/normalization-r2-collection.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/normalization-selection.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/parent-renewals.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/plan.md",
+      ".evidence/gt-source-full-suite-root-current-20261009/process-observation.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/process.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/register_stage.py",
+      ".evidence/gt-source-full-suite-root-current-20261009/review.md",
+      ".evidence/gt-source-full-suite-root-current-20261009/run_normalization_r2.py",
+      ".evidence/gt-source-full-suite-root-current-20261009/run_whole_r1.py",
+      ".evidence/gt-source-full-suite-root-current-20261009/task.json",
+      ".evidence/gt-source-full-suite-root-current-20261009/verify_normalization_r2.py",
+      ".evidence/gt-source-full-suite-root-current-20261009/whole-r1-collection.json"
+    ],
+    "commits": [
+      "bd3274c391635432860f40c052f097920bae314b"
+    ],
+    "verification": [
+      "Original101function386node full selection50pass1fail196.50s,335unexecuted; duplicate migrated source field profile native RED independently diagnosed",
+      "Original3normalization oracle functions5nodes pass20.04s, full original date/shape/type negative controls retained; independent1963inputs and zeroSource/protected32resources"
+    ],
+    "risks": [
+      "Full Source suite and actual final COMMIT expiry counterexample pending",
+      "No modelreview or formal firstchain acceptance"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T13:43:27+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001640-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001640"
+  },
+  "checkpoints": {
+    "gt-atomic-model-admission-20261008": {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001640",
+      "step": "whole-source-first-normalization-gap-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "29a6ac6678dd0040a674d73bd36cedf85fd43e099de481af28b3e6beecd18857",
+      "task_base_revision": "AOS-001537"
+    },
+    "gt-model-typed-proof-20261008": {
+      "task_id": "gt-model-typed-proof-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001640",
+      "step": "whole-source-first-normalization-gap-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "61c3e7aa97c5008862d0dbd2abb5c4b3583ad777fd98c117755747321a403f40",
+      "task_base_revision": "AOS-001513"
+    },
+    "gt-judge-call-authority-20261008": {
+      "task_id": "gt-judge-call-authority-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001640",
+      "step": "whole-source-first-normalization-gap-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "30bf833e3649e258e011177021fe6698ca50db831c6f4aa4983da38d7cd54734",
+      "task_base_revision": "AOS-001578"
+    },
+    "gt-judge-budget-parent-20261008": {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001640",
+      "step": "whole-source-first-normalization-gap-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "6efba0b50d975af3101a8bcff5235955e5e8c425778b9a6a42c3f688b1661a2a",
+      "task_base_revision": "AOS-001588"
+    },
+    "gt-shared-budget-fence-order-20261008": {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001640",
+      "step": "whole-source-first-normalization-gap-repaired-full-suite-next-final-clock-pending",
+      "fingerprint": "ae9f24d70036e2d393f1a5910a60488c9e16161ffbf0187d134538d862fdf190",
+      "task_base_revision": "AOS-001588"
+    }
+  },
+  "original_source_task": "ACTIVE",
+  "full_source_delivery": false,
+  "goal_status_changed": false
+}
