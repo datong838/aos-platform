@@ -1,0 +1,19 @@
+{
+  "authority_revision": "AOS-001650",
+  "head": "c1e7de96240a2fd725b832e5a913581a57836f19",
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/current-source-entire386-reference-1649.json",
+      "sha256": "c4b89d66e9f6677869f4f88a25ba93ac786ddcd12adc17f3bc94e19b6a1e4d28"
+    },
+    {
+      "path": ".evidence/gt-source-final-commit-boundary-20261009/boundary-audit.json",
+      "sha256": "79efb48a26805c4bbf1a2f1a16fe7bf038c5f10dcabaad2efd227bf018ddfec4"
+    },
+    {
+      "path": ".evidence/gt-source-final-commit-boundary-20261009/boundary-contract.md",
+      "sha256": "e0a80899a03d4dfc39d8a958265a677f4bba9d9b0cd50d6bd2fe0e527b5bd902"
+    }
+  ],
+  "execution_allowed": false
+}

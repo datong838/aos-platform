@@ -1,0 +1,19 @@
+{
+  "authority_revision": "AOS-001650",
+  "head": "c1e7de96240a2fd725b832e5a913581a57836f19",
+  "references": [
+    {
+      "path": ".evidence/gt-shared-budget-fence-order-20261008/current-source-entire386-reference-1649.json",
+      "sha256": "05cf36022d05f77e7f167ed8ee18ba033593cce3ab098199ab357eee6b6825f8"
+    },
+    {
+      "path": ".evidence/gt-source-final-commit-boundary-20261009/boundary-audit.json",
+      "sha256": "79efb48a26805c4bbf1a2f1a16fe7bf038c5f10dcabaad2efd227bf018ddfec4"
+    },
+    {
+      "path": ".evidence/gt-source-final-commit-boundary-20261009/boundary-contract.md",
+      "sha256": "e0a80899a03d4dfc39d8a958265a677f4bba9d9b0cd50d6bd2fe0e527b5bd902"
+    }
+  ],
+  "execution_allowed": false
+}
