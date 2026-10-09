@@ -1,0 +1,20 @@
+{
+  "authority_revision": "AOS-001616",
+  "source": ".evidence/gt-occupation-ledger-immutability-native-20261009/ledger-green.json",
+  "source_sha256": "12feb7b94aa18b355aff57279aa0b35e05b004c578dbcf4b16e458e9a45351b6",
+  "original_hash_primitive": "aos_api.aip_model_runtime_store.canonical_hash",
+  "native_root_hash": "sha256:ee715c0c21049e86343281064908ffb389e0d90c21c7c181b6f2100187f0b03b",
+  "native_event_hash": "sha256:969f46cff9dc19c479f8834b1b7806888212cdb611516a87e816e923d5734db6",
+  "both_original_native_hashes_match": true,
+  "next_contract_must_bind": [
+    "top.callId=root.callId=event.callId",
+    "top.occupationHash=event.occupationHash=canonical(root)",
+    "top.eventHash=canonical(event)",
+    "root/event tenant+login+xid+pid exact",
+    "all executionAllowed/countsAsInflight exact bool false",
+    "eventSeq exact integer1/previousEventHash null/state prepared_only"
+  ],
+  "no_new_hash_implementation": true,
+  "product_changed": false,
+  "execution_allowed": false
+}

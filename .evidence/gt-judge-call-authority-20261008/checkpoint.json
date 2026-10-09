@@ -6,7 +6,7 @@
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "authority_revision": "AOS-001616",
   "task_base_revision": "AOS-001578",
-  "step": "occupation-root-event-immutability-native-green-strict-preparation-type-next",
+  "step": "occupation-immutability-native-green-original-hash-type-binding-investigated",
   "code_files": [
     "services/aos-api/aos_api/aip_action_policy.py",
     "services/aos-api/aos_api/aip_action_store.py",
@@ -50,6 +50,6 @@
     ".evidence/gt-judge-call-authority-20261008/published-rule-reader-reference.json",
     ".evidence/gt-judge-call-authority-20261008/published-rule-currentness-reference.json",
     ".evidence/gt-judge-call-authority-20261008/exact-signed-rule-suite-reference.json",
-    ".evidence/gt-judge-call-authority-20261008/occupation-ledger-immutability-reference-1616.json"
+    ".evidence/gt-judge-call-authority-20261008/occupation-type-investigation-reference-1616.json"
   ]
 }

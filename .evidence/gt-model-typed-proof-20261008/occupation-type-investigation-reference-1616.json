@@ -1,0 +1,14 @@
+{
+  "authority_revision": "AOS-001616",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/occupation-ledger-immutability-reference-1616.json",
+      "sha256": "13f0ef4b44b81af0615c3a0e2e7387601ce7986baf2e0f03b6000ae497078231"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/occupation-type-hash-investigation-1616.json",
+      "sha256": "43d094ef0ae0e049bd7a3f6a59875695f49fca0883e0e0115c98c4eb8bc52bff"
+    }
+  ]
+}
