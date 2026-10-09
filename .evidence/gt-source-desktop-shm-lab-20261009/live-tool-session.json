@@ -1,0 +1,11 @@
+{
+  "session_id": 4152,
+  "pid": 59304,
+  "uid": 501,
+  "started": "Fri Oct 9 22:51:35 2026",
+  "comm": "services/aos-api/.venv/bin/python",
+  "head": "007902dbf4159a9efb46199ce85f490a82bd64bf",
+  "authority_revision": "AOS-001648",
+  "replay_allowed": false,
+  "scope": "New exact original386 run, retain all original DBs"
+}

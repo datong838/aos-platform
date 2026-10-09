@@ -1,0 +1,14 @@
+[
+    {
+        "CreatedAt": "2026-10-09T14:48:18Z",
+        "Driver": "local",
+        "Labels": {
+            "aos.scope": "test-only",
+            "aos.task": "gt-source-desktop-shm-lab-20261009"
+        },
+        "Mountpoint": "/var/lib/docker/volumes/aos-source-desktop-shm-20261009-data/_data",
+        "Name": "aos-source-desktop-shm-20261009-data",
+        "Options": null,
+        "Scope": "local"
+    }
+]

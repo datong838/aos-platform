@@ -1,0 +1,8 @@
+{
+  "failed_id": "52219392c3e9176ebf3c8913131c2622097cf0f99a2eb1728d4cb5a1045a983e",
+  "exit": 1,
+  "empty_uninitialized_volume_verified": true,
+  "readonly_audit": "70:70 1777\n",
+  "no_database_effect": true,
+  "reason": "Image volume copy resets owned empty directory permissions; missing volume-nocopy"
+}

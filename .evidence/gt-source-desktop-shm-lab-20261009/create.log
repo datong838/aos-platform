@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-desktop-shm-lab-20261009/create_lab.py", line 46, in <module>
+    else:raise RuntimeError('new lab unavailable; reconcile exact container, do not recreate')
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: new lab unavailable; reconcile exact container, do not recreate

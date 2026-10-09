@@ -1,0 +1,16 @@
+{
+  "observed_at": "2026-10-09T15:37:06.410312+00:00",
+  "terminal_session": 4152,
+  "exit": 0,
+  "full386": true,
+  "retained_database_inventory": 174,
+  "other_clients": [],
+  "no_backend_crash_or_shm_failure": true,
+  "shm_peak_bytes": 97533952,
+  "shm_final": "Filesystem           1-blocks       Used Available Capacity Mounted on\nshm                  268435456  97533952 170901504  36% /dev/shm\n",
+  "native_c_sha256": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+  "memory_limit": 805306368,
+  "shm_limit": 268435456,
+  "restart_count": 0,
+  "all_source_and_business_delivery": false
+}

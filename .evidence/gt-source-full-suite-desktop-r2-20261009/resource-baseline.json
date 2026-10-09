@@ -1,0 +1,1562 @@
+{
+  "desktop-linux": [
+    {
+      "Id": "6b57690c0e3b4288a354d658ff744bbf724bc2834390ef321e4c7879e5b45971",
+      "started": "2026-10-09T11:50:13.894029418Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-source-desktop-native-20261009-data",
+          "Source": "/var/lib/docker/volumes/aos-source-desktop-native-20261009-data/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "bind",
+          "Source": "/host_mnt/Users/ddt/.aos-lab-secrets/aos-source-desktop-native-20261009/postgres-password",
+          "Destination": "/run/aos-postgres-password",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "5440"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "d407a6161717245a9906ab9296b8e3db4dee98e671ebd9928296aade258ff272",
+      "started": "2026-10-09T11:50:13.761536918Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-source-desktop-native-20261009-data",
+          "Source": "/var/lib/docker/volumes/aos-source-desktop-native-20261009-data/_data",
+          "Destination": "/newdata",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "volume",
+          "Name": "44ce11b63d34a2d153295b5c8a87293778523b4421b30f003cbd93e9253162a8",
+          "Source": "/var/lib/docker/volumes/44ce11b63d34a2d153295b5c8a87293778523b4421b30f003cbd93e9253162a8/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "2d70a18d370df11f2ce6d0d6a1fb7887434c95441dfd3a94c133c99243d63071",
+      "started": "2026-10-09T11:49:09.105959264Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-source-desktop-native-20261009-data",
+          "Source": "/var/lib/docker/volumes/aos-source-desktop-native-20261009-data/_data",
+          "Destination": "/newdata",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": false,
+          "Propagation": ""
+        },
+        {
+          "Type": "volume",
+          "Name": "745413c21b8219392794a536fe0f32ed280c382d512f3c8a6019f9f6946b4170",
+          "Source": "/var/lib/docker/volumes/745413c21b8219392794a536fe0f32ed280c382d512f3c8a6019f9f6946b4170/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "994d076b02bd16fc5bf9afc484ed77f370fcb94bba1e2cb7b8f8afb703b884c4",
+      "started": "2026-10-09T11:47:51.253973463Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-source-desktop-native-20261009-data",
+          "Source": "/var/lib/docker/volumes/aos-source-desktop-native-20261009-data/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "bind",
+          "Source": "/host_mnt/Users/ddt/.aos-lab-secrets/aos-source-desktop-native-20261009/postgres-password",
+          "Destination": "/run/aos-postgres-password",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "5440"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "be515ff46bfcd2a3420bb649039d534fb2deb23e4bbc98f8e8c771ff55199a1d",
+      "started": "2026-10-09T11:47:50.981468672Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-source-desktop-native-20261009-data",
+          "Source": "/var/lib/docker/volumes/aos-source-desktop-native-20261009-data/_data",
+          "Destination": "/newdata",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "volume",
+          "Name": "abb39e7522b0e5465204030bdb41516a20db61a8d4a51e39b9f2c790507c3c7f",
+          "Source": "/var/lib/docker/volumes/abb39e7522b0e5465204030bdb41516a20db61a8d4a51e39b9f2c790507c3c7f/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "eea687dc728a6f85938a8f12fb9b5de93cd2e2996e2172db0a80823ac73b5464",
+      "started": "2026-10-09T11:44:08.814319013Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "86c5bb38a6704400cc40dfd5dc5035479f7aff50615c26c1126cc89e9b9de66f",
+          "Source": "/var/lib/docker/volumes/86c5bb38a6704400cc40dfd5dc5035479f7aff50615c26c1126cc89e9b9de66f/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "84036b587ab62d88551b9d27b592c891ece99f2f61b4ec9b6c8aa8f44ebd6cfa",
+      "started": "2026-10-09T09:14:50.999663177Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "carbon-redis-data",
+          "Source": "/var/lib/docker/volumes/carbon-redis-data/_data",
+          "Destination": "/data",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "6379/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "6379"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "5e23fb2bd7f794900d770cdca2b060b0a28d28d218d89e90915d2188c8264b7d",
+      "started": "2026-09-25T02:57:57.33495501Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/functions",
+          "Destination": "/home/deno/functions",
+          "Mode": "rw,z",
+          "RW": true,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "volume",
+          "Name": "supabase_deno-cache",
+          "Source": "/var/lib/docker/volumes/supabase_deno-cache/_data",
+          "Destination": "/root/.cache/deno",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "cae49b729399f6b21af4353d46fd7ea8562385206d8cf3439ff9cbeb1325c473",
+      "started": "2026-09-25T02:57:47.309691796Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/storage",
+          "Destination": "/var/lib/storage",
+          "Mode": "rw,z",
+          "RW": true,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "93be52233f1ac41c843061e37ebe041ba5051fb28430d9cd7ec4656d0e25c6ce",
+      "started": "2026-09-25T02:57:46.656045921Z",
+      "mounts": [],
+      "ports": {}
+    },
+    {
+      "Id": "fe2f388e98e7b88c16021546deb54dcaf2629ae7aec910435413aa50a2615197",
+      "started": "2026-09-25T02:57:46.684202588Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/api/envoy/docker-entrypoint.sh",
+          "Destination": "/docker-entrypoint.sh",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/api/envoy/cds.yaml",
+          "Destination": "/etc/envoy/cds.yaml",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/api/envoy/envoy.yaml",
+          "Destination": "/etc/envoy/envoy.yaml",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/api/envoy/lds.template.yaml",
+          "Destination": "/etc/envoy/lds.template.yaml",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {
+        "8000/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "8000"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "ace9db6cacd4634b819d9f56711b4e74ba043ae982c288c698e7bb7b099b1f4f",
+      "started": "2026-09-25T02:57:46.677304838Z",
+      "mounts": [],
+      "ports": {}
+    },
+    {
+      "Id": "dd0771eaa770289f4bcd25f5bc770d5507244c1e13a7d4703de79a4fb5920b89",
+      "started": "2026-09-25T02:57:46.682723296Z",
+      "mounts": [],
+      "ports": {}
+    },
+    {
+      "Id": "423f8c48e875fbdb5d8b83e2fc1762248525fdb935703dd70ed31ba19ad68918",
+      "started": "2026-09-25T02:57:46.681906921Z",
+      "mounts": [],
+      "ports": {}
+    },
+    {
+      "Id": "a77b4887203ad2e4cefb1445c32bb3acacc11824e026f160f3e7f2687340bad5",
+      "started": "2026-09-25T02:57:46.681173338Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/pooler/pooler.exs",
+          "Destination": "/etc/pooler/pooler.exs",
+          "Mode": "ro,z",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "5432"
+          }
+        ],
+        "6543/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "6543"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "250a39d74ecf691421970bd227e2ce1ea45c8083fb69236c104824ff8cb372cf",
+      "started": "2026-09-25T02:57:41.028181793Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/functions",
+          "Destination": "/app/edge-functions",
+          "Mode": "ro,z",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/snippets",
+          "Destination": "/app/snippets",
+          "Mode": "rw,z",
+          "RW": true,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "af9f6d4ebd9a6e6ca3a3c2d0e84ecc725b391e82814fdf5312be2a4b822a06bf",
+      "started": "2026-09-25T02:57:41.04256721Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/jwt.sql",
+          "Destination": "/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql",
+          "Mode": "rw,Z",
+          "RW": true,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/roles.sql",
+          "Destination": "/docker-entrypoint-initdb.d/init-scripts/99-roles.sql",
+          "Mode": "rw,Z",
+          "RW": true,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/_supabase.sql",
+          "Destination": "/docker-entrypoint-initdb.d/migrations/97-_supabase.sql",
+          "Mode": "rw,Z",
+          "RW": true,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/realtime.sql",
+          "Destination": "/docker-entrypoint-initdb.d/migrations/99-realtime.sql",
+          "Mode": "rw,Z",
+          "RW": true,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "volume",
+          "Name": "supabase_db-config",
+          "Source": "/var/lib/docker/volumes/supabase_db-config/_data",
+          "Destination": "/etc/postgresql-custom",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "bind",
+          "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/data",
+          "Destination": "/var/lib/postgresql/data",
+          "Mode": "rw,Z",
+          "RW": true,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/webhooks.sql",
+          "Destination": "/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql",
+          "Mode": "rw,Z",
+          "RW": true,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/logs.sql",
+          "Destination": "/docker-entrypoint-initdb.d/migrations/99-logs.sql",
+          "Mode": "rw,Z",
+          "RW": true,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/pooler.sql",
+          "Destination": "/docker-entrypoint-initdb.d/migrations/99-pooler.sql",
+          "Mode": "rw,Z",
+          "RW": true,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "b290188089f6cf227e532cc699c95d9f9161bb86cf43c469ce63dbc56365e314",
+      "started": "2026-09-25T02:57:41.02773071Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/storage",
+          "Destination": "/var/lib/storage",
+          "Mode": "rw,z",
+          "RW": true,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "a9fbe129b5dfe4e3781e9e573ec6f6be56544f424630451665e56bcd85f7fa4d",
+      "started": "2026-09-24T18:13:54.377387761Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "72965f2b3d44ef7bd812d40e59c2a331778a54b55e68ba298c276c4778318162",
+          "Source": "/var/lib/docker/volumes/72965f2b3d44ef7bd812d40e59c2a331778a54b55e68ba298c276c4778318162/_data",
+          "Destination": "/data/configdb",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "volume",
+          "Name": "openstock-mongo-data",
+          "Source": "/var/lib/docker/volumes/openstock-mongo-data/_data",
+          "Destination": "/data/db",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "27017/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "27017"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "9a2a4d5130d81cd724df8d5ad6ee3bc5c2d30eeb6e3e9d23e867615ffc5030ef",
+      "started": "2026-09-24T05:52:24.215429003Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "lianghua_panwatch_data",
+          "Source": "/var/lib/docker/volumes/lianghua_panwatch_data/_data",
+          "Destination": "/app/data",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "8000/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "8000"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "253a932a193bc98573aeb5cd9aca42cc5b4e19b44a981c9278e8cf1e711e176b",
+      "started": "2026-09-20T17:40:21.88041963Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/zhensi_waimai",
+          "Destination": "/data",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "volume",
+          "Name": "ops-observer_n8n-obs-data",
+          "Source": "/var/lib/docker/volumes/ops-observer_n8n-obs-data/_data",
+          "Destination": "/home/node/.n8n",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/docs/\u4ea7\u54c1\u63a2\u7d22/n8n/ops-observer",
+          "Destination": "/observer",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {
+        "5678/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "5678"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "64c697bae9bb4177f8c5177b772238e30ba811d5a75f0a283997dc832ed07111",
+      "started": "2026-09-25T10:06:34.94376675Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "e69f58e52044eaee35b02e92f9f2dfdb435316c73ca40c3b626508efba9565da",
+          "Source": "/var/lib/docker/volumes/e69f58e52044eaee35b02e92f9f2dfdb435316c73ca40c3b626508efba9565da/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "18432"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "9bbc568287f40c500e4787ef6ae192808818ff5e60a431eea20aaafdbd67287e",
+      "started": "2026-09-25T15:20:32.071259833Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-dev-prereq_aos_dev_pg_data",
+          "Source": "/var/lib/docker/volumes/aos-dev-prereq_aos_dev_pg_data/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "5433"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "39239f7ade6842feb04e6c975d8f31e2bdb39ba159d7a0afde7686c9c11e6d73",
+      "started": "2026-09-13T02:21:01.310813001Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "sub2api-local_sub2api_data",
+          "Source": "/var/lib/docker/volumes/sub2api-local_sub2api_data/_data",
+          "Destination": "/app/data",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "8080/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18080"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "e604a3d796eab16c55d316cb46c3f219704ab9fa43d82f4ee3323aece87396e1",
+      "started": "2026-09-13T02:21:00.305752417Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "sub2api-local_redis_data",
+          "Source": "/var/lib/docker/volumes/sub2api-local_redis_data/_data",
+          "Destination": "/data",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "bdf23d03457cbdc3e6eb4a1c3b4414d64e86d726d7b4f38d81429e846e738c40",
+      "started": "2026-09-13T02:21:00.306887125Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "0e153a73b792770013c4bedbebb906d3253d2d524093c1b2ebcb84238d8abada",
+          "Source": "/var/lib/docker/volumes/0e153a73b792770013c4bedbebb906d3253d2d524093c1b2ebcb84238d8abada/_data",
+          "Destination": "/var/lib/postgresql",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "volume",
+          "Name": "sub2api-local_postgres_data",
+          "Source": "/var/lib/docker/volumes/sub2api-local_postgres_data/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "cff4e820030c8ed92f2d80dc989bab6d0dff697009c850a7dfa680cd1ae86206",
+      "started": "2026-08-30T00:27:59.400951878Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/aos-platform/deploy/dev/mysql/init.sql",
+          "Destination": "/docker-entrypoint-initdb.d/init.sql",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "volume",
+          "Name": "aos-dev-prereq_aos_dev_mysql_data",
+          "Source": "/var/lib/docker/volumes/aos-dev-prereq_aos_dev_mysql_data/_data",
+          "Destination": "/var/lib/mysql",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "3306/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "3307"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "35d65179f0b5c4e3eba84bd74c58981e8ea142a5db83be61d714d5d14bd373e4",
+      "started": "2026-08-30T00:27:59.401426045Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/aos-platform/deploy/dev/analytics-runtime/notebooks",
+          "Destination": "/notebooks",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {
+        "8084/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "8084"
+          }
+        ],
+        "8888/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "8888"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "7ed8d7f3018dd2a7399b6e4138089ecab9a300eeb2d40a9aa42ca306b621d030",
+      "started": "2026-08-30T00:27:59.916888462Z",
+      "mounts": [],
+      "ports": {
+        "4000/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "4001"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "27ceb14a9cd81cfb8cbec2394be1ce4a9bbf98409a1ddf9ae4f9a53e766eef5e",
+      "started": "2026-09-20T14:52:41.997740669Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/llm-router/token-factory/deploy/newapi/nginx/default.conf",
+          "Destination": "/etc/nginx/conf.d/default.conf",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {
+        "80/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "3300"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "7d77ca10deffc0c2edb5b03db546ffd53c162b32c15af8285a9c5e9ae726f77b",
+      "started": "2026-09-20T14:52:43.004797836Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/llm-router/token-factory/deploy/newapi/logs",
+          "Destination": "/app/logs",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/llm-router/token-factory/deploy/newapi/data",
+          "Destination": "/data",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "e11dbdad8c7b2a9ac0cc2a425fcaf7e5fc1b68f4c2da9d0e6e2b1b6d7ea25cbc",
+      "started": "2026-08-21T02:45:44.957813798Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/tmp/fake_usage_upstream.py",
+          "Destination": "/app/fake.py",
+          "Mode": "",
+          "RW": true,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "8aabd6928198dfd414c4bfcbf633d4c73f6364fc656f87e6db3e2b24f35b525a",
+      "started": "2026-09-10T14:25:00.823891793Z",
+      "mounts": [],
+      "ports": {
+        "8080/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "8086"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "714d0b7aced6afc88cb909e85142ba01f4cc3f96ddc80f2ed22eb06f48887254",
+      "started": "2026-09-20T14:52:41.790148127Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "new-api-mysql-data",
+          "Source": "/var/lib/docker/volumes/new-api-mysql-data/_data",
+          "Destination": "/var/lib/mysql",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "3306/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "3306"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "8ed12f32a956b7c67bb50ceec23a734a31ec77fe09e4647c7a9c0c01270fff62",
+      "started": "2026-08-30T00:27:59.395464587Z",
+      "mounts": [],
+      "ports": {}
+    },
+    {
+      "Id": "ba1301a09222c58fff021e53cf5999fc3d95df03e930afe0a645137abf352c0f",
+      "started": "2026-08-17T03:22:00.480642137Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-dev-prereq_aos_dev_minio_data",
+          "Source": "/var/lib/docker/volumes/aos-dev-prereq_aos_dev_minio_data/_data",
+          "Destination": "/data",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "9000/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "9000"
+          }
+        ],
+        "9001/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "9001"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "fe244eea597c4d7e7635da46e46a51439905d02a60b40d0c5d163fb86904ea5b",
+      "started": "2026-08-17T03:22:00.479585053Z",
+      "mounts": [],
+      "ports": {
+        "8081/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "8081"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "942775aae800db797ae8e2067ba2e4fda674bca64fb5d5a6ed00bc52eee8f63f",
+      "started": "2026-08-17T03:22:00.479199762Z",
+      "mounts": [],
+      "ports": {
+        "8082/tcp": [
+          {
+            "HostIp": "",
+            "HostPort": "8082"
+          }
+        ]
+      }
+    }
+  ],
+  "colima-aos-extension": [
+    {
+      "Id": "2610b132e308269b3c1ac27a5df1f1181c088517e8152d2c720f33f848280c47",
+      "started": "2026-10-09T05:21:58.377765214Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-source-root-native-20261009-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/aos-source-root-native-20261009-data/_data",
+          "Destination": "/newdata",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "volume",
+          "Name": "6274406b9e283c39fab2f6b6a9f514b23ed8a17fba0da92ead17da80aad69c79",
+          "Source": "/var/lib/docker/100000.100000/volumes/6274406b9e283c39fab2f6b6a9f514b23ed8a17fba0da92ead17da80aad69c79/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "f4def0443209a571579226d857f3604dc41a6c613109462bb4d9d46c8d69801d",
+      "started": "2026-10-09T05:21:25.484004781Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-source-root-native-20261009-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/aos-source-root-native-20261009-data/_data",
+          "Destination": "/newdata",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "volume",
+          "Name": "252fc6425eb099a0e16e28307db5ba777c7afcfbb163d7ad7887b92a7e37f1b0",
+          "Source": "/var/lib/docker/100000.100000/volumes/252fc6425eb099a0e16e28307db5ba777c7afcfbb163d7ad7887b92a7e37f1b0/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "8384eef7b29dabf3629ba31c8ab18beab011a2f86cddffe96c0907be73024ec5",
+      "started": "2026-10-09T05:21:58.503260714Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-source-root-native-20261009-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/aos-source-root-native-20261009-data/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "5437"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "7d4a4c54ae793fc9fb2ba9147b47e79ff45fe95b84e8e40b70cdcce3e0b21122",
+      "started": "2026-10-09T05:20:03.0193537Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-source-root-native-20261009-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/aos-source-root-native-20261009-data/_data",
+          "Destination": "/newdata",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "volume",
+          "Name": "e4557edea836a40fd79f0561dee39fe35d9ee88e6bad94b986c16cdc3f6d79bd",
+          "Source": "/var/lib/docker/100000.100000/volumes/e4557edea836a40fd79f0561dee39fe35d9ee88e6bad94b986c16cdc3f6d79bd/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "c408a66259c718dd545e40e156961f0c51cb3dfa4735238fc90bd8ea450767dc",
+      "started": "2026-10-08T21:21:46.227331711Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-source-newjudge-native-20261009-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/aos-source-newjudge-native-20261009-data/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "fde431de702b48bbe4e2df5509dd237c240f21817eeacfd2becfc439976b80df",
+      "started": "2026-10-08T21:21:25.831732868Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-source-newjudge-native-20261009-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/aos-source-newjudge-native-20261009-data/_data",
+          "Destination": "/newdata",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "volume",
+          "Name": "47b4ac91d7b79dd041e436db2bd82696f2305ed66c45595f9f6cd3c7a3f36b2c",
+          "Source": "/var/lib/docker/100000.100000/volumes/47b4ac91d7b79dd041e436db2bd82696f2305ed66c45595f9f6cd3c7a3f36b2c/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "bcd0d503f9903e9f8eabea7d2d9d00ac7fb33df47e4e2318300eb8c34eeac4c7",
+      "started": "2026-10-08T21:21:46.380107503Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-source-newjudge-native-20261009-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/aos-source-newjudge-native-20261009-data/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "5436"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "d8f15c5060e3300c7d20f6256784156a7c9544832acc50e5d5663ebd20bf3eb5",
+      "started": "2026-10-08T21:20:12.609528792Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "aos-source-newjudge-native-20261009-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/aos-source-newjudge-native-20261009-data/_data",
+          "Destination": "/newdata",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "volume",
+          "Name": "18669d493f484818039b9fa0bf84e61b4b0bc78e10d5c928314c7079cb3fd2f3",
+          "Source": "/var/lib/docker/100000.100000/volumes/18669d493f484818039b9fa0bf84e61b4b0bc78e10d5c928314c7079cb3fd2f3/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "0ce36684e3e7ecbdc4a8f0976d19c0593c15ebe90eee4c42c1a963d2cd3b8d06",
+      "started": "2026-10-07T18:10:01.369955577Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "735994df7e4e1f895b317bfc3fbd86742dd922d1f16be598e942ca79d2878a39",
+      "started": "2026-10-07T18:09:58.829341826Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "3aed9d3cf0caf5dc045b900506ebb19f7ac035837e3071b509c37263ad3e2518",
+      "started": "2026-10-07T18:09:56.18764395Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "7993507d80a30c053a4266ba7343dc9744cdf7217cb045a6d50dbe0e54fa82f1",
+      "started": "2026-10-07T18:09:53.595211282Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "57439e119c4166c9b0c84c7b6fbd6e1a08b5334f3e95716deb1505138b2896e4",
+      "started": "2026-10-07T18:09:51.01079278Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "a33653ac2b0464887762416ab37ba64f01faff8bcc31e7b864e91765fc00d2f3",
+      "started": "2026-10-07T18:09:48.339024446Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "9e04be6778d8a1a326b4ad382b4fb9700531fc1d8ed95a654d25efa21672e121",
+      "started": "2026-10-07T18:09:36.211470982Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/86a1b3429b14e36275ea523719ace4caba5ae204dfcdd827aa4ec9b244ec81f8/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "a56788541ca41657e19378690b687b089d779259581403b13781113a1097fc4b",
+      "started": "2026-10-07T18:09:34.150285272Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/86a1b3429b14e36275ea523719ace4caba5ae204dfcdd827aa4ec9b244ec81f8/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "069f0718170e6a1a3a5d9ce20a8e2cd0efc33632af9b233e0d4bf62d075d4738",
+      "started": "2026-10-07T18:09:31.969535355Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/86a1b3429b14e36275ea523719ace4caba5ae204dfcdd827aa4ec9b244ec81f8/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "7cd37b395d5174d52325bfc429fd6397126ad08b725c60dd43b0483eae2f4fd2",
+      "started": "2026-10-07T18:09:29.862836312Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/86a1b3429b14e36275ea523719ace4caba5ae204dfcdd827aa4ec9b244ec81f8/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "b47693ccb6256d734adb5b92b38db319680e995824d5e65405a24054cd00e4ce",
+      "started": "2026-10-07T18:09:27.684096144Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/86a1b3429b14e36275ea523719ace4caba5ae204dfcdd827aa4ec9b244ec81f8/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "744569b453b61f670c551f9a1cd475345a9ba675994bc13209e57e358472452e",
+      "started": "2026-10-07T18:09:25.379347102Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/86a1b3429b14e36275ea523719ace4caba5ae204dfcdd827aa4ec9b244ec81f8/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "e73b7286809baa094637c87bc65403db485e392fd90f862b30d1b3f0e0cf3db0",
+      "started": "2026-10-07T18:09:15.95647593Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "current157-socket-pg-bc373b36cf89-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/current157-socket-pg-bc373b36cf89-data/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "9e7323da71206d4ad1e7e348972b1cd2c97cb65cfbe9761ce510b8891bb20614",
+      "started": "2026-10-07T18:08:40.972520789Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "382b996087cd7894f2eabc7467a4229f57092488dfe4b5a4bf6196b2d9a06111",
+      "started": "2026-10-07T18:08:40.546110789Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "acc8ba44154bc5fd0166848f2e0a4715cac8a0b24ae01dd2879a6dc7e64777b7",
+      "started": "2026-10-07T18:00:04.959634709Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "6a55e6e035f281e246a75738e1709c6fb8517a4ce1145eb4a2b03977f92c6780",
+      "started": "2026-10-07T18:00:02.860233292Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "708f7edf8ac080f86daa1cc1a58ab15cd8c492b7bc9bb7a6fa1ac3e6eb32ecd1",
+      "started": "2026-10-07T18:00:00.674026082Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "1b75cbe1fe944cdb24b2753c001292b50cb4c4d315ec7a176602faf1e818ad4c",
+      "started": "2026-10-07T17:59:58.496946873Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "43f5f5152381397b2b97e7d0ac6deb9497b9aa897c41497fa6fccb160aba0294",
+      "started": "2026-10-07T17:59:56.319478039Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "6c680d49595f3725d28af4087f1b3bd9e76a0c08494589c2e1e27ac9dae2a8c9",
+      "started": "2026-10-07T17:59:54.189120246Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/8b77cbb8526e0d2878c440ed2ecd4dcb308bb938d9210a75cc1f4ba8892ee4cf/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "386a052b3fa99c03893c63e357e7ab3d136a69e47d13896003c1c59cd3004da0",
+      "started": "2026-10-07T17:59:44.827672616Z",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "current157-socket-pg-adce8ec152af-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/current157-socket-pg-adce8ec152af-data/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "41767f883691c645d8a72a3896f7f2fc638c4ab5c731399050635a37e0aa5ad2",
+      "started": "2026-10-07T17:54:16.181486376Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "cfcdadcc74468b52a7943b92ca87041e633f0143b55592537448d02061332fae",
+      "started": "2026-10-07T17:51:59.442984811Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker/100000.100000/overlay2/20b710a7552beb6019fed0aa64b2ad2fc46562a2e7e6de3dcdab5b2821b8ec32/merged/var/run/postgresql",
+          "Destination": "/pgsocket",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rslave"
+        }
+      ],
+      "ports": {}
+    },
+    {
+      "Id": "980c0e4bede822b9174dfeafced6df21d35026c5cc0399fd0e0baaaa19ba3c0c",
+      "started": "2026-10-07T17:41:40.951926058Z",
+      "mounts": [],
+      "ports": null
+    },
+    {
+      "Id": "85ff2124c1dfdddc879a882cd1a667adc851571aa767e60a64a8b1bf30a62fb9",
+      "started": "2026-10-02T00:23:41.66452266Z",
+      "mounts": [],
+      "ports": {
+        "5000/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18438"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "6ae9ca475dec466169048ce13c105e8e4d1a5e4ec2ec89bd1a01c9f1a8413522",
+      "started": "2026-09-27T04:08:37.847537208Z",
+      "mounts": [],
+      "ports": {
+        "5000/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18436"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "2e1673dfb688655377000cfcf4852f2787bc31517bf44db5c1a1675702c97a04",
+      "started": "2026-09-27T03:50:10.090010138Z",
+      "mounts": [],
+      "ports": {
+        "5000/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18436"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+      "started": "2026-10-09T01:12:56.936918256Z",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260910/backups",
+          "Destination": "/backup",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "volume",
+          "Name": "aos-a0v-recovery-pg-data",
+          "Source": "/var/lib/docker/100000.100000/volumes/aos-a0v-recovery-pg-data/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "z",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18435"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "dd182a2cd268206c43066baf3fb5e8abb784eb201d131c3562f5173c41517f52",
+      "started": "2026-09-24T04:48:31.448795385Z",
+      "mounts": [],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18434"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "b5baa23cd07479859cfcf26bb72588ab6d9a0196ca311c0fbd4f88b51f0f2a06",
+      "started": "2026-10-03T02:36:57.944221435Z",
+      "mounts": [],
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18432"
+          }
+        ]
+      }
+    }
+  ]
+}

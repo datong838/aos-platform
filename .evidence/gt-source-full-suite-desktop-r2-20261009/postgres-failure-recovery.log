@@ -1,0 +1,27 @@
+2026-10-09 14:41:56.649 UTC [29638] ERROR:  could not resize shared memory segment "/PostgreSQL.2147784818" to 33554432 bytes: No space left on device
+2026-10-09 14:41:56.649 UTC [29638] STATEMENT:  CREATE TABLE aip_budget_head (
+	        org_id TEXT NOT NULL, project_id TEXT NOT NULL, budget_id TEXT NOT NULL,
+	        current_revision BIGINT NOT NULL, version BIGINT NOT NULL DEFAULT 1,
+	        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	        PRIMARY KEY(org_id,project_id,budget_id),
+	        CHECK(current_revision>=1), CHECK(version>=1))
+2026-10-09 14:41:56.668 UTC [1] LOG:  server process (PID 29638) was terminated by signal 11: Segmentation fault
+2026-10-09 14:41:56.668 UTC [1] DETAIL:  Failed process was running: CREATE TABLE aip_budget_head (
+	        org_id TEXT NOT NULL, project_id TEXT NOT NULL, budget_id TEXT NOT NULL,
+	        current_revision BIGINT NOT NULL, version BIGINT NOT NULL DEFAULT 1,
+	        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	        PRIMARY KEY(org_id,project_id,budget_id),
+	        CHECK(current_revision>=1), CHECK(version>=1))
+2026-10-09 14:41:56.668 UTC [1] LOG:  terminating any other active server processes
+2026-10-09 14:41:56.669 UTC [1] LOG:  all server processes terminated; reinitializing
+2026-10-09 14:41:56.894 UTC [29643] LOG:  database system was interrupted; last known up at 2026-10-09 14:41:16 UTC
+2026-10-09 14:42:08.151 UTC [29643] LOG:  syncing data directory (fsync), elapsed time: 10.00 s, current path: ./base/1015729/1020890
+2026-10-09 14:42:09.890 UTC [29643] LOG:  database system was not properly shut down; automatic recovery in progress
+2026-10-09 14:42:09.970 UTC [29643] LOG:  redo starts at 1/1A02B720
+2026-10-09 14:42:15.736 UTC [29643] LOG:  unexpected pageaddr 1/E400000 in WAL segment 000000010000000100000040, LSN 1/40400000, offset 4194304
+2026-10-09 14:42:15.736 UTC [29643] LOG:  redo done at 1/403FB140 system usage: CPU: user: 1.54 s, system: 1.40 s, elapsed: 5.76 s
+2026-10-09 14:42:16.395 UTC [29644] LOG:  checkpoint starting: end-of-recovery immediate wait
+2026-10-09 14:42:20.519 UTC [29644] LOG:  checkpoint complete: wrote 1650 buffers (80.6%); 0 WAL file(s) added, 0 removed, 38 recycled; write=2.495 s, sync=1.603 s, total=4.125 s; sync files=54672, longest=0.027 s, average=0.001 s; distance=626514 kB, estimate=626514 kB; lsn=1/40400048, redo lsn=1/40400048
+2026-10-09 14:42:20.528 UTC [1] LOG:  database system is ready to accept connections
+2026-10-09 14:47:16.086 UTC [29644] LOG:  checkpoint starting: time
+2026-10-09 14:47:16.216 UTC [29644] LOG:  checkpoint complete: wrote 1 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.101 s, sync=0.025 s, total=0.131 s; sync files=366, longest=0.003 s, average=0.001 s; distance=596 kB, estimate=563922 kB; lsn=1/404951F0, redo lsn=1/404951B8

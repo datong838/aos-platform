@@ -1,0 +1,12 @@
+{
+  "observed_at": "2026-10-09T14:58:57.056614+00:00",
+  "session_id": 4152,
+  "pid": 59304,
+  "live_process": "59304   501 07:22 services/aos-api/.venv/bin/python",
+  "node_start_samples": 137,
+  "shm_peak_bytes": 9453568,
+  "latest_node": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_current_signed_withdrawal_serializable_epoch_competition[withdrawal_first]",
+  "terminal": false,
+  "pass_claim": false,
+  "replay_allowed": false
+}

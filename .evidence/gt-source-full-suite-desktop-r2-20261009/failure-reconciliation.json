@@ -1,0 +1,21 @@
+{
+  "observed_at": "2026-10-09T14:48:37.446089+00:00",
+  "terminal_session": 8036,
+  "pytest_exit": 1,
+  "passed": 341,
+  "setup_errors": 1,
+  "known_failed_database": "aos_test_b1ea93c4618b_ti4_test",
+  "migration_head": [
+    [
+      "228assetintegration"
+    ]
+  ],
+  "source_relation": null,
+  "all_retained_databases": 136,
+  "other_clients": [],
+  "backend_signal11": true,
+  "automatic_wal_recovery": true,
+  "full386_passed": false,
+  "replay_allowed": false,
+  "independent_proof": "independent-failure-verification.json"
+}

@@ -1,0 +1,68 @@
+{
+  "schema": "aos-source-entire-original386nodes-terminal-readonly-verification/v1",
+  "head": "007902dbf4159a9efb46199ce85f490a82bd64bf",
+  "authority_revision": "AOS-001648",
+  "summary": "1 passed, 7 warnings in 17.26s",
+  "all_selected_passed": true,
+  "node_count": 1,
+  "database_count": 1,
+  "sources": 0,
+  "databases": [
+    {
+      "database": "aos_test_b060771d3dc1_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_migrated_private_source_drift_cannot_rebuild_fragments"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    }
+  ],
+  "exact_inputs_unchanged": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 77,
+  "full_source_delivery": false,
+  "formal_business_execution": false,
+  "root_volume": {
+    "CreatedAt": "2026-10-09T14:48:18Z",
+    "Driver": "local",
+    "Labels": {
+      "aos.scope": "test-only",
+      "aos.task": "gt-source-desktop-shm-lab-20261009"
+    },
+    "Mountpoint": "/var/lib/docker/volumes/aos-source-desktop-shm-20261009-data/_data",
+    "Name": "aos-source-desktop-shm-20261009-data",
+    "Options": null,
+    "Scope": "local"
+  },
+  "root_available_bytes": 429296414720
+}

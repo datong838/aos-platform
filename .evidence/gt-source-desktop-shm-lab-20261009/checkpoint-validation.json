@@ -1,0 +1,9 @@
+{
+  "task_id": "gt-source-desktop-shm-lab-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001648",
+  "step": "shm256-targeted-green-whole386-r4-running-same-handle",
+  "fingerprint": "04bfaad2932ee6d142c7ec46902486ef6c2e32a035152d5a8b65f8d5aff24561",
+  "task_base_revision": "AOS-001648",
+  "command_state": "ACTIVE"
+}

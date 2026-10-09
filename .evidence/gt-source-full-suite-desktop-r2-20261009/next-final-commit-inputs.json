@@ -1,0 +1,14 @@
+[
+  {
+    "path": "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py",
+    "sha256": "cd9564e8c37d0bdac9af7fa8311a0db7febc09a1ee1af6346245fc9ae2d61cc7"
+  },
+  {
+    "path": ".evidence/gt-source-body-expiry-commit-native-20261009/independent-verification.json",
+    "sha256": "17cc88e4bb9e693c212b7d94e86d7361c64cec87a5ef62b7e014fcf18cbb4003"
+  },
+  {
+    "path": ".evidence/gt-shared-physical-atomic-contract-20261007/joint-implementation-plan.md",
+    "sha256": "ffcd687a3ead94f4c96407fc4f15bba67b04d1fc3d6e70213009129effa068c9"
+  }
+]

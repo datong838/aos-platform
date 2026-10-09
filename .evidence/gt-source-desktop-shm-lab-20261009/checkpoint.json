@@ -1,0 +1,23 @@
+{
+  "schema": "aos-engineering-checkpoint/v1",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "task_id": "gt-source-desktop-shm-lab-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001648",
+  "task_base_revision": "AOS-001648",
+  "step": "entire386-terminal-green-independent-readback-complete",
+  "code_files": [],
+  "evidence_files": [
+    ".evidence/gt-source-desktop-shm-lab-20261009/plan.md",
+    ".evidence/gt-source-desktop-shm-lab-20261009/run_whole.py",
+    ".evidence/gt-source-desktop-shm-lab-20261009/lab.json",
+    ".evidence/gt-source-desktop-shm-lab-20261009/task.json",
+    ".evidence/gt-source-desktop-shm-lab-20261009/independent-targeted-verification.json",
+    ".evidence/gt-source-desktop-shm-lab-20261009/creation-failure-reconciliation.json",
+    ".evidence/gt-source-desktop-shm-lab-20261009/verifier-install.json",
+    ".evidence/gt-source-desktop-shm-lab-20261009/live-tool-session.json",
+    ".evidence/gt-source-desktop-shm-lab-20261009/independent-whole-final-verification.json",
+    ".evidence/gt-source-desktop-shm-lab-20261009/terminal-resource-verification.json"
+  ]
+}

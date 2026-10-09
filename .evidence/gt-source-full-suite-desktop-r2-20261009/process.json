@@ -1,0 +1,10 @@
+{
+  "pid": 53936,
+  "started_at": "2026-10-09T14:10:08.020097+00:00",
+  "head": "007902dbf4159a9efb46199ce85f490a82bd64bf",
+  "authority": "AOS-001648",
+  "state": "TERMINAL_FAILED",
+  "replay_allowed": false,
+  "pytest_exit": 1,
+  "reconciled_at": "2026-10-09T14:48:37.446089+00:00"
+}

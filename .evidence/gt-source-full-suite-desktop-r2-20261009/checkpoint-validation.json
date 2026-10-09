@@ -1,0 +1,9 @@
+{
+  "task_id": "gt-source-full-suite-desktop-r2-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001648",
+  "step": "whole386-r3-running-same-handle-no-replay",
+  "fingerprint": "8e0495e076085aff4aa3517bf7b13296a03545d3a967d02526513844796de246",
+  "task_base_revision": "AOS-001648",
+  "command_state": "ACTIVE"
+}

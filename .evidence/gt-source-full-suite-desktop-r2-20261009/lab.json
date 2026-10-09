@@ -1,0 +1,15 @@
+{
+  "name": "aos-source-desktop-native-20261009",
+  "context": "desktop-linux",
+  "container_id": "6b57690c0e3b4288a354d658ff744bbf724bc2834390ef321e4c7879e5b45971",
+  "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+  "source_image_config": "sha256:1a726528ec4ec3dfebf104148d3c6ae329828bfd228c305bb3e0e1e582ee074b",
+  "cluster": "7694634116600770584",
+  "port": 5440,
+  "volume": "aos-source-desktop-native-20261009-data",
+  "passfile": "/Users/ddt/.aos-lab-secrets/aos-source-desktop-native-20261009/pgpass",
+  "memory_bytes": 805306368,
+  "old_resources_unchanged": true,
+  "volume_options": {},
+  "external_mount": "/Volumes/NVME2T"
+}

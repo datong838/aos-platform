@@ -1,0 +1,18 @@
+{
+  "tool_session_id": 8036,
+  "pid": 53936,
+  "identity": {
+    "uid": 501,
+    "started": "Fri Oct 9 22:10:07 2026",
+    "comm": "services/aos-api/.venv/bin/python"
+  },
+  "observed_at": "2026-10-09T14:21:56.704273+00:00",
+  "authority_revision": "AOS-001648",
+  "head": "007902dbf4159a9efb46199ce85f490a82bd64bf",
+  "original_attempt": "native-whole-r3-attempt.json",
+  "terminal_result": "native-whole-r3-result.json",
+  "next_action": "Poll same exec session8036; terminal success then independent verify_whole_r3_readonly.py; failure readonly reconcile without unknown replay",
+  "goal_active_confirmed": true,
+  "user_resume_explicit": true,
+  "replay_allowed": false
+}

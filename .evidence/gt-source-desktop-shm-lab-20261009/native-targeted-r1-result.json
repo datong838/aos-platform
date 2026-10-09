@@ -1,0 +1,18 @@
+{
+  "observed_at": "2026-10-09T14:50:17.878000+00:00",
+  "database": "aos_test_b060771d3dc1_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_migrated_private_source_drift_cannot_rebuild_fragments",
+      "phase": "database_binding",
+      "database": "aos_test_b060771d3dc1_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_migrated_private_source_drift_cannot_rebuild_fragments",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "Original failed setup node fresh targeted verification; actual finalclock and business acceptance remain pending"
+}

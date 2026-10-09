@@ -1,0 +1,22 @@
+{
+  "schema": "aos-engineering-checkpoint/v1",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "task_id": "gt-source-full-suite-desktop-r2-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001648",
+  "task_base_revision": "AOS-001648",
+  "step": "whole-r3-terminal-failed-shm-exhaustion-readonly-reconciled",
+  "code_files": [],
+  "evidence_files": [
+    ".evidence/gt-source-full-suite-desktop-r2-20261009/plan.md",
+    ".evidence/gt-source-full-suite-desktop-r2-20261009/run_whole_r3.py",
+    ".evidence/gt-source-full-suite-desktop-r2-20261009/whole-r3-collection.json",
+    ".evidence/gt-source-full-suite-desktop-r2-20261009/native-whole-r3-attempt.json",
+    ".evidence/gt-source-full-suite-desktop-r2-20261009/live-tool-session.json",
+    ".evidence/gt-source-full-suite-desktop-r2-20261009/next-final-commit-investigation.md",
+    ".evidence/gt-source-full-suite-desktop-r2-20261009/collection-r2-failure-reconciliation.json",
+    ".evidence/gt-source-full-suite-desktop-r2-20261009/independent-failure-verification.json",
+    ".evidence/gt-source-full-suite-desktop-r2-20261009/failure-reconciliation.json"
+  ]
+}

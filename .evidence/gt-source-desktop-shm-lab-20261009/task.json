@@ -1,0 +1,20 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-source-desktop-shm-lab-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001648",
+  "scope": [
+    "aos-platform/.evidence/gt-source-desktop-shm-lab-20261009",
+    "isolatedDocker:desktop-linux/aos-source-desktop-shm-20261009"
+  ],
+  "excluded_scope": [
+    "aos-platform/services",
+    "aos-platform/apps"
+  ],
+  "expected_outputs": [
+    "Fresh exact native C lab with bounded256MiB shm, original failed node then entire386 cumulative; old resources preserved"
+  ],
+  "lease_expires_at": "2026-10-09T18:48:17.090068+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T22:48:18+08:00"
+}

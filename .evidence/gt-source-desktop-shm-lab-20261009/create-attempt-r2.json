@@ -1,0 +1,9 @@
+{
+  "observed_at": "2026-10-09T14:48:18.915125+00:00",
+  "name": "aos-source-desktop-shm-20261009",
+  "volume": "aos-source-desktop-shm-20261009-data",
+  "context": "desktop-linux",
+  "memory": 805306368,
+  "no_swap": true,
+  "no_old_resources_modified": true
+}
