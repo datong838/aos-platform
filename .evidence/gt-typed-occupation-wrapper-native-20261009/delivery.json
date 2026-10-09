@@ -1,0 +1,24 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "gt-typed-occupation-wrapper-native-20261009",
+  "base_revision": "AOS-001617",
+  "completed_revision": "AOS-001617",
+  "result": "TYPED_OCCUPATION_SAME_CALLER_WRAPPER_NATIVE_GREEN_ADMISSION_PENDING",
+  "changed_files": [
+    "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation.py",
+    "aos-platform/.evidence/gt-typed-occupation-wrapper-native-20261009"
+  ],
+  "commits": [
+    "dbf4a57e7d9d62fd482be1293addeb4d37cd789b"
+  ],
+  "verification": [
+    "Original native missing wrapper RED91.45s; R2 full original1PASS100.66s exact native DTO/replay/same connection/xid/pid and ten boundaries denied",
+    "Independent aborted/six preparations0/Source1/NOLOGIN/member0/no probes/31old resources unchanged; adjacent349PASS0.77s"
+  ],
+  "risks": [
+    "GREEN R1 fullFAIL66.49s oldJudge50s expiry after wrapper checks; only frozen duplicate oldplan negatives removed in R2, no expiry/product weakening",
+    "No runtime route/defaultmigration/admission/unknown/fees/Judge result/transport/finalizer/COMMIT permission; parentTasks ACTIVE"
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-09T09:05:38+08:00"
+}

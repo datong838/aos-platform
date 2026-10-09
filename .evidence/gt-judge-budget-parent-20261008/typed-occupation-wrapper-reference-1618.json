@@ -1,0 +1,331 @@
+{
+  "authority_revision": "AOS-001618",
+  "head": "dbf4a57e7d9d62fd482be1293addeb4d37cd789b",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/typed-occupation-wrapper-plan-reference-1617.json",
+      "sha256": "87c049e11b91128a6aed7c381c4ecca98e2c63c4ba4be10db6b0f22f26479f8f"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r1-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r1-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r1-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r1-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r1-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-budget-fact.json",
+      "sha256": "ed3af6aa960b98195add6bd8057e6574b5fe625fd95c6e9643f86f81b14cef5a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-case-binding.json",
+      "sha256": "be5837d7233700b43f449a4d81869670a4fb9dded0209cecbce83a30ac98323c"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-guard-race.json",
+      "sha256": "c9b0544d0134a0e546179498e839052ce68c17679731ecd13efa0fcf4c19f8b0"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-input-binding.json",
+      "sha256": "cc55be6b8aced5ac5fe53556af6bff1c8211d0f087c0aefdf54fbd145c929061"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-input.json",
+      "sha256": "6c844f28a2d360ea85023edea03c35e25fdceb3a2fe048b8e2e40a16d9c94b71"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-intent-existing-row-negative.json",
+      "sha256": "33f0405de3afef5e66c011e202a79b67b67ad9901760d0cc37187ee3c0e7fd25"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-intent.json",
+      "sha256": "c8f7a3506cf224774505f4dddf9adf1dc835c715a1fcd0151d897821877e3afb"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-parent-debit.json",
+      "sha256": "02d43570f2defc88908027494f55f0c8026e7d3a22bf231cdbb3bd4e999e1286"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-preparation.json",
+      "sha256": "21745e21ac42058bbe56f30165f9a1b06fc72e4040a11be28e8054f179703b78"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-whole-source-plan-input.json",
+      "sha256": "ed57919ea55e0b5907db834fa88c3e88fe1174b3d455f4a77231876338299553"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-green-r2-whole-source-plan-verification.json",
+      "sha256": "a0b30b52db7bf6b89d660481fe0f52d74c57a29106a572de96080ebd4e4b599c"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-budget-fact.json",
+      "sha256": "a1ab6ff50983479710560bab78e67f0bf062c341ceb73cafba1fc7c1b4212e86"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-case-binding.json",
+      "sha256": "776b9e00a3eec1502b465ec08bc358b122aedf9724e5a59041ed12baa72c5a9b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-guard-race.json",
+      "sha256": "2a1d63002ffa7f76c5a1f192d213738e1a87e3e1f5f0b1052f6b374ce6bc3554"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-input-binding.json",
+      "sha256": "5f7d6432b7e42c47f4b3e9637f39bbfcc2a006d92ceb6907b4d4d49120915666"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-input.json",
+      "sha256": "21b175edacf07e96aabaeb573480dd12f3c79872a5f0a53219ee12dd3e07dc3f"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-intent-existing-row-negative.json",
+      "sha256": "84ef6a339c6ec776c38d3a2e67014bda63064972a0ed09b39aa14b5bdd428193"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-intent.json",
+      "sha256": "ef591b633dca05463f7554a39bf286c35e5effb667ec4bac62998dba74cfa483"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-parent-debit.json",
+      "sha256": "ab271eded6743171c5b20811bd613036912e6e7ae4096d217a1f8f656454e571"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-preparation.json",
+      "sha256": "f67d7887bb7613403c36b71c192648585e6675719d14bedfff3e358453cb0fad"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-whole-source-plan-input.json",
+      "sha256": "5775115b9351a29d367a9d308aa9b69973f90536c67a89e64336e5df1751dd97"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-wrapper-red-r1-whole-source-plan-verification.json",
+      "sha256": "97b9bf86b5d81e8b359ff9e5d4cadb2538d408d2d14879d4f32d93666ca53d89"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/wrapper-green-r2-whole-plan-proof.json",
+      "sha256": "1bb8864eeb3d835bd87a6129f78d26485c36355fda9fc3df72403e40a4883c22"
+    },
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/wrapper-red-r1-whole-plan-proof.json",
+      "sha256": "d5bbf801105addf896c741744e9a7b809529158f3b0ff89f8ece5f8c3dadfe41"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/adjacent-r1.log",
+      "sha256": "7ae42fef242cc37eff7dd7af894eacbf07e543a4c1cbe4651945d14060327e17"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/attempt-helper-bindings.json",
+      "sha256": "fef5ae6d5bdd1b58c9ee6832827161e34518c5aea08e887188826cefdf55a5af"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/catalog.json",
+      "sha256": "f6299bac1ac076606c8cded3b5d68362b639a40c2477ed9b8b9f6b4be6269afd"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/complete-plan-risk.json",
+      "sha256": "481e14f7cb04d15c2e8e10683fcfe875a8978ac3fc03bb8761a1dd337a191966"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/finalize_wave.py",
+      "sha256": "f23cda9033c6179f1da6b03e557ce55c7d2a21515fc9f5462d3b6b1ec01e2520"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/green-r1-independent.json",
+      "sha256": "d08bf0ac65d01be571b7cc04ab92611c27b72588458121d2b272315f40ec966d"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/green_r1_audit.py",
+      "sha256": "84196e846b6c70cb194849f816dea19f6e42d3c05cc89e8ec5e9738231b06df6"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/hash-check.json",
+      "sha256": "0183e783b7fe33594eb47b5916b31000f23d01c0b5dc293fae220efb84a96764"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/independent-readback.json",
+      "sha256": "b60222350ec8b5b576ab92976fd9f80303490b1527d72180ee94696c1aaedc92"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/independent_audit.py",
+      "sha256": "4143d7889efb458741a7a5ba21961232be5d2a9ab214f245b3ac7f906c47897c"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/ledger-catalog.json",
+      "sha256": "f3dd4d6994052f853bc363ee475ee43a79094b70eb9b6010594e13fb41e7eb50"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/ledger-green.json",
+      "sha256": "43c0b0f86095ca498b6807092bf68e239825fb2797e6604b5653aa3c9cff7dc0"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/native-green-r1-attempt.json",
+      "sha256": "94b30c1236af1a80084dcb11e2f51ce6cfc25302a0dca643afc9ee1ae947603b"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/native-green-r1-result.json",
+      "sha256": "cfabf5af402d29978787542f1847688f3f7928f4e0a8d1f9031b0bf753cca964"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/native-green-r1.log",
+      "sha256": "518d6527e31ad4f6de0b891a2e009f4ffd8cb4b8a85a442f950230732a5665c4"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/native-green-r2-attempt.json",
+      "sha256": "459cd190708ddec42117072ae655dacd9abca3f28484ccb8196700632a9a249d"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/native-green-r2-result.json",
+      "sha256": "64ee9fb7354b9cd42776f68e6c96b7d8a6ed78a56e9873c1fcd247f80314dbca"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/native-green-r2.log",
+      "sha256": "a1e813f01bc0fa65d601c5144be0912d814a0c000b7513007288e6bc3d4bb414"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/native-red-r1-attempt.json",
+      "sha256": "8ed1042bf17ea22a57cf33706702f6612d5716158df3ec55609e900a019a0597"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/native-red-r1-result.json",
+      "sha256": "36d03a3a653d19c35c981061dff248efd5c92ac40d41b5a698024f62c8e87072"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/native-red-r1.log",
+      "sha256": "609e88d59a2ee5bd10304c51654eabf609d588586a8eadaf00f71e2491383be1"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/original-product.py.txt",
+      "sha256": "432af3d789ab8a36b0b4d44c3d181d3ba750b9cb8354250298dbdd7a97cd358b"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/plan.md",
+      "sha256": "84023db1ac27f6fb4d343fa965558b84a2c9e7a6dd8781c4e21b9c0ff3ed843d"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/preflight.json",
+      "sha256": "65cfd11da85ca53d8e9a3d4386196e7341bf511ff7bd0d3ff5ef430e1ff3176f"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/red-independent.json",
+      "sha256": "65fb062baa70d1f1e5b7c93c667799a19f9a4fdb67928d595577e36d6ef4c93b"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/red_independent_audit.py",
+      "sha256": "81ab76385a55d2e710b26b2953fd3507d789f615348f7b32fe90a246794f392b"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/review.md",
+      "sha256": "f8bba3994b29c61c6dfaf753e713d173182a67e03003e2ec173e011dc503a5a0"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/run_native_green_r1.py",
+      "sha256": "db9d35d12221ed53e657646bab4e9ffff07a9d3916e4665dd8bd1ebca4647a94"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/run_native_green_r2.py",
+      "sha256": "53c5c823d8fdfec47bf8d2a17d9b7e667c3384e766ae7f5e441cf312108a07f4"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/run_native_red_r1.py",
+      "sha256": "a36d2609028378f34fd23c9ad801e88d4e51d20282f3a32b04818aadbf6418ee"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/source_newjudge_native_trial_1606.py",
+      "sha256": "e255a6abd01c1ba56a19d72be16ae04ff686e908b9b45c4e8cbb8fb818a73c5b"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/source_trial_green_r1.py",
+      "sha256": "a5e8e1cec420d7876a87e9c99fd64f60e7c61a6aa8d0be217d31f01a5b92841c"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/source_trial_red_r1.py",
+      "sha256": "9c0d22535f06d5fe2c5b0d13f227af0b21403c0d959762b8e6c0fccec77b8ce9"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/static-review.json",
+      "sha256": "339518610c27ca8786585fcfa32f032b70f6ae2ad9bc6097fb0b718556cb271b"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/task.json",
+      "sha256": "33c4afc90e7c38588e9f54d63ce2445ec760e428a6f44de5bb936a794bb498ca"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/trusted-target-call-green.json",
+      "sha256": "afc97f624ad041bb2eef54a606a22fa9452d31f9c39d9f8f113437fdf7db008f"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/wrapper-candidate.py.txt",
+      "sha256": "ab0f05b67e60b3e307d36a508f59fd2aed48893e5f311ef23b946ac720cf14ef"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/wrapper-green.json",
+      "sha256": "25565d30e60fcf5104db640ad2470401bbe05ebff520216ea0e5faef0e81f696"
+    },
+    {
+      "path": ".evidence/gt-typed-occupation-wrapper-native-20261009/wrapper-red.json",
+      "sha256": "68775efe9e27d779482825544ed916b0ff9386aa93678ab619cc1b3aabed2212"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_physical_capacity_occupation.py",
+      "sha256": "db39cc33b3d3b8f96ca6d2a7dff5bc798d49d707791c61e7033ca43cb2378259"
+    }
+  ]
+}
