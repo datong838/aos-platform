@@ -1,0 +1,102 @@
+{
+  "authority_revision": "AOS-001660",
+  "head": "399557f03f1676d8cb154e363838ffdeb9b430bf",
+  "database": "aos_test_bcd5c43891be_ti4_test",
+  "current_original_whole_schema": "aos.model-eval-target-judge-manifest/v2",
+  "original_cases": 2,
+  "legacy_exact_rejection": [
+    {
+      "location": [
+        "schemaVersion"
+      ],
+      "type": "value_error"
+    },
+    {
+      "location": [
+        "requestId"
+      ],
+      "type": "missing"
+    },
+    {
+      "location": [
+        "requestHash"
+      ],
+      "type": "missing"
+    },
+    {
+      "location": [
+        "request"
+      ],
+      "type": "missing"
+    },
+    {
+      "location": [
+        "cases",
+        0,
+        "judge"
+      ],
+      "type": "value_error"
+    },
+    {
+      "location": [
+        "cases",
+        1,
+        "judge"
+      ],
+      "type": "value_error"
+    },
+    {
+      "location": [
+        "parentBudgetLimits"
+      ],
+      "type": "missing"
+    },
+    {
+      "location": [
+        "judgeRequestId"
+      ],
+      "type": "extra_forbidden"
+    },
+    {
+      "location": [
+        "judgeRequestHash"
+      ],
+      "type": "extra_forbidden"
+    },
+    {
+      "location": [
+        "judgeRequest"
+      ],
+      "type": "extra_forbidden"
+    },
+    {
+      "location": [
+        "targetParentBudget"
+      ],
+      "type": "extra_forbidden"
+    },
+    {
+      "location": [
+        "judgeParentBudget"
+      ],
+      "type": "extra_forbidden"
+    }
+  ],
+  "read_only_inventory": {
+    "aos_model_eval_execution_private.manifest": 0,
+    "aos_model_eval_execution_private.case_result": 0,
+    "aos_model_eval_issuer_private.executor_certificate": 0,
+    "aos_model_eval_issuer_private.target_result_origin": null
+  },
+  "runtime_target_fact_function": null,
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": "40a3c6eacd13de6a3185c1f106f035cec7308e01ea3df72d25b0f8e1c2224d0b",
+    "services/aos-api/aos_api/aip_model_eval_execution_reader.py": "1b61a8d0df28743065c3facff18363c0847d68e3b64b7e68657052b90b2e69fa",
+    "services/aos-api/aos_api/aip_model_eval_execution_authority.py": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27",
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": "0da9585c402ec108fed7df9253a92da3385e90a9141d7cad2880c1e6568fe6de"
+  },
+  "result": "ORIGINAL_V2_JUDGE_NOT_WIRED_TO_LEGACY_TARGET_PROOF",
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "limitations": "Legacy signed COMMITTED Target reader exists in code but uses legacy Manifest/ModelEvalBudgetReservation for both legs. Current approved v2 uses independent ModelJudgeBudgetReservation and original Judge request/rule; no Target row in this owned DB. No proof/input coercion, installation or fabricated Target output performed."
+}

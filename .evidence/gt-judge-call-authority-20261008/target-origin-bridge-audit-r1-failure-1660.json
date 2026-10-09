@@ -1,0 +1,84 @@
+{
+  "exit": 1,
+  "stage": "pure DTO error-location assertion before database connect",
+  "database_accessed": false,
+  "execution_allowed": false,
+  "errors": [
+    {
+      "location": [
+        "schemaVersion"
+      ],
+      "type": "value_error"
+    },
+    {
+      "location": [
+        "requestId"
+      ],
+      "type": "missing"
+    },
+    {
+      "location": [
+        "requestHash"
+      ],
+      "type": "missing"
+    },
+    {
+      "location": [
+        "request"
+      ],
+      "type": "missing"
+    },
+    {
+      "location": [
+        "cases",
+        0,
+        "judge"
+      ],
+      "type": "value_error"
+    },
+    {
+      "location": [
+        "cases",
+        1,
+        "judge"
+      ],
+      "type": "value_error"
+    },
+    {
+      "location": [
+        "parentBudgetLimits"
+      ],
+      "type": "missing"
+    },
+    {
+      "location": [
+        "judgeRequestId"
+      ],
+      "type": "extra_forbidden"
+    },
+    {
+      "location": [
+        "judgeRequestHash"
+      ],
+      "type": "extra_forbidden"
+    },
+    {
+      "location": [
+        "judgeRequest"
+      ],
+      "type": "extra_forbidden"
+    },
+    {
+      "location": [
+        "targetParentBudget"
+      ],
+      "type": "extra_forbidden"
+    },
+    {
+      "location": [
+        "judgeParentBudget"
+      ],
+      "type": "extra_forbidden"
+    }
+  ]
+}

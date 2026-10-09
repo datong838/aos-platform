@@ -1,0 +1,9 @@
+# committed Target 与原独立 Judge 接线调查
+
+本轮真实原批准v2 wholeManifest通过其新类型；旧ModelEvalExecutionManifest实际拒绝12处：schemaVersion value_error，requestId/requestHash/request与parentBudgetLimits缺失，两case Judge旧leg value_error，newJudge request及两parent fields extra_forbidden。原独立ModelJudgeBudgetReservation不得改名为旧ModelEvalBudgetReservation绕过。
+
+代码已有runtime原Target reader：原签名证书/currentepoch/tenant/case/execution/hash/input/output、trigger原producerxid COMMITTED、read-only非执权输入准备。此机制依赖旧Manifest，不能由其测试正向认作当前newpurpose接线。本轮GREEN保留库SERIAL READ ONLY：manifest/case_result/executor_certificate 0，target_result_origin/function未安装(null)；未安装DDL/role/root/证书，不造结果或重放。
+
+调查脚本两次pure DTO assert失败保留；错误类型为custom validator value_error，不是literal_error，错误位置仍schemaVersion。两次都发生数据库连接之前。最终实际12错误加原库只读审计完成。绑定精确HEAD399557f03与四产品文件hash。没有改产品代码，无正式权威/Target来源/真实执行/首链结论。
+
+下一已登记Judge完整合同项的最小方案：定义原v2 Target case持久签名引用与全case一一映射，原request/Suite/Contract/Model/预算/Source/allocation/Intent和可信身份不能丢失；先核typed Task/Lease对精确新增接口的scope，再完善文件级方案。新路径必须独立schema/domain，保持旧签名输入与reader不可变；严禁把测试制造输出或caller flag当实际Target来源。Source实际结束/真实input计数等仍独立待完。完整Judge/Main继续ACTIVE。

@@ -1,0 +1,12 @@
+{
+  "exit": 1,
+  "stage": "pure DTO assertion expected wrong error label",
+  "database_accessed": false,
+  "execution_allowed": false,
+  "actual_schema_error": {
+    "location": [
+      "schemaVersion"
+    ],
+    "type": "value_error"
+  }
+}
