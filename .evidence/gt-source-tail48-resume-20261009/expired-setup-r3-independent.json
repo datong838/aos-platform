@@ -1,0 +1,128 @@
+{
+  "pytest_exit": 1,
+  "scope": "2PASS1SETUPERROR40.32s no patched assertion reached",
+  "database_count": 4,
+  "reports": [
+    {
+      "database": "aos_test_2651a2bbf016_ti4_test",
+      "source_counts": {
+        "global_account": 0,
+        "global_provider": 0,
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0
+      },
+      "proposals": [
+        {
+          "proposal_id": "proposal-d3be5f94debb45bd8535",
+          "created_at": "2026-10-09 10:04:12.869537+00:00",
+          "expires_at": "2026-10-09 10:09:12.716376+00:00",
+          "status": "approved",
+          "policy_id": null
+        },
+        {
+          "proposal_id": "proposal-847a95ec199840b39b19",
+          "created_at": "2026-10-09 10:04:12.753894+00:00",
+          "expires_at": "2026-10-09 10:09:12.716376+00:00",
+          "status": "approved",
+          "policy_id": null
+        },
+        {
+          "proposal_id": "proposal-2b084b3587f840bd8d93",
+          "created_at": "2026-10-09 10:04:12.405349+00:00",
+          "expires_at": "2026-10-09 10:09:12.376243+00:00",
+          "status": "approved",
+          "policy_id": "capacity-provider-f85c04fb79cc4842bd20bbf53d271b00-data"
+        },
+        {
+          "proposal_id": "proposal-a52c9238881b475cb0a0",
+          "created_at": "2026-10-09 10:04:12.205444+00:00",
+          "expires_at": "2026-10-09 10:09:12.166925+00:00",
+          "status": "approved",
+          "policy_id": "capacity-provider-f85c04fb79cc4842bd20bbf53d271b00-egress"
+        }
+      ],
+      "exactfoundation": true
+    },
+    {
+      "database": "aos_test_3c858aabe591_ti4_test",
+      "source_counts": {
+        "global_account": 0,
+        "global_provider": 0,
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0
+      },
+      "proposals": [
+        {
+          "proposal_id": "proposal-d4d2022a213e41068959",
+          "created_at": "2026-10-09 10:04:26.325625+00:00",
+          "expires_at": "2026-10-09 10:18:54.728389+00:00",
+          "status": "approved",
+          "policy_id": "capacity-provider-c0c71450b2b2449ca5d6d040cec51cba-egress"
+        }
+      ],
+      "exactfoundation": true
+    },
+    {
+      "database": "aos_test_b3f2bd01147d_ti4_test",
+      "source_counts": {
+        "global_account": 0,
+        "global_provider": 0,
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0
+      },
+      "proposals": [
+        {
+          "proposal_id": "proposal-9ab00c81da7346a88d73",
+          "created_at": "2026-10-09 10:04:01.605742+00:00",
+          "expires_at": "2026-10-09 10:09:01.388553+00:00",
+          "status": "approved",
+          "policy_id": null
+        },
+        {
+          "proposal_id": "proposal-145fc7387b3b4e54802c",
+          "created_at": "2026-10-09 10:04:01.431681+00:00",
+          "expires_at": "2026-10-09 10:09:01.388553+00:00",
+          "status": "approved",
+          "policy_id": null
+        },
+        {
+          "proposal_id": "proposal-e85baafc3204428bbd83",
+          "created_at": "2026-10-09 10:04:01.021730+00:00",
+          "expires_at": "2026-10-09 10:09:00.987008+00:00",
+          "status": "approved",
+          "policy_id": "capacity-provider-a0752876d1a6488da07665db2a83e914-data"
+        },
+        {
+          "proposal_id": "proposal-c9347826c3574a048a8e",
+          "created_at": "2026-10-09 10:04:00.800336+00:00",
+          "expires_at": "2026-10-09 10:09:00.760055+00:00",
+          "status": "approved",
+          "policy_id": "capacity-provider-a0752876d1a6488da07665db2a83e914-egress"
+        }
+      ],
+      "exactfoundation": true
+    },
+    {
+      "database": "aos_test_f642832e1132_ti4_test",
+      "source_counts": {
+        "global_account": 0,
+        "global_provider": 0,
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0
+      },
+      "proposals": [],
+      "exactfoundation": true
+    }
+  ],
+  "known_original_request_replay_allowed": false,
+  "actual_clock_probe": {
+    "host": "2026-10-09T11:29:58.441348+00:00",
+    "postgres": "2026-10-09T11:29:58.462080+00:00",
+    "delta_seconds": 0.020732
+  },
+  "clock_suspend_cause_not_proven": true
+}

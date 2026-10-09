@@ -4533,9 +4533,16 @@ def test_latest_migration_installs_private_source_boundary(native_signed_source)
     from aos_api import aip_provider_capacity_publication_transaction as transaction
     from tests.aip._runtime_guard_history_fixture import isolated_owner
     from psycopg import sql
+    from pathlib import Path
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+    scripts=ScriptDirectory.from_config(Config(str(Path(__file__).resolve().parents[2]/'alembic.ini')))
+    expected_heads=set(scripts.get_heads())
+    assert 'a0v_157' in {revision.revision for revision in scripts.walk_revisions()}, 'Current migration graph must retain the private Source installation'
     with isolated_owner() as owner:
         versions={r['version_num'] for r in owner.execute('SELECT version_num FROM alembic_version').fetchall()}
-        assert 'a0v_157' in versions,'Latest code migration must install the audited private Source boundary'
+        assert versions==expected_heads,'Isolated database must be at the exact current code migration heads'
+        transaction.require_source_transaction_functions(owner)
         transaction.require_source_transaction_tables(owner)
         for name in ('global_account','global_provider','source_pending','source_publication','source_provenance'):
             assert owner.execute(sql.SQL('SELECT count(*) AS n FROM aos_capacity_publication_private.{}').format(sql.Identifier(name))).fetchone()['n']==0

@@ -1,0 +1,6 @@
+[
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_rechecks_new_transaction[shared]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_rechecks_new_transaction[distinct]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_accepts_independent_owner[shared]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_accepts_independent_owner[distinct]"
+]

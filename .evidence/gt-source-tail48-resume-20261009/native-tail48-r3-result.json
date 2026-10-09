@@ -1,0 +1,33 @@
+{
+  "observed_at": "2026-10-09T10:13:56.505803+00:00",
+  "database": "aos_test_2651a2bbf016_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_table_installation_rejects_catalog_drift[trigger_condition]",
+      "phase": "database_binding",
+      "database": "aos_test_b3f2bd01147d_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_table_installation_rejects_catalog_drift[trigger_condition]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_source_installation_preserves_original_checker",
+      "phase": "database_binding",
+      "database": "aos_test_2651a2bbf016_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_source_installation_preserves_original_checker",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_latest_migration_installs_private_source_boundary",
+      "phase": "setup",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "Exact original remaining48 nodes diagnostic; never full386nodeSource acceptance"
+}

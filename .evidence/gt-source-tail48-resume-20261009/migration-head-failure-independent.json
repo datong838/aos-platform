@@ -1,0 +1,99 @@
+{
+  "head": "2c4d584377f59d44f6aa7a123ee69b39cfa46e4d",
+  "authority": "AOS-001646",
+  "reports": [
+    {
+      "database": "aos_test_da6df4211e5d_ti4_test",
+      "versions": [
+        {
+          "version_num": "a0v_159"
+        }
+      ],
+      "counts": {
+        "global_account": 0,
+        "global_provider": 0,
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "exact_functions_tables_acl_locks": true
+    },
+    {
+      "database": "aos_test_be163a043894_ti4_test",
+      "versions": [
+        {
+          "version_num": "a0v_159"
+        }
+      ],
+      "counts": {
+        "global_account": 0,
+        "global_provider": 0,
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "exact_functions_tables_acl_locks": true
+    },
+    {
+      "database": "aos_test_7f51c1acdc9d_ti4_test",
+      "versions": [
+        {
+          "version_num": "a0v_159"
+        }
+      ],
+      "counts": {
+        "global_account": 0,
+        "global_provider": 0,
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "exact_functions_tables_acl_locks": true
+    }
+  ],
+  "inputs_unchanged": true,
+  "product_changed": false,
+  "result": "2PASS1FAIL34.51s; latest migration head oracle incorrectly expects157 versus actual159"
+}

@@ -93,3 +93,7 @@ Run entire2functions11nodes plus previous24functions39nodes:50expectednodes, no 
 
 ## Local shared-memory setup failure and new attempt
 Actual49PASS1SETUPERROR185.95s, root_revoked never entered assertions. Isolated migration parallel DSM allocation32MiB on64MiB shm failed; currentshm low after process ends, rootdisk11GBfree, prior completedDBs exactfoundation/zeroSource readback. Preserve all old/partialDBs andfailedattempt. New r3 attempt runs entire26functions50nodes onfresh random retainedDBs, samecluster/nativeC/SCRAM/durability, only owned aos_app connection options max_parallel_workers_per_gather=0 andmax_parallel_maintenance_workers=0; no globalALTER/PGrestart/shmdelete/grant/product change. This changes query parallelism only, not transactional safety controls or acceptance scope. Exact explicit attempt newO_EXCL, no failed effect replay. Verify perconnection option andfsync/fullpage/synchronous_commit unchanged. FullSource andactualCOMMITexpiry pending.
+
+## 已定位迁移头断言最小修正
+
+原48项r2实际2PASS1FAIL34.51秒，45未执行；当前最新迁移头159，原测试错误要求157仍在alembic_version。独立3保留库SER READ ONLY核cluster、5表0、Source私有函数/表/ACL/locks和NOLOGIN恢复，1963输入原hash未变。原SourceTask同owner正式CAS续租后仅修改services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py的test_latest_migration_installs_private_source_boundary：比较库迁移头与原Alembic代码head集合精确相等，并验证157确在当前head真实祖先中；不接受任意数字>=157，不降级数据库。原5表0/15角色SELECT拒绝/2公共入口缺席断言全部保留；额外复用exactfunctions审计。修正前先plan。重跑原完整48参数，仍为诊断不全386GREEN；原fixture6/1不纳入提交。

@@ -1,0 +1,8 @@
+{
+  "pytest_exit": 3,
+  "no_tests_ran": true,
+  "database": null,
+  "known_no_fixture_effect": true,
+  "cause": "original node IDs relative to services/aos-api; initial runner joined repo root",
+  "repair": "join services/aos-api before exact unchanged node IDs"
+}

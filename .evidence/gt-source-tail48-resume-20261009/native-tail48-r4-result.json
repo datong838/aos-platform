@@ -1,0 +1,453 @@
+{
+  "observed_at": "2026-10-09T11:38:25.574578+00:00",
+  "database": "aos_test_02b490bb3034_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_table_installation_rejects_catalog_drift[trigger_condition]",
+      "phase": "database_binding",
+      "database": "aos_test_ba76b1150a5c_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_table_installation_rejects_catalog_drift[trigger_condition]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_source_installation_preserves_original_checker",
+      "phase": "database_binding",
+      "database": "aos_test_427f39e9fc23_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_source_installation_preserves_original_checker",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_latest_migration_installs_private_source_boundary",
+      "phase": "database_binding",
+      "database": "aos_test_59ca404a08fa_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_latest_migration_installs_private_source_boundary",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_migrated_private_source_drift_cannot_rebuild_fragments",
+      "phase": "database_binding",
+      "database": "aos_test_9e737c742dc3_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_migrated_private_source_drift_cannot_rebuild_fragments",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[none]",
+      "phase": "database_binding",
+      "database": "aos_test_92ddd161d780_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[none]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[body]",
+      "phase": "database_binding",
+      "database": "aos_test_be34f85fe472_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[body]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[search_path]",
+      "phase": "database_binding",
+      "database": "aos_test_3c28869a14d9_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[search_path]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[security]",
+      "phase": "database_binding",
+      "database": "aos_test_7734b5eca1e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[security]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[volatility]",
+      "phase": "database_binding",
+      "database": "aos_test_8293d5128c96_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[volatility]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[strict]",
+      "phase": "database_binding",
+      "database": "aos_test_efd782eb7883_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[strict]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[acl]",
+      "phase": "database_binding",
+      "database": "aos_test_05dd5d268ffc_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[acl]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[overload]",
+      "phase": "database_binding",
+      "database": "aos_test_5de9ee785e21_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[overload]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[default]",
+      "phase": "database_binding",
+      "database": "aos_test_83365fb4dd1c_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[default]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[nullable]",
+      "phase": "database_binding",
+      "database": "aos_test_2c4851916b3b_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[nullable]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[type]",
+      "phase": "database_binding",
+      "database": "aos_test_e365a5448db0_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[type]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[column_extra]",
+      "phase": "database_binding",
+      "database": "aos_test_e32eb9d24198_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[column_extra]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[table_acl]",
+      "phase": "database_binding",
+      "database": "aos_test_5eb4208f55fd_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[table_acl]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[column_acl]",
+      "phase": "database_binding",
+      "database": "aos_test_2123d5169a98_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[column_acl]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[owner]",
+      "phase": "database_binding",
+      "database": "aos_test_8cf858b77e2e_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[owner]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[rls]",
+      "phase": "database_binding",
+      "database": "aos_test_10ff01764731_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[rls]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[force_rls]",
+      "phase": "database_binding",
+      "database": "aos_test_f531caf5c0a8_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[force_rls]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[policy_using]",
+      "phase": "database_binding",
+      "database": "aos_test_f292a1e463af_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[policy_using]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[policy_extra]",
+      "phase": "database_binding",
+      "database": "aos_test_27bb4e63e330_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[policy_extra]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[unique]",
+      "phase": "database_binding",
+      "database": "aos_test_2c7f4437dfc6_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[unique]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[check]",
+      "phase": "database_binding",
+      "database": "aos_test_be0c5b0452ad_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[check]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[fk_action]",
+      "phase": "database_binding",
+      "database": "aos_test_064d8addfd4f_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[fk_action]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[index_extra]",
+      "phase": "database_binding",
+      "database": "aos_test_9b3677a1ba97_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[index_extra]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[immutable_trigger]",
+      "phase": "database_binding",
+      "database": "aos_test_6b7b696ac83f_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[immutable_trigger]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[deferred_trigger]",
+      "phase": "database_binding",
+      "database": "aos_test_d48edf2bdade_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[deferred_trigger]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[ri_trigger]",
+      "phase": "database_binding",
+      "database": "aos_test_b7b4de2303e9_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[ri_trigger]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[trigger_condition]",
+      "phase": "database_binding",
+      "database": "aos_test_d7ede32bad2c_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[trigger_condition]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[missing_table]",
+      "phase": "database_binding",
+      "database": "aos_test_560683be7ff9_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[missing_table]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[canonical_body]",
+      "phase": "database_binding",
+      "database": "aos_test_465a12479bb0_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[canonical_body]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[owner_login]",
+      "phase": "database_binding",
+      "database": "aos_test_799d667aa639_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_private_installation_audit_rejects_current_drift[owner_login]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_current_installation_rechecks_original_live_boundaries",
+      "phase": "database_binding",
+      "database": "aos_test_3ccec2430004_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_current_installation_rechecks_original_live_boundaries",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_current_installation_rechecks_original_registry_functions",
+      "phase": "database_binding",
+      "database": "aos_test_a8f042331936_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_current_installation_rechecks_original_registry_functions",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_current_installation_rechecks_original_registry_tables",
+      "phase": "database_binding",
+      "database": "aos_test_f3c85a8d46e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_current_installation_rechecks_original_registry_tables",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_current_installation_rechecks_native_verifier",
+      "phase": "database_binding",
+      "database": "aos_test_d93bbf407362_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_current_installation_rechecks_native_verifier",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_exact_public_source_composition_preserves_original_issuer_checker[shared]",
+      "phase": "database_binding",
+      "database": "aos_test_9bae61b630ff_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_exact_public_source_composition_preserves_original_issuer_checker[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_exact_public_source_composition_preserves_original_issuer_checker[distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_f69012b8cece_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_exact_public_source_composition_preserves_original_issuer_checker[distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_exact_public_source_rejects_live_issuer_drift",
+      "phase": "database_binding",
+      "database": "aos_test_806433f6ef72_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_exact_public_source_rejects_live_issuer_drift",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_exact_public_source_rejects_bad_signature_and_unfinished_commit",
+      "phase": "database_binding",
+      "database": "aos_test_c2e142e4ccda_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_exact_public_source_rejects_bad_signature_and_unfinished_commit",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_controlled_source_signer_binds_original_jwt_pending_and_private_key[shared]",
+      "phase": "database_binding",
+      "database": "aos_test_d8125a9066e7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_controlled_source_signer_binds_original_jwt_pending_and_private_key[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_controlled_source_signer_binds_original_jwt_pending_and_private_key[distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_02b490bb3034_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_controlled_source_signer_binds_original_jwt_pending_and_private_key[distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_rechecks_new_transaction[shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "Exact original remaining48 nodes diagnostic; never full386nodeSource acceptance"
+}

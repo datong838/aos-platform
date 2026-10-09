@@ -1,0 +1,13 @@
+# Source 剩余用例接续诊断与迁移头最小修正
+
+AOS-001646 / m1 2c4d584377f59d44f6aa7a123ee69b39cfa46e4d。正式Goal已回读active；同线程唯一owner，原SourceTask通过正式CAS续租。用户说明Docker迁移外置盘；实际Source lab仍在独立Colima20GiB根盘，原container/image/cluster/命名卷未变，当前迁移是否包含该环境待对齐。未改Docker/Colima全局配置或迁移存量卷。
+
+原r7未执行48项精确collection[338:]原15函数所有参数，r1运行器相对路径拼错导致pytestcollection exit3/无测试无fixture效果，修正前缀新r2原2PASS1FAIL34.51秒：旧migration断言157不接受实际159。独立3原库Source五表0和完整私有函数/表/ACL/锁、NOLOGIN恢复，1963输入未变。先完善本plan及原Sourceplan，再仅修正test_latest_migration_installs_private_source_boundary：库版本集合精确等于当前Alembicheads，并核真实migrationgraph包含157，新增完整私有函数审计。原5表0/角色SELECT拒绝/两个public入口缺席保留，全部其他AST保持。生产代码不变，原fixture6/1仍保护。
+
+r3 2PASS1SETUPERROR40.32秒，未触及新断言，原Guard审批过期；wall约10分钟/pytest40秒，暂停原因未证明。只读4保留库Source五表0及完整foundation确认，原proposal/期限保留，未重发。随后当前host/PG偏差0.021秒。新r4原freshfixture/原期限全部不变，临时caffeinate -i仅防闲置睡眠且进程终止恢复。
+
+r4实际44PASS1SETUPERROR421.94秒，最后在consumer shared用例setup前磁盘余量2.58GB守卫拒绝，4项未验证，不宣称48全过或386全累计。独立44原session-boundDBSER READ ONLY核完整foundation/ACL/lock/角色恢复、临时接口清理、occupation0、耐久性on，4持久Source原生C签名/rawhash/精确同xid/provenance/committed核对；1963输入hash和本次容器快照保持。安全守卫触发保留全部库，无删库/no currentDB/no Host-worker-Provider/mall/oldRun/manual/230L0/push。
+
+一致性与风险：本修正只使旧migration头测试与真实代码迁移图一致；不接受任意更大数字，不弱化安装审计。全Source仍未Delivery，actual最终COMMIT有效期反例保留，未授业务权、不作模型评审PASS。浏览器不适用。本Task交付范围为实际诊断/单断言修正+资源限制证据；完整386一次累计、剩余4当前消费、完整commitprotocol/联合预算容量Intent/自然首链/八工作台/观察发布全部继续待验。
+
+下一已登记安全候选：独立DockerDesktop实验存储容量核验及原nativeC image精确实验lab（不搬存量卷）后完整386累计；另候选完整finalCOMMITprotocol架构，依赖endingchannels/后续triggerlatewait/WAL语义。迁移DockerDesktop不自动扩大Colima，不能在旧lab降低余量/清旧库假绿。

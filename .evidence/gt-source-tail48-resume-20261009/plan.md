@@ -1,0 +1,17 @@
+# Source 原剩余48项恢复验证方案
+
+基线 AOS-001646 / m1 2c4d584377f59d44f6aa7a123ee69b39cfa46e4d；正式Goal回读active，用户告知Docker迁移外置盘。只读核验Source独立Colima仍20GiB根盘、剩余5.06GB，迁移是否覆盖Colima待用户说明；不得假定Docker Desktop迁移已扩大本lab。cluster7694534063495901208/container8384eef7b29dabf3629ba31c8ab18beab011a2f86cddffe96c0907be73024ec5/原命名卷保持；无其他pytest进程或数据库客户。
+
+候选1完整386累计（依赖容量）；候选2actualCOMMIT有效期完整协议（依赖全部endingchannel/latewait/WAL语义）。选候选1原未执行48项诊断，绝不宣称完整累计通过。精确来源r7 collection[338:]，337既有PASS与ri_trigger单项恢复保留；无重发旧效果。原15函数48参数节点全部保留，原产品与测试不修改，每参数既有fresh-retainedDB隔离。只新owned aos_app连接sessionparallel0/parallelhashoff/work_mem1MB/hashmultiplier1并记录实际参数和耐久性，继承r7已验收资源控制。
+
+每节点先read df保持2.58GB余量；不足停止该诊断并保留全部库，不能清库扩大容量。48数据库按此前约45MB估计2.16GB，实际超出会failclosed；不使用估计冒充容量验收。原错误setup节点terminal已收口，无unknownattempt重放。
+
+文件：本目录plan.md先行；run_tail48.py、input-bindings.json、selection.json、collection/result/log/connection记录；终止后独立SERIAL READ ONLY验证所有原session-boundDB Source Csignature/hash/provenance/committedxid、exactfoundationACL/locks/NOLOGIN/临时接口和occupation清理/耐久性/全部输入hash及本次前置容器不变。当前库/Host/worker/Provider/商城/旧Run/230L0/push均排除，浏览器不适用。剩余48即便PASS也不能替代整386一次累计或actualCOMMITdeadline闭合；不完成原SourceTask。
+
+首轮r1运行器拼接tests相对路径到repo而非services/aos-api，pytest collection终止exit3/no tests/database null/results空，明确无fixture效果。仅修正路径前缀；新r2保留相同48项完整顺序和参数，旧失败不覆盖。
+
+## 已定位迁移头断言最小修正
+
+原48项r2实际2PASS1FAIL34.51秒，45未执行；当前最新迁移头159，原测试错误要求157仍在alembic_version。独立3保留库SER READ ONLY核cluster、5表0、Source私有函数/表/ACL/locks和NOLOGIN恢复，1963输入原hash未变。原SourceTask同owner正式CAS续租后仅修改services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py的test_latest_migration_installs_private_source_boundary：比较库迁移头与原Alembic代码head集合精确相等，并验证157确在当前head真实祖先中；不接受任意数字>=157，不降级数据库。原5表0/15角色SELECT拒绝/2公共入口缺席断言全部保留；额外复用exactfunctions审计。修正前先plan。重跑原完整48参数，仍为诊断不全386GREEN；原fixture6/1不纳入提交。
+
+r3终态2PASS1SETUPERROR40.32s：原Guard消费拒绝过期，未到迁移断言；独立4原session保留DB只读核Source5表0与完整私有foundation，保留原proposal和期限，不重发。wall记录约10分钟/pytest40秒，当前host/PG差0.021秒；暂停/唤醒原因尚未证明。新r4使用全新原fixture/原48项，不延长任何期限；仅运行期间caffeinate -i防闲置睡眠，不改全局电源/时钟，终止后自动恢复。仍2.58GB每节点余量守卫，全库保留。

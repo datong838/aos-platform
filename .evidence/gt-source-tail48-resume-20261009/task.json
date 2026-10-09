@@ -1,0 +1,20 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-source-tail48-resume-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001646",
+  "scope": [
+    "aos-platform/.evidence/gt-source-tail48-resume-20261009"
+  ],
+  "excluded_scope": [
+    "aos-platform/services",
+    "aos-platform/apps"
+  ],
+  "expected_outputs": [
+    "Resume native original remaining48 nodes diagnostic with owned connection bounded resources and actual recording; full386 and actualCOMMITdeadline remain pending",
+    "Readonly storage and exact original lab/resource reconciliation; preserve all prior DBs and current tenant no effects"
+  ],
+  "lease_expires_at": "2026-10-09T14:00:04.109631+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T18:00:05+08:00"
+}
