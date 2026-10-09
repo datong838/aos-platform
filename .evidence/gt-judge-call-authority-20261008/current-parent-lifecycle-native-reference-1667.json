@@ -1,0 +1,24 @@
+{
+  "authority_revision": "AOS-001667",
+  "task": "gt-judge-call-authority-20261008",
+  "head": "c87682c39a93ce2ae6b40b9d84d4d74b1d1a7e97",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/current-parent-cost-lifecycle-reference-1666.json",
+      "sha256": "2da7c7a5aff7c1c544189fb54692acb0137ad0423a56457f7a69eca97bccb022"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/parent-lifecycle-native-review-1666.md",
+      "sha256": "12c8647b30927b3d39f567d73e81d2cc83a389d3b4f1229d2ab50a0136ab7ea6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/parent-lifecycle-native-r2/result-r2.json",
+      "sha256": "794b65dec4593b1b3d3fc16e1ac6d2362e3b204f5384769cb5431b1c04869e00"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/parent-lifecycle-native-r2/independent-readback.json",
+      "sha256": "21e10825f622c449065ff7668aff289195d5a23f09ea14112aefdeb5ef8c1829"
+    }
+  ]
+}

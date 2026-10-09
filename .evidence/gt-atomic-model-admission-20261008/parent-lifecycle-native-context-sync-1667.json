@@ -1,0 +1,18 @@
+{
+  "authority_revision": "AOS-001667",
+  "head": "c87682c39a93ce2ae6b40b9d84d4d74b1d1a7e97",
+  "installation": {
+    "status": "GREEN",
+    "project_revision": "AOS-001667",
+    "projection_count": 8,
+    "schema_count": 9,
+    "task_receipt_count": 1981,
+    "delivery_receipt_count": 1958,
+    "event_count": 5668
+  },
+  "six_checkpoints_valid": true,
+  "memory_write_skipped": true,
+  "source_end_decision_pending": true,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}
