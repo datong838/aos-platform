@@ -6,7 +6,7 @@
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "authority_revision": "AOS-001623",
   "task_base_revision": "AOS-001588",
-  "step": "occupation-after-wait-native-green-source-consumer-contract-next",
+  "step": "occupation-after-wait-native-green-direct-source-transport-investigated",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_judge_budget.py",
     "services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py",
@@ -16,6 +16,6 @@
   "evidence_files": [
     ".evidence/gt-judge-budget-parent-20261008/implementation-plan.md",
     ".evidence/gt-judge-budget-parent-20261008/task-readback.json",
-    ".evidence/gt-judge-budget-parent-20261008/occupation-after-wait-native-reference-1623.json"
+    ".evidence/gt-judge-budget-parent-20261008/source-consumer-transport-investigation-reference-1623.json"
   ]
 }

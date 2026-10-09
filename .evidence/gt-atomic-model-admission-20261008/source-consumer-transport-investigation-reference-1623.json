@@ -1,0 +1,18 @@
+{
+  "authority_revision": "AOS-001623",
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/occupation-after-wait-native-reference-1623.json",
+      "sha256": "16042c89a9768d77bcd4f9b5aebbe748330dbaa0a5d3fe5c73ce1e169bf04da0"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-consumer-transport-investigation-1623.json",
+      "sha256": "17dd5f9f6b5c495f310690b56057a68803d7743b1f7ea1cffc5e686d2cac9529"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-consumer-transport-investigation-1623.md",
+      "sha256": "ee13db519bedeb184291fa3ddbe4267d35b2014fe030ea4d08d8d254a0f1b643"
+    }
+  ],
+  "execution_allowed": false
+}

@@ -1,0 +1,24 @@
+{
+  "results": [
+    {
+      "label": "root-extra",
+      "direct_instance": "rejected",
+      "original_direct_consumer_dump": "accepted"
+    },
+    {
+      "label": "source-ref-extra",
+      "direct_instance": "rejected",
+      "original_direct_consumer_dump": "accepted"
+    },
+    {
+      "label": "tenant-extra",
+      "direct_instance": "rejected",
+      "original_direct_consumer_dump": "accepted"
+    }
+  ],
+  "source_file": "services/aos-api/aos_api/aip_provider_capacity_occupation_source.py",
+  "source_sha256": "e6b46538babab94fb56a5aca005cee0aae6190d3e7958c57ba7c10b66846686d",
+  "scope": "Pure exact original transport path expression only; shape JWT, no authentication/signature/SQL/Source/authority proof; native direct consumer acceptance not yet tested",
+  "execution_allowed": false,
+  "secret_emitted": false
+}
