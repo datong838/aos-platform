@@ -1,0 +1,34 @@
+{
+  "authority_revision": "AOS-001671",
+  "task": "gt-atomic-model-admission-20261008",
+  "head": "2a6deaeccb557917214a652e8a0ab7f75ea844f6",
+  "execution_allowed": false,
+  "historical_fixture_restored": false,
+  "full_task_delivered": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-shared-parent-native-reference-1670.json",
+      "sha256": "59b7a7ee888f2f1f07dd22022e1c344b46ff8238fb332e5b2c66b9e6e09ab178"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-risk-binding-implementation-review-1670.md",
+      "sha256": "ff324eab3dbf8553a43abdfdb0787f5029f73ef05110c443a963455bd9b882f9"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-risk-binding-native-1670-r1/runner-protection-failure.json",
+      "sha256": "b7f22c77f40bc3ad7304516dda644ef878876383c8484b6b4a7b68d2e50e6920"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-risk-binding-native-1670-r2/result-r2.json",
+      "sha256": "d9e0210f9e088850b524457fc714247e96f863b607824b7b7133a9806fef051d"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-risk-binding-native-1670-r2/native-risk-binding-proof.json",
+      "sha256": "638985ce980a46a5d6480c5a7f3cf3d32fce69c767504e5783f9a0f9d010668f"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-parent-risk-binding-native-1670-r2/independent-readback.json",
+      "sha256": "1a7ec02227a9f5f8695cd79ba8bcb1f561d349817e60d55994fa1aaff8e2cef2"
+    }
+  ]
+}
