@@ -348,6 +348,37 @@ class ModelEvalExecutionOwner:
                 or final['now'] >= datetime.fromisoformat(body['expiresAt'])):
             raise ModelEvalOwnerRejected('same-caller current Judge cases required after locks')
 
+    def validate_original_judge_expected_bytes(self, conn, scope, manifest, *,
+                                               expected: tuple, release_policy, artifact_bytes) -> None:
+        """Bind complete raw expected bytes, never certify actual Target output.
+
+        Only the original new-purpose Judge request and current native dual
+        parents determine these hashes. No artifact resolver, normalization,
+        token/quality claim, persisted result or execution grant is supplied.
+        """
+        import hashlib
+        from aos_api.aip_model_eval_execution_contracts import ModelEvalTargetJudgeExecutionManifest
+        try:
+            plan = ModelEvalTargetJudgeExecutionManifest.model_validate(manifest)
+        except (TypeError, ValueError) as exc:
+            raise ModelEvalOwnerRejected('exact original Judge expected bytes manifest required') from exc
+        if (type(expected) is not tuple or len(expected) != len(plan.cases)
+                or any(type(item) is not tuple or len(item) != 2
+                       or type(item[0]) is not str or type(item[1]) not in (bytes, type(None))
+                       or (type(item[1]) is bytes and len(item[1]) > 1048576) for item in expected)
+                or tuple(item[0] for item in expected) != tuple(case.case_id for case in plan.cases)):
+            raise ModelEvalOwnerRejected('complete ordered immutable Judge expected bytes required')
+        self.validate_original_target_judge_manifest(conn, scope, plan,
+            release_policy=release_policy, artifact_bytes=artifact_bytes)
+        for case, (_, data) in zip(plan.cases, expected):
+            if case.expected_hash is None:
+                if data is not None:
+                    raise ModelEvalOwnerRejected('absent original expected Artifact requires None')
+            elif data is None or hashlib.sha256(data).hexdigest() != case.expected_hash:
+                raise ModelEvalOwnerRejected('exact original Judge expected Artifact bytes required')
+        self.validate_original_target_judge_manifest(conn, scope, plan,
+            release_policy=release_policy, artifact_bytes=artifact_bytes)
+
     def validate_original_model_plan_suite(self,conn: psycopg.Connection,
                                           scope: TenantScope,manifest) -> None:
         """Necessary approved Suite case/hash binding, never Model quality.

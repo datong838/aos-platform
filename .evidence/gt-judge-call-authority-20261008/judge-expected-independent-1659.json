@@ -1,0 +1,196 @@
+{
+  "result": "ORIGINAL_JUDGE_EXPECTED_BYTES_NECESSARY_GATE_VERIFIED",
+  "reports": [
+    {
+      "phase": "red",
+      "database": "aos_test_f6262cdb6c25_ti4_test",
+      "originals": [
+        {
+          "request_id": "model-eval-request-3cd2f3f870f64f8cb95c",
+          "request_hash": "e12e20dc6f0591710bf2387ef0f97865894952c72c2e82c31d9bfc1a777212b5",
+          "suite_hash": "fab2139929012b90beea9bac7ebc8438102e0b2b9c2eca1e4ad0790d55435f7b",
+          "contract_hash": "22986e9f75663431eda8efecf2a3af9742a953e98f52370bf94bb046839e080c",
+          "cases": [
+            {
+              "case_id": "content-subject",
+              "expected_hash": "fb90cdac12776615dd16c945afa93869f8d2716f764a7903533615ff55ad2564"
+            }
+          ]
+        },
+        {
+          "request_id": "model-eval-request-a87833bc94ec4e1f9176",
+          "request_hash": "ecc831dcb577bd9a40daed5465c238d3c05ce17d8367ca8ad580bdc66a8779a2",
+          "suite_hash": "215a0649451c3aed98f10d71375d32eee77b2724aca0b733124f88097a254981",
+          "contract_hash": "1160011c0532a9ac2ccd712b28f6ef86f38d450080eb91344d35d3e03a292953",
+          "cases": [
+            {
+              "case_id": "content-subject-0",
+              "expected_hash": "fb90cdac12776615dd16c945afa93869f8d2716f764a7903533615ff55ad2564"
+            },
+            {
+              "case_id": "content-subject-1",
+              "expected_hash": "fb90cdac12776615dd16c945afa93869f8d2716f764a7903533615ff55ad2564"
+            }
+          ]
+        }
+      ],
+      "caller_states": {},
+      "execution_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      },
+      "separate_test_holds": {
+        "aip_model_eval_budget_reservation": 0,
+        "aip_model_judge_budget_reservation": 0
+      },
+      "read_only": true
+    },
+    {
+      "phase": "green",
+      "database": "aos_test_bcd5c43891be_ti4_test",
+      "originals": [
+        {
+          "request_id": "model-eval-request-2be649757634444aac88",
+          "request_hash": "1f5b0f821bd5ee3dd5e0aa236ecb417469ef4713c2caa49983ee408cd994b777",
+          "suite_hash": "e48933cd4df84e9dc2e713608a5ac0e8c1c3c7eaaae1632c86ee26adc4a90125",
+          "contract_hash": "4b8159f7518d7e1c06a964265058a3c2bf0d832e152668fe1344a3b3c4386631",
+          "cases": [
+            {
+              "case_id": "content-subject",
+              "expected_hash": "fb90cdac12776615dd16c945afa93869f8d2716f764a7903533615ff55ad2564"
+            }
+          ]
+        },
+        {
+          "request_id": "model-eval-request-598a7653882d46838e03",
+          "request_hash": "3a3fc7587bf28add7a3835f61f989fca0e6eca3dc5070ef850541add596bde60",
+          "suite_hash": "79fcbbea47fde5edfa6983d7f135f85e85723c7482ad83b99bbab48734c65e73",
+          "contract_hash": "02640922c48fb98e05b86994a4bbca837338697db9ff7f2f837ed9706310e164",
+          "cases": [
+            {
+              "case_id": "content-subject-0",
+              "expected_hash": "fb90cdac12776615dd16c945afa93869f8d2716f764a7903533615ff55ad2564"
+            },
+            {
+              "case_id": "content-subject-1",
+              "expected_hash": "fb90cdac12776615dd16c945afa93869f8d2716f764a7903533615ff55ad2564"
+            }
+          ]
+        }
+      ],
+      "caller_states": {
+        "whole": "aborted",
+        "deadline": "aborted"
+      },
+      "execution_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      },
+      "separate_test_holds": {
+        "aip_model_eval_budget_reservation": 0,
+        "aip_model_judge_budget_reservation": 1
+      },
+      "read_only": true
+    },
+    {
+      "phase": "adjacent-failed",
+      "database": "aos_test_50c092bc639d_ti4_test",
+      "originals": [
+        {
+          "request_id": "model-eval-request-d596690234b443a4ac5d",
+          "request_hash": "752fe3dffd7cfcbc4f91e76862b727704e797d974fc089aaa9e2cd5caef969f5",
+          "suite_hash": "af4035397710e86077954e37ab0f0cc42bc8e51e533904c3f7d29d3c6156a815",
+          "contract_hash": "9649866f4a55a1ffd05fb3ba42519097190954b3722649de9355afb113d7a0ff",
+          "cases": [
+            {
+              "case_id": "content-subject",
+              "expected_hash": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+            }
+          ]
+        },
+        {
+          "request_id": "model-eval-request-d70c62c3ad2040868c6f",
+          "request_hash": "786c502eaf42280a74973d72ecd2941cbb12c82a883bcfc9ddeb05df5122d978",
+          "suite_hash": "e35dd254bad2fc42b294b2b15ae1feb40b2fc0a9defab2e7bdab1a2fd541eb1c",
+          "contract_hash": "818e6ae4bde50961af892b54a8b958b49e02e2a1999e8ad71a51511135b6cf83",
+          "cases": [
+            {
+              "case_id": "content-subject-0",
+              "expected_hash": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+            },
+            {
+              "case_id": "content-subject-1",
+              "expected_hash": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+            }
+          ]
+        }
+      ],
+      "caller_states": {},
+      "execution_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      },
+      "separate_test_holds": {
+        "aip_model_eval_budget_reservation": 0,
+        "aip_model_judge_budget_reservation": 0
+      },
+      "read_only": true
+    },
+    {
+      "phase": "adjacent",
+      "database": "aos_test_b59c9392307e_ti4_test",
+      "originals": [
+        {
+          "request_id": "model-eval-request-c2cf3ef171cc4eb3a36a",
+          "request_hash": "1fc87e3c1787de4b9067de11a79977b38f95050852970c86907e419c39ef4f92",
+          "suite_hash": "d60cba07458da81d76db5e6539ecc5c246fc07fc669fe271df035ee581f17cb2",
+          "contract_hash": "0383ddf45488efe60b85cafa1d07a70135f1bf74cd0bd1e5e121e6be612d5efd",
+          "cases": [
+            {
+              "case_id": "content-subject-0",
+              "expected_hash": null
+            },
+            {
+              "case_id": "content-subject-1",
+              "expected_hash": null
+            }
+          ]
+        },
+        {
+          "request_id": "model-eval-request-c3c25184be3049dba233",
+          "request_hash": "ba121ec22127521a3923cc26e80aed80e231579d725082183ad217d117fb2ac1",
+          "suite_hash": "b14ce0a1c0f2c3055973d139a8f2aaba43db151229e3de1485031c1f220036d8",
+          "contract_hash": "6e38b307c135f49590e5b9145176eb0b89c16509162a591ee9b087c15bc13522",
+          "cases": [
+            {
+              "case_id": "content-subject",
+              "expected_hash": null
+            }
+          ]
+        }
+      ],
+      "caller_states": {
+        "whole": "aborted",
+        "deadline": "aborted"
+      },
+      "execution_counts": {
+        "aip_agent_run": 0,
+        "aip_model_capacity_reservation": 0,
+        "aos_model_eval_execution_private.case_result": 0
+      },
+      "separate_test_holds": {
+        "aip_model_eval_budget_reservation": 0,
+        "aip_model_judge_budget_reservation": 1
+      },
+      "read_only": true
+    }
+  ],
+  "old_evidence_unchanged": true,
+  "execution_allowed": false,
+  "actual_target_output_certified": false,
+  "full_task_delivered": false,
+  "limitations": "Test-owned expected artifact reference/bytes; no formal Artifact provenance, Target output, encoding/quality, tokens, actual-end, joint Intent or Provider identity."
+}

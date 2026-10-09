@@ -1,0 +1,31 @@
+{
+  "caller": {
+    "xid": "27485",
+    "pid": 71574
+  },
+  "cases": [
+    {
+      "caseId": "content-subject-0",
+      "sha256": "fb90cdac12776615dd16c945afa93869f8d2716f764a7903533615ff55ad2564",
+      "bytesLength": 35
+    },
+    {
+      "caseId": "content-subject-1",
+      "sha256": "fb90cdac12776615dd16c945afa93869f8d2716f764a7903533615ff55ad2564",
+      "bytesLength": 35
+    }
+  ],
+  "faults_rejected": [
+    "cropped",
+    "duplicate",
+    "reordered",
+    "list",
+    "missing",
+    "mutable",
+    "wrong",
+    "trailing",
+    "oversized",
+    "extra"
+  ],
+  "execution_allowed": false
+}

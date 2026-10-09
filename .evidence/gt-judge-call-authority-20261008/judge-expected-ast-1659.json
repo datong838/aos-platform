@@ -1,0 +1,6 @@
+{
+  "all_old_owner_method_ast_unchanged": true,
+  "original_whole_currentness_guard_calls": 2,
+  "new_method_direct_sql_or_transport": false,
+  "owner_sha256": "40a3c6eacd13de6a3185c1f106f035cec7308e01ea3df72d25b0f8e1c2224d0b"
+}

@@ -1,0 +1,31 @@
+{
+  "caller": {
+    "xid": "27830",
+    "pid": 73607
+  },
+  "cases": [
+    {
+      "caseId": "content-subject-0",
+      "sha256": null,
+      "bytesLength": null
+    },
+    {
+      "caseId": "content-subject-1",
+      "sha256": null,
+      "bytesLength": null
+    }
+  ],
+  "faults_rejected": [
+    "cropped",
+    "duplicate",
+    "reordered",
+    "list",
+    "missing",
+    "mutable",
+    "wrong",
+    "trailing",
+    "oversized",
+    "extra"
+  ],
+  "execution_allowed": false
+}

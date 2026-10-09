@@ -639,6 +639,32 @@ def test_exact_signed_rule_new_original_suite(
         native_body=whole_builder.build(native_target,native_judge)
         source_trial=None if source_probe is None else source_probe(hold_conn,native_body,native_target,native_judge)
         assert native_owner.validate_original_target_judge_manifest(hold_conn,scope,native_body,release_policy=policy,artifact_bytes=files) is None
+        if os.environ.get('AOS_JUDGE_EXPECTED_BYTES_PROBE') == '1':
+            import hashlib
+            assert hasattr(native_owner, 'validate_original_judge_expected_bytes'), 'original Judge expected byte gate missing'
+            raw = '  原Judge期望🙂\n保留空白  '.encode('utf-8')
+            expected = tuple((case['caseId'], raw if case['expectedHash'] is not None else None)
+                             for case in native_body['cases'])
+            assert all(case['expectedHash'] is None or case['expectedHash'] == hashlib.sha256(raw).hexdigest()
+                       for case in native_body['cases'])
+            native_owner.validate_original_judge_expected_bytes(hold_conn, scope, native_body,
+                expected=expected, release_policy=policy, artifact_bytes=files)
+            faults = {'cropped': expected[:1], 'duplicate': (expected[0], expected[0]),
+                'reordered': tuple(reversed(expected)), 'list': list(expected),
+                'missing': ((expected[0][0], None if expected[0][1] is not None else b''), expected[1]),
+                'mutable': ((expected[0][0], bytearray(raw)), expected[1]),
+                'wrong': ((expected[0][0], b'wrong'), expected[1]),
+                'trailing': ((expected[0][0], raw + b' '), expected[1]),
+                'oversized': ((expected[0][0], b'x' * 1048577), expected[1]),
+                'extra': expected + (('extra-case', raw),)}
+            for fault, value in faults.items():
+                with pytest.raises(ModelEvalOwnerRejected):
+                    native_owner.validate_original_judge_expected_bytes(hold_conn, scope, native_body,
+                        expected=value, release_policy=policy, artifact_bytes=files)
+            (evidence/(os.environ['AOS_JUDGE_NATIVE_EVIDENCE_LABEL']+'-expected-bytes.json')).write_text(json.dumps({
+                'caller':hold_rollback_identity,'cases':[{'caseId':k,'sha256':None if v is None else hashlib.sha256(v).hexdigest(),
+                    'bytesLength':None if v is None else len(v)} for k,v in expected],
+                'faults_rejected':list(faults),'execution_allowed':False},indent=2))
         native_negatives=[]
         for fault in ('request_body','judge_parent_hash','target_parent_hash','revoked_rule','canary'):
             wrong=json.loads(json.dumps(native_body))
