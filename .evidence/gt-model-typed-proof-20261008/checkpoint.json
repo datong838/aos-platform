@@ -4,8 +4,8 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-model-typed-proof-20261008",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001641",
-  "step": "whole-source-coherent-hash-oracle-repaired-full-suite-next-final-clock-pending",
+  "authority_revision": "AOS-001642",
+  "step": "whole-source-application-candidate-oracles-repaired-full-suite-next-final-clock-pending",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_execution_contracts.py",
     "services/aos-api/tests/aip/test_model_eval_execution_contracts.py",
@@ -46,7 +46,7 @@
     ".evidence/gt-model-typed-proof-20261008/judge-input-binding-checkpoint.md",
     ".evidence/gt-model-typed-proof-20261008/judge-input-binding-cumulative-r2-result.json",
     ".evidence/gt-model-typed-proof-20261008/judge-input-binding-independent-r2.json",
-    ".evidence/gt-model-typed-proof-20261008/current-source-coherent-hash-reference-1641.json"
+    ".evidence/gt-model-typed-proof-20261008/current-source-application-candidate-reference-1642.json"
   ],
   "task_base_revision": "AOS-001513"
 }

@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-judge-budget-parent-20261008",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001641",
+  "authority_revision": "AOS-001642",
   "task_base_revision": "AOS-001588",
-  "step": "whole-source-coherent-hash-oracle-repaired-full-suite-next-final-clock-pending",
+  "step": "whole-source-application-candidate-oracles-repaired-full-suite-next-final-clock-pending",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_judge_budget.py",
     "services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py",
@@ -16,6 +16,6 @@
   "evidence_files": [
     ".evidence/gt-judge-budget-parent-20261008/implementation-plan.md",
     ".evidence/gt-judge-budget-parent-20261008/task-readback.json",
-    ".evidence/gt-judge-budget-parent-20261008/current-source-coherent-hash-reference-1641.json"
+    ".evidence/gt-judge-budget-parent-20261008/current-source-application-candidate-reference-1642.json"
   ]
 }

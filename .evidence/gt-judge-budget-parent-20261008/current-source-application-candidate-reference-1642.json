@@ -1,0 +1,27 @@
+{
+  "authority_revision": "AOS-001642",
+  "head": "3525434a04687aff5798cf98cdcc8f5f886fb1a4",
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/current-source-coherent-hash-reference-1641.json",
+      "sha256": "ada5fe698aa382bae798ff3e38bb1bb4ee0f96d8a23492d51707333023686e35"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r3-20261009/review.md",
+      "sha256": "6b087ca64f5b8ad307ad75d6830f334a7db61cf743b21d81c7ecb686f4cb398a"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r3-20261009/independent-final-verification.json",
+      "sha256": "5f15628951d9b4faed4f1c14b687f97301d82aebc15a73a2c91f9250c6df8c53"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r3-20261009/first-failure-independent.json",
+      "sha256": "162307f0a32ca83a1d381ac6ddce915d953fc08300ac7d8c9682c28d6d198c62"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-root-r3-20261009/current-clock-completion-audit.json",
+      "sha256": "d1abf20568310695ed4edc74f8c07c9b6c020cc2fee97c5e98bd2fe360aebdd9"
+    }
+  ],
+  "execution_allowed": false
+}
