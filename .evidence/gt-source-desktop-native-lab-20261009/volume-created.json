@@ -1,0 +1,14 @@
+[
+    {
+        "CreatedAt": "2026-10-09T11:47:50Z",
+        "Driver": "local",
+        "Labels": {
+            "aos.scope": "test-only",
+            "aos.task": "gt-source-desktop-native-lab-20261009"
+        },
+        "Mountpoint": "/var/lib/docker/volumes/aos-source-desktop-native-20261009-data/_data",
+        "Name": "aos-source-desktop-native-20261009-data",
+        "Options": null,
+        "Scope": "local"
+    }
+]

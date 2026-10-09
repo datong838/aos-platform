@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-desktop-native-lab-20261009/run_preparation_r1.py", line 37, in <module>
+    assert c.execute("SELECT count(*) FROM pg_database WHERE datname LIKE 'aos_test_%'").fetchone()[0]>=2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

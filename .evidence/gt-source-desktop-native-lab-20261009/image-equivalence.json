@@ -1,0 +1,10 @@
+{
+  "source_config_digest": "sha256:1a726528ec4ec3dfebf104148d3c6ae329828bfd228c305bb3e0e1e582ee074b",
+  "target_OCI_manifest_digest": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+  "manifest_binds_exact_config": true,
+  "all13_rootfs_layers_exact": true,
+  "config_exact": true,
+  "architecture_exact": true,
+  "untagged_image_loaded": true,
+  "no_second_import": true
+}

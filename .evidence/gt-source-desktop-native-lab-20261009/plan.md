@@ -1,0 +1,15 @@
+# Docker Desktop 独立原生 Source 全量实验室方案
+
+基线 AOS-001647 / m1 ae8f0f5fa，原Colima源实验室20GiB仅2.58GB左右余量，原尾48诊断44PASS4pending且安全门触发，既有库不删除、不搬迁。用户已说明Docker迁移外置盘；当前mac外置NVME2T挂载，Docker Desktop daemon有8GB/14CPU。Docker设置文件受mac权限保护，不绕过读取；先在原已存在postgres16-alpine镜像上创建只读无网络短命容量探针（保留退出容器），只读取VM filesystem df，不访问任何业务数据。外置物理路径声明来自用户，实际测试卷及VM可用容量须记录；不伪称Colima已迁移。
+
+候选1足容量新独立lab完整386累计；候选2完整actualCOMMIT协议，依赖全部ending/latewait/WAL边界。选择1。Docker Desktop可用容量须>=30GB，host临时镜像文件所在磁盘须>=2GB；阈值未过不创建PG。两个context全部既有容器ID/启动/Mount/port快照前后不变。镜像精确原sha256:1a726528ec4ec3dfebf104148d3c6ae329828bfd228c305bb3e0e1e582ee074b从Colima save只读导出到本evidence并load到Desktop（不pull，不改原镜像），结果ID精确相等。
+
+新隔离名aos-source-desktop-native-20261009，namedvolume同名-data，localhost5440端口先空闲检查。新privatepassfile仅自己的lab，0700/0600，不读/复制旧凭证，不打印secret；原生SCRAM、nativeC Ed25519、PG16.14，运行768MiB/无swap/1CPU/128pids/耐久性on，与原测试身份同构。标准Desktop local命名卷，不替换任何原卷、不搬用户数据。仅新初始化卷设置0700和uid，不作用于旧卷；无globalALTER/restart。
+
+完整foundation验收：首次新PG只读核cluster/image/version/SCRAM/connection/capacity/卷identity/nativeverifierextension来源与全局参数；bootstrap原nativeC extension到新template1须在exact独立cluster，旧lab引导方式原样复用。原测试preflight/actualpass后独立回读零业务及临时入口角色/ACL/source输入hash，镜像source代码不变。相邻镜像来源校验和旧资源对账，不适用browser。资料/Delivery/m1精确提交/上下文同步后另Task全386；新labGREEN不是业务或最终COMMIT通过。未知create结果先只读inspect不重建；旧卷/旧Run/manual/商城/Host-worker-Provider/currentDB/230L0/push排除。
+
+首次导入exit0但旧config digest地址inspect不存在，创建尚未进入secret/volume/PG。只读对账发现Docker Desktop containerd存储用OCI manifest digest bcdf34...标识untagged镜像，旧Docker使用config digest1a7265...。原archive两段sha256精确验证manifest引用原config；目标Config对象和全部13RootFS Layers与原config相同。只修运行地址为实际OCI manifest并同时绑定原config，不重新导入，不伪称两个不同表示的ID字符串相等。C库文件/实际正负签名仍另核。
+
+Desktop r2新PG终态exit1/initdbchmod拒绝，运行器连接超时是结果而非根因。只读新volume-nocopy审计卷根70:70/1777，目录为空/PG_VERSION不存在；已知无DB初始化效果。首次helper chown501后PG mount自动复制image空datadir元数据覆盖为70:70。修正只新卷：保留失败PG容器通过rename至-owned-failed-r2；新helper卷nocopy chown501/0700；原NAME新PG使用volume-nocopy且同已有本labsecret，明确禁删卷/删文件/改旧资源。新PG新container ID必须重新绑定，不把失败ID假称运行。
+
+新PG仅恢复只读postcheck时误以Mount数组顺序变化为变更；只读重核4处均为顺序差异，所有字段/ID/启动/端口实际不变，未重放create。新Cverify原control/SQL字节及binaryhash相同，原生C数学正向/篡改负向通过。preparation-r1 runner继承旧lab>=2测试库前置条件，在readonly阶段即拒绝新lab0库，无测试/fixture/审批；新r2改精确==0且保留失败。只原registered_original_inputs_prepare_native_v2_before_signing完整shared/distinct两布局，不改变原测试。

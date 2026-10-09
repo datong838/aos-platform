@@ -1,0 +1,322 @@
+[
+  {
+    "context": "desktop-linux",
+    "Id": "5e23fb2bd7f794900d770cdca2b060b0a28d28d218d89e90915d2188c8264b7d",
+    "name": "/supabase-edge-functions",
+    "field": "mounts",
+    "before": [
+      {
+        "Type": "volume",
+        "Name": "supabase_deno-cache",
+        "Source": "/var/lib/docker/volumes/supabase_deno-cache/_data",
+        "Destination": "/root/.cache/deno",
+        "Driver": "local",
+        "Mode": "rw",
+        "RW": true,
+        "Propagation": ""
+      },
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/functions",
+        "Destination": "/home/deno/functions",
+        "Mode": "rw,z",
+        "RW": true,
+        "Propagation": "rprivate"
+      }
+    ],
+    "after": [
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/functions",
+        "Destination": "/home/deno/functions",
+        "Mode": "rw,z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "volume",
+        "Name": "supabase_deno-cache",
+        "Source": "/var/lib/docker/volumes/supabase_deno-cache/_data",
+        "Destination": "/root/.cache/deno",
+        "Driver": "local",
+        "Mode": "rw",
+        "RW": true,
+        "Propagation": ""
+      }
+    ],
+    "order_only": true
+  },
+  {
+    "context": "desktop-linux",
+    "Id": "af9f6d4ebd9a6e6ca3a3c2d0e84ecc725b391e82814fdf5312be2a4b822a06bf",
+    "name": "/supabase-db",
+    "field": "mounts",
+    "before": [
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/webhooks.sql",
+        "Destination": "/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/logs.sql",
+        "Destination": "/docker-entrypoint-initdb.d/migrations/99-logs.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/pooler.sql",
+        "Destination": "/docker-entrypoint-initdb.d/migrations/99-pooler.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/jwt.sql",
+        "Destination": "/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/roles.sql",
+        "Destination": "/docker-entrypoint-initdb.d/init-scripts/99-roles.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/_supabase.sql",
+        "Destination": "/docker-entrypoint-initdb.d/migrations/97-_supabase.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/realtime.sql",
+        "Destination": "/docker-entrypoint-initdb.d/migrations/99-realtime.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "volume",
+        "Name": "supabase_db-config",
+        "Source": "/var/lib/docker/volumes/supabase_db-config/_data",
+        "Destination": "/etc/postgresql-custom",
+        "Driver": "local",
+        "Mode": "rw",
+        "RW": true,
+        "Propagation": ""
+      },
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/data",
+        "Destination": "/var/lib/postgresql/data",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      }
+    ],
+    "after": [
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/jwt.sql",
+        "Destination": "/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/roles.sql",
+        "Destination": "/docker-entrypoint-initdb.d/init-scripts/99-roles.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/_supabase.sql",
+        "Destination": "/docker-entrypoint-initdb.d/migrations/97-_supabase.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/realtime.sql",
+        "Destination": "/docker-entrypoint-initdb.d/migrations/99-realtime.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "volume",
+        "Name": "supabase_db-config",
+        "Source": "/var/lib/docker/volumes/supabase_db-config/_data",
+        "Destination": "/etc/postgresql-custom",
+        "Driver": "local",
+        "Mode": "rw",
+        "RW": true,
+        "Propagation": ""
+      },
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/data",
+        "Destination": "/var/lib/postgresql/data",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/webhooks.sql",
+        "Destination": "/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/host_mnt/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/logs.sql",
+        "Destination": "/docker-entrypoint-initdb.d/migrations/99-logs.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/Users/ddt/work/projects/ai_agent/supabase/docker/volumes/db/pooler.sql",
+        "Destination": "/docker-entrypoint-initdb.d/migrations/99-pooler.sql",
+        "Mode": "rw,Z",
+        "RW": true,
+        "Propagation": "rprivate"
+      }
+    ],
+    "order_only": true
+  },
+  {
+    "context": "desktop-linux",
+    "Id": "253a932a193bc98573aeb5cd9aca42cc5b4e19b44a981c9278e8cf1e711e176b",
+    "name": "/n8n-obs",
+    "field": "mounts",
+    "before": [
+      {
+        "Type": "volume",
+        "Name": "ops-observer_n8n-obs-data",
+        "Source": "/var/lib/docker/volumes/ops-observer_n8n-obs-data/_data",
+        "Destination": "/home/node/.n8n",
+        "Driver": "local",
+        "Mode": "rw",
+        "RW": true,
+        "Propagation": ""
+      },
+      {
+        "Type": "bind",
+        "Source": "/Users/ddt/work/projects/ai_agent/docs/\u4ea7\u54c1\u63a2\u7d22/n8n/ops-observer",
+        "Destination": "/observer",
+        "Mode": "ro",
+        "RW": false,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/Users/ddt/work/projects/ai_agent/zhensi_waimai",
+        "Destination": "/data",
+        "Mode": "ro",
+        "RW": false,
+        "Propagation": "rprivate"
+      }
+    ],
+    "after": [
+      {
+        "Type": "bind",
+        "Source": "/Users/ddt/work/projects/ai_agent/zhensi_waimai",
+        "Destination": "/data",
+        "Mode": "ro",
+        "RW": false,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "volume",
+        "Name": "ops-observer_n8n-obs-data",
+        "Source": "/var/lib/docker/volumes/ops-observer_n8n-obs-data/_data",
+        "Destination": "/home/node/.n8n",
+        "Driver": "local",
+        "Mode": "rw",
+        "RW": true,
+        "Propagation": ""
+      },
+      {
+        "Type": "bind",
+        "Source": "/Users/ddt/work/projects/ai_agent/docs/\u4ea7\u54c1\u63a2\u7d22/n8n/ops-observer",
+        "Destination": "/observer",
+        "Mode": "ro",
+        "RW": false,
+        "Propagation": "rprivate"
+      }
+    ],
+    "order_only": true
+  },
+  {
+    "context": "desktop-linux",
+    "Id": "bdf23d03457cbdc3e6eb4a1c3b4414d64e86d726d7b4f38d81429e846e738c40",
+    "name": "/sub2api-postgres",
+    "field": "mounts",
+    "before": [
+      {
+        "Type": "volume",
+        "Name": "sub2api-local_postgres_data",
+        "Source": "/var/lib/docker/volumes/sub2api-local_postgres_data/_data",
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "rw",
+        "RW": true,
+        "Propagation": ""
+      },
+      {
+        "Type": "volume",
+        "Name": "0e153a73b792770013c4bedbebb906d3253d2d524093c1b2ebcb84238d8abada",
+        "Source": "/var/lib/docker/volumes/0e153a73b792770013c4bedbebb906d3253d2d524093c1b2ebcb84238d8abada/_data",
+        "Destination": "/var/lib/postgresql",
+        "Driver": "local",
+        "Mode": "",
+        "RW": true,
+        "Propagation": ""
+      }
+    ],
+    "after": [
+      {
+        "Type": "volume",
+        "Name": "0e153a73b792770013c4bedbebb906d3253d2d524093c1b2ebcb84238d8abada",
+        "Source": "/var/lib/docker/volumes/0e153a73b792770013c4bedbebb906d3253d2d524093c1b2ebcb84238d8abada/_data",
+        "Destination": "/var/lib/postgresql",
+        "Driver": "local",
+        "Mode": "",
+        "RW": true,
+        "Propagation": ""
+      },
+      {
+        "Type": "volume",
+        "Name": "sub2api-local_postgres_data",
+        "Source": "/var/lib/docker/volumes/sub2api-local_postgres_data/_data",
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "rw",
+        "RW": true,
+        "Propagation": ""
+      }
+    ],
+    "order_only": true
+  }
+]

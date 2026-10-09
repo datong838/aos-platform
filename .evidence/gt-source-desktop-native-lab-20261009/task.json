@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-source-desktop-native-lab-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001647",
+  "scope": [
+    "aos-platform/.evidence/gt-source-desktop-native-lab-20261009",
+    "isolatedDocker:desktop-linux/aos-source-desktop-native-20261009"
+  ],
+  "excluded_scope": [
+    "aos-platform/services",
+    "aos-platform/apps"
+  ],
+  "expected_outputs": [
+    "Fresh bounded native C/SCRAM PostgreSQL16 test lab using exact existing native image on Docker Desktop; verify storage capacity and all prior resources unchanged",
+    "No currentDB or oldvolume migration/deletion; complete native lab foundation evidence prerequisite for full386 cumulative"
+  ],
+  "lease_expires_at": "2026-10-09T15:44:07.426403+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T19:44:08+08:00"
+}

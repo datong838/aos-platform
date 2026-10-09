@@ -1,0 +1,8 @@
+{
+  "image": "sha256:1a726528ec4ec3dfebf104148d3c6ae329828bfd228c305bb3e0e1e582ee074b",
+  "archive_sha256": "d23479fa667d533f1b560059cd63dda7e700f36edc5e52f9bdc3092aaf51c7e1",
+  "bytes": 290938880,
+  "source_context": "colima-aos-extension",
+  "target_context": "desktop-linux",
+  "archive_not_git_staged": true
+}

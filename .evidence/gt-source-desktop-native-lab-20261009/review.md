@@ -1,0 +1,11 @@
+# Docker Desktop 原生独立实验室验收
+
+AOS-001647 / m1 ae8f0f5fa。用户说明Docker已迁移外置盘；mac确认NVME2T挂载及约1.8TB可用。实际旧Colima实验根盘仍20GiB、尾48诊断44PASS4项因2.58GB容量守卫待验；不清旧库、不移动原数据。Docker Desktop只读无网络filesystem探针436.96GB可用，准入30GB门满足。实际Docker磁盘镜像物理位置仍以用户说明为来源，受保护设置未绕过；实测Desktop测试卷容量为依据。
+
+原native C镜像export configdigest1a7265...，containerd加载后以OCImanifest bcdf34...寻址。首次load0后旧IDinspect失败，只读对账targetuntaggedmanifest存在，未重新load；archiveconfig/manifest两sha精确且manifest引用config，目标Config及13RootFSlayers/架构与原相同。不是镜像内容替换。新PGvolume空卷初始化r2因自动复制image目录root70:70覆盖helper501权限而失败；只读nocopy空目录及PG_VERSION不存在证明尚无DB。保留失败PG容器rename，owned新卷nocopy仅chown501/0700，绑定同本lab独立secret，创建新PG不重放未知操作。首次恢复postcheck误判四处Mount数组顺序，全部字段/ID/启动/端口实际相同；只读reconcile当前成功PG，不重建。
+
+当前DockerDesktop container6b57690c0e3b4288a354d658ff744bbf724bc2834390ef321e4c7879e5b45971，cluster7694634116600770584，localhost5440，独立命名卷aos-source-desktop-native-20261009-data，PG16.14/SCRAM/768MiB无swap/1CPU/128pids。原nativecontrol/SQL字节相同，C.so hash6054f5...与原镜像相同；exactC immutable/strict/invoker/safe/catalog-owner/NOLOGIN角色，真实Ed25519签名通过、篡改拒绝，安装已提交。新lab无Source信任或业务权。
+
+准备runner r1继承旧lab>=2库而在readonly条件失败，未进入pytest，修正新lab精确0库。原注册/prepare完整shared/distinct两布局实际2PASS26.00秒；owned连接sessionparallel0/parallelhashoff/work_mem1MB/hashmultiplier1并记录耐久性on，原每参数fresh-retained DB、真实SCRAM/xid/pid/原注册/force_rollback；没有产品或测试更改。独立SER READ ONLY2原session-boundDBSource五表0、完整privatefoundation/ACL/locks/roleNOLOGIN/临时RPC清理/occupation0/1963输入hash/耐久性on确认，71个既有容器ID/启动/挂载集合/端口未变；新卷实际436.37GB可用。
+
+只交付独立native实验基础，非完整Source或actual最终COMMIT验收，不授Host/worker/Provider或商城/旧Run/manual/当前DB/230L0/push。镜像tar保留但不入Git；所有故障/partial记录保留，没有删除任何库卷备份。Browser不适用。下一注册候选完整101函数386节点累计，原SourceTask仍ACTIVE/noDelivery；另候选完整COMMIT协议ending/latewait/WAL语义，原反例保留。不得用准备2PASS替代完整原目标。

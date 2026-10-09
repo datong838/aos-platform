@@ -1,0 +1,4 @@
+[
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_registered_original_inputs_prepare_native_v2_before_signing[shared]",
+  "tests/aip/test_capacity_source_publication_transaction_pg.py::test_registered_original_inputs_prepare_native_v2_before_signing[distinct]"
+]

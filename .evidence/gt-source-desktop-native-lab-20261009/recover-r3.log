@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-desktop-native-lab-20261009/recover_lab_r3.py", line 23, in <module>
+    now=json.loads(call(['docker','--context',ctx,'inspect',item['Id']]))[0];assert now['State']['StartedAt']==item['started'] and now['Mounts']==item['mounts'] and now['HostConfig']['PortBindings']==item['ports']
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

@@ -1,0 +1,8 @@
+{
+  "pid": 43137,
+  "started_at": "2026-10-09T11:53:21.957294+00:00",
+  "head": "ae8f0f5fa8ce7203cd8feca3b6824caa7b1d063e",
+  "authority": "AOS-001647",
+  "state": "RUNNING",
+  "replay_allowed": false
+}

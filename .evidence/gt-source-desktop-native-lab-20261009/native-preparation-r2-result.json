@@ -1,0 +1,28 @@
+{
+  "observed_at": "2026-10-09T11:53:55.034783+00:00",
+  "database": "aos_test_864de3d801fb_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_registered_original_inputs_prepare_native_v2_before_signing[shared]",
+      "phase": "database_binding",
+      "database": "aos_test_ae4c316a389e_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_registered_original_inputs_prepare_native_v2_before_signing[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_registered_original_inputs_prepare_native_v2_before_signing[distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_864de3d801fb_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_registered_original_inputs_prepare_native_v2_before_signing[distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "Original registration/preparation both native layouts on new Desktop lab; no full386 or finalclock acceptance"
+}
