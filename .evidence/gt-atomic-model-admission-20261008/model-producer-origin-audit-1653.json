@@ -1,0 +1,94 @@
+{
+  "result": "RED_ORIGINAL_MODEL_INPUT_PRODUCER_NOT_FROZEN",
+  "authority": "AOS-001653",
+  "head": "603eb3b12348504e951636ffcebb4c064d0ad983",
+  "observed_at": "2026-10-09T16:55:47.450771+00:00",
+  "database": "aos_test_841069306b60_ti4_test",
+  "read_only": true,
+  "records": [
+    {
+      "request_id": "model-eval-request-a0700e3155064050bd6e",
+      "request_hash": "9e3ce1c1b1f64f9aa6574b236a11280393c97d3cd327a9cd57bd9bec217f08ca",
+      "contract_hash": "2e8ad9b8011bb45513041e837ed415b9778554cf0075bb08af960b90bd4b449b",
+      "artifact_schema_ref": {
+        "resourceType": "Schema",
+        "resourceId": "ecommerce-readable-content-v1",
+        "revision": "1",
+        "authority": "aip"
+      },
+      "gate_policy": {
+        "subjectKind": "model_eval",
+        "executionAllowed": false
+      },
+      "input_sha256": "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de",
+      "variants": [
+        {
+          "conversion": "unapproved-whole-json",
+          "wire_sha256": "79e7805b519bcab35dcedefbc57766efe4539a753736dad767128bcc9a5e4e8f",
+          "wire_bytes": 119,
+          "max_tokens": 2000,
+          "approved": false
+        },
+        {
+          "conversion": "unapproved-case-id",
+          "wire_sha256": "08d0a823e1c48045c9bce73d656fa5e754ed80f11b80c6755621d9eb962376b0",
+          "wire_bytes": 102,
+          "max_tokens": 2000,
+          "approved": false
+        }
+      ],
+      "model_context": 8000,
+      "quota_output": 2000
+    },
+    {
+      "request_id": "model-eval-request-11748235bef04699a824",
+      "request_hash": "30f4c1f8cddf0b3abfa8c5cd9f109b78b8ae0e75695b677f7605a02980ba474e",
+      "contract_hash": "789be9db3a57f2dfe0b244f956247094b887276d7c6a8d7c3412a93d261bb73c",
+      "artifact_schema_ref": {
+        "resourceType": "Schema",
+        "resourceId": "ecommerce-readable-content-v1",
+        "revision": "1",
+        "authority": "aip"
+      },
+      "gate_policy": {
+        "subjectKind": "model_eval",
+        "executionAllowed": false
+      },
+      "input_sha256": "743ba8e122203d0798e80ae3277f734d8e9c356e0f83a67b88c5d15da8f2c0de",
+      "variants": [
+        {
+          "conversion": "unapproved-whole-json",
+          "wire_sha256": "79e7805b519bcab35dcedefbc57766efe4539a753736dad767128bcc9a5e4e8f",
+          "wire_bytes": 119,
+          "max_tokens": 2000,
+          "approved": false
+        },
+        {
+          "conversion": "unapproved-case-id",
+          "wire_sha256": "08d0a823e1c48045c9bce73d656fa5e754ed80f11b80c6755621d9eb962376b0",
+          "wire_bytes": 102,
+          "max_tokens": 2000,
+          "approved": false
+        }
+      ],
+      "model_context": 8000,
+      "quota_output": 2000
+    }
+  ],
+  "counts_before": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_model_eval_budget_reservation": 0,
+    "aos_model_eval_execution_private.case_result": 0
+  },
+  "counts_after": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_model_eval_budget_reservation": 0,
+    "aos_model_eval_execution_private.case_result": 0
+  },
+  "provider_calls": 0,
+  "execution_allowed": false,
+  "tokenizer_certified": false,
+  "limitation": "Historical fixture Contract has no Model renderer policy. Alternative encodings are counterexamples only, never approved prompts."
+}
