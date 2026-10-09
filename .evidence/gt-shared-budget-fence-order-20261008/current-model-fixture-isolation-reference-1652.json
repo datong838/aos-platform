@@ -1,0 +1,28 @@
+{
+  "authority_revision": "AOS-001652",
+  "head": "e1198db4e57e5fa928ae9cd445c87e1df5699662",
+  "prior_reference": {
+    "path": ".evidence/gt-shared-budget-fence-order-20261008/current-source-native-callback-counterexample-reference-1651.json",
+    "sha256": "70c8ab7bbeb6ec732a1aff665c706da47e2c60aee0ceb6af40fa8702fd02a8b7"
+  },
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-owner-fixture-isolation-review-1651.md",
+      "sha256": "0b65152d0bfcbef61abf997f0357e8b3e82ad9f9c6809d36c38aeadfb6efaf2d"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-owner-fixture-isolation-independent-1651.json",
+      "sha256": "469c8eef9dc982e4239f58865b789100d6a62a8869502cac57d8d5271475f82d"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-input-transport-investigation-1651-r3.json",
+      "sha256": "d8a85e9ac7cb2c53d9b700d33e8020b6cf13f3eafe98fe25ecdf53b16dc45274"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-input-envelope-next-plan-1651.md",
+      "sha256": "b1c321e37565c8db452b4cc93bb788e2beb051fa24802144810463a5ab9e1aef"
+    }
+  ],
+  "execution_allowed": false,
+  "full_model_admission": false
+}
