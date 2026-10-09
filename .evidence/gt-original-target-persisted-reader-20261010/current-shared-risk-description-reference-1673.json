@@ -1,0 +1,39 @@
+{
+  "authority_revision": "AOS-001673",
+  "task": "gt-original-target-persisted-reader-20261010",
+  "head": "70cab9e07c80a07ce075bb0b4d63fddda945f8d9",
+  "execution_allowed": false,
+  "executors_authenticated": false,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/current-shared-risk-persistence-reference-1672.json",
+      "sha256": "8138ba004fc6b5ca066fc4571697fbe7b5e2d1418746902eb03b75efdaf0b959"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-description-implementation-review-1672.md",
+      "sha256": "a5b3f4f0416d6d55d80c64a010dacd1014233976dafeebe4806268c175ab49be"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-description-old-definitions-review-1672.json",
+      "sha256": "82447889c2c7bad46996297ac9f2c50686a9168f2a089b4fa1c61d74195b6ea7"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-risk-description-native-1672-r6/approval-window-origin.json",
+      "sha256": "b8ad332cdce8e74c2a38296b03651f49e16aa6dd0a800614d3d4df56508eabfc"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-risk-description-native-1672-r6/native-description-proof.json",
+      "sha256": "f9aae7a94d69929ae5e25075d30606551c755621ecd56772fa360dfb070c0b8f"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-risk-description-native-1672-r6/result-r6.json",
+      "sha256": "da9108353ce5458d1b22a47dbe3a5223df7fb02636bcc2e306d8b47a82a6cfa8"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-risk-description-native-1672-r6/independent-readback.json",
+      "sha256": "f8dd0e720228b726be1033818ce563260d971abeea27a7c66750ef71f8b2a5d0"
+    }
+  ]
+}
