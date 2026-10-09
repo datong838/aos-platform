@@ -1,0 +1,18 @@
+{
+  "authority_revision": "AOS-001622",
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/nested-command-native-reference-1622.json",
+      "sha256": "3b373ae54513df153ee0f5c802da7ad1b4d92906d1f09f692b8fe14199e78068"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/after-wait-fence-investigation-1622.json",
+      "sha256": "8dad3e1a170f617e07bfdbfef10421b88921a599dbb6faaa8a8968b6584e4065"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/after-wait-fence-investigation-1622.md",
+      "sha256": "1fb5a749f8271c8455d85b5652f17302decf0a9b9b81e96bfda89a925d04041a"
+    }
+  ],
+  "execution_allowed": false
+}

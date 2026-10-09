@@ -1,0 +1,9 @@
+# 原等待后事实围栏调查
+
+1622嵌套原生完整通过后继续本登记项。候选①root INSERT真实关系锁等待后原审批到期拒绝（原atomic/typed授权，需5436独立新库/实际blocker与DBclock证据）；②原Source consumer直接运输合同与包装的一致性（同原Source授权，产品文件仍归其原Task，必须先renew并核完整旧矩阵，不能凭wrapper通过认为该入口也通过）。选择①先实际静态调查。
+
+当前生成原SQL已hash冻结：TARGET_OCCUPATION调用原TARGET_CALL，构造root/event后再次调用capacity_occupation_plan_risk_fact；原Eval fact在相关锁/事实读取之后使用clock_timestamp并检查申请、审批、proposal和Source期限。root INSERT早于最终事实重读，具备真实等待后拒绝核验落点；只证明代码路径，不证明并发正确或准入。
+
+下一原生挑战在首次root INSERT之前，由单独隔离Owner事务取得call_occupation EXCLUSIVE关系锁，保留原Source/Plan/Intent/call链；原业务caller在INSERT真实阻塞，独立pg_blocking_pids必须包含holder PID并核wait_event，DBclock超过冻结原审批expires后才释放holder。不得修改审批期限或人为缩短TTL，不用pg_sleep代替阻塞证据；锁只作为明确test-only故障注入，不增加业务权限。独立验证具体原SQLSTATE/错误，整个call savepoint不残留root/event，最终完整回滚six0/Source1/身份复原。原包装固定异常和原SQL具体拒绝分别验证，不能因固定异常猜测到期原因。
+
+当前已准备root的同caller replay不发生INSERT，不能拿来做等待测试；需首次root生成分支。旧审批约50秒窗口内必须先准备，若前置已过期只算前置失败而非真实等待拒绝。下一新增目录gt-occupation-after-wait-native-20261009，先Task/Lease/file计划再实现。当前未创建该Task、未注入锁或执行SQL，不影响现有资源。产品不改、当前库只读、Provider关闭、完整业务首链pending。

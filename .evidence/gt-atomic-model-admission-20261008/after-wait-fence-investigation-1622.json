@@ -1,0 +1,29 @@
+{
+  "head": "eb9bd688dc8471ea2d6075b2e047cbc0690c976e",
+  "authority": "AOS-001622",
+  "frozen_sql": [
+    {
+      "name": "ledger",
+      "sha256": "aebdff4fc69e9a73ed816811a0254b80f7b71d28a5d62ea2e0a013a00b69fab1",
+      "statement_count": 22
+    },
+    {
+      "name": "target_call",
+      "sha256": "e68250337ddac407ae85f2264c94943ee133395f1ec431ae3e62122e23044442",
+      "statement_count": 4
+    },
+    {
+      "name": "plan",
+      "sha256": "75a19773ad15b4ae36fc190f52264cf2085820bd65f60ca2a752ea166f70d601",
+      "statement_count": 17
+    },
+    {
+      "name": "eval_fact",
+      "sha256": "56476d1c27bac4016ad0195a221b4ad70ad47006dbc9a1903ff2c7e02925d679",
+      "statement_count": 8
+    }
+  ],
+  "observation": "Root insert precedes original plan-fact reread; actual clock at original Eval fact validates deadlines. Static path only, no actual waiting test yet.",
+  "investigation_failure": "Initial import attempted nonexistent occupation_original_fact_statements before any effects; corrected to exact occupation_eval_fact_statements",
+  "execution_allowed": false
+}
