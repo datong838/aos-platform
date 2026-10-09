@@ -1,0 +1,115 @@
+{
+  "authority_revision": "AOS-001624",
+  "head": "dd7da8c1a273181b44f284362faf5193b6c006af",
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-consumer-transport-investigation-reference-1623.json",
+      "sha256": "7b5ba4da912586b8d8be529e98317133fce2f77be05b12b6f355a53e0916ad23"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/audit_red.py",
+      "sha256": "d970203c706ad55a5980c266fabe20a27ff180a474b1bd42cc80ebced2550cfb"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/catalog.json",
+      "sha256": "f6299bac1ac076606c8cded3b5d68362b639a40c2477ed9b8b9f6b4be6269afd"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/command-mutation-proof.json",
+      "sha256": "def574dcb343e4c96cb7008590b95feec5417c087036d91b3056a0f3d78c8bc7"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/finalize_diagnostic.py",
+      "sha256": "649796e9da791bca70622c3d91d7e6b9cda7d1f51586ae197e8e654222e17dd5"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/fix-readiness.json",
+      "sha256": "197f6841740fd4f196dd751990c50398061fd2dee5202a114fda648d3bfce7e4"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/hash-check.json",
+      "sha256": "0183e783b7fe33594eb47b5916b31000f23d01c0b5dc293fae220efb84a96764"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/independent-readback.json",
+      "sha256": "6962e83e12c680bf5a41ccbfc6a6ddf87e5f287226d42ed2ad2fe83ce2b83fc1"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/lab.json",
+      "sha256": "ac37ebce8cca478e2518288d9539b03247b11891deeead2b5cab10db060a3866"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/ledger-catalog.json",
+      "sha256": "f3dd4d6994052f853bc363ee475ee43a79094b70eb9b6010594e13fb41e7eb50"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/ledger-green.json",
+      "sha256": "fee07bc803241efe91b60d9acd7ae5313ba54b7cf78ef629f0d65bde2c573134"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/native-direct-source-command-red-r1-attempt.json",
+      "sha256": "36f3c18dd90b27d0ced6bbf3c901b45eb5f21c8217a4c216a62feec04a5ffe4d"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/native-direct-source-command-red-r1-result.json",
+      "sha256": "7d562a86dd959b7b7cc418088e6834f0a4e53054be504168a7c8cc16d27a9640"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/native-red-r1.log",
+      "sha256": "22d7a8aead286758557a83025a5b1970a965d8a1c41ad4e9a56e3b1097717c50"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/original-source-consumer.py.txt",
+      "sha256": "e6b46538babab94fb56a5aca005cee0aae6190d3e7958c57ba7c10b66846686d"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/plan.md",
+      "sha256": "3dbfea7d2464102efd405990ddd39febbc44c60500f0bd68ef3b80c3d80b5ca1"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/proposed-minimal-fix.patch",
+      "sha256": "e6c2f815279f1eb699df8fd7e38630ec3906b93ffe1d835dedcf4008494e8bd0"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/review.md",
+      "sha256": "eb3988a9660d9c4e2f20dee50a99c2f57c8da3c9b5bc9992b91837c8d85053e5"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/run_native_red.py",
+      "sha256": "8d483a86c54aa7691fb94e24718950136dbc1eacd6d1e0071d299bf4919389ad"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/source-task-renewal.json",
+      "sha256": "6a4786df9ed090a0890bece6d3d6b953b64c4ce18871f2eb1c882e2be9ca926f"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/source_newjudge_native_trial_1606.py",
+      "sha256": "b2279e905c72714fe4eebdb51cf33f7ddc3ac129bb482ac58092edbe6b728723"
+    },
+    {
+      "path": ".evidence/gt-source-consumer-command-native-20261009/task.json",
+      "sha256": "0558bbe444b44b5b825a3a8858230ef520da2d86ef8406f4bd7ce8bf387046fe"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-direct-source-command-red-r1-case-installation.json",
+      "sha256": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-direct-source-command-red-r1-debit-installation.json",
+      "sha256": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-direct-source-command-red-r1-input-installation.json",
+      "sha256": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-direct-source-command-red-r1-installation.json",
+      "sha256": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/source-newjudge-direct-source-command-red-r1-intent-installation.json",
+      "sha256": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee"
+    }
+  ],
+  "execution_allowed": false
+}
