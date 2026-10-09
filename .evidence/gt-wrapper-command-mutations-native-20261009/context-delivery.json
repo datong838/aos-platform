@@ -1,0 +1,77 @@
+{
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-wrapper-command-mutations-native-20261009",
+    "base_revision": "AOS-001620",
+    "completed_revision": "AOS-001620",
+    "result": "ORIGINAL_COMMAND_MUTATIONS_NATIVE_GREEN_STRICT_INSTANCE_REVALIDATION",
+    "changed_files": [
+      "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation.py",
+      "aos-platform/.evidence/gt-wrapper-command-mutations-native-20261009"
+    ],
+    "commits": [
+      "efe7ad10d61edccb1f093d77c42273d86d17e9f3"
+    ],
+    "verification": [
+      "Real RED unknown field accepted; minimal instance revalidation closes serialization loss",
+      "Two new original native whole runs A4/B2 all six mutations refused; samecaller positive/replay/fullmanifest/actualCOMMIT reject",
+      "Independent both rolled back/six0/Source1/NOLOGIN/member0/probes0/31resources with1619 original restart reconciled; pure adjacent388PASS8.43s"
+    ],
+    "risks": [
+      "GREEN R1 six denials reached but whole69.51s fixed wrapper rejection; exact inner cause not confirmed, preserved",
+      "No current DB/API restart/Provider/runtime/defaultmigration/admission/fees/realJudge/Goal change"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T09:38:07+08:00"
+  },
+  "revision": "AOS-001621",
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/01-当前项目状态.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/06-当前执行检查点.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001621-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001621"
+  },
+  "validation": "GREEN",
+  "strong_projections": "CURRENT"
+}
