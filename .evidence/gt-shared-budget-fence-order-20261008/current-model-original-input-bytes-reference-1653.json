@@ -1,0 +1,24 @@
+{
+  "authority_revision": "AOS-001653",
+  "head": "3ee1cd345f45c63abb96e3aace38d43959a2353e",
+  "prior_reference": {
+    "path": ".evidence/gt-shared-budget-fence-order-20261008/current-model-fixture-isolation-reference-1652.json",
+    "sha256": "6ea94e38d643b98b8c29c3135533bc177f477fe1ca62ec9cf787dd8e1668f8b8"
+  },
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-original-input-bytes-plan-1652.md",
+      "sha256": "7fca0c75eb3e61f1d5def1f4ba0690cd91d1ff97010f5dc0f3fde767e19cd53b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-original-input-bytes-review-1652.md",
+      "sha256": "cfff74b3ba4d48efb965f52d6d439b701802a29bd83ba47bf470c882402ac765"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-original-input-bytes-independent-1652.json",
+      "sha256": "710c6cffeece2d3731c741915249b5129834b1b8b19063367969bdeb54b23d23"
+    }
+  ],
+  "execution_allowed": false,
+  "full_model_admission": false
+}
