@@ -1,0 +1,42 @@
+{
+  "authority_revision": "AOS-001675",
+  "task": "gt-model-typed-proof-20261008",
+  "head": "48c4eda1034d582de762e951b7216724afbfd76c",
+  "execution_allowed": false,
+  "executors_authenticated": false,
+  "issuer_metadata_current": false,
+  "root_provenance_verified": false,
+  "physical_description_origin_authenticated": false,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/current-shared-certificate-reference-1674.json",
+      "sha256": "88ba4f0eea3df9db87fffa1549252a8b3c3e2409e70e2e3ac9df354ca8ff5c52"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-certificate-identity-20261010/review.md",
+      "sha256": "b486780ba717587cc7a5c897121206db882d99564938a85bc562f161a3c3a9e0"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-certificate-identity-20261010/pure-result.json",
+      "sha256": "7bc5c645518078bd862a6b6021376336ad2a12ce42286025c03e7eed4bb6e26b"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-certificate-identity-20261010/native-r6/result-r6.json",
+      "sha256": "efb0cbcf82f849ac4b80f6d4ca2d094441037feb3ce886a18b4bfd1411cce555"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-certificate-identity-20261010/native-r6/native-identity-proof.json",
+      "sha256": "51101fd749ca12225cada0b43a18d9fa2be9a72f544220b0fd64f728e07d68f5"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-certificate-identity-20261010/native-r6/dual-wait-graph.json",
+      "sha256": "4aa21cd1c22aa3f24c266c09002d89e0fc1431758fb7e0ac2754093b0c1b2e68"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-certificate-identity-20261010/independent-readback-r6.json",
+      "sha256": "1337415d7c6c97b44c5a23bea133bef3ea4fe51c17e7d0484d3e307a25a0d679"
+    }
+  ]
+}
