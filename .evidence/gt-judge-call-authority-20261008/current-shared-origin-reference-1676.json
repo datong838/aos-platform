@@ -1,0 +1,47 @@
+{
+  "authority_revision": "AOS-001676",
+  "task": "gt-judge-call-authority-20261008",
+  "head": "9e544297747fbb467136429728fa07512dca6357",
+  "execution_allowed": false,
+  "executors_authenticated": false,
+  "issuer_metadata_current": false,
+  "root_provenance_verified": false,
+  "original_native_row_observed": true,
+  "physical_description_origin_authenticated": false,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/current-shared-identity-reference-1675.json",
+      "sha256": "93312b674d994b6d354d2196f5008bfdc8f53e11ed1c12cf06c13b8e634dc9f4"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/review.md",
+      "sha256": "e093014243714fed393e7ac41fc6d71726e3ee10378a15961036919017e8b1d2"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/pure-result.json",
+      "sha256": "9f7dc40da285045f6e6b249a19a8a499e8c8216dde5289269eabe53269f02f15"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/native-r2/result-r2.json",
+      "sha256": "95526f145419b40c9d57394b8548c083c79405aa429ced7e8f7af8f187d85c2d"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/native-r2/native-origin-reader-proof.json",
+      "sha256": "d68bd0ca195288e2f6f69ccc9a3575d543137df44eb24459204ba47d21bdc9a9"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/native-r2/new-authentication-window.json",
+      "sha256": "8034cfe529709dcf9b54ff4ca6e592b8d7c61b2a055fddc0ca9b5cc18cc7e16d"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/independent-readback-r2.json",
+      "sha256": "8e26eb90776d7de5ca769b20073b5aea70fe7d2ada97ecb0f5b72fdc923af3ed"
+    },
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/failure-readback-r1.json",
+      "sha256": "81014528d64ade5786da9a09f7cf9b9642f5e725183688800c08f5847511ac58"
+    }
+  ]
+}
