@@ -1,0 +1,29 @@
+{
+  "authority_revision": "AOS-001654",
+  "head": "23095ca061fdc3d12151ba99e8313e271ed1cd85",
+  "task": "gt-judge-call-authority-20261008",
+  "result": "RED_ORIGINAL_MODEL_INPUT_PRODUCER_NOT_FROZEN",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/current-model-original-input-bytes-reference-1653.json",
+      "sha256": "76ee1d3cebfbfbfa71c34cbbee9f778aa3b591ea38014b0c5e9feafdd74b4ae2"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-producer-origin-plan-1653.md",
+      "sha256": "89f9c6f7e53e5756b8503bb733b58fa17db5cd78d5de9372dd2308d3aae920d4"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-producer-origin-audit-1653.py",
+      "sha256": "f7bdd76ec07e53973e9e555824fb8a144381077f8f6aa7927ee212d15e628761"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-producer-origin-audit-1653.json",
+      "sha256": "b86185ee53727e5bdc729ce91c963be8e5501cbe1d66cee56816166fcbc3a4b2"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-producer-origin-review-1653.md",
+      "sha256": "898e94187015188eedd82b586e046fa1f6f5fcc72c30bf6c5a097bbe45e8240d"
+    }
+  ]
+}
