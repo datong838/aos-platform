@@ -1,0 +1,18 @@
+{
+  "schema": "aos-engineering-checkpoint/v1",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "task_id": "gt-source-trusted-end-protocol-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001650",
+  "task_base_revision": "AOS-001650",
+  "step": "trusted-installation-audit-complete-protocol-red-matrix-prepared",
+  "code_files": [],
+  "evidence_files": [
+    ".evidence/gt-source-trusted-end-protocol-20261009/plan.md",
+    ".evidence/gt-source-trusted-end-protocol-20261009/task.json",
+    ".evidence/gt-source-trusted-end-protocol-20261009/audit_trust.py",
+    ".evidence/gt-source-trusted-end-protocol-20261009/trust-audit.json",
+    ".evidence/gt-source-trusted-end-protocol-20261009/protocol-contract.md"
+  ]
+}

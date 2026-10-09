@@ -1,0 +1,112 @@
+{
+  "head": "701f2d13ee1ed5bdd969d3a7a766d083ee2edda2",
+  "authority_revision": "AOS-001650",
+  "database": "aos_test_2ac00c0e0559_ti4_test",
+  "cluster": "7694680278363095064",
+  "read_only": true,
+  "verifier_functions": [
+    {
+      "nspname": "aos_ed25519",
+      "proname": "verify",
+      "arguments": "signature bytea, message bytea, public_key bytea",
+      "prosrc": "aos_ed25519_verify",
+      "probin": "$libdir/aos_ed25519",
+      "prosecdef": false,
+      "proconfig": null,
+      "owner": "aos_ed25519_owner",
+      "proacl": "{aos_ed25519_owner=X/aos_ed25519_owner,aos_capacity_publication_owner=X/aos_ed25519_owner}"
+    }
+  ],
+  "roles": [
+    {
+      "rolname": "aos_capacity_publication_owner",
+      "rolsuper": false,
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_provider_capacity_issuer",
+      "rolsuper": false,
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_provider_capacity_policy_publisher",
+      "rolsuper": false,
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_runtime",
+      "rolsuper": false,
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    }
+  ],
+  "memberships": [],
+  "preload_parameters": [
+    {
+      "name": "local_preload_libraries",
+      "setting": "",
+      "context": "user",
+      "source": "default"
+    },
+    {
+      "name": "max_prepared_transactions",
+      "setting": "0",
+      "context": "postmaster",
+      "source": "default"
+    },
+    {
+      "name": "session_preload_libraries",
+      "setting": "",
+      "context": "superuser",
+      "source": "default"
+    },
+    {
+      "name": "shared_preload_libraries",
+      "setting": "",
+      "context": "postmaster",
+      "source": "default"
+    }
+  ],
+  "caller_privileges": [
+    {
+      "role": "aos_runtime",
+      "schema_create": false,
+      "mutate_pending": false,
+      "execute_pending_guard": false
+    },
+    {
+      "role": "aos_provider_capacity_issuer",
+      "schema_create": false,
+      "mutate_pending": false,
+      "execute_pending_guard": false
+    },
+    {
+      "role": "aos_provider_capacity_policy_publisher",
+      "schema_create": false,
+      "mutate_pending": false,
+      "execute_pending_guard": false
+    }
+  ],
+  "callback_registration_not_inferred": true,
+  "strict_completion_deadline": "RED_UNPROVEN",
+  "formal_execution": false
+}

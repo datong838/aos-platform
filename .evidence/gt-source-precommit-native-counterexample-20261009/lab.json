@@ -1,0 +1,12 @@
+{
+  "name": "aos-precommit-probe-20261009",
+  "volume": "aos-precommit-probe-20261009-data",
+  "context": "desktop-linux",
+  "image": "sha256:78dc0d198c99377fb3db1e9d2b3f58375c4626fdd22b89e4154bd86e7d9a1de4",
+  "container_id": "716970dac67d4695febf7867d5729bb80afec284c41537a7a59e4e03b31dba8c",
+  "cluster": "7694697754311639064",
+  "port": 5442,
+  "passfile": "/Users/ddt/.aos-lab-secrets/aos-precommit-probe-20261009/pgpass",
+  "memory_bytes": 805306368,
+  "shm_bytes": 268435456
+}

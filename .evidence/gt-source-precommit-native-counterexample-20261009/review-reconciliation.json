@@ -1,0 +1,16 @@
+{
+  "request_id": "precommit-native-candidate-quality-r1",
+  "returncode": 1,
+  "stdout_empty": true,
+  "error": "Daemon supervisor generation no longer owns its registry entry",
+  "result_absent": true,
+  "attempt_preserved": true,
+  "request_not_resent": true,
+  "model_review_pass_claimed": false,
+  "credentials_changed": false,
+  "daemon_restarted": false,
+  "supported_private_socket_option_found_but_not_started": true,
+  "reason_no_private_daemon_started": "Automatic restored sessions/background behavior not proven disabled; preserve sole writer and default daemon ownership",
+  "local_review": "C compilation and exact two native terminal outcomes independently audited; candidate rejection only",
+  "long_term_goal_stopped": false
+}

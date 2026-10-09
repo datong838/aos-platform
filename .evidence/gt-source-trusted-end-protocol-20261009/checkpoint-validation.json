@@ -1,0 +1,8 @@
+{
+  "task_id": "gt-source-trusted-end-protocol-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001650",
+  "step": "trusted-installation-audit-complete-protocol-red-matrix-prepared",
+  "fingerprint": "1caf77fe6e146298fdc6f5ba56f345e0a4ab5bb58fef03161e7bd222c40b2b07",
+  "task_base_revision": "AOS-001650"
+}

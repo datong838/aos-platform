@@ -1,0 +1,28 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 529B 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883
+#2 ERROR: unexpected status from HEAD request to https://docker.m.daocloud.io/v2/library/sha256/manifests/bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883?ns=docker.io: 403 Forbidden
+------
+ > [internal] load metadata for docker.io/library/sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883:
+------
+Dockerfile:5
+--------------------
+   3 |     COPY probe.c /build/probe.c
+   4 |     RUN cc -Wall -Werror -Wno-unused-parameter -fPIC -shared -I$(pg_config --includedir-server) -I$(pg_config --includedir) -o /build/aos_precommit_probe.so /build/probe.c
+   5 | >>> FROM sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883
+   6 |     COPY --from=build /build/aos_precommit_probe.so /usr/local/lib/postgresql/aos_precommit_probe.so
+   7 |     
+--------------------
+ERROR: failed to build: failed to solve: sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883: failed to resolve source metadata for docker.io/library/sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883: unexpected status from HEAD request to https://docker.m.daocloud.io/v2/library/sha256/manifests/bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883?ns=docker.io: 403 Forbidden
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/mnbbiy0guc065musdxklj88h8
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-precommit-native-counterexample-20261009/create_lab.py", line 18, in <module>
+    subprocess.run(D+['build','--progress','plain','--iidfile',str(B/'image-id.txt'),'-f',str(B/'Dockerfile'),str(B)],check=True)
+  File "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['docker', '--context', 'desktop-linux', 'build', '--progress', 'plain', '--iidfile', '/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-precommit-native-counterexample-20261009/image-id.txt', '-f', '/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-precommit-native-counterexample-20261009/Dockerfile', '/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-precommit-native-counterexample-20261009']' returned non-zero exit status 1.

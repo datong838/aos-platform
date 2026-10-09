@@ -1,0 +1,66 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 465B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/aos-precommit-probe-20261009-base:exact
+#2 DONE 0.4s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [internal] load build context
+#4 transferring context: 1.49kB done
+#4 DONE 0.0s
+
+#5 [build 1/4] FROM docker.io/library/aos-precommit-probe-20261009-base:exact@sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883
+#5 resolve docker.io/library/aos-precommit-probe-20261009-base:exact@sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883 done
+#5 DONE 0.1s
+
+#6 [build 2/4] RUN apk add --no-cache build-base
+#6 4.282 ( 1/19) Installing jansson (2.15.0-r0)
+#6 4.579 ( 2/19) Installing binutils (2.45.1-r1)
+#6 5.641 ( 3/19) Installing libmagic (5.47-r2)
+#6 6.060 ( 4/19) Installing file (5.47-r2)
+#6 6.366 ( 5/19) Installing libgcc-static (15.2.0-r5)
+#6 7.039 ( 6/19) Installing libgomp (15.2.0-r5)
+#6 7.360 ( 7/19) Installing libatomic (15.2.0-r5)
+#6 7.657 ( 8/19) Installing gmp (6.3.0-r4)
+#6 7.992 ( 9/19) Installing isl26 (0.26-r2)
+#6 8.452 (10/19) Installing mpfr4 (4.2.2-r0)
+#6 8.813 (11/19) Installing mpc1 (1.3.1-r1)
+#6 9.122 (12/19) Installing gcc (15.2.0-r5)
+#6 19.66 (13/19) Installing libstdc++-dev (15.2.0-r5)
+#6 20.75 (14/19) Installing musl-dev (1.2.6-r2)
+#6 21.53 (15/19) Installing g++ (15.2.0-r5)
+#6 24.82 (16/19) Installing make (4.4.1-r4)
+#6 25.18 (17/19) Installing fortify-headers (3.0.1-r2)
+#6 25.46 (18/19) Installing patch (2.8-r0)
+#6 25.76 (19/19) Installing build-base (0.5-r4)
+#6 25.76 Executing busybox-1.37.0-r31.trigger
+#6 25.77 OK: 450.8 MiB in 64 packages
+#6 DONE 25.9s
+
+#7 [build 3/4] COPY probe.c /build/probe.c
+#7 DONE 0.0s
+
+#8 [build 4/4] RUN cc -Wall -Werror -Wno-unused-parameter -fPIC -shared -I$(pg_config --includedir-server) -I$(pg_config --includedir) -o /build/aos_precommit_probe.so /build/probe.c
+#8 DONE 0.2s
+
+#9 [stage-1 2/2] COPY --from=build /build/aos_precommit_probe.so /usr/local/lib/postgresql/aos_precommit_probe.so
+#9 DONE 0.0s
+
+#10 exporting to image
+#10 exporting layers 0.0s done
+#10 exporting manifest sha256:79e6f93597d04987cb6bb39de1fc6cb563954da0c486c3282b97bcbca6dd73ae done
+#10 exporting config sha256:8db63d1eeb200883b525918fd7626e8d1c7dd7e395d6b441229318c0089c5205 done
+#10 exporting attestation manifest sha256:36726cbd0fe0ef805d1f479836fcd96f54db696d47a565ff4a5b3e5edba4a316 done
+#10 exporting manifest list sha256:78dc0d198c99377fb3db1e9d2b3f58375c4626fdd22b89e4154bd86e7d9a1de4 done
+#10 naming to moby-dangling@sha256:78dc0d198c99377fb3db1e9d2b3f58375c4626fdd22b89e4154bd86e7d9a1de4 done
+#10 unpacking to moby-dangling@sha256:78dc0d198c99377fb3db1e9d2b3f58375c4626fdd22b89e4154bd86e7d9a1de4 0.0s done
+#10 DONE 0.1s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/sck1dl2xwvsmg2djfk0jjtvxo
+{"name": "aos-precommit-probe-20261009", "cluster": "7694697754311639064", "port": 5442, "image": "sha256:78dc0d198c99377fb3db1e9d2b3f58375c4626fdd22b89e4154bd86e7d9a1de4"}

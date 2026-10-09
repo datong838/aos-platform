@@ -1,0 +1,8 @@
+{
+  "label": "wait_then_check",
+  "xid": "734",
+  "pid": 56,
+  "deadline": "2026-10-09T15:57:55.651175+00:00",
+  "before_commit": "2026-10-09T15:57:55.253230+00:00",
+  "check_first": false
+}

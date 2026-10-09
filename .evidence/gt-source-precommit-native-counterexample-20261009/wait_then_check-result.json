@@ -1,0 +1,12 @@
+{
+  "label": "wait_then_check",
+  "xid": "734",
+  "pid": 56,
+  "deadline": "2026-10-09T15:57:55.651175+00:00",
+  "before_commit": "2026-10-09T15:57:55.253230+00:00",
+  "check_first": false,
+  "known_terminal": "REJECTED_ROLLED_BACK",
+  "sqlstate": "23514",
+  "elapsed_seconds": 0.9030710839433596,
+  "after_commit": "2026-10-09T15:57:56.158338+00:00"
+}

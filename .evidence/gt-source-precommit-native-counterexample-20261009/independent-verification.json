@@ -1,0 +1,26 @@
+{
+  "read_only": true,
+  "rows": [
+    {
+      "label": "check_then_wait",
+      "deadline": "2026-10-09T15:57:54.732165+00:00",
+      "xid": "733"
+    }
+  ],
+  "xid_statuses": {
+    "check_then_wait": "committed",
+    "wait_then_check": "aborted"
+  },
+  "durability": {
+    "fsync": "on",
+    "full_page_writes": "on",
+    "synchronous_commit": "on"
+  },
+  "public_execute": false,
+  "old_resources_unchanged": true,
+  "old_resource_count": 92,
+  "original_verifier_sha256": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+  "strict_completion_candidate": "RED",
+  "callback_mechanism_only": true,
+  "formal_execution": false
+}
