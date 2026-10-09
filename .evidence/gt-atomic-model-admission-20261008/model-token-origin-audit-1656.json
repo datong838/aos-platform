@@ -1,0 +1,162 @@
+{
+  "result": "TOKEN_AUTHORITY_ORIGIN_MISSING",
+  "observed_at": "2026-10-09T17:46:08.708235+00:00",
+  "head": "730f5620eb8783de31057d709ef5f6d57da04cf0",
+  "authority_revision": "AOS-001656",
+  "task": "gt-atomic-model-admission-20261008",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "database": "aos_test_9f7e075e13ca_ti4_test",
+  "cluster": "7694680278363095064",
+  "caller_status": "aborted",
+  "business_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_model_eval_budget_reservation": 0,
+    "aos_model_eval_execution_private.case_result": 0
+  },
+  "original_evidence_sha256": "02facf6011e36142291edf73e1f7b88cfcedf2aeb1b60741f5ce475ddc77777a",
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_model_runtime_contracts.py": "4684c8bfb0e2a7102279db52229d6b2a02e5f8443696cabc1f54ae025810bdfa",
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": "793dde325a6131c71e393a96811fcffb92ed062e84d84f02a30b3953b46383a8",
+    "services/aos-api/aos_api/aip_exact_provider_invoker.py": "8b83b6c85066f33841c2d604831627bc59a76cb7c77182efda897850e30f2c9d"
+  },
+  "requests": [
+    {
+      "request_id": "model-eval-request-688bda527bd64e748846",
+      "request_hash": "19ba4fa09bac974273f05ee0f7f0b3bb24d9a177fc4fac7e0c74a3e293ba6b1b",
+      "model_hash": "0720e05d7b63af583ebe8087353fee81b10c7f027c850da008db149dfa9481b8",
+      "provider_model_id": "candidate-model",
+      "provider_ref": {
+        "assetType": "ProviderInstanceRevision",
+        "assetId": "joint-prefix-provider-c57463a9b2ee42e0be6775dfc162ce49",
+        "revision": 1,
+        "contentHash": "990369cb51ccd99485967a627b0ebdb5bbb650d601c4fa7e1d274ca01b387795"
+      },
+      "contract_hash": "07965206e6e35e301db3a6e21994839fda4d290e50c1f277b0fc13c3d52cd74d",
+      "context_window": 8000,
+      "token_origin_fields_rejected": [
+        {
+          "field": "tokenizerRef",
+          "errors": [
+            {
+              "loc": [
+                "tokenizerRef"
+              ],
+              "type": "extra_forbidden"
+            }
+          ],
+          "registered": false
+        },
+        {
+          "field": "tokenizerArtifactHash",
+          "errors": [
+            {
+              "loc": [
+                "tokenizerArtifactHash"
+              ],
+              "type": "extra_forbidden"
+            }
+          ],
+          "registered": false
+        },
+        {
+          "field": "messageEnvelopeRef",
+          "errors": [
+            {
+              "loc": [
+                "messageEnvelopeRef"
+              ],
+              "type": "extra_forbidden"
+            }
+          ],
+          "registered": false
+        },
+        {
+          "field": "inputTokenCount",
+          "errors": [
+            {
+              "loc": [
+                "inputTokenCount"
+              ],
+              "type": "extra_forbidden"
+            }
+          ],
+          "registered": false
+        }
+      ],
+      "token_policy_present": false
+    },
+    {
+      "request_id": "model-eval-request-3602722564894082b423",
+      "request_hash": "49e1700170c39cbd20465c7e12fbd9f8704f42f1dcae32a7175bc297d531bb6e",
+      "model_hash": "753ab8883458e1741bf662949f0489bc9ddbc625ec6d090234339da0345c47f5",
+      "provider_model_id": "candidate-model",
+      "provider_ref": {
+        "assetType": "ProviderInstanceRevision",
+        "assetId": "joint-prefix-provider-e86d61c7cd954beead39194f6c95cc46",
+        "revision": 1,
+        "contentHash": "c37afc7e5be2f49e66b0d5f193ec611c9f0c298129b08b1b19d466d513839547"
+      },
+      "contract_hash": "03545416f0512f89b620386b6c843ae22b672cff8ef30853488b55de87c85fe4",
+      "context_window": 8000,
+      "token_origin_fields_rejected": [
+        {
+          "field": "tokenizerRef",
+          "errors": [
+            {
+              "loc": [
+                "tokenizerRef"
+              ],
+              "type": "extra_forbidden"
+            }
+          ],
+          "registered": false
+        },
+        {
+          "field": "tokenizerArtifactHash",
+          "errors": [
+            {
+              "loc": [
+                "tokenizerArtifactHash"
+              ],
+              "type": "extra_forbidden"
+            }
+          ],
+          "registered": false
+        },
+        {
+          "field": "messageEnvelopeRef",
+          "errors": [
+            {
+              "loc": [
+                "messageEnvelopeRef"
+              ],
+              "type": "extra_forbidden"
+            }
+          ],
+          "registered": false
+        },
+        {
+          "field": "inputTokenCount",
+          "errors": [
+            {
+              "loc": [
+                "inputTokenCount"
+              ],
+              "type": "extra_forbidden"
+            }
+          ],
+          "registered": false
+        }
+      ],
+      "token_policy_present": false
+    }
+  ],
+  "transport_send_line": 173,
+  "post_response_usage_line": 526,
+  "counterexamples": 8,
+  "actual_input_token_count": null,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "next_required": "Immutable approved tokenizer artifact/version/hash and exact message overhead/model compatibility, verified server-side before joint admission; no char-count fallback."
+}

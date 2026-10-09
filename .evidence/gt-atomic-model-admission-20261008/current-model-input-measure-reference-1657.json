@@ -1,0 +1,28 @@
+{
+  "authority_revision": "AOS-001657",
+  "task": "gt-atomic-model-admission-20261008",
+  "result": "TOKEN_AUTHORITY_ORIGIN_MISSING",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-model-target-wire-reference-1656.json",
+      "sha256": "67f2225450c741eda3c40309e4c98d36dd5b19b00fac63ad7a230caf350d8402"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-token-origin-plan-1656.md",
+      "sha256": "59dfd40cdbf80aa989b0ccf9657e7174a91e282683c6976042968544ecf20c1b"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/audit-model-token-origin-1656.py",
+      "sha256": "cbce4cad94b615e3001711261f4eaf55bf7790f6a14931cd19144b4f53a8091c"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-token-origin-audit-1656.json",
+      "sha256": "b748608ed3b205d943ed7dca646e639cc38f260fd552f092161a3ae0149851fe"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-token-origin-review-1656.md",
+      "sha256": "fb74e86cee88e288af874aebb4c78314441f7353c774e457ea663c8bb4ed4eea"
+    }
+  ]
+}

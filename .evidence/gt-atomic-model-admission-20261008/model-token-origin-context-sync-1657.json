@@ -1,0 +1,16 @@
+{
+  "authority_revision": "AOS-001657",
+  "installation": {
+    "status": "GREEN",
+    "project_revision": "AOS-001657",
+    "projection_count": 8,
+    "schema_count": 9,
+    "task_receipt_count": 1979,
+    "delivery_receipt_count": 1957,
+    "event_count": 5655
+  },
+  "five_checkpoints_valid": true,
+  "first_checkpoint_validation_failure": "sensitive filename guard rejected token substring; no authority replay; nonsecret count reference renamed, guard unchanged",
+  "execution_allowed": false,
+  "full_task_delivered": false
+}
