@@ -1,0 +1,14 @@
+{
+  "database": "aos_test_0406c448c1ec_ti4_test",
+  "execution_id": "native-newJudge-model-judge-request-6effb686426444849664938b30f3529c",
+  "v2_rows": {
+    "aos_model_eval_execution_private.manifest": 0,
+    "aos_model_eval_execution_private.case_result": 0,
+    "aos_model_eval_issuer_private.executor_certificate": 0,
+    "aos_model_eval_issuer_private.target_result_origin": 0
+  },
+  "failed_v2_transaction_xid_not_recorded": true,
+  "legacy_adjacent_committed_rows_separate": true,
+  "unknown_effect_replayed": false,
+  "execution_allowed": false
+}

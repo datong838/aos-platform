@@ -1,0 +1,6 @@
+{
+  "result": "RED_MISSING_ORIGINAL_V2_PERSISTED_READER",
+  "exception": "ModuleNotFoundError",
+  "name": "aos_api.aip_model_original_target_result_reader",
+  "native_checks_executed": false
+}

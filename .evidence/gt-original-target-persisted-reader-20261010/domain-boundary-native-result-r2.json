@@ -1,0 +1,20 @@
+{
+  "database": "aos_test_ff40de426907_ti4_test",
+  "cluster": "7694680278363095064",
+  "caller_xid": "28568",
+  "caller_end_status": "aborted",
+  "v1_binding_accepted": true,
+  "v2_binding_rejected_v1": {
+    "sqlstate": "42501",
+    "message": "ORIGINAL_TARGET_CERTIFICATE_BINDING"
+  },
+  "manifest_rows_after_rollback": 0,
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_model_original_target_result_reader.py": "570d3bbcff7fa223aafc129a83f6c02867f94e7632e3cd087b69502a3ddc7dcc",
+    "services/aos-api/aos_api/aip_model_eval_execution_authority.py": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27",
+    "services/aos-api/aos_api/aip_model_eval_execution_reader.py": "1b61a8d0df28743065c3facff18363c0847d68e3b64b7e68657052b90b2e69fa"
+  },
+  "execution_allowed": false,
+  "actual_transport": false,
+  "full_task_delivered": false
+}

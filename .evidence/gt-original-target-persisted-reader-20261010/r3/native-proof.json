@@ -1,0 +1,44 @@
+{
+  "database": "127.0.0.1:5441/aos_test_ff40de426907_ti4_test",
+  "producer_xid": "28534",
+  "origin": {
+    "xid": "28534",
+    "pid": 84660
+  },
+  "native_committed_required": true,
+  "negative_cases": [
+    "output",
+    "mutable",
+    "case",
+    "manifest",
+    "identity_bool",
+    "identity_epoch",
+    "canary",
+    "case_hash",
+    "root_hash",
+    "certificate_hash",
+    "root_epoch",
+    "certificate_epoch_bool",
+    "runtime",
+    "binding_immutable",
+    "binding_runtime_acl",
+    "original_global_identity_withdrawal",
+    "actual_identity_lock_wait_past_certificate_end",
+    "revoked_certificate"
+  ],
+  "execution_allowed": false,
+  "bootstrap_trusted": false,
+  "actual_transport": false,
+  "joint_admission": false,
+  "test_owned_executor_metadata": true,
+  "original_prepared_parents_committed": false,
+  "actual_wait": {
+    "caller_xid": "28548",
+    "blocked_pid": 84680,
+    "blocking_pid": 84679,
+    "before": "2026-10-09T19:02:05.968809+00:00",
+    "certificate_end": "2026-10-09T19:02:13.778732+00:00",
+    "after": "2026-10-09T19:02:13.801788+00:00",
+    "reader_end_status": "aborted"
+  }
+}

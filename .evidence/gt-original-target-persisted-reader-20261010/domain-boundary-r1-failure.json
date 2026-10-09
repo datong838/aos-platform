@@ -1,0 +1,8 @@
+{
+  "sqlstate": "42501",
+  "message": "MODEL_IDENTITY_BOUND_OR_REVOKED",
+  "reason": "Fresh legacy fixture reused original global identity ID with a different public key; original shared identity guard correctly rejected it. New v2 binding had already rejected legacy schema, but full domain probe failed before output. Transaction xid not recorded; independent READ ONLY manifest rows0. No replay or overwrite of committed identity.",
+  "script_sha256": "a875c66de4d370aba219853f584fc3fd365bd3d380e2b705656288a48ad8e281",
+  "database": "aos_test_ff40de426907_ti4_test",
+  "execution_allowed": false
+}

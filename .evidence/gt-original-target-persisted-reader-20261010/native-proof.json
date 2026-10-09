@@ -1,0 +1,25 @@
+{
+  "database": "127.0.0.1:5441/aos_test_5ee4132119c6_ti4_test",
+  "producer_xid": "28311",
+  "origin": {
+    "xid": "28311",
+    "pid": 83553
+  },
+  "native_committed_required": true,
+  "negative_cases": [
+    "output",
+    "mutable",
+    "case",
+    "manifest",
+    "identity_bool",
+    "identity_epoch",
+    "runtime",
+    "revoked_certificate"
+  ],
+  "execution_allowed": false,
+  "bootstrap_trusted": false,
+  "actual_transport": false,
+  "joint_admission": false,
+  "test_owned_executor_metadata": true,
+  "original_prepared_parents_committed": false
+}
