@@ -1,0 +1,52 @@
+{
+  "authority_revision": "AOS-001681",
+  "task": "gt-atomic-model-admission-20261008",
+  "head": "b24a1fd7b3b46e77489a49ced754eecbac2ca06a",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "same_caller_metadata_necessary_verified": true,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-native-certificate-reference-1680.json",
+      "sha256": "7c8283142479a58e98e1e78f8201c76cc7ea48f33d43d600b32ae42f36e1d1c7"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/caller-domain-review-1680.md",
+      "sha256": "7dc3136670fdaa38fd9c3d02e609616788323f3c01f0e00009458faae4ac24b6"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/implementation-plan.md",
+      "sha256": "8a0f4d5ba8621945e180293f8abed8aecc11eefabf5fb4b89bbad3a25d6ad32f"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r16/result-r16.json",
+      "sha256": "5062a2a17d394931ef6b620bfb9df461464b6d8d094bd79ee95048cb0f7c22d8"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r16/native-same-transaction-prepare-proof.json",
+      "sha256": "41df2e9a7b2d5e7a8376715bd9ff47aa4e76b9da2f14a063615c7f22abd4ec1b"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r16/native-description-proof.json",
+      "sha256": "92c7c3421d93aa8b0c02bb9fec6b491845b19d2e485b008c60f54274166de7a1"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/independent-core-readback-r16.json",
+      "sha256": "e516c05d716e88e92b91ad8ef0de74c0d654d6786144a20dcc15ea54dfa9ea23"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/pure-result-r6.json",
+      "sha256": "c85142c6e9ef45f455607c1993cf398e6182f42cc4814139dce2d9ea0519a568"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/caller-domain-plan-1680.md",
+      "sha256": "ea5999114782519e2bf608b32eabc1cec4c66574baf45ac3f14e927780593f66"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r16/caller-domain-proof.json",
+      "sha256": "68e039c198e3f8789d83dbb67cab95b8e7ec422b2bd7fda4ff7f31cc6433a097"
+    }
+  ]
+}

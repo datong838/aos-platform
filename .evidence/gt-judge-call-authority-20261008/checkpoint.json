@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001680",
+  "authority_revision": "AOS-001681",
   "code_files": [
     "services/aos-api/aos_api/aip_action_policy.py",
     "services/aos-api/aos_api/aip_action_store.py",
@@ -43,12 +43,12 @@
     ".evidence/gt-judge-call-authority-20261008/published-rule-reader-reference.json",
     ".evidence/gt-judge-call-authority-20261008/published-rule-currentness-reference.json",
     ".evidence/gt-judge-call-authority-20261008/exact-signed-rule-suite-reference.json",
-    ".evidence/gt-judge-call-authority-20261008/current-native-certificate-reference-1680.json"
+    ".evidence/gt-judge-call-authority-20261008/current-native-certificate-reference-1681.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "dedicated-real-final-expiry-and-independent-fresh-native-necessary-green-other-caller-old-domain-next",
+  "step": "native-other-caller-old-domain-necessary-green-visible-withdrawal-finaljoint-next",
   "task_base_revision": "AOS-001578",
   "task_id": "gt-judge-call-authority-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
