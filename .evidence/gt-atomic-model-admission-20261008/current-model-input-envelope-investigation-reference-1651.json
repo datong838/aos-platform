@@ -1,0 +1,31 @@
+{
+  "authority_revision": "AOS-001651",
+  "prior_reference": {
+    "path": ".evidence/gt-atomic-model-admission-20261008/current-source-native-callback-counterexample-reference-1651.json",
+    "sha256": "2b578496f03f9812c593269bcd996b4009104cea93452a25e142f0452d7b7631"
+  },
+  "files": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-input-envelope-next-plan-1651.md",
+      "sha256": "3b87732687c8b43ef42f823f2f7ff209a2873b4b642f4bec2bc31aa51cc6170a"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-input-transport-investigation-1651.py",
+      "sha256": "006b159685f7647e9b856c40699182c7cef83730e0339c7fcf1b3d1c80517860"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-input-transport-investigation-1651-r2.py",
+      "sha256": "810b7df88f3c5d45ff0a67bd2b1b333ab943e75261ee721c73bcb209cfb12585"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-input-transport-investigation-1651-r2.json",
+      "sha256": "869ded0695f559357f7bb24c087ab8adfef6b1e1832564164eeac7cab1ee6914"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/model-input-transport-investigation-1651.md",
+      "sha256": "5ace563c42eced7c4dfe25bef8a92205c356eab640a1d75387636b93f48b9e06"
+    }
+  ],
+  "result": "FULL_MODEL_INPUT_TRANSPORT_BINDING_REMAINS_RED",
+  "execution_allowed": false
+}

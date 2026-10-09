@@ -1,0 +1,83 @@
+{
+  "observed_at": "2026-10-09T16:13:41.718639+00:00",
+  "authority": "AOS-001651",
+  "head": "f7a5c7dfa4d9bf0475205d7a261cf0888f34ecf3",
+  "historical_snapshot_sha256": "12a8f755deea3f0aecb0c1a4074f73c84f4a472b04d25892923f8690caf4679b",
+  "source_hashes": {
+    "aip_exact_provider_invoker.py": "8b83b6c85066f33841c2d604831627bc59a76cb7c77182efda897850e30f2c9d",
+    "aip_llm_adapter.py": "94ad9245b3a84143da2a74dacd6fb35055c8b565a6be3a59fb6c20c51af28d1c",
+    "aip_model_eval_execution_owner.py": "12c5e22e9f7dc84c95fb19fb10935911ce414def511d6e3058bd13e7e8080344",
+    "aip_eval_runner.py": "3b4c54d1e2f12dd320d15aafaf25daa1b92893b9e8114e1d241c548ed1f9d3cf",
+    "aip_physical_capacity_occupation_authority.py": "134ae1bebf21aa704f17a3901e6f952164dadf1909f42b6efbf4735774df5a87"
+  },
+  "parents": [
+    {
+      "historical_request_id": "model-eval-request-1ee53002e0684a838b2f",
+      "quota_hash_verified": "5cc7d7ab9a62f72904e7b6d6f454fe7e18fa65db957753147f380ec7fe23d55c",
+      "historical_model_context": 8000,
+      "quota_input": 8000,
+      "quota_output": 2000,
+      "conservative_occupation": 10000,
+      "samples": [
+        {
+          "utf8_request_length": 98,
+          "request_sha256": "e570d33c4699fc336b0efa28a437d454a12e78dd917d506dec8c192b4fe7f182",
+          "canonical_artifact_hash": "76c665718419b5c73795decadbbb57d90ee133e49715118e0921bf446976b5e7",
+          "same_hash": false
+        },
+        {
+          "utf8_request_length": 105,
+          "request_sha256": "adfe8837fd166d88e6d38b3ad372c3249f2cdf5d28a3ac2ef0bab465e165bf77",
+          "canonical_artifact_hash": "9202bbab2208bc3babe85d550924c8026b0507f7e56556768f884e207b813c8b",
+          "same_hash": false
+        }
+      ],
+      "encoder_accepts_output_above_quota": true,
+      "encoder_without_output_has_no_max_tokens": true
+    },
+    {
+      "historical_request_id": "model-eval-request-f7604fe1809b454cb1b5",
+      "quota_hash_verified": "ac9afc74701223282e92d8c0b5b3cced8dce3fc4cf1b04c866f013025b036df1",
+      "historical_model_context": 8000,
+      "quota_input": 8000,
+      "quota_output": 2000,
+      "conservative_occupation": 10000,
+      "samples": [
+        {
+          "utf8_request_length": 98,
+          "request_sha256": "e570d33c4699fc336b0efa28a437d454a12e78dd917d506dec8c192b4fe7f182",
+          "canonical_artifact_hash": "76c665718419b5c73795decadbbb57d90ee133e49715118e0921bf446976b5e7",
+          "same_hash": false
+        },
+        {
+          "utf8_request_length": 105,
+          "request_sha256": "adfe8837fd166d88e6d38b3ad372c3249f2cdf5d28a3ac2ef0bab465e165bf77",
+          "canonical_artifact_hash": "9202bbab2208bc3babe85d550924c8026b0507f7e56556768f884e207b813c8b",
+          "same_hash": false
+        }
+      ],
+      "encoder_accepts_output_above_quota": true,
+      "encoder_without_output_has_no_max_tokens": true
+    }
+  ],
+  "adapter_passes_output_limit": false,
+  "invoker_direct_input_context_attributes": false,
+  "native_database_queries": 0,
+  "provider_calls": 0,
+  "tokenizer_calls": 0,
+  "execution_allowed": false,
+  "result": "FULL_MODEL_INPUT_TRANSPORT_BINDING_REMAINS_RED",
+  "r1_failure": {
+    "stage": "private-passfile-stat-before-connect",
+    "code": "FileNotFoundError",
+    "path": "/tmp/aos-capacity-publication-scram-20261006.pgpass",
+    "native_queries": 0,
+    "replayed": false
+  },
+  "limitations": [
+    "Pure current HTTPX encoder only, not a Provider request or tokenizer.",
+    "Historical model identifier is not a current RegisteredModel authority.",
+    "Encoder accepts excess output; this alone does not prove complete invoker dispatch.",
+    "Current quota/model head and approvals were not queried; no new authority is granted."
+  ]
+}
