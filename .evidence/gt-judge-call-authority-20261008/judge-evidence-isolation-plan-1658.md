@@ -1,0 +1,13 @@
+# 独立 Judge 原全计划测试证据隔离
+
+Rules：231、Judge完整原申请/独立批准/预期字节接线原合同、m1单写。当前Authority1658，Main及Judge两个原Lease同唯一owner且有效，精确文件scope不重叠，无第二写者。
+
+已登记候选一Source trusted-end仍依赖无法用提交时间戳替代的实际终态；候选二独立Judge原Target输出/expected字节。本轮选二。编码前复习Owner validate_judge_application_case_set和validate_original_target_judge_manifest、原model-journal-owner合同与原完整signed-rule-suite测试。
+
+调查发现：Judge完整原测试仍从Main根加载fixture，并覆写Main旧legal JSON和Judge旧证据。直接运行不能保护既存验收。先隔离这条真实测试链，为后续expected字节RED准备安全路径，不能借本隔离步骤冒称expected已接线。
+
+产品代码不修改；精确修改 `services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py`，本目录新增runner、plan/review/结果。新增显式AOS_JUDGE_FIXTURE_EVIDENCE_ROOT；默认仍原Main/Judge根，原测试行为不变。显式值只接受Judge evidence的proper新子目录、全路径无symlink、两原helper逐字节一致、旧legal outputs不存在；同一全测试内部多次原创建可写自己的新attempt，不可重用旧attempt根。
+
+RED先证实当前缺隔离helper。最小修改只替换原两个申请producer及原signed-suite测试的base/output定位；规则注册/真正独立批准/currentness/预算/根撤回/等锁跨期矩阵原样保留。纯guard测试核默认及外部路径拒绝；新runner在当前ownedDesktop5441创建全新保留DB、原全部迁移和真实流程，不能用旧5434 disk-full库或修改原metadata/旧申请。旧Main/Judge证据hash全过程不变。
+
+独立回读新库核原申请hash、签名rule与新purpose申请/批准，原全计划caller真实ABORTED及四业务零计数；记录原fullproof覆盖的负门。浏览器不适用。所有旧fixture/source/hash不改，不调用Provider，不迁移真库；完整Judge/Main任务不Delivery。

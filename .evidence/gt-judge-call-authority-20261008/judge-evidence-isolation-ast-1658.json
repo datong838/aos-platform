@@ -1,0 +1,9 @@
+{
+  "all_existing_test_bodies_unchanged_except_explicit_root_output_relocation": true,
+  "existing_functions": 4,
+  "new_functions": [
+    "_judge_fixture_evidence_paths",
+    "test_judge_fixture_evidence_paths_default_and_boundary"
+  ],
+  "test_sha256": "d37725ebd49bd1969cf06ba80b10e1bef6ea528d21c638bdfd0497ba3d4a5307"
+}

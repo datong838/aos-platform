@@ -1,0 +1,5 @@
+{
+  "default_and_outside_root_rejection_passed": true,
+  "initial_pytest_autouse_setup": "ERROR before pure test call; default database fixture unsuitable; not retried",
+  "pure_direct_call_without_database": true
+}

@@ -4,7 +4,9 @@ The retained native database is isolated. No Judge-call approval, budget hold,
 formal Judge implementation, Provider request or Model quality is asserted.
 """
 import importlib.util
+import hashlib
 import json
+import os
 import sys
 import threading
 import time
@@ -21,6 +23,42 @@ from tests.aip._runtime_guard_history_fixture import (
 )
 
 
+def _judge_fixture_evidence_paths():
+    """Keep legacy defaults; explicit fresh Judge attempts own their evidence."""
+    repo = Path(__file__).resolve().parents[4]
+    models = repo / '.evidence/gt-atomic-model-admission-20261008'
+    judges = repo / '.evidence/gt-judge-call-authority-20261008'
+    selected = os.environ.get('AOS_JUDGE_FIXTURE_EVIDENCE_ROOT')
+    if selected is None:
+        return models, judges
+    path = Path(selected)
+    if (not path.is_absolute() or '..' in path.parts or not path.is_dir()
+            or path == judges or judges not in path.parents):
+        raise ValueError('fresh Judge evidence child directory required')
+    if any(p.is_symlink() for p in (path, *path.parents)):
+        raise ValueError('Judge evidence symlink rejected')
+    for name in ('legal_model_prefix_for_application_r4.py', 'legal_eval_application_fixture_r4.py',
+                 'build_whole_native_plan_1602.py'):
+        copy = path / name
+        if (copy.is_symlink() or not copy.is_file()
+                or hashlib.sha256(copy.read_bytes()).digest() != hashlib.sha256((models / name).read_bytes()).digest()):
+            raise ValueError('exact original Judge helper copy required')
+    if any((path / name).exists() for name in ('legal-model-prefix-application-r4.json', 'legal-eval-application-result-r4.json')):
+        raise ValueError('Judge attempt already has original application evidence')
+    return path, path
+
+
+def test_judge_fixture_evidence_paths_default_and_boundary(monkeypatch, tmp_path):
+    monkeypatch.delenv('AOS_JUDGE_FIXTURE_EVIDENCE_ROOT', raising=False)
+    models, judges = _judge_fixture_evidence_paths()
+    assert models.name == 'gt-atomic-model-admission-20261008'
+    assert judges.name == 'gt-judge-call-authority-20261008'
+    for value in (str(tmp_path), str(judges), 'relative-attempt'):
+        monkeypatch.setenv('AOS_JUDGE_FIXTURE_EVIDENCE_ROOT', value)
+        with pytest.raises(ValueError, match='fresh Judge evidence child directory required'):
+            _judge_fixture_evidence_paths()
+
+
 def test_pending_judge_request_from_original_approved_sources(
     caller, issuer_factory, https_signer, guard_issuer_factory,
     guard_consumer_factory, tmp_path,
@@ -31,8 +69,7 @@ def test_pending_judge_request_from_original_approved_sources(
     from aos_api.aip_model_runtime_store import AipModelRuntimeStore
     from aos_api.aip_action_store import canonical_hash
     repo = Path(__file__).resolve().parents[4]
-    base = repo / '.evidence/gt-atomic-model-admission-20261008'
-    evidence = repo / '.evidence/gt-judge-call-authority-20261008'
+    base, evidence = _judge_fixture_evidence_paths()
     for name in ('legal_model_prefix_for_application_r4', 'legal_eval_application_fixture_r4'):
         spec = importlib.util.spec_from_file_location(name, base / (name + '.py'))
         module = importlib.util.module_from_spec(spec)
@@ -377,7 +414,7 @@ def test_exact_signed_rule_new_original_suite(
     from aos_api.aip_action_store import canonical_hash
     from aos_api.aip_eval_contracts import JudgeRevisionRef,AssetRevisionRef,AssetType
     from aos_api.aip_model_eval_judge_request_store import ModelJudgeCallRequestStore
-    repo=Path(__file__).resolve().parents[4];base=repo/'.evidence/gt-atomic-model-admission-20261008'
+    repo=Path(__file__).resolve().parents[4];base,evidence=_judge_fixture_evidence_paths()
     for name in ('legal_model_prefix_for_application_r4','legal_eval_application_fixture_r4'):
         spec=importlib.util.spec_from_file_location(name,base/(name+'.py'))
         module=importlib.util.module_from_spec(spec);sys.modules[name]=module;spec.loader.exec_module(module)
@@ -644,7 +681,7 @@ def test_exact_signed_rule_new_original_suite(
         assert native_independent.execute('SELECT pg_xact_status(%s::xid8)',(hold_rollback_identity['xid'],)).fetchone()[0]=='aborted'
         native_whole_proof['independent_xact_status']='aborted'
     native_label=os.environ.get('AOS_JUDGE_NATIVE_EVIDENCE_LABEL','whole-manifest-native-current')
-    (repo/'.evidence/gt-judge-call-authority-20261008'/(native_label+'-whole-plan-proof.json')).write_text(json.dumps(native_whole_proof,default=str,indent=2)+'\n')
+    (evidence/(native_label+'-whole-plan-proof.json')).write_text(json.dumps(native_whole_proof,default=str,indent=2)+'\n')
     if source_native_only:
         assert source_trial is not None and source_finish is not None
         return
@@ -1187,9 +1224,9 @@ def test_exact_signed_rule_new_original_suite(
         'before':before_deadline.isoformat(),'approval_deadline':de['expires_at'].isoformat(),
         'after':after_deadline.isoformat(),'before_accepted':True,'after_rejected':True,
         'independent_xact_status':'aborted','dual_parent_rows':0,'actual_budget_lock_wait_claimed':False}
-    (repo/'.evidence/gt-judge-call-authority-20261008'/(native_label+'-whole-plan-proof.json')).write_text(json.dumps(native_whole_proof,default=str,indent=2)+'\n')
+    (evidence/(native_label+'-whole-plan-proof.json')).write_text(json.dumps(native_whole_proof,default=str,indent=2)+'\n')
     from psycopg.conninfo import conninfo_to_dict
-    out=repo/'.evidence/gt-judge-call-authority-20261008'/(os.environ['AOS_JUDGE_NATIVE_EVIDENCE_LABEL']+'-full-proof.json' if 'AOS_JUDGE_NATIVE_EVIDENCE_LABEL' in os.environ else 'exact-signed-rule-suite-native-r1.json')
+    out=evidence/(os.environ['AOS_JUDGE_NATIVE_EVIDENCE_LABEL']+'-full-proof.json' if 'AOS_JUDGE_NATIVE_EVIDENCE_LABEL' in os.environ else 'exact-signed-rule-suite-native-r1.json')
     out.write_text(json.dumps({'database':conninfo_to_dict(get_dsn())['dbname'],'judge_application':judge,
         'target_application':target,'source':source.model_dump(mode='json',by_alias=True),'rule_facts':facts,
         'new_suite':dict(suite),'target_request':dict(target_request),'target_approval':dict(approval),

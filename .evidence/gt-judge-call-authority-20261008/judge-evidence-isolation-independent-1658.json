@@ -1,0 +1,52 @@
+{
+  "result": "ORIGINAL_JUDGE_WHOLE_TEST_EVIDENCE_ISOLATED_NATIVE_VERIFIED",
+  "database": "aos_test_0df487213fdb_ti4_test",
+  "cluster": "7694680278363095064",
+  "requests": [
+    {
+      "id": "model-eval-request-a55f8621f7ae4a7d9c4a",
+      "hash": "e7c89ea5ee0035e7b3f6df9048c900550008fc86a11a645a00ce474bee038d0c",
+      "purpose": "original-model-eval"
+    },
+    {
+      "id": "model-eval-request-0622ecaebade4a2cb89b",
+      "hash": "c2e7632ff36915b2c660921d6e515710a947197df4f0ed87bd2f51104c482f01",
+      "purpose": "original-model-eval"
+    },
+    {
+      "id": "model-judge-request-c25188862ee046669a9942c64a0a5bc1",
+      "hash": "8b16c0fefe0133ce112b201c8ef1d2fd9b8f4a1a58c0516d7f91f9feee2198e7",
+      "purpose": "model-judge-call"
+    },
+    {
+      "id": "model-judge-request-065108aeaeb240e899bad07193194093",
+      "hash": "b49d2aa2f748b99711df9edcef4b3ae45815a3dcdb71ad3d45b5af021726e7dd",
+      "purpose": "model-judge-call"
+    }
+  ],
+  "independent_new_judge_approval": true,
+  "caller_states": {
+    "whole": "aborted",
+    "deadline": "aborted",
+    "budget_rollback": "aborted"
+  },
+  "whole_parent_counts": {
+    "aip_model_eval_budget_reservation": 0,
+    "aip_model_judge_budget_reservation": 0
+  },
+  "execution_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aos_model_eval_execution_private.case_result": 0
+  },
+  "separate_legacy_test_holds": {
+    "aip_model_eval_budget_reservation": 0,
+    "aip_model_judge_budget_reservation": 1
+  },
+  "old_evidence_unchanged": true,
+  "helper_file_hashes_exact": true,
+  "read_only": true,
+  "execution_allowed": false,
+  "expected_bytes_binding_implemented": false,
+  "full_task_delivered": false
+}

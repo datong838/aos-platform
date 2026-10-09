@@ -1,0 +1,11 @@
+{
+  "valid_exact_helper_root": true,
+  "faults_rejected": [
+    "modified-helper",
+    "symlink-helper",
+    "reused-attempt",
+    "traversal"
+  ],
+  "temporary_probe_files_removed": true,
+  "database_access": false
+}
