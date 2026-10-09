@@ -1,0 +1,85 @@
+{
+  "schema": "aos.shared-parent-manifest-audit/v1",
+  "authority_revision": "AOS-001668",
+  "task_id": "gt-atomic-model-admission-20261008",
+  "identity": {
+    "database": "aos_test_ff40de426907_ti4_test",
+    "cluster": "7694680278363095064",
+    "read_only": "on",
+    "observed_at": "2026-10-09 19:46:29.228759+00:00"
+  },
+  "source_hashes": {
+    "aip_model_eval_execution_contracts.py": "ee4eb61a0218e10f057209eb532ed9675a80d0efcd9576c929a1a6b29f400cf1",
+    "aip_model_eval_execution_owner.py": "40a3c6eacd13de6a3185c1f106f035cec7308e01ea3df72d25b0f8e1c2224d0b",
+    "aip_physical_capacity_occupation_authority.py": "134ae1bebf21aa704f17a3901e6f952164dadf1909f42b6efbf4735774df5a87"
+  },
+  "original_manifest_sha256": "72c8037e70081af669a13319523804be7fd7bff2807f84443101ac6f842612fa",
+  "case_count": 2,
+  "leg_count": 4,
+  "parent_bounds": {
+    "target": 10,
+    "judge": 10
+  },
+  "description_variants": [
+    {
+      "per_purpose_case_bounds": [
+        1,
+        1
+      ],
+      "total": 2,
+      "accepted_description": true,
+      "budget_authority_proven": false,
+      "description_sha256": "72c8037e70081af669a13319523804be7fd7bff2807f84443101ac6f842612fa"
+    },
+    {
+      "per_purpose_case_bounds": [
+        5,
+        5
+      ],
+      "total": 10,
+      "accepted_description": true,
+      "budget_authority_proven": false,
+      "description_sha256": "7e31a6b5e599f1ca8a24e83bd81bcf3a0fc4faeca5b47e687377d69aa0d4fcc5"
+    },
+    {
+      "per_purpose_case_bounds": [
+        1,
+        9
+      ],
+      "total": 10,
+      "accepted_description": true,
+      "budget_authority_proven": false,
+      "description_sha256": "087f3cd800fb67de531154741a291257fb718c447c79f05117b5d11f8214bc79"
+    },
+    {
+      "per_purpose_case_bounds": [
+        6,
+        6
+      ],
+      "total": 12,
+      "accepted_description": false,
+      "budget_authority_proven": false,
+      "description_sha256": "e4a0df7f78e90b132a3a74b6a13354642a3ac22792eaa04f87030a895c1e8efa"
+    },
+    {
+      "per_purpose_case_bounds": [
+        0,
+        0
+      ],
+      "total": 0,
+      "accepted_description": false,
+      "budget_authority_proven": false,
+      "description_sha256": "145797d293f7d53379bb17e99d117e02f7f33b65967c57aaed89f03f1f40ed00"
+    }
+  ],
+  "owner_direct_leg_allocation_derivation": false,
+  "prepared_risk_mode": "original_shared_parent_caps",
+  "database_mutations": 0,
+  "provider_calls": 0,
+  "execution_allowed": false,
+  "limitations": [
+    "pure description acceptance is not native admission",
+    "absence in this reader does not prove absence in every repository entry",
+    "test-owned stored manifest is not formal trust or actual transport"
+  ]
+}

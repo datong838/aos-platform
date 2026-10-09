@@ -1,0 +1,16 @@
+# 完整计划风险语义复审与后继实现边界
+
+本次保留实验库只读查询确认 cluster7694680278363095064、原两case四腿、Target/Judge父上界各10。内存修改每purpose两case描述为1/1、5/5、1/9均纯契约接纳；6/6及0/0拒绝。产品三个文件哈希前后一致，没有库写入或Provider调用。
+
+首次调查脚本错误读取不存在raw列，UndefinedColumn终止只读事务；依据原DDL _BODY修正为body并加精确tenant过滤后五项验证通过。这是调查脚本缺陷，不是产品RED；没有未知外部效果需要重发。
+
+现有 `validate_original_target_judge_manifest` 实际重读两parent、原申请/批准/Rule/治理/费用及锁等待后的期限，但本方法没有每腿金额来源推导。该事实仅覆盖此reader；不能仅用文本不存在宣称所有入口没有来源。新prepared_plan_risk明确original_shared_parent_caps，无每腿金额，与v2描述模型仍要求每腿allocationUpperBoundMinor的语义不一致。三个接纳变体仅描述，不穿过原execution拒绝门，因此不宣称正式预算越权漏洞。
+
+后继完整实施计划（承接1608的共享父风险方案）：
+
+1. 先在原typed-proof Task精确scope登记新共享父风险计划版本及签名域。完整case×purpose仍必须原Suite恰好覆盖；原parent引用/申请/批准/hash/风险10直接绑定，不要求无权威来源的每腿金额或allocationUUID。旧v1/v2描述和验签保持原行为；新版本不自动发行/安装/允许执行。
+2. 原共同caller producer从同一native事务prepared_plan_risk原件生成该完整计划的事实；完整parent字段、case集、purpose集合、source/account、caller/xid、内容hash必须逐项相等，不能客户端拼接一个prepared风险摘要。签名/Target必要reader同步新域，不能仅更换DTO随后复用旧签名。
+3. 实际call准入消费新完整计划与当前待执行leg，保留两父总风险，实际占用独立累计。四腿描述不占并发四个槽；在原Source约束内串行推进，Judge须可信Target结果。保守tokenUnits仍依原tokenizer/envelope权威，不凭客户端数字；trusted终结回执/实际Usage未知保留占用。
+4. 新协议实际提交还受Source硬截止独立协议决策、完整锁图和共同finalizer门约束。禁止把此次描述验证或新签名域测试当joint/transport批准。正式安装、真实费用结算、自然首链均未完成。
+
+自洽与风险：本波没有改产品、预算、旧签名、库卷；保留旧价格三null、完整两个parent10及全部四腿。需要跨typed-proof/atomic/issuer读者原Task协同精确文件scope，不增第二writer。独立Prime复核仍局部待恢复，本复审不冒充独立模型PASS。
