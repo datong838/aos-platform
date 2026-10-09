@@ -1,0 +1,1274 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                                          [100%]
+=================================== FAILURES ===================================
+_____________________ test_real_native_response_roundtrip ______________________
+
+    def test_real_native_response_roundtrip():
+>       v=fixture();m=parse(v);assert m.model_dump(mode='json',by_alias=True)==v
+                      ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:969f46cff9dc19c479f8834b1b7806888212cdb611516a...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_________ test_rejects_resigned_semantic_mutations[executionAllowed-0] _________
+
+path = 'executionAllowed', value = 0
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:969f46cff9dc19c479f8834b1b7806888212cdb611516a...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_______ test_rejects_resigned_semantic_mutations[executionAllowed-True] ________
+
+path = 'executionAllowed', value = True
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:969f46cff9dc19c479f8834b1b7806888212cdb611516a...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_________ test_rejects_resigned_semantic_mutations[countsAsInflight-0] _________
+
+path = 'countsAsInflight', value = 0
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:969f46cff9dc19c479f8834b1b7806888212cdb611516a...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+__ test_rejects_resigned_semantic_mutations[immutable.countsAsInflight-True] ___
+
+path = 'immutable.countsAsInflight', value = True
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:75f966d6a70931ef5fb4facde8198b5bf57fd93c197edd...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+____ test_rejects_resigned_semantic_mutations[immutable.executionAllowed-0] ____
+
+path = 'immutable.executionAllowed', value = 0
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:1b8f5cf73daec1f0dee9bd1ab40177c1e4ac54174378c4...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+__ test_rejects_resigned_semantic_mutations[immutable.initialState-admitted] ___
+
+path = 'immutable.initialState', value = 'admitted'
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:74c08ec04d7bb42280026f492b13de5b285ccd14f70ea5...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_____ test_rejects_resigned_semantic_mutations[initialEvent.state-unknown] _____
+
+path = 'initialEvent.state', value = 'unknown'
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:13c2ee3fcbe12d7cac9739d88f240eaff287deed22351b...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_____ test_rejects_resigned_semantic_mutations[initialEvent.eventSeq-True] _____
+
+path = 'initialEvent.eventSeq', value = True
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:78e836fecb8a20e1c56c4cbb071b94596aca028414335f...-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': True, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+______ test_rejects_resigned_semantic_mutations[initialEvent.eventSeq-2] _______
+
+path = 'initialEvent.eventSeq', value = 2
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:b228e4f770e0e5453e97df6ec096e42b65a834b393c794...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 2, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_ test_rejects_resigned_semantic_mutations[initialEvent.previousEventHash-sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] _
+
+path = 'initialEvent.previousEventHash'
+value = 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:96347bc192db48d4009166617aecfca372c08e98701509...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+___ test_rejects_resigned_semantic_mutations[immutable.tokenUpperBound-True] ___
+
+path = 'immutable.tokenUpperBound', value = True
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:74a587b815be9cbf6e635ba38fe3f9c79be6a33e3bb628...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+____ test_rejects_resigned_semantic_mutations[immutable.tokenUpperBound-0] _____
+
+path = 'immutable.tokenUpperBound', value = 0
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:b6780776dff20aa44fbda229eb79c3076e5002c42e2d19...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+______ test_rejects_resigned_semantic_mutations[immutable.callerPid-True] ______
+
+path = 'immutable.callerPid', value = True
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:009da171bf0dfe013510cbc23fa7cfcae050176666b06a...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_______ test_rejects_resigned_semantic_mutations[immutable.callerXid-0] ________
+
+path = 'immutable.callerXid', value = '0'
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:1a2ae2554fb6b25b148359c8e8445157f83b0b1a64dc97...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+___ test_rejects_resigned_semantic_mutations[immutable.tenant.orgId-dev-org] ___
+
+path = 'immutable.tenant.orgId', value = 'dev-org'
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:e3d0ff20e28aac4e94f2efcd05018dbef24abd285d49a1...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_ test_rejects_resigned_semantic_mutations[initialEvent.tenant.projectId-other] _
+
+path = 'initialEvent.tenant.projectId', value = 'other'
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:731845492cecc7131859388073d013db168ff57c534935...'21f03006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'other'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+___ test_rejects_resigned_semantic_mutations[immutable.callerLogin-aos_app] ____
+
+path = 'immutable.callerLogin', value = 'aos_app'
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:902c306d40f59e6b05e20ebf191b3f827bccd12a80fd9f...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_____ test_rejects_resigned_semantic_mutations[immutable.callId-not-uuid] ______
+
+path = 'immutable.callId', value = 'not-uuid'
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:16f11908ed76d3564bccbb7856ea296de896241f5f064d...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_____ test_rejects_resigned_semantic_mutations[initialEvent.callerPid-99] ______
+
+path = 'initialEvent.callerPid', value = 99
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:9b6010040299cb371b6e36c474e00cbf2a6f80430b5004...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+___ test_rejects_resigned_semantic_mutations[initialEvent.callerXid-999999] ____
+
+path = 'initialEvent.callerXid', value = '999999'
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:6afcf223baa92f4bfbaf1b8f2d48b68130d7b9840ec33a...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_ test_rejects_resigned_semantic_mutations[initialEvent.callId-00000000-0000-0000-0000-000000000001] _
+
+path = 'initialEvent.callId', value = '00000000-0000-0000-0000-000000000001'
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:5ef414c99337f1df943cd07cdc5086167f0d62b6d65ff3...000-0000-0000-0000-000000000001', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_ test_rejects_resigned_semantic_mutations[callId-00000000-0000-0000-0000-000000000001] _
+
+path = 'callId', value = '00000000-0000-0000-0000-000000000001'
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '00000000-0000-0000-0000-000000000001', 'eventHash': 'sha256:969f46cff9dc19c479f8834b1b7806888212cdb611516a...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_ test_rejects_resigned_semantic_mutations[initialEvent.occupationHash-sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] _
+
+path = 'initialEvent.occupationHash'
+value = 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:98091fea861049366947d5ef00c2e2715dcac87444a50c...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+___ test_rejects_resigned_semantic_mutations[immutable.extraPermission-True] ___
+
+path = 'immutable.extraPermission', value = True
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:8c5cf5ecbfcaa3af56384ab6190f8b3a1a2efa7eb15eb4...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_ test_rejects_resigned_semantic_mutations[initialEvent.extraPermission-True] __
+
+path = 'initialEvent.extraPermission', value = True
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:df2072681035737cb8d1baf8b0ca1838c6bc5b46e4be83...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+________ test_rejects_resigned_semantic_mutations[extraPermission-True] ________
+
+path = 'extraPermission', value = True
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:969f46cff9dc19c479f8834b1b7806888212cdb611516a...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_________ test_rejects_resigned_semantic_mutations[immutable.caseId-] __________
+
+path = 'immutable.caseId', value = ''
+
+    @pytest.mark.parametrize('path,value',[
+     ('executionAllowed',0),('executionAllowed',True),('countsAsInflight',0),
+     ('immutable.countsAsInflight',True),('immutable.executionAllowed',0),
+     ('immutable.initialState','admitted'),('initialEvent.state','unknown'),
+     ('initialEvent.eventSeq',True),('initialEvent.eventSeq',2),
+     ('initialEvent.previousEventHash','sha256:'+'a'*64),
+     ('immutable.tokenUpperBound',True),('immutable.tokenUpperBound',0),
+     ('immutable.callerPid',True),('immutable.callerXid','0'),
+     ('immutable.tenant.orgId','dev-org'),('initialEvent.tenant.projectId','other'),
+     ('immutable.callerLogin','aos_app'),('immutable.callId','not-uuid'),
+     ('initialEvent.callerPid',99),('initialEvent.callerXid','999999'),
+     ('initialEvent.callId','00000000-0000-0000-0000-000000000001'),
+     ('callId','00000000-0000-0000-0000-000000000001'),
+     ('initialEvent.occupationHash','sha256:'+'a'*64),
+     ('immutable.extraPermission',True),('initialEvent.extraPermission',True),
+     ('extraPermission',True),('immutable.caseId',''),
+    ])
+    def test_rejects_resigned_semantic_mutations(path,value):
+        v=copy.deepcopy(fixture());p=v
+        keys=path.split('.')
+        for k in keys[:-1]:p=p[k]
+        p[keys[-1]]=value
+        v['occupationHash']='sha256:'+canonical_hash(v['immutable'])
+        if path!='initialEvent.occupationHash':v['initialEvent']['occupationHash']=v['occupationHash']
+        v['eventHash']='sha256:'+canonical_hash(v['initialEvent'])
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:b5e575a2e3aa7d56c467977905994b8572f3ad0b226189...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+______________ test_rejects_content_hash_forgery[occupationHash] _______________
+
+field = 'occupationHash'
+
+    @pytest.mark.parametrize('field',['occupationHash','eventHash'])
+    def test_rejects_content_hash_forgery(field):
+        v=fixture();v[field]='sha256:'+'0'*64
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:51: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:969f46cff9dc19c479f8834b1b7806888212cdb611516a...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+_________________ test_rejects_content_hash_forgery[eventHash] _________________
+
+field = 'eventHash'
+
+    @pytest.mark.parametrize('field',['occupationHash','eventHash'])
+    def test_rejects_content_hash_forgery(field):
+        v=fixture();v[field]='sha256:'+'0'*64
+>       with pytest.raises(ValidationError):parse(v)
+                                            ^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:51: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:0000000000000000000000000000000000000000000000...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+____________________ test_revalidates_constructed_instance _____________________
+
+    def test_revalidates_constructed_instance():
+>       m=parse(fixture());bad=m.model_copy(update={'execution_allowed':True})
+          ^^^^^^^^^^^^^^^^
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = {'callId': '21f03006-4808-4311-aa51-dcbc71c2b5dc', 'eventHash': 'sha256:969f46cff9dc19c479f8834b1b7806888212cdb611516a...006-4808-4311-aa51-dcbc71c2b5dc', 'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'}, 'eventSeq': 1, ...}, ...}
+
+    def parse(v):
+>       return contracts.PhysicalOccupationPreparation.model_validate(v)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_physical_capacity_occupation_contracts' has no attribute 'PhysicalOccupationPreparation'
+
+.evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py:15: AttributeError
+=========================== short test summary info ============================
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_real_native_response_roundtrip
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[executionAllowed-0]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[executionAllowed-True]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[countsAsInflight-0]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[immutable.countsAsInflight-True]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[immutable.executionAllowed-0]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[immutable.initialState-admitted]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[initialEvent.state-unknown]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[initialEvent.eventSeq-True]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[initialEvent.eventSeq-2]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[initialEvent.previousEventHash-sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[immutable.tokenUpperBound-True]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[immutable.tokenUpperBound-0]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[immutable.callerPid-True]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[immutable.callerXid-0]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[immutable.tenant.orgId-dev-org]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[initialEvent.tenant.projectId-other]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[immutable.callerLogin-aos_app]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[immutable.callId-not-uuid]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[initialEvent.callerPid-99]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[initialEvent.callerXid-999999]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[initialEvent.callId-00000000-0000-0000-0000-000000000001]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[callId-00000000-0000-0000-0000-000000000001]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[initialEvent.occupationHash-sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[immutable.extraPermission-True]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[initialEvent.extraPermission-True]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[extraPermission-True]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_resigned_semantic_mutations[immutable.caseId-]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_content_hash_forgery[occupationHash]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_rejects_content_hash_forgery[eventHash]
+FAILED .evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py::test_revalidates_constructed_instance
+31 failed in 0.28s

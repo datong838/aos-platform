@@ -1,0 +1,23 @@
+"""Nonexecuting native physical guard facts; never an allocation permit."""
+from datetime import datetime
+from typing import Literal
+from pydantic import Field,field_validator
+from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+from aos_api.aip_model_eval_execution_contracts import _ModelExecutionContract
+
+
+class PhysicalAccountGuardPreparation(_ModelExecutionContract):
+    source_ref: FormalExactRef
+    physical_account_id: str = Field(pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+    version: int = Field(strict=True,gt=0)
+    xid: str = Field(pattern=r'^[1-9][0-9]*$')
+    pid: int = Field(strict=True,gt=0)
+    checked_at: datetime
+    execution_allowed: Literal[False]
+
+    @field_validator('execution_allowed',mode='before')
+    @classmethod
+    def _false(cls,value):
+        if type(value) is not bool or value is not False:
+            raise ValueError('native nonexecuting guard required')
+        return value

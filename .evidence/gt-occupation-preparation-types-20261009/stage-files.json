@@ -1,0 +1,14 @@
+[
+  ".evidence/gt-occupation-preparation-types-20261009/adjacent-r1.log",
+  ".evidence/gt-occupation-preparation-types-20261009/finalize_wave.py",
+  ".evidence/gt-occupation-preparation-types-20261009/fixture-reference.json",
+  ".evidence/gt-occupation-preparation-types-20261009/green-r1.log",
+  ".evidence/gt-occupation-preparation-types-20261009/original-contract.py.txt",
+  ".evidence/gt-occupation-preparation-types-20261009/plan.md",
+  ".evidence/gt-occupation-preparation-types-20261009/red-r1.log",
+  ".evidence/gt-occupation-preparation-types-20261009/review.md",
+  ".evidence/gt-occupation-preparation-types-20261009/static-review.json",
+  ".evidence/gt-occupation-preparation-types-20261009/task.json",
+  ".evidence/gt-occupation-preparation-types-20261009/test_preparation_types.py",
+  "services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py"
+]
