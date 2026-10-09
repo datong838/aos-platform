@@ -1,0 +1,35 @@
+{
+  "authority_revision": "AOS-001647",
+  "head": "96575c9ea3de506c4cbde999d9feab2bf31908bb",
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/current-source-full337-resource-pause-reference-1646.json",
+      "sha256": "6f5bb1da3fca2c55dc7e8d07684aa60b3b7a4bb4572ad16a74ebc598f17f982f"
+    },
+    {
+      "path": ".evidence/gt-source-tail48-resume-20261009/review.md",
+      "sha256": "34ad7817012a9760486a52294fb92fbcd8cf50d84f91309418c8a01781034a84"
+    },
+    {
+      "path": ".evidence/gt-source-tail48-resume-20261009/independent-tail44-terminal-verification.json",
+      "sha256": "967d177b6702d820b71ef3f4b5172edd87a70470e03d4329d43aae537f8f1be3"
+    },
+    {
+      "path": ".evidence/gt-source-tail48-resume-20261009/migration-head-failure-independent.json",
+      "sha256": "3f27e18b57ef26f46361d880fad36f6cf94647d39b1b22c9c26425b17d46c954"
+    },
+    {
+      "path": ".evidence/gt-source-tail48-resume-20261009/expired-setup-r3-independent.json",
+      "sha256": "62f72be6437b3830e5ac42d042e33566b07b31d3a47afcc64f852e9b81040169"
+    },
+    {
+      "path": ".evidence/gt-source-tail48-resume-20261009/remaining-four.json",
+      "sha256": "f017f71bd70b92f1e51c300a607832fe979a81a1444220c2ba85c894f1500dc8"
+    },
+    {
+      "path": ".evidence/gt-source-tail48-resume-20261009/exact-migration-oracle-change.json",
+      "sha256": "f9e015941f91fd680f9f62f03661c6d8bfc28b841f9a87294e55d8407632941f"
+    }
+  ],
+  "execution_allowed": false
+}

@@ -1,0 +1,162 @@
+{
+  "authority_revision": "AOS-001647",
+  "evidence_commit": "96575c9ea3de506c4cbde999d9feab2bf31908bb",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-tail48-resume-20261009",
+    "base_revision": "AOS-001646",
+    "completed_revision": "AOS-001646",
+    "result": "SOURCE_TAIL44_PASS_CURRENT_MIGRATION_ORACLE_REPAIRED_FOUR_STORAGE_PENDING",
+    "changed_files": [
+      ".evidence/gt-source-tail48-resume-20261009/collection-failure-r1.json",
+      ".evidence/gt-source-tail48-resume-20261009/exact-migration-oracle-change.json",
+      ".evidence/gt-source-tail48-resume-20261009/expired-setup-r3-independent.json",
+      ".evidence/gt-source-tail48-resume-20261009/independent-tail44-terminal-verification.json",
+      ".evidence/gt-source-tail48-resume-20261009/independent-tail44.log",
+      ".evidence/gt-source-tail48-resume-20261009/input-bindings-r3.json",
+      ".evidence/gt-source-tail48-resume-20261009/input-bindings.json",
+      ".evidence/gt-source-tail48-resume-20261009/lab.json",
+      ".evidence/gt-source-tail48-resume-20261009/lease-preflight.json",
+      ".evidence/gt-source-tail48-resume-20261009/migration-head-failure-independent.json",
+      ".evidence/gt-source-tail48-resume-20261009/native-tail48-r1-attempt.json",
+      ".evidence/gt-source-tail48-resume-20261009/native-tail48-r1-result.json",
+      ".evidence/gt-source-tail48-resume-20261009/native-tail48-r1.log",
+      ".evidence/gt-source-tail48-resume-20261009/native-tail48-r2-attempt.json",
+      ".evidence/gt-source-tail48-resume-20261009/native-tail48-r2-result.json",
+      ".evidence/gt-source-tail48-resume-20261009/native-tail48-r2.log",
+      ".evidence/gt-source-tail48-resume-20261009/native-tail48-r3-attempt.json",
+      ".evidence/gt-source-tail48-resume-20261009/native-tail48-r3-result.json",
+      ".evidence/gt-source-tail48-resume-20261009/native-tail48-r3.log",
+      ".evidence/gt-source-tail48-resume-20261009/native-tail48-r4-attempt.json",
+      ".evidence/gt-source-tail48-resume-20261009/native-tail48-r4-result.json",
+      ".evidence/gt-source-tail48-resume-20261009/native-tail48-r4.log",
+      ".evidence/gt-source-tail48-resume-20261009/parent-checkpoint-lease-renewals.json",
+      ".evidence/gt-source-tail48-resume-20261009/plan.md",
+      ".evidence/gt-source-tail48-resume-20261009/process.json",
+      ".evidence/gt-source-tail48-resume-20261009/register_stage.py",
+      ".evidence/gt-source-tail48-resume-20261009/remaining-four.json",
+      ".evidence/gt-source-tail48-resume-20261009/resource-baseline.json",
+      ".evidence/gt-source-tail48-resume-20261009/review.md",
+      ".evidence/gt-source-tail48-resume-20261009/run_tail48.py",
+      ".evidence/gt-source-tail48-resume-20261009/run_tail48_r2.py",
+      ".evidence/gt-source-tail48-resume-20261009/run_tail48_r3.py",
+      ".evidence/gt-source-tail48-resume-20261009/run_tail48_r4.py",
+      ".evidence/gt-source-tail48-resume-20261009/selection.json",
+      ".evidence/gt-source-tail48-resume-20261009/source-lease-renewal.json",
+      ".evidence/gt-source-tail48-resume-20261009/tail48-r2-collection.json",
+      ".evidence/gt-source-tail48-resume-20261009/tail48-r2-connections.jsonl",
+      ".evidence/gt-source-tail48-resume-20261009/tail48-r3-collection.json",
+      ".evidence/gt-source-tail48-resume-20261009/tail48-r3-connections.jsonl",
+      ".evidence/gt-source-tail48-resume-20261009/tail48-r4-collection.json",
+      ".evidence/gt-source-tail48-resume-20261009/tail48-r4-connections.jsonl",
+      ".evidence/gt-source-tail48-resume-20261009/task.json",
+      ".evidence/gt-source-tail48-resume-20261009/verify_tail44_readonly.py"
+    ],
+    "commits": [
+      "96575c9ea3de506c4cbde999d9feab2bf31908bb"
+    ],
+    "verification": [
+      "Original48tail r1 pathcollection no effect; r2 actual2PASS1FAIL34.51s migrationhead159 versus old157 oracle independently3DBzeroSource diagnosed",
+      "Only migrationhead test uses exact codeheads and real157 ancestry; originaltable/role/public-interface controls and allotherAST preserved; r3 knownexpiry setup2PASS1ERROR40.32s independently4DBreconciled no replay",
+      "r4 actual44PASS1diskguardSETUPERROR421.94s4pending; independent44DB4nativeC signed committed Source rows1963inputhashes/fullfoundationACLlock/roles/tempcleanup/durability/protectedresources; no full386 green"
+    ],
+    "risks": [
+      "Original remaining4 and full386 single cumulative still pending; Colima20GiB capacity not increased by Desktop migration",
+      "Actual final COMMIT expiry counterexample and joint/naturalfirstchain still open; no formal permission or modelreviewPASS"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T19:42:16+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001647-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001647"
+  },
+  "checkpoints": {
+    "gt-atomic-model-admission-20261008": {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001647",
+      "step": "source-tail44-migration-head-repaired-four-storage-pending-final-commit-pending",
+      "fingerprint": "a362c7b98e08198f3c1cae19ef15b5790053ce8b374710ce01f026d2946ea829",
+      "task_base_revision": "AOS-001537"
+    },
+    "gt-model-typed-proof-20261008": {
+      "task_id": "gt-model-typed-proof-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001647",
+      "step": "source-tail44-migration-head-repaired-four-storage-pending-final-commit-pending",
+      "fingerprint": "f16c2aeeefe84156ddcf31c748995802883e6e5704faf4a98a428c1956d2f39c",
+      "task_base_revision": "AOS-001513"
+    },
+    "gt-judge-call-authority-20261008": {
+      "task_id": "gt-judge-call-authority-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001647",
+      "step": "source-tail44-migration-head-repaired-four-storage-pending-final-commit-pending",
+      "fingerprint": "14efc843b48002e811595a85a89d66952ae86974aef4b407bd6367c866321d3c",
+      "task_base_revision": "AOS-001578"
+    },
+    "gt-judge-budget-parent-20261008": {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001647",
+      "step": "source-tail44-migration-head-repaired-four-storage-pending-final-commit-pending",
+      "fingerprint": "4823e1f54c3e8a0c1564ff4ee44d4518aae9b712f47ab1e159f1eccdf6868cb3",
+      "task_base_revision": "AOS-001588"
+    },
+    "gt-shared-budget-fence-order-20261008": {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001647",
+      "step": "source-tail44-migration-head-repaired-four-storage-pending-final-commit-pending",
+      "fingerprint": "55735ee5986bc4cb2488172ed95c8468e72341db6b8917a96dbe82cc26c3b23e",
+      "task_base_revision": "AOS-001588"
+    }
+  },
+  "original_source_task": "ACTIVE",
+  "full_source_delivery": false,
+  "goal_status_changed": false
+}
