@@ -1,0 +1,28 @@
+{
+  "authority_revision": "AOS-001663",
+  "task": "gt-judge-budget-parent-20261008",
+  "head": "7dfc7738c2ba220b2d97a3b492fa5d1eab0175cf",
+  "execution_allowed": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/current-original-target-signing-reference-1662.json",
+      "sha256": "23713e85c668f8976761b15e13ff9099860c73e2cf431d193b27a4b50476f1fc"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/original-target-crypto-plan-1662.md",
+      "sha256": "ccfb0e9b470a1123e6169fd16f7e42a130e63f0ee2686d9704a62a9e057005a2"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/original-target-crypto-pure-result-r3-1662.json",
+      "sha256": "c5fd524366a0545686db6c2e9dcdf9b8a44d3b39f1aa758d3763395dd7e8bc66"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/original-target-crypto-review-1662.md",
+      "sha256": "5ca141fbe671d27e4d324d7b0c4f7b450eaa5c53b4d4a4493971374726d13ef1"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/original-target-crypto-ast-final-1662.json",
+      "sha256": "35bafbbd8181d3f71efb9696b3598b09f75792ae90a16f19d428d27db963e66a"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001662",
+  "authority_revision": "AOS-001663",
   "code_files": [
     "services/aos-api/aos_api/aip_action_policy.py",
     "services/aos-api/aos_api/aip_action_store.py",
@@ -43,12 +43,12 @@
     ".evidence/gt-judge-call-authority-20261008/published-rule-reader-reference.json",
     ".evidence/gt-judge-call-authority-20261008/published-rule-currentness-reference.json",
     ".evidence/gt-judge-call-authority-20261008/exact-signed-rule-suite-reference.json",
-    ".evidence/gt-judge-call-authority-20261008/current-original-target-signing-reference-1662.json"
+    ".evidence/gt-judge-call-authority-20261008/current-original-target-crypto-reference-1663.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "original-v2-target-trusted-certificate-envelope-and-committed-consumer",
+  "step": "original-target-native-intent-source-joint-and-committed-producer",
   "task_base_revision": "AOS-001578",
   "task_id": "gt-judge-call-authority-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
