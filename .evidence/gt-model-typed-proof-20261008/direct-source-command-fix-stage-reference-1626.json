@@ -1,0 +1,18 @@
+{
+  "authority_revision": "AOS-001626",
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/direct-source-command-fix-stage-reference-1625.json",
+      "sha256": "181aeeac390a9fc9c3bdd52f10ccab017122a0f2f64205e6f64126d11ae15af6"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/authority-path-correction.json",
+      "sha256": "bfc4b83f834d8f25297c73b7153d9f46177accbf32e0477718d5086bd764614a"
+    },
+    {
+      "path": ".evidence/gt-capacity-occupation-source-20261007/plan.md",
+      "sha256": "2b46dbf193a902d6cc651c556edd916d327129042e00cd49d950a0e83e59ee04"
+    }
+  ],
+  "execution_allowed": false
+}

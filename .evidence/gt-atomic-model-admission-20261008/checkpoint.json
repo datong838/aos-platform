@@ -4,7 +4,7 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-atomic-model-admission-20261008",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001625",
+  "authority_revision": "AOS-001626",
   "task_base_revision": "AOS-001537",
   "step": "direct-source-command-fix-native-green-original-source-full-review-next",
   "code_files": [
@@ -47,6 +47,6 @@
     ".evidence/gt-atomic-model-admission-20261008/original-source-whole-plan-checkpoint.md",
     ".evidence/gt-atomic-model-admission-20261008/original-source-whole-plan-cumulative-r2-result.json",
     ".evidence/gt-atomic-model-admission-20261008/original-source-whole-plan-independent-r2.json",
-    ".evidence/gt-atomic-model-admission-20261008/direct-source-command-fix-stage-reference-1625.json"
+    ".evidence/gt-atomic-model-admission-20261008/direct-source-command-fix-stage-reference-1626.json"
   ]
 }

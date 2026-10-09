@@ -4,7 +4,7 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-judge-call-authority-20261008",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001625",
+  "authority_revision": "AOS-001626",
   "task_base_revision": "AOS-001578",
   "step": "direct-source-command-fix-native-green-original-source-full-review-next",
   "code_files": [
@@ -50,6 +50,6 @@
     ".evidence/gt-judge-call-authority-20261008/published-rule-reader-reference.json",
     ".evidence/gt-judge-call-authority-20261008/published-rule-currentness-reference.json",
     ".evidence/gt-judge-call-authority-20261008/exact-signed-rule-suite-reference.json",
-    ".evidence/gt-judge-call-authority-20261008/direct-source-command-fix-stage-reference-1625.json"
+    ".evidence/gt-judge-call-authority-20261008/direct-source-command-fix-stage-reference-1626.json"
   ]
 }

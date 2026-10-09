@@ -1,0 +1,93 @@
+# 业务事务用途的独立容量Source消费边界
+
+基线m1@9bc6ef7b / AOS-001464，已批准GT-b4普通/Eval同caller容量/预算/Intent原子路径的依赖。原pool caller内核已通过，不代替physicalAccount共享占用。原consumer固定issuer session，普通kernel固定runtime current role；独立连接之间的bool/DTO交接不能证明业务事务currentness。
+
+精确本波文件：services/aos-api/aos_api/aip_provider_capacity_occupation_source.py、新测试services/aos-api/tests/aip/test_capacity_occupation_source_pg.py、本证据目录；原Source transaction测试只在原ACTIVE同owner Lease内增加新case到隔离数据库登记器和显式consumer fixture集合，不改原测试行为。日志沿原publication同owner证据scope保留。本波尚不新增正式迁移/LOGIN配置，不改old private41/original17/default9/SourceIssuer ACL。
+
+固定新服务session为aos_provider_capacity_occupation，只是待部署的独立后端数据库身份。隔离测试新建NOINHERIT/无超级权限角色，以测试随机SCRAM密码开启LOGIN，仅member aos_runtime，在同一连接SET LOCAL ROLE aos_runtime、positive scope、UTC、SERIAL/read-write。新用途publicSECDEF Source入口必须由原SourceOwner拥有、固定pg_catalog并撤PUBLIC；执行权只给runtime，函数SQL/Python同时要求独立session，因此现普通runtime session不能误用。未正式安装/可信配置不启用生产。测试角色结束关闭LOGIN、撤runtime membership，保留身份记录；不删除库卷或Source。
+
+完整编译合同：静态复用可信consumer完整重组/C签名/映射/root/permit/origin及三次当前重验，不从DB或caller获取自由SQL。仅新profile静态inline完整原read_original_source_facts，原上下文session检查专门换成occupation，current_user仍SourceOwner；原helper/批准/Owner/Provider/Evidence/withdrawal/registry/global锁全部保留，不修改旧部署函数。历史原Source native_session仍必须issuer，新当前facts session单独核为occupation；比较历史facts时仅排除明确当前native xid/pid/session，不能改历史原文/认证时间/issuer记录。消费JWT每次真实验证，SQL前后再验；旧deadline仍只对signed issuedAt作历史有效性判断。新入口只接受独立consumption协议，不接旧issuancepacket，不能以新的caller角色签发Source。
+
+新profile必须自审完整原私有安装、epoch锁/原事实ACL、自己的完整SQL/Owner/ACL/参数/返回值/属性/重载、caller角色/membership/有效权限。额外公共函数不放入旧issuer whitelist、不给issuer/runtime私有schema/table权限；旧入口审计字节保持。完整正式role/config/SQL安装来源另门，不由隔离test-only角色证明。
+
+RED：两布局原独立批准+注册原文→原public prepare/test fixture Ed25519 sign→原commit→actual callerCOMMIT。新native SCRAM occupation session且currentrole runtime，不同xid/PID；先原native Source入口42501拒绝、原Pythonissuer consumer拒绝，再调用新consume_capacity_source_for_occupation同caller读取原exact Source。新module不存在时RED必须发生在真实Source durableCOMMIT之后，不能只import失败代替行为。测试签名/真实OIDC与Owner数据均来自现夹具，不造经营READY。后续GREEN须Source bytes/hash/非执行一致、不同合法Owner、错误/过期JWT和Source/ref/root/permit/origin/原批准/currentmembership拒绝、真实writer-first/reader-first和等待后到期、无Source/attempt/mapping写入、pool caller结合后失败全回滚。原角色/定义旧路径累计回归。
+
+锁图仍原Source批准/Owner/Provider→Evidence/withdrawal→registry/root/doc/global，然后全域occupation/普通pool/预算/Intent必须统一与所有writer对照；新Source读取不宣称组合全图已安全。完整sharedoccupation旧义务切换、submitted/unknown保持、正式用途授权及一次Intent、Source实际COMMITTTL继续pending。本Task保持ACTIVE直到完整profile验收，不以RED/helper或纯计划开Source/业务Delivery。
+
+首轮red-r1为2FAILED30.27s，但失败点是新测试消费请求漏填原必填schemaVersion，不是业务caller反例；原signed Source已COMMIT，尚未进入nativeoccupation连接，不能把此轮当预期RED。补schemaVersion=1，不放宽原DTO。隔离fixture角色cluster级跨测试库保留；新建时加本fixture归属comment，后续仅在comment完全相符、NOLOGIN/无高权/无membership时复用，再生成新临时SCRAM密码；不依赖TTL或盲覆盖未知角色。
+
+修正后red-r2：2FAILED/32.34s/7existingwarnings/noSKIP，两例均actualSourceCOMMIT→新native SCRAM occupation session/currentrole runtime/不同xidPID→旧public消费者原生42501及旧Pythonissuer身份拒绝→缺新occupation_source module。独立verify-red.py对六保留隔离库SER READ ONLY回读四durableSource，C签名/hash/finalized/历史issuer xidPIDsession一致；其中两条来自首轮fixture缺版本字段失败，不计有效行为RED。旧测试临时public3/privateaudit均恢复移除；新测试role已NOLOGIN/无membership/无高权，原Source/签名全保留。具体log/test SHA及当前dirtytest状态绑定red-verification.json，未将RED作为profile验收或父Delivery，也不制造失败提交刷新进展。
+
+新profile实现具体入口冻结为public.read_capacity_source_for_occupation(bytea,jsonb)及public.require_capacity_occupation_source_installation()：前者SECDEF/SourceOwner、固定pg_catalog、EXECUTE仅runtime；后者SECURITY INVOKER/SourceOwner、EXECUTE仅Owner，提供前者完整可信定义/ACL/参数与role/current原安装的原生审计。两者均public命名空间，避免新增旧私有41清单或改私有schema权限。独立Python入口先审两完整定义及新role/session/SCRAM/事务，再验证JWT和调用；SQL入口只放独立consumption协议，完整共享旧Source构造/签名与原facts可信静态inline。原issuer未获两个新函数执行权，不能对原白名单放宽；原private/default/legacy函数字节必须保持。迁移/正式部署不在本波；先在当前隔离ownedfixture临时显式安装两个函数，结束精确恢复，再独立注册默认NOLOGIN部署门。
+
+## 原生身份失败后的方案修订（2026-10-07）
+
+green-r2 两布局均 2FAILED/29.18s，实际错误为 CAPACITY_EVIDENCE_PRIVATE_ISSUER_REQUIRED。a0v_150 的 ISSUER_LOCK_BODY 精确检查 session_user，SECDEF 只改变 current_user；新 occupation session 即使进入 SourceOwner，仍不满足旧 issuer-only session。原事实编译体第393行继续调用 issuer_lock，原方案“仅换顶层 session 后保留全部旧 helper 即可工作”的兼容性假设已被真实 PG 证据推翻，不得报告实现可用。
+
+候选一：已登记 Source 完整 currentness/epoch 与新业务用途 profile 的联合实现。新增用途锁入口必须与 EvidenceOwner 额外对象审计、SourceOwner 精确外部函数对、原 Source 安装审计同时设计；先另登记精确文件 Task/Lease，再实现能够识别旧布局与新布局的完整审计，二者均保持精确拒绝未知函数/ACL。不能在当前排除 old private41/ACL expansion 的 Task 内私自改旧 helper/迁移。旧 issuer-only lock 的身份检查、函数原文和 ACL 不得为新用途放宽；仅增加函数而绕过旧额外对象检查也不成立。此候选承接已批准同caller Source→occupation→budget+Intent路线，不引入第二写者或正式授权。
+
+候选二：现 caller-owned 普通 pool 内核与 Source 组合的负门/异常回滚验证，属于已登记 GT-b4 原子路径；依赖 Source 正向 profile，但可先登记未安装/身份不匹配拒绝及零 reservation/event/Intent 的负门，不能拿负门替代完整组合正向。优先处理候选一的审计兼容性，因为它直接阻断合法业务 caller 读取。
+
+明确排除：冒充 issuer session、把 occupation 加入 issuer membership、从 caller 自报 epoch/bool 作为 currentness、改旧锁判断为允许任意 session、为绕审计把辅助对象藏到另一 schema、或使用跨连接读取 DTO 冒充同事务原子性。下一实现须保留全部原锁序、FOR SHARE 到实际 callerCOMMIT/rollback、writer-first/reader-first与旧快照拒绝；审批/Evidence/withdrawal/Owner/root/permit/origin与C签名完整重验继续适用。
+
+本轮先新增编译边界回归：完整新用途 reader 不得残留原 issuer-only epoch 调用。它是结构负门，必须结合已有真实 PG 身份失败判断，单独通过不证明新锁语义或正式可用。当前实现尚未修复，预期 RED；保存原日志和文件 hash，父 Task/Goal 保持 ACTIVE。
+
+进一步比较最小实现：原 public.aos_capacity_evidence_epoch_lock 已供 runtime 使用，原 LOCK_BODY 自带 exacttenant、FOR SHARE 和 epoch 初始化，不限 issuer session。可优先评估“新用途精确安装 profile 为 SourceOwner 增加该既有中立函数的单独 EXECUTE，同时以显式编译参数生成三入口精确锁边界/原Evidence ACL审计”；不必另复制中立锁算法。默认旧编译参数仍产生原两入口、原函数hash和ACL，新增 profile 必须绑定完整 manifest，不能接受任意附加 grants。旧 issuer_lock 的定义/身份检查保持原样，旧布局累计仍须通过；新布局的完整私有审计 hash 自身更新属于明确新增用途支持，须另Task登记，不能继续声称新布局private41全部原文字节不变。本轮未执行该权限/审计变更；需核现有父Task重叠Lease后登记实施，并先做两布局精确拒绝第三未知函数/ACL RED。
+
+编译回归实际1FAILED/5.68s/7existingwarnings/noSKIP，断言揭示新用途 reader 内仍有 issuer-only 调用，与前述真实 PG 两布局失败一致。首次直接 pytest 启动错误地走默认5433夹具，在连接拒绝处ERROR，没有数据库动作；已改用原受控隔离runner完成回归，不将夹具ERROR计为业务RED。此次保留所有库、卷和Source，无代码修复/Delivery/提交/正式资源改动。
+
+后续联合 epoch-profile Task 已实现显式可信三入口审核，不改旧默认SQL/issuer-only锁；本新reader现固定使用原中立Evidence lock，预期完整private Source安装审核hash绑定新profile。真实两布局signedSource issuer实际COMMIT→native occupation SCRAM/runtime/current同xid消费通过，结构回归不再残留issuer-only调用。epoch-profile完整专项+原桥累计33PASS176.74s，原issuer native/public/Python与旧消费者新三入口兼容已分别通过；独立恢复核查见对应epoch-profile证据。该进展替代上文“保留旧helper完全不变即可成功”的假设，仅默认编译SQL保持不变；新安装布局明确替换两个epoch审核及全private Source审核，并重编译原public guard的审核hash。新的用途role有效权限全部负门、独立Owner、writer/reader/等待JWT到期、同caller Source/pool/预算/一次Intent、正式身份部署与实际COMMITTTL仍pending；本Task保持ACTIVE，不以先期正向或隔离审核Delivery。
+
+## 2026-10-07 17:03 新用途身份最小权限负门
+
+先在现有shared/distinct两布局中追加真实已提交权限漂移：occupation直接表SELECT、列SELECT、public schema CREATE、当前数据库CREATE/TEMP、直接reader EXECUTE、自身default privileges、INHERIT、CREATEDB及runtime membership ADMIN OPTION。每项admin实际COMMIT后，业务caller从新SERIAL事务读取真实signed Source，必须由原生CAPACITY_OCCUPATION_CONTEXT_REQUIRED/42501拒绝，而非JWT过期/快照旧/其他安装漂移；错误后caller rollback释放锁，再admin精确逆操作并COMMIT，刷新真实JWT复验相同Source。初次先真实RED，再最小修改_context_checks，不改变原issuer/defaultSQL、正式库或既有Source。
+
+检查基于catalog直接ACL及occupation自有default ACL，不将PUBLIC继承的基线CONNECT/TEMP或runtime既有业务权限一概判错；唯一允许occupation直接currentdatabase CONNECT且不可转授，其他显式ACL/defaultACL均拒绝。对象ACL覆盖table/column/function/schema/database，grantor异常与grantoption也拒绝。角色已有高权/owned对象/membership门保持，runtime本身权限需后续独立冻结审核。每项finally恢复已知故障grant，禁止删库/卷/备份。两布局真实负门通过仍不是全原子occupation/budget/Intent交付；新purpose concurrency及COMMITTTL继续pending。
+
+实际red-r1 2FAILED1PASS32.66s，两布局首项direct tableSELECT均DID NOT RAISE；原入口可正常返回Source，确认不是fixture/JWT失败。最小补齐catalog表/列/函数/schema/database/defaultACL审计后green-r1 3PASS47.42s/noSKIP，每布局10类真实已提交故障均原生42501/CAPACITY_OCCUPATION_CONTEXT_REQUIRED，精确恢复后合法Source消费均重新通过。随后增加数据库CONNECT非转授正向、CONNECT grantoption负门及他role defaultACL授予occupation负门，两布局共12类。保留PUBLIC基线及既有runtime权限，不把“没有任何有效权限”作为合法条件；所有direct grant必须受明确profile允许。
+
+最终本轮green-r2：11PASS154.27s/7existingwarnings/noSKIP，包含新用途shared/distinct各12类已提交权限故障（24次原生42501拒绝），每次精确恢复后合法消费通过，当前数据库CONNECT且无grantoption正向通过；完整原生epoch profile/原签发Python/public/旧consumer兼容同时通过。独立verify-privileges.py以SER READ ONLY回读11保留隔离DB，核两条durableSource C签名/hash/finalized/原issuer xidPIDsession；occupation role NOLOGIN/无成员/无高权，表/列/函数/schema/database直接ACL和自身/授予自身defaultACL清零，旧两audit全文及neutral额外grant/新临时接口恢复。证据privilege-verification.json绑定当前代码/测试/日志/独立脚本hash。
+
+方案一致性：仅补新用途_context_checks；原Source签发算法/DTO/历史内容、旧issuer-only锁及默认SQL不改。所有故障先admin真实COMMIT、再新SERIALcaller读取，避免以未提交故障或旧snapshot伪证负门；拒绝精确断言原生错误代码与消息，避免JWT到期代证。该验证仅覆盖已列直接权限与角色故障；runtime自身flags/间接角色与其他catalog ACL表面仍待冻结审计。purpose writer-first/reader-first/等待JWT到期、独立Owner currentness、共享physicaloccupation/预算+一次Intent/最终COMMITTTL尚未收口。无正式资源/用户既有数据改动，无Source/epoch-profile Delivery或提交；Goal继续ACTIVE。
+
+## 2026-10-07 17:11 原生runtime与membership冻结
+
+沿已登记role有效权限矩阵继续两布局实际已提交故障，不增正式身份/代码写者。PostgreSQL16角色membership的ADMIN、INHERIT、SET三个独立维度必须分别冻结：occupation只允许runtime membership，ADMIN=false、INHERIT=false、SET=true。现有rolinherit=false并不等价membership inherit_option=false，因此新增真实GRANT WITH INHERIT TRUE负门。runtime必须原安装NOLOGIN/NOINHERIT/无SUPERUSER/CREATEDB/CREATEROLE/REPLICATION/BYPASSRLS；在ownedlab且无其他测试进程时先回读其7flags全false，再逐项临时实际COMMIT、入口原生拒绝、finally精确恢复全false并复验合法Source。初轮先membership INHERIT实际RED，然后最小新context审核，所有旧默认SQL/原角色正式配置保持。若连接scope门先拒绝而非新入口，按精确失败归因调整测试，不拿无关失败代证。测试/入口文件仍原Task scope；本scope不执行正式runtime ALTER。SET=false本身使合法SET ROLE不能进入，用原生SET拒绝另验，不能声称经Source context拒绝。
+
+角色补强实际RED2FAILED1PASS54.01s，两布局membership INHERIT TRUE均DID NOT RAISE，前12类负门已经拒绝。最小_context_checks补membership ADMIN=false/INHERIT=false/SET=true及runtime七flags全false后green-r1 3PASS65.33s/noSKIP，每布局20类实际COMMIT故障、原生42501/CAPACITY_OCCUPATION_CONTEXT_REQUIRED、逐项恢复后正向全部通过。
+
+## 2026-10-07 新用途Source真实竞争与等待到期
+
+复用同两布局实际signedSource和nativeoccupationSCRAM caller，新增已登记currentness/epoch验收：reader-first调用完整新Source入口并保持原caller事务，独立3个adminwriter对原bundle/sourceproposal/allocationproposal epoch行执行UPDATE epoch=epoch；每行必须已存在且rowcount1，观察pg_blocking_pids证明三个真实writer均被业务callerPID阻塞，随后实际callerCOMMIT释放，三writer完成且原epoch值不变。不是旧primitive harness，不装测试绕过函数。
+
+writer-first选择相同真实Evidence行SELECT FOR UPDATE（不改变epoch与snapshot内容），独立业务线程用剩余3秒真实JWT进入完整消费；pg_blocking_pids必须证明等该原生writerPID，等真实exp+0.1秒再writerCOMMIT，读线程必须报CAPACITY_CURRENT_SOURCE_EXPIRED/22023（完整原生末尾clock_timestamp检查），callerROLLBACK后刷新JWT仍同Source正向。仅time.monotonic与真实UTC计时，不mock时间/Source/授权。线程timeout<=8秒、finally释放caller/writer并join，未知写结果不重发，原库/卷/Source全部保留。此证据不替代最终COMMITTTL或sharedphysical/budget+Intent。
+
+本轮完整新用途专项3PASS77.51s/7existingwarnings/noSKIP：两布局各20类实际已提交role/ACL漂移均原生拒绝（40次）、精确恢复后正向通过；完整Source reader-first真实三个epoch writer阻塞业务callerPID且实际callerCOMMIT后完成，旧epoch值0保留；writer-first真实Evidence FOR UPDATE等待使有效JWT跨过真实exp，完整原生consumer末尾CAPACITY_CURRENT_SOURCE_EXPIRED/22023拒绝，freshJWT恢复正常。独立SER READ ONLY核3保留DB/2durableSource C签名/hash/finalized/历史issuer，role及runtime七flags全false，occupation无membership/ACL/defaultACL，旧完整audit/neutralgrant/临时新接口精确恢复。native-concurrency-verification.json绑定当前代码/测试/脚本及真实logSHA；旧privilege-verification.json保留历史12类证据不重写。
+
+相邻回归4PASS54.74s/4deselected/7existingwarnings/noSKIP：原Python全安装/Evidence/withdrawal审核与旧consumer在新三入口profile存续期仍接受真实Source。未扩大为所有role/功能全过；ownership/间接权限/其他catalog ACL、独立Owner/current原maker变更、真正writer修改后的旧snapshot拒绝、正式安装identity配置与共享occupation/预算Intent/最终COMMITTTL继续登记。代码与方案一致性复查：新context固定PG16会员三属性，runtime全flags拒绝；无SQL自安装/请求DDL，测试fault只在ownedlab真实COMMIT并finally逆恢复。并发writer只UPDATE epoch=epoch或SELECT FOR UPDATE，非撤销/新签发，不能声称撤销首链或预算Intent完成。无正式库/服务/Provider动作、无Source/epoch-profile Delivery/提交，Goal ACTIVE。
+
+## 2026-10-07 17:24 独立Owner与签名Origin真实撤销
+
+沿当前ACTIVE Source Task，两布局原签名Source/occupation原生SCRAM/runtime/SERIALcaller复用。仅在owned test DB注册新的独立Owner membership（非历史maker/checker），真实fixture OIDC签名当前JWT读取完整Source必须精确相同且nonexecuting。逐项临时将新consumer降为viewer/editor、原maker降为viewer，admin实际COMMIT后新caller快照必须原生CAPACITY_ORIGINAL_OWNER_REQUIRED/22023；finally原role精确恢复，freshJWT同Source正向重验。继而8认证故障、5exactref故障负门，不把这些拒绝当正式身份部署通过。membership SET=false原生SET ROLE拒绝单独验证，并恢复SET=true。
+
+最后调用现有_integrated_signed_origin_withdrawal，以同ownedfixture anchor签名真实撤销文档；原policyPublisher SESSION AUTHORIZATION经既有withdraw_origin并实际COMMIT，检查精确返回hash/原文/签名及prior1→new2。 fresh独立Owner JWT从新的native交易读取同Source必须被原生拒绝。保留不可变撤销记录/新Owner/签名Source，不逆转真实撤销；用_private_source_row_fingerprint核globalAccount/globalProvider/pending/publication/provenance全字段未改。所有活动仅owned隔离lab，无正式Provider/商城/服务影响。初轮直接验已有实现，若失败先完整根因再最小修改；Source/epoch-profile仍不Delivery，sharedphysical/预算Intent与最终COMMITTTL待闭合。
+
+首次r1 2FAILED1PASS80.93s：独立Owner正向与consumer viewer/editor降级均已通过，第三项历史maker降级被完整原事实投影拒绝，但原生返回NoDataFound/P0002，而测试统一期望后续CAPACITY_ORIGINAL_OWNER_REQUIRED/22023。可信新reader第185行SELECT original_source_ref当前完整投影INTO STRICT，先于第324行require_original_owner(p_maker)；失权maker被投影过滤，无匹配行。不是安全绕过/合法正向失败，不修改产品逻辑以迎合测试；最小更正测试按subject角色精确归因：consumer失权要求22023原Owner门，原maker失权要求P0002且diag context来自完整新reader。两种均必须故障前正向/已提交真实membership降级/finally恢复再正向，Source全字段不变。r1尚未执行签名撤销，不能计撤销通过。
+
+r2 2FAILED1PASS90.77s：独立Owner正向、三个当前角色失权、8认证/5exactref负门、membership SET=false均已执行成功；签名Origin撤销也已原publisher实际COMMIT，之后新consumer拒绝为NoDataFound/P0002，测试仍把最后拒绝误写成22023。可信reader第1010行SELECT origin WHERE content_hash=registry.head_origin_hash INTO STRICT；原撤销逻辑将registry.epoch=2/head_origin_hash=NULL，当前Origin行缺失先触发STRICT拒绝，属正确原生failclosed。最小修正测试严格P0002/newreader context，并加已提交registry epoch2/headNULL/原文签名/Source全字段不变核查。r2保留两条签名撤销及Source，不对其重发；r3是全新ownedfixture/新Source/新独立撤销文档，绝不重放r2操作。两次均测试错误码归因失败，不宣称实现漏洞或业务首链RED修复。
+
+r3完整3PASS91.68s/7existingwarnings/noSKIP。独立SER READ ONLY核3保留DB/两条Source及两条真实签名OriginWithdrawal：撤销原文hash、native C signature对当前冻结anchor publickey、prior1→new2、registry epoch2/headNULL均一致；新Owner当前仍owner，角色/ACL/profile恢复，Source签名/历史issuer完整。独立证据independent-owner-withdrawal-verification.json保留r3运行绑定，r2实际撤销记录与Source仍完整保留。
+
+紧接下一已登记竞争验收：把最后signedwithdraw_origin的actualCOMMIT改为“writer已执行可信撤销但尚未COMMIT、业务reader进入原SERIAL快照并等待”的真实次序。通过pg_blocking_pids证明reader确由该publisher PID阻塞，writer实际COMMIT后reader必须原生SerializationFailure/40001拒绝旧快照；rollback后freshJWT/freshSERIAL再次读取必须P0002/currentOrigin缺失，核registry2/headNULL。不手工伪造epoch、不回滚已真实提交的撤销，所有原签名撤销记录与Source历史保留，应用caller不自动重试消费。此处验证新用途真正改变权威epoch的writer，而不是上一轮epoch=epoch的写锁。
+
+最终r4 3PASS91.37s/7existingwarnings/noSKIP：完整previous40role/currentness/concurrency gates与独立Owner3current-role、8auth、5exactref、SET-off原生拒绝均保留通过；新增真实签名Origin writer-first native pid阻塞、实际publisherCOMMIT后oldSER snapshot40001、freshSER snapshot P0002确认当前Origin失效。Source五表全字段指纹before/after一致。独立SER READ ONLY3保留DB核2durableSource/2durableC-signedwithdrawals/prior1-new2/epoch2-headNULL/currentnewOwner/roleACLprofile恢复，signed-origin-race-verification.json绑定真实r4 log与当前测试/入口/验证脚本hash。原r3独立证据保留，不重写历史报告；r1/r2错误归因断言失败与各自实际数据库历史保留。
+
+本轮产品实现零新增变更（仅test/plan/verification），无修改原生投影拒绝语义；当前Owner/原maker失权与withdrawnOrigin的P0002均不暴露到API，通用ProviderCapacityConsumptionBlocked保留。实际Source权限仍nonexecuting，未组合共享physicaloccupation/预算Intent，未做正式身份配置或安装迁移，最终业务callerCOMMIT的wall-clock TTL门仍未解。本独立资料、Core验收进展不能冒充Source父Task或fullGoal完成；下一已登记主线优先将通过验收的实际samecaller Source接入共享物理ledger原子合同，剩余额外catalog权限及部署profile门需登记精确范围，不扩大为整体停工。
+
+收口后立即复习下一b4登记方案及现reserve_pool_in_transaction：原普通内核当前按pool_id/current_revision/provider exactref计数（services/aos-api/aos_api/aip_model_capacity_reservation.py第77起），不能覆盖物理账户跨RoutePool/跨revision义务。2026-10-02 shared-ledger早期方案的Provider共享账户/先预算锁设计与后续完整signedSource physicalAccount合同存在差异，禁止未经精确合同直接沿旧Provider键编码。下一实现先以当前可信Source.physical_account_id/supplier_account_fingerprint和全域currentness冻结账户身份、物理共享锁序、既有普通/Eval占额cutover、unknown不自动TTL释放，再由已登记预算/单次Intent合同组合；pool-only内核继续原语义，不能修改旧ttl/revision算法冒充完成。当前相关注册registry/withdrawal-drill Lease旧过期，不按TTL夺锁；若新文件scope重叠先同owner支持续租/精确对账。此为下一主线实际代码/方案调查结果，尚未新增ledger代码或授权正式效果。
+
+## 2026-10-09 直接消费命令额外字段保留与实例重验证
+
+AOS-001624 已用真实 Source/SCRAM/同 caller 完整 Plan Intent call 确认 root/source_ref/tenant 额外字段副本在直接消费者被接受；原调用全回滚，详见独立诊断 Task review。原 Source Task 范围内仅消费者第143行改为 model_validate(command)，不改变 SQL、认证、权限、签名、时钟、Source历史或旧消费入口。原专项在真实合法正向后新增三项固定拒绝及未变命令重放，分别运行 shared/distinct 两布局既有角色ACL/currentness/并发/Owner/签名撤销全矩阵；另复验前一原 native 三项负门与真实 Plan Intent call/fullmanifest/COMMIT 边界。保留全部旧未追踪实现及证据，未通过整体边界核对前不自动stage完整产品文件或关闭原 Source Task。
+
+变更文件：services/aos-api/aos_api/aip_provider_capacity_occupation_source.py、services/aos-api/tests/aip/test_capacity_occupation_source_pg.py；本次运行辅助与证据位于 .evidence/gt-capacity-occupation-source-20261007/direct-command-fix-1624/。
