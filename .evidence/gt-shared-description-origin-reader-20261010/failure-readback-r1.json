@@ -1,0 +1,42 @@
+{
+  "identity": {
+    "database": "aos_test_95c2bc0e7e72_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "origin_xid_status": "aborted",
+  "risk_counts": {
+    "prepared_plan_risk": 0,
+    "prepared_shared_risk_description": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "roles": [
+    {
+      "rolname": "aos_guard_approval_issuer",
+      "rolcanlogin": false,
+      "no_password": true
+    },
+    {
+      "rolname": "aos_guard_policy_consumer_call",
+      "rolcanlogin": false,
+      "no_password": true
+    },
+    {
+      "rolname": "aos_provider_capacity_issuer",
+      "rolcanlogin": false,
+      "no_password": true
+    },
+    {
+      "rolname": "aos_provider_capacity_occupation",
+      "rolcanlogin": false,
+      "no_password": false
+    }
+  ],
+  "source": 1,
+  "reader_substep_observed": true,
+  "complete_native_node_passed": false,
+  "cleanup_supplier_recheck_expired": true,
+  "old_files_unchanged": true,
+  "execution_allowed": false
+}

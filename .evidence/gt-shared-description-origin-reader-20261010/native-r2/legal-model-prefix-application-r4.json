@@ -1,0 +1,47 @@
+{
+  "status": "LEGAL_MODEL_PUBLICATION_PREFIX_ONLY",
+  "database": "aos_test_f9459fd4498b_ti4_test",
+  "model_id": "joint-prefix-model-3c37644750114db9975d2e2142904c9c",
+  "model_hash": "d2c8167c6bd122e38ef2eca1b9a430d876f46db983aca6b8cfa87135e9cc9474",
+  "model_head": {
+    "current_revision": 1,
+    "version": 1
+  },
+  "publication_receipts": 1,
+  "quota_ref": {
+    "assetType": "QuotaPolicyRevision",
+    "assetId": "gp-26f9bbad651d41b78bbb766e94206fd7",
+    "revision": 2,
+    "contentHash": "ff08ab2e9d992fe1726676eab060d3a4a9ffd3858c3e2bf669fc274b002b83d8"
+  },
+  "budget_refs": {
+    "priceRef": {
+      "assetId": "cost-price-d67a69cda8fd90e19fe4b1c491c3a772aeabdcd2728fce2362a01fec9f6bf5ca",
+      "revision": 1,
+      "assetType": "ModelPriceSnapshotRevision",
+      "contentHash": "0a7599acaedf299f66d7043b8818757e3c015617972ba739ff42bb732649d687"
+    },
+    "budgetRef": {
+      "assetId": "test:activation:9ad96f6f31124b378e8bd500ee38465b",
+      "revision": 2,
+      "assetType": "BudgetRevision",
+      "contentHash": "e196ac1f616d12fa7b9106a40aa82a83800c067e6ddff3df4bc291264c637bdb"
+    },
+    "policyRef": {
+      "assetId": "cost-policy-d67a69cda8fd90e19fe4b1c491c3a772aeabdcd2728fce2362a01fec9f6bf5ca",
+      "revision": 1,
+      "assetType": "BudgetPolicyRevision",
+      "contentHash": "ce41b2517ed236a79daeca1fb421f8a235a5f0395b401e53ca372fd9e1bed559"
+    },
+    "receiptId": "cost-configuration-d67a69cda8fd90e19fe4b1c491c3a772aeabdcd2728fce2362a01fec9f6bf5ca",
+    "decisionId": "budget-cost-decision-f1d5fa1a79ed4529af59a38a9efce6cc",
+    "proposalId": "budget-cost-63e4301ff09d45f58e3bc28d826ebf62",
+    "proposalHash": "579503dd58d683e59c7e2f9036a808e2cb6a65e2d85778215f43b5974f24c72f"
+  },
+  "pending": [
+    "Original Suite/Contract governance provenance",
+    "Eval request approval and unique execution Intent",
+    "Joint physical transaction"
+  ],
+  "no_provider_execution": true
+}

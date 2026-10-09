@@ -1,0 +1,165 @@
+{
+  "source": {
+    "schemaVersion": 2,
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "assetId": "occupation-source-9d5d1b796d104a8ca3a35660d89af17b",
+    "revision": 1,
+    "publisher": "isolated-source-signer",
+    "keyId": "isolated-source-key",
+    "validFrom": "2026-10-09T21:39:11.908663Z",
+    "validUntil": "2026-10-09T21:44:11.819639Z",
+    "deploymentTarget": {
+      "host": "127.0.0.1",
+      "port": 5441,
+      "database": "aos_test_95c2bc0e7e72_ti4_test",
+      "databaseOid": 3584644,
+      "clusterIdentifier": "7694680278363095064",
+      "issuerRole": "aos_provider_capacity_issuer"
+    },
+    "purpose": "provider_capacity_published_source",
+    "physicalAccountId": "d00a7c56-cffd-4192-9f7a-a0b4c1576575",
+    "supplierId": "test-only-supplier",
+    "supplierAccountFingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "providerRefs": [
+      {
+        "assetType": "ProviderInstanceRevision",
+        "assetId": "capacity-provider-b7c782bb4c7f482f9ce05232c0af311b",
+        "revision": 1,
+        "contentHash": "1c20625a20f50882b3e4d982df9d6e5dd37835f4f5520fcf7e7d2fc0d95e6c77"
+      }
+    ],
+    "evidenceRefs": [
+      {
+        "assetType": "EvidenceBundleRevision",
+        "assetId": "evidence-bundle-6c7066686e854045bdd8",
+        "revision": 1,
+        "contentHash": "ded880c149ab8c9dfd1745d63f571b0908d231522023c0223b303d212618baca"
+      }
+    ],
+    "sourceProposalRef": {
+      "assetType": "ActionProposal",
+      "assetId": "proposal-bf17766b85784fbabd04",
+      "revision": 2,
+      "contentHash": "688835587f2c6a1ee77eab8cc1cbb7c9021913f0bc1d11d9a5da66ee381b22d9"
+    },
+    "sourceApprovalRef": {
+      "assetType": "ActionApprovalEvent",
+      "assetId": "approval-0cdefb63994840b2ab55",
+      "revision": 1,
+      "contentHash": "cbf7ff300cc94b898a01bfd41c12cb9f94238776a9cbec16d099eadbf6d75d3f"
+    },
+    "allocationRequestRef": {
+      "assetType": "ProviderCapacityRequest",
+      "assetId": "capacity-request-ae996bf8dbc54630a1f4fe70a703c5df",
+      "revision": 1,
+      "contentHash": "cac562f6184bbe2d9a96c53059e7b9cb613c2e2fe9eae92895b5c0c13f5cd5e4"
+    },
+    "allocationApprovalRef": {
+      "assetType": "ActionApprovalEvent",
+      "assetId": "approval-695d30dcfa46414fb154",
+      "revision": 1,
+      "contentHash": "e414cc23bb478cbab23a8fc43746bafd8eda4b7c489179b5d81236bbffd9057e"
+    },
+    "accountCandidateRef": {
+      "assetType": "ProviderPhysicalAccountCandidateRevision",
+      "assetId": "capacity-candidate-09a45143889c485f8d30ec525951415f",
+      "revision": 1,
+      "contentHash": "583bff58742b50845ede508dd0fd3164e47eba610e97c692a341fc7dd26352eb"
+    },
+    "basisCandidateRef": {
+      "assetType": "ProviderCapacityBasisCandidateRevision",
+      "assetId": "capacity-candidate-bca6ab96534f4b7c9f3c8d3f68ed6a98",
+      "revision": 1,
+      "contentHash": "793e979d3b8fe3abdc6340500d2f2ea29fbb97ea404341409e78631614883d17"
+    },
+    "sourcePolicyRef": {
+      "assetType": "ProviderCapacitySourcePolicyRevision",
+      "assetId": "source-policy",
+      "revision": 1,
+      "contentHash": "6b41030d20be29d8980c72543c8335eab6cdbc9ffd28d9eeed4bd50bd99b3fe4"
+    },
+    "supplierAttestationRef": {
+      "assetType": "SupplierCapacityAttestationRevision",
+      "assetId": "supplier-attestation",
+      "revision": 1,
+      "contentHash": "4f85d664ea4302af829ed40bdc4510d35985fc57f4e4e7d1c5a5646aa7934f23"
+    },
+    "signingPermitRef": {
+      "assetType": "ProviderCapacitySigningPermitRevision",
+      "assetId": "integrated-permit-bd8bae2bf11d4619a829fba5ed6cee13",
+      "revision": 1,
+      "contentHash": "da101c968d2fe9c9177ae4405109d18daf6e29b12baef10259fadd05165db071"
+    },
+    "originRef": {
+      "assetType": "ProviderCapacityOriginBootstrapRevision",
+      "assetId": "integrated-origin-ac0191c9d04e4ba3b1acc0a016888008",
+      "revision": 1,
+      "contentHash": "06a21d6d52042d204ad7d588a2e90f97f1d106aacfa42a1e438b0ae5d7b28b9f"
+    },
+    "originEpoch": 1,
+    "sourceWithdrawalEpoch": 0,
+    "allocationWithdrawalEpoch": 0,
+    "requestHash": "a9adf7a156c2100b9189b97f9e1acc3efa9bc1212e962444366cbd58affdf00d",
+    "maxConcurrency": 2,
+    "tokenLimit": {
+      "mode": "inflight_upper_bound",
+      "unit": "token",
+      "maxTokens": 20000
+    },
+    "observedAt": "2026-10-09T21:39:02.347735Z",
+    "issuedAt": "2026-10-09T21:39:14.455066Z",
+    "executionAllowed": false,
+    "issuanceContext": {
+      "makerSubject": "capacity-maker-9e0e62a8228a4f71aefda00c2b778be1",
+      "oidcIssuer": "https://aos-jwks.integration.test:55644",
+      "oidcAudience": "isolated-consumer",
+      "authenticationExpiresAt": "2026-10-09T21:41:12Z",
+      "issuerRole": "aos_provider_capacity_issuer",
+      "transactionId": "34284",
+      "backendPid": 29393,
+      "attemptId": "91734bfd-8498-4f82-b3be-46b80147f46e"
+    }
+  },
+  "source_ref": {
+    "assetType": "ProviderCapacitySourceRevision",
+    "assetId": "occupation-source-9d5d1b796d104a8ca3a35660d89af17b",
+    "revision": 1,
+    "contentHash": "e91c6ae12dc8765148a867a87d0933df0a4a359c0918426b38f8a2045feb7b6a"
+  },
+  "application": {
+    "status": "ORIGINAL_NONEXECUTABLE_EVAL_APPLICATION_APPROVED",
+    "database": "aos_test_95c2bc0e7e72_ti4_test",
+    "model_id": "joint-prefix-model-c93fbc58052b4fa3bec20f148def4638",
+    "model_hash": "3646ecad3e8ac5f9d4fdf0f4d4cd5b62be61434f4feb62855f8e3bc86325ca1f",
+    "request_id": "model-eval-request-c63c2371b89d45019081",
+    "request_hash": "488f1d3ecb0e8678359953c9a03a6a5e608970bb8cbe0ab5004761abb9fb6970",
+    "proposal_id": "proposal-050cd67f2d4d4a0ab532",
+    "maker": "test-maker-8f98c0a20c144fc693883cbc2a448f19",
+    "checker": "test-checker-8f98c0a20c144fc693883cbc2a448f19",
+    "expected_head_version": 1,
+    "suite_id": "judge-expected-e6a7b55a600b404f9aeb36b5c11a33d4-suite-two",
+    "contract_id": "eval-contract-e634707b3e734201a1ed",
+    "execution_allowed": false,
+    "business_counts": {
+      "aip_agent_run": 0,
+      "aip_model_capacity_reservation": 0,
+      "aip_model_eval_budget_reservation": 0
+    },
+    "count_scope": "Eval hold count is this exact request; AgentRun/capacity remain database-wide",
+    "limitations": [
+      "Test-owned dataset/redaction artifacts and actual deterministic Graph governance gate",
+      "Model-target Suite remains unexecuted; no Model quality gate",
+      "No budget hold, shared physical joint, unique execution Intent or formal business"
+    ]
+  },
+  "approval_event_id": "approval-ed3af46675844d8d8b51",
+  "caller": {
+    "login": "aos_provider_capacity_occupation",
+    "role": "aos_runtime",
+    "xid": "34511",
+    "pid": 30190
+  }
+}

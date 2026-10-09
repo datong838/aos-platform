@@ -1,0 +1,87 @@
+{
+  "identity": {
+    "database": "aos_test_ae3180ed8baa_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "prepared_rows": {
+    "prepared_plan_risk": 0,
+    "prepared_shared_risk_description": 0
+  },
+  "committed_identity_bindings": 4,
+  "root_bootstrap_groups": [
+    {
+      "bootstrap_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "n": 2
+    }
+  ],
+  "root_constraints": [
+    {
+      "conname": "issuer_root_body_check",
+      "contype": "c",
+      "definition": "CHECK (((octet_length(body) >= 1) AND (octet_length(body) <= 8388608)))"
+    },
+    {
+      "conname": "issuer_root_bootstrap_hash_check",
+      "contype": "c",
+      "definition": "CHECK ((bootstrap_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "conname": "issuer_root_check",
+      "contype": "c",
+      "definition": "CHECK ((content_hash = encode(sha256(body), 'hex'::text)))"
+    },
+    {
+      "conname": "issuer_root_content_hash_check",
+      "contype": "c",
+      "definition": "CHECK ((content_hash ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "conname": "issuer_root_issuer_id_check",
+      "contype": "c",
+      "definition": "CHECK ((((length(issuer_id) >= 1) AND (length(issuer_id) <= 200)) AND (issuer_id = btrim(issuer_id))))"
+    },
+    {
+      "conname": "issuer_root_key_id_check",
+      "contype": "c",
+      "definition": "CHECK ((((length(key_id) >= 1) AND (length(key_id) <= 200)) AND (key_id = btrim(key_id))))"
+    },
+    {
+      "conname": "issuer_root_org_id_check",
+      "contype": "c",
+      "definition": "CHECK ((org_id = 'org-org'::text))"
+    },
+    {
+      "conname": "issuer_root_org_id_project_id_issuer_id_key_id_content_hash_key",
+      "contype": "u",
+      "definition": "UNIQUE (org_id, project_id, issuer_id, key_id, content_hash)"
+    },
+    {
+      "conname": "issuer_root_pkey",
+      "contype": "p",
+      "definition": "PRIMARY KEY (org_id, project_id, issuer_id, key_id)"
+    },
+    {
+      "conname": "issuer_root_project_id_check",
+      "contype": "c",
+      "definition": "CHECK ((project_id = 'dev-project'::text))"
+    }
+  ],
+  "existing_producer": {
+    "proname": "prepare_capacity_shared_risk_description",
+    "owner": "aos_physical_capacity_occupation_owner",
+    "prosecdef": true,
+    "body_hash": "3b2f935a8c5c9eea85ba7c9f164b181ead779ae3e65351dfd024adb1de8265b4",
+    "inserts_description": true
+  },
+  "origin_reader_count": 0,
+  "runtime_direct_access": {
+    "direct_read": false,
+    "direct_insert": false
+  },
+  "red_reason": "NO_READONLY_NATIVE_DESCRIPTION_ORIGIN_ENTRY",
+  "root_provenance_verified": false,
+  "physical_description_origin_authenticated": false,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

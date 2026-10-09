@@ -1,0 +1,9 @@
+{
+  "pytest_exit": 0,
+  "database_connections": 0,
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_shared_parent_description_origin_reader.py": "92aa9d11a58a27a86d3a0848503e96d0c17a083157ad71ff7d3ffc7898e9c63a",
+    "services/aos-api/tests/aip/test_shared_parent_description_origin_reader_pg.py": "677ec397cb69e7a337899792cc75a8396d6986c1ef6009220675e8ba66ab6b3f"
+  },
+  "execution_allowed": false
+}
