@@ -1,0 +1,46 @@
+diff --git a/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py b/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py
+index 787006186..98d538b68 100644
+--- a/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py
++++ b/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py
+@@ -34,6 +34,11 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
+         'test_controlled_source_signer_binds_original_jwt_pending_and_private_key',
+         'test_current_source_consumer_rechecks_new_transaction',
+         'test_current_source_consumer_accepts_independent_owner',
++        'test_occupation_source_consumption_uses_actual_business_caller',
++        'test_occupation_epoch_profile_requires_complete_native_audits',
++        'test_occupation_epoch_profile_keeps_issuer_publication_usable',
++        'test_occupation_epoch_profile_keeps_original_python_audits',
++        'test_occupation_epoch_profile_keeps_existing_consumer_usable',
+         'test_exact_public_source_rejects_live_issuer_drift',
+         'test_exact_public_source_rejects_bad_signature_and_unfinished_commit',
+         'test_native_committed_sources_share_one_physical_account',
+@@ -3000,8 +3005,8 @@ def test_original_request_large_offset_storage_boundary_is_not_source_authority(
+         ProviderCapacityRequestStore().create(SCOPE,approved_command[0],key,application)
+     with isolated_owner() as owner:
+         assert owner.execute('SELECT count(*) AS n FROM public.aip_provider_capacity_request WHERE idempotency_key=%s',(key,)).fetchone()['n']==0
+-        owner.execute(native.CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+-        owner.execute(native.CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL)
++        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
++        require_source_transaction_functions(owner)
+         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+         parsed=owner.execute('SELECT aos_capacity_publication_private.read_original_capacity_application(%s) AS value',
+             (Jsonb(application.model_dump(mode='json',by_alias=True)),)).fetchone()['value']
+@@ -3054,7 +3059,8 @@ def test_native_signing_permit_binds_exact_policy_and_controlled_source_root(nat
+     assert statement is not None,'S20 needs actual permit / separate controlled signer-root combination'
+     with isolated_owner() as owner:
+         owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+-        owner.execute(native.CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
++        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
++        require_source_transaction_functions(owner)
+         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+         for ref in (material['refs'][0],material['refs'][2]):
+             assert owner.execute(native.CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL,_current_signed_params(ref)).fetchone() is not None
+@@ -4913,7 +4919,7 @@ def exact_public_source_caller(native_full_signed_reader,request):
+             assert row['signature'].startswith('publication_')
+             revoked.append(row['signature'])
+             owner.execute(sql.SQL('REVOKE EXECUTE ON FUNCTION '+row['signature']+' FROM aos_provider_capacity_issuer'))
+-        include_consumer=request.node.originalname in {'test_current_source_consumer_rechecks_new_transaction','test_current_source_consumer_accepts_independent_owner'}
++        include_consumer=request.node.originalname in {'test_current_source_consumer_rechecks_new_transaction','test_current_source_consumer_accepts_independent_owner','test_occupation_source_consumption_uses_actual_business_caller','test_occupation_epoch_profile_keeps_existing_consumer_usable'}
+         for statement in transaction.source_public_entry_statements(include_consumer=include_consumer):owner.execute(statement)
+     _refresh_native_facts_transaction(caller)
+     try:yield caller,raw,material,original

@@ -1,0 +1,12 @@
+{
+  "owned_native_cluster": "7694534063495901208",
+  "read_only": true,
+  "session_values": {
+    "max_parallel_workers_per_gather": "0",
+    "max_parallel_maintenance_workers": "0",
+    "fsync": "on",
+    "full_page_writes": "on",
+    "synchronous_commit": "on"
+  },
+  "global_configuration_unchanged": true
+}

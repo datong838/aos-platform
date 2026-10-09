@@ -1,0 +1,14 @@
+{
+  "observed_at": "2026-10-09T06:35:10.333237+00:00",
+  "process": {
+    "pid": 9447,
+    "started_at": "2026-10-09T06:28:33.889498+00:00",
+    "head": "6f4e2e984f345c81240063096091971edcb92458",
+    "authority": "AOS-001644",
+    "state": "RUNNING",
+    "replay_allowed": false
+  },
+  "tool_session": 63192,
+  "os_status": "  PID STARTED                      ELAPSED STAT\n 9447 Fri Oct  9 14:28:33 2026       06:37 Ss  \n",
+  "no_code_mutation_while_live": true
+}

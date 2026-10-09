@@ -1,0 +1,26 @@
+{
+  "head": "6f4e2e984f345c81240063096091971edcb92458",
+  "test_sha256": "b8f230b078c0b2af300e1c34045e239b994fdb8ae9e63ae171b2d5d0f6abc6cd",
+  "rows": [
+    {
+      "function": "test_original_request_large_offset_storage_boundary_is_not_source_authority",
+      "line": 2983,
+      "direct_profiles": [
+        "CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL",
+        "CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL"
+      ],
+      "review_only": true,
+      "no_repair_without_actual_failure": true
+    },
+    {
+      "function": "test_native_signing_permit_binds_exact_policy_and_controlled_source_root",
+      "line": 3025,
+      "direct_profiles": [
+        "CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL"
+      ],
+      "review_only": true,
+      "no_repair_without_actual_failure": true
+    }
+  ],
+  "conditional_original_fact_fixture_preserved": true
+}

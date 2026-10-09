@@ -1,0 +1,137 @@
+{
+  "result": "49PASS1SETUPERROR185.95s",
+  "error": "parallel dynamic shared memory resize32MiB exceeded64MiB shm during new isolatedDB migration",
+  "unknown_business_effect": false,
+  "no_replay_of_failed_attempt": true,
+  "prior_databases": [
+    {
+      "database": "aos_test_077b62c63105_ti4_test",
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "exact_foundation_audit": true
+    },
+    {
+      "database": "aos_test_18216b497cde_ti4_test",
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "exact_foundation_audit": true
+    },
+    {
+      "database": "aos_test_42b95a7c4592_ti4_test",
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "exact_foundation_audit": true
+    },
+    {
+      "database": "aos_test_4e91b08b86ba_ti4_test",
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "exact_foundation_audit": true
+    },
+    {
+      "database": "aos_test_5b2aa41d5bc1_ti4_test",
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "exact_foundation_audit": true
+    },
+    {
+      "database": "aos_test_9866c8f2ca4c_ti4_test",
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "exact_foundation_audit": true
+    },
+    {
+      "database": "aos_test_9a966dd9d345_ti4_test",
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "exact_foundation_audit": true
+    },
+    {
+      "database": "aos_test_beeb7dcf7d4b_ti4_test",
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "exact_foundation_audit": true
+    },
+    {
+      "database": "aos_test_f6a0c76e0a8a_ti4_test",
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "exact_foundation_audit": true
+    },
+    {
+      "database": "aos_test_fd4fb5d51a05_ti4_test",
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "exact_foundation_audit": true
+    }
+  ],
+  "settings": {
+    "max_parallel_workers_per_gather": {
+      "max_parallel_workers_per_gather": "2"
+    },
+    "max_parallel_maintenance_workers": {
+      "max_parallel_maintenance_workers": "2"
+    },
+    "fsync": {
+      "fsync": "on"
+    },
+    "full_page_writes": {
+      "full_page_writes": "on"
+    },
+    "synchronous_commit": {
+      "synchronous_commit": "on"
+    }
+  },
+  "active_connections": [],
+  "shm_observation": "Filesystem           1-blocks       Used Available Capacity Mounted on\nshm                   67108864   1064960  66043904   2% /dev/shm\n/dev/root            19682557952 8308363264 11357417472  42% /var/lib/postgresql/data\n"
+}

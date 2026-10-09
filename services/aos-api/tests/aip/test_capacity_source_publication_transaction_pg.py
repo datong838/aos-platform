@@ -3000,8 +3000,8 @@ def test_original_request_large_offset_storage_boundary_is_not_source_authority(
         ProviderCapacityRequestStore().create(SCOPE,approved_command[0],key,application)
     with isolated_owner() as owner:
         assert owner.execute('SELECT count(*) AS n FROM public.aip_provider_capacity_request WHERE idempotency_key=%s',(key,)).fetchone()['n']==0
-        owner.execute(native.CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
-        owner.execute(native.CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         parsed=owner.execute('SELECT aos_capacity_publication_private.read_original_capacity_application(%s) AS value',
             (Jsonb(application.model_dump(mode='json',by_alias=True)),)).fetchone()['value']
@@ -3054,7 +3054,8 @@ def test_native_signing_permit_binds_exact_policy_and_controlled_source_root(nat
     assert statement is not None,'S20 needs actual permit / separate controlled signer-root combination'
     with isolated_owner() as owner:
         owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
-        owner.execute(native.CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         for ref in (material['refs'][0],material['refs'][2]):
             assert owner.execute(native.CAPACITY_NATIVE_REGISTERED_DOCUMENT_ROW_SQL,_current_signed_params(ref)).fetchone() is not None

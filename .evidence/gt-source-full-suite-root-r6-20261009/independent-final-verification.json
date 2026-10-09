@@ -1,0 +1,491 @@
+{
+  "schema": "aos-source-original-offset-signing-permit-and-adjacent-fifty-nodes-verification/v1",
+  "head": "6f4e2e984f345c81240063096091971edcb92458",
+  "authority_revision": "AOS-001644",
+  "summary": "50 passed, 7 warnings in 191.78s (0:03:11)",
+  "all_selected_passed": true,
+  "node_count": 50,
+  "database_count": 11,
+  "sources": 0,
+  "databases": [
+    {
+      "database": "aos_test_12d464ae495b_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_signing_permit_binds_exact_policy_and_controlled_source_root[policy_hash]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_21c932384950_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_signing_permit_binds_exact_policy_and_controlled_source_root[signer_key]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_342248bec125_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_binding_rejects_coherent_wrong_hash",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[nested_alias]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[offset_space]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[epoch_string]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_time_profile_matches_original_datetime_oracle",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_candidate_profile_matches_original_shape_oracle",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_capacity_application_profile_matches_original_model",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_capacity_request_rechecks_exact_row_expiry",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_candidate_profile_matches_original_model[account]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_candidate_profile_matches_original_model[basis]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_candidate_rows_and_combination_keep_original_claims",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[basis_account]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[account_provider]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[basis_mixed]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[provider_mixed]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[basis_epoch]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[token_alias]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_rejects_rehashed_original_row_term_faults",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_provider_profile_preserves_actual_business_hash",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_provider_profile_matches_original_model_domain",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_provider_current_row_rejects_coherent_payload_faults",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_provider_query_holds_original_head_share_fence[reader_first]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_provider_query_holds_original_head_share_fence[writer_first]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_provider_query_checks_real_full_original_account_set[None]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_provider_query_checks_real_full_original_account_set[second_head]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_provider_query_checks_real_full_original_account_set[second_payload_hash]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_provider_query_checks_real_full_original_account_set[second_payload_revision]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_build_request_reads_actual_original_provenance",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_build_request_canonical_domain_and_acl",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_build_json_matches_original_decoded_hash_input",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_evidence_row_reads_real_verified_build",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_build_equality_matches_original_decoder",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_evidence_query_preserves_original_row_domains_and_faults",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_evidence_query_checks_three_distinct_original_source_origins[request]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_evidence_query_checks_three_distinct_original_source_origins[account]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_evidence_query_checks_three_distinct_original_source_origins[basis]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_evidence_contract_rejects_coherently_rehashed_bad_metadata",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_evidence_query_preserves_genuine_build_cutoff_and_numeric_hash[None]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_evidence_query_preserves_genuine_build_cutoff_and_numeric_hash[1439]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_request_large_offset_storage_boundary_is_not_source_authority"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_38d4e3510a41_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_signing_permit_binds_exact_policy_and_controlled_source_root[signer_public_key]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_70f3e76b9a7d_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_signing_permit_binds_exact_policy_and_controlled_source_root[root_revoked]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_7d92639be5ae_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_signing_permit_binds_exact_policy_and_controlled_source_root[root_future]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_a136a8fcd7ae_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_signing_permit_binds_exact_policy_and_controlled_source_root[signer_publisher]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_c7ddca7b9706_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_signing_permit_binds_exact_policy_and_controlled_source_root[signer_revision]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_db84d33c75b8_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_signing_permit_binds_exact_policy_and_controlled_source_root[valid]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_e588dc0633f2_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_signing_permit_binds_exact_policy_and_controlled_source_root[root_expired]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    },
+    {
+      "database": "aos_test_f65ce9b3b9b6_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_signing_permit_binds_exact_policy_and_controlled_source_root[short_window]"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    }
+  ],
+  "exact_inputs_unchanged": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 35,
+  "full_source_delivery": false,
+  "formal_business_execution": false,
+  "root_volume": {
+    "CreatedAt": "2026-10-09T13:20:02+08:00",
+    "Driver": "local",
+    "Labels": {
+      "aos.scope": "test-only",
+      "aos.task": "gt-source-root-native-lab-20261009"
+    },
+    "Mountpoint": "/var/lib/docker/100000.100000/volumes/aos-source-root-native-20261009-data/_data",
+    "Name": "aos-source-root-native-20261009-data",
+    "Options": {
+      "device": "/var/lib/aos-test-labs/aos-source-root-native-20261009",
+      "o": "bind",
+      "type": "none"
+    },
+    "Scope": "local"
+  },
+  "root_available_bytes": 10860597248
+}

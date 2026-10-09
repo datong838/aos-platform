@@ -1,0 +1,17 @@
+{
+  "failed_node": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_request_large_offset_storage_boundary_is_not_source_authority",
+  "database": "aos_test_26df4cb2a926_ti4_test",
+  "whole_nodes": 386,
+  "passed_nodes": 164,
+  "unexecuted_nodes": 221,
+  "exact_existing_function_acl_lock_audit": true,
+  "publication_counts": {
+    "source_pending": 0,
+    "source_publication": 0,
+    "source_provenance": 0,
+    "global_account": 0,
+    "global_provider": 0
+  },
+  "root_cause": "Original offset storage boundary and adjacent exact signing permit repeat installed permanent157 profiles; original offset storage22009 and zero request assertion precede duplicate CREATE failure",
+  "goal_completion_proven": false
+}
