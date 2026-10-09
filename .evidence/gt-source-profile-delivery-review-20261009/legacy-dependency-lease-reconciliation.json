@@ -1,0 +1,55 @@
+[
+  {
+    "path": "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py",
+    "matching_leases": [
+      {
+        "task_id": "gt-capacity-source-publication-20261006",
+        "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+        "expires": "2026-10-07T18:00:00+08:00",
+        "scope": [
+          "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py",
+          "aos-platform/services/aos-api/alembic/versions/a0v_155_capacity_source_publication.py",
+          "aos-platform/services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+          "aos-platform/.evidence/gt-capacity-source-publication-20261006"
+        ]
+      }
+    ]
+  },
+  {
+    "path": "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_lock_boundary.py",
+    "matching_leases": [
+      {
+        "task_id": "gt-capacity-publication-epoch-locks-20261006",
+        "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+        "expires": "2026-10-07T18:00:00+08:00",
+        "scope": [
+          "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_lock_boundary.py",
+          "aos-platform/services/aos-api/alembic/versions/a0v_156_capacity_publication_epoch_locks.py",
+          "aos-platform/services/aos-api/aos_api/aip_capacity_withdrawal_fence.py",
+          "aos-platform/services/aos-api/tests/aip/test_capacity_publication_epoch_locks_pg.py",
+          "aos-platform/.evidence/gt-capacity-publication-epoch-locks-20261006"
+        ]
+      }
+    ]
+  },
+  {
+    "path": "aos-platform/services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py",
+    "matching_leases": [
+      {
+        "task_id": "gt-provider-capacity-formal-boundary-20261005",
+        "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+        "expires": "2026-10-07T18:00:00+08:00",
+        "scope": [
+          "aos-platform/services/aos-api/alembic/versions/a0v_150_provider_capacity_issuance_boundary.py",
+          "aos-platform/services/aos-api/aos_api/aip_provider_capacity_formal_boundary.py",
+          "aos-platform/services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py",
+          "aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_action.py",
+          "aos-platform/services/aos-api/aos_api/aip_provider_capacity_action.py",
+          "aos-platform/services/aos-api/tests/aip/test_provider_capacity_formal_boundary_pg.py",
+          "aos-platform/services/aos-api/tests/aip/test_provider_capacity_evidence_epoch_pg.py",
+          "aos-platform/.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-formal-boundary-20261005"
+        ]
+      }
+    ]
+  }
+]

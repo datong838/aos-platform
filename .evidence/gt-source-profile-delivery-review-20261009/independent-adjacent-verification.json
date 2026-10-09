@@ -1,0 +1,150 @@
+{
+  "schema": "aos-occupation-epoch-profile-verification/v1",
+  "head": "04a9cd1c9ebf9528928c9024835d1323623f558e",
+  "result": "8 passed, 7 warnings in 102.92s",
+  "scope": "CUMULATIVE_PROFILE_AND_LEGACY_EPOCH",
+  "container_id": "bcd0d503f9903e9f8eabea7d2d9d00ac7fb33df47e4e2318300eb8c34eeac4c7",
+  "retained_databases": [
+    {
+      "database": "aos_test_0ccaf202c76a_ti4_test",
+      "sources": [
+        {
+          "asset_id": "occupation-profile-consumer-37958876578a4264aaa3ecdcde0ab1dc",
+          "content_hash": "0cb6f47bdf02d55d9a302413422534a641da265aa2aa3c92fe89f9ea3e0ea287",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "legacy_audit_bodies_restored": true,
+      "neutral_extra_grant_restored": true,
+      "temporary_interfaces_restored": true,
+      "occupation_role_restored": true
+    },
+    {
+      "database": "aos_test_1b0e00c514c4_ti4_test",
+      "sources": [
+        {
+          "asset_id": "occupation-compatible-issuer-74f550ae91c74ca7b2d3e54498feeca4",
+          "content_hash": "25f21b7d710d933390084df4b17d2b4f6c112ed67084ae90c23da0af8a6c72b2",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "legacy_audit_bodies_restored": true,
+      "neutral_extra_grant_restored": true,
+      "temporary_interfaces_restored": true,
+      "occupation_role_restored": true
+    },
+    {
+      "database": "aos_test_4e58591156ab_ti4_test",
+      "sources": [],
+      "legacy_audit_bodies_restored": true,
+      "neutral_extra_grant_restored": true,
+      "temporary_interfaces_restored": true,
+      "occupation_role_restored": true
+    },
+    {
+      "database": "aos_test_76aa9009120a_ti4_test",
+      "sources": [
+        {
+          "asset_id": "occupation-profile-consumer-f74e76b76f984b47b7aaf9c8c0d5cefc",
+          "content_hash": "3f48df570545f636bbd89d7038bc368e2c930f361905cffbe29bbe96917ca37f",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "legacy_audit_bodies_restored": true,
+      "neutral_extra_grant_restored": true,
+      "temporary_interfaces_restored": true,
+      "occupation_role_restored": true
+    },
+    {
+      "database": "aos_test_92bfc89c5bbf_ti4_test",
+      "sources": [],
+      "legacy_audit_bodies_restored": true,
+      "neutral_extra_grant_restored": true,
+      "temporary_interfaces_restored": true,
+      "occupation_role_restored": true
+    },
+    {
+      "database": "aos_test_9981bdbb40d8_ti4_test",
+      "sources": [],
+      "legacy_audit_bodies_restored": true,
+      "neutral_extra_grant_restored": true,
+      "temporary_interfaces_restored": true,
+      "occupation_role_restored": true
+    },
+    {
+      "database": "aos_test_9ebf61578db5_ti4_test",
+      "sources": [
+        {
+          "asset_id": "occupation-compatible-issuer-a3b373ab07ce457681e90ff4c44d9897",
+          "content_hash": "f35f23fae1e97ec556f9e73ed09eb8bb5d7280d5b33b56e1988873231a935c73",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "provenance_ok": true
+        }
+      ],
+      "legacy_audit_bodies_restored": true,
+      "neutral_extra_grant_restored": true,
+      "temporary_interfaces_restored": true,
+      "occupation_role_restored": true
+    },
+    {
+      "database": "aos_test_a8637e9d5769_ti4_test",
+      "sources": [],
+      "legacy_audit_bodies_restored": true,
+      "neutral_extra_grant_restored": true,
+      "temporary_interfaces_restored": true,
+      "occupation_role_restored": true
+    },
+    {
+      "database": "aos_test_c70a777618f2_ti4_test",
+      "sources": [],
+      "legacy_audit_bodies_restored": true,
+      "neutral_extra_grant_restored": true,
+      "temporary_interfaces_restored": true,
+      "occupation_role_restored": true
+    }
+  ],
+  "durable_occupation_sources": 4,
+  "original_default_files_unchanged": [
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py",
+    "services/aos-api/alembic/versions/a0v_150_provider_capacity_issuance_boundary.py"
+  ],
+  "default_sql_outputs_equal_HEAD": {
+    "private_installation": "2f20609404a319f95f3f2b9799fc55d40fa9b69f08a8818df4f02880b0a73927",
+    "private_transaction": "7fdabd44295b09bc97f70af4e00e403c3e2c676b8bef714e49a0b6ae9e2f1ef8",
+    "public_without_consumer": "eba581fe725fdebc6ba7cd7a5f78106c0554a159d68b01201b362ee06d7ab83d",
+    "public_with_consumer": "30c11bea7820a2c060c3aad3cab004212b5db6524c3a91c5998842f9f410490f"
+  },
+  "sha256": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_store.py": "13682034eaae269ea6e63f34805548b63e0484e5368169882e9c8249aec0ce77",
+    "services/aos-api/alembic/versions/a0v_150_provider_capacity_issuance_boundary.py": "42c5447bb89c20561ead962699d1c6734cd7a53b0d6b99c8321941ce913474b8",
+    "services/aos-api/aos_api/aip_provider_capacity_occupation_epoch_profile.py": "e326f0e61e653d1f826972960c6d40a36d899a4ce706a8661d4460174b486241",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "cd9564e8c37d0bdac9af7fa8311a0db7febc09a1ee1af6346245fc9ae2d61cc7",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_lock_boundary.py": "30229822a7e5bf20eb77b015dcc411864edf3fdca905512354c6080dcc1d9d15",
+    "services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py": "047c4b301036bbfb5dd036531d0002c6eb1e257ceb6a31515d5765cd01bc42ab",
+    "services/aos-api/aos_api/aip_provider_capacity_occupation_source.py": "a26d32cb2f0dc9a796332e37beb0b5c015586a5876cdebb2c77d95308dec4a50",
+    "services/aos-api/tests/aip/test_capacity_occupation_epoch_profile_pg.py": "305fb9b911ff63d6f9b0891d07d5e3544800eb8a9c987b303dbf58f48070dc1a",
+    "services/aos-api/tests/aip/test_capacity_occupation_source_pg.py": "fe5f886ead523fb4b562a9faaff49674285441b568e8e2733c5ae857c49bdc60",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-source-profile-delivery-review-20261009/adjacent-r1.log": "4a4940d7219acfbaed29ebd25d2396a7652aa611e90b29bde448ae7d93beb7df"
+  },
+  "pending": [
+    "full new-purpose role/effective privileges negatives",
+    "new profile writer/reader competition and waiting JWT expiry",
+    "samecaller Source/sharedoccupation/budget/Intent integration",
+    "formal deployment/identity/authorization",
+    "actual final COMMIT TTL"
+  ],
+  "task_delivered": false,
+  "full_goal_complete": false,
+  "formal_resources_changed": false
+}

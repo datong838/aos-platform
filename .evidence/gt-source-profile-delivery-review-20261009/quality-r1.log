@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/aos_review.py", line 251, in <module>
+    main()
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/aos_review.py", line 236, in main
+    raise ValueError('review provider failed; reconcile attempt; no automatic resend')
+ValueError: review provider failed; reconcile attempt; no automatic resend
