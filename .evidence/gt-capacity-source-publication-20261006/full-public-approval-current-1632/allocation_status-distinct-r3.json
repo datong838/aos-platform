@@ -1,0 +1,38 @@
+{
+  "fault": "allocation_status",
+  "database": "aos_test_7e2fc5482184_ti4_test",
+  "observations": [
+    {
+      "outcome": "prepared_actual_public_source",
+      "identity": {
+        "session": "aos_provider_capacity_issuer",
+        "role": "aos_provider_capacity_issuer",
+        "xid": "21709",
+        "pid": 44679
+      },
+      "source_sha256": "32a796ec7a3aa31d42d5b59168ef00dba1db71ae84cedf7abdaee44ada621a25"
+    },
+    {
+      "outcome": "native_refusal",
+      "identity": {
+        "session": "aos_provider_capacity_issuer",
+        "role": "aos_provider_capacity_issuer",
+        "xid": "21712",
+        "pid": 44679
+      },
+      "type": "NoDataFound",
+      "sqlstate": "P0002",
+      "reason": "query returned no rows"
+    },
+    {
+      "outcome": "prepared_actual_public_source",
+      "identity": {
+        "session": "aos_provider_capacity_issuer",
+        "role": "aos_provider_capacity_issuer",
+        "xid": "21716",
+        "pid": 44679
+      },
+      "source_sha256": "79b7d5dec95cce3c7131e12bc9bd8aeb00ed8aefba98b471c557e87bb633903a"
+    }
+  ]
+}

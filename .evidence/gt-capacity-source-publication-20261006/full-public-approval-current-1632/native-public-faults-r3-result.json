@@ -1,0 +1,48 @@
+{
+  "observed_at": "2026-10-09T04:23:48.841768+00:00",
+  "database": "aos_test_7e2fc5482184_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults_r3.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[receipt_result-shared]",
+      "phase": "database_binding",
+      "database": "aos_test_c8f9b6bed352_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults_r3.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[receipt_result-shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults_r3.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[receipt_result-distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_eab44b276db2_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults_r3.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[receipt_result-distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults_r3.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_status-shared]",
+      "phase": "database_binding",
+      "database": "aos_test_13f96599ffd2_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults_r3.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_status-shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults_r3.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_status-distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_7e2fc5482184_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults_r3.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_status-distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "original complete Source core actual COMMIT/global ownership/issuer/current-consumer matrix; no business execution"
+}

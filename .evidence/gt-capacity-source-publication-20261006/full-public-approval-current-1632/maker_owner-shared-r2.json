@@ -1,0 +1,38 @@
+{
+  "fault": "maker_owner",
+  "database": "aos_test_7e49acba4f4e_ti4_test",
+  "observations": [
+    {
+      "outcome": "prepared_actual_public_source",
+      "identity": {
+        "session": "aos_provider_capacity_issuer",
+        "role": "aos_provider_capacity_issuer",
+        "xid": "19695",
+        "pid": 41794
+      },
+      "source_sha256": "d705b2407bb8f186a31bc8eaae5c1d04b1bd5485cc6b676043ca58ec59d5d0ec"
+    },
+    {
+      "outcome": "native_refusal",
+      "identity": {
+        "session": "aos_provider_capacity_issuer",
+        "role": "aos_provider_capacity_issuer",
+        "xid": "19698",
+        "pid": 41794
+      },
+      "type": "NoDataFound",
+      "sqlstate": "P0002",
+      "reason": "query returned no rows"
+    },
+    {
+      "outcome": "prepared_actual_public_source",
+      "identity": {
+        "session": "aos_provider_capacity_issuer",
+        "role": "aos_provider_capacity_issuer",
+        "xid": "19700",
+        "pid": 41794
+      },
+      "source_sha256": "8c3bac26f2960be06104f0408f84360a532122022e573a255f56a4bcb2f0074f"
+    }
+  ]
+}

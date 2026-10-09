@@ -1,0 +1,20 @@
+{
+  "task_id": "gt-capacity-source-publication-20261006",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001632",
+  "head": "0eba54befe62b6b625b0272ee9a82e98da22abf3",
+  "pid": 95929,
+  "identity": {
+    "uid": 501,
+    "started": "Fri Oct 9 12:15:37 2026",
+    "comm": "services/aos-api/.venv/bin/python"
+  },
+  "tool_session": 13041,
+  "observed_at": "2026-10-09T04:17:48.671203+00:00",
+  "deadline_at": "2026-10-09T04:37:48.671576+00:00",
+  "runner_sha256": "a71b4a426011457c21bf14912c0479373eaedad6d58cb2ff59de3ae7178d8314",
+  "helper_sha256": "7228da2db474dffc1c14d74b5b9544bf286947b21dc5469db4529a87da005a5f",
+  "status": "RUNNING",
+  "unknown_result_policy": "poll this handle/read-only reconcile; do not restart"
+}

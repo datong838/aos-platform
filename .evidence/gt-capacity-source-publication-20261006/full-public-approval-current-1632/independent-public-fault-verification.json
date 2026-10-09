@@ -1,0 +1,1146 @@
+{
+  "schema": "aos-direct-public-source-original-fault-verification/v1",
+  "authority_revision": "AOS-001632",
+  "head": "0eba54befe62b6b625b0272ee9a82e98da22abf3",
+  "node_count": 24,
+  "databases": [
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[source_metadata-shared]",
+      "database": "aos_test_dc0a13f00123_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19327",
+            "pid": 41216
+          },
+          "source_sha256": "584056cfecedb26bbf19b756fdd0e98718998da0d1e37a98ac2f6772fb9e9957"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19330",
+            "pid": 41216
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19332",
+            "pid": 41216
+          },
+          "source_sha256": "6b6ca342f91a2c96502eedd6b0d06471cedca612463cf2f75c4e8e91cb3fae51"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[source_metadata-distinct]",
+      "database": "aos_test_307a03d79ee5_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19442",
+            "pid": 41397
+          },
+          "source_sha256": "75a9ab01c42d2de042239fb469b4a0684c52e1629696d90f6b36b65ae8aaca54"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19445",
+            "pid": 41397
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19447",
+            "pid": 41397
+          },
+          "source_sha256": "28de219c61e79f58ed3d1f9b988bad2df76d5c06ef8553661b960ff74f075c88"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_metadata-shared]",
+      "database": "aos_test_2514c060c34d_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19509",
+            "pid": 41504
+          },
+          "source_sha256": "c9a92377fd015fbbc0a229ba4f2a1b40ef7bf5185434c704c6e328f2b1930fe0"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19512",
+            "pid": 41504
+          },
+          "type": "InvalidParameterValue",
+          "sqlstate": "22023",
+          "reason": "CAPACITY_ORIGINAL_METADATA_DRIFTED"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19516",
+            "pid": 41504
+          },
+          "source_sha256": "17c97e25f3fee04ee9d17b25ca3c75211fcc53d2133147b696baeb2146000215"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_metadata-distinct]",
+      "database": "aos_test_f380bf8dfad7_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19619",
+            "pid": 41685
+          },
+          "source_sha256": "73c2f4abe84c5564daf3ac34f60bb0f836e0206311a746e862eb8e6a88ef0496"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19622",
+            "pid": 41685
+          },
+          "type": "InvalidParameterValue",
+          "sqlstate": "22023",
+          "reason": "CAPACITY_ORIGINAL_METADATA_DRIFTED"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19626",
+            "pid": 41685
+          },
+          "source_sha256": "0c8dd7259b30e334149fe15ae16cba608ed6d08882e97cd96065318258ae615c"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[maker_owner-shared]",
+      "database": "aos_test_7e49acba4f4e_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19695",
+            "pid": 41794
+          },
+          "source_sha256": "d705b2407bb8f186a31bc8eaae5c1d04b1bd5485cc6b676043ca58ec59d5d0ec"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19698",
+            "pid": 41794
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19700",
+            "pid": 41794
+          },
+          "source_sha256": "8c3bac26f2960be06104f0408f84360a532122022e573a255f56a4bcb2f0074f"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[maker_owner-distinct]",
+      "database": "aos_test_e0203c0f03ea_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19825",
+            "pid": 41975
+          },
+          "source_sha256": "2692392addfd81078580cfae7a336e58e48af838f065b8997310105bf2843f12"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19828",
+            "pid": 41975
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19830",
+            "pid": 41975
+          },
+          "source_sha256": "779e362cd81d2a6cb7a816cda28c74d26ff592344d3201062ee51b32f1ba9222"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[checker_owner-shared]",
+      "database": "aos_test_b8bc77ef9ebe_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19912",
+            "pid": 42084
+          },
+          "source_sha256": "4c40a9d6df6885fe0d105b1ed3e9f13123f06f4f6099f8d3835fa1abc8718993"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19915",
+            "pid": 42084
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "19917",
+            "pid": 42084
+          },
+          "source_sha256": "b837d830ab8fc35d24ffa1ff40c869a75bf8f0f44f8e0e920f2d06c690173480"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[checker_owner-distinct]",
+      "database": "aos_test_4605d25556f4_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20031",
+            "pid": 42265
+          },
+          "source_sha256": "d73d896eb51eaa1542e8b1655651f58d936fefe619cc859b8cf49abb23c130e1"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20034",
+            "pid": 42265
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20036",
+            "pid": 42265
+          },
+          "source_sha256": "5522114763e9d9ae7f38e0988f1674cda1ce2e874c6ad698172951209903c5ee"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[request_hash-shared]",
+      "database": "aos_test_3dea35743c0d_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20110",
+            "pid": 42374
+          },
+          "source_sha256": "c2272790ee54235acfdb080a7a0b1691bdd9bcec7515500593b567fbc3a0e5fc"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20113",
+            "pid": 42374
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20117",
+            "pid": 42374
+          },
+          "source_sha256": "654285b0ce3e71dc8d66a102e2a56e4ecc9830a2294298d161cfdd7f4f3f824f"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[request_hash-distinct]",
+      "database": "aos_test_f7b75c42fb3e_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20239",
+            "pid": 42556
+          },
+          "source_sha256": "fff622effb376f13e4f48175759e1dd80c1de969691c4a5d9bda2f19b6d7ccc8"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20242",
+            "pid": 42556
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20246",
+            "pid": 42556
+          },
+          "source_sha256": "48ace628cb372d319fbd8a249c56dee280f998b5a4ee6eca9d9f64ef96490a38"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[account_hash-shared]",
+      "database": "aos_test_ed2a6d8f9f32_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20328",
+            "pid": 42665
+          },
+          "source_sha256": "0dfde1f14007a2d35fef2ddb8070a751c857d97480e3d9340486c0479e3ed7e6"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20331",
+            "pid": 42665
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20335",
+            "pid": 42665
+          },
+          "source_sha256": "788a47d5c7ddf0b3661df3404bc7ddb738ad0899c20df1cd971e540c7605b85c"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[account_hash-distinct]",
+      "database": "aos_test_9d196f467ef1_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20457",
+            "pid": 42848
+          },
+          "source_sha256": "ce0416fee984b8152924794f61f592c7a74f0458428169d8de8ce032b2cf5955"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20461",
+            "pid": 42848
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20465",
+            "pid": 42848
+          },
+          "source_sha256": "be5c919669f8fcb325a0c03e4d67b09f6219917395994b85efe17f09f8f97338"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[basis_hash-shared]",
+      "database": "aos_test_70fc4b37580e_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20539",
+            "pid": 42957
+          },
+          "source_sha256": "e992d3fbb196c01879ed2cc9cbf550ed7412e48858049f751c52530368047daf"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20542",
+            "pid": 42957
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20546",
+            "pid": 42957
+          },
+          "source_sha256": "2860ea3b48d08469610fbf4a1d0bd01f56ecabfa7c8f3b3f99728e8ad3d975b0"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[basis_hash-distinct]",
+      "database": "aos_test_7c803b663491_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20660",
+            "pid": 43141
+          },
+          "source_sha256": "6bc5a383b3e1754e3366e0266da3aad6f0126af780883c4eb5060f1a10643c18"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20663",
+            "pid": 43141
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20667",
+            "pid": 43141
+          },
+          "source_sha256": "fb2654c8ec0d5aa4084b655d536a03d371f91d5c04c4b593e22878f917fe7423"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[provider_head-shared]",
+      "database": "aos_test_e70a8c19ab5f_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20741",
+            "pid": 43251
+          },
+          "source_sha256": "a74bd3d560e2010637c1eb3f15e4251c163cc64256b4578b42701a5476e6c897"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20744",
+            "pid": 43251
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20748",
+            "pid": 43251
+          },
+          "source_sha256": "3372e946a61b9481d8225aad779a925dab3d3ec658fc6ad74d79e1515f77948d"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[provider_head-distinct]",
+      "database": "aos_test_990d9e4dfed1_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20862",
+            "pid": 43434
+          },
+          "source_sha256": "0df16a90e63dc6c72fc24725e373cc262b25cf2bcac537379eb8f37cf168affb"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20865",
+            "pid": 43434
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20869",
+            "pid": 43434
+          },
+          "source_sha256": "79a4193d0dcabda6f1e60ee0819ddcdb0ed09da9f2d93320629f3d420a372f04"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[evidence_lifecycle-shared]",
+      "database": "aos_test_4ff35259d7eb_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20951",
+            "pid": 43546
+          },
+          "source_sha256": "9e326c875300eabee989471b7ab3d429e7894110e1d1871f1e3a83d509ad88a8"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20954",
+            "pid": 43546
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "20958",
+            "pid": 43546
+          },
+          "source_sha256": "adfe6f68a9bfc3d48ca8aa6036ae4a293c631b3694fbfc60f0d5281901b64eb5"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[evidence_lifecycle-distinct]",
+      "database": "aos_test_a2fd591f77ff_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21080",
+            "pid": 43729
+          },
+          "source_sha256": "403cbb46a9a480e4033ab82d29268fca2fb56102e60f156327036ae70d75e98d"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21083",
+            "pid": 43729
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21087",
+            "pid": 43729
+          },
+          "source_sha256": "9998e3b63eb7149997d7fc187a1b2e3f3eca9816949e8505d6078187d340afe0"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[build_hash-shared]",
+      "database": "aos_test_838db27e7ae4_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21161",
+            "pid": 43841
+          },
+          "source_sha256": "010ee600b9dfd6d847b196d38cfef341fccd732dbd852aa77ae099ee630f415a"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21164",
+            "pid": 43841
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21168",
+            "pid": 43841
+          },
+          "source_sha256": "9d67e77eeeef596c211743caf97bbb88b519e1dc6a260cfc8accf1682743eebe"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[build_hash-distinct]",
+      "database": "aos_test_6c7fc3245730_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21291",
+            "pid": 44025
+          },
+          "source_sha256": "1028f0b3b89a88712743b52c2e540c93e8edb310133e26fe25be962dc8928141"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21294",
+            "pid": 44025
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21298",
+            "pid": 44025
+          },
+          "source_sha256": "86a9874d312564addc6836bb6bf1f27e6e0666ab049fbedb73ef4991219e48eb"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults_r3.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[receipt_result-shared]",
+      "database": "aos_test_c8f9b6bed352_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21421",
+            "pid": 44260
+          },
+          "source_sha256": "85ebbf8b2e6c7e4d28e96ad1c42146e4bb576b65e59ee1732785087c0d984522"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21424",
+            "pid": 44260
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21428",
+            "pid": 44260
+          },
+          "source_sha256": "3dc77f6d946cb2773472e80f7c5e3a27c2b311e23f5c75403bc03edffe487018"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults_r3.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[receipt_result-distinct]",
+      "database": "aos_test_eab44b276db2_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21531",
+            "pid": 44423
+          },
+          "source_sha256": "13f2449bd09dd32301325056ad4b3e07b7b53743113874a57b64a781abbd29e4"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21534",
+            "pid": 44423
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21538",
+            "pid": 44423
+          },
+          "source_sha256": "7c8887c7b7a6526e9f6f0a63811dd3d15588d95a1cd16ba90831e4d3676ed12d"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults_r3.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_status-shared]",
+      "database": "aos_test_13f96599ffd2_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21600",
+            "pid": 44515
+          },
+          "source_sha256": "2b807a3c9b1bd6f397518967cdeb082978adbed40ea6122da196a79de3be3aab"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21603",
+            "pid": 44515
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21607",
+            "pid": 44515
+          },
+          "source_sha256": "b69c61ac06c980df52ee1d820d57901d0e01deb512b641b0a5143bc8c0fd1f80"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults_r3.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_status-distinct]",
+      "database": "aos_test_7e2fc5482184_ti4_test",
+      "actual_public_sql_observations": [
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21709",
+            "pid": 44679
+          },
+          "source_sha256": "32a796ec7a3aa31d42d5b59168ef00dba1db71ae84cedf7abdaee44ada621a25"
+        },
+        {
+          "outcome": "native_refusal",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21712",
+            "pid": 44679
+          },
+          "type": "NoDataFound",
+          "sqlstate": "P0002",
+          "reason": "query returned no rows"
+        },
+        {
+          "outcome": "prepared_actual_public_source",
+          "identity": {
+            "session": "aos_provider_capacity_issuer",
+            "role": "aos_provider_capacity_issuer",
+            "xid": "21716",
+            "pid": 44679
+          },
+          "source_sha256": "79b7d5dec95cce3c7131e12bc9bd8aeb00ed8aefba98b471c557e87bb633903a"
+        }
+      ],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    }
+  ],
+  "whole_r2_failed": true,
+  "r2_passed_nodes": 20,
+  "r3_passed_nodes": 4,
+  "single_full_green": false,
+  "old_resources_unchanged": true,
+  "old_resource_count": 31,
+  "product_hashes_unchanged": true,
+  "original_test_unchanged": true,
+  "full_source_delivery": false,
+  "business_execution": false
+}

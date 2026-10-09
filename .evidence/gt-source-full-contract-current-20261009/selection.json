@@ -1,0 +1,15 @@
+[
+  "test_exact_public_source_composition_preserves_original_issuer_checker",
+  "test_exact_public_source_rejects_live_issuer_drift",
+  "test_exact_public_source_rejects_bad_signature_and_unfinished_commit",
+  "test_controlled_source_signer_binds_original_jwt_pending_and_private_key",
+  "test_native_pending_source_rejects_unfinished_actual_commit",
+  "test_native_pending_source_savepoint_rollback_has_no_residue",
+  "test_native_pending_source_rejects_new_key_for_same_request",
+  "test_native_pending_sources_reuse_physical_account_in_same_transaction",
+  "test_native_pending_source_respects_existing_global_ownership",
+  "test_native_committed_source_is_durable_and_signed",
+  "test_native_committed_sources_share_one_physical_account",
+  "test_native_committed_source_refuses_invalid_finalize",
+  "test_current_source_consumer_accepts_independent_owner"
+]

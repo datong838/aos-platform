@@ -1,0 +1,28 @@
+{
+  "passed_call_nodes": 20,
+  "setup_errors": [
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[receipt_result-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[receipt_result-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_status-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_status-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    }
+  ],
+  "postgres_failure": "backend signal 11 during CREATE TABLE aip_feature_activation; automatic recovery completed",
+  "product_failure_proven": false,
+  "unknown_effect_replay": false
+}

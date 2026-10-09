@@ -1,0 +1,133 @@
+{
+  "observed_at": "2026-10-09T04:14:26.363472+00:00",
+  "database": "aos_test_2ce15dfa1484_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[source_metadata-shared]",
+      "phase": "database_binding",
+      "database": "aos_test_2ce15dfa1484_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[source_metadata-shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[source_metadata-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_metadata-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_metadata-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[maker_owner-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[maker_owner-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[checker_owner-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[checker_owner-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[request_hash-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[request_hash-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[account_hash-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[account_hash-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[basis_hash-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[basis_hash-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[provider_head-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[provider_head-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[evidence_lifecycle-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[evidence_lifecycle-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[build_hash-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[build_hash-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[receipt_result-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[receipt_result-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_status-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_status-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "original complete Source core actual COMMIT/global ownership/issuer/current-consumer matrix; no business execution"
+}

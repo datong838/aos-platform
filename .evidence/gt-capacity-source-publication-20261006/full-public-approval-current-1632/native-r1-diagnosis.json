@@ -1,0 +1,8 @@
+{
+  "result": "1 passed, 23 setup errors, 126.32s",
+  "actual_first_public_field_gate": "source_metadata shared accepted legal / refused actual fault / accepted restored",
+  "failure": "Original _registered_publication_inputs requires registry_epoch count0; external wrapper reused session isolated database because original field test name is outside per-node signed-registration whitelist",
+  "product_failure_proven": false,
+  "correction": "Add this wrapper own per-node original bootstrap; do not alter original whitelist or signed registry rows",
+  "old_database": "aos_test_2ce15dfa1484_ti4_test"
+}

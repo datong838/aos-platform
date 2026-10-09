@@ -1,0 +1,338 @@
+{
+  "original_contract": {
+    "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005/sql-approval-equivalence-plan.md",
+    "sha256": "b62cd78b5024dbcfad3f5b5f771ccb96e6efb70b9a8aaca7929f6110b63ed5be"
+  },
+  "requirements": [
+    {
+      "id": "S01",
+      "original_authority": "formal_boundary.require_capacity_issuer_identity",
+      "required_acceptance": "原session_user与native role均为issuer，正向双tenant、SERIALIZABLE、非autocommit、正常replication；固定实际owner/ACL/RLS/函数与trigger fence",
+      "direct_sql_negative": "SET ROLE、额外schema/helper/表/函数grant、错scope、非SERIAL",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_exact_public_source_rejects_live_issuer_drift",
+        "test_native_original_fact_prefix_refuses_role_impersonation",
+        "test_native_original_command_private_functions_have_no_ordinary_entry"
+      ],
+      "selected_now": [
+        "test_exact_public_source_rejects_live_issuer_drift"
+      ],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S02",
+      "original_authority": "source_issuer.authenticate_capacity_issuance_command",
+      "required_acceptance": "受控signer核原JWT的真实subject/issuer/audience/expiry；签名原文绑定主体、原command requestHash及DB实际prepare事务；SQL按原maker重算binding并验授权permit下的签名",
+      "direct_sql_negative": "自报maker、Python verified、任意bytes签名、授权上下文互换",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_controlled_source_signer_binds_original_jwt_pending_and_private_key",
+        "test_native_original_command_rejects_exact_transport_and_original_drift"
+      ],
+      "selected_now": [
+        "test_controlled_source_signer_binds_original_jwt_pending_and_private_key"
+      ],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S03",
+      "original_authority": "formal_boundary.read_capacity_approved_claims",
+      "required_acceptance": "Source proposal原actionType、approved状态、version=2、exact proposal_hash、maker真实主体、未到期",
+      "direct_sql_negative": "未批准、wrong action、ref/hash/version漂移",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_original_fact_prefix_rejects_committed_original_fact_drift"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S04",
+      "original_authority": "同入口approval_event",
+      "required_acceptance": "该proposal恰一条approved checker.1 event；原proposal_version=1、proposal_hash/action_binding_hash/approval_policy_hash一致，expiry有效，exact event ID及模型规范body hash一致",
+      "direct_sql_negative": "双event、不同slot、任一hash/expiry漂移",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_original_approval_sql_rechecks_native_approval_facts_without_client_guard",
+        "test_native_original_fact_prefix_rejects_committed_original_fact_drift"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S05",
+      "original_authority": "Source/Capacity guard read_metadata",
+      "required_acceptance": "两专用Action及Object metadata逐字段与原固定snapshot一致，canonical metadata revisionHash正确；原FOR SHARE顺序",
+      "direct_sql_negative": "metadata一个字段变异、换revisionHash",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_original_fact_prefix_rejects_committed_original_fact_drift"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S06",
+      "original_authority": "Capacity guard check_proposal",
+      "required_acceptance": "task/run/object/impact/client_risk_hint均无附加执行目标；diff={}、evidence_refs=[]；source/request各专用purpose与payload字段集合严格匹配",
+      "direct_sql_negative": "注入task/run/附加payload或effect字段",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_original_fact_prefix_rejects_committed_original_fact_drift"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S07",
+      "original_authority": "同guard check_request/risk",
+      "required_acceptance": "固定专用R2风险与makerChecker/executionAllowed=false/draftOnly=false规则，policy_snapshot与原canonical policy hash、原actionBinding重算一致；不可自由接受risk/policy JSON",
+      "direct_sql_negative": "篡改风险/审批策略/actionBinding",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_original_fact_prefix_rejects_committed_original_fact_drift"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S08",
+      "original_authority": "同guard draft + ActionStore._bundle",
+      "required_acceptance": "原draft snapshot canonical hash等于proposal_hash，payload/actionType/policy/actionBinding与proposal一致；draft.status=approved；event canonical格式复用原模型字段与时间表示",
+      "direct_sql_negative": "snapshot/body/hash/status任一漂移",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_original_fact_prefix_rejects_committed_original_fact_drift",
+        "test_original_approval_sql_rechecks_native_approval_facts_without_client_guard"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S09",
+      "original_authority": "Capacity guard._role / checker",
+      "required_acceptance": "当前maker/checker各原meta_membership Owner记录持SHARE，maker≠checker；eligibility原tenant/actor/roles=['owner']/slot/policy hash重算一致",
+      "direct_sql_negative": "checker等于maker、撤销任一Owner、资格hash漂移",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_original_fact_owner_boundary_rejects_effective_drift",
+        "test_native_original_fact_prefix_rejects_committed_original_fact_drift"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S10",
+      "original_authority": "Source guard._allocation",
+      "required_acceptance": "原allocation request/approval及proposal属于同maker、正向tenant和专用Action；唯一原批准、其binding/eligibility/body hash与source exactref匹配",
+      "direct_sql_negative": "换批准、不同maker、旧版本/多event",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_original_fact_prefix_rejects_committed_original_fact_drift",
+        "test_native_allocation_binding_rejects_coherent_wrong_hash"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S11",
+      "original_authority": "Capacity guard._request",
+      "required_acceptance": "request_json恰application/makerSubject；canonical原request hash一致；REQUEST_ONLY_NO_CAPACITY_NO_START、basis_verified=false、execution_allowed=false；expires_at与原proposalExpiresAt及validity一致",
+      "direct_sql_negative": "候选或测试pass冒充正式申请、bool/shape/hash漂移",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_original_capacity_request_rechecks_exact_row_expiry",
+        "test_native_original_capacity_application_profile_matches_original_model"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S12",
+      "original_authority": "Source guard._candidate",
+      "required_acceptance": "原account/basis候选exact ID/revision/kind/hash、candidateKind/makerSubject与原maker；CANDIDATE_ONLY_NO_CAPACITY_NO_START、basis_verified=false/execution_allowed=false；严格候选模型",
+      "direct_sql_negative": "自由DTO/alias、错maker、误标verified、额外字段",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_original_candidate_profile_matches_original_model",
+        "test_native_candidate_combination_rejects_rehashed_original_row_term_faults"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S13",
+      "original_authority": "Source guard account/basis/request组合",
+      "required_acceptance": "basis.account exactref等于source.account；account alias等于原request alias仅用于匹配，不能作global ID；request Provider属于account全集，basis并发不超过原申请",
+      "direct_sql_negative": "拆账户、少Provider、超申请并发",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_signed_supplier_combination_keeps_original_approved_terms",
+        "test_native_original_candidate_rows_and_combination_keep_original_claims"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S14",
+      "original_authority": "_current_revision/_account_dependencies",
+      "required_acceptance": "原Provider head/current exactrevision/contentHash、状态与原模型要求一致；全部Provider exact集合，无重复或跨tenant；按现原guard持锁",
+      "direct_sql_negative": "head换代、disabled、old ref、集合缩减",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_provider_query_checks_real_full_original_account_set",
+        "test_native_original_provider_current_row_rejects_coherent_payload_faults"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S15",
+      "original_authority": "Evidence/production contract与neutral fence",
+      "required_acceptance": "三路原Evidence exacthash、frozen/nonrevoked、原build provenance/contract；原neutral epoch锁/fence必须有效；不得仅evidence存在",
+      "direct_sql_negative": "revoke/build/contract drift、epoch或函数ACL/hash漂移",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_evidence_query_checks_three_distinct_original_source_origins",
+        "test_native_original_evidence_catalog_matches_original_drift_reason"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S16",
+      "original_authority": "Source guard151 withdrawal fence",
+      "required_acceptance": "Source与allocation两个proposal均无withdrawal；对应实际epoch锁及owner/ACL/trigger结构有效；保持原guard内部顺序",
+      "direct_sql_negative": "普通withdraw及直接INSERT，两方向竞争、epoch删除",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_original_withdrawal_audit_denied_to_ordinary_callers",
+        "test_native_original_fact_prefix_holds_real_locks_until_caller_commit"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S17",
+      "original_authority": "source_issuer.check_signed_capacity_documents",
+      "required_acceptance": "原policy/attestation raw typed/canonical、独立trusted root/permit取钥、Ed25519、purpose、tenant、exactref与原raw SHA256；受控root/policy currentepoch",
+      "direct_sql_negative": "caller key、verified flag、重签重复字段、错purpose/rootref",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_full_signed_suffix_rejects_changed_exact_document_refs",
+        "test_native_current_signed_exact_scope_matrix_and_ordinary_role_denial"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S18",
+      "original_authority": "check_native_capacity_supplier_inputs",
+      "required_acceptance": "policy指定attestation publisher/key/root/supplier；supplier/fingerprint和Provider全集等于原account，Evidence等于basis；token模式/unit/上界及fixed-window秒数/anchor精确相等",
+      "direct_sql_negative": "任一计量/供应商/窗口/集合变异",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_signed_supplier_combination_keeps_original_approved_terms"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S19",
+      "original_authority": "同入口窗口/observation",
+      "required_acceptance": "policy/attestation/basis/request/两proposal/两events/Source有效窗口交集；supplier_observed_at当前年龄/未来偏差满足policy，supplier_limit_claim observation等于basis",
+      "direct_sql_negative": "old/future observation、窗口越界、批准临界过期",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_source_window_requires_original_request_allocation_and_basis",
+        "test_original_source_time_profile_matches_original_datetime_oracle"
+      ],
+      "selected_now": [],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    },
+    {
+      "id": "S20",
+      "original_authority": "publication的新域",
+      "required_acceptance": "独立anchor/bootstrap/permit exactrefs与实际部署、签发主体授权；DB推导global稳定ID/Provider映射；同事务的精确待签bytes与完整Source签名绑定；全域唯一约束",
+      "direct_sql_negative": "wrong DB/cluster/映射、自由stableID、跨tenant归属",
+      "state": "NOT_PROVEN_BY_CURRENT_SELECTED_CORE_ALONE",
+      "candidate_native_tests": [
+        "test_native_pending_source_respects_existing_global_ownership",
+        "test_native_committed_sources_share_one_physical_account",
+        "test_native_committed_source_refuses_invalid_finalize"
+      ],
+      "selected_now": [
+        "test_native_pending_source_respects_existing_global_ownership",
+        "test_native_committed_sources_share_one_physical_account",
+        "test_native_committed_source_refuses_invalid_finalize"
+      ],
+      "coverage_limit": "Test names are navigation only. Full parameter fields and actual run/input hashes must be reconciled; no S-number PASS inferred."
+    }
+  ],
+  "historical_results": [
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/full157-native-facts-adjacent-r3.log",
+      "sha256": "97a4df6550b25b5c2041d3e055ee8193c2e2a027942d2655a3da575ed064edb6",
+      "summary": "124 passed, 156 deselected, 7 warnings in 334.47s (0:05:34)",
+      "reusable_current_acceptance": false,
+      "reason": "Historical log alone lacks current exact field/caller/input reconciliation; one signed-current historical log contains failure. Do not silently aggregate as full green."
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/full157-native-command-adjacent-r1.log",
+      "sha256": "e32d4ff06805889a3ee9529b4573291369e44818f8dbd9c022a55f317fb79a5e",
+      "summary": "168 passed, 154 deselected, 7 warnings in 483.70s (0:08:03)",
+      "reusable_current_acceptance": false,
+      "reason": "Historical log alone lacks current exact field/caller/input reconciliation; one signed-current historical log contains failure. Do not silently aggregate as full green."
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/source-window-domain-r2.log",
+      "sha256": "d05eca2c1d0792a875d2c8cfe27413be458b1ed767623bbc339eb801db35ab9a",
+      "summary": "5 passed, 155 deselected, 7 warnings in 17.89s",
+      "reusable_current_acceptance": false,
+      "reason": "Historical log alone lacks current exact field/caller/input reconciliation; one signed-current historical log contains failure. Do not silently aggregate as full green."
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/signed-current-native-adjacent-r1.log",
+      "sha256": "9ed8489c9ecca4b38d7bb666d3e98778981f63ad9afd3f935825165b777b564d",
+      "summary": "1 failed, 4 passed, 124 deselected, 7 warnings in 38.92s",
+      "reusable_current_acceptance": false,
+      "reason": "Historical log alone lacks current exact field/caller/input reconciliation; one signed-current historical log contains failure. Do not silently aggregate as full green."
+    },
+    {
+      "path": ".evidence/gt-capacity-source-publication-20261006/full157-native-commit-expanded-r1.log",
+      "sha256": "0eeb4b32e3e4c75fe247fdef6f551fe5695ef85f570f62d09b1c025b65d67a3c",
+      "summary": "6 passed, 300 deselected, 7 warnings in 66.94s (0:01:06)",
+      "reusable_current_acceptance": false,
+      "reason": "Historical log alone lacks current exact field/caller/input reconciliation; one signed-current historical log contains failure. Do not silently aggregate as full green."
+    }
+  ],
+  "actual_final_commit_wallclock": {
+    "state": "UNRESOLVED_REAL_COUNTEREXAMPLE",
+    "evidence": ".evidence/gt-source-body-expiry-commit-native-20261009",
+    "current_consumer_expiry": ".evidence/gt-source-current-body-expiry-native-20261009",
+    "postgresql_reference": "https://www.postgresql.org/docs/16/sql-set-constraints.html",
+    "weaker_semantics_approved": false
+  },
+  "full_source_complete": false,
+  "current_selected_core": {
+    "proof": "independent-core-verification.json",
+    "node_count": 24,
+    "sources": 10,
+    "status": "24_NATIVE_PASS_INDEPENDENTLY_READ_BACK",
+    "scope_limit": "13 selected original functions; not all S01-S20 field mutations or final COMMIT time guarantee"
+  },
+  "next_registered_step": {
+    "task_id": "gt-capacity-source-publication-20261006",
+    "path": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/plan.md",
+    "status": "RUNNING_REAL_PUBLIC_PREPARE_ORIGINAL_12_FIELD_FAULTS_BOTH_LAYOUTS"
+  },
+  "actual_public_original_field_followup": {
+    "path": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/independent-public-fault-verification.json",
+    "r2": "20 passed / 4 environment setup errors, complete run failed",
+    "r3": "4 passed / 20 deselected, new independent retained DBs",
+    "independently_verified_nodes": 24,
+    "single_full_run_green": false,
+    "full_parent_delivery": false
+  }
+}

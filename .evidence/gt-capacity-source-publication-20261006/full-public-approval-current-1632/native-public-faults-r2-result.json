@@ -1,0 +1,228 @@
+{
+  "observed_at": "2026-10-09T04:19:37.893872+00:00",
+  "database": "aos_test_6c7fc3245730_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[source_metadata-shared]",
+      "phase": "database_binding",
+      "database": "aos_test_dc0a13f00123_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[source_metadata-shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[source_metadata-distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_307a03d79ee5_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[source_metadata-distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_metadata-shared]",
+      "phase": "database_binding",
+      "database": "aos_test_2514c060c34d_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_metadata-shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_metadata-distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_f380bf8dfad7_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_metadata-distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[maker_owner-shared]",
+      "phase": "database_binding",
+      "database": "aos_test_7e49acba4f4e_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[maker_owner-shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[maker_owner-distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_e0203c0f03ea_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[maker_owner-distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[checker_owner-shared]",
+      "phase": "database_binding",
+      "database": "aos_test_b8bc77ef9ebe_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[checker_owner-shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[checker_owner-distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_4605d25556f4_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[checker_owner-distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[request_hash-shared]",
+      "phase": "database_binding",
+      "database": "aos_test_3dea35743c0d_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[request_hash-shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[request_hash-distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_f7b75c42fb3e_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[request_hash-distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[account_hash-shared]",
+      "phase": "database_binding",
+      "database": "aos_test_ed2a6d8f9f32_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[account_hash-shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[account_hash-distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_9d196f467ef1_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[account_hash-distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[basis_hash-shared]",
+      "phase": "database_binding",
+      "database": "aos_test_70fc4b37580e_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[basis_hash-shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[basis_hash-distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_7c803b663491_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[basis_hash-distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[provider_head-shared]",
+      "phase": "database_binding",
+      "database": "aos_test_e70a8c19ab5f_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[provider_head-shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[provider_head-distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_990d9e4dfed1_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[provider_head-distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[evidence_lifecycle-shared]",
+      "phase": "database_binding",
+      "database": "aos_test_4ff35259d7eb_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[evidence_lifecycle-shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[evidence_lifecycle-distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_a2fd591f77ff_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[evidence_lifecycle-distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[build_hash-shared]",
+      "phase": "database_binding",
+      "database": "aos_test_838db27e7ae4_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[build_hash-shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[build_hash-distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_6c7fc3245730_ti4_test"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[build_hash-distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[receipt_result-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[receipt_result-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_status-shared]",
+      "phase": "setup",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": ".evidence/gt-capacity-source-publication-20261006/full-public-approval-current-1632/test_public_original_faults.py::test_native_original_fact_prefix_rejects_committed_original_fact_drift[allocation_status-distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "original complete Source core actual COMMIT/global ownership/issuer/current-consumer matrix; no business execution"
+}

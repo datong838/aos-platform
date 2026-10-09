@@ -1,0 +1,100 @@
+2026-10-09 04:19:07.822 UTC [43760] ERROR:  permission denied for table twa_org
+2026-10-09 04:19:07.822 UTC [43760] STATEMENT:  SELECT COUNT(*) AS c FROM twa_org
+2026-10-09 04:19:15.875 UTC [43854] ERROR:  query returned no rows
+2026-10-09 04:19:15.875 UTC [43854] CONTEXT:  PL/pgSQL function aos_capacity_publication_private.require_original_fact_evidence(jsonb,boolean) line 20 at SQL statement
+2026-10-09 04:19:15.875 UTC [43854] STATEMENT:  SELECT aos_capacity_publication_private.require_original_fact_evidence($1::jsonb,true)
+2026-10-09 04:19:16.110 UTC [43841] ERROR:  query returned no rows
+2026-10-09 04:19:16.110 UTC [43841] CONTEXT:  PL/pgSQL function aos_capacity_publication_private.require_original_fact_evidence(jsonb,boolean) line 20 at SQL statement
+	SQL statement "SELECT aos_capacity_publication_private.require_original_fact_evidence(ref,true)"
+	PL/pgSQL function aos_capacity_publication_private.read_original_source_facts(text,jsonb,jsonb) line 482 at PERFORM
+	PL/pgSQL function aos_capacity_publication_private.read_source_command_facts(bytea) line 5 at assignment
+	PL/pgSQL function aos_capacity_publication_private.read_source_command_signed_facts(bytea,jsonb) line 12 at assignment
+	PL/pgSQL function aos_capacity_publication_private.prepare_original_source(bytea,text,text,jsonb) line 14 at assignment
+	SQL statement "SELECT * FROM aos_capacity_publication_private.prepare_original_source(p_raw,p_attempt_key,p_source_asset_id,p_permit_ref)"
+	PL/pgSQL function public.prepare_capacity_source(bytea,text,text,jsonb) line 209 at RETURN QUERY
+2026-10-09 04:19:16.110 UTC [43841] STATEMENT:  SELECT * FROM public.prepare_capacity_source($1,$2,$3,$4::jsonb)
+2026-10-09 04:19:18.461 UTC [43872] ERROR:  permission denied for table twa_org
+2026-10-09 04:19:18.461 UTC [43872] STATEMENT:  SELECT COUNT(*) AS c FROM twa_org
+2026-10-09 04:19:27.334 UTC [44039] ERROR:  query returned no rows
+2026-10-09 04:19:27.334 UTC [44039] CONTEXT:  PL/pgSQL function aos_capacity_publication_private.require_original_fact_evidence(jsonb,boolean) line 20 at SQL statement
+2026-10-09 04:19:27.334 UTC [44039] STATEMENT:  SELECT aos_capacity_publication_private.require_original_fact_evidence($1::jsonb,true)
+2026-10-09 04:19:27.560 UTC [44025] ERROR:  query returned no rows
+2026-10-09 04:19:27.560 UTC [44025] CONTEXT:  PL/pgSQL function aos_capacity_publication_private.require_original_fact_evidence(jsonb,boolean) line 20 at SQL statement
+	SQL statement "SELECT aos_capacity_publication_private.require_original_fact_evidence(ref,true)"
+	PL/pgSQL function aos_capacity_publication_private.read_original_source_facts(text,jsonb,jsonb) line 482 at PERFORM
+	PL/pgSQL function aos_capacity_publication_private.read_source_command_facts(bytea) line 5 at assignment
+	PL/pgSQL function aos_capacity_publication_private.read_source_command_signed_facts(bytea,jsonb) line 12 at assignment
+	PL/pgSQL function aos_capacity_publication_private.prepare_original_source(bytea,text,text,jsonb) line 14 at assignment
+	SQL statement "SELECT * FROM aos_capacity_publication_private.prepare_original_source(p_raw,p_attempt_key,p_source_asset_id,p_permit_ref)"
+	PL/pgSQL function public.prepare_capacity_source(bytea,text,text,jsonb) line 209 at RETURN QUERY
+2026-10-09 04:19:27.560 UTC [44025] STATEMENT:  SELECT * FROM public.prepare_capacity_source($1,$2,$3,$4::jsonb)
+2026-10-09 04:19:29.949 UTC [44057] ERROR:  permission denied for table twa_org
+2026-10-09 04:19:29.949 UTC [44057] STATEMENT:  SELECT COUNT(*) AS c FROM twa_org
+2026-10-09 04:19:33.736 UTC [44077] ERROR:  could not resize shared memory segment "/PostgreSQL.995298446" to 33554432 bytes: No space left on device
+2026-10-09 04:19:33.736 UTC [44077] CONTEXT:  SQL expression "NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='public.aip_action_withdrawal_event'::regclass
+	 AND tgisinternal AND tgtype=5 AND tgname LIKE 'RI_ConstraintTrigger_%')
+	 OR EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='public.aip_action_withdrawal_event'::regclass
+	 AND tgisinternal AND (tgtype & 4)=4 AND (tgdeferrable OR tginitdeferred OR tgtype<>5
+	 OR tgname>='zz_capacity_withdrawal_epoch_bump_a0v151'))"
+	PL/pgSQL function inline_code_block line 16 at IF
+2026-10-09 04:19:33.736 UTC [44077] STATEMENT:  DO $$ DECLARE r record; BEGIN
+	 SELECT * INTO r FROM pg_roles WHERE rolname='aos_capacity_withdrawal_epoch_owner';
+	 IF NOT FOUND THEN CREATE ROLE aos_capacity_withdrawal_epoch_owner NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+	 ELSIF r.rolcanlogin OR r.rolinherit OR r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls THEN
+	 RAISE EXCEPTION 'CAPACITY_WITHDRAWAL_OWNER_DRIFT' USING ERRCODE='42501'; END IF;
+	 IF EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid='aos_capacity_withdrawal_epoch_owner'::regrole OR member='aos_capacity_withdrawal_epoch_owner'::regrole)
+	 OR EXISTS(SELECT 1 FROM pg_class WHERE relowner='aos_capacity_withdrawal_epoch_owner'::regrole)
+	 OR EXISTS(SELECT 1 FROM pg_proc WHERE proowner='aos_capacity_withdrawal_epoch_owner'::regrole)
+	 OR EXISTS(SELECT 1 FROM pg_namespace WHERE nspowner='aos_capacity_withdrawal_epoch_owner'::regrole)
+	 OR EXISTS(SELECT 1 FROM pg_database WHERE datdba='aos_capacity_withdrawal_epoch_owner'::regrole)
+	 OR EXISTS(SELECT 1 FROM pg_class c,LATERAL aclexplode(c.relacl) a WHERE a.grantee='aos_capacity_withdrawal_epoch_owner'::regrole)
+	 OR EXISTS(SELECT 1 FROM pg_attribute c,LATERAL aclexplode(c.attacl) a WHERE a.grantee='aos_capacity_withdrawal_epoch_owner'::regrole)
+	 OR EXISTS(SELECT 1 FROM pg_proc p,LATERAL aclexplode(p.proacl) a WHERE a.grantee='aos_capacity_withdrawal_epoch_owner'::regrole)
+	 OR EXISTS(SELECT 1 FROM pg_namespace n,LATERAL aclexplode(n.nspacl) a WHERE a.grantee='aos_capacity_withdrawal_epoch_owner'::regrole) THEN
+	 RAISE EXCEPTION 'CAPACITY_WITHDRAWAL_OWNER_DRIFT' USING ERRCODE='42501'; END IF;
+	 IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='public.aip_action_withdrawal_event'::regclass
+	 AND tgisinternal AND tgtype=5 AND tgname LIKE 'RI_ConstraintTrigger_%')
+	 OR EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='public.aip_action_withdrawal_event'::regclass
+	 AND tgisinternal AND (tgtype & 4)=4 AND (tgdeferrable OR tginitdeferred OR tgtype<>5
+	 OR tgname>='zz_capacity_withdrawal_epoch_bump_a0v151')) THEN
+	 RAISE EXCEPTION 'CAPACITY_WITHDRAWAL_FOREIGN_KEY_ORDER_REQUIRED' USING ERRCODE='42501'; END IF;
+	 END $$
+2026-10-09 04:19:34.580 UTC [44093] ERROR:  permission denied for table twa_org
+2026-10-09 04:19:34.580 UTC [44093] STATEMENT:  SELECT COUNT(*) AS c FROM twa_org
+2026-10-09 04:19:36.997 UTC [44114] ERROR:  could not resize shared memory segment "/PostgreSQL.985747822" to 33554432 bytes: No space left on device
+2026-10-09 04:19:36.997 UTC [44114] STATEMENT:  CREATE TABLE aip_feature_activation(
+	      org_id TEXT NOT NULL,project_id TEXT NOT NULL,feature_id TEXT NOT NULL,
+	      revision BIGINT NOT NULL,content_hash TEXT NOT NULL,status TEXT NOT NULL,
+	      activated_at TIMESTAMPTZ NOT NULL,expires_at TIMESTAMPTZ,
+	      authority_data JSONB NOT NULL,created_by TEXT NOT NULL,created_at TIMESTAMPTZ NOT NULL,
+	      PRIMARY KEY(org_id,project_id,feature_id,revision),
+	      CHECK(feature_id ~ '^aip[.][a-z0-9]+([.-][a-z0-9]+)*$'),CHECK(revision>=1),
+	      CHECK(content_hash ~ '^sha256:[0-9a-f]{64}$'),
+	      CHECK(status IN('active','superseded','revoked')),
+	      CHECK(expires_at IS NULL OR expires_at>activated_at),
+	      CHECK(jsonb_typeof(authority_data)='object'))
+2026-10-09 04:19:37.062 UTC [1] LOG:  server process (PID 44114) was terminated by signal 11: Segmentation fault
+2026-10-09 04:19:37.062 UTC [1] DETAIL:  Failed process was running: CREATE TABLE aip_feature_activation(
+	      org_id TEXT NOT NULL,project_id TEXT NOT NULL,feature_id TEXT NOT NULL,
+	      revision BIGINT NOT NULL,content_hash TEXT NOT NULL,status TEXT NOT NULL,
+	      activated_at TIMESTAMPTZ NOT NULL,expires_at TIMESTAMPTZ,
+	      authority_data JSONB NOT NULL,created_by TEXT NOT NULL,created_at TIMESTAMPTZ NOT NULL,
+	      PRIMARY KEY(org_id,project_id,feature_id,revision),
+	      CHECK(feature_id ~ '^aip[.][a-z0-9]+([.-][a-z0-9]+)*$'),CHECK(revision>=1),
+	      CHECK(content_hash ~ '^sha256:[0-9a-f]{64}$'),
+	      CHECK(status IN('active','superseded','revoked')),
+	      CHECK(expires_at IS NULL OR expires_at>activated_at),
+	      CHECK(jsonb_typeof(authority_data)='object'))
+2026-10-09 04:19:37.062 UTC [1] LOG:  terminating any other active server processes
+2026-10-09 04:19:37.065 UTC [1] LOG:  all server processes terminated; reinitializing
+2026-10-09 04:19:37.306 UTC [44120] LOG:  database system was interrupted; last known up at 2026-10-09 04:14:34 UTC
+2026-10-09 04:19:37.307 UTC [44123] FATAL:  the database system is in recovery mode
+2026-10-09 04:19:37.318 UTC [44124] FATAL:  the database system is in recovery mode
+2026-10-09 04:19:49.701 UTC [44120] LOG:  syncing data directory (fsync), elapsed time: 10.00 s, current path: ./base/1123260/1127342
+2026-10-09 04:19:50.578 UTC [44120] LOG:  database system was not properly shut down; automatic recovery in progress
+2026-10-09 04:19:50.646 UTC [44120] LOG:  redo starts at 1/2C23930
+2026-10-09 04:19:55.081 UTC [44120] LOG:  unexpected pageaddr 0/F8000000 in WAL segment 000000010000000100000037, LSN 1/37000000, offset 0
+2026-10-09 04:19:55.081 UTC [44120] LOG:  redo done at 1/36FFFFC0 system usage: CPU: user: 1.92 s, system: 1.67 s, elapsed: 4.43 s
+2026-10-09 04:19:55.257 UTC [44121] LOG:  checkpoint starting: end-of-recovery immediate wait
+2026-10-09 04:19:56.999 UTC [44121] LOG:  checkpoint complete: wrote 1946 buffers (95.0%); 0 WAL file(s) added, 0 removed, 53 recycled; write=0.010 s, sync=1.715 s, total=1.743 s; sync files=74380, longest=0.007 s, average=0.001 s; distance=855921 kB, estimate=855921 kB; lsn=1/37000028, redo lsn=1/37000028
+2026-10-09 04:19:57.007 UTC [1] LOG:  database system is ready to accept connections
