@@ -1,0 +1,10 @@
+{
+  "database": "aos_test_235f9f604d83_ti4_test",
+  "read_only": true,
+  "identity_epoch_exported": true,
+  "identity_version_exported": false,
+  "replay_version_verification_ready": false,
+  "red_is_routing_investigation_only": true,
+  "authority": "AOS-001678",
+  "execution_allowed": false
+}

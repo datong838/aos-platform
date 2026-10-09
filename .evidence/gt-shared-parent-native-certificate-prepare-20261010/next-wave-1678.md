@@ -1,0 +1,11 @@
+# 下一波：幂等重放与租户边界
+
+Rules：231、现有Task9/10与同owner Lease、方案先行、同caller/Source原件、真库只读。AOS-001678，m1@26804d93d12e05d6bee9df8f2b9eab5b39d8c680。
+
+已登记候选一：Task10同风险内重放/Task9元数据版本读回，以及canary/委托直呼负门；已获Model隔离实现授权，依赖已通过R8必要门与现有合法Task Lease，不依赖正式Root或Host。候选二：专属SourceTTL/审批撤回终止矩阵；已登记方案授权，依赖正确划分终止专项与fresh邻接完整正向，不能期待已到期原审批继续正向。先选一。
+
+本轮实际调查：现有reader只返回identityEpoch，不返回identityVersion。绑定trigger在同identity跨case追加时增长version但epoch保持1，所以仅epoch前后相等不能证明幂等重放没有重复触发身份版本。需要真实同caller元数据Version前后读回，不能以SQL源文本存在NOT EXISTS或单测替代。独立只读目录核对形成routing RED，无业务完成结论。
+
+拟修改目录/文件：services/aos-api/aos_api/aip_shared_parent_executor_set_reader.py（当前窄读取新增identityVersion并严格正整数，现有epoch/Source末尾复核和权限不变）；services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py（实际同caller正向后，以持久原件certificateBody解码重放精确同证书、不是+00:00非规范呈现副本，比较身份version及完整元数据不增；same transaction canary scope savepoint/严格42501；runtime直接委托EXEC拒绝并校验恢复正向）；若需要contract检查，则Task9 tests/aip/test_shared_parent_executor_set_reader_pg.py。其余只在本Task新隔离r9证据/Task3已登记prefix，4源码范围不扩大。
+
+先实际native Version缺失RED，再最小reader增量、337累计与fresh完整native。任何跨真实40秒证书窗口保持到期拒绝，不延旧证书/旧审批；新增幂等最多一轮、不合并需要另独立终止实验的到期/撤回。完成后独立只读实际COMMIT拒绝/零风险元数据/Source C授权闭合/源码与SQLbody；Root正式谱系/最终joint/WALACK仍独立。Task9/10无完整Delivery，不改长期Goal状态。
