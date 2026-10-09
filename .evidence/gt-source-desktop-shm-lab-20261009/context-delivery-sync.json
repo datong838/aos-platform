@@ -1,0 +1,216 @@
+{
+  "authority_revision": "AOS-001649",
+  "evidence_commit": "3547cd4cdb34aa97b75a0f09c82af9dc3661500d",
+  "delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-desktop-shm-lab-20261009",
+    "base_revision": "AOS-001648",
+    "completed_revision": "AOS-001648",
+    "result": "ENTIRE386_NATIVE_SOURCE_CUMULATIVE_GREEN_FINAL_COMMIT_DEADLINE_PENDING",
+    "changed_files": [
+      ".evidence/gt-source-desktop-shm-lab-20261009/checkpoint-validation.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/checkpoint.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/container-id-r3.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/container-id.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/create-attempt-r2.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/create.log",
+      ".evidence/gt-source-desktop-shm-lab-20261009/create_lab.py",
+      ".evidence/gt-source-desktop-shm-lab-20261009/creation-failure-reconciliation.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/finalize.log",
+      ".evidence/gt-source-desktop-shm-lab-20261009/finalize_full_green.py",
+      ".evidence/gt-source-desktop-shm-lab-20261009/independent-targeted-verification.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/independent-whole-final-verification.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/independent-whole-verification.log",
+      ".evidence/gt-source-desktop-shm-lab-20261009/input-bindings-r1.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/install_verifier.py",
+      ".evidence/gt-source-desktop-shm-lab-20261009/lab.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/leases-before.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/live-progress-observation.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/live-tool-session.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/native-targeted-r1-attempt.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/native-targeted-r1-result.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/native-whole-r4-attempt.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/native-whole-r4-result.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/native-whole-r4.log",
+      ".evidence/gt-source-desktop-shm-lab-20261009/parent-lease-renewals.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/plan.md",
+      ".evidence/gt-source-desktop-shm-lab-20261009/preflight.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/prepare_finalizer.py",
+      ".evidence/gt-source-desktop-shm-lab-20261009/process.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/recover-attempt-r3.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/recover.log",
+      ".evidence/gt-source-desktop-shm-lab-20261009/recover_lab.py",
+      ".evidence/gt-source-desktop-shm-lab-20261009/resource-baseline.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/review.md",
+      ".evidence/gt-source-desktop-shm-lab-20261009/run_targeted.py",
+      ".evidence/gt-source-desktop-shm-lab-20261009/run_whole.py",
+      ".evidence/gt-source-desktop-shm-lab-20261009/shm-root-cause-review.md",
+      ".evidence/gt-source-desktop-shm-lab-20261009/storage-probe.log",
+      ".evidence/gt-source-desktop-shm-lab-20261009/targeted-r1-collection.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/targeted-r1-connections.jsonl",
+      ".evidence/gt-source-desktop-shm-lab-20261009/targeted.log",
+      ".evidence/gt-source-desktop-shm-lab-20261009/task.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/terminal-resource-verification.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/verifier-install-attempt.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/verifier-install.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/verifier-install.log",
+      ".evidence/gt-source-desktop-shm-lab-20261009/verify-targeted.log",
+      ".evidence/gt-source-desktop-shm-lab-20261009/verify_targeted.py",
+      ".evidence/gt-source-desktop-shm-lab-20261009/verify_whole.py",
+      ".evidence/gt-source-desktop-shm-lab-20261009/volume-created.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/whole-r4-collection.json",
+      ".evidence/gt-source-desktop-shm-lab-20261009/whole-r4-connections.jsonl",
+      ".evidence/gt-source-desktop-shm-lab-20261009/whole-r4-resource-observations.jsonl",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/checkpoint-validation.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/checkpoint.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/collection-r2-failure-reconciliation.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/failure-reconciliation.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/finalize_full_green.py",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/independent-failure-verification.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/independent-failure-verification.log",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/input-bindings-r1.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/lab.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/leases-before.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/live-progress-observation.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/live-tool-session.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/native-whole-r2-attempt.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/native-whole-r2-result.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/native-whole-r2.log",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/native-whole-r3-attempt.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/native-whole-r3-result.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/native-whole-r3.log",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/next-final-commit-inputs.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/next-final-commit-investigation.md",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/plan.md",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/postgres-failure-recovery.log",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/process.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/resource-baseline.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/run_whole_r2.py",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/run_whole_r3.py",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/source-lease-renewal.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/task.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/verify_failure_readonly.py",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/verify_whole_r3_readonly.py",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/verify_whole_readonly.py",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/whole-r3-collection.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/whole-r3-connections.jsonl"
+    ],
+    "commits": [
+      "3547cd4cdb34aa97b75a0f09c82af9dc3661500d"
+    ],
+    "verification": [
+      "386 passed, 7 warnings in 2627.97s (0:43:47)",
+      "Independent retained native signedSource/xid/provenance/fullfoundation/ACL/roles/cleanup/durability/1963inputs/77priorresources readback"
+    ],
+    "risks": [
+      "Original actualCOMMITexpirycounterexample unresolved; fullSourceDelivery andformalfirstchain unproven"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T23:41:19+08:00"
+  },
+  "prior_failed_delivery": {
+    "schema": "aos-memory-delivery-receipt/v1",
+    "task_id": "gt-source-full-suite-desktop-r2-20261009",
+    "base_revision": "AOS-001648",
+    "completed_revision": "AOS-001648",
+    "result": "WHOLE_R3_341PASS_SETUP_SHM_ERROR_TERMINAL_READONLY_RECONCILED",
+    "changed_files": [
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/checkpoint-validation.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/checkpoint.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/collection-r2-failure-reconciliation.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/failure-reconciliation.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/finalize_full_green.py",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/independent-failure-verification.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/independent-failure-verification.log",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/input-bindings-r1.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/lab.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/leases-before.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/live-progress-observation.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/live-tool-session.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/native-whole-r2-attempt.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/native-whole-r2-result.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/native-whole-r2.log",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/native-whole-r3-attempt.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/native-whole-r3-result.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/native-whole-r3.log",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/next-final-commit-inputs.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/next-final-commit-investigation.md",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/plan.md",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/postgres-failure-recovery.log",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/process.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/resource-baseline.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/run_whole_r2.py",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/run_whole_r3.py",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/source-lease-renewal.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/task.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/verify_failure_readonly.py",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/verify_whole_r3_readonly.py",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/verify_whole_readonly.py",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/whole-r3-collection.json",
+      ".evidence/gt-source-full-suite-desktop-r2-20261009/whole-r3-connections.jsonl"
+    ],
+    "commits": [
+      "3547cd4cdb34aa97b75a0f09c82af9dc3661500d"
+    ],
+    "verification": [
+      "341 passed, 7 warnings, 1 error in 1902.69s (0:31:42)",
+      "127 retained databases / 7 committed signed Sources; SIG11 and WAL recovery preserved; no replay"
+    ],
+    "risks": [
+      "64MiB shared memory exhaustion and backend SIG11; r3 is FAILED, not cumulative green"
+    ],
+    "blockers": [],
+    "completed_at": "2026-10-09T23:41:20+08:00"
+  },
+  "sync": {
+    "apply": true,
+    "changed": 8,
+    "changes": [
+      {
+        "id": "context-current-status",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/01-\u5f53\u524d\u9879\u76ee\u72b6\u6001.md"
+      },
+      {
+        "id": "context-checkpoint",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/06-\u5f53\u524d\u6267\u884c\u68c0\u67e5\u70b9.md"
+      },
+      {
+        "id": "project-shared",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/projections/aos-project.json"
+      },
+      {
+        "id": "workbuddy-project",
+        "status": "CHANGE",
+        "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+      },
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001649-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001649"
+  },
+  "full_source_delivery": false,
+  "formal_execution": false,
+  "user_resume_explicit": true,
+  "goal_status_changed": false
+}

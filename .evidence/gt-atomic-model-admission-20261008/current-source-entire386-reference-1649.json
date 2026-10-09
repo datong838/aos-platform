@@ -1,0 +1,23 @@
+{
+  "authority_revision": "AOS-001649",
+  "head": "3547cd4cdb34aa97b75a0f09c82af9dc3661500d",
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-source-desktop-native-lab-reference-1648.json",
+      "sha256": "57a8ab3ffcfac436389224efcd0bbcac9c5b75d243ec9bf64b62d878ba4d611b"
+    },
+    {
+      "path": ".evidence/gt-source-desktop-shm-lab-20261009/review.md",
+      "sha256": "3bef312159addaa3cb3bb169e1d3ae8990539640f51a8eb3aa2395346f935d35"
+    },
+    {
+      "path": ".evidence/gt-source-desktop-shm-lab-20261009/independent-whole-final-verification.json",
+      "sha256": "f7fa46f60ff76883018ee4783ab1ecbd7f19ce5bc3b0daaf40710be57b97723e"
+    },
+    {
+      "path": ".evidence/gt-source-full-suite-desktop-r2-20261009/next-final-commit-investigation.md",
+      "sha256": "9189b3b7844106cbb6886c0a93f6bf0befd913e89f0786c5b27963ce248f02e3"
+    }
+  ],
+  "execution_allowed": false
+}
