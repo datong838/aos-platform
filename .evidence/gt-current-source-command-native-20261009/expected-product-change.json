@@ -1,0 +1,7 @@
+{
+  "path": "services/aos-api/aos_api/aip_provider_capacity_source_consumer.py",
+  "before_sha256": "a22d722ca6f262af612162c14c033773c4fe8553f14698ce00e1fc8d9e65d281",
+  "after_sha256": "53d01185001447482305c2ff3aeb37cac31bffb97c0121fb6a8766c3c8d72b0f",
+  "exact_replacements": 2,
+  "sql_unchanged": true
+}

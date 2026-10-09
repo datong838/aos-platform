@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-09T03:29:24.126679+00:00",
+  "database": "aos_test_f1635db250fb_ti4_test",
+  "pytest_exit": 1,
+  "results": [
+    {
+      "nodeid": ".evidence/gt-current-source-command-native-20261009/test_current_command.py::test_current_source_consumer_accepts_independent_owner[shared]",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "scope": "real current independent Owner/native Source direct command extra-key validation diagnostic; no business execution"
+}

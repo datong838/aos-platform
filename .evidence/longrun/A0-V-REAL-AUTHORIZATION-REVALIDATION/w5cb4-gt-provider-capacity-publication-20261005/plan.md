@@ -1,5 +1,13 @@
 # 完整非执行容量Source publication施工方案门
 
+## 2026-10-09 当前独立消费者的命令实例重验证
+
+AOS-001630后已登记真实诊断：新全迁移库、原prepare/sign/finalize/actualCOMMIT、真实当前独立Owner、新SCRAM xid/PID，consume_current_capacity_source合法原命令正向与重放通过，root/source_ref/tenant三个model_copy额外键均被接受，拒绝断言1FAILED27.45秒；原Sourcehash相同，未执行业务。诊断位于aos-platform/.evidence/gt-current-source-command-native-20261009/。原Task已按完整scope同owner续租+2小时，未因旧TTL夺锁、无重叠Lease；原Task不Delivery。
+
+修改文件仅services/aos-api/aos_api/aip_provider_capacity_source_consumer.py：_consumption_packet和consume_current_capacity_source两处ProviderCapacityConsumptionCommand.model_validate(command.model_dump(...))改为model_validate(command)，沿原extra=forbid/revalidate_instances=always保留并重验原命令及嵌套字段。现read_current_capacity_source旧issuance入口、SQL/private/public接口、身份授权/Owner/签名/原事实/锁/期限/Source历史全不改，不增加生产安装或授权。不得归为occupation消费者旧修复，也不对前波P0002具名自拟断言修产品。
+
+诊断先独立核对RED持久化签名/provenance/接口与角色/原31资源，保存修改前原字节及精确2行diff。之后用新全迁移库相同原current Owner/Source/SCRAM三extra固定拒绝、未变命令正向/重放；shared/distinct完整原current消费者矩阵和publication合同相邻验证。检查代码与本方案一致、旧接口正常；独立模型review当前daemon局部失败须如实保留。证据/产品精确提交与AOS/Prime同步后只收口本有限修复阶段，原完整Source/epoch/legacy/最终COMMIT合同和自然首链仍按原门验收。
+
 ## 本波SQL原文字节实施范围
 
 首SQL RED12 errors缺新store模块，最小SQL实现12项native专项通过。复核大消息逐项array_append可能重复复制大块内存，改string_agg有序聚合；补object键数<=1000（Python与SQL同步）、空容器/true/null/转义/Unicode排序/嵌套边界、完整bootstrap/PublishedSource、2MiB附近TOAST及ACL/普通role拒绝与精确grant验证。此调整解决未关闭的性能/权限验收风险，不为刷新进度制造测试。

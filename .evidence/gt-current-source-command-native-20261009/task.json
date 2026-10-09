@@ -1,0 +1,20 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-current-source-command-native-20261009",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001630",
+  "scope": [
+    "aos-platform/.evidence/gt-current-source-command-native-20261009",
+    "isolatedDocker:colima-aos-extension/aos-source-newjudge-native-20261009/current-source-command-diagnostic"
+  ],
+  "excluded_scope": [
+    "product/currentDB/runtime/Provider/restart/expiry semantics/full Source Delivery"
+  ],
+  "expected_outputs": [
+    "Authentic current independent Owner/native Source positive then three direct command extra-key native outcomes and unchanged-command replay",
+    "Independent Source hash/signature/provenance and complete role/interface/resource cleanup; RED preserved if any accepted"
+  ],
+  "lease_expires_at": "2026-10-09T05:28:11.059935+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-09T11:28:12+08:00"
+}

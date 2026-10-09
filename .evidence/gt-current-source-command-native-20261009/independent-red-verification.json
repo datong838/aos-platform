@@ -1,0 +1,53 @@
+{
+  "observations": [
+    {
+      "database": "aos_test_f1635db250fb_ti4_test",
+      "source": [
+        {
+          "asset_id": "current-source-command-74bdaefb6a224b50845e0c0a0c2c3ec6",
+          "content_hash": "1156eeaf3df1a93d7f8c01f4c1e6e5a329ece0aecccecb8f14c169852a176fd8",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "original_xid": "14236",
+          "original_pid": 30823,
+          "original_session": "aos_provider_capacity_issuer",
+          "provenance_ok": true
+        }
+      ],
+      "occupation_counts": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "original_source_committed": true,
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true,
+      "denials": [
+        {
+          "case": "root",
+          "denied": false,
+          "returned_source_sha256": "1156eeaf3df1a93d7f8c01f4c1e6e5a329ece0aecccecb8f14c169852a176fd8"
+        },
+        {
+          "case": "source_ref",
+          "denied": false,
+          "returned_source_sha256": "1156eeaf3df1a93d7f8c01f4c1e6e5a329ece0aecccecb8f14c169852a176fd8"
+        },
+        {
+          "case": "tenant",
+          "denied": false,
+          "returned_source_sha256": "1156eeaf3df1a93d7f8c01f4c1e6e5a329ece0aecccecb8f14c169852a176fd8"
+        }
+      ]
+    }
+  ],
+  "original_products_unchanged": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 31,
+  "three_extra_keys_accepted": true,
+  "formal_execution_allowed": false
+}

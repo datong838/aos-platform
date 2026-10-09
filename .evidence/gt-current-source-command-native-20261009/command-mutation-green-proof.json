@@ -1,0 +1,32 @@
+{
+  "database": "aos_test_04ac9e307e30_ti4_test",
+  "asset": "current-source-command-76ec0874762a4168a259f86f0a0dd9ee",
+  "identity": {
+    "xid": "14347",
+    "pid": 31157,
+    "login": "aos_provider_capacity_issuer"
+  },
+  "independent_owner": true,
+  "source_sha256": "d3bf115d094ce26cd895c786ece51aaba317f8df73b68958f78a55c684b7b62c",
+  "observed_at": "2026-10-09T03:32:16.871575+00:00",
+  "positive": true,
+  "unchanged_command_replay": true,
+  "outcomes": [
+    {
+      "case": "root",
+      "denied": true,
+      "reason": "CAPACITY_CURRENT_SOURCE_REQUIRED"
+    },
+    {
+      "case": "source_ref",
+      "denied": true,
+      "reason": "CAPACITY_CURRENT_SOURCE_REQUIRED"
+    },
+    {
+      "case": "tenant",
+      "denied": true,
+      "reason": "CAPACITY_CURRENT_SOURCE_REQUIRED"
+    }
+  ],
+  "execution_allowed": false
+}

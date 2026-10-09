@@ -1,0 +1,32 @@
+{
+  "database": "aos_test_f1635db250fb_ti4_test",
+  "asset": "current-source-command-74bdaefb6a224b50845e0c0a0c2c3ec6",
+  "identity": {
+    "xid": "14237",
+    "pid": 30833,
+    "login": "aos_provider_capacity_issuer"
+  },
+  "independent_owner": true,
+  "source_sha256": "1156eeaf3df1a93d7f8c01f4c1e6e5a329ece0aecccecb8f14c169852a176fd8",
+  "observed_at": "2026-10-09T03:29:21.910712+00:00",
+  "positive": true,
+  "unchanged_command_replay": true,
+  "outcomes": [
+    {
+      "case": "root",
+      "denied": false,
+      "returned_source_sha256": "1156eeaf3df1a93d7f8c01f4c1e6e5a329ece0aecccecb8f14c169852a176fd8"
+    },
+    {
+      "case": "source_ref",
+      "denied": false,
+      "returned_source_sha256": "1156eeaf3df1a93d7f8c01f4c1e6e5a329ece0aecccecb8f14c169852a176fd8"
+    },
+    {
+      "case": "tenant",
+      "denied": false,
+      "returned_source_sha256": "1156eeaf3df1a93d7f8c01f4c1e6e5a329ece0aecccecb8f14c169852a176fd8"
+    }
+  ],
+  "execution_allowed": false
+}

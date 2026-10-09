@@ -1,0 +1,63 @@
+{
+  "before": {
+    "base_revision": "AOS-001354",
+    "created_at": "2026-10-05T23:07:24+08:00",
+    "excluded_scope": [
+      "current real DB migration/write/restart",
+      "Host/worker/real Provider/Secret/\u5546\u57ce\u6e90/old12Run/manual/230L0/external effects",
+      "retroactive a147/a150 migration changes",
+      "borrow License purpose/roles",
+      "closing fullSource on table/helper-only"
+    ],
+    "expected_outputs": [
+      "fully specified private owner/function/ACL/trusted cluster and root-policy coordination additive schema",
+      "global stable supplier/fingerprint and bidirectional Provider mapping actual concurrency/reject tests",
+      "original private native approved+signed inputs atomic nonexecuting signed Source COMMIT/rollback/replay with immutable provenance and current consumer",
+      "fullSource/formalBoundary coupled exit remains pending until actual complete issuance and consumer"
+    ],
+    "lease_expires_at": "2026-10-07T18:00:00+08:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/alembic/versions/a0v_151_provider_capacity_publication.py",
+      "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_contracts.py",
+      "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py",
+      "aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_consumer.py",
+      "aos-platform/services/aos-api/tests/aip/test_provider_capacity_publication_pg.py",
+      "aos-platform/.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-provider-capacity-publication-schema-20261005"
+  },
+  "after": {
+    "base_revision": "AOS-001354",
+    "created_at": "2026-10-05T23:07:24+08:00",
+    "excluded_scope": [
+      "current real DB migration/write/restart",
+      "Host/worker/real Provider/Secret/\u5546\u57ce\u6e90/old12Run/manual/230L0/external effects",
+      "retroactive a147/a150 migration changes",
+      "borrow License purpose/roles",
+      "closing fullSource on table/helper-only"
+    ],
+    "expected_outputs": [
+      "fully specified private owner/function/ACL/trusted cluster and root-policy coordination additive schema",
+      "global stable supplier/fingerprint and bidirectional Provider mapping actual concurrency/reject tests",
+      "original private native approved+signed inputs atomic nonexecuting signed Source COMMIT/rollback/replay with immutable provenance and current consumer",
+      "fullSource/formalBoundary coupled exit remains pending until actual complete issuance and consumer"
+    ],
+    "lease_expires_at": "2026-10-09T05:29:47.915208+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/alembic/versions/a0v_151_provider_capacity_publication.py",
+      "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_contracts.py",
+      "aos-platform/services/aos-api/aos_api/aip_provider_capacity_publication_store.py",
+      "aos-platform/services/aos-api/aos_api/aip_provider_capacity_source_consumer.py",
+      "aos-platform/services/aos-api/tests/aip/test_provider_capacity_publication_pg.py",
+      "aos-platform/.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-gt-provider-capacity-publication-20261005"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-provider-capacity-publication-schema-20261005"
+  },
+  "overlaps": []
+}

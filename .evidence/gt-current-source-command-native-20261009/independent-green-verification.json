@@ -1,0 +1,53 @@
+{
+  "observations": [
+    {
+      "database": "aos_test_04ac9e307e30_ti4_test",
+      "source": [
+        {
+          "asset_id": "current-source-command-76ec0874762a4168a259f86f0a0dd9ee",
+          "content_hash": "d3bf115d094ce26cd895c786ece51aaba317f8df73b68958f78a55c684b7b62c",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "original_xid": "14346",
+          "original_pid": 31146,
+          "original_session": "aos_provider_capacity_issuer",
+          "provenance_ok": true
+        }
+      ],
+      "occupation_counts": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "original_source_committed": true,
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true,
+      "denials": [
+        {
+          "case": "root",
+          "denied": true,
+          "reason": "CAPACITY_CURRENT_SOURCE_REQUIRED"
+        },
+        {
+          "case": "source_ref",
+          "denied": true,
+          "reason": "CAPACITY_CURRENT_SOURCE_REQUIRED"
+        },
+        {
+          "case": "tenant",
+          "denied": true,
+          "reason": "CAPACITY_CURRENT_SOURCE_REQUIRED"
+        }
+      ]
+    }
+  ],
+  "exact_two_line_validation_fix": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 31,
+  "three_extra_keys_denied": true,
+  "formal_execution_allowed": false
+}

@@ -250,7 +250,7 @@ def _consumption_packet(command):
     from aos_api.asset_registry.canonical_json import canonical_json
     if type(command) is not ProviderCapacityConsumptionCommand:
         raise ValueError('exact independent consumption command required')
-    command=ProviderCapacityConsumptionCommand.model_validate(command.model_dump(mode='python',by_alias=True))
+    command=ProviderCapacityConsumptionCommand.model_validate(command)
     _require_external_oidc_config()
     token=command.bearer_token.get_secret_value()
     principal=resolve_principal(token=token,header_org=command.tenant.org_id,header_project=command.tenant.project_id)
@@ -286,7 +286,7 @@ def consume_current_capacity_source(conn,command):
     try:
         if type(conn) is not psycopg.Connection or type(command) is not ProviderCapacityConsumptionCommand:
             raise ValueError('exact native caller and independent command required')
-        command=ProviderCapacityConsumptionCommand.model_validate(command.model_dump(mode='python',by_alias=True))
+        command=ProviderCapacityConsumptionCommand.model_validate(command)
         ref=command.source_ref
         packet=_consumption_packet(command)
         require_capacity_issuer_identity(conn,TenantScope('org-org','dev-project'))

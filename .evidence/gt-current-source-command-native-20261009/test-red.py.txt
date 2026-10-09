@@ -1,0 +1,78 @@
+"""Real original current Source entry, not the occupation consumer."""
+import hashlib,json
+from pathlib import Path
+from uuid import uuid4
+import pytest
+from pydantic import SecretStr
+from psycopg.types.json import Jsonb
+pytest_plugins=('tests.conftest','tests.aip.test_capacity_source_publication_transaction_pg')
+B=Path(__file__).resolve().parent
+
+@pytest.fixture(autouse=True)
+def registered_database_isolation(_isolated_postgres_database,monkeypatch):
+    from tests.conftest import _isolated_postgres_database as bootstrap
+    from aos_api import tenant_catalog,data_os_store
+    import os
+    assert os.environ['AOS_TEST_RETAIN_DATABASE']=='1' and os.environ['AOS_TEST_USE_SHARED_DATABASE']=='0'
+    with monkeypatch.context() as local:
+        local.setattr(tenant_catalog,'_schema_ready',False);local.setattr(data_os_store,'_schema_ready',False)
+        gen=bootstrap.__wrapped__();next(gen)
+        try:yield
+        finally:gen.close()
+
+@pytest.mark.parametrize('native_original_fact_reader',['shared'],indirect=True)
+def test_current_source_consumer_accepts_independent_owner(exact_public_source_caller,https_signer):
+    from aos_api.aip_provider_capacity_issuer_connection import connect_capacity_issuer
+    from aos_api.aip_provider_capacity_source_contracts import ProviderCapacityConsumptionCommand
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from aos_api.aip_provider_capacity_source_consumer import consume_current_capacity_source,ProviderCapacityConsumptionBlocked
+    from aos_api.aip_provider_capacity_source_issuer import capacity_source_preparation_bytes
+    from aos_api.aip_provider_capacity_publication_contracts import PublishedProviderCapacitySourceV2,parse_signed_capacity_body
+    from aos_api.tenant_scope import TenantScope
+    from aos_api.auth import resolve_principal
+    from tests.aip.test_capacity_source_publication_transaction_pg import _refresh_native_facts_transaction
+    scope=TenantScope('org-org','dev-project');sign,_=https_signer
+    caller,_,material,original=exact_public_source_caller
+    issuance,_,_=material['actual_command']();packet=capacity_source_preparation_bytes(issuance)
+    maker=json.loads(packet)['makerSubject'];asset='current-source-command-'+uuid4().hex
+    row=caller.execute('SELECT * FROM public.prepare_capacity_source(%s,%s,%s,%s::jsonb)',
+        (packet,issuance.idempotency_key,asset,Jsonb(material['refs'][-1]))).fetchone()
+    raw=bytes(row['source_raw']);source=parse_signed_capacity_body(raw,PublishedProviderCapacitySourceV2)
+    published=caller.execute('SELECT * FROM public.commit_capacity_source(%s,%s,%s)',
+        (issuance.idempotency_key,raw,material['source_key'].sign(raw))).fetchone();caller.commit()
+    ref=FormalExactRef(asset_type='ProviderCapacitySourceRevision',asset_id=asset,revision=published['revision'],content_hash=published['content_hash'])
+    with connect_capacity_issuer(original[4],scope) as consumer:
+        identity=consumer.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid,session_user AS login').fetchone()
+        assert consumer.pgconn.used_password and identity['login']=='aos_provider_capacity_issuer'
+        assert identity['xid']!=source.issuance_context.transaction_id and identity['pid']!=source.issuance_context.backend_pid
+        owners=consumer.execute("SELECT subject FROM public.meta_membership WHERE org_id=%s AND project_id=%s AND lower(role)='owner' AND subject<>%s ORDER BY subject",(*scope.key,maker)).fetchall()
+        assert owners;subject=owners[0]['subject'];token=sign(subject)
+        principal=resolve_principal(token=token,header_org=scope.org_id,header_project=scope.project_id)
+        assert principal.subject==subject and principal.token_kind=='oidc'
+        command=ProviderCapacityConsumptionCommand(schemaVersion=1,tenant={'orgId':scope.org_id,'projectId':scope.project_id},sourceRef=ref,bearerToken=SecretStr(token))
+        positive=consume_current_capacity_source(consumer,command)
+        assert positive.model_dump(mode='json',by_alias=True)==source.model_dump(mode='json',by_alias=True)
+        assert positive.execution_allowed is False
+        variants={
+            'root':command.model_copy(update={'unapprovedExtra':True}),
+            'source_ref':command.model_copy(update={'source_ref':command.source_ref.model_copy(update={'unapprovedExtra':True})}),
+            'tenant':command.model_copy(update={'tenant':command.tenant.model_copy(update={'unapprovedExtra':True})}),
+        }
+        outcomes=[]
+        for name,item in variants.items():
+            _refresh_native_facts_transaction(consumer)
+            try:
+                consumed=consume_current_capacity_source(consumer,item)
+                assert consumed.model_dump(mode='json',by_alias=True)==source.model_dump(mode='json',by_alias=True)
+            except ProviderCapacityConsumptionBlocked as error:
+                assert str(error)=='CAPACITY_CURRENT_SOURCE_REQUIRED'
+                outcomes.append(dict(case=name,denied=True,reason=str(error)))
+            else:outcomes.append(dict(case=name,denied=False,returned_source_sha256=ref.content_hash))
+        _refresh_native_facts_transaction(consumer)
+        assert consume_current_capacity_source(consumer,command).model_dump(mode='json',by_alias=True)==source.model_dump(mode='json',by_alias=True)
+        now=consumer.execute('SELECT clock_timestamp() AS now').fetchone()['now'];consumer.rollback()
+        report=dict(database=consumer.info.dbname,asset=asset,identity=identity,independent_owner=True,
+            source_sha256=hashlib.sha256(raw).hexdigest(),observed_at=now.isoformat(),positive=True,unchanged_command_replay=True,
+            outcomes=outcomes,execution_allowed=False)
+        with (B/'command-mutation-proof.json').open('x') as h:json.dump(report,h,indent=2)
+        assert all(r['denied'] for r in outcomes),outcomes

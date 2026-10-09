@@ -1,0 +1,48 @@
+{
+  "observed_at": "2026-10-09T03:36:06.635341+00:00",
+  "database": "aos_test_898d1391022f_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_rechecks_new_transaction[shared]",
+      "phase": "database_binding",
+      "database": "aos_test_2650dc0f1fd4_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_rechecks_new_transaction[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_rechecks_new_transaction[distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_3fdf996e1775_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_rechecks_new_transaction[distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_accepts_independent_owner[shared]",
+      "phase": "database_binding",
+      "database": "aos_test_d49eb3f98eb7_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_accepts_independent_owner[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_accepts_independent_owner[distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_898d1391022f_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_accepts_independent_owner[distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "real current independent Owner/native Source direct command extra-key validation diagnostic; no business execution"
+}

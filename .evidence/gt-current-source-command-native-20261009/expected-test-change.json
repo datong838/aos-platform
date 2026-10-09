@@ -1,0 +1,7 @@
+{
+  "path": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+  "before_sha256": "4aa91d9ac8ab0e0733087a91a42b7fc4ef657b03775ce3f95117f09193d1e967",
+  "after_sha256": "e4d392f78d65dde59645235aaf2a301f478eaaa456fab00d185df864e9ada90d",
+  "expected_index_sha256": "b1e83012e422122f5dffdbb79c329040bd118e50c813e2a072c54bacbc50aaab",
+  "protected_fixture_diff_preserved": true
+}

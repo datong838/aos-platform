@@ -1,0 +1,28 @@
+{
+  "observed_at": "2026-10-09T03:38:39.873940+00:00",
+  "database": "aos_test_1693b65a4b81_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_accepts_independent_owner[shared]",
+      "phase": "database_binding",
+      "database": "aos_test_859f85a3c588_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_accepts_independent_owner[shared]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_accepts_independent_owner[distinct]",
+      "phase": "database_binding",
+      "database": "aos_test_1693b65a4b81_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_current_source_consumer_accepts_independent_owner[distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "real current independent Owner/native Source direct command extra-key validation diagnostic; no business execution"
+}

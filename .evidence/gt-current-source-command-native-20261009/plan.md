@@ -1,0 +1,15 @@
+# 当前独立 Owner 消费命令的额外键真实诊断
+
+使用用户 AGENTS.md、aos-engineering-delivery、231、原publication-schema Task/current Source消费合同。基线55ac836f/AOS-001630。上一波三轮诊断与独立读回为实质进展，原进程已全部退出，不重放任何原COMMIT。现在唯一执行者仍本thread/owner。
+
+两个已登记候选：①原消费者直接命令root/source_ref/tenant额外键真实入口诊断（1630 followup-investigation）；②distinct最终COMMIT时钟观察。优先①，依赖原新全迁移隔离库、真正签名Source/public prepare/finalize/actualCOMMIT、SCRAM新caller/current真实独立Owner。新当前消费者不同于已修的occupation消费者，不能以另一入口GREEN外推。
+
+先复习原合同：原Source消费需历史provenance与当前身份/期限，Python固定CAPACITY_CURRENT_SOURCE_REQUIRED。未发现强制特定SQL22023到期代码要求。前波P0002/STRICT在过期筛选后拒绝，仍保存具名断言RED，不据自拟期望修改查询/错误码。本Task不改时间或批准合同，也不通过泛化拒绝修绿。
+
+只新增本目录test_current_command.py、run_native.py、verify_red.py、plan/task和实际证据。原fixture名字保持已有consumer安装登记项，独立数据库bootstrap仅复用原全迁移helper，不改产品/旧测试。先真实消费正向成功且exact Source/executionAllowed=false；同native连接每次回滚后调用原_refresh_native_facts_transaction恢复scope/UTC/search_path。三个model_copy变异每次只新增root/source_ref/tenant一个extra键，分别调用原consume_current_capacity_source；记录接受/固定拒绝及精确Sourcehash。结束先未变原命令重放，再断言三项必须拒绝；若接受则真实RED留存，不修改产品。库保留、清理接口/NOLOGIN与原资源独立核对，不调用业务、Provider、当前权威库或浏览器。
+
+若RED，后续回原gt-provider-capacity-publication-schema-20261005完整scope，支持同owner续租/重叠对账后先完善原方案，最小修复source_consumer.py的直接实例再验证；原已有正常合法输入、完整身份与签名currentness不改。完整Source/legacy/epoch任务不因本诊断收口。
+
+真实RED27.45秒三extra均接受，独立核验Source/hash/signature/provenance/角色接口资源通过。原publication-schema Task已支持同owner续租；其原方案新增两行direct model_validate修改，产品精确2行实现后新真实GREEN1PASS23.75秒三extra固定拒绝、原命令重放一致。正在运行原shared/distinct两种旧/独立当前消费者4case完整回归，结束前不修改已加载原测试文件。
+
+为保留正常测试套件的长期回归，原gt-capacity-source-publication-20261006完整scope同owner支持续租，无重叠Lease。原方案先登记：仅在原test_current_source_consumer_accepts_independent_owner的真实合法正向后添加root/source_ref/tenant三extra固定拒绝及未变命令重放；原全签名/SCRAM/锁/漂移/withdrawal/清理矩阵保留。原test文件已有6新增1删除的occupation fixture白名单改动受保护；本波仅精确stage新回归hunk，不把已有fixture变更顺带提交。新增case后重跑shared/distinct两布局该完整原矩阵，不重复已通过且未修改的旧consumer矩阵。新test baseline/精确diff单独记录，旧RED与GREEN尝试绑定不改写。

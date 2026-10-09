@@ -1,0 +1,165 @@
+{
+  "databases": [
+    {
+      "database": "aos_test_2650dc0f1fd4_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-7421708c3535418d8d67b8b10c970c01",
+          "content_hash": "cec4299e0c4d58ef37f35a92a157a6f824ae5c783392c15328c25e0a28cf7931",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "original_xid": "14461",
+          "original_pid": 31336,
+          "original_state": "committed",
+          "provenance_ok": true
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "database": "aos_test_3fdf996e1775_ti4_test",
+      "sources": [
+        {
+          "asset_id": "consumed-source-2abd9904aeae4bcda2b2b20eea4844df",
+          "content_hash": "f822239047d4c72ae9fa17504cb6bf03cf8aea7ea816854fa99dac41271dc55a",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "original_xid": "14579",
+          "original_pid": 31549,
+          "original_state": "committed",
+          "provenance_ok": true
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "database": "aos_test_d49eb3f98eb7_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-d7d58e051c9047aa95f697277659c5e5",
+          "content_hash": "7019c45c0c91e7e906f3db539deb076703594d4f94af3c162e2c94efefe18e95",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "original_xid": "14678",
+          "original_pid": 31690,
+          "original_state": "committed",
+          "provenance_ok": true
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "database": "aos_test_898d1391022f_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-2b32f8407feb44478633d149cda8a696",
+          "content_hash": "e816c62bfb0c0318b1e0ef8394e9d60c86bad1378da9dd3b7494efa9f3f8d882",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "original_xid": "14822",
+          "original_pid": 31929,
+          "original_state": "committed",
+          "provenance_ok": true
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "database": "aos_test_859f85a3c588_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-e561a431454546aaa07bb485e1456ad0",
+          "content_hash": "c57b882a5b635023ee540796de92ea9e2ee94a79a3d8f091ab42a8a2d2d9afe2",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "original_xid": "14951",
+          "original_pid": 32185,
+          "original_state": "committed",
+          "provenance_ok": true
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    },
+    {
+      "database": "aos_test_1693b65a4b81_ti4_test",
+      "sources": [
+        {
+          "asset_id": "independent-consumer-source-f477f492ed4d4c76aa23ee29bcea10f3",
+          "content_hash": "cc8fc3761bd7f6d530ace34bde9d0b61da14d9aafcc9ef6f97edd7eff1c81418",
+          "hash_ok": true,
+          "signature_ok": true,
+          "finalized": true,
+          "original_xid": "15086",
+          "original_pid": 32426,
+          "original_state": "committed",
+          "provenance_ok": true
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "roles_nologin": true
+    }
+  ],
+  "current_consumer_exact_two_line_fix": true,
+  "persistent_regression_exact_hash": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 31,
+  "formal_execution_allowed": false
+}

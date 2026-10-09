@@ -5264,6 +5264,19 @@ def test_current_source_consumer_accepts_independent_owner(exact_public_source_c
         assert result.model_dump(mode='json',by_alias=True)==source.model_dump(mode='json',by_alias=True)
         assert result.execution_allowed is False
 
+        # Preserve extra keys on the original typed instance before revalidation.
+        from aos_api.aip_provider_capacity_source_consumer import ProviderCapacityConsumptionBlocked
+        for malformed in (
+            request.model_copy(update={'unapprovedExtra':True}),
+            request.model_copy(update={'source_ref':request.source_ref.model_copy(update={'unapprovedExtra':True})}),
+            request.model_copy(update={'tenant':request.tenant.model_copy(update={'unapprovedExtra':True})}),
+        ):
+            _refresh_native_facts_transaction(consumer)
+            with pytest.raises(ProviderCapacityConsumptionBlocked,match='^CAPACITY_CURRENT_SOURCE_REQUIRED$'):
+                consume_current_capacity_source(consumer,malformed)
+        _refresh_native_facts_transaction(consumer)
+        assert consume_current_capacity_source(consumer,request).model_dump(mode='json',by_alias=True)==source.model_dump(mode='json',by_alias=True)
+
         consumer.rollback()
         from tests.aip._runtime_guard_history_fixture import isolated_owner
         from aos_api.aip_provider_capacity_source_consumer import ProviderCapacityConsumptionBlocked,_consumption_packet
