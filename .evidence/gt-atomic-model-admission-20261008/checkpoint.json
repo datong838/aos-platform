@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001671",
+  "authority_revision": "AOS-001672",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_execution_owner.py",
     "services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py",
@@ -40,12 +40,12 @@
     ".evidence/gt-atomic-model-admission-20261008/original-source-whole-plan-checkpoint.md",
     ".evidence/gt-atomic-model-admission-20261008/original-source-whole-plan-cumulative-r2-result.json",
     ".evidence/gt-atomic-model-admission-20261008/original-source-whole-plan-independent-r2.json",
-    ".evidence/gt-atomic-model-admission-20261008/current-shared-parent-risk-binding-reference-1671.json"
+    ".evidence/gt-atomic-model-admission-20261008/current-shared-risk-persistence-reference-1672.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "full-v3-private-risk-manifest-persistence-signature-provenance-audit",
+  "step": "isolated-full-v3-descriptive-risk-binding-red-native-implementation",
   "task_base_revision": "AOS-001537",
   "task_id": "gt-atomic-model-admission-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"

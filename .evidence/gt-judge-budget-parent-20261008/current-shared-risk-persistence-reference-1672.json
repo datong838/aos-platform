@@ -1,0 +1,22 @@
+{
+  "authority_revision": "AOS-001672",
+  "task": "gt-judge-budget-parent-20261008",
+  "head": "9332be1d9ed05b9614efbc75be51f9339162d650",
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/current-shared-parent-risk-binding-reference-1671.json",
+      "sha256": "eb8ab83434057c2a53f652458987010d5dccba218c6e34d9e33c3c8e9a21e7bb"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-risk-persistent-provenance-findings-1671.md",
+      "sha256": "d548d1dd2fecff9f28b13143e0051b6b7d758fbe50685f7b894970907ebfa668"
+    },
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/shared-risk-persistent-provenance-audit-1671.json",
+      "sha256": "a1c048b7770fe237d78691efb2df021be090d5071f5ce569ec5ba5fbfe704653"
+    }
+  ]
+}
