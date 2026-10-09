@@ -1,0 +1,41 @@
+{
+  "authority_revision": "AOS-001674",
+  "renewals": [
+    {
+      "task_id": "gt-atomic-model-admission-20261008",
+      "before": "2026-10-09T21:37:31.958805+00:00",
+      "after": "2026-10-09T23:17:48.811262+00:00"
+    },
+    {
+      "task_id": "gt-model-typed-proof-20261008",
+      "before": "2026-10-09T21:37:31.958805+00:00",
+      "after": "2026-10-09T23:17:48.811262+00:00"
+    },
+    {
+      "task_id": "gt-judge-call-authority-20261008",
+      "before": "2026-10-09T21:37:31.958805+00:00",
+      "after": "2026-10-09T23:17:48.811262+00:00"
+    },
+    {
+      "task_id": "gt-judge-budget-parent-20261008",
+      "before": "2026-10-09T21:37:31.958805+00:00",
+      "after": "2026-10-09T23:17:48.811262+00:00"
+    },
+    {
+      "task_id": "gt-shared-budget-fence-order-20261008",
+      "before": "2026-10-09T21:37:31.958805+00:00",
+      "after": "2026-10-09T23:17:48.811262+00:00"
+    },
+    {
+      "task_id": "gt-original-target-persisted-reader-20261010",
+      "before": "2026-10-09T21:37:31.958805+00:00",
+      "after": "2026-10-09T23:17:48.811262+00:00"
+    },
+    {
+      "task_id": "gt-shared-parent-certificate-identity-20261010",
+      "before": "2026-10-09T23:02:55.578565+00:00",
+      "after": "2026-10-09T23:17:48.811262+00:00"
+    }
+  ],
+  "no_scope_changes": true
+}

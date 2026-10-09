@@ -1,0 +1,16 @@
+{
+  "body_hash": "7433a25d209230cb3536d736094866e49ba453c776f801e449383edb0b6f34b7",
+  "owner": "aos_physical_capacity_occupation_owner",
+  "acl": [
+    {
+      "grantee": "aos_physical_capacity_occupation_owner",
+      "privilege_type": "EXECUTE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_runtime",
+      "privilege_type": "EXECUTE",
+      "is_grantable": false
+    }
+  ]
+}

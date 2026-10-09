@@ -1,0 +1,14 @@
+{
+  "cluster": "7694680278363095064",
+  "risk_status": "aborted",
+  "risk_count": 0,
+  "metadata_counts": {
+    "issuer_root": 2,
+    "executor_certificate": 5,
+    "shared_parent_certificate_identity_binding": 4
+  },
+  "old_files_unchanged": true,
+  "whole_node_passed": false,
+  "unobserved_waiter_results_not_retried": true,
+  "execution_allowed": false
+}

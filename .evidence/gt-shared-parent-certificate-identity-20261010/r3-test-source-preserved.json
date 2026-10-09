@@ -1,0 +1,7 @@
+{
+  "frozen_test_path": ".evidence/gt-shared-parent-certificate-identity-20261010/native-r3/frozen-native-scenario.py",
+  "sha256": "8d8097101197c610d8d727ffd54dd823ed78fb1f3b2e562babb64932e07abb2b",
+  "matches_native_r3": true,
+  "current_scenario_extended": true,
+  "execution_allowed": false
+}

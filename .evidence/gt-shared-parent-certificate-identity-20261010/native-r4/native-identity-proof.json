@@ -1,0 +1,46 @@
+{
+  "producer_xid": "33490",
+  "positive_certificates": 4,
+  "negative_cases": [
+    "root_hash",
+    "certificate_hash",
+    "root_epoch",
+    "certificate_epoch",
+    "epoch_bool",
+    "canary",
+    "identity_epoch_bool",
+    "description_callerXid",
+    "description_callerPid",
+    "description_originalRiskHash",
+    "runtime_reader_denied",
+    "binding_immutable",
+    "native_global_identity_key_rebind_rejected",
+    "native_global_identity_purpose_rebind_rejected",
+    "original_identity_withdrawal",
+    "native_global_identity_revive_rejected",
+    "certificate_withdrawal_head",
+    "root_withdrawal_head",
+    "native_lock_wait_expired_certificate"
+  ],
+  "reader_lock_blocks_identity_withdrawal": true,
+  "consumer_pid": 22973,
+  "rival_pid": 22974,
+  "actual_wait": {
+    "before": "2026-10-09T21:16:43.004775+00:00",
+    "after": "2026-10-09T21:16:50.527313+00:00",
+    "certificate_end": "2026-10-09T21:16:50.499236+00:00",
+    "caller_xid": "33520",
+    "waiting_pid": 22977,
+    "blocking_pid": 22976
+  },
+  "root_provenance_verified": false,
+  "physical_description_native_origin_proven": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "test_owned_metadata": true,
+  "binding_count": 4,
+  "runtime_table_access": {
+    "read": false,
+    "write": false
+  }
+}

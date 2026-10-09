@@ -1,0 +1,26 @@
+{
+  "status": "ORIGINAL_NONEXECUTABLE_EVAL_APPLICATION_APPROVED",
+  "database": "aos_test_ec05a8ab9a8a_ti4_test",
+  "model_id": "joint-prefix-model-ac920adc950346be993aed9f6397b4f9",
+  "model_hash": "a4944ac5bdc98ae46815fac085e679b1f3608b22d29feda78f0c8e449ed4d23c",
+  "request_id": "model-eval-request-2e3f280ac45644688a70",
+  "request_hash": "fcfdd03a210584f66fcea9227184a62be4dceacb42ad7ebe2ce225519cb491ea",
+  "proposal_id": "proposal-5c52e1f914694c1a9d01",
+  "maker": "test-maker-7c3ac8b67d8847f5a944a07bc0d9e91e",
+  "checker": "test-checker-7c3ac8b67d8847f5a944a07bc0d9e91e",
+  "expected_head_version": 1,
+  "suite_id": "judge-expected-22681d3c41a44efb94b0fbff74b453e8-suite",
+  "contract_id": "eval-contract-43b8381a55eb4727a5ae",
+  "execution_allowed": false,
+  "business_counts": {
+    "aip_agent_run": 0,
+    "aip_model_capacity_reservation": 0,
+    "aip_model_eval_budget_reservation": 0
+  },
+  "count_scope": "Eval hold count is this exact request; AgentRun/capacity remain database-wide",
+  "limitations": [
+    "Test-owned dataset/redaction artifacts and actual deterministic Graph governance gate",
+    "Model-target Suite remains unexecuted; no Model quality gate",
+    "No budget hold, shared physical joint, unique execution Intent or formal business"
+  ]
+}

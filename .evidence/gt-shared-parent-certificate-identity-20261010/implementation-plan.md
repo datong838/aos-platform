@@ -1,0 +1,21 @@
+# v3完整准备态证书与原身份current head必要门
+
+基线7f1d67e9d / AOS-001674，当前Goal active，m1唯一写者，新Task/Lease独立无重叠。231八步与已批准GT typed/subject-review隔离方案；上一波332纯验+完整Source原Suite native通过，issuer当前元数据表0并非注册。候选一独立v3身份绑定和同snapshot元数据读取（优先、安全独立）；候选二actual token/最终joint仍依真实输入与严格WAL/ACK语义，不猜计数或跨门。
+
+精确新增services/aos-api/aos_api/aip_model_shared_parent_certificate_identity.py、services/aos-api/tests/aip/test_model_shared_parent_certificate_identity_pg.py。旧未跟踪authority/reader原件不修改不夹带提交。schema explicit statements仅隔离安装，无alembic、public入口、runtime或Provider grant。新shared_parent_certificate_identity_binding FK复用原executor_certificate、global identity_epoch；Trigger从存储证书bytes重新导出identity/purpose/key、完整manifestHash/descriptionHash/originalRiskHash/callerxidpid，核对完整manifest对应case/leg/原申请，不扩旧v1/v2 trigger。immutable/FORCE RLS/owner-only、禁UPDATE/DELETE/TRUNCATE；原identity_withdrawal回收全域同identity，不能v3绕过已撤回身份或key/purpose重绑。
+
+私有验证者要求真psycopg连接、正向typedtenant、ISSUER_OWNER/SERIAL/UTC及caller事务不被修复；严格hash/nativeepoch。读原私有完整manifest/证书/root bytes与列头，复用root->certificate锁，新增identity锁，同snapshot及后置真实clock进行上一波全v3签名/区间检查。外部描述typed只能是签名必要绑定，不能凭客户端hash证明physical准备态DB原件或原issuer bootstrap。结果None/异常、不授执行、Source/joint/Transport/root provenance独立。
+
+native fresh Source原2case4leg+独立100秒批准，在原准备态原件生成后实际四签名，独立实验元数据Writer存完整manifest、root、证书，随后私有校验与身份binding/撤回矩阵。metadata lab root的bootstrap hash是实验描述，rootProvenanceVerified=false；不是正式身份。native实际风险事务仍COMMIT拒绝/ABORTED/4表0；元数据不用于Provider。必要元数据原件可在独立测试库COMMIT，读后保留，不代正式root。
+
+先缺入口RED；专项四leg回读、列头/byte/hash/新旧domain/identity key/purpose/原描述origin/过期/issuer和certificate撤回/identity撤回与复活/租户/ACL/immutable/原窗口等待后拒绝。相邻332纯验与原native完整节点，旧50秒失败与历史两摘要缺失保留，不覆写。当前wave无UI，浏览器不适用。真实并发撤回共享锁必须验证；若本轮只收口必要子节点，不给整个Task Delivery，后继native完整并发矩阵登记。
+
+R1 native隔离安装RED：PL/pgSQL IF的两处CASE需括号避免THEN解析边界。新增模块最小修正两个表达式，原错误日志/result保留；尚未注册证书，R2 fresh目录/独立批准复验，不复用失败窗口。
+
+R2 native RED捕获physical tenant DTO子类与AIP TenantContext实例直接比较造成误拒，改为双租户标识精确tuple，不能放宽tenant；复审实验writer原root/cert datetime字符串需严格typed再canonical存储（不是放宽reader校验），R3按canonical原件写入。旧失败窗口不重放，新实验原Source/审批独立。
+
+R3原四leg/current撤回/实际锁等待过期矩阵通过。为补齐计划key/purpose/撤回后复活，R4增加真Ed25519新证书的client-description反例，只在独立元数据保存点插入并回滚，明确不是新native physical原件，不授root trust；原R3测试源码冻结保存其精确hash，不重写R3结果。产品模块不改。
+
+R4完整19反例矩阵native通过，审查补充注册原子性：函数仅对自己INSERT/global版本变化使用嵌套保存点，末尾时间/绑定失败撤销子操作，不修复/提交外层调用事务；R5原真实identity阻塞窗口同时运行reader与新证书register，等待过期后register调用者仍实际COMMIT，独立核新binding0/global version不变。新拒绝证书仅实验历史，root/cert各增1且明确不可执行；原风险继续ABORTED/0。R4产品与测试源码冻结保存。
+
+R5双等待观测RED：单一直接blocker假设超时，未记录实际pid列表，不能凭推断宣真实锁队列细节。R6要求registration实际阻塞于原blocker，或阻塞于确实正在等原blocker的reader；将完整图落盘。到期拒绝和调用方实际COMMIT后无binding/版本变化要求不变。R5真实结果只读对账，不重放其未知事务效果。

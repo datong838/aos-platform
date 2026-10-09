@@ -1,0 +1,46 @@
+{
+  "identity": {
+    "database": "aos_test_809758bedb99_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "statuses": {
+    "metadata": "committed",
+    "risk": "aborted",
+    "wait": "aborted"
+  },
+  "risk_counts": {
+    "prepared_plan_risk": 0,
+    "prepared_shared_risk_description": 0,
+    "prepared_parent_debit": 0,
+    "prepared_execution_intent": 0
+  },
+  "metadata_counts": {
+    "issuer_root": 1,
+    "executor_certificate": 4,
+    "certificate_epoch": 4,
+    "identity_epoch": 2,
+    "shared_parent_certificate_identity_binding": 4,
+    "certificate_identity_binding": 0,
+    "identity_withdrawal": 0
+  },
+  "function": {
+    "owner": "aos_model_eval_issuer_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "body_hash": "16f363f28d05bdab40ce5cef13fae0baf4debc76ce2ec269894e11254cfd9c60"
+  },
+  "runtime_access": {
+    "read": false,
+    "write": false
+  },
+  "source": 1,
+  "frozen_product_hashes_match": true,
+  "root_provenance_verified": false,
+  "physical_description_origin_authenticated": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false
+}

@@ -1,0 +1,9 @@
+{
+  "pytest_exit": 0,
+  "database_connections": 0,
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_model_shared_parent_certificate_identity.py": "33e866d46216e0059085f42f7237ce84660ad6bfa3f74e180c06a38158b7b819",
+    "services/aos-api/tests/aip/test_model_shared_parent_certificate_identity_pg.py": "8d8097101197c610d8d727ffd54dd823ed78fb1f3b2e562babb64932e07abb2b"
+  },
+  "execution_allowed": false
+}

@@ -1,0 +1,11 @@
+{
+  "registration_pid": 26302,
+  "registration_blockers": [
+    26301
+  ],
+  "reader_pid": 26301,
+  "reader_blockers": [
+    26300
+  ],
+  "blocker_pid": 26300
+}

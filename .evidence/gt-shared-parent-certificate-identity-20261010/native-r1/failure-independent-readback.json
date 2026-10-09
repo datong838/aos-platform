@@ -1,0 +1,21 @@
+{
+  "identity": {
+    "database": "aos_test_ffee99470ba1_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "counts": {
+    "aos_physical_capacity_occupation_private.prepared_plan_risk": 0,
+    "aos_physical_capacity_occupation_private.prepared_shared_risk_description": 0,
+    "aos_physical_capacity_occupation_private.prepared_parent_debit": 0,
+    "aos_physical_capacity_occupation_private.prepared_execution_intent": 0,
+    "aos_model_eval_issuer_private.issuer_root": 0,
+    "aos_model_eval_issuer_private.executor_certificate": 0,
+    "aos_model_eval_issuer_private.identity_epoch": null,
+    "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding": null
+  },
+  "source": 1,
+  "old_files_unchanged": true,
+  "whole_node_passed": false,
+  "execution_allowed": false
+}
