@@ -1,0 +1,283 @@
+{
+  "schema": "aos.parent-cost-lifecycle-audit/v1",
+  "authority_revision": "AOS-001665",
+  "task_id": "gt-atomic-model-admission-20261008",
+  "identity": {
+    "database": "aos_test_ff40de426907_ti4_test",
+    "cluster": "7694680278363095064",
+    "read_only": "on",
+    "observed_at": "2026-10-09 19:13:27.851820+00:00"
+  },
+  "migration_heads": [
+    {
+      "version_num": "a0v_159"
+    }
+  ],
+  "sources": {
+    "aip_budget_reservation_store.py": {
+      "sha256": "07df0cf6575350fd96374a698325a581800319ed16c65bcc9fcafea99b3bf9d9",
+      "classes": {
+        "BudgetReservationError": [],
+        "BudgetReservationConflict": [],
+        "BudgetReservationBlocked": [],
+        "BudgetReservationNotFound": [],
+        "AipBudgetReservationStore": [
+          "__init__",
+          "reserve",
+          "reserve_in_transaction",
+          "_reserve_in_transaction",
+          "initial_hold_refs",
+          "get",
+          "submit",
+          "mark_unknown",
+          "release_no_effect",
+          "complete_cost_pending",
+          "_require_deferred_cost_authority",
+          "settle",
+          "_require_bucket_room",
+          "_prepare_and_lock_buckets",
+          "_move_buckets",
+          "_transition_reservation",
+          "_record_provider_receipt",
+          "_assert_provider_receipt_replay",
+          "_provider_authority",
+          "_update_invocation_state",
+          "_invocation_payload",
+          "_reservation_payload",
+          "_usage_authority",
+          "_actual_from_usage",
+          "_bucket_row",
+          "_cost_risk_authority",
+          "_budget_authority",
+          "_price_authority",
+          "_task_authority",
+          "_approval_authority",
+          "_lock_invocation",
+          "_reservation_by_key",
+          "_reservation_by_id",
+          "_view",
+          "_event",
+          "_identity",
+          "_digest",
+          "_json",
+          "_load"
+        ]
+      }
+    },
+    "aip_model_eval_budget_reservation.py": {
+      "sha256": "70ebb534ac5f21e968470b6ab797184ff7ea59ab35822a9482d3574c8df1cbc2",
+      "classes": {
+        "ModelEvalBudgetBlocked": [],
+        "AipModelEvalBudgetReservationStore": [
+          "__init__",
+          "_ref",
+          "_require_exact_hold",
+          "hold"
+        ]
+      }
+    },
+    "aip_model_eval_judge_budget.py": {
+      "sha256": "3c8e6dbe0b15f3aebbb720aaca1e3d754b86c60c8f63a0bce660b115b9b5a84f",
+      "classes": {
+        "ModelJudgeBudgetStore": [
+          "__init__",
+          "_ref",
+          "_sources",
+          "_immutable",
+          "_expected_hold",
+          "_require_existing_hold",
+          "require_current_parent",
+          "hold"
+        ]
+      }
+    },
+    "aip_budget_cost_runtime.py": {
+      "sha256": "30ff850dc1bbc6d03298f68bd12c6184ecad8d0e3896da9a20a1ffbcc9b58be0",
+      "classes": {
+        "BudgetCostRuntimeBlocked": [],
+        "FormalBudgetFact": []
+      }
+    }
+  },
+  "catalog": {
+    "aip_budget_reservation": {
+      "checks": [
+        {
+          "conname": "aip_budget_reservation_check",
+          "definition": "CHECK (((actual_minor >= 0) AND (actual_minor <= upper_bound_minor)))"
+        },
+        {
+          "conname": "aip_budget_reservation_check1",
+          "definition": "CHECK (((jsonb_typeof(task_ref) = 'object'::text) AND (jsonb_typeof(policy_ref) = 'object'::text) AND (jsonb_typeof(pricing_ref) = 'object'::text) AND (jsonb_typeof(approval_ref) = 'object'::text)))"
+        },
+        {
+          "conname": "aip_budget_reservation_content_hash_check",
+          "definition": "CHECK ((content_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+        },
+        {
+          "conname": "aip_budget_reservation_currency_check",
+          "definition": "CHECK ((currency = 'CNY'::text))"
+        },
+        {
+          "conname": "aip_budget_reservation_invocation_key_check",
+          "definition": "CHECK (((length(invocation_key) >= 1) AND (length(invocation_key) <= 200)))"
+        },
+        {
+          "conname": "aip_budget_reservation_operation_id_check",
+          "definition": "CHECK (((length(operation_id) >= 1) AND (length(operation_id) <= 160)))"
+        },
+        {
+          "conname": "aip_budget_reservation_provider_receipt_ref_check",
+          "definition": "CHECK (((provider_receipt_ref IS NULL) OR (jsonb_typeof(provider_receipt_ref) = 'object'::text)))"
+        },
+        {
+          "conname": "aip_budget_reservation_provider_request_receipt_ref_check",
+          "definition": "CHECK (((provider_request_receipt_ref IS NULL) OR (jsonb_typeof(provider_request_receipt_ref) = 'object'::text)))"
+        },
+        {
+          "conname": "aip_budget_reservation_reconciliation_evidence_ref_check",
+          "definition": "CHECK (((reconciliation_evidence_ref IS NULL) OR (jsonb_typeof(reconciliation_evidence_ref) = 'object'::text)))"
+        },
+        {
+          "conname": "aip_budget_reservation_request_hash_check",
+          "definition": "CHECK ((request_hash ~ '^[0-9a-f]{64}$'::text))"
+        },
+        {
+          "conname": "aip_budget_reservation_revision_check",
+          "definition": "CHECK ((revision > 0))"
+        },
+        {
+          "conname": "aip_budget_reservation_state_check",
+          "definition": "CHECK ((state = ANY (ARRAY['held'::text, 'submitted'::text, 'settled'::text, 'released'::text, 'unknown'::text, 'cost_pending'::text])))"
+        },
+        {
+          "conname": "aip_budget_reservation_upper_bound_minor_check",
+          "definition": "CHECK ((upper_bound_minor > 0))"
+        },
+        {
+          "conname": "aip_budget_reservation_usage_receipt_refs_check",
+          "definition": "CHECK ((jsonb_typeof(usage_receipt_refs) = 'array'::text))"
+        }
+      ],
+      "triggers": [
+        {
+          "tgname": "trg_ar2_budget_reservation_update",
+          "definition": "CREATE TRIGGER trg_ar2_budget_reservation_update BEFORE UPDATE ON public.aip_budget_reservation FOR EACH ROW EXECUTE FUNCTION guard_ar2_budget_reservation_update()"
+        }
+      ],
+      "states": []
+    },
+    "aip_model_eval_budget_reservation": {
+      "checks": [
+        {
+          "conname": "aip_model_eval_budget_reservation_check",
+          "definition": "CHECK (((request_hash ~ '^[0-9a-f]{64}$'::text) AND (proposal_hash ~ '^[0-9a-f]{64}$'::text)))"
+        },
+        {
+          "conname": "aip_model_eval_budget_reservation_check1",
+          "definition": "CHECK (((jsonb_typeof(budget_policy_ref) = 'object'::text) AND (jsonb_typeof(budget_revision_ref) = 'object'::text) AND (jsonb_typeof(price_ref) = 'object'::text)))"
+        },
+        {
+          "conname": "aip_model_eval_budget_reservation_content_hash_check",
+          "definition": "CHECK ((content_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+        },
+        {
+          "conname": "aip_model_eval_budget_reservation_currency_check",
+          "definition": "CHECK ((currency = 'CNY'::text))"
+        },
+        {
+          "conname": "aip_model_eval_budget_reservation_state_check",
+          "definition": "CHECK ((state = 'held'::text))"
+        },
+        {
+          "conname": "aip_model_eval_budget_reservation_upper_bound_minor_check",
+          "definition": "CHECK (((upper_bound_minor >= 1) AND (upper_bound_minor <= 100000000)))"
+        }
+      ],
+      "triggers": [
+        {
+          "tgname": "trg_aip_model_eval_budget_reservation_append_only",
+          "definition": "CREATE TRIGGER trg_aip_model_eval_budget_reservation_append_only BEFORE DELETE OR UPDATE ON public.aip_model_eval_budget_reservation FOR EACH ROW EXECUTE FUNCTION guard_aip4_append_only()"
+        },
+        {
+          "tgname": "trg_aip_model_eval_budget_reservation_truncate_guard",
+          "definition": "CREATE TRIGGER trg_aip_model_eval_budget_reservation_truncate_guard BEFORE TRUNCATE ON public.aip_model_eval_budget_reservation FOR EACH STATEMENT EXECUTE FUNCTION guard_aip4_append_only()"
+        }
+      ],
+      "states": []
+    },
+    "aip_model_judge_budget_reservation": {
+      "checks": [
+        {
+          "conname": "aip_model_judge_budget_reservation_check",
+          "definition": "CHECK (((request_hash ~ '^[0-9a-f]{64}$'::text) AND (proposal_hash ~ '^[0-9a-f]{64}$'::text)))"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_check1",
+          "definition": "CHECK (((jsonb_typeof(approval_ref) = 'object'::text) AND (jsonb_typeof(budget_policy_ref) = 'object'::text) AND (jsonb_typeof(budget_revision_ref) = 'object'::text) AND (jsonb_typeof(price_ref) = 'object'::text)))"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_content_hash_check",
+          "definition": "CHECK ((content_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_currency_check",
+          "definition": "CHECK ((currency = 'CNY'::text))"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_purpose_check",
+          "definition": "CHECK ((purpose = 'model-judge-call'::text))"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_state_check",
+          "definition": "CHECK ((state = 'held'::text))"
+        },
+        {
+          "conname": "aip_model_judge_budget_reservation_upper_bound_minor_check",
+          "definition": "CHECK (((upper_bound_minor >= 1) AND (upper_bound_minor <= 100000000)))"
+        }
+      ],
+      "triggers": [
+        {
+          "tgname": "trg_aip_model_judge_budget_reservation_append_only",
+          "definition": "CREATE TRIGGER trg_aip_model_judge_budget_reservation_append_only BEFORE DELETE OR UPDATE ON public.aip_model_judge_budget_reservation FOR EACH ROW EXECUTE FUNCTION guard_aip4_append_only()"
+        },
+        {
+          "tgname": "trg_aip_model_judge_budget_reservation_truncate_guard",
+          "definition": "CREATE TRIGGER trg_aip_model_judge_budget_reservation_truncate_guard BEFORE TRUNCATE ON public.aip_model_judge_budget_reservation FOR EACH STATEMENT EXECUTE FUNCTION guard_aip4_append_only()"
+        }
+      ],
+      "states": [
+        {
+          "state": "held",
+          "n": 1
+        }
+      ]
+    }
+  },
+  "prices": [
+    {
+      "model_price_snapshot_id": "cost-price-92ebf70dabfc9c7a23d78e1e745e3acec2d64ee79eb7c8c35d8419f446d71810",
+      "revision": 1,
+      "content_hash": "4f37ec71b67532d4e707f55fcbfd2d35273efbff8847212a00cb8b74ae77703f",
+      "input_price": null,
+      "output_price": null,
+      "cached_price": null,
+      "has_development_authorization": true
+    },
+    {
+      "model_price_snapshot_id": "cost-price-b8723c37c4655c3812c087e9a07bc75a91825af29e4b0572268726ae92d88e11",
+      "revision": 1,
+      "content_hash": "74597b81acb7243e9cb48325f0577c7be83ca945ee1594b6e6935786f0828e18",
+      "input_price": null,
+      "output_price": null,
+      "cached_price": null,
+      "has_development_authorization": true
+    }
+  ],
+  "database_mutations": 0,
+  "provider_calls": 0,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "recorded_at": "2026-10-09 19:13:27.880731+00:00"
+}
