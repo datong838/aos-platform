@@ -1,0 +1,27 @@
+from pathlib import Path
+import json
+R=Path(__file__).resolve().parents[2];B=Path(__file__).resolve().parent
+p=B/'native-normalization-r2-result.json';result=json.loads(p.read_text());assert result['pytest_exit']==0 and sum(x['phase']=='call' for x in result['results'])==18
+result['scope']='Entire original10functions18nodes selected:6application/candidate functions12nodes plus4adjacent functions6nodes; not whole386node Source acceptance';p.write_text(json.dumps(result,indent=2))
+f=B/'run_normalization_r2.py';s=f.read_text().replace('full original Source file selected, maxfail1 actual first failure; unexecuted nodes not acceptance',result['scope']);f.write_text(s)
+f=B/'verify_normalization_r2.py';s=f.read_text().replace('aos-source-original-normalization-three-oracles-five-nodes-verification/v1','aos-source-original-application-candidate-and-adjacent-eighteen-nodes-verification/v1');f.write_text(s)
+f=B/'independent-final-verification.json';p=json.loads(f.read_text());p['schema']='aos-source-original-application-candidate-and-adjacent-eighteen-nodes-verification/v1';f.write_text(json.dumps(p,indent=2))
+(B/'review.md').write_text('''# Original application/candidate migrated-profile review
+
+AOS-001641/m1 35eb116cb0b0951dffc5a5a7c44986bb97df06f8. Whole original101functions386nodes r3 actually56passed1failed219.41s/329unexecuted. Failure repeats migrated Source profile before application-model oracle. Independent retained failedDB exactfunction/body/ACL/lock audit and five publication tables zero.
+
+Original Source plan amended before minimal test-only changes to exactly six enumerated original functions (repaired-functions.json). Replaced permanentprofile CREATE/setup loops with exactaudit. Application rollback permanentfunction presence+audit; candidate rollback7permanentfunctions+audit. All original assertion counts, model-domain and fault loop/Try bodies byte-identical except enumerated migrated-installation assertions. Original real runtime candidate inserts, original independent Maker/checker decisions, native SCRAM signed claims, Source typed binding and six representations preserved. Full four coherently rehashed alias/ref/provider-member/concurrency faults reject and original postrollback positive preserved. Catalog owner/searchpath/ACL/immutable flags unchanged. No product SQL/code changes.
+
+Full6affectedfunctions12nodes plus original4adjacentfunctions6nodes18passed52.97s. Independent retained sameoriginalsession newDB exact1963hashes/zeroSource/roleflags/temporaryinterfaces/occupation cleanup/durability settings,32oldresources unchanged and exactrootvolume+reserve. Original protected fixture6/1 staysunstaged; selective originalfunction index only. Browser inapplicable. No modelreview/formalSourceDelivery/currentDB/Provider/Goal change.
+
+Current commitSQL independently remains identical to preserved4350f338 actual expiredSourceCOMMIT counterexample, so even future fullsuitePASS cannot close finalclock. Original fullSourceTask ACTIVE, finalclock/fullatomicjoint/firstchain/eightworkbenches/continuousobservation/release remainpending. Remaining installation calls require intent-specific audit; no blanketreplacement. Next registered action new full original386-node cumulative. Evidence result and verifier schema labels explicitly describe18selectednodes, no fullsuite label substitution.
+''')
+s=(R/'.evidence/gt-source-full-suite-root-r2-20261009/register_stage.py').read_text().replace('AOS-001640','AOS-001641').replace('8b238c737d266ae8cc11dac58ea2a554d39d6408','35eb116cb0b0951dffc5a5a7c44986bb97df06f8').replace("p['node_count']==6","p['node_count']==18")
+a=s.index('names={');z=s.index('\nold_nodes=',a);s=s[:a]+'names=set('+repr(json.loads((B/'repaired-functions.json').read_text()))+')'+s[z:]
+s=s.replace('WHOLE_SOURCE_COHERENT_HASH_ORACLE_REPAIRED_FULL_PENDING','WHOLE_SOURCE_APPLICATION_CANDIDATE_ORACLES_REPAIRED_FULL_PENDING')
+a=s.index('verification=[');z=s.index(',risks=',a);s=s[:a]+"verification="+repr(['Whole original101functions386nodes56passed1failed219.41s329unexecuted; repeated permanentprofile native RED independently audited','Entire6affectedfunctions12nodes plus4adjacentfunctions6nodes18passed52.97s; original real approvals/model domains/four rehashed faults preserved; independent1963inputs/zeroSource/protected32resources'])+s[z:]
+a=s.index('summary=');z=s.index('\nu=m.update_authority',a);s=s[:a]+'summary='+repr((B/'review.md').read_text())+s[z:]
+s=s.replace("B/'first-failure-independent.json')","B/'first-failure-independent.json',B/'current-clock-completion-audit.json')")
+s=s.replace('current-source-normalization-reference-1640.json','current-source-coherent-hash-reference-1641.json').replace("new=f'.evidence/{tid}/current-source-coherent-hash-reference-1641.json'","new=f'.evidence/{tid}/current-source-application-candidate-reference-1642.json'")
+s=s.replace('whole-source-coherent-hash-oracle-repaired-full-suite-next-final-clock-pending','whole-source-application-candidate-oracles-repaired-full-suite-next-final-clock-pending').replace('test(aip): preserve coherent hash rejection with migrated Source profile','test(aip): audit migrated application and candidate Source profiles').replace('docs(aos): record coherent hash oracle verification and pending full exits','docs(aos): record original application and candidate oracle verification')
+(B/'register_stage.py').write_text(s);print('Precise6function stage/review prepared; honest18node labels and protectedfixture preserved')

@@ -1,0 +1,61 @@
+{
+  "head": "35eb116cb0b0951dffc5a5a7c44986bb97df06f8",
+  "rows": [
+    {
+      "function": "test_native_original_capacity_application_profile_matches_original_model",
+      "start": 1010,
+      "end": 1089,
+      "assert_count": 6,
+      "profile_installs": [
+        {
+          "line": 1059,
+          "arg": "CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL"
+        },
+        {
+          "line": 1060,
+          "arg": "CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL"
+        }
+      ],
+      "function_sha256": "5caf8e286eef8749554a86aa346a49f05ee7c8f33fb2f8af59149721eadd5bda",
+      "classification": "original model equivalence or original expiry corruption control; repeated installation setup conflicts with permanent migration; changes forbidden while cumulative process live"
+    },
+    {
+      "function": "test_native_original_capacity_request_rechecks_exact_row_expiry",
+      "start": 1092,
+      "end": 1133,
+      "assert_count": 7,
+      "profile_installs": [
+        {
+          "line": 1106,
+          "arg": "CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL"
+        },
+        {
+          "line": 1107,
+          "arg": "CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL"
+        }
+      ],
+      "function_sha256": "624d0dff301892226c211c98c2ce77a61763a4849fc878731b47f2b641db53dd",
+      "classification": "original model equivalence or original expiry corruption control; repeated installation setup conflicts with permanent migration; changes forbidden while cumulative process live"
+    },
+    {
+      "function": "test_native_original_candidate_profile_matches_original_model",
+      "start": 1137,
+      "end": 1247,
+      "assert_count": 5,
+      "profile_installs": [
+        {
+          "line": 1216,
+          "arg": "CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL"
+        },
+        {
+          "line": 1217,
+          "arg": "CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL"
+        }
+      ],
+      "function_sha256": "566877221a99d92e889f109f6ef0335f6afb61979db013050a8e582b72084ff5",
+      "classification": "original model equivalence or original expiry corruption control; repeated installation setup conflicts with permanent migration; changes forbidden while cumulative process live"
+    }
+  ],
+  "bulk_repair_authorized": false,
+  "requires_actual_terminal_failure": true
+}

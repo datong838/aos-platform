@@ -1,0 +1,17 @@
+{
+  "failed_node": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_capacity_application_profile_matches_original_model",
+  "database": "aos_test_07db9bd668b8_ti4_test",
+  "whole_nodes": 386,
+  "passed_nodes": 56,
+  "unexecuted_nodes": 329,
+  "exact_existing_function_acl_lock_audit": true,
+  "publication_counts": {
+    "source_pending": 0,
+    "source_publication": 0,
+    "source_provenance": 0,
+    "global_account": 0,
+    "global_provider": 0
+  },
+  "root_cause": "Old test repeats permanent a0v157 source/application profiles before original model-equivalence assertions",
+  "goal_completion_proven": false
+}

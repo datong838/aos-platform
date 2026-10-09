@@ -1,0 +1,89 @@
+{
+  "schema": "aos-source-original-application-candidate-and-adjacent-eighteen-nodes-verification/v1",
+  "head": "35eb116cb0b0951dffc5a5a7c44986bb97df06f8",
+  "authority_revision": "AOS-001641",
+  "summary": "18 passed, 7 warnings in 52.97s",
+  "all_selected_passed": true,
+  "node_count": 18,
+  "database_count": 1,
+  "sources": 0,
+  "databases": [
+    {
+      "database": "aos_test_7ffd62425ab5_ti4_test",
+      "nodeids": [
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_binding_rejects_coherent_wrong_hash",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[nested_alias]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[offset_space]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[epoch_string]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_time_profile_matches_original_datetime_oracle",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_candidate_profile_matches_original_shape_oracle",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_capacity_application_profile_matches_original_model",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_capacity_request_rechecks_exact_row_expiry",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_candidate_profile_matches_original_model[account]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_candidate_profile_matches_original_model[basis]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_candidate_rows_and_combination_keep_original_claims",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[basis_account]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[account_provider]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[basis_mixed]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[provider_mixed]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[basis_epoch]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[token_alias]",
+        "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_rejects_rehashed_original_row_term_faults"
+      ],
+      "sources": [],
+      "publication_counts": {
+        "source_pending": 0,
+        "source_publication": 0,
+        "source_provenance": 0,
+        "global_account": 0,
+        "global_provider": 0
+      },
+      "roles": [
+        {
+          "rolname": "aos_provider_capacity_issuer",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        },
+        {
+          "rolname": "aos_provider_capacity_policy_publisher",
+          "rolcanlogin": false,
+          "rolsuper": false,
+          "rolbypassrls": false
+        }
+      ],
+      "occupation": {
+        "prepared_call_occupation": "ABSENT",
+        "prepared_plan_risk": "ABSENT",
+        "prepared_parent_debit": "ABSENT",
+        "prepared_execution_intent": "ABSENT",
+        "call_occupation": "ABSENT",
+        "call_occupation_event": "ABSENT"
+      },
+      "temporary_interfaces_removed": true,
+      "exact_functions_acl_lock_audit": true
+    }
+  ],
+  "exact_inputs_unchanged": true,
+  "old_resources_unchanged": true,
+  "old_resource_count": 35,
+  "full_source_delivery": false,
+  "formal_business_execution": false,
+  "root_volume": {
+    "CreatedAt": "2026-10-09T13:20:02+08:00",
+    "Driver": "local",
+    "Labels": {
+      "aos.scope": "test-only",
+      "aos.task": "gt-source-root-native-lab-20261009"
+    },
+    "Mountpoint": "/var/lib/docker/100000.100000/volumes/aos-source-root-native-20261009-data/_data",
+    "Name": "aos-source-root-native-20261009-data",
+    "Options": {
+      "device": "/var/lib/aos-test-labs/aos-source-root-native-20261009",
+      "o": "bind",
+      "type": "none"
+    },
+    "Scope": "local"
+  },
+  "root_available_bytes": 15394381824
+}

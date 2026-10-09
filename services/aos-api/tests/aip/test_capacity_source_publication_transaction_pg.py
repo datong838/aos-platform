@@ -1051,8 +1051,8 @@ def test_native_original_capacity_application_profile_matches_original_model(nat
             value_body[field]=str(int(getattr(model,attribute).timestamp()))
         cases.append(('epoch_strings',value_body))
         value_body=deepcopy(baseline);value_body['providerRef']['assetType']='EvidenceBundleRevision';cases.append(('ref_kind',value_body))
-        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
-        owner.execute(CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         flags=owner.execute("""SELECT p.provolatile,p.proisstrict,p.prosecdef,p.proconfig,r.rolname,
             has_function_privilege('aos_runtime',p.oid,'EXECUTE') AS runtime_exec,
             has_function_privilege('aos_provider_capacity_issuer',p.oid,'EXECUTE') AS issuer_exec,
@@ -1079,7 +1079,8 @@ def test_native_original_capacity_application_profile_matches_original_model(nat
                 actual=None
             if expected!=actual:mismatches.append((label,expected is not None,actual is not None))
         owner.rollback()
-        assert owner.execute("SELECT to_regprocedure('aos_capacity_publication_private.read_original_capacity_application(jsonb)') AS fn").fetchone()['fn'] is None
+        assert owner.execute("SELECT to_regprocedure('aos_capacity_publication_private.read_original_capacity_application(jsonb)') AS fn").fetchone()['fn'] is not None
+        require_source_transaction_functions(owner)
         owner.rollback()
     assert not mismatches, f'Original application/native incompatibilities: {mismatches!r}'
 
@@ -1098,8 +1099,8 @@ def test_native_original_capacity_request_rechecks_exact_row_expiry(native_signe
         maker=authenticate_capacity_issuance_command(command).subject)
     with isolated_owner() as owner:
         owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
-        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
-        owner.execute(CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         original=owner.execute(CAPACITY_NATIVE_REQUEST_ROW_SQL,params).fetchone()
         assert original is not None
@@ -1208,8 +1209,8 @@ def test_native_original_candidate_profile_matches_original_model(native_signed_
             candidate=deepcopy(raw);candidate[field]=value;cases.append((label,candidate))
         duplicate=deepcopy(raw);duplicate['schema_version']=1;cases.append(('duplicate_alias',duplicate))
         missing=deepcopy(raw);del missing['evidenceRef'];cases.append(('missing',missing))
-        owner.execute(CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL)
-        owner.execute(CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         names=['original_claim_fields','original_claim_header','original_claim_identity','original_claim_integer',
             'read_original_token_limit','read_original_physical_account','read_original_capacity_basis']
         flags=owner.execute("""SELECT p.provolatile,p.proisstrict,p.prosecdef,p.proconfig,r.rolname,
@@ -1237,7 +1238,8 @@ def test_native_original_candidate_profile_matches_original_model(native_signed_
             if expected!=actual:mismatches.append((label,expected is not None,actual is not None))
         owner.rollback()
         assert owner.execute("SELECT count(*) AS n FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='aos_capacity_publication_private' AND p.proname=ANY(%s)",
-            (names,)).fetchone()['n']==0
+            (names,)).fetchone()['n']==7
+        require_source_transaction_functions(owner)
         owner.rollback()
     assert not mismatches, f'Original {kind}/native incompatibilities: {mismatches!r}'
 
@@ -1256,8 +1258,8 @@ def test_native_original_candidate_rows_and_combination_keep_original_claims(nat
     params=ProviderCapacitySourceActionGuard._combination_params(SCOPE,source,maker)
     with isolated_owner() as owner:
         owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
-        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL):
-            owner.execute(profile)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         for kind,ref,model in [('account',source.physical_account_ref,ProviderPhysicalAccountCandidate),('basis',source.basis_ref,ProviderCapacityBasisCandidate)]:
             row=owner.execute(CAPACITY_NATIVE_CANDIDATE_ROW_SQL,dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,
@@ -1338,8 +1340,8 @@ def test_native_candidate_combination_preserves_real_original_private_approval(n
     params=ProviderCapacitySourceActionGuard._combination_params(SCOPE,changed,maker.subject)
     with isolated_owner() as owner:
         owner.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
-        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL):
-            owner.execute(profile)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         assert owner.execute(CAPACITY_NATIVE_SOURCE_COMBINATION_SQL,params).fetchone() is not None
         assert owner.execute(CAPACITY_NATIVE_APPROVED_SOURCE_ROW_SQL,dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,maker=maker.subject,
@@ -1379,8 +1381,8 @@ def test_native_candidate_combination_rejects_rehashed_original_row_term_faults(
             (source.basis_ref.asset_id,)).fetchone()['request_json']
         request=owner.execute('SELECT request_json FROM public.aip_provider_capacity_request WHERE request_id=%s',
             (source.allocation_request_ref.asset_id,)).fetchone()['request_json']['application']
-        for profile in (CAPACITY_SOURCE_CANDIDATE_PROFILE_SQL,CAPACITY_ORIGINAL_APPLICATION_PROFILE_SQL,CAPACITY_ORIGINAL_CANDIDATES_PROFILE_SQL):
-            owner.execute(profile)
+        from aos_api.aip_provider_capacity_publication_transaction import require_source_transaction_functions
+        require_source_transaction_functions(owner)
         owner.execute('SET LOCAL ROLE aos_capacity_publication_owner')
         assert owner.execute(CAPACITY_NATIVE_SOURCE_COMBINATION_SQL,params).fetchone() is not None
         for fault in ['account_alias','basis_ref','provider_member','concurrency']:

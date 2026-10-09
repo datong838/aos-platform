@@ -1,0 +1,188 @@
+{
+  "observed_at": "2026-10-09T05:59:21.855084+00:00",
+  "database": "aos_test_7ffd62425ab5_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_binding_rejects_coherent_wrong_hash",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_source_binding_rejects_coherent_wrong_hash",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[nested_alias]",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[nested_alias]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[offset_space]",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[offset_space]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[epoch_string]",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_binding_uses_typed_normalization_in_private_reader[epoch_string]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_time_profile_matches_original_datetime_oracle",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_time_profile_matches_original_datetime_oracle",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_candidate_profile_matches_original_shape_oracle",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_original_source_candidate_profile_matches_original_shape_oracle",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_capacity_application_profile_matches_original_model",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_capacity_application_profile_matches_original_model",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_capacity_request_rechecks_exact_row_expiry",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_capacity_request_rechecks_exact_row_expiry",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_candidate_profile_matches_original_model[account]",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_candidate_profile_matches_original_model[account]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_candidate_profile_matches_original_model[basis]",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_candidate_profile_matches_original_model[basis]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_candidate_rows_and_combination_keep_original_claims",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_original_candidate_rows_and_combination_keep_original_claims",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[basis_account]",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[basis_account]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[account_provider]",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[account_provider]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[basis_mixed]",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[basis_mixed]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[provider_mixed]",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[provider_mixed]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[basis_epoch]",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[basis_epoch]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[token_alias]",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_preserves_real_original_private_approval[token_alias]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_rejects_rehashed_original_row_term_faults",
+      "phase": "database_binding",
+      "database": "aos_test_7ffd62425ab5_ti4_test"
+    },
+    {
+      "nodeid": "tests/aip/test_capacity_source_publication_transaction_pg.py::test_native_candidate_combination_rejects_rehashed_original_row_term_faults",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "Entire original10functions18nodes selected:6application/candidate functions12nodes plus4adjacent functions6nodes; not whole386node Source acceptance"
+}
