@@ -1,0 +1,15 @@
+{
+  "identity": {
+    "db": "aos_test_8eb453b71d1c_ti4_test",
+    "cluster": "7694680278363095064"
+  },
+  "first_snapshot": "35795:35795:",
+  "later_xid": "35795",
+  "later_status": "committed",
+  "caller_snapshot_after": "35795:35795:",
+  "later_xid_visible_in_original_caller": false,
+  "table_writes": 0,
+  "native_same_caller_currentness_verified": false,
+  "scope": "PostgreSQL SERIAL snapshot semantics; not certificate registration/positive bridge proof",
+  "execution_allowed": false
+}

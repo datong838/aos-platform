@@ -1,0 +1,37 @@
+# 原风险同事务签名证书暂存协议
+
+Rules：231八步、方案先行、单writer/精确TaskLease、原件与真库只读、原模型Root信任和执行独立授权。AOS-001677。候选一解决实际快照依赖；候选二独立SourceTTL/审批终止验收（不复用过期审批期待后段正向）。选择一，Root谱系不凭本协议补造。
+
+旧只读Task只读合同不扩大：其原件读取仍必要；新增独立module/test/Task及证据。固定SERIAL已经读取风险后看不见后来独立issuer COMMIT的描述绑定元数据，已由真实双只读/零表写证实；不降隔离、不换physical连接、不SET ROLE修补。代码依据：当前Source document registry有受限C Ed25519 verifier及catalog身份精确核对；闭合model储存/issuer/certificate epoch/global identity及v3 binding存在，但runtime没有任何直接表写权限。
+
+新时序：先由既有私有Owner在独立受控阶段登记长期发行者root/currenthead（真实信任谱系仍独立门，实验bootstrap不得宣正式可信），保证physical首快照能看到root。业务Manifest与description只在原physical SERIAL实际形成，签名方对精确v3 claim签名；原native caller通过明确新暂存函数提交签名原件。函数以实际风险原件/Source/currentfacts读出完整description；受限model Owner helper仅追加该原件中的完整Manifest，issuer Owner入口在原物理事务内验签后追加certificate/identity binding。自写行对同事务可见，无独立后提交可见性假设。原风险仍禁止COMMIT，所以暂存metadata随原风险回滚；此阶段无执行/消费结算/joint权限。
+
+SQL两窄函数和显式隔离installer，不挂请求时DDL/正式migration/启用开关。Manifest helper只授issuer Owner EXECUTE，不授runtime；helper借既有physical原件窄函数验证actual origin再追加immutable Manifest，不授跨域表INSERT。发行者入口仅runtime EXECUTE：exact occupation session/runtime role/SERIAL/UTC/origin/双tenant、bounded canonical signed envelope全case×targetjudge、完整manifest/description/risk hash与xidpid、original root/head/publickey/有效期/撤回、C verifier catalog身份与域分隔签名；root→certificate→identity锁序，插入证书后旧trigger产生currentcerthead，新v3 trigger产生绑定，原全局撤回继续约束。direct表ACL不变；授新Owner必要的既有窄读取/纯C验签EXECUTE，不把旧v1 reader或registry写者扩大。
+
+Python同一conn原件读/strict typed合同与签名/新SQL/同caller新reader/SourceOwner末尾currentness全部包在原conn.transaction保存点内，afterwrite时间/签名失败被caller捕获后仍不留cert/binding/manifest残行。不要自动COMMIT/ROLLBACK外层或改role。SQL完整原件header/集合/Hash/Ed25519重复检查，不能只依赖Python验签。新SQL显式prepared-only false标记，source/policy/bootstrap不自动授权。
+
+RED：本协议缺失、原独立COMMIT不可见；先事务内DDL编译并闭合admin负门，DBdenied纯验；native fresh ownedlab/新长期root提前提交、root私钥内存、实际preparedrisk与两case四leg原sig、返回同xidpid。反例假hash/bool/canary/其他caller/缺腿/重复/旧v1/签名坏/撤回/到期、caught Python failure提交残行0、真实风险COMMIT拒绝，独立只读核库身份/ACL/函数原文/hash/零metadata-risk。适用浏览器无UI；独立PrimeUNKNOWN不重发；复审后精确业务提交→CAS原经营状态保持→官方上下文sync→下波。不以只读artifact单测替代本协议验收。
+
+本Task ACTIVE；本方案是已授权Model设计/隔离实现内的时序修复，无正式Root/HostworkerProvider/数据库迁移授权。根谱系、正式crypto验证器安装身份、完整currentness/WALACK/Transport及经营链仍待验。后续若实际权限/锁序不能安全满足，先补方案而非grantall或绕过产品控件。
+
+实现复审修订：全root按issuer/key锁定、所有certificate epoch按hash锁定后才进入identity排序；幂等binding已存在时不再触发全局identity version增长。仅org/project/cert hash交给原v3 BEFORE trigger从原cert导出绑定，禁止占位字段；避免PLpgSQL同名body变量/列。SQL末尾复核cert/root真实区间和future revokedAt，Python先拒绝非native/intrans连接，嵌套保存点覆盖后写失败。
+
+Native R1：新root有效5分钟并在physical factory前私有Owner明确提交，原snapshot验证root xid可见；原bootstrap仍实验a*64无信任。新证书40秒且不超当前原Request/Root，不延旧8秒证书。fresh批准110秒/default新JWT300秒范围不变。新回调只新增本协议五SQL负门/同caller完整四leg/表直读拒绝；此前描述三反例和重复prepare不在本回调重跑，冻结R8完整范围保留；原driver后续Owner/parent/debit/input/Intent/guard及actualCOMMIT拒绝仍执行。
+
+R1完整节点13.76秒FAIL：原aip_model_eval_judge_request尚未建立而风险SQL提早编译；独立只读Source1/root0/cert0/manifest0，旧保护原件hash不变。R2仅将风险/Origin/reader/prepare函数安装移回原prefix（原Judge fixture已建表），root/identity结构及长期root原件仍在native factory前明确独立提交。无正式表改动或未知重发，fresh独立数据库。
+
+R2完整节点67.68秒FAIL：五个直接SQL负门均经过，但Python正向包装隐藏底层异常，尚不能归因验签或超时。337纯验PASS1.53秒。R3仅增加隔离runner的局部exception诊断，限定新wrapper帧、只记录类型/SQLSTATE/安全固定message和行号，不记录locals、参数、JWT、私钥或SQL上下文；fresh独立数据库及原件，不重发R2未知效果，不修改产品拒绝行为。先独立只读回读R2残行，再按实证最小修正。
+
+R3 78.56秒FAIL：SQL暂存已返回prepared-only，拒绝定位到后置完整Python原件reader，非SQL签名入口。R4局部帧诊断扩至新reader/原件reader，仅固定安全错误文本及行号；不记录参数或证书私钥，不增有效期，不减少校验；fresh原件独立实验。
+
+已离线确证R3Root原件UTC文本+00:00与严格类型规范Z哈希不同；新reader拒绝是必要门，不放宽。R5仅将新实验发行Root在独立Owner提交之前严格类型规范化，再以同字节哈希持久化；有效区间和实际时刻不变，原R1-R4字节/结果不覆盖。需R4诊断完成确认后才运行freshR5。
+
+R4实际异常canonical original metadata bytes required与离线Roothash差异一致。R5第一次为跑器preflightFAIL：版本文件名替换误改保护基线摘要名，未创建target、未进入数据库/test；保留native.log，精确修回旧r4保护路径，明确无效果的受控重试另存native-retry.log，不覆盖首次失败。
+
+R5完整79.54秒FAIL：Root规范字节门通过，全部完整集合/Python签名复核走到最终时钟，原40秒证书真实到期（current contained v3 certificate interval and presented issuer required）；不追认绿、不延旧证书。R6将已回滚的负门与后写失败/邻接正向各用新签名原件，所有新签名继续绑定同description/当前原Request与Root、同identity keys/xidpid，end<=原Request/Root且新窗口40秒，不改TTL或实际时钟。原5负门先跑；其后 fresh factory即时重新签发做SQL已成功后的Python强制失败，caught后同physical原件reader必须MANIFEST_REQUIRED；再次即时新签名做完整正常正向。仅新Task test与隔离runner/helper改动，无产品函数改动。不能用整体风险ABORTED代替保存点清理。完整driver后置Owner/parent/debit/input/Intent/guard/actualCOMMIT门保持。
+
+R6节点97.76秒整体FAIL，新增协议子步真实完成：same xid37415/pid50739四证书，五直接SQL负门，SQL完成后的Python强制失败被捕获且同callerManifest缺失，fresh正向全原件读取，实际COMMIT被CAPACITY_PARENT_FINALIZE_REQUIRED拒绝。后续原Source相邻从另caller xid37435失败CAPACITY_OCCUPATION_SOURCE_REQUIRED；当前Source原件5分钟未到期，不能推测SourceTTL原因。R7保持当前12冻结源码和原件协议，限定新隔离跑器诊断再加入原Source包装拒绝的底层SQLSTATE/固定CAPACITY_*拒绝码，先只读对账R6，独立fresh实验，不改变Product/TTL/权限以猜测修复。整个节点不标PASS。
+
+R7 96.95秒完整FAIL，新增核心子步仍通过；旧Source真实SQLSTATE42501 CAPACITY_SOURCE_CURRENT_INSTALLATION_DRIFTED。代码复核Source private audit 1305-1324严格要求原aos_ed25519 schema/verify ACL仅原aos_ed25519_owner和Source OWNER。Task10 installer直接给Model ISSUER_OWNER增加两项原C权限破坏旧闭合ACL；原SER旧快照可能遮蔽后来ACL变化，而新相邻连接正确拒绝。不得修改Source审核/扩大允许名单/复用旧snapshot伪绿。
+
+最小修复仅本Task新增module/test：移除直接C schema USAGE/verify EXEC grant；添加public.verify_model_shared_parent_certificate_signature(bytea,bytea,bytea)受限纯验签委托。函数由既有Source OWNER持有，SECURITY DEFINER/fixedpg_catalog，仅Model ISSUER_OWNER EXECUTE（PUBLIC/runtime/ProviderIssuer不授）。仅原physical session/runtime SERIAL UTC origin/positive scope、严格32公钥/64签名/1MiB域分隔v3消息；调用既有Source require_current_source_installation完整精确安装审核，再调用原C verifier。函数不读业务原件、不写表、不登记Root/不提交，不能签名或授信。主暂存入口继续已有完整Root/集合/原件/日期/签名currentness校验，调用窄委托替代C直调。原C/schema ACL字节闭合不变，旧Source审核函数/权限/数据不改；并保留新增主入口的C catalog身份检查。不是第二安装Crypto控制面，不扩大新Root信任。先记录精确ACL诊断，再新fresh R8完整专项+337累计+独立旧C ACL/实际Source邻接读回。

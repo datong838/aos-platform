@@ -1,0 +1,40 @@
+{
+  "first": {
+    "pid": 54169,
+    "xid": "38022",
+    "debitId": "d4e2063e-6534-450b-870c-578c2f3963bd",
+    "contentHash": "sha256:73dc08001b2c234911255a55a2a0b5c8892a29ace2f4ec341d1b837a6535b699",
+    "allocatedMinor": 6,
+    "parentCapMinor": 10,
+    "physicalTokens": 10000,
+    "executionAllowed": false,
+    "physicalRequests": 1
+  },
+  "second": {
+    "pid": 54169,
+    "xid": "38022",
+    "debitId": "9f3709b0-2c9b-496a-8eff-969dba1bc316",
+    "contentHash": "sha256:e3bde0f1ed4771ba228461d5ecaba48477d896af03f5e65125c839403db1695e",
+    "allocatedMinor": 10,
+    "parentCapMinor": 10,
+    "physicalTokens": 20000,
+    "executionAllowed": false,
+    "physicalRequests": 2
+  },
+  "replay": {
+    "pid": 54169,
+    "xid": "38022",
+    "debitId": "d4e2063e-6534-450b-870c-578c2f3963bd",
+    "contentHash": "sha256:73dc08001b2c234911255a55a2a0b5c8892a29ace2f4ec341d1b837a6535b699",
+    "allocatedMinor": 10,
+    "parentCapMinor": 10,
+    "physicalTokens": 20000,
+    "executionAllowed": false,
+    "physicalRequests": 2
+  },
+  "commit_sqlstate": "23514",
+  "caller_status": "aborted",
+  "early_check_rejected": true,
+  "private_rows": 0,
+  "execution_allowed": false
+}

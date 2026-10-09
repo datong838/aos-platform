@@ -1,0 +1,15 @@
+{
+  "status": "RED_MISSING_SAME_NATIVE_V3_BRIDGE",
+  "authority": "AOS-001677",
+  "head": "632428a74054998db0a83a9c5385abd5741dcb9b",
+  "new_bridge_exists": false,
+  "old_runtime_reads_v1": true,
+  "private_v3_requires_other_owner": true,
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_model_eval_execution_authority.py": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27",
+    "services/aos-api/aos_api/aip_model_shared_parent_certificate_identity.py": "4a5eb36ab7fcded7e256ca7270f88e6b6c9e064fc921da88a418aaa929e35101"
+  },
+  "identity_same_caller_verified": false,
+  "root_provenance_verified": false,
+  "execution_allowed": false
+}

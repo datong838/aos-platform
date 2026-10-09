@@ -1,0 +1,102 @@
+from pathlib import Path
+import os,sys,json,hashlib,subprocess,importlib.util
+B=Path(__file__).resolve().parent;R=B.parents[2]
+J=R/'.evidence/gt-judge-call-authority-20261008';M=R/'.evidence/gt-atomic-model-admission-20261008'
+label='shared-native-certificate-1677-r6';target=J/label
+lab=json.loads((R/'.evidence/gt-source-desktop-shm-lab-20261009/lab.json').read_text())
+c=json.loads(subprocess.check_output(['docker','--context',lab['context'],'inspect',lab['name']],text=True))[0]
+assert c['Id']==lab['container_id'] and c['State']['Running']
+assert lab['cluster']=='7694680278363095064' and lab['port']==5441
+free=int(subprocess.check_output(['docker','--context',lab['context'],'exec',lab['name'],'df','-P','-B1','/var/lib/postgresql/data'],text=True).splitlines()[-1].split()[3]);assert free>2500000000
+old=[M/'legal-model-prefix-application-r4.json',M/'legal-eval-application-result-r4.json',R/'services/aos-api/aos_api/aip_model_eval_execution_reader.py',R/'services/aos-api/aos_api/aip_model_eval_execution_authority.py']
+before={str(p.relative_to(R)):hashlib.sha256(p.read_bytes()).hexdigest() for p in old}
+target.mkdir()
+for n in ('legal_model_prefix_for_application_r4.py','legal_eval_application_fixture_r4.py','build_whole_native_plan_1602.py'):
+ (target/n).open('xb').write((M/n).read_bytes())
+for k in ('PGPASSWORD','PGPASSFILE','PGSERVICE','PGSERVICEFILE','PGOPTIONS'):os.environ.pop(k,None)
+os.environ.update(AOS_DATABASE_URL='postgresql://aos_app@127.0.0.1:5441/aos_meta',AOS_DOTENV_DISABLED='1',AOS_EXTENSION_PG_TEST='1',AOS_EXTENSION_PG_HOST='127.0.0.1',AOS_EXTENSION_PG_PORT='5441',AOS_EXTENSION_PG_USER='aos_app',AOS_EXTENSION_PG_DATABASE='aos_meta',AOS_TEST_RETAIN_DATABASE='1',AOS_TEST_USE_SHARED_DATABASE='0',AOS_JUDGE_FIXTURE_EVIDENCE_ROOT=str(target),AOS_JUDGE_NATIVE_EVIDENCE_LABEL=label,AOS_PARENT_LIFECYCLE_EVIDENCE=str(B))
+sys.path[:0]=[str(R/'services/aos-api'),str(R/'services/aos-api/tests/extension_runtime'),str(R/'services/aos-api/tests')]
+import psycopg
+from psycopg.conninfo import conninfo_to_dict
+connect=psycopg.connect
+def owned_connect(*args,**kwargs):
+ assert len(args)<=1
+ params=conninfo_to_dict(args[0] if args else kwargs.get('conninfo',''))
+ for k in ('host','port','user','dbname'):
+  if k in kwargs:params[k]=kwargs[k]
+ if params.get('user')=='aos_app':
+  assert params.get('host')=='127.0.0.1' and str(params.get('port'))=='5441'
+  assert params.get('dbname')=='aos_meta' or params.get('dbname','').startswith('aos_test_')
+  kwargs['passfile']=lab['passfile']
+ return connect(*args,**kwargs)
+psycopg.connect=owned_connect
+import pytest
+s=importlib.util.spec_from_file_location('expected',J/'registered_judge_expected_fixture_1659.py');fixture=importlib.util.module_from_spec(s);s.loader.exec_module(fixture);patch=pytest.MonkeyPatch();fixture.install(patch)
+os.environ.update(AOS_SOURCE_MODEL_EVIDENCE_LABEL=label,AOS_SOURCE_NEW_JUDGE_NATIVE='1',AOS_NEW_JUDGE_INTENT_NATIVE='1')
+sys.path.insert(0,str(B))
+import source_newjudge_native_trial_1606 as trial
+from aos_api.aip_model_eval_execution_owner import ModelEvalExecutionOwner
+original_judge=ModelEvalExecutionOwner.prepare_judge_application
+def record_judge(self,*args,**kwargs):
+ trial.POLICY=kwargs
+ return original_judge(self,*args,**kwargs)
+patch.setattr(ModelEvalExecutionOwner,'prepare_judge_application',record_judge)
+import tests.aip.test_physical_capacity_occupation_pg as test_module
+PlainPath=Path
+class EvidencePath(type(Path())):
+ def __truediv__(self,other):
+  result=super().__truediv__(other)
+  if str(result)==str(M):return B
+  return result
+patch.setattr(test_module,'Path',EvidencePath)
+class Recorder:
+ def __init__(self):self.databases=[];self.results=[]
+ def pytest_collection_modifyitems(self,items):
+  for item in items:
+   if str(item.path).endswith('test_physical_capacity_occupation_pg.py'):
+    patch.setattr(item.module,'Path',EvidencePath)
+    fd=item._fixtureinfo.name2fixturedefs['https_signer'][-1]
+    original=fd.func
+    def fresh_experiment_signer(**kwargs):
+     import time
+     generator=original(**kwargs)
+     try:
+      sign,requests=next(generator)
+      def independent_sign(subject,*,changes=None,omit=None,wrong_key=False):
+       claims=dict(changes or {})
+       if 'exp' not in claims:claims['exp']=int(time.time())+300
+       return sign(subject,changes=claims,omit=omit,wrong_key=wrong_key)
+      (B/'new-authentication-window.json').open('x').write(json.dumps(dict(new_independent_default_seconds=300,original_default_seconds=120,old_token_extended=False,explicit_negative_expiry_preserved=True,clock_mocked=False,execution_allowed=False),indent=2))
+      yield independent_sign,requests
+     finally:generator.close()
+    fd.func=fresh_experiment_signer
+ def pytest_runtest_call(self,item):
+  from aos_api.db import get_dsn
+  self.databases.append(conninfo_to_dict(get_dsn())['dbname'])
+ def pytest_runtest_logreport(self,report):
+  if report.when=='call' or report.failed:self.results.append({'nodeid':report.nodeid,'phase':report.when,'outcome':report.outcome})
+rec=Recorder()
+files=['services/aos-api/aos_api/aip_physical_capacity_occupation.py','services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py','services/aos-api/aos_api/aip_model_eval_execution_contracts.py','services/aos-api/aos_api/aip_model_eval_execution_owner.py','services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py','services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py']
+files += ['services/aos-api/aos_api/aip_shared_parent_description_origin_reader.py','services/aos-api/tests/aip/test_shared_parent_description_origin_reader_pg.py','services/aos-api/aos_api/aip_shared_parent_executor_set_reader.py','services/aos-api/tests/aip/test_shared_parent_executor_set_reader_pg.py','services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py','services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py']
+bindings={p:hashlib.sha256((R/p).read_bytes()).hexdigest() for p in files}
+(B/'attempt-r6.json').open('x').write(json.dumps({'cluster':lab['cluster'],'head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip(),'file_hashes':bindings,'old_hashes':before,'free_bytes':free,'execution_allowed':False},indent=2))
+diagnostics=[]
+targets=('/aip_shared_parent_certificate_prepare.py','/aip_shared_parent_executor_set_reader.py','/aip_shared_parent_description_origin_reader.py')
+def local_diagnose(frame,event,arg):
+ if event=='exception':
+  typ,exc,_=arg
+  state=getattr(exc,'sqlstate',None)
+  message=getattr(getattr(exc,'diag',None),'message_primary',None)
+  if not message and typ in (ValueError,RuntimeError):message=str(exc)
+  safe=message if message and (message.startswith(('SHARED_','permission denied','column ','record ','relation ','function ','exact ','current ','complete ','original ','canonical ')) or message in ('shared-parent certificate expired','shared-parent issuer expired')) else None
+  diagnostics.append(dict(type=typ.__name__,sqlstate=state,message=safe,function=frame.f_code.co_name,line=frame.f_lineno))
+ return local_diagnose
+def trace_router(frame,event,arg):
+ return local_diagnose if frame.f_code.co_filename.endswith(targets) else None
+sys.settrace(trace_router)
+code=pytest.main([str(R/'services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py')+'::test_source_model_preparation_original_native_caller','-q','-s','-p','no:cacheprovider'],plugins=[rec])
+sys.settrace(None)
+(B/'exception-diagnostics.json').open('x').write(json.dumps(diagnostics,indent=2)+'\n')
+after={str(p.relative_to(R)):hashlib.sha256(p.read_bytes()).hexdigest() for p in old};assert before==after
+(B/'result-r6.json').open('x').write(json.dumps({'pytest_exit':int(code),'databases':rec.databases,'reports':rec.results,'old_files_unchanged':before==after,'file_hashes':bindings,'execution_allowed':False,'full_task_delivered':False},indent=2))
+raise SystemExit(code)

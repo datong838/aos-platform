@@ -1,0 +1,14 @@
+[
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "line": 209
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "line": 211
+  }
+]

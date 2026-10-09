@@ -1,0 +1,41 @@
+{
+  "database": "aos_test_8eb453b71d1c_ti4_test",
+  "cluster": "7694680278363095064",
+  "ddl_compiled": true,
+  "administrator_rejected": {
+    "sqlstate": "42501",
+    "message": "SHARED_CERTIFICATE_NATIVE_CALLER_REQUIRED"
+  },
+  "metadata": {
+    "public.prepare_model_shared_parent_certificate_set(bytea,jsonb,uuid,text,bytea)": {
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner"
+    },
+    "public.prepare_model_shared_parent_manifest_origin(bytea,jsonb,uuid,text)": {
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_execution_owner"
+    },
+    "public.read_model_shared_parent_executor_set_facts(text,text,text,text)": {
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner"
+    }
+  },
+  "installation_and_grants_rolled_back": true,
+  "native_positive_verified": false,
+  "root_provenance_verified": false,
+  "execution_allowed": false,
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py": "38077affc2c114c19b68cadf2b1b435180a9e3dff7487de2b837004d87ee3b3b",
+    "services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py": "0e8d2521ae06106f2f12ae07f1f7732665b77ea2f290dded82cff884bb04bb45",
+    "services/aos-api/aos_api/aip_shared_parent_executor_set_reader.py": "d9f25129a50ddd252f0ec79827845f5119d85ca88a3e9a2c30358f6a4080e99d"
+  }
+}

@@ -1,0 +1,30 @@
+[
+  {
+    "type": "ValueError",
+    "sqlstate": null,
+    "message": "current contained v3 certificate interval and presented issuer required",
+    "function": "read_shared_parent_executor_set",
+    "line": 182
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "read_shared_parent_executor_set",
+    "line": 186
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 209
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 211
+  }
+]

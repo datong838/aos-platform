@@ -1,0 +1,30 @@
+[
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 209
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 211
+  },
+  {
+    "type": "InsufficientPrivilege",
+    "sqlstate": "42501",
+    "message": "CAPACITY_SOURCE_CURRENT_INSTALLATION_DRIFTED",
+    "function": "consume_capacity_source_for_occupation",
+    "line": 152
+  },
+  {
+    "type": "ProviderCapacityConsumptionBlocked",
+    "sqlstate": null,
+    "message": null,
+    "function": "consume_capacity_source_for_occupation",
+    "line": 165
+  }
+]

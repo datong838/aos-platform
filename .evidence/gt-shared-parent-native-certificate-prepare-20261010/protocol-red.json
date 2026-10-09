@@ -1,0 +1,14 @@
+{
+  "status": "MISSING_SAME_TRANSACTION_SIGNED_PREPARE",
+  "authority": "AOS-001677",
+  "snapshot_evidence": {
+    "path": ".evidence/gt-shared-parent-native-executor-set-20261010/serial-snapshot-dependency-red.json",
+    "sha256": "9c22904a392bec426dd59e2e097d4ad53fa6cf18dc315509798ebff0fe532e2d"
+  },
+  "files": [
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py",
+    "services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py"
+  ],
+  "existing_modules_present": false,
+  "execution_allowed": false
+}

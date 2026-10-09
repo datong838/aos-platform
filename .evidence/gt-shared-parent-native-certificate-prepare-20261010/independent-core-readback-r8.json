@@ -1,0 +1,99 @@
+{
+  "identity": {
+    "database": "aos_test_235f9f604d83_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "whole_node_passed": true,
+  "original_c_acl": [
+    {
+      "grantee": "aos_capacity_publication_owner",
+      "privilege_type": "EXECUTE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_ed25519_owner",
+      "privilege_type": "EXECUTE",
+      "is_grantable": false
+    }
+  ],
+  "verifier_permissions": {
+    "direct_c": false,
+    "direct_schema": false,
+    "runtime_delegate": false,
+    "issuer_delegate": true
+  },
+  "same_caller_staging_and_reader_substep_verified": true,
+  "postwrite_cleanup": {
+    "actual_sql_staging_completed": true,
+    "caught_python_failure": true,
+    "same_caller_manifest_absent": true,
+    "outer_transaction_still_live": true
+  },
+  "actual_commit_rejected": true,
+  "risk_xid_status": "aborted",
+  "root_xid_status": "committed",
+  "counts": {
+    "aos_physical_capacity_occupation_private.prepared_plan_risk": 0,
+    "aos_physical_capacity_occupation_private.prepared_shared_risk_description": 0,
+    "aos_physical_capacity_occupation_private.prepared_parent_debit": 0,
+    "aos_physical_capacity_occupation_private.prepared_execution_intent": 0,
+    "aos_model_eval_execution_private.manifest": 0,
+    "aos_model_eval_issuer_private.executor_certificate": 0,
+    "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding": 0,
+    "aos_model_eval_issuer_private.certificate_epoch": 0,
+    "aos_model_eval_issuer_private.identity_epoch": 0
+  },
+  "functions": {
+    "public.prepare_model_shared_parent_manifest_origin(bytea,jsonb,uuid,text)": {
+      "body_sha256": "5c0c42bce5877ba2e652dfb793c97d53afee5a42012907687b99f041bfad2755",
+      "owner": "aos_model_eval_execution_owner",
+      "public_execute": 0
+    },
+    "public.verify_model_shared_parent_certificate_signature(bytea,bytea,bytea)": {
+      "body_sha256": "c74a9bb51b574c8a008f479dbff0cbf58a91895aaff678236e350460889c85b2",
+      "owner": "aos_capacity_publication_owner",
+      "public_execute": 0
+    },
+    "public.prepare_model_shared_parent_certificate_set(bytea,jsonb,uuid,text,bytea)": {
+      "body_sha256": "035e87c437fe0afbbedea05165f5582475effef42ba9417e6273a8449c06d99a",
+      "owner": "aos_model_eval_issuer_owner",
+      "public_execute": 0
+    },
+    "public.read_model_shared_parent_executor_set_facts(text,text,text,text)": {
+      "body_sha256": "269e61c8977e25417ebf9b2896cf1225bca376463dbb4373086a77c1a6ca7c25",
+      "owner": "aos_model_eval_issuer_owner",
+      "public_execute": 0
+    }
+  },
+  "runtime_table_permissions": {
+    "aos_physical_capacity_occupation_private.prepared_plan_risk": false,
+    "aos_physical_capacity_occupation_private.prepared_shared_risk_description": false,
+    "aos_physical_capacity_occupation_private.prepared_parent_debit": false,
+    "aos_physical_capacity_occupation_private.prepared_execution_intent": false,
+    "aos_model_eval_execution_private.manifest": false,
+    "aos_model_eval_issuer_private.executor_certificate": false,
+    "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding": false,
+    "aos_model_eval_issuer_private.certificate_epoch": false,
+    "aos_model_eval_issuer_private.identity_epoch": false
+  },
+  "frozen_hashes_match": {
+    "services/aos-api/aos_api/aip_physical_capacity_occupation.py": true,
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": true,
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": true,
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": true,
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": true,
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_description_origin_reader.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_description_origin_reader_pg.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_executor_set_reader.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_executor_set_reader_pg.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py": true
+  },
+  "root_provenance_verified": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "next": "same-caller replay/canary/withdrawal/final expiry matrix; formal Root/final joint independent"
+}

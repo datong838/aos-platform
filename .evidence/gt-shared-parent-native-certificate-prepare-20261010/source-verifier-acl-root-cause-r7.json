@@ -1,0 +1,22 @@
+{
+  "database": "aos_test_f302f081bab9_ti4_test",
+  "read_only": true,
+  "verifier_acl": [
+    {
+      "grantee": "aos_capacity_publication_owner",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "grantee": "aos_ed25519_owner",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "grantee": "aos_model_eval_issuer_owner",
+      "privilege_type": "EXECUTE"
+    }
+  ],
+  "extra_model_issuer_grant_observed": true,
+  "source_exact_acl_guard_preserved": true,
+  "whole_node_passed": false,
+  "execution_allowed": false
+}

@@ -1,0 +1,13 @@
+{
+  "database": "aos_test_e0d5c979b7a1_ti4_test",
+  "read_only": true,
+  "counts": {
+    "aos_capacity_publication_private.source_publication": 1,
+    "aos_model_eval_issuer_private.issuer_root": 1,
+    "aos_model_eval_issuer_private.executor_certificate": 0,
+    "aos_model_eval_execution_private.manifest": 0,
+    "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding": 0
+  },
+  "native_positive_verified": false,
+  "execution_allowed": false
+}

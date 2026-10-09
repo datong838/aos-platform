@@ -1,0 +1,11 @@
+{
+  "pytest_exit": 0,
+  "database_connections": 0,
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_shared_parent_executor_set_reader.py": "d9f25129a50ddd252f0ec79827845f5119d85ca88a3e9a2c30358f6a4080e99d",
+    "services/aos-api/tests/aip/test_shared_parent_executor_set_reader_pg.py": "a6708872931a627f3d43548e66b2afd599e1b18ab74eeebfb6e0879685c06385",
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py": "38077affc2c114c19b68cadf2b1b435180a9e3dff7487de2b837004d87ee3b3b",
+    "services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py": "bdf214a0dcefc0c759e407210ef59881d38d89b6f37bda3a20d6f359af7e50dd"
+  },
+  "execution_allowed": false
+}

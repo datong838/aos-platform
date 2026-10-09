@@ -1,0 +1,37 @@
+[
+  {
+    "type": "ValueError",
+    "sqlstate": null,
+    "message": "canonical original metadata bytes required",
+    "function": "_original",
+    "line": 127
+  },
+  {
+    "type": "ValueError",
+    "sqlstate": null,
+    "message": "canonical original metadata bytes required",
+    "function": "read_shared_parent_executor_set",
+    "line": 155
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "read_shared_parent_executor_set",
+    "line": 186
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 209
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 211
+  }
+]

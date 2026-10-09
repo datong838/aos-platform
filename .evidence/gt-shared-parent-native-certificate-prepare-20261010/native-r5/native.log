@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r5/run-native-r5.py", line 12, in <module>
+    before={str(p.relative_to(R)):hashlib.sha256(p.read_bytes()).hexdigest() for p in old}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r5/run-native-r5.py", line 12, in <dictcomp>
+    before={str(p.relative_to(R)):hashlib.sha256(p.read_bytes()).hexdigest() for p in old}
+                                                 ^^^^^^^^^^^^^^
+  File "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py", line 1050, in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-atomic-model-admission-20261008/legal-eval-application-result-r5.json'

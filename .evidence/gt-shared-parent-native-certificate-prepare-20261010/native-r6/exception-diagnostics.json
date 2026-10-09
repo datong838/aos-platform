@@ -1,0 +1,16 @@
+[
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 209
+  },
+  {
+    "type": "ModelEvalOwnerRejected",
+    "sqlstate": null,
+    "message": null,
+    "function": "prepare_shared_parent_certificate_set",
+    "line": 211
+  }
+]
