@@ -1,0 +1,23 @@
+{
+  "schema": "aos-engineering-checkpoint/v1",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "task_id": "gt-shared-parent-native-ending-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001747",
+  "task_base_revision": "AOS-001746",
+  "step": "pending-reader-component-green-full-native-arm-and-ending-next",
+  "code_files": [
+    "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.c",
+    "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.control",
+    "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end--0.1.sql",
+    "services/aos-api/postgres-extensions/aos_admission_end/Makefile",
+    "services/aos-api/tests/aip/test_shared_parent_native_ending_pg.py"
+  ],
+  "evidence_files": [
+    ".evidence/gt-shared-parent-native-ending-20261011/task.json",
+    ".evidence/gt-shared-parent-native-ending-20261011/implementation-plan.md",
+    ".evidence/gt-shared-parent-native-ending-20261011/verification-r2.json",
+    ".evidence/gt-shared-parent-native-ending-20261011/independent-readback-r2.json"
+  ]
+}
