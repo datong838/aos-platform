@@ -1,0 +1,7 @@
+{
+  "r1_terminal": "pytest exit1",
+  "r1_database": "aos_test_32b1f2206ae3_ti4_test",
+  "reason": "Historical wrapper expected50s but actual original fixture150s; failed before new origin invocation.",
+  "r1_old_files_unchanged": true,
+  "r2": "New fresh independent experiment; no r1 replay or deadline extension"
+}

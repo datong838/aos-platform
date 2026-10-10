@@ -1,0 +1,91 @@
+{
+  "schema": "aos-native-origin-verification/v1",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "authority": "AOS-001720",
+  "head": "e2634c538d2d7b5fd7f42e1955eaca53e4988e24",
+  "rules": [
+    "231",
+    "single m1",
+    "original signed Source/independent two approvals/native budgets",
+    "fresh retained isolated DB/no old outcome replay",
+    "no formal grant/Host/worker/Provider"
+  ],
+  "reviewer": "primary writer scheme/code review; not independent model verdict",
+  "attempts": [
+    {
+      "attempt": 1,
+      "exit": 1,
+      "database": "aos_test_32b1f2206ae3_ti4_test",
+      "original_protected_files_unchanged": true,
+      "log_sha256": "17922548ab3064a32741543341d6ce916e5f2eacb4f6d942d5561c4ab787aa8a",
+      "result_path": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-positive-1720-r1/result-r1.json"
+    },
+    {
+      "attempt": 2,
+      "exit": 1,
+      "database": "aos_test_9fcfce6d4876_ti4_test",
+      "original_protected_files_unchanged": true,
+      "log_sha256": "c0d0241aa38eace5888c516d767a9e3828e8c7af9a00aa42e4098e68d277d695",
+      "result_path": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-positive-1720-r2/result-r2.json"
+    },
+    {
+      "attempt": 3,
+      "exit": 1,
+      "database": "aos_test_03e694cd0bea_ti4_test",
+      "original_protected_files_unchanged": true,
+      "log_sha256": "a620018b15101624276008d0e5b39a194e2fb842e3291515282f3bd3fb044bb8",
+      "result_path": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-positive-1720-r3/result-r3.json"
+    },
+    {
+      "attempt": 4,
+      "exit": 1,
+      "database": "aos_test_8cf046d602a1_ti4_test",
+      "original_protected_files_unchanged": true,
+      "log_sha256": "0854c17b38770a9349a35981ab7821ad88f007554ed00f6c598c1cade20a57bc",
+      "result_path": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-positive-1720-r4/result-r4.json"
+    },
+    {
+      "attempt": 5,
+      "exit": 1,
+      "database": "aos_test_ada234d10727_ti4_test",
+      "original_protected_files_unchanged": true,
+      "log_sha256": "a92e082553e600e77c7540f3b0da0cd4574de5df6c9869c055ff9c529ce6e976",
+      "result_path": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-positive-1720-r5/result-r5.json"
+    },
+    {
+      "attempt": 6,
+      "exit": 0,
+      "database": "aos_test_a4b1d39c4e02_ti4_test",
+      "original_protected_files_unchanged": true,
+      "log_sha256": "2f00adee5c11c3d11b4a29bfdc84609bb37745dbb5dc02a4d5c7ea4f039cbfb5",
+      "result_path": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-positive-1720-r6/result-r6.json"
+    }
+  ],
+  "source_code_sha256": "66476a1c40ada5a06b3dcbe6a1012bf31a6b48d3cc5ebc78b35f273172c4785d",
+  "positive": "New native origin built from original signed Source and independently approved original two applications/native holds;2cases, five exact negative contexts, repeated origin exact; original whole Source adjacent and cleanup passed",
+  "latest_test": {
+    "exit_code": 0,
+    "passed": 1,
+    "warnings": 8,
+    "seconds": 83.99,
+    "database": "aos_test_a4b1d39c4e02_ti4_test"
+  },
+  "independent_readback": "origin-positive-1720-r6/independent-readback.json",
+  "native_call_xid_state": "aborted",
+  "legacy_before_after": [
+    0,
+    0
+  ],
+  "two_parent_holds_after_rollback": 0,
+  "current_root_provenance": "isolated real signatures with test-owned trust root; no formal deployment provenance claim",
+  "test_proxy": "test-owned SECURITY DEFINER forwarding/counter observer only in fresh isolated DB; original new functions have no runtime execute grant; no production installation",
+  "scheme_consistency": "Original approved full two parent facts and complete original body/manifest kernels consumed with unchanged SERIAL native caller; no risk/description argument accepted, no legacy row promotion, no execution permission",
+  "full_parent_task_delivery": false,
+  "full_admission_commit": false,
+  "natural_business_chain": false,
+  "remaining": [
+    "persisted trusted version origin and narrow Issuer delegation",
+    "old/new unresolved risk ledger and unique Intent/Judge actual dependency",
+    "full native end-channel/COMMIT/rollback/unknown/revoke/time concurrency matrix"
+  ]
+}

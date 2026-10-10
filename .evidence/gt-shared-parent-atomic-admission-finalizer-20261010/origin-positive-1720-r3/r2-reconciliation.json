@@ -1,0 +1,6 @@
+{
+  "r2_terminal": "pytest exit1",
+  "reason": "Original Judge evidence guard rejects parent Task directory; failed before new origin invocation.",
+  "repair": "Use fresh child of original Judge Task evidence root, current ACTIVE exact same-owner lease checked/no overlap/noDelivery. No change to original path guard.",
+  "r3": "fresh independent test DB/Source/approvals; no prior result replay"
+}

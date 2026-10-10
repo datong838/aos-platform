@@ -1,0 +1,2 @@
+# 新版本原生来源真实正向
+Rules：231、原Source/原独立签名审批/全case/两父预算/nativecaller原fact，不mockfacts、不改正式库、不回放旧attempt。建立fresh retained test DB，保留原authority/reader和旧fixture文件。复用原测试建立新的原生Source与独立两批准、原应用及父预算；新固定origin经test-owned physical Owner proxy调用（仅本隔离库，正式无grant）。核canonical risk/doc/hash/caller，manifest/parent/Source完整反例，并核legacy risk/description同caller前后行数一致。最终rollback，不claimfulladmission COMMIT。全部未知错误保留attempt/result并只读核旧结果。无主app/服务/Host/Provider/商城源效果。

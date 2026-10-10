@@ -1,0 +1,6 @@
+{
+  "r4_terminal": "pytest exit1",
+  "reason": "New isolated function installed after caller SERIAL snapshot: undefined function at proxy resolution.",
+  "repair": "Install explicit isolated functions before original caller snapshot; preserve original SERIAL transaction, no RESET snapshot or production grants.",
+  "r5": "new fresh independent DB/Source/app/approvals; r4 retained"
+}

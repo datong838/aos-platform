@@ -1,0 +1,7 @@
+{
+  "r5_terminal": "pytest exit1",
+  "r5_origin_positive_and5negatives": "completed; native-origin-proof.json exists; caller48857/pid20407 rollback; legacy counts0\u21920",
+  "failure": "Adjacent original whole-Source fixture missing copied helper in B. Composite test remains failed.",
+  "repair": "Copy exact existing original_source_plan_fixture_r1.py into new attempt B; no production change or bypass.",
+  "r6": "new fresh independent test only; all r5 DB/source/proofs retained"
+}

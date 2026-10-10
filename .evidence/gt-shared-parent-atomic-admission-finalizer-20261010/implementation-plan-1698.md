@@ -41,3 +41,6 @@ Rules：231、原joint实施§3/§11.3、最小更改、单m1写者、未知效�
 
 ## 原生可信来源构建入口 AOS-001719
 新增本Task module内固定build_shared_parent_admission_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text)，无JSON facts/风险/描述输入。委托原fact入口→原Source fact→复用原风险body核→派生内存risk的immutable/hash/两request→原完整manifest核→新版本nonexecuting origin文档→原fact再次读取比较。原临时risk变量仅用于复用校验，不读写prepared表，无DDL/Receipt/dispatch/ledger/COMMIT。生成doc绑定session/caller xid pid和原完整risk hash；没有完整物理/费用/证书/历史义务/结束门不变为可执行。原physical Owner/search_path与runtime直接禁EXECUTE仍保持，原fact依赖先安装仅在native测试rollback中。native SQL编译/Owner ACL/错误session拒绝及回滚absent核验；真实完整正向来源必须原正式创建/独立审批签名fixture，不能mockfact来宣布正向。
+
+## 原生来源正向验收 AOS-001720
+独立fresh实验r1~r4均未完成新origin正向，具体过期harness窗口/严格原Judge路径/两层helper复制/SERIAL快照之前DDL原因保留。r5新origin正向及5negatives完成，但相邻helper缺失令整测试失败；不claimr5整包GREEN。r6修复复制完整原helper，保持原150s新审批函数字节不改，fresh保留DB全测试1PASS83.99s/8warnings；独立SER READ ONLY证明new2bodyOwner/ACL/noRuntimeGrant精确，legacy risk/description0，原caller aborted，两原hold0。正向Source/批准由原producer和真实签名形成，但测试Root不作正式provenance；无新ledger/Intent/certdelegate/fullendchannel/actualadmissionCOMMIT或业务首链。

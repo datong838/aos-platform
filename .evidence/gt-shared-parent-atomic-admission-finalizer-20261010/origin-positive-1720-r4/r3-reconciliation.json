@@ -1,0 +1,6 @@
+{
+  "r3_terminal": "pytest exit1",
+  "reason": "Parent Source fixture evidence path redirected to B but original helper copies only existed in Judge child.",
+  "repair": "Both original fixture helper locations receive exact original copies; original Judge guard retained. Fresh independent r4 only.",
+  "unknown_external_replayed": false
+}

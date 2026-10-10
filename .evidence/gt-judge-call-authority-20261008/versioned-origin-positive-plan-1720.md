@@ -1,0 +1,1 @@
+Rules：231、原Judge Task exact scope和原证据路径guard。为active parent gt-shared-parent-atomic-admission-finalizer-20261010真实新origin验收提供fresh child origin-positive-1720-r3原合法Judge source/signedRule/app/独立批准/预算必要资料。原文件/旧实验不重写。所有source/审批为新的隔离库实验，无正式接入或派发，无new origin整Task交付。
