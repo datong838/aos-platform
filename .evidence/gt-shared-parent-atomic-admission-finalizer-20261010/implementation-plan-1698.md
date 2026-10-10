@@ -64,3 +64,9 @@ RED新保存artifact缺失；先原生事务内DDL/Owner/ACL/RLS/不可变/defer
 
 ## 1724 下一波 Owner 交接门
 独立SER READ ONLY新保留库确认physical Owner对Issuer pending schema无USAGE、表无SELECT，完整结束入口不存在；不能假设后续physical endcallee能读取该表。下一最小步骤先设计固定可信lookup/精确函数委托：只读取同当前native caller/xid/pid与plan/hash的已原生核验记录，不授宽schema/table权限；再复用原account fence和费用桶顺序，联合旧未决风险/新risk/唯一Intent/Judge依赖。必须逐字冻结新查找函数与闭ACL、纳入全部event/RI/真实COMMIT测试，metadata门不授执行权限。正式Root来源为第二已登记候选，隔离test Root不解该门。
+
+## 1724 固定跨 Owner 查询实施
+精确产品两文件不变。新增 public.read_shared_parent_pending_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text)，Issuer Owner SECURITY DEFINER/pg_catalog。仅显式GRANT EXECUTE给既有physical Owner；PUBLIC/runtime/Provider issuer仍关闭，无schema/table权限扩张。接受原raw Source/exactRef/两hold/request/hash/plan/manifest/hash/完整canonical certificates和精确pending hash，先完整原生CERT核验，再FOR SHARE读取pending表；派生预期body并核caller xidpid/hash/tenant/account/hold，等锁后重复完整CERT核验且结果完全相同。返回可信pending候选，不写任何risk/Intent/receipt、不插入不存在记录、不授执行、不改变旧七guard或现有SQL输出。
+RED新增函数不存在；GREEN原生DDL/Owner/ACL/RLS权限不扩张及恶意caller早拒、完整新鲜Source/两hold/四签名同caller保存后physical Owner固定代理实际读取；hash错/plan错/坏证书/普通runtime拒绝，真实COMMIT仍拒绝缺失完整结束门、独立回滚readback。所有原生正向在新保留实验库和新审批内执行，不复用旧效果。
+
+1724 lookup-r1测试安装误用不存在api别名且漏lookup artifact，19.07秒NameError终止，保留新库及失败；仅修新r2测试prepare的admission别名与显式artifact安装，不改产品/审批/Root/TTL，生成全新隔离库与审批，不重放r1。

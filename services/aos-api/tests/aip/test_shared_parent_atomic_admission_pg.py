@@ -183,3 +183,26 @@ def test_native_pending_origin_storage_is_closed_and_transaction_bound(native):
     native.rollback()
     assert native.execute('SELECT to_regclass(%s)', (table,)).fetchone()[0] is None
     native.rollback()
+
+
+def test_native_pending_origin_lookup_delegates_only_fixed_function(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    from aos_api.aip_shared_parent_certificate_prepare import ISSUER_OWNER
+    for statement in (*api.shared_parent_admission_origin_statements(),
+                      *api.shared_parent_admission_certificate_set_statements(),
+                      *api.shared_parent_admission_storage_statements(),
+                      *api.shared_parent_pending_origin_lookup_statements()):
+        native.execute(statement)
+    row = native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (api.READ_PENDING,)).fetchone()
+    assert row == (ISSUER_OWNER, True, ['search_path=pg_catalog'])
+    assert native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (OWNER,api.READ_PENDING)).fetchone()[0]
+    for role in ('aos_runtime','aos_provider_capacity_issuer'):
+        assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (role,api.READ_PENDING)).fetchone()[0]
+    assert not native.execute("SELECT has_schema_privilege(%s,%s,'USAGE')", (OWNER,api.ADMISSION_SCHEMA)).fetchone()[0]
+    assert not native.execute("SELECT has_table_privilege(%s,%s,'SELECT')", (OWNER,api.ADMISSION_SCHEMA+'.pending_origin')).fetchone()[0]
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_CERTIFICATE_CALLER_REQUIRED'):
+        with native.transaction():
+            native.execute('SELECT public.read_shared_parent_pending_origin(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)')
+    native.rollback()
+    assert native.execute('SELECT to_regprocedure(%s)', (api.READ_PENDING,)).fetchone()[0] is None
+    native.rollback()

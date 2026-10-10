@@ -1,0 +1,118 @@
+{
+  "status": "NATIVE_PENDING_STORAGE_ACTUAL_COMMIT_REJECTED_AND_ROLLBACK_READBACK_PASS",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "authority": "AOS-001724",
+  "cluster": "7694680278363095064",
+  "database": "aos_test_96fc7f06c0e6_ti4_test",
+  "readonly": true,
+  "native_functions": [
+    {
+      "signature": "public.read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)",
+      "body_sha256": "7f32540c7113c978058a44e747510e50b5a735fd61328e7e04282b060db6ffe2",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "native_body_exact": true,
+      "runtime_execute": false
+    },
+    {
+      "signature": "public.build_shared_parent_admission_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text)",
+      "body_sha256": "bf77e5029c15c745907fa76beedc79cee84893aaae02a810733cd266750d56d2",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner,aos_model_eval_issuer_owner=X/aos_physical_capacity_occupation_owner}",
+      "native_body_exact": true,
+      "runtime_execute": false
+    },
+    {
+      "signature": "public.validate_shared_parent_admission_certificate_set(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea)",
+      "native_body_exact": true,
+      "owner": "aos_model_eval_issuer_owner",
+      "runtime_execute": false,
+      "physical_verifier_grant": false,
+      "signed_legs": 4,
+      "negative_cases": [
+        "UPDATE",
+        "DELETE",
+        "TRUNCATE",
+        "runtime_private_read"
+      ]
+    },
+    {
+      "signature": "public.read_shared_parent_pending_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text)",
+      "native_body_exact": true,
+      "body_sha256": "cca4bf55ec89d45587d7ce8df543ebf1091106949a0c29a83efe01aa1dcbf4d7",
+      "physical_owner_execute": true,
+      "runtime_execute": false,
+      "schema_table_grant": false
+    },
+    {
+      "name": "aos_shared_parent_admission_private.check_pending_origin",
+      "native_body_exact": true,
+      "body_sha256": "9b0778516fd81c2a0cef79384722f915b6140213e2ff99f9508b4938528e2bdf",
+      "owner": "aos_model_eval_issuer_owner"
+    },
+    {
+      "name": "aos_shared_parent_admission_private.immutable_pending_origin",
+      "native_body_exact": true,
+      "body_sha256": "4d2cc498d78993f7a858184f0f9f7428ba075fbf19aa4d1cab011450d81ef5e8",
+      "owner": "aos_model_eval_issuer_owner"
+    },
+    {
+      "name": "aos_shared_parent_admission_private.require_pending_completion",
+      "native_body_exact": true,
+      "body_sha256": "0cc61cc107ad38e73fccc0c3c58e895511edc21cef6bee6f4e8d13d46fc81fda",
+      "owner": "aos_model_eval_issuer_owner"
+    },
+    {
+      "name": "public.persist_shared_parent_admission_origin",
+      "native_body_exact": true,
+      "body_sha256": "52ea6339ee4c8f3ed8adb5911ac21c648beb38f28f1a78f730e65558c7201577",
+      "owner": "aos_model_eval_issuer_owner"
+    }
+  ],
+  "original_guard_readback": [
+    {
+      "table": "aos_physical_capacity_occupation_private.call_occupation",
+      "installed_in_this_fixture": false
+    },
+    {
+      "table": "aos_physical_capacity_occupation_private.call_occupation_event",
+      "installed_in_this_fixture": false
+    },
+    {
+      "table": "aos_physical_capacity_occupation_private.prepared_call_occupation",
+      "installed_in_this_fixture": false
+    },
+    {
+      "table": "aos_physical_capacity_occupation_private.prepared_judge_intent",
+      "installed_in_this_fixture": false
+    },
+    {
+      "table": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "installed_in_this_fixture": true,
+      "body_hash_exact": true
+    },
+    {
+      "table": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "installed_in_this_fixture": true,
+      "body_hash_exact": true
+    },
+    {
+      "table": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "installed_in_this_fixture": true,
+      "body_hash_exact": true
+    }
+  ],
+  "legacy_counts": {
+    "prepared_plan_risk": 0,
+    "prepared_shared_risk_description": 0
+  },
+  "caller_xid_state": "aborted",
+  "two_original_parent_holds_after_rollback": 0,
+  "positive_cases": 2,
+  "negative_cases": [],
+  "original_files_unchanged": true,
+  "execution_allowed": false,
+  "formal_root_provenance": false,
+  "full_admission_commit": false,
+  "database_writes": false
+}

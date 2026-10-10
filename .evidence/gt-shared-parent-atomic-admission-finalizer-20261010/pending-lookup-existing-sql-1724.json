@@ -1,0 +1,18 @@
+{
+  "shared_parent_original_fact_statements": {
+    "unchanged": true,
+    "sha256": "d2dfa658e16fe74f590409071fe0f83c045934a9fdf1945240bdbfb0502e3c1e"
+  },
+  "shared_parent_admission_origin_statements": {
+    "unchanged": true,
+    "sha256": "ca7df49a608d11dd014e52083dc7593630b85cb0d1c03c6c30be1cc30be49cc9"
+  },
+  "shared_parent_admission_certificate_set_statements": {
+    "unchanged": true,
+    "sha256": "fdfb28965a11c62b0adf6aa55873a0d5d5f98b8bd89083d0291902ba63347a5d"
+  },
+  "shared_parent_admission_storage_statements": {
+    "unchanged": true,
+    "sha256": "7cb4a1c6c5a83432997b5ffd57ff673c13fb9e5439ce0386d1799883cb4f9a78"
+  }
+}

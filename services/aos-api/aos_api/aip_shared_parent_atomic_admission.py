@@ -282,3 +282,59 @@ def shared_parent_admission_storage_statements():
         f'ALTER FUNCTION {PERSIST} OWNER TO {issuer}',
         f'REVOKE ALL ON FUNCTION {PERSIST} FROM {denied}',
     )
+
+
+READ_PENDING = 'public.read_shared_parent_pending_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text)'
+
+
+def shared_parent_pending_origin_lookup_statements():
+    """Fixed native handoff to the physical owner, without table access.
+
+    Raw authority inputs are reverified after row waits. This lookup neither
+    creates missing origins nor allocates capacity, issues receipts or admits
+    execution. The complete ledger/end channel remains a separate requirement.
+    """
+    issuer = _certificate.ISSUER_OWNER
+    table = ADMISSION_SCHEMA + '.pending_origin'
+    return (
+        f'''CREATE FUNCTION {READ_PENDING.split('(')[0]}(
+          p_raw bytea,p_source jsonb,p_target uuid,p_tr text,p_th text,
+          p_judge uuid,p_jr text,p_jh text,p_plan uuid,p_manifest jsonb,p_manifest_hash text,
+          p_certificates bytea,p_pending_hash text) RETURNS jsonb
+          LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $lookup$
+          DECLARE verified jsonb; previous {table}%ROWTYPE; facts jsonb;
+          BEGIN
+            verified:={CERTIFICATE_SET.split('(')[0]}(
+              p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh,p_plan,p_manifest,p_manifest_hash,p_certificates);
+            facts:=verified#>'{{origin,immutable,originalRisk,originalFacts}}';
+            SELECT * INTO previous FROM {table} WHERE plan_id=p_plan FOR SHARE;
+            IF NOT FOUND OR previous.caller_xid IS DISTINCT FROM pg_current_xact_id()
+              OR previous.caller_pid IS DISTINCT FROM pg_backend_pid()
+              OR previous.content_hash IS DISTINCT FROM p_pending_hash
+              OR previous.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(
+                public.canonical_asset_registry_jsonb(previous.body),'UTF8')),'hex')
+              OR previous.org_id IS DISTINCT FROM 'org-org'
+              OR previous.project_id IS DISTINCT FROM 'dev-project'
+              OR previous.physical_account_id::text IS DISTINCT FROM facts#>>'{{target,physicalAccountId}}'
+              OR previous.physical_account_id::text IS DISTINCT FROM facts#>>'{{judge,physicalAccountId}}'
+              OR previous.target_hold IS DISTINCT FROM p_target
+              OR previous.judge_hold IS DISTINCT FROM p_judge
+              OR previous.body->>'schemaVersion' IS DISTINCT FROM 'aos.shared-parent-pending-origin/v1'
+              OR previous.body->'origin' IS DISTINCT FROM verified->'origin'
+              OR previous.body->'certificates' IS DISTINCT FROM convert_from(p_certificates,'UTF8')::jsonb
+              OR previous.body->>'certificateSetHash' IS DISTINCT FROM 'sha256:'||encode(sha256(p_certificates),'hex')
+              OR previous.body->>'state' IS DISTINCT FROM 'awaiting_full_admission'
+              OR previous.body->'executionAllowed' IS DISTINCT FROM 'false'::jsonb THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_PENDING_ORIGIN_EXACT_HANDOFF_REQUIRED' USING ERRCODE='23514'; END IF;
+            IF {CERTIFICATE_SET.split('(')[0]}(
+              p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh,p_plan,p_manifest,p_manifest_hash,p_certificates)
+                IS DISTINCT FROM verified THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_PENDING_ORIGIN_CURRENTNESS_CHANGED' USING ERRCODE='23514'; END IF;
+            RETURN jsonb_build_object('planId',previous.plan_id,'immutable',previous.body,
+              'contentHash',previous.content_hash,'persisted',true,
+              'executionAllowed',false,'state','awaiting_full_admission');
+          END $lookup$''',
+        f'ALTER FUNCTION {READ_PENDING} OWNER TO {issuer}',
+        f'REVOKE ALL ON FUNCTION {READ_PENDING} FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer',
+        f'GRANT EXECUTE ON FUNCTION {READ_PENDING} TO {OWNER}',
+    )

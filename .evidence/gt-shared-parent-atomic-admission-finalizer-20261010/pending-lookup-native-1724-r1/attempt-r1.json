@@ -1,0 +1,20 @@
+{
+  "cluster": "7694680278363095064",
+  "head": "56bb4668f539ebfda7759db9e3fcc292e1fd1685",
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_physical_capacity_occupation.py": "fb682207bf165f442d305fc0d25e7603d1746910dcf081ce2edfce83998f1e78",
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": "e1384ab91c03099203d56fe814c588483d7915ee0e418a2cb39d08b5c5e68eb2",
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": "345fd26a913066caf5a3cc9bc91b84ca3b2e162b0d659b9a2dce8babe12c75b0",
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": "41356488500495d4abc7d7e64d9dc024eef4849f0214d22ed77748b8c920c64f",
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": "db8b698f779728db544bb7275214335316b1a8dcf4916ee2c4d77ec740258628",
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py": "b169f8e5f3d8025ba4e2459fb2b7160aa3ebc8b6468f130ef8785b6f37fd18fc"
+  },
+  "old_hashes": {
+    ".evidence/gt-atomic-model-admission-20261008/legal-model-prefix-application-r4.json": "ee446cf28a27432eeb60e981976af04f74182951cd72347bf639627df29584a9",
+    ".evidence/gt-atomic-model-admission-20261008/legal-eval-application-result-r4.json": "eb0d99289e9669ab4082bc8595b069a8aca174e41b58ff8a9078a02b914cc2db",
+    "services/aos-api/aos_api/aip_model_eval_execution_reader.py": "1b61a8d0df28743065c3facff18363c0847d68e3b64b7e68657052b90b2e69fa",
+    "services/aos-api/aos_api/aip_model_eval_execution_authority.py": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27"
+  },
+  "free_bytes": 411638943744,
+  "execution_allowed": false
+}
