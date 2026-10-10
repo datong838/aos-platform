@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "gt-closed-ddl-material-review-20261010-r1",
+    "task_id": "gt-closed-ddl-material-review-20261010",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "6afee0a9ec44481511ef687d78704166312f9b36",
+      "authority_revision": "AOS-001704",
+      "files": {
+        ".evidence/gt-closed-ddl-material-review-20261010/material.json": "4b8a667d045ec15ce46d2a9f78caff0b8b9c29eb1bb3677ecfcbc1a3dc86516d"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "158的upgrade仅调用closed storage、issuer history、certificate epochs；未调用identity、runtime bridge或target provenance安装函数。",
+        "evidence": "services/aos-api/alembic/versions/a0v_158_model_eval_execution_authority.py: upgrade() 明确调用 install_closed_storage、install_closed_issuer_history、install_closed_certificate_epochs。同文件 services/aos-api/aos_api/aip_model_eval_execution_authority.py 中虽然定义了 install_closed_model_identity_authority、runtime_executor_fact_statements、runtime_target_fact_statements、target_origin_statements，但在 a0v_158 的 import 语句和 upgrade() 调用中均未引用。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "159的upgrade仅追加Judge预算账本及三桶关联表与保护规则，未提供运行身份、Root bootstrap或外部执行许可。",
+        "evidence": "services/aos-api/alembic/versions/a0v_159_model_judge_budget.py: upgrade() 仅调用 judge_budget_statements()。services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py: judge_budget_statements() 仅创建 aip_model_judge_budget_reservation 和 aip_model_judge_budget_reservation_bucket 表及相应策略、触发器。无 identity、root bootstrap 或执行许可相关代码。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "这些迁移的downgrade拒绝破坏性回滚；资料不能证明完整Model/Judge包或正式迁移及自然首链完成。",
+        "evidence": "services/aos-api/alembic/versions/a0v_158_model_eval_execution_authority.py: downgrade() 抛出 RuntimeError('Immutable Model proof history requires explicit reconciliation; no destructive rollback')。services/aos-api/alembic/versions/a0v_159_model_judge_budget.py: downgrade() 抛出 RuntimeError('Judge budget evidence requires explicit reconciliation; no destructive rollback')。边界注释明确：'Not a full Model/Judge package, identity/runtime integration, formal Root bootstrap or deployment claim.'",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前基线审阅结论；若需推进至完整 Model/Judge 包部署，需另行提交包含 identity、runtime bridge、target provenance 及 root bootstrap 的迁移文件并单独审阅。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

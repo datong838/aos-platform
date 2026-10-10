@@ -1,0 +1,35 @@
+{
+  "authority_revision": "AOS-001704",
+  "baseline_head": "6afee0a9ec44481511ef687d78704166312f9b36",
+  "archive_sha256": "e302d3c8e5a39eb04ba2a1f2437f237b9303f103f299bee947abeab008030221",
+  "red_published_heads": [
+    "a0v_157"
+  ],
+  "prepared_candidate_heads": [
+    "a0v_159"
+  ],
+  "loaded_migrations": 345,
+  "exact_chain": [
+    "a0v_157",
+    "a0v_158",
+    "a0v_159"
+  ],
+  "candidate_files": {
+    "services/aos-api/aos_api/aip_model_eval_execution_authority.py": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27",
+    "services/aos-api/alembic/versions/a0v_158_model_eval_execution_authority.py": "1422a7c1d8bc2c61d89e8def855e1a68d2db41e97352753616fe4233025c1758",
+    "services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py": "f75a1360ee27eeda13d3173fa765b1a9e087745aac9ac62b1a3823d95ee091cb",
+    "services/aos-api/alembic/versions/a0v_159_model_judge_budget.py": "f2ea449b8c0b1a8af5047e07d56c616b3f8bcd54579b0b90ac37abaae9fda72f"
+  },
+  "native_four_exact_input_match": true,
+  "closed158_statements": 111,
+  "judge159_statements": 16,
+  "identity_runtime_target_helpers_invoked": false,
+  "database_connections": 0,
+  "published_head159_proven": false,
+  "full_task_delivery": false,
+  "retained_archives": [
+    ".evidence/gt-model-typed-proof-20261008/ddl-head157-bc045kdg",
+    ".evidence/gt-model-typed-proof-20261008/ddl-graph-nl6xl4m1"
+  ],
+  "first_attempt_failure": "Invalid revision-count assumption; cleanup refused by bulk-delete safety gate. No deletion retried."
+}

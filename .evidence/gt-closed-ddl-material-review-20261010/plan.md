@@ -1,0 +1,1 @@
+Review only frozen full four-file original158/159 DDL source at current1704 and m1. No tools, autoload or global settings change. Original Task2 publication plan controls exact files. Preserve old budget review protocol failure. This is distinct material/scope/request, not replay of its old result. Reject non-JSON output. No formal DB effects or Task2/4 Delivery.

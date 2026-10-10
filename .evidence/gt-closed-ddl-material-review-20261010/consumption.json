@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "gt-closed-ddl-material-review-20261010-r1",
+  "task_id": "gt-closed-ddl-material-review-20261010",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "6afee0a9ec44481511ef687d78704166312f9b36",
+    "authority_revision": "AOS-001704",
+    "files": {
+      ".evidence/gt-closed-ddl-material-review-20261010/material.json": "4b8a667d045ec15ce46d2a9f78caff0b8b9c29eb1bb3677ecfcbc1a3dc86516d"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "049bad7dafdda562bdf6d05e7a5487fcd4ef72c7775920d9761df4b3d3b1eea3",
+  "transport_sha256": "d7071bdc0a8ea1b634ed02fbbcf6490123f168a5bcf9498cdf5d57d691f7c232"
+}
