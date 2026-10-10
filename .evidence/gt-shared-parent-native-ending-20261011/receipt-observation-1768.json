@@ -1,0 +1,9 @@
+{
+  "authority_revision": "AOS-001768",
+  "main_evidence": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/receipt-fresh-ingress-1767-r2/verification.json",
+  "main_verification_sha256": "968b7c67b35c007e93d939fdcbcfc02aaf5b41688aad8b0a6d8e5b461419752c",
+  "actual_eight_node_preparation": true,
+  "positive_full_ending": false,
+  "formal_root_provenance": false,
+  "execution_allowed": false
+}

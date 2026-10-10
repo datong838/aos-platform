@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-native-ending-20261011",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001767",
+  "authority_revision": "AOS-001768",
   "task_base_revision": "AOS-001746",
-  "step": "fixed-final-call-real-source-positive-whole-timing-red-full-receipt-and-final-physical-next",
+  "step": "actual-Main-eight-node-material-observed-native-complete-ending-integration-next",
   "code_files": [
     "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.c",
     "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.control",
@@ -28,6 +28,7 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-intent-comparison-1751/verification.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-source-epoch-closure-1752/verification.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-executor-write-fence-1753/verification.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-utility-fence-1754/verification.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-utility-fence-1754/verification.json",
+    ".evidence/gt-shared-parent-native-ending-20261011/receipt-observation-1768.json"
   ]
 }
