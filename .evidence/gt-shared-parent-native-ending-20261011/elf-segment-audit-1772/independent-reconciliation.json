@@ -1,0 +1,15 @@
+{
+  "time": "2026-10-10T22:41:48.094276+00:00",
+  "head": "0da23e40e415eb43c51d0517b299c109121aa466",
+  "independent_xid_aborted": true,
+  "independent_backend_absent": true,
+  "independent_new_interfaces_absent": true,
+  "lease_expires_at": "2026-10-11T02:41:47.162597+00:00",
+  "formal_colima_status": "Stopped; socket absent",
+  "api_health": {
+    "status": "ok"
+  },
+  "formal_database_available": false,
+  "no_restart": true,
+  "full_task_delivered": false
+}

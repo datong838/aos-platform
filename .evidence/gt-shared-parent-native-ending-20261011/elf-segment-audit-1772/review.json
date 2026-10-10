@@ -1,0 +1,33 @@
+{
+  "status": "SCOPED_AUDIT_GREEN",
+  "independent_result_recomputation": true,
+  "module_count": 26,
+  "readonly_segments": 26,
+  "readonly_bytes": 26178317,
+  "original_crypto_and_data_only_modules_included": true,
+  "model_review_invoked": false,
+  "not_proven": [
+    "writable/RELRO relocated data",
+    "trusted source/build Root",
+    "immutable package lifecycle",
+    "native arm/fixedpoint",
+    "full8-node final COMMIT",
+    "formal database availability"
+  ],
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "material_hashes": {
+    ".evidence/gt-shared-parent-native-ending-20261011/elf-segment-audit-1772/attempt.json": "2774a4a2a81eef9b6e233d2cc22d767481a024ad2d018a441271269eeb30bea9",
+    ".evidence/gt-shared-parent-native-ending-20261011/elf-segment-audit-1772/current-layouts.json": "4ba4a970439489fb7cfb21f0ba88ea41d9cc1cea61336de491651cf0acd53f50",
+    ".evidence/gt-shared-parent-native-ending-20261011/elf-segment-audit-1772/independent-reconciliation.json": "e43a8b024c4a5ec165658e63216b0ebea2e845f8c17111d7c235525886ff636d",
+    ".evidence/gt-shared-parent-native-ending-20261011/elf-segment-audit-1772/loaded-ro-bytes-r2/attempt.json": "36672ffa5c960b7c82657567f8b36852ae1ee929621eaea4a8148cd0e5f37b86",
+    ".evidence/gt-shared-parent-native-ending-20261011/elf-segment-audit-1772/loaded-ro-bytes-r2/current-layouts.json": "0a4c0541de8f5618ce8c51da83e1fc3c4fabb2bd8e66dd5d71822aac199160f7",
+    ".evidence/gt-shared-parent-native-ending-20261011/elf-segment-audit-1772/loaded-ro-bytes-r2/run.log": "542fb54e65a213a1e1545d981e7383923f4ca457c9db01acd51fb61738ac4354",
+    ".evidence/gt-shared-parent-native-ending-20261011/elf-segment-audit-1772/loaded-ro-bytes-r2/run.py": "bb104fada559107edf9d3de67398ad3566752daacad27e949f0c4c0a3ca15b47",
+    ".evidence/gt-shared-parent-native-ending-20261011/elf-segment-audit-1772/loaded-ro-bytes-r2/verification.json": "1ad08b2870f7d7867eae84406b11723f8ea6012901c7ea23723e92b8da97b299",
+    ".evidence/gt-shared-parent-native-ending-20261011/elf-segment-audit-1772/plan.md": "b90b45afe098fae3998db6bd679f017e5a9c51816c6c55d54a95c1ff3a5172d9",
+    ".evidence/gt-shared-parent-native-ending-20261011/elf-segment-audit-1772/run.log": "f88c3f4fec23ea37a8c17fb78f8d139c3cc1a2e9429050757fef9d657b677b33",
+    ".evidence/gt-shared-parent-native-ending-20261011/elf-segment-audit-1772/run.py": "34ad4e05ed5c7f0f0bb4d1af014660a44e3b8c3853adefdba8c642e86ac37519",
+    ".evidence/gt-shared-parent-native-ending-20261011/elf-segment-audit-1772/verification.json": "a158ee16fe5f38797a0fdd02538146fc24228917726a41508fff71dc2c0e503b"
+  }
+}

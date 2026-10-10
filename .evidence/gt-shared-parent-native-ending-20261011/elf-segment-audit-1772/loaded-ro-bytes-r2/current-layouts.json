@@ -1,0 +1,827 @@
+{
+  "pid": 63357,
+  "modules": [
+    {
+      "path": "/usr/local/bin/postgres",
+      "sha256": "025eccb4f06a6d63d724cc1d8abdeb75c909f7bbb8493bf5b0e0273d67451d77",
+      "header_address": "aaaac9290040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 9,
+      "load_bias": "0xaaaac9290000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 9162032,
+          "memsz": 9162032,
+          "memory_start": "0xaaaac9290000",
+          "disk_segment_sha256": "5fcbdb4481e9725bfe8b734e270418094a5dee65065880a2dd24c99f1f263c17",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 9162032,
+          "memory_sha256": "5fcbdb4481e9725bfe8b734e270418094a5dee65065880a2dd24c99f1f263c17",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libzstd.so.1.5.7",
+      "sha256": "baeb93cf3904f55809f9229c7b0e9348bfe07b80d319a477df9ac63657a9fa55",
+      "header_address": "ffff9bb7c040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9bb7c000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 627176,
+          "memsz": 627176,
+          "memory_start": "0xffff9bb7c000",
+          "disk_segment_sha256": "6fd00f73932fb44d5dc8104f33a84b80ff2f01e565de0d9f7aedf1c2ffea976c",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 627176,
+          "memory_sha256": "6fd00f73932fb44d5dc8104f33a84b80ff2f01e565de0d9f7aedf1c2ffea976c",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/liblz4.so.1.10.0",
+      "sha256": "729ca3feae715dca6947674fa1f5451b4f36bbc54aa8a4471bf5c66096aeb41c",
+      "header_address": "ffff9bb3b040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9bb3b000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 142280,
+          "memsz": 142280,
+          "memory_start": "0xffff9bb3b000",
+          "disk_segment_sha256": "300698a3475d43f115e78d43e7b6afb10c8258cf167b9b0f7f2d89ca81e42552",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 142280,
+          "memory_sha256": "300698a3475d43f115e78d43e7b6afb10c8258cf167b9b0f7f2d89ca81e42552",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libxml2.so.2.13.9",
+      "sha256": "8930cfb0f6f0639e6ecde1f6b9d10fd66c81ffa6a3424352bac8e8b786a3f75b",
+      "header_address": "ffff9ba19040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9ba19000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 1084308,
+          "memsz": 1084308,
+          "memory_start": "0xffff9ba19000",
+          "disk_segment_sha256": "1dce0afaaeeffcb7c59a4804a8b4460bbc56531b4b56e5d8fb6244b94466112a",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 1084308,
+          "memory_sha256": "1dce0afaaeeffcb7c59a4804a8b4460bbc56531b4b56e5d8fb6244b94466112a",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libssl.so.3",
+      "sha256": "c9a8250bba27abe89c240876f8c78704eaaca9636f53b2aa29b3859f89d2e938",
+      "header_address": "ffff9b935040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9b935000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 795152,
+          "memsz": 795152,
+          "memory_start": "0xffff9b935000",
+          "disk_segment_sha256": "78a3483be15095076277209068b69f87d67c87e22a6047bdf2abcdba806076d6",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 795152,
+          "memory_sha256": "78a3483be15095076277209068b69f87d67c87e22a6047bdf2abcdba806076d6",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libcrypto.so.3",
+      "sha256": "ae1d370e3146642824c6ee4bde0fdf83b9e8174a9d28d093362afde5cc4b3e6c",
+      "header_address": "ffff9b4cf040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9b4cf000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 4038616,
+          "memsz": 4038616,
+          "memory_start": "0xffff9b4cf000",
+          "disk_segment_sha256": "e6414e06dcbee731a7ab19a6561236aa630994882784ae88ecd8028ff2bafd9f",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 4038616,
+          "memory_sha256": "e6414e06dcbee731a7ab19a6561236aa630994882784ae88ecd8028ff2bafd9f",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libgssapi_krb5.so.2.2",
+      "sha256": "41817694da65a0d4687ac5d2367d892e9e2414a9fcdff1437e7cad18647ac6a4",
+      "header_address": "ffff9b47e040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9b47e000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 258488,
+          "memsz": 258488,
+          "memory_start": "0xffff9b47e000",
+          "disk_segment_sha256": "b27c3dab36471a468575c7b6ea6ecc03bf394fff2d2ebf381daaf937a1e567eb",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 258488,
+          "memory_sha256": "b27c3dab36471a468575c7b6ea6ecc03bf394fff2d2ebf381daaf937a1e567eb",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libz.so.1.3.2",
+      "sha256": "d3b940580ded8f736804c78df7302b9e7a3f27900ac25a5c97bb05f50992f567",
+      "header_address": "ffff9b44d040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9b44d000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 89128,
+          "memsz": 89128,
+          "memory_start": "0xffff9b44d000",
+          "disk_segment_sha256": "99c2ca0c833e6686a318e22dafe00331314ea5fe06d510180fb11c80e458635f",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 89128,
+          "memory_sha256": "99c2ca0c833e6686a318e22dafe00331314ea5fe06d510180fb11c80e458635f",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libldap.so.2.0.200",
+      "sha256": "a546e5260262c213c4c3734df70185553b71df12a9724d89380918ccf850d0ea",
+      "header_address": "ffff9b3ea040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9b3ea000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 323112,
+          "memsz": 323112,
+          "memory_start": "0xffff9b3ea000",
+          "disk_segment_sha256": "c3c86548d2534adafcc10429c301ef13ddb3e4a22132ff23dc6918f1cb2d3655",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 323112,
+          "memory_sha256": "c3c86548d2534adafcc10429c301ef13ddb3e4a22132ff23dc6918f1cb2d3655",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libicui18n.so.78.1",
+      "sha256": "df94fdacc782b0ce874f3a950bd10f0f8e5aca7dc5512ccf411002f650b81892",
+      "header_address": "ffff9b0d8040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9b0d8000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 3037503,
+          "memsz": 3037503,
+          "memory_start": "0xffff9b0d8000",
+          "disk_segment_sha256": "69a448c6a0d671b6e36f6b8c028e842d080f6430387a3cb0d77bd626b92c16ed",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 3037503,
+          "memory_sha256": "69a448c6a0d671b6e36f6b8c028e842d080f6430387a3cb0d77bd626b92c16ed",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libicuuc.so.78.1",
+      "sha256": "3873dd2a58594254560e70b3a8fcf4d8cf1854e5b4958bfe59911614e37ce692",
+      "header_address": "ffff9af05040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9af05000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 1766661,
+          "memsz": 1766661,
+          "memory_start": "0xffff9af05000",
+          "disk_segment_sha256": "36a6565ced72a31fd67cb77b16835f9d1e503094835d1dfe67f0ab113670ff53",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 1766661,
+          "memory_sha256": "36a6565ced72a31fd67cb77b16835f9d1e503094835d1dfe67f0ab113670ff53",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/lib/ld-musl-aarch64.so.1",
+      "sha256": "32377e6d71725bb019e9ff6d5e9f16b4d5156d6f2c36504191c2d6a7c4d4a44d",
+      "header_address": "ffff9bc2d040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9bc2d000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 664756,
+          "memsz": 664756,
+          "memory_start": "0xffff9bc2d000",
+          "disk_segment_sha256": "42801d696addc652f1856905ba51cc5b9ee83533b46baa9e0de58ccb335a11c7",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 664756,
+          "memory_sha256": "42801d696addc652f1856905ba51cc5b9ee83533b46baa9e0de58ccb335a11c7",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/liblzma.so.5.8.3",
+      "sha256": "a30eb437c4fb1fc99a14d8038ee5db824121e14579abff329831a9a1be0f5f37",
+      "header_address": "ffff9aeb4040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9aeb4000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 203828,
+          "memsz": 203828,
+          "memory_start": "0xffff9aeb4000",
+          "disk_segment_sha256": "04429544af2c813957ede594f56ca0cbe4543992b07939ebf37d93027e5a95d2",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 203828,
+          "memory_sha256": "04429544af2c813957ede594f56ca0cbe4543992b07939ebf37d93027e5a95d2",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libkrb5.so.3.3",
+      "sha256": "c8037f7ee147d64ecbe9f5b4a7a7ec45cbcb1508817825d054a73d6d34ec8ee1",
+      "header_address": "ffff9adf2040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9adf2000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 670372,
+          "memsz": 670372,
+          "memory_start": "0xffff9adf2000",
+          "disk_segment_sha256": "1c4f6f0f3bad8f692ffb736d68d1a1beb2108c9ab6688a254fba81732dd8fadb",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 670372,
+          "memory_sha256": "1c4f6f0f3bad8f692ffb736d68d1a1beb2108c9ab6688a254fba81732dd8fadb",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libk5crypto.so.3.1",
+      "sha256": "209699357765808420432a5c12eed8ef7d5d21d9dfdb0959e752f4d88c02db15",
+      "header_address": "ffff9adb1040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9adb1000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 159484,
+          "memsz": 159484,
+          "memory_start": "0xffff9adb1000",
+          "disk_segment_sha256": "dc4ba7d0ca5fd88c9bf0edb5b311311cdd521e786a6ac91f2eddf57dc0bb84af",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 159484,
+          "memory_sha256": "dc4ba7d0ca5fd88c9bf0edb5b311311cdd521e786a6ac91f2eddf57dc0bb84af",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libcom_err.so.2.1",
+      "sha256": "24566328c96f483f5f52dd99c7c0a9654f84175cd96cb98dfcc838179bd805f2",
+      "header_address": "ffff9ad90040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 8,
+      "load_bias": "0xffff9ad90000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 8776,
+          "memsz": 8776,
+          "memory_start": "0xffff9ad90000",
+          "disk_segment_sha256": "8ddc8dc4cbd96f33d3e6674c3fe166f49ec58aae25ebafe1a8c541e1db825433",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 8776,
+          "memory_sha256": "8ddc8dc4cbd96f33d3e6674c3fe166f49ec58aae25ebafe1a8c541e1db825433",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libkrb5support.so.0.1",
+      "sha256": "afa7c4a65691c2fdd59460827c6653f51509efa7a06bfc5aaf45933f72708be6",
+      "header_address": "ffff9ad6f040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9ad6f000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 38412,
+          "memsz": 38412,
+          "memory_start": "0xffff9ad6f000",
+          "disk_segment_sha256": "f554b0e20700e172f7dc0a36328781f8839bc1b7f0fbe81eb4f90a58b1d8561d",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 38412,
+          "memory_sha256": "f554b0e20700e172f7dc0a36328781f8839bc1b7f0fbe81eb4f90a58b1d8561d",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/liblber.so.2.0.200",
+      "sha256": "a61c5860f91e4daf0e0fa464ce48dc39c1568629b693050c24734c0b2e12d515",
+      "header_address": "ffff9ad4e040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9ad4e000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 49448,
+          "memsz": 49448,
+          "memory_start": "0xffff9ad4e000",
+          "disk_segment_sha256": "2ba0e01e67c35be7cdde83f3c3fc9bb6589fff7e4e9295d6950c1952056d618d",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 49448,
+          "memory_sha256": "2ba0e01e67c35be7cdde83f3c3fc9bb6589fff7e4e9295d6950c1952056d618d",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libsasl2.so.3.0.0",
+      "sha256": "f7be9e5f370e61382482ba06a0dbcf4617e683956f5fc0f1fcf00d151776f1ea",
+      "header_address": "ffff9ad1d040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9ad1d000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 97384,
+          "memsz": 97384,
+          "memory_start": "0xffff9ad1d000",
+          "disk_segment_sha256": "fe1e1ace3156e536e452e9d4c834c25fdb6674f28075db4a74b1138c5db921aa",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 97384,
+          "memory_sha256": "fe1e1ace3156e536e452e9d4c834c25fdb6674f28075db4a74b1138c5db921aa",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libstdc++.so.6.0.34",
+      "sha256": "bc958507db0cacf75cbf7298c395fbc7596667b17e1283d98bd6cfe3e59df951",
+      "header_address": "ffff9aa58040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 8,
+      "load_bias": "0xffff9aa58000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 2690229,
+          "memsz": 2690229,
+          "memory_start": "0xffff9aa58000",
+          "disk_segment_sha256": "0e1822a8aa1ba949894b2a39fd69b1c37c447330885a5e88465c2ce23fe8e2be",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 2690229,
+          "memory_sha256": "0e1822a8aa1ba949894b2a39fd69b1c37c447330885a5e88465c2ce23fe8e2be",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libgcc_s.so.1",
+      "sha256": "b83bc14b3e1660d66b0387077aea7e104fce3ed93bb56d05e30e4e2cdb37b473",
+      "header_address": "ffff9aa27040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 8,
+      "load_bias": "0xffff9aa27000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 123176,
+          "memsz": 123176,
+          "memory_start": "0xffff9aa27000",
+          "disk_segment_sha256": "fb74fd3785d2435d441e37edc368b67d641b9299600aae4777559b2f0ec51518",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 123176,
+          "memory_sha256": "fb74fd3785d2435d441e37edc368b67d641b9299600aae4777559b2f0ec51518",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libicudata.so.78.1",
+      "sha256": "32b2e6af13f6c8694002699d07b50e7ca657e352c26a2da171b51e06ed97bf21",
+      "header_address": "ffff9aa07040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 6,
+      "load_bias": "0xffff9aa07000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 4,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 624,
+          "memsz": 624,
+          "memory_start": "0xffff9aa07000",
+          "disk_segment_sha256": "b0913ffd1875246039a7f986b08bfe8c9896adf6366c8c3acf7f027fdb1127b9",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 624,
+          "memory_sha256": "b0913ffd1875246039a7f986b08bfe8c9896adf6366c8c3acf7f027fdb1127b9",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/lib/libkeyutils.so.1.10",
+      "sha256": "1ead757a4645a477d16b616b4764dabcb5200e45ad0e6c4a95c8e4450b3c37c0",
+      "header_address": "ffff9a9e6040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff9a9e6000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 13228,
+          "memsz": 13228,
+          "memory_start": "0xffff9a9e6000",
+          "disk_segment_sha256": "8f2167842821bc4209a0f74f9fbf862a90e3e4bf3cace52fa7c1004022f5ec59",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 13228,
+          "memory_sha256": "8f2167842821bc4209a0f74f9fbf862a90e3e4bf3cace52fa7c1004022f5ec59",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/tmp/aos_admission_modules_8d2939cd71374240b0b28471379b8d42.so",
+      "sha256": "7b7b029c62a6bc57a840e6415234021953b490104b188a8978289bdcea430a42",
+      "header_address": "ffff8d1b9040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff8d1b9000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 16440,
+          "memsz": 16440,
+          "memory_start": "0xffff8d1b9000",
+          "disk_segment_sha256": "a5d3b6c380e7373da78790bbc8aa4fb926bc4226d9b3645ac00a1487cf941c6c",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 16440,
+          "memory_sha256": "a5d3b6c380e7373da78790bbc8aa4fb926bc4226d9b3645ac00a1487cf941c6c",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/local/lib/postgresql/pgcrypto.so",
+      "sha256": "5244bf9d2d9740ef3f65aaf4770f110ac3db862664c073656767ca40ec8507ff",
+      "header_address": "ffff8d176040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff8d176000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 114284,
+          "memsz": 114284,
+          "memory_start": "0xffff8d176000",
+          "disk_segment_sha256": "1c97a22c67026ce340211d527476b076b13dcec6dcfaad365ca3c6a54a4388ca",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 114284,
+          "memory_sha256": "1c97a22c67026ce340211d527476b076b13dcec6dcfaad365ca3c6a54a4388ca",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    },
+    {
+      "path": "/usr/local/lib/postgresql/aos_ed25519.so",
+      "sha256": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+      "header_address": "ffff8d155040",
+      "elf_class": "ELF64LE",
+      "machine": 183,
+      "type": 3,
+      "program_header_offset": 64,
+      "program_header_count": 7,
+      "load_bias": "0xffff8d155000",
+      "text_relocations": false,
+      "readonly_loads": [
+        {
+          "load_index": 0,
+          "flags": 5,
+          "offset": 0,
+          "vaddr": 0,
+          "filesz": 3420,
+          "memsz": 3420,
+          "memory_start": "0xffff8d155000",
+          "disk_segment_sha256": "473278a500f970238241829fbe7c0bf7105e812d9ac289805267143c2854a07b",
+          "memory_read_exit": 0,
+          "memory_bytes_read": 3420,
+          "memory_sha256": "473278a500f970238241829fbe7c0bf7105e812d9ac289805267143c2854a07b",
+          "memory_stderr": "",
+          "loaded_file_bytes_equal": true
+        }
+      ],
+      "writable_load_count": 1,
+      "gnu_relro_count": 1
+    }
+  ],
+  "virtual_modules": [
+    {
+      "path": "virtual:linux-vdso.so.1",
+      "virtual": true
+    }
+  ],
+  "memory_header_oracle": {
+    "exit_code": 0,
+    "bytes": 64,
+    "stderr": "",
+    "expected_sha256": "10aa7da092cfb537e8c712b57a6e305329270f6e61a4d07f2788fe485ead1730",
+    "observed_sha256": "10aa7da092cfb537e8c712b57a6e305329270f6e61a4d07f2788fe485ead1730",
+    "header_bytes_match": true
+  },
+  "source_provenance": false,
+  "immutable_lifecycle": false
+}
