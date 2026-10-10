@@ -1,0 +1,13 @@
+{
+  "event": "2026-10-10T06:53:53.448Z",
+  "exit_code": 0,
+  "persisted_event_result": true,
+  "returned_head": "18093f1164f1f821a4543dddb403ff460a7b9a9d",
+  "returned_authority": "AOS-001703",
+  "returned_task": "gt-judge-call-authority-20261008",
+  "current_head": "4057e5ef7f55846965d6f0f9b4d68386bdc1e10d",
+  "current_authority": "AOS-001776",
+  "current_task": "gt-shared-parent-native-ending-20261011",
+  "fresh_task_progress_proved": false,
+  "no_duplicate_event_mutation": true
+}

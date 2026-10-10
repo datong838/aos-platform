@@ -1,0 +1,28 @@
+{
+  "files": {
+    "aos_ed25519.so": {
+      "rebuilt_sha256": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+      "installed_sha256": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+      "bytes_equal": true
+    },
+    "aos_ed25519.control": {
+      "rebuilt_sha256": "b8ed0944fec477a668418ebd4e8f7a8d8528b7a256f1fd9feca6609b2aef9d4f",
+      "installed_sha256": "b8ed0944fec477a668418ebd4e8f7a8d8528b7a256f1fd9feca6609b2aef9d4f",
+      "bytes_equal": true
+    },
+    "aos_ed25519--1.0.sql": {
+      "rebuilt_sha256": "add5aff9bf5ed07b7db16793cc498b210533b9006e180a0c1b405c2b6539bb67",
+      "installed_sha256": "add5aff9bf5ed07b7db16793cc498b210533b9006e180a0c1b405c2b6539bb67",
+      "bytes_equal": true
+    }
+  },
+  "source_and_original_binary_unchanged": true,
+  "original_recipe_unchanged": true,
+  "never_started_artifact_container": true,
+  "exact_binary_reproduced": true,
+  "trusted_signed_build_provenance_proved": false,
+  "all_five_components_provenance_proved": false,
+  "formal_database_changed": false,
+  "full_task_delivered": false,
+  "execution_allowed": false
+}

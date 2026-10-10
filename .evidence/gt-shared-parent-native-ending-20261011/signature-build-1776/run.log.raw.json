@@ -1,0 +1,4 @@
+{
+  "sha256": "6f175b1b49de6d1bbb8c3a60e43be7ca75d82d3e7b951b5797a8ae57b701c2f4",
+  "utf8": "Traceback (most recent call last):\n  File \"/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/signature-build-1776/run.py\", line 30, in <module>\n    if result.returncode!=0:raise RuntimeError('BUILD_FAILED: preserve diagnostics; no runtime or network retry')\n                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: BUILD_FAILED: preserve diagnostics; no runtime or network retry\n"
+}

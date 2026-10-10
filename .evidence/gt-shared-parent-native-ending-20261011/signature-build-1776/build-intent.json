@@ -1,0 +1,7 @@
+{
+  "context": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/signature-build-1776/frozen-source",
+  "dockerfile_sha256": "ab5592724ff5a77fef2df3346d39c3e312ccef1f5242db9da8501818bce83387",
+  "base_image": "aos-precommit-probe-20261009-base:exact@sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+  "network": "none",
+  "original_recipe_unchanged": true
+}

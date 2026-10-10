@@ -1,0 +1,25 @@
+{
+  "status": "SCOPED_SIGNATURE_REPRODUCTION_GREEN",
+  "three_artifacts_independently_equal": true,
+  "original_five_source_hashes_unchanged": true,
+  "base_and_source_inputs_identical_r1_r2": true,
+  "artifact_container_id": "6c8080e11bf375bffba125f6c90f0ceed3d1b498433048dc14765beae0b85428",
+  "image": "sha256:e6c25128f25bf9630cd8af7fe1ca4b45ff7cb6487a5e2036457fb9f3b6448764",
+  "never_started": true,
+  "artifact_mounts": [
+    {
+      "type": "volume",
+      "name": "60cbf5ecf3293cc00f75c28e8e1afbf583d756abf8aa0722679c20469c81051d",
+      "destination": "/var/lib/postgresql/data",
+      "rw": true
+    }
+  ],
+  "anonymous_mounts_preserved": true,
+  "prior_failure_preserved": true,
+  "network_recovery": "exact original recipe; Alpine dependency download only in disposable build stage",
+  "trusted_signed_source_build_provenance": false,
+  "main_full_profile_or_native_commit_accepted": false,
+  "model_review_invoked": false,
+  "formal_database_changed": false,
+  "full_task_delivered": false
+}

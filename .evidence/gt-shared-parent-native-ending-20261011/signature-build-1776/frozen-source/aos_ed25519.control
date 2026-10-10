@@ -1,0 +1,7 @@
+comment = 'Bounded pure OpenSSL Ed25519 verification; no trust or business authority'
+default_version = '1.0'
+module_pathname = '$libdir/aos_ed25519'
+relocatable = false
+schema = 'aos_ed25519'
+superuser = true
+trusted = false
