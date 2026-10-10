@@ -1,0 +1,38 @@
+{
+  "status": "ORIGINAL_SOURCE_NESTED_EPOCH_LAZY_WRITE_NATIVE_PROVEN",
+  "authority": "AOS-001752",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "head": "67dca782c736ebe688f4329e61e0cf70d9024e54",
+  "probe_id": "final-epoch-closure-21a1439eee9941719401599d2f297524",
+  "xid": "59932",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "cluster": "7694680278363095064",
+  "original_lock_body_sha256": "b9e0dfa8cd25d0570e61c14fc9d9cb86652891fc3845e8e153935dafa53d42ce",
+  "original_lock_metadata_unchanged": true,
+  "first_missing_row_inserted": 1,
+  "repeat_added_rows": 0,
+  "returned_epoch": 0,
+  "independent_rollback_absent": true,
+  "full_source_invoked": false,
+  "deferred_queue_claim": false,
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "goal_complete": false,
+  "next": "Bind all original Source/Evidence epochs before drain; exact final profile rejects absent epochs, never lazy creates. Complete Receipt/native ending still required.",
+  "generated_source_sha256": "170238e1cbd2fd1fc010f43bf3887c7d49a2eb53d6b6aba53b14505dc1e82260",
+  "generated_source_epoch_calls": [
+    {
+      "line": 638,
+      "sql": "epochs:=epochs||jsonb_build_object(target,public.aos_capacity_evidence_epoch_lock('org-org','dev-project',target));"
+    },
+    {
+      "line": 2563,
+      "sql": "epochs:=epochs||jsonb_build_object(target,public.aos_capacity_evidence_epoch_lock('org-org','dev-project',target));"
+    },
+    {
+      "line": 4499,
+      "sql": "epochs:=epochs||jsonb_build_object(target,public.aos_capacity_evidence_epoch_lock('org-org','dev-project',target));"
+    }
+  ],
+  "independent_xid_status": "aborted"
+}
