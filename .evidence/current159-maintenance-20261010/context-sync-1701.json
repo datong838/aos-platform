@@ -1,0 +1,8 @@
+{
+  "revision": "AOS-001701",
+  "source_commit": "6315f073928e313e95509fd0be41f373f49beb5a",
+  "installation": "GREEN",
+  "codex_memory_writes": 0,
+  "full_task_delivery": false,
+  "prior_sync_failure": "wrapper mode keyword unsupported; CAS1701 read back, projections safely completed; no repeated CAS"
+}
