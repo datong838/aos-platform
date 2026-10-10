@@ -1,0 +1,35 @@
+{
+  "authority": "AOS-001747",
+  "source": "https://raw.githubusercontent.com/postgres/postgres/REL_16_14/src/backend/access/transam/xact.c",
+  "register_lines": [
+    3415,
+    3424
+  ],
+  "dispatch_lines": [
+    3447,
+    3456
+  ],
+  "findings": [
+    "Registration prepends to a backend-private singly linked callback list",
+    "Dispatch walks that list and caches next before invoking each callback",
+    "Newly armed callback being newest therefore proves first, not last, among pre-existing callbacks",
+    "Checking pending events before and after one callback cannot prove a later callback will not enqueue",
+    "SQL validator currentness can expire during a later callback; C reader alone does not close the commit deadline"
+  ],
+  "registered_candidates": [
+    {
+      "candidate": "native callback ordering adversarial probe",
+      "authorized": "support isolated Task scope, test-owned tables only",
+      "dependency": "freeze same backend callback registration order, actual commit and independent XID proof"
+    },
+    {
+      "candidate": "complete Main Receipt and immutable arm contract",
+      "authorized": "Main and support current leases",
+      "dependency": "all eight nodes plus Source/cert after waits and full callback ownership proof"
+    }
+  ],
+  "selection": "first candidate source-level investigation now; actual two-callback isolated RED next",
+  "product_arm_enabled": false,
+  "full_task_delivered": false,
+  "execution_allowed": false
+}

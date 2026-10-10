@@ -16,3 +16,7 @@ RED missing extension/native routine. Exact C builds with warnings-as-errors und
 
 ## Remaining complete support implementation
 Native arm/post-drain receiver, exact pinned SQL validator and package attestation require Main full-end body/Receipt design, registered exact ownership, no hidden Source/fence writes that enqueue checks, future-callback audit, before/after native pending checks and final deadline. Do not promote test-only superuser callback. Support Task remains ACTIVE until full required support is actually accepted with Main full native pipeline; no helper-only Delivery.
+
+## Callback order investigation at AOS-001747
+
+PG16.14 RegisterXactCallback prepends to the private list; CallXactCallbacks walks it and saves next before each call. Arming a newly registered callback puts it before existing callbacks, so postvalidation of its own events does not prove no later callback can write or wait past Source expiry. Native support remains closed. Next authorized isolated step is a two-callback adversarial actual COMMIT test with independent XID/event readback; in parallel only as a sequential planning candidate, complete Main Receipt design needs all eight nodes and exact Source/certificate/currentness after waits. No callback-last promise, private list patch or runtime opening is authorized by the reader component.
