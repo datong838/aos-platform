@@ -8,7 +8,7 @@ Rules：231、原joint实施§3/§11.3、最小更改、单m1写者、未知效�
 原准备artifact七个deferred检查使用无条件拒绝函数。完整新版本不能将该旧函数改为常真、关闭trigger、SET ALL或删原FK，不能把Task10的prepared_only row提升成正式Receipt。采用明确隔离的新版本入口和完整生命周期，原准备路径保持拒绝。新路径须复用原预算/Source/物理算法及核验核心，而非复制简化alg或另造fake来源；需要提取common kernel时，须在对应现有Task精确scope先登记计划，逐字验证旧生成SQL/已安装函数body hash、权限和所有相邻行为不变。新版本计算必须纳入旧未决风险；无完整切换、历史映射和独立签名来源则禁入，不能以表空推断正式权限。
 
 ## 精确文件与接线
-本Task产品scope：services/aos-api/aos_api/aip_shared_parent_atomic_admission.py；services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py；证据位于本目录。两个产品文件仍未创建，不把登记当实现。
+本Task产品scope：services/aos-api/aos_api/aip_shared_parent_atomic_admission.py；services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py；证据位于本目录。两文件已创建原fact接线及原生边界测试；完整准入、版本账本和提交结束门尚未实现，不把此增量当整Task交付。
 支持接线必须逐文件回读既有Task归属：aip_physical_capacity_occupation_authority.py（当前回读属Task1）、aip_physical_capacity_occupation.py（原Task1）、预算/模型Owner及contracts（对应原Task），不能创建重叠Lease或在本Task冒写。需要新迁移时先核代码head和迁移分配，再单独登记该精确文件；不重写已发布版本，真库仍只读。
 
 ## 必须完成的流程
