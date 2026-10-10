@@ -1,0 +1,31 @@
+{
+  "authority_revision": "AOS-001687",
+  "task": "gt-shared-parent-native-certificate-prepare-20261010",
+  "head": "a7dee573ccffd37c9e11ebf74f694e87aa38aef3",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/current-native-certificate-reference-1686.json",
+      "sha256": "1a6804ca122c3d606c7fda965f3d116003def73acfb63f6e90e6e455e38d2303"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/fk-types-plan-1686.md",
+      "sha256": "15dd826c8a45460da16be3d596739381201b5e2992ace12ef15eb2221bf8b568"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/fk-types-review-1686.md",
+      "sha256": "d15dca01b42e40a9a8877a9c677f86ae81f15788889d7dfb06940837ba1acfad"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/fk-types-current-r1-1686.json",
+      "sha256": "fe0441e47e7927ee5c731fb79d0250896706374195e60b3605b4668ed19d2fa1"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/pg-binary-current-r1-1686.json",
+      "sha256": "b8d4ac36838d8bfcf80cb1932eaf2d7fca51b58f5422e0e59a3ce335433b7a02"
+    }
+  ]
+}
