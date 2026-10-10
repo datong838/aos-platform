@@ -1,0 +1,32 @@
+{
+  "authority_revision": "AOS-001730",
+  "source_sha256": "9aa4041b1d063e5946b59d7c5839915205a0d35582d03fa2b0b0010cdac8b82e",
+  "registered_candidates": [
+    {
+      "candidate": "Complete ending typed native node binding and raw Suite/Input revalidation",
+      "authorization": "Current full section3 Task, isolated artifact only",
+      "dependencies": [
+        "pending/end_authority under Issuer Owner",
+        "initial obligation/Target Intent/Judge dependency under physical Owner",
+        "Original native CASE_FACT requires suite_raw and input_raw"
+      ]
+    },
+    {
+      "candidate": "Whole physical window and old unknown cutover",
+      "authorization": "Current full section3 Task, isolated implementation only",
+      "dependencies": [
+        "complete ending identity and all original guards",
+        "formal historical mapping and full conflict/event/RI matrix"
+      ]
+    }
+  ],
+  "investigated_first_candidate": true,
+  "findings": [
+    "Issuer pending and end_authority deferred events pass distinct NEW.content_hash into private END_CHANNEL; physical obligation and two Intent tables pass distinct hashes into PHYSICAL_END. Full ending must resolve a native typed node, not trust one caller snapshot/hash.",
+    "Retained Source raw now exists, but INITIAL_INTENT validates p_suite_raw/p_input_raw transiently and stores input artifact hash/application, not original raw Suite/Input bytes. Ending cannot replay original CASE_FACT from a hash alone.",
+    "Do not add a permissive ending stub, grant physical Owner private Issuer table access, disable any existing guard, or accept partial admission COMMIT."
+  ],
+  "next_file_level_scheme": "Add separately immutable private physical Suite/Input authority handoff under current Task, native CASE_FACT and same pending/obligation/Intent binding, exact byte/hash, closed fields and narrow fixed re-read; keep original seven artifact outputs unchanged. Update scheme and RED before code.",
+  "formal_writes": false,
+  "full_task_delivered": false
+}
