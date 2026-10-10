@@ -1,0 +1,26 @@
+{
+  "pytest_exit": 1,
+  "databases": [
+    "aos_test_5b389e7d4782_ti4_test",
+    "aos_test_5b389e7d4782_ti4_test"
+  ],
+  "reports": [
+    {
+      "nodeid": "tests/aip/test_model_original_target_result_reader_pg.py::test_original_target_persisted_native_provenance",
+      "phase": "call",
+      "outcome": "failed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_persisted_model_certificate_bytes_signature_and_current_epochs",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "old_files_unchanged": true,
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_model_original_target_result_reader.py": "a4ded2ffb1be1e1faf6b620fe7e9e9527ffbee1d7807e3ca36d727c730f168fc",
+    "services/aos-api/tests/aip/test_model_original_target_result_reader_pg.py": "36e6dc7b84f618519a029e4bdbe6501afc3c1a2c72a8f09f8fb393f05a523b2f"
+  },
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

@@ -1,0 +1,56 @@
+{
+  "database": "127.0.0.1:5441/aos_test_291a8a364c77_ti4_test",
+  "producer_xid": "43893",
+  "origin": {
+    "xid": "43893",
+    "pid": 7545
+  },
+  "native_committed_required": true,
+  "negative_cases": [
+    "output",
+    "mutable",
+    "case",
+    "manifest",
+    "identity_bool",
+    "identity_epoch",
+    "canary",
+    "case_hash",
+    "root_hash",
+    "certificate_hash",
+    "root_epoch",
+    "certificate_epoch_bool",
+    "runtime",
+    "binding_immutable",
+    "binding_runtime_acl",
+    "original_global_identity_withdrawal",
+    "actual_identity_lock_wait_past_certificate_end",
+    "revoked_certificate"
+  ],
+  "execution_allowed": false,
+  "bootstrap_trusted": false,
+  "actual_transport": false,
+  "joint_admission": false,
+  "test_owned_executor_metadata": true,
+  "original_prepared_parents_committed": false,
+  "judge_input": {
+    "schema": "aos.model-eval-original-target-judge-input/v2",
+    "sha256": "157cdf4cc2c5c7aeaf7f4fc90b864baef7e67e30345f0f4c5106502fa2d2cdca",
+    "canonical": true,
+    "actual_bytes_preserved": true,
+    "expected_bytes_preserved": true,
+    "manifest_case_certificate_and_judge_leg_bound": true,
+    "invalid_expected_cases": 4,
+    "wrong_actual_rejected": true,
+    "uncommitted_and_runtime_rejected": true,
+    "execution_allowed": false
+  },
+  "actual_wait": {
+    "caller_xid": "43907",
+    "blocked_pid": 7565,
+    "blocking_pid": 7564,
+    "before": "2026-10-10T01:42:45.049121+00:00",
+    "certificate_end": "2026-10-10T01:42:52.787715+00:00",
+    "after": "2026-10-10T01:42:52.809741+00:00",
+    "reader_end_status": "aborted"
+  }
+}

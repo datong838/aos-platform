@@ -1,0 +1,9 @@
+{
+  "pytest_exit": 1,
+  "failure": "FileNotFoundError at final native-proof output: r4 directory missing",
+  "runtime_handle_terminal": true,
+  "retry_policy": "fresh isolated database and attempt; no old committed operations replayed",
+  "legacy_adjacent_passed": true,
+  "overall_pass": false,
+  "execution_allowed": false
+}

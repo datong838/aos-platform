@@ -4,7 +4,9 @@ Stored signatures, current metadata heads and a committed insertion origin do
 not prove bootstrap authority, joint admission, real transport, Usage or fees.
 The original caller owns its transaction and retains all shared locks.
 """
+import base64
 import hashlib
+import json
 import re
 
 import psycopg
@@ -92,9 +94,9 @@ def _require(ok, reason):
         raise ValueError(reason)
 
 
-def validate_persisted_original_target_case(conn, *, expected_tenant,
+def _read_persisted_original_target_case(conn, *, expected_tenant,
         execution_id, manifest_hash, case_id, binding, expected_identity_epoch,
-        input_bytes, output_bytes) -> None:
+        input_bytes, output_bytes) -> tuple:
     """Read original v2 bytes and committed origin; grant no admission.
 
     Does not repair callers, create holds/Intents, install objects, write rows,
@@ -194,5 +196,57 @@ def validate_persisted_original_target_case(conn, *, expected_tenant,
         validate_original_target_case_signature(plan,case,certificate_envelope=cert,
             issuer_input=root,checked_at=final['now'],revoked_identity_ids=frozenset(),
             input_bytes=input_bytes,output_bytes=output_bytes)
+        return plan,case,cert,root,context
     except psycopg.Error as exc:
         raise ValueError('original Target persisted evidence unavailable') from exc
+
+
+def validate_persisted_original_target_case(conn, *, expected_tenant,
+        execution_id, manifest_hash, case_id, binding, expected_identity_epoch,
+        input_bytes, output_bytes) -> None:
+    """Validate necessary original v2 facts, preserving caller locks and no grant."""
+    _read_persisted_original_target_case(conn,expected_tenant=expected_tenant,
+        execution_id=execution_id,manifest_hash=manifest_hash,case_id=case_id,
+        binding=binding,expected_identity_epoch=expected_identity_epoch,
+        input_bytes=input_bytes,output_bytes=output_bytes)
+
+
+def build_original_target_judge_input(conn, *, expected_output, **target_args) -> bytes:
+    """Bind a Judge input to current stored original v2 Target facts.
+
+    Private SERIAL caller only. Signatures and committed insertion provenance
+    are necessary facts; this neither proves transport/Usage nor authorizes
+    Judge dispatch, a runtime caller or a final joint commit.
+    """
+    plan,target,certificate,root,context = _read_persisted_original_target_case(conn,**target_args)
+    case = next(item for item in plan.cases if item.case_id == target.payload.claim.case_id)
+    if case.expected_hash is None:
+        _require(expected_output is None,'absent original expected artifact requires no bytes')
+    else:
+        _require(type(expected_output) is bytes and len(expected_output) <= 1048576
+            and hashlib.sha256(expected_output).hexdigest() == case.expected_hash,
+            'exact bounded original expected hash witness required')
+    payload = dict(schemaVersion='aos.model-eval-original-target-judge-input/v2',
+        tenant=plan.tenant.model_dump(mode='json',by_alias=True),
+        executionId=plan.execution_id,manifestHash=target.payload.claim.manifest_hash,
+        judgeRequestHash=plan.judge_request_hash,caseId=case.case_id,
+        judgeLeg=case.judge.model_dump(mode='json',by_alias=True),
+        targetCaseHash=canonical_hash(target.model_dump(mode='json',by_alias=True)),
+        targetCertificateHash=target.payload.certificate_hash,
+        actualHash=target.payload.claim.output_hash,
+        actualBase64=base64.b64encode(target_args['output_bytes']).decode('ascii'),
+        expectedHash=case.expected_hash,
+        expectedBase64=None if expected_output is None else base64.b64encode(expected_output).decode('ascii'),
+        executionAllowed=False)
+    raw = json.dumps(payload,sort_keys=True,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode('utf-8')
+    try:
+        with conn.cursor(row_factory=dict_row) as cur:
+            final = cur.execute('SELECT clock_timestamp() AS now,pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+    except psycopg.Error as exc:
+        raise ValueError('original Judge input final currentness unavailable') from exc
+    _require((final['xid'],final['pid']) == (context['xid'],context['pid']),
+        'original Judge input caller drifted')
+    validate_original_target_case_signature(plan,target,certificate_envelope=certificate,
+        issuer_input=root,checked_at=final['now'],revoked_identity_ids=frozenset(),
+        input_bytes=target_args['input_bytes'],output_bytes=target_args['output_bytes'])
+    return raw

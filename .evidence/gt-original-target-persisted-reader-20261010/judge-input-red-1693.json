@@ -1,0 +1,6 @@
+{
+  "required_interface": "build_original_target_judge_input",
+  "present": false,
+  "requirement_status": "RED",
+  "execution_allowed": false
+}

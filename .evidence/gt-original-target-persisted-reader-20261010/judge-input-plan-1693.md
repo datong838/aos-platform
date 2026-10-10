@@ -1,0 +1,11 @@
+# Original v2 Target → Judge necessary input
+
+Authority AOS-001693; original Task6 exact scope and current owned Lease verified. Follow 231/product Model typed proof boundaries and joint plan §11.3. No legacy signature domains or execution gates changed.
+
+Candidates: (1) original v2 Target necessary Judge input builder: current signed persisted Target reader exists; corresponding v2 builder missing; this step needs no Provider or formal trust grant. (2) trusted native effect/artifact audit: awaits complete provenance and effect closure; cannot approve native callbacks from symbol metadata.
+
+Choose (1). Files: services/aos-api/aos_api/aip_model_original_target_result_reader.py; services/aos-api/tests/aip/test_model_original_target_result_reader_pg.py; this Task evidence. Internally return already validated typed facts from private reader; preserve public validator signature and None result. New builder consumes exact same private SERIAL caller, current issuer/certificate/identity epochs and independently COMMITTED insertion origin; binds exact Target output, complete manifest/case/certificate hashes, original Judge request hash and Judge leg, original expected artifact bytes/hash. New necessary-input v2 domain, executionAllowed=false. No rows, grants, COMMIT, network, signer or fabricated result.
+
+After serialization, recheck same xid/pid and original certificate/root deadlines with DB clock, preserving original locks. Reject mutable/oversized/wrong expected bytes and absent-witness mismatch. Runtime remains denied. This is not a transport receipt, real Usage proof, producer or final joint admission.
+
+RED: builder absent. Native GREEN: extend original current reader test with exact output bytes, canonical/hash binding, wrong/missing/mutable/oversized expected witness, wrong actual bytes and same-transaction uncommitted/runtime rejection. Keep original negative/withdrawal/wait/legacy adjacent tests. Test-owned signed result remains labelled test-only. Fresh isolated DB and fresh attempt, no replay old requests/results. Independently verify source hashes and terminal outcome. Then code/plan review, precise m1 commit, authority/checkpoints/projections; continue actual producer protocol.

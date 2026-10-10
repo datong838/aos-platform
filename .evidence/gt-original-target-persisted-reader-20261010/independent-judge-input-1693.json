@@ -1,0 +1,52 @@
+{
+  "authority": "AOS-001693",
+  "identity": {
+    "database": "aos_test_291a8a364c77_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "exact_original_producer_rows": [
+    {
+      "xid": "43893",
+      "pid": 7545,
+      "status": "committed",
+      "content_hash": "59d254ec964be79fe0bf3f012da0155f3469efbc707938b81ca5beb9028f990e",
+      "body_hash": "59d254ec964be79fe0bf3f012da0155f3469efbc707938b81ca5beb9028f990e"
+    }
+  ],
+  "expired_lock_wait_caller_status": "aborted",
+  "canary_rows": 0,
+  "source_hashes_match": true,
+  "pytest_reports": [
+    {
+      "nodeid": "tests/aip/test_model_original_target_result_reader_pg.py::test_original_target_persisted_native_provenance",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_persisted_model_certificate_bytes_signature_and_current_epochs",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "judge_input": {
+    "schema": "aos.model-eval-original-target-judge-input/v2",
+    "sha256": "157cdf4cc2c5c7aeaf7f4fc90b864baef7e67e30345f0f4c5106502fa2d2cdca",
+    "canonical": true,
+    "actual_bytes_preserved": true,
+    "expected_bytes_preserved": true,
+    "manifest_case_certificate_and_judge_leg_bound": true,
+    "invalid_expected_cases": 4,
+    "wrong_actual_rejected": true,
+    "uncommitted_and_runtime_rejected": true,
+    "execution_allowed": false
+  },
+  "raw_log_sha256": {
+    "native-r4.log": "98e3b0b2137b63ebc1e41270df75a4896689b084cb9638a19e09d06e80e5dced",
+    "native-r5.log": "7b2748627aa361ddec7c6e78db33287c0c6794e3b8cd318535587f3726db097a"
+  },
+  "actual_transport": false,
+  "formal_root_provenance": false,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

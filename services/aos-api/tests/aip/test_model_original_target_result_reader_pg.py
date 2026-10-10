@@ -127,10 +127,37 @@ def test_original_target_persisted_native_provenance(
             input_bytes=wire, output_bytes=output)
         with pytest.raises(ValueError, match='committed'):
             reader.validate_persisted_original_target_case(c, **args)
+        with pytest.raises(ValueError, match='committed'):
+            reader.build_original_target_judge_input(c,expected_output=None,**args)
         c.commit()
     negatives = []
     with owned() as c:
         assert reader.validate_persisted_original_target_case(c, **args) is None
+        expected = '  原Judge期望🙂\n保留空白  '.encode('utf-8') if plan.cases[0].expected_hash else None
+        if expected is not None:
+            assert hashlib.sha256(expected).hexdigest() == plan.cases[0].expected_hash
+        raw = reader.build_original_target_judge_input(c,expected_output=expected,**args)
+        facts = json.loads(raw)
+        assert raw == encode(facts)
+        assert facts['schemaVersion'] == 'aos.model-eval-original-target-judge-input/v2'
+        assert facts['executionAllowed'] is False
+        assert base64.b64decode(facts['actualBase64'],validate=True) == output
+        assert facts['actualHash'] == hashlib.sha256(output).hexdigest()
+        assert facts['targetCaseHash'] == digest(case)
+        assert facts['targetCertificateHash'] == digest(envelope)
+        assert facts['manifestHash'] == digest(plan)
+        assert facts['judgeRequestHash'] == plan.judge_request_hash
+        assert facts['judgeLeg'] == plan.cases[0].judge.model_dump(mode='json',by_alias=True)
+        assert facts['expectedHash'] == plan.cases[0].expected_hash
+        assert facts['expectedBase64'] == (None if expected is None else base64.b64encode(expected).decode())
+        invalid_expected = [b'wrong',bytearray(b'wrong'),b'x'*1048577]
+        if expected is not None:
+            invalid_expected.append(None)
+        for witness in invalid_expected:
+            with pytest.raises(ValueError,match='expected'):
+                reader.build_original_target_judge_input(c,expected_output=witness,**args)
+        with pytest.raises(ValueError):
+            reader.build_original_target_judge_input(c,expected_output=expected,**(args|{'output_bytes':output+b' '}))
         c.rollback()
     for fault, change in [('output',{'output_bytes':output+b' '}), ('mutable',{'input_bytes':bytearray(wire)}),
             ('case',{'case_id':'wrong-case'}), ('manifest',{'manifest_hash':'f'*64}),
@@ -144,6 +171,7 @@ def test_original_target_persisted_native_provenance(
             c.rollback(); negatives.append(fault)
     with owned('aos_runtime') as c:
         with pytest.raises(ValueError): reader.validate_persisted_original_target_case(c, **args)
+        with pytest.raises(ValueError): reader.build_original_target_judge_input(c,expected_output=None,**args)
         c.rollback(); negatives.append('runtime')
     with owned() as c:
         with pytest.raises(psycopg.errors.InsufficientPrivilege):
@@ -206,6 +234,11 @@ def test_original_target_persisted_native_provenance(
         'native_committed_required':True,'negative_cases':negatives,'execution_allowed':False,
         'bootstrap_trusted':False,'actual_transport':False,'joint_admission':False,
         'test_owned_executor_metadata':True,'original_prepared_parents_committed':False}
+    out['judge_input']={'schema':facts['schemaVersion'],'sha256':hashlib.sha256(raw).hexdigest(),
+        'canonical':True,'actual_bytes_preserved':True,'expected_bytes_preserved':True,
+        'manifest_case_certificate_and_judge_leg_bound':True,
+        'invalid_expected_cases':len(invalid_expected),'wrong_actual_rejected':True,
+        'uncommitted_and_runtime_rejected':True,'execution_allowed':False}
     out['actual_wait']={'caller_xid':waited['xid'],'blocked_pid':waited['pid'],'blocking_pid':blocker_pid,
         'before':waited['now'].isoformat(),'certificate_end':envelope.certificate.valid_until.isoformat(),
         'after':after.isoformat(),'reader_end_status':'aborted'}
