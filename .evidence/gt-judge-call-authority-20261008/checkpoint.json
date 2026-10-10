@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001755",
+  "authority_revision": "AOS-001756",
   "code_files": [
     "services/aos-api/aos_api/aip_action_policy.py",
     "services/aos-api/aos_api/aip_action_store.py",
@@ -26,7 +26,7 @@
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "native-utility-fence-green-select-effects-red-fixed-validator-semantic-closure-and-eight-node-receipt-next",
+  "step": "fixed-final-call-comparison-component-green-full-source-positive-eight-node-receipt-native-commit-next",
   "task_base_revision": "AOS-001578",
   "task_id": "gt-judge-call-authority-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
