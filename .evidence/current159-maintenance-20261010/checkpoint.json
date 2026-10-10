@@ -3,10 +3,10 @@
   "task_id": "current159-maintenance-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "task_base_revision": "AOS-001699",
-  "authority_revision": "AOS-001709",
+  "authority_revision": "AOS-001710",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
-  "step": "web-restoration-controller-verified-bound-second-window-executor-and-complete-runtime-off-proof-pending",
+  "step": "complete-isolated-native-window159-and-independent-role-readback-green-current-second-window-pending",
   "code_files": [],
   "evidence_files": [
     ".evidence/current159-maintenance-20261010/plan.md",
@@ -29,6 +29,12 @@
     ".evidence/current159-maintenance-20261010/registered_web_restore159.py",
     ".evidence/current159-maintenance-20261010/test_registered_web_restore159.py",
     ".evidence/current159-maintenance-20261010/registered-web-restore159-review.json",
-    ".evidence/current159-maintenance-20261010/current159-execution-surface-readonly.json"
+    ".evidence/current159-maintenance-20261010/current159-execution-surface-readonly.json",
+    ".evidence/current159-maintenance-20261010/window159_native_rehearsal.py",
+    ".evidence/current159-maintenance-20261010/test_window159_native_rehearsal.py",
+    ".evidence/current159-maintenance-20261010/window159-native-rehearsal-r1.json",
+    ".evidence/current159-maintenance-20261010/window159-native-independent-readback.py",
+    ".evidence/current159-maintenance-20261010/window159-native-independent-readback.json",
+    ".evidence/current159-maintenance-20261010/window159-native-protocol-review.json"
   ]
 }
