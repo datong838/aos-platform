@@ -1,0 +1,91 @@
+{
+  "authority": "AOS-001741",
+  "status": "NEW_CERTIFICATE_LOCK_PHASE_AND_POSTWAIT_FULL_CLAIMS_VERIFIED",
+  "native_component": {
+    "status": "CERTIFICATE_POSTWAIT_PHASE_COMPONENT_VERIFIED",
+    "authority": "AOS-001741",
+    "database": "aos_test_2ddb6db98476_ti4_test",
+    "cluster": "7694680278363095064",
+    "native_functions": [
+      {
+        "name": "aos_shared_parent_physical_private.bind_complete_parent_risk",
+        "body_sha256": "97334dc5e1b17a67d6011c697cfa5645017a7249ed9d226e9cd126f9bae84974",
+        "native_body_exact": true
+      },
+      {
+        "name": "public.stage_shared_parent_complete_risk",
+        "body_sha256": "15e95e139c3e42c334fc3e7a50759b9a862b1da8605219bdae74de8661c92320",
+        "native_body_exact": true
+      },
+      {
+        "name": "public.validate_shared_parent_admission_certificate_set(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea)",
+        "body_sha256": "30e82fdb7be148dd611500a47774765d63aead3659c800c44611581593bf4039",
+        "native_body_exact": true
+      }
+    ],
+    "zero_rows": {
+      "aos_shared_parent_admission_private.pending_origin": 0,
+      "aos_shared_parent_physical_private.initial_target_obligation": 0,
+      "aos_shared_parent_physical_private.target_intent": 0,
+      "aos_shared_parent_physical_private.judge_dependency": 0,
+      "aos_shared_parent_admission_private.end_authority": 0,
+      "aos_shared_parent_physical_private.initial_call_authority": 0,
+      "aos_shared_parent_physical_private.initial_window_obligation": 0,
+      "aos_shared_parent_physical_private.complete_parent_risk": 0
+    },
+    "signed_legs": 4,
+    "parent_risks": 2,
+    "native_caller_aborted": true,
+    "negative_cases": [],
+    "temporary_permissions_restored": true,
+    "actual_missing_end_commit_rejected": true,
+    "separate_risk_negatives": true,
+    "whole_fixture_pass": false,
+    "full_admission_commit": false,
+    "formal_root_provenance": false,
+    "execution_allowed": false,
+    "full_task_delivered": false
+  },
+  "adjacent_passed": 331,
+  "other_11_generators_exact": {
+    "shared_parent_original_fact_statements": true,
+    "shared_parent_admission_origin_statements": true,
+    "shared_parent_admission_storage_statements": true,
+    "shared_parent_pending_origin_lookup_statements": true,
+    "shared_parent_physical_obligation_statements": true,
+    "shared_parent_initial_intent_statements": true,
+    "shared_parent_end_authority_statements": true,
+    "shared_parent_initial_call_authority_statements": true,
+    "shared_parent_initial_window_obligation_statements": true,
+    "shared_parent_live_physical_fact_statements": true,
+    "shared_parent_complete_parent_risk_statements": true
+  },
+  "original_preparation_producer_exact": true,
+  "original_risk_negatives_separately_verified": true,
+  "risk_negatives_repeated_in_latest_whole_attempt": false,
+  "whole_source_fixture_pass": false,
+  "whole_failure": "Original post-native Source consumer rejects CAPACITY_OCCUPATION_SOURCE_REQUIRED and supplier cleanup rejects expired signed inputs; latest whole129.71s RED",
+  "actual_full_component_path": true,
+  "actual_missing_end_commit_rejected": true,
+  "actual_admission_committed": false,
+  "root_provenance_formal": false,
+  "original_source_ttl_changed": false,
+  "code_files": {
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "48d58f6c3996f39a328f79cf90e7a865348b75aa0d723e684240761bfbae0281",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "33986b903c2e96dc23ed546fa99f560476fa8545d6d226f6dc900f12a87c0ebf"
+  },
+  "review": {
+    "original_budget_then_root_lock_order": true,
+    "all_four_original_claim_signature_checks_after_wait": true,
+    "original_origin_postwait_compare": true,
+    "native_c_verifier_requirements_before_after": true,
+    "callbacks_or_caller_override": false,
+    "grant_added": false,
+    "full_end_queue_fixedpoint": false,
+    "browser_applicable": false,
+    "remaining": "Real end/Receipt/event and RI proof/legacy cutover/formal Root trust and whole Source timing"
+  },
+  "full_task_delivered": false,
+  "goal_complete": false,
+  "execution_allowed": false
+}

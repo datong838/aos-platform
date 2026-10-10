@@ -33,6 +33,23 @@ def shared_parent_admission_certificate_validation_sql():
             + _certificate.shared_parent_certificate_claim_sql())
 
 
+def shared_parent_admission_certificate_lock_sql():
+    """Original complete-set and Root locks, before post-wait verification.
+
+    Only the new admission lane separates these phases. The published
+    preparation producer and its full validation fragment remain unchanged.
+    """
+    original = _certificate.shared_parent_certificate_claim_sql()
+    boundary = '            -- Validate every signature and complete original claim before any certificate insert.\n'
+    locks, marker, validation = original.partition(boundary)
+    if (not marker or boundary in validation or 'FOR SHARE OF e' not in locks
+            or 'SHARED_CERTIFICATE_COMPLETE_SET_REQUIRED' not in locks
+            or 'SHARED_CERTIFICATE_PREPUBLISHED_ROOT_REQUIRED' not in locks
+            or 'verify_model_shared_parent_certificate_signature' not in validation):
+        raise ValueError('SHARED_CERTIFICATE_LOCK_PHASE_BOUNDARY_REQUIRED')
+    return locks
+
+
 def shared_parent_original_fact_statements():
     """Reuse original Source and independent Target/Judge hold validation.
 
@@ -144,7 +161,7 @@ def shared_parent_admission_certificate_set_statements():
               OR convert_to(public.canonical_asset_registry_jsonb(items),'UTF8') IS DISTINCT FROM p_certificates THEN
               RAISE EXCEPTION 'SHARED_CERTIFICATE_CANONICAL_SET_REQUIRED' USING ERRCODE='23514'; END IF;
             doc:={origin_call};p_hash:=doc->>'contentHash';
-{shared_parent_admission_certificate_validation_sql()}            IF {origin_call} IS DISTINCT FROM doc THEN
+{_certificate.shared_parent_native_verifier_requirement_sql()}{shared_parent_admission_certificate_lock_sql()}            IF {origin_call} IS DISTINCT FROM doc THEN
               RAISE EXCEPTION 'SHARED_ADMISSION_CERTIFICATE_ORIGIN_CHANGED' USING ERRCODE='23514'; END IF;
 {shared_parent_admission_certificate_validation_sql()}            RETURN jsonb_build_object('origin',doc,'certificateCount',actual,
               'executionAllowed',false,'rootProvenanceVerified',false,'state','awaiting_full_admission');

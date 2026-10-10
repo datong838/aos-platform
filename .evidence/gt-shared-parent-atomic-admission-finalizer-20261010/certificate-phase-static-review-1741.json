@@ -1,0 +1,24 @@
+{
+  "other_generators_unchanged": {
+    "shared_parent_original_fact_statements": true,
+    "shared_parent_admission_origin_statements": true,
+    "shared_parent_admission_storage_statements": true,
+    "shared_parent_pending_origin_lookup_statements": true,
+    "shared_parent_physical_obligation_statements": true,
+    "shared_parent_initial_intent_statements": true,
+    "shared_parent_end_authority_statements": true,
+    "shared_parent_initial_call_authority_statements": true,
+    "shared_parent_initial_window_obligation_statements": true,
+    "shared_parent_live_physical_fact_statements": true,
+    "shared_parent_complete_parent_risk_statements": true
+  },
+  "origin_calls": 2,
+  "full_claim_regions": 1,
+  "native_verifier_requirements": 2,
+  "full_original_claim_retained": true,
+  "budget_then_root_lock_order_preserved": true,
+  "postwait_original_fact_comparison_retained": true,
+  "current_source_ttl_changed": false,
+  "execution_allowed": false,
+  "full_admission": false
+}

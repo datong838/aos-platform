@@ -12,6 +12,33 @@ from aos_api.aip_shared_parent_atomic_admission import FUNCTION, shared_parent_o
 from aos_api.aip_physical_capacity_occupation_authority import OWNER, PLAN_FACT, occupation_plan_risk_statements
 
 
+def test_certificate_waits_precede_complete_signature_validation():
+    from aos_api import aip_shared_parent_atomic_admission as api
+    from aos_api import aip_shared_parent_certificate_prepare as original
+    lock_phase = api.shared_parent_admission_certificate_lock_sql()
+    full = original.shared_parent_certificate_claim_sql()
+    assert 'FOR SHARE OF e' in lock_phase
+    assert 'SHARED_CERTIFICATE_COMPLETE_SET_REQUIRED' in lock_phase
+    assert 'SHARED_CERTIFICATE_PREPUBLISHED_ROOT_REQUIRED' in lock_phase
+    assert 'verify_model_shared_parent_certificate_signature' not in lock_phase
+    body = next(s for s in api.shared_parent_admission_certificate_set_statements()
+                if s.startswith('CREATE FUNCTION '))
+    assert body.count(full) == 1
+    assert body.count(api.shared_parent_admission_certificate_validation_sql()) == 1
+    before, after = body.split(lock_phase, 1)
+    assert api.ORIGIN.split('(')[0] + '(' in before
+    assert after.index(api.ORIGIN.split('(')[0] + '(') < after.index(full)
+    assert 'SHARED_ADMISSION_CERTIFICATE_ORIGIN_CHANGED' in after
+
+
+def test_certificate_phase_boundary_drift_fails_closed(monkeypatch):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    monkeypatch.setattr(api._certificate, 'shared_parent_certificate_claim_sql',
+                        lambda: 'unrecognized or missing original lock phase')
+    with pytest.raises(ValueError, match='SHARED_CERTIFICATE_LOCK_PHASE_BOUNDARY_REQUIRED'):
+        api.shared_parent_admission_certificate_set_statements()
+
+
 @pytest.fixture
 def native():
     path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
