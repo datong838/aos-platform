@@ -1,0 +1,27 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "gt-shared-certificate-validation-kernel-20261010",
+  "base_revision": "AOS-001717",
+  "completed_revision": "AOS-001717",
+  "result": "ORIGINAL_CERTIFICATE_KERNEL_REFACTOR_EXACT; new parent admission remains incomplete",
+  "changed_files": [
+    "aos-platform/services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py",
+    "aos-platform/services/aos-api/tests/aip/test_shared_parent_certificate_validation_kernel.py",
+    "aos-platform/.evidence/gt-shared-certificate-validation-kernel-20261010"
+  ],
+  "commits": [
+    "eb27a3425dc46d253c3face5925a21cccf5d259d"
+  ],
+  "verification": [
+    "93 passed (0.71s), exit0",
+    "13 original generated SQL statements byte exact",
+    "3 retained original native functions body/Owner/ACL/search_path exact; native C metadata exact",
+    "Native readback read-only; no permissions or formal DB changes"
+  ],
+  "risks": [
+    "Kernel fragment requires trusted description/caller and narrow original Issuer delegation",
+    "No formal Root provenance, full new admission/ledger/finalizer/end-channel COMMIT or natural business chain verdict"
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-10T19:16:31+08:00"
+}
