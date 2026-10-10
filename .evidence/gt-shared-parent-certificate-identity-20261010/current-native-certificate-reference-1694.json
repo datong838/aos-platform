@@ -1,0 +1,34 @@
+{
+  "authority_revision": "AOS-001694",
+  "task": "gt-shared-parent-certificate-identity-20261010",
+  "head": "3d84abcad5ed2c258a2f4045f80f87755f796589",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false,
+  "references": [
+    {
+      "path": ".evidence/gt-shared-parent-certificate-identity-20261010/current-native-certificate-reference-1693.json",
+      "sha256": "96dd54658aa778328d6377dd851ed7a72d417d3138702825796dd86c11799a98"
+    },
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/judge-input-plan-1693.md",
+      "sha256": "67cfb2dda418c5f5adb056e52950d6fa8ef7b935030296df575ed9480f26d90a"
+    },
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/judge-input-review-1693.md",
+      "sha256": "e3e587a72af680982be9d0a88f0d60ee5026cc9af02ae549b3bb1415a27ae7c9"
+    },
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/result-r5.json",
+      "sha256": "94ed7c585672d0871107d0e7941de3c4b03fb3e946f0f518c7c10e6a5b2dca3d"
+    },
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/r5/native-proof.json",
+      "sha256": "dbaaf4e026325c1d7c572b3c41026fbf0bf168509520b3371a4f4c8896f1e50a"
+    },
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/independent-judge-input-1693.json",
+      "sha256": "fe9fd830f5545697be4eb3b503591ab7ca3aa11516389b26be27c809ef8e668d"
+    }
+  ]
+}
