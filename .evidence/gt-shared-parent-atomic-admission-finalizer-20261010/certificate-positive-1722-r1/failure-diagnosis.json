@@ -1,0 +1,6 @@
+{
+  "terminal_pytest_exit": 1,
+  "error": "SHARED_CERTIFICATE_SIGNATURE_OR_TIME_REQUIRED",
+  "unknown_effect_replay": false,
+  "next": "fresh r2 isolated full native context with byte/signature/time diagnostic before validation; original guard unchanged"
+}

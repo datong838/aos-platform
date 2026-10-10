@@ -1,0 +1,25 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "pytest_exit": 1,
+      "full_test_pass": false
+    },
+    {
+      "attempt": 2,
+      "pytest_exit": 1,
+      "full_test_pass": false
+    },
+    {
+      "attempt": 3,
+      "pytest_exit": 1,
+      "full_test_pass": false
+    }
+  ],
+  "actual_failure_location": "post-negative final assert validate()==positive; initial repeated real signature positive reached",
+  "r2_raw_C_signatures": 4,
+  "r2_canonical_and_time_before_call": true,
+  "base64_hypothesis": "refuted by original exact SQL canonical guard; no product change",
+  "repair": "fresh r4 certificate uses original approved Judge and Root bounds, no arbitrary40s cap; original approval and root deadlines unchanged; extra expired signed negative and DBclock evidence",
+  "no_old_effect_replay": true
+}

@@ -1,0 +1,103 @@
+{
+  "rules": [
+    "231",
+    "single m1",
+    "original signed Source/two parent approvals/current Root",
+    "original deadlines and protected fixtures unchanged"
+  ],
+  "authority": "AOS-001722",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "reviewer": "primary writer scheme and evidence review; not independent model verdict",
+  "attempts": [
+    {
+      "attempt": 1,
+      "pytest_exit": 1,
+      "database": "aos_test_d5793d5e8f31_ti4_test",
+      "terminal": "test terminal",
+      "old_files_unchanged": true,
+      "log_sha256": "a6236e0f972f08863b3dcd14ae21eee492c993b1fd57e3a5f9dd573c4f87d05b"
+    },
+    {
+      "attempt": 2,
+      "pytest_exit": 1,
+      "database": "aos_test_1ebe6646c5c0_ti4_test",
+      "terminal": "test terminal",
+      "old_files_unchanged": true,
+      "log_sha256": "d9f0eee2c8fba6f0bed12ebf07483e3b2443905a1393d20416e0faad445131c1"
+    },
+    {
+      "attempt": 3,
+      "pytest_exit": 1,
+      "database": "aos_test_b25fd46b2859_ti4_test",
+      "terminal": "test terminal",
+      "old_files_unchanged": true,
+      "log_sha256": "189c5a849bcfa05d81b6b24279297fb61e54729902a36b77a03a9ca260de30b7"
+    },
+    {
+      "attempt": 4,
+      "pytest_exit": 1,
+      "database": "aos_test_1dc99fd5c27d_ti4_test",
+      "terminal": "test terminal",
+      "old_files_unchanged": true,
+      "log_sha256": "245ef980a7de89dae80ae24f417f276bd92d4e02885034bb0703ac21d6bcd639"
+    },
+    {
+      "attempt": 5,
+      "pytest_exit": null,
+      "database": null,
+      "terminal": "failed pre-database fixture filename read",
+      "old_files_unchanged": true,
+      "log_sha256": "eeec93b087cf5874248b5e90aa17fa6e78efbf49ea16f7500d71115a6606a53c"
+    },
+    {
+      "attempt": 6,
+      "pytest_exit": 1,
+      "database": "aos_test_5bd420b02404_ti4_test",
+      "terminal": "test terminal",
+      "old_files_unchanged": true,
+      "log_sha256": "af952370ae9c84f220c387fb993fc945232bfeb21ff59409cc42f93d5a7bf8bb"
+    },
+    {
+      "attempt": 7,
+      "pytest_exit": 0,
+      "database": "aos_test_f675cc1af2ea_ti4_test",
+      "terminal": "test terminal",
+      "old_files_unchanged": true,
+      "log_sha256": "2b7cd5f5491b5e9115a3d736a5802484bf224498d89f0ec64a1404590401fcb2"
+    }
+  ],
+  "latest_native": {
+    "passed": 1,
+    "warnings": 8,
+    "seconds": 135.3,
+    "pytest_exit": 0,
+    "database": "aos_test_f675cc1af2ea_ti4_test"
+  },
+  "signed_legs": 4,
+  "negative_cases": [
+    "missing_leg",
+    "duplicate_leg",
+    "noncanonical",
+    "signature",
+    "callerXid",
+    "expired_signed_certificate",
+    "canary"
+  ],
+  "native_origins_and_approvals": true,
+  "root_provenance": "test-owned prepublished Root only; not formal independent deployment provenance",
+  "independent_readback": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/certificate-positive-1722-r7/independent-readback.json",
+  "native_xid_state": "aborted",
+  "two_parent_holds_after_rollback": 0,
+  "closed_function_and_verifier_permissions": true,
+  "original_source_adjacent_and_cleanup": "original unchanged full test passed; no skip",
+  "repairs": "r1-3 initial positives reached but final negative-suite readback rejected short local certificate40s window; crypto/canonical/time independent diagnostic passed and Base64 hypothesis refuted without product modification. r4 logger referenced future timing locals; r5 filename substitution failed before DB; r6 complete certificate matrix/rollback independently verified but original Source adjacent/teardown current-consumer expired RED. r7 omits1720 completed origin-negative reruns, retains full7certificate faults and original Source adjacent, certificates bind unchanged original request/Root bounds; full test now passed. All attempts retained.",
+  "product_changes_this_wave": false,
+  "full_admission_commit": false,
+  "full_parent_task_delivery": false,
+  "natural_business_chain": false,
+  "remaining": [
+    "trusted persisted native origin and full old/new physical exposure accounting",
+    "unique Target Intent and Judge actual-result dependency",
+    "native full end-channel/admission COMMIT rollback/unknown and formal deployment provenance"
+  ]
+}

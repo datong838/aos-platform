@@ -1,0 +1,6 @@
+{
+  "terminal_exit": 1,
+  "effect": "before fixture copies/new database",
+  "cause": "broad output-filename substitution accidentally changed protected source fixture filename; fresh r6 limits replacement to exact output paths",
+  "old_files_changed": false
+}

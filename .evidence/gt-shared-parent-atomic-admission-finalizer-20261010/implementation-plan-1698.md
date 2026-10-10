@@ -50,3 +50,6 @@ Rules：231、原joint实施§3/§11.3、最小更改、单m1写者、未知效�
 精确修改 services/aos-api/aos_api/aip_shared_parent_atomic_admission.py 和 services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py。新增关闭的Issuer SECURITY DEFINER入口只接受rawSource/exactRef/两父hold/request/hash/plan/manifest/hash/完整原始证书bytes，不接受可信doc/risk。在同一原occupation SERIAL UTC caller中调用已有新原生ORIGIN，取得doc和descriptionHash，再逐字复用原C verifier要求及全部v3 claim/签名/Root锁/当前性。结束前重取原生doc，要求完全相同，再复用完整claim检查，不能将检查时间宣称WAL期限。
 新ORIGIN仅新增显式EXECUTE给既有Issuer Owner，非runtime/PUBLIC；新核验函数Issuer Owner所有，PUBLIC/runtime/Provider issuer无EXECUTE。不改任何原函数/旧七拒绝门/VERIFY权限；物理Owner不获VERIFY能力。全部SQL仅显式artifact，无导入安装、无表写、无签发、无Root创建、无执行权限。后续真正保存和最终入口必须使用此原生核验再计入旧风险；不能从客户端JSON信任，也不能由这个返回值获得准入Receipt。
 RED：新入口artifact不存在；GREEN：保留原库事务内原生DDL/Owner/search_path/ACL/恶意caller早拒及rollback复核、相邻专项。完整真签名集合的原生正向及持锁期限竞争须另在新test-owned fixture安装原证书artifact后验收，未执行不宣称通过。测试artifact中函数编译不能代替调用签名验证。
+
+## AOS-001722 完整原生证书接线验收
+新隔离库aos_test_f675cc1af2ea_ti4_test实际原Source/两独立申请与父预算、预发布test Root、4条真实签名和7证书负门，原Source整体相邻/cleanup共1PASS135.30秒8warnings；独立只读回读函数body/Issuer闭权限/物理Owner无VERIFY/caller aborted/两hold零残留。r1-r6全部保留，r6局部矩阵通过但完整相邻RED明确不算整体GREEN。R7去掉1720已完成来源负门重复，没有删证书矩阵或Source相邻、没有放宽审批/身份/Root deadline；只修test fixture，不改产品。下一步仍为同完整Task的native可信保存/旧新未决risk账本、唯一Target Intent和Judge actual dependency及end-channel实际COMMIT，未交付整Task。
