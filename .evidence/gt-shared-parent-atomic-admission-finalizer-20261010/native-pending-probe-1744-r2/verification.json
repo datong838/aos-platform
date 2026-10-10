@@ -1,0 +1,39 @@
+{
+  "status": "NATIVE_PENDING_READER_CURRENT_EVENT_COUNTEREXAMPLE_VERIFIED",
+  "authority": "AOS-001744",
+  "schema": "test_owned_pending_d6cb603f3e404693a1c7c895f4e1a54e",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "cluster": "7694680278363095064",
+  "binary_sha256": "e81a85becf8785fdc39053b671bfee5d201c61fe755c81080ec27d078a1fb1cb",
+  "red_missing_function": true,
+  "baseline_pending": false,
+  "after_insert_pending": true,
+  "inside_executing_trigger_pending": true,
+  "after_exact_scoped_drain_pending": false,
+  "savepoint_rollback_restores_pending": true,
+  "xids": [
+    "59847",
+    "59849"
+  ],
+  "independent_states": [
+    "aborted",
+    "committed"
+  ],
+  "actual_commit_samples": [
+    {
+      "id": 2,
+      "phase": "later",
+      "pending": true
+    },
+    {
+      "id": 2,
+      "phase": "probe",
+      "pending": true
+    }
+  ],
+  "role_unchanged": true,
+  "original_business_tables_written": false,
+  "pending_queue_enumerated": false,
+  "full_admission": false,
+  "execution_allowed": false
+}

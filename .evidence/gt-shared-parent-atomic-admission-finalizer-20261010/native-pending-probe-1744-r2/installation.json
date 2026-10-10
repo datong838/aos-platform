@@ -1,0 +1,7 @@
+{
+  "schema": "test_owned_pending_d6cb603f3e404693a1c7c895f4e1a54e",
+  "library": "/tmp/aos_pending_d6cb603f3e404693a1c7c895f4e1a54e.so",
+  "binary_sha256": "e81a85becf8785fdc39053b671bfee5d201c61fe755c81080ec27d078a1fb1cb",
+  "committed": true,
+  "public_runtime_execute": false
+}

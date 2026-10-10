@@ -1,0 +1,10 @@
+{
+  "schema": "test_owned_pending_d6cb603f3e404693a1c7c895f4e1a54e",
+  "library": "/tmp/aos_pending_d6cb603f3e404693a1c7c895f4e1a54e.so",
+  "artifact_container": "aos-pending-artifact-d6cb603f3e404693a1c7c895f4e1a54e",
+  "image": "sha256:c23d1d440e754839a8827acfdce624f3e05ab053aa5d895f217e26d6b7b390cf",
+  "cluster": "7694680278363095064",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "red_missing_native_function": true,
+  "original_tables_written": false
+}

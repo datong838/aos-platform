@@ -1,0 +1,8 @@
+{
+  "status": "KNOWN_DDL_SYNTAX_ERROR_ROLLED_BACK",
+  "schema_absent": true,
+  "no_install_commit": true,
+  "existing_library_copy_known": true,
+  "error": "DDL AS requires SQL literal; bind parameter $1 rejected",
+  "no_unknown_replay": true
+}
