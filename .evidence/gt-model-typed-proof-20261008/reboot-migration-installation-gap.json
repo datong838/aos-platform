@@ -1,0 +1,18 @@
+{
+  "migration": "a0v_158",
+  "sha256": "1422a7c1d8bc2c61d89e8def855e1a68d2db41e97352753616fe4233025c1758",
+  "installed_calls": [
+    "install_closed_storage",
+    "install_closed_issuer_history",
+    "install_closed_certificate_epochs"
+  ],
+  "test_explicit_only_not_migration_installed": [
+    "install_closed_model_identity_authority",
+    "runtime_executor_fact_statements",
+    "runtime_target_fact_statements",
+    "target_origin_statements"
+  ],
+  "identity_runtime_deployment_complete": false,
+  "native_34_cannot_prove_production_installation": true,
+  "next_requirement": "review all original Task2/3/4 source and scope; publish exact inert migration graph; register further deployment integration separately before claiming runtime coverage"
+}

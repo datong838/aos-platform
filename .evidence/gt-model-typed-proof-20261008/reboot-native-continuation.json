@@ -1,0 +1,208 @@
+{
+  "at": "2026-10-10T06:11:57.602135+00:00",
+  "authority": "AOS-001701",
+  "state": "FULL_NATIVE_COLLECTION_AND_READBACK_PASS",
+  "known_prior_hash_native_pass": 28,
+  "known_corrected_global_withdrawal_pass": 1,
+  "all_current_hash_34_passed": true,
+  "active_collection": "reboot-native-r6",
+  "tool_session": 4991,
+  "independent_audit_after_success": "reboot-native-audit.py",
+  "formal_database_version": "a0v_157",
+  "formal_database_writes": 0,
+  "api_started": false,
+  "execution_allowed": false,
+  "full_task_delivery": false,
+  "remaining": [
+    "r6 exact34 and independent readback",
+    "published migration dependency review",
+    "second consistent backup full restore and rehearsal",
+    "formal maintenance and signed API startup gates"
+  ],
+  "current_hash_known_terminals": [
+    {
+      "index": 1,
+      "exit": 0,
+      "database": "aos_test_436c8915d253_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_private_storage_native_boundary",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "exit": 0,
+      "database": "aos_test_ea94e0c05436_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_issuer_history_has_independent_closed_owner_and_native_boundaries",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "exit": 0,
+      "database": "aos_test_f2a63f3ce381_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_persisted_model_certificate_bytes_signature_and_current_epochs",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "exit": 0,
+      "database": "aos_test_b9526ab82707_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_certificate_epoch_real_commit_and_two_withdrawal_orders",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "exit": 0,
+      "database": "aos_test_4f55d1308e4b_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_issuer_epoch_real_commit_and_two_withdrawal_orders",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "exit": 0,
+      "database": "aos_test_a0eecf0c86ee_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_persisted_plan_reader_requires_exact_owner_snapshot",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "exit": 0,
+      "database": "aos_test_eec5599e6aa0_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_persisted_model_target_judge_case_bytes_and_current_certificates",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "exit": 0,
+      "database": "aos_test_c4eed2dc7145_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_persisted_model_case_global_identity_currentness",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "exit": 0,
+      "database": "aos_test_0c6182466caf_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[target-case]",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "exit": 0,
+      "database": "aos_test_f742bc3bbd78_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[target-certificate]",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "exit": 0,
+      "database": "aos_test_d844e50ae966_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[target-registration]",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "exit": 0,
+      "database": "aos_test_4e69ae56660f_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[target-executor-set]",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "exit": 0,
+      "database": "aos_test_cb3a9dda671d_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[target-runtime-executor-set]",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 14,
+      "exit": 0,
+      "database": "aos_test_b45b24dbc706_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[judge-case]",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "index": 15,
+      "exit": 0,
+      "database": "aos_test_1c2e7ad8bcc3_ti4_test",
+      "results": [
+        {
+          "nodeid": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[judge-certificate]",
+          "phase": "call",
+          "outcome": "passed"
+        }
+      ]
+    }
+  ],
+  "publication_dependency_audit": "reboot-publication-dependency-audit.json",
+  "next_action": "renew original Judge Task then investigate fresh exact signed source/budget fixture; no whole Task Delivery",
+  "collection_process_exit": 0,
+  "independent_audit": "reboot-native-independent-audit.json"
+}

@@ -1,0 +1,122 @@
+{
+  "head": "b3590e8b9832f8f143e457876da94ef5f9560a0f",
+  "scope": "static selected Model/Judge import closure only",
+  "records": [
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_execution_authority.py",
+      "sha256": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27",
+      "exists_in_head": false,
+      "model_eval_dependencies": []
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_execution_reader.py",
+      "sha256": "1b61a8d0df28743065c3facff18363c0847d68e3b64b7e68657052b90b2e69fa",
+      "exists_in_head": false,
+      "model_eval_dependencies": [
+        "aip_model_eval_authorization",
+        "aip_model_eval_budget_reservation",
+        "aip_model_eval_execution_authority",
+        "aip_model_eval_execution_contracts",
+        "aip_model_eval_judge_budget"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_execution_contracts.py",
+      "sha256": "345fd26a913066caf5a3cc9bc91b84ca3b2e162b0d659b9a2dce8babe12c75b0",
+      "exists_in_head": true,
+      "model_eval_dependencies": [
+        "aip_model_eval_authorization",
+        "aip_model_eval_execution_contracts",
+        "aip_model_eval_judge_authorization"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_judge_budget.py",
+      "sha256": "3c8e6dbe0b15f3aebbb720aaca1e3d754b86c60c8f63a0bce660b115b9b5a84f",
+      "exists_in_head": false,
+      "model_eval_dependencies": [
+        "aip_model_eval_execution_contracts",
+        "aip_model_eval_judge_action"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py",
+      "sha256": "f75a1360ee27eeda13d3173fa765b1a9e087745aac9ac62b1a3823d95ee091cb",
+      "exists_in_head": false,
+      "model_eval_dependencies": []
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_budget_reservation_store.py",
+      "sha256": "07df0cf6575350fd96374a698325a581800319ed16c65bcc9fcafea99b3bf9d9",
+      "exists_in_head": true,
+      "model_eval_dependencies": []
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_authorization.py",
+      "sha256": "0d5e743a54d2b4365fc39a0751f9ad9c6740b3cd8960f6389bbf05cbee560bf2",
+      "exists_in_head": true,
+      "model_eval_dependencies": []
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_budget_reservation.py",
+      "sha256": "70ebb534ac5f21e968470b6ab797184ff7ea59ab35822a9482d3574c8df1cbc2",
+      "exists_in_head": true,
+      "model_eval_dependencies": [
+        "aip_model_eval_action",
+        "aip_model_eval_authorization"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_judge_authorization.py",
+      "sha256": "8361b20c58b8c92371aa6902a2c8fa8b66a94c59cfe316bbe43e2e673e4551c2",
+      "exists_in_head": false,
+      "model_eval_dependencies": []
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_judge_action.py",
+      "sha256": "5bae612a05961102b815fca5a2a41e96f5d97194219be0a656d502187dfe7ed8",
+      "exists_in_head": false,
+      "model_eval_dependencies": [
+        "aip_model_eval_action",
+        "aip_model_eval_judge_request_store"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_action.py",
+      "sha256": "8f4be9a912e1ebda52dcad9d22b601ce3c4f6cd4f1a5913e857edf536a843a11",
+      "exists_in_head": true,
+      "model_eval_dependencies": [
+        "aip_model_eval_authorization",
+        "aip_model_eval_request_store"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_judge_request_store.py",
+      "sha256": "0d1118809494b9fa537a1445f2f68fb584c653e84b37e465146e23e6d499ae6e",
+      "exists_in_head": false,
+      "model_eval_dependencies": [
+        "aip_model_eval_action",
+        "aip_model_eval_judge_authorization"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_request_store.py",
+      "sha256": "f18777ae5cd22b8de3db52d5daa3679fe06ee6ae8888e846fd21ec4768187830",
+      "exists_in_head": true,
+      "model_eval_dependencies": [
+        "aip_model_eval_authorization"
+      ]
+    }
+  ],
+  "unpublished_files": [
+    "services/aos-api/aos_api/aip_model_eval_execution_authority.py",
+    "services/aos-api/aos_api/aip_model_eval_execution_reader.py",
+    "services/aos-api/aos_api/aip_model_eval_judge_budget.py",
+    "services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py",
+    "services/aos-api/aos_api/aip_model_eval_judge_authorization.py",
+    "services/aos-api/aos_api/aip_model_eval_judge_action.py",
+    "services/aos-api/aos_api/aip_model_eval_judge_request_store.py"
+  ],
+  "full_package_publication_proven": false,
+  "current_database_migration_allowed": false
+}

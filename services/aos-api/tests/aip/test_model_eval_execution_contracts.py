@@ -11,7 +11,7 @@ from aos_api.aip_model_eval_authorization import ModelEvalRequestCreate
 from aos_api.aip_model_runtime_store import canonical_hash
 
 
-def _certificate_input():
+def _certificate_input(*, valid_from=None, valid_until=None):
     import base64
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
     from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
@@ -29,16 +29,16 @@ def _certificate_input():
         leg=plan.cases[0].target.model_dump(mode='json', by_alias=True),
         issuerId='isolated-issuer', issuerKeyId='isolated-issuer-key',
         publicKeyBase64=base64.b64encode(pub).decode(),
-        validFrom=datetime(2026,10,8,tzinfo=timezone.utc),
-        validUntil=datetime(2026,10,9,tzinfo=timezone.utc))
+        validFrom=valid_from if valid_from is not None else datetime(2026,10,8,tzinfo=timezone.utc),
+        validUntil=valid_until if valid_until is not None else datetime(2026,10,9,tzinfo=timezone.utc))
     return module, plan, cert, key
 
 
-def _issuer_signature_inputs():
+def _issuer_signature_inputs(*, valid_from=None, valid_until=None):
     import base64
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
     from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
-    module, plan, cert, _ = _certificate_input()
+    module, plan, cert, _ = _certificate_input(valid_from=valid_from, valid_until=valid_until)
     issuer = Ed25519PrivateKey.generate()
     root = dict(schemaVersion='aos.model-eval-issuer-verification-input/v1',
         purpose='model-eval-execution', tenant=cert['tenant'],
@@ -422,7 +422,7 @@ def test_signed_certificate_envelope_rejects_noncanonical_or_unchecked_input(cha
     with pytest.raises(ValueError): ModelEvalSignedCertificateEnvelope.model_validate(body)
 
 
-def _signed_model_case_fixture():
+def _signed_model_case_fixture(*, valid_from=None, valid_until=None):
     import base64
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
     from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
@@ -433,17 +433,18 @@ def _signed_model_case_fixture():
     body = original.model_dump(mode='json', by_alias=True)
     for purpose in keys: body['cases'][0][purpose]['identityKeyHash'] = hashlib.sha256(public(keys[purpose])).hexdigest()
     plan = module.ModelEvalExecutionManifest.model_validate(body)
-    start = datetime(2026, 10, 8, tzinfo=timezone.utc)
+    start = valid_from if valid_from is not None else datetime(2026, 10, 8, tzinfo=timezone.utc)
+    end = valid_until if valid_until is not None else start+timedelta(days=1)
     root = dict(schemaVersion='aos.model-eval-issuer-verification-input/v1', purpose='model-eval-execution',
         tenant=body['tenant'], issuerId='case-issuer', issuerKeyId='case-key',
-        publicKeyBase64=base64.b64encode(public(issuer)).decode(), validFrom=start, validUntil=start+timedelta(days=1), revokedAt=None)
+        publicKeyBase64=base64.b64encode(public(issuer)).decode(), validFrom=start, validUntil=end, revokedAt=None)
     certs, envelopes, claims, raw = {}, {}, {}, {}
     for purpose in ('target', 'judge'):
         cert = dict(schemaVersion='aos.model-eval-executor-certificate-signing-input/v1', tenant=body['tenant'],
             executionId=plan.execution_id, manifestHash=canonical_hash(plan.model_dump(mode='json', by_alias=True)),
             requestHash=plan.request_hash, caseId='case-1', purpose=purpose, candidateRef=plan.request.target_ref,
             leg=getattr(plan.cases[0], purpose), issuerId='case-issuer', issuerKeyId='case-key',
-            publicKeyBase64=base64.b64encode(public(keys[purpose])).decode(), validFrom=start, validUntil=start+timedelta(days=1))
+            publicKeyBase64=base64.b64encode(public(keys[purpose])).decode(), validFrom=start, validUntil=end)
         certs[purpose] = module.ModelEvalSignedCertificateEnvelope.model_validate(dict(
             schemaVersion='aos.model-eval-signed-certificate-envelope/v1',certificate=cert,
             signatureBase64=base64.b64encode(issuer.sign(module.canonical_model_certificate_signing_bytes(plan, cert))).decode()))

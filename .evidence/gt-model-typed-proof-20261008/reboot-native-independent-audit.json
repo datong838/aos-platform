@@ -1,0 +1,319 @@
+{
+  "at": "2026-10-10T06:19:36.261138+00:00",
+  "head": "b3590e8b9832f8f143e457876da94ef5f9560a0f",
+  "all_34_known_passed": true,
+  "retained_distinct_databases": 34,
+  "records": [
+    {
+      "index": 1,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_private_storage_native_boundary",
+      "child": "reboot-native-r6-n01",
+      "database": "aos_test_436c8915d253_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "f6e97462704499edbcfd38bbcc0641b1a95c9beafe62bf319252213a73bf0c4f"
+    },
+    {
+      "index": 2,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_issuer_history_has_independent_closed_owner_and_native_boundaries",
+      "child": "reboot-native-r6-n02",
+      "database": "aos_test_ea94e0c05436_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "e0a92b2c21ff7a4a7cc9e51ba2e1e10434fc886a198b00f8923a59cbd8e181fc"
+    },
+    {
+      "index": 3,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_persisted_model_certificate_bytes_signature_and_current_epochs",
+      "child": "reboot-native-r6-n03",
+      "database": "aos_test_f2a63f3ce381_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "30d5f4c09049c450cce2453291fb9fde34ecab342382ad4361fb5f7b83c816cc"
+    },
+    {
+      "index": 4,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_certificate_epoch_real_commit_and_two_withdrawal_orders",
+      "child": "reboot-native-r6-n04",
+      "database": "aos_test_b9526ab82707_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "bae4472dbb62e4e855b83a9d54cb050e4c9d1b95a5b94342fe8672dbeec22107"
+    },
+    {
+      "index": 5,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_issuer_epoch_real_commit_and_two_withdrawal_orders",
+      "child": "reboot-native-r6-n05",
+      "database": "aos_test_4f55d1308e4b_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "2b1e973780429abf95a35c2b207c04f840198966cc60296a3ccb171ead45421f"
+    },
+    {
+      "index": 6,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_persisted_plan_reader_requires_exact_owner_snapshot",
+      "child": "reboot-native-r6-n06",
+      "database": "aos_test_a0eecf0c86ee_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "e0ef3929c75524c2c550147049b883871d6fc9b3d7220dee20cfd8826777ee5c"
+    },
+    {
+      "index": 7,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_persisted_model_target_judge_case_bytes_and_current_certificates",
+      "child": "reboot-native-r6-n07",
+      "database": "aos_test_eec5599e6aa0_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "b7a1f7b8c5fd3b2bf04cdecd1a76770c262456641ac5142e723383797511212e"
+    },
+    {
+      "index": 8,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_persisted_model_case_global_identity_currentness",
+      "child": "reboot-native-r6-n08",
+      "database": "aos_test_c4eed2dc7145_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "f298b8c75635fe478c3bea3a2b1247e52fafecd9d9695864a6665708c562f22e"
+    },
+    {
+      "index": 9,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[target-case]",
+      "child": "reboot-native-r6-n09",
+      "database": "aos_test_0c6182466caf_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "94b56aa87572ee0b71a8a7e5cdedb93c63d99ee980dc3990623a43488faa2c06"
+    },
+    {
+      "index": 10,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[target-certificate]",
+      "child": "reboot-native-r6-n10",
+      "database": "aos_test_f742bc3bbd78_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "957b477197aa4e3e3bcaebb06bb2cebeb32dfad7af2ee032b6c817553b90c253"
+    },
+    {
+      "index": 11,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[target-registration]",
+      "child": "reboot-native-r6-n11",
+      "database": "aos_test_d844e50ae966_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "a5311d21c54f88f0dea01db337789ace766a031aa1710111cb10988248ec77a6"
+    },
+    {
+      "index": 12,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[target-executor-set]",
+      "child": "reboot-native-r6-n12",
+      "database": "aos_test_4e69ae56660f_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "0f7502800b227743fc5dcb0d7c909744b047460eaa8f9616d1f4577620afbc61"
+    },
+    {
+      "index": 13,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[target-runtime-executor-set]",
+      "child": "reboot-native-r6-n13",
+      "database": "aos_test_cb3a9dda671d_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "03bb266b7682cb967b6dc0ba1378c8bd6df54f8721e01657d5918ec0d5dce7e0"
+    },
+    {
+      "index": 14,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[judge-case]",
+      "child": "reboot-native-r6-n14",
+      "database": "aos_test_b45b24dbc706_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "2d472466e0a59682dd728b8a6ece2fc8f1e002c0c3ef5a23085ad2a80c59c289"
+    },
+    {
+      "index": 15,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[judge-certificate]",
+      "child": "reboot-native-r6-n15",
+      "database": "aos_test_1c2e7ad8bcc3_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "d232f4d5cbd8aee31bd0720e76ad7cff94a212cba0b9acc71e407464a412c984"
+    },
+    {
+      "index": 16,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[judge-registration]",
+      "child": "reboot-native-r6-n16",
+      "database": "aos_test_70315dea967c_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "fb308e41c415eb1b4b7d043572ca62e969e0b40005dae7da848ce869c9bebb99"
+    },
+    {
+      "index": 17,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[judge-executor-set]",
+      "child": "reboot-native-r6-n17",
+      "database": "aos_test_9f8ccedbde0d_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "8424fbc0dbe1615467815d915462d7160e1fbd4a6520f4bffa43bd9a390b7101"
+    },
+    {
+      "index": 18,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_wait_rechecks_certificate_window[judge-runtime-executor-set]",
+      "child": "reboot-native-r6-n18",
+      "database": "aos_test_d05ba827e841_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "3dbaa4ce190dbbfdbb5dc56574c23fc4e07475a3a4663e713368b386b5e52ba8"
+    },
+    {
+      "index": 19,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_runtime_target_result_identity_wait_rechecks_window",
+      "child": "reboot-native-r6-n19",
+      "database": "aos_test_c64b83d5dae6_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "d5c6301251d6030c49dbcc7bd29241ec20ee34e777be970ea9229be278a5e009"
+    },
+    {
+      "index": 20,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_runtime_judge_input_identity_wait_rechecks_window",
+      "child": "reboot-native-r6-n20",
+      "database": "aos_test_fb4ed4bf4409_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "ef78b9a057132931ae1159571f04ded2f07fca7ee632c3a86be484fc5ff2c5fb"
+    },
+    {
+      "index": 21,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_target_result_identity_wait_rechecks_window",
+      "child": "reboot-native-r6-n21",
+      "database": "aos_test_74536206d192_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "106bda1cdd7429c28128a4f540e97f123cdeba7deab5ecd8fe2f5851e4af9c25"
+    },
+    {
+      "index": 22,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_target_result_before_judge_native",
+      "child": "reboot-native-r6-n22",
+      "database": "aos_test_ac3ca6ea16b4_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "04281749b8083de94a90fdfc9c91e8bc16fa80dc8a98d1bc9d8b75675264faa7"
+    },
+    {
+      "index": 23,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_multi_case_parent_plan_persistence",
+      "child": "reboot-native-r6-n23",
+      "database": "aos_test_10b5a3b15445_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "3bb1b380a5cb2138c9f4f47d56ef1f09946a21c939d38e6c03c8512a9561c9cc"
+    },
+    {
+      "index": 24,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_parent_hold_reader_uses_original_committed_budget",
+      "child": "reboot-native-r6-n24",
+      "database": "aos_test_0ffb27bb9ed3_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "049838dc3fada4a225fbb32e5c26950b0dd2232e6530d1c91dd86cc30bc97c9f"
+    },
+    {
+      "index": 25,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_parent_reader_follows_original_bucket_lock_order[native]",
+      "child": "reboot-native-r6-n25",
+      "database": "aos_test_ab7738e3c3d3_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "16cc2ab2bc8c64537fe527571e2c4799b7036fe0efd2b5cd5c4cb8d568608ec2"
+    },
+    {
+      "index": 26,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_parent_reader_follows_original_bucket_lock_order[task-first]",
+      "child": "reboot-native-r6-n26",
+      "database": "aos_test_8137ac9e0e67_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "6086d06d55f8061aa7ec8b381d21118a7f9900cec3835b67d054f861a8101acd"
+    },
+    {
+      "index": 27,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_parent_currentness_is_not_a_joint_commit_guard[bucket-wait]",
+      "child": "reboot-native-r6-n27",
+      "database": "aos_test_d0377ca014d3_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "db5ed245973577e499b52237590cff167eff3e3888a695b7bacd7244f75e161e"
+    },
+    {
+      "index": 28,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_parent_currentness_is_not_a_joint_commit_guard[after-check-before-commit]",
+      "child": "reboot-native-r6-n28",
+      "database": "aos_test_7fb5fc521e9a_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "9414a2116980ff8a1d3880b639baeac223f60b80970816bbc706ad1d745c910b"
+    },
+    {
+      "index": 29,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_model_identity_binding_global_withdrawal_native",
+      "child": "reboot-native-r6-n29",
+      "database": "aos_test_be2ce373fae1_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "5e643728d354d5c02659997328cd1fcf67a0e47627add865fee7d5084c0faf59"
+    },
+    {
+      "index": 30,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_persisted_model_whole_case_set_current_identity",
+      "child": "reboot-native-r6-n30",
+      "database": "aos_test_e78aa0be2c79_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "d69fa8727d8376b43ad2e32eaf7ced561d9122e9a14e49ee9e441de042ee7c86"
+    },
+    {
+      "index": 31,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_runtime_executor_identity_withdrawal_native[target-reader-first]",
+      "child": "reboot-native-r6-n31",
+      "database": "aos_test_3133cf14b504_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "702ebbfe25eeaabf51c240f29d07dec9fbfe86dfb1b3762c9db66f078952e4b1"
+    },
+    {
+      "index": 32,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_runtime_executor_identity_withdrawal_native[target-writer-first]",
+      "child": "reboot-native-r6-n32",
+      "database": "aos_test_3b39857a9b63_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "c44e0168922979f2b17ec01d94bc5d8615513b24d78eea3ce69c8f28d84a6a1c"
+    },
+    {
+      "index": 33,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_runtime_executor_identity_withdrawal_native[judge-reader-first]",
+      "child": "reboot-native-r6-n33",
+      "database": "aos_test_9a532c8491f6_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "0a93d5a95222145b82eadbb3129910d51a247bcb1c7f48a179f924cc57eb2a6e"
+    },
+    {
+      "index": 34,
+      "node": "tests/aip/test_model_eval_execution_authority_pg.py::test_runtime_executor_identity_withdrawal_native[judge-writer-first]",
+      "child": "reboot-native-r6-n34",
+      "database": "aos_test_aea8bfa39daa_ti4_test",
+      "cluster": "7694913788751646744",
+      "version": "a0v_159",
+      "terminal_sha256": "06a7895d0bbcf544d59de2eb5c49e1a4cb84888c6e1376d61bf79af87563bdb4"
+    }
+  ],
+  "original_resources_unchanged": true,
+  "formal_database_writes": 0,
+  "root_trust_proven": false,
+  "execution_allowed": false,
+  "full_task_delivery": false
+}

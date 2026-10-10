@@ -1,0 +1,14 @@
+{
+  "context": "desktop-linux",
+  "name": "aos-model-native-shm-20261010",
+  "container_id": "64350ecc88aa446cc0a5694a3398155f4b123bbe6633d5ab24b84a46fc0de849",
+  "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+  "cluster": "7694913788751646744",
+  "port": 5442,
+  "volume": "aos-model-native-shm-20261010-data",
+  "passfile": "/Users/ddt/.aos-lab-secrets/aos-model-native-shm-20261010/pgpass",
+  "shm_bytes": 1073741824,
+  "memory_bytes": 2147483648,
+  "original_resources_unchanged": true,
+  "task": "gt-model-typed-proof-20261008"
+}
