@@ -1210,6 +1210,171 @@ def shared_parent_live_physical_fact_statements():
 
 STAGE_PARENT_RISK = 'public.stage_shared_parent_complete_risk(uuid,text,xid8,integer)'
 
+STAGE_COMPLETE_RECEIPT = 'public.stage_shared_parent_complete_receipt(uuid,text,xid8,integer)'
+READ_RECEIPT_ORIGIN = 'public.read_shared_parent_receipt_origin(uuid,text,xid8,integer)'
+
+
+def shared_parent_receipt_origin_statements():
+    """Expose only the original verified packet hash, retaining every check."""
+    signature = READ_RETAINED.split('(')[0]
+    definitions = [sql for sql in shared_parent_end_authority_statements()
+                   if sql.startswith('CREATE FUNCTION ' + signature + '(')]
+    if len(definitions) != 1:
+        raise ValueError('SHARED_ADMISSION_RECEIPT_ORIGIN_DEFINITION_REQUIRED')
+    body = definitions[0]
+    boundary = "RETURN verified||jsonb_build_object('authorityMaterialHash',material.content_hash);"
+    if body.count(boundary) != 1:
+        raise ValueError('SHARED_ADMISSION_RECEIPT_ORIGIN_RETURN_BOUNDARY_REQUIRED')
+    body = body.replace(boundary,
+        "RETURN verified||jsonb_build_object('authorityMaterialHash',material.content_hash,"
+        "'sourcePacketHash',body->>'sourcePacketHash');", 1)
+    if re.search(r'\b(?:INSERT|UPDATE|DELETE|MERGE|TRUNCATE)\b', body, re.I):
+        raise ValueError('SHARED_ADMISSION_RECEIPT_ORIGIN_DIRECT_WRITER_FORBIDDEN')
+    body = body.replace('CREATE FUNCTION ' + signature + '(',
+                        'CREATE FUNCTION ' + READ_RECEIPT_ORIGIN.split('(')[0] + '(', 1)
+    return (body,
+            f'ALTER FUNCTION {READ_RECEIPT_ORIGIN} OWNER TO {_certificate.ISSUER_OWNER}',
+            f'REVOKE ALL ON FUNCTION {READ_RECEIPT_ORIGIN} FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer',
+            f'GRANT EXECUTE ON FUNCTION {READ_RECEIPT_ORIGIN} TO {OWNER}')
+
+
+def shared_parent_complete_receipt_statements():
+    """Derive all eight node bindings before drain; never admit execution.
+
+    The current live account version is derived natively, not taken from the
+    historical window. The immutable preparation retains risk on unknown
+    outcomes and still requires the complete native end/COMMIT protocol.
+    """
+    s = PHYSICAL_SCHEMA
+    table = s + '.complete_receipt'
+    denied = 'PUBLIC,aos_runtime,aos_provider_capacity_issuer'
+    nodes = (('initialTargetObligation', 'initial_target_obligation'),
+             ('targetIntent', 'target_intent'), ('judgeDependency', 'judge_dependency'),
+             ('initialCallAuthority', 'initial_call_authority'),
+             ('initialWindowObligation', 'initial_window_obligation'),
+             ('completeParentRisk', 'complete_parent_risk'))
+    scan = '\n              UNION ALL '.join(
+        f"SELECT '{name}' AS name,body,content_hash,caller_xid,caller_pid,org_id,project_id "
+        f"FROM {s}.{relation} WHERE plan_id=NEW.plan_id" for name, relation in nodes)
+    return (
+        *shared_parent_receipt_origin_statements(),
+        f'''CREATE TABLE {table}(
+          plan_id uuid PRIMARY KEY REFERENCES {s}.initial_target_obligation(plan_id),
+          org_id text NOT NULL CHECK(org_id='org-org'),project_id text NOT NULL CHECK(project_id='dev-project'),
+          material_hash text NOT NULL CHECK(material_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          physical_account_id uuid NOT NULL,body jsonb NOT NULL,
+          content_hash text NOT NULL CHECK(content_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          caller_xid xid8 NOT NULL,caller_pid integer NOT NULL CHECK(caller_pid>0))''',
+        f'ALTER TABLE {table} OWNER TO {OWNER}',
+        f'REVOKE ALL ON {table} FROM {denied}',
+        f'ALTER TABLE {table} ENABLE ROW LEVEL SECURITY',
+        f'ALTER TABLE {table} FORCE ROW LEVEL SECURITY',
+        f'''CREATE POLICY exact_scope ON {table} TO {OWNER}
+          USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+          WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))''',
+        f'''CREATE FUNCTION {s}.bind_complete_receipt() RETURNS trigger LANGUAGE plpgsql
+          SET search_path=pg_catalog AS $receipt_binding$
+          DECLARE obligation {s}.initial_target_obligation%ROWTYPE;
+            target_row {s}.target_intent%ROWTYPE;judge_row {s}.judge_dependency%ROWTYPE;
+            material {s}.initial_call_authority%ROWTYPE;window_row {s}.initial_window_obligation%ROWTYPE;
+            risk_row {s}.complete_parent_risk%ROWTYPE;node record;count_nodes integer:=0;
+            hashes jsonb:='{{}}'::jsonb;pending jsonb;facts jsonb;intents jsonb;live jsonb;
+          BEGIN
+            IF {_end_authority_native_context_sql()}
+              OR NEW.caller_xid IS DISTINCT FROM pg_current_xact_id()
+              OR NEW.caller_pid IS DISTINCT FROM pg_backend_pid() THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RECEIPT_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+            SELECT * INTO obligation FROM {s}.initial_target_obligation WHERE plan_id=NEW.plan_id FOR SHARE;
+            SELECT * INTO target_row FROM {s}.target_intent WHERE plan_id=NEW.plan_id FOR SHARE;
+            SELECT * INTO judge_row FROM {s}.judge_dependency WHERE plan_id=NEW.plan_id FOR SHARE;
+            SELECT * INTO material FROM {s}.initial_call_authority WHERE plan_id=NEW.plan_id FOR SHARE;
+            SELECT * INTO window_row FROM {s}.initial_window_obligation WHERE plan_id=NEW.plan_id FOR SHARE;
+            SELECT * INTO risk_row FROM {s}.complete_parent_risk WHERE plan_id=NEW.plan_id FOR SHARE;
+            FOR node IN {scan} LOOP
+              IF node.caller_xid IS DISTINCT FROM NEW.caller_xid OR node.caller_pid IS DISTINCT FROM NEW.caller_pid
+                OR node.org_id IS DISTINCT FROM NEW.org_id OR node.project_id IS DISTINCT FROM NEW.project_id
+                OR node.body->>'planId' IS DISTINCT FROM NEW.plan_id::text
+                OR node.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(
+                  public.canonical_asset_registry_jsonb(node.body),'UTF8')),'hex') THEN
+                RAISE EXCEPTION 'SHARED_ADMISSION_RECEIPT_NODE_BINDING_REQUIRED' USING ERRCODE='23514'; END IF;
+              hashes:=hashes||jsonb_build_object(node.name,node.content_hash);count_nodes:=count_nodes+1;
+            END LOOP;
+            IF count_nodes<>6 OR material.content_hash IS DISTINCT FROM NEW.material_hash
+              OR window_row.material_hash IS DISTINCT FROM material.content_hash
+              OR window_row.physical_account_id IS DISTINCT FROM obligation.physical_account_id
+              OR risk_row.physical_account_id IS DISTINCT FROM obligation.physical_account_id
+              OR risk_row.pending_hash IS DISTINCT FROM obligation.pending_hash
+              OR material.target_id IS DISTINCT FROM target_row.intent_id
+              OR material.target_hash IS DISTINCT FROM target_row.content_hash
+              OR material.judge_id IS DISTINCT FROM judge_row.intent_id
+              OR material.judge_hash IS DISTINCT FROM judge_row.content_hash THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RECEIPT_COMPLETE_NODES_REQUIRED' USING ERRCODE='23514'; END IF;
+            pending:={READ_RECEIPT_ORIGIN.split('(')[0]}(NEW.plan_id,obligation.pending_hash,NEW.caller_xid,NEW.caller_pid);
+            facts:=pending#>'{{immutable,origin,immutable,originalRisk,originalFacts}}';
+            IF pending->>'sourcePacketHash' IS DISTINCT FROM material.body->>'sourcePacketHash'
+              OR pending->>'sourcePacketHash' IS DISTINCT FROM 'sha256:'||encode(sha256(material.source_raw),'hex')
+              OR risk_row.body->'originalRisk' IS DISTINCT FROM pending#>'{{immutable,origin,immutable,originalRisk}}'
+              OR risk_row.body->>'originalRiskHash' IS DISTINCT FROM pending#>>'{{immutable,origin,immutable,originalRiskHash}}'
+              OR risk_row.body->>'authorityMaterialHash' IS DISTINCT FROM pending->>'authorityMaterialHash'
+              OR risk_row.target_hold::text IS DISTINCT FROM facts#>>'{{target,reservationId}}'
+              OR risk_row.judge_hold::text IS DISTINCT FROM facts#>>'{{judge,reservationId}}'
+              OR risk_row.target_request IS DISTINCT FROM facts#>>'{{target,requestId}}'
+              OR risk_row.judge_request IS DISTINCT FROM facts#>>'{{judge,requestId}}'
+              OR obligation.physical_account_id::text IS DISTINCT FROM facts#>>'{{target,physicalAccountId}}'
+              OR obligation.physical_account_id::text IS DISTINCT FROM facts#>>'{{judge,physicalAccountId}}' THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RECEIPT_ORIGINAL_RISK_REQUIRED' USING ERRCODE='23514'; END IF;
+            intents:={FINAL_CALL.split('(')[0]}(NEW.plan_id,material.content_hash,NEW.caller_xid,NEW.caller_pid);
+            IF intents->>'targetIntentHash' IS DISTINCT FROM target_row.content_hash
+              OR intents->>'judgeDependencyHash' IS DISTINCT FROM judge_row.content_hash
+              OR intents->>'initialCallAuthorityHash' IS DISTINCT FROM material.content_hash THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RECEIPT_CURRENT_INTENTS_REQUIRED' USING ERRCODE='23514'; END IF;
+            -- This original account update/capacity check occurs before native drain.
+            live:={READ_LIVE_PHYSICAL.split('(')[0]}(NEW.plan_id,window_row.content_hash,NEW.caller_xid,NEW.caller_pid);
+            hashes:=hashes||jsonb_build_object('pendingOrigin',pending->>'contentHash',
+              'endAuthority',pending->>'authorityMaterialHash');
+            NEW.physical_account_id:=obligation.physical_account_id;
+            NEW.body:=jsonb_build_object('schemaVersion','aos.shared-parent-complete-receipt-preparation/v1',
+              'planId',NEW.plan_id,'tenant',jsonb_build_object('orgId',NEW.org_id,'projectId',NEW.project_id),
+              'nodes',hashes,'originalRiskHash',risk_row.body->>'originalRiskHash',
+              'sourcePacketHash',material.body->>'sourcePacketHash','physicalFacts',live->'facts',
+              'physicalFactsHash',live->>'contentHash','callerLogin',session_user,
+              'callerXid',NEW.caller_xid::text,'callerPid',NEW.caller_pid,
+              'state','awaiting_complete_native_end','preparedAt',clock_timestamp(),
+              'windowExpiryReleasesRisk',false,'unknownCommitRetainsRisk',true,'executionAllowed',false);
+            NEW.content_hash:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(NEW.body),'UTF8')),'hex');
+            RETURN NEW;
+          END $receipt_binding$''',
+        f'ALTER FUNCTION {s}.bind_complete_receipt() OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {s}.bind_complete_receipt() FROM {denied}',
+        f'CREATE TRIGGER exact_complete_receipt BEFORE INSERT ON {table} FOR EACH ROW EXECUTE FUNCTION {s}.bind_complete_receipt()',
+        f'CREATE TRIGGER immutable_complete_receipt BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION {s}.immutable_obligation()',
+        f'CREATE TRIGGER no_truncate_complete_receipt BEFORE TRUNCATE ON {table} FOR EACH STATEMENT EXECUTE FUNCTION {s}.immutable_obligation()',
+        f'''CREATE CONSTRAINT TRIGGER require_complete_receipt_end AFTER INSERT ON {table}
+          DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION {s}.require_complete_obligation()''',
+        f'''CREATE FUNCTION {STAGE_COMPLETE_RECEIPT.split('(')[0]}(p_plan uuid,p_material_hash text,p_xid xid8,p_pid integer)
+          RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $receipt_stage$
+          DECLARE previous {table}%ROWTYPE;pending jsonb;
+          BEGIN
+            IF {_end_authority_native_context_sql()} OR p_xid IS DISTINCT FROM pg_current_xact_id()
+              OR p_pid IS DISTINCT FROM pg_backend_pid() THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RECEIPT_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+            SELECT * INTO previous FROM {table} WHERE plan_id=p_plan FOR SHARE;
+            IF FOUND THEN RAISE EXCEPTION 'SHARED_ADMISSION_RECEIPT_ALREADY_STAGED' USING ERRCODE='23514'; END IF;
+            INSERT INTO {table}(plan_id,org_id,project_id,material_hash,caller_xid,caller_pid)
+              VALUES(p_plan,'org-org','dev-project',p_material_hash,p_xid,p_pid) RETURNING * INTO previous;
+            -- Revalidate original signed authority after all insertion/uniqueness/FK waits.
+            pending:={READ_RECEIPT_ORIGIN.split('(')[0]}(p_plan,previous.body#>>'{{nodes,pendingOrigin}}',p_xid,p_pid);
+            IF pending->>'authorityMaterialHash' IS DISTINCT FROM previous.body#>>'{{nodes,endAuthority}}'
+              OR pending->>'sourcePacketHash' IS DISTINCT FROM previous.body->>'sourcePacketHash'
+              OR pending#>>'{{immutable,origin,immutable,originalRiskHash}}' IS DISTINCT FROM previous.body->>'originalRiskHash' THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RECEIPT_POSTWAIT_ORIGIN_CHANGED' USING ERRCODE='23514'; END IF;
+            RETURN jsonb_build_object('planId',p_plan,'immutable',previous.body,'contentHash',previous.content_hash,
+              'persisted',true,'executionAllowed',false,'state','awaiting_complete_native_end');
+          END $receipt_stage$''',
+        f'ALTER FUNCTION {STAGE_COMPLETE_RECEIPT} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {STAGE_COMPLETE_RECEIPT} FROM {denied}',
+    )
+
 
 def shared_parent_complete_parent_risk_statements():
     """Persist the complete original two-parent risk, without charging it again.

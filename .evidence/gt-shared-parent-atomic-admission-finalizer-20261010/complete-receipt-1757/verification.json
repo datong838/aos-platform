@@ -1,0 +1,65 @@
+{
+  "status": "EIGHT_NODE_RECEIPT_PREPARATION_IMPLEMENTED_CLOSED_NEGATIVE_COMPONENT_GREEN_FULL_NATIVE_POSITIVE_PENDING",
+  "authority": "AOS-001757",
+  "head": "18bbb044f439c5b878d660903fdfc8c6a8446316",
+  "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "files": {
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "b4cdfaed7029a9845e1b6f4a4c8ca5134440c6931b0f84ead642a9ca6bbcb8aa",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "b2c6e88ecd82e1343449fa35aa32dc959fd40d625bb512fc796d0b6a59a9ac75"
+  },
+  "initial_test_selection": {
+    "exit": 5,
+    "all_36_deselected": true,
+    "missing_generator_red_not_executed": true,
+    "test_renamed_to_avoid_native_filter_collision": true
+  },
+  "independent_rollback": {
+    "table_absent": true,
+    "entry_absent": true,
+    "test_proxy_absent": true,
+    "role_membership_restored": true,
+    "origin_delegate_absent": true
+  },
+  "review": {
+    "all8_hashes_server_derived": true,
+    "six_native_nodes_locked_and_canonical_hash_checked": true,
+    "issuer2_nodes_legal_fixed_delegate_only": true,
+    "current_live_version_not_historical_window_version": true,
+    "original_complete_risk_crosschecked": true,
+    "source_revalidation_after_insert_waits": true,
+    "preparation_not_final_commit_receipt": true,
+    "single_assignment_rejects_second_stage": true,
+    "immutable_deferred_gate_closed": true,
+    "old_generators_exact": true,
+    "no_default_installation": true,
+    "temporary_test_role_impersonation_only_not_real_source_positive": true,
+    "full_native_final_semantic_closure_not_proven": true,
+    "retained_source_packet_exact_byte_hash_crosslink": true,
+    "new_issuer_delegate_preserves_original_reader_checks": true,
+    "new_issuer_delegate_direct_writer_drift_rejected": true
+  },
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "goal_complete": false,
+  "remaining": [
+    "real original signed Source full8-node Receipt positive/tamper/unique waits",
+    "fixed postdrain current physical comparison against sealed Receipt",
+    "whole Source timing RED",
+    "native full event/RI/module/callback/end/actualCOMMIT/deadline/postcommit confirmation"
+  ],
+  "formal_database_touched": false,
+  "adjacent": {
+    "passed": 41,
+    "seconds": 1.77,
+    "warnings": 7,
+    "files": [
+      "test_shared_parent_atomic_admission_pg.py",
+      "test_shared_parent_certificate_prepare_pg.py"
+    ]
+  },
+  "targeted_before_review_correction": {
+    "passed": 2,
+    "seconds": 0.57,
+    "warnings": 7
+  }
+}

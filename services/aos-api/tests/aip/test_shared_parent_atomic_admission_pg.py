@@ -561,3 +561,96 @@ def test_native_final_call_comparison_closed_and_rollback(native):
     native.rollback()
     assert native.execute('SELECT to_regprocedure(%s)', (api.FINAL_CALL,)).fetchone()[0] is None
     native.rollback()
+
+
+def test_complete_receipt_fixed_nodes_and_original_generators():
+    from aos_api import aip_shared_parent_atomic_admission as api
+    statements = api.shared_parent_complete_receipt_statements()
+    sql = '\n'.join(statements)
+    for name in ('pendingOrigin', 'endAuthority', 'initialTargetObligation', 'targetIntent',
+                 'judgeDependency', 'initialCallAuthority', 'initialWindowObligation', 'completeParentRisk'):
+        assert "'" + name + "'" in sql
+    for callee in (api.READ_RECEIPT_ORIGIN, api.FINAL_CALL, api.READ_LIVE_PHYSICAL):
+        assert callee.split('(')[0] in sql
+    assert 'window_row.body->>\'accountVersion\'' not in sql
+    assert 'awaiting_complete_native_end' in sql
+    assert 'windowExpiryReleasesRisk' in sql and 'unknownCommitRetainsRisk' in sql
+    stage = next(x for x in statements if x.startswith('CREATE FUNCTION ' + api.STAGE_COMPLETE_RECEIPT.split('(')[0]))
+    assert stage.index('INSERT INTO') < stage.index(api.READ_RECEIPT_ORIGIN.split('(')[0] + '(')
+    assert 'SHARED_ADMISSION_RECEIPT_ALREADY_STAGED' in stage
+    assert 'p_body' not in stage and 'p_facts' not in stage
+    root = Path(__file__).resolve().parents[4]
+    frozen = json.loads((root / '.evidence/gt-shared-parent-atomic-admission-finalizer-20261010/complete-receipt-1757/beforeimage.json').read_text())
+    for name, digest in frozen.items():
+        assert hashlib.sha256('\n'.join(getattr(api, name)()).encode()).hexdigest() == digest, name
+
+
+def test_native_complete_receipt_closed_metadata_and_rollback(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    for generator in (api.shared_parent_admission_origin_statements, api.shared_parent_admission_certificate_set_statements,
+                      api.shared_parent_admission_storage_statements, api.shared_parent_pending_origin_lookup_statements,
+                      api.shared_parent_physical_obligation_statements, api.shared_parent_initial_intent_statements,
+                      api.shared_parent_end_authority_statements, api.shared_parent_initial_call_authority_statements,
+                      api.shared_parent_initial_window_obligation_statements, api.shared_parent_live_physical_fact_statements,
+                      api.shared_parent_complete_parent_risk_statements, api.shared_parent_final_intent_validation_statements,
+                      api.shared_parent_final_call_validation_statements, api.shared_parent_complete_receipt_statements):
+        for statement in generator(): native.execute(statement)
+    table = api.PHYSICAL_SCHEMA + '.complete_receipt'
+    assert native.execute('SELECT pg_get_userbyid(relowner),relrowsecurity,relforcerowsecurity FROM pg_class WHERE oid=%s::regclass', (table,)).fetchone() == (OWNER, True, True)
+    assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (api.STAGE_COMPLETE_RECEIPT,)).fetchone() == (OWNER, True, ['search_path=pg_catalog'])
+    assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (api.READ_RECEIPT_ORIGIN,)).fetchone() == (api._certificate.ISSUER_OWNER, True, ['search_path=pg_catalog'])
+    assert native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (OWNER, api.READ_RECEIPT_ORIGIN)).fetchone()[0]
+    for role in ('aos_runtime', 'aos_provider_capacity_issuer'):
+        assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (role, api.READ_RECEIPT_ORIGIN)).fetchone()[0]
+    for role in ('aos_runtime', 'aos_provider_capacity_issuer'):
+        assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (role, api.STAGE_COMPLETE_RECEIPT)).fetchone()[0]
+        for privilege in ('SELECT','INSERT','UPDATE','DELETE','TRUNCATE'):
+            assert not native.execute('SELECT has_table_privilege(%s,%s,%s)', (role, table, privilege)).fetchone()[0]
+    assert native.execute("SELECT tgdeferrable,tginitdeferred FROM pg_trigger WHERE tgrelid=%s::regclass AND tgname='require_complete_receipt_end'", (table,)).fetchone() == (True, True)
+    assert native.execute("SELECT count(*) FROM pg_constraint WHERE conrelid=%s::regclass AND contype='f'", (table,)).fetchone()[0] == 1
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_RECEIPT_NATIVE_CALLER_REQUIRED'):
+        with native.transaction(): native.execute('SELECT public.stage_shared_parent_complete_receipt(NULL,NULL,NULL,NULL)')
+    # Test-owned identity impersonation checks only early context/missing nodes,
+    # not an authenticated supplier Source positive. All grants roll back.
+    assert not native.execute("SELECT pg_has_role('aos_provider_capacity_occupation','aos_runtime','MEMBER')").fetchone()[0]
+    wrapper = 'public.test_owned_complete_receipt_probe()'
+    native.execute("CREATE FUNCTION " + wrapper + " RETURNS jsonb LANGUAGE SQL SECURITY DEFINER SET search_path=pg_catalog AS $$ SELECT public.stage_shared_parent_complete_receipt('11111111-1111-1111-1111-111111111111'::uuid,'sha256:'||repeat('0',64),pg_current_xact_id(),pg_backend_pid()) $$")
+    native.execute('ALTER FUNCTION ' + wrapper + ' OWNER TO ' + OWNER)
+    native.execute('REVOKE ALL ON FUNCTION ' + wrapper + ' FROM PUBLIC')
+    native.execute('GRANT EXECUTE ON FUNCTION ' + wrapper + ' TO aos_runtime')
+    native.execute('GRANT aos_runtime TO aos_provider_capacity_occupation')
+    native.execute('SET SESSION AUTHORIZATION aos_provider_capacity_occupation')
+    native.execute('SET LOCAL ROLE aos_runtime')
+    native.execute("SET LOCAL TimeZone='UTC'")
+    native.execute("SET LOCAL aos.project_id='dev-project'")
+    native.execute("SET LOCAL aos.org_id='dev-org'")
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_RECEIPT_NATIVE_CALLER_REQUIRED'):
+        with native.transaction(): native.execute('SELECT ' + wrapper)
+    native.execute("SET LOCAL aos.org_id='org-org'")
+    with pytest.raises(psycopg.errors.CheckViolation, match='SHARED_ADMISSION_RECEIPT_COMPLETE_NODES_REQUIRED'):
+        with native.transaction(): native.execute('SELECT ' + wrapper)
+    native.execute('RESET ROLE')
+    native.execute('RESET SESSION AUTHORIZATION')
+    assert native.execute('SELECT count(*) FROM ' + table).fetchone()[0] == 0
+    native.rollback()
+    assert native.execute('SELECT to_regclass(%s)', (table,)).fetchone()[0] is None
+    native.rollback()
+
+
+@pytest.mark.parametrize('drift', ['missing', 'return_boundary', 'writer'])
+def test_receipt_origin_delegate_rejects_original_drift(monkeypatch, drift):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    original = api.shared_parent_end_authority_statements
+    prefix = 'CREATE FUNCTION ' + api.READ_RETAINED.split('(')[0] + '('
+    def changed():
+        values = list(original())
+        for i, sql in enumerate(values):
+            if sql.startswith(prefix):
+                if drift == 'missing': values.pop(i)
+                elif drift == 'return_boundary': values[i] = sql.replace('RETURN verified||', 'RETURN changed||', 1)
+                else: values[i] = sql.replace('RETURN verified||', 'DELETE FROM extra_table; RETURN verified||', 1)
+                break
+        return tuple(values)
+    monkeypatch.setattr(api, 'shared_parent_end_authority_statements', changed)
+    with pytest.raises(ValueError, match='SHARED_ADMISSION_RECEIPT_ORIGIN_'):
+        api.shared_parent_receipt_origin_statements()
