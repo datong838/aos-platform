@@ -1,0 +1,2245 @@
+{
+  "authority": "AOS-001740",
+  "database": "aos_test_0b205ea00ce8_ti4_test",
+  "cluster": "7694680278363095064",
+  "transaction": "SERIALIZABLE READ ONLY",
+  "triggers": [
+    {
+      "relation": "aos_physical_capacity_occupation_private.account_guard",
+      "tgname": "RI_ConstraintTrigger_a_5163953",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.account_guard",
+      "tgname": "RI_ConstraintTrigger_a_5163954",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.account_guard",
+      "tgname": "RI_ConstraintTrigger_a_5164127",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.account_guard",
+      "tgname": "RI_ConstraintTrigger_a_5164128",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "tgname": "RI_ConstraintTrigger_a_5163803",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "tgname": "RI_ConstraintTrigger_a_5163804",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "tgname": "RI_ConstraintTrigger_c_5163783",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "tgname": "RI_ConstraintTrigger_c_5163784",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.parent_debit_guard",
+      "tgname": "RI_ConstraintTrigger_a_5163757",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.parent_debit_guard",
+      "tgname": "RI_ConstraintTrigger_a_5163758",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "tgname": "RI_ConstraintTrigger_c_5163805",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "tgname": "RI_ConstraintTrigger_c_5163806",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "tgname": "immutable_prepared_intent",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 27,
+      "tgenabled": "O",
+      "function": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "tgname": "no_truncate_prepared_intent",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 34,
+      "tgenabled": "O",
+      "function": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "tgname": "RI_ConstraintTrigger_a_5163781",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "tgname": "RI_ConstraintTrigger_a_5163782",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "tgname": "RI_ConstraintTrigger_c_5163759",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "tgname": "RI_ConstraintTrigger_c_5163760",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "tgname": "require_joint_finalization",
+      "tgisinternal": false,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgtype": 21,
+      "tgenabled": "O",
+      "function": "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "tgname": "RI_ConstraintTrigger_a_5163888",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "tgname": "RI_ConstraintTrigger_a_5163889",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "tgname": "immutable_plan_risk",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 27,
+      "tgenabled": "O",
+      "function": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "tgname": "no_truncate_plan_risk",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 34,
+      "tgenabled": "O",
+      "function": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "tgname": "no_unfinalized_plan_risk",
+      "tgisinternal": false,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "tgname": "RI_ConstraintTrigger_c_5163890",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "tgname": "RI_ConstraintTrigger_c_5163891",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "tgname": "immutable_shared_description",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 27,
+      "tgenabled": "O",
+      "function": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "tgname": "no_truncate_shared_description",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 34,
+      "tgenabled": "O",
+      "function": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "tgname": "no_unfinalized_shared_description",
+      "tgisinternal": false,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "tgname": "RI_ConstraintTrigger_c_5164049",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "tgname": "RI_ConstraintTrigger_c_5164050",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "tgname": "exact_authority",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 7,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_admission_private.check_end_authority()",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "a57899de91c03d3f69ea256d0f919122831d12aab2e2d4ee343defe1ce84127d"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "tgname": "immutable_authority",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 27,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_admission_private.immutable_pending_origin()",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "4d2cc498d78993f7a858184f0f9f7428ba075fbf19aa4d1cab011450d81ef5e8"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "tgname": "no_truncate_authority",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 34,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_admission_private.immutable_pending_origin()",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "4d2cc498d78993f7a858184f0f9f7428ba075fbf19aa4d1cab011450d81ef5e8"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "tgname": "require_complete_authority_end",
+      "tgisinternal": false,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_admission_private.require_pending_completion()",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "0cc61cc107ad38e73fccc0c3c58e895511edc21cef6bee6f4e8d13d46fc81fda"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.pending_origin",
+      "tgname": "RI_ConstraintTrigger_a_5164047",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.pending_origin",
+      "tgname": "RI_ConstraintTrigger_a_5164048",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.pending_origin",
+      "tgname": "bind_pending_origin",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 7,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_admission_private.check_pending_origin()",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "9b0778516fd81c2a0cef79384722f915b6140213e2ff99f9508b4938528e2bdf"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.pending_origin",
+      "tgname": "immutable_pending_origin",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 27,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_admission_private.immutable_pending_origin()",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "4d2cc498d78993f7a858184f0f9f7428ba075fbf19aa4d1cab011450d81ef5e8"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.pending_origin",
+      "tgname": "no_truncate_pending_origin",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 34,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_admission_private.immutable_pending_origin()",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "4d2cc498d78993f7a858184f0f9f7428ba075fbf19aa4d1cab011450d81ef5e8"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.pending_origin",
+      "tgname": "require_complete_admission_end",
+      "tgisinternal": false,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_admission_private.require_pending_completion()",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "0cc61cc107ad38e73fccc0c3c58e895511edc21cef6bee6f4e8d13d46fc81fda"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.complete_parent_risk",
+      "tgname": "exact_complete_risk",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 7,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.bind_complete_parent_risk()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "97334dc5e1b17a67d6011c697cfa5645017a7249ed9d226e9cd126f9bae84974"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.complete_parent_risk",
+      "tgname": "immutable_complete_risk",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 27,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.immutable_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.complete_parent_risk",
+      "tgname": "no_truncate_complete_risk",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 34,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.immutable_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.complete_parent_risk",
+      "tgname": "require_complete_risk_end",
+      "tgisinternal": false,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.require_complete_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "tgname": "RI_ConstraintTrigger_c_5164081",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "tgname": "RI_ConstraintTrigger_c_5164082",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "tgname": "RI_ConstraintTrigger_c_5164086",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "tgname": "RI_ConstraintTrigger_c_5164087",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "tgname": "RI_ConstraintTrigger_c_5164091",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "tgname": "RI_ConstraintTrigger_c_5164092",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "tgname": "exact_initial_call",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 7,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.bind_initial_call_authority()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "4e309d0efb1f8471e6e5073986e2eb1822cf5387b86451b3802e9fdafae03159"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "tgname": "immutable_initial_call",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 27,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.immutable_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "tgname": "no_truncate_initial_call",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 34,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.immutable_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "tgname": "require_complete_call_end",
+      "tgisinternal": false,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.require_complete_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_a_5163987",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_a_5163988",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_a_5164079",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_a_5164080",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_a_5164122",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_a_5164123",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_c_5163955",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_c_5163956",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "tgname": "immutable_obligation",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 27,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.immutable_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "tgname": "no_truncate_obligation",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 34,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.immutable_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "tgname": "require_complete_obligation_end",
+      "tgisinternal": false,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.require_complete_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "tgname": "RI_ConstraintTrigger_c_5164124",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "tgname": "RI_ConstraintTrigger_c_5164125",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "tgname": "RI_ConstraintTrigger_c_5164129",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "tgname": "RI_ConstraintTrigger_c_5164130",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "tgname": "bind_initial_window",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 7,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.bind_initial_window()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "0362383951aa0685249a77aa841e1e8402dde33e8421b6a717b36f4a09b68dbe"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "tgname": "immutable_initial_window",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 27,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.immutable_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "tgname": "no_truncate_initial_window",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 34,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.immutable_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "tgname": "require_complete_window_end",
+      "tgisinternal": false,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.require_complete_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "tgname": "RI_ConstraintTrigger_a_5164089",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "tgname": "RI_ConstraintTrigger_a_5164090",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "tgname": "RI_ConstraintTrigger_c_5164012",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "tgname": "RI_ConstraintTrigger_c_5164013",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "tgname": "RI_ConstraintTrigger_c_5164017",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "tgname": "RI_ConstraintTrigger_c_5164018",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "tgname": "immutable_intent",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 27,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.immutable_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "tgname": "no_truncate_intent",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 34,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.immutable_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "tgname": "require_complete_intent_end",
+      "tgisinternal": false,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.require_complete_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "tgname": "RI_ConstraintTrigger_a_5164010",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "tgname": "RI_ConstraintTrigger_a_5164011",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "tgname": "RI_ConstraintTrigger_a_5164015",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "tgname": "RI_ConstraintTrigger_a_5164016",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "tgname": "RI_ConstraintTrigger_a_5164084",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 9,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "tgname": "RI_ConstraintTrigger_a_5164085",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "tgname": "RI_ConstraintTrigger_c_5163989",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "tgname": "RI_ConstraintTrigger_c_5163990",
+      "tgisinternal": true,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 17,
+      "tgenabled": "O",
+      "function": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "tgname": "immutable_intent",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 27,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.immutable_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "tgname": "no_truncate_intent",
+      "tgisinternal": false,
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgtype": 34,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.immutable_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "tgname": "require_complete_intent_end",
+      "tgisinternal": false,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgtype": 5,
+      "tgenabled": "O",
+      "function": "aos_shared_parent_physical_private.require_complete_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+    }
+  ],
+  "constraints": [
+    {
+      "relation": "aos_physical_capacity_occupation_private.account_guard",
+      "conname": "account_guard_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (physical_account_id)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.account_guard",
+      "conname": "account_guard_version_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((version > 0))"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "conname": "case_input_binding_debit_id_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (debit_id) REFERENCES aos_physical_capacity_occupation_private.prepared_parent_debit(debit_id)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "conname": "case_input_binding_org_id_project_id_parent_hold_case_id_pu_key",
+      "contype": "u",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "UNIQUE (org_id, project_id, parent_hold, case_id, purpose)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "conname": "case_input_binding_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (debit_id)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "conname": "case_input_binding_purpose_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((purpose = 'target'::text))"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.parent_debit_guard",
+      "conname": "parent_debit_guard_cap_minor_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((cap_minor > 0))"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.parent_debit_guard",
+      "conname": "parent_debit_guard_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK (((allocated_minor >= 0) AND (allocated_minor <= cap_minor)))"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.parent_debit_guard",
+      "conname": "parent_debit_guard_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (parent_hold)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.parent_debit_guard",
+      "conname": "parent_debit_guard_version_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((version > 0))"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "conname": "prepared_execution_intent_attempt_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((attempt = 1))"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "conname": "prepared_execution_intent_debit_id_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (debit_id) REFERENCES aos_physical_capacity_occupation_private.case_input_binding(debit_id)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "conname": "prepared_execution_intent_debit_id_key",
+      "contype": "u",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "UNIQUE (debit_id)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "conname": "prepared_execution_intent_org_id_project_id_request_id_case_key",
+      "contype": "u",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "UNIQUE (org_id, project_id, request_id, case_id, purpose, attempt)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "conname": "prepared_execution_intent_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (intent_id)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "conname": "prepared_execution_intent_purpose_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((purpose = 'target'::text))"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "conname": "prepared_execution_intent_state_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((state = 'prepared'::text))"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "conname": "prepared_parent_debit_origin_pid_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((origin_pid > 0))"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "conname": "prepared_parent_debit_parent_hold_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (parent_hold) REFERENCES aos_physical_capacity_occupation_private.parent_debit_guard(parent_hold)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "conname": "prepared_parent_debit_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (debit_id)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "conname": "prepared_parent_debit_token_units_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((token_units > 0))"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "conname": "prepared_parent_debit_upper_bound_minor_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((upper_bound_minor > 0))"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "conname": "require_joint_finalization",
+      "contype": "t",
+      "condeferrable": true,
+      "condeferred": true,
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "conname": "no_unfinalized_plan_risk",
+      "contype": "t",
+      "condeferrable": true,
+      "condeferred": true,
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "conname": "prepared_plan_risk_org_id_project_id_target_request_judge_r_key",
+      "contype": "u",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "UNIQUE (org_id, project_id, target_request, judge_request)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "conname": "prepared_plan_risk_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (plan_id)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "conname": "no_unfinalized_shared_description",
+      "contype": "t",
+      "condeferrable": true,
+      "condeferred": true,
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "conname": "prepared_shared_risk_description_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (plan_id)"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "conname": "prepared_shared_risk_description_plan_id_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (plan_id) REFERENCES aos_physical_capacity_occupation_private.prepared_plan_risk(plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "conname": "end_authority_caller_pid_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((caller_pid > 0))"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "conname": "end_authority_content_hash_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((content_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "conname": "end_authority_org_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((org_id = 'org-org'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "conname": "end_authority_pending_hash_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((pending_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "conname": "end_authority_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "conname": "end_authority_plan_id_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (plan_id) REFERENCES aos_shared_parent_admission_private.pending_origin(plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "conname": "end_authority_project_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((project_id = 'dev-project'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "conname": "end_authority_source_raw_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK (((octet_length(source_raw) >= 2) AND (octet_length(source_raw) <= 1048576)))"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.end_authority",
+      "conname": "require_complete_authority_end",
+      "contype": "t",
+      "condeferrable": true,
+      "condeferred": true,
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.pending_origin",
+      "conname": "pending_origin_caller_pid_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((caller_pid > 0))"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.pending_origin",
+      "conname": "pending_origin_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((target_hold <> judge_hold))"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.pending_origin",
+      "conname": "pending_origin_content_hash_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((content_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.pending_origin",
+      "conname": "pending_origin_org_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((org_id = 'org-org'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.pending_origin",
+      "conname": "pending_origin_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.pending_origin",
+      "conname": "pending_origin_project_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((project_id = 'dev-project'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_admission_private.pending_origin",
+      "conname": "require_complete_admission_end",
+      "contype": "t",
+      "condeferrable": true,
+      "condeferred": true,
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.complete_parent_risk",
+      "conname": "complete_parent_risk_caller_pid_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((caller_pid > 0))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.complete_parent_risk",
+      "conname": "complete_parent_risk_content_hash_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((content_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.complete_parent_risk",
+      "conname": "complete_parent_risk_org_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((org_id = 'org-org'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.complete_parent_risk",
+      "conname": "complete_parent_risk_org_id_project_id_target_request_judge_key",
+      "contype": "u",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "UNIQUE (org_id, project_id, target_request, judge_request)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.complete_parent_risk",
+      "conname": "complete_parent_risk_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.complete_parent_risk",
+      "conname": "complete_parent_risk_project_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((project_id = 'dev-project'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.complete_parent_risk",
+      "conname": "require_complete_risk_end",
+      "contype": "t",
+      "condeferrable": true,
+      "condeferred": true,
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "conname": "initial_call_authority_caller_pid_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((caller_pid > 0))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "conname": "initial_call_authority_content_hash_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((content_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "conname": "initial_call_authority_judge_id_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (judge_id) REFERENCES aos_shared_parent_physical_private.judge_dependency(intent_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "conname": "initial_call_authority_org_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((org_id = 'org-org'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "conname": "initial_call_authority_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "conname": "initial_call_authority_plan_id_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (plan_id) REFERENCES aos_shared_parent_physical_private.initial_target_obligation(plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "conname": "initial_call_authority_project_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((project_id = 'dev-project'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "conname": "initial_call_authority_target_id_target_hash_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (target_id, target_hash) REFERENCES aos_shared_parent_physical_private.target_intent(intent_id, content_hash)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_call_authority",
+      "conname": "require_complete_call_end",
+      "contype": "t",
+      "condeferrable": true,
+      "condeferred": true,
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "conname": "initial_target_obligation_caller_pid_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((caller_pid > 0))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "conname": "initial_target_obligation_case_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((length(case_id) > 0))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "conname": "initial_target_obligation_content_hash_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((content_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "conname": "initial_target_obligation_org_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((org_id = 'org-org'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "conname": "initial_target_obligation_pending_hash_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((pending_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "conname": "initial_target_obligation_physical_account_id_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (physical_account_id) REFERENCES aos_physical_capacity_occupation_private.account_guard(physical_account_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "conname": "initial_target_obligation_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "conname": "initial_target_obligation_project_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((project_id = 'dev-project'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "conname": "initial_target_obligation_token_upper_bound_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((token_upper_bound > 0))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_target_obligation",
+      "conname": "require_complete_obligation_end",
+      "contype": "t",
+      "condeferrable": true,
+      "condeferred": true,
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "conname": "initial_window_obligation_caller_pid_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((caller_pid > 0))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "conname": "initial_window_obligation_content_hash_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((content_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "conname": "initial_window_obligation_material_hash_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((material_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "conname": "initial_window_obligation_org_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((org_id = 'org-org'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "conname": "initial_window_obligation_physical_account_id_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (physical_account_id) REFERENCES aos_physical_capacity_occupation_private.account_guard(physical_account_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "conname": "initial_window_obligation_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "conname": "initial_window_obligation_plan_id_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (plan_id) REFERENCES aos_shared_parent_physical_private.initial_target_obligation(plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "conname": "initial_window_obligation_project_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((project_id = 'dev-project'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.initial_window_obligation",
+      "conname": "require_complete_window_end",
+      "contype": "t",
+      "condeferrable": true,
+      "condeferred": true,
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "conname": "judge_dependency_attempt_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((attempt = 1))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "conname": "judge_dependency_caller_pid_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((caller_pid > 0))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "conname": "judge_dependency_content_hash_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((content_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "conname": "judge_dependency_org_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((org_id = 'org-org'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "conname": "judge_dependency_org_id_project_id_request_id_case_id_attem_key",
+      "contype": "u",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "UNIQUE (org_id, project_id, request_id, case_id, attempt)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "conname": "judge_dependency_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (intent_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "conname": "judge_dependency_plan_id_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (plan_id) REFERENCES aos_shared_parent_physical_private.target_intent(plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "conname": "judge_dependency_plan_id_key",
+      "contype": "u",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "UNIQUE (plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "conname": "judge_dependency_project_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((project_id = 'dev-project'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "conname": "judge_dependency_target_intent_id_key",
+      "contype": "u",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "UNIQUE (target_intent_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "conname": "judge_dependency_target_intent_id_target_intent_hash_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (target_intent_id, target_intent_hash) REFERENCES aos_shared_parent_physical_private.target_intent(intent_id, content_hash)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.judge_dependency",
+      "conname": "require_complete_intent_end",
+      "contype": "t",
+      "condeferrable": true,
+      "condeferred": true,
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "conname": "require_complete_intent_end",
+      "contype": "t",
+      "condeferrable": true,
+      "condeferred": true,
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "conname": "target_intent_attempt_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((attempt = 1))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "conname": "target_intent_caller_pid_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((caller_pid > 0))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "conname": "target_intent_content_hash_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((content_hash ~ '^sha256:[0-9a-f]{64}$'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "conname": "target_intent_intent_id_content_hash_key",
+      "contype": "u",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "UNIQUE (intent_id, content_hash)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "conname": "target_intent_org_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((org_id = 'org-org'::text))"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "conname": "target_intent_org_id_project_id_request_id_case_id_attempt_key",
+      "contype": "u",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "UNIQUE (org_id, project_id, request_id, case_id, attempt)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "conname": "target_intent_pkey",
+      "contype": "p",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "PRIMARY KEY (intent_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "conname": "target_intent_plan_id_fkey",
+      "contype": "f",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "FOREIGN KEY (plan_id) REFERENCES aos_shared_parent_physical_private.initial_target_obligation(plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "conname": "target_intent_plan_id_key",
+      "contype": "u",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "UNIQUE (plan_id)"
+    },
+    {
+      "relation": "aos_shared_parent_physical_private.target_intent",
+      "conname": "target_intent_project_id_check",
+      "contype": "c",
+      "condeferrable": false,
+      "condeferred": false,
+      "definition": "CHECK ((project_id = 'dev-project'::text))"
+    }
+  ],
+  "absent_end_functions": {
+    "aos_shared_parent_admission_private.require_complete_admission(uuid,text,xid8,integer)": true,
+    "public.require_complete_shared_parent_admission(uuid,text,xid8,integer)": true
+  },
+  "zero_shared_rows": {
+    "aos_shared_parent_admission_private.pending_origin": 0,
+    "aos_shared_parent_physical_private.initial_target_obligation": 0,
+    "aos_shared_parent_physical_private.target_intent": 0,
+    "aos_shared_parent_physical_private.judge_dependency": 0,
+    "aos_shared_parent_admission_private.end_authority": 0,
+    "aos_shared_parent_physical_private.initial_call_authority": 0,
+    "aos_shared_parent_physical_private.initial_window_obligation": 0,
+    "aos_shared_parent_physical_private.complete_parent_risk": 0
+  },
+  "actual_event_queue_observed": false,
+  "set_constraints_executed": false,
+  "full_admission_commit": false,
+  "full_task_delivered": false,
+  "execution_allowed": false
+}
