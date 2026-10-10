@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001751",
+  "authority_revision": "AOS-001752",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_execution_owner.py",
     "services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py",
@@ -41,12 +41,13 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/write-closure-verification-1743.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/native-pending-probe-1744-r2/verification.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/native-postdrain-callback-1745-r1/verification.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-reader-closure-r1/result.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-reader-closure-r1/result.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-intent-comparison-1751/verification.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "final-reader-write-reachability-red-fixed-original-kernel-validation-and-full-eight-node-receipt-end-next",
+  "step": "closed-final-intent-comparison-green-transitive-closure-physical-final-validation-full-eight-node-receipt-end-next",
   "task_base_revision": "AOS-001537",
   "task_id": "gt-atomic-model-admission-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
