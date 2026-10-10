@@ -1,0 +1,36 @@
+{
+  "authority_revision": "AOS-001685",
+  "task": "gt-judge-call-authority-20261008",
+  "head": "37f702e8a1584dd767e3b7a3f820a4075a755384",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "same_caller_metadata_necessary_verified": true,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/current-native-certificate-reference-1684.json",
+      "sha256": "072c9129b73ecba73201a6db1937a97b8391e6d120370b8dc47239e3998c7bca"
+    },
+    {
+      "path": ".evidence/gt-joint-constraint-dependency-closure-20261010/implementation-plan.md",
+      "sha256": "c465359e4f6ebf1283be7beabcbf0dcba7a699fdffb2afc0211bd6ef1d9c7feb"
+    },
+    {
+      "path": ".evidence/gt-joint-constraint-dependency-closure-20261010/review.md",
+      "sha256": "067a6236e1d8a3782268f396caa907c321cc2d641f49d1473121d588e9569095"
+    },
+    {
+      "path": ".evidence/gt-joint-constraint-dependency-closure-20261010/pure-result-r2.json",
+      "sha256": "d6a54b8396fb5555d5e4f462c811b8cf71ba06572d66aa3eff167a7a248487b2"
+    },
+    {
+      "path": ".evidence/gt-joint-constraint-dependency-closure-20261010/current-catalog-negative-summary-r1.json",
+      "sha256": "b1cdc500d606eae80b61b1a9bc21aa4c217cf3a0b5dd6009eec11642db3ba837"
+    },
+    {
+      "path": ".evidence/gt-joint-constraint-dependency-closure-20261010/delivery.json",
+      "sha256": "61df4bc7774c0a833fd43c9e297dddcb17bbf9d61d142d77f2caa7124b75dd22"
+    }
+  ]
+}
