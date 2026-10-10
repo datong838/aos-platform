@@ -1,0 +1,18 @@
+{
+  "authority": "AOS-001708",
+  "at": "2026-10-10T07:51:47.119746+00:00",
+  "database_facts": {
+    "positive_enabled_bindings": 0,
+    "canary_enabled_bindings": 0,
+    "positive_assigned_hosts": 0,
+    "positive_enabled_schedules": 0
+  },
+  "known_host_label_exit": 113,
+  "known_local_host_pids": [],
+  "process_inventory_decode_replacements": 6,
+  "global_fleet_off_proven": false,
+  "worker_provider_off_proven": false,
+  "business_runtime_authorized": false,
+  "formal_writes": 0,
+  "scope": "Current DB configuration and readable known local Host only; no full fleet or original12Run settlement proof"
+}

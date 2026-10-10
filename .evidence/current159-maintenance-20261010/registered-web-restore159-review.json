@@ -1,0 +1,17 @@
+{
+  "authority": "AOS-001708",
+  "scope": "Web restoration helper isolated verification, no native bootstrap",
+  "restore_tests_passed": 27,
+  "adjacent_total_passed": 151,
+  "red_helper_descendant_failures": 1,
+  "formal_database_writes": 0,
+  "native_service_mutations": 0,
+  "review": "Fixed Web-only original path/hash and verified stop hash; new exact process/helper schema, identity and start; exclusive intent and no unknown resend. Fresh Task/source caller binding remains mandatory. No API bootstrap or business permit. Native process encoding limitation preserved; no full-fleet off claim.",
+  "hashes": {
+    "registered_web_restore159.py": "a98e4f0b74e635b6b830d25fdbf8693e72bff84b78f3bdb72e1b20b67554aaec",
+    "test_registered_web_restore159.py": "90d704ab33efb14b87c59bbb14e338e49737b3ca8fc2c9970669499ff6c7d116",
+    "current159-execution-surface-readonly.json": "a54b3d71bfb4f8cb6ebdd0e690a9af5d98f281caf55db15463c203ec11414811",
+    "current159-execution-surface-readonly-failed-r1.json": "d53380dc72898085ec1cb4a2fcf6a0efc2c8d540264ac2d875e5dcdcddfbf791"
+  },
+  "next": "Bound second-window executor and complete frozen restoration resources; latest signed API path remains unverified."
+}

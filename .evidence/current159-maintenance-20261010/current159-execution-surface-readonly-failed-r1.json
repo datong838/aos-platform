@@ -1,0 +1,5 @@
+{
+  "failure": "ps process argv inventory contains non-UTF8 bytes",
+  "scope": "read-only collector stopped before evidence write or commit; no database/service mutation",
+  "recovery": "retain undecodable-byte diagnostic; readable known candidates only; never assert full fleet off"
+}
