@@ -1,0 +1,26 @@
+{
+  "base_head": "60d0052683cc1a3657beb2770fe381cebbc7f9ea",
+  "existing_ast_unchanged": true,
+  "new_functions": [
+    "build_shared_parent_target_judge_input",
+    "validate_shared_parent_target_judge_input"
+  ],
+  "passed": 390,
+  "source_hashes_verified": {
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": "345fd26a913066caf5a3cc9bc91b84ca3b2e162b0d659b9a2dce8babe12c75b0",
+    ".evidence/gt-model-typed-proof-20261008/shared-judge-input-test-r3-1697.py": "d25104c3a485f202f5546eda6457146fee4d4d7b754facc48b975ef16f9100c5",
+    ".evidence/gt-model-typed-proof-20261008/shared-case-test-1694.py": "515a5b0009ba9ef1b271ec58ca0a4e5bed35e27718d7557d02fd8d9b407a48e7",
+    ".evidence/gt-model-typed-proof-20261008/test_shared_certificate_1673.py": "17fe08d0d41fd494802e9307ba36c24432a1b95939975358d7f4f06e4c125d12",
+    "services/aos-api/tests/aip/test_model_eval_execution_contracts.py": "e80d403ecd0b3d08eb9508020e313623339f9a69023117ea72a50a1a29ad1eb2"
+  },
+  "log_sha256": {
+    "shared-judge-input-red-1697.log": "154c9cd81526acc170d515dcc9542eb17485996ee72ca64fd72fb71376f389e1",
+    "shared-judge-input-r1-1697.local.log": "78aa459e6aefae88ca03d7fd53b3f2e1bbeb352d7ac5e0c1fb85bd0373f72d9e",
+    "shared-judge-input-r2-1697.local.log": "ceab345adfc69dcea124d1de9e989ceaa065705f02b7d136c6449ce12be6766b",
+    "shared-judge-input-r3-1697.local.log": "a8f345d624949ad6ec66a514e1e2ac5967de91321547055f4f6286ff0369624d"
+  },
+  "database_connections": 0,
+  "actual_transport": false,
+  "native_reader_integrated": false,
+  "execution_allowed": false
+}

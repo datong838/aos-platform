@@ -1,0 +1,1 @@
+r1原361相邻通过；新增27项在fixture重新签发前触发原manifest完整性门，因synthetic expected变更重建Judge requestHash时遗漏Judge parent requestHash。r2仅补齐原父请求绑定，在新fixture文件保留r1；不放宽原校验、不改产品，不调用DB/Provider。

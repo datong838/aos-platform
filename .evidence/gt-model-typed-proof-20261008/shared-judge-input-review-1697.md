@@ -1,0 +1,11 @@
+# v3 Target→Judge输入实现复审
+
+r3 390/390 PASS：29新输入协议用例+原361相邻；DB connect被拒绝、调用数0，无网络transport/Provider。RED接口缺失保留；r1 361 PASS/27 fixture错误保留（期望改动后遗漏Judge parent requestHash），r2补齐fixture绑定388 PASS，r3增补两项真实Judge签名与exact输入合验390 PASS。所有原模块AST逐节点完全相同，仅追加两个函数；精确sourcehash与本地日志hash独立复核。
+
+输入绑定原描述、完整manifest/risk/caller、JudgeRequestHash/leg、case/dataset、完整Target签名canonical hash和certificate hash、实际原始字节、期望hash与字节。Target真实Ed25519必要链先验；用途不可借Judge替代；bytearray拒绝，空期望与缺失期望有别，非ASCII/空白不归一化。编码后完整wire上界1MiB，比只核raw output更严格且符合原签名wire约束；大原始期望即使≤1MiB仍可能因base64膨胀超界，明确拒绝而非截断。
+
+关键两case：Judge对canonical输入签名，必要crypto与exact consumer均通过；Judge对无关输入真实签名，原必要crypto可通过（其合同只认证字节），新增exact consumer拒绝。保持旧函数边界与行为；完整后继native reader必须组合两门，不能只依赖签名合法。未接线的pure API不宣称现有存储或发布Gate已经获得完整语义保护。
+
+原批准joint§3要求准入风险/Intent同次实际COMMIT；不是强迫外部Target/Judge结果在未提交准入内产生。此前候选文所列边界需以此原条款复核，不能无依据额外要求所有结果同joint。当前七prepared_only门仍无条件拒绝；正式准入完整finalizer、可信Root、部署native artifact、实际Target/Judge transport/Usage、独立COMMITTED来源、撤回头及最终发布/currentResolver仍待原生完整验收。此变更不修改它们、不授予准入、不绕过旧门。
+
+安全候选一：完整native结果reader接线（依赖可提交原子准入及COMMITTED原producer）；候选二：在已注册Task证据范围核准入finalizer和七拒绝门迁移协议，沿全event/effect审计明确合法新版本，不禁trigger/改旧body。继续完整目标，Task2与Task10不作全部Delivery。

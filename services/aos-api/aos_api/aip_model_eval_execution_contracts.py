@@ -1242,3 +1242,62 @@ def validate_shared_parent_case_signature(description, envelope, *, certificate_
             base64.b64decode(signed.signature_base64,validate=True),raw)
     except (InvalidSignature,ValueError,binascii.Error) as exc:
         raise ValueError('invalid v3 shared-parent executor case signature') from exc
+
+
+def build_shared_parent_target_judge_input(description, target_envelope, *,
+        certificate_envelope, issuer_input, checked_at, revoked_identity_ids,
+        target_input_bytes, target_output_bytes, expected_output) -> bytes:
+    """Necessary exact v3 Judge bytes, never a persisted-origin or execution grant.
+
+    Native consumers must additionally verify current trusted roots, committed
+    Target provenance, admission/Intent and actual transport/Usage. Presented
+    signatures alone do not establish any of those facts.
+    """
+    from aos_api.aip_physical_capacity_occupation_contracts import SharedParentRiskDescriptionPreparation
+    prepared = SharedParentRiskDescriptionPreparation.model_validate(description)
+    target = ModelSharedParentRiskSignedCaseEnvelope.model_validate(target_envelope)
+    if target.payload.claim.purpose != 'target':
+        raise ValueError('v3 Judge input requires independent Target result')
+    validate_shared_parent_case_signature(prepared, target,
+        certificate_envelope=certificate_envelope, issuer_input=issuer_input,
+        checked_at=checked_at, revoked_identity_ids=revoked_identity_ids,
+        input_bytes=target_input_bytes, output_bytes=target_output_bytes)
+    case = _bound_shared_parent_case(prepared, target.payload.claim)
+    if case.expected_hash is None:
+        if expected_output is not None:
+            raise ValueError('absent v3 expected artifact requires no bytes')
+    elif (type(expected_output) is not bytes or len(expected_output) > 1048576
+            or hashlib.sha256(expected_output).hexdigest() != case.expected_hash):
+        raise ValueError('exact bounded v3 expected hash witness required')
+    body = dict(schemaVersion='aos.model-eval-shared-parent-target-judge-input/v3',
+        tenant=prepared.immutable.manifest.tenant.model_dump(mode='json', by_alias=True),
+        executionId=target.payload.claim.execution_id,
+        manifestHash=prepared.immutable.manifest_hash,
+        descriptionHash=prepared.content_hash,
+        originalRiskHash=prepared.immutable.original_risk_hash,
+        callerXid=prepared.immutable.caller_xid, callerPid=prepared.immutable.caller_pid,
+        judgeRequestHash=prepared.immutable.manifest.judge_request_hash,
+        caseId=case.case_id, caseInputHash=case.input_hash,
+        judgeLeg=case.judge.model_dump(mode='json', by_alias=True),
+        targetCaseHash=canonical_hash(target.model_dump(mode='json', by_alias=True)),
+        targetCertificateHash=target.payload.certificate_hash,
+        actualHash=target.payload.claim.output_hash,
+        actualBase64=base64.b64encode(target_output_bytes).decode('ascii'),
+        expectedHash=case.expected_hash,
+        expectedBase64=None if expected_output is None else base64.b64encode(expected_output).decode('ascii'),
+        executionAllowed=False)
+    raw = json.dumps(body, sort_keys=True, ensure_ascii=False,
+        separators=(',', ':'), allow_nan=False).encode('utf-8')
+    if len(raw) > 1048576:
+        raise ValueError('complete v3 Judge input exceeds case wire bound')
+    return raw
+
+
+def validate_shared_parent_target_judge_input(description, target_envelope, *,
+        judge_input_bytes, **target_args) -> None:
+    """Reject any wire differing from the exact independently signed Target input."""
+    if type(judge_input_bytes) is not bytes or len(judge_input_bytes) > 1048576:
+        raise ValueError('bounded exact v3 Judge input bytes required')
+    expected = build_shared_parent_target_judge_input(description, target_envelope, **target_args)
+    if judge_input_bytes != expected:
+        raise ValueError('v3 Judge input must bind complete exact Target and expected bytes')

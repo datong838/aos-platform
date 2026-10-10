@@ -1,0 +1,1956 @@
+{
+  "pytest_exit": 0,
+  "database_connections": 0,
+  "reports": [
+    {
+      "nodeid": "::test_exact_judge_input_preserves_target_and_expected_raw_bytes[present]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_judge_input_preserves_target_and_expected_raw_bytes[absent]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_judge_input_preserves_target_and_expected_raw_bytes[empty]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_builder_rejects_unbound_target_or_expected[signature]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_builder_rejects_unbound_target_or_expected[certificate]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_builder_rejects_unbound_target_or_expected[root]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_builder_rejects_unbound_target_or_expected[expired]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_builder_rejects_unbound_target_or_expected[revoked]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_builder_rejects_unbound_target_or_expected[actual]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_builder_rejects_unbound_target_or_expected[wire]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_builder_rejects_unbound_target_or_expected[expected]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_builder_rejects_unbound_target_or_expected[mutable_expected]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_builder_rejects_unbound_target_or_expected[missing_expected]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_builder_rejects_unbound_target_or_expected[oversize_expected]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_builder_rejects_unbound_target_or_expected[borrowed_case]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_wire_consumer_rejects_resigned_or_semantic_aliases[reordered]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_wire_consumer_rejects_resigned_or_semantic_aliases[actual]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_wire_consumer_rejects_resigned_or_semantic_aliases[expected]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_wire_consumer_rejects_resigned_or_semantic_aliases[case]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_wire_consumer_rejects_resigned_or_semantic_aliases[extra]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_wire_consumer_rejects_resigned_or_semantic_aliases[missing]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_wire_consumer_rejects_resigned_or_semantic_aliases[allowed]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_wire_consumer_rejects_resigned_or_semantic_aliases[mutable]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_wire_consumer_rejects_resigned_or_semantic_aliases[oversize]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_wire_consumer_rejects_resigned_or_semantic_aliases[empty]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_absent_expected_ref_rejects_present_bytes[absent]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_serialized_wire_bound_includes_base64_and_full_binding[large]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_four_independent_real_case_signatures_and_old_domain_denial",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[descriptionHash-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[descriptionHash-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[originalRiskHash-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[originalRiskHash-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[callerXid-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[callerXid-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[callerPid-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[callerPid-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[manifestHash-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[manifestHash-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[requestHash-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[requestHash-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[caseInputHash-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[caseInputHash-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[candidateRef-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[candidateRef-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[leg-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[leg-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[inputHash-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[inputHash-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[outputHash-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_full_case_origin_and_wire_binding[outputHash-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[signature]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[certificate]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[target_signature]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[target_certificate]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[target_output]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[target_input]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[target_missing]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[borrowed_case]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[expired]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[root_key]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[revoked_target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[revoked_judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[mutable_revocations]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[actual_output]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_independently_rejects_forged_or_unavailable_target[mutable_input]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_target_binding_even_with_own_valid_signature[targetClaimHash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_target_binding_even_with_own_valid_signature[actualHash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_judge_target_binding_even_with_own_valid_signature[expectedHash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_four_leg_real_signatures_and_separate_domain",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_claim_drift[descriptionHash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_claim_drift[originalRiskHash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_claim_drift[callerXid]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_claim_drift[callerPid]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_claim_drift[requestHash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_claim_drift[manifestHash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_claim_drift[caseId]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_claim_drift[executionId]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_claim_drift[candidateRef]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_exact_claim_drift[leg]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_rehashed_whole_description_cannot_reuse_certificate[identityId]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_rehashed_whole_description_cannot_reuse_certificate[intentRef]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_rehashed_whole_description_cannot_reuse_certificate[jointReceiptRef]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_signature_time_and_typed_negatives[signature]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_signature_time_and_typed_negatives[root_key]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_signature_time_and_typed_negatives[root_id]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_signature_time_and_typed_negatives[expired]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_signature_time_and_typed_negatives[revoked_root]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_signature_time_and_typed_negatives[revoked_identity]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_signature_time_and_typed_negatives[mutable_revocations]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_signature_time_and_typed_negatives[bool_pid]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_signature_time_and_typed_negatives[old_schema]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "::test_signature_time_and_typed_negatives[judge_governance_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_is_a_pure_necessary_check",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[issuer]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[key]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[purpose]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[tenant]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[root_expired]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[root_future]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[root_revoked]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[identity_revoked]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[certificate_end]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[naive_check]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[signature]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[signature_length]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[root_key]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[tamper]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[root_interval]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[mutable_revocations]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signature_rejects_invalid_crypto_or_currentness[copied]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_has_separate_domain_and_real_signature",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_judge_and_timezone_use_exact_independent_leg",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[schema]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[manifest]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[request]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[case]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[candidate]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[identity]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[purpose]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[key_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[key_length]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[base64]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[empty_interval]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[naive_time]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[issuer]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[extra]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_certificate_signing_input_rejects_unbound_or_invalid_input[copied]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_binds_target_raw_bytes_and_independent_domain",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_rejects_exact_binding_drift[manifest]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_rejects_exact_binding_drift[request]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_rejects_exact_binding_drift[candidate]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_rejects_exact_binding_drift[leg]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_rejects_exact_binding_drift[case]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_rejects_exact_binding_drift[input]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_rejects_exact_binding_drift[output]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_judge_binds_complete_target_and_preserves_false",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_judge_rejects_detached_or_bypassed_target[target_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_judge_rejects_detached_or_bypassed_target[actual]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_judge_rejects_detached_or_bypassed_target[expected]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_judge_rejects_detached_or_bypassed_target[past]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_judge_rejects_detached_or_bypassed_target[passed_integer]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_judge_rejects_detached_or_bypassed_target[missing_target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_judge_rejects_detached_or_bypassed_target[copied_target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_judge_rejects_detached_or_bypassed_target[copied_plan]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_judge_rejects_detached_or_bypassed_target[naive_time]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_judge_rejects_detached_or_bypassed_target[raw_input]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_case_signing_input_ephemeral_signature_cannot_cross_skill_domain",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_approved_request_without_joint_and_judge_is_not_execution_manifest",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_descriptive_plan_roundtrip_preserves_shared_policy_without_granting_execution",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_identifiers_are_exact_without_implicit_normalization[ -executionId]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_identifiers_are_exact_without_implicit_normalization[ -requestId]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_identifiers_are_exact_without_implicit_normalization[ -caseId]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_identifiers_are_exact_without_implicit_normalization[ padded-executionId]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_identifiers_are_exact_without_implicit_normalization[ padded-requestId]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_identifiers_are_exact_without_implicit_normalization[ padded-caseId]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_identifiers_are_exact_without_implicit_normalization[padded -executionId]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_identifiers_are_exact_without_implicit_normalization[padded -requestId]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_identifiers_are_exact_without_implicit_normalization[padded -caseId]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_copied_plan_cannot_bypass_exact_identifier_validation[execution_id]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_copied_plan_cannot_bypass_exact_identifier_validation[request_id]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_copied_plan_cannot_bypass_exact_identifier_validation[case_id]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_rejects_unbound_or_borrowed_authority[request_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_rejects_unbound_or_borrowed_authority[tenant]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_rejects_unbound_or_borrowed_authority[input_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_rejects_unbound_or_borrowed_authority[duplicate_case]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_rejects_unbound_or_borrowed_authority[identity]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_rejects_unbound_or_borrowed_authority[key]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_rejects_unbound_or_borrowed_authority[approval]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_rejects_unbound_or_borrowed_authority[hold]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_rejects_unbound_or_borrowed_authority[intent]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_rejects_unbound_or_borrowed_authority[price]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_rejects_unbound_or_borrowed_authority[source_kind]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_rejects_unbound_or_borrowed_authority[execution]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_control_fields_do_not_coerce_boolean_or_integer[schemaVersion]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_control_fields_do_not_coerce_boolean_or_integer[attempt]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_plan_control_fields_do_not_coerce_boolean_or_integer[executionAllowed]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_copied_typed_instances_cannot_skip_nested_validation[manifest_version]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_copied_typed_instances_cannot_skip_nested_validation[manifest_allowed]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_copied_typed_instances_cannot_skip_nested_validation[leg_attempt]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_copied_typed_instances_cannot_skip_nested_validation[leg_key]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_copied_typed_instances_cannot_skip_nested_validation[source_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_copied_typed_instances_cannot_skip_nested_validation[source_id]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_copied_unknown_proof_fields_are_rejected_instead_of_discarded",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_typed_plan_revalidation_preserves_existing_exact_inputs",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_signed_certificate_envelope_rejects_noncanonical_or_unchecked_input[short]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_signed_certificate_envelope_rejects_noncanonical_or_unchecked_input[newline]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_signed_certificate_envelope_rejects_noncanonical_or_unchecked_input[padbits]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_signed_certificate_envelope_rejects_noncanonical_or_unchecked_input[extra]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_signed_certificate_envelope_rejects_noncanonical_or_unchecked_input[copied]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_actual_executor_signature_necessary_check[target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_actual_executor_signature_necessary_check[judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[signature]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[input]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[output]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[certificate_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[case]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[leg]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[future]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[expired]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[revoked]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[judge_target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[certificate_swap]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[wrong_key]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[old_domain]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[past_time]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_signed_case_rejects_resigned_semantic_drift[copied_extra]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_shares_request_parent_hold_with_unique_allocations",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[duplicate_allocation]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[over_limit]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[amount_bool]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[wrong_kind]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[missing_parent]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[unused_parent]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[approval]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[request]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[request_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[price]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[borrow_judge_parent]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[parent_bool]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[approved_limit]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_multi_case_parent_allocation_rejects_drift[missing_allocation]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_execution_identity_ids_require_exact_revocation_keys[ -target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_execution_identity_ids_require_exact_revocation_keys[ -judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_execution_identity_ids_require_exact_revocation_keys[ target-identity-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_execution_identity_ids_require_exact_revocation_keys[ target-identity-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_execution_identity_ids_require_exact_revocation_keys[target-identity -target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_execution_identity_ids_require_exact_revocation_keys[target-identity -judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_execution_identity_ids_require_exact_revocation_keys[\\u3000identity-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_execution_identity_ids_require_exact_revocation_keys[\\u3000identity-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_execution_identity_ids_require_exact_revocation_keys[identity\\xa0-target]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_model_execution_identity_ids_require_exact_revocation_keys[identity\\xa0-judge]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_case_witnesses_are_strict_and_non_authorizing[case]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_case_witnesses_are_strict_and_non_authorizing[target_epoch_bool]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_case_witnesses_are_strict_and_non_authorizing[judge_epoch_zero]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_case_witnesses_are_strict_and_non_authorizing[input_text]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_case_witnesses_are_strict_and_non_authorizing[output_mutable]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_case_witnesses_are_strict_and_non_authorizing[extra]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_case_witnesses_are_strict_and_non_authorizing[typed_copy]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_declaration_is_separate_and_nonexecuting",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[quality_purpose]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[old_hold]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[wrong_approval]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[wrong_policy]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[wrong_price]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[hold_revision_bool]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[hold_revision_two]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[empty_request]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[space_request]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[amount_bool]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[amount_text]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[amount_zero]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[execute_true]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[execute_zero]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[execute_text]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[permit]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[missing_purpose]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[wrong_schema]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[missing_tenant]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_rejects_cross_purpose_or_unvalidated_declaration[request_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_parent_revalidates_nested_model_copy",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_judge_preparation_requires_matching_current_parent_declaration",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_preparation_rejects_copied_or_rehashed_inconsistent_facts[hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_preparation_rejects_copied_or_rehashed_inconsistent_facts[request_id]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_preparation_rejects_copied_or_rehashed_inconsistent_facts[parent_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_preparation_rejects_copied_or_rehashed_inconsistent_facts[parent_request]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_preparation_rejects_copied_or_rehashed_inconsistent_facts[parent_amount]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_preparation_rejects_copied_or_rehashed_inconsistent_facts[false_zero]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_preparation_rejects_copied_or_rehashed_inconsistent_facts[false_text]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_preparation_rejects_copied_or_rehashed_inconsistent_facts[extra]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_preparation_rejects_copied_or_rehashed_inconsistent_facts[naive]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_preparation_rejects_copied_or_rehashed_inconsistent_facts[expired]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_preparation_rejects_copied_or_rehashed_inconsistent_facts[policy]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_preparation_rejects_copied_or_rehashed_inconsistent_facts[price]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_judge_preparation_rejects_copied_or_rehashed_inconsistent_facts[missing_expiry]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_case_input_binding_complete_strict_and_no_artifact_permission",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_case_input_binding_rejects_drift_or_permission[caseId- ]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_case_input_binding_rejects_drift_or_permission[caseId- case-1]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_case_input_binding_rejects_drift_or_permission[caseId-1]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_case_input_binding_rejects_drift_or_permission[inputHash-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_case_input_binding_rejects_drift_or_permission[inputHash-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_case_input_binding_rejects_drift_or_permission[inputHash-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_case_input_binding_rejects_drift_or_permission[expectedHash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_case_input_binding_rejects_drift_or_permission[expectedHash-True]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_case_input_binding_rejects_drift_or_permission[expectedHash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_case_input_binding_rejects_drift_or_permission[executionAllowed-False]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_case_input_binding_rejects_drift_or_permission[readExpected-True]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_case_input_binding_requires_explicit_expected_and_rechecks_copy",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_freezes_original_request_without_execution",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[tenant]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[case_missing]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[case_order]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[input]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[target_price]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[judge_quota]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[judge_old_hold]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[borrow_approval]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[parent_request]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[amount_total]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[duplicate_intent]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[duplicate_allocation]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[execute_zero]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[execute_true]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[extra]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[raw_request_extra]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_manifest_rejects_cross_purpose_and_partial_obligations[rule_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_revalidates_copied_nested_authority",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_raw_request_cannot_hide_malformed_snapshot_by_rehashing[expiry_null]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_raw_request_cannot_hide_malformed_snapshot_by_rehashing[expiry_naive]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_raw_request_cannot_hide_malformed_snapshot_by_rehashing[root_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_raw_request_cannot_hide_malformed_snapshot_by_rehashing[signature_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_raw_request_cannot_hide_malformed_snapshot_by_rehashing[release_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_raw_request_cannot_hide_malformed_snapshot_by_rehashing[raw_cases_empty]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_raw_request_cannot_hide_malformed_snapshot_by_rehashing[old_schema]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_raw_request_cannot_hide_malformed_snapshot_by_rehashing[raw_execute_zero]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_raw_request_cannot_hide_malformed_snapshot_by_rehashing[shared_application_approval]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_raw_request_cannot_hide_malformed_snapshot_by_rehashing[raw_case_set_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_raw_request_cannot_hide_malformed_snapshot_by_rehashing[rule_template_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_cannot_enter_legacy_certificate_signer",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_governance_fault_reaches_leg_binding_with_original_hash_intact[target-priceRef]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_whole_newjudge_governance_fault_reaches_leg_binding_with_original_hash_intact[judge-quotaPolicyRef]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_domain_preserves_full_newjudge_and_actual_wire",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[manifest]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[request]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[candidate]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[case]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[case_input]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[wire_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[output_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[wire_bytes]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[output_bytes]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[mutable]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[oversized]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[purpose]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[judge_fields]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[expired]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[naive]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[extra]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[legacy_domain]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[copied]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[tenant]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[execution]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[leg]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_signing_rejects_borrowed_or_incomplete_origin[deep_copied]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_signing_each_original_case_keeps_distinct_parent_leg",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_chain_verifies_actual_ed25519_without_authority",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[cert_signature]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[case_signature]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[issuer]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[root_key]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[revoked]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[root_end]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[cert_end]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[naive]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[mutable_revocations]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[case_hash]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[case_time]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[case_leg]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[wire]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[output]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[copied]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[legacy_domain]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[cert_request]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[cert_interval]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_crypto_rejects_forgery_expiry_and_cross_domain[extra]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_certificate_directly_rejects_invalid_crypto_and_authority_inputs[signature]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_certificate_directly_rejects_invalid_crypto_and_authority_inputs[issuer_key]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_certificate_directly_rejects_invalid_crypto_and_authority_inputs[issuer_id]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_certificate_directly_rejects_invalid_crypto_and_authority_inputs[revoked_root]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_certificate_directly_rejects_invalid_crypto_and_authority_inputs[revoked_identity]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_certificate_directly_rejects_invalid_crypto_and_authority_inputs[end]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_certificate_directly_rejects_invalid_crypto_and_authority_inputs[naive]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_certificate_directly_rejects_invalid_crypto_and_authority_inputs[mutable]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_certificate_directly_rejects_invalid_crypto_and_authority_inputs[request]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_certificate_directly_rejects_invalid_crypto_and_authority_inputs[copied]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_certificate_directly_rejects_invalid_crypto_and_authority_inputs[legacy_signed_domain]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_original_target_case_wrong_signature_reaches_real_crypto_rejection",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_shared_parent_full_plan_keeps_original_risk_without_leg_money",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_shared_parent_full_plan_rejects_unbound_obligations[amount]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_shared_parent_full_plan_rejects_unbound_obligations[allocation]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_shared_parent_full_plan_rejects_unbound_obligations[missing_case]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_shared_parent_full_plan_rejects_unbound_obligations[reordered]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_shared_parent_full_plan_rejects_unbound_obligations[duplicate_intent]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_shared_parent_full_plan_rejects_unbound_obligations[wrong_parent]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_shared_parent_full_plan_rejects_unbound_obligations[wrong_model]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_shared_parent_full_plan_rejects_unbound_obligations[allowed]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_shared_parent_full_plan_rejects_unbound_obligations[bool_attempt]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": "tests/aip/test_model_eval_execution_contracts.py::test_shared_parent_full_plan_rejects_unbound_obligations[copied_amount]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": "345fd26a913066caf5a3cc9bc91b84ca3b2e162b0d659b9a2dce8babe12c75b0",
+    ".evidence/gt-model-typed-proof-20261008/shared-judge-input-test-r2-1697.py": "4393b82fbe6b83590a8f21e0cfe5f75e5d524e7809ebb97c9e0b3f7e495b3bc8",
+    ".evidence/gt-model-typed-proof-20261008/shared-case-test-1694.py": "515a5b0009ba9ef1b271ec58ca0a4e5bed35e27718d7557d02fd8d9b407a48e7",
+    ".evidence/gt-model-typed-proof-20261008/test_shared_certificate_1673.py": "17fe08d0d41fd494802e9307ba36c24432a1b95939975358d7f4f06e4c125d12",
+    "services/aos-api/tests/aip/test_model_eval_execution_contracts.py": "e80d403ecd0b3d08eb9508020e313623339f9a69023117ea72a50a1a29ad1eb2"
+  },
+  "execution_allowed": false,
+  "synthetic_facts": true,
+  "actual_transport": false
+}
