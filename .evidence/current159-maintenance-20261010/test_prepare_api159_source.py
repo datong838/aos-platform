@@ -70,3 +70,10 @@ def test_private_parent_required(tmp_path):
     with pytest.raises(ValueError,match='PRIVATE_PARENT'):
         m.materialize(raw,tmp_path/'source',m.manifest(m.archive_files(raw)))
     assert not (tmp_path/'source').exists()
+
+def test_deep_directory_permissions(tmp_path):
+    os.chmod(tmp_path,0o700)
+    raw=archive([('services/aos-api/aos_api/deep/module.py',tarfile.REGTYPE)])
+    expected=m.manifest(m.archive_files(raw));root=tmp_path/'source'
+    assert m.materialize(raw,root,expected)['files']==1
+    assert all(path.stat().st_mode & 0o077 == 0 for path in root.rglob('*'))

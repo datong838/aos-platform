@@ -69,7 +69,10 @@ def materialize(raw, root, expected):
     root.mkdir(mode=0o700)
     for name, data in files.items():
         path = root / name
-        path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        parent = root
+        for part in PurePosixPath(name).parts[:-1]:
+            parent = parent / part
+            parent.mkdir(mode=0o700, exist_ok=True)
         with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600), 'wb') as output:
             output.write(data)
             output.flush()
