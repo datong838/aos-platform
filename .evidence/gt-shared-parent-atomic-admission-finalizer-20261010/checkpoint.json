@@ -4,7 +4,7 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001715",
+  "authority_revision": "AOS-001716",
   "task_base_revision": "AOS-001698",
   "step": "current159-recovered-full-admission-original-sql-and-risk-dependencies-bound-next-versioned-ledger",
   "evidence_files": [
@@ -12,7 +12,8 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/current-native-certificate-reference-1699.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/inspect-native-finalizer-gap-1698.py",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/admission-kernel-binding-1715.py",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/admission-kernel-binding-1715.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/admission-kernel-binding-1715.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/admission-kernel-context-sync-1716.json"
   ],
   "code_files": []
 }
