@@ -1,0 +1,18 @@
+{
+  "actual_blocking": true,
+  "blockers": [
+    75185
+  ],
+  "reader": {
+    "xid": "41571",
+    "pid": 75185
+  },
+  "writer": {
+    "xid": "41585",
+    "pid": 75411
+  },
+  "writer_live_observed": true,
+  "same_risk_caller_unchanged": true,
+  "certificate_count": 4,
+  "execution_allowed": false
+}

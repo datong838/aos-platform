@@ -1,0 +1,37 @@
+{
+  "risk_caller": {
+    "xid": "41873",
+    "pid": 76723
+  },
+  "published": {
+    "identity_xid": "41782",
+    "execution_id": "isolated-visible-27454400-3bd4-4bab-b0d7-a278e40de898",
+    "manifest_hash": "e33af16d09656a93658172074388f4cf944f26b1e48afe3ae52c6eeb3cbaf14f",
+    "certificate_hash": "86e9d45e5999335b33c16ae9698d1c916b4e646e8ae06a0ba42374acfba08471",
+    "root_hash": "5ab44d7eb8d08d16f629cb169447ceffd27bc2fb291e4d79ea2f8f4120956a49",
+    "before": {
+      "epoch": 1,
+      "version": 1,
+      "active": true
+    },
+    "after": {
+      "epoch": 1,
+      "version": 1,
+      "active": true
+    },
+    "legacy_manifest_synthetic_not_approval": true,
+    "root_provenance_verified": false,
+    "execution_allowed": false
+  },
+  "event": {
+    "schemaVersion": "aos.model-eval-identity-withdrawal/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "identityId": "target-identity",
+    "eventId": "isolated-pending-writer-0b531125-bf73-4ef2-ba04-ca77adeedff6"
+  },
+  "event_hash": "b75d41975ed2d2b6511891f397fdcf8a958342fd950d72e424083c13e4700372",
+  "execution_allowed": false
+}

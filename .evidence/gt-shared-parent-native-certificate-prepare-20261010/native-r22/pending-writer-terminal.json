@@ -1,0 +1,15 @@
+{
+  "writer": {
+    "xid": "41875",
+    "pid": 76811
+  },
+  "commit_returned": true,
+  "actual_blocking": true,
+  "blockers": [
+    76811
+  ],
+  "reader": {
+    "xid": "41873",
+    "pid": 76723
+  }
+}

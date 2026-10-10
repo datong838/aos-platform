@@ -1,0 +1,13 @@
+# v3 风险读者先持锁 → 原撤回写者真实等待
+
+Rules：231、AOS-001682、既有Task9/10/Task3 scoped Lease、m1单施工、仅新ownedlab隔离库、原件与闭合权限。另一登记候选为finaljoint原件合同/实际COMMIT闭环，当前Root正式谱系和finalizer不全，不关闭deferred trigger放行。先进行本竞争。
+
+目录：本Tasknative-r21新helper/driver、Task3 shared-native-reader-first-withdrawal-1682-r21前缀；产品与现有tests十二hash不改。沿R19合法实验v1 typed元数据当前签名登记器，先实际COMMIT active global target-identity(1,1,true)，同key与后续v3两case target绑定。legacy申请字段是synthetic metadata而非经营批准，Root仍实验bootstrap false。
+
+原native SERIAL actualSource/双审批风险产生description；新当前四证书经原prepare wrapper/full reader正向，同风险caller持root→certificate→globalidentity锁。随后仅在独立隔离私有Issuer连接追加精确identity_withdrawal/v1 event（不direct epoch UPDATE），记录精确writer xid/pid与intent，在pg_blocking_pids实测writer被风险reader堵塞并确认线程live。测试的第二数据库actor仅撤回协议竞争，不是第二代码写者/CLI；不操作正式库、权限或Provider。
+
+读者实际风险COMMIT仍原CAPACITY_PARENT_FINALIZE_REQUIRED拒绝，整体风险ABORT；随后writer原immutable event合法COMMIT→globalhead2/2/false。writer结果仅在commit返回后落盘；未知效果仅读回、不重发。新SERIAL私有原件reader exact legacy identity消费必须拒绝inactive；这是新global-currentness读回，v3 fresh撤回终止另由独立R19已证明，不能说本case又创建了完整新v3风险或合法经营COMMIT。
+
+实际等待不以time.sleep猜测。statement_timeout 20秒，monitor实际blocking最多5秒，join最多25秒；失败必须保留attempt/terminal并读回，不kill未知metadatawriter。读者任意failure外层rollback会释放锁；线程结束与writerCOMMIT/xid状态独立核实。风险caller不换角色/连接，不延原审批/证书，等待不被当最终joint复核。
+
+验收：读者实际v3全原件正向、锁阻塞pid关系、riskCOMMIT拒绝/ABORT、writer COMMITTED/event exacthash/head合法、fresh私有当前性拒绝，原风险与当前v3metadata0/合法legacyhistory保留、SQLbody/ACL/hash。reader-first顺序仅necessary metadata fence，旧snapshot40001反向pending-writer-first与formalRoot/finaljoint/WALACK/自然首链仍独立。Task9/10ACTIVE无Delivery，337samehash结果不重复计数。

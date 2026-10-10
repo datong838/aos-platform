@@ -1,0 +1,52 @@
+{
+  "blocking": {
+    "actual_blocking": true,
+    "blockers": [
+      75185
+    ],
+    "reader": {
+      "xid": "41571",
+      "pid": 75185
+    },
+    "writer": {
+      "xid": "41585",
+      "pid": 75411
+    },
+    "writer_live_observed": true,
+    "same_risk_caller_unchanged": true,
+    "certificate_count": 4,
+    "execution_allowed": false
+  },
+  "writer": {
+    "writer": {
+      "xid": "41585",
+      "pid": 75411
+    },
+    "commit_returned": true
+  },
+  "event": {
+    "schemaVersion": "aos.model-eval-identity-withdrawal/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "identityId": "target-identity",
+    "eventId": "isolated-reader-first-64bb8dd2-b809-45fe-b2e5-c7e6cba056ef"
+  },
+  "event_hash": "d69c8801d82043b599a747eccff281f0eb969576700805b1a6217ac944bc0176",
+  "statuses": {
+    "risk": "aborted",
+    "writer": "committed"
+  },
+  "head": {
+    "epoch": 2,
+    "version": 2,
+    "active": false
+  },
+  "fresh_private_original_identity_rejected": true,
+  "fresh_full_v3_risk_attempted": false,
+  "risk_commit_rejected": true,
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false
+}

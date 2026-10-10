@@ -1,0 +1,22 @@
+{
+  "writer": {
+    "writer": {
+      "xid": "41875",
+      "pid": 76811
+    },
+    "commit_returned": true,
+    "actual_blocking": true,
+    "blockers": [
+      76811
+    ],
+    "reader": {
+      "xid": "41873",
+      "pid": 76723
+    }
+  },
+  "sqlstate": "40001",
+  "same_risk_caller_unchanged": true,
+  "manifest_absent_after_savepoint": true,
+  "outer_transaction_live": true,
+  "execution_allowed": false
+}

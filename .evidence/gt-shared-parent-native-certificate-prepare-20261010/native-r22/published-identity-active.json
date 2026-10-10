@@ -1,0 +1,20 @@
+{
+  "identity_xid": "41782",
+  "execution_id": "isolated-visible-27454400-3bd4-4bab-b0d7-a278e40de898",
+  "manifest_hash": "e33af16d09656a93658172074388f4cf944f26b1e48afe3ae52c6eeb3cbaf14f",
+  "certificate_hash": "86e9d45e5999335b33c16ae9698d1c916b4e646e8ae06a0ba42374acfba08471",
+  "root_hash": "5ab44d7eb8d08d16f629cb169447ceffd27bc2fb291e4d79ea2f8f4120956a49",
+  "before": {
+    "epoch": 1,
+    "version": 1,
+    "active": true
+  },
+  "after": {
+    "epoch": 1,
+    "version": 1,
+    "active": true
+  },
+  "legacy_manifest_synthetic_not_approval": true,
+  "root_provenance_verified": false,
+  "execution_allowed": false
+}

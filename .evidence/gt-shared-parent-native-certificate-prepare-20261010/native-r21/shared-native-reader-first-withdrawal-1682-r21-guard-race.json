@@ -1,0 +1,38 @@
+{
+  "baseline": {
+    "pid": 75593,
+    "xid": "41598",
+    "version": 1,
+    "checkedAt": "2026-10-09T23:57:53.866596+00:00",
+    "sourceRef": {
+      "assetId": "occupation-source-4e3ec6038afd4b4297d05d1d72e8da9b",
+      "revision": 1,
+      "assetType": "ProviderCapacitySourceRevision",
+      "contentHash": "02a12c1d7568c2ab85b39072b3d38168c7935533a9cbebb0fbe3218667ce150e"
+    },
+    "executionAllowed": false,
+    "physicalAccountId": "79bcf17c-6998-4062-89b5-b26dd01f6b29"
+  },
+  "writer": {
+    "pid": 75593,
+    "xid": "41600",
+    "version": 2,
+    "checkedAt": "2026-10-09T23:57:54.607711+00:00",
+    "sourceRef": {
+      "assetId": "occupation-source-4e3ec6038afd4b4297d05d1d72e8da9b",
+      "revision": 1,
+      "assetType": "ProviderCapacitySourceRevision",
+      "contentHash": "02a12c1d7568c2ab85b39072b3d38168c7935533a9cbebb0fbe3218667ce150e"
+    },
+    "executionAllowed": false,
+    "physicalAccountId": "79bcf17c-6998-4062-89b5-b26dd01f6b29"
+  },
+  "stale": {
+    "snapshot": "41599:41599:",
+    "xid": "41599",
+    "pid": 75594
+  },
+  "blocked": true,
+  "sqlstate": "40001",
+  "execution_allowed": false
+}

@@ -1,0 +1,9 @@
+# pending writer先持身份更新 → 旧SERIAL风险快照真实40001
+
+Rules：231、现有Task9/10/Task3同owner scope、R21已terminal PASS无live writer、正式库只读；产品和十二hash不变。另一候选finaljoint合同当前缺Root正式谱系/合法finalizer，不降低COMMIT门。只新增本Tasknative-r22/helper与Task3 shared-native-pending-writer-withdrawal-1682-r22。
+
+沿R21先合法发布active identity(1,1,true) COMMIT。风险caller已有actualSource/审批/riskdescription首SERIAL快照。独立privateIssuerWriter先INSERT不可变withdraw事件（合法trigger UPDATE identity），未COMMIT，记录实际writerpid/xid；main原caller使用规范canonical v3四证书调用真实SQL入口，在globalidentity更新冲突处等待。writer线程通过独立监控连接实际pg_blocking_pids观察reader被自己pid堵塞，才COMMIT。reader必须准确40001 SerializationFailure，而非旧snapshot误接受active或靠sleep判断；即使产品wrapper可包装，也直接SQL负门不吞sqlstate。
+
+保存点捕获40001后要求原caller xid/pid/live未变、Manifest缺失；其后原风险实际COMMIT必须原CAPACITY_PARENT_FINALIZE_REQUIRED拒绝，风险ABORT。writer完成commit返回并落终端；fresh private原legacyidentity reader拒绝撤回，合法history/head2/2/false保留。40001本身不证明Root谱系或finaljoint/经营链；R19另证明newv3 fresh aftercommittedwithdraw。原窗口不延，反向竞争与正向R21各自独立新库。
+
+限时statement_timeout20s，监控最多5s，join25s；writer未观测到真实block则ROLLBACK并失败，不COMMIT事件。未知结果仅读回，禁止kill/重发；两数据库actor为已授权隔离协议验收，不是第二代码writer。读回riskABORTED/三metadata事务COMMITTED/精确原件hash/当前v3metadata0/封闭SQL权限/十二hash。Task9/10 ACTIVE无Delivery。
