@@ -1,0 +1,8 @@
+{
+  "context": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/pgcrypto-build-1777/r2",
+  "network": "default",
+  "timeout_seconds": 300,
+  "dockerfile_sha256": "8a2ee9331d42e52d775c7ab560407de9104f43b49ea279379f329d9af65a439e",
+  "no_install": true,
+  "no_pg_start": true
+}

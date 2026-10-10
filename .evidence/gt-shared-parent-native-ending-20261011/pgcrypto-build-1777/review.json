@@ -1,0 +1,24 @@
+{
+  "status": "SCOPED_PGCRYPTO_SOURCE_REPRODUCTION_GREEN",
+  "source_file_count": 37,
+  "original_archive_sha256": "f6d077142737920858ce958ccdb75c6ee137a63b5b0853c70693d401ac7e3471",
+  "two_artifacts_independently_equal": true,
+  "source_hashes_unchanged": true,
+  "build_exit_code": 0,
+  "never_started_container": "e4b11a8f662a711f1be8fd2574329bc65bdcfac2be19bc169d33bfd7170b2b25",
+  "artifact_mounts": [
+    {
+      "type": "volume",
+      "name": "7b34835951bf4674046516659f185f9447f0ff553b67feb442b3f425fade525b",
+      "destination": "/var/lib/postgresql/data",
+      "rw": true
+    }
+  ],
+  "preflight_failure_preserved": true,
+  "upstream_makefile_unchanged": true,
+  "pgxs_mode_not_original_whole_image_recipe": true,
+  "signed_build_provenance_proved": false,
+  "full_task_delivered": false,
+  "formal_database_changed": false,
+  "model_review_invoked": false
+}

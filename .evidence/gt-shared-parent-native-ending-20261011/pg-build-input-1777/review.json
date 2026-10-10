@@ -1,0 +1,15 @@
+{
+  "status": "SCOPED_PG_SOURCE_HEADER_BINDINGS_VERIFIED",
+  "installed_headers_independently_read_back": 860,
+  "archive_equal_total": 856,
+  "one_socket_directory_patch": true,
+  "three_generated_headers_unproved": [
+    "pg_config.h",
+    "pg_config_ext.h",
+    "utils/probes.h"
+  ],
+  "original_binary_or_signed_build_provenance_proved": false,
+  "no_container_or_database_mutation": true,
+  "model_review_invoked": false,
+  "full_task_delivered": false
+}

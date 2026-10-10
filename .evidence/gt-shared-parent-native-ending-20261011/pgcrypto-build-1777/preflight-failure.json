@@ -1,0 +1,23 @@
+{
+  "exit_code": 1,
+  "stage": "archive extraction",
+  "build_intent_created": false,
+  "non_regular_direct_entries": [
+    {
+      "name": "sql",
+      "is_directory": true,
+      "is_link": false
+    },
+    {
+      "name": "expected",
+      "is_directory": true,
+      "is_link": false
+    },
+    {
+      "name": "scripts",
+      "is_directory": true,
+      "is_link": false
+    }
+  ],
+  "cause": "ordinary archive subdirectories encountered before file filter; reject links but skip directories"
+}

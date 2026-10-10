@@ -1,0 +1,4 @@
+{
+  "sha256": "6ef3369bd15664e543116c14353f851e783af87ac582e922e381013b7c54dd64",
+  "utf8": "Traceback (most recent call last):\n  File \"/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/pgcrypto-build-1777/run.py\", line 23, in <module>\n    assert m.isfile() and name not in ('.','..')\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+}

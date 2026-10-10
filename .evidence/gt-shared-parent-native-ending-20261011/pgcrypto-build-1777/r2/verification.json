@@ -1,0 +1,29 @@
+{
+  "files": {
+    "pgcrypto.so": {
+      "rebuilt_sha256": "5244bf9d2d9740ef3f65aaf4770f110ac3db862664c073656767ca40ec8507ff",
+      "installed_sha256": "5244bf9d2d9740ef3f65aaf4770f110ac3db862664c073656767ca40ec8507ff",
+      "bytes_equal": true
+    },
+    "pgcrypto.control": {
+      "rebuilt_sha256": "2a6c81eef34ae6cee9ff5b557f3b6285db7fdd7bc76ee57798e82c945c61c939",
+      "installed_sha256": "2a6c81eef34ae6cee9ff5b557f3b6285db7fdd7bc76ee57798e82c945c61c939",
+      "bytes_equal": true
+    }
+  },
+  "source_and_original_binary_unchanged": true,
+  "never_started": true,
+  "artifact_mounts": [
+    {
+      "type": "volume",
+      "name": "7b34835951bf4674046516659f185f9447f0ff553b67feb442b3f425fade525b",
+      "destination": "/var/lib/postgresql/data",
+      "rw": true
+    }
+  ],
+  "exact_pgcrypto_reproduced": true,
+  "trusted_source_build_provenance": false,
+  "formal_database_changed": false,
+  "full_task_delivered": false,
+  "execution_allowed": false
+}

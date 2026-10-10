@@ -1,0 +1,5 @@
+{
+  "path": "pg_config_manual.h",
+  "diff": "--- archive/src/include/pg_config_manual.h\n+++ installed/server/pg_config_manual.h\n@@ -206,7 +206,7 @@\n  * support them yet.\n  */\n #ifndef WIN32\n-#define DEFAULT_PGSOCKET_DIR  \"/tmp\"\n+#define DEFAULT_PGSOCKET_DIR \"/var/run/postgresql\"\n #else\n #define DEFAULT_PGSOCKET_DIR \"\"\n #endif\n",
+  "not_original_binary_provenance": true
+}

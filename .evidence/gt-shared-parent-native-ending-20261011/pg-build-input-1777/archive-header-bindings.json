@@ -1,0 +1,301 @@
+{
+  "missing_direct_path_files": 97,
+  "equal_bytes_elsewhere_archive": 94,
+  "archive_bindings": {
+    "catalog/pg_aggregate_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_aggregate_d.h"
+    ],
+    "catalog/pg_am_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_am_d.h"
+    ],
+    "catalog/pg_amop_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_amop_d.h"
+    ],
+    "catalog/pg_amproc_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_amproc_d.h"
+    ],
+    "catalog/pg_attrdef_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_attrdef_d.h"
+    ],
+    "catalog/pg_attribute_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_attribute_d.h"
+    ],
+    "catalog/pg_auth_members_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_auth_members_d.h"
+    ],
+    "catalog/pg_authid_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_authid_d.h"
+    ],
+    "catalog/pg_cast_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_cast_d.h"
+    ],
+    "catalog/pg_class_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_class_d.h"
+    ],
+    "catalog/pg_collation_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_collation_d.h"
+    ],
+    "catalog/pg_constraint_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_constraint_d.h"
+    ],
+    "catalog/pg_conversion_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_conversion_d.h"
+    ],
+    "catalog/pg_database_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_database_d.h"
+    ],
+    "catalog/pg_db_role_setting_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_db_role_setting_d.h"
+    ],
+    "catalog/pg_default_acl_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_default_acl_d.h"
+    ],
+    "catalog/pg_depend_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_depend_d.h"
+    ],
+    "catalog/pg_description_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_description_d.h"
+    ],
+    "catalog/pg_enum_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_enum_d.h"
+    ],
+    "catalog/pg_event_trigger_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_event_trigger_d.h"
+    ],
+    "catalog/pg_extension_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_extension_d.h"
+    ],
+    "catalog/pg_foreign_data_wrapper_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_foreign_data_wrapper_d.h"
+    ],
+    "catalog/pg_foreign_server_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_foreign_server_d.h"
+    ],
+    "catalog/pg_foreign_table_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_foreign_table_d.h"
+    ],
+    "catalog/pg_index_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_index_d.h"
+    ],
+    "catalog/pg_inherits_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_inherits_d.h"
+    ],
+    "catalog/pg_init_privs_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_init_privs_d.h"
+    ],
+    "catalog/pg_language_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_language_d.h"
+    ],
+    "catalog/pg_largeobject_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_largeobject_d.h"
+    ],
+    "catalog/pg_largeobject_metadata_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_largeobject_metadata_d.h"
+    ],
+    "catalog/pg_namespace_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_namespace_d.h"
+    ],
+    "catalog/pg_opclass_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_opclass_d.h"
+    ],
+    "catalog/pg_operator_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_operator_d.h"
+    ],
+    "catalog/pg_opfamily_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_opfamily_d.h"
+    ],
+    "catalog/pg_parameter_acl_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_parameter_acl_d.h"
+    ],
+    "catalog/pg_partitioned_table_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_partitioned_table_d.h"
+    ],
+    "catalog/pg_policy_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_policy_d.h"
+    ],
+    "catalog/pg_proc_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_proc_d.h"
+    ],
+    "catalog/pg_publication_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_publication_d.h"
+    ],
+    "catalog/pg_publication_namespace_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_publication_namespace_d.h"
+    ],
+    "catalog/pg_publication_rel_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_publication_rel_d.h"
+    ],
+    "catalog/pg_range_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_range_d.h"
+    ],
+    "catalog/pg_replication_origin_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_replication_origin_d.h"
+    ],
+    "catalog/pg_rewrite_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_rewrite_d.h"
+    ],
+    "catalog/pg_seclabel_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_seclabel_d.h"
+    ],
+    "catalog/pg_sequence_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_sequence_d.h"
+    ],
+    "catalog/pg_shdepend_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_shdepend_d.h"
+    ],
+    "catalog/pg_shdescription_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_shdescription_d.h"
+    ],
+    "catalog/pg_shseclabel_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_shseclabel_d.h"
+    ],
+    "catalog/pg_statistic_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_statistic_d.h"
+    ],
+    "catalog/pg_statistic_ext_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_statistic_ext_d.h"
+    ],
+    "catalog/pg_statistic_ext_data_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_statistic_ext_data_d.h"
+    ],
+    "catalog/pg_subscription_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_subscription_d.h"
+    ],
+    "catalog/pg_subscription_rel_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_subscription_rel_d.h"
+    ],
+    "catalog/pg_tablespace_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_tablespace_d.h"
+    ],
+    "catalog/pg_transform_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_transform_d.h"
+    ],
+    "catalog/pg_trigger_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_trigger_d.h"
+    ],
+    "catalog/pg_ts_config_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_ts_config_d.h"
+    ],
+    "catalog/pg_ts_config_map_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_ts_config_map_d.h"
+    ],
+    "catalog/pg_ts_dict_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_ts_dict_d.h"
+    ],
+    "catalog/pg_ts_parser_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_ts_parser_d.h"
+    ],
+    "catalog/pg_ts_template_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_ts_template_d.h"
+    ],
+    "catalog/pg_type_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_type_d.h"
+    ],
+    "catalog/pg_user_mapping_d.h": [
+      "postgresql-16.14/src/backend/catalog/pg_user_mapping_d.h"
+    ],
+    "catalog/schemapg.h": [
+      "postgresql-16.14/src/backend/catalog/schemapg.h"
+    ],
+    "catalog/system_fk_info.h": [
+      "postgresql-16.14/src/backend/catalog/system_fk_info.h"
+    ],
+    "extension/cube/cubedata.h": [
+      "postgresql-16.14/contrib/cube/cubedata.h"
+    ],
+    "extension/hstore/hstore.h": [
+      "postgresql-16.14/contrib/hstore/hstore.h"
+    ],
+    "extension/isn/isn.h": [
+      "postgresql-16.14/contrib/isn/isn.h"
+    ],
+    "extension/ltree/ltree.h": [
+      "postgresql-16.14/contrib/ltree/ltree.h"
+    ],
+    "extension/seg/segdata.h": [
+      "postgresql-16.14/contrib/seg/segdata.h"
+    ],
+    "nodes/nodetags.h": [
+      "postgresql-16.14/src/backend/nodes/nodetags.h"
+    ],
+    "pg_config.h": [],
+    "pg_config_ext.h": [],
+    "pg_config_os.h": [
+      "postgresql-16.14/src/include/port/linux.h"
+    ],
+    "plperl.h": [
+      "postgresql-16.14/src/pl/plperl/plperl.h"
+    ],
+    "plperl_system.h": [
+      "postgresql-16.14/src/pl/plperl/plperl_system.h"
+    ],
+    "plpy_cursorobject.h": [
+      "postgresql-16.14/src/pl/plpython/plpy_cursorobject.h"
+    ],
+    "plpy_elog.h": [
+      "postgresql-16.14/src/pl/plpython/plpy_elog.h"
+    ],
+    "plpy_exec.h": [
+      "postgresql-16.14/src/pl/plpython/plpy_exec.h"
+    ],
+    "plpy_main.h": [
+      "postgresql-16.14/src/pl/plpython/plpy_main.h"
+    ],
+    "plpy_planobject.h": [
+      "postgresql-16.14/src/pl/plpython/plpy_planobject.h"
+    ],
+    "plpy_plpymodule.h": [
+      "postgresql-16.14/src/pl/plpython/plpy_plpymodule.h"
+    ],
+    "plpy_procedure.h": [
+      "postgresql-16.14/src/pl/plpython/plpy_procedure.h"
+    ],
+    "plpy_resultobject.h": [
+      "postgresql-16.14/src/pl/plpython/plpy_resultobject.h"
+    ],
+    "plpy_spi.h": [
+      "postgresql-16.14/src/pl/plpython/plpy_spi.h"
+    ],
+    "plpy_subxactobject.h": [
+      "postgresql-16.14/src/pl/plpython/plpy_subxactobject.h"
+    ],
+    "plpy_typeio.h": [
+      "postgresql-16.14/src/pl/plpython/plpy_typeio.h"
+    ],
+    "plpy_util.h": [
+      "postgresql-16.14/src/pl/plpython/plpy_util.h"
+    ],
+    "plpython.h": [
+      "postgresql-16.14/src/pl/plpython/plpython.h"
+    ],
+    "plpython_system.h": [
+      "postgresql-16.14/src/pl/plpython/plpython_system.h"
+    ],
+    "ppport.h": [
+      "postgresql-16.14/src/pl/plperl/ppport.h"
+    ],
+    "storage/lwlocknames.h": [
+      "postgresql-16.14/src/backend/storage/lmgr/lwlocknames.h"
+    ],
+    "utils/errcodes.h": [
+      "postgresql-16.14/src/backend/utils/errcodes.h"
+    ],
+    "utils/fmgroids.h": [
+      "postgresql-16.14/src/backend/utils/fmgroids.h"
+    ],
+    "utils/fmgrprotos.h": [
+      "postgresql-16.14/src/backend/utils/fmgrprotos.h"
+    ],
+    "utils/probes.h": []
+  },
+  "unbound": [
+    "pg_config.h",
+    "pg_config_ext.h",
+    "utils/probes.h"
+  ],
+  "socket_patch_present_in_image_history": true,
+  "patch_command_hashes": [
+    "e56a1b0e0e6ab44fca52e37cf00a8faf93f130f50c2199b64e7d8988faf62288"
+  ],
+  "signed_source_build_provenance_proved": false
+}

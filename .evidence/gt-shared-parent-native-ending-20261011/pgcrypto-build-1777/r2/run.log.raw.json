@@ -1,0 +1,4 @@
+{
+  "sha256": "3aa719328e45dd45c2bcf82ccf830a87c0b6f2ca7c03b39e5928cb41f0f9014a",
+  "utf8": "{\"pgcrypto.so\": {\"rebuilt_sha256\": \"5244bf9d2d9740ef3f65aaf4770f110ac3db862664c073656767ca40ec8507ff\", \"installed_sha256\": \"5244bf9d2d9740ef3f65aaf4770f110ac3db862664c073656767ca40ec8507ff\", \"bytes_equal\": true}, \"pgcrypto.control\": {\"rebuilt_sha256\": \"2a6c81eef34ae6cee9ff5b557f3b6285db7fdd7bc76ee57798e82c945c61c939\", \"installed_sha256\": \"2a6c81eef34ae6cee9ff5b557f3b6285db7fdd7bc76ee57798e82c945c61c939\", \"bytes_equal\": true}}\n"
+}
