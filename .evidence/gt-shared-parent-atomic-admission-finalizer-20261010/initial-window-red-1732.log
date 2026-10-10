@@ -1,0 +1,54 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_native_initial_window_obligation_closed_metadata _____________
+
+native = <psycopg.Connection [INTRANS] (host=127.0.0.1 port=5441 user=aos_app database=aos_test_05f1a1dcd51f_ti4_test) at 0x11cf60e10>
+
+    def test_native_initial_window_obligation_closed_metadata(native):
+        from aos_api import aip_shared_parent_atomic_admission as api
+        for statement in (*api.shared_parent_admission_origin_statements(),
+                          *api.shared_parent_admission_certificate_set_statements(),
+                          *api.shared_parent_admission_storage_statements(),
+                          *api.shared_parent_pending_origin_lookup_statements(),
+                          *api.shared_parent_physical_obligation_statements(),
+                          *api.shared_parent_initial_intent_statements(),
+                          *api.shared_parent_end_authority_statements(),
+                          *api.shared_parent_initial_call_authority_statements(),
+>                         *api.shared_parent_initial_window_obligation_statements()):
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                         AttributeError: module 'aos_api.aip_shared_parent_atomic_admission' has no attribute 'shared_parent_initial_window_obligation_statements'
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:339: AttributeError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_initial_window_obligation_closed_metadata
+1 failed, 19 deselected, 7 warnings in 0.45s

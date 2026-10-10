@@ -324,3 +324,30 @@ def test_native_initial_call_authority_is_closed_and_caller_bound(native):
     native.rollback()
     assert native.execute('SELECT to_regclass(%s)',(table,)).fetchone()[0] is None
     native.rollback()
+
+
+def test_native_initial_window_obligation_closed_metadata(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    for statement in (*api.shared_parent_admission_origin_statements(),
+                      *api.shared_parent_admission_certificate_set_statements(),
+                      *api.shared_parent_admission_storage_statements(),
+                      *api.shared_parent_pending_origin_lookup_statements(),
+                      *api.shared_parent_physical_obligation_statements(),
+                      *api.shared_parent_initial_intent_statements(),
+                      *api.shared_parent_end_authority_statements(),
+                      *api.shared_parent_initial_call_authority_statements(),
+                      *api.shared_parent_initial_window_obligation_statements()):
+        native.execute(statement)
+    table=api.PHYSICAL_SCHEMA+'.initial_window_obligation'
+    assert native.execute('SELECT pg_get_userbyid(relowner),relrowsecurity,relforcerowsecurity FROM pg_class WHERE oid=%s::regclass',(table,)).fetchone()==(OWNER,True,True)
+    assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure',(api.STAGE_INITIAL_WINDOW,)).fetchone()==(OWNER,True,['search_path=pg_catalog'])
+    for role in ('aos_runtime','aos_provider_capacity_issuer'):
+        assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')",(role,api.STAGE_INITIAL_WINDOW)).fetchone()[0]
+        for privilege in ('SELECT','INSERT','UPDATE','DELETE','TRUNCATE'):
+            assert not native.execute('SELECT has_table_privilege(%s,%s,%s)',(role,table,privilege)).fetchone()[0]
+    assert native.execute("SELECT tgdeferrable,tginitdeferred FROM pg_trigger WHERE tgrelid=%s::regclass AND tgname='require_complete_window_end'",(table,)).fetchone()==(True,True)
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SHARED_ADMISSION_WINDOW_NATIVE_CALLER_REQUIRED'):
+        with native.transaction():native.execute('SELECT public.stage_shared_parent_initial_window_obligation(NULL,NULL,NULL,NULL)')
+    native.rollback()
+    assert native.execute('SELECT to_regclass(%s)',(table,)).fetchone()[0] is None
+    native.rollback()

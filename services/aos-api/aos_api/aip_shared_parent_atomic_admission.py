@@ -915,3 +915,129 @@ def shared_parent_initial_call_authority_statements():
         f'ALTER FUNCTION {READ_INITIAL_CALL} OWNER TO {OWNER}',
         f'REVOKE ALL ON FUNCTION {READ_INITIAL_CALL} FROM {denied}',
     )
+
+STAGE_INITIAL_WINDOW = 'public.stage_shared_parent_initial_window_obligation(uuid,text,xid8,integer)'
+
+
+def shared_parent_initial_window_obligation_statements():
+    """Native window identity and conservative unresolved-risk union only.
+
+    No obligation is released on time, window or Source revision changes.
+    Actual settlement, full ending and execution remain separate requirements.
+    """
+    s = PHYSICAL_SCHEMA
+    table = s + '.initial_window_obligation'
+    denied = 'PUBLIC,aos_runtime,aos_provider_capacity_issuer'
+    return (
+        f'''CREATE TABLE {table}(
+          plan_id uuid PRIMARY KEY REFERENCES {s}.initial_target_obligation(plan_id),
+          org_id text NOT NULL CHECK(org_id='org-org'),project_id text NOT NULL CHECK(project_id='dev-project'),
+          material_hash text NOT NULL CHECK(material_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          physical_account_id uuid NOT NULL REFERENCES {_physical.SCHEMA}.account_guard(physical_account_id),
+          caller_xid xid8 NOT NULL,caller_pid integer NOT NULL CHECK(caller_pid>0),
+          body jsonb NOT NULL,content_hash text NOT NULL CHECK(content_hash ~ '^sha256:[0-9a-f]{{64}}$'))''',
+        f'ALTER TABLE {table} OWNER TO {OWNER}',
+        f'REVOKE ALL ON {table} FROM {denied}',
+        f'ALTER TABLE {table} ENABLE ROW LEVEL SECURITY',
+        f'ALTER TABLE {table} FORCE ROW LEVEL SECURITY',
+        f'''CREATE POLICY exact_scope ON {table} TO {OWNER}
+          USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+          WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))''',
+        f'''CREATE FUNCTION {s}.bind_initial_window() RETURNS trigger LANGUAGE plpgsql
+          SET search_path=pg_catalog AS $window_binding$
+          DECLARE material {s}.initial_call_authority%ROWTYPE; obligation {s}.initial_target_obligation%ROWTYPE;
+            fact jsonb; packet jsonb; limit_body jsonb; body jsonb; guard_version bigint;
+            used_requests bigint; used_tokens numeric; total_requests bigint; total_tokens numeric;
+            now_at timestamptz; anchor_at timestamptz; window_seconds integer; window_index numeric;
+          BEGIN
+            IF {_end_authority_native_context_sql()} THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+            SELECT * INTO material FROM {s}.initial_call_authority WHERE plan_id=NEW.plan_id FOR SHARE;
+            SELECT * INTO obligation FROM {s}.initial_target_obligation WHERE plan_id=NEW.plan_id FOR SHARE;
+            IF material.plan_id IS NULL OR obligation.plan_id IS NULL
+              OR material.content_hash IS DISTINCT FROM NEW.material_hash
+              OR material.caller_xid IS DISTINCT FROM pg_current_xact_id() OR material.caller_pid IS DISTINCT FROM pg_backend_pid()
+              OR obligation.caller_xid IS DISTINCT FROM pg_current_xact_id() OR obligation.caller_pid IS DISTINCT FROM pg_backend_pid()
+              OR NEW.caller_xid IS DISTINCT FROM pg_current_xact_id() OR NEW.caller_pid IS DISTINCT FROM pg_backend_pid()
+              OR NEW.physical_account_id IS DISTINCT FROM obligation.physical_account_id THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_MATERIAL_REQUIRED' USING ERRCODE='23514'; END IF;
+            packet:=convert_from(material.source_raw,'UTF8')::jsonb;
+            fact:={_physical.SOURCE_FACT.split('(')[0]}(material.source_raw,packet->'sourceRef');
+            IF fact->>'physicalAccountId' IS DISTINCT FROM obligation.physical_account_id::text THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_ACCOUNT_REQUIRED' USING ERRCODE='23514'; END IF;
+            SELECT version INTO guard_version FROM {_physical.SCHEMA}.account_guard
+              WHERE physical_account_id=obligation.physical_account_id AND org_id='org-org' AND project_id='dev-project'
+                AND xmin::text::numeric=mod(pg_current_xact_id()::text::numeric,4294967296) FOR UPDATE;
+            IF NOT FOUND THEN RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_GUARD_REQUIRED' USING ERRCODE='23514'; END IF;
+            limit_body:=fact->'tokenLimit';
+            IF limit_body->>'mode' NOT IN ('inflight_upper_bound','fixed_window_rate')
+              OR limit_body->>'mode' IS NULL OR limit_body->>'unit' IS DISTINCT FROM 'token'
+              OR (limit_body->>'maxTokens')::numeric IS NULL OR (limit_body->>'maxTokens')::numeric<=0 THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_LIMIT_REQUIRED' USING ERRCODE='23514'; END IF;
+            SELECT count(*),coalesce(sum(token_units),0) INTO total_requests,total_tokens FROM (
+              SELECT token_units FROM {_physical.SCHEMA}.prepared_parent_debit WHERE physical_account_id=obligation.physical_account_id
+              UNION ALL SELECT token_upper_bound FROM {s}.initial_target_obligation WHERE physical_account_id=obligation.physical_account_id
+            ) native_unresolved;
+            -- Current initial obligation is already present exactly once.
+            used_requests:=total_requests-1;used_tokens:=total_tokens-obligation.token_upper_bound;
+            IF used_requests<0 OR used_tokens<0 THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_COUNTS_REQUIRED' USING ERRCODE='23514'; END IF;
+            fact:=fact||jsonb_build_object('tokenUpperBound',obligation.token_upper_bound);
+            {_physical._physical_call_capacity_guard_sql('target')}
+            now_at:=clock_timestamp();
+            IF limit_body->>'mode'='fixed_window_rate' THEN
+              window_seconds:=(limit_body->>'windowSeconds')::integer;
+              anchor_at:=(limit_body->>'windowAnchor')::timestamptz;
+              IF window_seconds IS NULL OR window_seconds NOT BETWEEN 1 AND 86400 OR anchor_at IS NULL THEN
+                RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_LIMIT_REQUIRED' USING ERRCODE='23514'; END IF;
+              window_index:=floor(extract(epoch FROM now_at-anchor_at)/window_seconds);
+            END IF;
+            body:=jsonb_build_object('schemaVersion','aos.shared-parent-initial-window-obligation/v1',
+              'planId',NEW.plan_id,'initialCallAuthorityHash',material.content_hash,
+              'obligationHash',obligation.content_hash,'physicalAccountId',obligation.physical_account_id,
+              'sourceRef',packet->'sourceRef','sourceTokenLimit',limit_body,'accountVersion',guard_version,
+              'observedAt',now_at,'windowIndex',window_index,'windowAnchor',anchor_at,'windowSeconds',window_seconds,
+              'unresolvedRequests',total_requests,'unresolvedTokenUpperBound',total_tokens,
+              'countingBasis','legacy_prepared_plus_new_initial_unreleased','windowExpiryReleasesRisk',false,
+              'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),
+              'state','prepared_window_only','executionAllowed',false);
+            NEW.body:=body;NEW.content_hash:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
+            RETURN NEW;
+          END $window_binding$''',
+        f'ALTER FUNCTION {s}.bind_initial_window() OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {s}.bind_initial_window() FROM {denied}',
+        f'CREATE TRIGGER bind_initial_window BEFORE INSERT ON {table} FOR EACH ROW EXECUTE FUNCTION {s}.bind_initial_window()',
+        f'CREATE TRIGGER immutable_initial_window BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION {s}.immutable_obligation()',
+        f'CREATE TRIGGER no_truncate_initial_window BEFORE TRUNCATE ON {table} FOR EACH STATEMENT EXECUTE FUNCTION {s}.immutable_obligation()',
+        f'''CREATE CONSTRAINT TRIGGER require_complete_window_end AFTER INSERT ON {table}
+          DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION {s}.require_complete_obligation()''',
+        f'''CREATE FUNCTION {STAGE_INITIAL_WINDOW.split('(')[0]}(p_plan uuid,p_material_hash text,p_xid xid8,p_pid integer)
+          RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $window_stage$
+          DECLARE material {s}.initial_call_authority%ROWTYPE; previous {table}%ROWTYPE;
+            packet jsonb; guard_doc jsonb; call_doc jsonb;
+          BEGIN
+            IF {_end_authority_native_context_sql()} OR p_xid IS DISTINCT FROM pg_current_xact_id() OR p_pid IS DISTINCT FROM pg_backend_pid() THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+            SELECT * INTO material FROM {s}.initial_call_authority WHERE plan_id=p_plan FOR SHARE;
+            IF NOT FOUND OR material.content_hash IS DISTINCT FROM p_material_hash
+              OR material.caller_xid IS DISTINCT FROM p_xid OR material.caller_pid IS DISTINCT FROM p_pid THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_MATERIAL_REQUIRED' USING ERRCODE='23514'; END IF;
+            packet:=convert_from(material.source_raw,'UTF8')::jsonb;
+            guard_doc:={_physical.GUARD.split('(')[0]}(material.source_raw,packet->'sourceRef');
+            call_doc:={READ_INITIAL_CALL.split('(')[0]}(p_plan,p_material_hash,p_xid,p_pid);
+            SELECT * INTO previous FROM {table} WHERE plan_id=p_plan FOR SHARE;
+            IF NOT FOUND THEN
+              INSERT INTO {table}(plan_id,org_id,project_id,material_hash,physical_account_id,caller_xid,caller_pid,body,content_hash)
+                VALUES(p_plan,'org-org','dev-project',p_material_hash,(guard_doc->>'physicalAccountId')::uuid,p_xid,p_pid,'{{}}'::jsonb,'sha256:'||repeat('0',64))
+                RETURNING * INTO previous;
+            END IF;
+            IF previous.material_hash IS DISTINCT FROM p_material_hash OR previous.caller_xid IS DISTINCT FROM p_xid
+              OR previous.caller_pid IS DISTINCT FROM p_pid OR previous.physical_account_id::text IS DISTINCT FROM guard_doc->>'physicalAccountId'
+              OR previous.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(previous.body),'UTF8')),'hex') THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+            RETURN jsonb_build_object('planId',p_plan,'immutable',previous.body,'contentHash',previous.content_hash,
+              'initialCall',call_doc,'executionAllowed',false);
+          END $window_stage$''',
+        f'ALTER FUNCTION {STAGE_INITIAL_WINDOW} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {STAGE_INITIAL_WINDOW} FROM {denied}',
+    )
