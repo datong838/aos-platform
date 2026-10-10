@@ -35,6 +35,7 @@
     ".evidence/current159-maintenance-20261010/window159-native-rehearsal-r1.json",
     ".evidence/current159-maintenance-20261010/window159-native-independent-readback.py",
     ".evidence/current159-maintenance-20261010/window159-native-independent-readback.json",
-    ".evidence/current159-maintenance-20261010/window159-native-protocol-review.json"
+    ".evidence/current159-maintenance-20261010/window159-native-protocol-review.json",
+    ".evidence/current159-maintenance-20261010/window159-native-listen-source-independent.json"
   ]
 }

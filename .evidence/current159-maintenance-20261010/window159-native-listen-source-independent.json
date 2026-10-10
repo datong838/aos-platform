@@ -1,0 +1,30 @@
+{
+  "status": "ORIGINAL_NATIVE_LISTEN_SOURCE_ROWS_EXACTLY_RESTORED",
+  "before": {
+    "effective": "*",
+    "restore_statement": "ALTER SYSTEM RESET listen_addresses",
+    "rows": [
+      {
+        "applied": true,
+        "error": null,
+        "setting": "*",
+        "sourcefile": "/var/lib/postgresql/data/postgresql.conf"
+      }
+    ]
+  },
+  "after": {
+    "effective": "*",
+    "rows": [
+      {
+        "sourcefile": "/var/lib/postgresql/data/postgresql.conf",
+        "setting": "*",
+        "applied": true,
+        "error": null
+      }
+    ],
+    "cluster": "7694947223238172711"
+  },
+  "read_only": true,
+  "formal_database_writes": 0,
+  "api_web_started": false
+}
