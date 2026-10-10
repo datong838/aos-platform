@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001762",
+  "authority_revision": "AOS-001763",
   "code_files": [
     "services/aos-api/aos_api/aip_action_policy.py",
     "services/aos-api/aos_api/aip_action_store.py",
