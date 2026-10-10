@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001688",
+  "authority_revision": "AOS-001689",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_execution_contracts.py",
     "services/aos-api/tests/aip/test_model_eval_execution_contracts.py",
@@ -40,12 +40,12 @@
     ".evidence/gt-model-typed-proof-20261008/judge-input-binding-checkpoint.md",
     ".evidence/gt-model-typed-proof-20261008/judge-input-binding-cumulative-r2-result.json",
     ".evidence/gt-model-typed-proof-20261008/judge-input-binding-independent-r2.json",
-    ".evidence/gt-model-typed-proof-20261008/current-native-certificate-reference-1688.json"
+    ".evidence/gt-model-typed-proof-20261008/current-native-certificate-reference-1689.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "original-caller-write-inventory-and-complete-joint-next",
+  "step": "full-source-preparation-writer-bound-fresh-combined-native-next",
   "task_base_revision": "AOS-001513",
   "task_id": "gt-model-typed-proof-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"

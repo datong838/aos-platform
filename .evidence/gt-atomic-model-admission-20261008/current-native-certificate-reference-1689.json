@@ -1,0 +1,31 @@
+{
+  "authority_revision": "AOS-001689",
+  "task": "gt-atomic-model-admission-20261008",
+  "head": "b02a698ea4e0e051c8b8eb76ab8525ea72f9e73e",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-atomic-model-admission-20261008/current-native-certificate-reference-1688.json",
+      "sha256": "fecfad7ec7f1fdca0799987247b7feb8a427c69d726bdd34d8a20f11eea8ef30"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/full-writer-plan-1688.md",
+      "sha256": "72faacd170d7527ab5b23a4c69cdb17cddec8b1066323c5936d329cb26632600"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/full-writer-review-1688.md",
+      "sha256": "753c2427b8de108b8cfcd7faa25f29fccfbcc74459bab409b25b43697f5224bb"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/full-writer-installation-r2-1688.json",
+      "sha256": "db160c39a1c0fc02809a87c2e0edabf01d1b644f90a2acfa75a85a0d80906608"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/full-writer-contract-candidate-r1-1688.json",
+      "sha256": "a4abc5196fade5d71748da248de2a79378892adaa82ba0a12dba8197bdadf5b7"
+    }
+  ]
+}
