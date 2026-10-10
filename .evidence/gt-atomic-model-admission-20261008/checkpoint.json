@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001743",
+  "authority_revision": "AOS-001744",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_execution_owner.py",
     "services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py",
@@ -9,7 +9,6 @@
     "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py"
   ],
   "evidence_files": [
-    ".evidence/gt-atomic-model-admission-20261008/joint-origin-composition-r1.json",
     ".evidence/gt-atomic-model-admission-20261008/joint-origin-composition-checkpoint.md",
     ".evidence/gt-atomic-model-admission-20261008/original-certificate-set-plan.md",
     ".evidence/gt-atomic-model-admission-20261008/original-certificate-checkpoint.md",
@@ -40,12 +39,13 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/live-savepoint-verification-1738.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/parent-risk-verification-1739.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/certificate-phase-verification-1741.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/event-ri-wait-independent-1742.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/event-ri-wait-independent-1742.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/write-closure-verification-1743.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "full-original-write-event-closure-and-native-ending-next",
+  "step": "native-pending-event-and-original-cutover-protocol-next",
   "task_base_revision": "AOS-001537",
   "task_id": "gt-atomic-model-admission-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
