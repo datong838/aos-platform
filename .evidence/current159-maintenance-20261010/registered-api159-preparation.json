@@ -1,0 +1,23 @@
+{
+  "head": "4e9a5fab4decd4442aefe38e15f87f86021a8aa9",
+  "authority": "AOS-001712",
+  "task": "current159-maintenance-20261010",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "entry_sha256": "159a3af478a371c1d58feeb4ea74874e388e52b10c94d9f1d762cf0c7274aac6",
+  "source_manifest_sha256": "ed69fd4241bcebae2ef56f7a19f65b90696f23a71406149ff37a17223b70c117",
+  "source_files": 5604,
+  "effects": "PRIVATE_ARTIFACT_ONLY",
+  "original_database_mutated": false,
+  "startup_attempted": false,
+  "status": "FROZEN_ENTRY_NATIVE_ORIGINAL157_REJECTED_EXPECTED",
+  "current_original_scope_exact": true,
+  "source_exact": true,
+  "private_entry": "/Users/ddt/work/projects/ai_agent/aos-recovery/api159-source-132b92e20d26/api159-registered-entry.py",
+  "entry_preflight_returncode": 2,
+  "entry_preflight_reason": "CURRENT_NATIVE159_DATABASE_REQUIRED",
+  "private_plan_sha256": "e0ace8907b5da400810f399e25edbd50032227684648aa4b9a4419a2ea698f7f",
+  "original_plist_still_exact": true,
+  "current159_positive_startup_pending": true,
+  "browser_acceptance_pending": true
+}
