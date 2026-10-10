@@ -6,7 +6,7 @@
   "authority_revision": "AOS-001708",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
-  "step": "registered-launchd-stop-tested-native-candidates-verified-second-window-executor-pending",
+  "step": "registered-stop-verified-original-listen-restore-readonly-prepared-bound-executor-and-latest-signed-api-pending",
   "code_files": [],
   "evidence_files": [
     ".evidence/current159-maintenance-20261010/plan.md",
@@ -24,6 +24,7 @@
     ".evidence/current159-maintenance-20261010/test_registered_launch159.py",
     ".evidence/current159-maintenance-20261010/registered-launch159-readback.py",
     ".evidence/current159-maintenance-20261010/registered-launch159-readback-r2.json",
-    ".evidence/current159-maintenance-20261010/registered-launch159-review.json"
+    ".evidence/current159-maintenance-20261010/registered-launch159-review.json",
+    ".evidence/current159-maintenance-20261010/second-window159-restoration-preflight-readonly.json"
   ]
 }

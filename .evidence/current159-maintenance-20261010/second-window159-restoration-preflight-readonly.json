@@ -1,0 +1,44 @@
+{
+  "at": "2026-10-10T07:45:35.945398+00:00",
+  "head": "e5b87bf4af43226bc0efa1059c197990d8727c2d",
+  "authority": "AOS-001708",
+  "source": {
+    "id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+    "volume": "aos-a0v-recovery-pg-data",
+    "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "started_at": "2026-10-10T05:00:09.147703427Z"
+  },
+  "database": {
+    "cluster": "7683855731447750695",
+    "database": "aos_current_preview_20260927",
+    "version": "a0v_157",
+    "listen_addresses": "*",
+    "other_clients": 0,
+    "prepared": 0,
+    "listen_rows": [
+      {
+        "sourcefile": "/var/lib/postgresql/data/postgresql.conf",
+        "setting": "*",
+        "applied": true,
+        "error": null
+      }
+    ]
+  },
+  "listen_restore_statement": "ALTER SYSTEM RESET listen_addresses",
+  "api_original_signing_receipt": {
+    "path": "/Users/ddt/work/projects/ai_agent/.aos-current-build-pyGkqQ/signing-receipt.json",
+    "exists": true,
+    "latest_head_signed_verified": false,
+    "sha256": "1530d5fb03fa052d70a90f89f7ec09d7301455459e2e3034f41998a178369886"
+  },
+  "pending": [
+    "separate Host/worker/Provider native-off collection",
+    "bound second-window executor and its restore resources",
+    "second consistent backup/full restore/original158 and159 rehearsal",
+    "formal exact migration only after all safety gates",
+    "latest committed signed API plus eight-workbench browser acceptance"
+  ],
+  "formal_database_writes": 0,
+  "service_mutations": 0,
+  "window_established": false
+}
