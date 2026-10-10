@@ -1,0 +1,9 @@
+# 约束收敛入口：真实目录对账与设计修正
+
+r1沿旧18个已知候选事件只读核33trigger/23RI/3deferred guard。复核原caller与SQL源码发现候选不完整：account_guard INSERT/UPDATE、parent_debit_guard INSERT、case_input_binding INSERT遗漏。旧15种子不是full链，旧记录完整保留且complete_event_closure_proven原本为false；r2补四操作后为22候选、34trigger/24RI/3guard；r3再查写表所有p/u/x/FK/check约束。没有运行原含DROP teardown的测试、没有重放risk或写DDL/业务表。
+
+当前具体候选路径所有24个RI匹配检查不可延迟；3可延迟constraint trigger全部来自reject_unfinalized_parent_debit，分别prepared_parent_debit/require_joint_finalization、prepared_plan_risk/no_unfinalized_plan_risk、prepared_shared_risk_description/no_unfinalized_shared_description。schema+constraint name反查没有名字碰撞或额外对象。写表没有额外可延迟唯一/排他约束，查询到的写表FK动作没有CASCADE/SET NULL/SET DEFAULT。只对当前原目录及22候选陈述，不把全库105 deferred RI套上来、不假完整排队。
+
+关键实现约束：当前已知子集没有需要提前SET的legacy deferred RI，不能据总目录count新增SET ALL或提前清除三原deny，也不能仅凭trigger字母名字忽略真实检查。既有即时RI等待发生在原INSERT/UPDATE点，所有必要原Source/审批/预算/证书/锁currentness仍必须在完整最终decision前核；这不证明COMMIT/WAL/ACK期限。当前不生成结束SQL、不删改trigger/旧deny、不授执行。
+
+下一已登记Task10安全步骤：按实际原native helper调用及完整Model/Judge plan逐个绑定所有caller/Owner SQL写入入口（含account/parent/case/Intent和后续prepared call/ledger），收敛精确事件种子，不能再把少量risk表当整个结束链。再审查原触发器/RI可信安装与完整Source/budget/Intent/clock协议。Root/WAL外部裁决只局部限制该动作，不暂停Goal。此为原Task10调查进展而非新的完整Delivery。无产品代码变动、无需重复39纯验或UI浏览器。
