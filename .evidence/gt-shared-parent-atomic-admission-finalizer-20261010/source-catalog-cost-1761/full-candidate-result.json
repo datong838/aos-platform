@@ -1,0 +1,491 @@
+{
+  "authority": "AOS-001761",
+  "database": "aos_test_08aeabe72b44_ti4_test",
+  "original_sha256": "a58f562c97da4059549b8e18289c6a5f46b8a61553031b53961b60684231f030",
+  "candidate_sha256": "79c97b994497d2f365b74580d02d99676dae735dde5a65d92f5ceb4eadb84cd9",
+  "exact_predicate_replacements": 2,
+  "cases": [
+    {
+      "case": "baseline",
+      "expected_pass": true,
+      "original": {
+        "passed": true,
+        "sqlstate": null
+      },
+      "candidate": {
+        "passed": true,
+        "sqlstate": null
+      },
+      "equal": true
+    },
+    {
+      "case": "aos_capacity_publication_owner_column_INSERT",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "aos_capacity_publication_owner_column_UPDATE",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "aos_capacity_publication_owner_column_REFERENCES",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "aos_capacity_publication_owner_column_SELECT",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "aos_capacity_publication_owner_table_INSERT",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "aos_capacity_publication_owner_table_UPDATE",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "aos_capacity_publication_owner_table_REFERENCES",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "aos_capacity_publication_owner_table_SELECT",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "PUBLIC_column_INSERT",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "PUBLIC_column_UPDATE",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "PUBLIC_column_REFERENCES",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "PUBLIC_column_SELECT",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "PUBLIC_table_INSERT",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "PUBLIC_table_UPDATE",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "PUBLIC_table_REFERENCES",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "PUBLIC_table_SELECT",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "allowed_owner_duplicate",
+      "expected_pass": true,
+      "original": {
+        "passed": true,
+        "sqlstate": null
+      },
+      "candidate": {
+        "passed": true,
+        "sqlstate": null
+      },
+      "equal": true
+    },
+    {
+      "case": "allowed_public_duplicate",
+      "expected_pass": true,
+      "original": {
+        "passed": true,
+        "sqlstate": null
+      },
+      "candidate": {
+        "passed": true,
+        "sqlstate": null
+      },
+      "equal": true
+    },
+    {
+      "case": "allowed_column_grant_option",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "own_table",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    }
+  ],
+  "all_equal": true,
+  "all_expected": true,
+  "samples": [
+    {
+      "variant": "original",
+      "seconds": 0.02243537500180537
+    },
+    {
+      "variant": "original",
+      "seconds": 0.021974541996314656
+    },
+    {
+      "variant": "original",
+      "seconds": 0.022401666996302083
+    },
+    {
+      "variant": "original",
+      "seconds": 0.023334958001214545
+    },
+    {
+      "variant": "original",
+      "seconds": 0.022773750002670567
+    },
+    {
+      "variant": "original",
+      "seconds": 0.023102957995433826
+    },
+    {
+      "variant": "original",
+      "seconds": 0.02355412500037346
+    },
+    {
+      "variant": "original",
+      "seconds": 0.025516542002151255
+    },
+    {
+      "variant": "original",
+      "seconds": 0.023537542001577094
+    },
+    {
+      "variant": "original",
+      "seconds": 0.023176667004008777
+    },
+    {
+      "variant": "original",
+      "seconds": 0.031613999999535736
+    },
+    {
+      "variant": "original",
+      "seconds": 0.024397083994699642
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.019614333999925293
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.019693332993483637
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.02145879200543277
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.022735291000572033
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.019277207997220103
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.018539333002991043
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.018546332998084836
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.018206166998425033
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.018497916003980208
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.019181124996975996
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.018864459001633804
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.018482834006135818
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.01793333399837138
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.022658624999166932
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.01878033400134882
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.018498625002393965
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.018589415994938463
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.01872354099759832
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.02095033299701754
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.01900312500220025
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.019411375003983267
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.018748541006061714
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.018309332997887395
+    },
+    {
+      "variant": "candidate",
+      "seconds": 0.018343791998631787
+    },
+    {
+      "variant": "original",
+      "seconds": 0.02251350000005914
+    },
+    {
+      "variant": "original",
+      "seconds": 0.022307459003059193
+    },
+    {
+      "variant": "original",
+      "seconds": 0.0219737920051557
+    },
+    {
+      "variant": "original",
+      "seconds": 0.023522874995251186
+    },
+    {
+      "variant": "original",
+      "seconds": 0.025872665995848365
+    },
+    {
+      "variant": "original",
+      "seconds": 0.023241791997861583
+    },
+    {
+      "variant": "original",
+      "seconds": 0.02346837500226684
+    },
+    {
+      "variant": "original",
+      "seconds": 0.02312766700197244
+    },
+    {
+      "variant": "original",
+      "seconds": 0.022981834001257084
+    },
+    {
+      "variant": "original",
+      "seconds": 0.022650500002782792
+    },
+    {
+      "variant": "original",
+      "seconds": 0.026217208003799897
+    },
+    {
+      "variant": "original",
+      "seconds": 0.022273290996963624
+    }
+  ],
+  "median_seconds": {
+    "original": 0.02315216700299061,
+    "candidate": 0.018764437503705267
+  },
+  "original_unchanged": true,
+  "temporary_objects_and_grants_rolled_back": true,
+  "global_role_modified": false,
+  "source_issued_or_replayed": false,
+  "product_modified": false,
+  "formal_database_touched": false,
+  "whole_source_timing_recovered": false,
+  "execution_allowed": false,
+  "goal_complete": false
+}

@@ -1,0 +1,8 @@
+{
+  "database": "aos_test_08aeabe72b44_ti4_test",
+  "source_database": "aos_test_7c4f2f6b4aa8_ti4_test",
+  "cluster": "7694680278363095064",
+  "head": "e5a9a830284f16b6daf484442451cc1069398bf8",
+  "unknown_outcome_requires_readonly_reconciliation": true,
+  "source_replay": false
+}

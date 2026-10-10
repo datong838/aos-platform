@@ -1,0 +1,220 @@
+{
+  "authority": "AOS-001761",
+  "scope": "read-only exact explicit Owner/PUBLIC column ACL candidate under successfully checked original role/table guards",
+  "columns_compared": 11249,
+  "mismatches": 0,
+  "expected_original_count": 5,
+  "samples": [
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.005934250002610497
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.006088957998144906
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.0061404589941957965
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.005830708003486507
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.006097833997046109
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.005890375003218651
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.005516624994925223
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.0061929579969728366
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.006546165997860953
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.00596945799770765
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.0038265830007730983
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.0032591670023975894
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.0031679999956395477
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.003353708001668565
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.0035112080004182644
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.004102750004676636
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.0032531660035601817
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.0031896660002530552
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.0037066250006319024
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.003623666998464614
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.0036411249966477044
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.0033147909998660907
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.00329129199963063
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.0032543749985052273
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.003318915994896088
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.0031723749998491257
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.0033176249999087304
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.003298165996966418
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.003432499994232785
+    },
+    {
+      "variant": "merged",
+      "count": 5,
+      "seconds": 0.00321099999564467
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.005868708998605143
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.006040542000846472
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.005442583998956252
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.005755250000220258
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.0054552910005440935
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.005339584000466857
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.00528945800033398
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.005475833000673447
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.005176250000658911
+    },
+    {
+      "variant": "original",
+      "count": 5,
+      "seconds": 0.005196291000174824
+    }
+  ],
+  "median_seconds": {
+    "original": 0.005849708501045825,
+    "merged": 0.0033162079998874106
+  },
+  "original_routine_sha256": "a58f562c97da4059549b8e18289c6a5f46b8a61553031b53961b60684231f030",
+  "original_routine_unchanged": true,
+  "product_modified": false,
+  "all_possible_acl_drift_proven": false,
+  "whole_source_timing_recovered": false,
+  "source_issued": false,
+  "execution_allowed": false
+}

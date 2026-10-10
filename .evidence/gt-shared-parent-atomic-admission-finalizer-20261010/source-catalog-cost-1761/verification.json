@@ -1,0 +1,54 @@
+{
+  "status": "ORIGINAL_CATALOG_COST_ISOLATED_CONDITIONAL_ACL_CANDIDATE_EQUIVALENCE_GREEN_WHOLE_SOURCE_TIMING_RED",
+  "authority": "AOS-001761",
+  "head": "e5a9a830284f16b6daf484442451cc1069398bf8",
+  "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "jit": {
+    "samples": 24,
+    "median_seconds": {
+      "on": 0.02284693699766649,
+      "off": 0.02231941649733926
+    },
+    "not_material_recovery": true,
+    "settings_restored": true
+  },
+  "columns_compared": 11249,
+  "column_predicate_mismatches": 0,
+  "conditional_acl_predicate_mismatches": 0,
+  "full_catalog_candidate": {
+    "fresh_retained_database": "aos_test_08aeabe72b44_ti4_test",
+    "exact_two_replacements": 2,
+    "native_cases": 21,
+    "all_equal": true,
+    "all_expected": true,
+    "complete_audit_median_seconds": {
+      "original": 0.02315216700299061,
+      "candidate": 0.018764437503705267
+    },
+    "median_reduction_fraction": 0.1895170114624074,
+    "not_all_possible_drift_proven": true
+  },
+  "independent_readback": {
+    "original_routine_unchanged": true,
+    "test_candidate_and_table_absent": true,
+    "local_settings_restored": true,
+    "fresh_database_retained": true
+  },
+  "initial_driver_parse_error": {
+    "sql_effects": 0,
+    "corrected_before_execution": true
+  },
+  "remaining": [
+    "Expand set-based exact catalog audit candidate and role/default ACL/RLS/guard/body drift coverage.",
+    "Resolve versioned Source installation identity/Owner inventory compatibility without silently rewriting published original functions.",
+    "Integrate only through a registered complete original signed Source isolated trial; no TTL extension/check omission or authority memoization.",
+    "Real v2 Receipt/final physical positive and native full event/RI/module/callback/end/actual COMMIT remain pending."
+  ],
+  "product_modified": false,
+  "formal_database_touched": false,
+  "global_role_modified": false,
+  "source_issued_or_replayed": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "goal_complete": false
+}

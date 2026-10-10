@@ -1,0 +1,205 @@
+{
+  "authority": "AOS-001761",
+  "head": "e5a9a830284f16b6daf484442451cc1069398bf8",
+  "database": "aos_test_7c4f2f6b4aa8_ti4_test",
+  "cluster": "7694680278363095064",
+  "routine_sha256": "a58f562c97da4059549b8e18289c6a5f46b8a61553031b53961b60684231f030",
+  "routine_owner": "aos_capacity_publication_owner",
+  "routine_security_definer": false,
+  "routine_search_path": [
+    "search_path=pg_catalog"
+  ],
+  "before_settings": [
+    [
+      "jit",
+      "on"
+    ],
+    [
+      "jit_above_cost",
+      "100000"
+    ],
+    [
+      "jit_inline_above_cost",
+      "500000"
+    ],
+    [
+      "jit_optimize_above_cost",
+      "500000"
+    ]
+  ],
+  "after_settings": [
+    [
+      "jit",
+      "on"
+    ],
+    [
+      "jit_above_cost",
+      "100000"
+    ],
+    [
+      "jit_inline_above_cost",
+      "500000"
+    ],
+    [
+      "jit_optimize_above_cost",
+      "500000"
+    ]
+  ],
+  "settings_restored": true,
+  "samples": [
+    {
+      "jit": "on",
+      "iteration": 0,
+      "seconds": 0.10215295899979537,
+      "outcome": "passed"
+    },
+    {
+      "jit": "on",
+      "iteration": 1,
+      "seconds": 0.023243124996952247,
+      "outcome": "passed"
+    },
+    {
+      "jit": "on",
+      "iteration": 2,
+      "seconds": 0.02280008299567271,
+      "outcome": "passed"
+    },
+    {
+      "jit": "on",
+      "iteration": 3,
+      "seconds": 0.02257975000247825,
+      "outcome": "passed"
+    },
+    {
+      "jit": "on",
+      "iteration": 4,
+      "seconds": 0.024241375002020504,
+      "outcome": "passed"
+    },
+    {
+      "jit": "on",
+      "iteration": 5,
+      "seconds": 0.02379212499363348,
+      "outcome": "passed"
+    },
+    {
+      "jit": "off",
+      "iteration": 0,
+      "seconds": 0.02258925000205636,
+      "outcome": "passed"
+    },
+    {
+      "jit": "off",
+      "iteration": 1,
+      "seconds": 0.024206833004427608,
+      "outcome": "passed"
+    },
+    {
+      "jit": "off",
+      "iteration": 2,
+      "seconds": 0.02249350000056438,
+      "outcome": "passed"
+    },
+    {
+      "jit": "off",
+      "iteration": 3,
+      "seconds": 0.021828832999744918,
+      "outcome": "passed"
+    },
+    {
+      "jit": "off",
+      "iteration": 4,
+      "seconds": 0.022145332994114142,
+      "outcome": "passed"
+    },
+    {
+      "jit": "off",
+      "iteration": 5,
+      "seconds": 0.021963166000205092,
+      "outcome": "passed"
+    },
+    {
+      "jit": "off",
+      "iteration": 0,
+      "seconds": 0.02350983400538098,
+      "outcome": "passed"
+    },
+    {
+      "jit": "off",
+      "iteration": 1,
+      "seconds": 0.02325458300038008,
+      "outcome": "passed"
+    },
+    {
+      "jit": "off",
+      "iteration": 2,
+      "seconds": 0.02213099999789847,
+      "outcome": "passed"
+    },
+    {
+      "jit": "off",
+      "iteration": 3,
+      "seconds": 0.023282292000658344,
+      "outcome": "passed"
+    },
+    {
+      "jit": "off",
+      "iteration": 4,
+      "seconds": 0.02179345899639884,
+      "outcome": "passed"
+    },
+    {
+      "jit": "off",
+      "iteration": 5,
+      "seconds": 0.022029709005437326,
+      "outcome": "passed"
+    },
+    {
+      "jit": "on",
+      "iteration": 0,
+      "seconds": 0.02225670900224941,
+      "outcome": "passed"
+    },
+    {
+      "jit": "on",
+      "iteration": 1,
+      "seconds": 0.02229487500153482,
+      "outcome": "passed"
+    },
+    {
+      "jit": "on",
+      "iteration": 2,
+      "seconds": 0.02173400000174297,
+      "outcome": "passed"
+    },
+    {
+      "jit": "on",
+      "iteration": 3,
+      "seconds": 0.02289379099966027,
+      "outcome": "passed"
+    },
+    {
+      "jit": "on",
+      "iteration": 4,
+      "seconds": 0.023877459003415424,
+      "outcome": "passed"
+    },
+    {
+      "jit": "on",
+      "iteration": 5,
+      "seconds": 0.022273666996625252,
+      "outcome": "passed"
+    }
+  ],
+  "median_seconds": {
+    "on": 0.02284693699766649,
+    "off": 0.02231941649733926
+  },
+  "formal_database_touched": false,
+  "source_issued": false,
+  "product_modified": false,
+  "execution_allowed": false,
+  "whole_source_timing_recovered": false,
+  "goal_complete": false
+}
