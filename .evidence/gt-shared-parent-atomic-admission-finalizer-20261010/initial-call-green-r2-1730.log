@@ -1,0 +1,143 @@
+..................FE                                                     [100%]
+==================================== ERRORS ====================================
+_ ERROR at teardown of test_native_initial_call_authority_is_closed_and_caller_bound _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+            assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+            before = conn.execute("SELECT p.oid::regprocedure::text,p.prosrc,p.proacl::text FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='aos_physical_capacity_occupation_private' OR p.proname LIKE 'prepare_capacity%%' ORDER BY 1").fetchall()
+            for statement in shared_parent_original_fact_statements():
+                conn.execute(statement)
+            yield conn
+>           conn.execute('RESET ROLE')
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [BAD] at 0x11c746e10>, query = 'RESET ROLE'
+params = None, prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.InFailedSqlTransaction: current transaction is aborted, commands ignored until end of transaction block
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: InFailedSqlTransaction
+=================================== FAILURES ===================================
+________ test_native_initial_call_authority_is_closed_and_caller_bound _________
+
+native = <psycopg.Connection [INERROR] (host=127.0.0.1 port=5441 user=aos_app database=aos_test_05f1a1dcd51f_ti4_test) at 0x11c746e10>
+
+    def test_native_initial_call_authority_is_closed_and_caller_bound(native):
+        from aos_api import aip_shared_parent_atomic_admission as api
+        for statement in (*api.shared_parent_admission_origin_statements(),
+                          *api.shared_parent_admission_certificate_set_statements(),
+                          *api.shared_parent_admission_storage_statements(),
+                          *api.shared_parent_pending_origin_lookup_statements(),
+                          *api.shared_parent_physical_obligation_statements(),
+                          *api.shared_parent_initial_intent_statements(),
+                          *api.shared_parent_end_authority_statements(),
+                          *api.shared_parent_initial_call_authority_statements()):
+>           native.execute(statement)
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:309: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (host=127.0.0.1 port=5441 user=aos_app database=aos_test_05f1a1dcd51f_ti4_test) at 0x11c746e10>
+query = 'CREATE TABLE aos_shared_parent_physical_private.initial_call_authority(\n          plan_id uuid PRIMARY KEY REFERENCE...REIGN KEY(judge_id,judge_hash) REFERENCES aos_shared_parent_physical_private.judge_dependency(intent_id,content_hash))'
+params = None, prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.InvalidForeignKey: there is no unique constraint matching given keys for referenced table "judge_dependency"
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: InvalidForeignKey
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_initial_call_authority_is_closed_and_caller_bound
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_initial_call_authority_is_closed_and_caller_bound
+1 failed, 18 passed, 7 warnings, 1 error in 1.13s

@@ -1,0 +1,42 @@
+{
+  "authority_revision": "AOS-001730",
+  "status": "INITIAL_CALL_AUTHORITY_STRUCTURE_GREEN_NATIVE_POSITIVE_RED",
+  "attempts": [
+    {
+      "attempt": 1,
+      "database": "aos_test_0f081ecfdac3_ti4_test",
+      "pytest_exit": 1,
+      "native_function_bodies_exact": true,
+      "initial_material_and_intent_rows": {
+        "initial_call_authority": 0,
+        "initial_target_obligation": 0,
+        "target_intent": 0,
+        "judge_dependency": 0
+      },
+      "test_role_restored": true,
+      "positive_component_proof": false,
+      "failure": "Original Source/current consumer deadline rejected at stage READ_RETAINED; outer supplier cleanup also RED"
+    },
+    {
+      "attempt": 2,
+      "database": "aos_test_49ece847e43c_ti4_test",
+      "pytest_exit": 1,
+      "native_function_bodies_exact": true,
+      "initial_material_and_intent_rows": {
+        "initial_call_authority": 0,
+        "initial_target_obligation": 0,
+        "target_intent": 0,
+        "judge_dependency": 0
+      },
+      "test_role_restored": true,
+      "positive_component_proof": false,
+      "failure": "Original Source/current consumer deadline rejected at stage READ_RETAINED; outer supplier cleanup also RED"
+    }
+  ],
+  "adjacent_passed": 326,
+  "existing_eight_artifacts_unchanged": true,
+  "formal_writes": false,
+  "execution_authorized": false,
+  "full_task_delivered": false,
+  "next_step": "Measure individual native call elapsed times and redesign duplicate full-kernel orchestration while preserving original Source/currentness deadlines and postwait checks."
+}

@@ -1,0 +1,34 @@
+{
+  "shared_parent_original_fact_statements": {
+    "unchanged": true,
+    "sha256": "d4ab5c4a1c44ec8a5e4a8e2f42dce4f986e96a19dec210758c8921fad3427f1e"
+  },
+  "shared_parent_admission_origin_statements": {
+    "unchanged": true,
+    "sha256": "cfd208bc9d3c44c7480fddd3a4fdb4ece3e94bd2054b50da958f9e6ad5d4f642"
+  },
+  "shared_parent_admission_certificate_set_statements": {
+    "unchanged": true,
+    "sha256": "41d5a25a9f5c4bfbdcedf8505e029df71963bc68c4bf3d1ce1e9a1f59d605c78"
+  },
+  "shared_parent_admission_storage_statements": {
+    "unchanged": true,
+    "sha256": "4c2a466f82c47dd43302377e5dfc7c0ac2c26edf293da0d9d2fa8761d6edcdd2"
+  },
+  "shared_parent_pending_origin_lookup_statements": {
+    "unchanged": true,
+    "sha256": "fb26ec742de3c26c8c48950a8f56b05d40f62f27eafda4809417aa6e0bb5dd97"
+  },
+  "shared_parent_physical_obligation_statements": {
+    "unchanged": true,
+    "sha256": "7ef0b5ed0cf3df73fdb9dd317c79c1e0ced7d9bca66fb433c9d1daf460d63819"
+  },
+  "shared_parent_initial_intent_statements": {
+    "unchanged": true,
+    "sha256": "0b4befe2d619b1b5f3e1ac16e34a06da184176953a38e08b55747c6794b0c26e"
+  },
+  "shared_parent_end_authority_statements": {
+    "unchanged": true,
+    "sha256": "c2f547fe3dffc132394bc3423593f59270d237ac1a0bd295781904c1f7c9f55a"
+  }
+}

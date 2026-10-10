@@ -103,3 +103,15 @@ read_shared_parent_retained_origin(uuid,text,xid8,integer)仅GRANT给physical Ow
 1729 r1新retained组件Stage/固定read/四negative/实际COMMIT拒绝及独立aborted零材料父hold通过，后续原Source相邻和supplier cleanup到期RED保留；不同Source独立原回归57.68s证据仍适用且原14/新既有7SQL组字节保持。r2新Source/新审批/新签名，补实际存在材料行UPDATE/DELETE不可变拒绝及合法native调用方切dev-org后固定read早拒，保留全部原试验流程与原TTL；无原结果重发。
 
 1729 r2独立回读：保留库aos_test_9fcf64cfee71_ti4_test，7项实际负门（含合法caller canary、既存材料UPDATE/DELETE）与四签名、精确原生函数/ACL、实际COMMIT拒绝、aborted零pending/material/父hold及角色恢复通过；外层Source/cleanup因到期整轮RED，不能升级为全包GREEN。累计325通过，旧7artifact/原14SQL不变。独立模型review r1因返回Markdown fenced JSON被官方严格解析拒绝，保留原transport，不伪装已消费；r2为新纯材料请求，无执行权。
+
+## 1730 原初调用材料闭合方案（编码前）
+候选一为完整终门Suite/Input原字节重核，候选二为全物理窗口/历史unknown切换；先做前者，后者依赖完整结束通道及历史映射。
+精确产品文件仍仅 services/aos-api/aos_api/aip_shared_parent_atomic_admission.py、services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py。新增独立initial_call_authority artifact，原8组SQL逐字不变。物理Owner private表存原Source packet/Suite/Input bytea；Source用已存在闭字段核（不存bearer），Suite/Input原生CASE_FACT与input核复用INITIAL_INTENT，不猜canonical恢复原字节。绑定plan/pending/obligation/TargetIntent+hash/JudgeDependency+hash、三原字节SHA256及caller xid/pid。plan唯一、两Intent复合FK、同scope FORCE RLS；无runtime/Provider表和函数权限，immutable UPDATE/DELETE/TRUNCATE，deferred仍同既存完整结束通道，不能单独COMMIT。
+固定stage接受原18参数，先原INITIAL_INTENT全部原核和两行幂等绑定，再新READ_RETAINED完整证书/Source当前性，server派生材料body/hash、存三bytea，后重复原核。固定read仅plan/hash/xid/pid：锁已有材料和通过FK保证的两Intent/obligation，核三字节hash与native两Intent/hash及caller，然后READ_RETAINED重读pending，从原facts/manifest/cert与材料重构原18参数，调用同INITIAL_INTENT再比精确native两body/hash。原INITIAL_INTENT可执行INSERT ON CONFLICT，但已存FK及原ID保证只能原同行精确幂等，不生成新ID/新Intent；材料read不接受caller原始facts。返回复核两Intent/hash及material hash，不返回原字节。保留原整个风险/物理窗口/事件RI/历史unknown/full ending缺口，不安装空终门、不授执行权。
+RED artifact缺失；GREEN原生DDL/ACL/RLS/复合FK/管理员拒绝+回滚、原8 SQL byte image；然后新鲜Source两审批四签名真实stage/read和原始字节篡改/坏caller/坏hash/私表拒绝/既存不可变/实际COMMIT拒绝+独立aborted零行。metadata和Source串行，期限不改，整轮Source若到期继续保留RED。未部署artifact无浏览器验收条件。
+
+1730 metadata r1误用旧artifact函数名、r2发现Judge无复合unique；均保留失败。调整为Judge原PK单列FK+BEFORE native hash绑定，Target沿用既有复合FK，不新增或修改原表约束。这样仍三FK、两hash原生核验，旧artifact字节不变。
+
+1730 native r1在stage内READ_RETAINED原Source到期，未取得新增组件正向/COMMIT证据，保留aos_test_0f081ecfdac3_ti4_test及原Source teardown RED。r2全新Source/审批/签名，不重放；删夹具中上轮已验收的7项retention重复负门，仅做本轮原字节保存/固定重读及3新negative；原product核与外层Source测试及TTL均不变。若仍到期，登记真实路径耗时，不宣称组件PASS。
+
+1730实际r1/r2均未完成新Stage正向，分别原Source expired/current consumer门拒绝，不能仅凭19原生结构+326累计GREEN宣称成功。两新保留库原生body与role恢复、initial材料/obligation/Intent/dependency全零已独立回读。下一项不是继续堆叠重试：在新fresh fixture逐段记录BEGIN/END/elapsed和原deadline，再评审整体pipeline重复重核，保持旧8artifact、原期限和等锁后全重核，不用轻量stub绕过full ending；当前新增artifact仅未部署WIP，无完整Task Delivery。

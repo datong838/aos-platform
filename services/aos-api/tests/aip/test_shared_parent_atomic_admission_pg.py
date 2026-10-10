@@ -294,3 +294,33 @@ def test_native_retained_end_authority_is_closed_and_caller_bound(native):
     native.rollback()
     assert native.execute('SELECT to_regclass(%s)', (table,)).fetchone()[0] is None
     native.rollback()
+
+
+def test_native_initial_call_authority_is_closed_and_caller_bound(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    for statement in (*api.shared_parent_admission_origin_statements(),
+                      *api.shared_parent_admission_certificate_set_statements(),
+                      *api.shared_parent_admission_storage_statements(),
+                      *api.shared_parent_pending_origin_lookup_statements(),
+                      *api.shared_parent_physical_obligation_statements(),
+                      *api.shared_parent_initial_intent_statements(),
+                      *api.shared_parent_end_authority_statements(),
+                      *api.shared_parent_initial_call_authority_statements()):
+        native.execute(statement)
+    table=api.PHYSICAL_SCHEMA+'.initial_call_authority'
+    assert native.execute('SELECT pg_get_userbyid(relowner),relrowsecurity,relforcerowsecurity FROM pg_class WHERE oid=%s::regclass',(table,)).fetchone()==(OWNER,True,True)
+    for signature in (api.STAGE_INITIAL_CALL,api.READ_INITIAL_CALL):
+        assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure',(signature,)).fetchone()==(OWNER,True,['search_path=pg_catalog'])
+        for role in ('aos_runtime','aos_provider_capacity_issuer'):
+            assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')",(role,signature)).fetchone()[0]
+    for role in ('aos_runtime','aos_provider_capacity_issuer'):
+        for privilege in ('SELECT','INSERT','UPDATE','DELETE','TRUNCATE'):
+            assert not native.execute('SELECT has_table_privilege(%s,%s,%s)',(role,table,privilege)).fetchone()[0]
+    assert native.execute("SELECT count(*) FROM pg_constraint WHERE conrelid=%s::regclass AND contype='f'",(table,)).fetchone()[0]==3
+    assert native.execute("SELECT tgdeferrable,tginitdeferred FROM pg_trigger WHERE tgrelid=%s::regclass AND tgname='require_complete_call_end'",(table,)).fetchone()==(True,True)
+    for name,count in [('stage_shared_parent_initial_call_authority',18),('read_shared_parent_initial_call_authority',4)]:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SHARED_ADMISSION_CALL_NATIVE_CALLER_REQUIRED'):
+            with native.transaction():native.execute('SELECT public.'+name+'('+','.join(['NULL']*count)+')')
+    native.rollback()
+    assert native.execute('SELECT to_regclass(%s)',(table,)).fetchone()[0] is None
+    native.rollback()
