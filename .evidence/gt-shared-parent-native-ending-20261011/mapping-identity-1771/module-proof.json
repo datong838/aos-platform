@@ -1,0 +1,562 @@
+{
+  "full_admission": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "rollback_only_installation_absent": true,
+  "original_pending_reader_exact": true,
+  "file_metadata_exact": true,
+  "file_public_runtime_closed": true,
+  "file_direct_superuser_denied": true,
+  "native_file_hashes_match_independent_disk": true,
+  "repeated_file_observation_stable": true,
+  "module_file_facts": {
+    "files": [
+      {
+        "path": "/lib/ld-musl-aarch64.so.1",
+        "bytes": 723480,
+        "inode": "342",
+        "device": "63",
+        "sha256": "32377e6d71725bb019e9ff6d5e9f16b4d5156d6f2c36504191c2d6a7c4d4a44d",
+        "virtual": false
+      },
+      {
+        "path": "/tmp/aos_admission_modules_8d2939cd71374240b0b28471379b8d42.so",
+        "bytes": 74136,
+        "inode": "2384134",
+        "device": "63",
+        "sha256": "7b7b029c62a6bc57a840e6415234021953b490104b188a8978289bdcea430a42",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libcom_err.so.2.1",
+        "bytes": 67320,
+        "inode": "7165",
+        "device": "63",
+        "sha256": "24566328c96f483f5f52dd99c7c0a9654f84175cd96cb98dfcc838179bd805f2",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libcrypto.so.3",
+        "bytes": 4533144,
+        "inode": "573",
+        "device": "63",
+        "sha256": "ae1d370e3146642824c6ee4bde0fdf83b9e8174a9d28d093362afde5cc4b3e6c",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libgcc_s.so.1",
+        "bytes": 133008,
+        "inode": "7172",
+        "device": "63",
+        "sha256": "b83bc14b3e1660d66b0387077aea7e104fce3ed93bb56d05e30e4e2cdb37b473",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libgssapi_krb5.so.2.2",
+        "bytes": 331952,
+        "inode": "7178",
+        "device": "63",
+        "sha256": "41817694da65a0d4687ac5d2367d892e9e2414a9fcdff1437e7cad18647ac6a4",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libicudata.so.78.1",
+        "bytes": 66296,
+        "inode": "7182",
+        "device": "63",
+        "sha256": "32b2e6af13f6c8694002699d07b50e7ca657e352c26a2da171b51e06ed97bf21",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libicui18n.so.78.1",
+        "bytes": 3148224,
+        "inode": "7184",
+        "device": "63",
+        "sha256": "df94fdacc782b0ce874f3a950bd10f0f8e5aca7dc5512ccf411002f650b81892",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libicuuc.so.78.1",
+        "bytes": 1902632,
+        "inode": "7188",
+        "device": "63",
+        "sha256": "3873dd2a58594254560e70b3a8fcf4d8cf1854e5b4958bfe59911614e37ce692",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libk5crypto.so.3.1",
+        "bytes": 198736,
+        "inode": "7190",
+        "device": "63",
+        "sha256": "209699357765808420432a5c12eed8ef7d5d21d9dfdb0959e752f4d88c02db15",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libkeyutils.so.1.10",
+        "bytes": 67400,
+        "inode": "7198",
+        "device": "63",
+        "sha256": "1ead757a4645a477d16b616b4764dabcb5200e45ad0e6c4a95c8e4450b3c37c0",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libkrb5.so.3.3",
+        "bytes": 726736,
+        "inode": "7202",
+        "device": "63",
+        "sha256": "c8037f7ee147d64ecbe9f5b4a7a7ec45cbcb1508817825d054a73d6d34ec8ee1",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libkrb5support.so.0.1",
+        "bytes": 67648,
+        "inode": "7204",
+        "device": "63",
+        "sha256": "afa7c4a65691c2fdd59460827c6653f51509efa7a06bfc5aaf45933f72708be6",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/liblber.so.2.0.200",
+        "bytes": 67600,
+        "inode": "7206",
+        "device": "63",
+        "sha256": "a61c5860f91e4daf0e0fa464ce48dc39c1568629b693050c24734c0b2e12d515",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libldap.so.2.0.200",
+        "bytes": 396176,
+        "inode": "7208",
+        "device": "63",
+        "sha256": "a546e5260262c213c4c3734df70185553b71df12a9724d89380918ccf850d0ea",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/liblz4.so.1.10.0",
+        "bytes": 198392,
+        "inode": "7210",
+        "device": "63",
+        "sha256": "729ca3feae715dca6947674fa1f5451b4f36bbc54aa8a4471bf5c66096aeb41c",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/liblzma.so.5.8.3",
+        "bytes": 263928,
+        "inode": "7212",
+        "device": "63",
+        "sha256": "a30eb437c4fb1fc99a14d8038ee5db824121e14579abff329831a9a1be0f5f37",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libsasl2.so.3.0.0",
+        "bytes": 133680,
+        "inode": "7221",
+        "device": "63",
+        "sha256": "f7be9e5f370e61382482ba06a0dbcf4617e683956f5fc0f1fcf00d151776f1ea",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libssl.so.3",
+        "bytes": 868240,
+        "inode": "574",
+        "device": "63",
+        "sha256": "c9a8250bba27abe89c240876f8c78704eaaca9636f53b2aa29b3859f89d2e938",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libstdc++.so.6.0.34",
+        "bytes": 2820600,
+        "inode": "7223",
+        "device": "63",
+        "sha256": "bc958507db0cacf75cbf7298c395fbc7596667b17e1283d98bd6cfe3e59df951",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libxml2.so.2.13.9",
+        "bytes": 1182624,
+        "inode": "7229",
+        "device": "63",
+        "sha256": "8930cfb0f6f0639e6ecde1f6b9d10fd66c81ffa6a3424352bac8e8b786a3f75b",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libz.so.1.3.2",
+        "bytes": 133008,
+        "inode": "576",
+        "device": "63",
+        "sha256": "d3b940580ded8f736804c78df7302b9e7a3f27900ac25a5c97bb05f50992f567",
+        "virtual": false
+      },
+      {
+        "path": "/usr/lib/libzstd.so.1.5.7",
+        "bytes": 657240,
+        "inode": "7233",
+        "device": "63",
+        "sha256": "baeb93cf3904f55809f9229c7b0e9348bfe07b80d319a477df9ac63657a9fa55",
+        "virtual": false
+      },
+      {
+        "path": "/usr/local/bin/postgres",
+        "bytes": 10369648,
+        "inode": "7278",
+        "device": "63",
+        "sha256": "025eccb4f06a6d63d724cc1d8abdeb75c909f7bbb8493bf5b0e0273d67451d77",
+        "virtual": false
+      },
+      {
+        "path": "/usr/local/lib/postgresql/pgcrypto.so",
+        "bytes": 164024,
+        "inode": "9398",
+        "device": "63",
+        "sha256": "5244bf9d2d9740ef3f65aaf4770f110ac3db862664c073656767ca40ec8507ff",
+        "virtual": false
+      },
+      {
+        "path": "/usr/local/lib/postgresql/plpgsql.so",
+        "bytes": 226000,
+        "inode": "9430",
+        "device": "63",
+        "sha256": "c8e33f978d81ebbe5296ae02ec3c42d810787cc7ac854437371f6974fa41a21e",
+        "virtual": false
+      },
+      {
+        "path": "virtual:linux-vdso.so.1",
+        "sha256": null,
+        "virtual": true
+      }
+    ],
+    "schemaVersion": "aos.native-module-file-observation/v1",
+    "executionAllowed": false,
+    "mappedImageProvenance": false
+  },
+  "metadata_exact": true,
+  "no_caller_allowlist": true,
+  "public_runtime_closed": true,
+  "direct_superuser_denied": true,
+  "actual_backend_maps_match": true,
+  "repeated_observation_stable": true,
+  "loaded_paths": [
+    "/lib/ld-musl-aarch64.so.1",
+    "/tmp/aos_admission_modules_8d2939cd71374240b0b28471379b8d42.so",
+    "/usr/lib/libcom_err.so.2.1",
+    "/usr/lib/libcrypto.so.3",
+    "/usr/lib/libgcc_s.so.1",
+    "/usr/lib/libgssapi_krb5.so.2.2",
+    "/usr/lib/libicudata.so.78.1",
+    "/usr/lib/libicui18n.so.78.1",
+    "/usr/lib/libicuuc.so.78.1",
+    "/usr/lib/libk5crypto.so.3.1",
+    "/usr/lib/libkeyutils.so.1.10",
+    "/usr/lib/libkrb5.so.3.3",
+    "/usr/lib/libkrb5support.so.0.1",
+    "/usr/lib/liblber.so.2.0.200",
+    "/usr/lib/libldap.so.2.0.200",
+    "/usr/lib/liblz4.so.1.10.0",
+    "/usr/lib/liblzma.so.5.8.3",
+    "/usr/lib/libsasl2.so.3.0.0",
+    "/usr/lib/libssl.so.3",
+    "/usr/lib/libstdc++.so.6.0.34",
+    "/usr/lib/libxml2.so.2.13.9",
+    "/usr/lib/libz.so.1.3.2",
+    "/usr/lib/libzstd.so.1.5.7",
+    "/usr/local/bin/postgres",
+    "/usr/local/lib/postgresql/aos_ed25519.so",
+    "/usr/local/lib/postgresql/pgcrypto.so",
+    "/usr/local/lib/postgresql/plpgsql.so",
+    "virtual:linux-vdso.so.1"
+  ],
+  "virtual_vdso_matches_kernel_auxv": true,
+  "later_foreign_module_observed": true,
+  "foreign_arm_invoked": false,
+  "foreign_library": "/tmp/aos_order_19c98c11c71b44ffa9f8b6a33e0b4573.so",
+  "new_binary_original_pending_api_native_verified": true,
+  "module_observation_does_not_drain_events": true,
+  "savepoint_pending_restored": true,
+  "changed_copy_observed": true,
+  "oversize_copy_denied": true,
+  "failed_observation_recovery": true,
+  "original_foreign_binary_exact": true,
+  "retained_test_copy": "/tmp/aos_order_file_facts_4fca8e9f2ac84e428b93f8ab724f8974.so",
+  "header_mapping_kernel_identity_exact": true,
+  "header_mapping_owner_acl_closed": true,
+  "header_mapping_facts": {
+    "files": [
+      {
+        "path": "/usr/local/bin/postgres",
+        "inode": "7278",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "aaaac9b4d000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "aaaac9290000",
+        "headerAddress": "aaaac9290040"
+      },
+      {
+        "path": "/usr/lib/libzstd.so.1.5.7",
+        "inode": "7233",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9bc2b000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9bb7c000",
+        "headerAddress": "ffff9bb7c040"
+      },
+      {
+        "path": "/usr/lib/liblz4.so.1.10.0",
+        "inode": "7210",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9bb7a000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9bb3b000",
+        "headerAddress": "ffff9bb3b040"
+      },
+      {
+        "path": "/usr/lib/libxml2.so.2.13.9",
+        "inode": "7229",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9bb2e000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9ba19000",
+        "headerAddress": "ffff9ba19040"
+      },
+      {
+        "path": "/usr/lib/libssl.so.3",
+        "inode": "574",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9ba0b000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9b935000",
+        "headerAddress": "ffff9b935040"
+      },
+      {
+        "path": "/usr/lib/libcrypto.so.3",
+        "inode": "573",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9b8be000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9b4cf000",
+        "headerAddress": "ffff9b4cf040"
+      },
+      {
+        "path": "/usr/lib/libgssapi_krb5.so.2.2",
+        "inode": "7178",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9b4cc000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9b47e000",
+        "headerAddress": "ffff9b47e040"
+      },
+      {
+        "path": "/usr/lib/libz.so.1.3.2",
+        "inode": "576",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9b47c000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9b44d000",
+        "headerAddress": "ffff9b44d040"
+      },
+      {
+        "path": "/usr/lib/libldap.so.2.0.200",
+        "inode": "7208",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9b447000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9b3ea000",
+        "headerAddress": "ffff9b3ea040"
+      },
+      {
+        "path": "/usr/lib/libicui18n.so.78.1",
+        "inode": "7184",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9b3d4000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9b0d8000",
+        "headerAddress": "ffff9b0d8040"
+      },
+      {
+        "path": "/usr/lib/libicuuc.so.78.1",
+        "inode": "7188",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9b0c2000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9af05000",
+        "headerAddress": "ffff9af05040"
+      },
+      {
+        "path": "/lib/ld-musl-aarch64.so.1",
+        "inode": "342",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9bcd0000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9bc2d000",
+        "headerAddress": "ffff9bc2d040"
+      },
+      {
+        "path": "/usr/lib/liblzma.so.5.8.3",
+        "inode": "7212",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9af03000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9aeb4000",
+        "headerAddress": "ffff9aeb4040"
+      },
+      {
+        "path": "/usr/lib/libkrb5.so.3.3",
+        "inode": "7202",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9aea5000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9adf2000",
+        "headerAddress": "ffff9adf2040"
+      },
+      {
+        "path": "/usr/lib/libk5crypto.so.3.1",
+        "inode": "7190",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9adef000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9adb1000",
+        "headerAddress": "ffff9adb1040"
+      },
+      {
+        "path": "/usr/lib/libcom_err.so.2.1",
+        "inode": "7165",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9adaf000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9ad90000",
+        "headerAddress": "ffff9ad90040"
+      },
+      {
+        "path": "/usr/lib/libkrb5support.so.0.1",
+        "inode": "7204",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9ad8e000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9ad6f000",
+        "headerAddress": "ffff9ad6f040"
+      },
+      {
+        "path": "/usr/lib/liblber.so.2.0.200",
+        "inode": "7206",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9ad6d000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9ad4e000",
+        "headerAddress": "ffff9ad4e040"
+      },
+      {
+        "path": "/usr/lib/libsasl2.so.3.0.0",
+        "inode": "7221",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9ad4c000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9ad1d000",
+        "headerAddress": "ffff9ad1d040"
+      },
+      {
+        "path": "/usr/lib/libstdc++.so.6.0.34",
+        "inode": "7223",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9ad06000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9aa58000",
+        "headerAddress": "ffff9aa58040"
+      },
+      {
+        "path": "/usr/lib/libgcc_s.so.1",
+        "inode": "7172",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9aa56000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9aa27000",
+        "headerAddress": "ffff9aa27040"
+      },
+      {
+        "path": "/usr/lib/libicudata.so.78.1",
+        "inode": "7182",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9aa26000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9aa07000",
+        "headerAddress": "ffff9aa07040"
+      },
+      {
+        "path": "/usr/lib/libkeyutils.so.1.10",
+        "inode": "7198",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff9aa05000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff9a9e6000",
+        "headerAddress": "ffff9a9e6040"
+      },
+      {
+        "path": "virtual:linux-vdso.so.1",
+        "virtual": true
+      },
+      {
+        "path": "/tmp/aos_admission_modules_8d2939cd71374240b0b28471379b8d42.so",
+        "inode": "2384134",
+        "virtual": false,
+        "fileOffset": "0",
+        "mappingEnd": "ffff8d1c3000",
+        "deviceMajor": "0",
+        "deviceMinor": "63",
+        "mappingStart": "ffff8d1a4000",
+        "headerAddress": "ffff8d1a4040"
+      }
+    ],
+    "schemaVersion": "aos.native-module-header-mapping/v1",
+    "executionAllowed": false,
+    "imageBytesVerified": false,
+    "programHeaderMappingIdentity": true
+  },
+  "header_path_replacement_denied": true,
+  "header_identity_recovery": true,
+  "mapping_test_copy_retained": "/tmp/aos_order_mapping_test_284db48af2574a4da994ef768a03db66.so",
+  "mapping_error_descriptors_released": true
+}

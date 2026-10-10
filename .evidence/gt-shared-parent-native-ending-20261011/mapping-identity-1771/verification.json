@@ -1,0 +1,26 @@
+{
+  "authority": "AOS-001771",
+  "red": "2 native UndefinedFunction failures; 11 deselected; no skips",
+  "build": "isolated native Werror exit0",
+  "native_and_adjacent": "9 passed 4 deselected; no skips",
+  "error_resource_recovery": "2 mapping tests pass after descriptor closure assertion",
+  "independent": "new3 APIs absent; original pending/C prefix/native/signature/foreign binaries exact; all5 owners closed",
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "formal_database_changed": false,
+  "limitations": [
+    "header mapping identity only, not all segments or bytes",
+    "No trusted package/Root immutable lifecycle or final callback/RI/clock proof",
+    "Main full8/fourcert/Source/risk/physical/Receipt/native positive COMMIT remains"
+  ],
+  "readback_failures": [
+    "system Python TypeAlias import failed before connection; corrected project Python",
+    "wrong nonexistent model role name; corrected actual issuer_owner; read-only failure"
+  ],
+  "source_hashes": {
+    "aos_admission_end.c": "28dea2e69713ae970aac10bc3d26bad1a5f8931a9c2e6cd64856148201e43d70",
+    "Makefile": "56080f2509ebb5f5d5de7f1b2567c0478d3c37fcbc9a9915c547a1073bb48d5d",
+    "aos_admission_end.control": "786f5ff9b0848d21160fabb996bc3b43086d462ab7deb74a598808e048b0e750",
+    "aos_admission_end--0.1.sql": "7b531c1e031d28967e4677ecca06d189fd95c860f19492d30c6a75a14714bbac"
+  }
+}

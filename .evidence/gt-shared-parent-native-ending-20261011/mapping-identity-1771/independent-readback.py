@@ -1,0 +1,14 @@
+import pathlib,json,hashlib,subprocess
+import psycopg
+B=pathlib.Path(__file__).resolve().parent;R=B.parents[2]
+s=json.loads((B/'spec.json').read_text());l=json.loads((R/'.evidence/gt-source-desktop-shm-lab-20261009/lab.json').read_text());proof=json.loads((B/'module-proof.json').read_text());assert proof['header_identity_recovery'] and proof['mapping_error_descriptors_released']
+with psycopg.connect(host='127.0.0.1',port=l['port'],user='aos_app',dbname=s['database'],passfile=l['passfile'],connect_timeout=5) as c:
+ c.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE READ ONLY');assert c.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0]==l['cluster']
+ for f in ['loaded_module_paths','loaded_module_file_facts','loaded_module_mapping_facts']:assert c.execute('SELECT to_regprocedure(%s)',('aos_admission_native_private.'+f+'()',)).fetchone()[0] is None
+ meta=c.execute("SELECT prosrc,probin,proacl::text FROM pg_proc WHERE oid='aos_admission_native_private.pending_relations()'::regprocedure").fetchone();assert meta[0]=='aos_admission_pending_relations' and meta[1]=='/tmp/aos_admission_end_25913075ff7145d485a5509d8d55d142.so'
+ roles={}
+ for role in ['aos_physical_capacity_occupation_owner','aos_provider_capacity_issuer','aos_provider_capacity_occupation','aos_model_eval_issuer_owner','aos_capacity_publication_owner']:
+  flags=c.execute('SELECT rolcanlogin,rolinherit,rolsuper,rolcreatedb,rolcreaterole,rolreplication,rolbypassrls FROM pg_roles WHERE rolname=%s',(role,)).fetchone();assert flags is not None and not any(flags),(role,flags);assert c.execute('SELECT count(*) FROM pg_auth_members WHERE roleid=%s::regrole OR member=%s::regrole',(role,role)).fetchone()[0]==0;roles[role]=flags
+foreign=subprocess.check_output(['docker','exec',l['name'],'sha256sum',s['foreign_library']],text=True).split()[0];assert foreign==s['foreign_library_sha256'];signature=subprocess.check_output(['docker','exec',l['name'],'sha256sum','/usr/local/lib/postgresql/aos_ed25519.so'],text=True).split()[0];assert signature=='6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e'
+p=R/'services/aos-api/postgres-extensions/aos_admission_end';old=(B.parent/'module-file-facts-1768/native/aos_admission_end.c').read_text();new=(p/'aos_admission_end.c').read_text();assert new.startswith(old.rstrip());assert all(hashlib.sha256((p/n).read_bytes()).hexdigest()==h for n,h in s['source_hashes'].items())
+(B/'independent-all-owners.json').open('x').write(json.dumps({'cluster':l['cluster'],'new_interfaces_absent':True,'original_pending_metadata':meta,'five_roles_closed':roles,'original_binary_hashes_exact':True,'old_C_prefix_exact':True,'current_package_hashes_match_artifact_spec':True,'full_task_delivered':False},indent=2)+'\n');print(json.dumps({'five_roles_closed':True,'new_interfaces_absent':True,'old_C_prefix_exact':True}))

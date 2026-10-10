@@ -259,3 +259,123 @@ Datum aos_admission_loaded_module_file_facts(PG_FUNCTION_ARGS)
     PG_RETURN_NULL();
 #endif
 }
+
+/* Program-header mapping identity only; this does not verify loaded image bytes. */
+#ifdef __linux__
+#include <sys/sysmacros.h>
+static void append_header_mapping(StringInfo output, const char *path, uintptr_t header)
+{
+    FILE *volatile file = NULL;
+    FILE *volatile maps = NULL;
+    PG_TRY();
+    {
+        struct stat before, after, named;
+        unsigned count = 0, matched = 0;
+        unsigned long long found_start = 0, found_end = 0, found_offset = 0;
+        char line[AOS_MODULE_PATH_LIMIT + 256];
+        file = AllocateFile(path, "rb");
+        if (file == NULL || fstat(fileno(file), &before) != 0 || !S_ISREG(before.st_mode) || header == 0)
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_MAPPING_REQUIRED");
+        maps = AllocateFile("/proc/self/maps", "r");
+        if (maps == NULL)
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_MAPPING_REQUIRED");
+        while (fgets(line, sizeof(line), maps) != NULL) {
+            unsigned long long start, end, offset, inode;
+            unsigned device_major, device_minor;
+            char permissions[5];
+            CHECK_FOR_INTERRUPTS();
+            if (++count > 8192 || strchr(line, '\n') == NULL ||
+                sscanf(line, "%llx-%llx %4s %llx %x:%x %llu", &start, &end, permissions,
+                    &offset, &device_major, &device_minor, &inode) != 7 || start >= end)
+                elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_MAPPING_REQUIRED");
+            if ((unsigned long long) header < start || (unsigned long long) header >= end)
+                continue;
+            /* Locate the actual loader program header, never any matching pathname. */
+            if (++matched != 1 || permissions[0] != 'r' || inode == 0 ||
+                inode != (unsigned long long) before.st_ino ||
+                device_major != (unsigned) major(before.st_dev) ||
+                device_minor != (unsigned) minor(before.st_dev))
+                elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_MAPPING_CHANGED");
+            found_start = start;
+            found_end = end;
+            found_offset = offset;
+        }
+        if (ferror(maps) || matched != 1 || fstat(fileno(file), &after) != 0 ||
+            stat(path, &named) != 0 || !same_file_stat(&before, &after) || !same_file_stat(&before, &named))
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_MAPPING_CHANGED");
+        appendStringInfoString(output, "{\"path\":");
+        escape_json(output, path);
+        appendStringInfo(output, ",\"virtual\":false,\"headerAddress\":\"%llx\",\"mappingStart\":\"%llx\",\"mappingEnd\":\"%llx\",\"fileOffset\":\"%llx\",\"deviceMajor\":\"%u\",\"deviceMinor\":\"%u\",\"inode\":\"%llu\"}",
+            (unsigned long long) header, found_start, found_end, found_offset,
+            (unsigned) major(before.st_dev), (unsigned) minor(before.st_dev), (unsigned long long) before.st_ino);
+        if (FreeFile(maps) != 0) {
+            maps = NULL;
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_MAPPING_REQUIRED");
+        }
+        maps = NULL;
+        if (FreeFile(file) != 0) {
+            file = NULL;
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_MAPPING_REQUIRED");
+        }
+        file = NULL;
+    }
+    PG_CATCH();
+    {
+        if (maps != NULL)
+            FreeFile(maps);
+        if (file != NULL)
+            FreeFile(file);
+        PG_RE_THROW();
+    }
+    PG_END_TRY();
+}
+#endif
+PG_FUNCTION_INFO_V1(aos_admission_loaded_module_mapping_facts);
+Datum aos_admission_loaded_module_mapping_facts(PG_FUNCTION_ARGS)
+{
+    if (GetUserId() != get_role_oid("aos_physical_capacity_occupation_owner", false))
+        ereport(ERROR, (errcode(ERRCODE_INSUFFICIENT_PRIVILEGE), errmsg("SHARED_ADMISSION_NATIVE_OWNER_REQUIRED")));
+#ifdef __linux__
+    {
+        struct aos_module_snapshot *first = palloc0(sizeof(*first));
+        struct aos_module_snapshot *last = palloc0(sizeof(*last));
+        uintptr_t vdso = (uintptr_t) getauxval(AT_SYSINFO_EHDR);
+        uintptr_t main_headers = (uintptr_t) getauxval(AT_PHDR);
+        unsigned i;
+        StringInfoData output;
+        /* Preserve all existing canonical path/alias/unnamed-object checks. */
+        (void) aos_admission_loaded_module_paths(fcinfo);
+        if (dl_iterate_phdr(collect_module, first) != 0 || first->invalid || first->count == 0)
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_SNAPSHOT_REQUIRED");
+        initStringInfo(&output);
+        appendStringInfoString(&output, "{\"schemaVersion\":\"aos.native-module-header-mapping/v1\",\"programHeaderMappingIdentity\":true,\"imageBytesVerified\":false,\"executionAllowed\":false,\"files\":[");
+        for (i = 0; i < first->count; i++) {
+            const char *input = first->names[i];
+            char resolved[PATH_MAX];
+            CHECK_FOR_INTERRUPTS();
+            if (i)
+                appendStringInfoChar(&output, ',');
+            if (vdso != 0 && first->addresses[i] == vdso) {
+                appendStringInfoString(&output, "{\"path\":\"virtual:linux-vdso.so.1\",\"virtual\":true}");
+                continue;
+            }
+            if (!input[0]) {
+                if (main_headers == 0 || first->headers[i] != main_headers)
+                    elog(ERROR, "SHARED_ADMISSION_NATIVE_UNNAMED_MODULE_REQUIRED");
+                input = "/proc/self/exe";
+            }
+            if (input[0] != '/' || realpath(input, resolved) == NULL || strlen(resolved) >= AOS_MODULE_PATH_LIMIT)
+                elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_PATH_REQUIRED");
+            pg_verify_mbstr(GetDatabaseEncoding(), resolved, strlen(resolved), false);
+            append_header_mapping(&output, resolved, first->headers[i]);
+        }
+        if (dl_iterate_phdr(collect_module, last) != 0 || memcmp(first, last, sizeof(*first)) != 0)
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_SNAPSHOT_CHANGED");
+        appendStringInfoString(&output, "]}");
+        PG_RETURN_DATUM(DirectFunctionCall1(jsonb_in, CStringGetDatum(output.data)));
+    }
+#else
+    ereport(ERROR, (errcode(ERRCODE_FEATURE_NOT_SUPPORTED), errmsg("SHARED_ADMISSION_NATIVE_LINUX_REQUIRED")));
+    PG_RETURN_NULL();
+#endif
+}

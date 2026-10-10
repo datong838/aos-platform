@@ -1,0 +1,61 @@
+{
+  "cluster": "7694680278363095064",
+  "new_interfaces_absent": true,
+  "original_pending_metadata": [
+    "aos_admission_pending_relations",
+    "/tmp/aos_admission_end_25913075ff7145d485a5509d8d55d142.so",
+    "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}"
+  ],
+  "five_roles_closed": {
+    "aos_physical_capacity_occupation_owner": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "aos_provider_capacity_issuer": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "aos_provider_capacity_occupation": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "aos_model_eval_issuer_owner": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "aos_capacity_publication_owner": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "original_binary_hashes_exact": true,
+  "old_C_prefix_exact": true,
+  "current_package_hashes_match_artifact_spec": true,
+  "full_task_delivered": false,
+  "new_native_artifact_sha256_after_tests": "7b7b029c62a6bc57a840e6415234021953b490104b188a8978289bdcea430a42"
+}

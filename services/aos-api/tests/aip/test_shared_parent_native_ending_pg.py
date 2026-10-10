@@ -172,6 +172,7 @@ def native_module_lab():
         other.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE READ ONLY')
         assert other.execute('SELECT to_regprocedure(%s) AS p',(MODULES,)).fetchone()['p'] is None
         assert other.execute('SELECT to_regprocedure(%s) AS p',(MODULE_FILES,)).fetchone()['p'] is None
+        assert other.execute('SELECT to_regprocedure(%s) AS p',(MODULE_MAPPING,)).fetchone()['p'] is None
         assert other.execute('SELECT prosrc,probin,proacl::text FROM pg_proc WHERE oid=%s::regprocedure',(NATIVE,)).fetchone()==original
     store(proof,rollback_only_installation_absent=True,original_pending_reader_exact=True)
 
@@ -349,3 +350,63 @@ def test_native_module_files_observe_changed_copy_and_reject_oversize(native_mod
     assert copied_fact()==after
     assert subprocess.check_output(['docker','exec',lab['name'],'sha256sum',spec['foreign_library']],text=True).split()[0]==spec['foreign_library_sha256']
     store(proof,changed_copy_observed=True,oversize_copy_denied=True,failed_observation_recovery=True,original_foreign_binary_exact=True,retained_test_copy=copied)
+
+MODULE_MAPPING='aos_admission_native_private.loaded_module_mapping_facts()'
+
+def test_native_module_mapping_metadata_and_kernel_identity(native_module_lab):
+    import subprocess
+    c,lab,spec,proof=native_module_lab
+    meta=c.execute('SELECT pg_get_userbyid(proowner) AS owner,prosrc,probin,prosecdef,proconfig,provolatile,proparallel,pronargs,prorettype::regtype::text AS result FROM pg_proc WHERE oid=%s::regprocedure',(MODULE_MAPPING,)).fetchone()
+    assert meta==dict(owner=OWNER,prosrc='aos_admission_loaded_module_mapping_facts',probin=spec['library'],prosecdef=False,proconfig=['search_path=pg_catalog'],provolatile='v',proparallel='u',pronargs=0,result='jsonb')
+    for role in ('aos_runtime','aos_provider_capacity_issuer','aos_provider_capacity_occupation'):
+        assert not c.execute("SELECT has_function_privilege(%s,%s,'EXECUTE') AS allowed",(role,MODULE_MAPPING)).fetchone()['allowed']
+    assert not c.execute("SELECT EXISTS(SELECT 1 FROM pg_proc p CROSS JOIN LATERAL aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE p.oid=%s::regprocedure AND a.grantee=0) AS public",(MODULE_MAPPING,)).fetchone()['public']
+    c.execute('SAVEPOINT mapping_owner')
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SHARED_ADMISSION_NATIVE_OWNER_REQUIRED'):c.execute('SELECT '+MODULE_MAPPING)
+    c.execute('ROLLBACK TO SAVEPOINT mapping_owner')
+    c.execute('SET LOCAL ROLE '+OWNER)
+    facts=c.execute('SELECT '+MODULE_MAPPING+' AS facts').fetchone()['facts']
+    assert facts['schemaVersion']=='aos.native-module-header-mapping/v1' and facts['programHeaderMappingIdentity'] is True
+    assert facts['imageBytesVerified'] is False and facts['executionAllowed'] is False
+    pid=c.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+    maps=subprocess.check_output(['docker','exec',lab['name'],'cat','/proc/'+str(pid)+'/maps'],text=True).splitlines()
+    assert {x['path'] for x in facts['files']}==set(module_paths(c))
+    for row in facts['files']:
+        if row['virtual']:
+            assert row['path']=='virtual:linux-vdso.so.1'
+            continue
+        header=int(row['headerAddress'],16)
+        matched=[line.split(maxsplit=5) for line in maps if int(line.split()[0].split('-')[0],16)<=header<int(line.split()[0].split('-')[1],16)]
+        assert len(matched)==1
+        m=matched[0];start,end=m[0].split('-');major,minor=m[3].split(':')
+        assert row['inode']==m[4] and int(row['mappingStart'],16)==int(start,16) and int(row['mappingEnd'],16)==int(end,16)
+        assert int(row['fileOffset'],16)==int(m[2],16) and row['deviceMajor']==str(int(major,16)) and row['deviceMinor']==str(int(minor,16))
+    store(proof,header_mapping_kernel_identity_exact=True,header_mapping_owner_acl_closed=True,header_mapping_facts=facts)
+
+
+def test_native_module_mapping_rejects_path_replacement_and_recovers(native_module_lab):
+    import subprocess
+    c,lab,spec,proof=native_module_lab
+    copied='/tmp/aos_order_mapping_test_'+uuid.uuid4().hex+'.so';saved=copied+'.saved';changed=copied+'.changed'
+    subprocess.run(['docker','exec',lab['name'],'cp',spec['foreign_library'],copied],check=True)
+    schema='test_owned_mapping_identity_'+uuid.uuid4().hex
+    c.execute('CREATE SCHEMA '+schema+' AUTHORIZATION aos_app')
+    c.execute(sql.SQL('CREATE FUNCTION '+schema+".uninvoked(oid,oid,boolean) RETURNS void AS {},'aos_test_order_arm' LANGUAGE c STRICT VOLATILE SET search_path=pg_catalog").format(sql.Literal(copied)))
+    c.execute('REVOKE ALL ON FUNCTION '+schema+'.uninvoked(oid,oid,boolean) FROM PUBLIC')
+    c.execute('SET LOCAL ROLE '+OWNER)
+    before=c.execute('SELECT '+MODULE_MAPPING+' AS facts').fetchone()['facts']
+    pid=c.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+    def open_descriptors():
+        return len(subprocess.check_output(['docker','exec',lab['name'],'ls','/proc/'+str(pid)+'/fd'],text=True).splitlines())
+    descriptors_before=open_descriptors()
+    subprocess.run(['docker','exec',lab['name'],'mv',copied,saved],check=True)
+    subprocess.run(['docker','exec',lab['name'],'cp',saved,copied],check=True)
+    c.execute('SAVEPOINT mismatched_mapping')
+    with pytest.raises(psycopg.errors.InternalError_,match='SHARED_ADMISSION_NATIVE_MODULE_MAPPING_CHANGED'):c.execute('SELECT '+MODULE_MAPPING)
+    c.execute('ROLLBACK TO SAVEPOINT mismatched_mapping')
+    assert open_descriptors()==descriptors_before
+    subprocess.run(['docker','exec',lab['name'],'mv',copied,changed],check=True)
+    subprocess.run(['docker','exec',lab['name'],'mv',saved,copied],check=True)
+    assert c.execute('SELECT '+MODULE_MAPPING+' AS facts').fetchone()['facts']==before
+    assert subprocess.check_output(['docker','exec',lab['name'],'sha256sum',spec['foreign_library']],text=True).split()[0]==spec['foreign_library_sha256']
+    store(proof,header_path_replacement_denied=True,header_identity_recovery=True,mapping_error_descriptors_released=True,mapping_test_copy_retained=copied,foreign_arm_invoked=False)

@@ -1,0 +1,15 @@
+{
+  "cluster": "7694680278363095064",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "library": "/tmp/aos_admission_modules_8d2939cd71374240b0b28471379b8d42.so",
+  "library_sha256": "7b7b029c62a6bc57a840e6415234021953b490104b188a8978289bdcea430a42",
+  "source_hashes": {
+    "aos_admission_end.c": "28dea2e69713ae970aac10bc3d26bad1a5f8931a9c2e6cd64856148201e43d70",
+    "Makefile": "56080f2509ebb5f5d5de7f1b2567c0478d3c37fcbc9a9915c547a1073bb48d5d",
+    "aos_admission_end.control": "786f5ff9b0848d21160fabb996bc3b43086d462ab7deb74a598808e048b0e750",
+    "aos_admission_end--0.1.sql": "7b531c1e031d28967e4677ecca06d189fd95c860f19492d30c6a75a14714bbac"
+  },
+  "evidence": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/mapping-identity-1771",
+  "foreign_library": "/tmp/aos_order_19c98c11c71b44ffa9f8b6a33e0b4573.so",
+  "foreign_library_sha256": "0f22fb884fd06f27324f06316cf1c1caba9968ebb2ac0523b43e7caeeeec5e0c"
+}

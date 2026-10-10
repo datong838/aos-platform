@@ -1,0 +1,4 @@
+{
+  "sha256": "c0f44aab323f0bab6e03f258ccb59e5e6d0f24423f2990b877ee670421f9d124",
+  "utf8": "Traceback (most recent call last):\n  File \"/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/mapping-identity-1771/independent-readback.py\", line 11, in <module>\n    flags=c.execute('SELECT rolcanlogin,rolinherit,rolsuper,rolcreatedb,rolcreaterole,rolreplication,rolbypassrls FROM pg_roles WHERE rolname=%s',(role,)).fetchone();assert flags is not None and not any(flags),(role,flags);assert c.execute('SELECT count(*) FROM pg_auth_members WHERE roleid=%s::regrole OR member=%s::regrole',(role,role)).fetchone()[0]==0;roles[role]=flags\n                                                                                                                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: ('aos_model_eval_issuer', None)\n"
+}
