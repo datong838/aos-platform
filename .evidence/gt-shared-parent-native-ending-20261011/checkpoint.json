@@ -4,7 +4,7 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-native-ending-20261011",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001763",
+  "authority_revision": "AOS-001764",
   "task_base_revision": "AOS-001746",
   "step": "fixed-final-call-real-source-positive-whole-timing-red-full-receipt-and-final-physical-next",
   "code_files": [

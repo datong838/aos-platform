@@ -1,0 +1,7 @@
+{
+  "authority": "AOS-001764",
+  "code_commit": "2bf234a944707f68c00ec131522b144d6b24e584",
+  "verification": ".evidence/gt-capacity-source-catalog-profile-20261011/verification.json",
+  "verification_sha256": "1a9ef3e4159ccceeef7fe9b809c9cdb8662b383495809efd8e0bc40ad2c2e228",
+  "next": "real signed Source timing and true Receipt v2/engine ending"
+}

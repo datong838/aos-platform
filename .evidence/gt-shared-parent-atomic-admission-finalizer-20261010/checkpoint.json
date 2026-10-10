@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001763",
+  "authority_revision": "AOS-001764",
   "task_base_revision": "AOS-001698",
-  "step": "source-catalog-38-native-drift-cases-and-complete-profile-compatibility-route-established",
+  "step": "complete-catalog-profile-dependency-native-identity-green-real-signed-source-next",
   "evidence_files": [
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/checkpoint-file-bound-1755/history-index.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/late-writer-red-verification-1735.json",
@@ -32,7 +32,8 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/exact-members-1759/verification.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-physical-comparison-1760/verification.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/source-catalog-cost-1761/verification.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/source-catalog-compatibility-1762/verification.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/source-catalog-compatibility-1762/verification.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/catalog-family-1764.json"
   ],
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
