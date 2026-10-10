@@ -1,0 +1,3 @@
+# 可信pending原生写入与真实COMMIT拒绝
+Rules：231、single m1、精确Task、真Source/两原独立审批/四签名、原期限、未知结果不重放。当前选择已授权新版本可信保存；正式Root与完整结束门为另一个已登记候选，依赖独立正式部署/风险和Intent协议，不以实验Root授执行权。
+精确本folder和原JudgeTask新child。新独立全量test库中Caller snapshot前显式安装新storage及test-owned同Issuer proxy，不改原函数/ACL/七拒绝门。原生rawSource、当前审批hold、四签名调用PERSIST保存，验本体hash/四cert集合/同caller、UPDATE/DELETE/TRUNCATE不可变拒绝、runtime私表不可读。不重复1723已完成7证书负门。actual COMMIT应因缺require_complete_admission拒绝；caller独立aborted、两父hold及pending表零残留。原Source相邻验收不变；若整个测试RED如实保留。禁止任何stub complete end gate、旧Guard禁用、SET ALL、正式库写或Provider。

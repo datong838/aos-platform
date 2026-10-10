@@ -338,3 +338,121 @@ def shared_parent_pending_origin_lookup_statements():
         f'REVOKE ALL ON FUNCTION {READ_PENDING} FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer',
         f'GRANT EXECUTE ON FUNCTION {READ_PENDING} TO {OWNER}',
     )
+
+
+PHYSICAL_SCHEMA = 'aos_shared_parent_physical_private'
+INITIAL_OBLIGATION = 'public.prepare_shared_parent_initial_target_obligation(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text)'
+PHYSICAL_END = 'public.require_complete_shared_parent_admission(uuid,text,xid8,integer)'
+
+
+def shared_parent_physical_obligation_statements():
+    """First Target obligation; legacy/new totals under original account lock.
+
+    No dispatch, monetary debit, release or complete admission. Missing native
+    complete finalizer rejects COMMIT; formal cutover remains independently
+    required even when this isolated internal component is installed.
+    """
+    s = PHYSICAL_SCHEMA
+    table = s + '.initial_target_obligation'
+    denied = 'PUBLIC,aos_runtime,aos_provider_capacity_issuer'
+    return (
+        f'CREATE SCHEMA {s} AUTHORIZATION {OWNER}',
+        f'REVOKE ALL ON SCHEMA {s} FROM {denied}',
+        f'''CREATE TABLE {table}(
+          plan_id uuid PRIMARY KEY,org_id text NOT NULL CHECK(org_id='org-org'),
+          project_id text NOT NULL CHECK(project_id='dev-project'),
+          physical_account_id uuid NOT NULL REFERENCES {_physical.SCHEMA}.account_guard(physical_account_id),
+          target_hold uuid NOT NULL,case_id text NOT NULL CHECK(length(case_id)>0),
+          token_upper_bound bigint NOT NULL CHECK(token_upper_bound>0),
+          pending_hash text NOT NULL CHECK(pending_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          caller_xid xid8 NOT NULL,caller_pid integer NOT NULL CHECK(caller_pid>0),
+          body jsonb NOT NULL,content_hash text NOT NULL CHECK(content_hash ~ '^sha256:[0-9a-f]{{64}}$'))''',
+        f'ALTER TABLE {table} OWNER TO {OWNER}',
+        f'REVOKE ALL ON {table} FROM {denied}',
+        f'ALTER TABLE {table} ENABLE ROW LEVEL SECURITY',
+        f'ALTER TABLE {table} FORCE ROW LEVEL SECURITY',
+        f'''CREATE POLICY exact_scope ON {table} TO {OWNER}
+          USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+          WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))''',
+        f'''CREATE FUNCTION {s}.immutable_obligation() RETURNS trigger LANGUAGE plpgsql
+          SET search_path=pg_catalog AS $immutable$
+          BEGIN RAISE EXCEPTION 'SHARED_ADMISSION_OBLIGATION_IMMUTABLE' USING ERRCODE='42501'; END $immutable$''',
+        f'ALTER FUNCTION {s}.immutable_obligation() OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {s}.immutable_obligation() FROM {denied}',
+        f'CREATE TRIGGER immutable_obligation BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION {s}.immutable_obligation()',
+        f'CREATE TRIGGER no_truncate_obligation BEFORE TRUNCATE ON {table} FOR EACH STATEMENT EXECUTE FUNCTION {s}.immutable_obligation()',
+        f'''CREATE FUNCTION {s}.require_complete_obligation() RETURNS trigger LANGUAGE plpgsql
+          SECURITY DEFINER SET search_path=pg_catalog AS $end$
+          BEGIN
+            IF NEW.caller_xid IS DISTINCT FROM pg_current_xact_id()
+              OR NEW.caller_pid IS DISTINCT FROM pg_backend_pid()
+              OR NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_language l ON l.oid=p.prolang
+                WHERE p.oid=to_regprocedure('{PHYSICAL_END}') AND pg_get_userbyid(p.proowner)='{OWNER}'
+                  AND p.prosecdef AND p.proconfig=ARRAY['search_path=pg_catalog'] AND l.lanname='plpgsql'
+                  AND p.prorettype='void'::regtype
+                  AND NOT has_function_privilege('aos_runtime',p.oid,'EXECUTE')
+                  AND NOT has_function_privilege('aos_provider_capacity_issuer',p.oid,'EXECUTE')) THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_COMPLETE_END_CHANNEL_REQUIRED' USING ERRCODE='23514'; END IF;
+            PERFORM {PHYSICAL_END.split('(')[0]}(NEW.plan_id,NEW.content_hash,NEW.caller_xid,NEW.caller_pid);
+            RETURN NEW;
+          END $end$''',
+        f'ALTER FUNCTION {s}.require_complete_obligation() OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {s}.require_complete_obligation() FROM {denied}',
+        f'''CREATE CONSTRAINT TRIGGER require_complete_obligation_end AFTER INSERT ON {table}
+          DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION {s}.require_complete_obligation()''',
+        f'''CREATE FUNCTION {INITIAL_OBLIGATION.split('(')[0]}(
+          p_raw bytea,p_source jsonb,p_target uuid,p_tr text,p_th text,
+          p_judge uuid,p_jr text,p_jh text,p_plan uuid,p_manifest jsonb,p_manifest_hash text,
+          p_certificates bytea,p_pending_hash text) RETURNS jsonb
+          LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $obligation$
+          DECLARE pending jsonb; fact jsonb; body jsonb; digest text; account jsonb;
+            case_id text; used_requests bigint; used_tokens numeric; previous {table}%ROWTYPE;
+          BEGIN
+            IF session_user<>'aos_provider_capacity_occupation'
+              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'
+              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'
+              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'
+              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'
+              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'
+              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_OBLIGATION_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+            account:={_physical.GUARD.split('(')[0]}(p_raw,p_source);
+            pending:={READ_PENDING.split('(')[0]}(
+              p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh,p_plan,p_manifest,p_manifest_hash,p_certificates,p_pending_hash);
+            fact:=pending#>'{{immutable,origin,immutable,originalRisk,originalFacts,target}}';
+            case_id:=pending#>>'{{immutable,origin,immutable,originalRisk,originalFacts,cases,0,caseId}}';
+            IF case_id IS NULL OR account->>'physicalAccountId' IS DISTINCT FROM fact->>'physicalAccountId' THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_OBLIGATION_NATIVE_ACCOUNT_REQUIRED' USING ERRCODE='23514'; END IF;
+            body:=jsonb_build_object('schemaVersion','aos.shared-parent-initial-target-obligation/v1',
+              'planId',p_plan,'pendingOriginHash',p_pending_hash,'tenant',jsonb_build_object('orgId','org-org','projectId','dev-project'),
+              'physicalAccountId',fact->>'physicalAccountId','targetHold',p_target,'caseId',case_id,
+              'tokenUpperBound',fact->'tokenUpperBound','callerLogin',session_user,
+              'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),
+              'state','pending_full_admission','executionAllowed',false);
+            digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
+            SELECT * INTO previous FROM {table} WHERE plan_id=p_plan FOR SHARE;
+            IF FOUND THEN
+              IF previous.body IS DISTINCT FROM body OR previous.content_hash IS DISTINCT FROM digest
+                OR previous.caller_xid IS DISTINCT FROM pg_current_xact_id() OR previous.caller_pid IS DISTINCT FROM pg_backend_pid() THEN
+                RAISE EXCEPTION 'SHARED_ADMISSION_OBLIGATION_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+            ELSE
+              SELECT count(*),coalesce(sum(token_units),0) INTO used_requests,used_tokens
+                FROM {_physical.SCHEMA}.prepared_parent_debit WHERE physical_account_id=(fact->>'physicalAccountId')::uuid;
+              SELECT used_requests+count(*),used_tokens+coalesce(sum(token_upper_bound),0) INTO used_requests,used_tokens
+                FROM {table} WHERE physical_account_id=(fact->>'physicalAccountId')::uuid;
+              {_physical._physical_call_capacity_guard_sql('target')}
+              INSERT INTO {table}(plan_id,org_id,project_id,physical_account_id,target_hold,case_id,token_upper_bound,
+                pending_hash,caller_xid,caller_pid,body,content_hash)
+                VALUES(p_plan,'org-org','dev-project',(fact->>'physicalAccountId')::uuid,p_target,case_id,
+                  (fact->>'tokenUpperBound')::bigint,p_pending_hash,pg_current_xact_id(),pg_backend_pid(),body,digest);
+            END IF;
+            IF {READ_PENDING.split('(')[0]}(
+              p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh,p_plan,p_manifest,p_manifest_hash,p_certificates,p_pending_hash)
+                IS DISTINCT FROM pending THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_OBLIGATION_CURRENTNESS_CHANGED' USING ERRCODE='23514'; END IF;
+            RETURN jsonb_build_object('planId',p_plan,'immutable',body,'contentHash',digest,'executionAllowed',false);
+          END $obligation$''',
+        f'ALTER FUNCTION {INITIAL_OBLIGATION} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {INITIAL_OBLIGATION} FROM {denied}',
+    )

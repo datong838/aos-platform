@@ -70,3 +70,13 @@ RED新保存artifact缺失；先原生事务内DDL/Owner/ACL/RLS/不可变/defer
 RED新增函数不存在；GREEN原生DDL/Owner/ACL/RLS权限不扩张及恶意caller早拒、完整新鲜Source/两hold/四签名同caller保存后physical Owner固定代理实际读取；hash错/plan错/坏证书/普通runtime拒绝，真实COMMIT仍拒绝缺失完整结束门、独立回滚readback。所有原生正向在新保留实验库和新审批内执行，不复用旧效果。
 
 1724 lookup-r1测试安装误用不存在api别名且漏lookup artifact，19.07秒NameError终止，保留新库及失败；仅修新r2测试prepare的admission别名与显式artifact安装，不改产品/审批/Root/TTL，生成全新隔离库与审批，不重放r1。
+
+## 1725 首 Target 物理义务及旧新计数
+精确两产品文件新增显式physical private schema，Owner沿用原physical Owner；所有表/函数闭PUBLIC/runtime/Provider issuer权限，FORCE RLS/正向scope。不可变首Target obligation按plan唯一，保存精确pending hash、首case、原target hold/account/token上界、caller xidpid，无TTL清零或release接口。固定raw参数入口先原account guard实际version UPDATE，再精确Owner lookup完整当前原Source/两hold/四签名；计数旧prepared_parent_debit与新义务同physical account，复用原_physical_call_capacity_guard_sql('target')，不改原SQL、不把全case父上界重复扣费。此前取得原费用fence/Source/budget顺序仍由完整producer保证，本内部构件不能替代该顺序验收。
+重放仅同plan/hash/case/hold/account/tokens/caller原事务相同；已有义务不重新计额，冲突拒绝。新记录仍pending_full_admission，无Intent绑定/实际执行权限；新deferred结束门明确缺完整finalizer就拒绝。完整旧writer清单/签名cutover/未知义务映射、窗口token语义、唯一Intent/Judge依赖与真实结束协议仍属于整体退出条件，不因这张表或局部计数通过而授权正式切换。首case token从原fact取得而非caller supplied。
+RED artifact缺失；GREEN原生DDL闭ACL/Owner/RLS、admin拒绝、原入口SQL字节不变、相邻；另在全新Source/审批/四签名实验实际创建并重复首义务、独立实际COMMIT拒绝/义务与父hold零残留，未来完整并发/全窗口矩阵保留。禁止授正式权限或关闭旧七门。
+
+1725元数据相邻333PASS1FAIL：admin调用到缺失原account guard，原生UndefinedFunction；新增入口在任何Source/account写前先拒绝非occupation/runtime/SER/UTC/origin/正向scope上下文，原有效native调用仍复用原guard，未以mock或跳过缺失依赖获得正向。已启动r1使用冻结前版本，终态后按bodyhash区分，不用其证明最新新增早拒；不修改运行中fixture或重发旧效果。
+1725相邻r2在实测fixture运行时333PASS1FAIL：原拒绝角色测试观察到cluster级occupation→runtime临时测试membership，不能把不同DB误当独立全局角色。保持原测试不变、不撤销运行中fixture角色；等待当前唯一实测终态及角色恢复后串行重跑相邻。后续所有共享此cluster身份的实测/元数据测试串行，禁止并发污染。
+
+1725初始义务r1：两实际创建/重放及缺结束门COMMIT拒绝通过，但原Source后续相邻和cleanup真实到期RED，129.75秒；安装body为新增早拒前版本，独立读回按精确旧body区分。新r2保持Source全相邻与cleanup、原TTL/审批/签名不改，仅不重复r1已局部验收的第二次义务重放，单次义务正向后实际提交拒绝再跑全部Source相邻。旧r1不当完整Green，测试排序节省重复来源核验不删除业务相邻或放宽期限。

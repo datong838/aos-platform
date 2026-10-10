@@ -206,3 +206,25 @@ def test_native_pending_origin_lookup_delegates_only_fixed_function(native):
     native.rollback()
     assert native.execute('SELECT to_regprocedure(%s)', (api.READ_PENDING,)).fetchone()[0] is None
     native.rollback()
+
+
+def test_native_first_target_obligation_is_closed_and_pending(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    for statement in (*api.shared_parent_admission_origin_statements(),
+                      *api.shared_parent_admission_certificate_set_statements(),
+                      *api.shared_parent_admission_storage_statements(),
+                      *api.shared_parent_pending_origin_lookup_statements(),
+                      *api.shared_parent_physical_obligation_statements()):
+        native.execute(statement)
+    table=api.PHYSICAL_SCHEMA+'.initial_target_obligation'
+    assert native.execute('SELECT pg_get_userbyid(relowner),relrowsecurity,relforcerowsecurity FROM pg_class WHERE oid=%s::regclass',(table,)).fetchone()==(OWNER,True,True)
+    for role in ('aos_runtime','aos_provider_capacity_issuer'):
+        assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')",(role,api.INITIAL_OBLIGATION)).fetchone()[0]
+        for privilege in ('SELECT','INSERT','UPDATE','DELETE','TRUNCATE'):
+            assert not native.execute('SELECT has_table_privilege(%s,%s,%s)',(role,table,privilege)).fetchone()[0]
+    assert native.execute("SELECT tgdeferrable,tginitdeferred FROM pg_trigger WHERE tgrelid=%s::regclass AND tgname='require_complete_obligation_end'",(table,)).fetchone()==(True,True)
+    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+        with native.transaction():native.execute('SELECT public.prepare_shared_parent_initial_target_obligation(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)')
+    native.rollback()
+    assert native.execute('SELECT to_regclass(%s)',(table,)).fetchone()[0] is None
+    native.rollback()
