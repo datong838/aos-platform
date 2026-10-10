@@ -600,6 +600,18 @@ def test_native_complete_receipt_closed_metadata_and_rollback(native, exact_memb
                       api.shared_parent_exact_receipt_statements if exact_members else api.shared_parent_complete_receipt_statements):
         for statement in generator(): native.execute(statement)
     table = api.PHYSICAL_SCHEMA + ('.complete_receipt_v2' if exact_members else '.complete_receipt')
+    if exact_members:
+        for statement in api.shared_parent_final_physical_comparison_statements(): native.execute(statement)
+        assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (api.FINAL_PHYSICAL,)).fetchone() == (OWNER, True, ['search_path=pg_catalog'])
+        for role in ('aos_runtime', 'aos_provider_capacity_issuer'):
+            assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (role, api.FINAL_PHYSICAL)).fetchone()[0]
+        with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_FINAL_PHYSICAL_CALLER_REQUIRED'):
+            with native.transaction(): native.execute('SELECT public.verify_shared_parent_final_physical(NULL,NULL,NULL,NULL)')
+        native.execute("CREATE FUNCTION public.test_owned_final_physical_probe() RETURNS jsonb LANGUAGE SQL SECURITY DEFINER SET search_path=pg_catalog AS $$ SELECT public.verify_shared_parent_final_physical('11111111-1111-1111-1111-111111111111'::uuid,'sha256:'||repeat('0',64),pg_current_xact_id(),pg_backend_pid()) $$")
+        native.execute('ALTER FUNCTION public.test_owned_final_physical_probe() OWNER TO ' + OWNER)
+        native.execute('REVOKE ALL ON FUNCTION public.test_owned_final_physical_probe() FROM PUBLIC')
+        native.execute('GRANT EXECUTE ON FUNCTION public.test_owned_final_physical_probe() TO aos_runtime')
+
     assert native.execute('SELECT pg_get_userbyid(relowner),relrowsecurity,relforcerowsecurity FROM pg_class WHERE oid=%s::regclass', (table,)).fetchone() == (OWNER, True, True)
     assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (stage,)).fetchone() == (OWNER, True, ['search_path=pg_catalog'])
     assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (api.READ_RECEIPT_ORIGIN,)).fetchone() == (api._certificate.ISSUER_OWNER, True, ['search_path=pg_catalog'])
@@ -641,6 +653,8 @@ def test_native_complete_receipt_closed_metadata_and_rollback(native, exact_memb
         with native.transaction(): native.execute('SELECT ' + wrapper)
     native.execute("SET LOCAL aos.org_id='org-org'")
     if exact_members:
+        with pytest.raises(psycopg.errors.CheckViolation, match='SHARED_ADMISSION_FINAL_PHYSICAL_RECEIPT_REQUIRED'):
+            with native.transaction(): native.execute('SELECT public.test_owned_final_physical_probe()')
         members = native.execute('SELECT public.test_owned_exact_member_probe()').fetchone()[0]
         assert members['unresolvedMembers'] == [] and members['unresolvedRequests'] == 0
         assert members['unresolvedTokenUpperBound'] == 0 and members['accountVersion'] == 1
@@ -743,3 +757,24 @@ def test_exact_receipt_compiler_rejects_drift(monkeypatch, drift):
     monkeypatch.setattr(api, 'shared_parent_complete_receipt_statements', changed)
     with pytest.raises(ValueError, match='SHARED_ADMISSION_EXACT_RECEIPT_'):
         api.shared_parent_exact_receipt_statements()
+
+
+def test_final_physical_fixed_receipt_binding_and_no_writer():
+    from aos_api import aip_shared_parent_atomic_admission as api
+    statements = api.shared_parent_final_physical_comparison_statements()
+    body = statements[0]
+    assert not re.search(r'\b(?:INSERT|UPDATE|DELETE|MERGE|TRUNCATE)\b', body, re.I)
+    assert api.READ_LIVE_PHYSICAL.split('(')[0] not in body
+    assert api._physical.GUARD.split('(')[0] not in body
+    assert api.READ_UNRESOLVED_MEMBERS.split('(')[0] in body
+    for name in ('accountMapping', 'accountVersion', 'unresolvedMembers', 'unresolvedSetHash',
+                 'unresolvedRequests', 'unresolvedTokenUpperBound', 'callerLogin', 'callerXid', 'callerPid'):
+        assert name in body
+    assert 'SHARED_ADMISSION_FINAL_PHYSICAL_CHANGED' in body
+    assert 'SHARED_ADMISSION_FINAL_PHYSICAL_RECEIPT_REQUIRED' in body
+    assert "'executionAllowed',false" in body
+    assert 'p_facts' not in body and 'p_members' not in body
+    root = Path(__file__).resolve().parents[4]
+    frozen = json.loads((root / '.evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-physical-comparison-1760/beforeimage.json').read_text())
+    for name, digest in frozen.items():
+        assert hashlib.sha256('\n'.join(getattr(api, name)()).encode()).hexdigest() == digest, name

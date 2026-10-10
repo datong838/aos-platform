@@ -1,0 +1,47 @@
+{
+  "status": "FIXED_FINAL_PHYSICAL_COMPARISON_IMPLEMENTED_NATIVE_METADATA_NEGATIVE_GREEN_REAL_RECEIPT_POSITIVE_PENDING",
+  "authority": "AOS-001760",
+  "head": "fd6c52ed5d54e2a38dff36ea14cb6fed2c66ea35",
+  "files": {
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "35aaceb8c1d08949ea9015f6f69e7b09fe94fa84d6fbf2fc684619fb84d24a8f",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "546eb9be810c9b519acb425732ccef6885f57d1bee1fc67324be620b8d33d434"
+  },
+  "red": {
+    "exit": 1,
+    "reason": "missing shared_parent_final_physical_comparison_statements AttributeError"
+  },
+  "adjacent": {
+    "passed": 47,
+    "seconds": 1.94,
+    "existing_warnings": 7
+  },
+  "independent_rollback": {
+    "final_physical_absent": true,
+    "v2_receipt_absent": true,
+    "test_probe_absent": true,
+    "test_owned_account_absent": true,
+    "role_membership_restored": true
+  },
+  "review": {
+    "old_generators_byte_exact": true,
+    "receipt_and_physical_canonical_hash_rechecked": true,
+    "exact_samecaller_topxid_pid_and_tenant": true,
+    "native_self_obligation_member_required": true,
+    "mapping_version_members_hash_and_totals_compared": true,
+    "no_direct_dml": true,
+    "no_original_guard_upsert": true,
+    "no_caller_facts_or_reseal": true,
+    "closed_owner_acl_and_missing_receipt_rejection": true,
+    "no_physical_end_installation_or_execution_grant": true,
+    "browser_applicable": false
+  },
+  "limitations": [
+    "Real original signed Source v2 Receipt positive/tamper/late-writer comparison matrix not executed.",
+    "This component does not prove postdrain invocation, full transitive semantic closure, Source/approval/currentness/final clock or event/RI/module/callback ending.",
+    "Original whole Source timing RED remains; actual COMMIT and unknown-result postcommit acceptance pending."
+  ],
+  "formal_database_touched": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "goal_complete": false
+}
