@@ -24,3 +24,7 @@ PG16.14 RegisterXactCallback prepends to the private list; CallXactCallbacks wal
 ## Two-callback native result
 
 Actual COMMIT on distinct fresh backends confirms observer-first sees no pending event yet a later writer commits a row whose unconditional deferred rejection never fires; observer-last rejects and aborts the row. Ordinary INSERT also rejects. Independent XIDs 59878/59879/59880 and rows 0/1/0 prove the ordering counterexample. Full ending cannot rely on newest registration. Empty preload settings or SQL catalog C-library inventory do not prove backend callback closure. Continue complete backend package/callback ownership audit and precreated full Receipt design under existing Task scopes.
+
+## Complete backend closure inputs after native ordering RED
+
+Official PG16.14 source archive and SHA verified; all registration sites frozen. Three upstream modules register, but only postgres_fdw PRE_COMMIT can issue remote commits in inspected bodies. Read-only fresh-backend executable maps and all26 file hashes were recorded after pure PL/pgSQL/crypto/native observation; test-only callback probes were absent from this backend. This is a concrete closure input, not full admission binary provenance or a callback-last promise. Next native support must obtain supported immutable loaded-module/package attestation and reject unowned/indirect loader drift before arming; keep all original guards closed. Full eight-node Receipt and postcommit conservative confirmation remain inseparable acceptance requirements.
