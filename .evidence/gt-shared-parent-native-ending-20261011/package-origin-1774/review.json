@@ -1,0 +1,29 @@
+{
+  "status": "SCOPED_PACKAGE_AUDIT_COMPLETE_FULL_TRUST_UNPROVEN",
+  "fresh_independent_all27_file_hashes_exact": true,
+  "both_xids_aborted_backends_gone_interfaces_absent": true,
+  "profile_delta_exactly_plpgsql": true,
+  "model_review_invoked": false,
+  "findings": "22 installed SHA1 checksums match;5 unowned components;backend-writable native artifact;indirect loader imports;source/build and immutable lifecycle not proven",
+  "no_product_code_or_permission_change": true,
+  "no_root_issuance_or_formal_cutover": true,
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "file_hashes": {
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/attempt.json": "f97da7f95c01921a92789d0cbd10df1f174911fe71faef0df3d7bec3216109d5",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/current-package.json": "866b54a04e7da228f2d4cc3efaaca44bc3f50f154f926a715ef37047bee1648b",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/findings.md": "7e2a751fbf4ff18adf999b99f4cbd647717c242080aeacfd29169f26f6b9631d",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/package-contract.md": "465ce116ef23f2318ade8177f613bf10b92c07c6503c56065b2bf1ec8fec79f9",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/plan.md": "acfee1c4e345410440138df6ba51e32db9ea55871639996c6e536fbeee1090bf",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/r2/attempt.json": "8f7db1a22db8b9a345f359fe0edeaee676227a60d66137c38124c37ffd9f017c",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/r2/current-package.json": "ccb1481d00195de078dd64990151fa102ca6343f5f12e946079c1c1b1ae4b692",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/r2/run.log": "1b2463d9c0946f2bac06fd4e1ff2943f7bd0ffd1bbb50f97ad1e44363a8a4b1d",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/r2/run.log.raw.json": "8e23bdc6a93d8496b7416ed0a1f30f741b8e631275764dcfe89607df3f68dd7c",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/r2/run.py": "d24a8d562d5fe810453db429f674b026bcce8c250f06c14b0aef7fa3cf2dae6c",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/r2/verification.json": "69fb2aa441b6bd974a76a63b3614b9bf72abc02d6430f1b9dfd3795a6ec43bd3",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/run.log": "afe25503d2e0f51a1a11be3e20c0f80c1a64f49911fc00a5b9e4cfaaff8a87cb",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/run.log.raw.json": "1d5cdbb4c32ca0ee9a968ee5720ae52eb3cf787be9dbed8bcc9b7f0889d32b4f",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/run.py": "5bbb0143a3d414922d2da2d1c4b6e35abea62864ae28d98cfcb5fcd3b2998bec",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/verification.json": "ee28327c5c3ec095f2448aaad3268c39b344d45b28e39dd3557e753cb05a7e31"
+  }
+}

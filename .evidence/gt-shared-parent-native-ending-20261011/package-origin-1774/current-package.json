@@ -1,0 +1,1596 @@
+{
+  "modules": [
+    {
+      "path": "/usr/local/bin/postgres",
+      "sha256": "025eccb4f06a6d63d724cc1d8abdeb75c909f7bbb8493bf5b0e0273d67451d77",
+      "bytes": 10369648,
+      "apk": null,
+      "elf": {
+        "dynamic_needed": [
+          "libzstd.so.1",
+          "liblz4.so.1",
+          "libxml2.so.2",
+          "libssl.so.3",
+          "libcrypto.so.3",
+          "libgssapi_krb5.so.2",
+          "libz.so.1",
+          "libldap.so.2",
+          "libicui18n.so.78",
+          "libicuuc.so.78",
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 566,
+        "loader_callback_imports": [
+          "dlclose",
+          "dlopen",
+          "dlsym"
+        ],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/local/bin/postgres",
+          "stat": "0 0 755 63 7278",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/local/bin",
+          "stat": "0 0 755 63 10160",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/local",
+          "stat": "0 0 755 63 88008",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libzstd.so.1.5.7",
+      "sha256": "baeb93cf3904f55809f9229c7b0e9348bfe07b80d319a477df9ac63657a9fa55",
+      "bytes": 657240,
+      "apk": {
+        "package": {
+          "C": "Q1UrGFE6B78rsNBjRohoH37c42uco=",
+          "P": "zstd-libs",
+          "V": "1.5.7-r2",
+          "A": "aarch64",
+          "o": "zstd"
+        },
+        "installed_checksum": "Q1N6Hlm0Z4uBYjv/F32rzx7YMOUrA=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 36,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libzstd.so.1.5.7",
+          "stat": "0 0 755 63 7233",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/liblz4.so.1.10.0",
+      "sha256": "729ca3feae715dca6947674fa1f5451b4f36bbc54aa8a4471bf5c66096aeb41c",
+      "bytes": 198392,
+      "apk": {
+        "package": {
+          "C": "Q1RioRKt15XaaI2RhIih1C8TkbOTU=",
+          "P": "lz4-libs",
+          "V": "1.10.0-r1",
+          "A": "aarch64",
+          "o": "lz4"
+        },
+        "installed_checksum": "Q1ds3Lgj8mpREheufm47Pz3CAtMAw=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 13,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/liblz4.so.1.10.0",
+          "stat": "0 0 755 63 7210",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libxml2.so.2.13.9",
+      "sha256": "8930cfb0f6f0639e6ecde1f6b9d10fd66c81ffa6a3424352bac8e8b786a3f75b",
+      "bytes": 1182624,
+      "apk": {
+        "package": {
+          "C": "Q1XqQkBQptIO/m8hIOcwc4bK4yAnU=",
+          "P": "libxml2",
+          "V": "2.13.9-r2",
+          "A": "aarch64",
+          "o": "libxml2"
+        },
+        "installed_checksum": "Q13/IhBRXQdSK2edNeixWmgm3G+lo=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libz.so.1",
+          "liblzma.so.5",
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 105,
+        "loader_callback_imports": [
+          "dlclose",
+          "dlopen",
+          "dlsym"
+        ],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libxml2.so.2.13.9",
+          "stat": "0 0 755 63 7229",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libssl.so.3",
+      "sha256": "c9a8250bba27abe89c240876f8c78704eaaca9636f53b2aa29b3859f89d2e938",
+      "bytes": 868240,
+      "apk": {
+        "package": {
+          "C": "Q1PhWl7mgtPkZrLcCwKAOl9S7yNfA=",
+          "P": "libssl3",
+          "V": "3.5.7-r0",
+          "A": "aarch64",
+          "o": "openssl"
+        },
+        "installed_checksum": "Q1LKWvLkVLpOKlxt0NagIwfPI0Poc=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libcrypto.so.3",
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 589,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libssl.so.3",
+          "stat": "0 0 755 63 574",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libcrypto.so.3",
+      "sha256": "ae1d370e3146642824c6ee4bde0fdf83b9e8174a9d28d093362afde5cc4b3e6c",
+      "bytes": 4533144,
+      "apk": {
+        "package": {
+          "C": "Q1B+W/WsLe+RZ3uvymoYtsJR6A9To=",
+          "P": "libcrypto3",
+          "V": "3.5.7-r0",
+          "A": "aarch64",
+          "o": "openssl"
+        },
+        "installed_checksum": "Q1+T5ClsVA1Pq4HmCnBpVISTLOMjU=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 160,
+        "loader_callback_imports": [
+          "dlclose",
+          "dlopen",
+          "dlsym"
+        ],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libcrypto.so.3",
+          "stat": "0 0 755 63 573",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libgssapi_krb5.so.2.2",
+      "sha256": "41817694da65a0d4687ac5d2367d892e9e2414a9fcdff1437e7cad18647ac6a4",
+      "bytes": 331952,
+      "apk": {
+        "package": {
+          "C": "Q1PqtOIvG5QM6aniGYycm3K1JiXPo=",
+          "P": "krb5-libs",
+          "V": "1.22.2-r1",
+          "A": "aarch64",
+          "o": "krb5"
+        },
+        "installed_checksum": "Q1Lo1Y7IfYeYoMsUTL6pNyuQzhll0=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libkrb5.so.3",
+          "libk5crypto.so.3",
+          "libcom_err.so.2",
+          "libkrb5support.so.0",
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 299,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libgssapi_krb5.so.2.2",
+          "stat": "0 0 755 63 7178",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libz.so.1.3.2",
+      "sha256": "d3b940580ded8f736804c78df7302b9e7a3f27900ac25a5c97bb05f50992f567",
+      "bytes": 133008,
+      "apk": {
+        "package": {
+          "C": "Q1qeG8MrsxW/2sYiT5J4Xk2aM0vyk=",
+          "P": "zlib",
+          "V": "1.3.2-r0",
+          "A": "aarch64",
+          "o": "zlib"
+        },
+        "installed_checksum": "Q1mz0t8Hl3iOZ0NVY7G2tasx+qcAE=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 24,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libz.so.1.3.2",
+          "stat": "0 0 755 63 576",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libldap.so.2.0.200",
+      "sha256": "a546e5260262c213c4c3734df70185553b71df12a9724d89380918ccf850d0ea",
+      "bytes": 396176,
+      "apk": {
+        "package": {
+          "C": "Q1AR1rvDRaiTgalqLuqkbkLgL0xzM=",
+          "P": "libldap",
+          "V": "2.6.13-r0",
+          "A": "aarch64",
+          "o": "openldap"
+        },
+        "installed_checksum": "Q1W/uLsjPw0DPVLeqFng50yaScaoM=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "liblber.so.2",
+          "libsasl2.so.3",
+          "libssl.so.3",
+          "libcrypto.so.3",
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 331,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libldap.so.2.0.200",
+          "stat": "0 0 644 63 7208",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libicui18n.so.78.1",
+      "sha256": "df94fdacc782b0ce874f3a950bd10f0f8e5aca7dc5512ccf411002f650b81892",
+      "bytes": 3148224,
+      "apk": {
+        "package": {
+          "C": "Q1YULmZdkQfFs4QsGjjH+pMK5XHR8=",
+          "P": "icu-libs",
+          "V": "78.1-r0",
+          "A": "aarch64",
+          "o": "icu"
+        },
+        "installed_checksum": "Q1SRdXT+/Sg3DxawieNHKR98YKV5I=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libicuuc.so.78",
+          "libstdc++.so.6",
+          "libgcc_s.so.1",
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 751,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libicui18n.so.78.1",
+          "stat": "0 0 755 63 7184",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libicuuc.so.78.1",
+      "sha256": "3873dd2a58594254560e70b3a8fcf4d8cf1854e5b4958bfe59911614e37ce692",
+      "bytes": 1902632,
+      "apk": {
+        "package": {
+          "C": "Q1YULmZdkQfFs4QsGjjH+pMK5XHR8=",
+          "P": "icu-libs",
+          "V": "78.1-r0",
+          "A": "aarch64",
+          "o": "icu"
+        },
+        "installed_checksum": "Q1SRAFQygcUhGNBTesT9OfPw5zhwU=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libicudata.so.78",
+          "libstdc++.so.6",
+          "libgcc_s.so.1",
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 93,
+        "loader_callback_imports": [
+          "dlclose",
+          "dlopen",
+          "dlsym"
+        ],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libicuuc.so.78.1",
+          "stat": "0 0 755 63 7188",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/lib/ld-musl-aarch64.so.1",
+      "sha256": "32377e6d71725bb019e9ff6d5e9f16b4d5156d6f2c36504191c2d6a7c4d4a44d",
+      "bytes": 723480,
+      "apk": {
+        "package": {
+          "C": "Q1JNQts+O/Z+jaJ4QHLMXQ5svftIU=",
+          "P": "musl",
+          "V": "1.2.6-r2",
+          "A": "aarch64",
+          "o": "musl"
+        },
+        "installed_checksum": "Q1zIDMk6a3hga0KXHGz/ACqHqblWg=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [],
+        "undefined_symbol_count": 0,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/lib/ld-musl-aarch64.so.1",
+          "stat": "0 0 755 63 342",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/lib",
+          "stat": "0 0 755 63 7035",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/liblzma.so.5.8.3",
+      "sha256": "a30eb437c4fb1fc99a14d8038ee5db824121e14579abff329831a9a1be0f5f37",
+      "bytes": 263928,
+      "apk": {
+        "package": {
+          "C": "Q1gIJnhr0NBN+vJ9H4hFKMKKwsa+E=",
+          "P": "xz-libs",
+          "V": "5.8.3-r0",
+          "A": "aarch64",
+          "o": "xz"
+        },
+        "installed_checksum": "Q13dYH877ttfZRErEkQEzequutUYE=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 37,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/liblzma.so.5.8.3",
+          "stat": "0 0 755 63 7212",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libkrb5.so.3.3",
+      "sha256": "c8037f7ee147d64ecbe9f5b4a7a7ec45cbcb1508817825d054a73d6d34ec8ee1",
+      "bytes": 726736,
+      "apk": {
+        "package": {
+          "C": "Q1PqtOIvG5QM6aniGYycm3K1JiXPo=",
+          "P": "krb5-libs",
+          "V": "1.22.2-r1",
+          "A": "aarch64",
+          "o": "krb5"
+        },
+        "installed_checksum": "Q12ovk1ZoYGo5KeKtzBckRYndSdyk=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libk5crypto.so.3",
+          "libcom_err.so.2",
+          "libkrb5support.so.0",
+          "libkeyutils.so.1",
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 258,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libkrb5.so.3.3",
+          "stat": "0 0 755 63 7202",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libk5crypto.so.3.1",
+      "sha256": "209699357765808420432a5c12eed8ef7d5d21d9dfdb0959e752f4d88c02db15",
+      "bytes": 198736,
+      "apk": {
+        "package": {
+          "C": "Q1PqtOIvG5QM6aniGYycm3K1JiXPo=",
+          "P": "krb5-libs",
+          "V": "1.22.2-r1",
+          "A": "aarch64",
+          "o": "krb5"
+        },
+        "installed_checksum": "Q1eGrZCERgCA1GnnxzEsbO0VYCT0A=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libkrb5support.so.0",
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 30,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libk5crypto.so.3.1",
+          "stat": "0 0 755 63 7190",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libcom_err.so.2.1",
+      "sha256": "24566328c96f483f5f52dd99c7c0a9654f84175cd96cb98dfcc838179bd805f2",
+      "bytes": 67320,
+      "apk": {
+        "package": {
+          "C": "Q1SFJf5C4Zg5AwT77WolxGkRLj06M=",
+          "P": "libcom_err",
+          "V": "1.47.4-r0",
+          "A": "aarch64",
+          "o": "e2fsprogs"
+        },
+        "installed_checksum": "Q1Rp94FdYdEXVbbgsbFoHJy5ZOuxw=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 35,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libcom_err.so.2.1",
+          "stat": "0 0 755 63 7165",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libkrb5support.so.0.1",
+      "sha256": "afa7c4a65691c2fdd59460827c6653f51509efa7a06bfc5aaf45933f72708be6",
+      "bytes": 67648,
+      "apk": {
+        "package": {
+          "C": "Q1PqtOIvG5QM6aniGYycm3K1JiXPo=",
+          "P": "krb5-libs",
+          "V": "1.22.2-r1",
+          "A": "aarch64",
+          "o": "krb5"
+        },
+        "installed_checksum": "Q1RbfnEwf7XT4zk3vGQn/GV0eoh+s=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 57,
+        "loader_callback_imports": [
+          "dlclose",
+          "dlopen",
+          "dlsym"
+        ],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libkrb5support.so.0.1",
+          "stat": "0 0 755 63 7204",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/liblber.so.2.0.200",
+      "sha256": "a61c5860f91e4daf0e0fa464ce48dc39c1568629b693050c24734c0b2e12d515",
+      "bytes": 67600,
+      "apk": {
+        "package": {
+          "C": "Q1AR1rvDRaiTgalqLuqkbkLgL0xzM=",
+          "P": "libldap",
+          "V": "2.6.13-r0",
+          "A": "aarch64",
+          "o": "openldap"
+        },
+        "installed_checksum": "Q1tn4x30EAgELdAl971vxZUVFFM2A=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 31,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/liblber.so.2.0.200",
+          "stat": "0 0 644 63 7206",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libsasl2.so.3.0.0",
+      "sha256": "f7be9e5f370e61382482ba06a0dbcf4617e683956f5fc0f1fcf00d151776f1ea",
+      "bytes": 133680,
+      "apk": {
+        "package": {
+          "C": "Q1yf+ZK9Tt9Q/Fk6lAdpgu6PACJG0=",
+          "P": "libsasl",
+          "V": "2.1.28-r9",
+          "A": "aarch64",
+          "o": "cyrus-sasl"
+        },
+        "installed_checksum": "Q1VSZpwasUKZSzEG6GKuIwEvlxr3I=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 77,
+        "loader_callback_imports": [
+          "dlclose",
+          "dlopen",
+          "dlsym"
+        ],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libsasl2.so.3.0.0",
+          "stat": "0 0 755 63 7221",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libstdc++.so.6.0.34",
+      "sha256": "bc958507db0cacf75cbf7298c395fbc7596667b17e1283d98bd6cfe3e59df951",
+      "bytes": 2820600,
+      "apk": {
+        "package": {
+          "C": "Q16WWaNCGe8kVn4lkwb/3DGo6OyqY=",
+          "P": "libstdc++",
+          "V": "15.2.0-r5",
+          "A": "aarch64",
+          "o": "gcc"
+        },
+        "installed_checksum": "Q148zKq2g7PieZXeMmr1lz+daDONs=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libc.musl-aarch64.so.1",
+          "libgcc_s.so.1"
+        ],
+        "undefined_symbol_count": 194,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libstdc++.so.6.0.34",
+          "stat": "0 0 755 63 7223",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libgcc_s.so.1",
+      "sha256": "b83bc14b3e1660d66b0387077aea7e104fce3ed93bb56d05e30e4e2cdb37b473",
+      "bytes": 133008,
+      "apk": {
+        "package": {
+          "C": "Q1JLUL+2dMZ+EpWBoaIsHD7VI7bUg=",
+          "P": "libgcc",
+          "V": "15.2.0-r5",
+          "A": "aarch64",
+          "o": "gcc"
+        },
+        "installed_checksum": "Q1oLEjSe1l3ZPPNX36A67E60uPRjw=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 25,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libgcc_s.so.1",
+          "stat": "0 0 644 63 7172",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libicudata.so.78.1",
+      "sha256": "32b2e6af13f6c8694002699d07b50e7ca657e352c26a2da171b51e06ed97bf21",
+      "bytes": 66296,
+      "apk": {
+        "package": {
+          "C": "Q1YULmZdkQfFs4QsGjjH+pMK5XHR8=",
+          "P": "icu-libs",
+          "V": "78.1-r0",
+          "A": "aarch64",
+          "o": "icu"
+        },
+        "installed_checksum": "Q1T+zMz/OYwQqnkThm2Id1f9i9HEA=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [],
+        "undefined_symbol_count": 0,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libicudata.so.78.1",
+          "stat": "0 0 755 63 7182",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/lib/libkeyutils.so.1.10",
+      "sha256": "1ead757a4645a477d16b616b4764dabcb5200e45ad0e6c4a95c8e4450b3c37c0",
+      "bytes": 67400,
+      "apk": {
+        "package": {
+          "C": "Q1Juh2z3Zsr91DNwkzySscDpkwRKo=",
+          "P": "keyutils-libs",
+          "V": "1.6.3-r4",
+          "A": "aarch64",
+          "o": "keyutils"
+        },
+        "installed_checksum": "Q1RuouW8QiuKxafnrvkidsLLg++7A=",
+        "installed_checksum_matches": true,
+        "checksum_is_trusted_signature": false
+      },
+      "elf": {
+        "dynamic_needed": [
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 24,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/lib/libkeyutils.so.1.10",
+          "stat": "0 0 755 63 7198",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/lib",
+          "stat": "0 0 755 63 7108",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/tmp/aos_admission_modules_b16f65420b8743d08217fd64041f7497.so",
+      "sha256": "fb8771bcccb98d5919b5276b9137b1f694890c744a2017247bd977930d020626",
+      "bytes": 74616,
+      "apk": null,
+      "elf": {
+        "dynamic_needed": [
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 73,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/tmp/aos_admission_modules_b16f65420b8743d08217fd64041f7497.so",
+          "stat": "501 20 755 63 2384349",
+          "writable_by_container_identity": true
+        },
+        {
+          "path": "/tmp",
+          "stat": "0 0 1777 63 421",
+          "writable_by_container_identity": true
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/local/lib/postgresql/pgcrypto.so",
+      "sha256": "5244bf9d2d9740ef3f65aaf4770f110ac3db862664c073656767ca40ec8507ff",
+      "bytes": 164024,
+      "apk": null,
+      "elf": {
+        "dynamic_needed": [
+          "libcrypto.so.3",
+          "libz.so.1",
+          "libc.musl-aarch64.so.1"
+        ],
+        "undefined_symbol_count": 125,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/local/lib/postgresql/pgcrypto.so",
+          "stat": "0 0 755 63 9398",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/local/lib/postgresql",
+          "stat": "0 0 755 63 88002",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/local/lib",
+          "stat": "0 0 755 63 88001",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/local",
+          "stat": "0 0 755 63 88008",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    },
+    {
+      "path": "/usr/local/lib/postgresql/aos_ed25519.so",
+      "sha256": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+      "bytes": 71520,
+      "apk": null,
+      "elf": {
+        "dynamic_needed": [
+          "libcrypto.so.3"
+        ],
+        "undefined_symbol_count": 14,
+        "loader_callback_imports": [],
+        "indirect_registration_absence_proved": false
+      },
+      "file_and_ancestors": [
+        {
+          "path": "/usr/local/lib/postgresql/aos_ed25519.so",
+          "stat": "0 0 755 63 88003",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/local/lib/postgresql",
+          "stat": "0 0 755 63 88002",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/local/lib",
+          "stat": "0 0 755 63 88001",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr/local",
+          "stat": "0 0 755 63 88008",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/usr",
+          "stat": "0 0 755 63 88007",
+          "writable_by_container_identity": false
+        },
+        {
+          "path": "/",
+          "stat": "0 0 755 63 980028",
+          "writable_by_container_identity": false
+        }
+      ]
+    }
+  ],
+  "virtual_modules": [
+    {
+      "path": "virtual:linux-vdso.so.1",
+      "virtual": true
+    }
+  ],
+  "backend_identity": {
+    "Uid": "501\t501\t501\t501",
+    "Gid": "20\t20\t20\t20",
+    "Groups": "20"
+  },
+  "container_exec_identity": "uid=501 gid=20(dialout) groups=20(dialout)",
+  "readonly_native_facts": {
+    "files": [
+      {
+        "path": "/usr/local/bin/postgres",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "5fcbdb4481e9725bfe8b734e270418094a5dee65065880a2dd24c99f1f263c17",
+            "fileBytes": "9162032",
+            "fileOffset": "0",
+            "memoryStart": "aaaac9290000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libzstd.so.1.5.7",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "6fd00f73932fb44d5dc8104f33a84b80ff2f01e565de0d9f7aedf1c2ffea976c",
+            "fileBytes": "627176",
+            "fileOffset": "0",
+            "memoryStart": "ffff9bb7c000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/liblz4.so.1.10.0",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "300698a3475d43f115e78d43e7b6afb10c8258cf167b9b0f7f2d89ca81e42552",
+            "fileBytes": "142280",
+            "fileOffset": "0",
+            "memoryStart": "ffff9bb3b000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libxml2.so.2.13.9",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "1dce0afaaeeffcb7c59a4804a8b4460bbc56531b4b56e5d8fb6244b94466112a",
+            "fileBytes": "1084308",
+            "fileOffset": "0",
+            "memoryStart": "ffff9ba19000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libssl.so.3",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "78a3483be15095076277209068b69f87d67c87e22a6047bdf2abcdba806076d6",
+            "fileBytes": "795152",
+            "fileOffset": "0",
+            "memoryStart": "ffff9b935000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libcrypto.so.3",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "e6414e06dcbee731a7ab19a6561236aa630994882784ae88ecd8028ff2bafd9f",
+            "fileBytes": "4038616",
+            "fileOffset": "0",
+            "memoryStart": "ffff9b4cf000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libgssapi_krb5.so.2.2",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "b27c3dab36471a468575c7b6ea6ecc03bf394fff2d2ebf381daaf937a1e567eb",
+            "fileBytes": "258488",
+            "fileOffset": "0",
+            "memoryStart": "ffff9b47e000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libz.so.1.3.2",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "99c2ca0c833e6686a318e22dafe00331314ea5fe06d510180fb11c80e458635f",
+            "fileBytes": "89128",
+            "fileOffset": "0",
+            "memoryStart": "ffff9b44d000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libldap.so.2.0.200",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "c3c86548d2534adafcc10429c301ef13ddb3e4a22132ff23dc6918f1cb2d3655",
+            "fileBytes": "323112",
+            "fileOffset": "0",
+            "memoryStart": "ffff9b3ea000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libicui18n.so.78.1",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "69a448c6a0d671b6e36f6b8c028e842d080f6430387a3cb0d77bd626b92c16ed",
+            "fileBytes": "3037503",
+            "fileOffset": "0",
+            "memoryStart": "ffff9b0d8000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libicuuc.so.78.1",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "36a6565ced72a31fd67cb77b16835f9d1e503094835d1dfe67f0ab113670ff53",
+            "fileBytes": "1766661",
+            "fileOffset": "0",
+            "memoryStart": "ffff9af05000"
+          }
+        ]
+      },
+      {
+        "path": "/lib/ld-musl-aarch64.so.1",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "42801d696addc652f1856905ba51cc5b9ee83533b46baa9e0de58ccb335a11c7",
+            "fileBytes": "664756",
+            "fileOffset": "0",
+            "memoryStart": "ffff9bc2d000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/liblzma.so.5.8.3",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "04429544af2c813957ede594f56ca0cbe4543992b07939ebf37d93027e5a95d2",
+            "fileBytes": "203828",
+            "fileOffset": "0",
+            "memoryStart": "ffff9aeb4000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libkrb5.so.3.3",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "1c4f6f0f3bad8f692ffb736d68d1a1beb2108c9ab6688a254fba81732dd8fadb",
+            "fileBytes": "670372",
+            "fileOffset": "0",
+            "memoryStart": "ffff9adf2000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libk5crypto.so.3.1",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "dc4ba7d0ca5fd88c9bf0edb5b311311cdd521e786a6ac91f2eddf57dc0bb84af",
+            "fileBytes": "159484",
+            "fileOffset": "0",
+            "memoryStart": "ffff9adb1000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libcom_err.so.2.1",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "8ddc8dc4cbd96f33d3e6674c3fe166f49ec58aae25ebafe1a8c541e1db825433",
+            "fileBytes": "8776",
+            "fileOffset": "0",
+            "memoryStart": "ffff9ad90000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libkrb5support.so.0.1",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "f554b0e20700e172f7dc0a36328781f8839bc1b7f0fbe81eb4f90a58b1d8561d",
+            "fileBytes": "38412",
+            "fileOffset": "0",
+            "memoryStart": "ffff9ad6f000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/liblber.so.2.0.200",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "2ba0e01e67c35be7cdde83f3c3fc9bb6589fff7e4e9295d6950c1952056d618d",
+            "fileBytes": "49448",
+            "fileOffset": "0",
+            "memoryStart": "ffff9ad4e000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libsasl2.so.3.0.0",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "fe1e1ace3156e536e452e9d4c834c25fdb6674f28075db4a74b1138c5db921aa",
+            "fileBytes": "97384",
+            "fileOffset": "0",
+            "memoryStart": "ffff9ad1d000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libstdc++.so.6.0.34",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "0e1822a8aa1ba949894b2a39fd69b1c37c447330885a5e88465c2ce23fe8e2be",
+            "fileBytes": "2690229",
+            "fileOffset": "0",
+            "memoryStart": "ffff9aa58000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libgcc_s.so.1",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "fb74fd3785d2435d441e37edc368b67d641b9299600aae4777559b2f0ec51518",
+            "fileBytes": "123176",
+            "fileOffset": "0",
+            "memoryStart": "ffff9aa27000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libicudata.so.78.1",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "b0913ffd1875246039a7f986b08bfe8c9896adf6366c8c3acf7f027fdb1127b9",
+            "fileBytes": "624",
+            "fileOffset": "0",
+            "memoryStart": "ffff9aa07000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/lib/libkeyutils.so.1.10",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "8f2167842821bc4209a0f74f9fbf862a90e3e4bf3cace52fa7c1004022f5ec59",
+            "fileBytes": "13228",
+            "fileOffset": "0",
+            "memoryStart": "ffff9a9e6000"
+          }
+        ]
+      },
+      {
+        "path": "virtual:linux-vdso.so.1",
+        "virtual": true
+      },
+      {
+        "path": "/tmp/aos_admission_modules_b16f65420b8743d08217fd64041f7497.so",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "566a820f87603ee584819070786c6ee31bb2bfe63cefaa88078c43a5029d64a2",
+            "fileBytes": "23416",
+            "fileOffset": "0",
+            "memoryStart": "ffff8d1b9000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/local/lib/postgresql/pgcrypto.so",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "1c97a22c67026ce340211d527476b076b13dcec6dcfaad365ca3c6a54a4388ca",
+            "fileBytes": "114284",
+            "fileOffset": "0",
+            "memoryStart": "ffff8d176000"
+          }
+        ]
+      },
+      {
+        "path": "/usr/local/lib/postgresql/aos_ed25519.so",
+        "virtual": false,
+        "segments": [
+          {
+            "sha256": "473278a500f970238241829fbe7c0bf7105e812d9ac289805267143c2854a07b",
+            "fileBytes": "3420",
+            "fileOffset": "0",
+            "memoryStart": "ffff8d155000"
+          }
+        ]
+      }
+    ],
+    "schemaVersion": "aos.native-module-readonly-bytes/v1",
+    "executionAllowed": false,
+    "mappedImageProvenance": false,
+    "writableBytesVerified": false,
+    "readonlyLoadedBytesVerified": true
+  },
+  "installed_apk_database_sha256": "16d39753f3f8a9c5bebb95ad07ba442a2d35eeff03a17f0a73b143871fbeb3c1",
+  "readonly_rootfs": false,
+  "image_id": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+  "image_repo_digests": [
+    "aos-precommit-probe-20261009-base@sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883"
+  ],
+  "repo_digest_is_signature": false
+}

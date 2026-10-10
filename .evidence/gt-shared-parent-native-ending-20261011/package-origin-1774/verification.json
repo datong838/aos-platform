@@ -1,0 +1,34 @@
+{
+  "module_count": 26,
+  "apk_owned_count": 22,
+  "apk_checksum_matches": 22,
+  "unowned_modules": [
+    "/usr/local/bin/postgres",
+    "/tmp/aos_admission_modules_b16f65420b8743d08217fd64041f7497.so",
+    "/usr/local/lib/postgresql/pgcrypto.so",
+    "/usr/local/lib/postgresql/aos_ed25519.so"
+  ],
+  "writable_files": [
+    "/tmp/aos_admission_modules_b16f65420b8743d08217fd64041f7497.so"
+  ],
+  "loader_callback_import_modules": [
+    "/usr/local/bin/postgres",
+    "/usr/lib/libxml2.so.2.13.9",
+    "/usr/lib/libcrypto.so.3",
+    "/usr/lib/libicuuc.so.78.1",
+    "/usr/lib/libkrb5support.so.0.1",
+    "/usr/lib/libsasl2.so.3.0.0"
+  ],
+  "readonly_rootfs": false,
+  "original_metadata_exact": true,
+  "five_owners_closed": true,
+  "xid_aborted": true,
+  "backend_gone": true,
+  "new_interfaces_absent": true,
+  "original_binaries_exact": true,
+  "package_source_build_provenance_proved": false,
+  "immutable_lifecycle_proved": false,
+  "formal_database_changed": false,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}
