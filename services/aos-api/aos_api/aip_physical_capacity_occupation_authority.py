@@ -294,11 +294,7 @@ def occupation_intent_statements():
             binding:=public.prepare_capacity_input_parent_debit(p_raw,p_source,p_hold,p_request,p_hash,p_debit,p_minor,p_suite_raw,p_case,p_input_raw);
             SELECT immutable INTO STRICT debit_body FROM {SCHEMA}.prepared_parent_debit WHERE debit_id=p_debit;
             body:=jsonb_build_object('intentId',p_intent,'state','prepared','tenant',jsonb_build_object('orgId','org-org','projectId','dev-project'),
-              'requestId',p_request,'requestHash',p_hash,'requestMaker',fact->>'requestMaker',
-              'approvalChecker',fact->>'approvalChecker','approvalSnapshot',fact->'approvalSnapshot',
-              'proposalId',fact->>'proposalId','proposalHash',fact->>'proposalHash',
-              'originalIdempotencyKey',fact->>'requestIdempotencyKey','application',fact->'application',
-              'debit',debit_body,'caseBinding',binding->'caseBinding','caseBindingHash',binding->>'caseBindingHash',
+{occupation_target_authority_fields_sql()}              'debit',debit_body,'caseBinding',binding->'caseBinding','caseBindingHash',binding->>'caseBindingHash',
               'inputHash',binding->>'verifiedInputHash','purpose','target','attempt',1,
               'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid());
             digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
@@ -330,11 +326,7 @@ def occupation_input_binding_statements():
           DECLARE fact jsonb; value jsonb; debit jsonb;
           BEGIN
             fact:=public.capacity_occupation_eval_case_fact(p_raw,p_source,p_hold,p_request,p_hash,p_suite_raw,p_case);
-            IF p_input_raw IS NULL OR octet_length(p_input_raw)=0 OR octet_length(p_input_raw)>1048576
-              OR encode(sha256(p_input_raw),'hex') IS DISTINCT FROM fact->>'inputHash' THEN
-              RAISE EXCEPTION 'CAPACITY_CASE_INPUT_BYTES_REQUIRED' USING ERRCODE='23514'; END IF;
-            value:=convert_from(p_input_raw,'UTF8')::jsonb;
-            debit:=public.prepare_capacity_case_parent_debit(p_raw,p_source,p_hold,p_request,p_hash,p_debit,p_minor,p_suite_raw,p_case);
+{occupation_input_bytes_validation_sql()}            debit:=public.prepare_capacity_case_parent_debit(p_raw,p_source,p_hold,p_request,p_hash,p_debit,p_minor,p_suite_raw,p_case);
             RETURN debit||jsonb_build_object('verifiedInputHash',fact->>'inputHash','inputValue',value,'executionAllowed',false);
           END $inputbind$''',
         f'ALTER FUNCTION {INPUT_DEBIT} OWNER TO {OWNER}',
@@ -1522,3 +1514,13 @@ def occupation_shared_risk_description_statements():
         f'REVOKE ALL ON FUNCTION {SHARED_RISK_DESCRIPTION} FROM PUBLIC',
         f'GRANT EXECUTE ON FUNCTION {SHARED_RISK_DESCRIPTION} TO aos_runtime',
     )
+
+
+def occupation_input_bytes_validation_sql():
+    """Exact original input-byte/hash/JSON check; requires native CASE_FACT."""
+    return "            IF p_input_raw IS NULL OR octet_length(p_input_raw)=0 OR octet_length(p_input_raw)>1048576\n              OR encode(sha256(p_input_raw),'hex') IS DISTINCT FROM fact->>'inputHash' THEN\n              RAISE EXCEPTION 'CAPACITY_CASE_INPUT_BYTES_REQUIRED' USING ERRCODE='23514'; END IF;\n            value:=convert_from(p_input_raw,'UTF8')::jsonb;\n"
+
+
+def occupation_target_authority_fields_sql():
+    """Exact original Target request/approval fields from native fact only."""
+    return "              'requestId',p_request,'requestHash',p_hash,'requestMaker',fact->>'requestMaker',\n              'approvalChecker',fact->>'approvalChecker','approvalSnapshot',fact->'approvalSnapshot',\n              'proposalId',fact->>'proposalId','proposalHash',fact->>'proposalHash',\n              'originalIdempotencyKey',fact->>'requestIdempotencyKey','application',fact->'application',\n"

@@ -1,0 +1,38 @@
+{
+  "authority": "AOS-001727",
+  "files": {
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": "086110f30a9f96b0b6f7493832fd586b6358abb6ea7cb8443ae83c04afa26b8f",
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "1152b23192e29b57adf10789efe4f4810fc865f1d23930ed353d03c5c3def75c",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "7b74a963be989a1f161d37a5ffd6d071c7c179f27dbcd4e7efdcd71cbed72dcd"
+  },
+  "original_sql_14_byte_exact": true,
+  "adjacent_tests": 336,
+  "scope": "first Target input and nonexecuting Judge dependency only",
+  "review": {
+    "unique_target": "plan unique plus original request/case/attempt unique",
+    "dependency": "target id/hash composite FK and original judge facts; no target result fabricated",
+    "input": "actual original Suite bytes and pack input content hash; no old per-case debit",
+    "native_context": "private occupation login/runtime role/SERIAL/write/UTC/origin/positive scope",
+    "current_after_waits": "native original facts reread and verified certificate bounds; Root/head locks retained",
+    "commit": "original pending and new obligation/Intent deferred complete gates remain required"
+  },
+  "pending": [
+    "full complete ending",
+    "same-transaction Root drift matrix",
+    "physical/window competition and unresolved cutover",
+    "actual Target result/Judge consumer",
+    "formal Root provenance and business first chain"
+  ],
+  "formal_service_observation": {
+    "colima_socket_available": false,
+    "api_process_found": true,
+    "formal_writes": false,
+    "api_pid": 52077,
+    "api_registered_entry": "api159-source-132b92e20d26",
+    "api_started": "2026-10-10 17:39:41 Asia/Shanghai",
+    "web_5173_listening": false,
+    "formal_colima_profile": "Stopped"
+  },
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

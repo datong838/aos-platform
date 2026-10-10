@@ -228,3 +228,36 @@ def test_native_first_target_obligation_is_closed_and_pending(native):
     native.rollback()
     assert native.execute('SELECT to_regclass(%s)',(table,)).fetchone()[0] is None
     native.rollback()
+
+
+def test_original_capacity_generators_remain_byte_exact():
+    from aos_api import aip_physical_capacity_occupation_authority as original
+    root=Path(__file__).resolve().parents[4]
+    before=json.loads((root/'.evidence/gt-shared-parent-atomic-admission-finalizer-20261010/capacity-kernel-sql-beforeimage-1699.json').read_text())['generators']
+    for name,statements in before.items():
+        assert list(getattr(original,name)())==statements,name
+
+
+def test_native_shared_intent_dependency_is_closed(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    for statement in (*api.shared_parent_admission_origin_statements(),
+                      *api.shared_parent_admission_certificate_set_statements(),
+                      *api.shared_parent_admission_storage_statements(),
+                      *api.shared_parent_pending_origin_lookup_statements(),
+                      *api.shared_parent_physical_obligation_statements(),
+                      *api.shared_parent_initial_intent_statements()):
+        native.execute(statement)
+    for name in ('target_intent','judge_dependency'):
+        table=api.PHYSICAL_SCHEMA+'.'+name
+        assert native.execute('SELECT pg_get_userbyid(relowner),relrowsecurity,relforcerowsecurity FROM pg_class WHERE oid=%s::regclass',(table,)).fetchone()==(OWNER,True,True)
+        for role in ('aos_runtime','aos_provider_capacity_issuer'):
+            for privilege in ('SELECT','INSERT','UPDATE','DELETE','TRUNCATE'):
+                assert not native.execute('SELECT has_table_privilege(%s,%s,%s)',(role,table,privilege)).fetchone()[0]
+        assert native.execute("SELECT tgdeferrable,tginitdeferred FROM pg_trigger WHERE tgrelid=%s::regclass AND tgname='require_complete_intent_end'",(table,)).fetchone()==(True,True)
+    for role in ('aos_runtime','aos_provider_capacity_issuer'):
+        assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')",(role,api.INITIAL_INTENT)).fetchone()[0]
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SHARED_ADMISSION_INTENT_NATIVE_CALLER_REQUIRED'):
+        with native.transaction():native.execute('SELECT public.prepare_shared_parent_initial_intents(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)')
+    native.rollback()
+    assert native.execute('SELECT to_regprocedure(%s)',(api.INITIAL_INTENT,)).fetchone()[0] is None
+    native.rollback()

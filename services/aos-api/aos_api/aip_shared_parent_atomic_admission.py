@@ -456,3 +456,140 @@ def shared_parent_physical_obligation_statements():
         f'ALTER FUNCTION {INITIAL_OBLIGATION} OWNER TO {OWNER}',
         f'REVOKE ALL ON FUNCTION {INITIAL_OBLIGATION} FROM {denied}',
     )
+
+
+INITIAL_INTENT = 'public.prepare_shared_parent_initial_intents(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text,text,bytea,bytea,uuid,uuid)'
+
+
+def shared_parent_initial_intent_statements():
+    """Unique first Target intent and nonexecuting Judge result dependency.
+
+    Original native CASE_FACT and input/approval kernels remain authoritative.
+    Full ending, legacy cutover and actual-result consumers remain required.
+    """
+    s = PHYSICAL_SCHEMA
+    target = s + '.target_intent'
+    judge = s + '.judge_dependency'
+    denied = 'PUBLIC,aos_runtime,aos_provider_capacity_issuer'
+    statements = [
+        f'''CREATE TABLE {target}(
+          intent_id uuid PRIMARY KEY,plan_id uuid NOT NULL UNIQUE REFERENCES {s}.initial_target_obligation(plan_id),
+          org_id text NOT NULL CHECK(org_id='org-org'),project_id text NOT NULL CHECK(project_id='dev-project'),
+          request_id text NOT NULL,case_id text NOT NULL,attempt integer NOT NULL CHECK(attempt=1),
+          body jsonb NOT NULL,content_hash text NOT NULL CHECK(content_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          caller_xid xid8 NOT NULL,caller_pid integer NOT NULL CHECK(caller_pid>0),
+          UNIQUE(org_id,project_id,request_id,case_id,attempt),UNIQUE(intent_id,content_hash))''',
+        f'''CREATE TABLE {judge}(
+          intent_id uuid PRIMARY KEY,plan_id uuid NOT NULL UNIQUE REFERENCES {target}(plan_id),
+          org_id text NOT NULL CHECK(org_id='org-org'),project_id text NOT NULL CHECK(project_id='dev-project'),
+          target_intent_id uuid NOT NULL UNIQUE,target_intent_hash text NOT NULL,
+          request_id text NOT NULL,case_id text NOT NULL,attempt integer NOT NULL CHECK(attempt=1),
+          body jsonb NOT NULL,content_hash text NOT NULL CHECK(content_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          caller_xid xid8 NOT NULL,caller_pid integer NOT NULL CHECK(caller_pid>0),
+          UNIQUE(org_id,project_id,request_id,case_id,attempt),
+          FOREIGN KEY(target_intent_id,target_intent_hash) REFERENCES {target}(intent_id,content_hash))''',
+    ]
+    for table in (target, judge):
+        statements.extend((
+            f'ALTER TABLE {table} OWNER TO {OWNER}',
+            f'REVOKE ALL ON {table} FROM {denied}',
+            f'ALTER TABLE {table} ENABLE ROW LEVEL SECURITY',
+            f'ALTER TABLE {table} FORCE ROW LEVEL SECURITY',
+            f'''CREATE POLICY exact_scope ON {table} TO {OWNER}
+              USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+              WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))''',
+            f'CREATE TRIGGER immutable_intent BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION {s}.immutable_obligation()',
+            f'CREATE TRIGGER no_truncate_intent BEFORE TRUNCATE ON {table} FOR EACH STATEMENT EXECUTE FUNCTION {s}.immutable_obligation()',
+            f'''CREATE CONSTRAINT TRIGGER require_complete_intent_end AFTER INSERT ON {table}
+              DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION {s}.require_complete_obligation()''',
+        ))
+    statements.extend((
+        f'''CREATE FUNCTION {INITIAL_INTENT.split('(')[0]}(
+          p_raw bytea,p_source jsonb,p_target uuid,p_tr text,p_th text,
+          p_judge uuid,p_jr text,p_jh text,p_plan uuid,p_manifest jsonb,p_manifest_hash text,
+          p_certificates bytea,p_pending_hash text,p_obligation_hash text,p_suite_raw bytea,p_input_raw bytea,
+          p_target_intent uuid,p_judge_intent uuid) RETURNS jsonb
+          LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $intents$
+          DECLARE obligation {s}.initial_target_obligation%ROWTYPE; prior_target {target}%ROWTYPE;
+            prior_judge {judge}%ROWTYPE; fact jsonb; value jsonb; pending jsonb; original jsonb; after_facts jsonb;
+            target_body jsonb; target_hash text; judge_body jsonb; judge_hash text; native_case jsonb;
+            p_request text:=p_tr; p_hash text:=p_th;
+          BEGIN
+            IF session_user<>'aos_provider_capacity_occupation'
+              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'
+              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'
+              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'
+              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'
+              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'
+              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_INTENT_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+            IF p_target_intent IS NULL OR p_judge_intent IS NULL OR p_target_intent=p_judge_intent THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_DISTINCT_INTENT_IDS_REQUIRED' USING ERRCODE='23514'; END IF;
+            SELECT * INTO obligation FROM {s}.initial_target_obligation WHERE plan_id=p_plan FOR SHARE;
+            IF NOT FOUND OR obligation.caller_xid IS DISTINCT FROM pg_current_xact_id()
+              OR obligation.caller_pid IS DISTINCT FROM pg_backend_pid()
+              OR obligation.pending_hash IS DISTINCT FROM p_pending_hash
+              OR obligation.content_hash IS DISTINCT FROM p_obligation_hash
+              OR obligation.target_hold IS DISTINCT FROM p_target
+              OR obligation.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(
+                public.canonical_asset_registry_jsonb(obligation.body),'UTF8')),'hex') THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_INTENT_NATIVE_OBLIGATION_REQUIRED' USING ERRCODE='23514'; END IF;
+            fact:={_physical.CASE_FACT.split('(')[0]}(p_raw,p_source,p_target,p_tr,p_th,p_suite_raw,obligation.case_id);
+{_physical.occupation_input_bytes_validation_sql()}            target_body:=jsonb_build_object(
+              'schemaVersion','aos.shared-parent-target-intent/v1','intentId',p_target_intent,'planId',p_plan,
+              'pendingOriginHash',p_pending_hash,'obligationHash',p_obligation_hash,
+              'tenant',jsonb_build_object('orgId','org-org','projectId','dev-project'),
+{_physical.occupation_target_authority_fields_sql()}              'parentHold',p_target,'caseId',obligation.case_id,'inputRef',fact->'inputRef',
+              'inputHash',fact->>'inputHash','inputValue',value,'purpose','target','attempt',1,
+              'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),
+              'state','pending_full_admission','executionAllowed',false);
+            target_hash:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(target_body),'UTF8')),'hex');
+            INSERT INTO {target}(intent_id,plan_id,org_id,project_id,request_id,case_id,attempt,body,content_hash,caller_xid,caller_pid)
+              VALUES(p_target_intent,p_plan,'org-org','dev-project',p_tr,obligation.case_id,1,target_body,target_hash,
+                pg_current_xact_id(),pg_backend_pid()) ON CONFLICT DO NOTHING;
+            SELECT * INTO prior_target FROM {target} WHERE plan_id=p_plan FOR SHARE;
+            IF NOT FOUND OR prior_target.intent_id IS DISTINCT FROM p_target_intent
+              OR prior_target.body IS DISTINCT FROM target_body OR prior_target.content_hash IS DISTINCT FROM target_hash
+              OR prior_target.caller_xid IS DISTINCT FROM pg_current_xact_id() OR prior_target.caller_pid IS DISTINCT FROM pg_backend_pid() THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_TARGET_INTENT_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+            pending:={READ_PENDING.split('(')[0]}(
+              p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh,p_plan,p_manifest,p_manifest_hash,p_certificates,p_pending_hash);
+            original:=pending#>'{{immutable,origin,immutable,originalRisk,originalFacts}}';native_case:=original->'cases'->0;
+            IF fact->'application' IS DISTINCT FROM original->'target'->'application'
+              OR fact->>'inputHash' IS DISTINCT FROM native_case->'inputArtifact'->>'contentHash'
+              OR obligation.case_id IS DISTINCT FROM native_case->>'caseId'
+              OR original#>>'{{judge,application,ruleFacts,rule,inputProtocol}}' IS DISTINCT FROM 'aos.model-eval-judge-input/v1' THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_INTENT_ORIGINAL_PAIR_REQUIRED' USING ERRCODE='23514'; END IF;
+            judge_body:=jsonb_build_object('schemaVersion','aos.shared-parent-judge-dependency/v1',
+              'intentId',p_judge_intent,'planId',p_plan,'pendingOriginHash',p_pending_hash,
+              'tenant',target_body->'tenant','requestId',p_jr,'requestHash',p_jh,
+              'parentHold',p_judge,'caseId',obligation.case_id,'application',original#>'{{judge,application}}',
+              'targetIntentId',p_target_intent,'targetIntentHash',target_hash,
+              'inputDependency',jsonb_build_object('protocol','aos.model-eval-judge-input/v1',
+                'state','awaiting_target_result','targetIntentId',p_target_intent,
+                'targetIntentHash',target_hash,'expectedArtifact',native_case->'expectedArtifact'),
+              'purpose','judge','attempt',1,'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,
+              'callerPid',pg_backend_pid(),'state','awaiting_target_result','executionAllowed',false);
+            judge_hash:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(judge_body),'UTF8')),'hex');
+            INSERT INTO {judge}(intent_id,plan_id,org_id,project_id,target_intent_id,target_intent_hash,
+              request_id,case_id,attempt,body,content_hash,caller_xid,caller_pid)
+              VALUES(p_judge_intent,p_plan,'org-org','dev-project',p_target_intent,target_hash,p_jr,obligation.case_id,1,
+                judge_body,judge_hash,pg_current_xact_id(),pg_backend_pid()) ON CONFLICT DO NOTHING;
+            SELECT * INTO prior_judge FROM {judge} WHERE plan_id=p_plan FOR SHARE;
+            IF NOT FOUND OR prior_judge.intent_id IS DISTINCT FROM p_judge_intent
+              OR prior_judge.body IS DISTINCT FROM judge_body OR prior_judge.content_hash IS DISTINCT FROM judge_hash
+              OR prior_judge.caller_xid IS DISTINCT FROM pg_current_xact_id() OR prior_judge.caller_pid IS DISTINCT FROM pg_backend_pid() THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_JUDGE_DEPENDENCY_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+            after_facts:={FUNCTION.split('(')[0]}(p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh);
+            IF after_facts IS DISTINCT FROM original OR EXISTS(SELECT 1 FROM jsonb_array_elements(pending#>'{{immutable,certificates}}') envelope
+                WHERE clock_timestamp()<(envelope#>>'{{certificate,validFrom}}')::timestamptz
+                   OR clock_timestamp()>=(envelope#>>'{{certificate,validUntil}}')::timestamptz) THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_INTENT_CURRENT_AFTER_WAITS_REQUIRED' USING ERRCODE='23514'; END IF;
+            RETURN jsonb_build_object('planId',p_plan,'targetIntent',target_body,'targetIntentHash',target_hash,
+              'judgeDependency',judge_body,'judgeDependencyHash',judge_hash,'executionAllowed',false);
+          END $intents$''',
+        f'ALTER FUNCTION {INITIAL_INTENT} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {INITIAL_INTENT} FROM {denied}',
+    ))
+    return tuple(statements)

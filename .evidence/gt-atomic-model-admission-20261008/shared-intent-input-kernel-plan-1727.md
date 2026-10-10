@@ -1,0 +1,4 @@
+# 1727 原输入/Target权威字段共用核
+Rules：231、原模型Task精确Scope、单m1、既有完整来源原算法复用。
+只修改services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py：提取原INPUT_DEBIT中字节大小/hash/JSON转换块及原INTENT中的request/maker/checker/approval/proposal/idempotency/application字段片段为固定零参数helper。原两个producer改为插入同一字符串，原14生成SQL逐字相同、全部已发布/准备函数保持。主Task新version调用同一helper，不写old per-case debit、不复制简化输入校验或批准字段。
+不增加SQL权限、表、网络或正式库效果。旧完整Source/Intent相邻由主Task的新鲜原Source总体测试加metadata/旧字节beforeimage核验；原正常动态producer行为不借提取改变。支持Task仍完整未交付，不写Delivery。

@@ -80,3 +80,12 @@ RED artifact缺失；GREEN原生DDL闭ACL/Owner/RLS、admin拒绝、原入口SQL
 1725相邻r2在实测fixture运行时333PASS1FAIL：原拒绝角色测试观察到cluster级occupation→runtime临时测试membership，不能把不同DB误当独立全局角色。保持原测试不变、不撤销运行中fixture角色；等待当前唯一实测终态及角色恢复后串行重跑相邻。后续所有共享此cluster身份的实测/元数据测试串行，禁止并发污染。
 
 1725初始义务r1：两实际创建/重放及缺结束门COMMIT拒绝通过，但原Source后续相邻和cleanup真实到期RED，129.75秒；安装body为新增早拒前版本，独立读回按精确旧body区分。新r2保持Source全相邻与cleanup、原TTL/审批/签名不改，仅不重复r1已局部验收的第二次义务重放，单次义务正向后实际提交拒绝再跑全部Source相邻。旧r1不当完整Green，测试排序节省重复来源核验不删除业务相邻或放宽期限。
+
+## 1727 唯一首 Target Intent 与 Judge 等待依赖
+产品scope原两文件；支持Task仅提取原physical_authority两个零参数共用片段，原14 SQL字节不变。新physical private表target_intent绑定initial_target_obligation的plan唯一，intentUUID唯一与(request,case,attempt=1)唯一；judge_dependency绑定精确Target Intent/hash、plan唯一且judge UUID独立。每表闭ACL/FORCE RLS/不可变、native deferred结束门。
+固定新入口使用完整rawSource/两hold/request/hash/manifest/certs/pendingHash/obligationHash、原Suite raw和input raw及两Intent UUID。原CASE_FACT核当前真实Suite/Contract/具体首case，复用原输入bytes核；同caller original obligation/hash/plan/account/hold校验，复用原Target权威字段。写入新Target schema及Judge等待协议、原期望artifact，没有实际Target result/Judge input，也不再次扣父预算。唯一性/重放要求同caller、body和hash精确一致，不同Intent或请求case重复稳定拒绝。写后再通过固定Owner lookup完整Source/两审批/四签名当前性，任何不一致整事务拒绝。
+这仍不是完整COMMIT：完整新旧风险/窗口/unknown切换、原唯一Intent外部producer/consumer兼容、全部event/RI最终检查和单一可信结束通道仍须完成；新功能不开放runtime权限、不替换原七guard。先RED新增artifact缺失→原14beforeimage字节保持+新原生metadata/ACL/admin拒绝→新鲜Source两审批四签名+实际Suite/input正向Target/Judge依赖与故障/提交拒绝/独立回滚。共享cluster角色测试全部串行，不放宽旧TTL或删Source总体相邻。
+1727写入顺序细化：Target原CASE_FACT/输入后创建Target唯一行，再固定Issuer lookup验证完整4证书并取得原Judge facts；随后Judge唯一/FK写入。Root/head/key已有同事务SHARE锁，最后用原完整FUNCTION重读Source/两hold/所有case原facts并要求完全相同，DBclock校核此前原C核已验证且被Root期限上界约束的全部cert validFrom/Until。没有授physical Owner C verifier、不缓存客户端currentness、不以元数据门授准入；对真实等待跨期与同事务Root/Source变更完整负门仍需后续整体矩阵验收。新结束门仍不存在。
+
+### 1727 fresh native r3 evidence refinement
+r1 missing test-only certificate helper, r2 full original chain Source expiry RED retained. r3 keeps the original entire test and unchanged approval/Source deadlines; persist component proof at actual rejected COMMIT before subsequent original adjacent cases so partial component result is independently reconcilable. Whole fixture result remains separate and cannot be promoted from component PASS. No formal writes or old attempt replay.

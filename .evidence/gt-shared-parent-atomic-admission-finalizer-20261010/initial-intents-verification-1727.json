@@ -1,0 +1,177 @@
+{
+  "authority": "AOS-001727",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "status": "INITIAL_INTENTS_COMPONENT_NATIVE_PASS_WHOLE_SOURCE_ADJACENT_RED",
+  "adjacent_pass": 336,
+  "component_readback": {
+    "status": "INITIAL_INTENTS_COMPONENT_NATIVE_ROLLBACK_READBACK",
+    "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+    "authority": "AOS-001727",
+    "cluster": "7694680278363095064",
+    "database": "aos_test_01f650d00ba8_ti4_test",
+    "readonly": true,
+    "latest_entry_context_guard_installed": true,
+    "whole_fixture_pass": false,
+    "native_functions": [
+      {
+        "signature": "public.read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)",
+        "body_sha256": "7f32540c7113c978058a44e747510e50b5a735fd61328e7e04282b060db6ffe2",
+        "owner": "aos_physical_capacity_occupation_owner",
+        "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+        "native_body_exact": true,
+        "runtime_execute": false
+      },
+      {
+        "signature": "public.build_shared_parent_admission_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text)",
+        "body_sha256": "bf77e5029c15c745907fa76beedc79cee84893aaae02a810733cd266750d56d2",
+        "owner": "aos_physical_capacity_occupation_owner",
+        "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner,aos_model_eval_issuer_owner=X/aos_physical_capacity_occupation_owner}",
+        "native_body_exact": true,
+        "runtime_execute": false
+      },
+      {
+        "signature": "public.validate_shared_parent_admission_certificate_set(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea)",
+        "native_body_exact": true,
+        "owner": "aos_model_eval_issuer_owner",
+        "runtime_execute": false,
+        "physical_verifier_grant": false,
+        "signed_legs": 4,
+        "negative_cases": [
+          "actual_input_bytes_tampered"
+        ]
+      },
+      {
+        "signature": "public.read_shared_parent_pending_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text)",
+        "native_body_exact": true,
+        "body_sha256": "cca4bf55ec89d45587d7ce8df543ebf1091106949a0c29a83efe01aa1dcbf4d7",
+        "physical_owner_execute": true,
+        "runtime_execute": false,
+        "schema_table_grant": false
+      },
+      {
+        "name": "aos_shared_parent_physical_private.immutable_obligation",
+        "native_body_exact": true,
+        "owner": "aos_physical_capacity_occupation_owner",
+        "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+      },
+      {
+        "name": "aos_shared_parent_physical_private.require_complete_obligation",
+        "native_body_exact": true,
+        "owner": "aos_physical_capacity_occupation_owner",
+        "body_sha256": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+      },
+      {
+        "name": "public.prepare_shared_parent_initial_target_obligation",
+        "native_body_exact": true,
+        "owner": "aos_physical_capacity_occupation_owner",
+        "body_sha256": "018c8a862d4e085ec7dffcf8390628444528faafa7d25e5d516954090e285048"
+      },
+      {
+        "name": "aos_shared_parent_admission_private.check_pending_origin",
+        "native_body_exact": true,
+        "body_sha256": "9b0778516fd81c2a0cef79384722f915b6140213e2ff99f9508b4938528e2bdf",
+        "owner": "aos_model_eval_issuer_owner"
+      },
+      {
+        "name": "aos_shared_parent_admission_private.immutable_pending_origin",
+        "native_body_exact": true,
+        "body_sha256": "4d2cc498d78993f7a858184f0f9f7428ba075fbf19aa4d1cab011450d81ef5e8",
+        "owner": "aos_model_eval_issuer_owner"
+      },
+      {
+        "name": "aos_shared_parent_admission_private.require_pending_completion",
+        "native_body_exact": true,
+        "body_sha256": "0cc61cc107ad38e73fccc0c3c58e895511edc21cef6bee6f4e8d13d46fc81fda",
+        "owner": "aos_model_eval_issuer_owner"
+      },
+      {
+        "name": "public.persist_shared_parent_admission_origin",
+        "native_body_exact": true,
+        "body_sha256": "52ea6339ee4c8f3ed8adb5911ac21c648beb38f28f1a78f730e65558c7201577",
+        "owner": "aos_model_eval_issuer_owner"
+      },
+      {
+        "signature": "public.prepare_shared_parent_initial_intents(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text,text,bytea,bytea,uuid,uuid)",
+        "native_body_exact": true,
+        "body_sha256": "494777622aa8ea32ba3240710d431a4603f2cc1e230f38f680052c5a86c370ed",
+        "runtime_execute": false
+      }
+    ],
+    "original_guard_readback": [
+      {
+        "table": "aos_physical_capacity_occupation_private.call_occupation",
+        "installed_in_this_fixture": false
+      },
+      {
+        "table": "aos_physical_capacity_occupation_private.call_occupation_event",
+        "installed_in_this_fixture": false
+      },
+      {
+        "table": "aos_physical_capacity_occupation_private.prepared_call_occupation",
+        "installed_in_this_fixture": false
+      },
+      {
+        "table": "aos_physical_capacity_occupation_private.prepared_judge_intent",
+        "installed_in_this_fixture": false
+      },
+      {
+        "table": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+        "installed_in_this_fixture": true,
+        "body_hash_exact": true
+      },
+      {
+        "table": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+        "installed_in_this_fixture": true,
+        "body_hash_exact": true
+      },
+      {
+        "table": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+        "installed_in_this_fixture": true,
+        "body_hash_exact": true
+      }
+    ],
+    "legacy_counts": {
+      "prepared_plan_risk": 0,
+      "prepared_shared_risk_description": 0
+    },
+    "caller_xid_state": "aborted",
+    "two_original_parent_holds_after_rollback": 0,
+    "positive_cases": 2,
+    "negative_cases": [],
+    "original_files_unchanged": true,
+    "execution_allowed": false,
+    "formal_root_provenance": false,
+    "full_admission_commit": false,
+    "database_writes": false
+  },
+  "whole_fixture_pass": false,
+  "red_attempts": [
+    {
+      "attempt": "r1",
+      "reason": "missing test-owned certificate helper",
+      "pytest_exit": 1
+    },
+    {
+      "attempt": "r2",
+      "reason": "later legacy Source expired and signed supplier cleanup expiry",
+      "pytest_exit": 1
+    },
+    {
+      "attempt": "r3",
+      "reason": "later legacy current consumer required and signed supplier cleanup expiry",
+      "pytest_exit": 1
+    }
+  ],
+  "unchanged_approval_window_seconds": 150,
+  "old_attempts_replayed": false,
+  "formal_database_writes": false,
+  "root_provenance_verified": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "next_steps": [
+    "diagnose complete original Source caller lifecycle after rejected COMMIT and added per-call cost without extending TTL",
+    "finish complete admission ending and risk/window/cutover acceptance"
+  ],
+  "postnative_metadata_pass": 17,
+  "postnative_first_invocation": "wrong default test endpoint5433; corrected explicit shared native metadata fixture; zero formal writes"
+}
