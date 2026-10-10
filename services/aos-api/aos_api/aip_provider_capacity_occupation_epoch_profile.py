@@ -1,0 +1,165 @@
+"""Explicit trusted occupation epoch installation, never automatic deployment.
+
+The legacy SQL compiler remains unchanged. This separate installation artifact
+is not yet a complete public Source installation or business execution grant.
+"""
+import hashlib
+import re
+
+from aos_api import aip_provider_capacity_publication_transaction as transaction
+from aos_api import aip_provider_capacity_publication_store as store
+from aos_api.aip_provider_capacity_evidence_fence import FUNCTIONS
+
+NEUTRAL_LOCK = 'public.aos_capacity_evidence_epoch_lock(text,text,text)'
+PAIR = 'aos_capacity_publication_private.require_original_epoch_pair_boundary()'
+EVIDENCE = 'aos_capacity_publication_private.require_original_evidence_boundary()'
+INSTALLATION = 'aos_capacity_publication_private.require_current_source_installation()'
+
+
+def _replace(text, old, new, count=1):
+    if text.count(old) != count:
+        raise ValueError('CAPACITY_OCCUPATION_EPOCH_TRUSTED_COMPILER_DRIFTED')
+    return text.replace(old, new)
+
+
+def _body(sql, signature, delimiter='body'):
+    pattern = (r'CREATE FUNCTION\s+' + re.escape(signature)
+               + r'\s+RETURNS void LANGUAGE plpgsql VOLATILE SECURITY INVOKER '
+               + r'SET search_path=pg_catalog AS \$' + delimiter + r'\$(.*?)\$'
+               + delimiter + r'\$;')
+    matches = re.findall(pattern, sql, re.S)
+    if len(matches) != 1:
+        raise ValueError('CAPACITY_OCCUPATION_EPOCH_TRUSTED_COMPILER_DRIFTED')
+    return matches[0]
+
+
+def _definition(signature, body):
+    # Existing function ownership/ACL are retained by CREATE OR REPLACE, and
+    # the complete Source installation audit verifies them before use.
+    return (f'CREATE OR REPLACE FUNCTION {signature} RETURNS void LANGUAGE plpgsql '
+            f'VOLATILE SECURITY INVOKER SET search_path=pg_catalog AS $profile${body}$profile$;')
+
+
+def occupation_epoch_profile_statements():
+    """Compile exact three-lock audits; installer must own its transaction.
+
+    Never accept SQL, expected hashes, roles or function names from a caller or
+    target catalog. Unsupported changes to the trusted originals fail closed.
+    Public Source entries and Python consumers need a separate profile-aware
+    installation before this artifact can be deployed outside isolated tests.
+    """
+    original_pair = _body(store.CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL, PAIR)
+    original_evidence = _body(transaction._original_evidence_boundary_sql(), EVIDENCE)
+    pair = _replace(original_pair,
+        " FOR expected IN SELECT * FROM (VALUES\n",
+        " FOR expected IN SELECT * FROM (VALUES\n"
+        f"  ('{NEUTRAL_LOCK}','aos_capacity_evidence_epoch_owner','{FUNCTIONS['lock']}'),\n")
+    pair = _replace(pair,
+        "  allowed:=ARRAY[expected.neutral_owner,'aos_capacity_publication_owner','aos_provider_capacity_issuer'];",
+        "  allowed:=ARRAY[expected.neutral_owner,'aos_capacity_publication_owner',\n"
+        f"   CASE WHEN expected.signature='{NEUTRAL_LOCK}' THEN 'aos_runtime' ELSE 'aos_provider_capacity_issuer' END];")
+    pair = _replace(pair, ')<>2', ')<>3', 2)
+    evidence = _replace(original_evidence,
+        "  IF expected.name='issuer_lock' THEN allowed:=array_append(allowed,'aos_capacity_publication_owner'); END IF;",
+        "  IF expected.name IN ('lock','issuer_lock') THEN allowed:=array_append(allowed,'aos_capacity_publication_owner'); END IF;")
+    audit_sql = transaction.source_private_installation_audit_sql()
+    audit = _body(audit_sql, INSTALLATION, 'audit')
+    # Only the two exact trusted body hashes change. All original function
+    # metadata, private ACLs, tables, policies, C verifier and roots are audited.
+    for before, after in ((original_pair, pair), (original_evidence, evidence)):
+        audit = _replace(audit, hashlib.sha256(before.encode()).hexdigest(),
+                         hashlib.sha256(after.encode()).hexdigest())
+    return (f'GRANT EXECUTE ON FUNCTION {NEUTRAL_LOCK} TO aos_capacity_publication_owner',
+            _definition(PAIR, pair), _definition(EVIDENCE, evidence),
+            _definition(INSTALLATION, audit))
+
+
+def legacy_epoch_profile_restoration_statements():
+    """Exact test restoration artifact, not an unattended downgrade API."""
+    return (_definition(PAIR, _body(store.CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL, PAIR)),
+            _definition(EVIDENCE, _body(transaction._original_evidence_boundary_sql(), EVIDENCE)),
+            _definition(INSTALLATION, _body(transaction.source_private_installation_audit_sql(), INSTALLATION, 'audit')),
+            f'REVOKE EXECUTE ON FUNCTION {NEUTRAL_LOCK} FROM aos_capacity_publication_owner')
+
+
+def occupation_public_source_profile_statements(*, include_consumer=False):
+    """Explicit full public SQL layout; original issuer checks stay intact."""
+    profile = occupation_epoch_profile_statements()
+    original = _body(transaction.source_private_installation_audit_sql(), INSTALLATION, 'audit')
+    compiled = re.findall(r'AS \$profile\$(.*?)\$profile\$;', profile[3], re.S)
+    if len(compiled) != 1:
+        raise ValueError('CAPACITY_OCCUPATION_EPOCH_TRUSTED_COMPILER_DRIFTED')
+    before = hashlib.sha256(original.encode()).hexdigest()
+    after = hashlib.sha256(compiled[0].encode()).hexdigest()
+    statements = []
+    for statement in transaction.source_public_entry_statements(include_consumer=include_consumer)[1:]:
+        # Every public entry embeds the complete installation hash once.
+        if statement.startswith('CREATE FUNCTION public.'):
+            statement = _replace(statement, before, after)
+            statement = _replace(statement, 'CREATE FUNCTION public.', 'CREATE OR REPLACE FUNCTION public.')
+        statements.append(statement)
+    return (*profile, *statements)
+
+
+def legacy_public_source_restoration_statements(*, include_consumer=False):
+    """Trusted exact test restoration for the public SQL layout."""
+    public = []
+    for statement in transaction.source_public_entry_statements(include_consumer=include_consumer)[1:]:
+        if statement.startswith('CREATE FUNCTION public.'):
+            statement = _replace(statement, 'CREATE FUNCTION public.', 'CREATE OR REPLACE FUNCTION public.')
+        public.append(statement)
+    return (*legacy_epoch_profile_restoration_statements(), *public)
+
+
+def occupation_epoch_profile_is_installed(conn):
+    """Recognize only exact trusted native audits; never authorize execution."""
+    from aos_api.aip_provider_capacity_catalog_audit_profile import catalog_profile_is_installed
+    if catalog_profile_is_installed(conn):
+        return True
+    extra = conn.execute("""SELECT EXISTS(SELECT 1 FROM pg_proc p,LATERAL aclexplode(p.proacl) a
+        WHERE p.oid=to_regprocedure(%s) AND a.grantee=to_regrole('aos_capacity_publication_owner')) AS present""",
+        (NEUTRAL_LOCK,)).fetchone()['present']
+    definitions = tuple(zip((PAIR, EVIDENCE, INSTALLATION), occupation_epoch_profile_statements()[1:]))
+    if not extra:
+        # A partial withdrawal of the profile grant cannot relabel installed
+        # profile audits as the legacy layout and bypass profile checks.
+        for signature, ddl in definitions:
+            expected = re.findall(r'AS \$profile\$(.*?)\$profile\$;', ddl, re.S)[0]
+            partial = conn.execute("""SELECT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+                WHERE n.nspname='aos_capacity_publication_private' AND p.proname=%s
+                AND p.pronargs=0 AND p.prosrc=%s) AS present""", (signature.split('.')[-1].split('(')[0],expected)).fetchone()['present']
+            if partial:
+                raise ValueError('CAPACITY_OCCUPATION_EPOCH_INSTALLATION_DRIFTED')
+        return False
+    for signature, ddl in definitions:
+        expected = re.findall(r'AS \$profile\$(.*?)\$profile\$;', ddl, re.S)
+        row = conn.execute("""SELECT p.oid,p.prosrc,r.rolname,p.prosecdef,p.proisstrict,p.proconfig,
+            p.provolatile,p.proparallel,p.prokind,p.proretset,p.prorettype,p.pronargs,p.pronargdefaults,
+            p.provariadic,p.proleakproof,p.prosupport::oid AS prosupport,l.lanname,p.proargtypes::text AS args
+            FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+            JOIN pg_roles r ON r.oid=p.proowner JOIN pg_language l ON l.oid=p.prolang
+            WHERE n.nspname='aos_capacity_publication_private' AND p.proname=%s AND p.pronargs=0""",
+            (signature.split('.')[-1].split('(')[0],)).fetchall()
+        if len(expected) != 1 or len(row) != 1:
+            raise ValueError('CAPACITY_OCCUPATION_EPOCH_INSTALLATION_DRIFTED')
+        r = row[0]
+        if (r['prosrc'] != expected[0] or r['rolname'] != 'aos_capacity_publication_owner'
+            or r['prosecdef'] or r['proisstrict'] or r['proconfig'] != ['search_path=pg_catalog']
+            or r['provolatile'] != 'v' or r['proparallel'] != 'u' or r['prokind'] != 'f'
+            or r['proretset'] or r['prorettype'] != 2278 or r['pronargs'] != 0 or r['args'] != ''
+            or r['pronargdefaults'] != 0 or r['provariadic'] != 0 or r['proleakproof'] or r['prosupport'] != 0
+            or r['lanname'] != 'plpgsql'):
+            raise ValueError('CAPACITY_OCCUPATION_EPOCH_INSTALLATION_DRIFTED')
+        acl = conn.execute("""SELECT a.grantee::regrole::text AS grantee,a.grantor::regrole::text AS grantor,
+            a.privilege_type,a.is_grantable FROM pg_proc p,
+            LATERAL aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE p.oid=%s""", (r['oid'],)).fetchall()
+        if acl != [dict(grantee='aos_capacity_publication_owner',grantor='aos_capacity_publication_owner',
+                         privilege_type='EXECUTE',is_grantable=False)]:
+            raise ValueError('CAPACITY_OCCUPATION_EPOCH_INSTALLATION_DRIFTED')
+    return True
+
+
+def occupation_public_source_manifest(*, include_consumer=False):
+    statements = occupation_public_source_profile_statements(include_consumer=include_consumer)[4:]
+    return transaction._trusted_function_manifest(tuple(
+        s.replace('CREATE OR REPLACE FUNCTION public.', 'CREATE FUNCTION public.') for s in statements))

@@ -1,0 +1,475 @@
+......E..EEEEEE...E.EEEE.EEEEEE.....E.EE.........                        [100%]
+==================================== ERRORS ====================================
+__ ERROR at setup of test_native_final_intent_comparison_closed_and_rollback ___
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_native_owner_search_path_and_no_direct_runtime_privilege _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_original_fact_dependency_is_native_exact_and_callable_by_owner _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_native_admin_session_rejected_with_positive_or_canary_scope[org-org-UTC] _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_native_admin_session_rejected_with_positive_or_canary_scope[dev-org-UTC] _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_native_admin_session_rejected_with_positive_or_canary_scope[org-org-Asia/Shanghai] _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+________ ERROR at setup of test_original_login_cannot_gain_runtime_role ________
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_native_versioned_origin_definition_privilege_and_rollback _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_native_closed_issuer_delegate_metadata_and_admin_rejection _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_native_pending_origin_storage_is_closed_and_transaction_bound _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_native_pending_origin_lookup_delegates_only_fixed_function _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_native_first_target_obligation_is_closed_and_pending __
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_______ ERROR at setup of test_native_shared_intent_dependency_is_closed _______
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_native_retained_end_authority_is_closed_and_caller_bound _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_native_initial_call_authority_is_closed_and_caller_bound _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+___ ERROR at setup of test_native_initial_window_obligation_closed_metadata ____
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+______ ERROR at setup of test_native_live_physical_facts_closed_metadata _______
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+______ ERROR at setup of test_native_complete_parent_risk_closed_metadata ______
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+___ ERROR at setup of test_native_final_call_comparison_closed_and_rollback ____
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_native_complete_receipt_closed_metadata_and_rollback[False] _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+_ ERROR at setup of test_native_complete_receipt_closed_metadata_and_rollback[True] _
+
+    @pytest.fixture
+    def native():
+        path = os.environ.get('AOS_SHARED_ADMISSION_LAB_MANIFEST')
+        if not path:
+            pytest.skip('explicit retained isolated lab manifest required')
+        lab = json.loads(Path(path).read_text())
+        item = json.loads(subprocess.check_output(['docker', '--context', lab['context'], 'inspect', lab['name']]))[0]
+        assert item['Id'] == lab['container_id'] and item['Image'] == lab['image'] and item['State']['Running']
+        database = os.environ['AOS_SHARED_ADMISSION_LAB_DATABASE']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        with psycopg.connect(host='127.0.0.1', port=lab['port'], user='aos_app', dbname=database,
+                             passfile=lab['passfile']) as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+            assert conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0] == lab['cluster']
+>           assert conn.execute('SELECT to_regprocedure(%s)', (FUNCTION,)).fetchone()[0] is None
+E           AssertionError: assert 'read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)' is None
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:116: AssertionError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_final_intent_comparison_closed_and_rollback
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_owner_search_path_and_no_direct_runtime_privilege
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_original_fact_dependency_is_native_exact_and_callable_by_owner
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_admin_session_rejected_with_positive_or_canary_scope[org-org-UTC]
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_admin_session_rejected_with_positive_or_canary_scope[dev-org-UTC]
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_admin_session_rejected_with_positive_or_canary_scope[org-org-Asia/Shanghai]
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_original_login_cannot_gain_runtime_role
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_versioned_origin_definition_privilege_and_rollback
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_closed_issuer_delegate_metadata_and_admin_rejection
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_pending_origin_storage_is_closed_and_transaction_bound
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_pending_origin_lookup_delegates_only_fixed_function
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_first_target_obligation_is_closed_and_pending
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_shared_intent_dependency_is_closed
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_retained_end_authority_is_closed_and_caller_bound
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_initial_call_authority_is_closed_and_caller_bound
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_initial_window_obligation_closed_metadata
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_live_physical_facts_closed_metadata
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_complete_parent_risk_closed_metadata
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_final_call_comparison_closed_and_rollback
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_complete_receipt_closed_metadata_and_rollback[False]
+ERROR services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_native_complete_receipt_closed_metadata_and_rollback[True]
+28 passed, 7 warnings, 21 errors in 2.38s

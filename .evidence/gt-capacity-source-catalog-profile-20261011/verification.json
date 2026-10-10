@@ -1,0 +1,61 @@
+{
+  "authority": "AOS-001763",
+  "task": "gt-capacity-source-catalog-profile-20261011",
+  "status": "EXPLICIT_COMPLETE_FAMILY_CATALOG_IDENTITY_NATIVE_GREEN_SIGNED_SOURCE_ACCEPTANCE_PENDING",
+  "rules": [
+    "AGENTS",
+    "231",
+    "joint admission complete3/11.3",
+    "aos-engineering-delivery",
+    "unique m1 writer",
+    "formal database read only"
+  ],
+  "red": "2 missing-module failures",
+  "targeted": "3 pass native-r1; initial candidate whitespace subsequently aligned to previously proven exact prosrc and native rerun in adjacent-r3",
+  "adjacent": "49 passed, 0 skipped, 7 existing warnings, 2.94 seconds",
+  "previous_failures": [
+    "adjacent-r1 21 skipped due explicit native manifest missing; not native pass",
+    "adjacent-r2 21 setup errors: retained cost clone already contains Main FUNCTION; no SQL mutations before asserted setup denial",
+    "legacy-hashes.json false: whitespace differed from proven candidate; corrected fixed compiler to exact approved candidate, no SQL semantic difference"
+  ],
+  "native_checks": [
+    "complete private/public/occupation function body identities",
+    "original FACT runtime audit",
+    "partial new FACT rejection",
+    "old FACT hybrid rejection",
+    "old private audit hybrid rejection",
+    "lock grant removal rejection",
+    "PUBLIC EXEC rejection",
+    "SECURITY DEFINER rejection",
+    "search_path rejection",
+    "Owner rejection",
+    "strict/volatility rejection",
+    "old public entry body rejection",
+    "old occupation Auditor body rejection",
+    "independent catalog rollback readback"
+  ],
+  "legacy_generators_byte_exact": true,
+  "original_candidate_body_byte_exact": true,
+  "source_file_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_catalog_audit_profile.py": "5c9b883a4b18f60564c0b128babbcd26662e19925b9081033aeda272e3057e42",
+    "services/aos-api/aos_api/aip_provider_capacity_occupation_epoch_profile.py": "f946df529fb19d97f25c09f6745860e2ce104f4b1c726b43c6994f4456f4415f",
+    "services/aos-api/aos_api/aip_provider_capacity_occupation_source.py": "704a1ece0e8c5e0c1579a4dac229fe7fac05244dcd43a5107bab96b0fddd255b",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "2448cc102cd5646c41f115b8aef56f5f2b0fcefc9ba2f7e767f5f868385a2017",
+    "services/aos-api/tests/aip/test_provider_capacity_catalog_audit_profile_pg.py": "0a6cb150b7015edf75b842b1eccba66f094da2e28aa5b3c8f88e292670ae8a5c"
+  },
+  "independent_catalog_restoration": true,
+  "formal_database_touched": false,
+  "source_issued_or_replayed": false,
+  "global_role_mutation": false,
+  "old_trigger_rewrite_or_disable": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "goal_complete": false,
+  "limitations": [
+    "No full private installation audit runtime positive in retained catalog clone; complete family catalog identity is not complete signed Source acceptance",
+    "Original signed Source full timing remains previous RED until fresh actual rerun",
+    "Receipt v2 true signed Source positive, writer matrix, engine callbacks/RI/module ending and actual COMMIT remain required",
+    "Model checkpoint37 exceeds observer32 known limitation retained; no global watcher pass claim"
+  ],
+  "next": "Fresh owned original signed Source fixture with explicit complete catalog family installation, original four signatures/independent parents/TTL unchanged; execute actual consumer and v2 receipt/final physical and engine ending matrices"
+}

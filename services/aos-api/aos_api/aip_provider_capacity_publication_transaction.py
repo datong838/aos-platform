@@ -1504,6 +1504,19 @@ def require_source_public_entry_definitions(conn):
     """Allow only both exact definitions; absent installation keeps legacy gates."""
     consumer=conn.execute("SELECT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname='read_current_capacity_source') AS present").fetchone()['present']
     manifest=source_public_entry_manifest(include_consumer=consumer)
+    from aos_api.aip_provider_capacity_occupation_epoch_profile import (
+        occupation_epoch_profile_is_installed, occupation_public_source_manifest,
+    )
+    try:
+        if occupation_epoch_profile_is_installed(conn):
+            from aos_api.aip_provider_capacity_catalog_audit_profile import (
+                catalog_profile_is_installed, catalog_public_manifest,
+            )
+            manifest=(catalog_public_manifest(include_consumer=consumer)
+                      if catalog_profile_is_installed(conn) else
+                      occupation_public_source_manifest(include_consumer=consumer))
+    except ValueError as error:
+        raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_PUBLIC_INSTALLATION_DRIFTED') from error
     rows=conn.execute("SELECT p.*,p.prosupport::oid AS support_oid,r.rolname,l.lanname FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace JOIN pg_roles r ON r.oid=p.proowner JOIN pg_language l ON l.oid=p.prolang WHERE n.nspname='public' AND p.proname=ANY(%s)",([m['signature'].split('(')[0].split('.')[1] for m in manifest],)).fetchall()
     if not rows:return ()
     if len(rows)!=len(manifest):raise CapacityPublicationBoundaryBlocked('CAPACITY_SOURCE_PUBLIC_INSTALLATION_DRIFTED')
