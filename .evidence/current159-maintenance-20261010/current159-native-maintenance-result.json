@@ -1,0 +1,18 @@
+{
+  "status": "CURRENT159_DATABASE_MIGRATED_AND_REGISTERED_PROCESSES_STARTED_ACCEPTANCE_PENDING",
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/current159-window-800a4a23804b/resume-r1",
+  "head": "1143ea33206325938a8b58461205912e86c02f82",
+  "authority": "AOS-001714",
+  "source_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+  "cluster": "7683855731447750695",
+  "volume": "aos-a0v-recovery-pg-data",
+  "version": "a0v_159",
+  "target": "current159-second-2b9e81802cc7",
+  "original_full_backup_sha256": "7b5db12c5a7744fe5622c5fc1e61010b7a47f272df936564374079e1675d0f16",
+  "current_native_original_commits": 2,
+  "independent_native_original_commits": 2,
+  "browser_acceptance_pending": true,
+  "health_acceptance_pending": true,
+  "business_runtime_authorized": false,
+  "goal_complete": false
+}

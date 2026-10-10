@@ -1,0 +1,160 @@
+{
+  "status": "CURRENT159_DATABASE_AND_PREVIEW_HEALTH_TENANT_READONLY_ACCEPTANCE_GREEN_BUSINESS_POSITIVE_PENDING",
+  "head": "1143ea33206325938a8b58461205912e86c02f82",
+  "authority": "AOS-001714",
+  "task": "current159-maintenance-20261010",
+  "at": "2026-10-10T09:49:02.448207+00:00",
+  "cluster": "7683855731447750695",
+  "version": "a0v_159",
+  "post_api_browser_full_database_exact": true,
+  "tables": 626,
+  "native_execution_counts": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "api_health": {
+    "status": 200,
+    "body": {
+      "status": "ok"
+    }
+  },
+  "web_shell": {
+    "status": 200,
+    "bytes": 617
+  },
+  "tenant_catalogs": [
+    {
+      "org": "org-org",
+      "project": "dev-project",
+      "path": "/v1/ecommerce-workshop/modules",
+      "status": 200,
+      "count": 0,
+      "items_empty": true
+    },
+    {
+      "org": "org-org",
+      "project": "dev-project",
+      "path": "/v1/runtime-workshop/modules",
+      "status": 200,
+      "count": 0,
+      "items_empty": true
+    },
+    {
+      "org": "dev-org",
+      "project": "dev-project",
+      "path": "/v1/ecommerce-workshop/modules",
+      "status": 403,
+      "count": null,
+      "items_empty": false
+    },
+    {
+      "org": "dev-org",
+      "project": "dev-project",
+      "path": "/v1/runtime-workshop/modules",
+      "status": 403,
+      "count": null,
+      "items_empty": false
+    }
+  ],
+  "source": {
+    "id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+    "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "started_at": "2026-10-10T09:39:28.541460668Z",
+    "mounts": [
+      {
+        "Destination": "/backup",
+        "Mode": "ro",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260910/backups",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "z",
+        "Name": "aos-a0v-recovery-pg-data",
+        "Propagation": "",
+        "RW": true,
+        "Source": "/var/lib/docker/100000.100000/volumes/aos-a0v-recovery-pg-data/_data",
+        "Type": "volume"
+      }
+    ],
+    "ports": {
+      "5432/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "18435"
+        }
+      ]
+    }
+  },
+  "api_process": {
+    "argv_sha256": "e5812e2ba14f621c5642af648bbfab46308c7d6a429c4fc08f9a8d4eea820a6e",
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-recovery/api159-source-132b92e20d26/source",
+    "fingerprint": {
+      "argv_sha256": "e5812e2ba14f621c5642af648bbfab46308c7d6a429c4fc08f9a8d4eea820a6e",
+      "children": [],
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-recovery/api159-source-132b92e20d26/source",
+      "listener_ports": [
+        8080
+      ],
+      "pid": 52077,
+      "ppid": 1,
+      "started": "Sat Oct 10 17:39:41 2026",
+      "uid": 501
+    },
+    "label": "com.aos.a0v-api-daily0900",
+    "last_exit_status": 0,
+    "listener_pids": [
+      "52077"
+    ],
+    "pid": 52077,
+    "plist_sha256": "075f5e6a92d1349e317853b4929d581be6d37ac53213a2e1b535ada6357d88ee",
+    "port": 8080,
+    "registered": true
+  },
+  "web_process": {
+    "argv_sha256": "4cd8ae42f94933c4fa6fceeb4cda83e16c8940a1509321db6ef2f849bd771270",
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform/apps/web",
+    "fingerprint": {
+      "argv_sha256": "4cd8ae42f94933c4fa6fceeb4cda83e16c8940a1509321db6ef2f849bd771270",
+      "children": [
+        {
+          "argv_sha256": "d76592cffd7f6b7d2e96cda9fcb2b8bd908f96f5181122e60faa399aabea545e",
+          "pid": 52249,
+          "ppid": 52238,
+          "started": "Sat Oct 10 17:39:54 2026",
+          "uid": 501
+        }
+      ],
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform/apps/web",
+      "listener_ports": [
+        8434
+      ],
+      "pid": 52238,
+      "ppid": 1,
+      "started": "Sat Oct 10 17:39:54 2026",
+      "uid": 501
+    },
+    "label": "com.aos.a0v-web-8434",
+    "last_exit_status": 0,
+    "listener_pids": [
+      "52238"
+    ],
+    "pid": 52238,
+    "plist_sha256": "63386bf353912636f90ec8f21374e04f8e1c0b558c4d22c8dde5bc00ecac25d3",
+    "port": 8434,
+    "registered": true
+  },
+  "installation_state": "approved",
+  "business_positive_modules_visible": 0,
+  "eight_business_core_readonly_interactions_unavailable": true,
+  "natural_first_chain_pass": false,
+  "global_fleet_off_proven": false,
+  "business_runtime_authorized": false,
+  "after_canary_and_browser_refresh_full_database_exact": true
+}

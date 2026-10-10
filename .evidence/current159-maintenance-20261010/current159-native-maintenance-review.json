@@ -1,0 +1,60 @@
+{
+  "status": "CURRENT159_NATIVE_MAINTENANCE_AND_LOCAL_PREVIEW_VERIFIED_BUSINESS_ACCEPTANCE_PENDING",
+  "task": "current159-maintenance-20261010",
+  "head": "1143ea33206325938a8b58461205912e86c02f82",
+  "authority": "AOS-001714",
+  "tests_passed": 288,
+  "same_original_container_volume_cluster": true,
+  "second_full_backup_and_independent_restore_rehearsal": true,
+  "current_original_migration_commits": [
+    158,
+    159
+  ],
+  "full_post_startup_and_canary_snapshot_exact": true,
+  "registered_api_web_new_processes_verified": true,
+  "http_health_and_positive_tenant_readonly_catalogs": true,
+  "canary_catalogs_403": true,
+  "eight_browser_denial_pages": true,
+  "installation_state": "approved",
+  "positive_business_core": false,
+  "natural_first_chain": false,
+  "acceptance_done_written": false,
+  "task_delivery": false,
+  "retain_all_backups_volumes_failed_journals": true,
+  "no_unknown_effect_replay": true,
+  "docker_external_disk_migration_fully_verified": false,
+  "phase_receipts": [
+    {
+      "phase": "stop_clients",
+      "sha256": "65f6a05952f5fc7f77019c0134d616d6b48da1186b220ebf9504b9f07f386b00"
+    },
+    {
+      "phase": "fence_tcp",
+      "sha256": "a69c49f36ec2c23fabf9443488459e16fd17e177217f2d6c7c0637cf74e6a80e"
+    },
+    {
+      "phase": "snapshot_dump",
+      "sha256": "d541c53b7949b596419cda8bb32446a61074f945fa7101bd16dd54a86cc09048"
+    },
+    {
+      "phase": "independent_restore",
+      "sha256": "5062ed684f1a67bf898f7a4f9bf0f6f6e84d46fffe2540fbea26b66b47f91738"
+    },
+    {
+      "phase": "migrate_steps",
+      "sha256": "2956546395347395a17f8f2ced933c2dced4aff49d0d45fe0bf201c557846e01"
+    },
+    {
+      "phase": "verify",
+      "sha256": "761b79f7b6ee65164539a70961c9e0a1e984f28b03115e8aac4d860585312ce6"
+    },
+    {
+      "phase": "restore_tcp",
+      "sha256": "2ce01663dbdc667fb0ec401c5da49ca78e6b83dd74d763bfc774706c7f01f584"
+    },
+    {
+      "phase": "restart_clients",
+      "sha256": "e68af7a07b9cac9d71e150e718a9caeb54cca8ae1b4fa958d912daa100982aa8"
+    }
+  ]
+}

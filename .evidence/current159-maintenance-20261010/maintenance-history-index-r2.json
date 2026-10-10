@@ -1,0 +1,122 @@
+{
+  "status": "HISTORICAL_CHECKPOINT_INPUTS_NOT_CURRENT_COMPLETION_PROOF",
+  "authority": "AOS-001714",
+  "files": [
+    {
+      "path": ".evidence/current159-maintenance-20261010/plan.md",
+      "sha256": "1500ae138e3ea7b0e5e11203cc387731abe51ec0048a117c2732e632b7f81630"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/maintenance-history-index-r1.json",
+      "sha256": "d5d10c41771517e7e894836ccfeab2280de7075c6b67ba785ff3df776bc974fd"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/committed-code159-r3.json",
+      "sha256": "80103699f8db6476f2e82ff9b54affa956ad8522d35cc3936531d8538da6158a"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/window159-native-rehearsal-r1.json",
+      "sha256": "4e8cfab45903c2c546a55424998b677d2fe8a512a07c4b01951d2f000e4c6b4f"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/window159-native-protocol-review.json",
+      "sha256": "2f08dc513e8c82e11740fe40ffe087667fc7797502e7981d20bca09a909af2b0"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/registered_launch159.py",
+      "sha256": "210614b8be3825d1331bb96243d11bc25d72b8b054d545d772d38a2b3fa71249"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/test_registered_launch159.py",
+      "sha256": "f14a20f4c47409d22b28e4b841955c553c4e62fde58a70632a83990784ed3acc"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/current-window159-service-candidates.json",
+      "sha256": "4e5a3e1f711b57f9c13189cd8994dc6c7d8782177a538019843586f4a83a90b9"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/registered_web_restore159.py",
+      "sha256": "a98e4f0b74e635b6b830d25fdbf8693e72bff84b78f3bdb72e1b20b67554aaec"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/test_registered_web_restore159.py",
+      "sha256": "90d704ab33efb14b87c59bbb14e338e49737b3ca8fc2c9970669499ff6c7d116"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/prepare_api159_source.py",
+      "sha256": "f6c6c7cc545431b5ee0d22ef4f0787cb0f22aed3999829acc5f3f6dfd2a18f00"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/test_prepare_api159_source.py",
+      "sha256": "959241e8b805b06162b9b4019c96f6af1f331a48704d3994826f97bdf9ca6f5c"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/prepared-api159-source.json",
+      "sha256": "c287d211748ef72a4995f318bb91ddfa525ce87765bf1085e6de1c053f988620"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/prepared-api159-review.json",
+      "sha256": "6106a22b5a14315256c9e3f8ddbe261aa22bab1f20eabdde0614b274edca2074"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/execution_surface159.py",
+      "sha256": "2f5c161789f781b58b379007fb801def9ee98c642f86260e84ec47395484fa89"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/test_execution_surface159.py",
+      "sha256": "30c4f45a5fc2a48658741225abb151b2a85f456b9c309042aff33a3e2c4ab49f"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/current_window159_contract.py",
+      "sha256": "de44c5e64339e46ba52184e869923b9bbeac455d7907004a2764c1aee983e306"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/test_current_window159_contract.py",
+      "sha256": "e06a8885a3038ecbf5dac03f43c0ed2f13649d6db2bf6ab2830245f4d2be515d"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/execution-surface159-native-readback.json",
+      "sha256": "c8ae8f56413046dbb2054cd1cff20b72775cde578d85aae2ef1a576249328cc0"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/execution-surface159-committed-readback.json",
+      "sha256": "ecd03f0245eab1aab600865d7fb8f181d3a6fe86d699eab3fe1f19c6d9cfb8e8"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/execution-surface159-review.json",
+      "sha256": "0790df26ddcdd773ea58fc02f428e705cdf31e71a36e7942b177a6a8064a6015"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/registered_api_restore159.py",
+      "sha256": "4d81e92d0db5d787504bae6cfa63f244836c83651dc909e6f36f7efb1f2806e4"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/test_registered_api_restore159.py",
+      "sha256": "50b5f101de4082f0d4f36fb24d93b899504e4d4bdeb0c35255e2a639eab37b73"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/api159_registered_entrypoint.py",
+      "sha256": "159a3af478a371c1d58feeb4ea74874e388e52b10c94d9f1d762cf0c7274aac6"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/test_api159_registered_entrypoint.py",
+      "sha256": "2cda718329c6a45bbb5483a1a8e210c1ece0ea4ea5b9b231258725ef6d044e3f"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/prepared-api159-real-app-import.json",
+      "sha256": "e872b5bb12f66183bb03f4c9e88116db35d208d4b762d0d00e2d8d49be7e2acf"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/registered-api159-preparation.json",
+      "sha256": "39101027054078f6d79396a7e282c8009cfd42f1887df7ebd124737e25823e5d"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/native-socket159-readonly.json",
+      "sha256": "0da10efccf8861ac54abeadbab1d98055d9b3fad0120039ede1172e08031aee6"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/api159-restoration-socket-review.json",
+      "sha256": "f0e3f5db3280a197a31fb5f20f2d319751aa8c2434f582f333bb2be945e04c56"
+    }
+  ]
+}

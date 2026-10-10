@@ -1,0 +1,31 @@
+{
+  "status": "EIGHT_PREVIEW_DENIAL_PAGES_VERIFIED_POSITIVE_BUSINESS_PENDING",
+  "head": "1143ea33206325938a8b58461205912e86c02f82",
+  "authority": "AOS-001714",
+  "task": "current159-maintenance-20261010",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "tenant": [
+    "org-org",
+    "dev-project"
+  ],
+  "routes": [
+    "/workshop/cockpit",
+    "/workshop/content-campaign",
+    "/workshop/operations",
+    "/workshop/creator-growth",
+    "/workshop/media-studio",
+    "/workshop/analyst",
+    "/workshop/price-governance",
+    "/workshop/customer"
+  ],
+  "observed_heading": "电商工作台",
+  "observed_status": "当前工作台入口不可用",
+  "observed_description": "当前目录没有此工作台的可见入口。请核对安装配置与访问权限后重新读取。",
+  "method": "Actual CUA navigation and rendered DOM readback for each route; retained aosBrowserChecks read back after compaction",
+  "customer_catalog_refresh_clicked_and_same_denial_verified": true,
+  "positive_business_core_pass": false,
+  "natural_first_chain_pass": false,
+  "after_canary_full_snapshot_sha256": "3054964cca1e9ac25d121a74a3633e7ac84ae653bba3ab997392bc026d0ce6dd",
+  "after_canary_full_snapshot_exact": true,
+  "browser_retained": true
+}
