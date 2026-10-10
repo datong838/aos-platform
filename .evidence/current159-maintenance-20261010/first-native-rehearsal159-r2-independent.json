@@ -1,0 +1,19 @@
+{
+  "cluster": "7694901228328955942",
+  "version": "a0v_159",
+  "private_empty_tables": 9,
+  "judge_empty_tables": 2,
+  "private_runtime_denied": true,
+  "new_roles_no_login_or_memberships": true,
+  "judge_select_insert_only": true,
+  "identity_runtime_provenance_absent": true,
+  "other_clients": 0,
+  "prepared_transactions": 0,
+  "read_only": true,
+  "original_role_attributes_unchanged": true,
+  "original_sequences_unchanged": true,
+  "current_database_writes": 0,
+  "current_migration_allowed": false,
+  "program_sha256": "2ac09746b5a4a4981ba4bdf3b74f06c3c529f9bbad0ba50596dc64764cb43827",
+  "native_rehearsal_result_sha256": "4026c6dd9456735b10a529b80ab54744eddee40de66831c6332e8212f5ada391"
+}

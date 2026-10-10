@@ -1,0 +1,11 @@
+{
+  "status": "EXACT_COMMITTED_CODE_VOLUME_VERIFIED",
+  "head": "c95ad824bd6640f41edb6d5fd762b76f33d16b63",
+  "volume": "current159-code-12cd5cd483ee",
+  "files": 2487,
+  "archive_sha256": "70b9500d1218c883d1569bc8b832a5efec7eaaef9f518e600fb3c01b46f44291",
+  "manifest_sha256": "77368b731b439aecabe5232058a661b18aeac7b0b1a4085bd5d07278a8ce88b3",
+  "tool": "sha256:982fd540f5eb90d3b936bea1aa084b70a72470b5d2bd024964455c3cf45e3e25",
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/current159-code-12cd5cd483ee",
+  "uncommitted_code_excluded": true
+}

@@ -33,3 +33,17 @@
 
 ## 原158/159独立副本迁移演练
 新增freeze_code159.py/socket_migrate159.py/rehearse159.py，目标仅已有完整恢复副本current159-first-1579cb9f5251。从精确HEAD0282e07b3 git archive提取API/全部迁移目录到独立新code volume，逐文件与git blob SHA对照；禁入未提交支持Task改动。固定迁移工具2376642.../none网络/只读codevolume与socket/no privileges。先只读核157/独立cluster/原615表等价、当前authority1700/TaskLease，再每一步写fsync intent、原Alembic原事务执行158/159、terminal、独立后版本/旧数据/ACL检查。失败/未知不得重发。完善snapshot_all/supplement的version参数只接受明确157旧2schema与158/159固定新增execution/issuer私有schema组合，库版本须等于参数，不允许任意schema或动态放宽。成功后只作为第一副本演练，不给当前库迁移权限；第二零窗口备份/新恢复/两步重演仍必须独立完成。
+
+## AOS-001705: original first-restore native rehearsal r2
+
+Candidates: (1) freeze latest committed159 DDL at c95ad824b and rehearse original158/159 on retained first full restore157; (2) complete API source package/signed installation and second zero-window backup/full restore, dependent on source Tasks and first rehearsal. Choose1. Four unchanged published DDL bytes match native inputs and full-material review PASS consumed. This is not full Model/Judge runtime installation or business authority.
+
+Files within original maintenance scope only: freeze_code159_r2.py, rehearse159_r2.py, committed-code159-r2.json, first-native-rehearsal159-r2.json. Reuse exact original algorithms with current HEAD/authority, dependency-complete tools image982fd540 and distinct r2 receipts/journal. Old r1 failed before DB connection;159 not attempted. Preserve all old journals/volumes/backups; never replay unknown. Before r2 actual steps verify restored157 cluster/volume/image/none-network and no clients/prepared; snapshot equals original restored snapshot. Each step: intent, original native Alembic transaction, terminal, independent after snapshot. Formal157 comparison remains read-only. No backup/restore replay.
+
+Retain all tools/volumes/containers, no automatic cleanup/global mount changes. Second zero-window full backup/restore and both-step rehearsal remain required before precise formal migration. API/Web/Host/worker/Provider remain outside this r2 operation.
+
+Freeze r2 failed exact manifest after known init0/verify0. Read-only reconciliation found2487 expected files exact, no changed/missing, plus4672 inherited tool-image files because Docker populated empty /code volume. Do not accept or delete extras. Preserve failed volume df1cd847bdc2 and old journal; no DB effects. New freeze_code159_r3.py changes only new receipt name and init mount volume-nocopy; exact manifest comparison remains strict. New distinct code volume, not replay of an unknown attempt. Native rehearsal r2 reads only committed-code159-r3.json after r3 exact verification.
+
+R2 runner import correction before execution: original final source read used bare bootstrap module without scripts import path; use explicit importlib source path, matching existing capture/compare scripts, to avoid late import failure after known isolated COMMITs. Only _connection_parameters and original snapshot in read-only REPEATABLE READ are called; no bootstrap/DDL main invocation.
+
+After r2 native commits confirmed: add first-native-rehearsal159-r2-independent.py/json. Read-only fixed restored cluster159 Unix socket only. Verify version, original role attributes/sequences unchanged, new private roles NOLOGIN/no membership, nine empty private history tables and two empty public Judge tables, identity/target provenance/runtime bridges absent, private runtime access denied, Judge public SELECT/INSERT-only. No new migration/replay or formal write; current formal157 already independently compared by runner.

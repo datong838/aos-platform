@@ -1,0 +1,16 @@
+{
+  "status": "KNOWN_FAILED_FREEZE_RECONCILED_READONLY",
+  "expected_files": 2487,
+  "actual_files": 7159,
+  "inherited_extra_files": 4672,
+  "missing_files": 0,
+  "changed_expected_files": 0,
+  "original_init_exit": 0,
+  "original_verification_exit": 0,
+  "exact_manifest_accepted": false,
+  "original_volume_retained": "current159-code-df1cd847bdc2",
+  "corrected_distinct_volume": "current159-code-12cd5cd483ee",
+  "correction": "volume-nocopy during new initialization; exact all-file hash equality passed",
+  "detail_sha256": "6e9e7ede54bb9bafb4b94f3a442783a2e16aeeb0b1223d67beffba9ec16fa2e4",
+  "database_connections": 0
+}

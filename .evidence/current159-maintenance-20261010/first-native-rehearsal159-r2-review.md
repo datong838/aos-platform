@@ -1,0 +1,7 @@
+# First restored157 -> original158/159 native rehearsal r2
+
+Frozen committed HEAD c95ad824b, code volume12cd5cd483ee, exact2487 source files. Retained first full restore cluster7694901228328955942 migrated by original Alembic engine caller transactions, each intent/terminal plus independent native snapshot confirms158 then159. Old listed catalogue objects and614 non-version table data preserved, new tables empty; independent final readback verifies nine private and two public empty tables, original role attributes and sequences unchanged, new NOLOGIN/no-membership owners, private runtime denial, public Judge SELECT/INSERT-only, absent identity/runtime/provenance integration, no other clients or prepared transactions. Current formal cluster7683855731447750695 remains157 and original full base snapshot equal, no current writes.
+
+Earlier freeze r2 known init0/verify0 contained4672 inherited image files and failed strict manifest; preserved failed volume/journal and exact readonly reconciliation. Corrected new freeze r3 uses volume-nocopy, no old attempt replay or deletion. Old rehearsal r1 is retained failed-before-connection evidence.
+
+This is first isolated native rehearsal only. Second zero-window consistent backup, independent full recovery and both steps still pending before current precise migration; signed API/Web/eight workbench and full source package integration pending. No Root trust, execution authorization, natural business first-chain or Task Delivery claim. No Host/worker/Provider enablement.
