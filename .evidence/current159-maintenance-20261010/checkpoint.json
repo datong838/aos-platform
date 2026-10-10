@@ -3,10 +3,10 @@
   "task_id": "current159-maintenance-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "task_base_revision": "AOS-001699",
-  "authority_revision": "AOS-001713",
+  "authority_revision": "AOS-001714",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
-  "step": "frozen-native-original-api-target-guard-verified-full-current-window-executor-next",
+  "step": "api159-frozen-entry-and-native-socket-observer-closed-complete-current-window-executor-next",
   "code_files": [],
   "evidence_files": [
     ".evidence/current159-maintenance-20261010/plan.md",
@@ -35,6 +35,8 @@
     ".evidence/current159-maintenance-20261010/api159_registered_entrypoint.py",
     ".evidence/current159-maintenance-20261010/test_api159_registered_entrypoint.py",
     ".evidence/current159-maintenance-20261010/prepared-api159-real-app-import.json",
-    ".evidence/current159-maintenance-20261010/registered-api159-preparation.json"
+    ".evidence/current159-maintenance-20261010/registered-api159-preparation.json",
+    ".evidence/current159-maintenance-20261010/native-socket159-readonly.json",
+    ".evidence/current159-maintenance-20261010/api159-restoration-socket-review.json"
   ]
 }
