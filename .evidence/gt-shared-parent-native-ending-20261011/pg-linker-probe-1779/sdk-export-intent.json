@@ -1,0 +1,7 @@
+{
+  "context": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/pg-core-build-1778/r3",
+  "target": "build",
+  "network": "default",
+  "expected_core_sha256": "66684918da41eefe2d97881e6a44eba68103de44afe7d31299e2a46ae132d6e8",
+  "original_source_script_sha256": "02979fd659a8264a2eafcaaf8b70efef721df59c77a4818a788b81e153e8f73d"
+}

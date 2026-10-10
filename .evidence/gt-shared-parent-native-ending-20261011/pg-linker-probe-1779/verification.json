@@ -1,0 +1,15 @@
+{
+  "three_hashes": [
+    "66684918da41eefe2d97881e6a44eba68103de44afe7d31299e2a46ae132d6e8",
+    "66684918da41eefe2d97881e6a44eba68103de44afe7d31299e2a46ae132d6e8",
+    "66684918da41eefe2d97881e6a44eba68103de44afe7d31299e2a46ae132d6e8"
+  ],
+  "three_raw_equal": true,
+  "input_hashes_unchanged": true,
+  "original_core_sha256": "025eccb4f06a6d63d724cc1d8abdeb75c909f7bbb8493bf5b0e0273d67451d77",
+  "never_started": true,
+  "no_mounts": true,
+  "original_binary_reproduced": false,
+  "full_task_delivered": false,
+  "execution_allowed": false
+}

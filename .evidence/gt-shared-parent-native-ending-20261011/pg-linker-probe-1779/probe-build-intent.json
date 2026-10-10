@@ -1,0 +1,6 @@
+{
+  "sdk_image": "sha256:851765e2f8107a9014019a4431240db650318edf8cbd542f1e4514993581e992",
+  "network": "none",
+  "predetermined_relinks": 2,
+  "script_sha256": "8c3f09372ceac288ac1d1e7ec4b578a1863666788a35de05a9ee82b71b1cf605"
+}

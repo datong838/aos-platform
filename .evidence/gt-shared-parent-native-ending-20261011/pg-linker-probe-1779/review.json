@@ -1,0 +1,23 @@
+{
+  "status": "SCOPED_FIXED_INPUT_LINK_DETERMINISM_GREEN_ORIGINAL_CORE_RAW_PENDING",
+  "predetermined_relinks": 2,
+  "three_outputs_independently_hashed_equal": true,
+  "frozen_object_archive_inputs": 1410,
+  "input_hashes_unchanged": true,
+  "sdk_export_actual_r3_cached": true,
+  "compiler_linker_versions": {
+    "gcc": "gcc (Alpine 15.2.0) 15.2.0",
+    "ld": "GNU ld (GNU Binutils) 2.45.1"
+  },
+  "tool_binary_sha256": {
+    "gcc": "0e56242014fe7ce934e73b2495b801785fcf7d78ad7131e8ec086b1884ee1d07",
+    "ld": "93e9000e8bc4afe78c7be2e6ee61249f9b2b08e4d0fc7956c1590d63dc350682",
+    "ar": "8ca7778550cec7ffae285ed80ab0801e3bb56f711d31da9c93f6c6b02e97b4c9"
+  },
+  "never_started_no_mounts": true,
+  "original_core_reproduction": false,
+  "historical_linker_source_or_dependency_signature_trust": false,
+  "no_pg_execution_or_original_mutation": true,
+  "full_task_delivered": false,
+  "model_review_invoked": false
+}
