@@ -1,0 +1,19 @@
+{
+  "authority_revision": "AOS-001741",
+  "head": "69f6b7d70a0656785a75f71f4aff975c2600fe59",
+  "installation": {
+    "status": "GREEN",
+    "project_revision": "AOS-001741",
+    "projection_count": 8,
+    "schema_count": 9,
+    "task_receipt_count": 1994,
+    "delivery_receipt_count": 1962,
+    "event_count": 5803
+  },
+  "goal_complete": false,
+  "full_task_delivered": false,
+  "codex_memories_write_skipped": true,
+  "historical_wake_event": "2026-10-10T06:53:53.448Z",
+  "historical_wake_result_reused": true,
+  "historical_wake_not_current_progress": true
+}
