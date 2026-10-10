@@ -1,0 +1,139 @@
+{
+  "schema": "aos-maintenance-completed-evidence-index/v1",
+  "task": "current159-maintenance-20261010",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority": "AOS-001711",
+  "head": "4e4f1514e9fb6626994ee7ac334a8f6cc5d72964",
+  "scope": "Frozen completed evidence history only; index is not live source/process/DB authorization",
+  "entries": [
+    {
+      "path": ".evidence/current159-maintenance-20261010/plan.md",
+      "sha256": "3647f5ae67c7de069ccfc0e45fb7866c4d2780d78bdf9b8b44380c50e82ec900"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/committed-code159-r3.json",
+      "sha256": "80103699f8db6476f2e82ff9b54affa956ad8522d35cc3936531d8538da6158a"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/freeze-r2-readback-review.json",
+      "sha256": "05beffbc758e0992161713cb7c5fff4f555c0b6a03c70cc9b3d00047bc22ed5f"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/first-native-rehearsal159-r2.json",
+      "sha256": "4026c6dd9456735b10a529b80ab54744eddee40de66831c6332e8212f5ada391"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/first-native-rehearsal159-r2-independent.json",
+      "sha256": "23f7914e07b81707619e2af929b73008c9eef939f234f2c942491215e101df95"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/first-native-rehearsal159-r2-review.md",
+      "sha256": "49e8967f06e6bd0e4dbe0a08e6fa4ddeb8df1e25dce295345e5c148ccb667b24"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/current_window159_contract.py",
+      "sha256": "de44c5e64339e46ba52184e869923b9bbeac455d7907004a2764c1aee983e306"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/test_current_window159_contract.py",
+      "sha256": "e06a8885a3038ecbf5dac03f43c0ed2f13649d6db2bf6ab2830245f4d2be515d"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/current-window159-native-red.json",
+      "sha256": "ff936f6113376b714254efb1f2039e5052280732609b3b9fc90bf75048020c6b"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/current-window159-service-candidates.json",
+      "sha256": "4e5a3e1f711b57f9c13189cd8994dc6c7d8782177a538019843586f4a83a90b9"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/current-window159-gate-review.json",
+      "sha256": "9c51a91db44bb575f7395eef77b64e2d0011a80c9b7a27d4035db48796dcb41f"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/registered_launch159.py",
+      "sha256": "210614b8be3825d1331bb96243d11bc25d72b8b054d545d772d38a2b3fa71249"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/test_registered_launch159.py",
+      "sha256": "f14a20f4c47409d22b28e4b841955c553c4e62fde58a70632a83990784ed3acc"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/registered-launch159-readback.py",
+      "sha256": "628b41794df03986a26b4aca2e66608dba1b0809b984721fcde6223ade51d722"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/registered-launch159-readback-r2.json",
+      "sha256": "ab0df9a2c778712fc74d76e604b1fa334b0b6c1dcbd10175a94ad18ea70f8f63"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/registered-launch159-review.json",
+      "sha256": "cce1399a4d09613fe8d8e728e0f1223a49a6daf88d53bee2bf9473c2c37aec7e"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/second-window159-restoration-preflight-readonly.json",
+      "sha256": "08d93d751cdef2b44310dfae0ffaa4b5c2273a0a227d4ee67c1a811b5d255fc5"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/registered_web_restore159.py",
+      "sha256": "a98e4f0b74e635b6b830d25fdbf8693e72bff84b78f3bdb72e1b20b67554aaec"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/test_registered_web_restore159.py",
+      "sha256": "90d704ab33efb14b87c59bbb14e338e49737b3ca8fc2c9970669499ff6c7d116"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/registered-web-restore159-review.json",
+      "sha256": "e0b911e112679556308990165cf08336ada775eb5b519a4246b3f4c3b4346449"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/current159-execution-surface-readonly.json",
+      "sha256": "a54b3d71bfb4f8cb6ebdd0e690a9af5d98f281caf55db15463c203ec11414811"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/window159_native_rehearsal.py",
+      "sha256": "988f25da998672e5980564b00df9dcae41b7b7fad58003126ec3767cffb4c4fe"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/test_window159_native_rehearsal.py",
+      "sha256": "d4653b4997a6fc000b646dbb0072d8d4de1a4c30e9f445a82d8eb00d22ea0eab"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/window159-native-rehearsal-r1.json",
+      "sha256": "4e8cfab45903c2c546a55424998b677d2fe8a512a07c4b01951d2f000e4c6b4f"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/window159-native-independent-readback.py",
+      "sha256": "f90b6ee9472ecd2bf6b12aa4d503d10a21e5481e6ab58e488cf60b34619d7b5f"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/window159-native-independent-readback.json",
+      "sha256": "5a65d7570d654dec567bddaa22d21b8c95be0807134f763c7a726200e26d9c77"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/window159-native-protocol-review.json",
+      "sha256": "2f08dc513e8c82e11740fe40ffe087667fc7797502e7981d20bca09a909af2b0"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/window159-native-listen-source-independent.json",
+      "sha256": "4559ac9f09144bd20ef28b4c8127bc7542c291c20c2c8c612bc085ef6176377e"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/prepare_api159_source.py",
+      "sha256": "f6c6c7cc545431b5ee0d22ef4f0787cb0f22aed3999829acc5f3f6dfd2a18f00"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/test_prepare_api159_source.py",
+      "sha256": "959241e8b805b06162b9b4019c96f6af1f331a48704d3994826f97bdf9ca6f5c"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/prepared-api159-source.json",
+      "sha256": "c287d211748ef72a4995f318bb91ddfa525ce87765bf1085e6de1c053f988620"
+    },
+    {
+      "path": ".evidence/current159-maintenance-20261010/prepared-api159-review.json",
+      "sha256": "6106a22b5a14315256c9e3f8ddbe261aa22bab1f20eabdde0614b274edca2074"
+    }
+  ]
+}
