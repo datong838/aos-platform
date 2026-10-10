@@ -4,7 +4,7 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-native-ending-20261011",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001769",
+  "authority_revision": "AOS-001770",
   "task_base_revision": "AOS-001746",
   "step": "native-module-disk-facts-seven-tests-green-full-ending-remains",
   "code_files": [

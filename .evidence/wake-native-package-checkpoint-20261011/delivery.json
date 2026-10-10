@@ -1,0 +1,25 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "wake-native-package-checkpoint-20261011",
+  "base_revision": "AOS-001769",
+  "completed_revision": "AOS-001769",
+  "result": "BOUNDED_NATIVE_CHECKPOINT_AND_CODE_AGE_GREEN_NO_EXECUTION_AUTHORITY",
+  "changed_files": [
+    "aos-platform/scripts/long-task-watchdog/aos_wake_progress.py",
+    "aos-platform/scripts/long-task-watchdog/test_aos_wake_progress.py"
+  ],
+  "commits": [
+    "c9bd960684dad1f9e9278a384e2524272305aaa0"
+  ],
+  "verification": [
+    ".evidence/wake-native-package-checkpoint-20261011/verification.json",
+    ".evidence/wake-native-package-checkpoint-20261011/actual-readback.json",
+    "129 watchdog tests OK"
+  ],
+  "risks": [
+    "References are not recursive dependency validation; old duplicate event intentionally retains prior snapshot",
+    "Original complete NativeEnding/Goal remain pending"
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-11T06:18:29+08:00"
+}
