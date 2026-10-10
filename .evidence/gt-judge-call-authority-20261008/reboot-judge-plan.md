@@ -1,0 +1,13 @@
+# 原 Judge 签名与预算依赖重启后复审
+
+AOS-001702，原Task同owner已续租，无Delivery/重叠Lease；不接续旧attempt，只读旧资料。复习原request-producer和signed-rule-original-suite-binding计划。候选一完整原签名规则→新Suite→原两个独立质量批准→新Judge审批/三桶parent；候选二Task4 parent/新费用/Intent完整consumer。先一，复用原test_exact_signed_rule_new_original_suite原集合，不裁剪成功/拒绝分支。
+
+新增本目录reboot-judge-review.py。严格核Task3当前Lease/authority、已知新Desktop实验容器64350ecc/cluster7694913788751646744/5442和private passfile；连接只该lab的aos_meta或原conftest随机新DB。原conftest完整159安装，保留新库。每次独立child/attempt/terminal，复制原Task1三个合法helper且逐字hash一致，通过已有AOS_JUDGE_FIXTURE_EVIDENCE_ROOT使全部写入原Task3新child，不写Task1旧证据。冻结selected Model/Judge依赖及原native测试hash；原HTTPS signer仅本地合成正负门，Root不宣称正式信任，不发Provider请求，正式库18435禁连接。
+
+首次运行完整原核心native测试并独立保存database/终态。失败先诊断，源码改动前追加精确计划、RED/最小改动及累计；无产品改动则不机械重跑纯门。成功后独立原生只读核原pending/审批/三桶与完整manifest边界，再原Task4源码/迁移复审和精确发布依赖图。identity/runtime安装缺口另行正式部署包，不直接改变158或授权runtime。完整Source/occupation/Intent/Usage/Report与自然首链仍待，完整Task不Delivery。
+
+r1失败已只读核对：进程exit1，原测试库其他client0/prepared0；两原Model申请2，Judge hold1/原三桶3已真实COMMIT，Target hold0。原库不重发。pytest工具输出截断，无法可靠定位应用exception；仅Evidence runner Recorder追加原失败longrepr私有0600落盘，不修改产品校验。r2使用原conftest另一全新库和新child，执行同冻结原用例以采集精确诊断；此前已COMMIT Judge hold不在旧库重复，真实Provider及外部效果仍零。所有stdout/stderr落本Task私有local.log，公开输出仅terminal元数据。
+
+r2精确RED为test_model_eval_judge_authority_pg.py:1158原正向父hold prewait，JUDGE_CURRENT_APPROVAL_REQUIRED；独立DBclock证明对应审批已过期，其他client/prepared均0。正常审批50秒被整个单用例的大量原签名/锁/费用/父/错误分支耗尽，不是生产门失效。仅原Task3测试文件调整该完整核心fixture：签名Rule root3→5分钟，pending2→4分钟（仍被root包含），其正向新审批50→150秒，原“延长超Root”反例4→6分钟。真实4秒预算/审批到期与5秒whole reader到期、DBclock/实际锁等待及rollback全部保持，原过期记录不可续期/回写。较长正向审批使后续真实parent wait等待更久，但不靠增加重试/睡眠绕门；这只是fixture用途窗口分离。源码/生产期限不变，原固定r1/r2库保留。r3另一全新库同完整原用例，自测当前完整sourcehash并独立读回。
+
+r3核心原生PASS，新保留库aos_test_a3a93c72286e_ti4_test，独立只读核目标parent0、Judge held10一行/三原桶各10、ordinary0、其他client/prepared0及全部15源码hash一致。下一覆盖同原测试文件其余三个节点（pending producer、原Registry规则来源、fixture Evidence边界），每节点新库/child，原核心PASS不重跑。Evidence runner node白名单仅这四原精确node；scope和旧无规则用途仍闭合。终态全部核实后源码依赖复审与提交，完整Source/最终Intent及运行部署不因四门通过而放行。

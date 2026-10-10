@@ -1,0 +1,151 @@
+{
+  "native_4_of_4_pass": true,
+  "nodes": [
+    {
+      "label": "reboot-judge-r3",
+      "database": "aos_test_a3a93c72286e_ti4_test",
+      "node": "tests/aip/test_model_eval_judge_authority_pg.py::test_exact_signed_rule_new_original_suite",
+      "exit": 0,
+      "version": "a0v_159",
+      "cluster": "7694913788751646744",
+      "source_hashes": {
+        "services/aos-api/aos_api/aip_model_eval_execution_authority.py": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27",
+        "services/aos-api/aos_api/aip_model_eval_execution_reader.py": "1b61a8d0df28743065c3facff18363c0847d68e3b64b7e68657052b90b2e69fa",
+        "services/aos-api/alembic/versions/a0v_158_model_eval_execution_authority.py": "1422a7c1d8bc2c61d89e8def855e1a68d2db41e97352753616fe4233025c1758",
+        "services/aos-api/alembic/versions/a0v_159_model_judge_budget.py": "f2ea449b8c0b1a8af5047e07d56c616b3f8bcd54579b0b90ac37abaae9fda72f",
+        "services/aos-api/tests/aip/test_model_eval_execution_authority_pg.py": "eb1e51ac632100375dda41c219bd30419f81fc9c2a25fa24bbde697b8be68bf1",
+        "services/aos-api/tests/aip/test_model_eval_execution_contracts.py": "a645f1cae17a1acb7f791ec861532d77ad8fa6fe96d1062eb93ddbd5b13627e0",
+        "services/aos-api/aos_api/aip_model_eval_judge_authorization.py": "8361b20c58b8c92371aa6902a2c8fa8b66a94c59cfe316bbe43e2e673e4551c2",
+        "services/aos-api/aos_api/aip_model_eval_judge_request_store.py": "0d1118809494b9fa537a1445f2f68fb584c653e84b37e465146e23e6d499ae6e",
+        "services/aos-api/aos_api/aip_model_eval_judge_action.py": "5bae612a05961102b815fca5a2a41e96f5d97194219be0a656d502187dfe7ed8",
+        "services/aos-api/aos_api/aip_model_eval_judge_authority.py": "1e38658ea311a66191032d1725fb01754338f8ae94c2a70d6a99e141e0ace637",
+        "services/aos-api/aos_api/aip_model_eval_judge_budget.py": "3c8e6dbe0b15f3aebbb720aaca1e3d754b86c60c8f63a0bce660b115b9b5a84f",
+        "services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py": "f75a1360ee27eeda13d3173fa765b1a9e087745aac9ac62b1a3823d95ee091cb",
+        "services/aos-api/aos_api/aip_budget_reservation_store.py": "07df0cf6575350fd96374a698325a581800319ed16c65bcc9fcafea99b3bf9d9",
+        "services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py": "3013b21ea4362e4610ac04d972488d76fde8cc661d9770814ab8f6859253b1b1"
+      },
+      "terminal_sha256": "e704c45bd86eaf2d869ca6591fe6114f207a9c1402e056a4cb432937f6b5826b"
+    },
+    {
+      "label": "reboot-judge-r4",
+      "database": "aos_test_11ddee5637af_ti4_test",
+      "node": "tests/aip/test_model_eval_judge_authority_pg.py::test_pending_judge_request_from_original_approved_sources",
+      "exit": 0,
+      "version": "a0v_159",
+      "cluster": "7694913788751646744",
+      "source_hashes": {
+        "services/aos-api/aos_api/aip_model_eval_execution_authority.py": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27",
+        "services/aos-api/aos_api/aip_model_eval_execution_reader.py": "1b61a8d0df28743065c3facff18363c0847d68e3b64b7e68657052b90b2e69fa",
+        "services/aos-api/alembic/versions/a0v_158_model_eval_execution_authority.py": "1422a7c1d8bc2c61d89e8def855e1a68d2db41e97352753616fe4233025c1758",
+        "services/aos-api/alembic/versions/a0v_159_model_judge_budget.py": "f2ea449b8c0b1a8af5047e07d56c616b3f8bcd54579b0b90ac37abaae9fda72f",
+        "services/aos-api/tests/aip/test_model_eval_execution_authority_pg.py": "eb1e51ac632100375dda41c219bd30419f81fc9c2a25fa24bbde697b8be68bf1",
+        "services/aos-api/tests/aip/test_model_eval_execution_contracts.py": "a645f1cae17a1acb7f791ec861532d77ad8fa6fe96d1062eb93ddbd5b13627e0",
+        "services/aos-api/aos_api/aip_model_eval_judge_authorization.py": "8361b20c58b8c92371aa6902a2c8fa8b66a94c59cfe316bbe43e2e673e4551c2",
+        "services/aos-api/aos_api/aip_model_eval_judge_request_store.py": "0d1118809494b9fa537a1445f2f68fb584c653e84b37e465146e23e6d499ae6e",
+        "services/aos-api/aos_api/aip_model_eval_judge_action.py": "5bae612a05961102b815fca5a2a41e96f5d97194219be0a656d502187dfe7ed8",
+        "services/aos-api/aos_api/aip_model_eval_judge_authority.py": "1e38658ea311a66191032d1725fb01754338f8ae94c2a70d6a99e141e0ace637",
+        "services/aos-api/aos_api/aip_model_eval_judge_budget.py": "3c8e6dbe0b15f3aebbb720aaca1e3d754b86c60c8f63a0bce660b115b9b5a84f",
+        "services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py": "f75a1360ee27eeda13d3173fa765b1a9e087745aac9ac62b1a3823d95ee091cb",
+        "services/aos-api/aos_api/aip_budget_reservation_store.py": "07df0cf6575350fd96374a698325a581800319ed16c65bcc9fcafea99b3bf9d9",
+        "services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py": "3013b21ea4362e4610ac04d972488d76fde8cc661d9770814ab8f6859253b1b1"
+      },
+      "terminal_sha256": "3a8c0e85690c43939933c76c6965938538a772565c1cb3abce8683e97535a4c0"
+    },
+    {
+      "label": "reboot-judge-r5",
+      "database": "aos_test_4ab4e775d833_ti4_test",
+      "node": "tests/aip/test_model_eval_judge_authority_pg.py::test_published_judge_rule_source_original_registry",
+      "exit": 0,
+      "version": "a0v_159",
+      "cluster": "7694913788751646744",
+      "source_hashes": {
+        "services/aos-api/aos_api/aip_model_eval_execution_authority.py": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27",
+        "services/aos-api/aos_api/aip_model_eval_execution_reader.py": "1b61a8d0df28743065c3facff18363c0847d68e3b64b7e68657052b90b2e69fa",
+        "services/aos-api/alembic/versions/a0v_158_model_eval_execution_authority.py": "1422a7c1d8bc2c61d89e8def855e1a68d2db41e97352753616fe4233025c1758",
+        "services/aos-api/alembic/versions/a0v_159_model_judge_budget.py": "f2ea449b8c0b1a8af5047e07d56c616b3f8bcd54579b0b90ac37abaae9fda72f",
+        "services/aos-api/tests/aip/test_model_eval_execution_authority_pg.py": "eb1e51ac632100375dda41c219bd30419f81fc9c2a25fa24bbde697b8be68bf1",
+        "services/aos-api/tests/aip/test_model_eval_execution_contracts.py": "a645f1cae17a1acb7f791ec861532d77ad8fa6fe96d1062eb93ddbd5b13627e0",
+        "services/aos-api/aos_api/aip_model_eval_judge_authorization.py": "8361b20c58b8c92371aa6902a2c8fa8b66a94c59cfe316bbe43e2e673e4551c2",
+        "services/aos-api/aos_api/aip_model_eval_judge_request_store.py": "0d1118809494b9fa537a1445f2f68fb584c653e84b37e465146e23e6d499ae6e",
+        "services/aos-api/aos_api/aip_model_eval_judge_action.py": "5bae612a05961102b815fca5a2a41e96f5d97194219be0a656d502187dfe7ed8",
+        "services/aos-api/aos_api/aip_model_eval_judge_authority.py": "1e38658ea311a66191032d1725fb01754338f8ae94c2a70d6a99e141e0ace637",
+        "services/aos-api/aos_api/aip_model_eval_judge_budget.py": "3c8e6dbe0b15f3aebbb720aaca1e3d754b86c60c8f63a0bce660b115b9b5a84f",
+        "services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py": "f75a1360ee27eeda13d3173fa765b1a9e087745aac9ac62b1a3823d95ee091cb",
+        "services/aos-api/aos_api/aip_budget_reservation_store.py": "07df0cf6575350fd96374a698325a581800319ed16c65bcc9fcafea99b3bf9d9",
+        "services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py": "3013b21ea4362e4610ac04d972488d76fde8cc661d9770814ab8f6859253b1b1"
+      },
+      "terminal_sha256": "376460b928a396d286750f7d63c13bb4dcfabc10f13629de897c8956e4fa953d"
+    },
+    {
+      "label": "reboot-judge-r6",
+      "database": "aos_test_f0d87e3fe687_ti4_test",
+      "node": "tests/aip/test_model_eval_judge_authority_pg.py::test_judge_fixture_evidence_paths_default_and_boundary",
+      "exit": 0,
+      "version": "a0v_159",
+      "cluster": "7694913788751646744",
+      "source_hashes": {
+        "services/aos-api/aos_api/aip_model_eval_execution_authority.py": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27",
+        "services/aos-api/aos_api/aip_model_eval_execution_reader.py": "1b61a8d0df28743065c3facff18363c0847d68e3b64b7e68657052b90b2e69fa",
+        "services/aos-api/alembic/versions/a0v_158_model_eval_execution_authority.py": "1422a7c1d8bc2c61d89e8def855e1a68d2db41e97352753616fe4233025c1758",
+        "services/aos-api/alembic/versions/a0v_159_model_judge_budget.py": "f2ea449b8c0b1a8af5047e07d56c616b3f8bcd54579b0b90ac37abaae9fda72f",
+        "services/aos-api/tests/aip/test_model_eval_execution_authority_pg.py": "eb1e51ac632100375dda41c219bd30419f81fc9c2a25fa24bbde697b8be68bf1",
+        "services/aos-api/tests/aip/test_model_eval_execution_contracts.py": "a645f1cae17a1acb7f791ec861532d77ad8fa6fe96d1062eb93ddbd5b13627e0",
+        "services/aos-api/aos_api/aip_model_eval_judge_authorization.py": "8361b20c58b8c92371aa6902a2c8fa8b66a94c59cfe316bbe43e2e673e4551c2",
+        "services/aos-api/aos_api/aip_model_eval_judge_request_store.py": "0d1118809494b9fa537a1445f2f68fb584c653e84b37e465146e23e6d499ae6e",
+        "services/aos-api/aos_api/aip_model_eval_judge_action.py": "5bae612a05961102b815fca5a2a41e96f5d97194219be0a656d502187dfe7ed8",
+        "services/aos-api/aos_api/aip_model_eval_judge_authority.py": "1e38658ea311a66191032d1725fb01754338f8ae94c2a70d6a99e141e0ace637",
+        "services/aos-api/aos_api/aip_model_eval_judge_budget.py": "3c8e6dbe0b15f3aebbb720aaca1e3d754b86c60c8f63a0bce660b115b9b5a84f",
+        "services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py": "f75a1360ee27eeda13d3173fa765b1a9e087745aac9ac62b1a3823d95ee091cb",
+        "services/aos-api/aos_api/aip_budget_reservation_store.py": "07df0cf6575350fd96374a698325a581800319ed16c65bcc9fcafea99b3bf9d9",
+        "services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py": "3013b21ea4362e4610ac04d972488d76fde8cc661d9770814ab8f6859253b1b1"
+      },
+      "terminal_sha256": "300aa8d64eaff4721fed4b32f36b7e2e2a68e6f23d12a7b0ba2ef9d7e94674d2"
+    }
+  ],
+  "main_independent_readback": {
+    "database": "aos_test_a3a93c72286e_ti4_test",
+    "cluster": "7694913788751646744",
+    "version": "a0v_159",
+    "source_hashes_unchanged": true,
+    "target_parent_rows": 0,
+    "judge_parent_rows": 1,
+    "judge_backing_buckets": 3,
+    "ordinary_parent_rows": 0,
+    "held_minor": 10,
+    "buckets": [
+      [
+        "daily",
+        10
+      ],
+      [
+        "pilot",
+        10
+      ],
+      [
+        "task",
+        10
+      ]
+    ],
+    "active_clients": 0,
+    "prepared_transactions": 0,
+    "execution_allowed": false,
+    "root_trust_proven": false,
+    "formal_database_writes": 0,
+    "full_task_delivery": false,
+    "evidence_sha256": "fc0dde8260b8a4db1ea798bd74f3819dbdb9414d9a038eb2c23c807046bd5490",
+    "version_independently_queried": true
+  },
+  "formal_database_writes": 0,
+  "full_task_delivery": false,
+  "root_trust_proven": false,
+  "execution_allowed": false,
+  "source_binding_scope": "15 explicitly listed files per attempt; not full transitive Owner/Source artifact closure",
+  "publication_head": "a0v_157",
+  "working_graph": "a0v_159",
+  "limits": [
+    "signature/approval protocol uses isolated synthetic roots",
+    "identity/runtime helper DDL not installed by158",
+    "unpublished Model/Judge modules and broader Owner/Source closure need separate review",
+    "whole Source/joint Intent/Usage/fees/Report/natural first chain remain pending"
+  ]
+}

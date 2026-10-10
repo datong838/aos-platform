@@ -424,7 +424,7 @@ def test_exact_signed_rule_new_original_suite(
     judge=json.loads((base/'legal-eval-application-result-r4.json').read_text())
     with connect(scope) as conn:
         request=conn.execute('SELECT request_json FROM aip_model_eval_request WHERE request_id=%s',(judge['request_id'],)).fetchone()['request_json']
-    source,files,rule,root,service,scope,publisher,bundle_id=_publish_original_signed_judge_rule(tmp_path/'rules',request['sourceRef'],root_lifetime=timedelta(minutes=3))
+    source,files,rule,root,service,scope,publisher,bundle_id=_publish_original_signed_judge_rule(tmp_path/'rules',request['sourceRef'],root_lifetime=timedelta(minutes=5))
     policy=ReleasePolicy(trust_roots=FrozenTrustRootProvider({(root.publisher,root.key_id):root}))
     with connect_serializable(scope) as conn:
         facts=ModelJudgeCallRequestStore().read_published_rule(conn,scope,source,release_policy=policy,artifact_bytes=files)
@@ -463,7 +463,7 @@ def test_exact_signed_rule_new_original_suite(
     checker=resolve_principal(token=https_signer[0](target['checker']),header_org=scope.org_id,header_project=scope.project_id)
     body=ModelJudgeCallRuleRequestInput(targetRequestId=target['request_id'],targetRequestHash=target['request_hash'],
         targetApprovalEventId=ids[0],judgeRequestId=judge['request_id'],judgeRequestHash=judge['request_hash'],
-        judgeApprovalEventId=ids[1],ruleSource=source,upperBoundMinor=20,expiresAt=datetime.now(UTC)+timedelta(minutes=2))
+        judgeApprovalEventId=ids[1],ruleSource=source,upperBoundMinor=20,expiresAt=datetime.now(UTC)+timedelta(minutes=4))
     from uuid import uuid4
     attempt_suffix=uuid4().hex
     request_key='exact-rule-v2-'+attempt_suffix
@@ -496,7 +496,7 @@ def test_exact_signed_rule_new_original_suite(
     from dataclasses import replace
     with connect_serializable(scope) as conn:
         with pytest.raises(ModelJudgeRequestRejected,match='RULE_REQUEST_WINDOW'):
-            store.create_with_rule(conn,maker,'extended-window-v2',body.model_copy(update={'expires_at':datetime.now(UTC)+timedelta(minutes=4)}),release_policy=policy,artifact_bytes=files)
+            store.create_with_rule(conn,maker,'extended-window-v2',body.model_copy(update={'expires_at':datetime.now(UTC)+timedelta(minutes=6)}),release_policy=policy,artifact_bytes=files)
     revoked_policy=ReleasePolicy(trust_roots=FrozenTrustRootProvider({(root.publisher,root.key_id):replace(root,revoked_at=datetime.now(UTC))}))
     with connect_serializable(scope) as conn:
         with pytest.raises(ModelJudgeRequestRejected,match='PUBLISHED_RULE_AUTHORITY'):
@@ -518,7 +518,7 @@ def test_exact_signed_rule_new_original_suite(
     from aos_api.aip_action_store import AipActionStore,AipActionTransitionBlocked
     with psycopg.connect(get_dsn()) as install:
         for statement in judge_action_metadata_statements():install.execute(statement)
-    expires=datetime.now(UTC)+timedelta(seconds=50)
+    expires=datetime.now(UTC)+timedelta(seconds=150)
     proposed=propose_model_judge_request(maker,pending['request_id'],proposal_key,expires,
         release_policy=policy,artifact_bytes=files,connect_factory=connect_serializable)
     with connect(scope) as read:
