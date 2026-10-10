@@ -1135,6 +1135,94 @@ def shared_parent_initial_window_obligation_statements():
 
 READ_LIVE_PHYSICAL = 'public.read_shared_parent_live_physical_facts(uuid,text,xid8,integer)'
 
+READ_UNRESOLVED_MEMBERS = 'public.read_shared_parent_unresolved_members(uuid)'
+
+
+def shared_parent_unresolved_member_statements():
+    """Derive exact native membership; no Source or admission permission."""
+    s = PHYSICAL_SCHEMA
+    return (
+        f'''CREATE FUNCTION {READ_UNRESOLVED_MEMBERS.split('(')[0]}(p_account uuid)
+          RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $members$
+          DECLARE account_row {_physical.SCHEMA}.account_guard%ROWTYPE;
+            members jsonb; total_requests bigint; total_tokens numeric; invalid_members bigint;
+          BEGIN
+            IF {_end_authority_native_context_sql()} THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_EXACT_MEMBER_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+            SELECT * INTO account_row FROM {_physical.SCHEMA}.account_guard
+              WHERE physical_account_id=p_account AND org_id='org-org' AND project_id='dev-project' FOR SHARE;
+            IF NOT FOUND THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_EXACT_MEMBER_ACCOUNT_REQUIRED' USING ERRCODE='23514'; END IF;
+            WITH native_members AS (
+              SELECT 'legacyDebit'::text AS kind,d.debit_id::text AS member_id,
+                to_jsonb(d) AS native_row,d.immutable AS original_body,d.content_hash,
+                d.token_units AS tokens,d.org_id,d.project_id
+              FROM {_physical.SCHEMA}.prepared_parent_debit d WHERE d.physical_account_id=p_account
+              UNION ALL
+              SELECT 'initialTarget',d.plan_id::text,to_jsonb(d),d.body,d.content_hash,
+                d.token_upper_bound,d.org_id,d.project_id
+              FROM {s}.initial_target_obligation d WHERE d.physical_account_id=p_account
+            )
+            SELECT coalesce(jsonb_agg(jsonb_build_object('kind',kind,'id',member_id,'nativeRow',native_row)
+                ORDER BY kind COLLATE "C",member_id COLLATE "C"),'[]'::jsonb),
+              count(*),coalesce(sum(tokens),0),
+              count(*) FILTER(WHERE org_id IS DISTINCT FROM 'org-org' OR project_id IS DISTINCT FROM 'dev-project'
+                OR tokens IS NULL OR tokens<=0 OR content_hash IS DISTINCT FROM
+                  'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(original_body),'UTF8')),'hex'))
+              INTO members,total_requests,total_tokens,invalid_members FROM native_members;
+            IF invalid_members<>0 THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_EXACT_MEMBER_HASH_REQUIRED' USING ERRCODE='23514'; END IF;
+            RETURN jsonb_build_object('physicalAccountId',p_account,'accountVersion',account_row.version,
+              'accountMapping',to_jsonb(account_row),'unresolvedMembers',members,
+              'unresolvedSetHash','sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(members),'UTF8')),'hex'),
+              'unresolvedRequests',total_requests,'unresolvedTokenUpperBound',total_tokens,'executionAllowed',false);
+          END $members$''',
+        f'ALTER FUNCTION {READ_UNRESOLVED_MEMBERS} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {READ_UNRESOLVED_MEMBERS} FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer',
+    )
+
+
+def shared_parent_exact_receipt_statements():
+    """Explicit v2 preparation, preserving every original v1 artifact.
+
+    A sealed member set is necessary for later pure comparison. Neither this
+    package nor the membership reader supplies the full native ending.
+    """
+    statements = list(shared_parent_complete_receipt_statements())
+    boundary = "            NEW.physical_account_id:=obligation.physical_account_id;"
+    candidates = [i for i, sql in enumerate(statements)
+                  if sql.startswith('CREATE FUNCTION ' + PHYSICAL_SCHEMA + '.bind_complete_receipt()')]
+    if len(candidates) != 1 or statements[candidates[0]].count(boundary) != 1:
+        raise ValueError('SHARED_ADMISSION_EXACT_RECEIPT_BINDING_BOUNDARY_REQUIRED')
+    index = candidates[0]
+    declaration = "pending jsonb;facts jsonb;intents jsonb;live jsonb;"
+    if statements[index].count(declaration) != 1:
+        raise ValueError('SHARED_ADMISSION_EXACT_RECEIPT_DECLARATION_REQUIRED')
+    statements[index] = statements[index].replace(declaration, declaration + "member_set jsonb;", 1)
+    addition = f'''            member_set:={READ_UNRESOLVED_MEMBERS.split('(')[0]}(obligation.physical_account_id);
+            IF member_set->>'accountVersion' IS DISTINCT FROM live#>>'{{facts,accountVersion}}'
+              OR member_set->>'unresolvedRequests' IS DISTINCT FROM live#>>'{{facts,unresolvedRequests}}'
+              OR member_set->>'unresolvedTokenUpperBound' IS DISTINCT FROM live#>>'{{facts,unresolvedTokenUpperBound}}' THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RECEIPT_MEMBER_TOTALS_CHANGED' USING ERRCODE='23514'; END IF;
+            live:=jsonb_set(live,'{{facts}}',(live->'facts')||jsonb_build_object(
+              'accountMapping',member_set->'accountMapping','unresolvedMembers',member_set->'unresolvedMembers',
+              'unresolvedSetHash',member_set->'unresolvedSetHash'));
+            live:=jsonb_set(live,'{{contentHash}}',to_jsonb('sha256:'||encode(sha256(convert_to(
+              public.canonical_asset_registry_jsonb(live->'facts'),'UTF8')),'hex')));
+'''
+    statements[index] = statements[index].replace(boundary, addition + boundary, 1)
+    replacements = (
+        ('stage_shared_parent_complete_receipt', 'stage_shared_parent_complete_receipt_v2'),
+        ('bind_complete_receipt', 'bind_complete_receipt_v2'),
+        (PHYSICAL_SCHEMA + '.complete_receipt', PHYSICAL_SCHEMA + '.complete_receipt_v2'),
+        ('aos.shared-parent-complete-receipt-preparation/v1', 'aos.shared-parent-complete-receipt-preparation/v2'),
+    )
+    for before, after in replacements:
+        statements = [sql.replace(before, after) for sql in statements]
+    # Both v1/v2 reuse the original closed Issuer origin delegate. Install the
+    # chosen complete package once; this is not an automatic upgrade migration.
+    return (*shared_parent_unresolved_member_statements(), *statements)
+
 
 def shared_parent_live_physical_fact_statements():
     """Current original Source and old/new totals under an account write lock.

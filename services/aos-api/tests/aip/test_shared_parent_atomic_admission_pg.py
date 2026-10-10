@@ -585,39 +585,52 @@ def test_complete_receipt_fixed_nodes_and_original_generators():
         assert hashlib.sha256('\n'.join(getattr(api, name)()).encode()).hexdigest() == digest, name
 
 
-def test_native_complete_receipt_closed_metadata_and_rollback(native):
+@pytest.mark.parametrize("exact_members", [False, True])
+def test_native_complete_receipt_closed_metadata_and_rollback(native, exact_members):
     from aos_api import aip_shared_parent_atomic_admission as api
+    stage = api.STAGE_COMPLETE_RECEIPT.replace("complete_receipt", "complete_receipt_v2") if exact_members else api.STAGE_COMPLETE_RECEIPT
+    stage_name = stage.split("(")[0]
     for generator in (api.shared_parent_admission_origin_statements, api.shared_parent_admission_certificate_set_statements,
                       api.shared_parent_admission_storage_statements, api.shared_parent_pending_origin_lookup_statements,
                       api.shared_parent_physical_obligation_statements, api.shared_parent_initial_intent_statements,
                       api.shared_parent_end_authority_statements, api.shared_parent_initial_call_authority_statements,
                       api.shared_parent_initial_window_obligation_statements, api.shared_parent_live_physical_fact_statements,
                       api.shared_parent_complete_parent_risk_statements, api.shared_parent_final_intent_validation_statements,
-                      api.shared_parent_final_call_validation_statements, api.shared_parent_complete_receipt_statements):
+                      api.shared_parent_final_call_validation_statements,
+                      api.shared_parent_exact_receipt_statements if exact_members else api.shared_parent_complete_receipt_statements):
         for statement in generator(): native.execute(statement)
-    table = api.PHYSICAL_SCHEMA + '.complete_receipt'
+    table = api.PHYSICAL_SCHEMA + ('.complete_receipt_v2' if exact_members else '.complete_receipt')
     assert native.execute('SELECT pg_get_userbyid(relowner),relrowsecurity,relforcerowsecurity FROM pg_class WHERE oid=%s::regclass', (table,)).fetchone() == (OWNER, True, True)
-    assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (api.STAGE_COMPLETE_RECEIPT,)).fetchone() == (OWNER, True, ['search_path=pg_catalog'])
+    assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (stage,)).fetchone() == (OWNER, True, ['search_path=pg_catalog'])
     assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (api.READ_RECEIPT_ORIGIN,)).fetchone() == (api._certificate.ISSUER_OWNER, True, ['search_path=pg_catalog'])
     assert native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (OWNER, api.READ_RECEIPT_ORIGIN)).fetchone()[0]
     for role in ('aos_runtime', 'aos_provider_capacity_issuer'):
         assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (role, api.READ_RECEIPT_ORIGIN)).fetchone()[0]
     for role in ('aos_runtime', 'aos_provider_capacity_issuer'):
-        assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (role, api.STAGE_COMPLETE_RECEIPT)).fetchone()[0]
+        assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (role, stage)).fetchone()[0]
         for privilege in ('SELECT','INSERT','UPDATE','DELETE','TRUNCATE'):
             assert not native.execute('SELECT has_table_privilege(%s,%s,%s)', (role, table, privilege)).fetchone()[0]
     assert native.execute("SELECT tgdeferrable,tginitdeferred FROM pg_trigger WHERE tgrelid=%s::regclass AND tgname='require_complete_receipt_end'", (table,)).fetchone() == (True, True)
     assert native.execute("SELECT count(*) FROM pg_constraint WHERE conrelid=%s::regclass AND contype='f'", (table,)).fetchone()[0] == 1
     with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_RECEIPT_NATIVE_CALLER_REQUIRED'):
-        with native.transaction(): native.execute('SELECT public.stage_shared_parent_complete_receipt(NULL,NULL,NULL,NULL)')
+        with native.transaction(): native.execute('SELECT ' + stage_name + '(NULL,NULL,NULL,NULL)')
     # Test-owned identity impersonation checks only early context/missing nodes,
     # not an authenticated supplier Source positive. All grants roll back.
     assert not native.execute("SELECT pg_has_role('aos_provider_capacity_occupation','aos_runtime','MEMBER')").fetchone()[0]
     wrapper = 'public.test_owned_complete_receipt_probe()'
-    native.execute("CREATE FUNCTION " + wrapper + " RETURNS jsonb LANGUAGE SQL SECURITY DEFINER SET search_path=pg_catalog AS $$ SELECT public.stage_shared_parent_complete_receipt('11111111-1111-1111-1111-111111111111'::uuid,'sha256:'||repeat('0',64),pg_current_xact_id(),pg_backend_pid()) $$")
+    native.execute("CREATE FUNCTION " + wrapper + " RETURNS jsonb LANGUAGE SQL SECURITY DEFINER SET search_path=pg_catalog AS $$ SELECT " + stage_name + "('11111111-1111-1111-1111-111111111111'::uuid,'sha256:'||repeat('0',64),pg_current_xact_id(),pg_backend_pid()) $$")
     native.execute('ALTER FUNCTION ' + wrapper + ' OWNER TO ' + OWNER)
     native.execute('REVOKE ALL ON FUNCTION ' + wrapper + ' FROM PUBLIC')
     native.execute('GRANT EXECUTE ON FUNCTION ' + wrapper + ' TO aos_runtime')
+    if exact_members:
+        assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (api.READ_UNRESOLVED_MEMBERS,)).fetchone() == (OWNER, True, ['search_path=pg_catalog'])
+        for role in ('aos_runtime', 'aos_provider_capacity_issuer'):
+            assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (role, api.READ_UNRESOLVED_MEMBERS)).fetchone()[0]
+        native.execute("INSERT INTO aos_physical_capacity_occupation_private.account_guard VALUES ('22222222-2222-2222-2222-222222222222','org-org','dev-project','test-owned-empty-account','test-owned-empty-fingerprint',1)")
+        native.execute("CREATE FUNCTION public.test_owned_exact_member_probe() RETURNS jsonb LANGUAGE SQL SECURITY DEFINER SET search_path=pg_catalog AS $$ SELECT public.read_shared_parent_unresolved_members('22222222-2222-2222-2222-222222222222'::uuid) $$")
+        native.execute('ALTER FUNCTION public.test_owned_exact_member_probe() OWNER TO ' + OWNER)
+        native.execute('REVOKE ALL ON FUNCTION public.test_owned_exact_member_probe() FROM PUBLIC')
+        native.execute('GRANT EXECUTE ON FUNCTION public.test_owned_exact_member_probe() TO aos_runtime')
     native.execute('GRANT aos_runtime TO aos_provider_capacity_occupation')
     native.execute('SET SESSION AUTHORIZATION aos_provider_capacity_occupation')
     native.execute('SET LOCAL ROLE aos_runtime')
@@ -627,6 +640,45 @@ def test_native_complete_receipt_closed_metadata_and_rollback(native):
     with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_RECEIPT_NATIVE_CALLER_REQUIRED'):
         with native.transaction(): native.execute('SELECT ' + wrapper)
     native.execute("SET LOCAL aos.org_id='org-org'")
+    if exact_members:
+        members = native.execute('SELECT public.test_owned_exact_member_probe()').fetchone()[0]
+        assert members['unresolvedMembers'] == [] and members['unresolvedRequests'] == 0
+        assert members['unresolvedTokenUpperBound'] == 0 and members['accountVersion'] == 1
+        assert members['executionAllowed'] is False
+        assert members['unresolvedSetHash'] == 'sha256:' + hashlib.sha256(b'[]').hexdigest()
+        # Test-owned native row shapes only. All original deferred denials stay
+        # active; these rows are never Source/Root authority or committed risks.
+        native.execute('RESET ROLE')
+        native.execute('RESET SESSION AUTHORIZATION')
+        native.execute("INSERT INTO aos_physical_capacity_occupation_private.parent_debit_guard VALUES ('org-org','dev-project','33333333-3333-3333-3333-333333333333','test-request','test-parent',100,7,1)")
+        native.execute("INSERT INTO aos_physical_capacity_occupation_private.prepared_parent_debit VALUES ('org-org','dev-project','44444444-4444-4444-4444-444444444444','33333333-3333-3333-3333-333333333333','{}'::jsonb,'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb('{}'::jsonb),'UTF8')),'hex'),7,'22222222-2222-2222-2222-222222222222',7,pg_current_xact_id(),pg_backend_pid())")
+        native.execute("INSERT INTO aos_shared_parent_physical_private.initial_target_obligation VALUES ('55555555-5555-5555-5555-555555555555','org-org','dev-project','22222222-2222-2222-2222-222222222222','33333333-3333-3333-3333-333333333333','test-owned-case',11,'sha256:'||repeat('0',64),pg_current_xact_id(),pg_backend_pid(),'{}'::jsonb,'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb('{}'::jsonb),'UTF8')),'hex'))")
+        native.execute('SET SESSION AUTHORIZATION aos_provider_capacity_occupation')
+        native.execute('SET LOCAL ROLE aos_runtime')
+        first = native.execute('SELECT public.test_owned_exact_member_probe()').fetchone()[0]
+        assert first['unresolvedRequests'] == 2 and first['unresolvedTokenUpperBound'] == 18
+        assert [x['kind'] for x in first['unresolvedMembers']] == ['initialTarget', 'legacyDebit']
+        expected = native.execute("SELECT 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(%s::jsonb),'UTF8')),'hex')", (json.dumps(first['unresolvedMembers']),)).fetchone()[0]
+        assert first['unresolvedSetHash'] == expected
+        native.execute('RESET ROLE')
+        native.execute('RESET SESSION AUTHORIZATION')
+        native.execute("UPDATE aos_physical_capacity_occupation_private.prepared_parent_debit SET debit_id='66666666-6666-6666-6666-666666666666'")
+        native.execute('SET SESSION AUTHORIZATION aos_provider_capacity_occupation')
+        native.execute('SET LOCAL ROLE aos_runtime')
+        second = native.execute('SELECT public.test_owned_exact_member_probe()').fetchone()[0]
+        assert second['accountVersion'] == first['accountVersion']
+        assert second['unresolvedRequests'] == first['unresolvedRequests']
+        assert second['unresolvedTokenUpperBound'] == first['unresolvedTokenUpperBound']
+        assert second['unresolvedSetHash'] != first['unresolvedSetHash']
+        native.execute('RESET ROLE')
+        native.execute('RESET SESSION AUTHORIZATION')
+        native.execute("UPDATE aos_physical_capacity_occupation_private.prepared_parent_debit SET content_hash='sha256:'||repeat('0',64)")
+        native.execute('SET SESSION AUTHORIZATION aos_provider_capacity_occupation')
+        native.execute('SET LOCAL ROLE aos_runtime')
+        with pytest.raises(psycopg.errors.CheckViolation, match='SHARED_ADMISSION_EXACT_MEMBER_HASH_REQUIRED'):
+            with native.transaction(): native.execute('SELECT public.test_owned_exact_member_probe()')
+
+
     with pytest.raises(psycopg.errors.CheckViolation, match='SHARED_ADMISSION_RECEIPT_COMPLETE_NODES_REQUIRED'):
         with native.transaction(): native.execute('SELECT ' + wrapper)
     native.execute('RESET ROLE')
@@ -654,3 +706,40 @@ def test_receipt_origin_delegate_rejects_original_drift(monkeypatch, drift):
     monkeypatch.setattr(api, 'shared_parent_end_authority_statements', changed)
     with pytest.raises(ValueError, match='SHARED_ADMISSION_RECEIPT_ORIGIN_'):
         api.shared_parent_receipt_origin_statements()
+
+
+def test_exact_unresolved_members_and_versioned_receipt_preserve_originals():
+    from aos_api import aip_shared_parent_atomic_admission as api
+    statements = api.shared_parent_exact_receipt_statements()
+    sql = '\n'.join(statements)
+    assert api.READ_UNRESOLVED_MEMBERS.split('(')[0] in sql
+    for field in ('legacyDebit', 'initialTarget', 'nativeRow', 'unresolvedMembers', 'unresolvedSetHash'):
+        assert "'" + field + "'" in sql
+    reader = api.shared_parent_unresolved_member_statements()[0]
+    assert 'COLLATE "C"' in reader and 'FOR SHARE' in reader
+    assert not re.search(r'\b(?:INSERT|UPDATE|DELETE|MERGE|TRUNCATE)\b', reader, re.I)
+    assert 'SHARED_ADMISSION_EXACT_MEMBER_HASH_REQUIRED' in reader
+    assert 'SHARED_ADMISSION_RECEIPT_MEMBER_TOTALS_CHANGED' in sql
+    assert 'aos.shared-parent-complete-receipt-preparation/v2' in sql
+    assert 'executionAllowed' in sql
+    root = Path(__file__).resolve().parents[4]
+    frozen = json.loads((root / '.evidence/gt-shared-parent-atomic-admission-finalizer-20261010/exact-members-1759/beforeimage.json').read_text())
+    for name, digest in frozen.items():
+        assert hashlib.sha256('\n'.join(getattr(api, name)()).encode()).hexdigest() == digest, name
+
+
+@pytest.mark.parametrize('drift', ['missing_binding', 'duplicate_boundary', 'declaration'])
+def test_exact_receipt_compiler_rejects_drift(monkeypatch, drift):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    original = api.shared_parent_complete_receipt_statements
+    def changed():
+        values = list(original())
+        for i, sql in enumerate(values):
+            if sql.startswith('CREATE FUNCTION ' + api.PHYSICAL_SCHEMA + '.bind_complete_receipt()'):
+                if drift == 'missing_binding': values[i] = sql.replace('bind_complete_receipt()', 'unknown_binding()')
+                elif drift == 'duplicate_boundary': values[i] = sql + '            NEW.physical_account_id:=obligation.physical_account_id;'
+                else: values[i] = sql.replace('pending jsonb;facts jsonb;intents jsonb;live jsonb;', 'pending jsonb;facts jsonb;intents jsonb;live jsonb ;')
+        return tuple(values)
+    monkeypatch.setattr(api, 'shared_parent_complete_receipt_statements', changed)
+    with pytest.raises(ValueError, match='SHARED_ADMISSION_EXACT_RECEIPT_'):
+        api.shared_parent_exact_receipt_statements()

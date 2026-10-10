@@ -1,0 +1,56 @@
+{
+  "status": "EXACT_NATIVE_MEMBER_SET_V2_PREPARATION_COMPONENT_GREEN_REAL_SOURCE_FULL_POSITIVE_PENDING",
+  "authority": "AOS-001759",
+  "head": "ebcaf4c2b0505bcb672fe194b04042eb30796672",
+  "files": {
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "dce33465e0122c0e7ff6e4672ad6f1e3fe2023930de8174ff548baeff6dc0e7b",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "b01f53bf152ce0f6462d5e89bda69816f0e61a34a6b3fc68e05f2abe6b904ad6"
+  },
+  "red": {
+    "test": "test_exact_unresolved_members_and_versioned_receipt_preserve_originals",
+    "exit": 1,
+    "reason": "missing shared_parent_exact_receipt_statements AttributeError"
+  },
+  "adjacent": {
+    "passed": 46,
+    "seconds": 1.98,
+    "existing_warnings": 7,
+    "files": [
+      "test_shared_parent_atomic_admission_pg.py",
+      "test_shared_parent_certificate_prepare_pg.py"
+    ]
+  },
+  "independent_rollback": {
+    "v2_table_absent": true,
+    "member_reader_absent": true,
+    "test_probe_absent": true,
+    "role_membership_restored": true,
+    "test_owned_rows_absent": true
+  },
+  "review": {
+    "old_generators_byte_exact": true,
+    "server_derived_tagged_full_native_rows": true,
+    "ordering_explicit_C_collation": true,
+    "original_body_hashes_rechecked": true,
+    "totals_from_same_member_array": true,
+    "account_mapping_bound": true,
+    "original_pending_origin_variable_preserved": true,
+    "v1_preserved_v2_explicit_no_auto_upgrade": true,
+    "no_default_installation": true,
+    "no_execution_grant": true,
+    "no_old_guard_rewrite": true,
+    "browser_applicable": false,
+    "native_test_owned_equal_total_identity_change_detected": true,
+    "native_test_owned_invalid_body_hash_rejected": true,
+    "original_deferred_denials_kept_active": true
+  },
+  "limitations": [
+    "Native query covers test-owned empty and populated legacy/new table shapes with administrator identity impersonation; no authenticated signed Source admission claim.",
+    "Real signed Source populated membership/Receipt positive and formally reachable after-wait/late-writer pure comparison remain required.",
+    "Original whole Source timing RED persists. Native full closure/event/RI/callback/module/end/actual COMMIT remains unproven."
+  ],
+  "formal_database_touched": false,
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "goal_complete": false
+}
