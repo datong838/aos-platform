@@ -1,0 +1,9 @@
+# 原联合结束类型/安装调查复审
+
+本次仅实际R22 retained库READONLY目录核对与固定Docker容器的只读文件hash，未执行比较/转换回调、未启动新风险事务、未DDL或更改角色。沿15个原caller候选写操作及实际应用函数SQL候选影响展开为18个已知候选事件；明确原生RI未审查，不能把这称完整闭包或排队观测。
+
+所涉25FK/81对列均为pg_catalog text/uuid/timestamptz，两端type与collation无差异、无domain或用户定义type。text为default deterministic collation（版本null），不代表系统locale/binary受信。对应类型范围pg_cast有1个内置timestamptz typmod函数，该目录存在不证明此次外键实际调用。仍需正式native RI合同与所有间接/类型输入/排序规则实现可信来源。
+
+固定原Docker容器8d2a50...的image bcdf34...与原lab.json一致；23个PG executable/动态库文件hash已绑定。RepoDigest标签为历史aos-precommit-probe-20261009-base，记录本地镜像身份，不伪装成官方签名证明；核对历史Dockerfile显示probe是另一镜像78dc0d...的扩展，当前base身份不是本次新安装或启用probe。未根据镜像名称推断权限或完整来源，release_signature_verified及formal_installation_approved均false。
+
+调查符合方案，新增仅本Task登记.evidence文件。无产品代码变动，无UI故不重复39PASS或浏览器。原Task9/10仍ACTIVE无Delivery。下一候选：精确原native/extension/locale安装绑定，及Source/预算/唯一Intent/currentness/clock联合结束合约接入。正式Root/WAL期限裁决保持局部门，不停Loop、不变经营next gate。
