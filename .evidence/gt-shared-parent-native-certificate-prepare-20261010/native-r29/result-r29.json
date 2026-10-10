@@ -1,0 +1,30 @@
+{
+  "pytest_exit": 1,
+  "databases": [
+    "aos_test_6eba2c24f229_ti4_test"
+  ],
+  "reports": [
+    {
+      "nodeid": "tests/aip/test_physical_capacity_occupation_pg.py::test_source_model_preparation_original_native_caller[shared]",
+      "phase": "call",
+      "outcome": "failed"
+    }
+  ],
+  "old_files_unchanged": true,
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_physical_capacity_occupation.py": "fb682207bf165f442d305fc0d25e7603d1746910dcf081ce2edfce83998f1e78",
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": "e1384ab91c03099203d56fe814c588483d7915ee0e418a2cb39d08b5c5e68eb2",
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": "8f367dadcc2b71f8e0e22f2a779d26cd997371ceeb8f36d38fbc9ba9d8a88a99",
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": "41356488500495d4abc7d7e64d9dc024eef4849f0214d22ed77748b8c920c64f",
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": "a71944ef653421b7e38038fdf99de3b244cc3a793ebf0f606c0e66d63e8c6bb0",
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py": "b169f8e5f3d8025ba4e2459fb2b7160aa3ebc8b6468f130ef8785b6f37fd18fc",
+    "services/aos-api/aos_api/aip_shared_parent_description_origin_reader.py": "92aa9d11a58a27a86d3a0848503e96d0c17a083157ad71ff7d3ffc7898e9c63a",
+    "services/aos-api/tests/aip/test_shared_parent_description_origin_reader_pg.py": "d3011dcd6a62fa4bc6ce322103e86dedcb01f00e2d8dbc72ec5d7f2ccc409288",
+    "services/aos-api/aos_api/aip_shared_parent_executor_set_reader.py": "dd17b97d2a2f05c4b15c45ac6c449d06a2aef1dffade029c94b7ca8c1390adcf",
+    "services/aos-api/tests/aip/test_shared_parent_executor_set_reader_pg.py": "a6708872931a627f3d43548e66b2afd599e1b18ab74eeebfb6e0879685c06385",
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py": "c41182b6972f3613a1581ec686f4ef7d9ed2ea3baa2e22f778f7a513a6687c40",
+    "services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py": "a5aaa47e86eab043df32f203db5afe323cf9b38818b2d15bacba58a626d1d627"
+  },
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

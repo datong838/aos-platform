@@ -1,0 +1,31 @@
+{
+  "authority": "AOS-001695",
+  "file_sha256": {
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py": "c41182b6972f3613a1581ec686f4ef7d9ed2ea3baa2e22f778f7a513a6687c40",
+    "services/aos-api/aos_api/aip_model_original_target_result_reader.py": "ea9ed1f0e61be25ef6e3c0dc8ada70ccc48dec16b0d4074e9260d5f5475609f0",
+    "services/aos-api/aos_api/aip_model_eval_execution_authority.py": "a66a33b53ca6a9ef67e59e9e946f023ab29c7eebb9c61635bd6ea1a21d555e27",
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": "a71944ef653421b7e38038fdf99de3b244cc3a793ebf0f606c0e66d63e8c6bb0",
+    "services/aos-api/aos_api/ecommerce_content_execution_worker.py": "814a97498dcf0f89cafe7464a2a3348447c3a56d21416a1fc9c06cf44ead3d59"
+  },
+  "worker_literal_call_order": [
+    {
+      "line": 97,
+      "call": "conn.commit"
+    },
+    {
+      "line": 101,
+      "call": "self.invoke"
+    },
+    {
+      "line": 103,
+      "call": "self.invoke"
+    },
+    {
+      "line": 118,
+      "call": "conn.commit"
+    }
+  ],
+  "statement": "Literal source commit before invoke; this alone does not verify durable commit under every borrowed factory",
+  "native_timing_probe_pending": true,
+  "execution_allowed": false
+}

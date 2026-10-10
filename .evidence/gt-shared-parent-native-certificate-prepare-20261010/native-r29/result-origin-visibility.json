@@ -1,0 +1,29 @@
+{
+  "database": "aos_test_6eba2c24f229_ti4_test",
+  "source_caller": {
+    "xid": "44187",
+    "pid": 11857
+  },
+  "observer": {
+    "database": "aos_test_6eba2c24f229_ti4_test",
+    "cluster": "7694680278363095064",
+    "pid": 12247,
+    "readonly": "on"
+  },
+  "source_status": "in progress",
+  "independent_visible_counts": {
+    "aos_model_eval_execution_private.manifest": 0,
+    "aos_model_eval_issuer_private.executor_certificate": 0
+  },
+  "fk_rejection": "23503",
+  "constraint": "case_result_org_id_project_id_execution_id_fkey",
+  "child_writer": {
+    "xid": "44206",
+    "pid": 12247
+  },
+  "child_writer_status": "aborted",
+  "retained_case_rows": 0,
+  "test_only_unsigned_probe": true,
+  "actual_model_execution": false,
+  "execution_allowed": false
+}

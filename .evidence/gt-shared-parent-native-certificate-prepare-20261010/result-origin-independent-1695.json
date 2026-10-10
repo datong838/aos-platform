@@ -1,0 +1,31 @@
+{
+  "authority": "AOS-001695",
+  "database": "aos_test_6eba2c24f229_ti4_test",
+  "cluster": "7694680278363095064",
+  "visibility_and_fk_observation_proved": true,
+  "compound_native_pytest_exit": 1,
+  "compound_failure": "CAPACITY_JUDGE_CURRENT_DEADLINES_REQUIRED after visibility probe",
+  "statuses": {
+    "source_caller": "aborted",
+    "child_writer": "aborted"
+  },
+  "risk_and_result_counts": {
+    "aos_physical_capacity_occupation_private.call_occupation": 0,
+    "aos_physical_capacity_occupation_private.call_occupation_event": 0,
+    "aos_physical_capacity_occupation_private.prepared_call_occupation": 0,
+    "aos_physical_capacity_occupation_private.prepared_execution_intent": 0,
+    "aos_physical_capacity_occupation_private.prepared_judge_intent": 0,
+    "aos_physical_capacity_occupation_private.prepared_parent_debit": 0,
+    "aos_physical_capacity_occupation_private.prepared_plan_risk": 0,
+    "aos_physical_capacity_occupation_private.prepared_shared_risk_description": 0,
+    "aos_model_eval_execution_private.manifest": 0,
+    "aos_model_eval_execution_private.case_result": 0,
+    "aos_model_eval_issuer_private.executor_certificate": 0
+  },
+  "original_seven_guard_hashes_unchanged": true,
+  "source_hashes_match": true,
+  "raw_log_sha256": "f721d37663c7c80881e4ef7acece1fdf35b2a28dceef1b25f79b423f8d228a26",
+  "native_model_execution": false,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

@@ -1,0 +1,7 @@
+# Native result-origin review
+
+R29 fresh complete Source/dual-parent/shared-description/real certificate prefix reached independent visibility probe. Source caller44187 in progress; independent backend12247 sees exact manifest/certificate0. Its unsigned test-owned case insertion failed original FK23503, child writer44206 aborted, case rows0. This is physical timing/visibility evidence, not actual signed transport or Usage. Original same-transaction producer/independent committed-origin assumptions cannot simply be combined.
+
+Compound original node later FAILED CAPACITY_JUDGE_CURRENT_DEADLINES_REQUIRED; do not call full trial green or silently lengthen deadlines. Terminal handle closed. Independent READ ONLY confirms source/child aborted,11 risk/result tables0 and all seven deferred guards same exact body hashes as retained R28; current12 product file hashes match. Raw log retained locally SHA-bound, excluded from Git. No product, guard, FK, grant, actual Model, formal database or service mutation. Known old R28 pass is historical adjacent evidence, not a new R29 pass.
+
+Commit-boundary candidate proposal explains atomic admission versus actual-result boundaries and concrete follow-up scope/acceptance. It does not change the approved single-joint requirement, authorize a split, enable a finalizer or create admission trust. Next verify genuine committed Intent/unknown journal producer and finalize reviewed phase protocol before implementing a v3 reader premise. Goal remains active; local deadline failure does not exhaust safe design/implementation work.
