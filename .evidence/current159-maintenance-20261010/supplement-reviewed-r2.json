@@ -1,0 +1,23 @@
+{
+  "status": "SUPPLEMENT_COMPLETE_NATIVE_REVIEWED_EQUIVALENCE_GREEN",
+  "binding_count": 9,
+  "toast_internal_name_changes": 614,
+  "full_supplement_fields": [
+    "collations",
+    "comments",
+    "database",
+    "database_acl",
+    "database_role_settings",
+    "dependencies",
+    "domain_constraints",
+    "extension_config",
+    "inheritance",
+    "sequence_definitions",
+    "shared_dependencies",
+    "tablespaces",
+    "type_acl"
+  ],
+  "all_other_supplement_exact": true,
+  "database_writes": 0,
+  "migration_allowed": false
+}

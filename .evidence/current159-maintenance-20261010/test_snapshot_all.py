@@ -22,3 +22,12 @@ def test_any_restore_omission_rejected(key):
 
 def test_exact_comparison_preserves_input():
  a={'tables':{'public.x':{'rows':0,'sha256':'x'}}};assert m.compare_exact(a,a)==True
+@pytest.mark.parametrize('version',['a0v_158','a0v_159'])
+def test_explicit_original_migrated_schema_set_only(version):
+ schemas=['public','aos_capacity_publication_private','aos_model_eval_execution_private','aos_model_eval_issuer_private']
+ assert m.require_schema_set(schemas,version=version) is None
+ with pytest.raises(ValueError):m.require_schema_set(schemas,version='a0v_157')
+ with pytest.raises(ValueError):m.require_schema_set(schemas+['unregistered'],version=version)
+@pytest.mark.parametrize('version',['a0v_160',None,True,'a0v_159;COMMIT'])
+def test_schema_version_selector_closed(version):
+ with pytest.raises(ValueError):m.require_schema_set(list(m.SCHEMAS),version=version)

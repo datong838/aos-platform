@@ -1,5 +1,11 @@
 # 当前157→159原卷重启维护方案
 
+## 2026-10-10 重启后提交来源纠偏与下一步
+
+实时核对 m1 HEAD0282e07b34d5bd9d6f0ebb1ea0a37b22fc503d87：提交迁移图头为157；工作树158/159及对应authority模块是原登记Task的未提交文件，冻结archive不含这两版。原库157与已提交代码一致。native-rehearsal-r1的158进程在迁移图加载、建立数据库连接前因工具缺FastAPI失败；原副本及原库仍157，159未尝试。旧失败保留，不重跑旧journal；不能把名为code159的157制品当159通过。
+
+先在本maintenance范围完善全schema检查器：snapshot_supplement.py的routine-kind查询也须按已核验版本覆盖四个schema；test_snapshot_supplement.py构造158/159新增私有schema存在不支持routine的负例，先RED、最小修复、相邻累计。此修复只完善只读安全门，不产生DDL。原Task2/4模块需在其合法续租与完整方案/测试复审后精确提交，再冻结新的完整159提交图、独立journal及已验依赖工具；不得从本maintenance Task修改产品模块，不以空表包或部分代码替代完整Task交付。第二零窗口备份/全恢复/两步演练、当前一次迁移、签名API及八工作台均仍pending。API门保持关闭，Host/worker/Provider保持off。
+
 唯一写者01a107a2-e9e4-7670-bc44-1144fa9b27e2，m1 fa70a7123，authority1699。用户已授权最新全量重启与安全迁移；原PG9cc6091c、卷aos-a0v-recovery-pg-data、cluster7683855731447750695，当前库aos_current_preview_20260927@157。Desktop研发库不替代该权威卷。
 
 先全schema只读清册并冻结当前提交源码及迁移依赖hash。旧150全备校验器拒绝私有schema，禁止猴补丁放宽。新增本目录snapshot_all.py和test_snapshot_all.py，独立全schema行摘要、函数/触发器/FK/ACL/角色/序列/策略/默认权限/扩展目录比较；数据留私有state，公开报告仅hash与数量。先RED覆盖私有schema同名表、防SQL注入与遗漏。
@@ -17,3 +23,13 @@
 原生副本615表/410函数已读取，全部行摘要、函数体、ACL、角色、序列当前值与原库相同；仅constraints/triggers存在差异。18个CHECK为原已审长度/AND结合律表达式；2756个内部RI触发器名称随恢复OID改变。新增restore_comparison.py/test_restore_comparison.py：复用原150已审严格length_and_candidate，其他CHECK不归一；只允许tgisinternal且名字严格RI_ConstraintTrigger_[ac]_[数字]、完整定义中原名字精确匹配且RI_FKey原生函数在闭合清单的名称变化；保留重复事件多重集和全部属性，不删除触发器。数据/ACL/函数/触发模式/约束变化必须失败，原差异完整留私有state。此审查不是158/159演练或第二零窗口备份通过。
 
 原150严格规则仅覆盖15个public CHECK；剩余3个为私有deployment_anchor.publisher_subject/signer_key_id/signer_publisher的长度1..200与btrim合取。逐项冻结schema/table/conname、列名、上下界和唯一两种原/恢复表达式；仅允许括号合取结合变化，操作数、NULL三值语义和所有约束属性不变。不得扩大旧150规则或全局接受bound200。新增负测改变200/操作符/列名/所属schema必须失败。原18全部已审的提前文案以此明细纠正；旧结果保留，不能宣称第一轮归一已经通过。
+
+## 完整目录补充实施（authority1700，HEAD0282e07b3）
+新增本目录snapshot_supplement.py/test_snapshot_supplement.py与compare_supplement.py。只读采集当前数据库属性/ACL/本库角色设置、序列参数及所有权依赖、类型ACL/domain约束、collation、对象注释、用户对象pg_depend及本库pg_shdepend、继承/扩展配置、表空间；对象引用全部由pg_identify_object/角色名解析，不比较OID。固定两个schema，发现aggregate/window/未知对象种类先拒绝，不悄悄过滤。源与已有恢复副本同REPEATABLE READ内采完整基础+补充清单；副本仍none-network，工具镜像固定2376642...只读socket/stdin hash。禁止恢复重放或迁移；旧150/首备脚本保持历史固定门。补充差异需逐项审查，不因只有615行表摘要通过就放行。测试先证明无补充不能获得全目录通过、任何补充ACL/序列定义/依赖遗漏均失败。
+
+补充源/副本各完整快照已生成且工具terminal0。宿主纯比较对每条依赖遍历2756个RI名字，形成O(trigger×dependency)；精确核PID/argv及已落盘只读terminal后终止宿主比较，未执行任何数据库效果。改为单次闭合RI名字token匹配和字典回调O(total identity length)，增加大量名字/依赖的调用次数测试；只消费现有快照并重新只读核源一致，不重跑备份/恢复/迁移。
+
+补充原生差异：614个toast table内部依赖仅pg_toast数字OID名字变化，deptype=i/ref是精确原父表，需保留逐父表及多重集。9个public module_*外键从uq_meta_module_scope_pk_ti2选择到meta_module_pkey；两索引在原库与副本均存在，旧全目录已显示定义/权限/约束一致，不能仅改名后忽略。新增review_native_dependencies.py/test_dependency_review.py：精确九约束/原表/两索引闭合集，原生只读查询conindid的键顺序、key/total属性数、每个opclass/collation/indoption、predicate/expression、valid/ready/live/unique/immediate/access-method。原非primary与副本primary区别留诊断，仅当上述候选键语义全部相同且依赖行精确匹配证明时将这一条依赖引用视作已审等价；其他依赖/同名不同scope/操作类/排序/NULL语义/表达式漂移必须失败，不修改原库或恢复DDL。
+
+## 原158/159独立副本迁移演练
+新增freeze_code159.py/socket_migrate159.py/rehearse159.py，目标仅已有完整恢复副本current159-first-1579cb9f5251。从精确HEAD0282e07b3 git archive提取API/全部迁移目录到独立新code volume，逐文件与git blob SHA对照；禁入未提交支持Task改动。固定迁移工具2376642.../none网络/只读codevolume与socket/no privileges。先只读核157/独立cluster/原615表等价、当前authority1700/TaskLease，再每一步写fsync intent、原Alembic原事务执行158/159、terminal、独立后版本/旧数据/ACL检查。失败/未知不得重发。完善snapshot_all/supplement的version参数只接受明确157旧2schema与158/159固定新增execution/issuer私有schema组合，库版本须等于参数，不允许任意schema或动态放宽。成功后只作为第一副本演练，不给当前库迁移权限；第二零窗口备份/新恢复/两步重演仍必须独立完成。

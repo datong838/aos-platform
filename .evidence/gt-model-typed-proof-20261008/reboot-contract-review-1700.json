@@ -1,0 +1,14 @@
+{
+  "head": "0282e07b34d5bd9d6f0ebb1ea0a37b22fc503d87",
+  "authority": "AOS-001700",
+  "task_status": "ACTIVE",
+  "pure_contract_passed": 296,
+  "database_proof": false,
+  "initial_setup_failure": "default disposable fixture targets unavailable5433; no connection/effect",
+  "pure_rerun": "shared-fixture disabled with deliberately unavailable loopback port1 DSN; this file has no DB fixture",
+  "logs_sha256": {
+    "reboot-contract-review-1700.local.log": "5cf08c4faaa45571561d50e324d9f960de7138f7ae8cbe29ad372fb234406140",
+    "reboot-contract-pure-1700.local.log": "068f3fe767e66f708032c00df74966eaf71d81aadda42ad2437247718dd929ad"
+  },
+  "migration_or_delivery_allowed": false
+}

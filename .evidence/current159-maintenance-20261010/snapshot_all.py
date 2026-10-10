@@ -12,8 +12,11 @@ SCHEMAS=frozenset(('public','aos_capacity_publication_private'))
 def qualified(schema,name):
     return sql.Identifier(schema,name)
 
-def require_schema_set(schemas):
-    if set(schemas)!=SCHEMAS or len(schemas)!=len(SCHEMAS):
+def require_schema_set(schemas,version='a0v_157'):
+    if type(version) is not str or version not in ('a0v_157','a0v_158','a0v_159'):
+        raise ValueError('CLOSED_SCHEMA_VERSION_REQUIRED')
+    expected=SCHEMAS if version=='a0v_157' else SCHEMAS|frozenset(('aos_model_eval_execution_private','aos_model_eval_issuer_private'))
+    if set(schemas)!=expected or len(schemas)!=len(expected):
         raise ValueError('ALL_SCHEMA_SCOPE_DRIFT')
 
 def compare_exact(before,after):
@@ -45,13 +48,15 @@ CATALOG={
 def rows(conn,statement,params=None):
     return conn.execute('SELECT coalesce(json_agg(r ORDER BY row_to_json(r)::text),\'[]\'::json) FROM ('+statement+') r',params).fetchone()[0]
 
-def snapshot(conn):
+def snapshot(conn,version='a0v_157'):
     if not conn.read_only:
         raise ValueError('READ_ONLY_TRANSACTION_REQUIRED')
     conn.execute("SET LOCAL timezone='UTC'")
     conn.execute('SET LOCAL search_path=pg_catalog,public')
     schemas=[r[0] for r in conn.execute("SELECT nspname FROM pg_namespace WHERE nspname !~ '^pg_' AND nspname<>'information_schema' ORDER BY 1")]
-    require_schema_set(schemas)
+    require_schema_set(schemas,version=version)
+    if conn.execute('SELECT version_num FROM public.alembic_version').fetchall()!=[(version,)]:
+        raise ValueError('EXACT_DATABASE_VERSION_REQUIRED')
     relations=conn.execute('SELECT n.nspname,c.relname,c.relkind FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=ANY(%s) ORDER BY 1,2',(schemas,)).fetchall()
     if any(r[2] not in ('r','i','S') for r in relations):
         raise ValueError('UNREVIEWED_RELATION_KIND')
