@@ -1,0 +1,13 @@
+{
+  "step": "catalog expected four direct deferred guards",
+  "exit_code": 1,
+  "error": "AssertionError",
+  "database": "aos_test_616a4d9f71e0_ti4_test",
+  "actual_direct_guard_relations": [
+    "prepared_parent_debit",
+    "prepared_plan_risk",
+    "prepared_shared_risk_description"
+  ],
+  "product_failure_proven": false,
+  "external_mutation": false
+}

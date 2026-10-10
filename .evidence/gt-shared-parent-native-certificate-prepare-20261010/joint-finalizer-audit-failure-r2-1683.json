@@ -1,0 +1,8 @@
+{
+  "step": "wrong direct FK assumption",
+  "exit_code": 1,
+  "error": "AssertionError",
+  "actual": "execution_intent references case_input_binding; inspect two-hop parent FK",
+  "external_mutation": false,
+  "product_failure_proven": false
+}

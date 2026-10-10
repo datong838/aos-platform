@@ -1,0 +1,13 @@
+# 当前联合结束队列调查复审
+
+当前R22保留隔离库，仅READ ONLY，无业务重发/数据库修改。当前目录37个application deferred、105个internal RI deferred；这是已安装目录全集，不是某次调用实际事件队列，也不证明后续无等待。此前Source旧截面34个application不能冒充当前目录。
+
+本波调查器R1/R2两项错误静态预期均真实失败并保留原脚本/记录。R3按实际目录核对通过：prepared_parent_debit/plan_risk/shared_risk_description有直接无条件拒绝deferred门；prepared_execution_intent没有自己的deferred拒绝门，实际FK为execution_intent→case_input_binding→parent_debit两跳。原Intent入口先核original case并调用prepare_capacity_input_parent_debit再写Intent，绑定same caller origin；父debit原门仍拒绝COMMIT。缺直接Intent触发器本身不证明越权可提交，不为此新增重复拒绝门。
+
+准确纠正：过去“四风险表全部各有deferred拒绝trigger”表述不成立；四表均在风险回滚中归零是已实测事实，直接门数与结果不能混用。prepared_judge_intent/target_call等独立artifact在完整方案存在但本R22未安装，不能由其源码推断当前已安装或完整finalizer具备。
+
+AST原调用清单绑定八文件hash/行号：Source exact当前性→cost fence/physical guard→原Eval hold/application→Source再核/clock；shared plan risk→共享description；证书wrapper保存点内原description reader→真实SQLstaging→全原件reader。只读目录/AST只作为合同输入，不是原native全链合法COMMIT或写入事件审计。
+
+收敛设计必须逐实际事件闭包绑定所有真正写表及间接FK、预算/Source/Risk/Intent/签名metadata当前性，审计original constraints是否能提前强制后设IMMEDIATE、后续新事件及结束通道；不得SET ALL猜测、关trigger、改旧迁移或把最终decision clock偷换成实际COMMIT/WAL ACK期限。正式Root仍待可信来源，current无合法finalizer。
+
+下一精确实现候选：在完整合同中先引入只读结束依赖图/目录绑定验证器（不放行、不发业务），文件级Task/Lease先登记；让真实installed目录/写入集合/原件hash/Owner/同caller证明作为必须输入，未知后续事件保持拒绝。该候选必须先与已有physical atomic plan一致，不能签一个synthetic complete证据。另Root正式验收仍需现有正式安装身份资料，继续不索取旧401身份。Goal active、Task9/10无Delivery、Host/worker/Provider关闭。

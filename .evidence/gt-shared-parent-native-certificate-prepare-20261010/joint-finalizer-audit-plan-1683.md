@@ -1,0 +1,11 @@
+# 联合结束协议：当前原件目录与调用顺序调查计划
+
+Rules：231、Task10现有证据scope、AOS-001683、m1单写。仅本Task新增调查脚本/JSON/复审；产品只读、原数据与权限不变。先复习joint-implementation-plan §11.3/普通预算窄桥与当前产品方案；不把静态事件全集称为实际事务触发队列。
+
+候选①原joint finalizer合同：已获方案/隔离实现授权，依赖预算原件窄桥、Source期限、原唯一Intent和正式Root；候选②正式Root谱系：依赖正式安装签发与身份。先选①，在R22已知terminal保留新库仅READ ONLY取当前已安装所有相关deferred触发器/约束函数Owner/精确hash，配合AST列原caller Source→预算→Manifest→风险→description→四证书SQL真实源码顺序。
+
+任务是明确结束队列可否收敛，以及仍需哪一个精确产品文件合同；不新增runtime finalizer、不改无条件拒绝、不开Host/Provider、不重复旧风险或做实际COMMIT。静态调用顺序和数据库目录只是设计证据，不能证明某次真实调用事件队列、后续RI无等待或WAL期限。目录内容有精确DB/cluster/HEAD/hash，存同Task；查不到权限/目录或原SQL不一致真实失败再诊断，不假绿。
+
+R1实际目录调查失败：错误预期四张表各有direct deferred guard，实际只有parent_debit/plan_risk/shared_description三张。最小修订R2读取所有risk表trigger与精确FK；target execution_intent是FK到parent_debit的不可变记录，直接无延迟门不等于可commit，须确认创建入口只能同txn建立该父debit及COMMIT拒绝。judge/call完整后续artifact不在本R22安装集合，不假称已安装/全链。保持R1脚本及失败记录不覆盖。
+
+R2第二项错误预期已失败并保留：execution_intent不直接FK到parent，而是execution_intent→case_input_binding→parent_debit两跳。R3按真实目录逐跳核对，不把文字预期替代数据库事实，前述direct父FK表述由本条纠正。再次只读，不重发业务。
