@@ -20,3 +20,11 @@ LANGUAGE c VOLATILE PARALLEL UNSAFE SECURITY INVOKER SET search_path=pg_catalog;
 ALTER FUNCTION aos_admission_native_private.pending_relations()
 OWNER TO aos_physical_capacity_occupation_owner;
 REVOKE ALL ON FUNCTION aos_admission_native_private.pending_relations() FROM PUBLIC;
+
+-- Supported loader observation, never a caller-supplied package allowlist.
+CREATE FUNCTION aos_admission_native_private.loaded_module_paths()
+RETURNS text[] AS 'MODULE_PATHNAME', 'aos_admission_loaded_module_paths'
+LANGUAGE c VOLATILE PARALLEL UNSAFE SECURITY INVOKER SET search_path=pg_catalog;
+ALTER FUNCTION aos_admission_native_private.loaded_module_paths()
+OWNER TO aos_physical_capacity_occupation_owner;
+REVOKE ALL ON FUNCTION aos_admission_native_private.loaded_module_paths() FROM PUBLIC;

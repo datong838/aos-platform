@@ -1,0 +1,12 @@
+{
+  "image": "sha256:a703a31b47684c6993047c01f2ece5c9e39e45a911b5bd2e981db1d7174bdec6",
+  "library": "/tmp/aos_admission_modules_26b54282f7684f2a8269003ef7989a5f.so",
+  "source_hashes": {
+    "aos_admission_end.c": "4b8e4759869a6302b99a2f2352b54d04c7e98fc5a565b3e11c948cf57a4fb38d",
+    "Makefile": "56080f2509ebb5f5d5de7f1b2567c0478d3c37fcbc9a9915c547a1073bb48d5d",
+    "aos_admission_end.control": "786f5ff9b0848d21160fabb996bc3b43086d462ab7deb74a598808e048b0e750",
+    "aos_admission_end--0.1.sql": "efc34b0186909d1b79ffa5d076886eaf9910c166ae38a0c66ff9084a88527d21"
+  },
+  "red_missing_modules_function": true,
+  "no_business_effects": true
+}

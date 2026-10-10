@@ -43,3 +43,102 @@ Datum aos_admission_pending_relations(PG_FUNCTION_ARGS)
     SPI_finish();
     PG_RETURN_ARRAYTYPE_P(result);
 }
+
+/* Public Linux loader observation only; paths are not package authority. */
+#ifdef __linux__
+#include <link.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <sys/auxv.h>
+#include "utils/builtins.h"
+#include "mb/pg_wchar.h"
+#define AOS_MODULE_LIMIT 256
+#define AOS_MODULE_PATH_LIMIT 4096
+struct aos_module_snapshot {
+    unsigned count;
+    bool invalid;
+    uintptr_t addresses[AOS_MODULE_LIMIT];
+    uintptr_t headers[AOS_MODULE_LIMIT];
+    char names[AOS_MODULE_LIMIT][AOS_MODULE_PATH_LIMIT];
+};
+static int collect_module(struct dl_phdr_info *info, size_t size, void *data)
+{
+    struct aos_module_snapshot *snapshot = data;
+    const char *name;
+    size_t length;
+    /* No PostgreSQL ERROR/allocation while the loader holds its locks. */
+    if (size < offsetof(struct dl_phdr_info, dlpi_phnum) + sizeof(info->dlpi_phnum) ||
+        info->dlpi_name == NULL || snapshot->count >= AOS_MODULE_LIMIT) {
+        snapshot->invalid = true;
+        return 1;
+    }
+    name = info->dlpi_name;
+    length = strnlen(name, AOS_MODULE_PATH_LIMIT);
+    if (length >= AOS_MODULE_PATH_LIMIT) {
+        snapshot->invalid = true;
+        return 1;
+    }
+    snapshot->addresses[snapshot->count] = (uintptr_t) info->dlpi_addr;
+    snapshot->headers[snapshot->count] = (uintptr_t) info->dlpi_phdr;
+    memcpy(snapshot->names[snapshot->count++], name, length + 1);
+    return 0;
+}
+static int compare_module_names(const void *left, const void *right)
+{
+    return strcmp((const char *) left, (const char *) right);
+}
+#endif
+PG_FUNCTION_INFO_V1(aos_admission_loaded_module_paths);
+Datum aos_admission_loaded_module_paths(PG_FUNCTION_ARGS)
+{
+    if (GetUserId() != get_role_oid("aos_physical_capacity_occupation_owner", false))
+        ereport(ERROR, (errcode(ERRCODE_INSUFFICIENT_PRIVILEGE), errmsg("SHARED_ADMISSION_NATIVE_OWNER_REQUIRED")));
+#ifdef __linux__
+    {
+        struct aos_module_snapshot *snapshot = palloc0(sizeof(*snapshot));
+        Datum *paths;
+        ArrayType *result;
+        unsigned i;
+        uintptr_t vdso = (uintptr_t) getauxval(AT_SYSINFO_EHDR);
+        uintptr_t main_headers = (uintptr_t) getauxval(AT_PHDR);
+        int status = dl_iterate_phdr(collect_module, snapshot);
+        if (status != 0 || snapshot->invalid || snapshot->count == 0)
+            ereport(ERROR, (errcode(ERRCODE_PROGRAM_LIMIT_EXCEEDED), errmsg("SHARED_ADMISSION_NATIVE_MODULE_SNAPSHOT_REQUIRED")));
+        for (i = 0; i < snapshot->count; i++) {
+            char resolved[PATH_MAX];
+            char *name = snapshot->names[i];
+            const char *input = name;
+            /* musl may expose the vDSO with an empty loader name. */
+            if (vdso != 0 && snapshot->addresses[i] == vdso) {
+                strlcpy(name, "virtual:linux-vdso.so.1", AOS_MODULE_PATH_LIMIT);
+                continue;
+            }
+            if (!name[0]) {
+                if (main_headers == 0 || snapshot->headers[i] != main_headers)
+                    ereport(ERROR, (errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE), errmsg("SHARED_ADMISSION_NATIVE_UNNAMED_MODULE_REQUIRED")));
+                input = "/proc/self/exe";
+            }
+            if (input[0] != '/' || realpath(input, resolved) == NULL ||
+                strlen(resolved) >= AOS_MODULE_PATH_LIMIT)
+                ereport(ERROR, (errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE), errmsg("SHARED_ADMISSION_NATIVE_MODULE_PATH_REQUIRED")));
+            pg_verify_mbstr(GetDatabaseEncoding(), resolved, strlen(resolved), false);
+            strlcpy(name, resolved, AOS_MODULE_PATH_LIMIT);
+        }
+        qsort(snapshot->names, snapshot->count, AOS_MODULE_PATH_LIMIT, compare_module_names);
+        paths = palloc(sizeof(Datum) * snapshot->count);
+        for (i = 0; i < snapshot->count; i++) {
+            if (i > 0 && strcmp(snapshot->names[i - 1], snapshot->names[i]) == 0)
+                ereport(ERROR, (errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE), errmsg("SHARED_ADMISSION_NATIVE_MODULE_ALIAS_REQUIRED")));
+            paths[i] = CStringGetTextDatum(snapshot->names[i]);
+        }
+        result = construct_array(paths, (int) snapshot->count, TEXTOID, -1, false, 'i');
+        pfree(paths);
+        pfree(snapshot);
+        PG_RETURN_ARRAYTYPE_P(result);
+    }
+#else
+    ereport(ERROR, (errcode(ERRCODE_FEATURE_NOT_SUPPORTED), errmsg("SHARED_ADMISSION_NATIVE_LINUX_REQUIRED")));
+    PG_RETURN_NULL();
+#endif
+}

@@ -1,0 +1,1 @@
+Diagnose known terminal module reader ALIAS_REQUIRED RED. Build test-only raw-name reader under same exact isolated image. Dedicated SQL wrapper transaction-only, PUBLIC closed, no arm. Return every public loader record without canonicalization; independently resolve names and identify duplicate canonical paths. No product code repair or claim before raw evidence.

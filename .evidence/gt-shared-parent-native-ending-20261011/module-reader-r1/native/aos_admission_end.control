@@ -1,0 +1,6 @@
+comment = 'Closed native ending support; local pending observation alone grants no admission'
+default_version = '0.1'
+module_pathname = '$libdir/aos_admission_end'
+relocatable = false
+superuser = true
+schema = 'aos_admission_native_private'

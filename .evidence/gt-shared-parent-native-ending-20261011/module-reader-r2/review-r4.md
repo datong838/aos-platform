@@ -1,0 +1,5 @@
+Native module observation review
+
+Only the appended new C function and new closed SQL function change; original C/SQL prefixes byte-identical. Public Linux loader callback has bounded copies and no PostgreSQL allocation/errors. Address/header comparison to kernel auxv distinguishes vDSO from unnamed main; other unnamed objects and true disk aliases reject. Paths resolve outside loader callback and are encoding-checked/sorted. Corrected independent oracle includes data-only ELF. Three native module cases plus new-binary pending-queue regression pass;32 adjacent pass. Independent post-adjacent rollback/role readback succeeds.
+
+No input allowlist/override, SQL/callback execution, source signing, runtime grant, arm or end permission. Returned paths do not attest in-memory bytes/source provenance, immutability, callback ordering or future loads; support remains incomplete. Unsupported platform, capacity limits, malformed/unresolvable aliases are fail-closed code paths not all actual native exercised. No formal DB/service changes, no browser flow applicable.

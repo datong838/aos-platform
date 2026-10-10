@@ -1,0 +1,11 @@
+{
+  "full_admission": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "metadata_exact": true,
+  "no_caller_allowlist": true,
+  "public_runtime_closed": true,
+  "direct_superuser_denied": true,
+  "rollback_only_installation_absent": true,
+  "original_pending_reader_exact": true
+}
