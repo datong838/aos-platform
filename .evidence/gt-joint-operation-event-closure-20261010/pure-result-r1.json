@@ -1,0 +1,14 @@
+{
+  "pytest_exit": 0,
+  "database_connections": 0,
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_physical_capacity_joint_events.py": "e96e586a59cd1a36f40908d2dd5ceacb3e343951e716377d06edfbbea97e122c",
+    "services/aos-api/aos_api/aip_physical_capacity_joint_catalog.py": "29bf7211abbcc6d0499792304ca378d7a7e2061fee133fcb0b4496e4170979e3",
+    "services/aos-api/tests/aip/test_physical_capacity_joint_events.py": "c8e445b722a54a160984eb8db3e1b1884be202bbf278bcac363d1375bdaa7b09",
+    "services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py": "5e28fd9dc907fa4d48fed607c266d94a659a4dcafe4ea1b4ee876d52f18fbc4f",
+    "services/aos-api/tests/aip/test_shared_parent_executor_set_reader_pg.py": "a6708872931a627f3d43548e66b2afd599e1b18ab74eeebfb6e0879685c06385",
+    "services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py": "a5aaa47e86eab043df32f203db5afe323cf9b38818b2d15bacba58a626d1d627"
+  },
+  "execution_allowed": false,
+  "finalizer_implemented": false
+}

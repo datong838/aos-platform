@@ -1,0 +1,154 @@
+{
+  "contracts": [
+    {
+      "function": "aos_model_eval_execution_private.immutable_proof_row()",
+      "body_hash": "130303e134a07eeeb848a6b3750a2dd61355558fdad97e5dfa0948ac85afeea2",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_model_eval_issuer_private.advance_identity_withdrawal()",
+      "body_hash": "e56405804576d71fdce1a83a38c2d45b997e94f79555496da819dca29d34e840",
+      "writes": [
+        {
+          "relation": "aos_model_eval_issuer_private.identity_epoch",
+          "operation": "UPDATE"
+        }
+      ],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_model_eval_issuer_private.advance_root_withdrawal_epoch()",
+      "body_hash": "a7b4433948501f7a3daedeb9912c742f52812288375f859ebc6bcbd478999ad7",
+      "writes": [
+        {
+          "relation": "aos_model_eval_issuer_private.issuer_epoch",
+          "operation": "UPDATE"
+        },
+        {
+          "relation": "aos_model_eval_issuer_private.certificate_epoch",
+          "operation": "UPDATE"
+        }
+      ],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_model_eval_issuer_private.certificate_epoch_transition()",
+      "body_hash": "c6373c918c8974f413f8198a51b15b9ca3810ef0551637d03aaacaaf663c74a0",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_model_eval_issuer_private.derive_certificate_identity()",
+      "body_hash": "a947bcad43f75f71ac2637bf593efd406cc472c02519aa0cafbbbb97bdb69c1b",
+      "writes": [
+        {
+          "relation": "aos_model_eval_issuer_private.identity_epoch",
+          "operation": "INSERT"
+        },
+        {
+          "relation": "aos_model_eval_issuer_private.identity_epoch",
+          "operation": "UPDATE"
+        }
+      ],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_model_eval_issuer_private.derive_shared_parent_identity()",
+      "body_hash": "16f363f28d05bdab40ce5cef13fae0baf4debc76ce2ec269894e11254cfd9c60",
+      "writes": [
+        {
+          "relation": "aos_model_eval_issuer_private.identity_epoch",
+          "operation": "INSERT"
+        },
+        {
+          "relation": "aos_model_eval_issuer_private.identity_epoch",
+          "operation": "UPDATE"
+        }
+      ],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_model_eval_issuer_private.identity_epoch_transition()",
+      "body_hash": "109d0f495cc9095cce3ae7d27a0e8d03d674a3fac09cf8845884e8f6c2d44dc6",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_model_eval_issuer_private.initialize_certificate_epoch()",
+      "body_hash": "6fc563aed285b2876084be35a6b51fdd17f9711bbab4154ec1630fb10f964aa7",
+      "writes": [
+        {
+          "relation": "aos_model_eval_issuer_private.certificate_epoch",
+          "operation": "INSERT"
+        }
+      ],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_model_eval_issuer_private.issuer_epoch_transition()",
+      "body_hash": "bc317a2fcdd65b139af74825d7fc0838a80bcba2357cbd4bcbb3b12f483560fb",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "body_hash": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "body_hash": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "public.aip_budget_cost_fence_guard_a0v_126()",
+      "body_hash": "a6578978be73a7132b8d11abaad9b221926816fe0323f1c6cb2c8bc05b41dff9",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "public.binding_evaluator_read_lock_only_a0v144()",
+      "body_hash": "84ffec865cb2a8e502270b0ebe2b293c9c740dee560cea8dffdfe3d61ce30b99",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "public.guard_ar2_budget_bucket_update()",
+      "body_hash": "6caf5c743dc6b283ee53fc714c47dd29116e69c4927e417c4507568f84916357",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    }
+  ],
+  "application_sql_contract_count": 15,
+  "internal_functions_omitted": [
+    "pg_catalog.\"RI_FKey_check_ins\"()",
+    "pg_catalog.\"RI_FKey_check_upd\"()",
+    "pg_catalog.\"RI_FKey_noaction_del\"()",
+    "pg_catalog.\"RI_FKey_noaction_upd\"()"
+  ],
+  "real_catalog_rejection": "TRIGGER_EFFECT_REQUIRED",
+  "kernel_empty_effect_approved": false,
+  "formal_installation_approved": false,
+  "recursive_effects_complete": false,
+  "execution_allowed": false,
+  "source_fetch_failure": {
+    "url": "https://raw.githubusercontent.com/postgres/postgres/REL_16_14/src/backend/utils/adt/ri_triggers.c",
+    "curl_exit": 35,
+    "message": "Recv failure: Connection reset by peer",
+    "local_source_exists": false,
+    "following_assertion_failed_before_candidate_write": true
+  },
+  "primary_source_reading_only": [
+    "https://raw.githubusercontent.com/postgres/postgres/REL_16_14/src/backend/utils/adt/ri_triggers.c",
+    "https://raw.githubusercontent.com/postgres/postgres/REL_16_14/src/include/catalog/pg_trigger.h"
+  ]
+}

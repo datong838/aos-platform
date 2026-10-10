@@ -1,0 +1,11 @@
+# 完整joint触发器影响合同：原函数调查
+
+Rules：231、现有Task10证据scope/AOS-001685、m1单写、R22已终态保留库READONLY。下一登记候选①实际风险/证书写入集与相关函数effect合同；②正式Root谱系与结束期限协议，依赖正式安装资料/用户期限裁决。先①，不补空effects假绿、不关原deferred门。
+
+文件限定本Task trigger-effects原件JSON/复审/计划。产品模块不改、新组件Task11已Delivery不得无Lease再写。先从原native风险四表和证书SQL实际INSERT表提取FK连通分量，再读精确trigger函数原body/Owner/语言/probin/securitydef/config/ACL。当前初查risk四表扩至六表/25trigger/6函数；metadata INSERT可能trigger写epoch/identity，必须人工阅读并递归加入被写表和其后续trigger。
+
+C/internal函数只读symbol/bodyhash不能证明native binary/语义，需官方对应PG版本源和当前受信安装谱系；没有就标pending，不根据函数名字猜effects。原SQL无条件RAISE可以精确核且写集合为空不代表允许结束。动态SQL/可调用函数遗漏标未完成。调查目录不是实际eventqueue，不执行新风险/COMMIT或写库。
+
+复审必须分别列原函数真实effects、原FK锁/等待、缺完整链和下一确切实现。Source/预算原件/合法Intent/Root/最终clock/WAL协议依旧完整要求；可确认的必要合同才交付，不将静态分析冒充全finalizer。
+
+真实预算源码补充：Eval/Judge hold会写reservation、reservation_bucket、共享bucket，原费用检查UPDATE cost_runtime_fence；只读引用graph扩436表2975triggers，需按实际operation区分read-lock与触发新writeevent。已登记新独立Task gt-joint-operation-event-closure-20261010/additive产品范围，不重开已Delivery旧Task/抢旧Lease。

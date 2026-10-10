@@ -1,0 +1,16 @@
+
+==================================== ERRORS ====================================
+______ ERROR collecting tests/aip/test_physical_capacity_joint_events.py _______
+ImportError while importing test module '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_physical_capacity_joint_events.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/tests/aip/test_physical_capacity_joint_events.py:4: in <module>
+    from aos_api.aip_physical_capacity_joint_events import (TableEvent,ForeignKeyAction,EventTrigger,EventEffect,EventCatalog,joint_event_closure)
+E   ModuleNotFoundError: No module named 'aos_api.aip_physical_capacity_joint_events'
+=========================== short test summary info ============================
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_events.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.11s

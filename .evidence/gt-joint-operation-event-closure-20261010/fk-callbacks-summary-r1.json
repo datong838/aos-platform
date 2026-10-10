@@ -1,0 +1,65 @@
+{
+  "identity": {
+    "database": "aos_test_616a4d9f71e0_ti4_test",
+    "cluster": "7694680278363095064",
+    "version": "16.14",
+    "readonly": "on"
+  },
+  "foreign_key_count": 712,
+  "operator_bindings": 6645,
+  "callbacks": {
+    "texteq(text,text)": {
+      "callback_schema": "pg_catalog",
+      "language": "internal",
+      "library": null,
+      "owner": "aos_app",
+      "security_definer": false,
+      "volatility": "i",
+      "body_sha256": "b8fa8b2fd3bfc8a1cadb05d1f6ef7e54f8ad52249245f9dc1444899e1b4b4d55"
+    },
+    "int4eq(integer,integer)": {
+      "callback_schema": "pg_catalog",
+      "language": "internal",
+      "library": null,
+      "owner": "aos_app",
+      "security_definer": false,
+      "volatility": "i",
+      "body_sha256": "8ec922470926e10484722ef80b9fd67fc2ba2a6eda1db67e75032f0270446fe4"
+    },
+    "uuid_eq(uuid,uuid)": {
+      "callback_schema": "pg_catalog",
+      "language": "internal",
+      "library": null,
+      "owner": "aos_app",
+      "security_definer": false,
+      "volatility": "i",
+      "body_sha256": "7c343c3045c3fab7d8daee143b1c1b1b7cf335ceb3fef3afca9282abf11a9d55"
+    },
+    "int8eq(bigint,bigint)": {
+      "callback_schema": "pg_catalog",
+      "language": "internal",
+      "library": null,
+      "owner": "aos_app",
+      "security_definer": false,
+      "volatility": "i",
+      "body_sha256": "0c697b5be4013187c2164bfefded8d4414e68ae9b81b7f74c8b1cdab62570c89"
+    },
+    "timestamptz_eq(timestamp with time zone,timestamp with time zone)": {
+      "callback_schema": "pg_catalog",
+      "language": "internal",
+      "library": null,
+      "owner": "aos_app",
+      "security_definer": false,
+      "volatility": "i",
+      "body_sha256": "6a1353c534722d49b5e691b83ae0d9469a07216d0149dbb7b6dfeaa68cb04c97"
+    }
+  },
+  "non_pg_internal_callbacks": [],
+  "read_only_catalog_lookup": true,
+  "callbacks_executed": false,
+  "binary_provenance_verified": false,
+  "casts_collations_complete": false,
+  "formal_installation_approved": false,
+  "execution_allowed": false,
+  "exact_callback_file_sha256": "0ed12585cd18db08795cdd83778021452051c03f7e53d9342a3663c06bd97548"
+}

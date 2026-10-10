@@ -1,0 +1,2019 @@
+{
+  "authority": "AOS-001685",
+  "identity": {
+    "database": "aos_test_616a4d9f71e0_ti4_test",
+    "cluster": "7694680278363095064",
+    "version": "16.14",
+    "readonly": "on"
+  },
+  "seed_relations": [
+    "aos_model_eval_execution_private.manifest",
+    "aos_model_eval_issuer_private.executor_certificate",
+    "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+    "aos_physical_capacity_occupation_private.prepared_execution_intent",
+    "aos_physical_capacity_occupation_private.prepared_parent_debit",
+    "aos_physical_capacity_occupation_private.prepared_plan_risk",
+    "aos_physical_capacity_occupation_private.prepared_shared_risk_description"
+  ],
+  "fk_only_component": [
+    "aos_model_eval_execution_private.case_result",
+    "aos_model_eval_execution_private.manifest",
+    "aos_model_eval_execution_private.obligation_event",
+    "aos_model_eval_execution_private.report_link",
+    "aos_model_eval_issuer_private.authority_withdrawal",
+    "aos_model_eval_issuer_private.certificate_epoch",
+    "aos_model_eval_issuer_private.certificate_identity_binding",
+    "aos_model_eval_issuer_private.executor_certificate",
+    "aos_model_eval_issuer_private.identity_epoch",
+    "aos_model_eval_issuer_private.identity_withdrawal",
+    "aos_model_eval_issuer_private.issuer_epoch",
+    "aos_model_eval_issuer_private.issuer_root",
+    "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+    "aos_physical_capacity_occupation_private.case_input_binding",
+    "aos_physical_capacity_occupation_private.parent_debit_guard",
+    "aos_physical_capacity_occupation_private.prepared_execution_intent",
+    "aos_physical_capacity_occupation_private.prepared_parent_debit",
+    "aos_physical_capacity_occupation_private.prepared_plan_risk",
+    "aos_physical_capacity_occupation_private.prepared_shared_risk_description"
+  ],
+  "triggers": [
+    {
+      "key": "aos_model_eval_execution_private.case_result.RI_ConstraintTrigger_c_4018819",
+      "relation": "aos_model_eval_execution_private.case_result",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.case_result.RI_ConstraintTrigger_c_4018820",
+      "relation": "aos_model_eval_execution_private.case_result",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.case_result.immutable_model_proof_row",
+      "relation": "aos_model_eval_execution_private.case_result",
+      "function": "aos_model_eval_execution_private.immutable_proof_row()",
+      "body_hash": "130303e134a07eeeb848a6b3750a2dd61355558fdad97e5dfa0948ac85afeea2",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_execution_private.case_result.immutable_model_proof_truncate",
+      "relation": "aos_model_eval_execution_private.case_result",
+      "function": "aos_model_eval_execution_private.immutable_proof_row()",
+      "body_hash": "130303e134a07eeeb848a6b3750a2dd61355558fdad97e5dfa0948ac85afeea2",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_execution_private.manifest.RI_ConstraintTrigger_a_4018817",
+      "relation": "aos_model_eval_execution_private.manifest",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.manifest.RI_ConstraintTrigger_a_4018818",
+      "relation": "aos_model_eval_execution_private.manifest",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.manifest.RI_ConstraintTrigger_a_4018839",
+      "relation": "aos_model_eval_execution_private.manifest",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.manifest.RI_ConstraintTrigger_a_4018840",
+      "relation": "aos_model_eval_execution_private.manifest",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.manifest.RI_ConstraintTrigger_a_4018857",
+      "relation": "aos_model_eval_execution_private.manifest",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.manifest.RI_ConstraintTrigger_a_4018858",
+      "relation": "aos_model_eval_execution_private.manifest",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.manifest.RI_ConstraintTrigger_a_4018921",
+      "relation": "aos_model_eval_execution_private.manifest",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.manifest.RI_ConstraintTrigger_a_4018922",
+      "relation": "aos_model_eval_execution_private.manifest",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.manifest.immutable_model_proof_row",
+      "relation": "aos_model_eval_execution_private.manifest",
+      "function": "aos_model_eval_execution_private.immutable_proof_row()",
+      "body_hash": "130303e134a07eeeb848a6b3750a2dd61355558fdad97e5dfa0948ac85afeea2",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_execution_private.manifest.immutable_model_proof_truncate",
+      "relation": "aos_model_eval_execution_private.manifest",
+      "function": "aos_model_eval_execution_private.immutable_proof_row()",
+      "body_hash": "130303e134a07eeeb848a6b3750a2dd61355558fdad97e5dfa0948ac85afeea2",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_execution_private.obligation_event.RI_ConstraintTrigger_c_4018841",
+      "relation": "aos_model_eval_execution_private.obligation_event",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.obligation_event.RI_ConstraintTrigger_c_4018842",
+      "relation": "aos_model_eval_execution_private.obligation_event",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.obligation_event.immutable_model_proof_row",
+      "relation": "aos_model_eval_execution_private.obligation_event",
+      "function": "aos_model_eval_execution_private.immutable_proof_row()",
+      "body_hash": "130303e134a07eeeb848a6b3750a2dd61355558fdad97e5dfa0948ac85afeea2",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_execution_private.obligation_event.immutable_model_proof_truncate",
+      "relation": "aos_model_eval_execution_private.obligation_event",
+      "function": "aos_model_eval_execution_private.immutable_proof_row()",
+      "body_hash": "130303e134a07eeeb848a6b3750a2dd61355558fdad97e5dfa0948ac85afeea2",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_execution_private.report_link.RI_ConstraintTrigger_c_4018859",
+      "relation": "aos_model_eval_execution_private.report_link",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.report_link.RI_ConstraintTrigger_c_4018860",
+      "relation": "aos_model_eval_execution_private.report_link",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_execution_private.report_link.immutable_model_proof_row",
+      "relation": "aos_model_eval_execution_private.report_link",
+      "function": "aos_model_eval_execution_private.immutable_proof_row()",
+      "body_hash": "130303e134a07eeeb848a6b3750a2dd61355558fdad97e5dfa0948ac85afeea2",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_execution_private.report_link.immutable_model_proof_truncate",
+      "relation": "aos_model_eval_execution_private.report_link",
+      "function": "aos_model_eval_execution_private.immutable_proof_row()",
+      "body_hash": "130303e134a07eeeb848a6b3750a2dd61355558fdad97e5dfa0948ac85afeea2",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.authority_withdrawal.RI_ConstraintTrigger_c_4018946",
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.authority_withdrawal.RI_ConstraintTrigger_c_4018947",
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.authority_withdrawal.RI_ConstraintTrigger_c_4018951",
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.authority_withdrawal.RI_ConstraintTrigger_c_4018952",
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.authority_withdrawal.advance_model_root_withdrawal_epoch",
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "function": "aos_model_eval_issuer_private.advance_root_withdrawal_epoch()",
+      "body_hash": "a7b4433948501f7a3daedeb9912c742f52812288375f859ebc6bcbd478999ad7",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.authority_withdrawal.immutable_model_issuer_row",
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.authority_withdrawal.immutable_model_issuer_truncate",
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.certificate_epoch.RI_ConstraintTrigger_c_4019013",
+      "relation": "aos_model_eval_issuer_private.certificate_epoch",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.certificate_epoch.RI_ConstraintTrigger_c_4019014",
+      "relation": "aos_model_eval_issuer_private.certificate_epoch",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.certificate_epoch.immutable_model_certificate_epoch_delete",
+      "relation": "aos_model_eval_issuer_private.certificate_epoch",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.certificate_epoch.immutable_model_certificate_epoch_truncate",
+      "relation": "aos_model_eval_issuer_private.certificate_epoch",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.certificate_epoch.model_certificate_epoch_transition",
+      "relation": "aos_model_eval_issuer_private.certificate_epoch",
+      "function": "aos_model_eval_issuer_private.certificate_epoch_transition()",
+      "body_hash": "c6373c918c8974f413f8198a51b15b9ca3810ef0551637d03aaacaaf663c74a0",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.certificate_identity_binding.RI_ConstraintTrigger_c_4019281",
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.certificate_identity_binding.RI_ConstraintTrigger_c_4019282",
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.certificate_identity_binding.RI_ConstraintTrigger_c_4019286",
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.certificate_identity_binding.RI_ConstraintTrigger_c_4019287",
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.certificate_identity_binding.derive_certificate_identity",
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "function": "aos_model_eval_issuer_private.derive_certificate_identity()",
+      "body_hash": "a947bcad43f75f71ac2637bf593efd406cc472c02519aa0cafbbbb97bdb69c1b",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.certificate_identity_binding.immutable_identity_row",
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.certificate_identity_binding.immutable_identity_truncate",
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.RI_ConstraintTrigger_a_4018949",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.RI_ConstraintTrigger_a_4018950",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.RI_ConstraintTrigger_a_4019011",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.RI_ConstraintTrigger_a_4019012",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.RI_ConstraintTrigger_a_4019279",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.RI_ConstraintTrigger_a_4019280",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.RI_ConstraintTrigger_a_4019343",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.RI_ConstraintTrigger_a_4019344",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.RI_ConstraintTrigger_c_4018918",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.RI_ConstraintTrigger_c_4018919",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.RI_ConstraintTrigger_c_4018923",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.RI_ConstraintTrigger_c_4018924",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.immutable_model_issuer_row",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.immutable_model_issuer_truncate",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.executor_certificate.initialize_model_certificate_epoch",
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "function": "aos_model_eval_issuer_private.initialize_certificate_epoch()",
+      "body_hash": "6fc563aed285b2876084be35a6b51fdd17f9711bbab4154ec1630fb10f964aa7",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_epoch.RI_ConstraintTrigger_a_4019284",
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_epoch.RI_ConstraintTrigger_a_4019285",
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_epoch.RI_ConstraintTrigger_a_4019306",
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_epoch.RI_ConstraintTrigger_a_4019307",
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_epoch.RI_ConstraintTrigger_a_4019348",
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_epoch.RI_ConstraintTrigger_a_4019349",
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_epoch.identity_epoch_transition",
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "function": "aos_model_eval_issuer_private.identity_epoch_transition()",
+      "body_hash": "109d0f495cc9095cce3ae7d27a0e8d03d674a3fac09cf8845884e8f6c2d44dc6",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_epoch.immutable_identity_row",
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_epoch.immutable_identity_truncate",
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_withdrawal.RI_ConstraintTrigger_c_4019308",
+      "relation": "aos_model_eval_issuer_private.identity_withdrawal",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_withdrawal.RI_ConstraintTrigger_c_4019309",
+      "relation": "aos_model_eval_issuer_private.identity_withdrawal",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_withdrawal.advance_identity_withdrawal",
+      "relation": "aos_model_eval_issuer_private.identity_withdrawal",
+      "function": "aos_model_eval_issuer_private.advance_identity_withdrawal()",
+      "body_hash": "e56405804576d71fdce1a83a38c2d45b997e94f79555496da819dca29d34e840",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_withdrawal.immutable_identity_row",
+      "relation": "aos_model_eval_issuer_private.identity_withdrawal",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.identity_withdrawal.immutable_identity_truncate",
+      "relation": "aos_model_eval_issuer_private.identity_withdrawal",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_epoch.RI_ConstraintTrigger_c_4018983",
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_epoch.RI_ConstraintTrigger_c_4018984",
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_epoch.RI_ConstraintTrigger_c_4018988",
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_epoch.RI_ConstraintTrigger_c_4018989",
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_epoch.immutable_model_issuer_epoch_delete",
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_epoch.immutable_model_issuer_epoch_truncate",
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_epoch.model_issuer_epoch_transition",
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "function": "aos_model_eval_issuer_private.issuer_epoch_transition()",
+      "body_hash": "bc317a2fcdd65b139af74825d7fc0838a80bcba2357cbd4bcbb3b12f483560fb",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_root.RI_ConstraintTrigger_a_4018916",
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_root.RI_ConstraintTrigger_a_4018917",
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_root.RI_ConstraintTrigger_a_4018944",
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_root.RI_ConstraintTrigger_a_4018945",
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_root.RI_ConstraintTrigger_a_4018981",
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_root.RI_ConstraintTrigger_a_4018982",
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_root.RI_ConstraintTrigger_a_4018986",
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_root.RI_ConstraintTrigger_a_4018987",
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_root.immutable_model_issuer_row",
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.issuer_root.immutable_model_issuer_truncate",
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding.RI_ConstraintTrigger_c_4019345",
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding.RI_ConstraintTrigger_c_4019346",
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding.RI_ConstraintTrigger_c_4019350",
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding.RI_ConstraintTrigger_c_4019351",
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding.shared_parent_binding_immutable",
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding.shared_parent_binding_insert",
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "function": "aos_model_eval_issuer_private.derive_shared_parent_identity()",
+      "body_hash": "16f363f28d05bdab40ce5cef13fae0baf4debc76ce2ec269894e11254cfd9c60",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding.shared_parent_binding_no_truncate",
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "function": "aos_model_eval_issuer_private.immutable_issuer_history()",
+      "body_hash": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.case_input_binding.RI_ConstraintTrigger_a_4019238",
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.case_input_binding.RI_ConstraintTrigger_a_4019239",
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.case_input_binding.RI_ConstraintTrigger_c_4019218",
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.case_input_binding.RI_ConstraintTrigger_c_4019219",
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.parent_debit_guard.RI_ConstraintTrigger_a_4019192",
+      "relation": "aos_physical_capacity_occupation_private.parent_debit_guard",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.parent_debit_guard.RI_ConstraintTrigger_a_4019193",
+      "relation": "aos_physical_capacity_occupation_private.parent_debit_guard",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_execution_intent.RI_ConstraintTrigger_c_4019240",
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_execution_intent.RI_ConstraintTrigger_c_4019241",
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_execution_intent.immutable_prepared_intent",
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "function": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "body_hash": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_execution_intent.no_truncate_prepared_intent",
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "function": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "body_hash": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_parent_debit.RI_ConstraintTrigger_a_4019216",
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_parent_debit.RI_ConstraintTrigger_a_4019217",
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_parent_debit.RI_ConstraintTrigger_c_4019194",
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_parent_debit.RI_ConstraintTrigger_c_4019195",
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_parent_debit.require_joint_finalization",
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "function": "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "body_hash": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_plan_risk.RI_ConstraintTrigger_a_4019432",
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "function": "pg_catalog.\"RI_FKey_noaction_del\"()",
+      "body_hash": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_plan_risk.RI_ConstraintTrigger_a_4019433",
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "function": "pg_catalog.\"RI_FKey_noaction_upd\"()",
+      "body_hash": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_plan_risk.immutable_plan_risk",
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "function": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "body_hash": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_plan_risk.no_truncate_plan_risk",
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "function": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "body_hash": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_plan_risk.no_unfinalized_plan_risk",
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "function": "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "body_hash": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_shared_risk_description.RI_ConstraintTrigger_c_4019434",
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "function": "pg_catalog.\"RI_FKey_check_ins\"()",
+      "body_hash": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_shared_risk_description.RI_ConstraintTrigger_c_4019435",
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "function": "pg_catalog.\"RI_FKey_check_upd\"()",
+      "body_hash": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3",
+      "enabled": true,
+      "internal": true
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_shared_risk_description.immutable_shared_description",
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "function": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "body_hash": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_shared_risk_description.no_truncate_shared_description",
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "function": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "body_hash": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda",
+      "enabled": true,
+      "internal": false
+    },
+    {
+      "key": "aos_physical_capacity_occupation_private.prepared_shared_risk_description.no_unfinalized_shared_description",
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "function": "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "body_hash": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "enabled": true,
+      "internal": false
+    }
+  ],
+  "trigger_definitions": [
+    {
+      "relation": "aos_model_eval_execution_private.case_result",
+      "name": "RI_ConstraintTrigger_c_4018819",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018819\" AFTER INSERT ON aos_model_eval_execution_private.case_result FROM aos_model_eval_execution_private.manifest NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.case_result",
+      "name": "RI_ConstraintTrigger_c_4018820",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018820\" AFTER UPDATE ON aos_model_eval_execution_private.case_result FROM aos_model_eval_execution_private.manifest NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.case_result",
+      "name": "immutable_model_proof_row",
+      "definition": "CREATE TRIGGER immutable_model_proof_row BEFORE DELETE OR UPDATE ON aos_model_eval_execution_private.case_result FOR EACH ROW EXECUTE FUNCTION aos_model_eval_execution_private.immutable_proof_row()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.case_result",
+      "name": "immutable_model_proof_truncate",
+      "definition": "CREATE TRIGGER immutable_model_proof_truncate BEFORE TRUNCATE ON aos_model_eval_execution_private.case_result FOR EACH STATEMENT EXECUTE FUNCTION aos_model_eval_execution_private.immutable_proof_row()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.manifest",
+      "name": "RI_ConstraintTrigger_a_4018817",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018817\" AFTER DELETE ON aos_model_eval_execution_private.manifest FROM aos_model_eval_execution_private.case_result NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.manifest",
+      "name": "RI_ConstraintTrigger_a_4018818",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018818\" AFTER UPDATE ON aos_model_eval_execution_private.manifest FROM aos_model_eval_execution_private.case_result NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.manifest",
+      "name": "RI_ConstraintTrigger_a_4018839",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018839\" AFTER DELETE ON aos_model_eval_execution_private.manifest FROM aos_model_eval_execution_private.obligation_event NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.manifest",
+      "name": "RI_ConstraintTrigger_a_4018840",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018840\" AFTER UPDATE ON aos_model_eval_execution_private.manifest FROM aos_model_eval_execution_private.obligation_event NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.manifest",
+      "name": "RI_ConstraintTrigger_a_4018857",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018857\" AFTER DELETE ON aos_model_eval_execution_private.manifest FROM aos_model_eval_execution_private.report_link NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.manifest",
+      "name": "RI_ConstraintTrigger_a_4018858",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018858\" AFTER UPDATE ON aos_model_eval_execution_private.manifest FROM aos_model_eval_execution_private.report_link NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.manifest",
+      "name": "RI_ConstraintTrigger_a_4018921",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018921\" AFTER DELETE ON aos_model_eval_execution_private.manifest FROM aos_model_eval_issuer_private.executor_certificate NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.manifest",
+      "name": "RI_ConstraintTrigger_a_4018922",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018922\" AFTER UPDATE ON aos_model_eval_execution_private.manifest FROM aos_model_eval_issuer_private.executor_certificate NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.manifest",
+      "name": "immutable_model_proof_row",
+      "definition": "CREATE TRIGGER immutable_model_proof_row BEFORE DELETE OR UPDATE ON aos_model_eval_execution_private.manifest FOR EACH ROW EXECUTE FUNCTION aos_model_eval_execution_private.immutable_proof_row()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.manifest",
+      "name": "immutable_model_proof_truncate",
+      "definition": "CREATE TRIGGER immutable_model_proof_truncate BEFORE TRUNCATE ON aos_model_eval_execution_private.manifest FOR EACH STATEMENT EXECUTE FUNCTION aos_model_eval_execution_private.immutable_proof_row()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.obligation_event",
+      "name": "RI_ConstraintTrigger_c_4018841",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018841\" AFTER INSERT ON aos_model_eval_execution_private.obligation_event FROM aos_model_eval_execution_private.manifest NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.obligation_event",
+      "name": "RI_ConstraintTrigger_c_4018842",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018842\" AFTER UPDATE ON aos_model_eval_execution_private.obligation_event FROM aos_model_eval_execution_private.manifest NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.obligation_event",
+      "name": "immutable_model_proof_row",
+      "definition": "CREATE TRIGGER immutable_model_proof_row BEFORE DELETE OR UPDATE ON aos_model_eval_execution_private.obligation_event FOR EACH ROW EXECUTE FUNCTION aos_model_eval_execution_private.immutable_proof_row()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.obligation_event",
+      "name": "immutable_model_proof_truncate",
+      "definition": "CREATE TRIGGER immutable_model_proof_truncate BEFORE TRUNCATE ON aos_model_eval_execution_private.obligation_event FOR EACH STATEMENT EXECUTE FUNCTION aos_model_eval_execution_private.immutable_proof_row()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.report_link",
+      "name": "RI_ConstraintTrigger_c_4018859",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018859\" AFTER INSERT ON aos_model_eval_execution_private.report_link FROM aos_model_eval_execution_private.manifest NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.report_link",
+      "name": "RI_ConstraintTrigger_c_4018860",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018860\" AFTER UPDATE ON aos_model_eval_execution_private.report_link FROM aos_model_eval_execution_private.manifest NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.report_link",
+      "name": "immutable_model_proof_row",
+      "definition": "CREATE TRIGGER immutable_model_proof_row BEFORE DELETE OR UPDATE ON aos_model_eval_execution_private.report_link FOR EACH ROW EXECUTE FUNCTION aos_model_eval_execution_private.immutable_proof_row()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_execution_private.report_link",
+      "name": "immutable_model_proof_truncate",
+      "definition": "CREATE TRIGGER immutable_model_proof_truncate BEFORE TRUNCATE ON aos_model_eval_execution_private.report_link FOR EACH STATEMENT EXECUTE FUNCTION aos_model_eval_execution_private.immutable_proof_row()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "name": "RI_ConstraintTrigger_c_4018946",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018946\" AFTER INSERT ON aos_model_eval_issuer_private.authority_withdrawal FROM aos_model_eval_issuer_private.issuer_root NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "name": "RI_ConstraintTrigger_c_4018947",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018947\" AFTER UPDATE ON aos_model_eval_issuer_private.authority_withdrawal FROM aos_model_eval_issuer_private.issuer_root NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "name": "RI_ConstraintTrigger_c_4018951",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018951\" AFTER INSERT ON aos_model_eval_issuer_private.authority_withdrawal FROM aos_model_eval_issuer_private.executor_certificate NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "name": "RI_ConstraintTrigger_c_4018952",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018952\" AFTER UPDATE ON aos_model_eval_issuer_private.authority_withdrawal FROM aos_model_eval_issuer_private.executor_certificate NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "name": "advance_model_root_withdrawal_epoch",
+      "definition": "CREATE TRIGGER advance_model_root_withdrawal_epoch AFTER INSERT ON aos_model_eval_issuer_private.authority_withdrawal FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.advance_root_withdrawal_epoch()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "name": "immutable_model_issuer_row",
+      "definition": "CREATE TRIGGER immutable_model_issuer_row BEFORE DELETE OR UPDATE ON aos_model_eval_issuer_private.authority_withdrawal FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.authority_withdrawal",
+      "name": "immutable_model_issuer_truncate",
+      "definition": "CREATE TRIGGER immutable_model_issuer_truncate BEFORE TRUNCATE ON aos_model_eval_issuer_private.authority_withdrawal FOR EACH STATEMENT EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.certificate_epoch",
+      "name": "RI_ConstraintTrigger_c_4019013",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019013\" AFTER INSERT ON aos_model_eval_issuer_private.certificate_epoch FROM aos_model_eval_issuer_private.executor_certificate NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.certificate_epoch",
+      "name": "RI_ConstraintTrigger_c_4019014",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019014\" AFTER UPDATE ON aos_model_eval_issuer_private.certificate_epoch FROM aos_model_eval_issuer_private.executor_certificate NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.certificate_epoch",
+      "name": "immutable_model_certificate_epoch_delete",
+      "definition": "CREATE TRIGGER immutable_model_certificate_epoch_delete BEFORE DELETE ON aos_model_eval_issuer_private.certificate_epoch FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.certificate_epoch",
+      "name": "immutable_model_certificate_epoch_truncate",
+      "definition": "CREATE TRIGGER immutable_model_certificate_epoch_truncate BEFORE TRUNCATE ON aos_model_eval_issuer_private.certificate_epoch FOR EACH STATEMENT EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.certificate_epoch",
+      "name": "model_certificate_epoch_transition",
+      "definition": "CREATE TRIGGER model_certificate_epoch_transition BEFORE INSERT OR UPDATE ON aos_model_eval_issuer_private.certificate_epoch FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.certificate_epoch_transition()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "name": "RI_ConstraintTrigger_c_4019281",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019281\" AFTER INSERT ON aos_model_eval_issuer_private.certificate_identity_binding FROM aos_model_eval_issuer_private.executor_certificate NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "name": "RI_ConstraintTrigger_c_4019282",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019282\" AFTER UPDATE ON aos_model_eval_issuer_private.certificate_identity_binding FROM aos_model_eval_issuer_private.executor_certificate NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "name": "RI_ConstraintTrigger_c_4019286",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019286\" AFTER INSERT ON aos_model_eval_issuer_private.certificate_identity_binding FROM aos_model_eval_issuer_private.identity_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "name": "RI_ConstraintTrigger_c_4019287",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019287\" AFTER UPDATE ON aos_model_eval_issuer_private.certificate_identity_binding FROM aos_model_eval_issuer_private.identity_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "name": "derive_certificate_identity",
+      "definition": "CREATE TRIGGER derive_certificate_identity BEFORE INSERT ON aos_model_eval_issuer_private.certificate_identity_binding FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.derive_certificate_identity()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "name": "immutable_identity_row",
+      "definition": "CREATE TRIGGER immutable_identity_row BEFORE DELETE OR UPDATE ON aos_model_eval_issuer_private.certificate_identity_binding FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.certificate_identity_binding",
+      "name": "immutable_identity_truncate",
+      "definition": "CREATE TRIGGER immutable_identity_truncate BEFORE TRUNCATE ON aos_model_eval_issuer_private.certificate_identity_binding FOR EACH STATEMENT EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "RI_ConstraintTrigger_a_4018949",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018949\" AFTER DELETE ON aos_model_eval_issuer_private.executor_certificate FROM aos_model_eval_issuer_private.authority_withdrawal NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "RI_ConstraintTrigger_a_4018950",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018950\" AFTER UPDATE ON aos_model_eval_issuer_private.executor_certificate FROM aos_model_eval_issuer_private.authority_withdrawal NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "RI_ConstraintTrigger_a_4019011",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019011\" AFTER DELETE ON aos_model_eval_issuer_private.executor_certificate FROM aos_model_eval_issuer_private.certificate_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "RI_ConstraintTrigger_a_4019012",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019012\" AFTER UPDATE ON aos_model_eval_issuer_private.executor_certificate FROM aos_model_eval_issuer_private.certificate_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "RI_ConstraintTrigger_a_4019279",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019279\" AFTER DELETE ON aos_model_eval_issuer_private.executor_certificate FROM aos_model_eval_issuer_private.certificate_identity_binding NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "RI_ConstraintTrigger_a_4019280",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019280\" AFTER UPDATE ON aos_model_eval_issuer_private.executor_certificate FROM aos_model_eval_issuer_private.certificate_identity_binding NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "RI_ConstraintTrigger_a_4019343",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019343\" AFTER DELETE ON aos_model_eval_issuer_private.executor_certificate FROM aos_model_eval_issuer_private.shared_parent_certificate_identity_binding NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "RI_ConstraintTrigger_a_4019344",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019344\" AFTER UPDATE ON aos_model_eval_issuer_private.executor_certificate FROM aos_model_eval_issuer_private.shared_parent_certificate_identity_binding NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "RI_ConstraintTrigger_c_4018918",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018918\" AFTER INSERT ON aos_model_eval_issuer_private.executor_certificate FROM aos_model_eval_issuer_private.issuer_root NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "RI_ConstraintTrigger_c_4018919",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018919\" AFTER UPDATE ON aos_model_eval_issuer_private.executor_certificate FROM aos_model_eval_issuer_private.issuer_root NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "RI_ConstraintTrigger_c_4018923",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018923\" AFTER INSERT ON aos_model_eval_issuer_private.executor_certificate FROM aos_model_eval_execution_private.manifest NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "RI_ConstraintTrigger_c_4018924",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018924\" AFTER UPDATE ON aos_model_eval_issuer_private.executor_certificate FROM aos_model_eval_execution_private.manifest NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "immutable_model_issuer_row",
+      "definition": "CREATE TRIGGER immutable_model_issuer_row BEFORE DELETE OR UPDATE ON aos_model_eval_issuer_private.executor_certificate FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "immutable_model_issuer_truncate",
+      "definition": "CREATE TRIGGER immutable_model_issuer_truncate BEFORE TRUNCATE ON aos_model_eval_issuer_private.executor_certificate FOR EACH STATEMENT EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "name": "initialize_model_certificate_epoch",
+      "definition": "CREATE TRIGGER initialize_model_certificate_epoch AFTER INSERT ON aos_model_eval_issuer_private.executor_certificate FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.initialize_certificate_epoch()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "name": "RI_ConstraintTrigger_a_4019284",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019284\" AFTER DELETE ON aos_model_eval_issuer_private.identity_epoch FROM aos_model_eval_issuer_private.certificate_identity_binding NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "name": "RI_ConstraintTrigger_a_4019285",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019285\" AFTER UPDATE ON aos_model_eval_issuer_private.identity_epoch FROM aos_model_eval_issuer_private.certificate_identity_binding NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "name": "RI_ConstraintTrigger_a_4019306",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019306\" AFTER DELETE ON aos_model_eval_issuer_private.identity_epoch FROM aos_model_eval_issuer_private.identity_withdrawal NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "name": "RI_ConstraintTrigger_a_4019307",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019307\" AFTER UPDATE ON aos_model_eval_issuer_private.identity_epoch FROM aos_model_eval_issuer_private.identity_withdrawal NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "name": "RI_ConstraintTrigger_a_4019348",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019348\" AFTER DELETE ON aos_model_eval_issuer_private.identity_epoch FROM aos_model_eval_issuer_private.shared_parent_certificate_identity_binding NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "name": "RI_ConstraintTrigger_a_4019349",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019349\" AFTER UPDATE ON aos_model_eval_issuer_private.identity_epoch FROM aos_model_eval_issuer_private.shared_parent_certificate_identity_binding NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "name": "identity_epoch_transition",
+      "definition": "CREATE TRIGGER identity_epoch_transition BEFORE INSERT OR UPDATE ON aos_model_eval_issuer_private.identity_epoch FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.identity_epoch_transition()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "name": "immutable_identity_row",
+      "definition": "CREATE TRIGGER immutable_identity_row BEFORE DELETE ON aos_model_eval_issuer_private.identity_epoch FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "name": "immutable_identity_truncate",
+      "definition": "CREATE TRIGGER immutable_identity_truncate BEFORE TRUNCATE ON aos_model_eval_issuer_private.identity_epoch FOR EACH STATEMENT EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_withdrawal",
+      "name": "RI_ConstraintTrigger_c_4019308",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019308\" AFTER INSERT ON aos_model_eval_issuer_private.identity_withdrawal FROM aos_model_eval_issuer_private.identity_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_withdrawal",
+      "name": "RI_ConstraintTrigger_c_4019309",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019309\" AFTER UPDATE ON aos_model_eval_issuer_private.identity_withdrawal FROM aos_model_eval_issuer_private.identity_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_withdrawal",
+      "name": "advance_identity_withdrawal",
+      "definition": "CREATE TRIGGER advance_identity_withdrawal BEFORE INSERT ON aos_model_eval_issuer_private.identity_withdrawal FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.advance_identity_withdrawal()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_withdrawal",
+      "name": "immutable_identity_row",
+      "definition": "CREATE TRIGGER immutable_identity_row BEFORE DELETE OR UPDATE ON aos_model_eval_issuer_private.identity_withdrawal FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_withdrawal",
+      "name": "immutable_identity_truncate",
+      "definition": "CREATE TRIGGER immutable_identity_truncate BEFORE TRUNCATE ON aos_model_eval_issuer_private.identity_withdrawal FOR EACH STATEMENT EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "name": "RI_ConstraintTrigger_c_4018983",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018983\" AFTER INSERT ON aos_model_eval_issuer_private.issuer_epoch FROM aos_model_eval_issuer_private.issuer_root NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "name": "RI_ConstraintTrigger_c_4018984",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018984\" AFTER UPDATE ON aos_model_eval_issuer_private.issuer_epoch FROM aos_model_eval_issuer_private.issuer_root NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "name": "RI_ConstraintTrigger_c_4018988",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018988\" AFTER INSERT ON aos_model_eval_issuer_private.issuer_epoch FROM aos_model_eval_issuer_private.issuer_root NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "name": "RI_ConstraintTrigger_c_4018989",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4018989\" AFTER UPDATE ON aos_model_eval_issuer_private.issuer_epoch FROM aos_model_eval_issuer_private.issuer_root NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "name": "immutable_model_issuer_epoch_delete",
+      "definition": "CREATE TRIGGER immutable_model_issuer_epoch_delete BEFORE DELETE ON aos_model_eval_issuer_private.issuer_epoch FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "name": "immutable_model_issuer_epoch_truncate",
+      "definition": "CREATE TRIGGER immutable_model_issuer_epoch_truncate BEFORE TRUNCATE ON aos_model_eval_issuer_private.issuer_epoch FOR EACH STATEMENT EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_epoch",
+      "name": "model_issuer_epoch_transition",
+      "definition": "CREATE TRIGGER model_issuer_epoch_transition BEFORE INSERT OR UPDATE ON aos_model_eval_issuer_private.issuer_epoch FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.issuer_epoch_transition()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "name": "RI_ConstraintTrigger_a_4018916",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018916\" AFTER DELETE ON aos_model_eval_issuer_private.issuer_root FROM aos_model_eval_issuer_private.executor_certificate NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "name": "RI_ConstraintTrigger_a_4018917",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018917\" AFTER UPDATE ON aos_model_eval_issuer_private.issuer_root FROM aos_model_eval_issuer_private.executor_certificate NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "name": "RI_ConstraintTrigger_a_4018944",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018944\" AFTER DELETE ON aos_model_eval_issuer_private.issuer_root FROM aos_model_eval_issuer_private.authority_withdrawal NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "name": "RI_ConstraintTrigger_a_4018945",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018945\" AFTER UPDATE ON aos_model_eval_issuer_private.issuer_root FROM aos_model_eval_issuer_private.authority_withdrawal NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "name": "RI_ConstraintTrigger_a_4018981",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018981\" AFTER DELETE ON aos_model_eval_issuer_private.issuer_root FROM aos_model_eval_issuer_private.issuer_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "name": "RI_ConstraintTrigger_a_4018982",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018982\" AFTER UPDATE ON aos_model_eval_issuer_private.issuer_root FROM aos_model_eval_issuer_private.issuer_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "name": "RI_ConstraintTrigger_a_4018986",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018986\" AFTER DELETE ON aos_model_eval_issuer_private.issuer_root FROM aos_model_eval_issuer_private.issuer_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "name": "RI_ConstraintTrigger_a_4018987",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4018987\" AFTER UPDATE ON aos_model_eval_issuer_private.issuer_root FROM aos_model_eval_issuer_private.issuer_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "name": "immutable_model_issuer_row",
+      "definition": "CREATE TRIGGER immutable_model_issuer_row BEFORE DELETE OR UPDATE ON aos_model_eval_issuer_private.issuer_root FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.issuer_root",
+      "name": "immutable_model_issuer_truncate",
+      "definition": "CREATE TRIGGER immutable_model_issuer_truncate BEFORE TRUNCATE ON aos_model_eval_issuer_private.issuer_root FOR EACH STATEMENT EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "name": "RI_ConstraintTrigger_c_4019345",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019345\" AFTER INSERT ON aos_model_eval_issuer_private.shared_parent_certificate_identity_binding FROM aos_model_eval_issuer_private.executor_certificate NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "name": "RI_ConstraintTrigger_c_4019346",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019346\" AFTER UPDATE ON aos_model_eval_issuer_private.shared_parent_certificate_identity_binding FROM aos_model_eval_issuer_private.executor_certificate NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "name": "RI_ConstraintTrigger_c_4019350",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019350\" AFTER INSERT ON aos_model_eval_issuer_private.shared_parent_certificate_identity_binding FROM aos_model_eval_issuer_private.identity_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "name": "RI_ConstraintTrigger_c_4019351",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019351\" AFTER UPDATE ON aos_model_eval_issuer_private.shared_parent_certificate_identity_binding FROM aos_model_eval_issuer_private.identity_epoch NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "name": "shared_parent_binding_immutable",
+      "definition": "CREATE TRIGGER shared_parent_binding_immutable BEFORE DELETE OR UPDATE ON aos_model_eval_issuer_private.shared_parent_certificate_identity_binding FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "name": "shared_parent_binding_insert",
+      "definition": "CREATE TRIGGER shared_parent_binding_insert BEFORE INSERT ON aos_model_eval_issuer_private.shared_parent_certificate_identity_binding FOR EACH ROW EXECUTE FUNCTION aos_model_eval_issuer_private.derive_shared_parent_identity()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "name": "shared_parent_binding_no_truncate",
+      "definition": "CREATE TRIGGER shared_parent_binding_no_truncate BEFORE TRUNCATE ON aos_model_eval_issuer_private.shared_parent_certificate_identity_binding FOR EACH STATEMENT EXECUTE FUNCTION aos_model_eval_issuer_private.immutable_issuer_history()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "name": "RI_ConstraintTrigger_a_4019238",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019238\" AFTER DELETE ON aos_physical_capacity_occupation_private.case_input_binding FROM aos_physical_capacity_occupation_private.prepared_execution_intent NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "name": "RI_ConstraintTrigger_a_4019239",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019239\" AFTER UPDATE ON aos_physical_capacity_occupation_private.case_input_binding FROM aos_physical_capacity_occupation_private.prepared_execution_intent NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "name": "RI_ConstraintTrigger_c_4019218",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019218\" AFTER INSERT ON aos_physical_capacity_occupation_private.case_input_binding FROM aos_physical_capacity_occupation_private.prepared_parent_debit NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "name": "RI_ConstraintTrigger_c_4019219",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019219\" AFTER UPDATE ON aos_physical_capacity_occupation_private.case_input_binding FROM aos_physical_capacity_occupation_private.prepared_parent_debit NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.parent_debit_guard",
+      "name": "RI_ConstraintTrigger_a_4019192",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019192\" AFTER DELETE ON aos_physical_capacity_occupation_private.parent_debit_guard FROM aos_physical_capacity_occupation_private.prepared_parent_debit NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.parent_debit_guard",
+      "name": "RI_ConstraintTrigger_a_4019193",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019193\" AFTER UPDATE ON aos_physical_capacity_occupation_private.parent_debit_guard FROM aos_physical_capacity_occupation_private.prepared_parent_debit NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "name": "RI_ConstraintTrigger_c_4019240",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019240\" AFTER INSERT ON aos_physical_capacity_occupation_private.prepared_execution_intent FROM aos_physical_capacity_occupation_private.case_input_binding NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "name": "RI_ConstraintTrigger_c_4019241",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019241\" AFTER UPDATE ON aos_physical_capacity_occupation_private.prepared_execution_intent FROM aos_physical_capacity_occupation_private.case_input_binding NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "name": "immutable_prepared_intent",
+      "definition": "CREATE TRIGGER immutable_prepared_intent BEFORE DELETE OR UPDATE ON aos_physical_capacity_occupation_private.prepared_execution_intent FOR EACH ROW EXECUTE FUNCTION aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "name": "no_truncate_prepared_intent",
+      "definition": "CREATE TRIGGER no_truncate_prepared_intent BEFORE TRUNCATE ON aos_physical_capacity_occupation_private.prepared_execution_intent FOR EACH STATEMENT EXECUTE FUNCTION aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "name": "RI_ConstraintTrigger_a_4019216",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019216\" AFTER DELETE ON aos_physical_capacity_occupation_private.prepared_parent_debit FROM aos_physical_capacity_occupation_private.case_input_binding NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "name": "RI_ConstraintTrigger_a_4019217",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019217\" AFTER UPDATE ON aos_physical_capacity_occupation_private.prepared_parent_debit FROM aos_physical_capacity_occupation_private.case_input_binding NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "name": "RI_ConstraintTrigger_c_4019194",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019194\" AFTER INSERT ON aos_physical_capacity_occupation_private.prepared_parent_debit FROM aos_physical_capacity_occupation_private.parent_debit_guard NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "name": "RI_ConstraintTrigger_c_4019195",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019195\" AFTER UPDATE ON aos_physical_capacity_occupation_private.prepared_parent_debit FROM aos_physical_capacity_occupation_private.parent_debit_guard NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "name": "require_joint_finalization",
+      "definition": "CREATE CONSTRAINT TRIGGER require_joint_finalization AFTER INSERT OR UPDATE ON aos_physical_capacity_occupation_private.prepared_parent_debit DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "deferrable": true,
+      "initially_deferred": true
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "name": "RI_ConstraintTrigger_a_4019432",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019432\" AFTER DELETE ON aos_physical_capacity_occupation_private.prepared_plan_risk FROM aos_physical_capacity_occupation_private.prepared_shared_risk_description NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "name": "RI_ConstraintTrigger_a_4019433",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_4019433\" AFTER UPDATE ON aos_physical_capacity_occupation_private.prepared_plan_risk FROM aos_physical_capacity_occupation_private.prepared_shared_risk_description NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "name": "immutable_plan_risk",
+      "definition": "CREATE TRIGGER immutable_plan_risk BEFORE DELETE OR UPDATE ON aos_physical_capacity_occupation_private.prepared_plan_risk FOR EACH ROW EXECUTE FUNCTION aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "name": "no_truncate_plan_risk",
+      "definition": "CREATE TRIGGER no_truncate_plan_risk BEFORE TRUNCATE ON aos_physical_capacity_occupation_private.prepared_plan_risk FOR EACH STATEMENT EXECUTE FUNCTION aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "name": "no_unfinalized_plan_risk",
+      "definition": "CREATE CONSTRAINT TRIGGER no_unfinalized_plan_risk AFTER INSERT ON aos_physical_capacity_occupation_private.prepared_plan_risk DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "deferrable": true,
+      "initially_deferred": true
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "name": "RI_ConstraintTrigger_c_4019434",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019434\" AFTER INSERT ON aos_physical_capacity_occupation_private.prepared_shared_risk_description FROM aos_physical_capacity_occupation_private.prepared_plan_risk NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "name": "RI_ConstraintTrigger_c_4019435",
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_4019435\" AFTER UPDATE ON aos_physical_capacity_occupation_private.prepared_shared_risk_description FROM aos_physical_capacity_occupation_private.prepared_plan_risk NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "name": "immutable_shared_description",
+      "definition": "CREATE TRIGGER immutable_shared_description BEFORE DELETE OR UPDATE ON aos_physical_capacity_occupation_private.prepared_shared_risk_description FOR EACH ROW EXECUTE FUNCTION aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "name": "no_truncate_shared_description",
+      "definition": "CREATE TRIGGER no_truncate_shared_description BEFORE TRUNCATE ON aos_physical_capacity_occupation_private.prepared_shared_risk_description FOR EACH STATEMENT EXECUTE FUNCTION aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "deferrable": false,
+      "initially_deferred": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "name": "no_unfinalized_shared_description",
+      "definition": "CREATE CONSTRAINT TRIGGER no_unfinalized_shared_description AFTER INSERT ON aos_physical_capacity_occupation_private.prepared_shared_risk_description DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "deferrable": true,
+      "initially_deferred": true
+    }
+  ],
+  "functions": {
+    "aos_model_eval_execution_private.immutable_proof_row()": {
+      "body": " BEGIN\n      RAISE EXCEPTION 'MODEL_EXECUTION_PROOF_IMMUTABLE' USING ERRCODE='42501';\n      END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_execution_owner",
+      "volatility": "v",
+      "body_sha256": "130303e134a07eeeb848a6b3750a2dd61355558fdad97e5dfa0948ac85afeea2"
+    },
+    "aos_model_eval_issuer_private.advance_identity_withdrawal()": {
+      "body": " DECLARE j jsonb; BEGIN\n        j:=convert_from(NEW.body,'UTF8')::jsonb;\n        IF j IS DISTINCT FROM jsonb_build_object('schemaVersion','aos.model-eval-identity-withdrawal/v1',\n          'tenant',jsonb_build_object('orgId',NEW.org_id,'projectId',NEW.project_id),\n          'identityId',NEW.identity_id,'eventId',NEW.event_id)\n        THEN RAISE EXCEPTION 'MODEL_IDENTITY_WITHDRAWAL_BODY' USING ERRCODE='42501'; END IF;\n        UPDATE aos_model_eval_issuer_private.identity_epoch SET epoch=epoch+1,version=version+1,active=false\n          WHERE org_id=NEW.org_id AND project_id=NEW.project_id AND identity_id=NEW.identity_id AND active;\n        IF NOT FOUND THEN RAISE EXCEPTION 'MODEL_IDENTITY_WITHDRAWAL_HEAD' USING ERRCODE='42501'; END IF;\n        NEW.created_at:=clock_timestamp();RETURN NEW;\n      END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner",
+      "volatility": "v",
+      "body_sha256": "e56405804576d71fdce1a83a38c2d45b997e94f79555496da819dca29d34e840"
+    },
+    "aos_model_eval_issuer_private.advance_root_withdrawal_epoch()": {
+      "body": " BEGIN\n      IF NEW.issuer_id IS NOT NULL THEN\n        UPDATE aos_model_eval_issuer_private.issuer_epoch SET epoch=epoch+1,root_hash=NULL\n          WHERE org_id=NEW.org_id AND project_id=NEW.project_id\n            AND issuer_id=NEW.issuer_id AND key_id=NEW.key_id AND root_hash IS NOT NULL;\n        IF NOT FOUND THEN\n          RAISE EXCEPTION 'MODEL_ISSUER_WITHDRAWAL_CURRENT_HEAD_MISSING' USING ERRCODE='42501';\n        END IF;\n      ELSE\n        PERFORM 1 FROM aos_model_eval_issuer_private.issuer_epoch h\n          JOIN aos_model_eval_issuer_private.executor_certificate c\n            ON (h.org_id,h.project_id,h.issuer_id,h.key_id)\n              =(c.org_id,c.project_id,c.issuer_id,c.key_id)\n          WHERE c.org_id=NEW.org_id AND c.project_id=NEW.project_id\n            AND c.content_hash=NEW.certificate_hash FOR SHARE OF h;\n        IF NOT FOUND THEN\n          RAISE EXCEPTION 'MODEL_CERTIFICATE_ROOT_HEAD_MISSING' USING ERRCODE='42501';\n        END IF;\n        UPDATE aos_model_eval_issuer_private.certificate_epoch SET epoch=epoch+1,active_hash=NULL\n          WHERE org_id=NEW.org_id AND project_id=NEW.project_id\n            AND certificate_hash=NEW.certificate_hash AND active_hash IS NOT NULL;\n        IF NOT FOUND THEN\n          RAISE EXCEPTION 'MODEL_CERTIFICATE_WITHDRAWAL_CURRENT_HEAD_MISSING' USING ERRCODE='42501';\n        END IF;\n      END IF;\n      RETURN NULL;\n      END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner",
+      "volatility": "v",
+      "body_sha256": "a7b4433948501f7a3daedeb9912c742f52812288375f859ebc6bcbd478999ad7"
+    },
+    "aos_model_eval_issuer_private.certificate_epoch_transition()": {
+      "body": " BEGIN\n      IF (TG_OP='INSERT' AND (NEW.epoch<>1 OR NEW.active_hash IS NULL\n          OR NEW.active_hash<>NEW.certificate_hash))\n        OR (TG_OP='UPDATE' AND (\n          (NEW.org_id,NEW.project_id,NEW.certificate_hash)\n            IS DISTINCT FROM (OLD.org_id,OLD.project_id,OLD.certificate_hash)\n          OR NEW.epoch<>OLD.epoch+1 OR OLD.active_hash IS NULL OR NEW.active_hash IS NOT NULL))\n      THEN RAISE EXCEPTION 'MODEL_CERTIFICATE_EPOCH_TRANSITION' USING ERRCODE='42501'; END IF;\n      NEW.updated_at:=clock_timestamp(); RETURN NEW;\n      END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner",
+      "volatility": "v",
+      "body_sha256": "c6373c918c8974f413f8198a51b15b9ca3810ef0551637d03aaacaaf663c74a0"
+    },
+    "aos_model_eval_issuer_private.derive_certificate_identity()": {
+      "body": "\n      DECLARE c record; j jsonb; BEGIN\n        SELECT h.root_hash INTO c FROM aos_model_eval_issuer_private.issuer_epoch h\n          JOIN aos_model_eval_issuer_private.executor_certificate x ON\n          (h.org_id,h.project_id,h.issuer_id,h.key_id)=(x.org_id,x.project_id,x.issuer_id,x.key_id)\n          WHERE x.org_id=NEW.org_id AND x.project_id=NEW.project_id\n            AND x.content_hash=NEW.certificate_hash FOR SHARE OF h;\n        IF NOT FOUND OR c.root_hash IS NULL THEN\n          RAISE EXCEPTION 'MODEL_IDENTITY_ROOT_INACTIVE' USING ERRCODE='42501'; END IF;\n        SELECT x.*,h.active_hash INTO c FROM aos_model_eval_issuer_private.executor_certificate x\n          JOIN aos_model_eval_issuer_private.certificate_epoch h ON\n          (h.org_id,h.project_id,h.certificate_hash)=(x.org_id,x.project_id,x.content_hash)\n          WHERE x.org_id=NEW.org_id AND x.project_id=NEW.project_id\n            AND x.content_hash=NEW.certificate_hash FOR SHARE OF h;\n        IF NOT FOUND OR c.active_hash IS NULL THEN\n          RAISE EXCEPTION 'MODEL_IDENTITY_CERTIFICATE_INACTIVE' USING ERRCODE='42501'; END IF;\n        j:=convert_from(c.body,'UTF8')::jsonb;\n        IF j->>'schemaVersion' IS DISTINCT FROM 'aos.model-eval-signed-certificate-envelope/v1'\n          OR j#>>'{certificate,tenant,orgId}' IS DISTINCT FROM NEW.org_id\n          OR j#>>'{certificate,tenant,projectId}' IS DISTINCT FROM NEW.project_id\n          OR j#>>'{certificate,executionId}' IS DISTINCT FROM c.execution_id\n          OR j#>>'{certificate,caseId}' IS DISTINCT FROM c.case_id\n          OR j#>>'{certificate,purpose}' IS DISTINCT FROM c.purpose\n          OR j#>>'{certificate,issuerId}' IS DISTINCT FROM c.issuer_id\n          OR j#>>'{certificate,issuerKeyId}' IS DISTINCT FROM c.key_id\n          OR j#>>'{certificate,leg,identityKeyHash}' IS DISTINCT FROM\n             encode(sha256(decode(j#>>'{certificate,publicKeyBase64}','base64')),'hex')\n        THEN RAISE EXCEPTION 'MODEL_IDENTITY_CERTIFICATE_BINDING' USING ERRCODE='42501'; END IF;\n        NEW.identity_id:=j#>>'{certificate,leg,identityId}';\n        NEW.purpose:=c.purpose;NEW.key_hash:=j#>>'{certificate,leg,identityKeyHash}';\n        INSERT INTO aos_model_eval_issuer_private.identity_epoch(org_id,project_id,identity_id,purpose,key_hash,epoch,version,active)\n          VALUES(NEW.org_id,NEW.project_id,NEW.identity_id,NEW.purpose,NEW.key_hash,1,1,true)\n          ON CONFLICT(org_id,project_id,identity_id) DO UPDATE SET version=identity_epoch.version+1\n          WHERE identity_epoch.active AND identity_epoch.purpose=EXCLUDED.purpose\n            AND identity_epoch.key_hash=EXCLUDED.key_hash;\n        IF NOT FOUND THEN RAISE EXCEPTION 'MODEL_IDENTITY_BOUND_OR_REVOKED' USING ERRCODE='42501'; END IF;\n        RETURN NEW;\n      END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner",
+      "volatility": "v",
+      "body_sha256": "a947bcad43f75f71ac2637bf593efd406cc472c02519aa0cafbbbb97bdb69c1b"
+    },
+    "aos_model_eval_issuer_private.derive_shared_parent_identity()": {
+      "body": "\n            DECLARE c record; j jsonb; m jsonb; leg jsonb; BEGIN\n            SELECT h.root_hash INTO c FROM aos_model_eval_issuer_private.issuer_epoch h JOIN aos_model_eval_issuer_private.executor_certificate x\n                ON (h.org_id,h.project_id,h.issuer_id,h.key_id)=(x.org_id,x.project_id,x.issuer_id,x.key_id)\n                WHERE x.org_id=NEW.org_id AND x.project_id=NEW.project_id AND x.content_hash=NEW.certificate_hash FOR SHARE OF h;\n            IF NOT FOUND OR c.root_hash IS NULL THEN RAISE EXCEPTION 'SHARED_PARENT_ROOT_INACTIVE' USING ERRCODE='42501'; END IF;\n            SELECT x.*,h.active_hash,p.body AS manifest_body,p.content_hash AS manifest_hash INTO c\n                FROM aos_model_eval_issuer_private.executor_certificate x JOIN aos_model_eval_issuer_private.certificate_epoch h\n                ON (h.org_id,h.project_id,h.certificate_hash)=(x.org_id,x.project_id,x.content_hash)\n                JOIN aos_model_eval_execution_private.manifest p ON (p.org_id,p.project_id,p.execution_id)=(x.org_id,x.project_id,x.execution_id)\n                WHERE x.org_id=NEW.org_id AND x.project_id=NEW.project_id AND x.content_hash=NEW.certificate_hash FOR SHARE OF h;\n            IF NOT FOUND OR c.active_hash IS NULL THEN RAISE EXCEPTION 'SHARED_PARENT_CERTIFICATE_INACTIVE' USING ERRCODE='42501'; END IF;\n            j:=convert_from(c.body,'UTF8')::jsonb;m:=convert_from(c.manifest_body,'UTF8')::jsonb;\n            SELECT v->c.purpose INTO leg FROM jsonb_array_elements(m->'cases') v WHERE v->>'caseId'=c.case_id;\n            IF j->>'schemaVersion' IS DISTINCT FROM 'aos.model-eval-shared-parent-signed-certificate-envelope/v3'\n                OR j#>>'{certificate,schemaVersion}' IS DISTINCT FROM 'aos.model-eval-shared-parent-certificate-signing-input/v3'\n                OR m->>'schemaVersion' IS DISTINCT FROM 'aos.model-eval-target-judge-shared-risk-manifest/v3'\n                OR m->>'executionId' IS DISTINCT FROM c.execution_id\n                OR m#>>'{tenant,orgId}' IS DISTINCT FROM NEW.org_id\n                OR m#>>'{tenant,projectId}' IS DISTINCT FROM NEW.project_id\n                OR c.attempt<>1 OR leg IS NULL OR j#>'{certificate,leg}' IS DISTINCT FROM leg\n                OR j#>>'{certificate,manifestHash}' IS DISTINCT FROM c.manifest_hash\n                OR j#>>'{certificate,requestHash}' IS DISTINCT FROM (CASE WHEN c.purpose='target' THEN m#>>'{judgeRequest,targetApplication,requestHash}' ELSE m->>'judgeRequestHash' END)\n                OR j#>'{certificate,candidateRef}' IS DISTINCT FROM (CASE WHEN c.purpose='target' THEN m#>'{judgeRequest,targetApplication,request,targetRef}' ELSE m#>'{judgeRequest,judgeGovernanceApplication,request,targetRef}' END)\n                OR j#>>'{certificate,tenant,orgId}' IS DISTINCT FROM NEW.org_id\n                OR j#>>'{certificate,tenant,projectId}' IS DISTINCT FROM NEW.project_id\n                OR j#>>'{certificate,executionId}' IS DISTINCT FROM c.execution_id\n                OR j#>>'{certificate,caseId}' IS DISTINCT FROM c.case_id\n                OR j#>>'{certificate,purpose}' IS DISTINCT FROM c.purpose\n                OR j#>>'{certificate,issuerId}' IS DISTINCT FROM c.issuer_id\n                OR j#>>'{certificate,issuerKeyId}' IS DISTINCT FROM c.key_id\n                OR octet_length(decode(j#>>'{certificate,publicKeyBase64}','base64')) IS DISTINCT FROM 32\n                OR leg->>'identityKeyHash' IS DISTINCT FROM encode(sha256(decode(j#>>'{certificate,publicKeyBase64}','base64')),'hex')\n            THEN RAISE EXCEPTION 'SHARED_PARENT_CERTIFICATE_BINDING' USING ERRCODE='42501'; END IF;\n            NEW.identity_id:=leg->>'identityId';NEW.purpose:=c.purpose;NEW.key_hash:=leg->>'identityKeyHash';\n            NEW.description_hash:=j#>>'{certificate,descriptionHash}';NEW.original_risk_hash:=j#>>'{certificate,originalRiskHash}';\n            NEW.caller_xid:=j#>>'{certificate,callerXid}';NEW.caller_pid:=(j#>>'{certificate,callerPid}')::integer;\n            INSERT INTO aos_model_eval_issuer_private.identity_epoch(org_id,project_id,identity_id,purpose,key_hash,epoch,version,active)\n                VALUES(NEW.org_id,NEW.project_id,NEW.identity_id,NEW.purpose,NEW.key_hash,1,1,true)\n                ON CONFLICT(org_id,project_id,identity_id) DO UPDATE SET version=identity_epoch.version+1\n                WHERE identity_epoch.active AND identity_epoch.purpose=EXCLUDED.purpose AND identity_epoch.key_hash=EXCLUDED.key_hash;\n            IF NOT FOUND THEN RAISE EXCEPTION 'SHARED_PARENT_IDENTITY_BOUND_OR_REVOKED' USING ERRCODE='42501'; END IF;\n            RETURN NEW; END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner",
+      "volatility": "v",
+      "body_sha256": "16f363f28d05bdab40ce5cef13fae0baf4debc76ce2ec269894e11254cfd9c60"
+    },
+    "aos_model_eval_issuer_private.identity_epoch_transition()": {
+      "body": " BEGIN\n        IF pg_trigger_depth()<2 OR\n          (TG_OP='INSERT' AND (NEW.epoch<>1 OR NEW.version<>1 OR NOT NEW.active)) OR\n          (TG_OP='UPDATE' AND (\n            (NEW.org_id,NEW.project_id,NEW.identity_id,NEW.purpose,NEW.key_hash)\n              IS DISTINCT FROM (OLD.org_id,OLD.project_id,OLD.identity_id,OLD.purpose,OLD.key_hash)\n            OR NOT OLD.active OR NEW.version<>OLD.version+1\n            OR (NEW.active AND NEW.epoch<>OLD.epoch)\n            OR (NOT NEW.active AND NEW.epoch<>OLD.epoch+1)))\n        THEN RAISE EXCEPTION 'MODEL_IDENTITY_EPOCH_TRANSITION' USING ERRCODE='42501'; END IF;\n        NEW.updated_at:=clock_timestamp();RETURN NEW;\n      END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner",
+      "volatility": "v",
+      "body_sha256": "109d0f495cc9095cce3ae7d27a0e8d03d674a3fac09cf8845884e8f6c2d44dc6"
+    },
+    "aos_model_eval_issuer_private.immutable_issuer_history()": {
+      "body": " BEGIN\n      RAISE EXCEPTION 'MODEL_ISSUER_HISTORY_IMMUTABLE' USING ERRCODE='42501';\n      END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner",
+      "volatility": "v",
+      "body_sha256": "b66fb331c1bed930baaa0cd130d0c9951dc989a2882e0a8e6493f57d42c6038f"
+    },
+    "aos_model_eval_issuer_private.initialize_certificate_epoch()": {
+      "body": " BEGIN\n      PERFORM 1 FROM aos_model_eval_issuer_private.issuer_epoch\n        WHERE org_id=NEW.org_id AND project_id=NEW.project_id\n          AND issuer_id=NEW.issuer_id AND key_id=NEW.key_id AND root_hash IS NOT NULL FOR SHARE;\n      IF NOT FOUND THEN\n        RAISE EXCEPTION 'MODEL_CERTIFICATE_ACTIVE_ROOT_HEAD_MISSING' USING ERRCODE='42501';\n      END IF;\n      INSERT INTO aos_model_eval_issuer_private.certificate_epoch(org_id,project_id,certificate_hash,epoch,active_hash)\n        VALUES(NEW.org_id,NEW.project_id,NEW.content_hash,1,NEW.content_hash);\n      RETURN NULL;\n      END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner",
+      "volatility": "v",
+      "body_sha256": "6fc563aed285b2876084be35a6b51fdd17f9711bbab4154ec1630fb10f964aa7"
+    },
+    "aos_model_eval_issuer_private.issuer_epoch_transition()": {
+      "body": " BEGIN\n      IF (TG_OP='INSERT' AND (NEW.epoch<>1 OR NEW.root_hash IS NULL))\n        OR (TG_OP='UPDATE' AND (\n          (NEW.org_id,NEW.project_id,NEW.issuer_id,NEW.key_id)\n            IS DISTINCT FROM (OLD.org_id,OLD.project_id,OLD.issuer_id,OLD.key_id)\n          OR NEW.epoch<>OLD.epoch+1 OR OLD.root_hash IS NULL OR NEW.root_hash IS NOT NULL))\n      THEN RAISE EXCEPTION 'MODEL_ISSUER_EPOCH_TRANSITION' USING ERRCODE='42501'; END IF;\n      NEW.updated_at:=clock_timestamp(); RETURN NEW;\n      END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner",
+      "volatility": "v",
+      "body_sha256": "bc317a2fcdd65b139af74825d7fc0838a80bcba2357cbd4bcbb3b12f483560fb"
+    },
+    "aos_physical_capacity_occupation_private.immutable_prepared_intent()": {
+      "body": "\n          BEGIN RAISE EXCEPTION 'CAPACITY_INTENT_IMMUTABLE' USING ERRCODE='42501'; END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_physical_capacity_occupation_owner",
+      "volatility": "v",
+      "body_sha256": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda"
+    },
+    "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()": {
+      "body": "\n          BEGIN RAISE EXCEPTION 'CAPACITY_PARENT_FINALIZE_REQUIRED' USING ERRCODE='23514'; END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": true,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_physical_capacity_occupation_owner",
+      "volatility": "v",
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    "pg_catalog.\"RI_FKey_check_ins\"()": {
+      "body": "RI_FKey_check_ins",
+      "library": null,
+      "language": "internal",
+      "security_definer": false,
+      "config": null,
+      "owner": "aos_app",
+      "volatility": "v",
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    "pg_catalog.\"RI_FKey_check_upd\"()": {
+      "body": "RI_FKey_check_upd",
+      "library": null,
+      "language": "internal",
+      "security_definer": false,
+      "config": null,
+      "owner": "aos_app",
+      "volatility": "v",
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    "pg_catalog.\"RI_FKey_noaction_del\"()": {
+      "body": "RI_FKey_noaction_del",
+      "library": null,
+      "language": "internal",
+      "security_definer": false,
+      "config": null,
+      "owner": "aos_app",
+      "volatility": "v",
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    "pg_catalog.\"RI_FKey_noaction_upd\"()": {
+      "body": "RI_FKey_noaction_upd",
+      "library": null,
+      "language": "internal",
+      "security_definer": false,
+      "config": null,
+      "owner": "aos_app",
+      "volatility": "v",
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    }
+  },
+  "source_catalog_sha256": "385aaae7aec243498f4f894f2c5f3f245bd3531ae98d40460a5ddab36d34a34b",
+  "actual_event_queue_proven": false,
+  "recursive_trigger_effects_complete": false,
+  "root_provenance_verified": false,
+  "execution_allowed": false
+}

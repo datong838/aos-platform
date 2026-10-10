@@ -1,0 +1,9 @@
+# 操作级联合结束闭包复审
+
+本波遵守231、先方案后编码、单m1、原库只读。RED为新模块不存在；专项19项+目录17项+原prepare/reader相邻3项共39 PASS/0.56s，连接被禁止且计数0。测试对应引用检查不冒充写入、NO ACTION不产生child写、CASCADE/SET NULL/DEFAULT跨事件闭包、循环稳定、精确事件掩码与合同漂移等负门。没有改变已Delivery目录组件、原风险deny、权限或业务数据。新增文件限本Task登记的模块、测试和证据；Task10只追加其scope内调查证据。
+
+新组件输出可能事件上界与FK读锁依赖，二者分开。父UPDATE未知key列时保守传播；trigger WHEN不假定false；FK相关TRUNCATE严格拒绝等待专门协议。精确类型、目录重复、未知操作、禁用、缺合同与hash漂移均拒绝。全部输出execution_allowed恒false；无SQL/COMMIT/权限接口、无安装或Root授权。使用上波共享目录validator，未修改上波已交付文件。代码/方案一致。
+
+原R22库只读核对638表、712FK、3629trigger及精确hash；原源码候选15写事件直接匹配27trigger/9function，不代表已观察事务队列。当前712FK的6645比较算子绑定均指向5个pg_catalog/internal函数；目录阅读未调用算子。二进制谱系、cast/collation闭包与正式安装审批仍不充分。15个PLpgSQL应用函数明确读完整body并记录SQL写入影响候选；4个原生RI函数仍缺正式可信合同，未补空effects，真实目录再次TRIGGER_EFFECT_REQUIRED。NEW赋值保留原操作，条件分支取写入上界，RAISE-only无额外SQL写入；这仅是应用SQL候选，不证明间接函数完整/安装受信。官方REL_16_14源码阅读用于语义比对；curl35下载断联及随后assert失败保留，不伪造本地源码hash、不重放任何数据库操作。
+
+风险与未完成：当前输入DTO不充权威；C函数prosrc仅符号名hash，Lab Owner aos_app不自动合格；目录合同上界非实际排队，完整finalizer还须Source/预算/唯一Intent/最终currentness/clock/WAL与正式Root。Task9/10仍无Delivery，经营首链仍pending。组件可独立交付，不把39PASS或目录审计计入业务完成。无UI变更，浏览器不适用。下一已登记安全步骤在Task10调查外键类型/cast/collation及原内核可信安装绑定，随后整合原结束协议。

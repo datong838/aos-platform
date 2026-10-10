@@ -1,0 +1,24 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-joint-operation-event-closure-20261010",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001685",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/aip_physical_capacity_joint_events.py",
+    "aos-platform/services/aos-api/tests/aip/test_physical_capacity_joint_events.py",
+    "aos-platform/.evidence/gt-joint-operation-event-closure-20261010"
+  ],
+  "excluded_scope": [
+    "formal-DB-Host-worker-Provider",
+    "old-source-migration-and-deny-guards",
+    "business-execution-or-runtime-finalizer"
+  ],
+  "expected_outputs": [
+    "Exact operation-aware FK readlock/cascade and reviewed trigger write-event closure for full joint protocol",
+    "RED-GREEN/adjacent/current installed catalogue rejection and exact original effect investigation",
+    "No SQL/commit/trust grant; actual event queue and complete finalizer remain separate"
+  ],
+  "lease_expires_at": "2026-10-10T02:23:58.946992+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-10T08:24:00+08:00"
+}

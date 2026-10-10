@@ -1,0 +1,8 @@
+{
+  "authority": "AOS-001685",
+  "lease_count": 28,
+  "all_task_lease_equal": true,
+  "scope_overlaps": 0,
+  "head": "f33b393b6ca66288d8920b2a87df259c26c6f3d1",
+  "execution_allowed": false
+}

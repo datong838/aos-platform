@@ -1,0 +1,103 @@
+{
+  "identity": {
+    "database": "aos_test_616a4d9f71e0_ti4_test",
+    "cluster": "7694680278363095064",
+    "version": "16.14",
+    "readonly": "on"
+  },
+  "functions": {
+    "aos_model_eval_issuer_private.derive_shared_parent_identity()": {
+      "body": "\n            DECLARE c record; j jsonb; m jsonb; leg jsonb; BEGIN\n            SELECT h.root_hash INTO c FROM aos_model_eval_issuer_private.issuer_epoch h JOIN aos_model_eval_issuer_private.executor_certificate x\n                ON (h.org_id,h.project_id,h.issuer_id,h.key_id)=(x.org_id,x.project_id,x.issuer_id,x.key_id)\n                WHERE x.org_id=NEW.org_id AND x.project_id=NEW.project_id AND x.content_hash=NEW.certificate_hash FOR SHARE OF h;\n            IF NOT FOUND OR c.root_hash IS NULL THEN RAISE EXCEPTION 'SHARED_PARENT_ROOT_INACTIVE' USING ERRCODE='42501'; END IF;\n            SELECT x.*,h.active_hash,p.body AS manifest_body,p.content_hash AS manifest_hash INTO c\n                FROM aos_model_eval_issuer_private.executor_certificate x JOIN aos_model_eval_issuer_private.certificate_epoch h\n                ON (h.org_id,h.project_id,h.certificate_hash)=(x.org_id,x.project_id,x.content_hash)\n                JOIN aos_model_eval_execution_private.manifest p ON (p.org_id,p.project_id,p.execution_id)=(x.org_id,x.project_id,x.execution_id)\n                WHERE x.org_id=NEW.org_id AND x.project_id=NEW.project_id AND x.content_hash=NEW.certificate_hash FOR SHARE OF h;\n            IF NOT FOUND OR c.active_hash IS NULL THEN RAISE EXCEPTION 'SHARED_PARENT_CERTIFICATE_INACTIVE' USING ERRCODE='42501'; END IF;\n            j:=convert_from(c.body,'UTF8')::jsonb;m:=convert_from(c.manifest_body,'UTF8')::jsonb;\n            SELECT v->c.purpose INTO leg FROM jsonb_array_elements(m->'cases') v WHERE v->>'caseId'=c.case_id;\n            IF j->>'schemaVersion' IS DISTINCT FROM 'aos.model-eval-shared-parent-signed-certificate-envelope/v3'\n                OR j#>>'{certificate,schemaVersion}' IS DISTINCT FROM 'aos.model-eval-shared-parent-certificate-signing-input/v3'\n                OR m->>'schemaVersion' IS DISTINCT FROM 'aos.model-eval-target-judge-shared-risk-manifest/v3'\n                OR m->>'executionId' IS DISTINCT FROM c.execution_id\n                OR m#>>'{tenant,orgId}' IS DISTINCT FROM NEW.org_id\n                OR m#>>'{tenant,projectId}' IS DISTINCT FROM NEW.project_id\n                OR c.attempt<>1 OR leg IS NULL OR j#>'{certificate,leg}' IS DISTINCT FROM leg\n                OR j#>>'{certificate,manifestHash}' IS DISTINCT FROM c.manifest_hash\n                OR j#>>'{certificate,requestHash}' IS DISTINCT FROM (CASE WHEN c.purpose='target' THEN m#>>'{judgeRequest,targetApplication,requestHash}' ELSE m->>'judgeRequestHash' END)\n                OR j#>'{certificate,candidateRef}' IS DISTINCT FROM (CASE WHEN c.purpose='target' THEN m#>'{judgeRequest,targetApplication,request,targetRef}' ELSE m#>'{judgeRequest,judgeGovernanceApplication,request,targetRef}' END)\n                OR j#>>'{certificate,tenant,orgId}' IS DISTINCT FROM NEW.org_id\n                OR j#>>'{certificate,tenant,projectId}' IS DISTINCT FROM NEW.project_id\n                OR j#>>'{certificate,executionId}' IS DISTINCT FROM c.execution_id\n                OR j#>>'{certificate,caseId}' IS DISTINCT FROM c.case_id\n                OR j#>>'{certificate,purpose}' IS DISTINCT FROM c.purpose\n                OR j#>>'{certificate,issuerId}' IS DISTINCT FROM c.issuer_id\n                OR j#>>'{certificate,issuerKeyId}' IS DISTINCT FROM c.key_id\n                OR octet_length(decode(j#>>'{certificate,publicKeyBase64}','base64')) IS DISTINCT FROM 32\n                OR leg->>'identityKeyHash' IS DISTINCT FROM encode(sha256(decode(j#>>'{certificate,publicKeyBase64}','base64')),'hex')\n            THEN RAISE EXCEPTION 'SHARED_PARENT_CERTIFICATE_BINDING' USING ERRCODE='42501'; END IF;\n            NEW.identity_id:=leg->>'identityId';NEW.purpose:=c.purpose;NEW.key_hash:=leg->>'identityKeyHash';\n            NEW.description_hash:=j#>>'{certificate,descriptionHash}';NEW.original_risk_hash:=j#>>'{certificate,originalRiskHash}';\n            NEW.caller_xid:=j#>>'{certificate,callerXid}';NEW.caller_pid:=(j#>>'{certificate,callerPid}')::integer;\n            INSERT INTO aos_model_eval_issuer_private.identity_epoch(org_id,project_id,identity_id,purpose,key_hash,epoch,version,active)\n                VALUES(NEW.org_id,NEW.project_id,NEW.identity_id,NEW.purpose,NEW.key_hash,1,1,true)\n                ON CONFLICT(org_id,project_id,identity_id) DO UPDATE SET version=identity_epoch.version+1\n                WHERE identity_epoch.active AND identity_epoch.purpose=EXCLUDED.purpose AND identity_epoch.key_hash=EXCLUDED.key_hash;\n            IF NOT FOUND THEN RAISE EXCEPTION 'SHARED_PARENT_IDENTITY_BOUND_OR_REVOKED' USING ERRCODE='42501'; END IF;\n            RETURN NEW; END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner",
+      "body_sha256": "16f363f28d05bdab40ce5cef13fae0baf4debc76ce2ec269894e11254cfd9c60"
+    },
+    "aos_model_eval_issuer_private.initialize_certificate_epoch()": {
+      "body": " BEGIN\n      PERFORM 1 FROM aos_model_eval_issuer_private.issuer_epoch\n        WHERE org_id=NEW.org_id AND project_id=NEW.project_id\n          AND issuer_id=NEW.issuer_id AND key_id=NEW.key_id AND root_hash IS NOT NULL FOR SHARE;\n      IF NOT FOUND THEN\n        RAISE EXCEPTION 'MODEL_CERTIFICATE_ACTIVE_ROOT_HEAD_MISSING' USING ERRCODE='42501';\n      END IF;\n      INSERT INTO aos_model_eval_issuer_private.certificate_epoch(org_id,project_id,certificate_hash,epoch,active_hash)\n        VALUES(NEW.org_id,NEW.project_id,NEW.content_hash,1,NEW.content_hash);\n      RETURN NULL;\n      END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner",
+      "body_sha256": "6fc563aed285b2876084be35a6b51fdd17f9711bbab4154ec1630fb10f964aa7"
+    },
+    "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()": {
+      "body": "\n          BEGIN RAISE EXCEPTION 'CAPACITY_PARENT_FINALIZE_REQUIRED' USING ERRCODE='23514'; END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": true,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_physical_capacity_occupation_owner",
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    "pg_catalog.\"RI_FKey_check_ins\"()": {
+      "body": "RI_FKey_check_ins",
+      "library": null,
+      "language": "internal",
+      "security_definer": false,
+      "config": null,
+      "owner": "aos_app",
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    "pg_catalog.\"RI_FKey_check_upd\"()": {
+      "body": "RI_FKey_check_upd",
+      "library": null,
+      "language": "internal",
+      "security_definer": false,
+      "config": null,
+      "owner": "aos_app",
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    "pg_catalog.\"RI_FKey_noaction_upd\"()": {
+      "body": "RI_FKey_noaction_upd",
+      "library": null,
+      "language": "internal",
+      "security_definer": false,
+      "config": null,
+      "owner": "aos_app",
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    "public.aip_budget_cost_fence_guard_a0v_126()": {
+      "body": " BEGIN\n      IF TG_OP='INSERT' THEN\n        IF session_user<>'aos_budget_consumer_call' OR current_user<>'aos_budget_consumer_owner' OR NEW.version<>1 THEN\n          RAISE EXCEPTION 'BUDGET_COST_FENCE_CONSUMER_REQUIRED' USING ERRCODE='42501'; END IF;\n      ELSIF TG_OP='UPDATE' THEN\n        IF (NEW.org_id,NEW.project_id,NEW.budget_id,NEW.revision,NEW.decision_id) IS DISTINCT FROM\n           (OLD.org_id,OLD.project_id,OLD.budget_id,OLD.revision,OLD.decision_id) OR NEW.version<>OLD.version+1 THEN\n          RAISE EXCEPTION 'BUDGET_COST_FENCE_DRIFT' USING ERRCODE='23514'; END IF;\n      ELSE RAISE EXCEPTION 'BUDGET_COST_FENCE_HISTORY_REQUIRED'; END IF;\n      RETURN NEW; END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_app",
+      "body_sha256": "a6578978be73a7132b8d11abaad9b221926816fe0323f1c6cb2c8bc05b41dff9"
+    },
+    "public.binding_evaluator_read_lock_only_a0v144()": {
+      "body": " BEGIN\n        IF current_user='aos_aip_binding_evaluator' OR session_user='aos_aip_binding_evaluator' THEN\n          RAISE EXCEPTION 'BINDING_EVALUATOR_READ_LOCK_ONLY' USING ERRCODE='42501';\n        END IF;\n        IF TG_OP='DELETE' THEN RETURN OLD; END IF; RETURN NEW;\n      END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_app",
+      "body_sha256": "84ffec865cb2a8e502270b0ebe2b293c9c740dee560cea8dffdfe3d61ce30b99"
+    },
+    "public.guard_ar2_budget_bucket_update()": {
+      "body": " BEGIN\n          IF ROW(NEW.org_id,NEW.project_id,NEW.bucket_kind,NEW.account_id,\n                 NEW.period_start,NEW.period_end,NEW.currency,NEW.limit_minor)\n             IS DISTINCT FROM\n             ROW(OLD.org_id,OLD.project_id,OLD.bucket_kind,OLD.account_id,\n                 OLD.period_start,OLD.period_end,OLD.currency,OLD.limit_minor)\n             OR NEW.version<>OLD.version+1 OR NEW.updated_at<OLD.updated_at\n          THEN RAISE EXCEPTION 'budget bucket authority drifted'; END IF;\n          RETURN NEW;\n        END ",
+      "library": null,
+      "language": "plpgsql",
+      "security_definer": false,
+      "config": null,
+      "owner": "aos_app",
+      "body_sha256": "6caf5c743dc6b283ee53fc714c47dd29116e69c4927e417c4507568f84916357"
+    }
+  },
+  "execution_allowed": false,
+  "semantic_review_complete": false
+}
