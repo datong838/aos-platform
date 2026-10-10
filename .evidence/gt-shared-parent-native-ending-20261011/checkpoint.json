@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-native-ending-20261011",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001778",
+  "authority_revision": "AOS-001779",
   "task_base_revision": "AOS-001746",
-  "step": "pgcrypto-exact-reproduction-header-source-gap-reviewed-plpgsql-core-next",
+  "step": "bundled-generated-reproduced-core-raw-mismatch-linker-bootstrap-next",
   "code_files": [
     "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.c",
     "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.control",
@@ -35,6 +35,7 @@
     ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/review.json",
     ".evidence/gt-shared-parent-native-ending-20261011/signature-build-1776/review.json",
     ".evidence/gt-shared-parent-native-ending-20261011/pgcrypto-build-1777/review.json",
-    ".evidence/gt-shared-parent-native-ending-20261011/pg-build-input-1777/review.json"
+    ".evidence/gt-shared-parent-native-ending-20261011/pg-build-input-1777/review.json",
+    ".evidence/gt-shared-parent-native-ending-20261011/pg-core-build-1778/review.json"
   ]
 }

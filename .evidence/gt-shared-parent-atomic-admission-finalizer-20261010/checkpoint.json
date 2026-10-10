@@ -4,7 +4,7 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001778",
+  "authority_revision": "AOS-001779",
   "task_base_revision": "AOS-001698",
   "step": "real-eight-node-Receipt-physical-late-writer-missing-end-COMMIT-verified-full-native-ending-next",
   "evidence_files": [
