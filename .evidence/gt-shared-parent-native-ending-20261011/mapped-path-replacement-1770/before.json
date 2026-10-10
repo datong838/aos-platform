@@ -1,0 +1,16 @@
+{
+  "disk_fact": {
+    "path": "/tmp/aos_order_mapping_15597687f30b41ddb561de3515663844.so",
+    "bytes": 72560,
+    "inode": "2380751",
+    "device": "63",
+    "sha256": "0f22fb884fd06f27324f06316cf1c1caba9968ebb2ac0523b43e7caeeeec5e0c",
+    "virtual": false
+  },
+  "maps": [
+    "ffff8d192000-ffff8d1b1000 r-xp 00000000 00:3f 2380751                    /tmp/aos_order_mapping_15597687f30b41ddb561de3515663844.so",
+    "ffff8d1b1000-ffff8d1b2000 r--p 0000f000 00:3f 2380751                    /tmp/aos_order_mapping_15597687f30b41ddb561de3515663844.so",
+    "ffff8d1b2000-ffff8d1b3000 rw-p 00010000 00:3f 2380751                    /tmp/aos_order_mapping_15597687f30b41ddb561de3515663844.so"
+  ],
+  "pending": []
+}

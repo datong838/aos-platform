@@ -1,0 +1,11 @@
+{
+  "xid": "61774",
+  "xid_aborted": true,
+  "backend_closed": true,
+  "new_schema_absent": true,
+  "new_interfaces_absent": true,
+  "original_pending_exact": true,
+  "owner_closed": true,
+  "original_binaries_exact": true,
+  "test_copy_retained": "/tmp/aos_order_mapping_15597687f30b41ddb561de3515663844.so"
+}

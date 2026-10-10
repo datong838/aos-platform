@@ -1,0 +1,10 @@
+{
+  "pid": 56171,
+  "xid": "61774",
+  "schema": "test_owned_mapping_15597687f30b41ddb561de3515663844",
+  "copied": "/tmp/aos_order_mapping_15597687f30b41ddb561de3515663844.so",
+  "replacement": "/tmp/aos_order_mapping_replacement_15597687f30b41ddb561de3515663844.so",
+  "library": "/tmp/aos_admission_modules_ab3dcc285ec34d1583eae727761ccc45.so",
+  "full_admission": false,
+  "foreign_arm_invoked": false
+}

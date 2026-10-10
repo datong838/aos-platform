@@ -6,7 +6,7 @@
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "authority_revision": "AOS-001770",
   "task_base_revision": "AOS-001746",
-  "step": "native-module-disk-facts-seven-tests-green-full-ending-remains",
+  "step": "actual-mapped-path-separation-proven-kernel-header-identity-and-image-closure-next",
   "code_files": [
     "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.c",
     "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.control",
@@ -26,6 +26,7 @@
     ".evidence/gt-shared-parent-native-ending-20261011/module-reader-r2/verification-r4.json",
     ".evidence/gt-shared-parent-native-ending-20261011/receipt-observation-1768.json",
     ".evidence/gt-shared-parent-native-ending-20261011/module-file-facts-1768/verification.json",
-    ".evidence/gt-shared-parent-native-ending-20261011/dependency-material-references-1769.json"
+    ".evidence/gt-shared-parent-native-ending-20261011/dependency-material-references-1769.json",
+    ".evidence/gt-shared-parent-native-ending-20261011/mapped-path-replacement-1770/verification.json"
   ]
 }
