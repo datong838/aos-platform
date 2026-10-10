@@ -1,0 +1,29 @@
+{
+  "status": "CURRENT_NATIVE_WINDOW_GATE_TIGHTENED_AND_REAL_RETRY_RACE_REPRODUCED",
+  "head": "151715fc9b9f68f72c28ed8a78a370f5c26b485d",
+  "authority": "AOS-001711",
+  "task": "current159-maintenance-20261010",
+  "native_runtime_race": [
+    45544
+  ],
+  "tests_pass": 170,
+  "skip": 0,
+  "schema_gate_not_weakened": true,
+  "global_fleet_or_old12run_pass": false,
+  "formal_writes": 0,
+  "service_effects": 0,
+  "task_delivery": false,
+  "review": [
+    "Native five all-scope counters exactlyzero; strict process bytes, exact four Unix Docker endpoints and stopped Colima proof; only original PG images/entrypoints/commands accepted",
+    "Current formal gate requires native proof with exact current Task/HEAD/authority/cluster and thirty-second freshness, plus original service/TCP/client/prepared observations",
+    "Actual six-snapshot series encountered registered API preflight PID45544; instantaneous no8080 or noPID is insufficient; require original durable launchd bootout before zero-window recollection",
+    "Runtime Provider/Host activation not granted; external Fleet and old12Run remain independent; API/Web and current PG still untouched"
+  ],
+  "next": "Prepare exact registered API restoration plan bound to committed source and original runtime; then whole current maintenance sequencer with journaled API/Web bootout, fresh local proof, fence, second fullbackup/fullrestore/original steps and exact original configuration restoration",
+  "file_hashes": {
+    "execution_surface159.py": "a4ad2cf5a0136d6270550e9f5d36041ba21d2be47e22d03cc30b5bdca79d2288",
+    "test_execution_surface159.py": "deccd5c5207311fee0c456f5f67eddb1abbc9f4a387abe31cbe9097ad3fafaa4",
+    "current_window159_contract.py": "de44c5e64339e46ba52184e869923b9bbeac455d7907004a2764c1aee983e306",
+    "test_current_window159_contract.py": "e06a8885a3038ecbf5dac03f43c0ed2f13649d6db2bf6ab2830245f4d2be515d"
+  }
+}

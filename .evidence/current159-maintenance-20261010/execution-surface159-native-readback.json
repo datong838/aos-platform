@@ -1,0 +1,762 @@
+{
+  "status": "REGISTERED_PREFLIGHT_RETRY_MUST_BE_STOPPED_BEFORE_CURRENT_WINDOW",
+  "snapshots": [
+    {
+      "status": "TRANSIENT_LOCAL_NO_RUNTIME_OBSERVED",
+      "observation": {
+        "scope": "CURRENT_PREVIEW_LOCAL_EXECUTION_SURFACE_ONLY",
+        "source_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+        "cluster": "7683855731447750695",
+        "database": "aos_current_preview_20260927",
+        "at": "2026-10-10T08:47:03.500531+00:00",
+        "binding": {
+          "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+          "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+          "task_id": "current159-maintenance-20261010",
+          "authority_revision": "AOS-001711",
+          "head": "251f8eafbca9f9f6c2fbcb246f664961d477af39"
+        },
+        "counts": {
+          "runtime_bindings": 0,
+          "host_assignments": 0,
+          "enabled_host_identities": 0,
+          "enabled_meta_schedules": 0,
+          "host_leases": 0
+        },
+        "process_inventory_utf8_strict": true,
+        "process_inventory_sha256": "622b0affb6a6391e4afd42fdc08b843a0e698d0ae9f68fa4f7af602a513045a3",
+        "forbidden_runtime_pids": [],
+        "legacy_api_label_absent": true,
+        "host_label_absent": true,
+        "global_fleet_off_proven": false,
+        "business_runtime_authorized": false,
+        "contexts": {
+          "default": {
+            "endpoint": "unix:///var/run/docker.sock",
+            "state": "SOCKET_ABSENT",
+            "socket_exists": false
+          },
+          "desktop-linux": {
+            "endpoint": "unix:///Users/ddt/.docker/run/docker.sock",
+            "state": "RUNNING",
+            "containers": [
+              {
+                "id": "64350ecc88aa446cc0a5694a3398155f4b123bbe6633d5ab24b84a46fc0de849",
+                "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+                "cmd": [
+                  "postgres",
+                  "-c",
+                  "shared_buffers=16MB",
+                  "-c",
+                  "max_connections=30"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+                "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+                "cmd": [
+                  "postgres",
+                  "-c",
+                  "shared_buffers=16MB",
+                  "-c",
+                  "max_connections=30"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              }
+            ]
+          },
+          "colima-aos-a0v-test-only": {
+            "endpoint": "unix:///Users/ddt/.colima/aos-a0v-test-only/docker.sock",
+            "state": "STOPPED_COLIMA",
+            "socket_exists": false,
+            "colima_status": "Stopped"
+          },
+          "colima-aos-extension": {
+            "endpoint": "unix:///Users/ddt/.colima/aos-extension/docker.sock",
+            "state": "RUNNING",
+            "containers": [
+              {
+                "id": "0d43faad9ecb351b7584d27ad099b05f9bb198d2991401a22480a4cee5975fdd",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "0a78aab54c880c1b7a17d965f4c10f58d81779f0c732ec4ba3ffb56df0fcb2c4",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "c0308953531d1b9c94a730e858d03a4f406a26bfb0b53feefe66343593a5b75d",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "zero_window_established": false
+    },
+    {
+      "status": "TRANSIENT_LOCAL_NO_RUNTIME_OBSERVED",
+      "observation": {
+        "scope": "CURRENT_PREVIEW_LOCAL_EXECUTION_SURFACE_ONLY",
+        "source_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+        "cluster": "7683855731447750695",
+        "database": "aos_current_preview_20260927",
+        "at": "2026-10-10T08:47:05.423913+00:00",
+        "binding": {
+          "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+          "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+          "task_id": "current159-maintenance-20261010",
+          "authority_revision": "AOS-001711",
+          "head": "251f8eafbca9f9f6c2fbcb246f664961d477af39"
+        },
+        "counts": {
+          "runtime_bindings": 0,
+          "host_assignments": 0,
+          "enabled_host_identities": 0,
+          "enabled_meta_schedules": 0,
+          "host_leases": 0
+        },
+        "process_inventory_utf8_strict": true,
+        "process_inventory_sha256": "0db8cde7933907719ac417f12514866e7d4c5f5842d772cde64a0fd01dd05f27",
+        "forbidden_runtime_pids": [],
+        "legacy_api_label_absent": true,
+        "host_label_absent": true,
+        "global_fleet_off_proven": false,
+        "business_runtime_authorized": false,
+        "contexts": {
+          "default": {
+            "endpoint": "unix:///var/run/docker.sock",
+            "state": "SOCKET_ABSENT",
+            "socket_exists": false
+          },
+          "desktop-linux": {
+            "endpoint": "unix:///Users/ddt/.docker/run/docker.sock",
+            "state": "RUNNING",
+            "containers": [
+              {
+                "id": "64350ecc88aa446cc0a5694a3398155f4b123bbe6633d5ab24b84a46fc0de849",
+                "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+                "cmd": [
+                  "postgres",
+                  "-c",
+                  "shared_buffers=16MB",
+                  "-c",
+                  "max_connections=30"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+                "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+                "cmd": [
+                  "postgres",
+                  "-c",
+                  "shared_buffers=16MB",
+                  "-c",
+                  "max_connections=30"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              }
+            ]
+          },
+          "colima-aos-a0v-test-only": {
+            "endpoint": "unix:///Users/ddt/.colima/aos-a0v-test-only/docker.sock",
+            "state": "STOPPED_COLIMA",
+            "socket_exists": false,
+            "colima_status": "Stopped"
+          },
+          "colima-aos-extension": {
+            "endpoint": "unix:///Users/ddt/.colima/aos-extension/docker.sock",
+            "state": "RUNNING",
+            "containers": [
+              {
+                "id": "0d43faad9ecb351b7584d27ad099b05f9bb198d2991401a22480a4cee5975fdd",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "0a78aab54c880c1b7a17d965f4c10f58d81779f0c732ec4ba3ffb56df0fcb2c4",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "c0308953531d1b9c94a730e858d03a4f406a26bfb0b53feefe66343593a5b75d",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "zero_window_established": false
+    },
+    {
+      "status": "TRANSIENT_LOCAL_NO_RUNTIME_OBSERVED",
+      "observation": {
+        "scope": "CURRENT_PREVIEW_LOCAL_EXECUTION_SURFACE_ONLY",
+        "source_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+        "cluster": "7683855731447750695",
+        "database": "aos_current_preview_20260927",
+        "at": "2026-10-10T08:47:07.289986+00:00",
+        "binding": {
+          "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+          "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+          "task_id": "current159-maintenance-20261010",
+          "authority_revision": "AOS-001711",
+          "head": "251f8eafbca9f9f6c2fbcb246f664961d477af39"
+        },
+        "counts": {
+          "runtime_bindings": 0,
+          "host_assignments": 0,
+          "enabled_host_identities": 0,
+          "enabled_meta_schedules": 0,
+          "host_leases": 0
+        },
+        "process_inventory_utf8_strict": true,
+        "process_inventory_sha256": "abc240d89bbc793a6990eaa9ba986c8820dbdd10159a5cef07522634134bad38",
+        "forbidden_runtime_pids": [],
+        "legacy_api_label_absent": true,
+        "host_label_absent": true,
+        "global_fleet_off_proven": false,
+        "business_runtime_authorized": false,
+        "contexts": {
+          "default": {
+            "endpoint": "unix:///var/run/docker.sock",
+            "state": "SOCKET_ABSENT",
+            "socket_exists": false
+          },
+          "desktop-linux": {
+            "endpoint": "unix:///Users/ddt/.docker/run/docker.sock",
+            "state": "RUNNING",
+            "containers": [
+              {
+                "id": "64350ecc88aa446cc0a5694a3398155f4b123bbe6633d5ab24b84a46fc0de849",
+                "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+                "cmd": [
+                  "postgres",
+                  "-c",
+                  "shared_buffers=16MB",
+                  "-c",
+                  "max_connections=30"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+                "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+                "cmd": [
+                  "postgres",
+                  "-c",
+                  "shared_buffers=16MB",
+                  "-c",
+                  "max_connections=30"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              }
+            ]
+          },
+          "colima-aos-a0v-test-only": {
+            "endpoint": "unix:///Users/ddt/.colima/aos-a0v-test-only/docker.sock",
+            "state": "STOPPED_COLIMA",
+            "socket_exists": false,
+            "colima_status": "Stopped"
+          },
+          "colima-aos-extension": {
+            "endpoint": "unix:///Users/ddt/.colima/aos-extension/docker.sock",
+            "state": "RUNNING",
+            "containers": [
+              {
+                "id": "0d43faad9ecb351b7584d27ad099b05f9bb198d2991401a22480a4cee5975fdd",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "0a78aab54c880c1b7a17d965f4c10f58d81779f0c732ec4ba3ffb56df0fcb2c4",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "c0308953531d1b9c94a730e858d03a4f406a26bfb0b53feefe66343593a5b75d",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "zero_window_established": false
+    },
+    {
+      "status": "TRANSIENT_LOCAL_NO_RUNTIME_OBSERVED",
+      "observation": {
+        "scope": "CURRENT_PREVIEW_LOCAL_EXECUTION_SURFACE_ONLY",
+        "source_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+        "cluster": "7683855731447750695",
+        "database": "aos_current_preview_20260927",
+        "at": "2026-10-10T08:47:09.104923+00:00",
+        "binding": {
+          "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+          "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+          "task_id": "current159-maintenance-20261010",
+          "authority_revision": "AOS-001711",
+          "head": "251f8eafbca9f9f6c2fbcb246f664961d477af39"
+        },
+        "counts": {
+          "runtime_bindings": 0,
+          "host_assignments": 0,
+          "enabled_host_identities": 0,
+          "enabled_meta_schedules": 0,
+          "host_leases": 0
+        },
+        "process_inventory_utf8_strict": true,
+        "process_inventory_sha256": "758c1b4d2cf7b7e01a94e1bd91223e728d9c4d587040895220dc959f1a4a0375",
+        "forbidden_runtime_pids": [],
+        "legacy_api_label_absent": true,
+        "host_label_absent": true,
+        "global_fleet_off_proven": false,
+        "business_runtime_authorized": false,
+        "contexts": {
+          "default": {
+            "endpoint": "unix:///var/run/docker.sock",
+            "state": "SOCKET_ABSENT",
+            "socket_exists": false
+          },
+          "desktop-linux": {
+            "endpoint": "unix:///Users/ddt/.docker/run/docker.sock",
+            "state": "RUNNING",
+            "containers": [
+              {
+                "id": "64350ecc88aa446cc0a5694a3398155f4b123bbe6633d5ab24b84a46fc0de849",
+                "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+                "cmd": [
+                  "postgres",
+                  "-c",
+                  "shared_buffers=16MB",
+                  "-c",
+                  "max_connections=30"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+                "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+                "cmd": [
+                  "postgres",
+                  "-c",
+                  "shared_buffers=16MB",
+                  "-c",
+                  "max_connections=30"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              }
+            ]
+          },
+          "colima-aos-a0v-test-only": {
+            "endpoint": "unix:///Users/ddt/.colima/aos-a0v-test-only/docker.sock",
+            "state": "STOPPED_COLIMA",
+            "socket_exists": false,
+            "colima_status": "Stopped"
+          },
+          "colima-aos-extension": {
+            "endpoint": "unix:///Users/ddt/.colima/aos-extension/docker.sock",
+            "state": "RUNNING",
+            "containers": [
+              {
+                "id": "0d43faad9ecb351b7584d27ad099b05f9bb198d2991401a22480a4cee5975fdd",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "0a78aab54c880c1b7a17d965f4c10f58d81779f0c732ec4ba3ffb56df0fcb2c4",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "c0308953531d1b9c94a730e858d03a4f406a26bfb0b53feefe66343593a5b75d",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "zero_window_established": false
+    },
+    {
+      "status": "TRANSIENT_LOCAL_NO_RUNTIME_OBSERVED",
+      "observation": {
+        "scope": "CURRENT_PREVIEW_LOCAL_EXECUTION_SURFACE_ONLY",
+        "source_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+        "cluster": "7683855731447750695",
+        "database": "aos_current_preview_20260927",
+        "at": "2026-10-10T08:47:11.079560+00:00",
+        "binding": {
+          "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+          "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+          "task_id": "current159-maintenance-20261010",
+          "authority_revision": "AOS-001711",
+          "head": "251f8eafbca9f9f6c2fbcb246f664961d477af39"
+        },
+        "counts": {
+          "runtime_bindings": 0,
+          "host_assignments": 0,
+          "enabled_host_identities": 0,
+          "enabled_meta_schedules": 0,
+          "host_leases": 0
+        },
+        "process_inventory_utf8_strict": true,
+        "process_inventory_sha256": "4ab34309007eb3a6af0ee909cb40720750539641c8453801bbe69f80ea2719f1",
+        "forbidden_runtime_pids": [],
+        "legacy_api_label_absent": true,
+        "host_label_absent": true,
+        "global_fleet_off_proven": false,
+        "business_runtime_authorized": false,
+        "contexts": {
+          "default": {
+            "endpoint": "unix:///var/run/docker.sock",
+            "state": "SOCKET_ABSENT",
+            "socket_exists": false
+          },
+          "desktop-linux": {
+            "endpoint": "unix:///Users/ddt/.docker/run/docker.sock",
+            "state": "RUNNING",
+            "containers": [
+              {
+                "id": "64350ecc88aa446cc0a5694a3398155f4b123bbe6633d5ab24b84a46fc0de849",
+                "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+                "cmd": [
+                  "postgres",
+                  "-c",
+                  "shared_buffers=16MB",
+                  "-c",
+                  "max_connections=30"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+                "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+                "cmd": [
+                  "postgres",
+                  "-c",
+                  "shared_buffers=16MB",
+                  "-c",
+                  "max_connections=30"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              }
+            ]
+          },
+          "colima-aos-a0v-test-only": {
+            "endpoint": "unix:///Users/ddt/.colima/aos-a0v-test-only/docker.sock",
+            "state": "STOPPED_COLIMA",
+            "socket_exists": false,
+            "colima_status": "Stopped"
+          },
+          "colima-aos-extension": {
+            "endpoint": "unix:///Users/ddt/.colima/aos-extension/docker.sock",
+            "state": "RUNNING",
+            "containers": [
+              {
+                "id": "0d43faad9ecb351b7584d27ad099b05f9bb198d2991401a22480a4cee5975fdd",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "0a78aab54c880c1b7a17d965f4c10f58d81779f0c732ec4ba3ffb56df0fcb2c4",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "c0308953531d1b9c94a730e858d03a4f406a26bfb0b53feefe66343593a5b75d",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "zero_window_established": false
+    },
+    {
+      "status": "CURRENT_SURFACE_REJECTED",
+      "reason": "CURRENT_RUNTIME_PROCESS_UNRESOLVED",
+      "observation": {
+        "scope": "CURRENT_PREVIEW_LOCAL_EXECUTION_SURFACE_ONLY",
+        "source_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+        "cluster": "7683855731447750695",
+        "database": "aos_current_preview_20260927",
+        "at": "2026-10-10T08:47:12.930387+00:00",
+        "binding": {
+          "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+          "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+          "task_id": "current159-maintenance-20261010",
+          "authority_revision": "AOS-001711",
+          "head": "251f8eafbca9f9f6c2fbcb246f664961d477af39"
+        },
+        "counts": {
+          "runtime_bindings": 0,
+          "host_assignments": 0,
+          "enabled_host_identities": 0,
+          "enabled_meta_schedules": 0,
+          "host_leases": 0
+        },
+        "process_inventory_utf8_strict": true,
+        "process_inventory_sha256": "aa6af5faf8300eca9ae5e2a537978be87002ee19da2aacfe17df9036ce88b206",
+        "forbidden_runtime_pids": [
+          45544
+        ],
+        "legacy_api_label_absent": true,
+        "host_label_absent": true,
+        "global_fleet_off_proven": false,
+        "business_runtime_authorized": false,
+        "contexts": {
+          "default": {
+            "endpoint": "unix:///var/run/docker.sock",
+            "state": "SOCKET_ABSENT",
+            "socket_exists": false
+          },
+          "desktop-linux": {
+            "endpoint": "unix:///Users/ddt/.docker/run/docker.sock",
+            "state": "RUNNING",
+            "containers": [
+              {
+                "id": "64350ecc88aa446cc0a5694a3398155f4b123bbe6633d5ab24b84a46fc0de849",
+                "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+                "cmd": [
+                  "postgres",
+                  "-c",
+                  "shared_buffers=16MB",
+                  "-c",
+                  "max_connections=30"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+                "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+                "cmd": [
+                  "postgres",
+                  "-c",
+                  "shared_buffers=16MB",
+                  "-c",
+                  "max_connections=30"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              }
+            ]
+          },
+          "colima-aos-a0v-test-only": {
+            "endpoint": "unix:///Users/ddt/.colima/aos-a0v-test-only/docker.sock",
+            "state": "STOPPED_COLIMA",
+            "socket_exists": false,
+            "colima_status": "Stopped"
+          },
+          "colima-aos-extension": {
+            "endpoint": "unix:///Users/ddt/.colima/aos-extension/docker.sock",
+            "state": "RUNNING",
+            "containers": [
+              {
+                "id": "0d43faad9ecb351b7584d27ad099b05f9bb198d2991401a22480a4cee5975fdd",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "0a78aab54c880c1b7a17d965f4c10f58d81779f0c732ec4ba3ffb56df0fcb2c4",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "c0308953531d1b9c94a730e858d03a4f406a26bfb0b53feefe66343593a5b75d",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              },
+              {
+                "id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+                "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+                "cmd": [
+                  "postgres"
+                ],
+                "entrypoint": [
+                  "docker-entrypoint.sh"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "zero_window_established": false
+    }
+  ],
+  "database_effects": 0,
+  "service_effects": 0,
+  "global_fleet_off_proven": false,
+  "scope": "current local inventory only; instantaneous no-PID does not prove a future zero window"
+}
