@@ -1,0 +1,46 @@
+{
+  "caller": {
+    "xid": "60415",
+    "pid": 12221
+  },
+  "plan": "a0f30729-bcb9-4de2-8ab7-66403a895f48",
+  "initialCallAuthorityHash": "sha256:93fc108ded896aab9f2d5f185c8f3c9b111a40ab3ad32ad76f699e8fa52c035d",
+  "targetIntentHash": "sha256:6a1e4ae2ca9de01940edaa425c42446a70bfa2858a3a931a96214209ccfd76bb",
+  "judgeDependencyHash": "sha256:5d19f2c9016a9f15fcae566ee807dfff6f5f8aca78d45cc467ef05c348ee5536",
+  "sourcePacketHash": "sha256:febc123989557c53c410faee6f2c86173f2aff5f7f95c8360f7233c90c63e521",
+  "before_intent_write_counts": [
+    {
+      "relname": "judge_dependency",
+      "n_tup_ins": 1,
+      "n_tup_upd": 0,
+      "n_tup_del": 0
+    },
+    {
+      "relname": "target_intent",
+      "n_tup_ins": 1,
+      "n_tup_upd": 0,
+      "n_tup_del": 0
+    }
+  ],
+  "after_intent_write_counts": [
+    {
+      "relname": "judge_dependency",
+      "n_tup_ins": 1,
+      "n_tup_upd": 0,
+      "n_tup_del": 0
+    },
+    {
+      "relname": "target_intent",
+      "n_tup_ins": 1,
+      "n_tup_upd": 0,
+      "n_tup_del": 0
+    }
+  ],
+  "real_signed_original_source": true,
+  "real_independent_parents": true,
+  "signed_certificate_legs": 4,
+  "judge_actual_result_pending": true,
+  "caller_input_bytes_match": true,
+  "full_admission": false,
+  "execution_allowed": false
+}

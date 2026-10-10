@@ -1,0 +1,14 @@
+{
+  "before_acl": [],
+  "after_acl": [],
+  "role": {
+    "rolcanlogin": false,
+    "rolinherit": false,
+    "rolsuper": false,
+    "rolcreatedb": false,
+    "rolcreaterole": false,
+    "rolreplication": false,
+    "rolbypassrls": false
+  },
+  "exact_restored": true
+}

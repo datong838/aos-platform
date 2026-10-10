@@ -1,0 +1,56 @@
+{
+  "status": "FIXED_FINAL_CALL_NATIVE_POSITIVE_VERIFIED",
+  "authority": "AOS-001756",
+  "final_call_native_positive": true,
+  "database": "aos_test_7c4f2f6b4aa8_ti4_test",
+  "cluster": "7694680278363095064",
+  "native_functions": [
+    {
+      "name": "aos_shared_parent_physical_private.bind_complete_parent_risk",
+      "body_sha256": "97334dc5e1b17a67d6011c697cfa5645017a7249ed9d226e9cd126f9bae84974",
+      "native_body_exact": true
+    },
+    {
+      "name": "public.stage_shared_parent_complete_risk",
+      "body_sha256": "15e95e139c3e42c334fc3e7a50759b9a862b1da8605219bdae74de8661c92320",
+      "native_body_exact": true
+    },
+    {
+      "name": "public.validate_shared_parent_admission_certificate_set(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea)",
+      "body_sha256": "30e82fdb7be148dd611500a47774765d63aead3659c800c44611581593bf4039",
+      "native_body_exact": true
+    },
+    {
+      "name": "public.verify_shared_parent_final_call_authority(uuid,text,xid8,integer)",
+      "body_sha256": "7cf524d8836a7afec21635e20425cdd8a5ba58399fdd00f4fd9f2dc31a2a5419",
+      "native_body_exact": true
+    },
+    {
+      "name": "public.verify_shared_parent_final_intents(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text,text,bytea,bytea,uuid,uuid)",
+      "body_sha256": "c8fc99d2b10859ea72c6509f1555c2f6225acec45761ef4489c0b450d94bba03",
+      "native_body_exact": true
+    }
+  ],
+  "zero_rows": {
+    "aos_shared_parent_admission_private.pending_origin": 0,
+    "aos_shared_parent_physical_private.initial_target_obligation": 0,
+    "aos_shared_parent_physical_private.target_intent": 0,
+    "aos_shared_parent_physical_private.judge_dependency": 0,
+    "aos_shared_parent_admission_private.end_authority": 0,
+    "aos_shared_parent_physical_private.initial_call_authority": 0,
+    "aos_shared_parent_physical_private.initial_window_obligation": 0,
+    "aos_shared_parent_physical_private.complete_parent_risk": 0
+  },
+  "signed_legs": 4,
+  "parent_risks": 2,
+  "native_caller_aborted": true,
+  "negative_cases": [],
+  "temporary_permissions_restored": true,
+  "actual_missing_end_commit_rejected": false,
+  "separate_risk_negatives": true,
+  "whole_fixture_pass": false,
+  "full_admission_commit": false,
+  "formal_root_provenance": false,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

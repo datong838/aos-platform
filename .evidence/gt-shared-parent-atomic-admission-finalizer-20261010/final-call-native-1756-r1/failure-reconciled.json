@@ -1,0 +1,9 @@
+{
+  "database": "aos_test_09f9612090a0_ti4_test",
+  "zero_shared_rows": {},
+  "role_restored": true,
+  "profiler_restored": true,
+  "failure": "test-owned Judge evidence path outside original allowed child root",
+  "final_call_positive_reached": false,
+  "unknown_effect_replayed": false
+}

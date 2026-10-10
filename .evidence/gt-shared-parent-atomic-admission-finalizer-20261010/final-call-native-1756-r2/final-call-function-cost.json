@@ -1,0 +1,463 @@
+{
+  "scope": "same-transaction pg_stat_xact_user_functions delta across exactly FINAL_CALL",
+  "elapsed_seconds": 15.212054,
+  "function_costs": [
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "require_original_fact_boundary",
+      "calls": 300,
+      "total_ms": 7362.863,
+      "self_ms": 7362.863
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_root_snapshot",
+      "calls": 552,
+      "total_ms": 1661.805,
+      "self_ms": 1404.103
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "require_current_source_installation",
+      "calls": 54,
+      "total_ms": 6331.458,
+      "self_ms": 948.834
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "canonical_signed_json",
+      "calls": 317546,
+      "total_ms": 883.375,
+      "self_ms": 883.375
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "require_original_withdrawal_boundary",
+      "calls": 123,
+      "total_ms": 3757.72,
+      "self_ms": 616.756
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "require_original_evidence_boundary",
+      "calls": 123,
+      "total_ms": 3766.59,
+      "self_ms": 560.168
+    },
+    {
+      "schema": "public",
+      "function": "read_capacity_source_for_occupation",
+      "calls": 23,
+      "total_ms": 14217.01,
+      "self_ms": 537.137
+    },
+    {
+      "schema": "public",
+      "function": "canonical_asset_registry_jsonb",
+      "calls": 132430,
+      "total_ms": 399.06,
+      "self_ms": 399.06
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_identifier",
+      "calls": 14237,
+      "total_ms": 373.745,
+      "self_ms": 373.745
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "require_original_epoch_pair_boundary",
+      "calls": 246,
+      "total_ms": 6347.385,
+      "self_ms": 331.529
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_claim_fields",
+      "calls": 13869,
+      "total_ms": 344.984,
+      "self_ms": 297.308
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_root_time_literal",
+      "calls": 3312,
+      "total_ms": 233.388,
+      "self_ms": 233.388
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_source_time",
+      "calls": 9660,
+      "total_ms": 221.377,
+      "self_ms": 221.377
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_source_ref",
+      "calls": 7130,
+      "total_ms": 128.345,
+      "self_ms": 111.575
+    },
+    {
+      "schema": "public",
+      "function": "require_capacity_occupation_source_installation",
+      "calls": 23,
+      "total_ms": 2873.39,
+      "self_ms": 101.193
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_build_json",
+      "calls": 23115,
+      "total_ms": 86.12,
+      "self_ms": 86.12
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_source_field",
+      "calls": 118772,
+      "total_ms": 79.087,
+      "self_ms": 79.087
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_provider_string",
+      "calls": 29670,
+      "total_ms": 63.842,
+      "self_ms": 63.842
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "require_original_fact_evidence",
+      "calls": 483,
+      "total_ms": 297.717,
+      "self_ms": 57.038
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_original_provider",
+      "calls": 1449,
+      "total_ms": 397.194,
+      "self_ms": 47.858
+    },
+    {
+      "schema": "aos_ed25519",
+      "function": "verify",
+      "calls": 997,
+      "total_ms": 47.533,
+      "self_ms": 47.533
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_origin_bootstrap",
+      "calls": 506,
+      "total_ms": 340.698,
+      "self_ms": 46.686
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_original_capacity_application",
+      "calls": 1104,
+      "total_ms": 156.799,
+      "self_ms": 42.598
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_provider_ref",
+      "calls": 4347,
+      "total_ms": 167.821,
+      "self_ms": 33.78
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_signed_time",
+      "calls": 5911,
+      "total_ms": 27.911,
+      "self_ms": 27.911
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_root_identifier_literal",
+      "calls": 3312,
+      "total_ms": 24.315,
+      "self_ms": 24.315
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_build_equal",
+      "calls": 6900,
+      "total_ms": 25.764,
+      "self_ms": 23.298
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_build_exact_ref",
+      "calls": 2346,
+      "total_ms": 76.082,
+      "self_ms": 20.63
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_original_source_candidate",
+      "calls": 552,
+      "total_ms": 102.007,
+      "self_ms": 18.315
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_signed_body",
+      "calls": 2047,
+      "total_ms": 193.291,
+      "self_ms": 17.132
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_evidence_fields",
+      "calls": 828,
+      "total_ms": 74.568,
+      "self_ms": 16.442
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_provider_integer",
+      "calls": 10971,
+      "total_ms": 14.697,
+      "self_ms": 14.697
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_deployment_target",
+      "calls": 851,
+      "total_ms": 34.941,
+      "self_ms": 14.408
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_source_issuer_url",
+      "calls": 161,
+      "total_ms": 61.354,
+      "self_ms": 12.603
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_source_policy",
+      "calls": 207,
+      "total_ms": 88.231,
+      "self_ms": 12.02
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_supplier_attestation",
+      "calls": 138,
+      "total_ms": 61.646,
+      "self_ms": 10.989
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_original_capacity_basis",
+      "calls": 552,
+      "total_ms": 113.74,
+      "self_ms": 10.782
+    },
+    {
+      "schema": "public",
+      "function": "digest",
+      "calls": 2277,
+      "total_ms": 10.341,
+      "self_ms": 10.341
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_original_fact_provider",
+      "calls": 207,
+      "total_ms": 423.765,
+      "self_ms": 9.425
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_provider_time",
+      "calls": 1794,
+      "total_ms": 47.983,
+      "self_ms": 9.319
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_signing_permit",
+      "calls": 138,
+      "total_ms": 68.005,
+      "self_ms": 8.6
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_original_physical_account",
+      "calls": 414,
+      "total_ms": 59.521,
+      "self_ms": 8.225
+    },
+    {
+      "schema": "public",
+      "function": "capacity_occupation_judge_fact",
+      "calls": 9,
+      "total_ms": 5524.805,
+      "self_ms": 7.122
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_original_build_request",
+      "calls": 345,
+      "total_ms": 48.449,
+      "self_ms": 6.229
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "require_original_owner",
+      "calls": 345,
+      "total_ms": 6.114,
+      "self_ms": 6.114
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_original_fact_request",
+      "calls": 138,
+      "total_ms": 390.082,
+      "self_ms": 5.831
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_claim_identity",
+      "calls": 828,
+      "total_ms": 4.425,
+      "self_ms": 4.425
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_claim_header",
+      "calls": 966,
+      "total_ms": 21.18,
+      "self_ms": 4.085
+    },
+    {
+      "schema": "public",
+      "function": "capacity_occupation_eval_fact",
+      "calls": 10,
+      "total_ms": 6290.901,
+      "self_ms": 3.934
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "read_original_token_limit",
+      "calls": 552,
+      "total_ms": 14.556,
+      "self_ms": 2.508
+    },
+    {
+      "schema": "aos_capacity_publication_private",
+      "function": "original_claim_integer",
+      "calls": 1104,
+      "total_ms": 1.799,
+      "self_ms": 1.799
+    },
+    {
+      "schema": "public",
+      "function": "aos_capacity_withdrawal_epoch_lock",
+      "calls": 138,
+      "total_ms": 1.793,
+      "self_ms": 1.793
+    },
+    {
+      "schema": "public",
+      "function": "aos_capacity_evidence_epoch_lock",
+      "calls": 69,
+      "total_ms": 1.693,
+      "self_ms": 1.693
+    },
+    {
+      "schema": "public",
+      "function": "build_shared_parent_admission_origin",
+      "calls": 4,
+      "total_ms": 12451.032,
+      "self_ms": 1.515
+    },
+    {
+      "schema": "public",
+      "function": "validate_shared_parent_admission_certificate_set",
+      "calls": 2,
+      "total_ms": 13378.878,
+      "self_ms": 1.483
+    },
+    {
+      "schema": "public",
+      "function": "read_shared_parent_pending_origin",
+      "calls": 2,
+      "total_ms": 13387.765,
+      "self_ms": 1.387
+    },
+    {
+      "schema": "public",
+      "function": "verify_shared_parent_final_call_authority",
+      "calls": 1,
+      "total_ms": 15210.951,
+      "self_ms": 1.243
+    },
+    {
+      "schema": "public",
+      "function": "verify_shared_parent_final_intents",
+      "calls": 1,
+      "total_ms": 8603.245,
+      "self_ms": 1.101
+    },
+    {
+      "schema": "public",
+      "function": "capacity_occupation_plan_risk_fact",
+      "calls": 9,
+      "total_ms": 11201.762,
+      "self_ms": 0.771
+    },
+    {
+      "schema": "public",
+      "function": "read_shared_parent_retained_origin",
+      "calls": 1,
+      "total_ms": 6604.376,
+      "self_ms": 0.611
+    },
+    {
+      "schema": "public",
+      "function": "capacity_occupation_eval_case_fact",
+      "calls": 1,
+      "total_ms": 615.284,
+      "self_ms": 0.568
+    },
+    {
+      "schema": "public",
+      "function": "capacity_occupation_source_fact",
+      "calls": 4,
+      "total_ms": 2425.512,
+      "self_ms": 0.163
+    },
+    {
+      "schema": "public",
+      "function": "verify_model_shared_parent_certificate_signature",
+      "calls": 8,
+      "total_ms": 916.937,
+      "self_ms": 0.104
+    },
+    {
+      "schema": "public",
+      "function": "test_owned_final_call",
+      "calls": 1,
+      "total_ms": 15211.052,
+      "self_ms": 0.101
+    },
+    {
+      "schema": "public",
+      "function": "read_shared_parent_admission_original_facts",
+      "calls": 9,
+      "total_ms": 11201.829,
+      "self_ms": 0.067
+    }
+  ],
+  "not_full_semantic_closure": true,
+  "not_permission_to_skip_checks": true
+}

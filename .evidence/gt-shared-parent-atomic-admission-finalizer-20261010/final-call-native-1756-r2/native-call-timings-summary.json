@@ -1,0 +1,50 @@
+[
+  {
+    "function": "public.test_owned_versioned_origin",
+    "elapsed_seconds": 3.557967,
+    "outcome": "returned",
+    "error": null
+  },
+  {
+    "function": "public.test_owned_pending_origin",
+    "elapsed_seconds": 13.828512,
+    "outcome": "returned",
+    "error": null
+  },
+  {
+    "function": "public.test_owned_end_authority",
+    "elapsed_seconds": 13.762092,
+    "outcome": "returned",
+    "error": null
+  },
+  {
+    "function": "public.test_owned_complete_risk",
+    "elapsed_seconds": 13.819211,
+    "outcome": "returned",
+    "error": null
+  },
+  {
+    "function": "public.test_owned_initial_obligation",
+    "elapsed_seconds": 13.658597,
+    "outcome": "returned",
+    "error": null
+  },
+  {
+    "function": "public.test_owned_initial_call_authority",
+    "elapsed_seconds": 23.301488,
+    "outcome": "returned",
+    "error": null
+  },
+  {
+    "function": "public.test_owned_final_call",
+    "elapsed_seconds": 15.212054,
+    "outcome": "returned",
+    "error": null
+  },
+  {
+    "function": "public.test_owned_initial_window",
+    "elapsed_seconds": 11.453503,
+    "outcome": "rejected",
+    "error": "CAPACITY_CURRENT_SOURCE_EXPIRED"
+  }
+]
