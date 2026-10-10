@@ -1,0 +1,125 @@
+{
+  "status": "ACTUAL_NATIVE_WRITE_OVERAPPROXIMATION_VERIFIED",
+  "authority": "AOS-001743",
+  "head": "fb06b58b2a9c72c9e43e817f61c5de817b611a08",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "database": "aos_test_a6cb41afc4a5_ti4_test",
+  "caller": {
+    "login": "aos_provider_capacity_occupation",
+    "role": "aos_runtime",
+    "xid": "59820",
+    "pid": 72813,
+    "observed_at": "2026-10-10T18:43:51.319694+00:00"
+  },
+  "stage_captures": 10,
+  "actual_write_counter_relations": [
+    "aos_physical_capacity_occupation_private.account_guard",
+    "aos_physical_capacity_occupation_private.parent_debit_guard",
+    "aos_physical_capacity_occupation_private.prepared_parent_debit",
+    "aos_shared_parent_admission_private.end_authority",
+    "aos_shared_parent_admission_private.pending_origin",
+    "aos_shared_parent_physical_private.complete_parent_risk",
+    "aos_shared_parent_physical_private.initial_call_authority",
+    "aos_shared_parent_physical_private.initial_target_obligation",
+    "aos_shared_parent_physical_private.initial_window_obligation",
+    "aos_shared_parent_physical_private.judge_dependency",
+    "aos_shared_parent_physical_private.target_intent",
+    "public.aip_budget_bucket",
+    "public.aip_budget_cost_runtime_fence",
+    "public.aip_model_eval_budget_reservation",
+    "public.aip_model_eval_budget_reservation_bucket",
+    "public.aip_model_judge_budget_reservation",
+    "public.aip_model_judge_budget_reservation_bucket"
+  ],
+  "original_relation_count": 9,
+  "shared_relation_count": 8,
+  "catalog_counts": {
+    "constraints": 138,
+    "triggers": 114,
+    "indexes": 29,
+    "columns": 186
+  },
+  "foreign_constraints": 21,
+  "incoming_foreign_constraints": 2,
+  "deferred_user_triggers": [
+    {
+      "table": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "name": "require_joint_finalization",
+      "function": "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "body_hash": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    {
+      "table": "aos_shared_parent_admission_private.pending_origin",
+      "name": "require_complete_admission_end",
+      "function": "aos_shared_parent_admission_private.require_pending_completion()",
+      "body_hash": "0cc61cc107ad38e73fccc0c3c58e895511edc21cef6bee6f4e8d13d46fc81fda"
+    },
+    {
+      "table": "aos_shared_parent_physical_private.initial_target_obligation",
+      "name": "require_complete_obligation_end",
+      "function": "aos_shared_parent_physical_private.require_complete_obligation()",
+      "body_hash": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+    },
+    {
+      "table": "aos_shared_parent_physical_private.target_intent",
+      "name": "require_complete_intent_end",
+      "function": "aos_shared_parent_physical_private.require_complete_obligation()",
+      "body_hash": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+    },
+    {
+      "table": "aos_shared_parent_physical_private.judge_dependency",
+      "name": "require_complete_intent_end",
+      "function": "aos_shared_parent_physical_private.require_complete_obligation()",
+      "body_hash": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+    },
+    {
+      "table": "aos_shared_parent_admission_private.end_authority",
+      "name": "require_complete_authority_end",
+      "function": "aos_shared_parent_admission_private.require_pending_completion()",
+      "body_hash": "0cc61cc107ad38e73fccc0c3c58e895511edc21cef6bee6f4e8d13d46fc81fda"
+    },
+    {
+      "table": "aos_shared_parent_physical_private.initial_call_authority",
+      "name": "require_complete_call_end",
+      "function": "aos_shared_parent_physical_private.require_complete_obligation()",
+      "body_hash": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+    },
+    {
+      "table": "aos_shared_parent_physical_private.initial_window_obligation",
+      "name": "require_complete_window_end",
+      "function": "aos_shared_parent_physical_private.require_complete_obligation()",
+      "body_hash": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+    },
+    {
+      "table": "aos_shared_parent_physical_private.complete_parent_risk",
+      "name": "require_complete_risk_end",
+      "function": "aos_shared_parent_physical_private.require_complete_obligation()",
+      "body_hash": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+    }
+  ],
+  "exact_capture_hashes": {
+    "native-write-capture.jsonl": "6131d03ce297595c686431dd938d3e17f84b02825b7171c842b4b7a4f7a01953",
+    "result-r1.json": "70d931f4478ae393e13948a3f406dcf762524ac29b2303ef3502a3e9d85531f9",
+    "profiler-restoration.json": "ca793bce34c20934efa06355c1e35ca335959c6b786e9dc98adfdc7a791100dd",
+    "independent-readback.json": "d8fe24539b1ca3004511072ba0684286a08721e32508352d79ad747344933c14",
+    "run-native-r1.py": "8d8080997e1f9876f9b1a95703dfe7969f50aaba4b4c5e80bc54337ec96fc8bd",
+    "source_newjudge_native_trial_1606.py": "36e3a2add11e3665276ee78738370e307c7f7fddc6c9072398250930a3d8c8c1"
+  },
+  "actual_missing_end_commit_rejected": true,
+  "native_caller_aborted": true,
+  "temporary_permissions_restored": true,
+  "whole_fixture_pass": false,
+  "pending_event_queue_proven": false,
+  "counters_include_rolled_back_savepoints": true,
+  "transitive_event_closure_proven": false,
+  "full_admission_commit": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "limitations": [
+    "Write statistics include rolled-back savepoints and do not enumerate pending events.",
+    "Incoming constraints on untouched relations do not prove absence of cascade-triggered effects.",
+    "Immediate FK catalog flags alone do not prove future deferred trigger execution has no waits.",
+    "Original whole fixture call and cleanup remain Source-currentness RED."
+  ],
+  "next_step": "Read exact native deferred bodies and transitive trigger dependencies; freeze an event-drain protocol before implementing the complete ending."
+}

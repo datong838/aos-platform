@@ -1,0 +1,306 @@
+{
+  "status": "NATIVE_WRITE_EVENT_BODIES_FROZEN_READ_ONLY",
+  "authority": "AOS-001743",
+  "database": "aos_test_a6cb41afc4a5_ti4_test",
+  "cluster": "7694680278363095064",
+  "caller_aborted": true,
+  "write_relations": 17,
+  "incoming_constraint_relations": 2,
+  "relations": [
+    {
+      "oid": 5214478,
+      "nspname": "aos_physical_capacity_occupation_private",
+      "relname": "account_guard"
+    },
+    {
+      "oid": 5214524,
+      "nspname": "aos_physical_capacity_occupation_private",
+      "relname": "case_input_binding"
+    },
+    {
+      "oid": 5214489,
+      "nspname": "aos_physical_capacity_occupation_private",
+      "relname": "parent_debit_guard"
+    },
+    {
+      "oid": 5214500,
+      "nspname": "aos_physical_capacity_occupation_private",
+      "relname": "prepared_parent_debit"
+    },
+    {
+      "oid": 5214787,
+      "nspname": "aos_shared_parent_admission_private",
+      "relname": "end_authority"
+    },
+    {
+      "oid": 5214668,
+      "nspname": "aos_shared_parent_admission_private",
+      "relname": "pending_origin"
+    },
+    {
+      "oid": 5214900,
+      "nspname": "aos_shared_parent_physical_private",
+      "relname": "complete_parent_risk"
+    },
+    {
+      "oid": 5214821,
+      "nspname": "aos_shared_parent_physical_private",
+      "relname": "initial_call_authority"
+    },
+    {
+      "oid": 5214692,
+      "nspname": "aos_shared_parent_physical_private",
+      "relname": "initial_target_obligation"
+    },
+    {
+      "oid": 5214863,
+      "nspname": "aos_shared_parent_physical_private",
+      "relname": "initial_window_obligation"
+    },
+    {
+      "oid": 5214745,
+      "nspname": "aos_shared_parent_physical_private",
+      "relname": "judge_dependency"
+    },
+    {
+      "oid": 5214722,
+      "nspname": "aos_shared_parent_physical_private",
+      "relname": "target_intent"
+    },
+    {
+      "oid": 5210299,
+      "nspname": "public",
+      "relname": "aip_budget_bucket"
+    },
+    {
+      "oid": 5212892,
+      "nspname": "public",
+      "relname": "aip_budget_cost_runtime_fence"
+    },
+    {
+      "oid": 5210357,
+      "nspname": "public",
+      "relname": "aip_budget_reservation_bucket"
+    },
+    {
+      "oid": 5213101,
+      "nspname": "public",
+      "relname": "aip_model_eval_budget_reservation"
+    },
+    {
+      "oid": 5213130,
+      "nspname": "public",
+      "relname": "aip_model_eval_budget_reservation_bucket"
+    },
+    {
+      "oid": 5214340,
+      "nspname": "public",
+      "relname": "aip_model_judge_budget_reservation"
+    },
+    {
+      "oid": 5214364,
+      "nspname": "public",
+      "relname": "aip_model_judge_budget_reservation_bucket"
+    }
+  ],
+  "trigger_functions": [
+    {
+      "signature": "\"RI_FKey_check_ins\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "lanname": "internal",
+      "prosrc": "RI_FKey_check_ins",
+      "body_sha256": "c7d3cb0e7da60ad104d23855d5c4706fc5adec81a52ac04d903eb2e0e59c1320"
+    },
+    {
+      "signature": "\"RI_FKey_check_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "lanname": "internal",
+      "prosrc": "RI_FKey_check_upd",
+      "body_sha256": "94ab317bbd11988d53472ae31f8bce5e46edde004cb89f6a91c68176b61fb4b3"
+    },
+    {
+      "signature": "\"RI_FKey_noaction_del\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "lanname": "internal",
+      "prosrc": "RI_FKey_noaction_del",
+      "body_sha256": "4ffbfbc6ff38962d9c39a1a4940135ccd4e46e61d400e2e157be1217ce5fb4f7"
+    },
+    {
+      "signature": "\"RI_FKey_noaction_upd\"()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "lanname": "internal",
+      "prosrc": "RI_FKey_noaction_upd",
+      "body_sha256": "be4d637c94a9aab4f10f1e19d7e16b5e35f397eacf2ad6ac606f6056848a841d"
+    },
+    {
+      "signature": "aip_budget_cost_fence_guard_a0v_126()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "lanname": "plpgsql",
+      "prosrc": " BEGIN\n      IF TG_OP='INSERT' THEN\n        IF session_user<>'aos_budget_consumer_call' OR current_user<>'aos_budget_consumer_owner' OR NEW.version<>1 THEN\n          RAISE EXCEPTION 'BUDGET_COST_FENCE_CONSUMER_REQUIRED' USING ERRCODE='42501'; END IF;\n      ELSIF TG_OP='UPDATE' THEN\n        IF (NEW.org_id,NEW.project_id,NEW.budget_id,NEW.revision,NEW.decision_id) IS DISTINCT FROM\n           (OLD.org_id,OLD.project_id,OLD.budget_id,OLD.revision,OLD.decision_id) OR NEW.version<>OLD.version+1 THEN\n          RAISE EXCEPTION 'BUDGET_COST_FENCE_DRIFT' USING ERRCODE='23514'; END IF;\n      ELSE RAISE EXCEPTION 'BUDGET_COST_FENCE_HISTORY_REQUIRED'; END IF;\n      RETURN NEW; END ",
+      "body_sha256": "a6578978be73a7132b8d11abaad9b221926816fe0323f1c6cb2c8bc05b41dff9"
+    },
+    {
+      "signature": "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "lanname": "plpgsql",
+      "prosrc": "\n          BEGIN RAISE EXCEPTION 'CAPACITY_PARENT_FINALIZE_REQUIRED' USING ERRCODE='23514'; END ",
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    {
+      "signature": "aos_shared_parent_admission_private.check_end_authority()",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "lanname": "plpgsql",
+      "prosrc": "\n          DECLARE original aos_shared_parent_admission_private.pending_origin%ROWTYPE; pending jsonb; facts jsonb; body jsonb;\n            packet jsonb; p_raw bytea:=NEW.source_raw;\n          BEGIN\n            IF session_user<>'aos_provider_capacity_occupation'\n              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'\n              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'\n              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'\n              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'\n              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'\n              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'\n              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_AUTHORITY_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;\n            IF p_raw IS NULL OR octet_length(p_raw) NOT BETWEEN 2 AND 1048576 THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_RETAINED_PACKET_REQUIRED' USING ERRCODE='23514'; END IF;\n            packet:=convert_from(p_raw,'UTF8')::jsonb;\n            IF jsonb_typeof(packet) IS DISTINCT FROM 'object'\n              OR jsonb_typeof(packet->'authentication') IS DISTINCT FROM 'object' THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_RETAINED_PACKET_REQUIRED' USING ERRCODE='23514'; END IF;\n            IF convert_to(public.canonical_asset_registry_jsonb(packet),'UTF8') IS DISTINCT FROM p_raw\n              OR (SELECT count(*) FROM jsonb_object_keys(packet))<>4\n              OR packet-ARRAY['protocol','tenant','sourceRef','authentication'] IS DISTINCT FROM '{}'::jsonb\n              OR packet->>'protocol' IS DISTINCT FROM 'aos-provider-capacity-source-consumption/v1'\n              OR packet->'tenant' IS DISTINCT FROM jsonb_build_object('orgId','org-org','projectId','dev-project')\n              OR (SELECT count(*) FROM jsonb_object_keys(packet->'authentication'))<>4\n              OR (packet->'authentication')-ARRAY['consumerSubject','oidcIssuer','oidcAudience','authenticationExpiresAt'] IS DISTINCT FROM '{}'::jsonb THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_RETAINED_PACKET_REQUIRED' USING ERRCODE='23514'; END IF;\n            SELECT * INTO original FROM aos_shared_parent_admission_private.pending_origin WHERE plan_id=NEW.plan_id FOR SHARE;\n            IF NOT FOUND OR original.content_hash IS DISTINCT FROM NEW.pending_hash\n              OR original.caller_xid IS DISTINCT FROM pg_current_xact_id()\n              OR original.caller_pid IS DISTINCT FROM pg_backend_pid() THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_AUTHORITY_PENDING_REQUIRED' USING ERRCODE='23514'; END IF;\n            pending:=jsonb_build_object('planId',original.plan_id,'immutable',original.body,'contentHash',original.content_hash);\n            facts:=pending#>'{immutable,origin,immutable,originalRisk,originalFacts}';\n            body:=jsonb_build_object('schemaVersion','aos.shared-parent-end-authority/v1',\n              'planId',pending->'planId','pendingOriginHash',pending->>'contentHash',\n              'sourcePacketHash','sha256:'||encode(sha256(p_raw),'hex'),\n              'sourceRef',facts#>'{target,sourceRef}',\n              'targetHold',facts#>'{target,reservationId}','targetRequestId',facts#>'{target,requestId}',\n              'targetRequestHash',facts#>'{target,requestHash}',\n              'judgeHold',facts#>'{judge,reservationId}','judgeRequestId',facts#>'{judge,requestId}',\n              'judgeRequestHash',facts#>'{judge,requestHash}',\n              'manifestHash',pending#>'{immutable,origin,immutable,manifestHash}',\n              'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),\n              'state','awaiting_full_admission','executionAllowed',false);\n            IF NEW.body IS DISTINCT FROM body\n              OR NEW.org_id IS DISTINCT FROM original.org_id OR NEW.project_id IS DISTINCT FROM original.project_id\n              OR NEW.caller_xid IS DISTINCT FROM original.caller_xid OR NEW.caller_pid IS DISTINCT FROM original.caller_pid\n              OR packet->'sourceRef' IS DISTINCT FROM body->'sourceRef'\n              OR facts#>'{judge,sourceRef}' IS DISTINCT FROM body->'sourceRef'\n              OR NEW.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex') THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_AUTHORITY_BINDING_REQUIRED' USING ERRCODE='23514'; END IF;\n            RETURN NEW;\n          END ",
+      "body_sha256": "a57899de91c03d3f69ea256d0f919122831d12aab2e2d4ee343defe1ce84127d"
+    },
+    {
+      "signature": "aos_shared_parent_admission_private.check_pending_origin()",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "lanname": "plpgsql",
+      "prosrc": "\n          DECLARE origin jsonb; facts jsonb;\n          BEGIN\n            origin:=NEW.body#>'{origin,immutable}';facts:=origin#>'{originalRisk,originalFacts}';\n            IF session_user<>'aos_provider_capacity_occupation'\n              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'\n              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'\n              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'\n              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'\n              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'\n              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'\n              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project'\n              OR NEW.body->>'schemaVersion' IS DISTINCT FROM 'aos.shared-parent-pending-origin/v1'\n              OR NEW.body->>'state' IS DISTINCT FROM 'awaiting_full_admission'\n              OR NEW.body->'executionAllowed' IS DISTINCT FROM 'false'::jsonb\n              OR NEW.body#>>'{origin,planId}' IS DISTINCT FROM NEW.plan_id::text\n              OR origin->>'schemaVersion' IS DISTINCT FROM 'aos.shared-parent-admission-origin/v1'\n              OR origin->>'callerLogin' IS DISTINCT FROM session_user\n              OR origin->>'callerXid' IS DISTINCT FROM pg_current_xact_id()::text\n              OR origin->>'callerPid' IS DISTINCT FROM pg_backend_pid()::text\n              OR NEW.caller_xid IS DISTINCT FROM pg_current_xact_id()\n              OR NEW.caller_pid IS DISTINCT FROM pg_backend_pid()\n              OR origin#>>'{tenant,orgId}' IS DISTINCT FROM NEW.org_id\n              OR origin#>>'{tenant,projectId}' IS DISTINCT FROM NEW.project_id\n              OR facts#>>'{target,physicalAccountId}' IS DISTINCT FROM NEW.physical_account_id::text\n              OR facts#>>'{judge,physicalAccountId}' IS DISTINCT FROM NEW.physical_account_id::text\n              OR facts#>>'{target,reservationId}' IS DISTINCT FROM NEW.target_hold::text\n              OR facts#>>'{judge,reservationId}' IS DISTINCT FROM NEW.judge_hold::text\n              OR NEW.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(\n                public.canonical_asset_registry_jsonb(NEW.body),'UTF8')),'hex') THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_PENDING_ORIGIN_BINDING_REQUIRED' USING ERRCODE='23514'; END IF;\n            RETURN NEW;\n          END ",
+      "body_sha256": "9b0778516fd81c2a0cef79384722f915b6140213e2ff99f9508b4938528e2bdf"
+    },
+    {
+      "signature": "aos_shared_parent_admission_private.immutable_pending_origin()",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "lanname": "plpgsql",
+      "prosrc": "\n          BEGIN RAISE EXCEPTION 'SHARED_ADMISSION_PENDING_ORIGIN_IMMUTABLE' USING ERRCODE='42501'; END ",
+      "body_sha256": "4d2cc498d78993f7a858184f0f9f7428ba075fbf19aa4d1cab011450d81ef5e8"
+    },
+    {
+      "signature": "aos_shared_parent_admission_private.require_pending_completion()",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "lanname": "plpgsql",
+      "prosrc": "\n          BEGIN\n            IF NEW.caller_xid IS DISTINCT FROM pg_current_xact_id()\n              OR NEW.caller_pid IS DISTINCT FROM pg_backend_pid()\n              OR NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_language l ON l.oid=p.prolang\n                WHERE p.oid=to_regprocedure('aos_shared_parent_admission_private.require_complete_admission(uuid,text,xid8,integer)')\n                  AND pg_get_userbyid(p.proowner)='aos_physical_capacity_occupation_owner' AND p.prosecdef\n                  AND p.proconfig=ARRAY['search_path=pg_catalog'] AND l.lanname='plpgsql'\n                  AND p.prorettype='void'::regtype\n                  AND NOT has_function_privilege('aos_runtime',p.oid,'EXECUTE')\n                  AND NOT has_function_privilege('aos_provider_capacity_issuer',p.oid,'EXECUTE')) THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_COMPLETE_END_CHANNEL_REQUIRED' USING ERRCODE='23514'; END IF;\n            PERFORM aos_shared_parent_admission_private.require_complete_admission(NEW.plan_id,NEW.content_hash,NEW.caller_xid,NEW.caller_pid);\n            RETURN NEW;\n          END ",
+      "body_sha256": "0cc61cc107ad38e73fccc0c3c58e895511edc21cef6bee6f4e8d13d46fc81fda"
+    },
+    {
+      "signature": "aos_shared_parent_physical_private.bind_complete_parent_risk()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "lanname": "plpgsql",
+      "prosrc": "\n          DECLARE risk jsonb:=NEW.body->'originalRisk'; facts jsonb:=risk->'originalFacts';\n          BEGIN\n            IF session_user<>'aos_provider_capacity_occupation'\n              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'\n              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'\n              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'\n              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'\n              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'\n              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'\n              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_RISK_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;\n            IF NEW.body->>'schemaVersion' IS DISTINCT FROM 'aos.shared-parent-complete-risk/v1'\n              OR NEW.body->>'planId' IS DISTINCT FROM NEW.plan_id::text\n              OR NEW.body->>'pendingOriginHash' IS DISTINCT FROM NEW.pending_hash\n              OR NEW.body->>'state' IS DISTINCT FROM 'awaiting_full_admission'\n              OR NEW.body->'windowExpiryReleasesRisk' IS DISTINCT FROM 'false'::jsonb\n              OR NEW.body->'executionAllowed' IS DISTINCT FROM 'false'::jsonb\n              OR risk->>'schemaVersion' IS DISTINCT FROM 'aos.capacity-complete-plan-risk/v1'\n              OR risk->>'planId' IS DISTINCT FROM NEW.plan_id::text\n              OR risk->>'state' IS DISTINCT FROM 'prepared_risk_only'\n              OR risk->'executionAllowed' IS DISTINCT FROM 'false'::jsonb\n              OR risk->'tenant' IS DISTINCT FROM jsonb_build_object('orgId',NEW.org_id,'projectId',NEW.project_id)\n              OR risk->>'callerLogin' IS DISTINCT FROM session_user\n              OR risk->>'callerXid' IS DISTINCT FROM NEW.caller_xid::text\n              OR (risk->>'callerPid')::integer IS DISTINCT FROM NEW.caller_pid\n              OR NEW.caller_xid IS DISTINCT FROM pg_current_xact_id()\n              OR NEW.caller_pid IS DISTINCT FROM pg_backend_pid()\n              OR facts#>>'{target,requestId}' IS DISTINCT FROM NEW.target_request\n              OR facts#>>'{judge,requestId}' IS DISTINCT FROM NEW.judge_request\n              OR facts#>>'{target,reservationId}' IS DISTINCT FROM NEW.target_hold::text\n              OR facts#>>'{judge,reservationId}' IS DISTINCT FROM NEW.judge_hold::text\n              OR facts#>>'{target,physicalAccountId}' IS DISTINCT FROM NEW.physical_account_id::text\n              OR facts#>>'{judge,physicalAccountId}' IS DISTINCT FROM NEW.physical_account_id::text\n              OR NEW.body->>'originalRiskHash' IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(risk),'UTF8')),'hex')\n              OR NEW.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(NEW.body),'UTF8')),'hex') THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_RISK_BINDING_REQUIRED' USING ERRCODE='23514'; END IF;\n            RETURN NEW;\n          END ",
+      "body_sha256": "97334dc5e1b17a67d6011c697cfa5645017a7249ed9d226e9cd126f9bae84974"
+    },
+    {
+      "signature": "aos_shared_parent_physical_private.bind_initial_call_authority()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "lanname": "plpgsql",
+      "prosrc": "\n          DECLARE target_row aos_shared_parent_physical_private.target_intent%ROWTYPE; judge_row aos_shared_parent_physical_private.judge_dependency%ROWTYPE;\n            obligation aos_shared_parent_physical_private.initial_target_obligation%ROWTYPE; body jsonb; packet jsonb; p_plan uuid:=NEW.plan_id; p_raw bytea:=NEW.source_raw;\n            p_suite_raw bytea:=NEW.suite_raw;p_input_raw bytea:=NEW.input_raw;\n          BEGIN\n            IF session_user<>'aos_provider_capacity_occupation'\n              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'\n              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'\n              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'\n              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'\n              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'\n              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'\n              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' THEN RAISE EXCEPTION 'SHARED_ADMISSION_CALL_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;\n            IF p_raw IS NULL OR octet_length(p_raw) NOT BETWEEN 2 AND 1048576 THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_RETAINED_PACKET_REQUIRED' USING ERRCODE='23514'; END IF;\n            packet:=convert_from(p_raw,'UTF8')::jsonb;\n            IF jsonb_typeof(packet) IS DISTINCT FROM 'object'\n              OR jsonb_typeof(packet->'authentication') IS DISTINCT FROM 'object' THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_RETAINED_PACKET_REQUIRED' USING ERRCODE='23514'; END IF;\n            IF convert_to(public.canonical_asset_registry_jsonb(packet),'UTF8') IS DISTINCT FROM p_raw\n              OR (SELECT count(*) FROM jsonb_object_keys(packet))<>4\n              OR packet-ARRAY['protocol','tenant','sourceRef','authentication'] IS DISTINCT FROM '{}'::jsonb\n              OR packet->>'protocol' IS DISTINCT FROM 'aos-provider-capacity-source-consumption/v1'\n              OR packet->'tenant' IS DISTINCT FROM jsonb_build_object('orgId','org-org','projectId','dev-project')\n              OR (SELECT count(*) FROM jsonb_object_keys(packet->'authentication'))<>4\n              OR (packet->'authentication')-ARRAY['consumerSubject','oidcIssuer','oidcAudience','authenticationExpiresAt'] IS DISTINCT FROM '{}'::jsonb THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_RETAINED_PACKET_REQUIRED' USING ERRCODE='23514'; END IF;\n            SELECT * INTO target_row FROM aos_shared_parent_physical_private.target_intent WHERE plan_id=p_plan FOR SHARE;\n            SELECT * INTO judge_row FROM aos_shared_parent_physical_private.judge_dependency WHERE plan_id=p_plan FOR SHARE;\n            SELECT * INTO obligation FROM aos_shared_parent_physical_private.initial_target_obligation WHERE plan_id=p_plan FOR SHARE;\n            IF target_row.plan_id IS NULL OR judge_row.plan_id IS NULL OR obligation.plan_id IS NULL\n              OR target_row.caller_xid IS DISTINCT FROM pg_current_xact_id()\n              OR judge_row.caller_xid IS DISTINCT FROM pg_current_xact_id()\n              OR obligation.caller_xid IS DISTINCT FROM pg_current_xact_id()\n              OR target_row.caller_pid IS DISTINCT FROM pg_backend_pid()\n              OR judge_row.caller_pid IS DISTINCT FROM pg_backend_pid()\n              OR obligation.caller_pid IS DISTINCT FROM pg_backend_pid()\n              OR judge_row.target_intent_id IS DISTINCT FROM target_row.intent_id\n              OR judge_row.target_intent_hash IS DISTINCT FROM target_row.content_hash\n              OR target_row.body->>'obligationHash' IS DISTINCT FROM obligation.content_hash\n              OR target_row.body->>'pendingOriginHash' IS DISTINCT FROM obligation.pending_hash\n              OR judge_row.body->>'pendingOriginHash' IS DISTINCT FROM obligation.pending_hash\n              OR target_row.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(target_row.body),'UTF8')),'hex')\n              OR judge_row.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(judge_row.body),'UTF8')),'hex') THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_CALL_NATIVE_NODES_REQUIRED' USING ERRCODE='23514'; END IF;\n            IF p_suite_raw IS NULL OR octet_length(p_suite_raw) NOT BETWEEN 1 AND 1048576\n              OR p_input_raw IS NULL OR octet_length(p_input_raw) NOT BETWEEN 1 AND 1048576\n              OR encode(sha256(p_input_raw),'hex') IS DISTINCT FROM target_row.body->>'inputHash'\n              OR convert_from(p_input_raw,'UTF8')::jsonb IS DISTINCT FROM target_row.body->'inputValue' THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_CALL_BYTES_REQUIRED' USING ERRCODE='23514'; END IF;\n            body:=jsonb_build_object('schemaVersion','aos.shared-parent-initial-call-authority/v1',\n              'planId',p_plan,'pendingOriginHash',obligation.pending_hash,'obligationHash',obligation.content_hash,\n              'targetIntentId',target_row.intent_id,'targetIntentHash',target_row.content_hash,\n              'judgeDependencyId',judge_row.intent_id,'judgeDependencyHash',judge_row.content_hash,\n              'sourcePacketHash','sha256:'||encode(sha256(p_raw),'hex'),\n              'suiteBytesHash','sha256:'||encode(sha256(p_suite_raw),'hex'),\n              'inputBytesHash','sha256:'||encode(sha256(p_input_raw),'hex'),\n              'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),\n              'executionAllowed',false);\n            IF NEW.body IS DISTINCT FROM body\n              OR NEW.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex')\n              OR NEW.target_id IS DISTINCT FROM target_row.intent_id OR NEW.target_hash IS DISTINCT FROM target_row.content_hash\n              OR NEW.judge_id IS DISTINCT FROM judge_row.intent_id OR NEW.judge_hash IS DISTINCT FROM judge_row.content_hash\n              OR NEW.caller_xid IS DISTINCT FROM pg_current_xact_id() OR NEW.caller_pid IS DISTINCT FROM pg_backend_pid() THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_CALL_BINDING_REQUIRED' USING ERRCODE='23514'; END IF;\n            RETURN NEW;\n          END ",
+      "body_sha256": "4e309d0efb1f8471e6e5073986e2eb1822cf5387b86451b3802e9fdafae03159"
+    },
+    {
+      "signature": "aos_shared_parent_physical_private.bind_initial_window()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "lanname": "plpgsql",
+      "prosrc": "\n          DECLARE material aos_shared_parent_physical_private.initial_call_authority%ROWTYPE; obligation aos_shared_parent_physical_private.initial_target_obligation%ROWTYPE;\n            fact jsonb; packet jsonb; limit_body jsonb; body jsonb; guard_version bigint;\n            used_requests bigint; used_tokens numeric; total_requests bigint; total_tokens numeric;\n            now_at timestamptz; anchor_at timestamptz; window_seconds integer; window_index numeric;\n          BEGIN\n            IF session_user<>'aos_provider_capacity_occupation'\n              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'\n              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'\n              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'\n              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'\n              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'\n              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'\n              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;\n            SELECT * INTO material FROM aos_shared_parent_physical_private.initial_call_authority WHERE plan_id=NEW.plan_id FOR SHARE;\n            SELECT * INTO obligation FROM aos_shared_parent_physical_private.initial_target_obligation WHERE plan_id=NEW.plan_id FOR SHARE;\n            IF material.plan_id IS NULL OR obligation.plan_id IS NULL\n              OR material.content_hash IS DISTINCT FROM NEW.material_hash\n              OR material.caller_xid IS DISTINCT FROM pg_current_xact_id() OR material.caller_pid IS DISTINCT FROM pg_backend_pid()\n              OR obligation.caller_xid IS DISTINCT FROM pg_current_xact_id() OR obligation.caller_pid IS DISTINCT FROM pg_backend_pid()\n              OR NEW.caller_xid IS DISTINCT FROM pg_current_xact_id() OR NEW.caller_pid IS DISTINCT FROM pg_backend_pid()\n              OR NEW.physical_account_id IS DISTINCT FROM obligation.physical_account_id THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_MATERIAL_REQUIRED' USING ERRCODE='23514'; END IF;\n            packet:=convert_from(material.source_raw,'UTF8')::jsonb;\n            fact:=public.capacity_occupation_source_fact(material.source_raw,packet->'sourceRef');\n            IF fact->>'physicalAccountId' IS DISTINCT FROM obligation.physical_account_id::text THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_ACCOUNT_REQUIRED' USING ERRCODE='23514'; END IF;\n            SELECT version INTO guard_version FROM aos_physical_capacity_occupation_private.account_guard\n              WHERE physical_account_id=obligation.physical_account_id AND org_id='org-org' AND project_id='dev-project'\n                AND xmin::text::numeric=mod(pg_current_xact_id()::text::numeric,4294967296) FOR UPDATE;\n            IF NOT FOUND THEN RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_GUARD_REQUIRED' USING ERRCODE='23514'; END IF;\n            limit_body:=fact->'tokenLimit';\n            IF limit_body->>'mode' NOT IN ('inflight_upper_bound','fixed_window_rate')\n              OR limit_body->>'mode' IS NULL OR limit_body->>'unit' IS DISTINCT FROM 'token'\n              OR (limit_body->>'maxTokens')::numeric IS NULL OR (limit_body->>'maxTokens')::numeric<=0 THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_LIMIT_REQUIRED' USING ERRCODE='23514'; END IF;\n            SELECT count(*),coalesce(sum(token_units),0) INTO total_requests,total_tokens FROM (\n              SELECT token_units FROM aos_physical_capacity_occupation_private.prepared_parent_debit WHERE physical_account_id=obligation.physical_account_id\n              UNION ALL SELECT token_upper_bound FROM aos_shared_parent_physical_private.initial_target_obligation WHERE physical_account_id=obligation.physical_account_id\n            ) native_unresolved;\n            -- Current initial obligation is already present exactly once.\n            used_requests:=total_requests-1;used_tokens:=total_tokens-obligation.token_upper_bound;\n            IF used_requests<0 OR used_tokens<0 THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_COUNTS_REQUIRED' USING ERRCODE='23514'; END IF;\n            fact:=fact||jsonb_build_object('tokenUpperBound',obligation.token_upper_bound);\n            IF used_requests>=(fact->>'maxConcurrency')::bigint\n                OR used_tokens+(fact->>'tokenUpperBound')::bigint>(fact->'tokenLimit'->>'maxTokens')::numeric THEN\n                RAISE EXCEPTION 'CAPACITY_PHYSICAL_CAPACITY_EXCEEDED' USING ERRCODE='23514'; END IF;\n            now_at:=clock_timestamp();\n            IF limit_body->>'mode'='fixed_window_rate' THEN\n              window_seconds:=(limit_body->>'windowSeconds')::integer;\n              anchor_at:=(limit_body->>'windowAnchor')::timestamptz;\n              IF window_seconds IS NULL OR window_seconds NOT BETWEEN 1 AND 86400 OR anchor_at IS NULL THEN\n                RAISE EXCEPTION 'SHARED_ADMISSION_WINDOW_NATIVE_LIMIT_REQUIRED' USING ERRCODE='23514'; END IF;\n              window_index:=floor(extract(epoch FROM now_at-anchor_at)/window_seconds);\n            END IF;\n            body:=jsonb_build_object('schemaVersion','aos.shared-parent-initial-window-obligation/v1',\n              'planId',NEW.plan_id,'initialCallAuthorityHash',material.content_hash,\n              'obligationHash',obligation.content_hash,'physicalAccountId',obligation.physical_account_id,\n              'sourceRef',packet->'sourceRef','sourceTokenLimit',limit_body,'accountVersion',guard_version,\n              'observedAt',now_at,'windowIndex',window_index,'windowAnchor',anchor_at,'windowSeconds',window_seconds,\n              'unresolvedRequests',total_requests,'unresolvedTokenUpperBound',total_tokens,\n              'countingBasis','legacy_prepared_plus_new_initial_unreleased','windowExpiryReleasesRisk',false,\n              'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),\n              'state','prepared_window_only','executionAllowed',false);\n            NEW.body:=body;NEW.content_hash:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');\n            RETURN NEW;\n          END ",
+      "body_sha256": "0362383951aa0685249a77aa841e1e8402dde33e8421b6a717b36f4a09b68dbe"
+    },
+    {
+      "signature": "aos_shared_parent_physical_private.immutable_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "lanname": "plpgsql",
+      "prosrc": "\n          BEGIN RAISE EXCEPTION 'SHARED_ADMISSION_OBLIGATION_IMMUTABLE' USING ERRCODE='42501'; END ",
+      "body_sha256": "ed33ae312a2e7502d50c92e735f10fc71b6067f8d42c7e16712f95f7ccbc9429"
+    },
+    {
+      "signature": "aos_shared_parent_physical_private.require_complete_obligation()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "lanname": "plpgsql",
+      "prosrc": "\n          BEGIN\n            IF NEW.caller_xid IS DISTINCT FROM pg_current_xact_id()\n              OR NEW.caller_pid IS DISTINCT FROM pg_backend_pid()\n              OR NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_language l ON l.oid=p.prolang\n                WHERE p.oid=to_regprocedure('public.require_complete_shared_parent_admission(uuid,text,xid8,integer)') AND pg_get_userbyid(p.proowner)='aos_physical_capacity_occupation_owner'\n                  AND p.prosecdef AND p.proconfig=ARRAY['search_path=pg_catalog'] AND l.lanname='plpgsql'\n                  AND p.prorettype='void'::regtype\n                  AND NOT has_function_privilege('aos_runtime',p.oid,'EXECUTE')\n                  AND NOT has_function_privilege('aos_provider_capacity_issuer',p.oid,'EXECUTE')) THEN\n              RAISE EXCEPTION 'SHARED_ADMISSION_COMPLETE_END_CHANNEL_REQUIRED' USING ERRCODE='23514'; END IF;\n            PERFORM public.require_complete_shared_parent_admission(NEW.plan_id,NEW.content_hash,NEW.caller_xid,NEW.caller_pid);\n            RETURN NEW;\n          END ",
+      "body_sha256": "3b46918e35036da893cedf1bde15b611d5c4c0e9f5a2f86cd45a869890013e3b"
+    },
+    {
+      "signature": "binding_evaluator_read_lock_only_a0v144()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "lanname": "plpgsql",
+      "prosrc": " BEGIN\n        IF current_user='aos_aip_binding_evaluator' OR session_user='aos_aip_binding_evaluator' THEN\n          RAISE EXCEPTION 'BINDING_EVALUATOR_READ_LOCK_ONLY' USING ERRCODE='42501';\n        END IF;\n        IF TG_OP='DELETE' THEN RETURN OLD; END IF; RETURN NEW;\n      END ",
+      "body_sha256": "84ffec865cb2a8e502270b0ebe2b293c9c740dee560cea8dffdfe3d61ce30b99"
+    },
+    {
+      "signature": "extension_reject_history_mutation()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "lanname": "plpgsql",
+      "prosrc": "\n      BEGIN RAISE EXCEPTION 'extension history is immutable'; END\n    ",
+      "body_sha256": "193250fd96c1fd46bb5397aff706b86645c0852e5e97d44b9187ed4ba05a52df"
+    },
+    {
+      "signature": "guard_aip4_append_only()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "lanname": "plpgsql",
+      "prosrc": "\n        BEGIN\n          RAISE EXCEPTION 'AIP4_APPEND_ONLY' USING ERRCODE='55000';\n        END;\n        ",
+      "body_sha256": "3960bfc367118ab06ac03c934b8425034584a9ec13a4b1ea5da65a8f76cb4041"
+    },
+    {
+      "signature": "guard_ar2_budget_bucket_update()",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "lanname": "plpgsql",
+      "prosrc": " BEGIN\n          IF ROW(NEW.org_id,NEW.project_id,NEW.bucket_kind,NEW.account_id,\n                 NEW.period_start,NEW.period_end,NEW.currency,NEW.limit_minor)\n             IS DISTINCT FROM\n             ROW(OLD.org_id,OLD.project_id,OLD.bucket_kind,OLD.account_id,\n                 OLD.period_start,OLD.period_end,OLD.currency,OLD.limit_minor)\n             OR NEW.version<>OLD.version+1 OR NEW.updated_at<OLD.updated_at\n          THEN RAISE EXCEPTION 'budget bucket authority drifted'; END IF;\n          RETURN NEW;\n        END ",
+      "body_sha256": "6caf5c743dc6b283ee53fc714c47dd29116e69c4927e417c4507568f84916357"
+    }
+  ],
+  "transitive_closure_proven": false,
+  "execution_allowed": false,
+  "capture_proves_pending_event_queue": false
+}

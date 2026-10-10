@@ -1,0 +1,136 @@
+from pathlib import Path
+import os,sys,json,hashlib,subprocess,importlib.util
+B=Path(__file__).resolve().parent;R=B.parents[2]
+J=R/'.evidence/gt-judge-call-authority-20261008';M=R/'.evidence/gt-atomic-model-admission-20261008'
+label='write-closure-native-1743-r1';target=J/label
+lab=json.loads((R/'.evidence/gt-source-desktop-shm-lab-20261009/lab.json').read_text())
+c=json.loads(subprocess.check_output(['docker','--context',lab['context'],'inspect',lab['name']],text=True))[0]
+assert c['Id']==lab['container_id'] and c['Image']==lab['image'] and c['State']['Running']
+assert lab['cluster']=='7694680278363095064' and lab['port']==5441
+free=int(subprocess.check_output(['docker','--context',lab['context'],'exec',lab['name'],'df','-P','-B1','/var/lib/postgresql/data'],text=True).splitlines()[-1].split()[3]);assert free>2500000000
+old=[M/'legal-model-prefix-application-r4.json',M/'legal-eval-application-result-r4.json',R/'services/aos-api/aos_api/aip_model_eval_execution_reader.py',R/'services/aos-api/aos_api/aip_model_eval_execution_authority.py']
+before={str(p.relative_to(R)):hashlib.sha256(p.read_bytes()).hexdigest() for p in old}
+target.mkdir()
+for n in ('legal_model_prefix_for_application_r4.py','legal_eval_application_fixture_r4.py','build_whole_native_plan_1602.py'):
+ (target/n).open('xb').write((M/n).read_bytes())
+for n in ('legal_model_prefix_for_application_r4.py','legal_eval_application_fixture_r4.py','build_whole_native_plan_1602.py'):
+ (B/n).open('xb').write((M/n).read_bytes())
+(B/'original_source_plan_fixture_r1.py').open('xb').write((M/'original_source_plan_fixture_r1.py').read_bytes())
+for k in ('PGPASSWORD','PGPASSFILE','PGSERVICE','PGSERVICEFILE','PGOPTIONS'):os.environ.pop(k,None)
+os.environ.update(AOS_DATABASE_URL='postgresql://aos_app@127.0.0.1:5441/aos_meta',AOS_DOTENV_DISABLED='1',AOS_EXTENSION_PG_TEST='1',AOS_EXTENSION_PG_HOST='127.0.0.1',AOS_EXTENSION_PG_PORT='5441',AOS_EXTENSION_PG_USER='aos_app',AOS_EXTENSION_PG_DATABASE='aos_meta',AOS_TEST_RETAIN_DATABASE='1',AOS_TEST_USE_SHARED_DATABASE='0',AOS_JUDGE_FIXTURE_EVIDENCE_ROOT=str(target),AOS_JUDGE_NATIVE_EVIDENCE_LABEL=label,AOS_PARENT_LIFECYCLE_EVIDENCE=str(B))
+sys.path[:0]=[str(R/'services/aos-api'),str(R/'services/aos-api/tests/extension_runtime'),str(R/'services/aos-api/tests')]
+import psycopg
+from psycopg.conninfo import conninfo_to_dict
+connect=psycopg.connect
+def owned_connect(*args,**kwargs):
+ assert len(args)<=1
+ params=conninfo_to_dict(args[0] if args else kwargs.get('conninfo',''))
+ for k in ('host','port','user','dbname'):
+  if k in kwargs:params[k]=kwargs[k]
+ if params.get('user')=='aos_app':
+  assert params.get('host')=='127.0.0.1' and str(params.get('port'))=='5441'
+  assert params.get('dbname')=='aos_meta' or params.get('dbname','').startswith('aos_test_')
+  kwargs['passfile']=lab['passfile']
+ c=connect(*args,**kwargs)
+ if params.get('user')=='aos_provider_capacity_occupation':
+  assert c.pgconn.used_password
+  c.autocommit=True
+  c.execute("SET track_functions='all'")
+  c.autocommit=False
+ return c
+psycopg.connect=owned_connect
+import pytest
+s=importlib.util.spec_from_file_location('expected',J/'registered_judge_expected_fixture_1659.py');fixture=importlib.util.module_from_spec(s);s.loader.exec_module(fixture);patch=pytest.MonkeyPatch();fixture.install(patch)
+os.environ.update(AOS_SOURCE_MODEL_EVIDENCE_LABEL=label,AOS_SOURCE_NEW_JUDGE_NATIVE='1',AOS_NEW_JUDGE_INTENT_NATIVE='1')
+sys.path.insert(0,str(B))
+import source_newjudge_native_trial_1606 as trial
+from aos_api.aip_model_eval_execution_owner import ModelEvalExecutionOwner
+original_judge=ModelEvalExecutionOwner.prepare_judge_application
+def record_judge(self,*args,**kwargs):
+ trial.POLICY=kwargs
+ return original_judge(self,*args,**kwargs)
+patch.setattr(ModelEvalExecutionOwner,'prepare_judge_application',record_judge)
+import tests.aip.test_physical_capacity_occupation_pg as test_module
+PlainPath=Path
+class EvidencePath(type(Path())):
+ def __truediv__(self,other):
+  result=super().__truediv__(other)
+  if str(result)==str(M):return B
+  return result
+patch.setattr(test_module,'Path',EvidencePath)
+class Recorder:
+ def __init__(self):self.databases=[];self.results=[]
+ def pytest_collection_modifyitems(self,items):
+  for item in items:
+   if str(item.path).endswith('test_physical_capacity_occupation_pg.py'):
+    patch.setattr(item.module,'Path',EvidencePath)
+ def pytest_runtest_call(self,item):
+  from aos_api.db import get_dsn
+  self.databases.append(conninfo_to_dict(get_dsn())['dbname'])
+ def pytest_runtest_logreport(self,report):
+  if report.when=='call' or report.failed:self.results.append({'nodeid':report.nodeid,'phase':report.when,'outcome':report.outcome})
+rec=Recorder()
+files=['services/aos-api/aos_api/aip_physical_capacity_occupation.py','services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py','services/aos-api/aos_api/aip_model_eval_execution_contracts.py','services/aos-api/aos_api/aip_model_eval_execution_owner.py','services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py','services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py']
+bindings={p:hashlib.sha256((R/p).read_bytes()).hexdigest() for p in files}
+(B/'attempt-r1.json').open('x').write(json.dumps({'cluster':lab['cluster'],'head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip(),'file_hashes':bindings,'old_hashes':before,'free_bytes':free,'execution_allowed':False},indent=2))
+# Observe only public test-owned call durations; no args, raw packets or secrets.
+import time,re
+original_execute=psycopg.Connection.execute
+def measured_execute(self,query,*args,**kwargs):
+ name=re.match(r'SELECT (public\.test_owned_[A-Za-z0-9_]+)\(',query) if isinstance(query,str) else None
+ if not name:return original_execute(self,query,*args,**kwargs)
+ started=time.monotonic();outcome='returned';error=None
+ try:return original_execute(self,query,*args,**kwargs)
+ except Exception as exc:
+  outcome='rejected';error=str(exc).splitlines()[0];raise
+ finally:
+  record={'function':name.group(1),'elapsed_seconds':round(time.monotonic()-started,6),'outcome':outcome,'error':error,'observed_at':__import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat()}
+  if outcome=='returned':
+   record['nested_functions']=original_execute(self,'SELECT schemaname,funcname,calls,total_time,self_time FROM pg_stat_xact_user_functions ORDER BY self_time DESC,schemaname,funcname').fetchall()
+  with (B/'native-call-timings.jsonl').open('a') as out:out.write(json.dumps(record)+'\n')
+psycopg.Connection.execute=measured_execute
+
+# These counters are native observations, not the pending constraint queue.
+def record_writes(conn,point):
+ identity=original_execute(conn,"SELECT session_user AS login,current_user AS role,pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid,clock_timestamp() AS observed_at").fetchone()
+ if identity['login']!='aos_provider_capacity_occupation' or identity['role']!='aos_runtime':return
+ rows=original_execute(conn,"SELECT relid,schemaname,relname,n_tup_ins,n_tup_upd,n_tup_del FROM pg_stat_xact_user_tables WHERE n_tup_ins+n_tup_upd+n_tup_del>0 ORDER BY schemaname,relname").fetchall()
+ identity['observed_at']=identity['observed_at'].isoformat()
+ record=dict(point=point,identity=identity,write_counters=rows,counters_include_rolled_back_savepoints=True,pending_event_queue_proven=False)
+ if point=='before_actual_commit':
+  ids=[r['relid'] for r in rows]
+  record['constraints']=original_execute(conn,"SELECT k.conrelid,k.confrelid,k.conname,k.contype,k.condeferrable,k.condeferred,pg_get_constraintdef(k.oid) AS definition FROM pg_constraint k WHERE k.conrelid=ANY(%s::oid[]) OR k.confrelid=ANY(%s::oid[]) ORDER BY k.conrelid,k.conname",(ids,ids)).fetchall()
+  record['triggers']=original_execute(conn,"SELECT g.tgrelid,g.tgname,g.tgisinternal,g.tgdeferrable,g.tginitdeferred,g.tgtype,g.tgenabled,g.tgattr::text,p.oid::regprocedure::text AS function,pg_get_userbyid(p.proowner) AS owner,p.prosecdef,p.proconfig,l.lanname,encode(sha256(convert_to(p.prosrc,'UTF8')),'hex') AS body_hash FROM pg_trigger g JOIN pg_proc p ON p.oid=g.tgfoid JOIN pg_language l ON l.oid=p.prolang WHERE g.tgrelid=ANY(%s::oid[]) ORDER BY g.tgrelid,g.tgname",(ids,)).fetchall()
+  record['indexes']=original_execute(conn,"SELECT i.indrelid,pg_get_indexdef(i.indexrelid) AS definition,i.indisunique,i.indisvalid,i.indisready,i.indimmediate,i.indclass::text FROM pg_index i WHERE i.indrelid=ANY(%s::oid[]) ORDER BY i.indrelid,i.indexrelid",(ids,)).fetchall()
+  record['columns']=original_execute(conn,"SELECT attrelid,attnum,attname,atttypid,attnotnull FROM pg_attribute WHERE attrelid=ANY(%s::oid[]) AND attnum>0 AND NOT attisdropped ORDER BY attrelid,attnum",(ids,)).fetchall()
+ with (B/'native-write-capture.jsonl').open('a') as out:out.write(json.dumps(record)+'\n')
+observed_execute=measured_execute
+def capture_execute(self,query,*args,**kwargs):
+ result=observed_execute(self,query,*args,**kwargs)
+ if isinstance(query,str) and re.match(r'SELECT public\.test_owned_[A-Za-z0-9_]+\(',query):record_writes(self,query.split('(')[0].split()[-1])
+ return result
+psycopg.Connection.execute=capture_execute
+original_commit=psycopg.Connection.commit
+def capture_commit(self):
+ if self.info.get_parameters().get('user')=='aos_provider_capacity_occupation' and self.info.transaction_status==psycopg.pq.TransactionStatus.INTRANS:
+  record_writes(self,'before_actual_commit')
+ return original_commit(self)
+psycopg.Connection.commit=capture_commit
+profiler_params=dict(host='127.0.0.1',port=lab['port'],user='aos_app',dbname='aos_meta',passfile=lab['passfile'],row_factory=__import__('psycopg.rows',fromlist=['dict_row']).dict_row)
+with connect(**profiler_params) as admin:
+ assert admin.execute('SELECT system_identifier::text AS id FROM pg_control_system()').fetchone()['id']==lab['cluster']
+ assert admin.execute("SELECT rolcanlogin FROM pg_roles WHERE rolname='aos_provider_capacity_occupation'").fetchone()['rolcanlogin'] is False
+ before_acl=admin.execute("SELECT parname,paracl::text FROM pg_parameter_acl WHERE parname='track_functions'").fetchall();assert before_acl==[]
+ admin.execute('GRANT SET ON PARAMETER track_functions TO aos_provider_capacity_occupation')
+try:
+ code=pytest.main([str(R/'services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py')+'::test_source_model_preparation_original_native_caller','-q','-s','-p','no:cacheprovider'],plugins=[rec])
+finally:
+ with connect(**profiler_params) as admin:
+  admin.execute('REVOKE SET ON PARAMETER track_functions FROM aos_provider_capacity_occupation');admin.commit()
+  after_acl=admin.execute("SELECT parname,paracl::text FROM pg_parameter_acl WHERE parname='track_functions'").fetchall();assert after_acl==before_acl
+  role=admin.execute("SELECT rolcanlogin,rolinherit,rolsuper,rolcreatedb,rolcreaterole,rolreplication,rolbypassrls FROM pg_roles WHERE rolname='aos_provider_capacity_occupation'").fetchone();assert not any(role.values())
+  assert admin.execute("SELECT count(*) AS n FROM pg_auth_members WHERE roleid='aos_provider_capacity_occupation'::regrole OR member='aos_provider_capacity_occupation'::regrole").fetchone()['n']==0
+ (B/'profiler-restoration.json').open('x').write(json.dumps({'before_acl':before_acl,'after_acl':after_acl,'role':role,'exact_restored':True},indent=2)+'\n')
+after={str(p.relative_to(R)):hashlib.sha256(p.read_bytes()).hexdigest() for p in old};assert before==after
+(B/'result-r1.json').open('x').write(json.dumps({'pytest_exit':int(code),'databases':rec.databases,'reports':rec.results,'old_files_unchanged':before==after,'file_hashes':bindings,'execution_allowed':False,'full_task_delivered':False},indent=2))
+raise SystemExit(code)
