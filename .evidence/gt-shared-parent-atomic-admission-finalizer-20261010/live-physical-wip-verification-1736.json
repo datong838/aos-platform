@@ -1,0 +1,33 @@
+{
+  "authority": "AOS-001736",
+  "status": "LIVE_PHYSICAL_WIP_NATIVE_SOURCE_DEADLINE_RED",
+  "native_component": {
+    "database": "aos_test_7efed020dfe1_ti4_test",
+    "native_body_exact": true,
+    "body_sha256": "a1cd878ca0d09b04e726cc59a7cc308efed69190ff7292db3271d99d669f20b0",
+    "roles_restored": true,
+    "rows_zero": {
+      "aos_shared_parent_admission_private.pending_origin": 0,
+      "aos_shared_parent_admission_private.end_authority": 0,
+      "aos_shared_parent_physical_private.initial_window_obligation": 0,
+      "aos_shared_parent_physical_private.initial_call_authority": 0,
+      "aos_shared_parent_physical_private.initial_target_obligation": 0,
+      "aos_shared_parent_physical_private.target_intent": 0,
+      "aos_shared_parent_physical_private.judge_dependency": 0,
+      "aos_physical_capacity_occupation_private.prepared_parent_debit": 0
+    },
+    "positive": false,
+    "late_writer_rejection": false,
+    "negative_cases": []
+  },
+  "adjacent_passed": 328,
+  "existing_artifacts_byte_exact": 10,
+  "whole_fixture_pass": false,
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "files": {
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "c7fc37cb3c1ae1de0212afb55f5f7d0e7ad6b779cb7ebe5e234aea711d036c9b",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "2dd27bd1aaad83dc17a9890538fd2305fb9dbcc595ea72cef8d7595b02c02974"
+  },
+  "next": "Investigate original preparation ordering and repeated full original checks; preserve every production authority check and deadline. Do not claim a narrower harness proves the whole pipeline."
+}

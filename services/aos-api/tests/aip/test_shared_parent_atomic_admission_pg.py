@@ -351,3 +351,27 @@ def test_native_initial_window_obligation_closed_metadata(native):
     native.rollback()
     assert native.execute('SELECT to_regclass(%s)',(table,)).fetchone()[0] is None
     native.rollback()
+
+
+def test_native_live_physical_facts_closed_metadata(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    for generator in (api.shared_parent_admission_origin_statements,
+                      api.shared_parent_admission_certificate_set_statements,
+                      api.shared_parent_admission_storage_statements,
+                      api.shared_parent_pending_origin_lookup_statements,
+                      api.shared_parent_physical_obligation_statements,
+                      api.shared_parent_initial_intent_statements,
+                      api.shared_parent_end_authority_statements,
+                      api.shared_parent_initial_call_authority_statements,
+                      api.shared_parent_initial_window_obligation_statements,
+                      api.shared_parent_live_physical_fact_statements):
+        for statement in generator():native.execute(statement)
+    sig=api.READ_LIVE_PHYSICAL
+    assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure',(sig,)).fetchone()==(OWNER,True,['search_path=pg_catalog'])
+    for role in ('aos_runtime','aos_provider_capacity_issuer'):
+        assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')",(role,sig)).fetchone()[0]
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SHARED_ADMISSION_LIVE_PHYSICAL_CALLER_REQUIRED'):
+        with native.transaction():native.execute('SELECT public.read_shared_parent_live_physical_facts(NULL,NULL,NULL,NULL)')
+    native.rollback()
+    assert native.execute('SELECT to_regprocedure(%s)',(sig,)).fetchone()[0] is None
+    native.rollback()
