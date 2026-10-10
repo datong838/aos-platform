@@ -1,0 +1,33 @@
+{
+  "authority": "AOS-001735",
+  "database": "aos_test_96285febcfcb_ti4_test",
+  "native_union_probe_body_exact": true,
+  "probe_sha256": "04933ef9ee697e035a517cf6b6b4ebd6ba09a9beda50c4ed3af6d8cf8979e02c",
+  "actual_legacy_after_late_writer": {
+    "physicalRequests": 2,
+    "physicalTokens": 20000,
+    "allocatedMinor": 2,
+    "parentCapMinor": 10
+  },
+  "actual_union_after_late_writer": {
+    "tokens": 30000,
+    "requests": 3
+  },
+  "original_window_snapshot": {
+    "unresolvedRequests": 2,
+    "unresolvedTokenUpperBound": 20000
+  },
+  "source_limits": {
+    "maxConcurrency": 2,
+    "tokenLimit": {
+      "mode": "inflight_upper_bound",
+      "unit": "token",
+      "maxTokens": 20000
+    }
+  },
+  "caller_aborted": true,
+  "legacy_rows_zero": true,
+  "role_restored": true,
+  "full_ending_missing": true,
+  "formal_execution_allowed": false
+}
