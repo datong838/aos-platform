@@ -1,0 +1,61 @@
+{
+  "database": "aos_test_ffc3891d30cf_ti4_test",
+  "original_base_installer_used": true,
+  "fixed_complete_family_native": true,
+  "actual_publication_owner": true,
+  "installation_samples_seconds": [
+    0.1871681670018006,
+    0.10557245900417911,
+    0.1043968340018182
+  ],
+  "native_stats": [
+    {
+      "schemaname": "aos_capacity_publication_private",
+      "funcname": "require_original_fact_boundary",
+      "calls": 9,
+      "total_time": 216.6255,
+      "self_time": 216.6255
+    },
+    {
+      "schemaname": "aos_capacity_publication_private",
+      "funcname": "require_current_source_installation",
+      "calls": 3,
+      "total_time": 393.888,
+      "self_time": 102.883539
+    },
+    {
+      "schemaname": "aos_capacity_publication_private",
+      "funcname": "canonical_signed_json",
+      "calls": 14286,
+      "total_time": 35.105713,
+      "self_time": 35.105713
+    },
+    {
+      "schemaname": "aos_capacity_publication_private",
+      "funcname": "require_original_withdrawal_boundary",
+      "calls": 3,
+      "total_time": 76.733458,
+      "self_time": 15.178542
+    },
+    {
+      "schemaname": "aos_capacity_publication_private",
+      "funcname": "require_original_evidence_boundary",
+      "calls": 3,
+      "total_time": 69.977332,
+      "self_time": 13.059082
+    },
+    {
+      "schemaname": "aos_capacity_publication_private",
+      "funcname": "require_original_epoch_pair_boundary",
+      "calls": 6,
+      "total_time": 118.473166,
+      "self_time": 11.035624
+    }
+  ],
+  "native_catalog_exact_restored": true,
+  "source_publication_replayed": false,
+  "source_ttl_extended": false,
+  "execution_allowed": false,
+  "persistent_effects": false,
+  "whole_receipt_pass": false
+}

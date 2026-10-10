@@ -1,0 +1,130 @@
+{
+  "root": "public.test_owned_receipt_v2",
+  "database": "aos_test_ffc3891d30cf_ti4_test",
+  "kind": "static_call_and_native_trigger_graph_not_runtime_counts",
+  "reachable_count": 27,
+  "missing_after_cleanup": [
+    "aos_capacity_publication_private.require_current_source_installation",
+    "aos_shared_parent_physical_private.complete_receipt_v2",
+    "public.capacity_occupation_eval_case_fact",
+    "public.capacity_occupation_eval_fact",
+    "public.capacity_occupation_judge_fact",
+    "public.capacity_occupation_source_fact",
+    "public.prepare_capacity_occupation_account_guard",
+    "public.require_complete_shared_parent_admission"
+  ],
+  "edges": {
+    "aos_shared_parent_physical_private.bind_complete_receipt_v2": {
+      "public.canonical_asset_registry_jsonb": 3,
+      "public.read_shared_parent_receipt_origin": 1,
+      "public.verify_shared_parent_final_call_authority": 1,
+      "public.read_shared_parent_live_physical_facts": 1,
+      "public.read_shared_parent_unresolved_members": 1
+    },
+    "aos_shared_parent_physical_private.require_complete_obligation": {
+      "public.require_complete_shared_parent_admission": 2
+    },
+    "public.build_shared_parent_admission_origin": {
+      "public.read_shared_parent_admission_original_facts": 2,
+      "public.capacity_occupation_source_fact": 1,
+      "public.canonical_asset_registry_jsonb": 4
+    },
+    "public.capacity_occupation_plan_risk_fact": {
+      "public.capacity_occupation_eval_fact": 1,
+      "public.capacity_occupation_judge_fact": 1
+    },
+    "public.read_shared_parent_admission_original_facts": {
+      "public.capacity_occupation_plan_risk_fact": 1
+    },
+    "public.read_shared_parent_live_physical_facts": {
+      "public.canonical_asset_registry_jsonb": 3,
+      "public.prepare_capacity_occupation_account_guard": 1,
+      "public.capacity_occupation_source_fact": 1
+    },
+    "public.read_shared_parent_pending_origin": {
+      "public.canonical_asset_registry_jsonb": 1,
+      "public.validate_shared_parent_admission_certificate_set": 1
+    },
+    "public.read_shared_parent_receipt_origin": {
+      "public.canonical_asset_registry_jsonb": 3,
+      "public.read_shared_parent_pending_origin": 1
+    },
+    "public.read_shared_parent_retained_origin": {
+      "public.canonical_asset_registry_jsonb": 3,
+      "public.read_shared_parent_pending_origin": 1
+    },
+    "public.read_shared_parent_unresolved_members": {
+      "public.canonical_asset_registry_jsonb": 2
+    },
+    "public.stage_shared_parent_complete_receipt_v2": {
+      "aos_shared_parent_physical_private.complete_receipt_v2": 1,
+      "public.read_shared_parent_receipt_origin": 1,
+      "aos_shared_parent_physical_private.bind_complete_receipt_v2": 1,
+      "aos_shared_parent_physical_private.immutable_obligation": 2,
+      "aos_shared_parent_physical_private.require_complete_obligation": 1
+    },
+    "public.test_owned_receipt_v2": {
+      "public.stage_shared_parent_complete_receipt_v2": 1
+    },
+    "public.validate_shared_parent_admission_certificate_set": {
+      "public.canonical_asset_registry_jsonb": 3,
+      "public.build_shared_parent_admission_origin": 2,
+      "public.verify_model_shared_parent_certificate_signature": 1
+    },
+    "public.verify_model_shared_parent_certificate_signature": {
+      "aos_capacity_publication_private.require_current_source_installation": 1,
+      "aos_ed25519.verify": 1
+    },
+    "public.verify_shared_parent_final_call_authority": {
+      "public.canonical_asset_registry_jsonb": 5,
+      "public.read_shared_parent_retained_origin": 1,
+      "public.verify_shared_parent_final_intents": 1
+    },
+    "public.verify_shared_parent_final_intents": {
+      "public.canonical_asset_registry_jsonb": 3,
+      "public.capacity_occupation_eval_case_fact": 1,
+      "public.read_shared_parent_pending_origin": 1,
+      "public.read_shared_parent_admission_original_facts": 1
+    }
+  },
+  "trigger_edges": [
+    {
+      "caller": "public.stage_shared_parent_complete_receipt_v2",
+      "relation": "aos_shared_parent_physical_private.complete_receipt_v2",
+      "function": "aos_shared_parent_physical_private.bind_complete_receipt_v2",
+      "tgname": "exact_complete_receipt",
+      "tgdeferrable": false,
+      "tginitdeferred": false
+    },
+    {
+      "caller": "public.stage_shared_parent_complete_receipt_v2",
+      "relation": "aos_shared_parent_physical_private.complete_receipt_v2",
+      "function": "aos_shared_parent_physical_private.immutable_obligation",
+      "tgname": "immutable_complete_receipt",
+      "tgdeferrable": false,
+      "tginitdeferred": false
+    },
+    {
+      "caller": "public.stage_shared_parent_complete_receipt_v2",
+      "relation": "aos_shared_parent_physical_private.complete_receipt_v2",
+      "function": "aos_shared_parent_physical_private.immutable_obligation",
+      "tgname": "no_truncate_complete_receipt",
+      "tgdeferrable": false,
+      "tginitdeferred": false
+    },
+    {
+      "caller": "public.stage_shared_parent_complete_receipt_v2",
+      "relation": "aos_shared_parent_physical_private.complete_receipt_v2",
+      "function": "aos_shared_parent_physical_private.require_complete_obligation",
+      "tgname": "require_complete_receipt_end",
+      "tgdeferrable": true,
+      "tginitdeferred": true
+    }
+  ],
+  "limits": [
+    "function-name graph merges overloads",
+    "SQL dynamic calls and branch execution not counted",
+    "native deferred trigger graph is structural, not proof of actual drain"
+  ],
+  "execution_allowed": false
+}

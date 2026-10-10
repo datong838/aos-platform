@@ -1,0 +1,11 @@
+{
+  "database": "aos_test_ffc3891d30cf_ti4_test",
+  "mixed_family_red": true,
+  "fixed_original_family_recognized": true,
+  "original_private_audit_actual_owner_pass": true,
+  "native_exact_rollback_restored": true,
+  "source_replayed": false,
+  "execution_allowed": false,
+  "whole_receipt_pass": false,
+  "full_task_delivered": false
+}

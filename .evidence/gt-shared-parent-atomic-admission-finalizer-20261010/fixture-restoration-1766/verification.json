@@ -1,0 +1,33 @@
+{
+  "status": "OWNED_FIXTURE_ORIGINAL_FAMILY_RESTORATION_NATIVE_RED_GREEN",
+  "authority_revision": "AOS-001766",
+  "head": "3b6a87afb055cd7e542e84fae4654e44ee8c0923",
+  "result": {
+    "database": "aos_test_ffc3891d30cf_ti4_test",
+    "mixed_family_red": true,
+    "fixed_original_family_recognized": true,
+    "original_private_audit_actual_owner_pass": true,
+    "native_exact_rollback_restored": true,
+    "source_replayed": false,
+    "execution_allowed": false,
+    "whole_receipt_pass": false,
+    "full_task_delivered": false
+  },
+  "full_audit_cost_seconds": [
+    0.1871681670018006,
+    0.10557245900417911,
+    0.1043968340018182
+  ],
+  "native_three_audits_fact_calls": 9,
+  "original_checks_preserved": true,
+  "integration_limit": "new complete-caller attempt has not yet incorporated or run helper; original teardown connection error remains separately unexplained",
+  "risk": "Do not reuse retained mixed profile as active installation. Temporary investigated installation rolled back exactly. No Source replay.",
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "files": {
+    "result.json": "95865e84818a370c159e74796f0b49cbb0de99d12f282d647612cb6bb9acac27",
+    "native-restoration-test.py": "5558fdd82cde3d53cbd84a335975bbb35b0f552e0f6c99f5d956678ca132bb2c",
+    "plan.md": "e52605cd53604475dd51e4478a8419f0758d773ac32fe449aaf268b640588021",
+    "catalog_fixture_restore.py": "8f896c2b1a1c86238f6a17a9dbc16f7f261380de07a815fb8d53bb6e318f3278"
+  }
+}
