@@ -1,0 +1,17 @@
+{
+  "schema": "aos-engineering-checkpoint/v1",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001755",
+  "task_base_revision": "AOS-001698",
+  "step": "native-utility-fence-green-select-effects-red-fixed-validator-semantic-closure-and-eight-node-receipt-next",
+  "evidence_files": [
+    ".evidence/foreign/result.json"
+  ],
+  "code_files": [
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py"
+  ]
+}

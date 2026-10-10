@@ -1,0 +1,60 @@
+{
+  "before-red": "invalid file list",
+  "valid": {
+    "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "authority_revision": "AOS-001755",
+    "step": "native-utility-fence-green-select-effects-red-fixed-validator-semantic-closure-and-eight-node-receipt-next",
+    "fingerprint": "18d197d52ec5a7135e55dcf0cf9bc02982ae4ef25bd35c14b1c5f0d5cf031507",
+    "task_base_revision": "AOS-001698"
+  },
+  "wrong-thread": "checkpoint identity mismatch",
+  "wrong-owner": "checkpoint has no current owned lease",
+  "stale-authority": "checkpoint has no current owned lease",
+  "foreign-evidence": "evidence outside task directory",
+  "unowned-code": "file outside task scope",
+  "history_files_verified": 37,
+  "current_evidence_count": 17,
+  "status": "CHECKPOINT_BOUND_REPAIR_GREEN",
+  "full_task_delivered": false,
+  "goal_complete": false,
+  "execution_allowed": false,
+  "original_wake_exit": 0,
+  "old_event_deduplicated": true,
+  "normal_retained_event": "0001791615233448",
+  "shadow_current_snapshot": {
+    "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+    "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "branch": "m1",
+    "head": "b65a38f18e77bd42f55a355be3267c330e754044",
+    "code_commit": "1eb7746e9203f84104dc8d7cfdc91f0fbada0fac",
+    "code_time": 1791662142,
+    "checkpoint": {
+      "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001755",
+      "step": "native-utility-fence-green-select-effects-red-fixed-validator-semantic-closure-and-eight-node-receipt-next",
+      "fingerprint": "18d197d52ec5a7135e55dcf0cf9bc02982ae4ef25bd35c14b1c5f0d5cf031507",
+      "task_base_revision": "AOS-001698"
+    },
+    "schema": "aos-wake-progress/v2",
+    "event": "0001791615233448",
+    "observed_at": 1791663536.944729,
+    "unchanged_wakes": 0,
+    "code_age_seconds": 1394,
+    "action": "REVIEW_REQUIRED",
+    "meaning": "Observation only: task file changes require content review; never work authorization, liveness or business completion."
+  },
+  "adjacent_tests": {
+    "passed": 42,
+    "subtests_passed": 50
+  },
+  "review": {
+    "code_files_unchanged": true,
+    "observer_limit_unchanged": true,
+    "history_preserved": true,
+    "no_database_or_services_touched": true,
+    "configuration_repair_only": true
+  },
+  "remaining": "Fixed-validator semantic closure and complete eight-node Receipt/native COMMIT acceptance remain pending; Model checkpoint list also exceeds32 and requires its own exact Lease scope repair."
+}
