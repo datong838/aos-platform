@@ -1,0 +1,17 @@
+{
+  "authority_revision": "AOS-001731",
+  "head": "ce61133959dde01e93714d5e37a60ca42edf8d74",
+  "validation": {
+    "status": "GREEN",
+    "project_revision": "AOS-001731",
+    "projection_count": 8,
+    "schema_count": 9,
+    "task_receipt_count": 1994,
+    "delivery_receipt_count": 1962,
+    "event_count": 5792
+  },
+  "native_positive": false,
+  "full_task_delivered": false,
+  "goal_complete": false,
+  "codex_memories_write_skipped": true
+}
