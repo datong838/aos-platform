@@ -1,0 +1,21 @@
+{
+  "authority": "AOS-001744",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "status": "ISOLATED_NATIVE_HEADER_ENTRY_FOUND_IMPLEMENTATION_NOT_STARTED",
+  "container": "aos-source-desktop-shm-20261009",
+  "postgres_version": "PostgreSQL 16.14",
+  "header": "/usr/local/include/postgresql/server/commands/trigger.h",
+  "declaration": "extern bool AfterTriggerPendingOnRel(Oid relid);",
+  "header_observed": true,
+  "dynamic_symbol_verified": false,
+  "symbol_probe_error": "sh: nm: not found",
+  "native_pending_event_trial_run": false,
+  "product_code_changed": false,
+  "execution_allowed": false,
+  "next_requirements": [
+    "Register exact native extension source/build/DDL/test paths before implementation outside current two-product-file scope.",
+    "Verify exact runtime symbol, pinned package and owned closed ACL; do not infer runtime support from header.",
+    "Native pending-event reader must cover all relevant relations and resist savepoint rollback, early SET, late writes and Receipt-own-event recursion.",
+    "Preserve original unconditional legacy debit refusal until approved joint cutover is implemented and tested."
+  ]
+}
