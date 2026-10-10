@@ -1,0 +1,54 @@
+{
+  "com.aos.a0v-api-daily0900": {
+    "label": "com.aos.a0v-api-daily0900",
+    "port": 8080,
+    "plist_sha256": "0ed893602c8fc5626672c87414788919a489df9e49ebfc083e22132a40535861",
+    "registered": true,
+    "pid": null,
+    "last_exit_status": 512,
+    "listener_pids": [],
+    "argv_sha256": "c81c2cb67f52827a36cc8d815b5d9a4a92efd93ff07cf204a3e0d2d3b3efa2ca",
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+    "legacy_unregistered_controller_applicable": false
+  },
+  "com.aos.a0v-web-8434": {
+    "label": "com.aos.a0v-web-8434",
+    "port": 8434,
+    "plist_sha256": "63386bf353912636f90ec8f21374e04f8e1c0b558c4d22c8dde5bc00ecac25d3",
+    "registered": true,
+    "pid": 846,
+    "last_exit_status": 0,
+    "listener_pids": [
+      "846"
+    ],
+    "argv_sha256": "4cd8ae42f94933c4fa6fceeb4cda83e16c8940a1509321db6ef2f849bd771270",
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform/apps/web",
+    "legacy_unregistered_controller_applicable": false,
+    "fingerprint": {
+      "pid": 846,
+      "ppid": 1,
+      "uid": 501,
+      "started": "Sat Oct 10 12:25:58 2026",
+      "argv_sha256": "4cd8ae42f94933c4fa6fceeb4cda83e16c8940a1509321db6ef2f849bd771270",
+      "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform/apps/web",
+      "children": [
+        {
+          "pid": 1064,
+          "ppid": 846,
+          "uid": 501,
+          "started": "Sat Oct 10 12:26:01 2026",
+          "argv_sha256": "d76592cffd7f6b7d2e96cda9fcb2b8bd908f96f5181122e60faa399aabea545e"
+        }
+      ],
+      "listener_ports": [
+        8434
+      ]
+    }
+  },
+  "host_label": {
+    "label": "com.aos.a0v-w5c3-runtime-host",
+    "registered_exit": 113,
+    "registered": false
+  },
+  "scope": "Readonly exact current launchd/API/Web process candidates; no signal or launchctl mutation; worker/Provider off not inferred from API port"
+}

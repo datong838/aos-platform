@@ -1,0 +1,20 @@
+{
+  "new_window_contract_tests": 41,
+  "adjacent_total_passed": 101,
+  "actual_current_state_rejected": true,
+  "actual_registered_launchd_control_path": true,
+  "legacy_unregistered_stop_controller_applicable": false,
+  "source_formal_cluster": "7683855731447750695",
+  "source_version": "a0v_157",
+  "formal_database_writes": 0,
+  "zero_window_established": false,
+  "second_backup_started": false,
+  "scope": "Window predicate and actual readonly service identity investigation; not full maintenance or execution authorization",
+  "hashes": {
+    "current_window159_contract.py": "475979cc75e4f0d5585104db16f43f7af4db174d6ed82999056723d2aab103b0",
+    "test_current_window159_contract.py": "6040d28e13c11f135e3b0453e17b9e77c5045e9965d4383519d8fcb0871e8f6f",
+    "current-window159-native-red.json": "ff936f6113376b714254efb1f2039e5052280732609b3b9fc90bf75048020c6b",
+    "current-window159-service-candidates.json": "4e5a3e1f711b57f9c13189cd8994dc6c7d8782177a538019843586f4a83a90b9"
+  },
+  "next_safe_step": "Implement/test exact launchd registered stop/restore controller with durable exclusive attempt journal and original plist/process fingerprints before any service/config effect"
+}
