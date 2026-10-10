@@ -4,11 +4,10 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001742",
+  "authority_revision": "AOS-001743",
   "task_base_revision": "AOS-001698",
-  "step": "actual-internal-ri-wait-and-flush-next",
+  "step": "full-original-write-event-closure-and-native-ending-next",
   "evidence_files": [
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-risk-review-1719.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-risk-native-readback-1719.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-positive-verification-1720.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-positive-1720-r6/independent-readback.json",
@@ -39,7 +38,8 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/live-savepoint-verification-1738.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/parent-risk-verification-1739.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/event-ri-inventory-1740.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/certificate-phase-verification-1741.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/certificate-phase-verification-1741.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/event-ri-wait-independent-1742.json"
   ],
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
