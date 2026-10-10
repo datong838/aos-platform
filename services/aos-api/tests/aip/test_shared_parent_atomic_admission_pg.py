@@ -1,5 +1,6 @@
 """New admission fact boundary on retained native lab; no admission success claim."""
 import json
+import hashlib
 import os
 import re
 import subprocess
@@ -10,6 +11,65 @@ import pytest
 
 from aos_api.aip_shared_parent_atomic_admission import FUNCTION, shared_parent_original_fact_statements
 from aos_api.aip_physical_capacity_occupation_authority import OWNER, PLAN_FACT, occupation_plan_risk_statements
+
+
+def test_final_intent_comparison_retains_original_authority_and_rows():
+    from aos_api import aip_shared_parent_atomic_admission as api
+    statements = api.shared_parent_final_intent_validation_statements()
+    body = statements[0]
+    assert not re.search(r'\b(?:INSERT|UPDATE|DELETE|MERGE|TRUNCATE)\b', body, re.I)
+    for check in ('SHARED_ADMISSION_INTENT_NATIVE_CALLER_REQUIRED',
+                  'SHARED_ADMISSION_TARGET_INTENT_REPLAY_CONFLICT',
+                  'SHARED_ADMISSION_JUDGE_DEPENDENCY_REPLAY_CONFLICT',
+                  'SHARED_ADMISSION_INTENT_CURRENT_AFTER_WAITS_REQUIRED',
+                  'capacity_occupation_eval_case_fact', 'read_shared_parent_pending_origin'):
+        assert check in body
+    assert api._physical.occupation_input_bytes_validation_sql() in body
+    root = Path(__file__).resolve().parents[4]
+    frozen = json.loads((root / '.evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-reader-closure-r1/result.json').read_text())
+    producer = next(s for s in api.shared_parent_initial_intent_statements()
+                    if s.startswith('CREATE FUNCTION ' + api.INITIAL_INTENT.split('(')[0]))
+    assert hashlib.sha256(producer.encode()).hexdigest() == frozen['sql_hashes'][api.INITIAL_INTENT.split('(')[0]]
+
+
+@pytest.mark.parametrize('drift', ['boundary', 'new_writer'])
+def test_final_intent_comparison_rejects_producer_drift(monkeypatch, drift):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    original = api.shared_parent_initial_intent_statements
+    def changed():
+        values = list(original())
+        for i, sql in enumerate(values):
+            if sql.startswith('CREATE FUNCTION ' + api.INITIAL_INTENT.split('(')[0]):
+                values[i] = (sql.replace('INSERT INTO ' + api.PHYSICAL_SCHEMA + '.target_intent', 'INSERT  INTO ' + api.PHYSICAL_SCHEMA + '.target_intent', 1)
+                             if drift == 'boundary' else sql.replace('RETURN jsonb_build_object', 'DELETE FROM extra_table; RETURN jsonb_build_object', 1))
+        return tuple(values)
+    monkeypatch.setattr(api, 'shared_parent_initial_intent_statements', changed)
+    with pytest.raises(ValueError, match='SHARED_ADMISSION_FINAL_INTENT_'):
+        api.shared_parent_final_intent_validation_statements()
+
+
+def test_native_final_intent_comparison_closed_and_rollback(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    for generator in (api.shared_parent_admission_origin_statements,
+                      api.shared_parent_admission_certificate_set_statements,
+                      api.shared_parent_admission_storage_statements,
+                      api.shared_parent_pending_origin_lookup_statements,
+                      api.shared_parent_physical_obligation_statements,
+                      api.shared_parent_initial_intent_statements,
+                      api.shared_parent_final_intent_validation_statements):
+        for statement in generator():
+            native.execute(statement)
+    row = native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (api.FINAL_INTENT,)).fetchone()
+    assert row == (OWNER, True, ['search_path=pg_catalog'])
+    assert not native.execute("SELECT EXISTS(SELECT 1 FROM pg_proc p, LATERAL aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE p.oid=%s::regprocedure AND a.grantee=0 AND a.privilege_type='EXECUTE')", (api.FINAL_INTENT,)).fetchone()[0]
+    for role in ('aos_runtime', 'aos_provider_capacity_issuer'):
+        assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (role, api.FINAL_INTENT)).fetchone()[0]
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_INTENT_NATIVE_CALLER_REQUIRED'):
+        with native.transaction():
+            native.execute('SELECT public.verify_shared_parent_final_intents(' + ','.join(['NULL'] * 18) + ')')
+    native.rollback()
+    assert native.execute('SELECT to_regprocedure(%s)', (api.FINAL_INTENT,)).fetchone()[0] is None
+    native.rollback()
 
 
 def test_certificate_waits_precede_complete_signature_validation():

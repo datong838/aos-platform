@@ -7,8 +7,52 @@ can be exposed. Necessary facts are never execution permission.
 from aos_api.aip_physical_capacity_occupation_authority import OWNER, PLAN_FACT
 from aos_api import aip_shared_parent_certificate_prepare as _certificate
 from aos_api import aip_physical_capacity_occupation_authority as _physical
+import re
 
 FUNCTION = 'public.read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)'
+
+
+FINAL_INTENT = 'public.verify_shared_parent_final_intents(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text,text,bytea,bytea,uuid,uuid)'
+
+
+def shared_parent_final_intent_validation_statements():
+    """Compare persisted intents with original authority without direct DML.
+
+    Preserve the original producer exactly. Exact write fragments are removed
+    only in this closed comparison artifact; generator drift fails closed.
+    Nested delegates, physical facts and the full Receipt/native end protocol
+    must still be accepted before this can be used by a complete finalizer.
+    """
+    signature = INITIAL_INTENT.split('(')[0]
+    definitions = [sql for sql in shared_parent_initial_intent_statements()
+                   if sql.startswith('CREATE FUNCTION ' + signature + '(')]
+    if len(definitions) != 1:
+        raise ValueError('SHARED_ADMISSION_FINAL_INTENT_DEFINITION_REQUIRED')
+    body = definitions[0]
+    target = PHYSICAL_SCHEMA + '.target_intent'
+    judge = PHYSICAL_SCHEMA + '.judge_dependency'
+    writes = (
+        f'''            INSERT INTO {target}(intent_id,plan_id,org_id,project_id,request_id,case_id,attempt,body,content_hash,caller_xid,caller_pid)
+              VALUES(p_target_intent,p_plan,'org-org','dev-project',p_tr,obligation.case_id,1,target_body,target_hash,
+                pg_current_xact_id(),pg_backend_pid()) ON CONFLICT DO NOTHING;
+''',
+        f'''            INSERT INTO {judge}(intent_id,plan_id,org_id,project_id,target_intent_id,target_intent_hash,
+              request_id,case_id,attempt,body,content_hash,caller_xid,caller_pid)
+              VALUES(p_judge_intent,p_plan,'org-org','dev-project',p_target_intent,target_hash,p_jr,obligation.case_id,1,
+                judge_body,judge_hash,pg_current_xact_id(),pg_backend_pid()) ON CONFLICT DO NOTHING;
+''',
+    )
+    for fragment in writes:
+        if body.count(fragment) != 1:
+            raise ValueError('SHARED_ADMISSION_FINAL_INTENT_WRITE_BOUNDARY_REQUIRED')
+        body = body.replace(fragment, '', 1)
+    if re.search(r'\b(?:INSERT|UPDATE|DELETE|MERGE|TRUNCATE)\b', body, re.I):
+        raise ValueError('SHARED_ADMISSION_FINAL_INTENT_DIRECT_WRITER_FORBIDDEN')
+    body = body.replace('CREATE FUNCTION ' + signature + '(',
+                        'CREATE FUNCTION ' + FINAL_INTENT.split('(')[0] + '(', 1)
+    return (body,
+            f'ALTER FUNCTION {FINAL_INTENT} OWNER TO {OWNER}',
+            f'REVOKE ALL ON FUNCTION {FINAL_INTENT} FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer')
 
 
 def shared_parent_admission_description_validation_sql():
