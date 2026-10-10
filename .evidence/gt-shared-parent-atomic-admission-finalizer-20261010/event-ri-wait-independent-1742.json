@@ -1,0 +1,22 @@
+{
+  "authority": "AOS-001742",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "schema": "test_owned_ri_dd57748412b249a3",
+  "transaction": "SERIALIZABLE READ ONLY",
+  "states": [
+    "committed",
+    "aborted"
+  ],
+  "test_owned_counts": {
+    "parent": 2,
+    "child": 1,
+    "audit": 1
+  },
+  "exact_native_wait_observed": true,
+  "production_rows_written": false,
+  "original_role_flags_unchanged": true,
+  "naive_end_red": true,
+  "scoped_flush_negative_pass": true,
+  "full_product_queue_verified": false,
+  "goal_complete": false
+}

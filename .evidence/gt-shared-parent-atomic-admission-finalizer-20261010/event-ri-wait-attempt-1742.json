@@ -1,0 +1,11 @@
+{
+  "authority": "AOS-001742",
+  "cluster": "7694680278363095064",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "schema": "test_owned_ri_dd57748412b249a3",
+  "head": "d28bd7df5516debc932b0da4b307f24e18336044",
+  "script_hash": "f65e4646edf5ea484b791dcf7b0de029125b85f1df741deeb254330e947032f0",
+  "created_at": "2026-10-10T18:31:50.694214+00:00",
+  "test_only": true,
+  "formal_effects": false
+}

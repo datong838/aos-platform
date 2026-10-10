@@ -1,0 +1,93 @@
+{
+  "authority": "AOS-001742",
+  "cluster": "7694680278363095064",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "schema": "test_owned_ri_dd57748412b249a3",
+  "head": "d28bd7df5516debc932b0da4b307f24e18336044",
+  "script_hash": "f65e4646edf5ea484b791dcf7b0de029125b85f1df741deeb254330e947032f0",
+  "created_at": "2026-10-10T18:31:50.694214+00:00",
+  "test_only": true,
+  "formal_effects": false,
+  "cases": [
+    {
+      "case": 1,
+      "scoped_fk_flushed": false,
+      "deadline": "2026-10-10T18:31:51.128562+00:00",
+      "xid": "59554",
+      "actual_wait": {
+        "query": "COMMIT",
+        "wait_event_type": "Lock",
+        "wait_event": "transactionid",
+        "blockers": [
+          68879
+        ]
+      },
+      "outcome": {
+        "committed": true
+      },
+      "transaction_state": "committed",
+      "audit": {
+        "id": 1,
+        "decision_at": "2026-10-10T18:31:50.730281+00:00",
+        "deadline": "2026-10-10T18:31:51.128562+00:00",
+        "query": "COMMIT"
+      },
+      "post_ending_readback_at": "2026-10-10T18:31:51.141154+00:00",
+      "child_rows": 1
+    },
+    {
+      "case": 2,
+      "scoped_fk_flushed": true,
+      "deadline": "2026-10-10T18:31:51.569152+00:00",
+      "xid": "59556",
+      "actual_wait": {
+        "query": "SET CONSTRAINTS \"test_owned_ri_dd57748412b249a3\".owned_fk IMMEDIATE",
+        "wait_event_type": "Lock",
+        "wait_event": "transactionid",
+        "blockers": [
+          68885
+        ]
+      },
+      "outcome": {
+        "committed": false,
+        "sqlstate": "23514",
+        "error": "TEST_OWNED_END_DEADLINE_REQUIRED"
+      },
+      "transaction_state": "aborted",
+      "audit": null,
+      "post_ending_readback_at": "2026-10-10T18:31:51.576566+00:00",
+      "child_rows": 0
+    }
+  ],
+  "native_trigger_catalog": [
+    {
+      "tgname": "00_gate",
+      "tgisinternal": false,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "prosrc": "\n      DECLARE observed timestamptz:=clock_timestamp(); BEGIN\n        IF current_query() IS DISTINCT FROM 'COMMIT' OR observed>=NEW.deadline THEN\n          RAISE EXCEPTION 'TEST_OWNED_END_DEADLINE_REQUIRED' USING ERRCODE='23514'; END IF;\n        INSERT INTO test_owned_ri_dd57748412b249a3.audit VALUES(NEW.id,observed,NEW.deadline,current_query());\n        RETURN NEW;\n      END ",
+      "lanname": "plpgsql"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_5199199",
+      "tgisinternal": true,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "prosrc": "RI_FKey_check_ins",
+      "lanname": "internal"
+    },
+    {
+      "tgname": "RI_ConstraintTrigger_c_5199200",
+      "tgisinternal": true,
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "prosrc": "RI_FKey_check_upd",
+      "lanname": "internal"
+    }
+  ],
+  "naive_commit_string_and_clock_sufficient": false,
+  "exact_scoped_fk_flush_moves_wait_before_decision": true,
+  "actual_product_event_queue_verified": false,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}
