@@ -1,0 +1,45 @@
+{
+  "status": "ORIGINAL_SHARED_PREPARATION_NATIVE_BODIES_EXACT",
+  "authority": "AOS-001716",
+  "cluster": "7694680278363095064",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "readonly": true,
+  "functions": [
+    {
+      "signature": "public.prepare_capacity_plan_risk(bytea,jsonb,uuid,text,text,uuid,text,text,uuid)",
+      "body_sha256": "eb0a4f44f6a85c3cfc3783a135ecafa36564a86ab5f06381da9f16e34d8a5b4a",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner,aos_runtime=X/aos_physical_capacity_occupation_owner}",
+      "body_exact_current_generated": true
+    },
+    {
+      "signature": "public.prepare_capacity_shared_risk_description(bytea,jsonb,uuid,jsonb,text)",
+      "body_sha256": "3b2f935a8c5c9eea85ba7c9f164b181ead779ae3e65351dfd024adb1de8265b4",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner,aos_runtime=X/aos_physical_capacity_occupation_owner}",
+      "body_exact_current_generated": true
+    },
+    {
+      "signature": "public.prepare_capacity_target_call(bytea,jsonb,uuid,uuid,uuid)",
+      "body_sha256": "e3f2c707ba2beca2aa89bd228d4cd1b3d4813a4f0c21c6ab00f161d37c168ea8",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner,aos_runtime=X/aos_physical_capacity_occupation_owner}",
+      "body_exact_current_generated": true
+    },
+    {
+      "signature": "public.prepare_capacity_target_occupation(bytea,jsonb,uuid,uuid,uuid)",
+      "body_sha256": "97a0f548ce5882a9773cfb2fcfa7c1d1599b1bbbc513670978514fc3b3e20f1c",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner,aos_runtime=X/aos_physical_capacity_occupation_owner}",
+      "body_exact_current_generated": true
+    }
+  ],
+  "legacy_per_case_debits_not_installed": [
+    "public.prepare_capacity_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint)",
+    "public.prepare_capacity_judge_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint,text)"
+  ],
+  "original_seven_denial_guards_unchanged": true,
+  "source_sha256": "45062a1181cf32a423ed284d4c8a4f4611d8e5e0d8fb8707e88d2a9a35d98ad6",
+  "full_admission_pass": false,
+  "database_writes": false
+}

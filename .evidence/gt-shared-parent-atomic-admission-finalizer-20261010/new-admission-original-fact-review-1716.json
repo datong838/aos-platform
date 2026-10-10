@@ -1,0 +1,45 @@
+{
+  "status": "NEW_ADMISSION_ORIGINAL_FACT_NATIVE_BOUNDARY_GREEN_FULL_ADMISSION_PENDING",
+  "authority": "AOS-001716",
+  "head": "9b1d8e8721a8b1a780bd9fd455785d491c3fc841",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "at": "2026-10-10T10:09:05.214529+00:00",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "96bdaa2132f030de59ab2339d8507b872cefe747702801c944255e92ec6168bd",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "93a80fe09aaffadba54016add4bd4ba5831a52c8e32442ff12450cefca09a99e"
+  },
+  "red": {
+    "exit": 2,
+    "reason": "ModuleNotFoundError: aos_api.aip_shared_parent_atomic_admission"
+  },
+  "native_r1": {
+    "exit": 1,
+    "tests_passed": 3,
+    "tests_failed": 2,
+    "teardown_errors": 2,
+    "reason": "Retained occupation login lacks runtime membership; failure occurred at SET ROLE, before new fact body",
+    "rollback_on_connection_close": true,
+    "no_permission_grant_added": true
+  },
+  "green": {
+    "exit": 0,
+    "passed": 82,
+    "output": "82 passed in 0.39s",
+    "scope": [
+      "new fact native owner/ACL/original body dependency/admin rejection/login no elevation and rollback",
+      "39 old SQL kernel exact/no-selector regressions",
+      "operation event closure and joint catalogue negative adjacent regressions"
+    ],
+    "command": "PYTHONPATH=services/aos-api pytest --confcutdir=services/aos-api/tests/aip -q tests/aip/test_shared_parent_atomic_admission_pg.py evidence/test-capacity-kernel-r2-1699.py tests/aip/test_physical_capacity_joint_events.py tests/aip/test_physical_capacity_joint_catalog.py"
+  },
+  "native_test_scope": "Original retained isolated lab DB aos_test_05f1a1dcd51f_ti4_test; all new DDL in rolled-back transactions",
+  "original_native_bodies": 4,
+  "original_seven_guards_unchanged": true,
+  "authorized_caller_positive_fact_consumption": false,
+  "per_field_canary_validation_under_authorized_caller": false,
+  "full_admission_pass": false,
+  "task_delivery": false,
+  "formal_database_writes": false,
+  "service_or_provider_activation": false,
+  "remaining": "Versioned combined risk ledger, original full certificate reuse, exact event/finalizer/end channel, native complete positive and rollback/competition matrix; formal identity/root separate"
+}

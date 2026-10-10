@@ -24,3 +24,11 @@ Rules：231、原joint实施§3/§11.3、最小更改、单m1写者、未知效�
 
 ## AOS-001715 维护后完整新版本接线调查
 原维护执行已知终态、当前159真库恢复只读。本Task同owner租约已对账续期，无重叠，无Delivery。候选一为完整新版本准入/finalizer，已批准隔离实现但必须复用原可信facts并计入全部旧未决风险；候选二正式native部署/Root来源，依赖独立正式签名不执行。选择一：新增本目录admission-kernel-binding-1715.py/json，静态生成精确原SQL并抽取CREATE表/INSERT/UPDATE/SELECT锁、实际deferred guards、容量计数与继承需求；核原14生成器对1699beforeimage逐字相同，原七拒绝门保持。禁止用这份静态清单证明native queue/完整准入GREEN。产品两文件仍未创建；本步不访问数据库、不安装函数、不触达Provider。下一实施以显式新版本tables、旧风险兼容mapping及完整结束通道为同一个交付包，不能通过替换prepare或关闭七guard获得正向。
+
+## AOS-001716 原生安装范围对账
+历史read-native-capacity-kernel-r2-1699在确认Judge旧per-case debit函数存在时失败；实际保留库仅安装完整shared准备所需plan_risk/shared_description/target_call/target_occupation四producer及七个原拒绝trigger，两个旧per-case debit均不存在。禁止为修测试安装旧逐case费用路径。新增native-kernel-scope-readback-1716.py/json，仅SER READ ONLY对四个实际生成body、Owner/SECURITY DEFINER/search_path/ACL及七个拒绝body逐字核；缺失legacy两个函数明确记为未部署，不能宣称已安装body验证。原生回读通过后接入新version kernel，不降低full admission目标。
+
+## 新准入入口原fact接线（本轮产品增量）
+精确新增services/aos-api/aos_api/aip_shared_parent_atomic_admission.py及tests/aip/test_shared_parent_atomic_admission_pg.py。新固定签名public.read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)仅委托原capacity_occupation_plan_risk_fact，不复制原Source/申请/审批/hold/cost算法，不写legacy准备账本、不签名、不COMMIT。新SECURITY DEFINER函数仍固定原physical Owner/search_path，拒PUBLIC/runtime直接EXECUTE；固定occupation登录、runtime当前role、SERIALIZABLE/UTC/origin/org-org+dev-project校验在原fact调用前。新trusted完整admission后续从原Owner内部调用；仍须全case/cert/版本风险账本/commit-end原生完整实现，不把此fact入口交付为完整Task。RED先缺产品module；GREEN验证native显式DDL仅在原保留test库事务中创建、元数据Owner/ACL精确、恶意session/canary拒绝并整体rollback，原七guard及四producer全量body不改。真库159仍只读，不注册服务、不新迁移、不开启业务。
+
+本次实现仅完成完整新准入的原fact接线：首次native测例在SET ROLE先失败，确认occupation登录无runtime membership，不为测试扩大权限；更正为真实admin边界拒绝及no-elevation矩阵，未声称authorized-caller canary字段单独验收。新7项及相邻共82通过；所有新DDL rollback且原native四函数/七guard/ACL保持。新函数无runtime/PUBLIC grants、不自动安装、不写旧账本。全准入正向、版本账本/证书复用/结束门仍待下一实施，Task无Delivery。

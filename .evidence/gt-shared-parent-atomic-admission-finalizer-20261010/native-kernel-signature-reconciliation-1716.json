@@ -1,0 +1,57 @@
+{
+  "authority": "AOS-001716",
+  "cluster": "7694680278363095064",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "readonly": true,
+  "original_readback_exit": 1,
+  "error": "Expected exact Judge signature absent; inspect actual signatures before fixing readback",
+  "functions": [
+    {
+      "signature": "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    {
+      "signature": "prepare_capacity_plan_risk(bytea,jsonb,uuid,text,text,uuid,text,text,uuid)",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "eb0a4f44f6a85c3cfc3783a135ecafa36564a86ab5f06381da9f16e34d8a5b4a"
+    },
+    {
+      "signature": "prepare_capacity_shared_risk_description(bytea,jsonb,uuid,jsonb,text)",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "3b2f935a8c5c9eea85ba7c9f164b181ead779ae3e65351dfd024adb1de8265b4"
+    },
+    {
+      "signature": "prepare_capacity_target_call(bytea,jsonb,uuid,uuid,uuid)",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "e3f2c707ba2beca2aa89bd228d4cd1b3d4813a4f0c21c6ab00f161d37c168ea8"
+    },
+    {
+      "signature": "prepare_capacity_target_occupation(bytea,jsonb,uuid,uuid,uuid)",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "body_sha256": "97a0f548ce5882a9773cfb2fcfa7c1d1599b1bbbc513670978514fc3b3e20f1c"
+    }
+  ],
+  "database_writes": false,
+  "full_admission_pass": false
+}
