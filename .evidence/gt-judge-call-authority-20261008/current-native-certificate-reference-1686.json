@@ -1,0 +1,44 @@
+{
+  "authority_revision": "AOS-001686",
+  "task": "gt-judge-call-authority-20261008",
+  "head": "6b76abf67f1703fac30946e060389b33b97a1725",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "same_caller_metadata_necessary_verified": true,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-call-authority-20261008/current-native-certificate-reference-1685.json",
+      "sha256": "6ffd9c8892f7aff6eeb073b9e5b56c832ed63daf1279e0ee6353f07745c73c89"
+    },
+    {
+      "path": ".evidence/gt-joint-operation-event-closure-20261010/implementation-plan.md",
+      "sha256": "1d0dd58d7d8645f9346ba990329a979a8c0be8231d427dd45c959f537f630a07"
+    },
+    {
+      "path": ".evidence/gt-joint-operation-event-closure-20261010/review.md",
+      "sha256": "f6c6725e5564a368a43f614b429e5d3d8e998e92233cee536d480dc7a595d222"
+    },
+    {
+      "path": ".evidence/gt-joint-operation-event-closure-20261010/pure-result-r1.json",
+      "sha256": "9283ba78655f819da416b8a7fb6dda773c4586e1f0b8c5f0dcfbd1e7bfd7af51"
+    },
+    {
+      "path": ".evidence/gt-joint-operation-event-closure-20261010/current-events-negative-r1.json",
+      "sha256": "4e4529f979f039385c1cd589ea64dea2bf945f7bda540b58b198deae30a8bc41"
+    },
+    {
+      "path": ".evidence/gt-joint-operation-event-closure-20261010/manual-effects-candidate-r1.json",
+      "sha256": "3abda67da379adfdb878c3fac50498c178caf02f6c8feccd30560a38eb44a034"
+    },
+    {
+      "path": ".evidence/gt-joint-operation-event-closure-20261010/fk-callbacks-summary-r1.json",
+      "sha256": "adfe720bab7e218deb27be1a2711b65f28260e90f7589e81361c54b9d5d3007b"
+    },
+    {
+      "path": ".evidence/gt-joint-operation-event-closure-20261010/delivery.json",
+      "sha256": "9f89bbfe9636b3ccf179905a2e4e4cd79bd430ff76f8b6c36424b9da232898b4"
+    }
+  ]
+}
