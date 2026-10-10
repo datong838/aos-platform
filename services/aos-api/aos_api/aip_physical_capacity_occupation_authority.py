@@ -993,6 +993,33 @@ PLAN_FACT = 'public.capacity_occupation_plan_risk_fact(bytea,jsonb,uuid,text,tex
 PLAN_RISK = 'public.prepare_capacity_plan_risk(bytea,jsonb,uuid,text,text,uuid,text,text,uuid)'
 
 
+def shared_parent_original_risk_body_sql():
+    """Original full nonexecuting risk body from native verified facts only.
+
+    Requires exact original facts/caller/parent IDs; neither a persisted origin
+    nor a capacity allocation or execution permission follows from this body.
+    """
+    return f'''        FOR item IN SELECT value FROM jsonb_array_elements(facts->'cases') LOOP
+          legs:=legs||jsonb_build_array(
+            jsonb_build_object('case',item,'purpose','target','parentHold',p_target,
+              'state','awaiting_input_binding'),
+            jsonb_build_object('case',item,'purpose','judge','parentHold',p_judge,
+              'state','awaiting_target_result'));
+        END LOOP;
+        body:=jsonb_build_object('schemaVersion','aos.capacity-complete-plan-risk/v1','planId',p_plan,
+          'tenant',jsonb_build_object('orgId','org-org','projectId','dev-project'),
+          'originalFacts',facts,'legs',legs,'riskMode','original_shared_parent_caps',
+          'parentRisks',jsonb_build_array(
+            jsonb_build_object('purpose','target','parentHold',p_target,'parentHash',facts->'target'->>'contentHash',
+              'upperBoundMinor',facts->'target'->'upperBoundMinor','currency',facts->'target'->'currency'),
+            jsonb_build_object('purpose','judge','parentHold',p_judge,'parentHash',facts->'judge'->>'contentHash',
+              'upperBoundMinor',facts->'judge'->'upperBoundMinor','currency',facts->'judge'->'currency')),
+          'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),
+          'state','prepared_risk_only','executionAllowed',false);
+        digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
+'''
+
+
 def occupation_plan_risk_statements():
     """Complete original case coverage, separate from actual inflight admission.
 
@@ -1033,25 +1060,7 @@ def occupation_plan_risk_statements():
       BEGIN
         IF p_plan IS NULL THEN RAISE EXCEPTION 'CAPACITY_PLAN_ID_REQUIRED' USING ERRCODE='23514'; END IF;
         facts:=public.capacity_occupation_plan_risk_fact(p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh);
-        FOR item IN SELECT value FROM jsonb_array_elements(facts->'cases') LOOP
-          legs:=legs||jsonb_build_array(
-            jsonb_build_object('case',item,'purpose','target','parentHold',p_target,
-              'state','awaiting_input_binding'),
-            jsonb_build_object('case',item,'purpose','judge','parentHold',p_judge,
-              'state','awaiting_target_result'));
-        END LOOP;
-        body:=jsonb_build_object('schemaVersion','aos.capacity-complete-plan-risk/v1','planId',p_plan,
-          'tenant',jsonb_build_object('orgId','org-org','projectId','dev-project'),
-          'originalFacts',facts,'legs',legs,'riskMode','original_shared_parent_caps',
-          'parentRisks',jsonb_build_array(
-            jsonb_build_object('purpose','target','parentHold',p_target,'parentHash',facts->'target'->>'contentHash',
-              'upperBoundMinor',facts->'target'->'upperBoundMinor','currency',facts->'target'->'currency'),
-            jsonb_build_object('purpose','judge','parentHold',p_judge,'parentHash',facts->'judge'->>'contentHash',
-              'upperBoundMinor',facts->'judge'->'upperBoundMinor','currency',facts->'judge'->'currency')),
-          'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),
-          'state','prepared_risk_only','executionAllowed',false);
-        digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
-        SELECT * INTO prior FROM {table} WHERE org_id='org-org' AND project_id='dev-project'
+{shared_parent_original_risk_body_sql()}        SELECT * INTO prior FROM {table} WHERE org_id='org-org' AND project_id='dev-project'
           AND target_request=p_tr AND judge_request=p_jr;
         IF FOUND AND prior.plan_id IS DISTINCT FROM p_plan THEN
           RAISE EXCEPTION 'CAPACITY_PLAN_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;

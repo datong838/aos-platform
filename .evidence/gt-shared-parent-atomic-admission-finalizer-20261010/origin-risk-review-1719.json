@@ -1,0 +1,53 @@
+{
+  "schema": "aos-scoped-code-review/v1",
+  "authority": "AOS-001719",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "physical_kernel_task": "gt-atomic-model-admission-20261008",
+  "reviewer": "primary writer self-review; not independent model review",
+  "head": "da6b5d9d1760b07156781107d0cdf07355f5d711",
+  "files": {
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": "db8b698f779728db544bb7275214335316b1a8dcf4916ee2c4d77ec740258628",
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "66476a1c40ada5a06b3dcbe6a1012bf31a6b48d3cc5ebc78b35f273172c4785d",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "238d788789fc4612547b0e134f8a4c01913e4ff137471d5985abbe4e51ecdab8"
+  },
+  "rules": [
+    "231",
+    "original native Source/independent parent facts",
+    "single m1 writer",
+    "no old preparation promotion/no execution grant"
+  ],
+  "red": {
+    "missing_helpers": {
+      "failed": 2,
+      "deselected": 10
+    },
+    "first_native_compile": {
+      "failed": 1,
+      "passed": 11,
+      "teardown_error": 1,
+      "reason": "original_case variable missing; failed transaction made teardown reset fail; connection closed and rollback, no committed DDL",
+      "repair": "declare original_case jsonb in new origin only"
+    }
+  },
+  "green": {
+    "passed": 104,
+    "seconds": 0.89,
+    "exit_code": 0
+  },
+  "old_generators_byte_exact_HEAD": 14,
+  "native_readback": "origin-risk-native-readback-1719.json",
+  "native_functions_body_acl_exact": 4,
+  "denial_guards_exact": 7,
+  "new_origin": "Native compile/Owner/search_path/no direct runtime EXECUTE/admin session rejection; new DDL absent after rollback. No original approved source positive claim.",
+  "scheme_consistency": "No caller facts/risk/doc input; exact original fact and Source functions plus original risk-body and full manifest kernels derive candidate origin; repeat original facts comparison after all validation; no old prepared rows read or written, no Receipt/ledger/COMMIT. Native returned document remains awaiting_full_admission/executionAllowed=false.",
+  "remaining": [
+    "actual original approved/signature full positive source",
+    "trusted persisted new origin and narrow original Issuer certificate delegation",
+    "global legacy+new unresolved risk ledger/unique Intent/Judge actual dependency",
+    "native complete end-channel/actual COMMIT rollback replay and unknown matrix"
+  ],
+  "formal_database_writes": false,
+  "full_admission_pass": false,
+  "delivery": false,
+  "browser": "not applicable: explicit undeployed SQL artifact"
+}

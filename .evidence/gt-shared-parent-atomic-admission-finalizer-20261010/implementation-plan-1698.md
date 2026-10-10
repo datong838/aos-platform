@@ -38,3 +38,6 @@ Rules：231、原joint实施§3/§11.3、最小更改、单m1写者、未知效�
 
 ## 原完整描述核接线 AOS-001718
 原physical Task gt-atomic-model-admission-20261008按exact scope提取全部manifest/caseSet/独立两父预算/每case/Source-account-provider两leg完整检查，原14 SQL生成器逐字保持；主Task从原physical module调用同一零参数核，作为新version trusted风险/描述建立的固定检查片段。不能把普通JSON或旧prepared_only行升级成可信doc；新版本schema/保存来源/窄Issuer委托/原风险兼容账本/完整endchannel仍需同一完整交付。
+
+## 原生可信来源构建入口 AOS-001719
+新增本Task module内固定build_shared_parent_admission_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text)，无JSON facts/风险/描述输入。委托原fact入口→原Source fact→复用原风险body核→派生内存risk的immutable/hash/两request→原完整manifest核→新版本nonexecuting origin文档→原fact再次读取比较。原临时risk变量仅用于复用校验，不读写prepared表，无DDL/Receipt/dispatch/ledger/COMMIT。生成doc绑定session/caller xid pid和原完整risk hash；没有完整物理/费用/证书/历史义务/结束门不变为可执行。原physical Owner/search_path与runtime直接禁EXECUTE仍保持，原fact依赖先安装仅在native测试rollback中。native SQL编译/Owner ACL/错误session拒绝及回滚absent核验；真实完整正向来源必须原正式创建/独立审批签名fixture，不能mockfact来宣布正向。

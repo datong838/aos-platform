@@ -113,3 +113,29 @@ def test_new_admission_reuses_original_complete_description_kernel(monkeypatch):
     marker = "-- original complete manifest kernel, not executed"
     monkeypatch.setattr(original, "shared_parent_description_validation_sql", lambda: marker)
     assert api.shared_parent_admission_description_validation_sql() == marker
+
+
+def test_native_versioned_origin_definition_privilege_and_rollback(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    assert native.execute('SELECT to_regprocedure(%s)', (api.ORIGIN,)).fetchone()[0] is None
+    for statement in api.shared_parent_admission_origin_statements():
+        native.execute(statement)
+    row = native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (api.ORIGIN,)).fetchone()
+    assert row == (OWNER, True, ['search_path=pg_catalog'])
+    assert not native.execute('SELECT has_function_privilege(%s,%s,%s)', ('aos_runtime',api.ORIGIN,'EXECUTE')).fetchone()[0]
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_ORIGINAL_FACT_CALLER_REQUIRED'):
+        with native.transaction():
+            native.execute('SELECT public.build_shared_parent_admission_origin(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)')
+    native.rollback()
+    assert native.execute('SELECT to_regprocedure(%s)', (api.ORIGIN,)).fetchone()[0] is None
+
+
+def test_versioned_origin_reuses_original_complete_risk_and_manifest_kernels(monkeypatch):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    from aos_api import aip_physical_capacity_occupation_authority as original
+    monkeypatch.setattr(original,'shared_parent_original_risk_body_sql',lambda:'--risk kernel marker')
+    monkeypatch.setattr(original,'shared_parent_description_validation_sql',lambda:'--manifest kernel marker')
+    producer=api.shared_parent_admission_origin_statements()[0]
+    assert '--risk kernel marker' in producer and '--manifest kernel marker' in producer
+    assert 'INSERT INTO' not in producer and 'UPDATE ' not in producer and 'COMMIT' not in producer
+    assert 'FROM aos_physical_capacity_occupation_private.prepared_' not in producer

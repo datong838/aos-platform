@@ -62,3 +62,44 @@ def shared_parent_original_fact_statements():
         f'ALTER FUNCTION {FUNCTION} OWNER TO {OWNER}',
         f'REVOKE ALL ON FUNCTION {FUNCTION} FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer',
     )
+
+
+ORIGIN = 'public.build_shared_parent_admission_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text)'
+
+
+def shared_parent_admission_origin_statements():
+    """Build trusted native facts/description for the complete versioned lane.
+
+    No old preparation rows, caller-supplied facts, admission Receipt or ledger
+    writes. Certificates and full physical/end-channel protocol remain needed.
+    Explicit artifact only; no automatic installation or runtime execute grant.
+    """
+    return (
+        f'''CREATE FUNCTION {ORIGIN.split('(')[0]}(
+          p_raw bytea,p_source jsonb,p_target uuid,p_tr text,p_th text,
+          p_judge uuid,p_jr text,p_jh text,p_plan uuid,p_manifest jsonb,p_hash text) RETURNS jsonb
+          LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $origin$
+          DECLARE facts jsonb; after_facts jsonb; item jsonb; legs jsonb:='[]'; body jsonb; digest text;
+            risk {_physical.SCHEMA}.prepared_plan_risk%ROWTYPE;
+            leg jsonb; parent jsonb; fact jsonb; source_doc jsonb; original_case jsonb; purpose text; idx integer:=0;
+          BEGIN
+            facts:={FUNCTION.split('(')[0]}(p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh);
+            IF p_plan IS NULL THEN RAISE EXCEPTION 'CAPACITY_PLAN_ID_REQUIRED' USING ERRCODE='23514'; END IF;
+            source_doc:=public.capacity_occupation_source_fact(p_raw,p_source);
+{_physical.shared_parent_original_risk_body_sql()}            risk.immutable:=body; risk.content_hash:=digest;
+            risk.target_request:=p_tr; risk.judge_request:=p_jr;
+{shared_parent_admission_description_validation_sql()}            body:=jsonb_build_object(
+              'schemaVersion','aos.shared-parent-admission-origin/v1','planId',p_plan,
+              'tenant',risk.immutable->'tenant','originalRisk',risk.immutable,
+              'originalRiskHash',risk.content_hash,'manifest',p_manifest,'manifestHash',p_hash,
+              'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),
+              'state','awaiting_full_admission','executionAllowed',false);
+            digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
+            after_facts:={FUNCTION.split('(')[0]}(p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh);
+            IF after_facts IS DISTINCT FROM facts THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_ORIGIN_FACT_CHANGED' USING ERRCODE='23514'; END IF;
+            RETURN jsonb_build_object('planId',p_plan,'immutable',body,'contentHash',digest,'executionAllowed',false);
+          END $origin$''',
+        f'ALTER FUNCTION {ORIGIN} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {ORIGIN} FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer',
+    )

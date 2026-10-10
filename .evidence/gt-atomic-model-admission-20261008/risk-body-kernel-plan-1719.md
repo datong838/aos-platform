@@ -1,0 +1,2 @@
+# 新版本可信原风险体构建
+Rules：231/完整原准入合同/原Source与独立两父预算/同caller xid pid。原Task scope authority.py。提取原occupation_plan_risk_statements中FOR item→完整body/digest为shared_parent_original_risk_body_sql零参数固定原核，所有14旧SQL字节不变。原body仍是非执行风险描述，不改state/schema/原准入拒绝。新版本使用原生facts生成内存risk，不能接受调用方originalFacts/DescriptionHash或promote旧准备row。
