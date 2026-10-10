@@ -1,0 +1,34 @@
+{
+  "authority_revision": "AOS-001690",
+  "task": "gt-original-target-persisted-reader-20261010",
+  "head": "5cf4edd4c7408767ede48e5b00d62b419fc83620",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false,
+  "references": [
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/current-native-certificate-reference-1689.json",
+      "sha256": "b833c2371e48180d75a4dca832a3e15a1c197bd2ac7a6fdf13ecd6e3f779dfbf"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/combined-wave-review-1689.md",
+      "sha256": "a94f8fb91eb9167e89915684ebfccd2490d312b9e64d81d280f823cf843e8b7a"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/combined-wave-terminal-summary-1689.json",
+      "sha256": "e2c6730f7d40017e30d940078eea4d2235dfe6fa713c9b8bb47aa648427cb509"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/independent-combined-r28-r2.json",
+      "sha256": "7aa8d80856aae5c31dfdf77dda929fc7ce81d6eb71bee2d54072c26888b6e866"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/full-combined-catalog-r1-1689.json",
+      "sha256": "1d83a58f5fb0f367e57c9313ff05ac30a708e467b399f759064e0cb58a877e79"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/lease-renewal-1689-combined.json",
+      "sha256": "2287b5782548d0aac1ec6677f2923027c58b35a7a8fa33c5fe5b041e28815ada"
+    }
+  ]
+}

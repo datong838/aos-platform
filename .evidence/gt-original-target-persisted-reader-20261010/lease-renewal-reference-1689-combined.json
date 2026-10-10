@@ -1,0 +1,27 @@
+{
+  "authority": "AOS-001689",
+  "task": {
+    "base_revision": "AOS-001664",
+    "created_at": "2026-10-10T02:48:53+08:00",
+    "excluded_scope": [
+      "formalDB-Provider-Host-worker-restart",
+      "existing-migrations-and-legacy-reader",
+      "business-execution-grants"
+    ],
+    "expected_outputs": [
+      "Original v2 private persisted Target evidence reader: canonical original bytes/current root-certificate-identity heads/real crypto/native COMMITTED result origin; no bootstrap or actual transport/admission grant",
+      "Native RED/GREEN and adjacent old reader regression with original fresh native v2 request; separate test-only stored signed bytes from real Model execution; full typed/atomic Tasks stay ACTIVE"
+    ],
+    "lease_expires_at": "2026-10-10T03:00:34.597543+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_model_original_target_result_reader.py",
+      "aos-platform/services/aos-api/tests/aip/test_model_original_target_result_reader_pg.py",
+      "aos-platform/.evidence/gt-original-target-persisted-reader-20261010"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-original-target-persisted-reader-20261010"
+  },
+  "execution_allowed": false
+}

@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001689",
+  "authority_revision": "AOS-001690",
   "code_files": [
     "services/aos-api/aos_api/aip_model_original_target_result_reader.py",
     "services/aos-api/tests/aip/test_model_original_target_result_reader_pg.py"
@@ -10,12 +10,12 @@
     ".evidence/gt-original-target-persisted-reader-20261010/result-r3.json",
     ".evidence/gt-original-target-persisted-reader-20261010/independent-final.json",
     ".evidence/gt-original-target-persisted-reader-20261010/r3/native-proof.json",
-    ".evidence/gt-original-target-persisted-reader-20261010/current-native-certificate-reference-1689.json"
+    ".evidence/gt-original-target-persisted-reader-20261010/current-native-certificate-reference-1690.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "full-source-preparation-writer-bound-fresh-combined-native-next",
+  "step": "combined-original-native-preparation-verified-full-event-closure-next",
   "task_base_revision": "AOS-001664",
   "task_id": "gt-original-target-persisted-reader-20261010",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
