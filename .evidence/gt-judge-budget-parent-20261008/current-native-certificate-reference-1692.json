@@ -1,0 +1,38 @@
+{
+  "authority_revision": "AOS-001692",
+  "task": "gt-judge-budget-parent-20261008",
+  "head": "85d368765af1ff10df006d77f2cfcaf9c873c952",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/current-native-certificate-reference-1691.json",
+      "sha256": "2e6f6a0dc722c2b002e1b6d424e5116e083ced2c486440a50361fec8b9eefa1d"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/full-effects-plan-1691.md",
+      "sha256": "1d5f94849786578cdbbb0ebffc567b948eb5fc61b688c37c99a370074b69e875"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/full-effects-review-1691.md",
+      "sha256": "5ea92afad00c7dbcce6583ea3db64128cd9bf986bea505647b6ec606a600827f"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/full-effects-current-summary-1691.json",
+      "sha256": "6f6928eb20e98725b39b91ff8d6b775e66aee5ca74ae493cb4ec7e316fc1e1bf"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/all-ri-comparisons-1691.json",
+      "sha256": "14aef1ef499cbaf7240b51d9a33c154af2237c4d47a6721000cf08b0d1ab2588"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/ri-read-surface-1691.json",
+      "sha256": "c6d642eb579b5b99eb9c773414002bd7549b2f6eba63b7fcb451148abcf8a9e8"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/full-effects-verification-1691.json",
+      "sha256": "2745619feba02bbb0db252939c75426da3de077dbefa3817844d00213d1b56f5"
+    }
+  ]
+}

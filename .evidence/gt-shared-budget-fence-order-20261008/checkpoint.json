@@ -1,17 +1,17 @@
 {
-  "authority_revision": "AOS-001691",
+  "authority_revision": "AOS-001692",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_budget_reservation.py"
   ],
   "evidence_files": [
     ".evidence/gt-shared-budget-fence-order-20261008/implementation-plan.md",
     ".evidence/gt-shared-budget-fence-order-20261008/task-readback.json",
-    ".evidence/gt-shared-budget-fence-order-20261008/current-native-certificate-reference-1691.json"
+    ".evidence/gt-shared-budget-fence-order-20261008/current-native-certificate-reference-1692.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "full-native-ri-semantic-delta-verified-effects-freeze-next",
+  "step": "full-effects-catalog-and-three-comparison-vectors-native-symbols-next",
   "task_base_revision": "AOS-001588",
   "task_id": "gt-shared-budget-fence-order-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
