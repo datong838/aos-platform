@@ -1,0 +1,5 @@
+# Task10同事务证书准备逐项交付验收
+
+依231/Task原expected_outputs，不扩大或缩小分母。仅验收原Task三条准备/负门目标；正式Root/完整joint/WALACK/经营权限是原合同excluded及分离后续门。
+逐项读取R15/R20/R21/R22/R28实际native结果、保存点/caller与ACL回核，R14最终到期专项与后续整节点deadline失败分别保留。对当前R28保留库再次SER READ ONLY核riskABORT/全risk0、合法Sourceadjacentguard保留、四函数正文Owner/path/PUBLIC0、C封闭ACL。唯一后继源码delta contracts.py以R28实际Gitblob SHA及整个原AST前缀一致验证，新增case/输入API不得冒称原Task重新native验过；其他11文件exactSHA。
+若原三目标均有足量证据则原机制Delivery记载ISOLATED_PREPARATION_ONLY，不标长期Goal完整、不授正式执行；释放本Task Lease后所有新工作转新独立finalizer Task，不继续写本目录。首次失败历史、根信任与fulljoint仍独立保留。

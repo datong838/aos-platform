@@ -1,0 +1,77 @@
+{
+  "task_id": "gt-shared-parent-native-certificate-prepare-20261010",
+  "base_head": "09507787045cccc03f8a66e2ce4a1cf46bfb4484",
+  "expected_outputs": [
+    {
+      "requirement": "Explicit isolated signed v3 certificate prepare in exact native physical SERIAL caller, original Source/risk/description and prepublished current issuer roots; pinned native Ed25519 verifier",
+      "verified": true
+    },
+    {
+      "requirement": "Narrow delegated manifest append and certificate/binding staging atomically in same physical transaction, ordered original locks, no direct table grants or role repair; new design does not widen old reader contract",
+      "verified": true
+    },
+    {
+      "requirement": "Native same-caller visibility positive, malformed/signature/old-domain/canary/other-origin/withdrawal/expiry and caller catch-commit negative cleanup; original pending risk still rejects COMMIT and leaves zero metadata/risk; root trust/finaljoint remain separate",
+      "verified": true
+    }
+  ],
+  "qualification": "ISOLATED_SIGNED_SAME_TRANSACTION_PREPARATION_ONLY",
+  "dedicated_expiry_assertions_passed": true,
+  "expiry_compound_passed": false,
+  "historical_failures_preserved": true,
+  "current_readonly_reconciled": true,
+  "evidence": [
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r28/native-same-transaction-prepare-proof.json",
+      "sha256": "0c00466cfe215c3ced34a35e53d5c0fb9fce9a8a3f0f368bf6fc04068ca83a5b"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r28/result-r28.json",
+      "sha256": "c56ff59c3d45e738930f81ae0ae8e4d7b4660b0f3813b5d552ee0cf73377a8bd"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r28/combined-preparation.json",
+      "sha256": "09c9cbcf70d10e3690b19d56dbe6a44d194b474186b095930eba98aa6794c8cd"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r20/caller-domain-proof.json",
+      "sha256": "cf873ef27b57878c00a296071a86f3eab242c925b9a8ecf837b9902e3361a27f"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r20/result-r20.json",
+      "sha256": "b22f2cdf6fb17e186a7eca4df194d6288d64bcf6fd91c21d273e6ac11f155730"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r14/dedicated-final-expiry-proof.json",
+      "sha256": "0838323536d474f8c212b84f8fabb1e95a64208abccc703502b797e5c90c0f87"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r14/result-r14.json",
+      "sha256": "f076f44579016c73082460a6e3c5ab880240339c1d0c52aca0bbc99423d759ac"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r19/visible-withdrawal-v3-proof.json",
+      "sha256": "5e226681d05b0377667916aec0c8ef2da2ded32b1552d3988d83ae46177059c7"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r19/result-r19.json",
+      "sha256": "d3adfdae1f8625c927869d0c408959f77fd390190c0d8935cd4560ee2cf3f4f5"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/independent-reader-first-withdrawal-readback-r21.json",
+      "sha256": "32a63033d8f46c5c19c743a23eff7c8c0b4fcecaa493132d58fbbe1f893b8fdb"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/independent-pending-writer-withdrawal-readback-r22.json",
+      "sha256": "92ab6e5957546e92f3da3ca97c2ab757817f34ce2b33f51a623300c25af5b225"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/task-delivery-current-readback-1698.json",
+      "sha256": "32d652539351a1f034c63775cb7c45d820bef918571c436d52d7bdb16d9e7a8b"
+    }
+  ],
+  "formal_root_provenance_verified": false,
+  "full_joint_pass": false,
+  "natural_first_chain_pass": false,
+  "execution_allowed": false
+}
