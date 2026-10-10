@@ -65,6 +65,7 @@ def shared_parent_original_fact_statements():
 
 
 ORIGIN = 'public.build_shared_parent_admission_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text)'
+CERTIFICATE_SET = 'public.validate_shared_parent_admission_certificate_set(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea)'
 
 
 def shared_parent_admission_origin_statements():
@@ -102,4 +103,49 @@ def shared_parent_admission_origin_statements():
           END $origin$''',
         f'ALTER FUNCTION {ORIGIN} OWNER TO {OWNER}',
         f'REVOKE ALL ON FUNCTION {ORIGIN} FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer',
+    )
+
+
+def shared_parent_admission_certificate_set_statements():
+    """Closed original-Issuer verification against newly derived native origin.
+
+    Explicit artifact; prerequisite original verifier/Root installation remains
+    separate. No certificate, risk, Intent or Receipt rows are written. This
+    verification result cannot authorize execution or a full admission COMMIT.
+    """
+    issuer = _certificate.ISSUER_OWNER
+    origin_call = (f'{ORIGIN.split("(")[0]}('
+                   'p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh,p_plan,p_manifest,p_manifest_hash)')
+    return (
+        f'GRANT EXECUTE ON FUNCTION {ORIGIN} TO {issuer}',
+        f'''CREATE FUNCTION {CERTIFICATE_SET.split('(')[0]}(
+          p_raw bytea,p_source jsonb,p_target uuid,p_tr text,p_th text,
+          p_judge uuid,p_jr text,p_jh text,p_plan uuid,p_manifest jsonb,p_manifest_hash text,p_certificates bytea)
+          RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $set$
+          DECLARE doc jsonb; plan jsonb; items jsonb; envelope jsonb; claim jsonb; leg jsonb; app jsonb;
+            root record; head record; candidate jsonb; p_hash text;
+            expected integer; actual integer; distinct_legs integer; start_at timestamptz; end_at timestamptz;
+          BEGIN
+            IF session_user<>'aos_provider_capacity_occupation'
+              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'
+              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'
+              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'
+              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'
+              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'
+              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project'
+              OR p_certificates IS NULL OR octet_length(p_certificates) NOT BETWEEN 2 AND 1048576 THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_CERTIFICATE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+            items:=convert_from(p_certificates,'UTF8')::jsonb;
+            IF jsonb_typeof(items) IS DISTINCT FROM 'array'
+              OR convert_to(public.canonical_asset_registry_jsonb(items),'UTF8') IS DISTINCT FROM p_certificates THEN
+              RAISE EXCEPTION 'SHARED_CERTIFICATE_CANONICAL_SET_REQUIRED' USING ERRCODE='23514'; END IF;
+            doc:={origin_call};p_hash:=doc->>'contentHash';
+{shared_parent_admission_certificate_validation_sql()}            IF {origin_call} IS DISTINCT FROM doc THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_CERTIFICATE_ORIGIN_CHANGED' USING ERRCODE='23514'; END IF;
+{shared_parent_admission_certificate_validation_sql()}            RETURN jsonb_build_object('origin',doc,'certificateCount',actual,
+              'executionAllowed',false,'rootProvenanceVerified',false,'state','awaiting_full_admission');
+          END $set$''',
+        f'ALTER FUNCTION {CERTIFICATE_SET} OWNER TO {issuer}',
+        f'REVOKE ALL ON FUNCTION {CERTIFICATE_SET} FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer',
     )

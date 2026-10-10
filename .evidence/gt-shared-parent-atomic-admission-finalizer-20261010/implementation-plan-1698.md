@@ -44,3 +44,9 @@ Rules：231、原joint实施§3/§11.3、最小更改、单m1写者、未知效�
 
 ## 原生来源正向验收 AOS-001720
 独立fresh实验r1~r4均未完成新origin正向，具体过期harness窗口/严格原Judge路径/两层helper复制/SERIAL快照之前DDL原因保留。r5新origin正向及5negatives完成，但相邻helper缺失令整测试失败；不claimr5整包GREEN。r6修复复制完整原helper，保持原150s新审批函数字节不改，fresh保留DB全测试1PASS83.99s/8warnings；独立SER READ ONLY证明new2bodyOwner/ACL/noRuntimeGrant精确，legacy risk/description0，原caller aborted，两原hold0。正向Source/批准由原producer和真实签名形成，但测试Root不作正式provenance；无新ledger/Intent/certdelegate/fullendchannel/actualadmissionCOMMIT或业务首链。
+
+## AOS-001721 原生完整证书集合内部接线
+本步是完整新版本准入的内部构件，不代替可信保存/完整风险账本/Intent/end-channel/真实COMMIT。原native-positive库只证明Source与两个父预算，不含原certificate verifier；记录缺口，不安装旧未知结果或将该库当完整证书正向。
+精确修改 services/aos-api/aos_api/aip_shared_parent_atomic_admission.py 和 services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py。新增关闭的Issuer SECURITY DEFINER入口只接受rawSource/exactRef/两父hold/request/hash/plan/manifest/hash/完整原始证书bytes，不接受可信doc/risk。在同一原occupation SERIAL UTC caller中调用已有新原生ORIGIN，取得doc和descriptionHash，再逐字复用原C verifier要求及全部v3 claim/签名/Root锁/当前性。结束前重取原生doc，要求完全相同，再复用完整claim检查，不能将检查时间宣称WAL期限。
+新ORIGIN仅新增显式EXECUTE给既有Issuer Owner，非runtime/PUBLIC；新核验函数Issuer Owner所有，PUBLIC/runtime/Provider issuer无EXECUTE。不改任何原函数/旧七拒绝门/VERIFY权限；物理Owner不获VERIFY能力。全部SQL仅显式artifact，无导入安装、无表写、无签发、无Root创建、无执行权限。后续真正保存和最终入口必须使用此原生核验再计入旧风险；不能从客户端JSON信任，也不能由这个返回值获得准入Receipt。
+RED：新入口artifact不存在；GREEN：保留原库事务内原生DDL/Owner/search_path/ACL/恶意caller早拒及rollback复核、相邻专项。完整真签名集合的原生正向及持锁期限竞争须另在新test-owned fixture安装原证书artifact后验收，未执行不宣称通过。测试artifact中函数编译不能代替调用签名验证。

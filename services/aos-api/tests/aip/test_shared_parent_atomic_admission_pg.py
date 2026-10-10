@@ -139,3 +139,23 @@ def test_versioned_origin_reuses_original_complete_risk_and_manifest_kernels(mon
     assert '--risk kernel marker' in producer and '--manifest kernel marker' in producer
     assert 'INSERT INTO' not in producer and 'UPDATE ' not in producer and 'COMMIT' not in producer
     assert 'FROM aos_physical_capacity_occupation_private.prepared_' not in producer
+
+
+def test_native_closed_issuer_delegate_metadata_and_admin_rejection(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    from aos_api.aip_shared_parent_certificate_prepare import ISSUER_OWNER
+    for statement in api.shared_parent_admission_origin_statements():
+        native.execute(statement)
+    for statement in api.shared_parent_admission_certificate_set_statements():
+        native.execute(statement)
+    row = native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (api.CERTIFICATE_SET,)).fetchone()
+    assert row == (ISSUER_OWNER, True, ['search_path=pg_catalog'])
+    for role in ('aos_runtime', 'aos_provider_capacity_issuer', OWNER):
+        assert not native.execute('SELECT has_function_privilege(%s,%s,%s)', (role,api.CERTIFICATE_SET,'EXECUTE')).fetchone()[0]
+    assert native.execute('SELECT has_function_privilege(%s,%s,%s)', (ISSUER_OWNER,api.ORIGIN,'EXECUTE')).fetchone()[0]
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_CERTIFICATE_CALLER_REQUIRED'):
+        with native.transaction():
+            native.execute('SELECT public.validate_shared_parent_admission_certificate_set(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)')
+    native.rollback()
+    assert native.execute('SELECT to_regprocedure(%s)', (api.CERTIFICATE_SET,)).fetchone()[0] is None
+    native.rollback()

@@ -1,0 +1,49 @@
+{
+  "rules": [
+    "231",
+    "single m1",
+    "plan before code",
+    "exact Task/Lease",
+    "no formal DB or execution grant"
+  ],
+  "authority": "AOS-001721",
+  "reviewer": "primary writer scheme/code review; no independent model verdict",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "files": {
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "a52e07304f4a33a9a4797d2a918b5ef7fd02183c6c4c92be586b51732831d71d",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "bb64077c5382d07af7bc6f6206081f5559133b6ec4c6f60fa99f0e8466d60601",
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py": "aefa54f37c5973c76dfea970e7afdf6e20466a2b312487f9c6484e54df91bced",
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": "db8b698f779728db544bb7275214335316b1a8dcf4916ee2c4d77ec740258628"
+  },
+  "red": [
+    "First runner default test fixture attempted unavailable5433 before native fixture; no DB effects; explicit owned lab context corrected",
+    "Corrected native RED: missing certificate_set_statements AttributeError; rollback, no retained DDL"
+  ],
+  "specialized": {
+    "passed": 12,
+    "warnings": 7,
+    "seconds": 1.09
+  },
+  "adjacent": {
+    "passed": 331,
+    "warnings": 7,
+    "seconds": 1.86
+  },
+  "native_readback": {
+    "database": "aos_test_05f1a1dcd51f_ti4_test",
+    "cluster": "7694680278363095064",
+    "new_delegate_absent_after_rollback": true,
+    "seven_old_unconditional_denial_guards_exact": true
+  },
+  "scheme_consistency": "New closed Issuer-owned function derives trusted doc using exact native ORIGIN, reuses both original full certificate kernels, re-derives native facts and revalidates after waits. Only explicit new ORIGIN EXECUTE delegation to existing Issuer; runtime/physical Owner cannot execute new delegate. Original verifier and physical SQL files byte-identical HEAD. No persistent rows, issuing, Root bootstrap, ledger, Receipt or COMMIT.",
+  "browser": "not applicable: undeployed SQL artifact",
+  "full_signed_set_native_positive": false,
+  "full_admission_commit": false,
+  "full_task_delivery": false,
+  "natural_business_chain": false,
+  "remaining": [
+    "Fresh owned fixture with exact original C verifier/Issuer/root, original real signed Source and current two parents; actual signed fullset positive and invalid/expiry/revoke contexts",
+    "trusted version persistence and old/new unresolved physical ledger",
+    "unique Target Intent/Judge actual dependency and full end-channel/actual COMMIT/unknown retention"
+  ]
+}
