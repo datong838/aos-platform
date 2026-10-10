@@ -1,0 +1,27 @@
+{
+  "schema": "test_owned_native_end_4bf71fd68d7d4b0d90bfc35393739e6a",
+  "library": "/tmp/aos_admission_end_25913075ff7145d485a5509d8d55d142.so",
+  "installation_committed": true,
+  "formal_admission": false,
+  "execution_allowed": false,
+  "native_metadata_exact": true,
+  "public_runtime_closed": true,
+  "non_owner_denied": true,
+  "two_pending_relations": true,
+  "exact_scoped_drain": true,
+  "rollback_restores_pending": true,
+  "drain_xid": "59856",
+  "drain_xid_aborted": true,
+  "commit_intent": {
+    "xid": "59857",
+    "relations": [
+      5215021,
+      5215016
+    ]
+  },
+  "commit_returned": true,
+  "actual_commit_self_and_future_reported": true,
+  "commit_xid_committed": true,
+  "same_statement_new_relation_visible": true,
+  "new_relation_rolled_back": true
+}

@@ -1,0 +1,7 @@
+{
+  "r1": "conftest attempted default unavailable port 5433 before native fixture",
+  "reconciled_native_schema_absent": true,
+  "reconciled_owner_no_memberships": true,
+  "repair": "explicit shared isolated database fixture switch; reuse known extracted immutable library spec",
+  "full_admission": false
+}

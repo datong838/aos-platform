@@ -1,0 +1,34 @@
+{
+  "states": {
+    "drain": "aborted",
+    "commit": "committed"
+  },
+  "rows": {
+    "one": 0,
+    "two": 1,
+    "sample": 1,
+    "audit": 1
+  },
+  "owner_flags": [
+    "aos_physical_capacity_occupation_owner",
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "owner_memberships": 0,
+  "native_metadata_exact": true,
+  "original_verifier_sha256": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+  "source_hashes": {
+    "aos_admission_end.c": "27b955cf464224356f11f38cb3ec2af746ae518e73cb992ff1c1c00ed7e4ea05",
+    "aos_admission_end.control": "786f5ff9b0848d21160fabb996bc3b43086d462ab7deb74a598808e048b0e750",
+    "aos_admission_end--0.1.sql": "654b2ef8ee9b1b176390e89425d8faeb4e12ac97773879e01ebb80475524fd1c",
+    "Makefile": "56080f2509ebb5f5d5de7f1b2567c0478d3c37fcbc9a9915c547a1073bb48d5d"
+  },
+  "full_admission": false,
+  "full_task_delivered": false,
+  "formal_database_changed": false
+}

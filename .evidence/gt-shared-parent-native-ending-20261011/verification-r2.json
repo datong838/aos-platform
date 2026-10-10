@@ -1,0 +1,67 @@
+{
+  "status": "NATIVE_PENDING_RELATION_READER_COMPONENT_GREEN_FULL_END_PENDING",
+  "authority": "AOS-001746",
+  "native_tests_passed": 4,
+  "independent_readback": {
+    "states": {
+      "drain": "aborted",
+      "commit": "committed"
+    },
+    "rows": {
+      "one": 0,
+      "two": 1,
+      "sample": 1,
+      "audit": 1
+    },
+    "owner_flags": [
+      "aos_physical_capacity_occupation_owner",
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "owner_memberships": 0,
+    "native_metadata_exact": true,
+    "original_verifier_sha256": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+    "source_hashes": {
+      "aos_admission_end.c": "27b955cf464224356f11f38cb3ec2af746ae518e73cb992ff1c1c00ed7e4ea05",
+      "aos_admission_end.control": "786f5ff9b0848d21160fabb996bc3b43086d462ab7deb74a598808e048b0e750",
+      "aos_admission_end--0.1.sql": "654b2ef8ee9b1b176390e89425d8faeb4e12ac97773879e01ebb80475524fd1c",
+      "Makefile": "56080f2509ebb5f5d5de7f1b2567c0478d3c37fcbc9a9915c547a1073bb48d5d"
+    },
+    "full_admission": false,
+    "full_task_delivered": false,
+    "formal_database_changed": false
+  },
+  "review": {
+    "fixed_catalog_query_no_caller_override": true,
+    "spi_result_allocated_in_caller_context": true,
+    "bounds_check_before_allocation": true,
+    "owner_only_even_superuser": true,
+    "volatile_parallel_unsafe": true,
+    "no_queue_mutation_or_callback_registration": true,
+    "no_runtime_grant": true,
+    "original_guard_or_signature_changed": false,
+    "browser_applicable": false
+  },
+  "known_failures": {
+    "build_r1": "optional LLVM clang-21 unavailable; C and shared library already compiled",
+    "harness_r1": "global test fixture attempted default port 5433 before native fixture; read-only reconciliation proved no installation",
+    "repairs": "build with_llvm=no; explicit isolated shared fixture switch"
+  },
+  "remaining": [
+    "complete immutable caller-bound arm and all eight original nodes",
+    "Source and four certificates after all waits",
+    "Receipt precreation and no new pending events after end",
+    "deadline and all callback ordering proof",
+    "actual whole original positive and independent unknown commit reconciliation"
+  ],
+  "full_task_delivered": false,
+  "goal_complete": false,
+  "execution_allowed": false,
+  "adjacent_tests_passed": 32,
+  "adjacent_exit": 0
+}

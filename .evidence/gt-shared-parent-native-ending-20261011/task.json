@@ -1,0 +1,23 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-shared-parent-native-ending-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001746",
+  "scope": [
+    "aos-platform/services/aos-api/postgres-extensions/aos_admission_end",
+    "aos-platform/services/aos-api/tests/aip/test_shared_parent_native_ending_pg.py",
+    "aos-platform/.evidence/gt-shared-parent-native-ending-20261011"
+  ],
+  "excluded_scope": [
+    "formal DB migration/Host/worker/Provider",
+    "existing signature extension/old seven denial bodies/published migration",
+    "arbitrary callback SQL, fake Receipt and Source override"
+  ],
+  "expected_outputs": [
+    "Native complete-ending support for Main full8-node/fourcert/Source risk/Receipt protocol, exact owner and package, event/deferred/RI fixedpoint and native COMMIT/deadline/unknown controls; no helper-only completion",
+    "Closed pending reader, native arm and post-drain validation with full same-caller actual Source integration; preserve original budget/physical algorithms and no execution authority"
+  ],
+  "lease_expires_at": "2026-10-10T23:05:54.173792+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-11T03:05:55+08:00"
+}

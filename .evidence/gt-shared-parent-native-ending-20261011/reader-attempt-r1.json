@@ -1,0 +1,15 @@
+{
+  "image": "sha256:cf87a99d86c22f8617c4918b8c234b3eb251086433adbfefc4d5c741c4faaeaa",
+  "artifact_container": "aos-native-end-artifact-25913075ff7145d485a5509d8d55d142",
+  "library": "/tmp/aos_admission_end_25913075ff7145d485a5509d8d55d142.so",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "cluster": "7694680278363095064",
+  "source_hashes": {
+    "aos_admission_end.c": "27b955cf464224356f11f38cb3ec2af746ae518e73cb992ff1c1c00ed7e4ea05",
+    "aos_admission_end.control": "786f5ff9b0848d21160fabb996bc3b43086d462ab7deb74a598808e048b0e750",
+    "aos_admission_end--0.1.sql": "654b2ef8ee9b1b176390e89425d8faeb4e12ac97773879e01ebb80475524fd1c",
+    "Makefile": "56080f2509ebb5f5d5de7f1b2567c0478d3c37fcbc9a9915c547a1073bb48d5d"
+  },
+  "red_missing_native_function": true,
+  "full_admission": false
+}

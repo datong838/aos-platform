@@ -1,0 +1,13 @@
+{
+  "known_first_exit": 1,
+  "c_and_shared_link_passed": true,
+  "failed_step": "optional LLVM bitcode clang-21 missing",
+  "repair": "PGXS with_llvm=no; exact native C/SO build, no production package completeness claimed",
+  "no_database_or_container_effect": true,
+  "source_hashes": {
+    "aos_admission_end--0.1.sql": "654b2ef8ee9b1b176390e89425d8faeb4e12ac97773879e01ebb80475524fd1c",
+    "Makefile": "56080f2509ebb5f5d5de7f1b2567c0478d3c37fcbc9a9915c547a1073bb48d5d",
+    "aos_admission_end.c": "27b955cf464224356f11f38cb3ec2af746ae518e73cb992ff1c1c00ed7e4ea05",
+    "aos_admission_end.control": "786f5ff9b0848d21160fabb996bc3b43086d462ab7deb74a598808e048b0e750"
+  }
+}

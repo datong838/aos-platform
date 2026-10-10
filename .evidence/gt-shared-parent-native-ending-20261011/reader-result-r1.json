@@ -1,0 +1,8 @@
+{
+  "pytest_exit": 1,
+  "source_files_unchanged": true,
+  "library_sha256": "1be8335f49201594e71135f893b83d3d80c6e39a4f656422273d8e9f9846f22d",
+  "full_admission": false,
+  "full_task_delivered": false,
+  "execution_allowed": false
+}
