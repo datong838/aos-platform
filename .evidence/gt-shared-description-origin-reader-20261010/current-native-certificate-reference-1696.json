@@ -1,0 +1,42 @@
+{
+  "authority_revision": "AOS-001696",
+  "task": "gt-shared-description-origin-reader-20261010",
+  "head": "4f2c97cf68242b1c3a09d00b64e3ea9be52ba27d",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false,
+  "references": [
+    {
+      "path": ".evidence/gt-shared-description-origin-reader-20261010/current-native-certificate-reference-1695.json",
+      "sha256": "440ef57fd49d12e00f21c785a80e3aa02a9dc33f0de3bb659b735b93ee066fa9"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/result-origin-timing-plan-1695.md",
+      "sha256": "8d8a8c3f833d63ea5583c60a812e03c3bbeb82a46a72a885b10e6ce4f0fd7433"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/result-origin-review-1695.md",
+      "sha256": "fb8f6c3de3ccdcac645315bf02ab12422cad280dd835dcc20b46aa6ba732821f"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/result-commit-boundary-proposal-1695.md",
+      "sha256": "e01bfaa09a286aed292ccc92a42c9fa13e516c0e17b539421efd3aa49417db01"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/result-origin-independent-1695.json",
+      "sha256": "0fd935b15bfda1c417b7aa22753f48455a69b5fee9e9324a352781494ab2c979"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/result-origin-source-binding-1695.json",
+      "sha256": "7afdfd9f4605e4d77ac6105c5ec3a7a73bc3f4b34406842b7266c329b43163bc"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r29/result-origin-visibility.json",
+      "sha256": "234558d5ba5cd58326b188fd5c56feaf62ca0882e8dff5e0024b82b3e5133f50"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r29/result-r29.json",
+      "sha256": "83a7ef14e68bb8019f2e4d57f3c3ff1a51ac98c69afe85352cfc7632e292d9cd"
+    }
+  ]
+}
