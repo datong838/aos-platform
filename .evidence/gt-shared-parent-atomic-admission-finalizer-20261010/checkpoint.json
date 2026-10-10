@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001756",
+  "authority_revision": "AOS-001757",
   "task_base_revision": "AOS-001698",
-  "step": "fixed-final-call-comparison-component-green-full-source-positive-eight-node-receipt-native-commit-next",
+  "step": "fixed-final-call-real-source-positive-whole-timing-red-full-receipt-and-final-physical-next",
   "evidence_files": [
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/checkpoint-file-bound-1755/history-index.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/late-writer-red-verification-1735.json",
@@ -25,7 +25,8 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-source-epoch-closure-1752/verification.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-executor-write-fence-1753/verification.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-utility-fence-1754/verification.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-call-comparison-1755/verification.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-call-comparison-1755/verification.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-call-native-1756-r2/verification.json"
   ],
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
