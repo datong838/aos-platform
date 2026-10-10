@@ -1,0 +1,26 @@
+{
+  "scope": "Registered launchd stop helper isolated tests plus current native readonly candidate validation only",
+  "controller_tests_passed": 26,
+  "adjacent_total_passed": 124,
+  "red_malformed_terminal_failures": 4,
+  "native_candidates_validated": true,
+  "launchctl_mutations": 0,
+  "formal_database_writes": 0,
+  "zero_window_established": false,
+  "second_backup_started": false,
+  "task_delivery": false,
+  "review": "Exact fixed labels/domain, plist/process/helper binding, durable exclusive intent, malformed/timeout/nonzero/post-readback fail closed and no replay. Internal helper still requires caller fresh authority/Task/source guard; no live stop until complete restoration resources/second-window executor prepared. No bootstrap or PID kill.",
+  "head": "572ad31ab76bfaa9b7e282933dbe9ccf83230f35",
+  "authority": "AOS-001707",
+  "hashes": {
+    "registered_launch159.py": "210614b8be3825d1331bb96243d11bc25d72b8b054d545d772d38a2b3fa71249",
+    "test_registered_launch159.py": "f14a20f4c47409d22b28e4b841955c553c4e62fde58a70632a83990784ed3acc",
+    "registered-launch159-readback.py": "628b41794df03986a26b4aca2e66608dba1b0809b984721fcde6223ade51d722",
+    "registered-launch159-readback-r2.json": "ab0df9a2c778712fc74d76e604b1fa334b0b6c1dcbd10175a94ad18ea70f8f63",
+    "registered-launch159-readback-failed-r1.json": "f28f58fc9af5e19e00f7f6a1730772e499f8fac6b283d82ba84eb5a83583b8cd"
+  },
+  "next_registered_candidates": [
+    "Prepare bound second zero-window executor and restoration resources; requires current Task/source and separate Host/worker/Provider observations",
+    "Close remaining committed runtime dependency package and latest signed API startup; requires source Task scopes and frozen package proof"
+  ]
+}
