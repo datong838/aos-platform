@@ -1,0 +1,36 @@
+{
+  "status": "NATIVE_UTILITY_FENCE_GREEN_SELECT_SIDE_EFFECT_CLOSURE_RED",
+  "authority": "AOS-001754",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "head": "c574d5654270d260da835ce78cfe42fadf4e79b1",
+  "proof": {
+    "missing_guc_denied": true,
+    "guarded_existing_epoch_passed": true,
+    "missing_write_rejected": "25006",
+    "cte_write_rejected": "25006",
+    "guarded_insert_statistics_delta": 0,
+    "utility_mode_2_rejected": "25006",
+    "utility_mode_3_rejected": "25006",
+    "select_nextval_side_effect_not_blocked": true,
+    "select_set_config_side_effect_not_blocked": true,
+    "ordinary_utilities_after_errors_passed": true,
+    "ordinary_writer_after_error_passed": true,
+    "guard_restored_and_reentrant_after_error": true
+  },
+  "xid": "59934",
+  "independent_xid_status": "aborted",
+  "independent_all_probe_rows_and_schema_absent": true,
+  "original_epoch_body_acl_owner_unchanged": true,
+  "binary_sha256": "eac9580a61960205fd99ee6a590f93e39ca0be72f4ea649b7eb74cdeacba429b",
+  "source_sha256": "5cb1833b435c9528e6486b989e877f343ec0d8c85586f22ddd9e33c6d1c3e411",
+  "library": "/tmp/aos_final_fence_6df834d02f4244198909f7d17eb0bbb9.so",
+  "artifact_image": "sha256:193653bcd56b897e0957547379a23753daf538deb1dbd099eb78534b81aaf702",
+  "limitations": [
+    "Executor+utility hooks do not prevent SELECT nextval/set_config; fixed function/expression closure is required.",
+    "Existing hook ownership/chain and immutable loaded-package closure still required.",
+    "No full Source invocation, all-eight-node Receipt, final clock/native event/RI or actual COMMIT positive."
+  ],
+  "full_task_delivered": false,
+  "goal_complete": false,
+  "execution_allowed": false
+}

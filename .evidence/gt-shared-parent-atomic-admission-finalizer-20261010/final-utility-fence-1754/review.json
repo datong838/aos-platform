@@ -1,0 +1,15 @@
+{
+  "status": "UTILITY_NATIVE_GREEN_SELECT_SIDE_EFFECT_CLOSURE_RED_REVIEWED",
+  "checks": [
+    "Exact supported PG16.14 ProcessUtility prototype/SPI dispatch read from verified official source archive.",
+    "Both hooks restored in exception and success paths; actual ordinary utilities/writes and reentry verified.",
+    "Six hardcoded SQL modes, no SQL/relation caller input; admin/isolated-db/tenant/probe-id guard.",
+    "Original nested epoch body/ACL/Owner unchanged; all private transaction effects rolled back."
+  ],
+  "limitations": [
+    "No declaration of complete side-effect prevention: SELECT sequence/config mutation native-proven.",
+    "Planner-time function evaluation, exact functions/operators/casts/native package and full fixed all-eight-node validator pending.",
+    "No full Source/fourcert/Receipt actual COMMIT/deadline/unknown acceptance."
+  ],
+  "full_task_delivered": false
+}
