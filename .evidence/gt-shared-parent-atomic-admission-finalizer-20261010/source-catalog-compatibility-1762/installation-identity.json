@@ -1,0 +1,29 @@
+{
+  "authority": "AOS-001762",
+  "original_manifest_entry": {
+    "signature": "aos_capacity_publication_private.require_original_fact_boundary()",
+    "names": [],
+    "input_types": [],
+    "all_types": null,
+    "modes": null,
+    "return_type": "void",
+    "returns_set": false,
+    "body_sha256": "a58f562c97da4059549b8e18289c6a5f46b8a61553031b53961b60684231f030",
+    "strict": false,
+    "volatility": "v",
+    "security_definer": false,
+    "config": [
+      "search_path=pg_catalog"
+    ]
+  },
+  "native_original_hash": "a58f562c97da4059549b8e18289c6a5f46b8a61553031b53961b60684231f030",
+  "candidate_hash": "79c97b994497d2f365b74580d02d99676dae735dde5a65d92f5ceb4eadb84cd9",
+  "original_exact_manifest_matches_native": true,
+  "candidate_matches_original_installation_identity": false,
+  "private_installation_audit_contains_original_digest_only": true,
+  "private_installation_audit_sha256": "c198eb9ca08a3e19a3e03c29b56b5a90eefe3d3321e2209d01ecd2540848849a",
+  "decision": "Do not substitute candidate under original identity. A separately registered complete versioned Source/caller/Owner-inventory package and full drift/Source native matrix are required.",
+  "product_modified": false,
+  "source_issued": false,
+  "execution_allowed": false
+}

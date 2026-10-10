@@ -1,0 +1,42 @@
+{
+  "authority": "AOS-001762",
+  "status": "SOURCE_CATALOG_CANDIDATE_38_NATIVE_DRIFT_CASES_EQUIVALENT_COMPLETE_PROFILE_COMPATIBILITY_REQUIRED",
+  "extended_cases": 17,
+  "previous_cases": 21,
+  "all_extended_equal_and_expected": true,
+  "installed_original_identity_unchanged": true,
+  "candidate_is_not_original_identity": true,
+  "supported_existing_profile_path_identified": true,
+  "profile_dependencies": [
+    {
+      "file": "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py",
+      "contract": "trusted private manifest/audit hash and public entry exact definitions"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_provider_capacity_occupation_epoch_profile.py",
+      "contract": "explicit three-lock profile compiler, exact native recognizer and public manifest; legacy compiler must stay unchanged"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_provider_capacity_occupation_source.py",
+      "contract": "occupation Reader/Auditor exact layout embeds private profile hash; Python definition checker must use complete chosen profile, not a trusted override"
+    }
+  ],
+  "source_file_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "cd9564e8c37d0bdac9af7fa8311a0db7febc09a1ee1af6346245fc9ae2d61cc7",
+    "services/aos-api/aos_api/aip_provider_capacity_occupation_epoch_profile.py": "e326f0e61e653d1f826972960c6d40a36d899a4ce706a8661d4460174b486241",
+    "services/aos-api/aos_api/aip_provider_capacity_occupation_source.py": "a26d32cb2f0dc9a796332e37beb0b5c015586a5876cdebb2c77d95308dec4a50"
+  },
+  "next_implementation_contract": "Register exact non-overlapping complete catalog-profile Task and plan; compile fixed two predicate replacement with all guards retained, closed profile-aware private/public/occupation hashes and native recognizer together. No isolated helper-only installation and no hand-edit legacy published DDL. Full original-source native v2 Receipt/final physical timing/late-writer/actual ending matrix remains required.",
+  "limitations": [
+    "38 cases are finite native equivalence coverage, not all possible catalog drift or learning/stability proof.",
+    "Global role flags/memberships were preserved, not mutated to manufacture coverage.",
+    "Whole signed Source timing remains RED; final native callback/event/RI/module/actual COMMIT unproven."
+  ],
+  "independent_catalog_restoration": true,
+  "formal_database_touched": false,
+  "product_modified": false,
+  "source_issued_or_replayed": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "goal_complete": false
+}

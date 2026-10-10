@@ -1,0 +1,242 @@
+{
+  "authority": "AOS-001762",
+  "head": "456ac6d6599e355e107a6f339bbdc1bea6a05ead",
+  "database": "aos_test_08aeabe72b44_ti4_test",
+  "original_sha256": "a58f562c97da4059549b8e18289c6a5f46b8a61553031b53961b60684231f030",
+  "candidate_sha256": "79c97b994497d2f365b74580d02d99676dae735dde5a65d92f5ceb4eadb84cd9",
+  "cases": [
+    {
+      "case": "baseline",
+      "expected_pass": true,
+      "original": {
+        "passed": true,
+        "sqlstate": null
+      },
+      "candidate": {
+        "passed": true,
+        "sqlstate": null
+      },
+      "equal": true
+    },
+    {
+      "case": "rls_disabled",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "rls_not_forced",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "missing_policy",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "policy_using_changed",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "policy_check_changed",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "policy_role_changed",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "extra_owner_policy",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "missing_fact_select",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "missing_allowed_column",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "schema_create_grant",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "owner_default_acl",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "foreign_default_acl_to_owner",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "guard_search_path",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "guard_security_definer",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "guard_public_execute",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    },
+    {
+      "case": "guard_owner_changed",
+      "expected_pass": false,
+      "original": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "candidate": {
+        "passed": false,
+        "sqlstate": "22023"
+      },
+      "equal": true
+    }
+  ],
+  "all_equal": true,
+  "all_expected": true,
+  "independent_catalog_restoration": true,
+  "original_body_unchanged": true,
+  "no_trigger_disabled": true,
+  "no_global_role_mutation": true,
+  "no_source_issue_or_replay": true,
+  "no_product_changes": true,
+  "formal_database_touched": false,
+  "whole_source_timing_recovered": false,
+  "execution_allowed": false,
+  "goal_complete": false
+}
