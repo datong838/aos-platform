@@ -1,0 +1,7 @@
+# Native dependency review
+
+AOS-001692 baseline. Read-only retained R28 identity matched. 46 exact comparison/index support signatures plus two estimator and two access-method handlers resolve to 50 distinct internal pg_catalog functions. 82 relation/index AM bindings resolve; no nonzero planner support recursively expands this set. Exact function signatures, Owner, ACL, proconfig, volatility, parallel/leakproof flags and symbols frozen. All 23 prior executable/linked-library hashes match. Task receipt equals live Lease, current owner and expiry valid, no overlapping scope.
+
+Symbol hashes are not native implementation hashes. Matching unsigned experiment image and linked libraries do not prove signed release/source provenance. This only covers selected index support/comparison/estimator/AM metadata, not every opfamily operator, collation dependency, dynamic module/hook or actual planner path. Native effects remain unapproved; existing partial-effect rejection retained. No guard, product source, service or formal database changed.
+
+Next registered safe candidate: investigate original Target-result and Judge producer contracts in existing Task6/Task3, with real result/Usage provenance; no fabricated Target/Judge outcome. Alternative: complete native source/artifact/effect dependency audit, dependent on trusted provenance and reviewed closure. Native provenance cannot be bypassed to enable finalization. Neither candidate is full first-chain completion.

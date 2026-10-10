@@ -1,0 +1,22 @@
+{
+  "authority": "AOS-001692",
+  "head": "b0acee3e4603d335701df7f7c2b3eb14e11ec7e2",
+  "function_closure": 50,
+  "access_method_bindings": 82,
+  "all_functions_pg_catalog_internal": true,
+  "recursive_support_count": 0,
+  "binary_files_unchanged": 23,
+  "leases": 27,
+  "current_task": "gt-shared-parent-native-certificate-prepare-20261010",
+  "current_lease_expiry": "2026-10-10T03:00:34.597543+00:00",
+  "overlaps": [],
+  "files": {
+    "native-planner-plan-1692.md": "2e357662bdb6d5192c36860248c702c6a048edab26438838c976f52dfb3ed283",
+    "read-native-planner-1692.py": "703935ed499e8cce86497497a26dcd40db1e1e9d616880e20ee7df1cf98a3e3b",
+    "native-planner-1692.json": "5b732be329cb5342e2ede6ec8ffb977e6eac41307ecc1bf6207315ac75eccb23",
+    "read-pg-binary-current-1692.py": "eb8471e0d070676bb43970d203a49ba752d711b3ee2ea579a5d030b7708a5b11",
+    "pg-binary-current-1692.json": "86bf86a490bc8ac786e321e5e428697b3168713b01dbf3d4a2ad8e1a3ee69fee"
+  },
+  "formal_native_approval": false,
+  "execution_allowed": false
+}

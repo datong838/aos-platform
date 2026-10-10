@@ -1,0 +1,39 @@
+{
+  "authority": "AOS-001692",
+  "container": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+  "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+  "image_repo_digests": [
+    "aos-precommit-probe-20261009-base@sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883"
+  ],
+  "ldd_output": "/lib/ld-musl-aarch64.so.1 (0xffffbd100000)\n\tlibzstd.so.1 => /usr/lib/libzstd.so.1 (0xffffbc711000)\n\tliblz4.so.1 => /usr/lib/liblz4.so.1 (0xffffbc6d0000)\n\tlibxml2.so.2 => /usr/lib/libxml2.so.2 (0xffffbc5ae000)\n\tlibssl.so.3 => /usr/lib/libssl.so.3 (0xffffbc4ca000)\n\tlibcrypto.so.3 => /usr/lib/libcrypto.so.3 (0xffffbc064000)\n\tlibgssapi_krb5.so.2 => /usr/lib/libgssapi_krb5.so.2 (0xffffbc013000)\n\tlibz.so.1 => /usr/lib/libz.so.1 (0xffffbbfe2000)\n\tlibldap.so.2 => /usr/lib/libldap.so.2 (0xffffbbf7f000)\n\tlibicui18n.so.78 => /usr/lib/libicui18n.so.78 (0xffffbbc6d000)\n\tlibicuuc.so.78 => /usr/lib/libicuuc.so.78 (0xffffbba9a000)\n\tlibc.musl-aarch64.so.1 => /lib/ld-musl-aarch64.so.1 (0xffffbd100000)\n\tliblzma.so.5 => /usr/lib/liblzma.so.5 (0xffffbba49000)\n\tlibkrb5.so.3 => /usr/lib/libkrb5.so.3 (0xffffbb987000)\n\tlibk5crypto.so.3 => /usr/lib/libk5crypto.so.3 (0xffffbb946000)\n\tlibcom_err.so.2 => /usr/lib/libcom_err.so.2 (0xffffbb925000)\n\tlibkrb5support.so.0 => /usr/lib/libkrb5support.so.0 (0xffffbb904000)\n\tliblber.so.2 => /usr/lib/liblber.so.2 (0xffffbb8e3000)\n\tlibsasl2.so.3 => /usr/lib/libsasl2.so.3 (0xffffbb8b2000)\n\tlibstdc++.so.6 => /usr/lib/libstdc++.so.6 (0xffffbb5ed000)\n\tlibgcc_s.so.1 => /usr/lib/libgcc_s.so.1 (0xffffbb5bc000)\n\tlibicudata.so.78 => /usr/lib/libicudata.so.78 (0xffffbb59c000)\n\tlibkeyutils.so.1 => /usr/lib/libkeyutils.so.1 (0xffffbb57b000)",
+  "file_sha256": {
+    "/usr/local/bin/postgres": "025eccb4f06a6d63d724cc1d8abdeb75c909f7bbb8493bf5b0e0273d67451d77",
+    "/lib/ld-musl-aarch64.so.1": "32377e6d71725bb019e9ff6d5e9f16b4d5156d6f2c36504191c2d6a7c4d4a44d",
+    "/usr/lib/libcom_err.so.2": "24566328c96f483f5f52dd99c7c0a9654f84175cd96cb98dfcc838179bd805f2",
+    "/usr/lib/libcrypto.so.3": "ae1d370e3146642824c6ee4bde0fdf83b9e8174a9d28d093362afde5cc4b3e6c",
+    "/usr/lib/libgcc_s.so.1": "b83bc14b3e1660d66b0387077aea7e104fce3ed93bb56d05e30e4e2cdb37b473",
+    "/usr/lib/libgssapi_krb5.so.2": "41817694da65a0d4687ac5d2367d892e9e2414a9fcdff1437e7cad18647ac6a4",
+    "/usr/lib/libicudata.so.78": "32b2e6af13f6c8694002699d07b50e7ca657e352c26a2da171b51e06ed97bf21",
+    "/usr/lib/libicui18n.so.78": "df94fdacc782b0ce874f3a950bd10f0f8e5aca7dc5512ccf411002f650b81892",
+    "/usr/lib/libicuuc.so.78": "3873dd2a58594254560e70b3a8fcf4d8cf1854e5b4958bfe59911614e37ce692",
+    "/usr/lib/libk5crypto.so.3": "209699357765808420432a5c12eed8ef7d5d21d9dfdb0959e752f4d88c02db15",
+    "/usr/lib/libkeyutils.so.1": "1ead757a4645a477d16b616b4764dabcb5200e45ad0e6c4a95c8e4450b3c37c0",
+    "/usr/lib/libkrb5.so.3": "c8037f7ee147d64ecbe9f5b4a7a7ec45cbcb1508817825d054a73d6d34ec8ee1",
+    "/usr/lib/libkrb5support.so.0": "afa7c4a65691c2fdd59460827c6653f51509efa7a06bfc5aaf45933f72708be6",
+    "/usr/lib/liblber.so.2": "a61c5860f91e4daf0e0fa464ce48dc39c1568629b693050c24734c0b2e12d515",
+    "/usr/lib/libldap.so.2": "a546e5260262c213c4c3734df70185553b71df12a9724d89380918ccf850d0ea",
+    "/usr/lib/liblz4.so.1": "729ca3feae715dca6947674fa1f5451b4f36bbc54aa8a4471bf5c66096aeb41c",
+    "/usr/lib/liblzma.so.5": "a30eb437c4fb1fc99a14d8038ee5db824121e14579abff329831a9a1be0f5f37",
+    "/usr/lib/libsasl2.so.3": "f7be9e5f370e61382482ba06a0dbcf4617e683956f5fc0f1fcf00d151776f1ea",
+    "/usr/lib/libssl.so.3": "c9a8250bba27abe89c240876f8c78704eaaca9636f53b2aa29b3859f89d2e938",
+    "/usr/lib/libstdc++.so.6": "bc958507db0cacf75cbf7298c395fbc7596667b17e1283d98bd6cfe3e59df951",
+    "/usr/lib/libxml2.so.2": "8930cfb0f6f0639e6ecde1f6b9d10fd66c81ffa6a3424352bac8e8b786a3f75b",
+    "/usr/lib/libz.so.1": "d3b940580ded8f736804c78df7302b9e7a3f27900ac25a5c97bb05f50992f567",
+    "/usr/lib/libzstd.so.1": "baeb93cf3904f55809f9229c7b0e9348bfe07b80d319a477df9ac63657a9fa55"
+  },
+  "read_only_installation_observation": true,
+  "release_signature_verified": false,
+  "official_kernel_source_binary_match_verified": false,
+  "formal_installation_approved": false,
+  "execution_allowed": false
+}
