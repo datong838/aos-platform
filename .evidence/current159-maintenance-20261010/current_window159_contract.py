@@ -17,6 +17,7 @@ def load(name,path):
  spec=importlib.util.spec_from_file_location(name,path);module=importlib.util.module_from_spec(spec);sys.modules[name]=module;spec.loader.exec_module(module);return module
 original=load('original142_zero_window159',ROOT/'scripts/a0v_current_142_maintenance.py')
 memory=load('original_scope_overlap159',ROOT/'scripts/memory/memoryctl.py')
+surface=load('current_local_execution_surface159',Path(__file__).with_name('execution_surface159.py'))
 
 class Window159Rejected(RuntimeError):pass
 
@@ -54,6 +55,10 @@ def require_zero_window(expected,observed,*,task,leases,now,delivered):
  require(type(task.get('scope')) is list and target in task['scope'],'EXACT_MAINTENANCE_SCOPE_REQUIRED')
  require(type(task.get('excluded_scope')) is list and not memory.scopes_overlap([target],task['excluded_scope']),'EXCLUDED_SCOPE')
  require(observed.get('unknown_external') is False,'UNKNOWN_RECONCILE_ONLY')
+ proof=observed.get('execution_surface')
+ try:surface.require_current_surface(proof,now=now)
+ except (ValueError,TypeError,KeyError) as exc:raise Window159Rejected('CURRENT_NATIVE_EXECUTION_SURFACE_REQUIRED') from exc
+ require(proof['binding']=={key:expected[key] for key in ('thread','owner','task_id','authority_revision','head')},'EXECUTION_SURFACE_BINDING_DRIFT')
  services=observed.get('services');require(type(services) is dict and set(services)==set(SERVICES) and all(services[k] is False for k in SERVICES),'EXECUTION_SERVICE_NOT_OFF')
  require(type(observed.get('listen_addresses')) is str,'LISTEN_OBSERVATION_REQUIRED')
  for field in ('tcp_exit','other_clients','prepared'):
