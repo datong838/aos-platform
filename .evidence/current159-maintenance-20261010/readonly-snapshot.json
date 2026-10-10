@@ -1,0 +1,17 @@
+{
+  "status": "CURRENT157_ALL_SCHEMA_READONLY_SNAPSHOT_CAPTURED",
+  "identity": [
+    "aos_current_preview_20260927",
+    7683855731447750695
+  ],
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/current159-readonly-d8de0f048be9",
+  "version": "a0v_157",
+  "table_count": 615,
+  "schema_count": 2,
+  "function_count": 410,
+  "snapshot_sha256": "7e182ab67df6523832465eceb6272c429bdd6254c796a5091f33b266d2863968",
+  "source_sha256": "0c3bf15537c4c9fa789735d1e4fc152b952e47a177b8d3d2c51e991585b256da",
+  "database_writes": 0,
+  "restore_verified": false,
+  "migration_allowed": false
+}

@@ -1,0 +1,15 @@
+{
+  "status": "RESTORE_DIFFERENCE_REMAINS",
+  "tables": 615,
+  "functions": 410,
+  "source_snapshot_sha256": "7e182ab67df6523832465eceb6272c429bdd6254c796a5091f33b266d2863968",
+  "restored_snapshot_sha256": "f8828cbf14f618a5843aa860c87f8de415c19fabb42224b473484a99e8e4ff45",
+  "raw_exact": false,
+  "reviewed_check_reassociation": 18,
+  "generated_ri_names_changed": 2756,
+  "all_other_evidence_exact": false,
+  "test_count": 24,
+  "migration_allowed": false,
+  "zero_window_second_backup_pending": true,
+  "original158_159_rehearsal_pending": true
+}

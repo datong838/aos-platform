@@ -1,0 +1,16 @@
+{
+  "status": "FIRST_FULL157_RESTORE_NATIVE_COMPARISON_REQUIRES_REVIEW",
+  "task": "current159-maintenance-20261010",
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/current159-first-05b88779fad3",
+  "pg": "current159-first-1579cb9f5251",
+  "tables": 615,
+  "functions": 410,
+  "differences": [
+    "constraints",
+    "triggers"
+  ],
+  "source_unchanged": true,
+  "database_writes": 0,
+  "migration_allowed": false,
+  "second_window_pending": true
+}

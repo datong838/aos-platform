@@ -1,0 +1,35 @@
+{
+  "test_passed": 27,
+  "database_writes": 0,
+  "current_version": "a0v_157",
+  "code_head": "a0v_159",
+  "maintenance_complete": false,
+  "snapshot_limitations_registered": true,
+  "hashes": {
+    "plan.md": "2dccafa4e96bd5c474d433bcf399c2c6db1ab37ca0644341484d19182448706b",
+    "task.json": "8246c1efda375b4b2e4f1441e1cd1ac858647e5ba60d0c5dffe01c26d1ab95c1",
+    "snapshot_all.py": "0c3bf15537c4c9fa789735d1e4fc152b952e47a177b8d3d2c51e991585b256da",
+    "restore_comparison.py": "e66092d63ed35ab0b290c0b2f039743a8fcdc2dbf505b6ea8cf047cd3384402c",
+    "test_snapshot_all.py": "2bf9100735eff715029b8dcac5f59c7cc26e2f7d0ff79dd6cc7b5ea4a1fc26cc",
+    "test_restore_comparison.py": "5dacd5cc825797e10dfff0de3f05b250c2dee94d181cf0dd97b42dd00afae559",
+    "capture_restore157.py": "7798bec2cfaca011ccb0f19f7126b5137c314ba6d91adbf3d4a6e1df0927470e",
+    "native_snapshot159.py": "d89be27d85da62870ddd7020f50feaddcbfa16d0fa6beefad88559cad202c602",
+    "resume_restore157.py": "394e6d1a2dd44b3454dff3db9db788ac8eface8f1f78ba9e96c3aade948046e4",
+    "compare_restore157.py": "220d74b618190fdfb7cce1a6d557184b01294373d7369f3e086e696c497c2411",
+    "red.json": "aec0e7a89ee4e7f18a30cea95410898be8d1c1e7a6710baa8f38bd81c8b42e27",
+    "readonly-snapshot.json": "3325977200faf5fd3efdbdee1fcdecd1a21203c08ae7ed02fd1a432472c87777",
+    "first-restore-native-comparison.json": "13b7d79babc5a8860bba7371620c2cf9746c739e56689578456d18ef87cac675",
+    "first-restore-reviewed.json": "f4acdbb8f57b8e5b5c7cb6366e88fd15c472d8cf065aad9d52d522ab044cb9df",
+    "first-restore-reviewed-r3.json": "ac92bab2b7815f808b690659e6d3ab7d0e2c58f159f95f4e3785ded7fe3a3d96",
+    "review.md": "38267334c30b1b7dd8e00464df5ffcabb53318cf61b3f53a1085fcbc0d1e8af5"
+  },
+  "local_log_hashes": {
+    "green.local.log": "ba56007400fa5292f01fa84ee89753d8713c5eaf824f5bc044e66f837f4f6d17",
+    "compare-r2.local.log": "8ef9175ecfc2bf8cf4eee890fd8062600cde551ef2e296ddfe60a7a83095c640",
+    "red.local.log": "a852c825128b95d8e55da97b06e8da570c3d798fa55a1c59ab3e6a4be8220fd1",
+    "first-backup.local.log": "8aa6761157476731c87251af525c79f93c9e7af60318b0ac83577ae3eacb9c98",
+    "green-r3.local.log": "7f77d548807f25eaa0076e067213b1e79b995b1fa40a1c17d347564c2c07ac84",
+    "resume-r1.local.log": "5b57bd99e513e62263e8662333236abe095dd3b37a20f64e71b5913874d2eb8c",
+    "green-r2.local.log": "75ac9edf6bb424d27b23957e4995e412426637e363b93016e3268a50eeae5e57"
+  }
+}
