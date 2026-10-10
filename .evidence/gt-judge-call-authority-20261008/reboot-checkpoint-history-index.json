@@ -1,0 +1,150 @@
+{
+  "schema": "aos-checkpoint-evidence-index/v1",
+  "task_id": "gt-judge-call-authority-20261008",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001703",
+  "head": "18093f1164f1f821a4543dddb403ff460a7b9a9d",
+  "reason": "Preserve original 35 exact evidence bindings within bounded checkpoint list; no claim of complete delivery",
+  "files": {
+    ".evidence/gt-judge-call-authority-20261008/implementation-plan.md": {
+      "sha256": "a4c895f53f5e1c8fd13a41cf2cd1d5f1bc9c8e565073245567355b1bc34352d7",
+      "bytes": 1993
+    },
+    ".evidence/gt-judge-call-authority-20261008/boundary-red-r1.log": {
+      "sha256": "5a53c91a7dbf4f25e7163f19c6e86dc54b69f518a0f141bffceaa1d084ec34b5",
+      "bytes": 61210
+    },
+    ".evidence/gt-judge-call-authority-20261008/boundary-red-r2.log": {
+      "sha256": "05bce0a852e62f65e207d9e5481ce3ddfa9cdddc505b92ca098c3c3379f1c624",
+      "bytes": 33083
+    },
+    ".evidence/gt-judge-call-authority-20261008/boundary-green-r1.log": {
+      "sha256": "9ecbac1adb040c50e26fd2d1c5e16816fd526c2a02a5848ebcf861eb5d5f6884",
+      "bytes": 2570
+    },
+    ".evidence/gt-judge-call-authority-20261008/boundary-static.json": {
+      "sha256": "e800c092ca87a243736d9c122db70dd0f1a935f73169f6bab8bdcf8b939b23e8",
+      "bytes": 965
+    },
+    ".evidence/gt-judge-call-authority-20261008/boundary-checkpoint.md": {
+      "sha256": "e840b32028d9842b95b16d6b32b7c2e0f3ddc66a02234533a64d6b29f26a50ea",
+      "bytes": 1982
+    },
+    ".evidence/gt-judge-call-authority-20261008/judge-call-action-boundary-reference.json": {
+      "sha256": "a367f6108b15516cdfa22f9461f1c018e21bda7205adfc7296bdbaf91b559815",
+      "bytes": 1887
+    },
+    ".evidence/gt-judge-call-authority-20261008/judge-call-boundary-cumulative-r1-result.json": {
+      "sha256": "710451ae1c32108e5d7305709e5a3633d2363f52c378326924682455908a95b7",
+      "bytes": 11575
+    },
+    ".evidence/gt-judge-call-authority-20261008/boundary-native-independent-r1.json": {
+      "sha256": "b42834bc421ceec9fe946afc9c8be51f0adf64710224c2d9e93ab0393c391cdf",
+      "bytes": 2205
+    },
+    ".evidence/gt-judge-call-authority-20261008/judge-call-action-execution-r1-result.json": {
+      "sha256": "41ae106368e14cafb3659054cbfa1ca62de8b877dc5a3c3c3059327d748408b6",
+      "bytes": 2058
+    },
+    ".evidence/gt-judge-call-authority-20261008/request-producer-plan.md": {
+      "sha256": "2c05d73dbe50112317e9cf59e709308937ec8f8e43f7ecf6240f2ac78573a1ee",
+      "bytes": 2331
+    },
+    ".evidence/gt-judge-call-authority-20261008/request-producer-checkpoint.md": {
+      "sha256": "c5e0f205a5b1e7c7227d2921d1b26f95f03945273583a4c8d761904bc89e2de9",
+      "bytes": 2883
+    },
+    ".evidence/gt-judge-call-authority-20261008/judge-request-producer-reference.json": {
+      "sha256": "23f53d95fe311331dc938c18f3b6e7261ce30220d74b4a68cfc0265e28f64073",
+      "bytes": 3498
+    },
+    ".evidence/gt-judge-call-authority-20261008/request-producer-cumulative-r1-result.json": {
+      "sha256": "4f9fd8b76156b25a68ca191c60eda17d0fb2ca5abbe238a2d92bb35e4f428792",
+      "bytes": 11763
+    },
+    ".evidence/gt-judge-call-authority-20261008/request-producer-independent-r1.json": {
+      "sha256": "eb8471e15d91c24290913f3517b4cfa3c4e4c838869abe1bd78cf5691fbd7d59",
+      "bytes": 1351
+    },
+    ".evidence/gt-judge-call-authority-20261008/request-producer-cumulative-r1-native-proof.json": {
+      "sha256": "fa7480889aca309c5edd80aa4875359ba7b3d3f704dfc8d1301b77b02c36c7cb",
+      "bytes": 12895
+    },
+    ".evidence/gt-judge-call-authority-20261008/request-producer-static.json": {
+      "sha256": "a49345eae560d58a7df8d1df19353bd08d030856c034a8040586b812b3a9dad6",
+      "bytes": 670
+    },
+    ".evidence/gt-judge-call-authority-20261008/checker-source-rederivation-plan.md": {
+      "sha256": "82de91bc924545221c581287df260c525833be6395c02695eef34f6ec80a5429",
+      "bytes": 1473
+    },
+    ".evidence/gt-judge-call-authority-20261008/checker-rederivation-checkpoint.md": {
+      "sha256": "bdd2abe6b38ad13dbf18fea71ac9f38d7a960b3bfd915651268d601dfd626579",
+      "bytes": 2534
+    },
+    ".evidence/gt-judge-call-authority-20261008/checker-source-rederivation-reference.json": {
+      "sha256": "e26cb2f0db9ffc7e5db764221a9e2947ec53e823cec8807f641e359a82dc324b",
+      "bytes": 3337
+    },
+    ".evidence/gt-judge-call-authority-20261008/checker-rederivation-cumulative-r1-result.json": {
+      "sha256": "cf829a687390ebea9fc116751705f7546855f163d31324b2f5eca7b141fb8bd2",
+      "bytes": 11763
+    },
+    ".evidence/gt-judge-call-authority-20261008/checker-rederivation-independent-r1.json": {
+      "sha256": "a379247ef409ecd08fff996154fdef446b0854c5e6925b8f08837025e400f6b7",
+      "bytes": 1933
+    },
+    ".evidence/gt-judge-call-authority-20261008/checker-rederivation-cumulative-r1-native-proof.json": {
+      "sha256": "5803f3acf0040e0bae39cb87f03a9ca1bf1412a0264604b2735738742465e0b6",
+      "bytes": 13346
+    },
+    ".evidence/gt-judge-call-authority-20261008/judge-rule-source-investigation-r1.md": {
+      "sha256": "82fdd5577473e6859b40e0d54485cac9ebee37cb23a185eee3051ee2394873c2",
+      "bytes": 1160
+    },
+    ".evidence/gt-judge-call-authority-20261008/judge-rule-source-native-inventory-r1.json": {
+      "sha256": "0967d3b7f4e3f2af469767cb37ec34bf01304032a8164b1da97f4c20a5a8a1d9",
+      "bytes": 13240
+    },
+    ".evidence/gt-judge-call-authority-20261008/judge-rule-published-source-plan.md": {
+      "sha256": "ae7ae70d3f787b330752d5bfde2f986cd5995207586106aaec6e0bc3d16ca7e5",
+      "bytes": 4097
+    },
+    ".evidence/gt-judge-call-authority-20261008/judge-rule-source-audit-checkpoint.md": {
+      "sha256": "0f5d565eacf5821cce3d47ead01022f36c3b6c6e850965601d9968b099bbedcb",
+      "bytes": 1092
+    },
+    ".evidence/gt-judge-call-authority-20261008/judge-rule-source-audit-reference.json": {
+      "sha256": "75fd43e8973a07d43cb9eff17165b013f2d299dd35715381f6e7b5273d046181",
+      "bytes": 1167
+    },
+    ".evidence/gt-judge-call-authority-20261008/published-rule-reader-reference.json": {
+      "sha256": "fd72dfe805f1756d15d88b2b60783d17fed7f46d885514e593524b71db6d5e98",
+      "bytes": 2567
+    },
+    ".evidence/gt-judge-call-authority-20261008/published-rule-currentness-reference.json": {
+      "sha256": "be351e7d0e6973345643e9d6c691e59494af620fa53289b504d8ac6b44ead4ba",
+      "bytes": 2614
+    },
+    ".evidence/gt-judge-call-authority-20261008/exact-signed-rule-suite-reference.json": {
+      "sha256": "e6408c1a9fc4147353737f604d940c17fa177d37e12b457c694fbeab67e63de7",
+      "bytes": 3194
+    },
+    ".evidence/gt-judge-call-authority-20261008/current-native-certificate-reference-1699.json": {
+      "sha256": "97bee3d88d489785dd467a7f9db279b697435537ee90c75437170b988fdfb6f1",
+      "bytes": 1696
+    },
+    ".evidence/gt-judge-call-authority-20261008/reboot-judge-plan.md": {
+      "sha256": "c832afe41b6c649e362abb7136ffe0d287dae743d9c10af78c542483780c150c",
+      "bytes": 3735
+    },
+    ".evidence/gt-judge-call-authority-20261008/reboot-judge-review.md": {
+      "sha256": "384e1911e7d88a1317061880458507faa8fb7e2b8a08805a7bea0a0d96ff102c",
+      "bytes": 1479
+    },
+    ".evidence/gt-judge-call-authority-20261008/reboot-judge-verification.json": {
+      "sha256": "c4c1a589f7ca92a0becb3b01af02341f55b81d230897a5399d39cbf71f54aa96",
+      "bytes": 11141
+    }
+  }
+}

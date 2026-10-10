@@ -1,0 +1,13 @@
+{
+  "task_id": "gt-judge-call-authority-20261008",
+  "authority_revision": "AOS-001703",
+  "historical_exact_files": 35,
+  "historical_bytes_unchanged": true,
+  "observer_retry_exit_code": 0,
+  "observer_action": "REVIEW_REQUIRED",
+  "checkpoint_evidence_count": 5,
+  "original_failure": "ValueError: invalid file list; 35 exceeds 32",
+  "observer_limits_unchanged": true,
+  "business_completion": false,
+  "formal_database_writes": 0
+}
