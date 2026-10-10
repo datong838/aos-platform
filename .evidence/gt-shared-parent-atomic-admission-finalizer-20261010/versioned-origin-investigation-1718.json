@@ -1,0 +1,55 @@
+{
+  "schema": "aos-versioned-admission-origin-investigation/v1",
+  "rules": [
+    "231",
+    "single m1 writer",
+    "reuse original complete kernel",
+    "no legacy prepared-row promotion"
+  ],
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "authority": "AOS-001718",
+  "fresh_snapshot": {
+    "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+    "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "branch": "m1",
+    "head": "4ce38fdd72a6612d0c79af2377fdb86c6b07b15f",
+    "code_commit": "eb27a3425dc46d253c3face5925a21cccf5d259d",
+    "code_time": 1791630964,
+    "checkpoint": {
+      "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001718",
+      "step": "original-certificate-kernel-reused-full-ledger-origin-delegate-finalizer-next",
+      "fingerprint": "a5b55947d0a54cb5750fcf3e76c38ec831c65e591d3a43ef7249cd1a172f6a4e",
+      "task_base_revision": "AOS-001698"
+    }
+  },
+  "observer_diagnostic": "Original heartbeat event returned cached AOS-001703/old HEAD. Fresh readback uses current checkpoint. First fresh snapshot call passed Path instead of required string; failed before writes; corrected argument without changing observer.",
+  "candidates": [
+    {
+      "work": "complete new version admission origin/ledger/finalizer",
+      "authorization": "approved isolated implementation and active parent Task",
+      "dependency": "original risk+description kernel, combined old unresolved exposure, narrow Issuer delegate and complete native end-channel"
+    },
+    {
+      "work": "formal Root/native deployment provenance",
+      "authorization": "registered route; no execution authority from refactor",
+      "dependency": "independent formal signed release and deployment identity; test bootstrap is not provenance"
+    }
+  ],
+  "chosen": "complete new version admission origin/ledger/finalizer",
+  "files": {
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": "45062a1181cf32a423ed284d4c8a4f4611d8e5e0d8fb8707e88d2a9a35d98ad6",
+    "services/aos-api/aos_api/aip_shared_parent_description_origin_reader.py": "92aa9d11a58a27a86d3a0848503e96d0c17a083157ad71ff7d3ffc7898e9c63a",
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py": "aefa54f37c5973c76dfea970e7afdf6e20466a2b312487f9c6484e54df91bced"
+  },
+  "findings": [
+    "Original manifest producer calls read_capacity_shared_risk_description_origin; requires prepared_plan_risk and prepared_shared_risk_description with matching native caller xid/pid.",
+    "Original risk+description producers INSERT legacy rows protected by unconditional deferred no_unfinalized guards. They cannot be reused as a committable new admission.",
+    "Original description validates every case, exact two parent holds/approvals, Source/account/provider refs and original facts; reduced duplicated builder is unsuitable.",
+    "Certificate descriptionHash/originalRiskHash/caller xid+pid require trusted versioned origin before any certificate/ledger writes.",
+    "Next modify physical-owner kernel only under its original Task exact scope after file-level plan, byte-exact original SQL/native body/ACL preservation; reuse in new version origin."
+  ],
+  "database_access": false,
+  "full_admission_complete": false
+}

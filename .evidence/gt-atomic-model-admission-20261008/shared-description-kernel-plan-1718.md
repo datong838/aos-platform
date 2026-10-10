@@ -1,0 +1,5 @@
+# 原完整描述验证核复用
+Rules：231、产品v3一对象一真源、single m1、原Task exact Lease。
+文件：services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py；本目录test-shared-description-kernel-1718.py及beforeimage/review。
+当前原文件有本Task未提交的物理/父预算限额核提取，先冻结全部14 SQL生成器及源码，保留不覆盖。此增量只将occupation_shared_risk_description_statements中IF facts IS DISTINCT FROM risk.immutable->originalFacts起至完整case/两leg END LOOP的原验证提取固定零参数shared_parent_description_validation_sql；schema/Root/事实不接受override。不写版本账本、不授权限、不使用旧prepared_only行完成COMMIT。原风险row/caller来源及source_doc/facts必须由可信Owner供给；核不认证origin，不建description，不签名。原producer继续原顺序消费，全部生成SQL逐字相同；新version之后同核复用。
+RED缺helper；GREEN全部14生成器beforeimage比较、shared原producer消费、完整case/parent/Source/account/provider保护，无write/COMMIT。相邻已有原native4函数/7拒绝guard回读及93项测试仍需按实际范围，不能当新完整准入。当前真库159与Host/worker/Provider无效果。父Task完整COMMIT尚未完成，因此不Delivery本Task。

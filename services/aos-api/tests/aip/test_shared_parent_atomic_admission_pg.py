@@ -105,3 +105,11 @@ def test_new_admission_consumes_both_original_certificate_checks(monkeypatch):
     monkeypatch.setattr(original, 'shared_parent_certificate_claim_sql', claim)
     assert admission.shared_parent_admission_certificate_validation_sql() == 'test-native-requirementtest-original-claim'
     assert calls == ['native', 'claim']
+
+
+def test_new_admission_reuses_original_complete_description_kernel(monkeypatch):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    from aos_api import aip_physical_capacity_occupation_authority as original
+    marker = "-- original complete manifest kernel, not executed"
+    monkeypatch.setattr(original, "shared_parent_description_validation_sql", lambda: marker)
+    assert api.shared_parent_admission_description_validation_sql() == marker

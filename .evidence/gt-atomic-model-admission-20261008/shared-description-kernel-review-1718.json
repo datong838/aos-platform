@@ -1,0 +1,60 @@
+{
+  "schema": "aos-scoped-code-review/v1",
+  "rules": [
+    "231",
+    "product v3 original truth",
+    "exact Task/Lease",
+    "no formal DB effects"
+  ],
+  "task": "gt-atomic-model-admission-20261008",
+  "authority": "AOS-001718",
+  "reviewer": "primary writer self-review; not independent model verdict",
+  "head": "4ce38fdd72a6612d0c79af2377fdb86c6b07b15f",
+  "code_sha256": "615f49066deb1b452f7e95b788aaf36ffdab2208dca6d74c8bc2d18457449a1b",
+  "previous_uncommitted_changes": "Original same-Task physical/parent guard extraction retained and reviewed: all 14 SQL generators also byte-identical to HEAD before this turn.",
+  "all_original_sql_generators_exact_head": [
+    "occupation_account_guard_statements",
+    "occupation_case_binding_statements",
+    "occupation_eval_fact_statements",
+    "occupation_input_binding_statements",
+    "occupation_intent_statements",
+    "occupation_judge_fact_statements",
+    "occupation_judge_intent_statements",
+    "occupation_judge_parent_debit_statements",
+    "occupation_parent_debit_statements",
+    "occupation_plan_risk_statements",
+    "occupation_prepared_call_statements",
+    "occupation_shared_risk_description_statements",
+    "occupation_target_call_statements",
+    "occupation_target_ledger_statements"
+  ],
+  "red": {
+    "kernel": {
+      "failed": 6,
+      "passed": 1
+    },
+    "consumer": {
+      "failed": 1,
+      "deselected": 8
+    }
+  },
+  "green": {
+    "passed": 101,
+    "seconds": 0.78,
+    "exit_code": 0
+  },
+  "native_readback": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/description-kernel-native-readback-1718.json",
+  "native_functions_body_acl_exact": 4,
+  "original_denial_guards_exact": 7,
+  "browser": "not applicable: fixed SQL artifact extraction, no UI/API/service exposure",
+  "scheme_consistency": "Complete original description validation reused; no abbreviated algorithm or caller override; original trusted source/caller and all writes remain outside fragment.",
+  "pending": [
+    "trusted versioned risk and description persisted origin",
+    "all old/new unresolved risk ledger under native global account lock",
+    "narrow original Issuer delegate",
+    "complete native end-channel and actual COMMIT/rollback/unknown matrix"
+  ],
+  "full_task_delivery": false,
+  "natural_business_chain": false,
+  "formal_database_effects": false
+}

@@ -6,8 +6,19 @@ can be exposed. Necessary facts are never execution permission.
 """
 from aos_api.aip_physical_capacity_occupation_authority import OWNER, PLAN_FACT
 from aos_api import aip_shared_parent_certificate_prepare as _certificate
+from aos_api import aip_physical_capacity_occupation_authority as _physical
 
 FUNCTION = 'public.read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)'
+
+
+def shared_parent_admission_description_validation_sql():
+    """Reuse original complete manifest checks after trusted versioned origin.
+
+    Caller-supplied JSON and legacy prepared rows are not an admission origin.
+    The complete version must establish current native facts/risk/Source and
+    caller context before using this fragment or creating a receipt.
+    """
+    return _physical.shared_parent_description_validation_sql()
 
 
 def shared_parent_admission_certificate_validation_sql():

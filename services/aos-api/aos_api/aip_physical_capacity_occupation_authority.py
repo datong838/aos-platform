@@ -444,6 +444,36 @@ def occupation_case_binding_statements():
     )
 
 
+def _physical_call_capacity_guard_sql(purpose):
+    """Shared physical limits; callers still supply trusted locked totals/facts."""
+    if type(purpose) is not str or purpose not in ('target', 'judge'):
+        raise ValueError('exact original physical call purpose required')
+    source = 'fact' if purpose == 'target' else 'source_body'
+    return f'''IF used_requests>=({source}->>'maxConcurrency')::bigint
+                OR used_tokens+(fact->>'tokenUpperBound')::bigint>({source}->'tokenLimit'->>'maxTokens')::numeric THEN
+                RAISE EXCEPTION 'CAPACITY_PHYSICAL_CAPACITY_EXCEEDED' USING ERRCODE='23514'; END IF;'''
+
+
+def _parent_debit_capacity_guard_sql(purpose):
+    """Original parent/physical limit algorithm; fixed preparation callers only.
+
+    This does not finalize a debit or change the ledger being counted. Any new
+    admission ledger and legacy-risk cutover require their complete protocol.
+    """
+    if type(purpose) is not str or purpose not in ('target', 'judge'):
+        raise ValueError('exact original parent debit purpose required')
+    fragment = f'''IF p_minor>g.cap_minor-g.allocated_minor THEN
+                RAISE EXCEPTION 'CAPACITY_PARENT_CAP_EXCEEDED' USING ERRCODE='23514'; END IF;
+              SELECT count(*),coalesce(sum(token_units),0) INTO used_requests,used_tokens
+                FROM {SCHEMA}.prepared_parent_debit
+                WHERE physical_account_id=(fact->>'physicalAccountId')::uuid;
+              {_physical_call_capacity_guard_sql(purpose)}'''
+    if purpose == 'judge':
+        # Keep the original installed body byte-for-byte, including layout.
+        fragment = fragment.replace('\n                WHERE', ' WHERE', 1)
+    return fragment
+
+
 def occupation_parent_debit_statements():
     """Explicit preparation ledger; no debit can commit without a future protocol.
 
@@ -524,14 +554,7 @@ def occupation_parent_debit_statements():
                 OR prior.origin_xid IS DISTINCT FROM xid_value OR prior.origin_pid IS DISTINCT FROM pid_value THEN
                 RAISE EXCEPTION 'CAPACITY_PARENT_DEBIT_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
             ELSE
-              IF p_minor>g.cap_minor-g.allocated_minor THEN
-                RAISE EXCEPTION 'CAPACITY_PARENT_CAP_EXCEEDED' USING ERRCODE='23514'; END IF;
-              SELECT count(*),coalesce(sum(token_units),0) INTO used_requests,used_tokens
-                FROM {SCHEMA}.prepared_parent_debit
-                WHERE physical_account_id=(fact->>'physicalAccountId')::uuid;
-              IF used_requests>=(fact->>'maxConcurrency')::bigint
-                OR used_tokens+(fact->>'tokenUpperBound')::bigint>(fact->'tokenLimit'->>'maxTokens')::numeric THEN
-                RAISE EXCEPTION 'CAPACITY_PHYSICAL_CAPACITY_EXCEEDED' USING ERRCODE='23514'; END IF;
+              {_parent_debit_capacity_guard_sql('target')}
               UPDATE {SCHEMA}.parent_debit_guard SET allocated_minor=allocated_minor+p_minor WHERE parent_hold=p_hold
                 RETURNING * INTO g;
               INSERT INTO {SCHEMA}.prepared_parent_debit
@@ -823,13 +846,7 @@ def occupation_judge_parent_debit_statements():
                 OR prior.origin_xid IS DISTINCT FROM xid_value OR prior.origin_pid IS DISTINCT FROM pid_value THEN
                 RAISE EXCEPTION 'CAPACITY_JUDGE_DEBIT_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
             ELSE
-              IF p_minor>g.cap_minor-g.allocated_minor THEN
-                RAISE EXCEPTION 'CAPACITY_PARENT_CAP_EXCEEDED' USING ERRCODE='23514'; END IF;
-              SELECT count(*),coalesce(sum(token_units),0) INTO used_requests,used_tokens
-                FROM {SCHEMA}.prepared_parent_debit WHERE physical_account_id=(fact->>'physicalAccountId')::uuid;
-              IF used_requests>=(source_body->>'maxConcurrency')::bigint
-                OR used_tokens+(fact->>'tokenUpperBound')::bigint>(source_body->'tokenLimit'->>'maxTokens')::numeric THEN
-                RAISE EXCEPTION 'CAPACITY_PHYSICAL_CAPACITY_EXCEEDED' USING ERRCODE='23514'; END IF;
+              {_parent_debit_capacity_guard_sql('judge')}
               UPDATE {SCHEMA}.parent_debit_guard SET allocated_minor=allocated_minor+p_minor
                 WHERE parent_hold=p_hold RETURNING * INTO g;
               INSERT INTO {SCHEMA}.prepared_parent_debit(org_id,project_id,debit_id,parent_hold,
@@ -1361,42 +1378,14 @@ def occupation_target_ledger_statements():
 SHARED_RISK_DESCRIPTION = 'public.prepare_capacity_shared_risk_description(bytea,jsonb,uuid,jsonb,text)'
 
 
-def occupation_shared_risk_description_statements():
-    """Closed complete description binding; no identity, Intent or call grant."""
-    table = SCHEMA + '.prepared_shared_risk_description'
-    producer = f'''CREATE FUNCTION {SHARED_RISK_DESCRIPTION.split('(')[0]}(
-      p_raw bytea,p_source jsonb,p_plan uuid,p_manifest jsonb,p_hash text) RETURNS jsonb
-      LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $shared$
-      DECLARE risk {SCHEMA}.prepared_plan_risk%ROWTYPE; prior {table}%ROWTYPE;
-        facts jsonb; after_facts jsonb; body jsonb; digest text; item jsonb; original_case jsonb;
-        leg jsonb; parent jsonb; fact jsonb; source_doc jsonb; purpose text; idx integer:=0;
-      BEGIN
-        IF session_user<>'aos_provider_capacity_occupation'
-          OR current_setting('transaction_isolation')<>'serializable'
-          OR current_setting('transaction_read_only')<>'off'
-          OR current_setting('TimeZone')<>'UTC'
-          OR current_setting('session_replication_role')<>'origin'
-          OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
-          OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' THEN
-          RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
-        SELECT * INTO risk FROM {SCHEMA}.prepared_plan_risk WHERE plan_id=p_plan FOR SHARE;
-        IF NOT FOUND OR risk.org_id<>'org-org' OR risk.project_id<>'dev-project'
-          OR risk.origin_xid IS DISTINCT FROM pg_current_xact_id()
-          OR risk.origin_pid IS DISTINCT FROM pg_backend_pid() THEN
-          RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_ORIGIN_REQUIRED' USING ERRCODE='23514'; END IF;
-        source_doc:=public.capacity_occupation_source_fact(p_raw,p_source);
-        SELECT * INTO prior FROM {table} WHERE plan_id=p_plan;
-        IF FOUND AND (prior.immutable->'manifest' IS DISTINCT FROM p_manifest
-          OR prior.immutable->>'manifestHash' IS DISTINCT FROM p_hash
-          OR prior.origin_xid IS DISTINCT FROM pg_current_xact_id()
-          OR prior.origin_pid IS DISTINCT FROM pg_backend_pid()) THEN
-          RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
-        facts:=public.capacity_occupation_plan_risk_fact(p_raw,p_source,
-          (risk.immutable->'originalFacts'->'target'->>'reservationId')::uuid,risk.target_request,
-          risk.immutable->'originalFacts'->'target'->>'requestHash',
-          (risk.immutable->'originalFacts'->'judge'->>'reservationId')::uuid,risk.judge_request,
-          risk.immutable->'originalFacts'->'judge'->>'requestHash');
-        IF facts IS DISTINCT FROM risk.immutable->'originalFacts'
+def shared_parent_description_validation_sql():
+    """Original complete manifest/parents/cases/legs validation, fixed SQL only.
+
+    Requires trusted original risk, current Source and original facts in the
+    native owner. This fragment does not establish origin, create a receipt,
+    write a ledger or grant an execution permission.
+    """
+    return f'''        IF facts IS DISTINCT FROM risk.immutable->'originalFacts'
           OR jsonb_typeof(p_manifest) IS DISTINCT FROM 'object'
           OR p_manifest->>'schemaVersion' IS DISTINCT FROM 'aos.model-eval-target-judge-shared-risk-manifest/v3'
           OR p_manifest->>'executionId' IS DISTINCT FROM p_plan::text
@@ -1445,7 +1434,45 @@ def occupation_shared_risk_description_statements():
               RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_LEG_REQUIRED' USING ERRCODE='23514'; END IF;
           END LOOP;
         END LOOP;
-        body:=jsonb_build_object('schemaVersion','aos.shared-parent-risk-description-preparation/v1',
+'''
+
+
+def occupation_shared_risk_description_statements():
+    """Closed complete description binding; no identity, Intent or call grant."""
+    table = SCHEMA + '.prepared_shared_risk_description'
+    producer = f'''CREATE FUNCTION {SHARED_RISK_DESCRIPTION.split('(')[0]}(
+      p_raw bytea,p_source jsonb,p_plan uuid,p_manifest jsonb,p_hash text) RETURNS jsonb
+      LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $shared$
+      DECLARE risk {SCHEMA}.prepared_plan_risk%ROWTYPE; prior {table}%ROWTYPE;
+        facts jsonb; after_facts jsonb; body jsonb; digest text; item jsonb; original_case jsonb;
+        leg jsonb; parent jsonb; fact jsonb; source_doc jsonb; purpose text; idx integer:=0;
+      BEGIN
+        IF session_user<>'aos_provider_capacity_occupation'
+          OR current_setting('transaction_isolation')<>'serializable'
+          OR current_setting('transaction_read_only')<>'off'
+          OR current_setting('TimeZone')<>'UTC'
+          OR current_setting('session_replication_role')<>'origin'
+          OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+          OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' THEN
+          RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+        SELECT * INTO risk FROM {SCHEMA}.prepared_plan_risk WHERE plan_id=p_plan FOR SHARE;
+        IF NOT FOUND OR risk.org_id<>'org-org' OR risk.project_id<>'dev-project'
+          OR risk.origin_xid IS DISTINCT FROM pg_current_xact_id()
+          OR risk.origin_pid IS DISTINCT FROM pg_backend_pid() THEN
+          RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_ORIGIN_REQUIRED' USING ERRCODE='23514'; END IF;
+        source_doc:=public.capacity_occupation_source_fact(p_raw,p_source);
+        SELECT * INTO prior FROM {table} WHERE plan_id=p_plan;
+        IF FOUND AND (prior.immutable->'manifest' IS DISTINCT FROM p_manifest
+          OR prior.immutable->>'manifestHash' IS DISTINCT FROM p_hash
+          OR prior.origin_xid IS DISTINCT FROM pg_current_xact_id()
+          OR prior.origin_pid IS DISTINCT FROM pg_backend_pid()) THEN
+          RAISE EXCEPTION 'CAPACITY_SHARED_DESCRIPTION_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+        facts:=public.capacity_occupation_plan_risk_fact(p_raw,p_source,
+          (risk.immutable->'originalFacts'->'target'->>'reservationId')::uuid,risk.target_request,
+          risk.immutable->'originalFacts'->'target'->>'requestHash',
+          (risk.immutable->'originalFacts'->'judge'->>'reservationId')::uuid,risk.judge_request,
+          risk.immutable->'originalFacts'->'judge'->>'requestHash');
+{shared_parent_description_validation_sql()}        body:=jsonb_build_object('schemaVersion','aos.shared-parent-risk-description-preparation/v1',
           'planId',p_plan,'tenant',risk.immutable->'tenant','originalRiskHash',risk.content_hash,
           'manifest',p_manifest,'manifestHash',p_hash,'callerLogin',session_user,
           'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),

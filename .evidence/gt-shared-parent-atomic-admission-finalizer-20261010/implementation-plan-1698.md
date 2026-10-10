@@ -35,3 +35,6 @@ Rules：231、原joint实施§3/§11.3、最小更改、单m1写者、未知效�
 
 ## 复用原证书核（支持Task gt-shared-certificate-validation-kernel-20261010）
 支持Task已将原nativeC requirement及完整set/Root锁/v3 claim/signature/time块提取为固定零参数helper，13条旧SQL和三native body/ACL全部精确保持。主Task新module新增shared_parent_admission_certificate_validation_sql，按原次序组合两helper，供完整version入口在真实doc/items/Source/父预算/原Issuer委托下调用；不建新的crypto verifier、不参数化schema/Root、不复制claim判断、不自动授physical Owner VERIFY。新增测试确认新构建确实消费同一两个helper；不把SQL片段视为准入receipt或授权。下一仍完整version风险账本及可信doc/Issuer narrowdelegate/endchannel。
+
+## 原完整描述核接线 AOS-001718
+原physical Task gt-atomic-model-admission-20261008按exact scope提取全部manifest/caseSet/独立两父预算/每case/Source-account-provider两leg完整检查，原14 SQL生成器逐字保持；主Task从原physical module调用同一零参数核，作为新version trusted风险/描述建立的固定检查片段。不能把普通JSON或旧prepared_only行升级成可信doc；新版本schema/保存来源/窄Issuer委托/原风险兼容账本/完整endchannel仍需同一完整交付。
