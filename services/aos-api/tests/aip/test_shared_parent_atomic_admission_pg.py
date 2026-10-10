@@ -159,3 +159,27 @@ def test_native_closed_issuer_delegate_metadata_and_admin_rejection(native):
     native.rollback()
     assert native.execute('SELECT to_regprocedure(%s)', (api.CERTIFICATE_SET,)).fetchone()[0] is None
     native.rollback()
+
+
+def test_native_pending_origin_storage_is_closed_and_transaction_bound(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    from aos_api.aip_shared_parent_certificate_prepare import ISSUER_OWNER
+    for statement in (*api.shared_parent_admission_origin_statements(),
+                      *api.shared_parent_admission_certificate_set_statements(),
+                      *api.shared_parent_admission_storage_statements()):
+        native.execute(statement)
+    table = api.ADMISSION_SCHEMA + '.pending_origin'
+    row = native.execute('SELECT pg_get_userbyid(relowner),relrowsecurity,relforcerowsecurity FROM pg_class WHERE oid=%s::regclass', (table,)).fetchone()
+    assert row == (ISSUER_OWNER, True, True)
+    for role in ('aos_runtime', 'aos_provider_capacity_issuer', OWNER):
+        for privilege in ('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE'):
+            assert not native.execute('SELECT has_table_privilege(%s,%s,%s)', (role,table,privilege)).fetchone()[0]
+    guard = native.execute("SELECT tgdeferrable,tginitdeferred FROM pg_trigger WHERE tgrelid=%s::regclass AND tgname='require_complete_admission_end'", (table,)).fetchone()
+    assert guard == (True, True)
+    assert native.execute('SELECT to_regprocedure(%s)', (api.END_CHANNEL,)).fetchone()[0] is None
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_CERTIFICATE_CALLER_REQUIRED'):
+        with native.transaction():
+            native.execute('SELECT public.persist_shared_parent_admission_origin(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)')
+    native.rollback()
+    assert native.execute('SELECT to_regclass(%s)', (table,)).fetchone()[0] is None
+    native.rollback()

@@ -66,6 +66,9 @@ def shared_parent_original_fact_statements():
 
 ORIGIN = 'public.build_shared_parent_admission_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text)'
 CERTIFICATE_SET = 'public.validate_shared_parent_admission_certificate_set(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea)'
+ADMISSION_SCHEMA = 'aos_shared_parent_admission_private'
+PERSIST = 'public.persist_shared_parent_admission_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea)'
+END_CHANNEL = ADMISSION_SCHEMA + '.require_complete_admission(uuid,text,xid8,integer)'
 
 
 def shared_parent_admission_origin_statements():
@@ -148,4 +151,134 @@ def shared_parent_admission_certificate_set_statements():
           END $set$''',
         f'ALTER FUNCTION {CERTIFICATE_SET} OWNER TO {issuer}',
         f'REVOKE ALL ON FUNCTION {CERTIFICATE_SET} FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer',
+    )
+
+
+def shared_parent_admission_storage_statements():
+    """Closed immutable native origin storage, pending the complete end channel.
+
+    Neither storage nor certificates allocate physical capacity or authorize
+    execution. Until the complete native end-channel artifact exists, a queued
+    origin cannot COMMIT. No original preparation guard is replaced.
+    """
+    s = ADMISSION_SCHEMA
+    issuer = _certificate.ISSUER_OWNER
+    table = s + '.pending_origin'
+    denied = f'PUBLIC,aos_runtime,aos_provider_capacity_issuer,{OWNER}'
+    return (
+        f'CREATE SCHEMA {s} AUTHORIZATION {issuer}',
+        f'REVOKE ALL ON SCHEMA {s} FROM {denied}',
+        f'''CREATE TABLE {table}(
+          plan_id uuid PRIMARY KEY,org_id text NOT NULL CHECK(org_id='org-org'),
+          project_id text NOT NULL CHECK(project_id='dev-project'),
+          physical_account_id uuid NOT NULL,target_hold uuid NOT NULL,judge_hold uuid NOT NULL,
+          caller_xid xid8 NOT NULL,caller_pid integer NOT NULL CHECK(caller_pid>0),
+          body jsonb NOT NULL,content_hash text NOT NULL CHECK(content_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          CHECK(target_hold<>judge_hold))''',
+        f'ALTER TABLE {table} OWNER TO {issuer}',
+        f'REVOKE ALL ON {table} FROM {denied}',
+        f'ALTER TABLE {table} ENABLE ROW LEVEL SECURITY',
+        f'ALTER TABLE {table} FORCE ROW LEVEL SECURITY',
+        f'''CREATE POLICY exact_scope ON {table} TO {issuer}
+          USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+          WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))''',
+        f'''CREATE FUNCTION {s}.check_pending_origin() RETURNS trigger
+          LANGUAGE plpgsql SET search_path=pg_catalog AS $binding$
+          DECLARE origin jsonb; facts jsonb;
+          BEGIN
+            origin:=NEW.body#>'{{origin,immutable}}';facts:=origin#>'{{originalRisk,originalFacts}}';
+            IF session_user<>'aos_provider_capacity_occupation'
+              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'
+              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'
+              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'
+              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'
+              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'
+              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project'
+              OR NEW.body->>'schemaVersion' IS DISTINCT FROM 'aos.shared-parent-pending-origin/v1'
+              OR NEW.body->>'state' IS DISTINCT FROM 'awaiting_full_admission'
+              OR NEW.body->'executionAllowed' IS DISTINCT FROM 'false'::jsonb
+              OR NEW.body#>>'{{origin,planId}}' IS DISTINCT FROM NEW.plan_id::text
+              OR origin->>'schemaVersion' IS DISTINCT FROM 'aos.shared-parent-admission-origin/v1'
+              OR origin->>'callerLogin' IS DISTINCT FROM session_user
+              OR origin->>'callerXid' IS DISTINCT FROM pg_current_xact_id()::text
+              OR origin->>'callerPid' IS DISTINCT FROM pg_backend_pid()::text
+              OR NEW.caller_xid IS DISTINCT FROM pg_current_xact_id()
+              OR NEW.caller_pid IS DISTINCT FROM pg_backend_pid()
+              OR origin#>>'{{tenant,orgId}}' IS DISTINCT FROM NEW.org_id
+              OR origin#>>'{{tenant,projectId}}' IS DISTINCT FROM NEW.project_id
+              OR facts#>>'{{target,physicalAccountId}}' IS DISTINCT FROM NEW.physical_account_id::text
+              OR facts#>>'{{judge,physicalAccountId}}' IS DISTINCT FROM NEW.physical_account_id::text
+              OR facts#>>'{{target,reservationId}}' IS DISTINCT FROM NEW.target_hold::text
+              OR facts#>>'{{judge,reservationId}}' IS DISTINCT FROM NEW.judge_hold::text
+              OR NEW.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(
+                public.canonical_asset_registry_jsonb(NEW.body),'UTF8')),'hex') THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_PENDING_ORIGIN_BINDING_REQUIRED' USING ERRCODE='23514'; END IF;
+            RETURN NEW;
+          END $binding$''',
+        f'ALTER FUNCTION {s}.check_pending_origin() OWNER TO {issuer}',
+        f'REVOKE ALL ON FUNCTION {s}.check_pending_origin() FROM {denied}',
+        f'''CREATE FUNCTION {s}.immutable_pending_origin() RETURNS trigger
+          LANGUAGE plpgsql SET search_path=pg_catalog AS $immutable$
+          BEGIN RAISE EXCEPTION 'SHARED_ADMISSION_PENDING_ORIGIN_IMMUTABLE' USING ERRCODE='42501'; END $immutable$''',
+        f'ALTER FUNCTION {s}.immutable_pending_origin() OWNER TO {issuer}',
+        f'REVOKE ALL ON FUNCTION {s}.immutable_pending_origin() FROM {denied}',
+        f'''CREATE FUNCTION {s}.require_pending_completion() RETURNS trigger
+          LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $end$
+          BEGIN
+            IF NEW.caller_xid IS DISTINCT FROM pg_current_xact_id()
+              OR NEW.caller_pid IS DISTINCT FROM pg_backend_pid()
+              OR NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_language l ON l.oid=p.prolang
+                WHERE p.oid=to_regprocedure('{END_CHANNEL}')
+                  AND pg_get_userbyid(p.proowner)='{OWNER}' AND p.prosecdef
+                  AND p.proconfig=ARRAY['search_path=pg_catalog'] AND l.lanname='plpgsql'
+                  AND p.prorettype='void'::regtype
+                  AND NOT has_function_privilege('aos_runtime',p.oid,'EXECUTE')
+                  AND NOT has_function_privilege('aos_provider_capacity_issuer',p.oid,'EXECUTE')) THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_COMPLETE_END_CHANNEL_REQUIRED' USING ERRCODE='23514'; END IF;
+            PERFORM {s}.require_complete_admission(NEW.plan_id,NEW.content_hash,NEW.caller_xid,NEW.caller_pid);
+            RETURN NEW;
+          END $end$''',
+        f'ALTER FUNCTION {s}.require_pending_completion() OWNER TO {issuer}',
+        f'REVOKE ALL ON FUNCTION {s}.require_pending_completion() FROM {denied}',
+        f'CREATE TRIGGER bind_pending_origin BEFORE INSERT ON {table} FOR EACH ROW EXECUTE FUNCTION {s}.check_pending_origin()',
+        f'CREATE TRIGGER immutable_pending_origin BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION {s}.immutable_pending_origin()',
+        f'CREATE TRIGGER no_truncate_pending_origin BEFORE TRUNCATE ON {table} FOR EACH STATEMENT EXECUTE FUNCTION {s}.immutable_pending_origin()',
+        f'''CREATE CONSTRAINT TRIGGER require_complete_admission_end AFTER INSERT ON {table}
+          DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION {s}.require_pending_completion()''',
+        f'''CREATE FUNCTION {PERSIST.split('(')[0]}(
+          p_raw bytea,p_source jsonb,p_target uuid,p_tr text,p_th text,
+          p_judge uuid,p_jr text,p_jh text,p_plan uuid,p_manifest jsonb,p_manifest_hash text,p_certificates bytea)
+          RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $persist$
+          DECLARE verified jsonb; origin jsonb; facts jsonb; body jsonb; digest text; previous {table}%ROWTYPE;
+          BEGIN
+            verified:={CERTIFICATE_SET.split('(')[0]}(
+              p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh,p_plan,p_manifest,p_manifest_hash,p_certificates);
+            origin:=verified->'origin';facts:=origin#>'{{immutable,originalRisk,originalFacts}}';
+            body:=jsonb_build_object('schemaVersion','aos.shared-parent-pending-origin/v1',
+              'origin',origin,'certificates',convert_from(p_certificates,'UTF8')::jsonb,
+              'certificateSetHash','sha256:'||encode(sha256(p_certificates),'hex'),
+              'state','awaiting_full_admission','executionAllowed',false);
+            digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
+            INSERT INTO {table}(plan_id,org_id,project_id,physical_account_id,target_hold,judge_hold,
+              caller_xid,caller_pid,body,content_hash)
+              VALUES(p_plan,'org-org','dev-project',(facts#>>'{{target,physicalAccountId}}')::uuid,
+                (facts#>>'{{target,reservationId}}')::uuid,(facts#>>'{{judge,reservationId}}')::uuid,
+                pg_current_xact_id(),pg_backend_pid(),body,digest) ON CONFLICT DO NOTHING;
+            SELECT * INTO previous FROM {table} WHERE plan_id=p_plan FOR SHARE;
+            IF NOT FOUND OR previous.body IS DISTINCT FROM body OR previous.content_hash IS DISTINCT FROM digest
+              OR previous.caller_xid IS DISTINCT FROM pg_current_xact_id()
+              OR previous.caller_pid IS DISTINCT FROM pg_backend_pid() THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_PENDING_ORIGIN_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+            -- INSERT uniqueness and row locks may wait. Revalidate the complete
+            -- native origin and all signatures after those waits, before return.
+            IF {CERTIFICATE_SET.split('(')[0]}(
+              p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh,p_plan,p_manifest,p_manifest_hash,p_certificates)
+                IS DISTINCT FROM verified THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_PENDING_ORIGIN_CURRENTNESS_CHANGED' USING ERRCODE='23514'; END IF;
+            RETURN jsonb_build_object('planId',p_plan,'immutable',body,'contentHash',digest,
+              'persisted',true,'executionAllowed',false,'state','awaiting_full_admission');
+          END $persist$''',
+        f'ALTER FUNCTION {PERSIST} OWNER TO {issuer}',
+        f'REVOKE ALL ON FUNCTION {PERSIST} FROM {denied}',
     )

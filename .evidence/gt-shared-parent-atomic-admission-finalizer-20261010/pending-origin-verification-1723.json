@@ -1,0 +1,189 @@
+{
+  "authority": "AOS-001723",
+  "head": "c6d2e7627ccf37144db1a1094dc8418e41002211",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "status": "PENDING_ORIGIN_COMPONENT_VERIFIED_FULL_ADMISSION_PENDING",
+  "adjacent_tests": 332,
+  "native_whole_tests": 1,
+  "native_seconds": 89.37,
+  "r1_failure": "TRUNCATE native pending-trigger 55006 before immutable trigger42501; preserved result/log",
+  "r2": "Fresh independently approved Source/two holds/four real signatures; immutable UPDATE/DELETE; native pending-trigger TRUNCATE denial; closed runtime read; actual missing-complete-end-channel COMMIT rejected",
+  "independent": {
+    "status": "NATIVE_PENDING_STORAGE_ACTUAL_COMMIT_REJECTED_AND_ROLLBACK_READBACK_PASS",
+    "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+    "authority": "AOS-001723",
+    "cluster": "7694680278363095064",
+    "database": "aos_test_dec98ee23cfe_ti4_test",
+    "readonly": true,
+    "native_functions": [
+      {
+        "signature": "public.read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)",
+        "body_sha256": "7f32540c7113c978058a44e747510e50b5a735fd61328e7e04282b060db6ffe2",
+        "owner": "aos_physical_capacity_occupation_owner",
+        "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+        "native_body_exact": true,
+        "runtime_execute": false
+      },
+      {
+        "signature": "public.build_shared_parent_admission_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text)",
+        "body_sha256": "bf77e5029c15c745907fa76beedc79cee84893aaae02a810733cd266750d56d2",
+        "owner": "aos_physical_capacity_occupation_owner",
+        "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner,aos_model_eval_issuer_owner=X/aos_physical_capacity_occupation_owner}",
+        "native_body_exact": true,
+        "runtime_execute": false
+      },
+      {
+        "signature": "public.validate_shared_parent_admission_certificate_set(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea)",
+        "native_body_exact": true,
+        "owner": "aos_model_eval_issuer_owner",
+        "runtime_execute": false,
+        "physical_verifier_grant": false,
+        "signed_legs": 4,
+        "negative_cases": [
+          "UPDATE",
+          "DELETE",
+          "TRUNCATE",
+          "runtime_private_read"
+        ]
+      },
+      {
+        "name": "aos_shared_parent_admission_private.check_pending_origin",
+        "native_body_exact": true,
+        "body_sha256": "9b0778516fd81c2a0cef79384722f915b6140213e2ff99f9508b4938528e2bdf",
+        "owner": "aos_model_eval_issuer_owner"
+      },
+      {
+        "name": "aos_shared_parent_admission_private.immutable_pending_origin",
+        "native_body_exact": true,
+        "body_sha256": "4d2cc498d78993f7a858184f0f9f7428ba075fbf19aa4d1cab011450d81ef5e8",
+        "owner": "aos_model_eval_issuer_owner"
+      },
+      {
+        "name": "aos_shared_parent_admission_private.require_pending_completion",
+        "native_body_exact": true,
+        "body_sha256": "0cc61cc107ad38e73fccc0c3c58e895511edc21cef6bee6f4e8d13d46fc81fda",
+        "owner": "aos_model_eval_issuer_owner"
+      },
+      {
+        "name": "public.persist_shared_parent_admission_origin",
+        "native_body_exact": true,
+        "body_sha256": "52ea6339ee4c8f3ed8adb5911ac21c648beb38f28f1a78f730e65558c7201577",
+        "owner": "aos_model_eval_issuer_owner"
+      }
+    ],
+    "original_guard_readback": [
+      {
+        "table": "aos_physical_capacity_occupation_private.call_occupation",
+        "installed_in_this_fixture": false
+      },
+      {
+        "table": "aos_physical_capacity_occupation_private.call_occupation_event",
+        "installed_in_this_fixture": false
+      },
+      {
+        "table": "aos_physical_capacity_occupation_private.prepared_call_occupation",
+        "installed_in_this_fixture": false
+      },
+      {
+        "table": "aos_physical_capacity_occupation_private.prepared_judge_intent",
+        "installed_in_this_fixture": false
+      },
+      {
+        "table": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+        "installed_in_this_fixture": true,
+        "body_hash_exact": true
+      },
+      {
+        "table": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+        "installed_in_this_fixture": true,
+        "body_hash_exact": true
+      },
+      {
+        "table": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+        "installed_in_this_fixture": true,
+        "body_hash_exact": true
+      }
+    ],
+    "legacy_counts": {
+      "prepared_plan_risk": 0,
+      "prepared_shared_risk_description": 0
+    },
+    "caller_xid_state": "aborted",
+    "two_original_parent_holds_after_rollback": 0,
+    "positive_cases": 2,
+    "negative_cases": [],
+    "original_files_unchanged": true,
+    "execution_allowed": false,
+    "formal_root_provenance": false,
+    "full_admission_commit": false,
+    "database_writes": false
+  },
+  "scheme_consistent": true,
+  "risks": [
+    "No full risk ledger/unique TargetIntent/Judge actual dependency/end-channel or successful admission COMMIT implemented",
+    "Fixture Root is isolated test provenance only; formal deployment/Root/first-chain not authorized",
+    "Full seven original guards not all installed in this fixture; installed subset exact, original product unchanged",
+    "Prior lease expired before r2 launch; explicitly reconciled and officially renewed same owner after detection"
+  ],
+  "wake": "Original event is cached historical observation head18093f authority1703; does not describe current1723 nor authorize work",
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "formal_db_changed": false,
+  "hashes": {
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/legal-eval-application-result-r4.json": "0e4d488dfa8eb6bf28696eda4bd332a0fb14a36443ee2ce428ffa98d39a71753",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/source_newjudge_native_trial_1606.py": "f37d964683a4a01053f245e32bf9f31c3f61773cd886fb3ab686fdc02be80d3c",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/native-r1.log": "1072904383ac67e125180c73426c6b0a68bbff84266692ab5f5415e129ec8c7e",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/pending-origin-native-1723-r1-debit-installation.json": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/approval-window-origin.json": "642a04271671f5a02835968788e284f490198dc128131f74b06029dac9d53246",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/result-r1.json": "aba4e84f179d49b536fa2d3a9ab2c64f7f51496ad337eabbb7a9c652dc905e1a",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/build_whole_native_plan_1602.py": "e15d6228686ef64099a3d6b11e68b51fbcb90eacb6731000c24a67f39393a24e",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/implementation-plan.md": "213512cc7bd29838dd973bc6bb77fd9dccf109096d55ebafe15fb9cad95ec669",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/shared_identity_certificate_fixture.py": "b7674e9ce6cb1a4ca0d3289b13defaf4b499b80398fa6edd3bd26977f02f4111",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/pending-origin-native-1723-r1-input-installation.json": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/attempt-r1.json": "3916e3c43e73df10a205f68f25662c20ed3ab25eaad26bd3f5d070c99d1173c4",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/run-native-r1.py": "05de76a81f250699d02115e2a754588c26517804452125589d58697037c986a5",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/legal_model_prefix_for_application_r4.py": "86c056756595ad97ad1355ff4c5da4a22bcb5d466dcc96e3453603c8781ff9e2",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/pending-origin-native-1723-r1-case-installation.json": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/pending-origin-native-1723-r1-installation.json": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/legal-model-prefix-application-r4.json": "a63d17e30bec32a30a29208ee4e555290d7f74cf2f9a20370fcb9cddc96172a8",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/legal_eval_application_fixture_r4.py": "2e147c5a01e17f7c13666f9d460f16d783e7904adb6d1aab8e4b63960b2621a7",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/pending-origin-native-1723-r1-intent-installation.json": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r1/original_source_plan_fixture_r1.py": "b2db09ab5b2386a4c3cd6e8eb5f5574c28e9354709588a289be20f65abfb5119",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/independent-readback.json": "0e57a29765be83580498e7c51d19a4db647da904ddc7053f3dc7e74977d2f922",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/legal-eval-application-result-r4.json": "ead6b1437a061ffa82f260dd2a014e05ce4f4f5a08f5129c2b493d909dfdd9a7",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-input.json": "067fcb35c533f03299ead4fd2b621fc6496645ac19cf89bfcc5231715a200141",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-debit-installation.json": "e2edbb3fd65a7e13b2aaa4b42d6846718375327e963427e5eff0b7124f369e5e",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/native-origin-proof.json": "44f1ce0b7fb0f4095662fb62ee0190e3f73e4f682168251531cfc40db647639d",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/independent-readback.py": "21cd83fabdead25af042ee4348a9a9e4ce2c042a0dcae518273f3936a37e9703",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-intent-existing-row-negative.json": "6e0eeb56c1a93967c88c1dab2730cb38e2a6302b1e2d0575a6ebbf3acbe2cea1",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/source_newjudge_native_trial_1606.py": "09b34cc13d770cb104660a477971b051d1e7cf18fcf275b066dab5b26900b441",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-intent-installation.json": "e79147f5a706e5713f514da035910206dac098a20c75c2e73ecd685b88e1afee",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-parent-debit.json": "bde1acd6b3f5c210f62fa1619425e510deda10fc65eb25b2660880afc4d639db",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/attempt-r2.json": "195773c01f4185f8034950750eb318a3902511f696e7b8c20d1c496d2b038f98",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/approval-window-origin.json": "642a04271671f5a02835968788e284f490198dc128131f74b06029dac9d53246",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/native-r2.log": "2eb2c52d2487015d8ef07b56d5834da3a601275130b3211a40c8f1f74292a2b4",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/result-r2.json": "f028be2122bf35686e6eefc12120f586f9b4364593bd70b8c22550f2f6a489fd",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/run-native-r2.py": "5dd8c606f30c8d552720812f05b31b99ff4d13f95a8cd5867a29e9ba14973621",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-case-installation.json": "a236a88a73e38be6bc36b0d6db26d814b77594aa9e0bc65ace699a1ed2a8a3d6",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/build_whole_native_plan_1602.py": "e15d6228686ef64099a3d6b11e68b51fbcb90eacb6731000c24a67f39393a24e",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/implementation-plan.md": "213512cc7bd29838dd973bc6bb77fd9dccf109096d55ebafe15fb9cad95ec669",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/shared_identity_certificate_fixture.py": "b7674e9ce6cb1a4ca0d3289b13defaf4b499b80398fa6edd3bd26977f02f4111",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-case-binding.json": "da8ea9fc20a9dbf91d9e0aeb33e8b8b412194623f409e5cd912a8197022207ff",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-whole-source-plan-verification.json": "65bbe3894d3977ea48d7ba71d6506a8b71793770c9c1b0d042e11d2f6ad34259",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/legal_model_prefix_for_application_r4.py": "86c056756595ad97ad1355ff4c5da4a22bcb5d466dcc96e3453603c8781ff9e2",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-budget-fact.json": "907f2a02de45d3833c8abc73608b03f592752f1bcdfb9baaeaa56bac58070e75",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-input-binding.json": "3f810e536ce76cf509ac12b0fb0c3668a89019be4a46b7807d74863f2b1c8d63",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-intent.json": "b379f8048f483269cd328b45eb975dea85eb3a64855a9a2a7aab785613955a05",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/legal-model-prefix-application-r4.json": "28b8e05bd5cf4416260859f08e736779394096a03c809b920b431a8a3e9b048c",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-preparation.json": "46977e0b2dd58c16394149d873e828a552526c40cc7bb4ffc923859ceff0887e",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/legal_eval_application_fixture_r4.py": "2e147c5a01e17f7c13666f9d460f16d783e7904adb6d1aab8e4b63960b2621a7",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-installation.json": "e25e04b844bcde694e65ef3e4f5178e3d0c44ed1cdc2dba7e81b487d7102e002",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-input-installation.json": "78a76acb047f8e8a9684dea23a29d66198696b58b9ab44676c8168cc579f6e1a",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/original_source_plan_fixture_r1.py": "b2db09ab5b2386a4c3cd6e8eb5f5574c28e9354709588a289be20f65abfb5119",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-whole-source-plan-input.json": "5adc629486c8179473d1a1e3277c03fcb1dfb7567265538ac5d3838f3a92570a",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/pending-origin-native-1723-r2-guard-race.json": "11fedd7b75c8a3fbea0aadfc1089d2b59b45f7d05e5d67d82803dccbe5704833",
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "84db36590adfca8d5ef1ea8b2adff51d57f2791202c169492e53488f3261d632",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "e5be82820d591752a4b709c5803780761f96994ce71bf5e8d106d13e06a4429e",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/implementation-plan-1698.md": "ffd037cb2e369167d7a589cdb115c34420a6ec8f15acf1f4e90653d95e5e16a9"
+  }
+}

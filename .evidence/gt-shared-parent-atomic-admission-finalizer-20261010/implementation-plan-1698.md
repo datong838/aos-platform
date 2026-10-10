@@ -53,3 +53,11 @@ RED：新入口artifact不存在；GREEN：保留原库事务内原生DDL/Owner/
 
 ## AOS-001722 完整原生证书接线验收
 新隔离库aos_test_f675cc1af2ea_ti4_test实际原Source/两独立申请与父预算、预发布test Root、4条真实签名和7证书负门，原Source整体相邻/cleanup共1PASS135.30秒8warnings；独立只读回读函数body/Issuer闭权限/物理Owner无VERIFY/caller aborted/两hold零残留。r1-r6全部保留，r6局部矩阵通过但完整相邻RED明确不算整体GREEN。R7去掉1720已完成来源负门重复，没有删证书矩阵或Source相邻、没有放宽审批/身份/Root deadline；只修test fixture，不改产品。下一步仍为同完整Task的native可信保存/旧新未决risk账本、唯一Target Intent和Judge actual dependency及end-channel实际COMMIT，未交付整Task。
+
+## AOS-001723 可信原生来源保存与未完成结束门
+修改仅 services/aos-api/aos_api/aip_shared_parent_atomic_admission.py、services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py。显式新private schema归既有Issuer Owner，关闭PUBLIC/runtime/Provider issuer；可信记录保存四签名和原生来源/hash、精确两hold/account/caller xidpid。固定原始参数入口由Issuer SECURITY DEFINER先调用当前新证书核验（仍原Source/原审批/完整v3 claim），派生body及全部绑定列；不收可信docJSON、不存rawSource身份包、不增加VERIFY权限。INSERT-only，重复同plan同内容同caller返回同记录，不同内容/caller拒绝；RLS FORCE、不可变UPDATE/DELETE/TRUNCATE，基于原NOLOGIN Owner与关闭ACL。
+新记录只是same-transaction awaiting_full_admission候选，不是完整准入Receipt或已承诺physical obligation。新deferred结束触发器固定依赖本schema.require_complete_admission(uuid,text,xid8,integer)，当前不存在时明确拒绝COMMIT。未来该精确callee必须是原physical Owner、SECURITY DEFINER/固定search_path/void，且完整原预算、旧新未决全局物理风险/唯一Intent/Judge pending dependency/全部native effect+RI/真实结束协议完成后才能显式安装；缺失不降级，不用caller setting或新签名替代。旧七prepared拒绝门完全不改；新guard不是允许空manifest/空表提交的捷径，也不把决策clock当WAL期限。
+RED新保存artifact缺失；先原生事务内DDL/Owner/ACL/RLS/不可变/deferrable元数据和恶意caller拒绝及DDL回滚；再新保留库内实际原Source/两批准hold/四签名保存、同caller回读与真实COMMIT拒绝/独立aborted/零保存及hold。完整联合准入COMMIT/旧新风险计数仍未实现，全部Task退出条件保留，不写Delivery。不触正式DB，不自动安装，不涉及浏览器页面。
+
+## 1723-r1 原生截断拒绝断言修正
+332项相邻通过。r1真实保存后UPDATE/DELETE被不可变门拒绝；TRUNCATE在待deferred事件存在时由PG原生55006先拒绝，测试原只接受42501而失败。产品无需放宽或改动。r2新隔离数据库/新申请/新签名，断言精确55006与pending trigger events；后续原Source相邻及真实COMMIT缺失结束通道拒绝保留。原r1未知数据库结果仅只读，不重跑。
