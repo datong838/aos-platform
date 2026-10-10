@@ -1,0 +1,17 @@
+{
+  "authority_revision": "AOS-001688",
+  "head": "3af6aa7987036af84bf994bd0c62f9d043b65ac2",
+  "installation": {
+    "status": "GREEN",
+    "project_revision": "AOS-001688",
+    "projection_count": 8,
+    "schema_count": 9,
+    "task_receipt_count": 1988,
+    "delivery_receipt_count": 1960,
+    "event_count": 5721
+  },
+  "memory_write_skipped": true,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false
+}

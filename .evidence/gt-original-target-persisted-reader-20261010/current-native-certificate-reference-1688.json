@@ -1,0 +1,27 @@
+{
+  "authority_revision": "AOS-001688",
+  "task": "gt-original-target-persisted-reader-20261010",
+  "head": "3af6aa7987036af84bf994bd0c62f9d043b65ac2",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/current-native-certificate-reference-1687.json",
+      "sha256": "1e80f251342c41d82f3bc1dfd4b02600700ee982a61d1f3fde02969997875545"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/constraint-selection-plan-1687.md",
+      "sha256": "bda7c227b40714023a3b58ef42658c6a076b04fed24cbe5bcd57570680bb2476"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/constraint-selection-review-1687.md",
+      "sha256": "377b57c1765826d9a2c80b50d1e5a131b14fe89ecfe6a2fb68ef78a20630bedd"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/constraint-selection-current-r3-1687.json",
+      "sha256": "6670d8540346a0b3492acb6045d6a72f726d5bcc50ceb5ec44f684a8b73c578c"
+    }
+  ]
+}
