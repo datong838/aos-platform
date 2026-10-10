@@ -1,0 +1,111 @@
+{
+  "authority": "AOS-001691",
+  "head": "76e25254a516cc3a33882a658e67f746967d3db1",
+  "identity": {
+    "database": "aos_test_05f1a1dcd51f_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "catalog_path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/full-effects-catalog-current-1691.json",
+  "catalog_sha256": "f7235cb21dc95e86fc89bf86fb41146982b5cd116e545e06fed961f5d0a65b3d",
+  "relation_count": 642,
+  "foreign_key_count": 721,
+  "trigger_count": 3677,
+  "seed_count": 26,
+  "direct_trigger_count": 49,
+  "direct_functions": [
+    "aos_model_eval_issuer_private.certificate_epoch_transition()",
+    "aos_model_eval_issuer_private.derive_shared_parent_identity()",
+    "aos_model_eval_issuer_private.identity_epoch_transition()",
+    "aos_model_eval_issuer_private.initialize_certificate_epoch()",
+    "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+    "pg_catalog.\"RI_FKey_check_ins\"()",
+    "pg_catalog.\"RI_FKey_check_upd\"()",
+    "pg_catalog.\"RI_FKey_noaction_upd\"()",
+    "public.aip_budget_cost_fence_guard_a0v_126()",
+    "public.binding_evaluator_read_lock_only_a0v144()",
+    "public.guard_ar2_budget_bucket_update()"
+  ],
+  "matching_original_plpgsql_contracts": [
+    {
+      "function": "aos_model_eval_issuer_private.certificate_epoch_transition()",
+      "body_hash": "c6373c918c8974f413f8198a51b15b9ca3810ef0551637d03aaacaaf663c74a0",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_model_eval_issuer_private.derive_shared_parent_identity()",
+      "body_hash": "16f363f28d05bdab40ce5cef13fae0baf4debc76ce2ec269894e11254cfd9c60",
+      "writes": [
+        {
+          "relation": "aos_model_eval_issuer_private.identity_epoch",
+          "operation": "INSERT"
+        },
+        {
+          "relation": "aos_model_eval_issuer_private.identity_epoch",
+          "operation": "UPDATE"
+        }
+      ],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_model_eval_issuer_private.identity_epoch_transition()",
+      "body_hash": "109d0f495cc9095cce3ae7d27a0e8d03d674a3fac09cf8845884e8f6c2d44dc6",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_model_eval_issuer_private.initialize_certificate_epoch()",
+      "body_hash": "6fc563aed285b2876084be35a6b51fdd17f9711bbab4154ec1630fb10f964aa7",
+      "writes": [
+        {
+          "relation": "aos_model_eval_issuer_private.certificate_epoch",
+          "operation": "INSERT"
+        }
+      ],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "body_hash": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "public.aip_budget_cost_fence_guard_a0v_126()",
+      "body_hash": "a6578978be73a7132b8d11abaad9b221926816fe0323f1c6cb2c8bc05b41dff9",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "public.binding_evaluator_read_lock_only_a0v144()",
+      "body_hash": "84ffec865cb2a8e502270b0ebe2b293c9c740dee560cea8dffdfe3d61ce30b99",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    },
+    {
+      "function": "public.guard_ar2_budget_bucket_update()",
+      "body_hash": "6caf5c743dc6b283ee53fc714c47dd29116e69c4927e417c4507568f84916357",
+      "writes": [],
+      "review": "manual visible PLpgSQL SQL write upper bound; branch union, NEW assignments stay original event; RAISE-only has no additional SQL writes"
+    }
+  ],
+  "body_drift": [],
+  "unreviewed_direct_functions": [
+    "pg_catalog.\"RI_FKey_check_ins\"()",
+    "pg_catalog.\"RI_FKey_check_upd\"()",
+    "pg_catalog.\"RI_FKey_noaction_upd\"()"
+  ],
+  "empty_effect_rejection": "TRIGGER_EFFECT_REQUIRED",
+  "partial_effect_rejection": "TRIGGER_EFFECT_REQUIRED",
+  "source_module_hashes": {
+    "services/aos-api/aos_api/aip_physical_capacity_joint_events.py": "e96e586a59cd1a36f40908d2dd5ceacb3e343951e716377d06edfbbea97e122c",
+    "services/aos-api/aos_api/aip_physical_capacity_joint_catalog.py": "29bf7211abbcc6d0499792304ca378d7a7e2061fee133fcb0b4496e4170979e3",
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": "a71944ef653421b7e38038fdf99de3b244cc3a793ebf0f606c0e66d63e8c6bb0"
+  },
+  "full_native_effects_approved": false,
+  "complete_event_closure_proven": false,
+  "actual_event_queue_proven": false,
+  "formal_binary_provenance_verified": false,
+  "execution_allowed": false
+}

@@ -1,0 +1,58 @@
+{
+  "authority": "AOS-001691",
+  "primary_source_url": "https://raw.githubusercontent.com/postgres/postgres/REL_16_14/src/backend/utils/adt/ri_triggers.c",
+  "release_tag": "REL_16_14",
+  "web_primary_source_read": true,
+  "full_original_source_bytes_downloaded": false,
+  "full_original_source_sha256": null,
+  "direct_download_error": {
+    "curl_exit": 35,
+    "reason": "Connection reset by peer",
+    "business_effect": false
+  },
+  "reviewed_ranges": [
+    {
+      "lines": [
+        220,
+        420
+      ],
+      "path": "check_ins/check_upd delegate RI_FKey_check, key-share lookup uses pf operator"
+    },
+    {
+      "lines": [
+        424,
+        507
+      ],
+      "path": "PK replacement check uses pp operator and key-share lookup"
+    },
+    {
+      "lines": [
+        545,
+        689
+      ],
+      "path": "noaction_upd delegates ri_restrict; FK key-share lookup uses pf operator"
+    },
+    {
+      "lines": [
+        2127,
+        2293
+      ],
+      "path": "table-owner SPI planning/checking, snapshot/currentness checks and rule rewrite error"
+    },
+    {
+      "lines": [
+        2631,
+        2800
+      ],
+      "path": "FK key significance uses ff operator; equality may invoke cast before function"
+    }
+  ],
+  "inferences": [
+    "Visible three selected callback routes construct SELECT key-share checks; unrelated cascade/set action routes are distinct, not blanket empty effects for every RI function.",
+    "All pf/pp/ff inputs and comparator symbols need exact current binding; table column type equality alone was insufficient.",
+    "Rule rewrite/planner/index callbacks and security context are extra prerequisites; no source reading certifies deployed native binary."
+  ],
+  "installed_binary_source_match_proven": false,
+  "native_effects_approved": false,
+  "execution_allowed": false
+}

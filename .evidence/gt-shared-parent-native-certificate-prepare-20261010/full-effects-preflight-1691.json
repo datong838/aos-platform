@@ -1,0 +1,115 @@
+{
+  "authority": "AOS-001691",
+  "head": "76e25254a516cc3a33882a658e67f746967d3db1",
+  "leases": 27,
+  "current_owned_tasks": [
+    {
+      "task": "gt-shared-budget-fence-order-20261008",
+      "expiry": "2026-10-10T03:00:34.597543+00:00",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_budget_reservation.py",
+        "aos-platform/.evidence/gt-shared-budget-fence-order-20261008"
+      ]
+    },
+    {
+      "task": "gt-shared-description-origin-reader-20261010",
+      "expiry": "2026-10-10T03:00:34.597543+00:00",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_shared_parent_description_origin_reader.py",
+        "aos-platform/services/aos-api/tests/aip/test_shared_parent_description_origin_reader_pg.py",
+        "aos-platform/.evidence/gt-shared-description-origin-reader-20261010"
+      ]
+    },
+    {
+      "task": "gt-judge-budget-parent-20261008",
+      "expiry": "2026-10-10T03:00:34.597543+00:00",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_budget.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_budget_authority.py",
+        "aos-platform/services/aos-api/alembic/versions/a0v_159_model_judge_budget.py",
+        "aos-platform/services/aos-api/aos_api/aip_budget_reservation_store.py",
+        "aos-platform/.evidence/gt-judge-budget-parent-20261008"
+      ]
+    },
+    {
+      "task": "gt-model-typed-proof-20261008",
+      "expiry": "2026-10-10T03:00:34.597543+00:00",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_contracts.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_authority.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_reader.py",
+        "aos-platform/services/aos-api/alembic/versions/a0v_158_model_eval_execution_authority.py",
+        "aos-platform/services/aos-api/tests/aip/test_model_eval_execution_contracts.py",
+        "aos-platform/services/aos-api/tests/aip/test_model_eval_execution_authority_pg.py",
+        "aos-platform/.evidence/gt-model-typed-proof-20261008"
+      ]
+    },
+    {
+      "task": "gt-judge-call-authority-20261008",
+      "expiry": "2026-10-10T03:00:34.597543+00:00",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_action_policy.py",
+        "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+        "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_authorization.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_request_store.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_action.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_authority.py",
+        "aos-platform/services/aos-api/tests/aip/test_model_eval_judge_action_boundary.py",
+        "aos-platform/services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py",
+        "aos-platform/.evidence/gt-judge-call-authority-20261008"
+      ]
+    },
+    {
+      "task": "gt-original-target-persisted-reader-20261010",
+      "expiry": "2026-10-10T03:00:34.597543+00:00",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_model_original_target_result_reader.py",
+        "aos-platform/services/aos-api/tests/aip/test_model_original_target_result_reader_pg.py",
+        "aos-platform/.evidence/gt-original-target-persisted-reader-20261010"
+      ]
+    },
+    {
+      "task": "gt-shared-parent-native-certificate-prepare-20261010",
+      "expiry": "2026-10-10T03:00:34.597543+00:00",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py",
+        "aos-platform/services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py",
+        "aos-platform/.evidence/gt-shared-parent-native-certificate-prepare-20261010"
+      ]
+    },
+    {
+      "task": "gt-shared-parent-native-executor-set-20261010",
+      "expiry": "2026-10-10T03:00:34.597543+00:00",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_shared_parent_executor_set_reader.py",
+        "aos-platform/services/aos-api/tests/aip/test_shared_parent_executor_set_reader_pg.py",
+        "aos-platform/.evidence/gt-shared-parent-native-executor-set-20261010"
+      ]
+    },
+    {
+      "task": "gt-shared-parent-certificate-identity-20261010",
+      "expiry": "2026-10-10T03:00:34.597543+00:00",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_model_shared_parent_certificate_identity.py",
+        "aos-platform/services/aos-api/tests/aip/test_model_shared_parent_certificate_identity_pg.py",
+        "aos-platform/.evidence/gt-shared-parent-certificate-identity-20261010"
+      ]
+    },
+    {
+      "task": "gt-atomic-model-admission-20261008",
+      "expiry": "2026-10-10T03:00:34.597543+00:00",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation.py",
+        "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py",
+        "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py",
+        "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_owner.py",
+        "aos-platform/services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py",
+        "aos-platform/services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py",
+        "aos-platform/.evidence/gt-atomic-model-admission-20261008"
+      ]
+    }
+  ],
+  "overlap": false,
+  "execution_allowed": false
+}

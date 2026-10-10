@@ -1,0 +1,14 @@
+{
+  "authority": "AOS-001691",
+  "evidence": {
+    "full-effects-current-summary-1691.json": "6f6928eb20e98725b39b91ff8d6b775e66aee5ca74ae493cb4ec7e316fc1e1bf",
+    "all-ri-comparisons-1691.json": "14aef1ef499cbaf7240b51d9a33c154af2237c4d47a6721000cf08b0d1ab2588",
+    "ri-read-surface-1691.json": "c6d642eb579b5b99eb9c773414002bd7549b2f6eba63b7fcb451148abcf8a9e8",
+    "pg16-ri-primary-source-review-1691.json": "df7531b8fc9a03fee973470698058567f870b0297dc3cd85fb589d58899451d0"
+  },
+  "current_partial_effect_rejected": true,
+  "full_catalog_hash": "f7235cb21dc95e86fc89bf86fb41146982b5cd116e545e06fed961f5d0a65b3d",
+  "full_native_effects_approved": false,
+  "complete_event_closure_proven": false,
+  "execution_allowed": false
+}
