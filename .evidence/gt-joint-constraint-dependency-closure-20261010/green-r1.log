@@ -1,0 +1,1479 @@
+EEEEEEEEEEEEEEEEE                                                        [100%]
+==================================== ERRORS ====================================
+___ ERROR at setup of test_multihop_reverse_fk_and_trigger_write_fixed_point ___
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+__________ ERROR at setup of test_cycles_and_catalog_order_are_stable __________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+_ ERROR at setup of test_incomplete_or_drifted_installation_rejected[unknown_seed] _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+_ ERROR at setup of test_incomplete_or_drifted_installation_rejected[unknown_fk] _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+_ ERROR at setup of test_incomplete_or_drifted_installation_rejected[unknown_write] _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+_ ERROR at setup of test_incomplete_or_drifted_installation_rejected[missing_effect] _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+_ ERROR at setup of test_incomplete_or_drifted_installation_rejected[hash_drift] _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+_ ERROR at setup of test_incomplete_or_drifted_installation_rejected[disabled] _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+_ ERROR at setup of test_incomplete_or_drifted_installation_rejected[duplicate_fk] _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+_ ERROR at setup of test_incomplete_or_drifted_installation_rejected[duplicate_trigger] _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+_ ERROR at setup of test_incomplete_or_drifted_installation_rejected[duplicate_effect] _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+_ ERROR at setup of test_incomplete_or_drifted_installation_rejected[ambiguous_relation] _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+_ ERROR at setup of test_incomplete_or_drifted_installation_rejected[empty_seed] _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+____________ ERROR at setup of test_internal_ri_never_auto_approved ____________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+___________ ERROR at setup of test_invalid_function_hash_rejected[] ____________
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+______ ERROR at setup of test_invalid_function_hash_rejected[not-a-hash] _______
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+_ ERROR at setup of test_invalid_function_hash_rejected[AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA] _
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _isolated_postgres_database():
+        """Run the test session against a disposable database, never shared aos_meta."""
+        if os.getenv("AOS_TEST_USE_SHARED_DATABASE") == "1":
+            yield
+            return
+    
+        base_dsn = os.getenv(
+            "AOS_DATABASE_URL",
+            "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
+        )
+        parts = conninfo_to_dict(base_dsn)
+        # Every standard test session owns and drops this database.  The explicit
+        # suffix lets destructive TI-4 migration drills prove they are never using
+        # the shared development database.
+        database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
+        admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
+        test_dsn = URL.create(
+            "postgresql",
+            username=parts.get("user"),
+            password=parts.get("password"),
+            host=parts.get("host"),
+            port=int(parts["port"]) if parts.get("port") else None,
+            database=database_name,
+        ).render_as_string(hide_password=False)
+    
+>       with psycopg.connect(admin_dsn, autocommit=True) as conn:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/conftest.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=aos_app password=aos_dev_only_change_me dbname=aos_meta host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = True, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_multihop_reverse_fk_and_trigger_write_fixed_point
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_cycles_and_catalog_order_are_stable
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_incomplete_or_drifted_installation_rejected[unknown_seed]
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_incomplete_or_drifted_installation_rejected[unknown_fk]
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_incomplete_or_drifted_installation_rejected[unknown_write]
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_incomplete_or_drifted_installation_rejected[missing_effect]
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_incomplete_or_drifted_installation_rejected[hash_drift]
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_incomplete_or_drifted_installation_rejected[disabled]
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_incomplete_or_drifted_installation_rejected[duplicate_fk]
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_incomplete_or_drifted_installation_rejected[duplicate_trigger]
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_incomplete_or_drifted_installation_rejected[duplicate_effect]
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_incomplete_or_drifted_installation_rejected[ambiguous_relation]
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_incomplete_or_drifted_installation_rejected[empty_seed]
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_internal_ri_never_auto_approved
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_invalid_function_hash_rejected[]
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_invalid_function_hash_rejected[not-a-hash]
+ERROR services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py::test_invalid_function_hash_rejected[AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA]
+7 warnings, 17 errors in 0.45s

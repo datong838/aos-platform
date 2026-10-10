@@ -1,0 +1,11 @@
+# 联合结束依赖闭包组件复审与验证
+
+17项新逻辑专项+3项原prepare/reader相邻共20PASS/0.55秒，禁止psycopg连接跑器确认连接0。RED确实缺模块；首次普通pytest被autouse数据库夹具拦截，5433连接拒绝，未进入新逻辑/无数据库效果，green-r1完整保留。改为已有noconftest/禁止connect路径，新结果不是跳过需要数据库的产品测试。
+
+完整组件实现固定不动点：双向FK保守闭包→经审查精确hash触发器影响写表→后续FK与trigger再展开，循环与反向cascade不丢失；缺合同/body漂移/disabled/duplicate/未知table严格拒绝。即使internal也不自动信任。纯dataclass输入/稳定排序/不改catalog，不提供SQL、权限、COMMIT或Root信任；输出execution_allowed不可通过初始化改true。
+
+当前R22保留库真实READONLY：638 relations/712 FK/3629 triggers，精确catalog摘要绑定原大文件hash。没有构造空的已审查effects冒充批准；原安装目录明确TRIGGER_EFFECT_REQUIRED拒绝。该负门证明未审核目录不会静默放行，未证明安装合同齐全、真实事件队列或合法joint。
+
+与方案一致；Owner/ACL/C库精确可信来源由正式安装审核原合同另行保证，function prosrc hash不等于C库binary hash或语义正确，代码docstring明确。FK连通全图有可能大于真实写入集，这是有意保守上界，不能称为某个事务事件queue；任意未审查触发器仍拒绝，后续须逐相关function精确阅读真实效果，不用regex猜动态SQL。首链、Source最终时限、WAL ACK、正式Root及完整finalizer未完成。
+
+组件可交付给完整joint安装审计；Task9/10仍无Delivery；本组件Delivery仅纯闭包与当前目录负门，不授业务权限、不放行全joint、不改当前经营next gate。无UI变更故浏览器不适用。后续登记相关函数影响合同与安装审计，再把原预算/Source/唯一Intent/clock纳入完整结束协议，Goal active。

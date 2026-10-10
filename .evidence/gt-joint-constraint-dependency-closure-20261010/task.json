@@ -1,0 +1,24 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "gt-joint-constraint-dependency-closure-20261010",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001684",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/aip_physical_capacity_joint_catalog.py",
+    "aos-platform/services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py",
+    "aos-platform/.evidence/gt-joint-constraint-dependency-closure-20261010"
+  ],
+  "excluded_scope": [
+    "formal-DB-Host-worker-Provider",
+    "old-source-and-migration",
+    "runtime-joint-finalizer-or-business-execution"
+  ],
+  "expected_outputs": [
+    "Installed catalog multi-hop FK and reviewed trigger-effect closure with strict missing/drift rejection",
+    "RED-GREEN/adjacent and current retained catalog READONLY rejection, no execution grant",
+    "Full joint composition remains pending; exact checkpoints and authority synchronization"
+  ],
+  "lease_expires_at": "2026-10-10T02:14:03.593786+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-10T08:14:04+08:00"
+}

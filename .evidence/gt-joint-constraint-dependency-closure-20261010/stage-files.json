@@ -1,0 +1,15 @@
+[
+  ".evidence/gt-joint-constraint-dependency-closure-20261010/current-catalog-negative-r1.json",
+  ".evidence/gt-joint-constraint-dependency-closure-20261010/current-catalog-negative-summary-r1.json",
+  ".evidence/gt-joint-constraint-dependency-closure-20261010/green-r1.log",
+  ".evidence/gt-joint-constraint-dependency-closure-20261010/green-r2.log",
+  ".evidence/gt-joint-constraint-dependency-closure-20261010/implementation-plan.md",
+  ".evidence/gt-joint-constraint-dependency-closure-20261010/pure-result-r2.json",
+  ".evidence/gt-joint-constraint-dependency-closure-20261010/read-current-catalog-r1.py",
+  ".evidence/gt-joint-constraint-dependency-closure-20261010/red-r1.log",
+  ".evidence/gt-joint-constraint-dependency-closure-20261010/review.md",
+  ".evidence/gt-joint-constraint-dependency-closure-20261010/run-pure-r2.py",
+  ".evidence/gt-joint-constraint-dependency-closure-20261010/task.json",
+  "services/aos-api/aos_api/aip_physical_capacity_joint_catalog.py",
+  "services/aos-api/tests/aip/test_physical_capacity_joint_catalog.py"
+]

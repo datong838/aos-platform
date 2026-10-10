@@ -1,0 +1,18 @@
+{
+  "identity": {
+    "database": "aos_test_616a4d9f71e0_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "relation_count": 638,
+  "foreign_key_count": 712,
+  "trigger_count": 3629,
+  "catalog_sha256": "385aaae7aec243498f4f894f2c5f3f245bd3531ae98d40460a5ddab36d34a34b",
+  "reviewed_effect_contracts": 0,
+  "actual_current_catalog_rejection": "TRIGGER_EFFECT_REQUIRED",
+  "execution_allowed": false,
+  "actual_event_queue_proven": false,
+  "finalizer_implemented": false,
+  "module_hash": "29bf7211abbcc6d0499792304ca378d7a7e2061fee133fcb0b4496e4170979e3",
+  "exact_catalog_file_sha256": "5a45c7d39d23920f6ef0a6d19f049ed1c9df2d4d3a55446b9d51007f83c6bc23"
+}
