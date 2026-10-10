@@ -4,11 +4,12 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-capacity-source-publication-20261006",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001764",
+  "authority_revision": "AOS-001765",
   "task_base_revision": "AOS-001414",
-  "step": "complete-catalog-family-native-identity-green-full-signed-source-and-actual-COMMIT-pending",
+  "step": "restricted-caller-fixed-real-signed-Source-COMMIT-fresh-consumer-green-full-whole-caller-ending-next",
   "evidence_files": [
-    ".evidence/gt-capacity-source-publication-20261006/catalog-family-1764.json"
+    ".evidence/gt-capacity-source-publication-20261006/catalog-family-1764.json",
+    ".evidence/gt-capacity-source-publication-20261006/signed-source-1765.json"
   ],
   "code_files": [
     "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py"

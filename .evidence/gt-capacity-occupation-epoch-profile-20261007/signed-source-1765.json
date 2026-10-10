@@ -1,0 +1,10 @@
+{
+  "authority": "AOS-001765",
+  "code_commit": "f1238668075347d56ea05c01bc07e8d00730fea9",
+  "verification": ".evidence/gt-capacity-source-catalog-profile-20261011/signed-source-r2/verification.json",
+  "verification_sha256": "e536704b28358e214187e35fedaf2c6a4cc4f0e945c66ef0397857154197379c",
+  "source_actual_COMMIT": true,
+  "engine_actual_COMMIT": false,
+  "original_whole_shared_parent_timing_not_yet_proven": true,
+  "execution_allowed": false
+}
