@@ -4,7 +4,7 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-capacity-source-publication-20261006",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001765",
+  "authority_revision": "AOS-001766",
   "task_base_revision": "AOS-001414",
   "step": "restricted-caller-fixed-real-signed-Source-COMMIT-fresh-consumer-green-full-whole-caller-ending-next",
   "evidence_files": [
