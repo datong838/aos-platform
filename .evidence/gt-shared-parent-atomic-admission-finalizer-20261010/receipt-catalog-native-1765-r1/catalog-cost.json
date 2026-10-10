@@ -1,0 +1,32 @@
+{
+  "database": "aos_test_ffc3891d30cf_ti4_test",
+  "samples": [
+    {
+      "iteration": 0,
+      "elapsed_seconds": 0.07328487500490155,
+      "returned": true
+    },
+    {
+      "iteration": 1,
+      "elapsed_seconds": 0.019891458003257867,
+      "returned": true
+    },
+    {
+      "iteration": 2,
+      "elapsed_seconds": 0.019747915997868404,
+      "returned": true
+    }
+  ],
+  "native_stats": [
+    {
+      "schemaname": "aos_capacity_publication_private",
+      "funcname": "require_original_fact_boundary",
+      "calls": 3,
+      "total_time": 110.520625,
+      "self_time": 110.520625
+    }
+  ],
+  "session_only_tracking": true,
+  "persistent_grants_added": false,
+  "read_only": true
+}

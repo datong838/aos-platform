@@ -1,0 +1,44 @@
+[
+  {
+    "signature": "aos_capacity_publication_private.require_original_fact_boundary()",
+    "exists": true,
+    "new_exact": true,
+    "actual_body_sha256": "79c97b994497d2f365b74580d02d99676dae735dde5a65d92f5ceb4eadb84cd9",
+    "new_body_sha256": "79c97b994497d2f365b74580d02d99676dae735dde5a65d92f5ceb4eadb84cd9",
+    "owner": "aos_capacity_publication_owner",
+    "config": [
+      "search_path=pg_catalog"
+    ]
+  },
+  {
+    "signature": "aos_capacity_publication_private.require_original_epoch_pair_boundary()",
+    "exists": true,
+    "new_exact": false,
+    "actual_body_sha256": "14a149a2aeb315ec72b22fdfbb6e2823fcee42b6d0c2fefb0f9e95543266662f",
+    "new_body_sha256": "e4615248f577432d28748be0d0171481b8bfb315610ab126d763d9685dc87383",
+    "owner": "aos_capacity_publication_owner",
+    "config": [
+      "search_path=pg_catalog"
+    ]
+  },
+  {
+    "signature": "aos_capacity_publication_private.require_original_evidence_boundary()",
+    "exists": true,
+    "new_exact": false,
+    "actual_body_sha256": "46c58a291d3b782a43368231aacd840c859a80645c41f95aa808c0812155641f",
+    "new_body_sha256": "51b7dfea18b14c8100b3bc1077641490d8e6c5d59077a2a85962f480b4f956a2",
+    "owner": "aos_capacity_publication_owner",
+    "config": [
+      "search_path=pg_catalog"
+    ]
+  },
+  {
+    "signature": "aos_capacity_publication_private.require_current_source_installation()",
+    "exists": false,
+    "new_exact": false,
+    "actual_body_sha256": null,
+    "new_body_sha256": "de0bfbb0ac7928416ddddfe16da8e4df97cdd0855c7bcce4ebe1a03674db8f73",
+    "owner": null,
+    "config": null
+  }
+]

@@ -1,0 +1,71 @@
+{
+  "database": "aos_test_ffc3891d30cf_ti4_test",
+  "cluster": "7694680278363095064",
+  "caller_state": "aborted",
+  "other_backends": 0,
+  "shared_rows": {
+    "aos_shared_parent_admission_private.pending_origin": 0,
+    "aos_shared_parent_physical_private.initial_target_obligation": 0,
+    "aos_shared_parent_physical_private.target_intent": 0,
+    "aos_shared_parent_physical_private.judge_dependency": 0,
+    "aos_shared_parent_admission_private.end_authority": 0,
+    "aos_shared_parent_physical_private.initial_call_authority": 0,
+    "aos_shared_parent_physical_private.initial_window_obligation": 0,
+    "aos_shared_parent_physical_private.complete_parent_risk": 0,
+    "aos_shared_parent_physical_private.complete_receipt_v2": 0
+  },
+  "source_tables": {
+    "aos_capacity_publication_private.deployment_anchor": 1,
+    "aos_capacity_publication_private.root_snapshot": 1,
+    "aos_capacity_publication_private.origin": 1,
+    "aos_capacity_publication_private.root_entry": 3,
+    "aos_capacity_publication_private.registry_epoch": 1,
+    "aos_capacity_publication_private.document": 3,
+    "aos_capacity_publication_private.origin_withdrawal": 0,
+    "aos_capacity_publication_private.global_account": 1,
+    "aos_capacity_publication_private.global_provider": 1,
+    "aos_capacity_publication_private.source_pending": 1,
+    "aos_capacity_publication_private.source_publication": 1,
+    "aos_capacity_publication_private.source_provenance": 1
+  },
+  "roles": [
+    {
+      "rolname": "aos_capacity_publication_owner",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreaterole": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_model_eval_issuer_owner",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreaterole": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_provider_capacity_issuer",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreaterole": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_provider_capacity_occupation",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreaterole": false,
+      "rolbypassrls": false
+    }
+  ],
+  "helper_count": 0,
+  "track_functions_acl": [],
+  "catalog_profile_error": "CAPACITY_CATALOG_PROFILE_INSTALLATION_DRIFTED",
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "read_only": true
+}

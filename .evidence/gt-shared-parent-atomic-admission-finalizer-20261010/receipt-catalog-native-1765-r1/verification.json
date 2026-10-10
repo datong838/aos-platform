@@ -1,0 +1,39 @@
+{
+  "status": "NATIVE_INITIAL_WINDOW_RETURNED_RECEIPT_SOURCE_EXPIRED_RED",
+  "authority_revision": "AOS-001765",
+  "head": "bde9b804b8b20b4b79bfa2a7f2156f372009ea67",
+  "database": "aos_test_ffc3891d30cf_ti4_test",
+  "native_caller_aborted": true,
+  "zero_shared_rows": true,
+  "receipt_rejection": "CAPACITY_CURRENT_SOURCE_EXPIRED",
+  "outer_call_seconds_sum": 108.85947300000001,
+  "teardown_separate_failure": "CAPACITY_ISSUER_CONNECTION_FAILED",
+  "cleanup_catalog_drift": {
+    "fact_new_exact": true,
+    "pair_new_exact": false,
+    "evidence_new_exact": false,
+    "installation_exists": false
+  },
+  "catalog_cost_limit": "isolated FACT only; not complete profile or complete Source path benchmark",
+  "unreached": [
+    "receipt_v2_positive",
+    "final_physical_positive",
+    "late_writer_rejection",
+    "actual_missing_end_commit_rejection"
+  ],
+  "product_files_unchanged": true,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "next_registered_steps": [
+    "complete original audit cost path investigation without dropping checks or increasing TTL",
+    "fresh owned fixture exact restoration before subsequent native Receipt attempt",
+    "native ending only after actual Receipt"
+  ],
+  "evidence_hashes": {
+    "result-r2.json": "22257bcf9221b422d21491da45775e516ba05a7c1fbe4deca254dae8c5f24dfc",
+    "native-call-timings.jsonl": "80e3acd01bc00cb71e44574acef6ef3359d4a382272b4b8169c0b97f26867b21",
+    "independent-readback.json": "ad20311209d9ee1ed5ea97e5c4c41aa2b4bf447860d32677757f273ae19628e7",
+    "catalog-cost.json": "bc388b2e156a3eeab1b1683b865c5bfbbfd567737b5fb9159f80aa71a3f0c56a",
+    "catalog-cleanup-identity.json": "effa9f741d5c4b888ab66858c0b47f8e3e2c2c0b1231cc2137dfa1d02b42f6bb"
+  }
+}
