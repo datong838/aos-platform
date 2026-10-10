@@ -4,11 +4,10 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001744",
+  "authority_revision": "AOS-001745",
   "task_base_revision": "AOS-001698",
-  "step": "native-pending-event-and-original-cutover-protocol-next",
+  "step": "full-event-ending-current-event-and-postdecision-fence-design-next",
   "evidence_files": [
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-positive-verification-1720.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-positive-1720-r6/independent-readback.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/persisted-origin-delegate-investigation-1721.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/certificate-delegate-verification-1721.json",
@@ -39,7 +38,8 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/event-ri-inventory-1740.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/certificate-phase-verification-1741.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/event-ri-wait-independent-1742.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/write-closure-verification-1743.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/write-closure-verification-1743.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/native-pending-probe-1744-r2/verification.json"
   ],
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
