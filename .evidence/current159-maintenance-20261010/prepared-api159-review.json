@@ -1,0 +1,72 @@
+{
+  "status": "COMMITTED_API_RESTORATION_ARTIFACT_AND_REAL_READONLY_PREFLIGHT_VERIFIED",
+  "source": {
+    "status": "COMMITTED_STARTUP_SOURCE_MATERIALIZED",
+    "files": 5604,
+    "archive_sha256": "1ced6e700233869394e0e843284130b48a345e7ff712f4ddcd4fd1ac24c3a942",
+    "manifest_sha256": "ed69fd4241bcebae2ef56f7a19f65b90696f23a71406149ff37a17223b70c117",
+    "database_effects": 0,
+    "service_start_attempted": false,
+    "head": "836b28f73d52e75794fb77700423de460d246106",
+    "authority": "AOS-001710",
+    "task": "current159-maintenance-20261010",
+    "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/api159-source-132b92e20d26",
+    "migration_files": 2487,
+    "source_paths": [
+      "services/aos-api/aos_api",
+      "services/aos-api/alembic",
+      "services/aos-api/alembic.ini",
+      "scripts",
+      "bundles/candidates/ecommerce"
+    ]
+  },
+  "preflight": {
+    "status": "EXPORTED_SIGNED_STARTUP_INPUTS_VERIFIED_SCHEMA_DRIFT_REJECTED",
+    "exported_code_head": "a0v_159",
+    "signed_crypto": true,
+    "four_build_sources_match": true,
+    "published_four_hashes_match": true,
+    "installation_approved": true,
+    "runtime_bindings": 0,
+    "expected_rejection": "PREVIEW_CODE_SCHEMA_DRIFT",
+    "database_effects": 0,
+    "service_start_attempted": false,
+    "source_head": "836b28f73d52e75794fb77700423de460d246106",
+    "source_manifest_sha256": "ed69fd4241bcebae2ef56f7a19f65b90696f23a71406149ff37a17223b70c117",
+    "task": "current159-maintenance-20261010",
+    "authority": "AOS-001710"
+  },
+  "failed_exports": [
+    {
+      "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/api159-source-d3aa0a67ab5d",
+      "terminal": "EXPORTED_PERMISSIONS_DRIFT",
+      "retained": true,
+      "preflight_attempted": false,
+      "service_start_attempted": false,
+      "database_effects": 0
+    }
+  ],
+  "tests": {
+    "targeted_and_adjacent_pass": 136,
+    "skip": 0
+  },
+  "review": {
+    "scope": "original maintenance evidence and new private recovery source only",
+    "product_source_edits": 0,
+    "existing_data_effects": 0,
+    "exact_migration_subset": 2487,
+    "archive_entries": 5604,
+    "no_symlinks_or_special_records": true,
+    "private_ancestors_and_files": true,
+    "source_after_real_preflight_exact": true,
+    "original_signed_bundle_sources_and_crypto_current": true,
+    "current_schema_rejection_retained": true,
+    "task_delivery": false
+  },
+  "remaining": [
+    "Original current zero-execution off closure, second consistent backup/full independent restore and original158/159 COMMIT",
+    "API launch configuration must bind prepared source and original dependency runtime before startup; existing registered API still targets dirty worktree",
+    "Post-migration actual signed API/Web start and eight browser workbenches",
+    "Business Host/worker/Provider authority and natural first chain remain independently pending"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "status": "COMMITTED_STARTUP_SOURCE_MATERIALIZED",
+  "files": 5604,
+  "archive_sha256": "1ced6e700233869394e0e843284130b48a345e7ff712f4ddcd4fd1ac24c3a942",
+  "manifest_sha256": "ed69fd4241bcebae2ef56f7a19f65b90696f23a71406149ff37a17223b70c117",
+  "database_effects": 0,
+  "service_start_attempted": false,
+  "head": "836b28f73d52e75794fb77700423de460d246106",
+  "authority": "AOS-001710",
+  "task": "current159-maintenance-20261010",
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/api159-source-132b92e20d26",
+  "migration_files": 2487,
+  "source_paths": [
+    "services/aos-api/aos_api",
+    "services/aos-api/alembic",
+    "services/aos-api/alembic.ini",
+    "scripts",
+    "bundles/candidates/ecommerce"
+  ]
+}

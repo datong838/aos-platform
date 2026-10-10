@@ -1,0 +1,16 @@
+{
+  "status": "EXPORTED_SIGNED_STARTUP_INPUTS_VERIFIED_SCHEMA_DRIFT_REJECTED",
+  "exported_code_head": "a0v_159",
+  "signed_crypto": true,
+  "four_build_sources_match": true,
+  "published_four_hashes_match": true,
+  "installation_approved": true,
+  "runtime_bindings": 0,
+  "expected_rejection": "PREVIEW_CODE_SCHEMA_DRIFT",
+  "database_effects": 0,
+  "service_start_attempted": false,
+  "source_head": "836b28f73d52e75794fb77700423de460d246106",
+  "source_manifest_sha256": "ed69fd4241bcebae2ef56f7a19f65b90696f23a71406149ff37a17223b70c117",
+  "task": "current159-maintenance-20261010",
+  "authority": "AOS-001710"
+}
