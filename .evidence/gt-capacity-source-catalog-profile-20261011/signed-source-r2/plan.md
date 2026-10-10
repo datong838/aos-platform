@@ -1,0 +1,1 @@
+R1 source0/pending0/backend0/closed roles read-only reconciliation complete. Fixed native catalog lookup removes private schema USAGE requirement without new grants. New factory database and new Source asset only; no R1 replay. Original Source120s/Root/signatures unchanged. Focused Source publication actualCOMMIT and fresh consumer; eight-node/engine ending still pending.

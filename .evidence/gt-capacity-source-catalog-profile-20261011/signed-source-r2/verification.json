@@ -1,0 +1,27 @@
+{
+  "authority": "AOS-001764",
+  "status": "CATALOG_PROFILE_RESTRICTED_CALLER_FIXED_REAL_SIGNED_SOURCE_COMMIT_AND_FRESH_CONSUMER_GREEN",
+  "previous_actual_red": "R1 fixture failed before testcall/Sourceissue: to_regprocedure(private signature) raises schema USAGE denial in ordinary existing Evidence caller",
+  "regression_red": "Restricted aos_runtime native baseline reproduces exact denial",
+  "fix": "Fixed pg_proc JOIN pg_namespace schema/name/zero-argument catalog lookup; no new private schema USAGE or other grants",
+  "restricted_and_adjacent": "49 passed/0skip/1 focused signed test deselected/3.02s/7existingwarnings",
+  "real_signed_source": "Fresh retained database931b287c07d4:1 actual test passed14.20s, full private runtime audit and original signature/root/approved Source actualcallerCOMMIT, fresh xid current consumer exact bytes/hash; publication0.945752s/first consumption1.992022s",
+  "r1_independent_reconciliation": "source0/pending0/public absent/backend0/closedroles",
+  "r2_independent_reconciliation": "committed original signed Source exactly1 matching full bytes/hash64byte signature independently retained; original FACT identity restored/publicentry0/backend0/rolesclosed",
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_catalog_audit_profile.py": "f4358314d86e78059d6ece59b41b1ffc76c35066b1dd19acf43fcc4846bf6714",
+    "services/aos-api/tests/aip/test_provider_capacity_catalog_audit_profile_pg.py": "b58f95ba74484fbeb7c8521b2c45878fda0e44b11a7a356038d7ae989e0a9546"
+  },
+  "formal_database_touched": false,
+  "source_replayed": false,
+  "permissions_expanded": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "goal_complete": false,
+  "limitations": [
+    "Complete two-parent/four-signature/eight-node Receipt/native late writers/event/RI/module ending and actual engine COMMIT still not verified",
+    "Previous whole shared-parent130.74s expiry RED remains until original full caller retested",
+    "This is current Source actual COMMIT evidence, not engine COMMIT/natural first chain"
+  ],
+  "next": "Explicit complete catalog family in fresh original whole Source + Model + Judge native fixture; capture full original8nodes Receipt v2 and final physical then complete ending matrix without TTL extension"
+}

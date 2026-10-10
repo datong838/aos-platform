@@ -95,8 +95,10 @@ def catalog_profile_is_installed(conn):
         row = conn.execute("""SELECT p.oid,p.prosrc,r.rolname,p.prosecdef,p.proisstrict,p.proconfig,
             p.provolatile,p.proparallel,p.prokind,p.proretset,p.prorettype,p.pronargs,p.pronargdefaults,
             p.provariadic,p.proleakproof,p.prosupport::oid AS prosupport,l.lanname,p.proargtypes::text AS args
-            FROM pg_proc p JOIN pg_roles r ON r.oid=p.proowner JOIN pg_language l ON l.oid=p.prolang
-            WHERE p.oid=to_regprocedure(%s)""", (signature,)).fetchone()
+            FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+            JOIN pg_roles r ON r.oid=p.proowner JOIN pg_language l ON l.oid=p.prolang
+            WHERE n.nspname=%s AND p.proname=%s AND p.pronargs=0""",
+            (signature.split('.')[0], signature.split('.')[1].split('(')[0])).fetchone()
         rows[signature] = (row, _profile_body(ddl))
     # Only new FACT/private-audit bodies identify this family. Shared PAIR and
     # EVIDENCE alone remain valid identifiers for the original epoch profile.

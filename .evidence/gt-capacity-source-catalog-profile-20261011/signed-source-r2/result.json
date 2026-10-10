@@ -1,0 +1,14 @@
+{
+  "pytest_exit": 0,
+  "databases": [
+    "aos_test_931b287c07d4_ti4_test"
+  ],
+  "reports": [
+    {
+      "node": "tests/aip/test_provider_capacity_catalog_audit_profile_pg.py::test_catalog_profile_real_signed_source_commit_and_fresh_consumer[distinct]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "execution_allowed": false
+}

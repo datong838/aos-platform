@@ -1,0 +1,14 @@
+{
+  "authority": "AOS-001764",
+  "head": "19b454f91535fa8f494c8c84f9efc43934712f50",
+  "task": "gt-capacity-source-catalog-profile-20261011",
+  "cluster": "7694680278363095064",
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_provider_capacity_catalog_audit_profile.py": "f4358314d86e78059d6ece59b41b1ffc76c35066b1dd19acf43fcc4846bf6714",
+    "services/aos-api/aos_api/aip_provider_capacity_occupation_epoch_profile.py": "f946df529fb19d97f25c09f6745860e2ce104f4b1c726b43c6994f4456f4415f",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py": "2448cc102cd5646c41f115b8aef56f5f2b0fcefc9ba2f7e767f5f868385a2017",
+    "services/aos-api/aos_api/aip_provider_capacity_occupation_source.py": "704a1ece0e8c5e0c1579a4dac229fe7fac05244dcd43a5107bab96b0fddd255b",
+    "services/aos-api/tests/aip/test_provider_capacity_catalog_audit_profile_pg.py": "b58f95ba74484fbeb7c8521b2c45878fda0e44b11a7a356038d7ae989e0a9546"
+  },
+  "execution_allowed": false
+}

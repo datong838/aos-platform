@@ -1,0 +1,14 @@
+{
+  "database": "aos_test_931b287c07d4_ti4_test",
+  "private_runtime_audit_passed": true,
+  "original_source_ttl_unchanged": true,
+  "execution_allowed": false,
+  "actual_caller_commit": true,
+  "publication_seconds": 0.945752,
+  "asset_id": "catalog-source-504c0568ab8f48adbcf50d813bc9dccd",
+  "content_hash": "671d858d127334b8ae5d5c362ea91178db15d11f536c143b116370b7ad965db9",
+  "fresh_native_xid": true,
+  "current_source_exact": true,
+  "publication_and_first_consume_seconds": 1.992022,
+  "original_function_identity_restored": true
+}

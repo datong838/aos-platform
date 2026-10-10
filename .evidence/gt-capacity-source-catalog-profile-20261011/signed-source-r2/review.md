@@ -1,0 +1,1 @@
+完整方案/代码复核：实际RED定位新身份查询而非Source业务权限缺失；系统目录固定定位不授schema USAGE，original-role权限恢复与legacy/newprofile受限调用者原生验证通过。旧编译/manifest/迁移/body语义不变，Source signature/Root/currentness检查未删。R1只读对账后新R2原fixture新库独立签发，没有重放未知Source。R2实际COMMIT/新事务读取与独立保留hash证据齐全，profile全表审计实际调用通过；清理恢复旧FACT/无公开Source入口及全角色closed。组件未Delivery，原完整Goal未缩窄，整条shared-parent时限与engine末门仍待。

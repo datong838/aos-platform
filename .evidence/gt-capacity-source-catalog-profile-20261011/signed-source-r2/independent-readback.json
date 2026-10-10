@@ -1,0 +1,58 @@
+{
+  "database": "aos_test_931b287c07d4_ti4_test",
+  "source_asset": "catalog-source-504c0568ab8f48adbcf50d813bc9dccd",
+  "source_content_hash": "671d858d127334b8ae5d5c362ea91178db15d11f536c143b116370b7ad965db9",
+  "signature_bytes": 64,
+  "source_actual_COMMIT_independently_retained": true,
+  "original_fact_body_sha256": "a58f562c97da4059549b8e18289c6a5f46b8a61553031b53961b60684231f030",
+  "original_fact_identity_restored": true,
+  "profile_installed": false,
+  "public_entries": 0,
+  "other_live_backends": 0,
+  "closed_roles": [
+    {
+      "rolname": "aos_capacity_publication_owner",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_provider_capacity_issuer",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_provider_capacity_occupation",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    {
+      "rolname": "aos_runtime",
+      "rolcanlogin": false,
+      "rolinherit": false,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false
+    }
+  ],
+  "execution_allowed": false,
+  "full_shared_parent_source_timing_proven": false,
+  "engine_ending_actual_COMMIT_proven": false,
+  "replayed": false
+}

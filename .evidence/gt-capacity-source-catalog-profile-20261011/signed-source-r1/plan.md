@@ -1,0 +1,11 @@
+# 当前真实签名 Source 接续验证
+
+Rules：231、完整联合准入、同线程/Owner的既有Task Lease、真实权威证据、原本120秒Source时限、真库只读。前一轮为progress：19b454f9/authority1764，49通过原生身份接线。
+
+已登记第一候选为新审计身份下真实签名Source准备、签名、actual callerCOMMIT与fresh native current consumer；依赖原完整signed reader fixture、显式private/public新family。第二候选为完整四签名/两parent/八节点Receipt v2和ending实际COMMIT，依赖第一候选及整体时限，仍未验收。
+
+本轮修改已登记文件 services/aos-api/tests/aip/test_provider_capacity_catalog_audit_profile_pg.py，新增一个focused真实Source测试，复用原签名根/原批准事实/SCRAM issuer fixture。先fullprivate audit，再originalSourceprepare/sign/SQLcommit/实际callerCOMMIT，再新事务消费者exact bytes/signature/ref/hash/currentness；不改变TTL或Roottrust，不从旧Source重放。测试只在新factory创建、保留的隔离DB运行；完整Source表内容及函数身份不替换真库。
+
+新profile与新增consumer函数恢复到fixture的原安装，独立核对原FACTbody和角色边界。标准原fixture负责合法临时test-onlyissuer身份/签名root的构建和清理；profile本身无全局角色权限修改。不运行原occupation大批全局角色fault矩阵。本轮不声称占用八节点或原生engine ending完成。错误保留nativeSQLSTATE，不重发未知Source结果。
+
+真实 RED 根因：catalog_profile_is_installed 在未安装新family时也使用 to_regprocedure(private signature)；受限调用者没有私有schema USAGE，导致现有Evidence边界在Source原批准fixture中失败。方案最小修复：使用 pg_proc JOIN pg_namespace 的固定schema/name/零参数定位，读取既有系统目录，不增任何schema/table/function授权。新增普通aos_runtime在legacy/newfamily下的真实识别回归，完整元数据与body审计仍保留。R1在setup阶段结束，没有测试call/Source发布；先只读确认既有事务/角色/Source0状态，再新R2独立factory，不重放原尝试。

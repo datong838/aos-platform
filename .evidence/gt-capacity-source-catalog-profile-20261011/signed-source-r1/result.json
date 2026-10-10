@@ -1,0 +1,12 @@
+{
+  "pytest_exit": 1,
+  "databases": [],
+  "reports": [
+    {
+      "node": "tests/aip/test_provider_capacity_catalog_audit_profile_pg.py::test_catalog_profile_real_signed_source_commit_and_fresh_consumer[distinct]",
+      "phase": "setup",
+      "outcome": "failed"
+    }
+  ],
+  "execution_allowed": false
+}

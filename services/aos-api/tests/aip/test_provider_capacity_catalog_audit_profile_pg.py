@@ -68,6 +68,9 @@ def test_native_complete_catalog_identity_partial_hybrid_acl_and_restoration():
         before = conn.execute(snapshot_sql).fetchall()
         assert profile.catalog_profile_is_installed(conn) is False
         with conn.transaction(force_rollback=True):
+            conn.execute("SET LOCAL ROLE aos_runtime")
+            assert profile.catalog_profile_is_installed(conn) is False
+        with conn.transaction(force_rollback=True):
             # This retained clone has original FACT/PAIR but no Source installer.
             # Create the trusted baseline audit as an owned test prerequisite,
             # retaining all checks; never claim its runtime audit passed.
@@ -82,6 +85,9 @@ def test_native_complete_catalog_identity_partial_hybrid_acl_and_restoration():
                 conn.execute(statement)
             assert profile.catalog_profile_is_installed(conn) is True
             assert epoch.occupation_epoch_profile_is_installed(conn) is True
+            with conn.transaction(force_rollback=True):
+                conn.execute("SET LOCAL ROLE aos_runtime")
+                assert profile.catalog_profile_is_installed(conn) is True
             transaction.require_source_public_entry_definitions(conn)
             occupation._require_definitions(conn)
             # Preserve full native original FACT runtime checks in the new body.
@@ -121,3 +127,79 @@ def test_native_complete_catalog_identity_partial_hybrid_acl_and_restoration():
         assert restored.execute(snapshot_sql).fetchall() == before
         assert profile.catalog_profile_is_installed(restored) is False
         restored.rollback()
+
+
+pytest_plugins = ('tests.aip.test_capacity_source_publication_transaction_pg',)
+
+
+@pytest.mark.parametrize('native_original_fact_reader', ['distinct'], indirect=True)
+def test_catalog_profile_real_signed_source_commit_and_fresh_consumer(exact_public_source_caller):
+    """Original roots/approvals/Source, actual COMMIT, new native transaction."""
+    import json
+    import os
+    import time
+    from pathlib import Path
+    from uuid import uuid4
+    from psycopg.types.json import Jsonb
+    from tests.aip._runtime_guard_history_fixture import isolated_owner
+    from tests.aip.test_capacity_source_publication_transaction_pg import _refresh_native_facts_transaction
+    from aos_api import aip_provider_capacity_catalog_audit_profile as profile
+    from aos_api import aip_provider_capacity_occupation_epoch_profile as epoch
+    from aos_api.aip_provider_capacity_publication_contracts import PublishedProviderCapacitySourceV2,parse_signed_capacity_body
+    from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+    from aos_api.aip_provider_capacity_source_consumer import read_current_capacity_source
+
+    caller, packet, material, _ = exact_public_source_caller
+    caller.rollback()
+    with isolated_owner() as admin:
+        before = admin.execute('SELECT prosrc FROM pg_proc WHERE oid=to_regprocedure(%s)',(profile.FACT,)).fetchone()['prosrc']
+        assert admin.execute("SELECT to_regprocedure('public.read_current_capacity_source(bytea,jsonb)')").fetchone()['to_regprocedure'] is None
+        for statement in profile.catalog_public_statements(include_consumer=True):
+            admin.execute(statement)
+        assert profile.catalog_profile_is_installed(admin)
+        with admin.transaction():
+            admin.execute('SET LOCAL ROLE aos_capacity_publication_owner')
+            admin.execute('SELECT '+epoch.INSTALLATION)
+    record = {'database': caller.info.dbname, 'private_runtime_audit_passed': True,
+              'original_source_ttl_unchanged': True, 'execution_allowed': False}
+    try:
+        _refresh_native_facts_transaction(caller)
+        command, _, _ = material['actual_command']()
+        started = time.monotonic()
+        asset = 'catalog-source-' + uuid4().hex
+        pending = caller.execute('SELECT * FROM public.prepare_capacity_source(%s,%s,%s,%s::jsonb)',
+            (packet,command.idempotency_key,asset,Jsonb(material['refs'][-1]))).fetchone()
+        raw = bytes(pending['source_raw'])
+        signed = material['source_key'].sign(raw)
+        published = caller.execute('SELECT * FROM public.commit_capacity_source(%s,%s,%s)',
+            (command.idempotency_key,raw,signed)).fetchone()
+        caller.commit()
+        record.update(actual_caller_commit=True, publication_seconds=round(time.monotonic()-started,6),
+                      asset_id=asset, content_hash=published['content_hash'])
+        source = parse_signed_capacity_body(raw,PublishedProviderCapacitySourceV2)
+        exact = FormalExactRef(asset_type='ProviderCapacitySourceRevision',asset_id=asset,
+                              revision=published['revision'],content_hash=published['content_hash'])
+        _refresh_native_facts_transaction(caller)
+        identity = caller.execute('SELECT pg_current_xact_id()::text AS xid,pg_backend_pid() AS pid').fetchone()
+        assert identity['xid'] != source.issuance_context.transaction_id
+        current, _, _ = material['actual_command']()
+        consumed = read_current_capacity_source(caller,current,exact)
+        assert consumed.model_dump(mode='json',by_alias=True) == source.model_dump(mode='json',by_alias=True)
+        assert consumed.execution_allowed is False
+        record.update(fresh_native_xid=True,current_source_exact=True,
+                      publication_and_first_consume_seconds=round(time.monotonic()-started,6))
+        caller.rollback()
+    finally:
+        caller.rollback()
+        with isolated_owner() as admin:
+            admin.execute('DROP FUNCTION public.read_current_capacity_source(bytea,jsonb)')
+            for statement in epoch.legacy_public_source_restoration_statements():
+                admin.execute(statement)
+            admin.execute(epoch._definition(profile.FACT,before))
+            assert admin.execute('SELECT prosrc FROM pg_proc WHERE oid=to_regprocedure(%s)',(profile.FACT,)).fetchone()['prosrc'] == before
+            assert profile.catalog_profile_is_installed(admin) is False
+        record['original_function_identity_restored'] = True
+        if os.getenv('AOS_CATALOG_SIGNED_EVIDENCE'):
+            path = Path(os.environ['AOS_CATALOG_SIGNED_EVIDENCE'])/'source-result.json'
+            with path.open('x') as out:
+                json.dump(record,out,indent=2);out.write('\n')
