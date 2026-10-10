@@ -1,0 +1,119 @@
+{
+  "authority": "AOS-001737",
+  "head": "971629ee6c2ca39b86cfee8851255310f52bf5fb",
+  "database": "aos_test_7efed020dfe1_ti4_test",
+  "cluster": "7694680278363095064",
+  "read_only": true,
+  "canonical_function_body_sha256": "f350cbf8e8742d181332224583a3cf3b27666269f84007c7e3197b5804f356d3",
+  "source_canonical_measurements": [
+    {
+      "jit": "on",
+      "elapsed_seconds": 0.008382583000638988,
+      "sources": [
+        {
+          "asset_id": "occupation-source-fae4432119324ab0b132d7d3ccc7adb9",
+          "bytes": 3991,
+          "hash": "521707c1a3a9284bca8de3a9cebc9e0090b82dba3bdf5bfe323e770bd9123bd0",
+          "exact": true
+        }
+      ]
+    },
+    {
+      "jit": "off",
+      "elapsed_seconds": 0.0011969159968430176,
+      "sources": [
+        {
+          "asset_id": "occupation-source-fae4432119324ab0b132d7d3ccc7adb9",
+          "bytes": 3991,
+          "hash": "521707c1a3a9284bca8de3a9cebc9e0090b82dba3bdf5bfe323e770bd9123bd0",
+          "exact": true
+        }
+      ]
+    },
+    {
+      "jit": "on",
+      "elapsed_seconds": 0.0008956669989856891,
+      "sources": [
+        {
+          "asset_id": "occupation-source-fae4432119324ab0b132d7d3ccc7adb9",
+          "bytes": 3991,
+          "hash": "521707c1a3a9284bca8de3a9cebc9e0090b82dba3bdf5bfe323e770bd9123bd0",
+          "exact": true
+        }
+      ]
+    }
+  ],
+  "other_database_sessions": 0,
+  "comparison": [
+    {
+      "function": "public.test_owned_versioned_origin",
+      "1735_seconds": 3.83716,
+      "1736_seconds": 4.283164
+    },
+    {
+      "function": "public.test_owned_pending_origin",
+      "1735_seconds": 16.479156,
+      "1736_seconds": 17.855454
+    },
+    {
+      "function": "public.test_owned_end_authority",
+      "1735_seconds": 16.309477,
+      "1736_seconds": 18.083346
+    },
+    {
+      "function": "public.test_owned_initial_obligation",
+      "1735_seconds": 16.424778,
+      "1736_seconds": 17.232368
+    },
+    {
+      "function": "public.test_owned_initial_call_authority",
+      "1735_seconds": 27.377881,
+      "1736_seconds": 28.971741
+    },
+    {
+      "function": "public.test_owned_initial_window",
+      "1735_seconds": 19.160091,
+      "1736_seconds": 20.229098
+    }
+  ],
+  "1736_returned_seconds": 106.655171,
+  "actual_failure": {
+    "function": "public.test_owned_live_physical",
+    "elapsed_seconds": 1.432882,
+    "outcome": "rejected",
+    "error": "CAPACITY_CURRENT_SOURCE_EXPIRED",
+    "observed_at": "2026-10-10T17:32:36.256907+00:00"
+  },
+  "window_returned_before_live_rejection": true,
+  "candidate_cause": "Nested full original authority revalidation cost; not yet attributed to a single kernel",
+  "no_deadline_extension": true,
+  "no_old_attempt_replayed": true,
+  "product_code_changed": false,
+  "native_live_positive": false,
+  "full_task_delivered": false,
+  "next": "Create a scoped fresh original Source/whole-chain function-level profiler plan before running another trial; measure nested original validators under true SCRAM caller with test-only parameter permission recorded and restored, without skipping authority or extending deadlines. Validate profiling mechanics separately first. Preserve the terminal old attempt; no replays.",
+  "manifest_canonical_measurement": {
+    "bytes": 22155,
+    "jit_on_seconds": 0.00950662499963073,
+    "jit_off_seconds": 0.0029724999985774048,
+    "exact_bytes_both": true,
+    "source": "same-turn readonly retained real manifest measurement; not a full authority profiler"
+  },
+  "findings": [
+    "Correct failure boundary: all six measured stage calls including Window returned; first live-physical call rejected CAPACITY_CURRENT_SOURCE_EXPIRED.",
+    "1736 six returned calls total106.655171s; same1735 stages total99.588543s. These exclude Source issuance/model preparation and uninstrumented original legacy calls.",
+    "Retained real Source canonical measurements remain under0.01s with exact bytes; manifest canonical under0.01s. These pure leaf calls cannot attribute compound full Source validation cost.",
+    "Source is committed before three original model applications and installation metadata; old source lifetime is already consumed before native staged calls.",
+    "STAGE_INITIAL_CALL invokes INITIAL_INTENT twice and READ_RETAINED once; Window invokes READ_INITIAL_CALL which invokes READ_RETAINED and INITIAL_INTENT. These are real wait/currentness guards, not safely removable based on timing alone."
+  ],
+  "root_cause_proven": false,
+  "wake_reconciliation": {
+    "original_event": "2026-10-10T06:53:53.448Z",
+    "normal_command_exit": 0,
+    "dedup_returned_older_cached_head": "18093f1164f1f821a4543dddb403ff460a7b9a9d",
+    "not_current_progress_evidence": true,
+    "shadow_current_head": "971629ee6c2ca39b86cfee8851255310f52bf5fb",
+    "shadow_authority": "AOS-001737",
+    "observation_only": true
+  }
+}
