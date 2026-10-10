@@ -1,0 +1,4 @@
+# 方案与代码复核
+原消费者协议通过真实OIDC解析同identity的独立入口token；只在完整probe开始前认证一次，120秒长度未改，后续所有节点绑定同raw SHA，Source原签名与审批不改。无产品文件修改。真实四签名/八节点/不可变Receipt hash/两父预算/物理2请求20000token与迟写3请求30000token、缺ending实际COMMIT拒绝、caller aborted及零shared/原parent rows均已有独立证据。
+完整pytest依然RED：目标probe之后的旧独立caller继续消费旧token；issuer teardown也拒绝过期输入。这些结果未隐藏，未把组件通过当整测试或整Task通过。旧failure无重发；新Source各独立新库，仅临时fixture装配，不授正式Root/执行权限。
+下一原Main/native-ending合同包含完整事件/RI/回调/模块闭包/当前Source及时钟/actualCOMMIT/未知风险；现有实际Receipt证据只是完整施工前提，缺门拒绝不等于正向准入。

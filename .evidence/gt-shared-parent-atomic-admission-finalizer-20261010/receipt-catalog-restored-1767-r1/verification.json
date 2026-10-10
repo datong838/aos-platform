@@ -1,0 +1,24 @@
+{
+  "status": "COMPLETE_FIXTURE_FACT_RESTORATION_CONFIRMED_RECEIPT_CURRENT_AUTH_WINDOW_RED",
+  "authority_revision": "AOS-001767",
+  "head": "7883e119669e1f07e6aa46446c4cd1fa75062fbe",
+  "database": "aos_test_f83eabfd5fdf_ti4_test",
+  "catalog_profile_cleanup_restored": true,
+  "native_caller_aborted": true,
+  "shared_zero_rows": true,
+  "phase_error": "CAPACITY_CURRENT_SOURCE_EXPIRED",
+  "teardown_error": "CAPACITY_NATIVE_SIGNED_SUPPLIER_INPUTS_REQUIRED",
+  "connection_error_from_previous_attempt_not_repeated": true,
+  "precise_failure_location": "read_capacity_source_for_occupation line 5878: historical Source validFrom/validUntil/issuedAt or consumer auth deadline final guard",
+  "time_diagnosis": "actual Source and both approvals remain valid until21:53; error observed21:50:03. Therefore consumer authentication deadline is implicated; historical issuance auth deadline21:50 is provenance and is not substituted for current consumer auth.",
+  "next_fixture_change": "actual current same-identity 120s independent authentication once at full admission ingress before frozen packet; no mid-call refresh",
+  "old_product_files_unchanged": true,
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "unreached": [
+    "eight_node_receipt_positive",
+    "final_physical",
+    "late_writer",
+    "actual_missing_end_commit"
+  ]
+}

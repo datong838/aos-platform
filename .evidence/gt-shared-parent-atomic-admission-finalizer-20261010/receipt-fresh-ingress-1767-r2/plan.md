@@ -1,0 +1,6 @@
+# 完整调用独立消费身份入口修正
+Rules：231、完整联合准入、m1单写与隔离原Task范围；不修改产品、真库、Source正文或已批准期限。
+最新r1实际证据：Source/两批准均有效到21:53，Receipt在21:50:03命中消费者最终时间检查；原Source历史签发身份到21:50。原独立消费协议明确区分历史签发身份与当前consumer，不把历史签发身份作为新输入。
+本次仅新隔离库、新Source、新Judge150秒批准、新label，一次运行。具体文件：本目录 run.py/source_newjudge_native_trial_1606.py/catalog_fixture_restore.py/shared_identity_certificate_fixture.py/证据，Judge同label原生材料。
+在真正完整admission probe入口且旧消费token仍有效时，先用原_consump­tion_packet实际验证旧token，取同subject/tenant/issuer/audience，以原HTTPS测试issuer签发一个新的独立120秒token并真实OIDC校验；冻结新packet供整次原子调用使用。原历史Source签名、issuedAt/validUntil/审批/ref及新原子调用开始后的packet完全不变。绝不在中途刷新token，不延长原token/Source/批准、无时钟mock。新认证属于现有协议的正常独立consumer入口，不是凭历史Source造身份。
+保留先前完整FACT恢复修复。失败必须先只读对账，真实8节点Receipt与迟写/物理/缺末门COMMIT仍待实际输出；即使通过也不宣称完整native ending或正式Root。

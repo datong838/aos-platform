@@ -1,0 +1,20 @@
+{
+  "source_hash": "eaa76f644219f6069abaf569cfd1984809f838a6181f0fa5fec716cc311fe8e7",
+  "raw_sha256": "eaa76f644219f6069abaf569cfd1984809f838a6181f0fa5fec716cc311fe8e7",
+  "signature_bytes": 64,
+  "time_fields": {
+    "issuanceContext": {
+      "attemptId": "323af88d-4c0a-451d-9200-37ef6eb1331f",
+      "authenticationExpiresAt": "2026-10-10T21:50:00Z",
+      "backendPid": 41182,
+      "issuerRole": "aos_provider_capacity_issuer",
+      "makerSubject": "capacity-maker-68a5b23285bf40a5836d7b7bac6da029",
+      "oidcAudience": "isolated-consumer",
+      "oidcIssuer": "https://aos-jwks.integration.test:49585",
+      "transactionId": "61242"
+    },
+    "publisher": "isolated-source-signer",
+    "validFrom": "2026-10-10T21:48:00.253127Z",
+    "validUntil": "2026-10-10T21:53:00.163489Z"
+  }
+}

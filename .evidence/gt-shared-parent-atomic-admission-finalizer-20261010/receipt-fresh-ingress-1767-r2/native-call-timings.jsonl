@@ -1,0 +1,13 @@
+{"function": "public.test_owned_versioned_origin", "elapsed_seconds": 3.2032, "outcome": "returned", "error": null, "observed_at": "2026-10-10T21:55:02.913125+00:00", "nested_functions": []}
+{"function": "public.test_owned_pending_origin", "elapsed_seconds": 12.31387, "outcome": "returned", "error": null, "observed_at": "2026-10-10T21:55:15.235050+00:00", "nested_functions": []}
+{"function": "public.test_owned_end_authority", "elapsed_seconds": 12.496475, "outcome": "returned", "error": null, "observed_at": "2026-10-10T21:55:27.734805+00:00", "nested_functions": []}
+{"function": "public.test_owned_complete_risk", "elapsed_seconds": 12.535393, "outcome": "returned", "error": null, "observed_at": "2026-10-10T21:55:40.272132+00:00", "nested_functions": []}
+{"function": "public.test_owned_initial_obligation", "elapsed_seconds": 12.303039, "outcome": "returned", "error": null, "observed_at": "2026-10-10T21:55:53.298513+00:00", "nested_functions": []}
+{"function": "public.test_owned_initial_call_authority", "elapsed_seconds": 20.990205, "outcome": "returned", "error": null, "observed_at": "2026-10-10T21:56:14.292433+00:00", "nested_functions": []}
+{"function": "public.test_owned_initial_window", "elapsed_seconds": 14.622619, "outcome": "returned", "error": null, "observed_at": "2026-10-10T21:56:28.917565+00:00", "nested_functions": []}
+{"function": "public.test_owned_receipt_v2", "elapsed_seconds": 26.619572, "outcome": "returned", "error": null, "observed_at": "2026-10-10T21:56:55.539788+00:00", "nested_functions": []}
+{"function": "public.test_owned_final_physical", "elapsed_seconds": 0.002339, "outcome": "returned", "error": null, "observed_at": "2026-10-10T21:56:55.546959+00:00", "nested_functions": []}
+{"function": "public.test_owned_live_union", "elapsed_seconds": 0.000912, "outcome": "returned", "error": null, "observed_at": "2026-10-10T21:56:56.103744+00:00", "nested_functions": []}
+{"function": "public.test_owned_final_physical", "elapsed_seconds": 0.002009, "outcome": "rejected", "error": "SHARED_ADMISSION_FINAL_PHYSICAL_CHANGED", "observed_at": "2026-10-10T21:56:56.107472+00:00"}
+{"function": "public.test_owned_initial_call_authority", "elapsed_seconds": 0.543696, "outcome": "rejected", "error": "CAPACITY_CASE_INPUT_BYTES_REQUIRED", "observed_at": "2026-10-10T21:56:56.653873+00:00"}
+{"function": "public.test_owned_initial_window", "elapsed_seconds": 0.000513, "outcome": "rejected", "error": "SHARED_ADMISSION_WINDOW_NATIVE_MATERIAL_REQUIRED", "observed_at": "2026-10-10T21:56:56.656554+00:00"}

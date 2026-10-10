@@ -1,0 +1,20 @@
+{
+  "receiptHash": "sha256:2113caa23fd372f0b9c500224802d56b00663a441b4efef1f05c5d231e9a263c",
+  "late_legacy": {
+    "pid": 44443,
+    "xid": "61736",
+    "debitId": "019153ad-bc7d-4c2d-8941-e5fc6bdf165b",
+    "contentHash": "sha256:10053aeb55a36e4c77e2e9d795c02896144224f98bfdcd0eae3728ae45d72f90",
+    "allocatedMinor": 2,
+    "parentCapMinor": 10,
+    "physicalTokens": 20000,
+    "executionAllowed": false,
+    "physicalRequests": 2
+  },
+  "actual_union": {
+    "tokens": 30000,
+    "requests": 3
+  },
+  "final_physical_changed_rejected": true,
+  "execution_allowed": false
+}

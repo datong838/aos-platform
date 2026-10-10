@@ -1,0 +1,44 @@
+{
+  "status": "REAL_EIGHT_NODE_RECEIPT_PHYSICAL_LATE_WRITER_AND_MISSING_END_COMMIT_NATIVE_VERIFIED",
+  "authority_revision": "AOS-001767",
+  "attempt_head": "7883e119669e1f07e6aa46446c4cd1fa75062fbe",
+  "database": "aos_test_c2cfca496cfd_ti4_test",
+  "receipt_stage_returned": true,
+  "receipt_stage_seconds": 26.619572,
+  "eight_nodes": 8,
+  "source_packet_same_fresh_ingress": true,
+  "four_signatures_independently_verified": true,
+  "exact_source_published_and_preserved": true,
+  "final_physical_comparison": true,
+  "late_writer_union_requests": 3,
+  "late_writer_union_tokens": 30000,
+  "late_writer_comparison_rejected": true,
+  "actual_missing_end_commit_rejected": true,
+  "native_caller_aborted": true,
+  "catalog_fact_restored": true,
+  "whole_fixture_pass": false,
+  "whole_fixture_errors": [
+    "CAPACITY_OCCUPATION_SOURCE_REQUIRED in subsequent legacy independent caller using earlier token",
+    "CAPACITY_NATIVE_SIGNED_SUPPLIER_INPUTS_REQUIRED in issuer fixture teardown"
+  ],
+  "complete_native_ending_pass": false,
+  "formal_root_provenance": false,
+  "full_admission_commit": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "next_registered_steps": [
+    "Main complete native ending integration consumes verified actual eight-node material",
+    "separate legacy fixture current-identity ingress and teardown expiry from main complete admission contract; preserve denial checks"
+  ],
+  "evidence_hashes": {
+    "receipt-v2-positive-proof.json": "a6b62d29d02582eb132713faac15c6879f041a30af187bb1b616d3e176279294",
+    "receipt-v2-late-writer-proof.json": "425c0ab7cef07e547258cd6a7c603fa2136daa272f3dda7528e1214ce30e6b26",
+    "component-native-proof.json": "8dc5808ca3ece42805d119470d402eecf420e36533a0ae3331e669d1fd3d95b8",
+    "parent-risk-stage-proof.json": "53572cdb07b4daa6ef48b4d7276505fd0a6218098efc750fd32a5e48d1005771",
+    "fresh-ingress-authentication.json": "4a83457f4b48bca57caaa2aacd973500b018373c7ba50efd74b5c47d5cf1652f",
+    "independent-readback.json": "f0ee5d006aab3357d0951238ba8d800988e5fa35d8ea860723a0567d9216e802",
+    "native-call-timings.jsonl": "68efeddbd04ce2d503c3f69629e7458d2462ac896429631460fc14275227a4c3",
+    "result-r2.json": "a035458d5299c8489534bd9d000677053d1bc0dd78970b45395f9efa627f9dbe",
+    "output.raw.json": "ee794c21bc8b4bdbb26c1e39098847fdf3f6605aab4bcae1c5d6f194a33270de"
+  }
+}

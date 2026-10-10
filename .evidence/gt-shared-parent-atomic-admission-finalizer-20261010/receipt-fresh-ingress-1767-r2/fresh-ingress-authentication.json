@@ -1,0 +1,12 @@
+{
+  "same_verified_identity": true,
+  "original_token_authenticated_before_new_ingress": true,
+  "original_auth_deadline": "2026-10-10T21:56:49Z",
+  "new_ingress_at": "2026-10-10T21:54:59.700675+00:00",
+  "fresh_120_second_auth_deadline": "2026-10-10T21:56:59+00:00",
+  "old_packet_sha256": "d609d77b4324a1b49bbb7935d9c63f7ad9c739d17169c19fc0db846ff78e3a1c",
+  "fresh_packet_sha256": "ad556d87be64094beeca73ac4069daaa74691eb49cc72e9a292aba7c4544f3f5",
+  "source_and_approval_unchanged": true,
+  "mid_call_authentication_refresh": false,
+  "execution_allowed": false
+}
