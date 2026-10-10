@@ -1,0 +1,52 @@
+{
+  "status": "FINAL_READER_WRITE_REACHABILITY_RED",
+  "head": "5caf60654b4bdc382fae04862387004c3df9ec40",
+  "authority": "AOS-001750",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "48d58f6c3996f39a328f79cf90e7a865348b75aa0d723e684240761bfbae0281",
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": "086110f30a9f96b0b6f7493832fd586b6358abb6ea7cb8443ae83c04afa26b8f"
+  },
+  "findings": [
+    {
+      "reader": "public.read_shared_parent_initial_call_authority",
+      "reaches": "public.prepare_shared_parent_initial_intents",
+      "direct_dml": [
+        "INSERT INTO aos_shared_parent_physical_private.target_intent",
+        "INSERT INTO aos_shared_parent_physical_private.judge_dependency"
+      ],
+      "final_read_only_contract": "RED",
+      "complete_call_graph_proven": false
+    },
+    {
+      "reader": "public.read_shared_parent_live_physical_facts",
+      "reaches": "public.prepare_capacity_occupation_account_guard",
+      "direct_dml": [
+        "INSERT INTO aos_physical_capacity_occupation_private.account_guard",
+        "UPDATE SET"
+      ],
+      "final_read_only_contract": "RED",
+      "complete_call_graph_proven": false
+    }
+  ],
+  "sql_hashes": {
+    "aos_shared_parent_physical_private.bind_initial_call_authority": "b6509ee4d04d43b46bf5b7ec922b4317e553f9bf978102a9cacc74eb633d62f4",
+    "public.stage_shared_parent_initial_call_authority": "b9a9a5b7f4acc31942d3e963169bf9ef341c9ea46204f05dd2222912dd55e546",
+    "public.read_shared_parent_initial_call_authority": "66914f34dbbeafffeb3114a52bc7b7bf2fc1e0a7843d2ee015ce17960049f714",
+    "public.prepare_shared_parent_initial_intents": "d23f45709ed83ea086bb3eaaffc45a3e1baf428b0c0430509a4b021968a92321",
+    "public.read_shared_parent_live_physical_facts": "1675a59f0e2bb0a643172d0b6e22adeb41cb26f0c06d9f8f6b7e5f81a7b00b26",
+    "public.capacity_occupation_source_fact": "849767d73ddac714abc1498309914fe5cc8f4dcf4f2ee83ca05678e754bf839c",
+    "public.prepare_capacity_occupation_account_guard": "9febc37bd1c21a4cb2b1b33ebf1e611a882403caf66fa0d24b7c43463294d48a"
+  },
+  "limitations": [
+    "Static concrete edges only; remaining called functions unclassified.",
+    "No native transaction or deferred event claim from this audit.",
+    "ON CONFLICT DO NOTHING does not establish a read-only call contract.",
+    "Existing PLAN_FACT itself is not assumed to require prepared debit rows."
+  ],
+  "database_operations": 0,
+  "product_modified": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "goal_complete": false
+}
