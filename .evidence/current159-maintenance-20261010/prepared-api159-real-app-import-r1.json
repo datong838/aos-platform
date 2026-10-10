@@ -1,0 +1,24 @@
+{
+  "status": "COMMITTED_API_REAL_APPLICATION_IMPORT_GREEN",
+  "loaded_api_modules": 1554,
+  "routes": 14,
+  "all_api_modules_from_export": true,
+  "lifespan_executed": false,
+  "server_started": false,
+  "PGOPTIONS": "default_transaction_read_only=on",
+  "runtime_distributions": {
+    "fastapi": "0.141.1",
+    "uvicorn": "0.52.1",
+    "psycopg": "3.3.4",
+    "SQLAlchemy": "2.0.51",
+    "alembic": "1.19.1",
+    "cryptography": "50.0.0",
+    "pydantic": "2.13.4"
+  },
+  "source_head": "836b28f73d52e75794fb77700423de460d246106",
+  "source_manifest_sha256": "ed69fd4241bcebae2ef56f7a19f65b90696f23a71406149ff37a17223b70c117",
+  "interpreter": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+  "interpreter_realpath": "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/bin/python3.11",
+  "interpreter_sha256": "ed958d09c2b6fef15e9f194c39c15dbe2e6ece9ae78d0983df63ace9cc047097",
+  "database_effects": 0
+}
