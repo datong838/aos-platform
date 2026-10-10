@@ -1,0 +1,42 @@
+{
+  "authority_revision": "AOS-001697",
+  "task": "gt-shared-budget-fence-order-20261008",
+  "head": "b51698b8ff02525adc04cbe5666df89420a25649",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false,
+  "references": [
+    {
+      "path": ".evidence/gt-shared-budget-fence-order-20261008/current-native-certificate-reference-1696.json",
+      "sha256": "3ace87c1b82792be224b2cc40cc55d651ab20627fe0bd1126f88e5269772a253"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/worker-commit-plan-1696.md",
+      "sha256": "09bbed3e12e6bfc2f218459d7e73eab0e01b2da289c011556ffa8d617837057f"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/worker-commit-review-1696.md",
+      "sha256": "f76ff6de268764c3fe47462498e0c2688962420929d24737edf8049e1a32838b"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/worker-commit-diagnosis-1696.md",
+      "sha256": "d48e402f6cef21c8bd57e9b27af22b3e154ad87fc84ee397d693892061fc10dc"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/worker-commit-independent-1696.json",
+      "sha256": "cc304eac6a80203324912f33b9910800696a0345e024fe372c28bceb593e9f4c"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/worker-commit-proof-1696-r2.json",
+      "sha256": "e4c96d5aa6dbe40c1c728bc7e8d03a552f1f7479d93c6e73ca5d870617070fd9"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/worker-commit-result-1696-r2.json",
+      "sha256": "fe2393919b095868f94b81978170d65ca54c12a85ae436555b389d156ce202cb"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/worker-commit-source-binding-1696.json",
+      "sha256": "b038920e53e956a96a1a9c073974e9837be3b5776b35732236cd78be67f8dbae"
+    }
+  ]
+}
