@@ -1,0 +1,15 @@
+{
+  "schema": "aos-task-dependency-material-reference/v1",
+  "task_id": "gt-shared-parent-native-ending-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001769",
+  "meaning": "Exact read-only dependency references; no execution authorization or recursive watcher validation",
+  "original_checkpoint_sha256": "0524fa62425cfda893d1edaa53029701a059213fc99d0f9930302c3bd2cbe708",
+  "references": {
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-reader-closure-r1/result.json": "6ce0938ef7d006a91e5733583fa32d6b914e629bdd6728fffe7b2509a606d7da",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-intent-comparison-1751/verification.json": "8d702061a061a607a18d7dae0d8b4964a83fc4531852df6c7aea81b66a3627e3",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-source-epoch-closure-1752/verification.json": "a40dcd0838fa5b96ef919d4459e8a70ea31371f0d8ca5070f638b3c8ba9cff68",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-executor-write-fence-1753/verification.json": "c8ca89a79a6b13b6f10d5a0801d3010e7911acc39335d856dcd6b332e02bdbca",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-utility-fence-1754/verification.json": "906b099fa0750596f68fda72c8fb78057c270f21b83c876deb150b3bc3cf9e77"
+  }
+}

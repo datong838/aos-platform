@@ -179,6 +179,73 @@ class CheckpointSafetyTest(unittest.TestCase):
             for name in ('scripts/../scripts/a.py','scripts/credential.py','scripts/link.py'):
                 with self.subTest(name=name),self.assertRaises(ValueError):exact_file(root,name,('scripts',))
 
+class NativePackageCheckpointTest(unittest.TestCase):
+    def native_context(self, root):
+        repo,context,cp,file=CheckpointSafetyTest().setup_context(root)
+        base=repo/'services/aos-api/postgres-extensions/native'
+        base.mkdir(parents=True)
+        files=[base/name for name in ('native.c','native.h','native.control','Makefile')]
+        for path in files:path.write_text('initial native material\n')
+        receipt=json.loads((context/'memory/receipts/tasks/task.json').read_text())
+        receipt['scope']=['aos-platform/services/aos-api/postgres-extensions/native']
+        (context/'memory/receipts/tasks/task.json').write_text(json.dumps(receipt))
+        (context/'memory/leases.json').write_text(json.dumps({'leases':[receipt]}))
+        cp['code_files']=[str(p.relative_to(repo)) for p in files]
+        file.write_text(json.dumps(cp))
+        return repo,context,cp,file,files
+
+    def test_native_package_sources_control_and_makefile_are_read_only(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo,context,cp,file,files=self.native_context(Path(d))
+            watched=[file,context/'memory/authority.json',context/'memory/leases.json',context/'memory/receipts/tasks/task.json']
+            before={p:p.read_bytes() for p in watched}
+            first=checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
+            for path in files:
+                path.write_text('changed '+path.name+'\n')
+                second=checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
+                self.assertNotEqual(first['fingerprint'],second['fingerprint'])
+                first=second
+            self.assertTrue(all(p.read_bytes()==raw for p,raw in before.items()))
+
+    def test_native_extension_does_not_expand_arbitrary_file_permissions(self):
+        for name in ('library.so','manifest.json','Makefile.backup','credentials.c','linked.h','../../../other.control'):
+            with self.subTest(name=name),tempfile.TemporaryDirectory() as d:
+                repo,context,cp,file,files=self.native_context(Path(d))
+                bad=files[0].parent/name
+                bad.parent.mkdir(parents=True,exist_ok=True)
+                if name=='linked.h':bad.symlink_to(files[0])
+                else:bad.write_text('not admissible\n')
+                cp['code_files']=[str(bad.relative_to(repo))];file.write_text(json.dumps(cp))
+                with self.assertRaises(ValueError):checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
+        with tempfile.TemporaryDirectory() as d:
+            repo,context,cp,file,files=self.native_context(Path(d))
+            cp['owner']='other';file.write_text(json.dumps(cp))
+            with self.assertRaises(ValueError):checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
+
+    def test_native_names_outside_extension_directory_remain_rejected(self):
+        for name in ('other.c','other.h','other.control','Makefile'):
+            with self.subTest(name=name),tempfile.TemporaryDirectory() as d:
+                repo,context,cp,file,files=self.native_context(Path(d))
+                path=repo/'services'/name;path.write_text('not an extension package\n')
+                receipt=json.loads((context/'memory/receipts/tasks/task.json').read_text())
+                receipt['scope']=['aos-platform/services']
+                (context/'memory/receipts/tasks/task.json').write_text(json.dumps(receipt))
+                (context/'memory/leases.json').write_text(json.dumps({'leases':[receipt]}))
+                cp['code_files']=[str(path.relative_to(repo))];file.write_text(json.dumps(cp))
+                with self.assertRaises(ValueError):checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
+
+    def test_native_only_git_change_counts_but_later_docs_do_not(self):
+        with tempfile.TemporaryDirectory() as d:
+            def git(*args):return run(['git','-C',d,*args],check=True,capture_output=True,text=True).stdout.strip()
+            git('init','-b','m1');git('config','user.name','test');git('config','user.email','test@invalid')
+            base=Path(d)/'services/aos-api/postgres-extensions/native';base.mkdir(parents=True)
+            for name in ('native.c','native.h','native.control','Makefile'):
+                (base/name).write_text('new '+name+'\n');git('add',str((base/name).relative_to(d)));git('commit','-m',name)
+                self.assertEqual(snapshot(Path(d),'thread')['code_commit'],git('rev-parse','HEAD'))
+            original=snapshot(Path(d),'thread')['code_commit']
+            (base/'notes.md').write_text('docs\n');git('add','.');git('commit','-m','docs')
+            self.assertEqual(snapshot(Path(d),'thread')['code_commit'],original)
+
 class RecoveryGuidanceTest(unittest.TestCase):
     def decide(self, **kwargs):
         values=dict(user_paused=False,mechanism_authorized=False,active_tool=False,ownership_known=True,

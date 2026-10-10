@@ -17,6 +17,15 @@ THREAD = '01a107a2-e9e4-7670-bc44-1144fa9b27e2'
 
 CODE_ROOTS = ('services', 'apps', 'bundles', 'scripts')
 CODE_EXTENSIONS = ('.py', '.ts', '.tsx', '.js', '.mjs', '.sql', '.sh')
+NATIVE_PACKAGE_ROOT = 'services/aos-api/postgres-extensions'
+NATIVE_EXTENSIONS = ('.c', '.h', '.control')
+
+
+def code_material(relative):
+    path = Path(relative)
+    return path.suffix in CODE_EXTENSIONS or (
+        path.is_relative_to(NATIVE_PACKAGE_ROOT) and
+        (path.suffix in NATIVE_EXTENSIONS or path.name == 'Makefile'))
 
 
 def exact_file(repo, relative, roots, *, max_bytes=1024 * 1024):
@@ -149,7 +158,7 @@ def checkpoint_snapshot(repo, thread, checkpoint, context):
                 raise ValueError('evidence outside task directory')
             file = exact_file(repo, relative, roots)
             if key == 'code_files':
-                if file.suffix not in CODE_EXTENSIONS:
+                if not code_material(relative):
                     raise ValueError('not a code file')
                 scoped = 'aos-platform/' + relative
                 if any(scoped == scope or scoped.startswith(scope.rstrip('/') + '/') for scope in receipt.get('excluded_scope', [])):
@@ -176,6 +185,8 @@ def snapshot(repo, thread, checkpoint=None, context=None):
     paths = [f':(glob){root}/**/*.{ext}'
              for root in ('services', 'apps', 'bundles', 'scripts')
              for ext in ('py', 'ts', 'tsx', 'js', 'mjs', 'sql', 'sh')]
+    paths += [f':(glob){NATIVE_PACKAGE_ROOT}/**/*{ext}' for ext in NATIVE_EXTENSIONS]
+    paths.append(f':(glob){NATIVE_PACKAGE_ROOT}/**/Makefile')
     latest = git('log', '-1', '--format=%H %ct', '--', *paths).split()
     result = dict(repo=str(repo), thread=thread, branch=git('branch', '--show-current'),
                   head=git('rev-parse', 'HEAD'), code_commit=latest[0] if latest else None,

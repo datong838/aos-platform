@@ -24,12 +24,8 @@
     ".evidence/gt-shared-parent-native-ending-20261011/backend-callback-inventory-1747.json",
     ".evidence/gt-shared-parent-native-ending-20261011/backend-source-audit-r1/verification.json",
     ".evidence/gt-shared-parent-native-ending-20261011/module-reader-r2/verification-r4.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-reader-closure-r1/result.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-intent-comparison-1751/verification.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-source-epoch-closure-1752/verification.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-executor-write-fence-1753/verification.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-utility-fence-1754/verification.json",
     ".evidence/gt-shared-parent-native-ending-20261011/receipt-observation-1768.json",
-    ".evidence/gt-shared-parent-native-ending-20261011/module-file-facts-1768/verification.json"
+    ".evidence/gt-shared-parent-native-ending-20261011/module-file-facts-1768/verification.json",
+    ".evidence/gt-shared-parent-native-ending-20261011/dependency-material-references-1769.json"
   ]
 }

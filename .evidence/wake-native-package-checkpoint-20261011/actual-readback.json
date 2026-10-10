@@ -1,0 +1,12 @@
+{
+  "unchanged_files": {
+    ".evidence/gt-shared-parent-native-ending-20261011/checkpoint.json": "e116c1f9c883367cce86b5e89b9cefe070fe8547aa10879854792fef6a4d542c",
+    ".evidence/gt-shared-parent-native-ending-20261011/dependency-material-references-1769.json": "dc193df375be6f148962f9d0f2c333ce25153515c5d55c45a818c63270c213fa",
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/authority.json": "90291e7a0f3fd8b38315f067c579ae0b16c64299a7c157f752d1d494ff115940",
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/leases.json": "a0e10af2f9760a3abb69cbe9bc58848bca7b4e4bf1505a02e546291792385ee2",
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS\u9879\u76ee\u5f00\u53d1\u4e0a\u4e0b\u6587/memory/receipts/tasks/gt-shared-parent-native-ending-20261011.json": "c128b05486cea2e5c043699d66fb9c29bd8c95340bf8b127c06e224036afa6c5"
+  },
+  "shadow_calls": 2,
+  "foreign_reference_hashes_rechecked": true,
+  "business_completion": false
+}

@@ -1,0 +1,18 @@
+[
+  "scripts/long-task-watchdog/aos_wake_progress.py",
+  "scripts/long-task-watchdog/test_aos_wake_progress.py",
+  ".evidence/gt-shared-parent-native-ending-20261011/checkpoint.json",
+  ".evidence/gt-shared-parent-native-ending-20261011/dependency-material-references-1769.json",
+  ".evidence/wake-native-package-checkpoint-20261011/before.json",
+  ".evidence/wake-native-package-checkpoint-20261011/original-event-readback.json",
+  ".evidence/wake-native-package-checkpoint-20261011/task.json",
+  ".evidence/wake-native-package-checkpoint-20261011/actual-shadow-1.json",
+  ".evidence/wake-native-package-checkpoint-20261011/red.raw.json",
+  ".evidence/wake-native-package-checkpoint-20261011/green-r2.raw.json",
+  ".evidence/wake-native-package-checkpoint-20261011/actual-shadow-2.json",
+  ".evidence/wake-native-package-checkpoint-20261011/green.raw.json",
+  ".evidence/wake-native-package-checkpoint-20261011/plan.md",
+  ".evidence/wake-native-package-checkpoint-20261011/verification.json",
+  ".evidence/wake-native-package-checkpoint-20261011/review.md",
+  ".evidence/wake-native-package-checkpoint-20261011/actual-readback.json"
+]

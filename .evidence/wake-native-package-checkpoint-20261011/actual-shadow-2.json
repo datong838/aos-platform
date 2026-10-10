@@ -1,0 +1,5 @@
+{
+  "exit": 0,
+  "stdout": "{\"repo\": \"/Users/ddt/work/projects/ai_agent/aos-platform\", \"thread\": \"01a107a2-e9e4-7670-bc44-1144fa9b27e2\", \"branch\": \"m1\", \"head\": \"5ece5bfcbeda79dbe7a6a3bc8fe5b2bd74912dc6\", \"code_commit\": \"d317590be7bbeb65eb3d1ecb16c3b5f57592680b\", \"code_time\": 1791670456, \"checkpoint\": {\"task_id\": \"gt-shared-parent-native-ending-20261011\", \"owner\": \"codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2\", \"authority_revision\": \"AOS-001769\", \"step\": \"native-module-disk-facts-seven-tests-green-full-ending-remains\", \"fingerprint\": \"a003d1fb39b4f3c2e4f36c0d758a7385a4f9cbafbed5c82821b3d4a9f4a9f933\", \"task_base_revision\": \"AOS-001746\"}, \"schema\": \"aos-wake-progress/v2\", \"event\": \"0001791615233448\", \"observed_at\": 1791670627.323282, \"unchanged_wakes\": 0, \"code_age_seconds\": 171, \"action\": \"REVIEW_REQUIRED\", \"meaning\": \"Observation only: task file changes require content review; never work authorization, liveness or business completion.\"}\n",
+  "stderr": ""
+}

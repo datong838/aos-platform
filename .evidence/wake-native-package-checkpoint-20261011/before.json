@@ -1,0 +1,4 @@
+{
+  "scripts/long-task-watchdog/aos_wake_progress.py": "456cd5c193ad4d96b9c8e77d225cc77d5184607d2f8590ab05786e9c8ecee363",
+  "scripts/long-task-watchdog/test_aos_wake_progress.py": "fadaaa52aa52c74d4517603db72a2cf4e58c232895dc544a1c1c679b0ded4ebd"
+}

@@ -1,0 +1,16 @@
+{
+  "authority": "AOS-001769",
+  "red": "45 tests: native checkpoint ERROR and native-only commit FAIL; negative safety still passed",
+  "regression": "129 tests OK",
+  "current_native_checkpoint_shadow": "two reads; exact current authority and same fingerprint; checkpoint/Task/Lease/authority unchanged",
+  "original_event_command_exit": 0,
+  "original_event_duplicate_retained_prior_state": true,
+  "limits": "Duplicate heartbeat retains prior state by contract; current native binding is proven by shadow, not the old persisted snapshot",
+  "business_authority": false,
+  "goal_complete": false,
+  "formal_db_changed": false,
+  "files": {
+    "scripts/long-task-watchdog/aos_wake_progress.py": "ab4b80062a045684cf4cc92b79a5345e9228e77cfeec7ac9765bd723b06b05ab",
+    "scripts/long-task-watchdog/test_aos_wake_progress.py": "5f83cf0a1e481215ec7b516bc6521cf97bfd9da93f16c4c349f054d6928a8d1c"
+  }
+}
