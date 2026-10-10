@@ -1,0 +1,36 @@
+{
+  "authority_revision": "AOS-001684",
+  "task": "gt-shared-parent-certificate-identity-20261010",
+  "head": "fe1793261be15c01bfc02aeef05d81bd5bc87b54",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "same_caller_metadata_necessary_verified": true,
+  "full_task_delivered": false,
+  "historical_fixture_restored": false,
+  "references": [
+    {
+      "path": ".evidence/gt-shared-parent-certificate-identity-20261010/current-native-certificate-reference-1683.json",
+      "sha256": "46e063b7d988a5a4761507f12749ff440fa33bf3209092b104b6aaa1e9b9c7bf"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/joint-finalizer-audit-plan-1683.md",
+      "sha256": "3a77c55f25f6166598fc937d6c5e3bc87af3ddef3eeb921e844dbf7981831daf"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/joint-finalizer-audit-review-1683.md",
+      "sha256": "d573dce1582c237f8cbdb0246565822f1281f6b85f168fe818774b0b63ca6bf9"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/joint-finalizer-current-audit-1683.json",
+      "sha256": "0e914c80c60cc85ca620baff9df7396b6bf9e59db0dd37f7f4e93fb511820fb5"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/joint-finalizer-audit-failure-r1-1683.json",
+      "sha256": "d47ef744a020da6eca2c7951fd88c2210bbb9a5896db8a980d4adca2a9776ec7"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/joint-finalizer-audit-failure-r2-1683.json",
+      "sha256": "4cd3c4b749a462a4b544a20c309275903c763c3ffc3dc86605f4f06798747ce3"
+    }
+  ]
+}
