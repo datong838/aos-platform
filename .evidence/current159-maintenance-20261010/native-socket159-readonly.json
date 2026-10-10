@@ -1,0 +1,23 @@
+{
+  "observation": {
+    "cluster": "7683855731447750695",
+    "database": "aos_current_preview_20260927",
+    "local_socket": true,
+    "counts": {
+      "runtime_bindings": 0,
+      "host_assignments": 0,
+      "enabled_host_identities": 0,
+      "enabled_meta_schedules": 0,
+      "host_leases": 0
+    }
+  },
+  "status": "CURRENT_NATIVE_SOCKET_READONLY_GREEN",
+  "version": "a0v_157",
+  "database_mutated": false,
+  "full_surface_after_stop_pending": true,
+  "observed_at": "2026-10-10T09:22:42.445961+00:00",
+  "head": "4e57a703066c828d2ba34aba2de6b73f2ad333fd",
+  "authority": "AOS-001713",
+  "task": "current159-maintenance-20261010",
+  "observer_sha256": "2f5c161789f781b58b379007fb801def9ee98c642f86260e84ec47395484fa89"
+}

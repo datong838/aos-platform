@@ -55,6 +55,22 @@ def require_current_surface(v,*,now):
     source_count+=1;require(name=='colima-aos-extension' and item['cmd']==['postgres'],'CURRENT_SOURCE_ENGINE_DRIFT')
  require(len(ids)==len(set(ids)) and source_count==1,'CURRENT_SOURCE_MISSING_OR_DUPLICATE')
 
+def require_native_database(value):
+ require(type(value) is dict and set(value)=={'cluster','database','local_socket','counts'},'EXACT_NATIVE_DATABASE_OBSERVATION_REQUIRED')
+ require(value['cluster']=='7683855731447750695' and value['database']==DB and value['local_socket'] is True,'ORIGINAL_NATIVE_SOCKET_DATABASE_REQUIRED')
+ counts=value['counts'];require(type(counts) is dict and set(counts)==set(COUNTS) and all(type(counts[k]) is int and counts[k]>=0 for k in COUNTS),'EXACT_NATIVE_INTEGER_COUNTS_REQUIRED')
+ return value
+
+def collect_native_database(checked):
+ query="""BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; SELECT json_build_object(
+ 'cluster',(SELECT system_identifier::text FROM pg_control_system()),'database',current_database(),'local_socket',inet_server_addr() IS NULL,
+ 'counts',json_build_object('runtime_bindings',(SELECT count(*) FROM extension_runtime_binding),
+ 'host_assignments',(SELECT count(*) FROM extension_runtime_host_assignment),
+ 'enabled_host_identities',(SELECT count(*) FROM extension_runtime_host_identity WHERE enabled),
+ 'enabled_meta_schedules',(SELECT count(*) FROM meta_schedule WHERE enabled),
+ 'host_leases',(SELECT count(*) FROM extension_runtime_host_lease_a0v_093))); ROLLBACK;"""
+ return require_native_database(json.loads(checked(['docker','--context','colima-aos-extension','exec',SOURCE,'psql','-X','-U','aos_app','-d',DB,'-qAt','-v','ON_ERROR_STOP=1','-c',query])))
+
 def collect():
  """Native read-only collector; caller must separately guard live Task/HEAD/authority."""
  root=Path(__file__).resolve().parents[2]
@@ -90,17 +106,7 @@ def collect():
  absent={}
  for label in ('com.aos.a0v-api-8080','com.aos.a0v-w5c3-runtime-host'):
   r=run(['launchctl','list',label]);absent[label]=(r.returncode==113 and r.stderr.decode('utf8',errors='strict')==f'Could not find service "{label}" in domain for port\n')
- spec=importlib.util.spec_from_file_location('surface_boot159',root/'scripts/a0v_current_preview_bootstrap.py');boot=importlib.util.module_from_spec(spec);spec.loader.exec_module(boot)
- import psycopg
- with psycopg.connect(**boot._connection_parameters()) as conn:
-  conn.read_only=True;conn.isolation_level=psycopg.IsolationLevel.REPEATABLE_READ
-  require(conn.info.dbname==DB,'CURRENT_DATABASE_TARGET_REQUIRED')
-  cluster=conn.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0]
-  result=conn.execute('''SELECT (SELECT count(*) FROM extension_runtime_binding),
-   (SELECT count(*) FROM extension_runtime_host_assignment),
-   (SELECT count(*) FROM extension_runtime_host_identity WHERE enabled),
-   (SELECT count(*) FROM meta_schedule WHERE enabled),
-   (SELECT count(*) FROM extension_runtime_host_lease_a0v_093)''').fetchone();conn.rollback()
+ native=collect_native_database(checked);cluster=native['cluster'];result=[native['counts'][k] for k in COUNTS]
  value={'scope':'CURRENT_PREVIEW_LOCAL_EXECUTION_SURFACE_ONLY','source_id':SOURCE,'cluster':cluster,'database':DB,'at':datetime.now(timezone.utc).isoformat(),
   'binding':binding,
   'counts':dict(zip(COUNTS,result)),'process_inventory_utf8_strict':True,'process_inventory_sha256':hashlib.sha256(raw.stdout).hexdigest(),'forbidden_runtime_pids':forbidden,

@@ -1,3 +1,4 @@
+import json
 import copy, importlib.util
 from datetime import datetime,timezone,timedelta
 from pathlib import Path
@@ -43,3 +44,24 @@ def test_topology_or_freshness_rejected(variant):
     if variant=='future':n-=timedelta(seconds=1)
     if variant=='naive':v['at']='2026-10-10T08:00:00'
     with pytest.raises(ValueError):module().require_current_surface(v,now=n)
+
+@pytest.mark.parametrize('variant',['cluster','database','socket','boolean','string','missing','extra'])
+def test_native_socket_database_rejects_foreign_or_malformed(variant):
+ m=module();v={'cluster':'7683855731447750695','database':m.DB,'local_socket':True,'counts':{k:0 for k in m.COUNTS}}
+ if variant=='cluster':v['cluster']='foreign'
+ if variant=='database':v['database']='foreign'
+ if variant=='socket':v['local_socket']=False
+ if variant=='boolean':v['counts'][m.COUNTS[0]]=False
+ if variant=='string':v['counts'][m.COUNTS[0]]='0'
+ if variant=='missing':v['counts'].pop(m.COUNTS[0])
+ if variant=='extra':v['counts']['extra']=0
+ with pytest.raises(ValueError):m.require_native_database(v)
+
+def test_native_socket_database_exact_command_and_readonly():
+ m=module();calls=[]
+ def checked(args):
+  calls.append(args);return json.dumps({'cluster':'7683855731447750695','database':m.DB,'local_socket':True,'counts':{k:0 for k in m.COUNTS}})
+ value=m.collect_native_database(checked)
+ assert value['local_socket'] is True and len(calls)==1
+ assert calls[0][:5]==['docker','--context','colima-aos-extension','exec',m.SOURCE]
+ assert '-h' not in calls[0] and 'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;' in calls[0][-1] and calls[0][-1].endswith('ROLLBACK;')

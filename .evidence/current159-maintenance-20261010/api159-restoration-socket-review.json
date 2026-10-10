@@ -1,0 +1,42 @@
+{
+  "status": "CURRENT_API_RESTORATION_AND_NATIVE_SOCKET_OBSERVER_REVIEW_GREEN",
+  "authority": "AOS-001713",
+  "tests": 236,
+  "files": {
+    "registered_api_restore159.py": "4d81e92d0db5d787504bae6cfa63f244836c83651dc909e6f36f7efb1f2806e4",
+    "api159_registered_entrypoint.py": "159a3af478a371c1d58feeb4ea74874e388e52b10c94d9f1d762cf0c7274aac6",
+    "execution_surface159.py": "2f5c161789f781b58b379007fb801def9ee98c642f86260e84ec47395484fa89"
+  },
+  "scheme_consistent": true,
+  "original_flags_signature_schema_checks_preserved": true,
+  "frozen_entry_rechecked_before_each_startup_effect": true,
+  "unknown_effects_reconcile_only": true,
+  "current_database_mutated": false,
+  "current_services_restarted": false,
+  "positive_current159_startup_pending": true,
+  "eight_browser_pending": true,
+  "candidates": [
+    {
+      "registered": "current159-maintenance-20261010",
+      "next": "compose complete current-source maintenance executor",
+      "authority": "user approved current exact migration/restart after second zero-window backup/fullrestore/rehearsal",
+      "dependencies": [
+        "same-owner live Lease",
+        "current original157/native surface",
+        "frozen original158159 and startup guard",
+        "no unknown effect"
+      ]
+    },
+    {
+      "registered": "complete shared physical atomic admission/finalizer",
+      "next": "original common kernel extraction and old seven denials preservation",
+      "authority": "existing supporting Task scopes and reviewed joint implementation plan",
+      "dependencies": [
+        "maintenance finished before current local restart acceptance",
+        "exact supporting Task/Lease readback",
+        "no formal Provider grant"
+      ]
+    }
+  ],
+  "risk": "Controller tests and readonly receipts do not prove current zero-execution window, actual current migration/startup/browser or natural business chain."
+}
