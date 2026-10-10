@@ -6,7 +6,7 @@
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "authority_revision": "AOS-001724",
   "task_base_revision": "AOS-001698",
-  "step": "native-pending-origin-verified-actual-commit-denied-full-risk-intent-endchannel-next",
+  "step": "pending-origin-pass-next-risk-owner-handoff-native-red",
   "evidence_files": [
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/implementation-plan-1698.md",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/current-native-certificate-reference-1699.json",
@@ -38,7 +38,8 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/certificate-positive-context-sync-1723.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-verification-1723.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-native-1723-r2/independent-readback.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-context-sync-1724.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-origin-context-sync-1724.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/risk-owner-handoff-investigation-1724.json"
   ],
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",

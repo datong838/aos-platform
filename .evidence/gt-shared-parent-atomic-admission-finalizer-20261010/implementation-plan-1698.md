@@ -61,3 +61,6 @@ RED新保存artifact缺失；先原生事务内DDL/Owner/ACL/RLS/不可变/defer
 
 ## 1723-r1 原生截断拒绝断言修正
 332项相邻通过。r1真实保存后UPDATE/DELETE被不可变门拒绝；TRUNCATE在待deferred事件存在时由PG原生55006先拒绝，测试原只接受42501而失败。产品无需放宽或改动。r2新隔离数据库/新申请/新签名，断言精确55006与pending trigger events；后续原Source相邻及真实COMMIT缺失结束通道拒绝保留。原r1未知数据库结果仅只读，不重跑。
+
+## 1724 下一波 Owner 交接门
+独立SER READ ONLY新保留库确认physical Owner对Issuer pending schema无USAGE、表无SELECT，完整结束入口不存在；不能假设后续physical endcallee能读取该表。下一最小步骤先设计固定可信lookup/精确函数委托：只读取同当前native caller/xid/pid与plan/hash的已原生核验记录，不授宽schema/table权限；再复用原account fence和费用桶顺序，联合旧未决风险/新risk/唯一Intent/Judge依赖。必须逐字冻结新查找函数与闭ACL、纳入全部event/RI/真实COMMIT测试，metadata门不授执行权限。正式Root来源为第二已登记候选，隔离test Root不解该门。

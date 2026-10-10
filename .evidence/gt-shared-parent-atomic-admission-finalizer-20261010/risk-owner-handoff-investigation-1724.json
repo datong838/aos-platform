@@ -1,0 +1,36 @@
+{
+  "authority": "AOS-001724",
+  "head": "19db445b2ed37d2aae6a140534ff94047629a352",
+  "readonly": true,
+  "cluster": "7694680278363095064",
+  "database": "aos_test_dec98ee23cfe_ti4_test",
+  "physical_owner": "aos_physical_capacity_occupation_owner",
+  "pending_origin_access": {
+    "schema_usage": false,
+    "table_select": false
+  },
+  "end_channel_installed": false,
+  "registered_candidates": [
+    {
+      "candidate": "Complete old/new physical risk ledger and unique TargetIntent/Judge dependency",
+      "authority": "Already approved isolation implementation; same Task exact scopes",
+      "dependencies": [
+        "Original physical account fence/fee bucket order",
+        "Closed cross-owner origin lookup or verified handoff; no broad schema/table grant",
+        "Full old unresolved and new risk counts without counting prepared_only as inflight",
+        "Complete event/RI/end protocol and actual COMMIT fault matrices"
+      ]
+    },
+    {
+      "candidate": "Formal native deployment/Root provenance",
+      "authority": "Separate formal gate",
+      "dependencies": [
+        "Current signed installation and Root provenance; unavailable in isolated fixture"
+      ]
+    }
+  ],
+  "finding": "New storage belongs to Issuer Owner; physical Owner has no schema USAGE/table SELECT. Future complete end-channel cannot assume direct access. Must explicitly design fixed trusted lookup/exact grant and include it in native artifact verification; metadata gate alone is insufficient.",
+  "next_safe_step": "Design fixed cross-owner raw-facts lookup and original account-lock/recount ordering before extending ledger tables. No broad grants or stub end-channel.",
+  "execution_allowed": false,
+  "full_task_delivered": false
+}
