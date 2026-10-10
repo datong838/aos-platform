@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001732",
+  "authority_revision": "AOS-001733",
   "code_files": [
     "services/aos-api/aos_api/aip_model_eval_execution_owner.py",
     "services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py",
@@ -9,7 +9,6 @@
     "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py"
   ],
   "evidence_files": [
-    ".evidence/gt-atomic-model-admission-20261008/model-identity-plan-reference.json",
     ".evidence/gt-atomic-model-admission-20261008/model-identity-design-checkpoint.md",
     ".evidence/gt-atomic-model-admission-20261008/intent-existing-row-checkpoint.md",
     ".evidence/gt-atomic-model-admission-20261008/intent-existing-row-independent-r1.json",
@@ -40,12 +39,13 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/initial-intents-separated-adjacent-verification-1728.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/end-authority-verification-1729.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/initial-call-verification-1730.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/postlock-lookup-verification-1731.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/postlock-lookup-verification-1731.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/initial-window-verification-1732.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "raw-initial-call-native-component-pass-full-window-state-counted-union-next",
+  "step": "initial-window-component-pass-fixed-source-investigation-next",
   "task_base_revision": "AOS-001537",
   "task_id": "gt-atomic-model-admission-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
