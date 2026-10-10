@@ -1,0 +1,168 @@
+Exact source SHA256: 9aa4041b1d063e5946b59d7c5839915205a0d35582d03fa2b0b0010cdac8b82e
+STAGE_AUTHORITY = 'public.stage_shared_parent_end_authority(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text)'
+READ_RETAINED = 'public.read_shared_parent_retained_origin(uuid,text,xid8,integer)'
+
+
+def _end_authority_native_context_sql():
+    return """session_user<>'aos_provider_capacity_occupation'
+              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'
+              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'
+              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'
+              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'
+              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'
+              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'
+              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project'"""
+
+
+def _retained_source_packet_validation_sql():
+    """Closed original consumer-claims packet; no bearer token is retained."""
+    return """            IF p_raw IS NULL OR octet_length(p_raw) NOT BETWEEN 2 AND 1048576 THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RETAINED_PACKET_REQUIRED' USING ERRCODE='23514'; END IF;
+            packet:=convert_from(p_raw,'UTF8')::jsonb;
+            IF jsonb_typeof(packet) IS DISTINCT FROM 'object'
+              OR jsonb_typeof(packet->'authentication') IS DISTINCT FROM 'object' THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RETAINED_PACKET_REQUIRED' USING ERRCODE='23514'; END IF;
+            IF convert_to(public.canonical_asset_registry_jsonb(packet),'UTF8') IS DISTINCT FROM p_raw
+              OR (SELECT count(*) FROM jsonb_object_keys(packet))<>4
+              OR packet-ARRAY['protocol','tenant','sourceRef','authentication'] IS DISTINCT FROM '{}'::jsonb
+              OR packet->>'protocol' IS DISTINCT FROM 'aos-provider-capacity-source-consumption/v1'
+              OR packet->'tenant' IS DISTINCT FROM jsonb_build_object('orgId','org-org','projectId','dev-project')
+              OR (SELECT count(*) FROM jsonb_object_keys(packet->'authentication'))<>4
+              OR (packet->'authentication')-ARRAY['consumerSubject','oidcIssuer','oidcAudience','authenticationExpiresAt'] IS DISTINCT FROM '{}'::jsonb THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RETAINED_PACKET_REQUIRED' USING ERRCODE='23514'; END IF;
+"""
+
+
+def _end_authority_body_sql():
+    """Derive bindings from the previously native-verified pending origin."""
+    return """            facts:=pending#>'{immutable,origin,immutable,originalRisk,originalFacts}';
+            body:=jsonb_build_object('schemaVersion','aos.shared-parent-end-authority/v1',
+              'planId',pending->'planId','pendingOriginHash',pending->>'contentHash',
+              'sourcePacketHash','sha256:'||encode(sha256(p_raw),'hex'),
+              'sourceRef',facts#>'{target,sourceRef}',
+              'targetHold',facts#>'{target,reservationId}','targetRequestId',facts#>'{target,requestId}',
+              'targetRequestHash',facts#>'{target,requestHash}',
+              'judgeHold',facts#>'{judge,reservationId}','judgeRequestId',facts#>'{judge,requestId}',
+              'judgeRequestHash',facts#>'{judge,requestHash}',
+              'manifestHash',pending#>'{immutable,origin,immutable,manifestHash}',
+              'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),
+              'state','awaiting_full_admission','executionAllowed',false);
+"""
+
+
+def shared_parent_end_authority_statements():
+    """Retain native Source revalidation inputs for the future full ending.
+
+    Closed explicit artifact. No bearer, new authentication, runtime grant or
+    complete ending is created. Immutable material has the same deferred
+    complete-ending requirement and cannot be independently committed.
+    """
+    s = ADMISSION_SCHEMA
+    table = s + '.end_authority'
+    issuer = _certificate.ISSUER_OWNER
+    denied = f'PUBLIC,aos_runtime,aos_provider_capacity_issuer,{OWNER}'
+    return (
+        f'''CREATE TABLE {table}(
+          plan_id uuid PRIMARY KEY REFERENCES {s}.pending_origin(plan_id),
+          org_id text NOT NULL CHECK(org_id='org-org'),project_id text NOT NULL CHECK(project_id='dev-project'),
+          pending_hash text NOT NULL CHECK(pending_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          source_raw bytea NOT NULL CHECK(octet_length(source_raw) BETWEEN 2 AND 1048576),
+          body jsonb NOT NULL,content_hash text NOT NULL CHECK(content_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          caller_xid xid8 NOT NULL,caller_pid integer NOT NULL CHECK(caller_pid>0))''',
+        f'ALTER TABLE {table} OWNER TO {issuer}',
+        f'REVOKE ALL ON {table} FROM {denied}',
+        f'ALTER TABLE {table} ENABLE ROW LEVEL SECURITY',
+        f'ALTER TABLE {table} FORCE ROW LEVEL SECURITY',
+        f'''CREATE POLICY exact_scope ON {table} TO {issuer}
+          USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+          WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))''',
+        f'''CREATE FUNCTION {s}.check_end_authority() RETURNS trigger
+          LANGUAGE plpgsql SET search_path=pg_catalog AS $retained_binding$
+          DECLARE original {s}.pending_origin%ROWTYPE; pending jsonb; facts jsonb; body jsonb;
+            packet jsonb; p_raw bytea:=NEW.source_raw;
+          BEGIN
+            IF {_end_authority_native_context_sql()} THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_AUTHORITY_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+{_retained_source_packet_validation_sql()}            SELECT * INTO original FROM {s}.pending_origin WHERE plan_id=NEW.plan_id FOR SHARE;
+            IF NOT FOUND OR original.content_hash IS DISTINCT FROM NEW.pending_hash
+              OR original.caller_xid IS DISTINCT FROM pg_current_xact_id()
+              OR original.caller_pid IS DISTINCT FROM pg_backend_pid() THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_AUTHORITY_PENDING_REQUIRED' USING ERRCODE='23514'; END IF;
+            pending:=jsonb_build_object('planId',original.plan_id,'immutable',original.body,'contentHash',original.content_hash);
+{_end_authority_body_sql()}            IF NEW.body IS DISTINCT FROM body
+              OR NEW.org_id IS DISTINCT FROM original.org_id OR NEW.project_id IS DISTINCT FROM original.project_id
+              OR NEW.caller_xid IS DISTINCT FROM original.caller_xid OR NEW.caller_pid IS DISTINCT FROM original.caller_pid
+              OR packet->'sourceRef' IS DISTINCT FROM body->'sourceRef'
+              OR facts#>'{{judge,sourceRef}}' IS DISTINCT FROM body->'sourceRef'
+              OR NEW.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex') THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_AUTHORITY_BINDING_REQUIRED' USING ERRCODE='23514'; END IF;
+            RETURN NEW;
+          END $retained_binding$''',
+        f'ALTER FUNCTION {s}.check_end_authority() OWNER TO {issuer}',
+        f'REVOKE ALL ON FUNCTION {s}.check_end_authority() FROM {denied}',
+        f'CREATE TRIGGER exact_authority BEFORE INSERT ON {table} FOR EACH ROW EXECUTE FUNCTION {s}.check_end_authority()',
+        f'CREATE TRIGGER immutable_authority BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION {s}.immutable_pending_origin()',
+        f'CREATE TRIGGER no_truncate_authority BEFORE TRUNCATE ON {table} FOR EACH STATEMENT EXECUTE FUNCTION {s}.immutable_pending_origin()',
+        f'''CREATE CONSTRAINT TRIGGER require_complete_authority_end AFTER INSERT ON {table}
+          DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION {s}.require_pending_completion()''',
+        f'''CREATE FUNCTION {STAGE_AUTHORITY.split('(')[0]}(
+          p_raw bytea,p_source jsonb,p_target uuid,p_tr text,p_th text,p_judge uuid,p_jr text,p_jh text,
+          p_plan uuid,p_manifest jsonb,p_manifest_hash text,p_certificates bytea,p_pending_hash text)
+          RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $retain$
+          DECLARE pending jsonb; facts jsonb; body jsonb; packet jsonb; digest text; previous {table}%ROWTYPE;
+          BEGIN
+            IF {_end_authority_native_context_sql()} THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_AUTHORITY_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+{_retained_source_packet_validation_sql()}            pending:={READ_PENDING.split('(')[0]}(
+              p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh,p_plan,p_manifest,p_manifest_hash,p_certificates,p_pending_hash);
+{_end_authority_body_sql()}            digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
+            INSERT INTO {table}(plan_id,org_id,project_id,pending_hash,source_raw,body,content_hash,caller_xid,caller_pid)
+              VALUES(p_plan,'org-org','dev-project',p_pending_hash,p_raw,body,digest,pg_current_xact_id(),pg_backend_pid())
+              ON CONFLICT DO NOTHING;
+            SELECT * INTO previous FROM {table} WHERE plan_id=p_plan FOR SHARE;
+            IF NOT FOUND OR previous.pending_hash IS DISTINCT FROM p_pending_hash
+              OR previous.source_raw IS DISTINCT FROM p_raw OR previous.body IS DISTINCT FROM body
+              OR previous.content_hash IS DISTINCT FROM digest OR previous.caller_xid IS DISTINCT FROM pg_current_xact_id()
+              OR previous.caller_pid IS DISTINCT FROM pg_backend_pid() THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_AUTHORITY_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+            IF {READ_PENDING.split('(')[0]}(
+              p_raw,p_source,p_target,p_tr,p_th,p_judge,p_jr,p_jh,p_plan,p_manifest,p_manifest_hash,p_certificates,p_pending_hash)
+                IS DISTINCT FROM pending THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_AUTHORITY_CURRENTNESS_CHANGED' USING ERRCODE='23514'; END IF;
+            RETURN jsonb_build_object('planId',p_plan,'immutable',body,'contentHash',digest,'executionAllowed',false);
+          END $retain$''',
+        f'ALTER FUNCTION {STAGE_AUTHORITY} OWNER TO {issuer}',
+        f'REVOKE ALL ON FUNCTION {STAGE_AUTHORITY} FROM {denied}',
+        f'''CREATE FUNCTION {READ_RETAINED.split('(')[0]}(p_plan uuid,p_pending_hash text,p_xid xid8,p_pid integer)
+          RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $retained$
+          DECLARE material {table}%ROWTYPE; original {s}.pending_origin%ROWTYPE;
+            pending jsonb; facts jsonb; body jsonb; packet jsonb; p_raw bytea; verified jsonb; certificates bytea;
+          BEGIN
+            IF {_end_authority_native_context_sql()}
+              OR p_xid IS DISTINCT FROM pg_current_xact_id() OR p_pid IS DISTINCT FROM pg_backend_pid() THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RETAINED_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+            SELECT * INTO material FROM {table} WHERE plan_id=p_plan FOR SHARE;
+            IF NOT FOUND OR material.pending_hash IS DISTINCT FROM p_pending_hash
+              OR material.caller_xid IS DISTINCT FROM p_xid OR material.caller_pid IS DISTINCT FROM p_pid THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RETAINED_AUTHORITY_REQUIRED' USING ERRCODE='23514'; END IF;
+            SELECT * INTO original FROM {s}.pending_origin WHERE plan_id=p_plan FOR SHARE;
+            IF NOT FOUND OR original.content_hash IS DISTINCT FROM p_pending_hash
+              OR original.caller_xid IS DISTINCT FROM p_xid OR original.caller_pid IS DISTINCT FROM p_pid THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RETAINED_PENDING_REQUIRED' USING ERRCODE='23514'; END IF;
+            p_raw:=material.source_raw;
+{_retained_source_packet_validation_sql()}            pending:=jsonb_build_object('planId',original.plan_id,'immutable',original.body,'contentHash',original.content_hash);
+{_end_authority_body_sql()}            IF body IS DISTINCT FROM material.body
+              OR material.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex')
+              OR packet->'sourceRef' IS DISTINCT FROM body->'sourceRef' THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RETAINED_BINDING_REQUIRED' USING ERRCODE='23514'; END IF;
+            certificates:=convert_to(public.canonical_asset_registry_jsonb(original.body->'certificates'),'UTF8');
+            verified:={READ_PENDING.split('(')[0]}(p_raw,body->'sourceRef',
+              (body->>'targetHold')::uuid,body->>'targetRequestId',body->>'targetRequestHash',
+              (body->>'judgeHold')::uuid,body->>'judgeRequestId',body->>'judgeRequestHash',p_plan,
+              original.body#>'{{origin,immutable,manifest}}',body->>'manifestHash',certificates,p_pending_hash);
+            RETURN verified||jsonb_build_object('authorityMaterialHash',material.content_hash);
+          END $retained$''',
+        f'ALTER FUNCTION {READ_RETAINED} OWNER TO {issuer}',
+        f'REVOKE ALL ON FUNCTION {READ_RETAINED} FROM {denied}',
+        f'GRANT EXECUTE ON FUNCTION {READ_RETAINED} TO {OWNER}',
+    )

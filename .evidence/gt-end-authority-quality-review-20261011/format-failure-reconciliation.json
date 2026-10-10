@@ -1,0 +1,25 @@
+{
+  "attempts": [
+    {
+      "request_id": "gt-end-authority-quality-review-20261011-r1",
+      "transport_sha256": "b73973a14cf052f7aec0cd291970f5a0a48d87b017b392d9b2f162729858b502",
+      "process_exit": 0,
+      "official_parser_accepted": false,
+      "failure": "Assistant response fenced with Markdown; strict JSON parser rejected",
+      "verdict_consumed": false,
+      "execution_authorized": false
+    },
+    {
+      "request_id": "gt-end-authority-quality-review-20261011-r2",
+      "transport_sha256": "42ace58162934d9dcba1349749907a3cf7be2f3e6f020717689b9da02b17f255",
+      "process_exit": 0,
+      "official_parser_accepted": false,
+      "failure": "Assistant response fenced with Markdown; strict JSON parser rejected",
+      "verdict_consumed": false,
+      "execution_authorized": false
+    }
+  ],
+  "retry_original_request": false,
+  "raw_transports_preserved": true,
+  "model_review_accepted": false
+}

@@ -1,0 +1,48 @@
+{
+  "head": "2570ae2df33ac0bdbd250b4e9a9b84ff65f8d281",
+  "existing_generators": [
+    {
+      "generator": "shared_parent_original_fact_statements",
+      "statements": 3,
+      "before_sha256": "d2dfa658e16fe74f590409071fe0f83c045934a9fdf1945240bdbfb0502e3c1e",
+      "after_byte_exact": true
+    },
+    {
+      "generator": "shared_parent_admission_origin_statements",
+      "statements": 3,
+      "before_sha256": "ca7df49a608d11dd014e52083dc7593630b85cb0d1c03c6c30be1cc30be49cc9",
+      "after_byte_exact": true
+    },
+    {
+      "generator": "shared_parent_admission_certificate_set_statements",
+      "statements": 4,
+      "before_sha256": "fdfb28965a11c62b0adf6aa55873a0d5d5f98b8bd89083d0291902ba63347a5d",
+      "after_byte_exact": true
+    },
+    {
+      "generator": "shared_parent_admission_storage_statements",
+      "statements": 24,
+      "before_sha256": "7cb4a1c6c5a83432997b5ffd57ff673c13fb9e5439ce0386d1799883cb4f9a78",
+      "after_byte_exact": true
+    },
+    {
+      "generator": "shared_parent_pending_origin_lookup_statements",
+      "statements": 4,
+      "before_sha256": "9a379e04c3290152c2762ba8e2febe909baec2894e6dcba717f4a6565c549426",
+      "after_byte_exact": true
+    },
+    {
+      "generator": "shared_parent_physical_obligation_statements",
+      "statements": 20,
+      "before_sha256": "db1a4d09dcc914351fcb700a1698441c31dde21dfccb05540a155d86ab7b8e9f",
+      "after_byte_exact": true
+    },
+    {
+      "generator": "shared_parent_initial_intent_statements",
+      "statements": 21,
+      "before_sha256": "de76e996dbbfd9b544ea6f53bc003cf3ea5a802a182da4ddeb56529c3f7edb76",
+      "after_byte_exact": true
+    }
+  ],
+  "all_byte_exact": true
+}

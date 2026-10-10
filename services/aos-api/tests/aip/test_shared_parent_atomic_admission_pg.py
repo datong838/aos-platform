@@ -261,3 +261,36 @@ def test_native_shared_intent_dependency_is_closed(native):
     native.rollback()
     assert native.execute('SELECT to_regprocedure(%s)',(api.INITIAL_INTENT,)).fetchone()[0] is None
     native.rollback()
+
+
+def test_native_retained_end_authority_is_closed_and_caller_bound(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    from aos_api.aip_shared_parent_certificate_prepare import ISSUER_OWNER
+    for statement in (*api.shared_parent_admission_origin_statements(),
+                      *api.shared_parent_admission_certificate_set_statements(),
+                      *api.shared_parent_admission_storage_statements(),
+                      *api.shared_parent_pending_origin_lookup_statements(),
+                      *api.shared_parent_end_authority_statements()):
+        native.execute(statement)
+    table = api.ADMISSION_SCHEMA + '.end_authority'
+    assert native.execute('SELECT pg_get_userbyid(relowner),relrowsecurity,relforcerowsecurity FROM pg_class WHERE oid=%s::regclass', (table,)).fetchone() == (ISSUER_OWNER, True, True)
+    for role in ('aos_runtime', 'aos_provider_capacity_issuer', OWNER):
+        for privilege in ('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE'):
+            assert not native.execute('SELECT has_table_privilege(%s,%s,%s)', (role,table,privilege)).fetchone()[0]
+    for signature in (api.STAGE_AUTHORITY, api.READ_RETAINED):
+        assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (signature,)).fetchone() == (ISSUER_OWNER, True, ['search_path=pg_catalog'])
+        for role in ('aos_runtime', 'aos_provider_capacity_issuer'):
+            assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (role,signature)).fetchone()[0]
+    assert native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (OWNER,api.READ_RETAINED)).fetchone()[0]
+    assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (OWNER,api.STAGE_AUTHORITY)).fetchone()[0]
+    assert not native.execute("SELECT has_schema_privilege(%s,%s,'USAGE')", (OWNER,api.ADMISSION_SCHEMA)).fetchone()[0]
+    assert native.execute("SELECT tgdeferrable,tginitdeferred FROM pg_trigger WHERE tgrelid=%s::regclass AND tgname='require_complete_authority_end'", (table,)).fetchone() == (True, True)
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_RETAINED_NATIVE_CALLER_REQUIRED'):
+        with native.transaction():
+            native.execute('SELECT public.read_shared_parent_retained_origin(NULL,NULL,NULL,NULL)')
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_AUTHORITY_NATIVE_CALLER_REQUIRED'):
+        with native.transaction():
+            native.execute('SELECT public.stage_shared_parent_end_authority('+','.join(['NULL']*13)+')')
+    native.rollback()
+    assert native.execute('SELECT to_regclass(%s)', (table,)).fetchone()[0] is None
+    native.rollback()

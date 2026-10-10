@@ -1,0 +1,46 @@
+{
+  "status": "RETAINED_AUTHORITY_NATIVE_REVALIDATION_AND_COMMIT_REJECTION_COMPONENT_PASS",
+  "authority": "AOS-001729",
+  "database": "aos_test_9fcf64cfee71_ti4_test",
+  "cluster": "7694680278363095064",
+  "native_functions": [
+    {
+      "name": "aos_shared_parent_admission_private.check_end_authority",
+      "body_sha256": "a57899de91c03d3f69ea256d0f919122831d12aab2e2d4ee343defe1ce84127d",
+      "native_body_exact": true,
+      "owner": "aos_model_eval_issuer_owner"
+    },
+    {
+      "name": "public.stage_shared_parent_end_authority",
+      "body_sha256": "3203a91e6d314e78f9e564512d9d21c05fa0b5bd749ad4ad20bbf71f85a5490d",
+      "native_body_exact": true,
+      "owner": "aos_model_eval_issuer_owner"
+    },
+    {
+      "name": "public.read_shared_parent_retained_origin",
+      "body_sha256": "6cf9f79bfbaf722f609bf250621e8e610d4135cf57b05a168c5fa040e8b3914b",
+      "native_body_exact": true,
+      "owner": "aos_model_eval_issuer_owner"
+    }
+  ],
+  "signed_legs": 4,
+  "native_caller_aborted": true,
+  "zero_pending_material_and_parent_holds": true,
+  "closed_credentials_field_gate": true,
+  "raw_packet_exported": false,
+  "negative_cases": [
+    "extra_authentication_field_rejected_before_retention",
+    "different_caller_xid",
+    "wrong_pending_hash",
+    "runtime_private_material_read",
+    "authorized_caller_canary_denied",
+    "existing_material_update_denied",
+    "existing_material_delete_denied"
+  ],
+  "whole_fixture_pass": false,
+  "formal_root_provenance": false,
+  "formal_writes": false,
+  "full_admission_commit": false,
+  "full_task_delivered": false,
+  "execution_allowed": false
+}
