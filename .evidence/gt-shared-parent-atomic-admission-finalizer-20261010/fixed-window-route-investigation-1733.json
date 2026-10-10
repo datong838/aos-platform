@@ -1,0 +1,28 @@
+{
+  "authority": "AOS-001733",
+  "status": "FIXED_WINDOW_ORIGINAL_SOURCE_ROUTE_INVESTIGATED",
+  "candidates": [
+    {
+      "candidate": "fresh signed fixed-window original Source to new window component",
+      "authorization": "same isolated Task artifacts; no formal database or runtime authority",
+      "dependency": "create new basis and Source approvals through original APIs, synchronize signed supplier policy and attestation, never mutate stored approved payload; old debit remains inflight-only and must not be weakened",
+      "finding": "existing original Source fixed-window test has real new basis/approval route; new window helper reuses mode-neutral capacity bound, legacy DEBIT/JUDGE_DEBIT deliberately reject fixed mode",
+      "full_positive": false
+    },
+    {
+      "candidate": "nonempty legacy/new union overload negative and rollback",
+      "authorization": "same isolated Task, original native rows only",
+      "dependency": "genuine original debit producer and full valid current facts; no handwritten historical unknown rows",
+      "full_positive": false
+    }
+  ],
+  "next": "prepare fresh fixed-window fixture plan with original approval route before executing; old full Source/cleanup failures remain separately RED",
+  "source_hashes": {
+    "services/aos-api/tests/aip/test_provider_capacity_source_pg.py": "86ed4372485781fc0dde425f25ed95dee316652d48bf0f2f16ec20a56110636c",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "720ab180267ef17ff3413fa5c8c0d94f797904787a2d45c28892ecaa8ea5dc96",
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": "086110f30a9f96b0b6f7493832fd586b6358abb6ea7cb8443ae83c04afa26b8f"
+  },
+  "formal_writes": false,
+  "execution_allowed": false,
+  "goal_complete": false
+}
