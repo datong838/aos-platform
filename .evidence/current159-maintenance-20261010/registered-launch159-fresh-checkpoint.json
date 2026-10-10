@@ -1,0 +1,21 @@
+{
+  "fresh_snapshot": {
+    "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+    "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "branch": "m1",
+    "head": "b99b3b819c6e9cf2d47035c302debabc3daafa22",
+    "code_commit": "84b2e5bc70a02edbc3b0bb5054c75c1100d217fb",
+    "code_time": 1791616497,
+    "checkpoint": {
+      "task_id": "current159-maintenance-20261010",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001708",
+      "step": "registered-launchd-stop-tested-native-candidates-verified-second-window-executor-pending",
+      "fingerprint": "eaf43f1219276d64a47ff0dfa790135b65773954fec9fcc8802ecc5eeb85abd0",
+      "task_base_revision": "AOS-001699"
+    }
+  },
+  "original_heartbeat_event": "2026-10-10T06:53:53.448Z",
+  "wake_original_event_exit": 0,
+  "cached_event_is_not_current_progress": true
+}

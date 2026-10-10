@@ -1,0 +1,9 @@
+{
+  "authority_after": "AOS-001708",
+  "authority_cas_complete": true,
+  "failure": "temporary memory-write exclusion wrapper omitted mode keyword before Prime backup write",
+  "wake_failure": "checkpoint still1707 while authority1708",
+  "recovery": "read back authority and exact Task/Lease; sync existing authority only; no duplicate CAS; update checkpoint1708",
+  "database_mutations": 0,
+  "launchctl_mutations": 0
+}

@@ -1,0 +1,42 @@
+{
+  "revision": "AOS-001708",
+  "commit": "b99b3b819c6e9cf2d47035c302debabc3daafa22",
+  "sync": {
+    "apply": true,
+    "changed": 4,
+    "changes": [
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001708-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001708"
+  },
+  "validation": {
+    "status": "GREEN",
+    "project_revision": "AOS-001708",
+    "projection_count": 8,
+    "schema_count": 9,
+    "task_receipt_count": 1992,
+    "delivery_receipt_count": 1961,
+    "event_count": 5761
+  },
+  "codex_memory_writes": false,
+  "codex_memory_candidates_skipped": 1
+}
