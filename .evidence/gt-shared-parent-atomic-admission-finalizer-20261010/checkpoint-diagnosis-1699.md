@@ -1,0 +1,1 @@
+首次当前checkpoint验证拒绝新Task把.evidence中的调查脚本列入code_files，因原观察器仅允许其固定产品代码根。已将该实际调查文件如实归为evidence_files，code_files留空（产品文件未创建），不改观察器、不伪造产品进展、不造计数提交。Delivery/新Task/CAS未知操作未重放；仅修复并重验checkpoint。

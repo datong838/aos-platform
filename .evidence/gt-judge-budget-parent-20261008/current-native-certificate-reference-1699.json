@@ -1,0 +1,38 @@
+{
+  "authority_revision": "AOS-001699",
+  "task": "gt-judge-budget-parent-20261008",
+  "head": "fdab7516f0ffaa89aa6870d8de5e195973a82ce6",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false,
+  "references": [
+    {
+      "path": ".evidence/gt-judge-budget-parent-20261008/current-native-certificate-reference-1698.json",
+      "sha256": "622fb7b1b6e825dba729efb789c5d13cf58b9c030150a4ccc1e71672c6a47f13"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/task-delivery-verification-1698.json",
+      "sha256": "6bd0a5b3cfc396596d87f5a321b229b6a891606f7c48d095a6054f9997f2d155"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/task-delivery-review-1698.md",
+      "sha256": "cfab15a7f979898bdf554a3e479ea8e8645c2fe5c85a8b7642cc8b9cfb00f3aa"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/previous-preparation-delivery.json",
+      "sha256": "460c0b32af5c81cd34168ccfdbe18a658dd901563fb7dadd425b675e035f6660"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/implementation-plan-1698.md",
+      "sha256": "e21918f8dc5e1122baf1d00208cc9b4a4a73b6168c02f1341fb424f98d6cd478"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/native-finalizer-gap-1698.json",
+      "sha256": "deab6007b4ba1ddc5926529419562ea770c97affbe43827bce55afc6f4530957"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/review-1698.md",
+      "sha256": "a75842df7617aae4f200e37cd7eaf5d727c6b3e516fec349e147585b1f205f8c"
+    }
+  ]
+}
