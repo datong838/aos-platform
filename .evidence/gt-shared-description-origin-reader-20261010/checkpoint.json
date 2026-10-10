@@ -4,14 +4,14 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-description-origin-reader-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001682",
+  "authority_revision": "AOS-001683",
   "task_base_revision": "AOS-001675",
-  "step": "visible-original-withdrawal-and-canonical-domain-control-necessary-green-reader-first-race-finaljoint-next",
+  "step": "bidirectional-native-identity-withdrawal-race-necessary-green-original-joint-finalizer-next",
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_description_origin_reader.py",
     "services/aos-api/tests/aip/test_shared_parent_description_origin_reader_pg.py"
   ],
   "evidence_files": [
-    ".evidence/gt-shared-description-origin-reader-20261010/current-native-certificate-reference-1682.json"
+    ".evidence/gt-shared-description-origin-reader-20261010/current-native-certificate-reference-1683.json"
   ]
 }
