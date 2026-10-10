@@ -30,6 +30,12 @@ def require_lab_command(args,labs,tools):
   require('--name' in args and args[args.index('--name')+1] in labs|tools,'EXACT_NEW_RESOURCE_REQUIRED')
   require('--network' in args and args[args.index('--network')+1]=='none' and not any(a in args for a in ('--privileged','-p','--publish','--rm')),'ISOLATED_NONDESTRUCTIVE_RUN_REQUIRED')
 
+def require_final_postmaster(item,top,ready_exit):
+ pid=item['State']['Pid'];require(type(pid) is int and pid>1,'FINAL_NATIVE_PID_REQUIRED')
+ rows=[r.strip().split(None,2) for r in top.splitlines()]
+ matches=[r for r in rows if len(r)==3 and r[0]==str(pid)]
+ require(matches==[[str(pid),'postgres','postgres']] and type(ready_exit) is int and ready_exit==0,'FINAL_POSTMASTER_NOT_READY')
+
 def load(name,path):
  s=importlib.util.spec_from_file_location(name,path);m=importlib.util.module_from_spec(s);sys.modules[name]=m;s.loader.exec_module(m);return m
 
@@ -55,7 +61,9 @@ def require_full_restore(left,right):
  return True
 
 def main():
- require(sys.argv[1:]==['--run-isolated'],'EXPLICIT_ISOLATED_ENTRY_ONLY')
+ known_resume=sys.argv[1:]==['--resume-isolated-known-r1']
+ require(known_resume or sys.argv[1:]==['--run-isolated'],'EXPLICIT_ISOLATED_ENTRY_ONLY')
+ prior=R.parent/'aos-recovery/window159-native-f1775d3bc3f4' if known_resume else None
  sys.path.insert(0,str(E));import snapshot_all as base;import snapshot_supplement as sup;import dependency_review as dep;import psycopg
  mem=load('window_mem159',R/'scripts/memory/memoryctl.py');old=load('window_old142',R/'scripts/a0v_current_142_maintenance.py');gate=load('window_restore_gate159',R/'scripts/a0v_current_142_restore_gate.py');boot=load('window_boot159',R/'scripts/a0v_current_preview_bootstrap.py')
  code=json.loads((E/'committed-code159-r3.json').read_text());expected_manifest=json.loads((Path(code['state'])/'intent.json').read_text())['manifest']
@@ -68,7 +76,7 @@ def main():
   t=mem.read_json(mem.DEFAULT_PATHS.receipts_path/'tasks'/ (TASK+'.json'));leases=mem.load_leases(mem.DEFAULT_PATHS)['leases']
   require(t['owner']==OWNER and t['status']=='ACTIVE' and datetime.fromisoformat(t['lease_expires_at'])>datetime.now(timezone.utc) and [x for x in leases if x['task_id']==TASK]==[t],'CURRENT_OWNED_TASK_LEASE_REQUIRED')
   require(not any(mem.scopes_overlap(t['scope'],x['scope']) for x in leases if x['task_id']!=TASK) and not (mem.DEFAULT_PATHS.receipts_path/'deliveries'/ (TASK+'.json')).exists(),'TASK_OVERLAP_OR_DELIVERY')
- guard();state=R.parent/'aos-recovery'/ ('window159-native-'+secrets.token_hex(6));load('window_private150',R/'scripts/a0v_current_150_restore_gate.py').require_private_parent(state.parent);state.mkdir(mode=0o700)
+ guard();state=prior/'resume-r1' if known_resume else R.parent/'aos-recovery'/ ('window159-native-'+secrets.token_hex(6));load('window_private150',R/'scripts/a0v_current_150_restore_gate.py').require_private_parent(state.parent);state.mkdir(mode=0o700)
  labs={};tools=set();counter=0
  def save(name,data,binary=False):
   with os.fdopen(os.open(state/name,os.O_CREAT|os.O_EXCL|os.O_WRONLY|os.O_NOFOLLOW,0o600),'wb') as f:
@@ -87,10 +95,18 @@ def main():
    require(c.execute('SELECT system_identifier::text FROM pg_control_system()').fetchone()[0]=='7683855731447750695','FORMAL_CLUSTER_DRIFT')
    return {'base':base.snapshot(c),'supplement':sup.supplement(c),'bindings':base.rows(c,query)}
  original=formal_read();save('formal-before.json',original)
+ if known_resume:base.compare_exact(original,json.loads((prior/'formal-before.json').read_text()))
  first=R.parent/'aos-recovery/current159-first-05b88779fad3';seed=(first/'full.dump').read_bytes();globals_data=(first/'globals.sql').read_bytes();backup=json.loads((first/'backup.json').read_text())
  require(hashlib.sha256(seed).hexdigest()==backup['sha256'] and hashlib.sha256(globals_data).hexdigest()==backup['globals_sha256'],'FIRST_BACKUP_HASH_DRIFT')
  base.compare_exact(json.loads((first/'source.json').read_text()),original['base'])
- for kind in ('source','restore'):name='window159-lab-'+kind+'-'+secrets.token_hex(6);labs[name]=None
+ if known_resume:
+  origin=json.loads((prior/'manifest.json').read_text());require(origin['authority']=='AOS-001709' and origin['head'].startswith('cbc9adffc'),'FIXED_PRIOR_ORIGIN_REQUIRED')
+  require(json.loads((prior/'019-terminal.json').read_text())=={'exit':2,'stderr':'psql: error: connection to server on socket \"/var/run/postgresql/.s.PGSQL.5432\" failed: FATAL:  the database system is shutting down\n'},'EXACT_KNOWN_NO_CONNECTION_FAILURE_REQUIRED')
+  require(not (prior/'migrate_steps-attempt.json').exists() and all(x.with_name(x.name.replace('-intent','-terminal')).exists() for x in prior.glob('[0-9]*-intent.json')),'UNKNOWN_OR_MIGRATION_ATTEMPT_RECONCILE_ONLY')
+  labs.update({'window159-lab-source-9954026e6a62':'0a78aab54c880c1b7a17d965f4c10f58d81779f0c732ec4ba3ffb56df0fcb2c4','window159-lab-restore-371de5b43938':'0d43faad9ecb351b7584d27ad099b05f9bb198d2991401a22480a4cee5975fdd'})
+  require([origin['source'],origin['target']]==list(labs),'FIXED_PRIOR_LABS_REQUIRED')
+ else:
+  for kind in ('source','restore'):name='window159-lab-'+kind+'-'+secrets.token_hex(6);labs[name]=None
  source,target=list(labs);save('manifest.json',{'head':head,'authority':authority,'task':TASK,'image':image,'source':source,'target':target,'code':code,'scope':'ISOLATED_NATIVE_PROTOCOL_ONLY','formal_writes':False})
  def cmd(args,data=None):
   nonlocal counter
@@ -109,9 +125,12 @@ def main():
   cmd(['run','-d','--pull','never','--name',name,'--label','aos.maintenance-task='+TASK,'--network','none','--cpus','1','--memory','768m','--mount','type=volume,source='+name+'-data,target=/var/lib/postgresql/data','-e','POSTGRES_USER=aos_app','-e','POSTGRES_HOST_AUTH_METHOD=trust',image]);ready(name)
  def ready(name):
   for _ in range(45):
-   lab(name)
+   item=lab(name)
+   top=subprocess.run(['docker','--context',CTX,'top',name,'-eo','pid,comm,args'],capture_output=True,text=True,timeout=10)
    p=subprocess.run(['docker','--context',CTX,'exec',name,'pg_isready','-U','aos_app'],capture_output=True,timeout=10)
-   if p.returncode==0:return
+   if top.returncode==0:
+    try:require_final_postmaster(item,top.stdout,p.returncode);return
+    except ValueError:pass
    time.sleep(1)
   raise ValueError('LAB_READINESS_NOT_VERIFIED')
  def sql(name,statement):
@@ -139,26 +158,43 @@ def main():
    after=native(name,'a0v_'+str(step));save(name+'-step-'+str(step)+'-verified.json',require_step_preservation(current['base'],after['base'],step));current=after
   return current
  try:
-  create(source);restore(source,seed,globals_data);before=native(source,'a0v_157');require_full_restore(original,before);save('lab-source157.json',before)
+  if not known_resume:create(source);restore(source,seed,globals_data)
+  else:ready(source);ready(target)
+  before=native(source,'a0v_157');require_full_restore(original,before);save('lab-source157.json',before)
+  if known_resume:
+   require(before==json.loads((prior/'lab-source157.json').read_text()),'PRIOR_SOURCE_NATIVE_SNAPSHOT_DRIFT')
+   require(sql(source,'SHOW listen_addresses').decode().strip()=='','PRIOR_REAL_FENCE_LOST')
   journal=old.MaintenanceJournal(state)
-  journal.perform('stop_clients',lambda:{'scope':'ISOLATED_PG_ONLY_NO_APP_RUNTIME','network':'none','no_application_image':True})
-  rows=json.loads(sql(source,"BEGIN READ ONLY; SELECT coalesce(json_agg(x),'[]'::json) FROM (SELECT sourcefile,setting,applied,error FROM pg_file_settings WHERE name='listen_addresses') x; COMMIT;"));effective=sql(source,'SHOW listen_addresses').decode().strip();restore_statement=old.listen_restore_statement(rows,effective=effective);save('original-listen.json',{'rows':rows,'effective':effective,'restore_statement':restore_statement})
+  if not known_resume:journal.perform('stop_clients',lambda:{'scope':'ISOLATED_PG_ONLY_NO_APP_RUNTIME','network':'none','no_application_image':True})
+  if known_resume:
+   listen_origin=json.loads((prior/'original-listen.json').read_text());rows=listen_origin['rows'];effective=listen_origin['effective'];restore_statement=listen_origin['restore_statement'];require(restore_statement==old.listen_restore_statement(rows,effective=effective),'ORIGINAL_LISTEN_RESTORE_DRIFT')
+  else:
+   rows=json.loads(sql(source,"BEGIN READ ONLY; SELECT coalesce(json_agg(x),'[]'::json) FROM (SELECT sourcefile,setting,applied,error FROM pg_file_settings WHERE name='listen_addresses') x; COMMIT;"));effective=sql(source,'SHOW listen_addresses').decode().strip();restore_statement=old.listen_restore_statement(rows,effective=effective)
+  save('original-listen.json',{'rows':rows,'effective':effective,'restore_statement':restore_statement})
   def fence():
    sql(source,"ALTER SYSTEM SET listen_addresses=''");cmd(['restart',source]);ready(source)
    listen=sql(source,'SHOW listen_addresses').decode().strip();p=subprocess.run(['docker','--context',CTX,'exec',source,'pg_isready','-h','127.0.0.1','-U','aos_app'],capture_output=True,timeout=10)
    counts=sql(source,"BEGIN READ ONLY; SELECT count(*) FROM pg_stat_activity WHERE backend_type='client backend' AND pid<>pg_backend_pid(); SELECT count(*) FROM pg_prepared_xacts; COMMIT;").decode().splitlines();clients,prepared=map(int,counts);old.require_window(listen_addresses=listen,tcp_exit=p.returncode,other_clients=clients,prepared=prepared)
    require(native(source,'a0v_157')==before,'LAB_FENCE_CHANGED_CATALOGUE');return {'listen_addresses':listen,'tcp_exit':p.returncode,'other_clients':clients,'prepared':prepared}
-  journal.perform('fence_tcp',fence)
+  if not known_resume:journal.perform('fence_tcp',fence)
   backup_data={}
   def dump():
    lab(source);backup_data['dump']=cmd(['exec',source,'pg_dump','-U','aos_app','-d',DB,'-Fc']);backup_data['globals']=cmd(['exec',source,'pg_dumpall','-U','aos_app','--globals-only','--no-role-passwords']);require(b'CREATE TABLESPACE' not in backup_data['globals'],'UNREVIEWED_TABLESPACE')
    toc=cmd(['exec','-i',source,'pg_restore','--list'],backup_data['dump']);require(b'TABLE DATA' in toc,'FULL_TABLE_DATA_TOC_REQUIRED')
    save('window-full.dump',backup_data['dump'],True);save('window-globals.sql',backup_data['globals'],True);save('window-toc.txt',toc,True);require(native(source,'a0v_157')==before,'SOURCE_CHANGED_DURING_BACKUP')
    return {'sha256':hashlib.sha256(backup_data['dump']).hexdigest(),'bytes':len(backup_data['dump']),'full_native_before_after_equal':True}
-  journal.perform('snapshot_dump',dump)
+  if not known_resume:journal.perform('snapshot_dump',dump)
+  else:
+   backup_data.update({'dump':(prior/'window-full.dump').read_bytes(),'globals':(prior/'window-globals.sql').read_bytes()});require(hashlib.sha256(backup_data['dump']).hexdigest()==json.loads((prior/'snapshot_dump-done.json').read_text())['sha256'],'PRIOR_WINDOW_BACKUP_HASH_DRIFT')
+   carried={}
+   for phase in ('stop_clients','fence_tcp','snapshot_dump'):
+    for suffix in ('attempt','done'):
+     filename=phase+'-'+suffix+'.json';raw=(prior/filename).read_bytes();save(filename,raw,True);carried[filename]={'original':str(prior/filename),'sha256':hashlib.sha256(raw).hexdigest()}
+   save('carried-verified-prefix.json',{'source_native157_unchanged':True,'real_listen_empty':True,'current_source_container_id':lab(source)['Id'],'current_target_container_id':lab(target)['Id'],'prior':str(prior),'original_receipt_lineage':carried,'backup_sha256':hashlib.sha256(backup_data['dump']).hexdigest()})
   restored={}
   def independent():
-   create(target);restore(target,backup_data['dump'],backup_data['globals']);restored.update(native(target,'a0v_157'));require(restored['cluster']!=before['cluster'],'INDEPENDENT_CLUSTER_REQUIRED');require_full_restore(before,restored);save('second-independent-full157.json',restored);return {'complete_base_supplement_native_equal':True,'independent_cluster':restored['cluster']}
+   if not known_resume:create(target)
+   restore(target,backup_data['dump'],backup_data['globals']);restored.update(native(target,'a0v_157'));require(restored['cluster']!=before['cluster'],'INDEPENDENT_CLUSTER_REQUIRED');require_full_restore(before,restored);save('second-independent-full157.json',restored);return {'complete_base_supplement_native_equal':True,'independent_cluster':restored['cluster']}
   journal.perform('independent_restore',independent)
   migrated={}
   def steps():

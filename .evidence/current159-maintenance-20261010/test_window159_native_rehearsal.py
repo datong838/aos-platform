@@ -41,3 +41,9 @@ def test_expected_next_version_and_multiset_catalogue_required():
  with pytest.raises(ValueError):m.require_step_preservation(before,after,158)
  after['version']='a0v_158';after['functions'].pop()
  with pytest.raises(ValueError):m.require_step_preservation(before,after,158)
+
+@pytest.mark.parametrize('top,exit_code',[('PID COMMAND COMMAND\n20 bash docker-entrypoint.sh postgres\n21 postgres postgres -c listen_addresses=\n',0),('PID COMMAND COMMAND\n21 postgres postgres\n',0),('PID COMMAND COMMAND\n20 postgres postgres\n',1),('PID COMMAND COMMAND\n20 postgres postgres\n',True)])
+def test_temporary_init_or_wrong_postmaster_not_ready(top,exit_code):
+ with pytest.raises(ValueError):m.require_final_postmaster({'State':{'Pid':20}},top,exit_code)
+
+def test_final_pid1_postgres_and_native_ready():m.require_final_postmaster({'State':{'Pid':20}},'PID COMMAND COMMAND\n20 postgres postgres\n21 postgres postgres: walwriter\n',0)

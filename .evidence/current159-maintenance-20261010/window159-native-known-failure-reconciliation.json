@@ -1,0 +1,15 @@
+{
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/window159-native-f1775d3bc3f4",
+  "failure_command": "019",
+  "terminal_exit": 2,
+  "before_database_connection": true,
+  "target_database_absent": true,
+  "target_only_bootstrap_role": true,
+  "unknown_command_intents": 0,
+  "migration_attempted": false,
+  "source_real_window_and_full_backup_completed": true,
+  "formal_writes": 0,
+  "exact_source_id": "0a78aab54c880c1b7a17d965f4c10f58d81779f0c732ec4ba3ffb56df0fcb2c4",
+  "exact_target_id": "0d43faad9ecb351b7584d27ad099b05f9bb198d2991401a22480a4cee5975fdd",
+  "recovery": "Exact known no-connection continuation with new journal; preserve source/target/backup and all old receipts"
+}
