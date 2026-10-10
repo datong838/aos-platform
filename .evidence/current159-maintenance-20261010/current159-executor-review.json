@@ -1,8 +1,8 @@
 {
   "status": "COMPLETE_CURRENT_NATIVE_EXECUTOR_SCHEME_CODE_REVIEW_GREEN",
   "authority": "AOS-001714",
-  "tests": 280,
-  "executor_sha256": "74f9d5e7912503892e1a9b2f5698bb71bc15a2c6f97bf8d1c954c64813944dd7",
+  "tests": 288,
+  "executor_sha256": "2207a56a657a0a04ec62067bb1c7303712289f116a07cedb8bad91fc821a6ee5",
   "original_journal_nine_steps_retained": true,
   "acceptance_not_automatically_filled": true,
   "current_migration_after_second_full_restore_and_native_clone_steps_only": true,
@@ -13,11 +13,16 @@
   "unknown_nonzero_no_retry": true,
   "pre_fence_current_surface_and_clients_prepared_zero": true,
   "fresh_native_window_before_each_migration": true,
-  "no_formal_effect_performed_yet": true,
+  "no_formal_effect_performed_yet": false,
   "pending": [
     "native complete current maintenance",
     "API health/tenant/installation/denials",
     "eight real workbench browser pages/core readonly interactions",
     "formal business firstchain still independently gated"
-  ]
+  ],
+  "native_database_effects_performed": false,
+  "original_api_web_stop_known_success": true,
+  "web_immediate_unregister_observation_race_independently_reconciled": true,
+  "fixed_resume_prefix_only_no_stop_replay": true,
+  "original_state": "/Users/ddt/work/projects/ai_agent/aos-recovery/current159-window-800a4a23804b"
 }

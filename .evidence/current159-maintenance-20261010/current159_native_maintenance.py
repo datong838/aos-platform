@@ -54,16 +54,32 @@ def require_effect(args,*,target,tools,image,tool_image):
   require(args[-1]==image and '--mount' in args and args[args.index('--mount')+1]=='type=volume,source='+target+'-data,target=/var/lib/postgresql/data','EXACT_NEW_RESTORE_RESOURCE_REQUIRED')
  else:require(name in tools and tool_image in args and '--read-only' in args and '--cap-drop' in args and args[args.index('--cap-drop')+1]=='ALL','EXACT_NATIVE_TOOL_REQUIRED')
 
+def require_known_stop(candidate,intent,terminal,after):
+ digest=sha(json.dumps(candidate,sort_keys=True).encode())
+ require(intent.get('candidate')==candidate and intent.get('candidate_sha256')==digest and intent.get('label')==candidate['label'],'ORIGINAL_STOP_INTENT_DRIFT')
+ require(type(terminal.get('returncode')) is int and terminal['returncode']==0 and terminal.get('reconcile_only') is False,'KNOWN_STOP_SUCCESS_REQUIRED')
+ require(after=={'label':candidate['label'],'registered':False,'listener_pids':[],'old_processes_gone':True},'INDEPENDENT_STOP_READBACK_REQUIRED')
+ return {'label':candidate['label'],'candidate_sha256':digest,'returncode':0,'verified_stopped':True}
+
 class Executor:
- def __init__(self):
+ def __init__(self,resume=False):
   self.head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip();self.authority=mem.load_authority()['project_revision'];require(self.authority=='AOS-001714','REGISTERED_AUTHORITY_REQUIRED')
   self.code=json.loads((E/'committed-code159-r3.json').read_text());self.manifest=json.loads((Path(self.code['state'])/'intent.json').read_text())['manifest'];self.image=entry.IMAGE
-  self.state=R.parent/'aos-recovery'/('current159-window-'+secrets.token_hex(6));self.target='current159-second-'+secrets.token_hex(6);self.tools=set();self.counter=0;self.version='a0v_157';self.stopped={};self.migration_proof={};self.clone=None
+  self.prior=R.parent/'aos-recovery/current159-window-800a4a23804b' if resume else None
+  self.state=self.prior/'resume-r1' if resume else R.parent/'aos-recovery'/('current159-window-'+secrets.token_hex(6));self.target='current159-second-'+secrets.token_hex(6);self.tools=set();self.counter=0;self.version='a0v_157';self.stopped={};self.migration_proof={};self.clone=None
   self.candidates=json.loads((E/'current-window159-service-candidates.json').read_text());self.api_plan=json.loads((entry.STATE/'registered-api-restoration-plan.json').read_text())
   names=['current159_native_maintenance.py','registered_launch159.py','registered_api_restore159.py','registered_web_restore159.py','api159_registered_entrypoint.py','execution_surface159.py','current_window159_contract.py','window159_native_rehearsal.py','snapshot_all.py','snapshot_supplement.py','socket_migrate159.py','restore_comparison.py','dependency_review.py','review_native_dependencies.py']
   self.inputs={x:sha((E/x).read_bytes()) for x in names}
   require(all(subprocess.check_output(['git','show',self.head+':'+str((E/x).relative_to(R))],cwd=R)==(E/x).read_bytes() for x in names),'EXACT_COMMITTED_MAINTENANCE_INPUTS_REQUIRED')
-  self.guard();self.state.mkdir(mode=0o700);self.save('manifest.json',{'head':self.head,'authority':self.authority,'task':TASK,'thread':THREAD,'owner':OWNER,'source_id':SOURCE,'cluster':CLUSTER,'database':DB,'target':self.target,'code':self.code,'api_plan_sha256':sha((entry.STATE/'registered-api-restoration-plan.json').read_bytes()),'no_automatic_retry':True,'evidence_input_sha256':self.inputs})
+  self.guard()
+  if self.prior:
+   origin=json.loads((self.prior/'manifest.json').read_text());require(origin['head']=='6185f83e45cca66d8f62effe0ce8f6e3c4323cc8' and origin['authority']==self.authority and origin['task']==TASK and origin['source_id']==SOURCE and origin['cluster']==CLUSTER,'FIXED_ORIGINAL_STOP_STATE_REQUIRED')
+   failure=json.loads((self.prior/'failure.json').read_text());require(failure=={'error_type':'RegisteredLaunchRejected','reason':'POST_OBSERVATION_UNKNOWN_RECONCILE_ONLY','reconcile_only':True},'EXACT_STOP_POST_OBSERVATION_FAILURE_REQUIRED')
+   require(not (self.prior/'fence_tcp-attempt.json').exists() and not (self.prior/'stop_clients-done.json').exists(),'LATER_OR_UNKNOWN_PREFIX_RECONCILE_ONLY')
+   require(all(x.with_name(x.name.replace('intent','terminal')).exists() and json.loads(x.with_name(x.name.replace('intent','terminal')).read_text()).get('exit')==0 for x in self.prior.glob('[0-9]*-intent.json')),'UNKNOWN_PRIOR_NATIVE_COMMAND')
+   for label,kind in [(launch.API,'api'),(launch.WEB,'web')]:
+    folder=self.prior/('stop-'+kind);self.stopped[label]=require_known_stop(self.candidates[label],json.loads((folder/'stop_clients-attempt.json').read_text()),json.loads((folder/'stop_clients-terminal.json').read_text()),self.service(label,stopped=True))
+  self.state.mkdir(mode=0o700);self.save('manifest.json',{'head':self.head,'authority':self.authority,'task':TASK,'thread':THREAD,'owner':OWNER,'source_id':SOURCE,'cluster':CLUSTER,'database':DB,'target':self.target,'code':self.code,'api_plan_sha256':sha((entry.STATE/'registered-api-restoration-plan.json').read_bytes()),'no_automatic_retry':True,'evidence_input_sha256':self.inputs})
   tree=ast.parse((E/'review_native_dependencies.py').read_text());env={};sys.path.insert(0,str(E));import psycopg
   env.update({'psycopg':psycopg,'TABLES':tuple(sorted(protocol.load('current159_dep',E/'dependency_review.py').TABLES))})
   exec(compile(ast.Module(body=[n for n in tree.body if isinstance(n,ast.Assign) and any(isinstance(x,ast.Name) and x.id=='QUERY' for x in n.targets)],type_ignores=[]),'<native-frozen-query>','exec'),env);self.query=env['QUERY']
@@ -125,6 +141,11 @@ class Executor:
    if label==launch.WEB:helper=[str(R/'node_modules/.pnpm/@esbuild+darwin-arm64@0.21.5/node_modules/@esbuild/darwin-arm64/bin/esbuild'),'--service=0.21.5','--ping']
    value['fingerprint']=old.read_service_candidate(pid=pid,expected_argv=cfg['ProgramArguments'],expected_cwd=cfg['WorkingDirectory'],expected_port=expected['port'],expected_child_argv=helper)
   return value
+ def observe_stopped(self,label):
+  for _ in range(15):
+   try:v=self.service(label,stopped=True);require(v['old_processes_gone'] and v['listener_pids']==[],'STOP_PROCESS_PENDING');return v
+   except ValueError:time.sleep(1)
+  raise ValueError('STOP_POST_OBSERVATION_UNKNOWN_RECONCILE_ONLY')
  def observe_new(self,label):
   for _ in range(45):
    try:v=self.service(label,new=True);require(v['pid'] is not None,'STARTUP_PROCESS_PENDING');return v
@@ -162,11 +183,15 @@ class Executor:
   def stop():
    for label in (launch.API,launch.WEB):
     self.guard();observed=self.service(label);candidate=self.candidates[label];launch.require_candidate(candidate,observed);folder=self.state/('stop-api' if label==launch.API else 'stop-web');folder.mkdir(mode=0o700)
-    launch.stop_registered(candidate,observed,journal=folder,runner=self.launch_run,observe_after=lambda label=label:self.service(label,stopped=True));self.stopped[label]={'label':label,'candidate_sha256':sha(json.dumps(candidate,sort_keys=True).encode()),'returncode':0,'verified_stopped':True}
+    launch.stop_registered(candidate,observed,journal=folder,runner=self.launch_run,observe_after=lambda label=label:self.observe_stopped(label));self.stopped[label]={'label':label,'candidate_sha256':sha(json.dumps(candidate,sort_keys=True).encode()),'returncode':0,'verified_stopped':True}
    require(self.off(),'CLIENT_STOP_UNVERIFIED');proof=surface.collect()
    counts=self.sql(SOURCE,"BEGIN READ ONLY; SELECT count(*) FROM pg_stat_activity WHERE backend_type='client backend' AND pid<>pg_backend_pid(); SELECT count(*) FROM pg_prepared_xacts; ROLLBACK;").decode().splitlines();require(counts==['0','0'],'PRE_FENCE_CLIENTS_OR_PREPARED_NOT_ZERO');self.save('pre-fence-current-surface.json',proof);return {'exact_registered_api_web_stopped':True,'native_pre_fence_client_prepared_zero':True}
 
-  journal.perform('stop_clients',stop)
+  if self.prior:
+   require(before==json.loads((self.prior/'original-full157.json').read_text()),'ORIGINAL_PRE_STOP_NATIVE157_DRIFT')
+   origin_listen=json.loads((self.prior/'original-listen.json').read_text());require(origin_listen=={'rows':rows,'effective':effective,'restore_statement':statement},'ORIGINAL_PRE_STOP_LISTEN_DRIFT')
+   raw=(self.prior/'stop_clients-attempt.json').read_bytes();self.save('stop_clients-attempt.json',raw,True);self.save('stop_clients-done.json',{'original_stop_prefix':str(self.prior),'original_attempt_sha256':sha(raw),'independent_verified_stops':self.stopped,'current_head':self.head,'no_stop_replayed':True});self.save('carried-stop-prefix.json',{'prior':str(self.prior),'stops':self.stopped,'full_current157_and_listen_unchanged':True,'head':self.head,'authority':self.authority,'unknown_external':False})
+  else:journal.perform('stop_clients',stop)
   def fence():
    self.sql(SOURCE,"ALTER SYSTEM SET listen_addresses=''",effect=True);self.effect(['restart',SOURCE]);self.ready(SOURCE);proof=self.window();require(self.native(SOURCE,'a0v_157')==before,'FENCE_CHANGED_CURRENT_CATALOGUE');self.save('zero-window-native.json',proof);return {'verified_current_zero_window':True}
   journal.perform('fence_tcp',fence);back={}
@@ -197,7 +222,7 @@ class Executor:
   result={'status':'CURRENT159_DATABASE_MIGRATED_AND_REGISTERED_PROCESSES_STARTED_ACCEPTANCE_PENDING','state':str(self.state),'head':self.head,'authority':self.authority,'source_id':SOURCE,'cluster':CLUSTER,'volume':'aos-a0v-recovery-pg-data','version':self.version,'target':self.target,'original_full_backup_sha256':sha(back['dump']),'current_native_original_commits':2,'independent_native_original_commits':2,'browser_acceptance_pending':True,'health_acceptance_pending':True,'business_runtime_authorized':False,'goal_complete':False};self.save('result.json',result);(E/'current159-native-maintenance-result.json').open('x').write(json.dumps(result,indent=2)+'\n');print(json.dumps(result),flush=True)
 
 def main():
- require(sys.argv[1:]==['--run-current-maintenance'],'EXPLICIT_ORIGINAL_CURRENT_MAINTENANCE_ONLY');x=Executor()
+ require(sys.argv[1:] in (['--run-current-maintenance'],['--resume-known-stops']),'EXPLICIT_ORIGINAL_CURRENT_MAINTENANCE_ONLY');x=Executor(resume=sys.argv[1:]==['--resume-known-stops'])
  try:x.run()
  except Exception as exc:x.save('failure.json',{'error_type':type(exc).__name__,'reason':str(exc)[:1000],'reconcile_only':True});print(json.dumps({'status':'FAILED_RECONCILE_ONLY','state':str(x.state),'reason':str(exc)[:300]}),flush=True);raise
 if __name__=='__main__':main()

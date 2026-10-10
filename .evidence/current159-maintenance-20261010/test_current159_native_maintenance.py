@@ -51,3 +51,18 @@ def test_exact_current_backup_and_fence_commands():
 def test_current_effects_require_complete_exact_original_arguments(command):
  m=module()
  with pytest.raises(ValueError):m.require_effect(['exec',m.SOURCE,*command],target='clone',tools=set(),image='image',tool_image='toolimage')
+
+@pytest.mark.parametrize('variant',['unknown','failure','boolean','foreign-intent','live','port','oldpid'])
+def test_no_stop_replay_or_unknown_prefix(variant):
+ m=module();c={'label':'original','pid':1};i={'label':'original','candidate':c,'candidate_sha256':m.sha(json.dumps(c,sort_keys=True).encode())};t={'returncode':0,'reconcile_only':False};after={'label':'original','registered':False,'listener_pids':[],'old_processes_gone':True}
+ if variant=='unknown':t['reconcile_only']=True
+ if variant=='failure':t['returncode']=1
+ if variant=='boolean':t['returncode']=False
+ if variant=='foreign-intent':i['candidate_sha256']='foreign'
+ if variant=='live':after['registered']=True
+ if variant=='port':after['listener_pids']=['11']
+ if variant=='oldpid':after['old_processes_gone']=False
+ with pytest.raises(ValueError):m.require_known_stop(c,i,t,after)
+def test_known_zero_terminal_and_independent_stopped_prefix():
+ m=module();c={'label':'original','pid':1};i={'label':'original','candidate':c,'candidate_sha256':m.sha(json.dumps(c,sort_keys=True).encode())};t={'returncode':0,'reconcile_only':False};a={'label':'original','registered':False,'listener_pids':[],'old_processes_gone':True}
+ assert m.require_known_stop(c,i,t,a)['verified_stopped'] is True
