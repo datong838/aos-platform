@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001752",
+  "authority_revision": "AOS-001753",
   "code_files": [
     "services/aos-api/aos_api/aip_action_policy.py",
     "services/aos-api/aos_api/aip_action_store.py",
@@ -18,12 +18,13 @@
     ".evidence/gt-judge-call-authority-20261008/reboot-judge-verification.json",
     ".evidence/gt-judge-call-authority-20261008/reboot-checkpoint-index-plan.md",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-reader-closure-r1/result.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-intent-comparison-1751/verification.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-intent-comparison-1751/verification.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-source-epoch-closure-1752/verification.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "closed-final-intent-comparison-green-transitive-closure-physical-final-validation-full-eight-node-receipt-end-next",
+  "step": "nested-source-epoch-write-proven-closed-final-source-and-sealed-eight-node-receipt-before-native-end-next",
   "task_base_revision": "AOS-001578",
   "task_id": "gt-judge-call-authority-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
