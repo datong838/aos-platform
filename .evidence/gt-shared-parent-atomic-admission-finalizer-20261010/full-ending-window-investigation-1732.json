@@ -1,0 +1,15 @@
+{
+  "authority_revision": "AOS-001731",
+  "source_sha256": "7d175ee91c586776601a60fca41cdef4c5b43997ffa091b146c088241872a07b",
+  "candidate_one": "Complete typed ending with original physical/window/currentness/event/RI closure",
+  "candidate_two": "Whole old/new unknown risk cutover",
+  "authorization": "Current full section3 isolated Task; no formal execution or database deployment",
+  "findings": [
+    "Initial obligation currently counts every old prepared_parent_debit and new initial_target_obligation by physical account; it has no fixed-window identity or per-state settlement/release mapping. This is conservative preparation, not a complete inflight/fixed-window lifecycle.",
+    "Original helper checks trusted used_requests against maxConcurrency and used_tokens plus first Target bound against maxTokens; adding an ending stub would not establish window transitions or preserve/reconcile submitted/unknown across revisions.",
+    "Issuer pending/material and physical obligation/Target/Judge/raw material send distinct typed hashes to two fixed ending signatures. Full ending must identify exact native node+caller and validate all mandatory nodes; a single matching hash cannot admit the package."
+  ],
+  "next_safe_step": "Define additive native window/state obligation and canonical old/new counted union under original account guard, with no TTL-based release, no guessed history and no complete-ending permission until source/window/unknown/RI matrices pass.",
+  "formal_writes": false,
+  "full_task_delivered": false
+}
