@@ -89,3 +89,6 @@ RED artifact缺失；GREEN原生DDL闭ACL/Owner/RLS、admin拒绝、原入口SQL
 
 ### 1727 fresh native r3 evidence refinement
 r1 missing test-only certificate helper, r2 full original chain Source expiry RED retained. r3 keeps the original entire test and unchanged approval/Source deadlines; persist component proof at actual rejected COMMIT before subsequent original adjacent cases so partial component result is independently reconcilable. Whole fixture result remains separate and cannot be promoted from component PASS. No formal writes or old attempt replay.
+
+### 1728 separate fresh Source adjacent acceptance
+Original occupation test line320 invokes added shared Source trial before opening a distinct original ordinary caller (line324). r3 component actual native Intent/dependency and rejected COMMIT/readback passed, but stacked work exhausted initial Source consumer/supplier currentness during later old checks. Next independently fresh Source baseline preserves original entire node and all old negatives/cleanup with integration hook disabled, no product/test-body modification or TTL increase. Component and baseline use separate fresh authorizations; do not relabel r3 whole RED as PASS. This is adjacent regression, not full shared admission or old replay.

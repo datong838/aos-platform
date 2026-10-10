@@ -1,0 +1,69 @@
+{
+  "status": "FRESH_ORIGINAL_SOURCE_ADJACENT_PASS_WITH_INDEPENDENT_ABORT_READBACK",
+  "authority": "AOS-001728",
+  "database": "aos_test_116e768ad98d_ti4_test",
+  "cluster": "7694680278363095064",
+  "original_node_unmodified": true,
+  "shared_integration_hook_disabled_for_independent_fresh_source": true,
+  "native_tests_pass": 1,
+  "seconds": 57.68,
+  "original_native_proof": {
+    "caller": {
+      "xid": "53827",
+      "pid": 6024
+    },
+    "checked_at": "2026-10-10T15:49:27.152483+00:00",
+    "cases": 2,
+    "legs": 4,
+    "distinct_sources": 1,
+    "same_original_source": true,
+    "original_suite_model_judge_verified": true,
+    "original_judge_ref": {
+      "judgeId": "isolated-model-judge-8e742689748c48388ce4a7d7c2b9cf0f",
+      "revision": 1,
+      "contentHash": "af7a3d3d544d204d21999b09d40ff22807e43a4827f3c3420bd344f7838371f0",
+      "modelRoute": {
+        "assetType": "registered_model",
+        "assetId": "joint-prefix-model-a3897cf0b91c4f68a8bc37d4af6fa449",
+        "revision": "1",
+        "contentHash": "3b6068c8c160d75c2b8cde2aecbf765e5df6fb5ca46c704483aeae15d172c729"
+      }
+    },
+    "wrong_source_physical_provider_rejected": true,
+    "empty_duplicate_extra_commands_rejected": true,
+    "canary_rejected": true,
+    "execution_allowed": false
+  },
+  "original_existing_row_negatives": {
+    "intent_id": "46d9ce58-b07c-45b8-bf6d-499f1b9df96b",
+    "caller_xid": "53827",
+    "caller_pid": 6024,
+    "probes": [
+      {
+        "operation": "update",
+        "sqlstate": "42501",
+        "content_hash": "sha256:70cd4fab2f11e5b477b02d856af5c5697dabfa84df07e5783c86dcb14bed04b1",
+        "existing_row_verified": true
+      },
+      {
+        "operation": "delete",
+        "sqlstate": "42501",
+        "content_hash": "sha256:70cd4fab2f11e5b477b02d856af5c5697dabfa84df07e5783c86dcb14bed04b1",
+        "existing_row_verified": true
+      }
+    ],
+    "execution_allowed": false
+  },
+  "caller_aborted": true,
+  "retained_counts": {
+    "prepared_execution_intent": 0,
+    "prepared_parent_debit": 0,
+    "prepared_plan_risk": null,
+    "prepared_shared_risk_description": null
+  },
+  "test_role_restored": true,
+  "formal_writes": false,
+  "execution_allowed": false,
+  "shared_complete_admission_pass": false,
+  "r3_whole_failure_superseded": false
+}
