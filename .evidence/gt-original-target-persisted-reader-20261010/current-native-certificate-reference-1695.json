@@ -1,0 +1,30 @@
+{
+  "authority_revision": "AOS-001695",
+  "task": "gt-original-target-persisted-reader-20261010",
+  "head": "efe7e046e336c43c17933f5e22ae06a1bc7f15e1",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false,
+  "references": [
+    {
+      "path": ".evidence/gt-original-target-persisted-reader-20261010/current-native-certificate-reference-1694.json",
+      "sha256": "a6aaf13661a10f6052afd0aca9f26ce0814f466427a93b2ff660e16ebd9009f3"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/shared-case-plan-1694.md",
+      "sha256": "6d0e23f29431a7e4241f33e5a1f88d8dce49b0ad24ca8b8e34e0eec20a4d95ae"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/shared-case-review-1694.md",
+      "sha256": "b46cd5406b245205c9647cb89b4e879c5f32b3d1b64f8b55fd77512e9828dac2"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/shared-case-result-r3-1694.json",
+      "sha256": "92794510aa5d0594b297f9f71ff1d2f38bd63c49f2e89dfe4ba7b7a947ed8337"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/shared-case-independent-1694.json",
+      "sha256": "8b238e418018232455ceea3c0fe85d308ee1294785339d2258fa1e3885384cac"
+    }
+  ]
+}

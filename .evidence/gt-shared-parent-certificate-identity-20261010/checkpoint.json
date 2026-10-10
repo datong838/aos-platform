@@ -4,15 +4,15 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-certificate-identity-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001694",
+  "authority_revision": "AOS-001695",
   "task_base_revision": "AOS-001674",
-  "step": "original-v2-judge-input-verified-shared-risk-producer-next",
+  "step": "shared-v3-signed-case-verified-native-result-provenance-next",
   "code_files": [
     "services/aos-api/aos_api/aip_model_shared_parent_certificate_identity.py",
     "services/aos-api/tests/aip/test_model_shared_parent_certificate_identity_pg.py"
   ],
   "evidence_files": [
     ".evidence/gt-shared-parent-certificate-identity-20261010/implementation-plan.md",
-    ".evidence/gt-shared-parent-certificate-identity-20261010/current-native-certificate-reference-1694.json"
+    ".evidence/gt-shared-parent-certificate-identity-20261010/current-native-certificate-reference-1695.json"
   ]
 }
