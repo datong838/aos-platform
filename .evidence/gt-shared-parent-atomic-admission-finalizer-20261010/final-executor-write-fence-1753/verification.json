@@ -1,0 +1,31 @@
+{
+  "status": "NATIVE_FIXED_EXECUTOR_WRITE_FENCE_COMPONENT_GREEN_FULL_VALIDATOR_PENDING",
+  "authority": "AOS-001753",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "head": "ab41c15b7c6f81ffc19d4402b287eca12b9501e8",
+  "proof": {
+    "missing_guc_denied": true,
+    "guarded_existing_epoch_passed": true,
+    "missing_write_rejected": "25006",
+    "cte_write_rejected": "25006",
+    "guarded_insert_statistics_delta": 0,
+    "ordinary_writer_after_error_passed": true,
+    "guard_restored_and_reentrant_after_error": true
+  },
+  "xid": "59933",
+  "independent_xid_status": "aborted",
+  "independent_all_probe_rows_and_schema_absent": true,
+  "original_epoch_body_acl_owner_unchanged": true,
+  "binary_sha256": "9fec9bb890c9e2cebeaf1bbb4828e44bb585fbf88095ab4a33c8740e672d9188",
+  "source_sha256": "2f0defeaf5ae573695c71fe082aebbb3777dc7d4ffa93058b25c7970f50c5bae",
+  "library": "/tmp/aos_final_fence_24faedeb4a0b4827959e7a17ff74dd1b.so",
+  "artifact_image": "sha256:67be31e69f2f22633b0fd3c8ef2c4b3fb4dab4c51f2761896d6392fa8a476531",
+  "limitations": [
+    "Executor hook test only: utilities and native direct effects not covered.",
+    "Existing hook ownership/chain and immutable loaded-package closure still required.",
+    "No full Source invocation, all-eight-node Receipt, final clock/native event/RI or actual COMMIT positive."
+  ],
+  "full_task_delivered": false,
+  "goal_complete": false,
+  "execution_allowed": false
+}
