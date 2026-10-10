@@ -20,3 +20,7 @@ Native arm/post-drain receiver, exact pinned SQL validator and package attestati
 ## Callback order investigation at AOS-001747
 
 PG16.14 RegisterXactCallback prepends to the private list; CallXactCallbacks walks it and saves next before each call. Arming a newly registered callback puts it before existing callbacks, so postvalidation of its own events does not prove no later callback can write or wait past Source expiry. Native support remains closed. Next authorized isolated step is a two-callback adversarial actual COMMIT test with independent XID/event readback; in parallel only as a sequential planning candidate, complete Main Receipt design needs all eight nodes and exact Source/certificate/currentness after waits. No callback-last promise, private list patch or runtime opening is authorized by the reader component.
+
+## Two-callback native result
+
+Actual COMMIT on distinct fresh backends confirms observer-first sees no pending event yet a later writer commits a row whose unconditional deferred rejection never fires; observer-last rejects and aborts the row. Ordinary INSERT also rejects. Independent XIDs 59878/59879/59880 and rows 0/1/0 prove the ordering counterexample. Full ending cannot rely on newest registration. Empty preload settings or SQL catalog C-library inventory do not prove backend callback closure. Continue complete backend package/callback ownership audit and precreated full Receipt design under existing Task scopes.

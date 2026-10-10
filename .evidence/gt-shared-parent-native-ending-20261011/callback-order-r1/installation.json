@@ -1,0 +1,7 @@
+{
+  "schema": "test_owned_order_19c98c11c71b44ffa9f8b6a33e0b4573",
+  "library": "/tmp/aos_order_19c98c11c71b44ffa9f8b6a33e0b4573.so",
+  "binary_sha256": "0f22fb884fd06f27324f06316cf1c1caba9968ebb2ac0523b43e7caeeeec5e0c",
+  "committed": true,
+  "public_runtime_closed": true
+}

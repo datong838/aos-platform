@@ -1,0 +1,54 @@
+{
+  "status": "TWO_CALLBACK_ACTUAL_COMMIT_ORDER_COUNTEREXAMPLE_VERIFIED",
+  "authority": "AOS-001747",
+  "schema": "test_owned_order_19c98c11c71b44ffa9f8b6a33e0b4573",
+  "cases": [
+    {
+      "label": "ordinary",
+      "xid": "59878",
+      "outcome": "rejected",
+      "error": "TEST_ORDER_DEFERRED_REJECT"
+    },
+    {
+      "label": "observer_first",
+      "xid": "59879",
+      "outcome": "committed",
+      "error": null
+    },
+    {
+      "label": "observer_last",
+      "xid": "59880",
+      "outcome": "rejected",
+      "error": "TEST_ORDER_OBSERVER_PENDING_REJECTED"
+    }
+  ],
+  "independent_xid_states": {
+    "ordinary": "aborted",
+    "observer_first": "committed",
+    "observer_last": "aborted"
+  },
+  "counts": {
+    "ordinary": 0,
+    "observer_first": 1,
+    "observer_last": 0,
+    "ordinary_observation": 0,
+    "observer_first_observation": 1,
+    "observer_last_observation": 0,
+    "marker": 1
+  },
+  "observer_first_record": [
+    [
+      1,
+      false
+    ]
+  ],
+  "guard_body_and_enabled_triggers_exact": true,
+  "roles_and_memberships_unchanged": true,
+  "original_verifier_sha256": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+  "lab_not_restarted": true,
+  "source_sha256": "e0b37308919c1d31c45cf78be2fa1af3f46771ab93342cd098a0e4bef04f3098",
+  "binary_sha256": "0f22fb884fd06f27324f06316cf1c1caba9968ebb2ac0523b43e7caeeeec5e0c",
+  "full_admission": false,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

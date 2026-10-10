@@ -1,0 +1,17 @@
+{
+  "test_only": true,
+  "fixed_owned_inserts_only": true,
+  "no_arbitrary_sql": true,
+  "fresh_backend_per_order": true,
+  "actual_commit_not_set_constraints_only": true,
+  "independent_xid_and_row_state": true,
+  "source_design_consistent": true,
+  "unexercised": [
+    "prepared transaction",
+    "parallel arm",
+    "subtransaction arm",
+    "deadline expiry during later callback"
+  ],
+  "not_production_callback": true,
+  "full_task_delivered": false
+}
