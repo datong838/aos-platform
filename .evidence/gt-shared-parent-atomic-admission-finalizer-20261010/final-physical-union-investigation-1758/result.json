@@ -1,0 +1,52 @@
+{
+  "authority": "AOS-001758",
+  "head": "a8a414e525078fbd406a24986e18add6f7d33a60",
+  "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "status": "FINAL_PHYSICAL_EXACT_MEMBERSHIP_BINDING_DESIGN_GAP_CONFIRMED",
+  "finding": "Current pre-drain physical facts bind account version and union totals but do not include exact old/new unresolved membership. Equal totals alone cannot prove the member set unchanged. This is a necessary additional design gate, not proof of reachable native mutation.",
+  "generated_reader_sha256": "1675a59f0e2bb0a643172d0b6e22adeb41cb26f0c06d9f8f6b7e5f81a7b00b26",
+  "receipt_statements_sha256": "f6772bba0f9f7a67332d4fac295e35a904f8784ba4ca1ba45de3ee4c29c8d1b0",
+  "counterexample": {
+    "kind": "in_memory_aggregate_logic_only_not_native_transaction",
+    "left": [
+      {
+        "id": "original-A",
+        "tokens": 7
+      },
+      {
+        "id": "initial-B",
+        "tokens": 11
+      }
+    ],
+    "right": [
+      {
+        "id": "replacement-C",
+        "tokens": 7
+      },
+      {
+        "id": "initial-B",
+        "tokens": 11
+      }
+    ],
+    "same_requests_and_tokens": true,
+    "native_reachability_proven": false
+  },
+  "registered_candidates": [
+    {
+      "step": "server-derived sealed unresolved union identity digest, then pure postdrain comparison",
+      "authorization": "Main existing two-file Task/Lease and complete-ending plan",
+      "dependency": "fixed exact native row identity/body hashes and canonical ordering; full writer/Source/end closure still required"
+    },
+    {
+      "step": "original Source verification cost/currentness analysis",
+      "authorization": "already registered full Source timing investigation",
+      "dependency": "retain original byte/signature/currentness checks; no TTL extension or production effect"
+    }
+  ],
+  "selected": "exact union binding design before comparator coding",
+  "database_operations": 0,
+  "product_modified": false,
+  "execution_allowed": false,
+  "full_task_delivered": false,
+  "goal_complete": false
+}
