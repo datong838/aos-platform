@@ -1,0 +1,36 @@
+{
+  "status": "BOTH_NATIVE_LABS_CLOSED_ROLE_INDEPENDENT_READBACK_GREEN",
+  "labs": [
+    {
+      "cluster": "7694947223238172711",
+      "version": "a0v_159",
+      "private_empty_tables": 9,
+      "judge_empty_tables": 2,
+      "private_runtime_denied": true,
+      "new_roles_no_login_or_memberships": true,
+      "judge_select_insert_only": true,
+      "identity_runtime_provenance_absent": true,
+      "other_clients": 0,
+      "prepared_transactions": 0,
+      "read_only": true
+    },
+    {
+      "cluster": "7694947385058754600",
+      "version": "a0v_159",
+      "private_empty_tables": 9,
+      "judge_empty_tables": 2,
+      "private_runtime_denied": true,
+      "new_roles_no_login_or_memberships": true,
+      "judge_select_insert_only": true,
+      "identity_runtime_provenance_absent": true,
+      "other_clients": 0,
+      "prepared_transactions": 0,
+      "read_only": true
+    }
+  ],
+  "native_protocol_sha256": "4e8cfab45903c2c546a55424998b677d2fe8a512a07c4b01951d2f000e4c6b4f",
+  "formal_database_writes": 0,
+  "current_second_zero_window_backup_pending": true,
+  "business_execution_authorized": false,
+  "goal_complete": false
+}

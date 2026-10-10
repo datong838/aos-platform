@@ -1,0 +1,47 @@
+{
+  "scope": "Complete isolated native window protocol and closed-role verification, not current formal maintenance delivery",
+  "authority": "AOS-001709",
+  "guard_and_readiness_tests_passed": 25,
+  "adjacent_total_passed": 176,
+  "real_native_phases": [
+    "stop_clients",
+    "fence_tcp",
+    "snapshot_dump",
+    "independent_restore",
+    "migrate_steps",
+    "verify",
+    "restore_tcp",
+    "restart_clients",
+    "acceptance"
+  ],
+  "full_restore_tables157": 615,
+  "independent_clusters": [
+    "7694947223238172711",
+    "7694947385058754600"
+  ],
+  "original_native_commits_confirmed": 4,
+  "original_table_catalogue_role_sequence_preservation": true,
+  "closed_role_independent_labs": 2,
+  "formal_full157_before_after_exact": true,
+  "no_unknown_pending_commands": true,
+  "first_known_failure_preserved": true,
+  "second_dump_not_replayed_on_resume": true,
+  "backup_volumes_and_containers_deleted": 0,
+  "formal_database_writes": 0,
+  "current_second_zero_window_pending": true,
+  "latest_signed_api_browser_pending": true,
+  "business_execution_authorized": false,
+  "task_delivery": false,
+  "hashes": {
+    "window159_native_rehearsal.py": "988f25da998672e5980564b00df9dcae41b7b7fad58003126ec3767cffb4c4fe",
+    "test_window159_native_rehearsal.py": "d4653b4997a6fc000b646dbb0072d8d4de1a4c30e9f445a82d8eb00d22ea0eab",
+    "window159-native-rehearsal-r1.json": "4e8cfab45903c2c546a55424998b677d2fe8a512a07c4b01951d2f000e4c6b4f",
+    "window159-native-independent-readback.py": "f90b6ee9472ecd2bf6b12aa4d503d10a21e5481e6ab58e488cf60b34619d7b5f",
+    "window159-native-independent-readback.json": "5a65d7570d654dec567bddaa22d21b8c95be0807134f763c7a726200e26d9c77",
+    "window159-native-known-failure-reconciliation.json": "e8a05d38a6ada6729151b35027bd284aa4c3234fa84cfc59c60e361696f572a5"
+  },
+  "next_registered_candidates": [
+    "Compose current-source exact zero-window executor with independently collected scoped runtime-off observations and frozen Web restoration; original formal second backup/full restore/both native migrations still mandatory",
+    "Close latest committed signed API package/installation/startup source; requires original source Task scopes and formal159 before startup, no stale receipt bootstrap"
+  ]
+}

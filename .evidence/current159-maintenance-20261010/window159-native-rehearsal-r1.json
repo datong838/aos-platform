@@ -1,0 +1,30 @@
+{
+  "status": "ISOLATED_FULL_NATIVE_WINDOW159_PROTOCOL_GREEN",
+  "head": "3c19cfffbef219c365939ff755c88f96b1c2924e",
+  "authority": "AOS-001709",
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/window159-native-f1775d3bc3f4/resume-r1",
+  "source_lab": "window159-lab-source-9954026e6a62",
+  "independent_restore": "window159-lab-restore-371de5b43938",
+  "lab_clusters": [
+    "7694947223238172711",
+    "7694947385058754600"
+  ],
+  "tables157": 615,
+  "code_manifest_files": 2487,
+  "phases": [
+    "stop_clients",
+    "fence_tcp",
+    "snapshot_dump",
+    "independent_restore",
+    "migrate_steps",
+    "verify",
+    "restore_tcp",
+    "restart_clients",
+    "acceptance"
+  ],
+  "native_original_commits": 4,
+  "formal_database_writes": 0,
+  "current_second_zero_window_pending": true,
+  "latest_signed_api_browser_pending": true,
+  "goal_complete": false
+}
