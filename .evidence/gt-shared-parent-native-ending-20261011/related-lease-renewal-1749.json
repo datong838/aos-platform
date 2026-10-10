@@ -1,0 +1,85 @@
+[
+  {
+    "base_revision": "AOS-001698",
+    "created_at": "2026-10-10T10:26:49+08:00",
+    "excluded_scope": [
+      "formal-DB-Host-worker-Provider",
+      "old-published-migration-or-trigger-function-rewrite",
+      "Root-bootstrap-trust-or-execution-grant",
+      "Mall-source-old-runs"
+    ],
+    "expected_outputs": [
+      "Complete original section3 same-transaction atomic admission: current signed Source, exact independent Target/Judge parent hold, full manifest/certificates, unique Target Intent/Judge pending dependency and initial physical obligation; no actual result required before admission",
+      "Explicit versioned trusted finalizer/end-channel/currentness and whole event/effect/RI ordering; preserve existing seven preparation denial bodies and closed old path, no SET ALL/no trigger disabling/no fake commit or deadline",
+      "Native same-caller real-source/hold full admission positive and rollback/replay/canary/current withdrawal/deadline/commit-control/unknown retention matrices; original budget/physical/Intent algorithms not replaced by mock sources or mere DTO proof. Formal Root/transport/cutover deployment and business first chain remain separate full Goal gates"
+    ],
+    "lease_expires_at": "2026-10-10T23:39:24.709028+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
+      "aos-platform/services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py",
+      "aos-platform/.evidence/gt-shared-parent-atomic-admission-finalizer-20261010"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010"
+  },
+  {
+    "base_revision": "AOS-001537",
+    "created_at": "2026-10-08T11:49:04+08:00",
+    "excluded_scope": [
+      "formal-DB-Host-worker-Provider",
+      "existing-Source-budget-Host-AgentRun-files",
+      "published-and-unpublished-migrations"
+    ],
+    "expected_outputs": [
+      "Complete original-caller Source/physical-account/ordinary-or-Eval-budget/parent-allocation/unique-Intent/finalize native actual COMMIT rollback replay and competition; no primitive-only Delivery",
+      "Model-specific Owner from actual original application, independent approval and typed proof; maintain original runtime denial until full formally authorized natural evidence"
+    ],
+    "lease_expires_at": "2026-10-10T23:39:25.693948+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation.py",
+      "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py",
+      "aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_execution_owner.py",
+      "aos-platform/services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py",
+      "aos-platform/services/aos-api/tests/aip/test_model_eval_execution_owner_pg.py",
+      "aos-platform/.evidence/gt-atomic-model-admission-20261008"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-atomic-model-admission-20261008"
+  },
+  {
+    "base_revision": "AOS-001578",
+    "created_at": "2026-10-08T21:52:33+08:00",
+    "excluded_scope": [
+      "formal-DB-Host-worker-Provider",
+      "old-ModelEval-quality-eval-permission",
+      "unreleased-budget-risk-and-joint-Leases",
+      "all-existing-migrations"
+    ],
+    "expected_outputs": [
+      "Full Judge-call original request producer and independent checker/current dependency native matrix; no DTO-only Delivery",
+      "Same-caller original budget/Target committed bytes/expected authority/Intent/joint origin wiring before real dispatch; preserve existing Model and Skill behavior"
+    ],
+    "lease_expires_at": "2026-10-10T23:39:25.968070+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_action_policy.py",
+      "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+      "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_authorization.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_request_store.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_action.py",
+      "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_authority.py",
+      "aos-platform/services/aos-api/tests/aip/test_model_eval_judge_action_boundary.py",
+      "aos-platform/services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py",
+      "aos-platform/.evidence/gt-judge-call-authority-20261008"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-judge-call-authority-20261008"
+  }
+]

@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001749",
+  "authority_revision": "AOS-001750",
   "code_files": [
     "services/aos-api/aos_api/aip_action_policy.py",
     "services/aos-api/aos_api/aip_action_store.py",
@@ -21,7 +21,7 @@
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "callback-source-and-loaded-backend-audit-frozen-full-module-attestation-and-receipt-next",
+  "step": "native-module-observation-green-immutable-package-authority-and-full-eight-node-receipt-end-next",
   "task_base_revision": "AOS-001578",
   "task_id": "gt-judge-call-authority-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
