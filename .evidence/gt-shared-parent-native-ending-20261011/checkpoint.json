@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-native-ending-20261011",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001775",
+  "authority_revision": "AOS-001776",
   "task_base_revision": "AOS-001746",
-  "step": "actual-package-origin-lifecycle-gap-bound-independent-bootstrap-next",
+  "step": "isolated-ro-file-substrate-green-controlled-build-and-installed-profile-next",
   "code_files": [
     "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.c",
     "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.control",
@@ -31,6 +31,7 @@
     ".evidence/gt-shared-parent-native-ending-20261011/mapping-identity-1771/verification.json",
     ".evidence/gt-shared-parent-native-ending-20261011/elf-segment-audit-1772/review.json",
     ".evidence/gt-shared-parent-native-ending-20261011/readonly-native-1773/review.json",
-    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/review.json"
+    ".evidence/gt-shared-parent-native-ending-20261011/package-origin-1774/review.json",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/review.json"
   ]
 }
