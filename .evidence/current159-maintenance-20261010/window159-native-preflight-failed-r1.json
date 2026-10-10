@@ -1,0 +1,11 @@
+{
+  "status": "REJECTED_BEFORE_RESOURCE_OR_JOURNAL_CREATION",
+  "expected_migration_files": 2487,
+  "whole_api_files": 5274,
+  "expected_files_changed": 0,
+  "expected_files_missing": 0,
+  "out_of_original_archive_scope_files": 2787,
+  "database_effects": 0,
+  "resource_effects": 0,
+  "correction": "Use original exact aos_api/alembic/alembic.ini archive paths; equality remains strict; no full API package closure claim"
+}

@@ -60,7 +60,7 @@ def main():
  mem=load('window_mem159',R/'scripts/memory/memoryctl.py');old=load('window_old142',R/'scripts/a0v_current_142_maintenance.py');gate=load('window_restore_gate159',R/'scripts/a0v_current_142_restore_gate.py');boot=load('window_boot159',R/'scripts/a0v_current_preview_bootstrap.py')
  code=json.loads((E/'committed-code159-r3.json').read_text());expected_manifest=json.loads((Path(code['state'])/'intent.json').read_text())['manifest']
  head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip();authority='AOS-001709'
- archive=subprocess.check_output(['git','archive',head,'services/aos-api'],cwd=R)
+ archive=subprocess.check_output(['git','archive',head,'services/aos-api/aos_api','services/aos-api/alembic','services/aos-api/alembic.ini'],cwd=R)
  with tarfile.open(fileobj=io.BytesIO(archive)) as tar:actual_manifest={p.name:hashlib.sha256(tar.extractfile(p).read()).hexdigest() for p in tar if p.isfile()}
  require(actual_manifest==expected_manifest,'LATEST_COMMITTED_API_BYTES_DIFFER_FROM_FROZEN_CODE')
  def guard():
