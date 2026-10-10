@@ -1,0 +1,14 @@
+{
+  "authority_revision": "AOS-001727",
+  "database": "aos_test_eb5ca8dd20c0_ti4_test",
+  "correction": "1726 prose truncated database label corrected by official CAS against exact result and independent readback; no experiment replay or Goal change",
+  "installation": {
+    "status": "GREEN",
+    "project_revision": "AOS-001727",
+    "projection_count": 8,
+    "schema_count": 9,
+    "task_receipt_count": 1993,
+    "delivery_receipt_count": 1962,
+    "event_count": 5786
+  }
+}

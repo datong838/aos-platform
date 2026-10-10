@@ -4,7 +4,7 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001726",
+  "authority_revision": "AOS-001727",
   "task_base_revision": "AOS-001698",
   "step": "initial-obligation-native-pass-unique-intent-full-risk-and-endchannel-next",
   "evidence_files": [
@@ -38,7 +38,7 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/pending-lookup-context-sync-1725.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/initial-obligation-verification-1725.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/initial-obligation-native-1725-r2/independent-readback.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/initial-obligation-context-sync-1726.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/initial-obligation-exact-db-correction-1727.json"
   ],
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
