@@ -171,3 +171,15 @@ RED：上一真实late writer3/30000超限2/20000+新artifact缺失。GREEN：na
 精确产品文件仅services/aos-api/aos_api/aip_shared_parent_atomic_admission.py的READ_LIVE_PHYSICAL新构件。删除把xmin误当顶层xid的筛选，保留原GUARD实际version UPDATE并持有account写锁、后等待原SOURCE_FACT完整核验；随后固定账户tenant FOR UPDATE回读版本，显式要求实际server原GUARD返回xid/pid等于当前绑定的p_xid/p_pid、physicalAccountId精确、version精确。guard_doc只能来自刚执行的固定原函数，不来自调用方；完整终结仍需独立冻结原函数/Owner/权限。版本返回值及独占更新锁证明本调用的写入，不以pg_xact_status任意inprogress行代替，不缓存Source或借别事务版本。其他10artifacts和旧14生成器字节不变。
 
 RED是r1全原链真实错误与临时子事务差异；GREEN必须新Source/新独立审批/真SCRAM同caller的首次live回读2/20000、实际第二旧debit后的保存点live精确CAPACITY_PHYSICAL_CAPACITY_EXCEEDED、真实COMMIT拒绝与独立回滚0行/角色/参数ACL恢复；原链剩余Source邻接与供应方清理如期限RED仍记录whole失败。再串行328相邻/metadata测试及方案一致性复审，不增正式授予、不触真实库、不声称完整准入或发布完成。
+
+## 1739 完整原父风险账本：新路径固定回读与旧对切换拒绝
+本轮沿原第3/11.3完整目标，不以单个helper交付整Task。现有Target/Judge已UNIQUE(org,project,request,case,attempt)，不再误称只有plan唯一；Issuer pending有全originalRisk而physical新路径无完整risk记录。精确产品文件仍为aip_shared_parent_atomic_admission.py、tests/aip/test_shared_parent_atomic_admission_pg.py；证据本目录。新增显式artifact generator不安装真库、不更改原11artifact/旧14函数与七无条件拒绝门。
+
+新增physical private complete_parent_risk：plan PK、正向tenant、原target/judge request对UNIQUE、两原hold/account/caller xidpid、pending/authority hash、包含全originalRisk/body/hash，不额外reserve或allocate任何费用。原held父cap仍唯一金额权威；风险没有TTL或自动release语义。当前完整终结门尚缺失，新记录复用当前deferred完整结束拒绝。
+
+固定4参数stage(plan,pendingHash,xid,pid)仅physical Owner闭EXECUTE；调用原READ_RETAINED（原Source/两个Owner/Root/四签名/全manifest和caller验证），不接受可信bodyJSON。查原prepared_plan_risk同tenant请求对FOR SHARE；任何已存在旧对明确LEGACY_RISK_PAIR_REQUIRES_CUTOVER拒绝，不假升级prepared旧行、不改旧状态。派生固定新body与hash，INSERT ON CONFLICT DO NOTHING、同plan/body/列/caller精确回读，另plan抢同对拒绝；所有可能等锁和唯一冲突之后再次完整READ_RETAINED且等于初次，避免缓存当前授权。BEFORE INSERT绑定完整risk/hash/tenant/hold/request/account/caller与新body，不开放Issuer schema/table权限。UPDATE/DELETE/TRUNCATE不可变、FORCE RLS；所有公开/运行/issuer无EXECUTE，无提交权限。
+
+RED先新artifact缺失；GREEN原生DDL/Owner/ACL/RLS/请求对唯一/完整guard/恶意caller及实际DDL回滚。真实原链另新Source/独立审批/真SCRAM正向stage含全cases/4legs/两父cap，与原risk/hash精确；新记录为awaiting_full_admission，不是已准入/dispatch。旧native队列、RI、完整Receipt/end-channel/真实准入COMMIT仍待实现；整链Source期限RED如实保留，不延时、改签名或断言fullTask通过。下一完整结束步骤需将risk与全部实际native effect及事件共同冻结、等锁后全权威/时钟复核，不能只回读此表就允许提交。
+
+### 1739 risk native r1 boundary diagnosis and r2 harness repair
+Readonly reconciliation proves r1 terminated before risk stage. The added risk wrapper reused local `sig`, so the later initial-intents Owner/ACL setup applied to the wrong test function. Retained fresh DB exposes test_owned_initial_intents as aos_app-owned with default PUBLIC execute; original epoch-pair boundary correctly rejected it. Repair only fresh r2 harness by explicitly rebinding INITIAL_INTENT before exact Owner/REVOKE/GRANT. Preserve r1, all production boundaries and Source validity; use a newly generated original transaction, not replay. Root and full ending remain unaccepted.

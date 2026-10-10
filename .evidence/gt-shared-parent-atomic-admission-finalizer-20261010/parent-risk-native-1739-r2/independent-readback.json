@@ -1,0 +1,43 @@
+{
+  "status": "COMPLETE_PARENT_RISK_PREPARATION_COMPONENT_VERIFIED",
+  "authority": "AOS-001739",
+  "database": "aos_test_0b205ea00ce8_ti4_test",
+  "cluster": "7694680278363095064",
+  "native_functions": [
+    {
+      "name": "aos_shared_parent_physical_private.bind_complete_parent_risk",
+      "body_sha256": "97334dc5e1b17a67d6011c697cfa5645017a7249ed9d226e9cd126f9bae84974",
+      "native_body_exact": true
+    },
+    {
+      "name": "public.stage_shared_parent_complete_risk",
+      "body_sha256": "15e95e139c3e42c334fc3e7a50759b9a862b1da8605219bdae74de8661c92320",
+      "native_body_exact": true
+    }
+  ],
+  "zero_rows": {
+    "aos_shared_parent_admission_private.pending_origin": 0,
+    "aos_shared_parent_physical_private.initial_target_obligation": 0,
+    "aos_shared_parent_physical_private.target_intent": 0,
+    "aos_shared_parent_physical_private.judge_dependency": 0,
+    "aos_shared_parent_admission_private.end_authority": 0,
+    "aos_shared_parent_physical_private.initial_call_authority": 0,
+    "aos_shared_parent_physical_private.initial_window_obligation": 0,
+    "aos_shared_parent_physical_private.complete_parent_risk": 0
+  },
+  "signed_legs": 4,
+  "parent_risks": 2,
+  "native_caller_aborted": true,
+  "negative_cases": [
+    "immutable_update",
+    "immutable_delete",
+    "wrong_pending_hash",
+    "real_legacy_pair_requires_cutover"
+  ],
+  "temporary_permissions_restored": true,
+  "whole_fixture_pass": false,
+  "full_admission_commit": false,
+  "formal_root_provenance": false,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

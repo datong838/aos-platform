@@ -1,0 +1,80 @@
+{
+  "authority": "AOS-001739",
+  "status": "PARENT_RISK_PREPARATION_COMPONENT_VERIFIED_FULL_END_PENDING",
+  "native_component": {
+    "status": "COMPLETE_PARENT_RISK_PREPARATION_COMPONENT_VERIFIED",
+    "authority": "AOS-001739",
+    "database": "aos_test_0b205ea00ce8_ti4_test",
+    "cluster": "7694680278363095064",
+    "native_functions": [
+      {
+        "name": "aos_shared_parent_physical_private.bind_complete_parent_risk",
+        "body_sha256": "97334dc5e1b17a67d6011c697cfa5645017a7249ed9d226e9cd126f9bae84974",
+        "native_body_exact": true
+      },
+      {
+        "name": "public.stage_shared_parent_complete_risk",
+        "body_sha256": "15e95e139c3e42c334fc3e7a50759b9a862b1da8605219bdae74de8661c92320",
+        "native_body_exact": true
+      }
+    ],
+    "zero_rows": {
+      "aos_shared_parent_admission_private.pending_origin": 0,
+      "aos_shared_parent_physical_private.initial_target_obligation": 0,
+      "aos_shared_parent_physical_private.target_intent": 0,
+      "aos_shared_parent_physical_private.judge_dependency": 0,
+      "aos_shared_parent_admission_private.end_authority": 0,
+      "aos_shared_parent_physical_private.initial_call_authority": 0,
+      "aos_shared_parent_physical_private.initial_window_obligation": 0,
+      "aos_shared_parent_physical_private.complete_parent_risk": 0
+    },
+    "signed_legs": 4,
+    "parent_risks": 2,
+    "native_caller_aborted": true,
+    "negative_cases": [
+      "immutable_update",
+      "immutable_delete",
+      "wrong_pending_hash",
+      "real_legacy_pair_requires_cutover"
+    ],
+    "temporary_permissions_restored": true,
+    "whole_fixture_pass": false,
+    "full_admission_commit": false,
+    "formal_root_provenance": false,
+    "execution_allowed": false,
+    "full_task_delivered": false
+  },
+  "adjacent_passed": 329,
+  "existing_artifact_groups_exact": {
+    "shared_parent_admission_certificate_set_statements": true,
+    "shared_parent_admission_origin_statements": true,
+    "shared_parent_admission_storage_statements": true,
+    "shared_parent_end_authority_statements": true,
+    "shared_parent_initial_call_authority_statements": true,
+    "shared_parent_initial_intent_statements": true,
+    "shared_parent_initial_window_obligation_statements": true,
+    "shared_parent_live_physical_fact_statements": true,
+    "shared_parent_original_fact_statements": true,
+    "shared_parent_pending_origin_lookup_statements": true,
+    "shared_parent_physical_obligation_statements": true
+  },
+  "code_files": {
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "7a3b5e0859d02acf0c4d91e6b44cfb5e2c60b6cb44c84a09629edd0b0b7c7ca6",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "ba923b280bb5cd5773c1e407804faccaf6b455bc420d32f89794be57fc2d8355"
+  },
+  "r1_failure": "test-owned initial-intents Owner/ACL setup misbound after local sig reuse; original boundary denied before risk",
+  "r2_failure": "CAPACITY_CURRENT_CONSUMER_REQUIRED at initial window; original approvals/terms expired on teardown; 129.58 seconds whole fixture RED",
+  "review": {
+    "original_two_parent_risk_reused": true,
+    "extra_reservation_or_charge": false,
+    "original_source_ttl_changed": false,
+    "all_possible_stage_waits_followed_by_full_original_revalidation": true,
+    "legacy_pair_upgraded": false,
+    "formal_permissions_added": false,
+    "browser_not_applicable": "closed backend SQL artifacts only; no formal installation",
+    "remaining": "Complete end, node/Receipt/currentness, event-RI ordering, cross-version cutover and Source whole timing remain pending"
+  },
+  "full_task_delivered": false,
+  "goal_complete": false,
+  "execution_allowed": false
+}

@@ -375,3 +375,34 @@ def test_native_live_physical_facts_closed_metadata(native):
     native.rollback()
     assert native.execute('SELECT to_regprocedure(%s)',(sig,)).fetchone()[0] is None
     native.rollback()
+
+
+def test_native_complete_parent_risk_closed_metadata(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    for generator in (api.shared_parent_admission_origin_statements,
+                      api.shared_parent_admission_certificate_set_statements,
+                      api.shared_parent_admission_storage_statements,
+                      api.shared_parent_pending_origin_lookup_statements,
+                      api.shared_parent_physical_obligation_statements,
+                      api.shared_parent_end_authority_statements,
+                      api.shared_parent_complete_parent_risk_statements):
+        for statement in generator():
+            native.execute(statement)
+    sig = api.STAGE_PARENT_RISK
+    table = api.PHYSICAL_SCHEMA + '.complete_parent_risk'
+    assert native.execute('SELECT pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (sig,)).fetchone() == (OWNER, True, ['search_path=pg_catalog'])
+    assert native.execute('SELECT relrowsecurity,relforcerowsecurity FROM pg_class WHERE oid=%s::regclass', (table,)).fetchone() == (True, True)
+    constraints = native.execute("SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid=%s::regclass AND contype='u'", (table,)).fetchall()
+    assert ('UNIQUE (org_id, project_id, target_request, judge_request)',) in constraints
+    trigger = native.execute("SELECT tgdeferrable,tginitdeferred FROM pg_trigger WHERE tgrelid=%s::regclass AND tgname='require_complete_risk_end'", (table,)).fetchone()
+    assert trigger == (True, True)
+    for role in ('aos_runtime', 'aos_provider_capacity_issuer'):
+        assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (role, sig)).fetchone()[0]
+        assert not native.execute("SELECT has_table_privilege(%s,%s,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE')", (role, table)).fetchone()[0]
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_RISK_NATIVE_CALLER_REQUIRED'):
+        with native.transaction():
+            native.execute('SELECT public.stage_shared_parent_complete_risk(NULL,NULL,NULL,NULL)')
+    native.rollback()
+    assert native.execute('SELECT to_regprocedure(%s)', (sig,)).fetchone()[0] is None
+    assert native.execute('SELECT to_regclass(%s)', (table,)).fetchone()[0] is None
+    native.rollback()

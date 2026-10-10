@@ -1115,3 +1115,117 @@ def shared_parent_live_physical_fact_statements():
         f'ALTER FUNCTION {READ_LIVE_PHYSICAL} OWNER TO {OWNER}',
         f'REVOKE ALL ON FUNCTION {READ_LIVE_PHYSICAL} FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer',
     )
+
+
+STAGE_PARENT_RISK = 'public.stage_shared_parent_complete_risk(uuid,text,xid8,integer)'
+
+
+def shared_parent_complete_parent_risk_statements():
+    """Persist the complete original two-parent risk, without charging it again.
+
+    Current originals come only from the fixed retained-origin delegate. This
+    pending ledger cannot finalize or upgrade a legacy prepared risk; the full
+    admission end channel and independently authorized cutover remain required.
+    """
+    s = PHYSICAL_SCHEMA
+    table = s + '.complete_parent_risk'
+    denied = 'PUBLIC,aos_runtime,aos_provider_capacity_issuer'
+    body_sql = """body:=jsonb_build_object('schemaVersion','aos.shared-parent-complete-risk/v1',
+              'planId',p_plan,'pendingOriginHash',p_pending_hash,
+              'authorityMaterialHash',pending->>'authorityMaterialHash',
+              'originalRiskHash',pending#>>'{immutable,origin,immutable,originalRiskHash}',
+              'originalRisk',pending#>'{immutable,origin,immutable,originalRisk}',
+              'state','awaiting_full_admission','windowExpiryReleasesRisk',false,'executionAllowed',false);"""
+    return (
+        f'''CREATE TABLE {table}(
+          plan_id uuid PRIMARY KEY,org_id text NOT NULL CHECK(org_id='org-org'),
+          project_id text NOT NULL CHECK(project_id='dev-project'),
+          target_request text NOT NULL,judge_request text NOT NULL,
+          target_hold uuid NOT NULL,judge_hold uuid NOT NULL,
+          physical_account_id uuid NOT NULL,pending_hash text NOT NULL,
+          body jsonb NOT NULL,content_hash text NOT NULL CHECK(content_hash ~ '^sha256:[0-9a-f]{{64}}$'),
+          caller_xid xid8 NOT NULL,caller_pid integer NOT NULL CHECK(caller_pid>0),
+          UNIQUE(org_id,project_id,target_request,judge_request))''',
+        f'ALTER TABLE {table} OWNER TO {OWNER}',
+        f'REVOKE ALL ON {table} FROM {denied}',
+        f'ALTER TABLE {table} ENABLE ROW LEVEL SECURITY',
+        f'ALTER TABLE {table} FORCE ROW LEVEL SECURITY',
+        f'''CREATE POLICY exact_scope ON {table} TO {OWNER}
+          USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+          WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))''',
+        f'''CREATE FUNCTION {s}.bind_complete_parent_risk() RETURNS trigger LANGUAGE plpgsql
+          SET search_path=pg_catalog AS $risk_binding$
+          DECLARE risk jsonb:=NEW.body->'originalRisk'; facts jsonb:=risk->'originalFacts';
+          BEGIN
+            IF {_end_authority_native_context_sql()} THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RISK_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+            IF NEW.body->>'schemaVersion' IS DISTINCT FROM 'aos.shared-parent-complete-risk/v1'
+              OR NEW.body->>'planId' IS DISTINCT FROM NEW.plan_id::text
+              OR NEW.body->>'pendingOriginHash' IS DISTINCT FROM NEW.pending_hash
+              OR NEW.body->>'state' IS DISTINCT FROM 'awaiting_full_admission'
+              OR NEW.body->'windowExpiryReleasesRisk' IS DISTINCT FROM 'false'::jsonb
+              OR NEW.body->'executionAllowed' IS DISTINCT FROM 'false'::jsonb
+              OR risk->>'schemaVersion' IS DISTINCT FROM 'aos.capacity-complete-plan-risk/v1'
+              OR risk->>'planId' IS DISTINCT FROM NEW.plan_id::text
+              OR risk->>'state' IS DISTINCT FROM 'prepared_risk_only'
+              OR risk->'executionAllowed' IS DISTINCT FROM 'false'::jsonb
+              OR risk->'tenant' IS DISTINCT FROM jsonb_build_object('orgId',NEW.org_id,'projectId',NEW.project_id)
+              OR risk->>'callerLogin' IS DISTINCT FROM session_user
+              OR risk->>'callerXid' IS DISTINCT FROM NEW.caller_xid::text
+              OR (risk->>'callerPid')::integer IS DISTINCT FROM NEW.caller_pid
+              OR NEW.caller_xid IS DISTINCT FROM pg_current_xact_id()
+              OR NEW.caller_pid IS DISTINCT FROM pg_backend_pid()
+              OR facts#>>'{{target,requestId}}' IS DISTINCT FROM NEW.target_request
+              OR facts#>>'{{judge,requestId}}' IS DISTINCT FROM NEW.judge_request
+              OR facts#>>'{{target,reservationId}}' IS DISTINCT FROM NEW.target_hold::text
+              OR facts#>>'{{judge,reservationId}}' IS DISTINCT FROM NEW.judge_hold::text
+              OR facts#>>'{{target,physicalAccountId}}' IS DISTINCT FROM NEW.physical_account_id::text
+              OR facts#>>'{{judge,physicalAccountId}}' IS DISTINCT FROM NEW.physical_account_id::text
+              OR NEW.body->>'originalRiskHash' IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(risk),'UTF8')),'hex')
+              OR NEW.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(NEW.body),'UTF8')),'hex') THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RISK_BINDING_REQUIRED' USING ERRCODE='23514'; END IF;
+            RETURN NEW;
+          END $risk_binding$''',
+        f'ALTER FUNCTION {s}.bind_complete_parent_risk() OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {s}.bind_complete_parent_risk() FROM {denied}',
+        f'CREATE TRIGGER exact_complete_risk BEFORE INSERT ON {table} FOR EACH ROW EXECUTE FUNCTION {s}.bind_complete_parent_risk()',
+        f'CREATE TRIGGER immutable_complete_risk BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION {s}.immutable_obligation()',
+        f'CREATE TRIGGER no_truncate_complete_risk BEFORE TRUNCATE ON {table} FOR EACH STATEMENT EXECUTE FUNCTION {s}.immutable_obligation()',
+        f'''CREATE CONSTRAINT TRIGGER require_complete_risk_end AFTER INSERT ON {table}
+          DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION {s}.require_complete_obligation()''',
+        f'''CREATE FUNCTION {STAGE_PARENT_RISK.split('(')[0]}(p_plan uuid,p_pending_hash text,p_xid xid8,p_pid integer)
+          RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $risk_stage$
+          DECLARE pending jsonb; facts jsonb; body jsonb; digest text; old_plan uuid;
+            previous {table}%ROWTYPE;
+          BEGIN
+            IF {_end_authority_native_context_sql()} OR p_xid IS DISTINCT FROM pg_current_xact_id()
+              OR p_pid IS DISTINCT FROM pg_backend_pid() THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RISK_NATIVE_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+            pending:={READ_RETAINED.split('(')[0]}(p_plan,p_pending_hash,p_xid,p_pid);
+            facts:=pending#>'{{immutable,origin,immutable,originalRisk,originalFacts}}';
+            SELECT plan_id INTO old_plan FROM {_physical.SCHEMA}.prepared_plan_risk
+              WHERE org_id='org-org' AND project_id='dev-project'
+                AND target_request=facts#>>'{{target,requestId}}'
+                AND judge_request=facts#>>'{{judge,requestId}}' FOR SHARE;
+            IF FOUND THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_LEGACY_RISK_PAIR_REQUIRES_CUTOVER' USING ERRCODE='23514'; END IF;
+            {body_sql}
+            digest:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex');
+            INSERT INTO {table}(plan_id,org_id,project_id,target_request,judge_request,target_hold,judge_hold,
+              physical_account_id,pending_hash,body,content_hash,caller_xid,caller_pid)
+              VALUES(p_plan,'org-org','dev-project',facts#>>'{{target,requestId}}',facts#>>'{{judge,requestId}}',
+                (facts#>>'{{target,reservationId}}')::uuid,(facts#>>'{{judge,reservationId}}')::uuid,
+                (facts#>>'{{target,physicalAccountId}}')::uuid,p_pending_hash,body,digest,p_xid,p_pid) ON CONFLICT DO NOTHING;
+            SELECT * INTO previous FROM {table} WHERE plan_id=p_plan FOR SHARE;
+            IF NOT FOUND OR previous.body IS DISTINCT FROM body OR previous.content_hash IS DISTINCT FROM digest
+              OR previous.pending_hash IS DISTINCT FROM p_pending_hash
+              OR previous.caller_xid IS DISTINCT FROM p_xid OR previous.caller_pid IS DISTINCT FROM p_pid THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RISK_REPLAY_CONFLICT' USING ERRCODE='23514'; END IF;
+            -- All possible ledger/legacy locks and uniqueness waits precede this full verification.
+            IF {READ_RETAINED.split('(')[0]}(p_plan,p_pending_hash,p_xid,p_pid) IS DISTINCT FROM pending THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_RISK_CURRENTNESS_CHANGED' USING ERRCODE='23514'; END IF;
+            RETURN jsonb_build_object('planId',p_plan,'immutable',body,'contentHash',digest,'executionAllowed',false);
+          END $risk_stage$''',
+        f'ALTER FUNCTION {STAGE_PARENT_RISK} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {STAGE_PARENT_RISK} FROM {denied}',
+    )
