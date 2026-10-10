@@ -115,3 +115,15 @@ RED artifact缺失；GREEN原生DDL/ACL/RLS/复合FK/管理员拒绝+回滚、�
 1730 native r1在stage内READ_RETAINED原Source到期，未取得新增组件正向/COMMIT证据，保留aos_test_0f081ecfdac3_ti4_test及原Source teardown RED。r2全新Source/审批/签名，不重放；删夹具中上轮已验收的7项retention重复负门，仅做本轮原字节保存/固定重读及3新negative；原product核与外层Source测试及TTL均不变。若仍到期，登记真实路径耗时，不宣称组件PASS。
 
 1730实际r1/r2均未完成新Stage正向，分别原Source expired/current consumer门拒绝，不能仅凭19原生结构+326累计GREEN宣称成功。两新保留库原生body与role恢复、initial材料/obligation/Intent/dependency全零已独立回读。下一项不是继续堆叠重试：在新fresh fixture逐段记录BEGIN/END/elapsed和原deadline，再评审整体pipeline重复重核，保持旧8artifact、原期限和等锁后全重核，不用轻量stub绕过full ending；当前新增artifact仅未部署WIP，无完整Task Delivery。
+
+1731下一步实际测量：新隔离fresh attempt initial-call-timing-1731-r1，仅包装已有test-owned公开调用记录函数名、UTC开始/结束耗时及单行拒绝码，不记录参数/Source packet/credential、不修改产品SQL或原TTL。沿用r2全部本轮路径与原外层试验，结果独立保留；接续只poll本进程，不重发。
+
+## 1731 基于实际耗时的 pending 窄门顺序修复（编码前）
+真实timing fresh原生结果：origin3.43s、persist14.28s、end_authority29.07s、retained lookup14.46s、obligation29.02s；initial call在19.73s后被原current consumer门拒绝。静态展开stage26个plan fact出现位置为上界，不当实际次数。下一已登记候选一是窄门锁顺序修复（当前完整Task，隔离artifact）；候选二全物理窗口/unknown切换仍依赖whole ending。
+仅修改 services/aos-api/aos_api/aip_shared_parent_atomic_admission.py 的未部署 READ_PENDING artifact；tests/aip/test_shared_parent_atomic_admission_pg.py 既有native矩阵复用。原已发布迁移/physical七拒绝体/原14SQL生成器不变。此前新8组byte exact是增量保护检查，不将其理解为禁止在证据证明缺陷后修复本Task未部署窄门；本轮允许且只允许READ_PENDING这1组生成体有意变更，另外7组与ACL/Owner/signature/table权限精确保持，记录before/after差异。
+READ_PENDING只读且无任何业务写入。先原八context与cert大小门→native pending plan FOR SHARE→核同caller xid/pid、pending hash及canonical body、tenant、两父hold、cert原bytes/hash/state/false→取得锁后只调用一次完整原CERTIFICATE_SET→核原origin/两account对native pending精确一致→返回原同一doc。锁前那一遍完整重核没有产生授权、锁后已有更强完整原核且原CERTIFICATE_SET内部保留before/after全部Source/父预算/Root/head/签名/DBclock检查；删除的是无效果的重复调用，绝不缓存currentness、跳过等锁后重核、延长期限或生成准入COMMIT。由于没有中间写入/回调，先锁不可变pending再验证原authority不引入部分提交；锁排序风险需native fresh与等待/撤回后续完整矩阵保留，不宣称已全过。
+RED使用已完成fresh timing-r1原实际currentness拒绝，不造新的镜像单测。GREEN19原生权限/编译/caller/RLS/rollback+326相邻；fresh同一路径带timing正向或真实RED并独立读库/精确body/四签名/全零回滚，复核整个Source结果，不凭结构GREEN授执行权。
+
+1731 beforeimage基线现为9组（含上一波initial_call），实际仅READ_PENDING一组变更，另外8组完全相同；原14与旧physical7拒绝体未修改。新fresh实测end_authority14.51s、retained7.27s，相对独立上一fresh的29.07s/14.46s减少重复工作；尚未凭此宣称整波通过。
+
+1731 fresh postlock r1：保留库aos_test_6142b10202c2_ti4_test，新initial call实际Stage24.17s/固定read15.58s正向，原输入篡改、错material hash、runtime私表读3negative以及实际missing-end COMMIT拒绝独立证据通过。native7函数body精确、4真签名、原caller aborted、全部材料/两Intent/obligation/原两父hold零、旧test角色恢复已独立回读。外层旧Source after-component及supplier cleanup到期RED保留；完整admission/Task/正式Root未通过。原Source独立fresh整体57.68s历史证据原文件哈希仍相同，不重复旧验收。

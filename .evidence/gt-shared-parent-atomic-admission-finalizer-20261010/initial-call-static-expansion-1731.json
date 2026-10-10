@@ -1,0 +1,18 @@
+{
+  "authority_revision": "AOS-001731",
+  "method": "Static emitted SQL call occurrence expansion, not measured latency; mutually exclusive branches may overcount",
+  "stage_direct_calls": {
+    "public.canonical_asset_registry_jsonb": 4,
+    "public.prepare_shared_parent_initial_intents": 2,
+    "public.read_shared_parent_retained_origin": 1
+  },
+  "stage_expanded_external_occurrences": {
+    "public.canonical_asset_registry_jsonb": 94,
+    "public.capacity_occupation_eval_case_fact": 2,
+    "public.capacity_occupation_plan_risk_fact": 26,
+    "public.capacity_occupation_source_fact": 12,
+    "public.verify_model_shared_parent_certificate_signature": 12
+  },
+  "full_currentness_must_be_preserved": true,
+  "optimization_not_yet_authorized_as_formal_installation": true
+}

@@ -1,0 +1,6 @@
+{"function": "public.test_owned_versioned_origin", "elapsed_seconds": 3.432944, "outcome": "returned", "error": null, "observed_at": "2026-10-10T16:30:34.915658+00:00"}
+{"function": "public.test_owned_pending_origin", "elapsed_seconds": 14.278569, "outcome": "returned", "error": null, "observed_at": "2026-10-10T16:30:49.199999+00:00"}
+{"function": "public.test_owned_end_authority", "elapsed_seconds": 29.072078, "outcome": "returned", "error": null, "observed_at": "2026-10-10T16:31:18.274900+00:00"}
+{"function": "public.test_owned_retained_origin", "elapsed_seconds": 14.460786, "outcome": "returned", "error": null, "observed_at": "2026-10-10T16:31:32.736731+00:00"}
+{"function": "public.test_owned_initial_obligation", "elapsed_seconds": 29.02036, "outcome": "returned", "error": null, "observed_at": "2026-10-10T16:32:01.760228+00:00"}
+{"function": "public.test_owned_initial_call_authority", "elapsed_seconds": 19.725133, "outcome": "rejected", "error": "CAPACITY_CURRENT_CONSUMER_REQUIRED", "observed_at": "2026-10-10T16:32:21.489432+00:00"}
