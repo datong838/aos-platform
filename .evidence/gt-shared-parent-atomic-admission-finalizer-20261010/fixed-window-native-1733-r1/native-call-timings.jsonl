@@ -1,0 +1,9 @@
+{"function": "public.test_owned_versioned_origin", "elapsed_seconds": 3.51995, "outcome": "returned", "error": null, "observed_at": "2026-10-10T17:01:31.312362+00:00"}
+{"function": "public.test_owned_pending_origin", "elapsed_seconds": 14.16167, "outcome": "returned", "error": null, "observed_at": "2026-10-10T17:01:45.479062+00:00"}
+{"function": "public.test_owned_end_authority", "elapsed_seconds": 14.374252, "outcome": "returned", "error": null, "observed_at": "2026-10-10T17:01:59.854296+00:00"}
+{"function": "public.test_owned_retained_origin", "elapsed_seconds": 7.244413, "outcome": "returned", "error": null, "observed_at": "2026-10-10T17:02:07.099531+00:00"}
+{"function": "public.test_owned_initial_obligation", "elapsed_seconds": 14.464561, "outcome": "returned", "error": null, "observed_at": "2026-10-10T17:02:21.564568+00:00"}
+{"function": "public.test_owned_initial_call_authority", "elapsed_seconds": 23.948576, "outcome": "returned", "error": null, "observed_at": "2026-10-10T17:02:45.517650+00:00"}
+{"function": "public.test_owned_initial_window", "elapsed_seconds": 16.598179, "outcome": "returned", "error": null, "observed_at": "2026-10-10T17:03:02.117872+00:00"}
+{"function": "public.test_owned_initial_call_authority", "elapsed_seconds": 0.59654, "outcome": "rejected", "error": "CAPACITY_CASE_INPUT_BYTES_REQUIRED", "observed_at": "2026-10-10T17:03:02.718206+00:00"}
+{"function": "public.test_owned_initial_window", "elapsed_seconds": 0.000568, "outcome": "rejected", "error": "SHARED_ADMISSION_WINDOW_NATIVE_MATERIAL_REQUIRED", "observed_at": "2026-10-10T17:03:02.721440+00:00"}

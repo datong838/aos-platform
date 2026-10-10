@@ -139,3 +139,8 @@ RED artifact缺失→native metadata/Owner/ACL/两模式字段/early admin deny/
 1732方案细化：无需扩展READ_INITIAL返回字段，现有9组保持逐字不变。新BEFORE使用同原SOURCE_FACT直接从native材料重读原签名Source，获得真实tokenLimit，核原GUARD同xid的账户version。BEFORE由数据库生成完整body/hash、clock/windowId和native总量，不接受或信任提交body/hash；table INSERT仅传plan/material hash/caller，触发器从原权威字段派生。Stage先GUARD→READ_INITIAL完整call核→INSERT RETURNING触发器生成的snapshot。该snapshot只prepared_window_only，不表示当前时刻可派发；replay返回同一不可变snapshot并仍重核原call，旧/新计数由最终终门重新核对，不能用历史snapshot授权。
 
 1732真实fresh r1：窗口Stage17.22s正向，四真签名/原始Input篡改与坏hash/私表拒绝/实际COMMIT缺完整终门拒绝，独立caller aborted、窗口/材料/两Intent/父hold全零。327相邻通过；原9artifact字节未改。外层Source当前性及supplier cleanup RED保留。仅inflight组件通过，fixed签名正向、非空旧池union/unknown、settlement与跨窗口释放、完整结束和自然首链未通过。下一首选fixed签名Source可达性调查，次选非空旧占用union原生负门；不伪造history、不修改旧TTL。
+
+## 1733 固定窗口原签名正向验收（夹具编码前）
+仅新增本Task evidence/fixed-window-native-1733-r1。原source_inputs生成有效account/allocation后，通过原CandidateStore创建新fixed Basis，以新exact ref构造待审批Source，后续Source proposal/approve/native signer原路径全部复用；在签名前选择policy允许fixed。不改既存批准行、不伪造哈希、不延长TTL。当前产品10artifact精确冻结。Stage窗口后验证真实tokenLimit/DB clock生成floor/windowAnchor/windowSeconds、unknown不随窗口释放、全部原重核、3negative/COMMIT缺end拒绝/独立原事务aborted全零。外层旧DEBIT故意inflight-only，若本轮触达该拒绝或原Source期限失败，保留为整轮RED。该验收不证明真正跨窗口settlement。
+
+1733 fixed fresh r1实际正向：aos_test_8eae415b6f96_ti4_test，Stage16.60s，原fixed签名Source/60秒anchor/native DBclock floor/windowIndex独立复核，4签名/3负门/actual COMMIT拒绝/caller aborted/材料窗口父hold全零。外层旧DEBIT原CAPACITY_PHYSICAL_TOKEN_MODE_REQUIRED拒绝，supplier cleanup期限RED均保留。产品文件精确未改，复用上一327相邻证据；fixed身份组件PASS不含settlement/跨窗口释放/完整admission。下一候选一完整terminal node/Receipt/guard核绑定及物理未解除池，候选二非空旧新union overload负门；先调查原完整结束合同再编码，不把旧prepared当已完整承诺的unknown。
