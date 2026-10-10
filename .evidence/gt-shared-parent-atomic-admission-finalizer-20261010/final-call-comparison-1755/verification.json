@@ -1,0 +1,54 @@
+{
+  "status": "FIXED_FINAL_CALL_COMPOSITION_COMPONENT_GREEN_FULL_ADMISSION_PENDING",
+  "baseline_head": "2b32dc820418e5fc4383ad522ea5306603867218",
+  "authority": "AOS-001755",
+  "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "files": {
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "5a62a29131ffb34c52e2d4b492e65ddfdb036dd95041e874f123b22ee46363eb",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "087d256c1380617f0eddf5ae39983392952cb58b9ec451b0c1f629a9867b462e"
+  },
+  "red": {
+    "failed": 5,
+    "cause": "new generator absent",
+    "native_attempted": false
+  },
+  "targeted": {
+    "passed": 6,
+    "warnings": 7,
+    "seconds": 0.51
+  },
+  "adjacent": {
+    "passed": 36,
+    "warnings": 7,
+    "seconds": 1.61,
+    "files": [
+      "test_shared_parent_atomic_admission_pg.py",
+      "test_shared_parent_certificate_prepare_pg.py"
+    ]
+  },
+  "independent_rollback_readback": {
+    "public.verify_shared_parent_final_call_authority(uuid,text,xid8,integer)": true,
+    "public.verify_shared_parent_final_intents(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text,text,bytea,bytea,uuid,uuid)": true,
+    "public.read_shared_parent_initial_call_authority(uuid,text,xid8,integer)": true
+  },
+  "lab_cluster": "7694680278363095064",
+  "review": {
+    "original_generators_exact_beforeimage": true,
+    "fixed_two_substitutions_only": true,
+    "original_full_material_binding_retained": true,
+    "closed_owner_acl": true,
+    "no_default_installation": true,
+    "no_formal_db_or_services": true,
+    "no_browser_change": true
+  },
+  "not_accepted": [
+    "full original signed Source positive for new FINAL_CALL",
+    "original trusted caller missing material native negative",
+    "nested Source/SELECT/planner/operator/cast/native-module semantic closure",
+    "eight-node immutable Receipt and last physical version/totals",
+    "event/RI/callback/native end and actual COMMIT/deadline/postcommit confirmation"
+  ],
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "goal_complete": false
+}

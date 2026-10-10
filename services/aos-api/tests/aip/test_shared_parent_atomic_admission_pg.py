@@ -493,3 +493,71 @@ def test_native_complete_parent_risk_closed_metadata(native):
     assert native.execute('SELECT to_regprocedure(%s)', (sig,)).fetchone()[0] is None
     assert native.execute('SELECT to_regclass(%s)', (table,)).fetchone()[0] is None
     native.rollback()
+
+
+def test_final_call_comparison_exact_composition_and_original_generators():
+    from aos_api import aip_shared_parent_atomic_admission as api
+    statements = api.shared_parent_final_call_validation_statements()
+    original = next(s for s in api.shared_parent_initial_call_authority_statements()
+                    if s.startswith('CREATE FUNCTION ' + api.READ_INITIAL_CALL.split('(')[0] + '('))
+    expected = original.replace('CREATE FUNCTION ' + api.READ_INITIAL_CALL.split('(')[0] + '(',
+                                'CREATE FUNCTION ' + api.FINAL_CALL.split('(')[0] + '(', 1)
+    expected = expected.replace('verified:=' + api.INITIAL_INTENT.split('(')[0] + '(',
+                                'verified:=' + api.FINAL_INTENT.split('(')[0] + '(', 1)
+    assert statements[0] == expected
+    assert api.INITIAL_INTENT.split('(')[0] not in statements[0]
+    assert api._initial_call_material_binding_sql() in statements[0]
+    assert api._retained_source_packet_validation_sql() in statements[0]
+    assert api.READ_RETAINED.split('(')[0] in statements[0]
+    assert not re.search(r'\b(?:INSERT|UPDATE|DELETE|MERGE|TRUNCATE)\b', statements[0], re.I)
+    root = Path(__file__).resolve().parents[4]
+    frozen = json.loads((root / '.evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-call-comparison-1755/beforeimage.json').read_text())
+    for name, digest in frozen.items():
+        assert hashlib.sha256('\n'.join(getattr(api, name)()).encode()).hexdigest() == digest, name
+
+
+@pytest.mark.parametrize('drift', ['missing', 'duplicate_call', 'missing_call', 'writer'])
+def test_final_call_comparison_rejects_reader_drift(monkeypatch, drift):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    original = api.shared_parent_initial_call_authority_statements
+    prefix = 'CREATE FUNCTION ' + api.READ_INITIAL_CALL.split('(')[0] + '('
+    call = 'verified:=' + api.INITIAL_INTENT.split('(')[0] + '('
+    def changed():
+        values = list(original())
+        for i, sql in enumerate(values):
+            if sql.startswith(prefix):
+                if drift == 'missing': values.pop(i)
+                elif drift == 'duplicate_call': values[i] = sql.replace(call, call + call, 1)
+                elif drift == 'missing_call': values[i] = sql.replace(call, 'verified:=wrong(', 1)
+                else: values[i] = sql.replace('RETURN verified', 'DELETE FROM extra_table; RETURN verified', 1)
+                break
+        return tuple(values)
+    monkeypatch.setattr(api, 'shared_parent_initial_call_authority_statements', changed)
+    with pytest.raises(ValueError, match='SHARED_ADMISSION_FINAL_CALL_'):
+        api.shared_parent_final_call_validation_statements()
+
+
+def test_native_final_call_comparison_closed_and_rollback(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    for generator in (api.shared_parent_admission_origin_statements,
+                      api.shared_parent_admission_certificate_set_statements,
+                      api.shared_parent_admission_storage_statements,
+                      api.shared_parent_pending_origin_lookup_statements,
+                      api.shared_parent_physical_obligation_statements,
+                      api.shared_parent_initial_intent_statements,
+                      api.shared_parent_end_authority_statements,
+                      api.shared_parent_initial_call_authority_statements,
+                      api.shared_parent_final_intent_validation_statements,
+                      api.shared_parent_final_call_validation_statements):
+        for sql in generator(): native.execute(sql)
+    expected_body = re.search(r'\$call_read\$(.*?)\$call_read\$', api.shared_parent_final_call_validation_statements()[0], re.S)[1]
+    assert native.execute('SELECT prosrc,pg_get_userbyid(proowner),prosecdef,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (api.FINAL_CALL,)).fetchone() == (expected_body, OWNER, True, ['search_path=pg_catalog'])
+    assert not native.execute("SELECT EXISTS(SELECT 1 FROM pg_proc p,LATERAL aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE p.oid=%s::regprocedure AND a.grantee=0 AND a.privilege_type='EXECUTE')", (api.FINAL_CALL,)).fetchone()[0]
+    for role in ('aos_runtime', 'aos_provider_capacity_issuer'):
+        assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (role, api.FINAL_CALL)).fetchone()[0]
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_CALL_NATIVE_CALLER_REQUIRED'):
+        with native.transaction():
+            native.execute('SELECT public.verify_shared_parent_final_call_authority(NULL,NULL,NULL,NULL)')
+    native.rollback()
+    assert native.execute('SELECT to_regprocedure(%s)', (api.FINAL_CALL,)).fetchone()[0] is None
+    native.rollback()

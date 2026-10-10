@@ -1,0 +1,15 @@
+{
+  "shared_parent_admission_certificate_set_statements": "452dd3f9944b3657bff53c57c18a532638550c3eea8f81f0223e85409f925899",
+  "shared_parent_admission_origin_statements": "ca7df49a608d11dd014e52083dc7593630b85cb0d1c03c6c30be1cc30be49cc9",
+  "shared_parent_admission_storage_statements": "7cb4a1c6c5a83432997b5ffd57ff673c13fb9e5439ce0386d1799883cb4f9a78",
+  "shared_parent_complete_parent_risk_statements": "08cc0300d56c07414b6ec19aef5c6e030e67dcd89dc4876d633e0623af24a6ae",
+  "shared_parent_end_authority_statements": "5248f7e2e656d6e70cd6a517d7366a8f5933af5b97ff9773d0bc079db25f87fb",
+  "shared_parent_final_intent_validation_statements": "ee99f791e84dd0825b0c2b2fe682f540d9141c749f0b3d476cca2ee32bbe696b",
+  "shared_parent_initial_call_authority_statements": "a9d04629988e8f9e789fadbbec8996f9913f3e277ddb5c8babc8ee70bc6759e1",
+  "shared_parent_initial_intent_statements": "de76e996dbbfd9b544ea6f53bc003cf3ea5a802a182da4ddeb56529c3f7edb76",
+  "shared_parent_initial_window_obligation_statements": "028e079208f79f1690935596f1372f611c9846b80f9830c41db43a3e6a1497da",
+  "shared_parent_live_physical_fact_statements": "533e1d882e31dcc9da84e95c0b0af9af2c3cd9fe77f6d1871b0a190cc750fa04",
+  "shared_parent_original_fact_statements": "d2dfa658e16fe74f590409071fe0f83c045934a9fdf1945240bdbfb0502e3c1e",
+  "shared_parent_pending_origin_lookup_statements": "fa8cb3e3bea0695e2d41a4b0099c91d93a24db9d8fb295fd3d32a3c7847a109f",
+  "shared_parent_physical_obligation_statements": "db1a4d09dcc914351fcb700a1698441c31dde21dfccb05540a155d86ab7b8e9f"
+}

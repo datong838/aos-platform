@@ -12,6 +12,36 @@ import re
 FUNCTION = 'public.read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)'
 
 
+FINAL_CALL = 'public.verify_shared_parent_final_call_authority(uuid,text,xid8,integer)'
+
+
+def shared_parent_final_call_validation_statements():
+    """Retain original material verification, using the fixed Intent comparison.
+
+    This explicit closed artifact removes the reachable Intent producer only.
+    Source delegates still require semantic closure and the complete native
+    Receipt/end protocol before any admission can be exposed.
+    """
+    signature = READ_INITIAL_CALL.split('(')[0]
+    definitions = [sql for sql in shared_parent_initial_call_authority_statements()
+                   if sql.startswith('CREATE FUNCTION ' + signature + '(')]
+    if len(definitions) != 1:
+        raise ValueError('SHARED_ADMISSION_FINAL_CALL_DEFINITION_REQUIRED')
+    body = definitions[0]
+    producer = INITIAL_INTENT.split('(')[0]
+    boundary = 'verified:=' + producer + '('
+    if body.count(boundary) != 1 or body.count(producer) != 1:
+        raise ValueError('SHARED_ADMISSION_FINAL_CALL_COMPARISON_BOUNDARY_REQUIRED')
+    body = body.replace(boundary, 'verified:=' + FINAL_INTENT.split('(')[0] + '(', 1)
+    if re.search(r'\b(?:INSERT|UPDATE|DELETE|MERGE|TRUNCATE)\b', body, re.I):
+        raise ValueError('SHARED_ADMISSION_FINAL_CALL_DIRECT_WRITER_FORBIDDEN')
+    body = body.replace('CREATE FUNCTION ' + signature + '(',
+                        'CREATE FUNCTION ' + FINAL_CALL.split('(')[0] + '(', 1)
+    return (body,
+            f'ALTER FUNCTION {FINAL_CALL} OWNER TO {OWNER}',
+            f'REVOKE ALL ON FUNCTION {FINAL_CALL} FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer')
+
+
 FINAL_INTENT = 'public.verify_shared_parent_final_intents(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text,text,bytea,bytea,uuid,uuid)'
 
 
