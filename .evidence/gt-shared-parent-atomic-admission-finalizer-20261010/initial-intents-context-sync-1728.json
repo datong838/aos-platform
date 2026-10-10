@@ -1,0 +1,19 @@
+{
+  "authority_revision": "AOS-001728",
+  "head": "f50dad6a501d143d8705b6d5d4dd0db0592ee232",
+  "installation": {
+    "status": "GREEN",
+    "project_revision": "AOS-001728",
+    "projection_count": 8,
+    "schema_count": 9,
+    "task_receipt_count": 1993,
+    "delivery_receipt_count": 1962,
+    "event_count": 5788
+  },
+  "retained_database": "aos_test_01f650d00ba8_ti4_test",
+  "component_only": true,
+  "whole_source_adjacent_pass": false,
+  "full_task_delivered": false,
+  "goal_complete": false,
+  "codex_memories_write_skipped": true
+}
