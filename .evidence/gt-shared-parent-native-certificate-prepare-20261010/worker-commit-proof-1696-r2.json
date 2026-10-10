@@ -1,0 +1,196 @@
+[
+  {
+    "outcome": "timeout",
+    "schema": "ar2_budget_9e0b8e2459c54117bf44a7134618f918",
+    "reservation_id": "c35c994e-aacd-471f-b60a-ac00f5447faa",
+    "before": {
+      "reservation": {
+        "state": "held",
+        "provider_request_receipt_ref": null,
+        "xmin": "46748",
+        "origin_state": "committed"
+      },
+      "buckets": [
+        {
+          "held_minor": 400,
+          "submitted_minor": 0,
+          "unknown_minor": 0
+        },
+        {
+          "held_minor": 400,
+          "submitted_minor": 0,
+          "unknown_minor": 0
+        },
+        {
+          "held_minor": 400,
+          "submitted_minor": 0,
+          "unknown_minor": 0
+        }
+      ],
+      "result_present": false
+    },
+    "at_call": [
+      {
+        "reservation": {
+          "state": "submitted",
+          "provider_request_receipt_ref": {
+            "revision": 1,
+            "resourceId": "c05b13e4-d863-46b8-89ec-f8e218476d8d",
+            "contentHash": "sha256:119d617aea5b76ba12d8f4ae2e462856ee390bd3ad2c3d8d130a7d46c021c94d",
+            "resourceType": "CapabilityProviderRequestReceipt"
+          },
+          "xmin": "46751",
+          "origin_state": "committed"
+        },
+        "buckets": [
+          {
+            "held_minor": 0,
+            "submitted_minor": 400,
+            "unknown_minor": 0
+          },
+          {
+            "held_minor": 0,
+            "submitted_minor": 400,
+            "unknown_minor": 0
+          },
+          {
+            "held_minor": 0,
+            "submitted_minor": 400,
+            "unknown_minor": 0
+          }
+        ],
+        "result_present": false
+      }
+    ],
+    "after": {
+      "reservation": {
+        "state": "unknown",
+        "provider_request_receipt_ref": {
+          "revision": 1,
+          "resourceId": "c05b13e4-d863-46b8-89ec-f8e218476d8d",
+          "contentHash": "sha256:119d617aea5b76ba12d8f4ae2e462856ee390bd3ad2c3d8d130a7d46c021c94d",
+          "resourceType": "CapabilityProviderRequestReceipt"
+        },
+        "xmin": "46753",
+        "origin_state": "committed"
+      },
+      "buckets": [
+        {
+          "held_minor": 0,
+          "submitted_minor": 0,
+          "unknown_minor": 400
+        },
+        {
+          "held_minor": 0,
+          "submitted_minor": 0,
+          "unknown_minor": 400
+        },
+        {
+          "held_minor": 0,
+          "submitted_minor": 0,
+          "unknown_minor": 400
+        }
+      ],
+      "result_present": false
+    },
+    "synthetic_invocations": 1,
+    "real_provider_calls": 0
+  },
+  {
+    "outcome": "persist_failure",
+    "schema": "ar2_budget_5c059db4ed764cdfa62f0106ae9f36eb",
+    "reservation_id": "e2947bf6-15a6-4f43-9ba0-c049fb795144",
+    "before": {
+      "reservation": {
+        "state": "held",
+        "provider_request_receipt_ref": null,
+        "xmin": "46850",
+        "origin_state": "committed"
+      },
+      "buckets": [
+        {
+          "held_minor": 400,
+          "submitted_minor": 0,
+          "unknown_minor": 0
+        },
+        {
+          "held_minor": 400,
+          "submitted_minor": 0,
+          "unknown_minor": 0
+        },
+        {
+          "held_minor": 400,
+          "submitted_minor": 0,
+          "unknown_minor": 0
+        }
+      ],
+      "result_present": false
+    },
+    "at_call": [
+      {
+        "reservation": {
+          "state": "submitted",
+          "provider_request_receipt_ref": {
+            "revision": 1,
+            "resourceId": "038da06b-7fcd-4a8d-bbb7-d2d21c1d9b9d",
+            "contentHash": "sha256:5792562d98ed5ecc7b57cb595a37e6150bb9895439649bc44a79f05c60030f97",
+            "resourceType": "CapabilityProviderRequestReceipt"
+          },
+          "xmin": "46853",
+          "origin_state": "committed"
+        },
+        "buckets": [
+          {
+            "held_minor": 0,
+            "submitted_minor": 400,
+            "unknown_minor": 0
+          },
+          {
+            "held_minor": 0,
+            "submitted_minor": 400,
+            "unknown_minor": 0
+          },
+          {
+            "held_minor": 0,
+            "submitted_minor": 400,
+            "unknown_minor": 0
+          }
+        ],
+        "result_present": false
+      }
+    ],
+    "after": {
+      "reservation": {
+        "state": "submitted",
+        "provider_request_receipt_ref": {
+          "revision": 1,
+          "resourceId": "038da06b-7fcd-4a8d-bbb7-d2d21c1d9b9d",
+          "contentHash": "sha256:5792562d98ed5ecc7b57cb595a37e6150bb9895439649bc44a79f05c60030f97",
+          "resourceType": "CapabilityProviderRequestReceipt"
+        },
+        "xmin": "46853",
+        "origin_state": "committed"
+      },
+      "buckets": [
+        {
+          "held_minor": 0,
+          "submitted_minor": 400,
+          "unknown_minor": 0
+        },
+        {
+          "held_minor": 0,
+          "submitted_minor": 400,
+          "unknown_minor": 0
+        },
+        {
+          "held_minor": 0,
+          "submitted_minor": 400,
+          "unknown_minor": 0
+        }
+      ],
+      "result_present": false
+    },
+    "synthetic_invocations": 1,
+    "real_provider_calls": 0
+  }
+]

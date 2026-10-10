@@ -1,0 +1,1 @@
+首次10个原回归PASS，新两项在调用前独立snapshot因调查SQL误用不存在bucket_id而失败，真实回调次数0，未触发未知效果；已核原迁移主键bucket_kind/account_id/period_start/currency。r2仅排序改为bucket_kind，另建fresh retained DB和O_EXCL attempt；原失败与库保留，不改产品、期限、断言或旧结果。

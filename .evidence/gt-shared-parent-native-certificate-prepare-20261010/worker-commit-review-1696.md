@@ -1,0 +1,11 @@
+# 原生提交前置与未知风险复审
+
+结论：r2 12/12原生用例通过；首次10 PASS/2调查SQL失败保留。独立SERIAL READ ONLY在当前5441/cluster7694680278363095064核对两保留schema与完整回读相符，产品五文件hash未变，dev-org预算reservation0。
+
+调用瞬间独立连接真实FOR UPDATE NOWAIT获取已提交reservation，pg_xact_status(xmin)=committed且request receipt非空；三桶held→submitted风险守恒。timeout实际mark_unknown后已提交unknown风险；record_result明确失败后仍submitted风险。restart同原run_one仅RECONCILE_ONLY，synthetic callback次数均1，无结果记录；再次回读整份snapshot相等。原consumer专项仍验证Usage/Artifact/Budget共同提交或回滚。
+
+证据一致性：本轮仅注册Task10证据文件；无产品、原测试、触发器、授权、原合同改动。原方案§11.3仍约束全joint，准入/结果分阶段仅待裁决的显式协议候选。新fixture沿原test-owned reduced budget schema；native ordinary提交前置不是完整v3 physical/双父certificate准入，不授正式Source/Model运行权，synthetic invoker不等于真实Provider/Usage。
+
+风险：单joint未提交父行不能供独立结果writer FK引用（1696真实负门）；新结果reader必须明确接受已提交可信准入receipt与current完整来源，不能伪造COMMITTED或复用任意callback。若保持执行结果也纳入原单joint，须另一完整durable-before-effect协议，不直接搬原worker。正式Root、实际transport、全部event/effect与deadline结束门仍待验收。
+
+下一已登记安全项：将当前签名/风险/Intent的持久化位置及caller身份映射到候选协议，完善完整拒绝矩阵；另一项native effect可信artifact来源仍待全部部署证明。保持Loop，不将局部RED或协议未收口写为Goal blocked。

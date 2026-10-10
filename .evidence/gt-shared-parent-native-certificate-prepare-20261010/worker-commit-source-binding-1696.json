@@ -1,0 +1,7 @@
+{
+  "services/aos-api/aos_api/ecommerce_content_execution_worker.py": "814a97498dcf0f89cafe7464a2a3348447c3a56d21416a1fc9c06cf44ead3d59",
+  "services/aos-api/aos_api/ecommerce_content_execution_journal.py": "1703d2637723d8916d55b357fb710b4d9b37a6cef03eaeece9c6227810971d40",
+  "services/aos-api/aos_api/aip_budget_reservation_store.py": "07df0cf6575350fd96374a698325a581800319ed16c65bcc9fcafea99b3bf9d9",
+  "services/aos-api/tests/aip/test_a0v_content_execution_worker_pg.py": "f17a15c94ab74d6caaab38b387e5673104bffe7333ad3413a515bfdf13353ee9",
+  "services/aos-api/tests/aip/test_a0v_content_result_consumer_pg.py": "5948471cfee7b5eda163c137ced25ae9749077ab81e3334bc1e723413ac649b0"
+}

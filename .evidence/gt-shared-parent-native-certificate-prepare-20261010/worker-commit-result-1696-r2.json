@@ -1,0 +1,68 @@
+{
+  "observed_at": "2026-10-10T02:09:46.467483+00:00",
+  "database": "aos_test_d46143865628_ti4_test",
+  "pytest_exit": 0,
+  "results": [
+    {
+      "nodeid": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/test-worker-commit-1696-r2.py::test_concurrent_worker_commits_before_send_and_restart_replays",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/test-worker-commit-1696-r2.py::test_unknown_outcome_never_resubmits_after_restart",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/test-worker-commit-1696-r2.py::test_preparation_failure_keeps_unsubmitted_reservation",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/test-worker-commit-1696-r2.py::test_result_persistence_failure_is_not_a_resubmission_license",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/test-worker-commit-1696-r2.py::test_real_invoker_result_shape_is_persisted_and_replayed",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/test-worker-commit-1696-r2.py::test_exact_owner_envelope_runs_once_to_measured_readable_artifact",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/test-worker-commit-1696-r2.py::test_usage_artifact_and_budget_commit_or_rollback_together[False-False]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/test-worker-commit-1696-r2.py::test_usage_artifact_and_budget_commit_or_rollback_together[False-True]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/test-worker-commit-1696-r2.py::test_usage_artifact_and_budget_commit_or_rollback_together[True-False]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/test-worker-commit-1696-r2.py::test_usage_artifact_and_budget_commit_or_rollback_together[True-True]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/test-worker-commit-1696-r2.py::test_independent_committed_request_and_risk_survive_unknown[timeout]",
+      "phase": "call",
+      "outcome": "passed"
+    },
+    {
+      "nodeid": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/test-worker-commit-1696-r2.py::test_independent_committed_request_and_risk_survive_unknown[persist_failure]",
+      "phase": "call",
+      "outcome": "passed"
+    }
+  ],
+  "scope": "Original content worker/consumer primitive only; synthetic callback/transport and reduced test schemas, not natural Model quality or execution authorization"
+}

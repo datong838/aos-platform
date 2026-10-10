@@ -1,0 +1,79 @@
+{
+  "cluster": "7694680278363095064",
+  "database": "aos_test_d46143865628_ti4_test",
+  "readonly": true,
+  "observations": [
+    {
+      "outcome": "timeout",
+      "reservation": {
+        "state": "unknown",
+        "provider_request_receipt_ref": {
+          "revision": 1,
+          "resourceId": "c05b13e4-d863-46b8-89ec-f8e218476d8d",
+          "contentHash": "sha256:119d617aea5b76ba12d8f4ae2e462856ee390bd3ad2c3d8d130a7d46c021c94d",
+          "resourceType": "CapabilityProviderRequestReceipt"
+        },
+        "xmin": "46753",
+        "origin_state": "committed"
+      },
+      "buckets": [
+        {
+          "held_minor": 0,
+          "submitted_minor": 0,
+          "unknown_minor": 400
+        },
+        {
+          "held_minor": 0,
+          "submitted_minor": 0,
+          "unknown_minor": 400
+        },
+        {
+          "held_minor": 0,
+          "submitted_minor": 0,
+          "unknown_minor": 400
+        }
+      ],
+      "canary_reservations": 0
+    },
+    {
+      "outcome": "persist_failure",
+      "reservation": {
+        "state": "submitted",
+        "provider_request_receipt_ref": {
+          "revision": 1,
+          "resourceId": "038da06b-7fcd-4a8d-bbb7-d2d21c1d9b9d",
+          "contentHash": "sha256:5792562d98ed5ecc7b57cb595a37e6150bb9895439649bc44a79f05c60030f97",
+          "resourceType": "CapabilityProviderRequestReceipt"
+        },
+        "xmin": "46853",
+        "origin_state": "committed"
+      },
+      "buckets": [
+        {
+          "held_minor": 0,
+          "submitted_minor": 400,
+          "unknown_minor": 0
+        },
+        {
+          "held_minor": 0,
+          "submitted_minor": 400,
+          "unknown_minor": 0
+        },
+        {
+          "held_minor": 0,
+          "submitted_minor": 400,
+          "unknown_minor": 0
+        }
+      ],
+      "canary_reservations": 0
+    }
+  ],
+  "source_hashes_unchanged": true,
+  "log_sha256": {
+    "worker-commit-1696.local.log": "040de3d932fc38692a1dd3d3d38579067009fcd690d5fc740649f4a13f4d477c",
+    "worker-commit-1696-r2.local.log": "b5d517d64f535e5682e7f10dc8a01d36af6dd48a93aaa85ea25515bae62a2442"
+  },
+  "real_provider_calls": 0,
+  "full_joint_pass": false,
+  "execution_allowed": false
+}
