@@ -379,3 +379,249 @@ Datum aos_admission_loaded_module_mapping_facts(PG_FUNCTION_ARGS)
     PG_RETURN_NULL();
 #endif
 }
+
+/* Bounded readonly PT_LOAD parity, not trusted package provenance. */
+#ifdef __linux__
+#include <elf.h>
+#include <unistd.h>
+#include <limits.h>
+struct aos_readonly_snapshot {
+    struct aos_module_snapshot modules;
+    Elf64_Half counts[AOS_MODULE_LIMIT];
+};
+static int collect_readonly_module(struct dl_phdr_info *info, size_t size, void *data)
+{
+    struct aos_readonly_snapshot *snapshot = data;
+    unsigned index = snapshot->modules.count;
+    int status = collect_module(info, size, &snapshot->modules);
+    if (status != 0)
+        return status;
+    if (info->dlpi_phnum == 0 || info->dlpi_phnum > 256) {
+        snapshot->modules.invalid = true;
+        return 1;
+    }
+    snapshot->counts[index] = info->dlpi_phnum;
+    return 0;
+}
+static void exact_pread(int fd, void *buffer, size_t size, uint64 offset)
+{
+    size_t done = 0;
+    if (offset > INT64_MAX || size > (uint64) INT64_MAX - offset)
+        elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_RANGE_REQUIRED");
+    while (done < size) {
+        ssize_t n;
+        CHECK_FOR_INTERRUPTS();
+        n = pread(fd, (char *) buffer + done, size - done, (off_t) (offset + done));
+        if (n <= 0)
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_READ_REQUIRED");
+        done += (size_t) n;
+    }
+}
+static void readonly_mapping_range(const struct stat *file, uint64 address, uint64 offset, uint64 size)
+{
+    FILE *volatile maps = NULL;
+    PG_TRY();
+    {
+        char line[AOS_MODULE_PATH_LIMIT + 256];
+        uint64 cursor = address;
+        unsigned lines = 0;
+        maps = AllocateFile("/proc/self/maps", "r");
+        if (maps == NULL || size > UINT64_MAX - address || size > UINT64_MAX - offset)
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_RANGE_REQUIRED");
+        while (fgets(line, sizeof(line), maps) != NULL) {
+            unsigned long long start, end, mapped_offset, inode;
+            unsigned device_major, device_minor;
+            char permissions[5];
+            CHECK_FOR_INTERRUPTS();
+            if (++lines > 8192 || strchr(line, '\n') == NULL ||
+                sscanf(line, "%llx-%llx %4s %llx %x:%x %llu", &start, &end, permissions,
+                    &mapped_offset, &device_major, &device_minor, &inode) != 7 || start >= end)
+                elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_MAPPING_REQUIRED");
+            if (cursor == address + size || cursor < start || cursor >= end)
+                continue;
+            if (permissions[0] != 'r' || permissions[1] == 'w' ||
+                inode != (unsigned long long) file->st_ino ||
+                device_major != (unsigned) major(file->st_dev) || device_minor != (unsigned) minor(file->st_dev) ||
+                mapped_offset > UINT64_MAX - (cursor - start) ||
+                mapped_offset + cursor - start != offset + cursor - address)
+                elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_MAPPING_CHANGED");
+            cursor = Min((uint64) end, address + size);
+        }
+        if (ferror(maps) || cursor != address + size)
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_MAPPING_REQUIRED");
+        if (FreeFile(maps) != 0) {
+            maps = NULL;
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_MAPPING_REQUIRED");
+        }
+        maps = NULL;
+    }
+    PG_CATCH();
+    {
+        if (maps != NULL)
+            FreeFile(maps);
+        PG_RE_THROW();
+    }
+    PG_END_TRY();
+}
+static void append_readonly_image(StringInfo output, const char *path, uintptr_t bias, uintptr_t loader_header, Elf64_Half loader_count)
+{
+    FILE *volatile file = NULL;
+    FILE *volatile memory = NULL;
+    pg_cryptohash_ctx *volatile hash = NULL;
+    PG_TRY();
+    {
+        struct stat before, after, named;
+        Elf64_Ehdr header;
+        Elf64_Phdr ph[256];
+        unsigned i, segments = 0, header_matches = 0;
+        char disk[65536], loaded[65536];
+        file = AllocateFile(path, "rb");
+        memory = AllocateFile("/proc/self/mem", "rb");
+        if (file == NULL || memory == NULL || fstat(fileno(file), &before) != 0 ||
+            !S_ISREG(before.st_mode) || before.st_size < (off_t) sizeof(header) || before.st_size > 256 * 1024 * 1024)
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_FILE_REQUIRED");
+        exact_pread(fileno(file), &header, sizeof(header), 0);
+        if (memcmp(header.e_ident, ELFMAG, SELFMAG) != 0 || header.e_ident[EI_CLASS] != ELFCLASS64 ||
+            header.e_ident[EI_DATA] != ELFDATA2LSB || header.e_ident[EI_VERSION] != EV_CURRENT ||
+            header.e_version != EV_CURRENT || header.e_machine != EM_AARCH64 ||
+            (header.e_type != ET_EXEC && header.e_type != ET_DYN) || header.e_ehsize != sizeof(header) ||
+            header.e_phentsize != sizeof(Elf64_Phdr) || header.e_phnum == 0 || header.e_phnum > 256 || header.e_phnum != loader_count ||
+            header.e_phoff < sizeof(header) || header.e_phoff > (uint64) before.st_size ||
+            header.e_phnum * sizeof(Elf64_Phdr) > (uint64) before.st_size - header.e_phoff)
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_LAYOUT_REQUIRED");
+        exact_pread(fileno(file), ph, header.e_phnum * sizeof(Elf64_Phdr), header.e_phoff);
+        for (i = 0; i < header.e_phnum; i++) {
+            Elf64_Phdr *p = &ph[i];
+            if (p->p_offset > (uint64) before.st_size || p->p_filesz > (uint64) before.st_size - p->p_offset ||
+                p->p_filesz > p->p_memsz || p->p_vaddr > UINT64_MAX - p->p_memsz ||
+                bias > UINT64_MAX - p->p_vaddr || p->p_memsz > UINT64_MAX - bias - p->p_vaddr ||
+                ((p->p_flags & PF_W) && (p->p_flags & PF_X)))
+                elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_RANGE_REQUIRED");
+            if (p->p_type == PT_LOAD && ((p->p_flags & ~(PF_R | PF_W | PF_X)) ||
+                (p->p_align > 1 && ((p->p_align & (p->p_align - 1)) || p->p_vaddr % p->p_align != p->p_offset % p->p_align))))
+                elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_LAYOUT_REQUIRED");
+            if (p->p_type == PT_LOAD && p->p_offset <= header.e_phoff &&
+                p->p_filesz >= header.e_phoff - p->p_offset + header.e_phnum * sizeof(Elf64_Phdr)) {
+                if (bias + p->p_vaddr + header.e_phoff - p->p_offset != loader_header)
+                    elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_HEADER_REQUIRED");
+                header_matches++;
+            }
+            if (p->p_type == PT_DYNAMIC) {
+                uint64 at;
+                bool ended = false;
+                if (p->p_filesz % sizeof(Elf64_Dyn) != 0)
+                    elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_DYNAMIC_REQUIRED");
+                for (at = 0; at < p->p_filesz; at += sizeof(Elf64_Dyn)) {
+                    Elf64_Dyn dynamic;
+                    exact_pread(fileno(file), &dynamic, sizeof(dynamic), p->p_offset + at);
+                    if (dynamic.d_tag == DT_NULL) { ended = true; break; }
+                    if (dynamic.d_tag == DT_TEXTREL || (dynamic.d_tag == DT_FLAGS && (dynamic.d_un.d_val & DF_TEXTREL)))
+                        elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_TEXTREL_REQUIRED");
+                }
+                if (!ended)
+                    elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_DYNAMIC_REQUIRED");
+            }
+        }
+        if (header_matches != 1)
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_HEADER_REQUIRED");
+        exact_pread(fileno(memory), loaded, header.e_phnum * sizeof(Elf64_Phdr), loader_header);
+        if (memcmp(ph, loaded, header.e_phnum * sizeof(Elf64_Phdr)) != 0)
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_BYTES_CHANGED");
+        appendStringInfoString(output, "{\"path\":");
+        escape_json(output, path);
+        appendStringInfoString(output, ",\"virtual\":false,\"segments\":[");
+        for (i = 0; i < header.e_phnum; i++) {
+            Elf64_Phdr *p = &ph[i];
+            uint64 at;
+            uint8 digest[PG_SHA256_DIGEST_LENGTH];
+            char hex[PG_SHA256_DIGEST_LENGTH * 2 + 1];
+            unsigned j;
+            if (p->p_type != PT_LOAD || !(p->p_flags & PF_R) || (p->p_flags & PF_W) || p->p_filesz == 0)
+                continue;
+            readonly_mapping_range(&before, bias + p->p_vaddr, p->p_offset, p->p_filesz);
+            hash = pg_cryptohash_create(PG_SHA256);
+            if (hash == NULL || pg_cryptohash_init(hash) < 0)
+                elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_HASH_REQUIRED");
+            for (at = 0; at < p->p_filesz;) {
+                size_t n = (size_t) Min((uint64) sizeof(disk), p->p_filesz - at);
+                exact_pread(fileno(file), disk, n, p->p_offset + at);
+                exact_pread(fileno(memory), loaded, n, bias + p->p_vaddr + at);
+                if (memcmp(disk, loaded, n) != 0)
+                    elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_BYTES_CHANGED");
+                if (pg_cryptohash_update(hash, (uint8 *) loaded, n) < 0)
+                    elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_HASH_REQUIRED");
+                at += n;
+            }
+            readonly_mapping_range(&before, bias + p->p_vaddr, p->p_offset, p->p_filesz);
+            if (pg_cryptohash_final(hash, digest, sizeof(digest)) < 0)
+                elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_HASH_REQUIRED");
+            pg_cryptohash_free(hash); hash = NULL;
+            for (j = 0; j < sizeof(digest); j++)
+                snprintf(hex + j * 2, 3, "%02x", digest[j]);
+            if (segments++) appendStringInfoChar(output, ',');
+            appendStringInfo(output, "{\"memoryStart\":\"%llx\",\"fileOffset\":\"%llu\",\"fileBytes\":\"%llu\",\"sha256\":\"%s\"}",
+                (unsigned long long) (bias + p->p_vaddr), (unsigned long long) p->p_offset, (unsigned long long) p->p_filesz, hex);
+        }
+        if (!segments || fstat(fileno(file), &after) != 0 || stat(path, &named) != 0 ||
+            !same_file_stat(&before, &after) || !same_file_stat(&before, &named))
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_FILE_CHANGED");
+        appendStringInfoString(output, "]}");
+        if (FreeFile(file) != 0) { file = NULL; elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_FILE_REQUIRED"); }
+        file = NULL;
+        if (FreeFile(memory) != 0) { memory = NULL; elog(ERROR, "SHARED_ADMISSION_NATIVE_ELF_READ_REQUIRED"); }
+        memory = NULL;
+    }
+    PG_CATCH();
+    {
+        if (hash != NULL) pg_cryptohash_free(hash);
+        if (memory != NULL) FreeFile(memory);
+        if (file != NULL) FreeFile(file);
+        PG_RE_THROW();
+    }
+    PG_END_TRY();
+}
+#endif
+PG_FUNCTION_INFO_V1(aos_admission_loaded_module_readonly_facts);
+Datum aos_admission_loaded_module_readonly_facts(PG_FUNCTION_ARGS)
+{
+    if (GetUserId() != get_role_oid("aos_physical_capacity_occupation_owner", false))
+        ereport(ERROR, (errcode(ERRCODE_INSUFFICIENT_PRIVILEGE), errmsg("SHARED_ADMISSION_NATIVE_OWNER_REQUIRED")));
+#ifdef __linux__
+    {
+        struct aos_readonly_snapshot *first = palloc0(sizeof(*first)), *last = palloc0(sizeof(*last));
+        uintptr_t vdso = (uintptr_t) getauxval(AT_SYSINFO_EHDR), main_headers = (uintptr_t) getauxval(AT_PHDR);
+        StringInfoData output;
+        unsigned i;
+        (void) aos_admission_loaded_module_mapping_facts(fcinfo);
+        if (dl_iterate_phdr(collect_readonly_module, first) != 0 || first->modules.invalid || first->modules.count == 0)
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_SNAPSHOT_REQUIRED");
+        initStringInfo(&output);
+        appendStringInfoString(&output, "{\"schemaVersion\":\"aos.native-module-readonly-bytes/v1\",\"readonlyLoadedBytesVerified\":true,\"writableBytesVerified\":false,\"mappedImageProvenance\":false,\"executionAllowed\":false,\"files\":[");
+        for (i = 0; i < first->modules.count; i++) {
+            const char *input = first->modules.names[i];
+            char path[PATH_MAX];
+            CHECK_FOR_INTERRUPTS();
+            if (i) appendStringInfoChar(&output, ',');
+            if (vdso != 0 && first->modules.addresses[i] == vdso) {
+                appendStringInfoString(&output, "{\"path\":\"virtual:linux-vdso.so.1\",\"virtual\":true}");
+                continue;
+            }
+            if (!input[0]) {
+                if (first->modules.headers[i] != main_headers) elog(ERROR, "SHARED_ADMISSION_NATIVE_UNNAMED_MODULE_REQUIRED");
+                input = "/proc/self/exe";
+            }
+            if (input[0] != '/' || realpath(input, path) == NULL || strlen(path) >= AOS_MODULE_PATH_LIMIT)
+                elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_PATH_REQUIRED");
+            append_readonly_image(&output, path, first->modules.addresses[i], first->modules.headers[i], first->counts[i]);
+        }
+        (void) aos_admission_loaded_module_mapping_facts(fcinfo);
+        if (dl_iterate_phdr(collect_readonly_module, last) != 0 || memcmp(first, last, sizeof(*first)) != 0)
+            elog(ERROR, "SHARED_ADMISSION_NATIVE_MODULE_SNAPSHOT_CHANGED");
+        appendStringInfoString(&output, "]}");
+        PG_RETURN_DATUM(DirectFunctionCall1(jsonb_in, CStringGetDatum(output.data)));
+    }
+#else
+    ereport(ERROR, (errcode(ERRCODE_FEATURE_NOT_SUPPORTED), errmsg("SHARED_ADMISSION_NATIVE_LINUX_REQUIRED")));
+    PG_RETURN_NULL();
+#endif
+}

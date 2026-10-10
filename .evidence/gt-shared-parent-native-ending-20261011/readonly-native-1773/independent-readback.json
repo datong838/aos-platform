@@ -1,0 +1,17 @@
+{
+  "status": "GREEN",
+  "container_cluster_exact": true,
+  "all_four_new_interfaces_absent": true,
+  "original_pending_metadata_exact": true,
+  "five_owners_flags_and_memberships_closed": true,
+  "original_crypto_foreign_and_new_artifact_hashes_exact": {
+    "/tmp/aos_admission_modules_b16f65420b8743d08217fd64041f7497.so": "fb8771bcccb98d5919b5276b9137b1f694890c744a2017247bd977930d020626",
+    "/tmp/aos_order_19c98c11c71b44ffa9f8b6a33e0b4573.so": "0f22fb884fd06f27324f06316cf1c1caba9968ebb2ac0523b43e7caeeeec5e0c",
+    "/usr/local/lib/postgresql/aos_ed25519.so": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e"
+  },
+  "native_readonly_segment_count": 26,
+  "all_original_four_C_bodies_exact_prefix": true,
+  "no_formal_database_operation": true,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

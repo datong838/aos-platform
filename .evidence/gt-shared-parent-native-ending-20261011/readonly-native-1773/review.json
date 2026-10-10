@@ -1,0 +1,30 @@
+{
+  "status": "NATIVE_READONLY_COMPONENT_GREEN",
+  "review_kind": "code_and_plan_self_review_with_independent_kernel_memory_and_disk_oracles",
+  "model_review_invoked": false,
+  "tests": {
+    "final_adjacent": "11 passed,4 deselected,0skip",
+    "final_crypto_inclusive_targeted": "2 passed,13 deselected,0skip"
+  },
+  "build": "r3 Werror passed; r2 declaration order failure preserved",
+  "exact_original_four_C_prefix": true,
+  "cleanup": "PG_TRY closes file/memory/maps/hash on ERROR; actual mismatch descriptor-count unchanged",
+  "bounds": "256 modules,256 program headers,256MiB/file,8192 map lines,64KiB reads; interrupts; checked arithmetic and file mapping offsets",
+  "scope": "Readonly PT_LOAD file-backed bytes only; Linux ELF64LE/aarch64; virtual vDSO separate; unsupported layouts reject",
+  "remaining": [
+    "trusted source/build package Root",
+    "immutable lifecycle and relocated/writable state policy",
+    "complete callback/RI fixedpoint",
+    "full8-node final Source/current clock/COMMIT/unknown protocol"
+  ],
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "file_hashes": {
+    "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.c": "e6a4ea1e4bd44afc9ff5e034ef9b72045e87aad6ef3159759d8bbeeb826ba731",
+    "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end--0.1.sql": "720bddb8dda52d6585477f2103ef3da1f1532126778014f629f88c702e39a095",
+    "services/aos-api/tests/aip/test_shared_parent_native_ending_pg.py": "b62959cd5bab44b56d8974f0a3dcce11985f80291e1b495d0d17bd02bfda3c54",
+    ".evidence/gt-shared-parent-native-ending-20261011/readonly-native-1773/plan.md": "0d4f3708f967c4e0a152b93a5e75a887e1392fc3b66f5ed566d1d7fdad4739a1",
+    ".evidence/gt-shared-parent-native-ending-20261011/readonly-native-1773/independent-readback.json": "96eb20fe863046b3384793ab48e2435b0e50a66bc6f97e9a7b12fe2a9f678abe",
+    ".evidence/gt-shared-parent-native-ending-20261011/readonly-native-1773/module-proof.json": "4918d0f9b2aecdc9031cd6582c5376526c894ea6e204a8d39ca540ee68e4800b"
+  }
+}

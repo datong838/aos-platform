@@ -173,6 +173,7 @@ def native_module_lab():
         assert other.execute('SELECT to_regprocedure(%s) AS p',(MODULES,)).fetchone()['p'] is None
         assert other.execute('SELECT to_regprocedure(%s) AS p',(MODULE_FILES,)).fetchone()['p'] is None
         assert other.execute('SELECT to_regprocedure(%s) AS p',(MODULE_MAPPING,)).fetchone()['p'] is None
+        assert other.execute('SELECT to_regprocedure(%s) AS p',(MODULE_READONLY,)).fetchone()['p'] is None
         assert other.execute('SELECT prosrc,probin,proacl::text FROM pg_proc WHERE oid=%s::regprocedure',(NATIVE,)).fetchone()==original
     store(proof,rollback_only_installation_absent=True,original_pending_reader_exact=True)
 
@@ -410,3 +411,73 @@ def test_native_module_mapping_rejects_path_replacement_and_recovers(native_modu
     assert c.execute('SELECT '+MODULE_MAPPING+' AS facts').fetchone()['facts']==before
     assert subprocess.check_output(['docker','exec',lab['name'],'sha256sum',spec['foreign_library']],text=True).split()[0]==spec['foreign_library_sha256']
     store(proof,header_path_replacement_denied=True,header_identity_recovery=True,mapping_error_descriptors_released=True,mapping_test_copy_retained=copied,foreign_arm_invoked=False)
+
+MODULE_READONLY='aos_admission_native_private.loaded_module_readonly_facts()'
+
+def test_native_module_readonly_bytes_and_owner(native_module_lab):
+    import subprocess,struct
+    c,lab,spec,proof=native_module_lab
+    c.execute("SELECT digest(''::text,'sha256')")
+    assert c.execute("SELECT aos_ed25519.verify(''::bytea,''::bytea,''::bytea) AS valid").fetchone()['valid'] is False
+    meta=c.execute('SELECT pg_get_userbyid(proowner) AS owner,prosrc,probin,prosecdef,proconfig,provolatile,proparallel,pronargs,prorettype::regtype::text AS result FROM pg_proc WHERE oid=%s::regprocedure',(MODULE_READONLY,)).fetchone()
+    assert meta==dict(owner=OWNER,prosrc='aos_admission_loaded_module_readonly_facts',probin=spec['library'],prosecdef=False,proconfig=['search_path=pg_catalog'],provolatile='v',proparallel='u',pronargs=0,result='jsonb')
+    for role in ('aos_runtime','aos_provider_capacity_issuer','aos_provider_capacity_occupation'):
+        assert c.execute('SELECT has_function_privilege(%s,%s,\'EXECUTE\') AS allowed',(role,MODULE_READONLY)).fetchone()['allowed'] is False
+    c.execute('SET LOCAL ROLE '+OWNER)
+    facts=c.execute('SELECT '+MODULE_READONLY+' AS facts').fetchone()['facts']
+    assert facts['readonlyLoadedBytesVerified'] is True and facts['executionAllowed'] is False
+    assert facts['mappedImageProvenance'] is False and facts['writableBytesVerified'] is False
+    pid=c.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+    count=0
+    for row in facts['files']:
+        if row['virtual']:continue
+        raw=subprocess.check_output(['docker','exec',lab['name'],'cat',row['path']])
+        elf=struct.unpack_from('<16sHHIQQQIHHHHHH',raw)
+        loads=[struct.unpack_from('<IIQQQQQQ',raw,elf[5]+i*elf[9]) for i in range(elf[10])]
+        expected=[p for p in loads if p[0]==1 and p[1]&4 and not p[1]&2 and p[5]]
+        assert len(row['segments'])==len(expected)>0
+        for segment,p in zip(row['segments'],expected):
+            address=int(segment['memoryStart'],16);size=p[5]
+            observed=subprocess.check_output(['docker','exec',lab['name'],'dd',f'if=/proc/{pid}/mem','bs=65536',f'skip={address}',f'count={size}','iflag=skip_bytes,count_bytes','status=none'],timeout=10)
+            assert len(observed)==size and observed==raw[p[2]:p[2]+size]
+            assert segment['sha256']==hashlib.sha256(observed).hexdigest()
+            count+=1
+    assert count>=26 and all(any(name in row['path'] for row in facts['files']) for name in ('libicudata','pgcrypto','aos_ed25519'))
+    c.execute('SAVEPOINT readonly_owner')
+    c.execute('SET LOCAL ROLE aos_app')
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SHARED_ADMISSION_NATIVE_OWNER_REQUIRED'):c.execute('SELECT '+MODULE_READONLY)
+    c.execute('ROLLBACK TO SAVEPOINT readonly_owner')
+    store(proof,native_readonly_bytes_independently_equal=True,readonly_segment_count=count,readonly_owner_denied=True,readonly_facts=facts)
+
+def test_native_module_readonly_memory_change_denied_and_restored(native_module_lab):
+    import subprocess,struct
+    c,lab,spec,proof=native_module_lab
+    copied='/tmp/aos_order_readonly_'+uuid.uuid4().hex+'.so'
+    subprocess.run(['docker','exec',lab['name'],'cp',spec['foreign_library'],copied],check=True)
+    raw=subprocess.check_output(['docker','exec',lab['name'],'cat',copied]);elf=struct.unpack_from('<16sHHIQQQIHHHHHH',raw)
+    schema='test_owned_readonly_'+uuid.uuid4().hex
+    c.execute('CREATE SCHEMA '+schema+' AUTHORIZATION aos_app')
+    c.execute(sql.SQL('CREATE FUNCTION '+schema+".uninvoked(oid,oid,boolean) RETURNS void AS {},'aos_test_order_arm' LANGUAGE c STRICT VOLATILE SET search_path=pg_catalog").format(sql.Literal(copied)))
+    c.execute('REVOKE ALL ON FUNCTION '+schema+'.uninvoked(oid,oid,boolean) FROM PUBLIC')
+    c.execute('SET LOCAL ROLE '+OWNER)
+    before=c.execute('SELECT '+MODULE_READONLY+' AS facts').fetchone()['facts']
+    row=next(x for x in before['files'] if x['path']==copied)
+    first=next(x for x in row['segments'] if x['fileOffset']=='0')
+    assert elf[0][15]==0 and int(first['fileBytes'])>64
+    pid=c.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'];address=int(first['memoryStart'],16)+15
+    def descriptors():return len(subprocess.check_output(['docker','exec',lab['name'],'ls',f'/proc/{pid}/fd'],text=True).splitlines())
+    def read_byte():return subprocess.check_output(['docker','exec',lab['name'],'dd',f'if=/proc/{pid}/mem','bs=1',f'skip={address}','count=1','status=none'],timeout=5)
+    def write_byte(value):subprocess.run(['docker','exec','-i',lab['name'],'dd',f'of=/proc/{pid}/mem','bs=1',f'seek={address}','count=1','conv=notrunc','status=none'],input=value,check=True,timeout=5)
+    original=read_byte();assert original==b'\x00';fd_count=descriptors()
+    try:
+        write_byte(b'\x01');assert read_byte()==b'\x01'
+        assert subprocess.check_output(['docker','exec',lab['name'],'cat',copied])==raw
+        c.execute('SAVEPOINT readonly_mismatch')
+        with pytest.raises(psycopg.errors.InternalError_,match='SHARED_ADMISSION_NATIVE_ELF_BYTES_CHANGED'):c.execute('SELECT '+MODULE_READONLY)
+        c.execute('ROLLBACK TO SAVEPOINT readonly_mismatch')
+        assert descriptors()==fd_count
+    finally:
+        write_byte(original)
+    assert read_byte()==original and c.execute('SELECT '+MODULE_READONLY+' AS facts').fetchone()['facts']==before
+    assert subprocess.check_output(['docker','exec',lab['name'],'sha256sum',spec['foreign_library']],text=True).split()[0]==spec['foreign_library_sha256']
+    store(proof,readonly_memory_byte_change_denied=True,readonly_memory_exactly_restored=True,readonly_error_descriptors_released=True,foreign_arm_invoked=False,readonly_test_copy_retained=copied)

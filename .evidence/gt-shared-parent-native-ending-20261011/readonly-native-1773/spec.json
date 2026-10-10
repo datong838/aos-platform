@@ -1,0 +1,15 @@
+{
+  "cluster": "7694680278363095064",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "library": "/tmp/aos_admission_modules_b16f65420b8743d08217fd64041f7497.so",
+  "library_sha256": "fb8771bcccb98d5919b5276b9137b1f694890c744a2017247bd977930d020626",
+  "source_hashes": {
+    "aos_admission_end--0.1.sql": "720bddb8dda52d6585477f2103ef3da1f1532126778014f629f88c702e39a095",
+    "Makefile": "56080f2509ebb5f5d5de7f1b2567c0478d3c37fcbc9a9915c547a1073bb48d5d",
+    "aos_admission_end.c": "e6a4ea1e4bd44afc9ff5e034ef9b72045e87aad6ef3159759d8bbeeb826ba731",
+    "aos_admission_end.control": "786f5ff9b0848d21160fabb996bc3b43086d462ab7deb74a598808e048b0e750"
+  },
+  "evidence": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/readonly-native-1773",
+  "foreign_library": "/tmp/aos_order_19c98c11c71b44ffa9f8b6a33e0b4573.so",
+  "foreign_library_sha256": "0f22fb884fd06f27324f06316cf1c1caba9968ebb2ac0523b43e7caeeeec5e0c"
+}
