@@ -1,0 +1,38 @@
+{
+  "container_id": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+  "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+  "pg_config": {
+    "version": "PostgreSQL 16.14",
+    "configure": "'--enable-option-checking=fatal' '--build=aarch64-linux-musl' '--enable-integer-datetimes' '--enable-thread-safety' '--enable-tap-tests' '--disable-rpath' '--with-uuid=e2fs' '--with-pgport=5432' '--with-system-tzdata=/usr/share/zoneinfo' '--prefix=/usr/local' '--with-includes=/usr/local/include' '--with-libraries=/usr/local/lib' '--with-gssapi' '--with-icu' '--with-ldap' '--with-libxml' '--with-libxslt' '--with-llvm' '--with-lz4' '--with-openssl' '--with-perl' '--with-python' '--with-tcl' '--with-zstd' 'build_alias=aarch64-linux-musl' 'LLVM_CONFIG=/usr/lib/llvm21/bin/llvm-config' 'CLANG=clang-21'",
+    "cc": "gcc",
+    "cflags": "-Wall -Wmissing-prototypes -Wpointer-arith -Wdeclaration-after-statement -Werror=vla -Wendif-labels -Wmissing-format-attribute -Wimplicit-fallthrough=3 -Wcast-function-type -Wshadow=compatible-local -Wformat-security -fno-strict-aliasing -fwrapv -fexcess-precision=standard -Wno-format-truncation -Wno-stringop-truncation -O2",
+    "ldflags": "-L/usr/local/lib -Wl,--as-needed"
+  },
+  "four_source_headers": {
+    "postgres.h": {
+      "installed_sha256": "b4894a5973569b98b975a585371a2d38ee53e76aca940093a7bd76900b99d488",
+      "archive_source_sha256": "b4894a5973569b98b975a585371a2d38ee53e76aca940093a7bd76900b99d488",
+      "bytes_equal": true
+    },
+    "fmgr.h": {
+      "installed_sha256": "fd781147ec3f936a4628b97c5df595b60cb06ea1756ac9966f5f3fc118827135",
+      "archive_source_sha256": "fd781147ec3f936a4628b97c5df595b60cb06ea1756ac9966f5f3fc118827135",
+      "bytes_equal": true
+    },
+    "miscadmin.h": {
+      "installed_sha256": "7558bf0de318ebafa10615b2ff400fc8d6f2db0012028843aff2cf1005e3433e",
+      "archive_source_sha256": "7558bf0de318ebafa10615b2ff400fc8d6f2db0012028843aff2cf1005e3433e",
+      "bytes_equal": true
+    },
+    "access/xact.h": {
+      "installed_sha256": "7c136cdc936f08ec7db937b83bf008e91a717c036e025c7506cebfaff4927d60",
+      "archive_source_sha256": "7c136cdc936f08ec7db937b83bf008e91a717c036e025c7506cebfaff4927d60",
+      "bytes_equal": true
+    }
+  },
+  "generated_headers_not_compared": true,
+  "original_binary_build_provenance_proved": false,
+  "build_executed": false,
+  "full_task_delivered": false,
+  "execution_allowed": false
+}

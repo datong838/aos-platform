@@ -1,0 +1,7 @@
+# PostgreSQL bundled module controlled build input audit
+
+Rules231, original full NativeEnding Task/Lease/m1 single writer. Two registered candidates: PostgreSQL/pgcrypto/PLpgsql source-build chain input audit (selected independent step); full Main8/fourcert/Source/nativeCOMMIT (depends on whole installed profile/bootstrap/lifecycle). No narrowed helper Delivery.
+
+Exact files: this evidence directory plan/input-manifest/source-header-comparison/review. Read-only current isolated lab image, pg_config and installed server headers plus independently hashed original PostgreSQL16.14 archive/source tree. No new compiler/SQL function/package/container/volume, no PostgreSQL process restart, no original/formal data write. No product edits. Archive hash/configure strings/source version alone cannot establish original binary origin. Compare original installed generated/source headers with archive files, record expected generated/config differences, and derive exact required toolchain/features/dependencies from actual current pg_config. Review before designing a subsequent build; don't execute guessed build commands or current image-history shell.
+
+Freeze source/header hashes and actual image identity. Input-only observation, not source signature trust, binary parity, callback closure, Source authority or original Main completion. Preserve all original Task/Lease and current formal availability limitation. Browser not applicable.
