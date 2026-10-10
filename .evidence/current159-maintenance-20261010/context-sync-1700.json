@@ -1,0 +1,17 @@
+{
+  "authority_revision": "AOS-001700",
+  "head": "0a4106a70f9c9674e80cdcb96fa31f313fce32f9",
+  "installation": {
+    "status": "GREEN",
+    "project_revision": "AOS-001700",
+    "projection_count": 8,
+    "schema_count": 9,
+    "task_receipt_count": 1990,
+    "delivery_receipt_count": 1961,
+    "event_count": 5746
+  },
+  "memory_write_skipped": true,
+  "maintenance_task_delivered": false,
+  "full_goal_complete": false,
+  "older_supporting_checkpoints_stale_until_explicit_renewal": true
+}
