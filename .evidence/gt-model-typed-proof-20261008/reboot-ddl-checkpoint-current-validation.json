@@ -1,0 +1,21 @@
+{
+  "snapshot": {
+    "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+    "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "branch": "m1",
+    "head": "84b2e5bc70a02edbc3b0bb5054c75c1100d217fb",
+    "code_commit": "84b2e5bc70a02edbc3b0bb5054c75c1100d217fb",
+    "code_time": 1791616497,
+    "checkpoint": {
+      "task_id": "gt-model-typed-proof-20261008",
+      "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "authority_revision": "AOS-001705",
+      "step": "published-closed-ddl159-actual-archive-pass-full-source-package-and-maintenance-next",
+      "fingerprint": "c7a788e6f3991aeba598cd580f1575ca39f8998abb9ee8b51c2bc6a4e5e9b489",
+      "task_base_revision": "AOS-001513"
+    }
+  },
+  "same_old_event_cached": true,
+  "direct_current_snapshot_validated": true,
+  "observation_only": true
+}

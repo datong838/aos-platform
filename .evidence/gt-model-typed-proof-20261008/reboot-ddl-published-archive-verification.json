@@ -1,0 +1,16 @@
+{
+  "head": "84b2e5bc70a02edbc3b0bb5054c75c1100d217fb",
+  "archive_sha256": "54729dc800ee77b38903c4a59c03b506af82778b1efffd45f44909e641e757be",
+  "archive_root": ".evidence/gt-model-typed-proof-20261008/ddl-published159-oiifsorr",
+  "published_heads": [
+    "a0v_159"
+  ],
+  "loaded_revision_objects": 345,
+  "exact_158_parent": "a0v_157",
+  "exact_159_parent": "a0v_158",
+  "all_four_native_bound_bytes_match": true,
+  "database_connections": 0,
+  "formal_database_migrated": false,
+  "full_package_publication": false,
+  "full_task_delivery": false
+}

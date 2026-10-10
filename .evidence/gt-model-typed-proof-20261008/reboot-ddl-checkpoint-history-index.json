@@ -1,0 +1,182 @@
+{
+  "schema": "aos-checkpoint-evidence-index/v1",
+  "task_id": "gt-model-typed-proof-20261008",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001705",
+  "files": {
+    ".evidence/gt-model-typed-proof-20261008/implementation-plan.md": {
+      "sha256": "3e75d0ef266e8f951a668efada8a6ac067d04895c1dbce2db9f73fe8864baea3",
+      "bytes": 21030
+    },
+    ".evidence/gt-model-typed-proof-20261008/atomic-allocation-owner-contract.md": {
+      "sha256": "1c902f9d849aa2b154bd8ee0a82da9ff4f0bc5903fd4d50fa594d4299e652e29",
+      "bytes": 3766
+    },
+    ".evidence/gt-model-typed-proof-20261008/parent-commit-boundary-plan.md": {
+      "sha256": "0706d797c385294ea164e50de2b228c0366abbe4104ac2d6d0bb93643b5d7039",
+      "bytes": 1485
+    },
+    ".evidence/gt-model-typed-proof-20261008/parent-commit-checkpoint.md": {
+      "sha256": "f765c00396ee68f3bbc97b3b73ae95ae96fbbadb7d16ef7f4c9e890bb72b77d4",
+      "bytes": 1877
+    },
+    ".evidence/gt-model-typed-proof-20261008/identity-epoch-plan.md": {
+      "sha256": "8e7440183a542f2817af1aa06c3a91adfbd8f16a7e59beed3b6b4d136ba41d5f",
+      "bytes": 8392
+    },
+    ".evidence/gt-model-typed-proof-20261008/identity-implementation-checkpoint.md": {
+      "sha256": "7d6eb635b5b9d381c49bd521f94a1dfc40dc65ae815e285a7071749df37b3c25",
+      "bytes": 2665
+    },
+    ".evidence/gt-model-typed-proof-20261008/identity-case-checkpoint.md": {
+      "sha256": "269b72495f74dccafc26db7af83c99567f7dde4eedc09a9074a157397e064864",
+      "bytes": 2576
+    },
+    ".evidence/gt-model-typed-proof-20261008/identity-window-checkpoint.md": {
+      "sha256": "9c30822c2361c735e84465ef333ab6d7bd6acee77017014b9c540152da863824",
+      "bytes": 2547
+    },
+    ".evidence/gt-model-typed-proof-20261008/issuer-source-audit-plan.md": {
+      "sha256": "1d22071bb5aab75c4596e1f54d876a45fbb3d314a92af663f06b8d80c6320b01",
+      "bytes": 1154
+    },
+    ".evidence/gt-model-typed-proof-20261008/issuer-source-audit-r1.json": {
+      "sha256": "2fee89e2f620ba4245217f0b94703f6512b7ec559d1fffce946cca5b972a135b",
+      "bytes": 9152
+    },
+    ".evidence/gt-model-typed-proof-20261008/identity-exact-id-plan.md": {
+      "sha256": "88a06696978df7f1a5c7abed85ee2a9c269724eaf12f620501b195a6c3cdbe77",
+      "bytes": 982
+    },
+    ".evidence/gt-model-typed-proof-20261008/identity-exact-id-checkpoint.md": {
+      "sha256": "28156f6e90187bfff54c1e2275a9caa9b7bf8247d23a3686b00ba643e3c89432",
+      "bytes": 1508
+    },
+    ".evidence/gt-model-typed-proof-20261008/identity-exact-id-independent-r1.json": {
+      "sha256": "d048e18587ce246e1824b28e91def8d624e44bb459fc7ad3bca1fea2f4095408",
+      "bytes": 5338
+    },
+    ".evidence/gt-model-typed-proof-20261008/whole-case-consumer-plan.md": {
+      "sha256": "4a7865d282f25bdaa8c08e0761b014623a476914e48cb3abff9683d8b9c30c21",
+      "bytes": 1416
+    },
+    ".evidence/gt-model-typed-proof-20261008/whole-case-checkpoint.md": {
+      "sha256": "f887323addd3ed45520f805325af02f3d75d4033fa5f89f22f88026c17c43951",
+      "bytes": 2425
+    },
+    ".evidence/gt-model-typed-proof-20261008/whole-case-independent-r1.json": {
+      "sha256": "30bf964dd11e3016365f15aca929ecbc5db421b4207a1d4c779aae16de021850",
+      "bytes": 4512
+    },
+    ".evidence/gt-model-typed-proof-20261008/original-certificate-set-checkpoint.md": {
+      "sha256": "04d6abbe71811c0198064c6e105498daae559846e435615f5740d8ffc199d8b0",
+      "bytes": 397
+    },
+    ".evidence/gt-model-typed-proof-20261008/runtime-executor-fact-bridge-plan.md": {
+      "sha256": "ee14273aa1ba17b5c4ed1b7e7337d61cc4c767d10dcf7342d43a905c86b48b85",
+      "bytes": 3017
+    },
+    ".evidence/gt-model-typed-proof-20261008/runtime-executor-fact-bridge-checkpoint.md": {
+      "sha256": "c9b2e376631c9934f3b29e09e52b757cc5c34c6c2910c6739fcbb120ca863909",
+      "bytes": 2721
+    },
+    ".evidence/gt-model-typed-proof-20261008/runtime-executor-fact-window-independent-r1.json": {
+      "sha256": "82bf06cead59de5e49a51b2ae300fb0258ca64d96df1eaec6505b8dc428b9815",
+      "bytes": 4631
+    },
+    ".evidence/gt-model-typed-proof-20261008/runtime-executor-fact-acl-independent-r1.json": {
+      "sha256": "5ea59f4cf33b14f422444e6c4b5ecf831feba7955bcfee7a1e1f203a2a922c73",
+      "bytes": 601
+    },
+    ".evidence/gt-model-typed-proof-20261008/runtime-executor-fact-static.json": {
+      "sha256": "443ca2f6b57d8da7fcd3c09036f067db62b9724e8f16ac8cb7efca261d48ae69",
+      "bytes": 1310
+    },
+    ".evidence/gt-model-typed-proof-20261008/runtime-executor-fact-cumulative-reference.json": {
+      "sha256": "d2f3b379e797b4850658b375a3f3cd3842930a565380c14c82d6668808e2ac03",
+      "bytes": 1013
+    },
+    ".evidence/gt-model-typed-proof-20261008/runtime-executor-withdrawal-plan.md": {
+      "sha256": "3255dd1dffdba9cdd7a01b0fd38e026dee1192c564f0567e10954833728b15c5",
+      "bytes": 1720
+    },
+    ".evidence/gt-model-typed-proof-20261008/runtime-executor-withdrawal-checkpoint.md": {
+      "sha256": "5a56b959f7714a30812efee3048866c9afb9115e01230587fd4274be5861bd3c",
+      "bytes": 2411
+    },
+    ".evidence/gt-model-typed-proof-20261008/runtime-executor-withdrawal-cumulative-reference.json": {
+      "sha256": "8efd75d706716f0bc6fde13998468ea640dcd6d6972116bed5fa3e59c058bf45",
+      "bytes": 607
+    },
+    ".evidence/gt-model-typed-proof-20261008/original-source-whole-plan-reference.json": {
+      "sha256": "59c1e3ebdacdbae458f713d24537eb0687a6a91ee076924834622534a2dc14b2",
+      "bytes": 2033
+    },
+    ".evidence/gt-model-typed-proof-20261008/judge-input-binding-plan.md": {
+      "sha256": "90aa6536322d4b379f207aeb82ab6bc2a44088a3814cbdc778a16a6a8189e267",
+      "bytes": 2250
+    },
+    ".evidence/gt-model-typed-proof-20261008/judge-input-binding-checkpoint.md": {
+      "sha256": "2579b9c434e3aa6c7e8b2805b89f3d0e32a2f174d114afb6629f69990eea6a29",
+      "bytes": 2680
+    },
+    ".evidence/gt-model-typed-proof-20261008/judge-input-binding-cumulative-r2-result.json": {
+      "sha256": "5a163f1b5319cf6a4d123acf1f93a0969cf3f4b50942f942d891ce991117f6ed",
+      "bytes": 7661
+    },
+    ".evidence/gt-model-typed-proof-20261008/judge-input-binding-independent-r2.json": {
+      "sha256": "8e493404d733cc5d16d60ab49c2c29c2b74c87218945d3d052ae4d9ada3bf456",
+      "bytes": 2540
+    },
+    ".evidence/gt-model-typed-proof-20261008/current-native-certificate-reference-1699.json": {
+      "sha256": "653308bc41501c13fe957014ed5f0fe5f9ed33b742810d41996cc60662374247",
+      "bytes": 1690
+    },
+    ".evidence/gt-model-typed-proof-20261008/reboot-native-continuation.json": {
+      "sha256": "982f6c4583d0c182b28a84eca61decd61f6ca0077a3090bf1ab6af24dce9d392",
+      "bytes": 6320
+    },
+    ".evidence/gt-model-typed-proof-20261008/reboot-lab.json": {
+      "sha256": "2192ea23b221ebe17980d256a68e5f5537ac2a10af9286989ff6124e37adb664",
+      "bytes": 572
+    },
+    ".evidence/gt-model-typed-proof-20261008/reboot-native-r4/terminal.json": {
+      "sha256": "7783aa8f37ca66f85e7d5ae013e6b3aaa00c2a1c95455882e09a97909f8b7701",
+      "bytes": 26384
+    },
+    ".evidence/gt-model-typed-proof-20261008/reboot-native-r5-n30/terminal.json": {
+      "sha256": "f364de9e9b0d9db1565f3effd4c7e57011381bd4470cd1f092e20ba93a6f4147",
+      "bytes": 484
+    },
+    ".evidence/gt-model-typed-proof-20261008/reboot-native-r3/resource-stop-reconciled.json": {
+      "sha256": "5db6eef7f049903b786d937e8e1d0ab3989810391b1d9964ba90497925c71d05",
+      "bytes": 6563
+    },
+    ".evidence/gt-model-typed-proof-20261008/reboot-publication-dependency-audit.json": {
+      "sha256": "b10468077e2ea577917210c23e2355be49f5e35fd188049a1ac5b44c50f6ec7b",
+      "bytes": 4686
+    },
+    ".evidence/gt-model-typed-proof-20261008/reboot-native-review.md": {
+      "sha256": "72cae9fea287440c9377b4b720d22c7686b8f6e00698dada54d8827089076e49",
+      "bytes": 1699
+    },
+    ".evidence/gt-model-typed-proof-20261008/reboot-native-independent-audit.json": {
+      "sha256": "1a16e0fe0a2bf723fad339e6504ce2482e6ad90f396d409a6f098e946a935b8c",
+      "bytes": 14566
+    },
+    ".evidence/gt-model-typed-proof-20261008/reboot-migration-installation-gap.json": {
+      "sha256": "7dd920cea4e87f84d0e58f7c3f029c07ac4c37725bc8b9b2cc32cb689656302a",
+      "bytes": 756
+    },
+    ".evidence/gt-model-typed-proof-20261008/reboot-judge-renewal.json": {
+      "sha256": "95134f07a1b378a8fca146ce5c3ffcf4b208a44cad18d7123af200175d955cbe",
+      "bytes": 1595
+    }
+  },
+  "path_correction": {
+    "missing_original_reference": ".evidence/gt-model-typed-proof-20261008/resource-stop-reconciled.json",
+    "existing_independently_read_file": ".evidence/gt-model-typed-proof-20261008/reboot-native-r3/resource-stop-reconciled.json",
+    "native_known_terminal_entries": 21
+  },
+  "reason": "42 historical bindings bounded; fix demonstrably dangling old path, no fabrication"
+}
