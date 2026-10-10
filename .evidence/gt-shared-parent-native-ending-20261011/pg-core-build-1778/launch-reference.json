@@ -1,0 +1,9 @@
+{
+  "tool_session_id": 47107,
+  "original_thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "task": "gt-shared-parent-native-ending-20261011",
+  "authority": "AOS-001778",
+  "phase": "isolated build started; result pending",
+  "not_liveness_proof": true,
+  "poll_same_handle_before_any_retry": true
+}
