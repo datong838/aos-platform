@@ -1,0 +1,11 @@
+# Shared-parent v3 signed Target/Judge case protocol
+
+Authority AOS-001694; Task2 exact contract source/evidence scope and live Lease verified. Follow 231, full typed Model product contract and shared physical joint plan §11.3. Existing v1/v2 signing domains remain strict and unchanged.
+
+Candidates: (1) new shared-risk v3 result signing domain: four-leg v3 certificates exist, but case claim/envelope/crypto consumers are absent; old v2 claims cannot legally consume v3. (2) native effect/artifact closure: formal native provenance still unavailable. Choose (1), no external effects needed.
+
+File: services/aos-api/aos_api/aip_model_eval_execution_contracts.py. Evidence/tests: .evidence/gt-model-typed-proof-20261008/shared-case-*. New typed case extends original strict purpose/time fields with shared-parent leg and dataset input hash; payload binds complete signed v3 certificate. Canonical domain binds complete prepared description/risk/caller origin, plan/application/case/leg and exact rendered wire/output witnesses. Target cannot carry Judge facts. Judge binds complete signed Target envelope hash, actual output hash, original expected hash, same case and time order. Crypto verifier must independently verify current presented Target certificate/root and Target signature before accepting Judge, then Judge certificate/root and signature. Wrong/missing Target, borrowed case, old domains, forged keys/signatures, caller/risk drift and byte drift reject.
+
+This signs necessary descriptive evidence, not actual transport, Usage, current stored heads, original committed producer, approval or final joint receipt. It cannot grant execution. Do not add per-leg money/allocation references to the shared-parent model. Producer/persisted consumption and typed real Usage/receipt protocol remain required next.
+
+RED: interfaces absent. GREEN: genuine Ed25519 synthetic Target/Judge pairs for all two cases, independent keys; full negative binding/crypto/time/domain matrix. Deny all database connections in pure runner. Run existing full contract and shared certificate adjacent suites. Review exact source/hash, retain failures, precise m1 commit and authority/checkpoints/context. No browser applicable to private contracts.

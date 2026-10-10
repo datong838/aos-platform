@@ -1,0 +1,13 @@
+{
+  "pytest_exit": 1,
+  "database_connections": 0,
+  "source_hashes": {
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": "8f367dadcc2b71f8e0e22f2a779d26cd997371ceeb8f36d38fbc9ba9d8a88a99",
+    ".evidence/gt-model-typed-proof-20261008/shared-case-test-1694.py": "9ba6aea1984a928fddd885a4b5e90309162daedfb11072ba5b012ca2151342dd",
+    ".evidence/gt-model-typed-proof-20261008/test_shared_certificate_1673.py": "17fe08d0d41fd494802e9307ba36c24432a1b95939975358d7f4f06e4c125d12",
+    "services/aos-api/tests/aip/test_model_eval_execution_contracts.py": "e80d403ecd0b3d08eb9508020e313623339f9a69023117ea72a50a1a29ad1eb2"
+  },
+  "execution_allowed": false,
+  "synthetic_facts": true,
+  "actual_transport": false
+}

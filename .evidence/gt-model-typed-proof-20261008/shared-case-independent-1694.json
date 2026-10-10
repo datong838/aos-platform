@@ -1,0 +1,19 @@
+{
+  "authority": "AOS-001694",
+  "all_previous_class_and_function_asts_unchanged": true,
+  "tests_passed": 361,
+  "new_protocol_tests": 41,
+  "adjacent_tests": 320,
+  "source_hashes_match": true,
+  "database_connections": 0,
+  "raw_logs": {
+    "shared-case-r2-1694.log": "37e8d7f88c50ec94f7245dca139edb20c010ed0d49a0084b3ff04b009c350726",
+    "shared-case-r3-1694.log": "d1fd24f1a42f0f543533e52dab47fa80fb4201588b71beddc3a23fd1c2462730"
+  },
+  "actual_transport": false,
+  "usage_verified": false,
+  "stored_current_heads_verified": false,
+  "formal_root_provenance": false,
+  "execution_allowed": false,
+  "full_task_delivered": false
+}

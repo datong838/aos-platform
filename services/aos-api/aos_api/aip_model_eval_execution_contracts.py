@@ -1130,3 +1130,115 @@ def validate_shared_parent_certificate_signature(description, envelope, *, issue
             base64.b64decode(signed.signature_base64, validate=True), raw)
     except (InvalidSignature, ValueError, binascii.Error) as exc:
         raise ValueError('invalid v3 shared-parent certificate signature') from exc
+
+
+class ModelSharedParentRiskCaseSigningInput(ModelEvalCaseSigningInput):
+    """Necessary v3 result claim; no transport, Usage or committed admission."""
+    schema_version: Literal['aos.model-eval-shared-parent-case-signing-input/v3']
+    leg: ModelSharedParentRiskLeg
+    case_input_hash: str = Field(strict=True, pattern=SHA256)
+    description_hash: str = Field(strict=True, pattern=r'^sha256:[0-9a-f]{64}$')
+    original_risk_hash: str = Field(strict=True, pattern=r'^sha256:[0-9a-f]{64}$')
+    caller_xid: str = Field(strict=True, pattern=r'^[1-9][0-9]*$')
+    caller_pid: int = Field(strict=True, gt=0)
+
+
+class ModelSharedParentRiskCaseSignaturePayload(ModelEvalCaseSignaturePayload):
+    schema_version: Literal['aos.model-eval-shared-parent-case-signature-payload/v3']
+    claim: ModelSharedParentRiskCaseSigningInput
+
+
+class ModelSharedParentRiskSignedCaseEnvelope(ModelEvalSignedCaseEnvelope):
+    schema_version: Literal['aos.model-eval-shared-parent-signed-case-envelope/v3']
+    payload: ModelSharedParentRiskCaseSignaturePayload
+
+
+def _bound_shared_parent_case(prepared, claim):
+    plan = prepared.immutable.manifest
+    case = next((c for c in plan.cases if c.case_id == claim.case_id),None)
+    app = plan.judge_request['targetApplication' if claim.purpose == 'target' else 'judgeGovernanceApplication']
+    request_hash = app['requestHash'] if claim.purpose == 'target' else plan.judge_request_hash
+    candidate = ModelEvalRequestCreate.model_validate(app['request']).target_ref
+    if (case is None or claim.tenant != plan.tenant or claim.execution_id != plan.execution_id
+            or claim.manifest_hash != prepared.immutable.manifest_hash
+            or claim.description_hash != prepared.content_hash
+            or claim.original_risk_hash != prepared.immutable.original_risk_hash
+            or (claim.caller_xid,claim.caller_pid) != (prepared.immutable.caller_xid,prepared.immutable.caller_pid)
+            or claim.request_hash != request_hash or claim.candidate_ref != candidate
+            or claim.leg != getattr(case,claim.purpose) or claim.case_input_hash != case.input_hash):
+        raise ValueError('complete original v3 case/description/request/origin binding required')
+    return case
+
+
+def canonical_shared_parent_signed_case_bytes(description, payload, *, input_bytes,
+        output_bytes, target_envelope=None) -> bytes:
+    """Exact v3 signed bytes, without trusting presented results or certificates."""
+    from aos_api.aip_physical_capacity_occupation_contracts import SharedParentRiskDescriptionPreparation
+    prepared = SharedParentRiskDescriptionPreparation.model_validate(description)
+    item = ModelSharedParentRiskCaseSignaturePayload.model_validate(payload)
+    claim = item.claim
+    case = _bound_shared_parent_case(prepared,claim)
+    if (type(input_bytes) is not bytes or type(output_bytes) is not bytes
+            or len(input_bytes) > 1048576 or len(output_bytes) > 1048576
+            or hashlib.sha256(input_bytes).hexdigest() != claim.input_hash
+            or hashlib.sha256(output_bytes).hexdigest() != claim.output_hash):
+        raise ValueError('bounded exact v3 case wire/output bytes required')
+    if claim.purpose == 'target':
+        if target_envelope is not None:
+            raise ValueError('v3 Target cannot borrow another result')
+    else:
+        target = ModelSharedParentRiskSignedCaseEnvelope.model_validate(target_envelope)
+        _bound_shared_parent_case(prepared,target.payload.claim)
+        if (target.payload.claim.purpose != 'target' or target.payload.claim.case_id != claim.case_id
+                or claim.target_claim_hash != canonical_hash(target.model_dump(mode='json',by_alias=True))
+                or claim.actual_hash != target.payload.claim.output_hash
+                or claim.expected_hash != case.expected_hash
+                or target.payload.claim.occurred_at > claim.occurred_at):
+            raise ValueError('v3 Judge must bind complete original signed Target and expected result')
+    raw = json.dumps(item.model_dump(mode='json',by_alias=True),sort_keys=True,
+        ensure_ascii=False,separators=(',',':'),allow_nan=False).encode('utf-8')
+    return b'AOS-MODEL-EVAL-SHARED-PARENT-SIGNED-CASE-v3\n' + raw
+
+
+def validate_shared_parent_case_signature(description, envelope, *, certificate_envelope,
+        issuer_input, checked_at, revoked_identity_ids, input_bytes, output_bytes,
+        target_envelope=None, target_certificate_envelope=None, target_issuer_input=None,
+        target_input_bytes=None, target_output_bytes=None) -> None:
+    """Verify presented v3 crypto, including independent Target before Judge.
+
+    Current persisted heads, formal trust, real transport/Usage and committed
+    original producer/joint receipts still require their own native consumers.
+    """
+    from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+    signed = ModelSharedParentRiskSignedCaseEnvelope.model_validate(envelope)
+    certificate = ModelSharedParentRiskSignedCertificateEnvelope.model_validate(certificate_envelope)
+    claim, cert = signed.payload.claim, certificate.certificate
+    if signed.payload.certificate_hash != canonical_hash(certificate.model_dump(mode='json',by_alias=True)):
+        raise ValueError('complete v3 case certificate envelope required')
+    validate_shared_parent_certificate_signature(description,certificate,issuer_input=issuer_input,
+        checked_at=checked_at,revoked_identity_ids=revoked_identity_ids)
+    fields = ('tenant','execution_id','manifest_hash','request_hash','case_id','purpose','candidate_ref',
+              'leg','description_hash','original_risk_hash','caller_xid','caller_pid')
+    if (any(getattr(claim,f) != getattr(cert,f) for f in fields)
+            or not cert.valid_from <= claim.occurred_at < cert.valid_until
+            or claim.occurred_at > checked_at):
+        raise ValueError('current v3 case must bind exact executor certificate and time')
+    if claim.purpose == 'judge':
+        target = ModelSharedParentRiskSignedCaseEnvelope.model_validate(target_envelope)
+        if target.payload.claim.purpose != 'target':
+            raise ValueError('v3 Judge requires independent Target result')
+        validate_shared_parent_case_signature(description,target,
+            certificate_envelope=target_certificate_envelope,issuer_input=target_issuer_input,
+            checked_at=checked_at,revoked_identity_ids=revoked_identity_ids,
+            input_bytes=target_input_bytes,output_bytes=target_output_bytes)
+    elif any(x is not None for x in (target_envelope,target_certificate_envelope,target_issuer_input,
+                                     target_input_bytes,target_output_bytes)):
+        raise ValueError('v3 Target cannot borrow Judge dependencies')
+    raw = canonical_shared_parent_signed_case_bytes(description,signed.payload,
+        input_bytes=input_bytes,output_bytes=output_bytes,target_envelope=target_envelope)
+    try:
+        Ed25519PublicKey.from_public_bytes(base64.b64decode(cert.public_key_base64,validate=True)).verify(
+            base64.b64decode(signed.signature_base64,validate=True),raw)
+    except (InvalidSignature,ValueError,binascii.Error) as exc:
+        raise ValueError('invalid v3 shared-parent executor case signature') from exc

@@ -1,0 +1,10 @@
+{
+  "required_interfaces": [
+    "ModelSharedParentRiskSignedCaseEnvelope",
+    "canonical_shared_parent_signed_case_bytes",
+    "validate_shared_parent_case_signature"
+  ],
+  "present": false,
+  "requirement_status": "RED",
+  "execution_allowed": false
+}

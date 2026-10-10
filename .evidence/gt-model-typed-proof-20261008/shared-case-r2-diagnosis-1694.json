@@ -1,0 +1,8 @@
+{
+  "pytest_exit": 1,
+  "passed": 360,
+  "failed": 1,
+  "diagnosis": "Certificate envelope hash used fixture timestamps +00:00 before DTO canonical UTC Z normalization; exact complete-certificate hash rejection retained",
+  "product_guard_relaxed": false,
+  "execution_allowed": false
+}

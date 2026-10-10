@@ -1,0 +1,8 @@
+{
+  "pytest_exit": 1,
+  "passed": 320,
+  "fixture_errors": 41,
+  "diagnosis": "Fixture hashed sparse Target envelope before DTO canonical normalization; product correctly rejects mismatch against complete normalized signed envelope",
+  "product_guard_relaxed": false,
+  "execution_allowed": false
+}
