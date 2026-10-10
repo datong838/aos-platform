@@ -1,0 +1,74 @@
+{
+  "rules": [
+    "231",
+    "single m1",
+    "read-only native reconciliation"
+  ],
+  "authority": "AOS-001721",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "head": "70743e50732eb1ba8ca2fb8488d3a3528654a894",
+  "database": "aos_test_a4b1d39c4e02_ti4_test",
+  "cluster": "7694680278363095064",
+  "verifier": null,
+  "tables": [
+    [
+      "aos_physical_capacity_occupation_private",
+      "prepared_execution_intent"
+    ],
+    [
+      "public",
+      "aip_action_compensation_intent"
+    ],
+    [
+      "public",
+      "aip_dispatch_intent_revision"
+    ],
+    [
+      "public",
+      "aip_workshop_preparation_intent"
+    ],
+    [
+      "public",
+      "ecommerce_growth_content_agentrun_intent"
+    ],
+    [
+      "public",
+      "ecommerce_growth_content_budget_command_intent"
+    ],
+    [
+      "public",
+      "ecommerce_growth_content_capacity_intent"
+    ],
+    [
+      "public",
+      "ecommerce_growth_content_taskrun_intent"
+    ],
+    [
+      "public",
+      "ecommerce_master_content_intent_head"
+    ],
+    [
+      "public",
+      "ecommerce_master_content_intent_revision"
+    ]
+  ],
+  "first_probe": "AssertionError: expected verifier installed, actual function absent; no mutation occurred. Separate read-only reconciliation confirms Source/native origin positive fixture does not imply certificate verifier installation.",
+  "candidates": [
+    {
+      "work": "new version trusted persistence and narrow Issuer delegate",
+      "authorization": "approved active finalizer Task isolated implementation",
+      "dependency": "install original certificate artifacts explicitly in a new owned test fixture, verify original ACL; native signed Source/holds origin already proven"
+    },
+    {
+      "work": "formal Root/native deployment provenance",
+      "authorization": "registered full Goal gate",
+      "dependency": "independent formal signed deployment identity; test bootstrap is insufficient"
+    }
+  ],
+  "chosen": "new version trusted persistence and narrow Issuer delegate",
+  "next": "Original certificate fixture installation must precede caller SERIAL snapshot. Do not grant physical Owner verifier access; implement narrow Issuer delegate only after trusted origin persistence, old/new exposure accounting and end-channel design.",
+  "observer": "Historical heartbeat cached AOS-001703 is not current state; calling-thread wait unsupported; local inventory has only root.",
+  "readonly": true,
+  "execution_allowed": false,
+  "full_task_delivery": false
+}
