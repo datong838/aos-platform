@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001750",
+  "authority_revision": "AOS-001751",
   "code_files": [
     "services/aos-api/aos_api/aip_action_policy.py",
     "services/aos-api/aos_api/aip_action_store.py",
@@ -16,12 +16,13 @@
     ".evidence/gt-judge-call-authority-20261008/reboot-judge-plan.md",
     ".evidence/gt-judge-call-authority-20261008/reboot-judge-review.md",
     ".evidence/gt-judge-call-authority-20261008/reboot-judge-verification.json",
-    ".evidence/gt-judge-call-authority-20261008/reboot-checkpoint-index-plan.md"
+    ".evidence/gt-judge-call-authority-20261008/reboot-checkpoint-index-plan.md",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-reader-closure-r1/result.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "native-module-observation-green-immutable-package-authority-and-full-eight-node-receipt-end-next",
+  "step": "final-reader-write-reachability-red-fixed-original-kernel-validation-and-full-eight-node-receipt-end-next",
   "task_base_revision": "AOS-001578",
   "task_id": "gt-judge-call-authority-20261008",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
