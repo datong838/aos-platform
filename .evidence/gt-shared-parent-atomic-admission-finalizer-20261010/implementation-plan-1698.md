@@ -9,7 +9,7 @@ Rules：231、原joint实施§3/§11.3、最小更改、单m1写者、未知效�
 
 ## 精确文件与接线
 本Task产品scope：services/aos-api/aos_api/aip_shared_parent_atomic_admission.py；services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py；证据位于本目录。两个产品文件仍未创建，不把登记当实现。
-支持接线必须逐文件回读既有Task归属：aip_physical_capacity_occupation_authority.py（原Task4）、aip_physical_capacity_occupation.py（原Task1）、预算/模型Owner及contracts（对应原Task），不能创建重叠Lease或在本Task冒写。需要新迁移时先核代码head和迁移分配，再单独登记该精确文件；不重写已发布版本，真库仍只读。
+支持接线必须逐文件回读既有Task归属：aip_physical_capacity_occupation_authority.py（当前回读属Task1）、aip_physical_capacity_occupation.py（原Task1）、预算/模型Owner及contracts（对应原Task），不能创建重叠Lease或在本Task冒写。需要新迁移时先核代码head和迁移分配，再单独登记该精确文件；不重写已发布版本，真库仍只读。
 
 ## 必须完成的流程
 1. 当前原Source签名/安装事实、两原真实批准request和parent hold同native caller/xid/pid；费用fence→物理account update→三桶固定序，禁止callbacks/普通Task替代Eval。
@@ -21,3 +21,6 @@ Rules：231、原joint实施§3/§11.3、最小更改、单m1写者、未知效�
 
 ## 当前选项及实测第一步
 候选一完整新版本准入/finalizer：用户已批准设计/隔离实现，依赖上述核内复用与完整结束门；本轮选择原生目录RED，确认旧七个拒绝门仍完整、候选新入口缺失，明确版本差距后推进kernel文件级接线。候选二正式native部署/Root信任：已登记，但需要正式签名来源/独立发布资料，不能用实验bootstrap替代。二者均不触达当前真库、真实Host/Provider或旧12Run。
+
+## AOS-001715 维护后完整新版本接线调查
+原维护执行已知终态、当前159真库恢复只读。本Task同owner租约已对账续期，无重叠，无Delivery。候选一为完整新版本准入/finalizer，已批准隔离实现但必须复用原可信facts并计入全部旧未决风险；候选二正式native部署/Root来源，依赖独立正式签名不执行。选择一：新增本目录admission-kernel-binding-1715.py/json，静态生成精确原SQL并抽取CREATE表/INSERT/UPDATE/SELECT锁、实际deferred guards、容量计数与继承需求；核原14生成器对1699beforeimage逐字相同，原七拒绝门保持。禁止用这份静态清单证明native queue/完整准入GREEN。产品两文件仍未创建；本步不访问数据库、不安装函数、不触达Provider。下一实施以显式新版本tables、旧风险兼容mapping及完整结束通道为同一个交付包，不能通过替换prepare或关闭七guard获得正向。

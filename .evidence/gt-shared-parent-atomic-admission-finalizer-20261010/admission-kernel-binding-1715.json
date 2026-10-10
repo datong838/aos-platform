@@ -1,0 +1,273 @@
+{
+  "status": "STATIC_NEW_VERSION_REUSE_AND_LEGACY_RISK_DEPENDENCIES_BOUND",
+  "head": "4b12584fa4bee25b3717801ac036caf867bac3b9",
+  "authority": "AOS-001715",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "source_sha256": "45062a1181cf32a423ed284d4c8a4f4611d8e5e0d8fb8707e88d2a9a35d98ad6",
+  "original_generators": [
+    {
+      "generator": "occupation_judge_fact_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "2f6fbc28f484ef878ce4a03ad3264d47cf4d1b1b97d4d534939497ac1bfa8f03",
+      "created_tables": [],
+      "insert_targets": [],
+      "update_targets": [],
+      "constraint_triggers": [],
+      "for_update_count": 0,
+      "for_share_count": 3,
+      "clock_reads": 2,
+      "unconditional_preparation_reject_calls": 0
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "16750052bec7101683d90611fc8c009b3dcb39e1a2dcced3981655b806cbb452",
+      "created_tables": [
+        "aos_physical_capacity_occupation_private.prepared_execution_intent"
+      ],
+      "insert_targets": [
+        "aos_physical_capacity_occupation_private.prepared_execution_intent"
+      ],
+      "update_targets": [],
+      "constraint_triggers": [],
+      "for_update_count": 0,
+      "for_share_count": 0,
+      "clock_reads": 0,
+      "unconditional_preparation_reject_calls": 0
+    },
+    {
+      "generator": "occupation_input_binding_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "4b52f2141552e701b12ea0b529bf7a19e47137149e78d9e0eb57ee995a1b52cf",
+      "created_tables": [],
+      "insert_targets": [],
+      "update_targets": [],
+      "constraint_triggers": [],
+      "for_update_count": 0,
+      "for_share_count": 0,
+      "clock_reads": 0,
+      "unconditional_preparation_reject_calls": 0
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "f97c5a8ca1cb4c2e28ea7ac5902df388bfbb86ee4a393c769b7a52bed0351f92",
+      "created_tables": [
+        "aos_physical_capacity_occupation_private.case_input_binding"
+      ],
+      "insert_targets": [
+        "aos_physical_capacity_occupation_private.case_input_binding"
+      ],
+      "update_targets": [],
+      "constraint_triggers": [],
+      "for_update_count": 0,
+      "for_share_count": 1,
+      "clock_reads": 0,
+      "unconditional_preparation_reject_calls": 0
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "d81e101f6a9ce6e8367134e28d33e1c63484e05cf9bb60ed6df28e6f12c25ce4",
+      "created_tables": [
+        "aos_physical_capacity_occupation_private.parent_debit_guard",
+        "aos_physical_capacity_occupation_private.prepared_parent_debit"
+      ],
+      "insert_targets": [
+        "aos_physical_capacity_occupation_private.parent_debit_guard",
+        "aos_physical_capacity_occupation_private.prepared_parent_debit"
+      ],
+      "update_targets": [
+        "aos_physical_capacity_occupation_private.parent_debit_guard"
+      ],
+      "constraint_triggers": [
+        "require_joint_finalization"
+      ],
+      "for_update_count": 0,
+      "for_share_count": 0,
+      "clock_reads": 0,
+      "unconditional_preparation_reject_calls": 1
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "1d967dc0107b217af8171e09be936813eca2056da36c82dcb634354031799283",
+      "created_tables": [
+        "aos_physical_capacity_occupation_private.account_guard"
+      ],
+      "insert_targets": [
+        "aos_physical_capacity_occupation_private.account_guard"
+      ],
+      "update_targets": [],
+      "constraint_triggers": [],
+      "for_update_count": 0,
+      "for_share_count": 0,
+      "clock_reads": 1,
+      "unconditional_preparation_reject_calls": 0
+    },
+    {
+      "generator": "occupation_eval_fact_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "56476d1c27bac4016ad0195a221b4ad70ad47006dbc9a1903ff2c7e02925d679",
+      "created_tables": [],
+      "insert_targets": [],
+      "update_targets": [],
+      "constraint_triggers": [],
+      "for_update_count": 0,
+      "for_share_count": 1,
+      "clock_reads": 1,
+      "unconditional_preparation_reject_calls": 0
+    },
+    {
+      "generator": "occupation_judge_parent_debit_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "d9ccb75f162ee2222a1ab0abfa0a8491d8bde696793db2fa70785899053f0506",
+      "created_tables": [],
+      "insert_targets": [
+        "aos_physical_capacity_occupation_private.parent_debit_guard",
+        "aos_physical_capacity_occupation_private.prepared_parent_debit"
+      ],
+      "update_targets": [
+        "aos_physical_capacity_occupation_private.parent_debit_guard"
+      ],
+      "constraint_triggers": [],
+      "for_update_count": 1,
+      "for_share_count": 0,
+      "clock_reads": 1,
+      "unconditional_preparation_reject_calls": 0
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "3308fa69722f1233c3e79527e3424470c07882db2752c01392e742cdf8e50a64",
+      "created_tables": [
+        "aos_physical_capacity_occupation_private.prepared_judge_intent"
+      ],
+      "insert_targets": [
+        "aos_physical_capacity_occupation_private.prepared_judge_intent"
+      ],
+      "update_targets": [],
+      "constraint_triggers": [
+        "no_unfinalized_judge_intent"
+      ],
+      "for_update_count": 0,
+      "for_share_count": 1,
+      "clock_reads": 0,
+      "unconditional_preparation_reject_calls": 1
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "75a19773ad15b4ae36fc190f52264cf2085820bd65f60ca2a752ea166f70d601",
+      "created_tables": [
+        "aos_physical_capacity_occupation_private.prepared_plan_risk"
+      ],
+      "insert_targets": [
+        "aos_physical_capacity_occupation_private.prepared_plan_risk"
+      ],
+      "update_targets": [],
+      "constraint_triggers": [
+        "no_unfinalized_plan_risk"
+      ],
+      "for_update_count": 0,
+      "for_share_count": 1,
+      "clock_reads": 0,
+      "unconditional_preparation_reject_calls": 1
+    },
+    {
+      "generator": "occupation_prepared_call_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "69f35355569ee9b7fb7f10d58383ac1a7c1d0def414f8f15f62b0c36012e592a",
+      "created_tables": [
+        "aos_physical_capacity_occupation_private.prepared_call_occupation"
+      ],
+      "insert_targets": [],
+      "update_targets": [],
+      "constraint_triggers": [
+        "require_joint_finalization"
+      ],
+      "for_update_count": 0,
+      "for_share_count": 0,
+      "clock_reads": 0,
+      "unconditional_preparation_reject_calls": 1
+    },
+    {
+      "generator": "occupation_target_call_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "e68250337ddac407ae85f2264c94943ee133395f1ec431ae3e62122e23044442",
+      "created_tables": [],
+      "insert_targets": [
+        "aos_physical_capacity_occupation_private.prepared_call_occupation"
+      ],
+      "update_targets": [],
+      "constraint_triggers": [],
+      "for_update_count": 0,
+      "for_share_count": 0,
+      "clock_reads": 0,
+      "unconditional_preparation_reject_calls": 0
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "aebdff4fc69e9a73ed816811a0254b80f7b71d28a5d62ea2e0a013a00b69fab1",
+      "created_tables": [
+        "aos_physical_capacity_occupation_private.call_occupation",
+        "aos_physical_capacity_occupation_private.call_occupation_event"
+      ],
+      "insert_targets": [
+        "aos_physical_capacity_occupation_private.call_occupation",
+        "aos_physical_capacity_occupation_private.call_occupation_event"
+      ],
+      "update_targets": [],
+      "constraint_triggers": [
+        "require_occupation_finalization",
+        "require_occupation_event_finalization"
+      ],
+      "for_update_count": 0,
+      "for_share_count": 0,
+      "clock_reads": 0,
+      "unconditional_preparation_reject_calls": 2
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "original_sql_byte_identical": true,
+      "sql_sha256": "e9750a4f0eacd0f79fc22ab33176d530eddb4e8d6100463e699213de78a15720",
+      "created_tables": [
+        "aos_physical_capacity_occupation_private.prepared_shared_risk_description"
+      ],
+      "insert_targets": [
+        "aos_physical_capacity_occupation_private.prepared_shared_risk_description"
+      ],
+      "update_targets": [],
+      "constraint_triggers": [
+        "no_unfinalized_shared_description"
+      ],
+      "for_update_count": 0,
+      "for_share_count": 1,
+      "clock_reads": 0,
+      "unconditional_preparation_reject_calls": 1
+    }
+  ],
+  "original_preparation_denial_triggers": 7,
+  "legacy_counted_relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+  "shared_physical_guard_requires_trusted_locked_combined_totals": true,
+  "remaining_full_implementation": [
+    "Explicit versioned admitted ledger and immutable lifecycle; original preparation remains closed",
+    "Complete old unresolved risk mapping and account-global lock order; no empty-table authority",
+    "Original signed Source and both independently approved parent holds; no copied simplified fact validator",
+    "All-case certificates and Target Intent with Judge pending actual Target dependency",
+    "Actual write-event closure and exact deferred/RI checks before final decision clock",
+    "Single trusted COMMIT channel, unknown retained and independently reconciled; no TTL refund",
+    "Native full positive/rollback/replay/canary/withdrawal/deadline/early-end matrix"
+  ],
+  "database_access": false,
+  "runtime_installation": false,
+  "full_admission_pass": false,
+  "business_runtime_authorized": false,
+  "full_original_beforeimage": {
+    "path": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/capacity-kernel-sql-beforeimage-1699.json",
+    "sha256": "a878545ce5912002322db49fe480268fbfe0f26d5cc965d7082a0f68891ee9e0",
+    "checkpoint_index_reason": "Exact historical SQL retained; oversized input cannot be an observer live file"
+  },
+  "kernel_regression_current_passed": 39
+}
