@@ -1,0 +1,13 @@
+{
+  "observation": "while native tool handle 30434 observed running; not retroactive preflight",
+  "helper_hashes": {
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r24/run-native-r24.py": "c690d5f4b736abcef58ba572a12d9aa427c47ec47cefd032e5f4d1ccd37a21df",
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r24/source_newjudge_native_trial_1606.py": "93c2ba39aaadb92ab45a9350bd8c02400e60bd089ac9ecfe926851998d284d3b",
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r24/combined_prepare_trial.py": "3b6da70adf4a9a45c47cfee6332fedd44a1b24207c02cd2ae32c5f1f7a38a393",
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r24/shared_identity_certificate_fixture.py": "b7674e9ce6cb1a4ca0d3289b13defaf4b499b80398fa6edd3bd26977f02f4111",
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r24/legal_model_prefix_for_application_r4.py": "86c056756595ad97ad1355ff4c5da4a22bcb5d466dcc96e3453603c8781ff9e2",
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r24/legal_eval_application_fixture_r4.py": "2e147c5a01e17f7c13666f9d460f16d783e7904adb6d1aab8e4b63960b2621a7",
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r24/build_whole_native_plan_1602.py": "e15d6228686ef64099a3d6b11e68b51fbcb90eacb6731000c24a67f39393a24e"
+  },
+  "execution_allowed": false
+}

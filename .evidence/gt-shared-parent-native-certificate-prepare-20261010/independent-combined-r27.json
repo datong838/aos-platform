@@ -1,0 +1,66 @@
+{
+  "identity": {
+    "database": "aos_test_3031c1bfd805_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "counts": {
+    "aos_physical_capacity_occupation_private.account_guard": 0,
+    "aos_physical_capacity_occupation_private.prepared_parent_debit": 0,
+    "aos_physical_capacity_occupation_private.case_input_binding": 0,
+    "aos_physical_capacity_occupation_private.prepared_execution_intent": 0,
+    "aos_physical_capacity_occupation_private.prepared_judge_intent": 0,
+    "aos_physical_capacity_occupation_private.prepared_plan_risk": 0,
+    "aos_physical_capacity_occupation_private.prepared_shared_risk_description": 0,
+    "aos_physical_capacity_occupation_private.prepared_call_occupation": 0,
+    "aos_physical_capacity_occupation_private.call_occupation": 0,
+    "aos_physical_capacity_occupation_private.call_occupation_event": 0,
+    "aos_model_eval_issuer_private.issuer_root": 1,
+    "aos_model_eval_issuer_private.executor_certificate": 0,
+    "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding": 0,
+    "aos_model_eval_execution_private.manifest": 0
+  },
+  "all_risks_rolled_back": true,
+  "prepublished_bootstrap_root_retained": true,
+  "caller_xid": "43125",
+  "caller_xact_status": "aborted",
+  "c_verifier_acls": [
+    {
+      "nspname": "aos_ed25519",
+      "function": "aos_ed25519.verify(bytea,bytea,bytea)",
+      "owner": "aos_ed25519_owner",
+      "acl": "{aos_ed25519_owner=X/aos_ed25519_owner,aos_capacity_publication_owner=X/aos_ed25519_owner}",
+      "model_issuer_execute": false
+    }
+  ],
+  "model_issuer_direct_c_execute": false,
+  "current_frozen_source_hashes": {
+    "services/aos-api/aos_api/aip_physical_capacity_occupation.py": true,
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": true,
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": true,
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": true,
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": true,
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_description_origin_reader.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_description_origin_reader_pg.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_executor_set_reader.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_executor_set_reader_pg.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py": true
+  },
+  "current_frozen_helper_hashes": {
+    "source_newjudge_native_trial_1606.py": true,
+    "build_whole_native_plan_1602.py": true,
+    "shared_identity_certificate_fixture.py": true,
+    "new_approval_window_fixture.py": true,
+    "combined_prepare_trial.py": true,
+    "legal_model_prefix_for_application_r4.py": true,
+    "legal_eval_application_fixture_r4.py": true,
+    "run-native-r27.py": true
+  },
+  "combined_proof_sha256": "3d438ccbbf83e18f115f3c72b95db9fce43c7c2f3f952f98ac2fc97b0703618e",
+  "actual_target_result_present": false,
+  "formal_root_provenance_verified": false,
+  "full_task_delivered": false,
+  "execution_allowed": false
+}

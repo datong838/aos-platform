@@ -1,0 +1,3 @@
+# R26 两身份约束拒绝分离
+Rules：231/joint §11.3、原Task10证据、m1单writer/不改产品权限。R25 terminal42501在最终直接schema SET CONSTRAINTS；前置完整TargetIntent/occupation/ledger/Judgeawaiting与20DML拒绝成功执行但无最终proof。独立READ ONLY各风险metadata0、Root1、12hash相同。
+文件本Task/native-r26/combined_prepare_trial.py及runner/helper，Task3独立label shared-native-combined-preparation-1689-r26。前置原计划编号修复保留。原runtime不具schemaUSAGE，直接SET须42501，不能GRANT。新增test-only固定SECURITY DEFINER/OWNER入口，仅执行固定schema.require_joint_finalization IMMEDIATE，无参数/任意SQL，全PUBLIC撤回，仅runtimeEXECUTE；应原23514拒绝并SAVEPOINT回滚，证明同名2约束原guard生效。不关guard不改变产品body。全部保留矩阵、actualCOMMIT拒绝、相邻原Source。新的独立DB/审批/Root/证书，不复用旧失败事务。完整Goal/真实Target结果/正式Root/joint尚未通过。

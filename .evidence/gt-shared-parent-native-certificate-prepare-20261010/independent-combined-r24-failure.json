@@ -1,0 +1,42 @@
+{
+  "identity": {
+    "database": "aos_test_f294dca72feb_ti4_test",
+    "cluster": "7694680278363095064",
+    "readonly": "on"
+  },
+  "failure": "CAPACITY_PLAN_REPLAY_CONFLICT: a fresh plan id conflicts with earlier same-request plan",
+  "counts": {
+    "aos_physical_capacity_occupation_private.account_guard": 0,
+    "aos_physical_capacity_occupation_private.prepared_parent_debit": 0,
+    "aos_physical_capacity_occupation_private.case_input_binding": 0,
+    "aos_physical_capacity_occupation_private.prepared_execution_intent": 0,
+    "aos_physical_capacity_occupation_private.prepared_judge_intent": 0,
+    "aos_physical_capacity_occupation_private.prepared_plan_risk": 0,
+    "aos_physical_capacity_occupation_private.prepared_shared_risk_description": 0,
+    "aos_physical_capacity_occupation_private.prepared_call_occupation": 0,
+    "aos_physical_capacity_occupation_private.call_occupation": 0,
+    "aos_physical_capacity_occupation_private.call_occupation_event": 0,
+    "aos_model_eval_issuer_private.issuer_root": 1,
+    "aos_model_eval_issuer_private.executor_certificate": 0,
+    "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding": 0,
+    "aos_model_eval_execution_private.manifest": 0
+  },
+  "all_existing_risk_metadata_rows_zero_except_prepublished_root": true,
+  "combined_installation_reached": true,
+  "current_frozen_source_hashes": {
+    "services/aos-api/aos_api/aip_physical_capacity_occupation.py": true,
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": true,
+    "services/aos-api/aos_api/aip_model_eval_execution_contracts.py": true,
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": true,
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": true,
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_contracts.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_description_origin_reader.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_description_origin_reader_pg.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_executor_set_reader.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_executor_set_reader_pg.py": true,
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py": true,
+    "services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py": true
+  },
+  "replayed": false,
+  "execution_allowed": false
+}

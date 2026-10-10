@@ -1,0 +1,93 @@
+{
+  "tables": [
+    {
+      "relation": "aos_physical_capacity_occupation_private.call_occupation",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "runtime_dml": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.call_occupation_event",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "runtime_dml": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_call_occupation",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "runtime_dml": false
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_judge_intent",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "runtime_dml": false
+    }
+  ],
+  "guards": [
+    {
+      "relation": "aos_physical_capacity_occupation_private.call_occupation",
+      "tgname": "require_occupation_finalization",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "conname": "require_occupation_finalization",
+      "body_hash": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.call_occupation_event",
+      "tgname": "require_occupation_event_finalization",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "conname": "require_occupation_event_finalization",
+      "body_hash": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_call_occupation",
+      "tgname": "require_joint_finalization",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "conname": "require_joint_finalization",
+      "body_hash": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_judge_intent",
+      "tgname": "no_unfinalized_judge_intent",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "conname": "no_unfinalized_judge_intent",
+      "body_hash": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "tgname": "require_joint_finalization",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "conname": "require_joint_finalization",
+      "body_hash": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "tgname": "no_unfinalized_plan_risk",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "conname": "no_unfinalized_plan_risk",
+      "body_hash": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "tgname": "no_unfinalized_shared_description",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "conname": "no_unfinalized_shared_description",
+      "body_hash": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953"
+    }
+  ],
+  "readback_sql_sha256": "82713127b9dc8650aaf3bdd6b04084d720f99d307b647991d645147f67e33a11",
+  "test_only_readback": true,
+  "execution_allowed": false
+}

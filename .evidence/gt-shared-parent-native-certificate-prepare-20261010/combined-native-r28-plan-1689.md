@@ -1,0 +1,3 @@
+# R28 原相邻输入完整复验
+Rules：231/同Task10、Task3原scope，m1单写。R27完整组合proof已产生：20DML42501、schema直接42501、固定Owner约束组23514，Target/ledger/Judgeawaiting同caller；独立读回aborted、风险0/Root1、12产品和helperhash相同/C无Model直接EXECUTE。整node126.42s FAIL在相邻source test加载漏复制original_source_plan_fixture_r1.py，不能称整项通过。
+文件本Task/native-r28/run-native-r28.py及只读原fixture复制，新Task3label。从成功R16只读复制该fixture，保持组合代码与期限完全不变。启动前required_fixture_inputs四文件存在且sha冻结于attempt，防重复漏依赖。新DB/新批准/Root/证书，不重放R27，完整相邻原Source和actualCOMMIT负门必须全通过。所有真实业务/正式Root/完整joint仍pending。

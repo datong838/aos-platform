@@ -1,0 +1,100 @@
+{
+  "authority": "AOS-001689",
+  "attempts": [
+    {
+      "attempt": "r23",
+      "exit": 1,
+      "database": "aos_test_b5f633dfa3d4_ti4_test",
+      "old_files_unchanged": true,
+      "terminal_summary": [
+        "1 failed, 8 warnings in 11.85s"
+      ],
+      "safe_errors": [
+        "E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r23/legal_model_prefix_for_application_r4.py'"
+      ],
+      "log_path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r23/native.log",
+      "log_sha256": "3d9769d9b50a59d72b338fbe2f03c04c6581d283d183cd8b75f5f85adf32d9f5",
+      "log_in_git": false
+    },
+    {
+      "attempt": "r24",
+      "exit": 1,
+      "database": "aos_test_f294dca72feb_ti4_test",
+      "old_files_unchanged": true,
+      "terminal_summary": [
+        "1 failed, 8 warnings in 102.01s (0:01:42)"
+      ],
+      "safe_errors": [
+        "E           psycopg.errors.CheckViolation: CAPACITY_PLAN_REPLAY_CONFLICT",
+        "E           CONTEXT:  PL/pgSQL function public.prepare_capacity_plan_risk(bytea,jsonb,uuid,text,text,uuid,text,text,uuid) line 28 at RAISE"
+      ],
+      "log_path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r24/native.log",
+      "log_sha256": "21718e98e81188e1f0d8069166e4b907787b3e1905e3573168c80c585ffffb19",
+      "log_in_git": false
+    },
+    {
+      "attempt": "r25",
+      "exit": 1,
+      "database": "aos_test_e56e9a778914_ti4_test",
+      "old_files_unchanged": true,
+      "terminal_summary": [
+        "1 failed, 8 warnings in 127.81s (0:02:07)"
+      ],
+      "safe_errors": [
+        "E           psycopg.errors.InsufficientPrivilege: permission denied for schema aos_physical_capacity_occupation_private"
+      ],
+      "log_path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r25/native.log",
+      "log_sha256": "bd8801c89ef570ed4d49cb85a26ed27ff260223753845f33f5ff8714c0454907",
+      "log_in_git": false
+    },
+    {
+      "attempt": "r26",
+      "exit": 1,
+      "database": "aos_test_0f691235e8c6_ti4_test",
+      "old_files_unchanged": true,
+      "terminal_summary": [
+        "1 failed, 8 warnings in 129.71s (0:02:09)"
+      ],
+      "safe_errors": [
+        "E           psycopg.errors.CheckViolation: CAPACITY_JUDGE_CURRENT_DEADLINES_REQUIRED",
+        "E           CONTEXT:  PL/pgSQL function public.capacity_occupation_judge_fact(bytea,jsonb,uuid,text,text) line 199 at RAISE",
+        "E           PL/pgSQL function public.capacity_occupation_plan_risk_fact(bytea,jsonb,uuid,text,text,uuid,text,text) line 5 at assignment",
+        "E           PL/pgSQL function public.prepare_capacity_target_call(bytea,jsonb,uuid,uuid,uuid) line 92 at assignment",
+        "E           PL/pgSQL function public.prepare_capacity_target_occupation(bytea,jsonb,uuid,uuid,uuid) line 5 at assignment"
+      ],
+      "log_path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r26/native.log",
+      "log_sha256": "5aeae747fe0cfa28d61a4771ff4abc59198cc80b3922df159d06ea805351997f",
+      "log_in_git": false
+    },
+    {
+      "attempt": "r27",
+      "exit": 1,
+      "database": "aos_test_3031c1bfd805_ti4_test",
+      "old_files_unchanged": true,
+      "terminal_summary": [
+        "1 failed, 8 warnings in 126.42s (0:02:06)"
+      ],
+      "safe_errors": [
+        "E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r27/original_source_plan_fixture_r1.py'"
+      ],
+      "log_path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r27/native.log",
+      "log_sha256": "4f84292f44917bd31db130fdf085604c6305b3f54c7b8a8688cbf4a83fa5694c",
+      "log_in_git": false
+    },
+    {
+      "attempt": "r28",
+      "exit": 0,
+      "database": "aos_test_05f1a1dcd51f_ti4_test",
+      "old_files_unchanged": true,
+      "terminal_summary": [
+        "1 passed, 8 warnings in 154.51s (0:02:34)"
+      ],
+      "safe_errors": [],
+      "log_path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/native-r28/native.log",
+      "log_sha256": "5057e3d115c06d6885413ffc478692b352acfb3d37215e579004ee8f8aa99fe4",
+      "log_in_git": false
+    }
+  ],
+  "full_task_delivered": false,
+  "execution_allowed": false
+}
