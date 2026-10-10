@@ -1,0 +1,5 @@
+# 完整准入后继第一步复审
+
+旧Task10原三目标已逐项当前回核并由官方complete_task生成Delivery，原Lease释放；本新Task已由官方start_task登记精确三scope，无第二施工写者或重叠Lease。并未调用Goal complete/blocked/paused。
+当前ownedlab R28 retained DB SERIAL READ ONLY：七prepared拒绝trigger均DEFERRABLE INITIALLY DEFERRED、body精确无条件CAPACITY_PARENT_FINALIZE_REQUIRED。候选新finalizer四参数signature不存在，这是新增完整协议的真实RED，不是业务全Goal blocked；原已关闭路径无变化。没有修改PG角色/函数/表，无真实Provider，也没有把新Task登记/方案当实现。
+新方案列完整单次准入COMMIT、currentSource/双父预算/完整cert/唯一Intent/物理义务、全部event/RI/currentness/结束门/未知风险与后继结果消费。需核内复用、新版本切换与旧未决风险同算，不能偷改旧拒绝函数或复制缩水算法。下一进入共享核提取的精确文件计划与生成SQL/body保持验证；迁移编号/新授予/真实数据库部署须另外登记原正式门。正式信任与经营首链仍未完成。

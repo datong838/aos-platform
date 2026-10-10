@@ -1,0 +1,28 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "gt-shared-parent-native-certificate-prepare-20261010",
+  "base_revision": "AOS-001677",
+  "completed_revision": "AOS-001698",
+  "result": "ISOLATED_SIGNED_SAME_TRANSACTION_PREPARATION_ONLY: all three registered outputs verified; no formal Root, finaljoint or execution grant",
+  "changed_files": [
+    "aos-platform/services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py",
+    "aos-platform/services/aos-api/tests/aip/test_shared_parent_certificate_prepare_pg.py",
+    "aos-platform/.evidence/gt-shared-parent-native-certificate-prepare-20261010"
+  ],
+  "commits": [
+    "403d9131b9a94bce70cc90d337eb213b8c348db3",
+    "5cf4edd4c",
+    "d9bd7139f"
+  ],
+  "verification": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-certificate-prepare-20261010/task-delivery-verification-1698.json",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-certificate-prepare-20261010/task-delivery-review-1698.md",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-certificate-prepare-20261010/task-delivery-current-readback-1698.json"
+  ],
+  "risks": [
+    "Experiment Root bootstrap not formally trusted; complete joint/cutover/native artifact provenance, actual transport/Usage and business first chain remain independently pending",
+    "R14 dedicated expiry proved termination; its later compound failed original deadline and is not full pass. Source contract append-only delta explicitly audited."
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-10T10:26:48+08:00"
+}

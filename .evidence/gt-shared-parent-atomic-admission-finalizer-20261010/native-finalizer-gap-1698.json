@@ -1,0 +1,62 @@
+{
+  "cluster": "7694680278363095064",
+  "readonly": true,
+  "guards": [
+    {
+      "table": "call_occupation",
+      "trigger": "require_occupation_finalization",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "unconditional_reject": true
+    },
+    {
+      "table": "call_occupation_event",
+      "trigger": "require_occupation_event_finalization",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "unconditional_reject": true
+    },
+    {
+      "table": "prepared_call_occupation",
+      "trigger": "require_joint_finalization",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "unconditional_reject": true
+    },
+    {
+      "table": "prepared_judge_intent",
+      "trigger": "no_unfinalized_judge_intent",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "unconditional_reject": true
+    },
+    {
+      "table": "prepared_parent_debit",
+      "trigger": "require_joint_finalization",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "unconditional_reject": true
+    },
+    {
+      "table": "prepared_plan_risk",
+      "trigger": "no_unfinalized_plan_risk",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "unconditional_reject": true
+    },
+    {
+      "table": "prepared_shared_risk_description",
+      "trigger": "no_unfinalized_shared_description",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "unconditional_reject": true
+    }
+  ],
+  "candidate_signature": "public.finalize_capacity_shared_parent_admission(bytea,jsonb,uuid,text)",
+  "candidate_installed": false,
+  "native_gap": "RED: complete new-version admission finalizer not installed; old prepared lane unconditionally rejects",
+  "existing_guards_unchanged": true,
+  "product_files_created": false,
+  "execution_allowed": false,
+  "full_joint_pass": false
+}
