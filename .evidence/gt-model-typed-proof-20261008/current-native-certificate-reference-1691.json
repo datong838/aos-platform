@@ -1,0 +1,26 @@
+{
+  "authority_revision": "AOS-001691",
+  "task": "gt-model-typed-proof-20261008",
+  "head": "0a84ed3fc59df5a43a24c8a8241417ae3f11f861",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false,
+  "references": [
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/current-native-certificate-reference-1690.json",
+      "sha256": "f01f4b7d273479ed9e67eb936852e3c4c5ae9ff996cc70bef0ffd13d547f0f1e"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/full-ri-delta-plan-1690.md",
+      "sha256": "45fbf5dc0eaa988124fbab1518c017799f4a0d7b36864f2c7842911eb3372285"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/full-ri-delta-review-1690.md",
+      "sha256": "a53da03d19f5bc39b1b81f4ca95dc69fcd8cdec2f73d950e2c2131c09a66d11c"
+    },
+    {
+      "path": ".evidence/gt-shared-parent-native-certificate-prepare-20261010/full-ri-delta-r2-1690.json",
+      "sha256": "69a77b99269288d9598ceff33cdca3952eab62388c0e3dac3f82c72139a1702e"
+    }
+  ]
+}
