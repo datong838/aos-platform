@@ -1,0 +1,20 @@
+[
+  {
+    "label": "ordinary",
+    "xid": "59852",
+    "outcome": "rejected",
+    "error": "TEST_OWNED_DEFERRED_REJECT"
+  },
+  {
+    "label": "naive",
+    "xid": "59853",
+    "outcome": "committed",
+    "error": null
+  },
+  {
+    "label": "checked",
+    "xid": "59854",
+    "outcome": "rejected",
+    "error": "TEST_CALLBACK_NEW_PENDING_EVENT_REJECTED"
+  }
+]

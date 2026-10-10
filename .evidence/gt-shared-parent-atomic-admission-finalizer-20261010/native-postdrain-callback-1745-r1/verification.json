@@ -1,0 +1,48 @@
+{
+  "status": "NATIVE_POSTDRAIN_CALLBACK_NEW_EVENT_COUNTEREXAMPLE_VERIFIED",
+  "authority": "AOS-001745",
+  "schema": "test_owned_callback_60851c96dd9a4829bd5196cf5b30f3f5",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "cluster": "7694680278363095064",
+  "binary_sha256": "fc2c12e83cbef97921d83033edf5115ad8bfe4f786dcd2a63fa12fe2f26e6229",
+  "cases": [
+    {
+      "label": "ordinary",
+      "xid": "59852",
+      "outcome": "rejected",
+      "error": "TEST_OWNED_DEFERRED_REJECT"
+    },
+    {
+      "label": "naive",
+      "xid": "59853",
+      "outcome": "committed",
+      "error": null
+    },
+    {
+      "label": "checked",
+      "xid": "59854",
+      "outcome": "rejected",
+      "error": "TEST_CALLBACK_NEW_PENDING_EVENT_REJECTED"
+    }
+  ],
+  "independent_statuses": {
+    "ordinary": "aborted",
+    "naive": "committed",
+    "checked": "aborted"
+  },
+  "owned_counts": {
+    "ordinary": 0,
+    "naive": 1,
+    "checked": 0,
+    "marker": 1
+  },
+  "ordinary_guard_really_rejects": true,
+  "naive_callback_commit_skips_new_deferred_rejection": true,
+  "explicit_pending_rejection_control_aborts": true,
+  "trigger_bodies_enabled_unchanged": true,
+  "role_unchanged": true,
+  "container_not_restarted": true,
+  "original_business_tables_written": false,
+  "full_admission": false,
+  "execution_allowed": false
+}

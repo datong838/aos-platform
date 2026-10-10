@@ -1,0 +1,34 @@
+{
+  "status": "POSTDRAIN_NATIVE_PROBE_DESIGN_CODE_REVIEWED",
+  "authority": "AOS-001745",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "head": "b1b1a46f6f1858c7053439c2db7d5a35be432052",
+  "scope": "Task evidence only; no product files changed",
+  "actual_native_verified": [
+    "ordinary_deferred_rejection",
+    "naive_callback_new_event_committed",
+    "pending_rejection_whole_abort",
+    "subtransaction_arm_rejected",
+    "non_private_relation_arm_rejected",
+    "runtime_arm_rejected",
+    "independent_durable_status_and_counts"
+  ],
+  "source_refs": [
+    "https://raw.githubusercontent.com/postgres/postgres/REL_16_14/src/backend/access/transam/xact.c",
+    "https://raw.githubusercontent.com/postgres/postgres/REL_16_14/src/backend/commands/trigger.c"
+  ],
+  "file_hashes": {
+    "probe.c": "6fffeb256a2efb90dbd11ad0b3275068e6c832503bf445b802afcdb5a0771d71",
+    "Dockerfile": "aeb2f36e6230b5bc6b09672da969284f0e4c3169f3e0846eb0b2d832105ada6a",
+    "run_probe.py": "5d3cd9239bc07608c165b964d954fa598cd4c1c6226d87fbf42b020cfaeed26e",
+    "verify_boundaries.py": "336eea9e6aa0f02dd8422453e9de1a8963c5247f6937ad1caf4d663a4c8adaf4",
+    "verification.json": "380fa6d640cabe0dd29625745218e314697400d8f688f7a9f50ab1f11c366397",
+    "independent-boundaries.json": "cb7993ee51654c10c6a709379541d9f6189ea18040c182d5adbfe1da21a4638e"
+  },
+  "new_effects": "Only unique isolated test_owned_callback schema plus unique /tmp library and stopped extraction container; retained.",
+  "risk": "Test-only superuser native callback deliberately writes after engine drain; never grant runtime or promote unchanged.",
+  "full_admission": false,
+  "full_task_delivered": false,
+  "review_model_consumed": false,
+  "goal_complete": false
+}

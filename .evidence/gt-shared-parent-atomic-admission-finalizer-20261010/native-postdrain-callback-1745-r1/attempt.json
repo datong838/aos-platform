@@ -1,0 +1,9 @@
+{
+  "schema": "test_owned_callback_60851c96dd9a4829bd5196cf5b30f3f5",
+  "library": "/tmp/aos_postdrain_60851c96dd9a4829bd5196cf5b30f3f5.so",
+  "artifact_container": "aos-callback-artifact-60851c96dd9a4829bd5196cf5b30f3f5",
+  "image": "sha256:661871bac8e9a4efa93bde9c9923f48a2db3876ddfaa75e0110542986d2b2661",
+  "cluster": "7694680278363095064",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "original_tables_written": false
+}

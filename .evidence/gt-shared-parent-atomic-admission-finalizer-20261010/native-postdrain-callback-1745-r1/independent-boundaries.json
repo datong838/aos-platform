@@ -1,0 +1,29 @@
+{
+  "status": "POSTDRAIN_CALLBACK_BOUNDARIES_AND_DURABLE_READBACK_VERIFIED",
+  "authority": "AOS-001745",
+  "negative_arms": [
+    "subtransaction_arm_denied",
+    "non_private_relation_arm_denied",
+    "runtime_arm_denied"
+  ],
+  "owned_counts": {
+    "ordinary": 0,
+    "naive": 1,
+    "checked": 0,
+    "marker": 1
+  },
+  "durability": {
+    "fsync": "on",
+    "full_page_writes": "on",
+    "synchronous_commit": "on"
+  },
+  "original_signature_binary_unchanged": true,
+  "c_sha256": "6fffeb256a2efb90dbd11ad0b3275068e6c832503bf445b802afcdb5a0771d71",
+  "library_sha256": "fc2c12e83cbef97921d83033edf5115ad8bfe4f786dcd2a63fa12fe2f26e6229",
+  "full_admission": false,
+  "execution_allowed": false,
+  "remaining_matrix": [
+    "Prepared and parallel channels have explicit C denial but were not exercised in this isolated three-case probe.",
+    "No original Source/hold/complete end positive was performed; a real admission protocol still requires exact native package, caller, closure and postcommit confirmation."
+  ]
+}

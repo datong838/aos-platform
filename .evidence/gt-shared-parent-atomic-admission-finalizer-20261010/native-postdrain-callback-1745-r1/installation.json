@@ -1,0 +1,7 @@
+{
+  "schema": "test_owned_callback_60851c96dd9a4829bd5196cf5b30f3f5",
+  "library": "/tmp/aos_postdrain_60851c96dd9a4829bd5196cf5b30f3f5.so",
+  "binary_sha256": "fc2c12e83cbef97921d83033edf5115ad8bfe4f786dcd2a63fa12fe2f26e6229",
+  "committed": true,
+  "public_runtime_execute": false
+}
