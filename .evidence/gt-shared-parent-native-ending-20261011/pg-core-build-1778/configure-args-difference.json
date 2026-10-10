@@ -1,0 +1,12 @@
+{
+  "embedded_configure_args": {
+    "original": "'--enable-option-checking=fatal' '--build=aarch64-linux-musl' '--enable-integer-datetimes' '--enable-thread-safety' '--enable-tap-tests' '--disable-rpath' '--with-uuid=e2fs' '--with-pgport=5432' '--with-system-tzdata=/usr/share/zoneinfo' '--prefix=/usr/local' '--with-includes=/usr/local/include' '--with-libraries=/usr/local/lib' '--with-gssapi' '--with-icu' '--with-ldap' '--with-libxml' '--with-libxslt' '--with-llvm' '--with-lz4' '--with-openssl' '--with-perl' '--with-python' '--with-tcl' '--with-zstd' 'build_alias=aarch64-linux-musl' 'LLVM_CONFIG=/usr/lib/llvm21/bin/llvm-config' 'CLANG=clang-21'",
+    "rebuilt": "'--enable-option-checking=fatal' '--build=aarch64-linux-musl' '--enable-integer-datetimes' '--enable-thread-safety' '--enable-tap-tests' '--disable-rpath' '--with-uuid=e2fs' '--with-pgport=5432' '--with-system-tzdata=/usr/share/zoneinfo' '--prefix=/usr/local' '--with-includes=/usr/local/include' '--with-libraries=/usr/local/lib' '--with-gssapi' '--with-icu' '--with-ldap' '--with-libxml' '--with-libxslt' '--with-llvm' '--with-lz4' '--with-openssl' '--with-perl' '--with-python' '--with-tcl' '--with-zstd' 'build_alias=aarch64-linux-musl' 'LLVM_CONFIG=/usr/lib/llvm21/bin/llvm-config' 'CLANG=clang-21'"
+  },
+  "original_arg_count": 27,
+  "rebuilt_arg_count": 27,
+  "original_build_alias_count": 1,
+  "rebuilt_build_alias_count": 1,
+  "additional_rodata_bytes": 0,
+  "no_binary_patch": true
+}

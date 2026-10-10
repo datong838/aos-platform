@@ -1,0 +1,8 @@
+{
+  "configure_sha256": "f7e0972f1d5cf6bc3b7169ac273615007a9b3cd2009210bdc2e219df48029f23",
+  "exact_source_snippet": "for dir in $with_includes $SRCH_INC; do\n  if test -d \"$dir\"; then\n    INCLUDES=\"$INCLUDES -I$dir\"\n  else\n    { $as_echo \"$as_me:${as_lineno-$LINENO}: WARNING: *** Include directory $dir does not exist.\" >&5\n$as_echo \"$as_me: WARNING: *** Include directory $dir does not exist.\" >&2;}\n  fi\ndone\nIFS=$ac_save_IFS\n\n\n\n#\n# Library directories\n#\nac_save_IFS=$IFS\nIFS=\"${IFS}${PATH_SEPARATOR}\"\n# LIBRARY_DIRS comes from command line, SRCH_LIB from template file.\nfor dir in $LIBRARY_DIRS $SRCH_LIB; do\n  if test -d \"$dir\"; then",
+  "original_cppflags": "-D_GNU_SOURCE -I/usr/include/libxml2",
+  "rebuilt_cppflags": "-D_GNU_SOURCE -I/usr/local/include -I/usr/include/libxml2",
+  "existing_prefix_difference_candidate": true,
+  "original_historical_directory_state_proved": false
+}

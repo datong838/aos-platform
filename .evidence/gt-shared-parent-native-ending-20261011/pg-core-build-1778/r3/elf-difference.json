@@ -1,0 +1,82 @@
+{
+  "original_sha256": "025eccb4f06a6d63d724cc1d8abdeb75c909f7bbb8493bf5b0e0273d67451d77",
+  "rebuilt_sha256": "66684918da41eefe2d97881e6a44eba68103de44afe7d31299e2a46ae132d6e8",
+  "original_size": 10369648,
+  "rebuilt_size": 10369648,
+  "equal_section_names": [
+    "",
+    ".interp",
+    ".gnu.hash",
+    ".gnu.version",
+    ".gnu.version_r",
+    ".rela.dyn",
+    ".rela.plt",
+    ".init",
+    ".plt",
+    ".text",
+    ".fini",
+    ".rodata",
+    ".eh_frame_hdr",
+    ".eh_frame",
+    ".init_array",
+    ".fini_array",
+    ".data.rel.ro",
+    ".dynamic",
+    ".got",
+    ".data",
+    ".bss",
+    ".comment",
+    ".debug_aranges",
+    ".debug_info",
+    ".debug_abbrev",
+    ".debug_line",
+    ".debug_frame",
+    ".debug_str",
+    ".debug_line_str",
+    ".debug_loclists",
+    ".debug_rnglists",
+    ".symtab",
+    ".strtab",
+    ".shstrtab"
+  ],
+  "different_sections": {
+    ".dynstr": {
+      "original": {
+        "size": 206295,
+        "sha256": "d7c6dab43c3fe80a048470b603b9691fca956351b326d4d8cd3fc729ef78a5c3"
+      },
+      "rebuilt": {
+        "size": 206295,
+        "sha256": "1dfb2298348acd2bae5e9da4c83a73fc53feae98c5dbd31930baa5ae51b45d19"
+      },
+      "first_mismatch": 2893,
+      "differing_overlap_bytes": 1610
+    },
+    ".dynsym": {
+      "original": {
+        "size": 266760,
+        "sha256": "8b5a443513fac273707935951142aa226e4003ec4054e48aae5840ad4f0b74df"
+      },
+      "rebuilt": {
+        "size": 266760,
+        "sha256": "a5bf2882b83037a85f78344cac08a9cb1b69b3f74a7b17ac081a365b07369f76"
+      },
+      "first_mismatch": 96,
+      "differing_overlap_bytes": 121
+    },
+    ".note.gnu.build-id": {
+      "original": {
+        "size": 36,
+        "sha256": "d0e91e8f7e03c9907ae45c9f9d0198791e30dba88980e5cf9c66fc31e77c6b89"
+      },
+      "rebuilt": {
+        "size": 36,
+        "sha256": "97b0e30c88e227596030ff8a1f74518da7f55b8bd23068403aba98f114cbb2fa"
+      },
+      "first_mismatch": 16,
+      "differing_overlap_bytes": 20
+    }
+  },
+  "original_binary_reproduced": false,
+  "no_execution_or_binary_patch": true
+}

@@ -1,0 +1,4 @@
+{
+  "sha256": "04e6711f8f2e1e37c6bbbf8955991756c5013457539c52ef98d3338087d5ce80",
+  "utf8": "Traceback (most recent call last):\n  File \"/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/pg-core-build-1778/r2/run.py\", line 60, in <module>\n    if result.returncode:raise RuntimeError('BUILD_FAILED preserve evidence no retry')\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: BUILD_FAILED preserve evidence no retry\n"
+}

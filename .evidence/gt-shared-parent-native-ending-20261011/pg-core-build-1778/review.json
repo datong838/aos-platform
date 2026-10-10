@@ -1,0 +1,42 @@
+{
+  "status": "BUNDLED_AND_GENERATED_REPRODUCTION_GREEN_CORE_RAW_MISMATCH",
+  "cases": {
+    "pg-core-build-1778": {
+      "container": "4cdb35634a511e157ca99d89103bc6537fa6d4b7a0e9ce5580a78a06af82b609",
+      "never_started": true,
+      "no_mounts": true,
+      "six_hashes_independently_verified": true,
+      "raw_core_equal": false,
+      "other_five_equal": true
+    },
+    "r3": {
+      "container": "0d67e20dc9beab744f26f5bd7890dc78ddf9b447247e1840d9777629a27ac37c",
+      "never_started": true,
+      "no_mounts": true,
+      "six_hashes_independently_verified": true,
+      "raw_core_equal": false,
+      "other_five_equal": true
+    }
+  },
+  "r2_known_exdev_failure_preserved": true,
+  "r3_scope": "same original flags/archive/socket patch; preexisting include parked during configure and restored; no flags/binary rewrite",
+  "dynamic_symbol_readback": {
+    "dynamic_symbols_index_by_index_equal": true,
+    "dynamic_symbol_count": 11115,
+    "dynamic_string_multiset_equal": true,
+    "remaining_unequal_sections": [
+      ".dynstr",
+      ".dynsym",
+      ".note.gnu.build-id"
+    ],
+    "raw_binary_equal": false,
+    "no_binary_reordering_patch": true,
+    "original_linker_or_historical_build_provenance_proved": false
+  },
+  "text_rodata_relocations_match_r3": true,
+  "historical_prefix_state_or_linker_provenance_proved": false,
+  "signed_build_provenance": false,
+  "full_task_delivered": false,
+  "formal_database_or_services_changed": false,
+  "model_review_invoked": false
+}

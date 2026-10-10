@@ -1,0 +1,8 @@
+{
+  "network": "default",
+  "timeout_seconds": 1200,
+  "jobs": 2,
+  "never_install": true,
+  "never_start": true,
+  "dockerfile_sha256": "7017531bc88b80ef985c36713822ff651e628209eb19d2eddc135b88aa6d5488"
+}

@@ -1,0 +1,13 @@
+{
+  "dynamic_symbols_index_by_index_equal": true,
+  "dynamic_symbol_count": 11115,
+  "dynamic_string_multiset_equal": true,
+  "remaining_unequal_sections": [
+    ".dynstr",
+    ".dynsym",
+    ".note.gnu.build-id"
+  ],
+  "raw_binary_equal": false,
+  "no_binary_reordering_patch": true,
+  "original_linker_or_historical_build_provenance_proved": false
+}

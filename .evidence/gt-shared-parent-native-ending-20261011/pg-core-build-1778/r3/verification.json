@@ -1,0 +1,40 @@
+{
+  "files": {
+    "postgres": {
+      "rebuilt_sha256": "66684918da41eefe2d97881e6a44eba68103de44afe7d31299e2a46ae132d6e8",
+      "installed_sha256": "025eccb4f06a6d63d724cc1d8abdeb75c909f7bbb8493bf5b0e0273d67451d77",
+      "bytes_equal": false
+    },
+    "plpgsql.so": {
+      "rebuilt_sha256": "c8e33f978d81ebbe5296ae02ec3c42d810787cc7ac854437371f6974fa41a21e",
+      "installed_sha256": "c8e33f978d81ebbe5296ae02ec3c42d810787cc7ac854437371f6974fa41a21e",
+      "bytes_equal": true
+    },
+    "pgcrypto.so": {
+      "rebuilt_sha256": "5244bf9d2d9740ef3f65aaf4770f110ac3db862664c073656767ca40ec8507ff",
+      "installed_sha256": "5244bf9d2d9740ef3f65aaf4770f110ac3db862664c073656767ca40ec8507ff",
+      "bytes_equal": true
+    },
+    "pg_config.h": {
+      "rebuilt_sha256": "5709fbef6e0fc407920071e00de88767fec1ea096f39ed429767c6628be432bc",
+      "installed_sha256": "5709fbef6e0fc407920071e00de88767fec1ea096f39ed429767c6628be432bc",
+      "bytes_equal": true
+    },
+    "pg_config_ext.h": {
+      "rebuilt_sha256": "ad524b12408615b768d82461fd513b107ca6850a9e5a8584f486f2ecdbe4b678",
+      "installed_sha256": "ad524b12408615b768d82461fd513b107ca6850a9e5a8584f486f2ecdbe4b678",
+      "bytes_equal": true
+    },
+    "probes.h": {
+      "rebuilt_sha256": "3f87fbd490b995cd6feb59714ea54c4765375a18738f52e9552429f261dd1195",
+      "installed_sha256": "3f87fbd490b995cd6feb59714ea54c4765375a18738f52e9552429f261dd1195",
+      "bytes_equal": true
+    }
+  },
+  "never_started": true,
+  "no_mounts": true,
+  "original_artifacts_unchanged": true,
+  "signed_source_build_provenance": false,
+  "full_task_delivered": false,
+  "execution_allowed": false
+}

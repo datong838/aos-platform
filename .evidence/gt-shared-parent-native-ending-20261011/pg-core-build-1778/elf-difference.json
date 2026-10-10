@@ -1,0 +1,159 @@
+{
+  "original_sha256": "025eccb4f06a6d63d724cc1d8abdeb75c909f7bbb8493bf5b0e0273d67451d77",
+  "rebuilt_sha256": "6c8d5f605aeb93ea85e020c599558ad1433201f74c2b3e007fc1850071de8144",
+  "original_size": 10369648,
+  "rebuilt_size": 10369648,
+  "equal_section_names": [
+    "",
+    ".interp",
+    ".gnu.hash",
+    ".gnu.version",
+    ".gnu.version_r",
+    ".rela.plt",
+    ".init",
+    ".plt",
+    ".fini",
+    ".eh_frame_hdr",
+    ".eh_frame",
+    ".init_array",
+    ".fini_array",
+    ".dynamic",
+    ".bss",
+    ".comment",
+    ".debug_aranges",
+    ".debug_info",
+    ".debug_abbrev",
+    ".debug_line",
+    ".debug_frame",
+    ".debug_str",
+    ".debug_line_str",
+    ".debug_loclists",
+    ".debug_rnglists",
+    ".strtab",
+    ".shstrtab"
+  ],
+  "different_sections": {
+    ".data": {
+      "original": {
+        "size": 97312,
+        "sha256": "b6a534ad331787b4de97697a20e2da13270d09a184b82594438e01398a0be8d3"
+      },
+      "rebuilt": {
+        "size": 97312,
+        "sha256": "cc2cb51b237c4924d376c6ba61dd64d6c85e29293ff5e40b326883b41ac2eff8"
+      },
+      "first_mismatch": 19360,
+      "differing_overlap_bytes": 7
+    },
+    ".data.rel.ro": {
+      "original": {
+        "size": 128632,
+        "sha256": "347389b3b64570d5f2a4bd4acf5b99b3748fced05c63cf95558917f7fe470dee"
+      },
+      "rebuilt": {
+        "size": 128632,
+        "sha256": "a1c6ef6b0d437f7c69de4717a685a1f0d30dc7146f09bcfe0b90906d6c5e3271"
+      },
+      "first_mismatch": 4272,
+      "differing_overlap_bytes": 392
+    },
+    ".dynstr": {
+      "original": {
+        "size": 206295,
+        "sha256": "d7c6dab43c3fe80a048470b603b9691fca956351b326d4d8cd3fc729ef78a5c3"
+      },
+      "rebuilt": {
+        "size": 206295,
+        "sha256": "1dfb2298348acd2bae5e9da4c83a73fc53feae98c5dbd31930baa5ae51b45d19"
+      },
+      "first_mismatch": 2893,
+      "differing_overlap_bytes": 1610
+    },
+    ".dynsym": {
+      "original": {
+        "size": 266760,
+        "sha256": "8b5a443513fac273707935951142aa226e4003ec4054e48aae5840ad4f0b74df"
+      },
+      "rebuilt": {
+        "size": 266760,
+        "sha256": "a10a9b9a5e62966e3f60dc4e6fdd24dedb7ac70c4b8f84133038b117d2bcf7ab"
+      },
+      "first_mismatch": 96,
+      "differing_overlap_bytes": 130
+    },
+    ".got": {
+      "original": {
+        "size": 10192,
+        "sha256": "b243f4aab70a60145544647f30cd9330efcc590a2e8713a087fb5b558c9b0f91"
+      },
+      "rebuilt": {
+        "size": 10192,
+        "sha256": "2c0720a0501979a5b56dd4aeb20b952bd167c80ba209e50bde6df066bd266728"
+      },
+      "first_mismatch": 4488,
+      "differing_overlap_bytes": 7
+    },
+    ".note.gnu.build-id": {
+      "original": {
+        "size": 36,
+        "sha256": "d0e91e8f7e03c9907ae45c9f9d0198791e30dba88980e5cf9c66fc31e77c6b89"
+      },
+      "rebuilt": {
+        "size": 36,
+        "sha256": "1f5b19a607c603e6a42656377d8d9bdcf49ead5e7a6de5b09f283362ebce4eab"
+      },
+      "first_mismatch": 16,
+      "differing_overlap_bytes": 20
+    },
+    ".rela.dyn": {
+      "original": {
+        "size": 282648,
+        "sha256": "67367d5be35683af81bd8286f9f7cd3117a4f010b37d0c1651a09a9197252a8a"
+      },
+      "rebuilt": {
+        "size": 282648,
+        "sha256": "bf1bb1c143c3c104aaad6b57a9cb94d050fd9feb3ae081c0e1a220ae1cbb004b"
+      },
+      "first_mismatch": 4840,
+      "differing_overlap_bytes": 406
+    },
+    ".rodata": {
+      "original": {
+        "size": 1910496,
+        "sha256": "6757d8cdf2f210eaaf2a61c1ea202e8d2ec3f129e9d20d3d0adcd65faa338b6b"
+      },
+      "rebuilt": {
+        "size": 1910496,
+        "sha256": "dabe09267d96c46d323a275db94bc1a051359eac6ab7c2ac3ee0da081107003b"
+      },
+      "first_mismatch": 617053,
+      "differing_overlap_bytes": 541388
+    },
+    ".symtab": {
+      "original": {
+        "size": 628104,
+        "sha256": "218dcb33874861ce53c2b53582bcdb33fa6c456e81d833a4c64f72c15e8e4e11"
+      },
+      "rebuilt": {
+        "size": 628104,
+        "sha256": "9ed33ddc1a0cfbb82c3f4310293eb7eb3ec3dd27209b8c257e37884ada7c88fa"
+      },
+      "first_mismatch": 1160,
+      "differing_overlap_bytes": 6316
+    },
+    ".text": {
+      "original": {
+        "size": 5528316,
+        "sha256": "061c591bad800b21a380dc9021d3378bd2a0f5d49045b1f518de129452e10fa5"
+      },
+      "rebuilt": {
+        "size": 5528316,
+        "sha256": "a0a56192a64506517f6497f47dc5c6ba2726c4636ba0d628b489694752e58f1f"
+      },
+      "first_mismatch": 53,
+      "differing_overlap_bytes": 17164
+    }
+  },
+  "original_binary_reproduced": false,
+  "no_execution_or_binary_patch": true
+}
