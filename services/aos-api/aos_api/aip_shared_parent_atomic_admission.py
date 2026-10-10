@@ -5,8 +5,21 @@ end channel and native full admission matrix remain required before admission
 can be exposed. Necessary facts are never execution permission.
 """
 from aos_api.aip_physical_capacity_occupation_authority import OWNER, PLAN_FACT
+from aos_api import aip_shared_parent_certificate_prepare as _certificate
 
 FUNCTION = 'public.read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)'
+
+
+def shared_parent_admission_certificate_validation_sql():
+    """Reuse both original native certificate checks without new trust rules.
+
+    This fragment requires original validated doc/items/caller variables and
+    the original issuer delegate's verification privilege. It neither builds
+    a description nor authenticates that origin by itself. The complete new
+    admission must still bind those inputs before any ledger/receipt write.
+    """
+    return (_certificate.shared_parent_native_verifier_requirement_sql()
+            + _certificate.shared_parent_certificate_claim_sql())
 
 
 def shared_parent_original_fact_statements():

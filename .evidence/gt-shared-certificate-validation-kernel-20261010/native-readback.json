@@ -1,0 +1,43 @@
+{
+  "status": "ORIGINAL_CERTIFICATE_SQL_NATIVE_BODIES_AND_ACL_EXACT",
+  "task": "gt-shared-certificate-validation-kernel-20261010",
+  "authority": "AOS-001717",
+  "cluster": "7694680278363095064",
+  "readonly": true,
+  "original_sql_statements_exact": 13,
+  "functions": [
+    {
+      "signature": "public.prepare_model_shared_parent_manifest_origin(bytea,jsonb,uuid,text)",
+      "body_sha256": "5c0c42bce5877ba2e652dfb793c97d53afee5a42012907687b99f041bfad2755",
+      "owner": "aos_model_eval_execution_owner",
+      "acl": "{aos_model_eval_execution_owner=X/aos_model_eval_execution_owner,aos_model_eval_issuer_owner=X/aos_model_eval_execution_owner}",
+      "original_body_and_permissions_exact": true
+    },
+    {
+      "signature": "public.verify_model_shared_parent_certificate_signature(bytea,bytea,bytea)",
+      "body_sha256": "c74a9bb51b574c8a008f479dbff0cbf58a91895aaff678236e350460889c85b2",
+      "owner": "aos_capacity_publication_owner",
+      "acl": "{aos_capacity_publication_owner=X/aos_capacity_publication_owner,aos_model_eval_issuer_owner=X/aos_capacity_publication_owner}",
+      "original_body_and_permissions_exact": true
+    },
+    {
+      "signature": "public.prepare_model_shared_parent_certificate_set(bytea,jsonb,uuid,text,bytea)",
+      "body_sha256": "035e87c437fe0afbbedea05165f5582475effef42ba9417e6273a8449c06d99a",
+      "owner": "aos_model_eval_issuer_owner",
+      "acl": "{aos_model_eval_issuer_owner=X/aos_model_eval_issuer_owner,aos_runtime=X/aos_model_eval_issuer_owner}",
+      "original_body_and_permissions_exact": true
+    }
+  ],
+  "native_verifier_catalog": {
+    "probin": "$libdir/aos_ed25519",
+    "prosrc": "aos_ed25519_verify",
+    "provolatile": "i",
+    "proisstrict": true,
+    "prosecdef": false,
+    "lanname": "c",
+    "owner": "aos_ed25519_owner"
+  },
+  "formal_root_provenance_verified": false,
+  "database_writes": false,
+  "full_new_admission_pass": false
+}

@@ -1,0 +1,7 @@
+# 原生共享证书验证核提取
+Rules：231、完整新准入方案，单m1写者，原准备路径SQL和已安装body/ACL不变。支持主Task gt-shared-parent-atomic-admission-finalizer-20261010。
+精确文件：services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py；tests/aip/test_shared_parent_certificate_validation_kernel.py；本证据目录。
+先冻结shared_parent_certificate_prepare_statements全部SQL，再RED要求共享核存在；将原plan:=doc后完整set计数/每Root锁/全v3 claim完整腿/native Ed25519/time验证至写certificate之前提取为固定零参数helper。无新的SQL selector、callback/schema参数、issuer来源或简化校验。原SQL插回字节完全一致，原prepare继续原description→manifest→validate→append证书顺序与closed7guard。新准入在自身原facts/manifest/current Root完整来源后复用此核；核本身不授权。
+本轮不部署、不改DB/role/grant/C库。SER READ ONLY实际核原保留lab函数源/ACL/owner/nativeC元数据与beforeimage，并跑原生成SQL/邻接测试；真实prepare正向的已有独立Task证据不重放。新version完整准入仍独立待实现与验证。
+
+范围细化：原nativeC目录requirement也提取固定零参数helper，与claim核一起复用；原caller检查、canonical bytes、description来源、append顺序、final currentness及expiry仍不改变。核依赖原Issuer委托VERIFY权限，不能为了新physical Owner可调用而放宽grants；完整新版本须专门设计原Issuer narrow delegate入口并核Root正式来源。

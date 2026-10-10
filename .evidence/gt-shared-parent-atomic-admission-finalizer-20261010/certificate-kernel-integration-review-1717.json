@@ -1,0 +1,42 @@
+{
+  "schema": "aos-scoped-code-review/v1",
+  "rules": [
+    "231",
+    "aos-engineering-delivery",
+    "single m1 writer",
+    "exact Task scope",
+    "original SQL/native ACL unchanged"
+  ],
+  "head": "7f429745bb61fd7dedc4668c888dfcd4e1142471",
+  "authority": "AOS-001717",
+  "task": "gt-shared-parent-atomic-admission-finalizer-20261010",
+  "reviewer": "primary-writer-self-review; not independent model verdict",
+  "files": {
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py": "aefa54f37c5973c76dfea970e7afdf6e20466a2b312487f9c6484e54df91bced",
+    "services/aos-api/tests/aip/test_shared_parent_certificate_validation_kernel.py": "2cd9fdc985e1fa621cdfdf8aba4b3184a554b6fbcc432344d414c1cbafce3243",
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "a73f55002134692e1731e83f239184b9c90e79e4ee29aa434296025086d875a9",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "c1e6696b924ffba1ce8eff8c5bfb3eb051527c6302ae59f5e4b8683e8e95fd8e"
+  },
+  "red": {
+    "failed": 6,
+    "passed": 1,
+    "reason": "missing original claim kernel helper"
+  },
+  "verification": {
+    "exit_code": 0,
+    "passed": 93,
+    "seconds": 0.71,
+    "native_readback": "native-readback.json",
+    "original_generated_statements_exact": 13,
+    "original_native_function_body_acl_exact": 3
+  },
+  "scheme_consistency": "Only original fixed SQL regions extracted; producer SQL byte identical; new admission builder consumes both original checks in order; no grant or installed DDL change.",
+  "risk": [
+    "Fragment requires trusted description/caller and narrow original Issuer delegate; not a full admission entry.",
+    "Formal Root provenance and full ledger/finalizer/end-channel/actual COMMIT remain unverified."
+  ],
+  "full_parent_task_complete": false,
+  "natural_business_chain_pass": false,
+  "database_writes_in_readback": false,
+  "support_task": "gt-shared-certificate-validation-kernel-20261010"
+}

@@ -89,3 +89,19 @@ def test_fact_artifact_has_no_admission_or_commit_channel():
     # admit a call, or install itself as a side effect of import.
     import aos_api.aip_shared_parent_atomic_admission as module
     assert not any(hasattr(module, name) for name in ('admit', 'dispatch', 'commit', 'install'))
+
+
+def test_new_admission_consumes_both_original_certificate_checks(monkeypatch):
+    from aos_api import aip_shared_parent_atomic_admission as admission
+    from aos_api import aip_shared_parent_certificate_prepare as original
+    calls = []
+    def native():
+        calls.append('native')
+        return 'test-native-requirement'
+    def claim():
+        calls.append('claim')
+        return 'test-original-claim'
+    monkeypatch.setattr(original, 'shared_parent_native_verifier_requirement_sql', native)
+    monkeypatch.setattr(original, 'shared_parent_certificate_claim_sql', claim)
+    assert admission.shared_parent_admission_certificate_validation_sql() == 'test-native-requirementtest-original-claim'
+    assert calls == ['native', 'claim']
