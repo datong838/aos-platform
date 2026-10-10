@@ -133,6 +133,7 @@ def test_native_same_statement_new_relation_visibility(native_ending_lab):
     store(path, same_statement_new_relation_visible=True, new_relation_rolled_back=True)
 
 MODULES = 'aos_admission_native_private.loaded_module_paths()'
+MODULE_FILES = 'aos_admission_native_private.loaded_module_file_facts()'
 
 @pytest.fixture
 def native_module_lab():
@@ -170,12 +171,49 @@ def native_module_lab():
     with psycopg.connect(**params) as other:
         other.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE READ ONLY')
         assert other.execute('SELECT to_regprocedure(%s) AS p',(MODULES,)).fetchone()['p'] is None
+        assert other.execute('SELECT to_regprocedure(%s) AS p',(MODULE_FILES,)).fetchone()['p'] is None
         assert other.execute('SELECT prosrc,probin,proacl::text FROM pg_proc WHERE oid=%s::regprocedure',(NATIVE,)).fetchone()==original
     store(proof,rollback_only_installation_absent=True,original_pending_reader_exact=True)
 
 
 def module_paths(c):
     return c.execute('SELECT '+MODULES+' AS paths').fetchone()['paths']
+
+
+def test_native_module_files_owner_acl_and_exact_metadata(native_module_lab):
+    c,lab,spec,proof=native_module_lab
+    meta=c.execute('SELECT pg_get_userbyid(proowner) AS owner,prosrc,probin,prosecdef,proconfig,provolatile,proparallel,pronargs,prorettype::regtype::text AS result FROM pg_proc WHERE oid=%s::regprocedure',(MODULE_FILES,)).fetchone()
+    assert meta==dict(owner=OWNER,prosrc='aos_admission_loaded_module_file_facts',probin=spec['library'],prosecdef=False,proconfig=['search_path=pg_catalog'],provolatile='v',proparallel='u',pronargs=0,result='jsonb')
+    for role in ('aos_runtime','aos_provider_capacity_issuer','aos_provider_capacity_occupation'):
+        assert not c.execute("SELECT has_function_privilege(%s,%s,'EXECUTE') AS allowed",(role,MODULE_FILES)).fetchone()['allowed']
+    assert not c.execute("SELECT EXISTS(SELECT 1 FROM pg_proc p CROSS JOIN LATERAL aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE p.oid=%s::regprocedure AND a.grantee=0 AND a.privilege_type='EXECUTE') AS public",(MODULE_FILES,)).fetchone()['public']
+    c.execute('SAVEPOINT non_owner_file')
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SHARED_ADMISSION_NATIVE_OWNER_REQUIRED'):
+        c.execute('SELECT '+MODULE_FILES)
+    c.execute('ROLLBACK TO SAVEPOINT non_owner_file')
+    store(proof,file_metadata_exact=True,file_public_runtime_closed=True,file_direct_superuser_denied=True)
+
+
+def test_native_module_files_match_independent_disk_hashes(native_module_lab):
+    import subprocess
+    c,lab,spec,proof=native_module_lab
+    c.execute('DO $$ BEGIN NULL; END $$')
+    c.execute("SELECT digest(''::text,'sha256')")
+    c.execute('SET LOCAL ROLE '+OWNER)
+    facts=c.execute('SELECT '+MODULE_FILES+' AS facts').fetchone()['facts']
+    assert facts['schemaVersion']=='aos.native-module-file-observation/v1'
+    assert facts['mappedImageProvenance'] is False and facts['executionAllowed'] is False
+    paths=module_paths(c)
+    assert [row['path'] for row in facts['files']]==paths
+    for row in facts['files']:
+        if row['virtual']:
+            assert row['path']=='virtual:linux-vdso.so.1' and row['sha256'] is None
+            continue
+        assert row['sha256']==subprocess.check_output(['docker','exec',lab['name'],'sha256sum',row['path']],text=True).split()[0]
+        fields=subprocess.check_output(['docker','exec',lab['name'],'stat','-c','%d %i %s',row['path']],text=True).split()
+        assert (row['device'],row['inode'],row['bytes'])==(fields[0],fields[1],int(fields[2]))
+    assert c.execute('SELECT '+MODULE_FILES+' AS facts').fetchone()['facts']==facts
+    store(proof,native_file_hashes_match_independent_disk=True,repeated_file_observation_stable=True,module_file_facts=facts)
 
 
 def backend_map_paths(c,lab):
@@ -278,3 +316,36 @@ def test_native_modules_leave_original_pending_queue_unchanged(native_module_lab
     c.execute('ROLLBACK TO SAVEPOINT queue_drain')
     assert queue()==[oid]
     store(proof,new_binary_original_pending_api_native_verified=True,module_observation_does_not_drain_events=True,savepoint_pending_restored=True)
+
+
+def test_native_module_files_observe_changed_copy_and_reject_oversize(native_module_lab):
+    """Only a unique retained test copy is changed; mapped-code authority stays false."""
+    import subprocess
+    c,lab,spec,proof=native_module_lab
+    copied='/tmp/aos_order_file_facts_'+uuid.uuid4().hex+'.so'
+    subprocess.run(['docker','exec',lab['name'],'cp',spec['foreign_library'],copied],check=True)
+    schema='test_owned_file_facts_'+uuid.uuid4().hex
+    c.execute('CREATE SCHEMA '+schema+' AUTHORIZATION aos_app')
+    c.execute(sql.SQL('CREATE FUNCTION '+schema+".uninvoked(oid,oid,boolean) RETURNS void AS {},'aos_test_order_arm' LANGUAGE c STRICT VOLATILE SET search_path=pg_catalog").format(sql.Literal(copied)))
+    c.execute('REVOKE ALL ON FUNCTION '+schema+'.uninvoked(oid,oid,boolean) FROM PUBLIC')
+    c.execute('SET LOCAL ROLE '+OWNER)
+    def copied_fact():
+        facts=c.execute('SELECT '+MODULE_FILES+' AS facts').fetchone()['facts']
+        assert facts['mappedImageProvenance'] is False
+        return next(row for row in facts['files'] if row['path']==copied)
+    before=copied_fact()
+    assert before['sha256']==spec['foreign_library_sha256']
+    subprocess.run(['docker','exec',lab['name'],'sh','-c','printf "file-facts-test" >> "$1"','append-test',copied],check=True)
+    after=copied_fact()
+    assert after['sha256']!=before['sha256'] and after['bytes']==before['bytes']+15
+    assert after['sha256']==subprocess.check_output(['docker','exec',lab['name'],'sha256sum',copied],text=True).split()[0]
+    subprocess.run(['docker','exec',lab['name'],'truncate','-s',str(257*1024*1024),copied],check=True)
+    c.execute('SAVEPOINT oversize_file')
+    with pytest.raises(psycopg.errors.InternalError_,match='SHARED_ADMISSION_NATIVE_MODULE_FILE_REQUIRED'):
+        copied_fact()
+    c.execute('ROLLBACK TO SAVEPOINT oversize_file')
+    # Restore only this copy's appended observation size, then prove recovery.
+    subprocess.run(['docker','exec',lab['name'],'truncate','-s',str(after['bytes']),copied],check=True)
+    assert copied_fact()==after
+    assert subprocess.check_output(['docker','exec',lab['name'],'sha256sum',spec['foreign_library']],text=True).split()[0]==spec['foreign_library_sha256']
+    store(proof,changed_copy_observed=True,oversize_copy_denied=True,failed_observation_recovery=True,original_foreign_binary_exact=True,retained_test_copy=copied)

@@ -1,0 +1,4 @@
+{
+  "sha256": "964ece954ad6d4dae8678d3f7f65c3b1ea054bd29199fbdd3551d6383cc872e8",
+  "utf8": "OCI runtime exec failed: exec failed: unable to start container process: exec: \"make\": executable file not found in $PATH\n"
+}

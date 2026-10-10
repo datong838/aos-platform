@@ -1,0 +1,5 @@
+{
+  "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.c": "4b8e4759869a6302b99a2f2352b54d04c7e98fc5a565b3e11c948cf57a4fb38d",
+  "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end--0.1.sql": "efc34b0186909d1b79ffa5d076886eaf9910c166ae38a0c66ff9084a88527d21",
+  "services/aos-api/tests/aip/test_shared_parent_native_ending_pg.py": "7349d65497d7ebd2aa3d51274ac2ee2b7126d799facf0fc12f2d91a2d5405e8a"
+}

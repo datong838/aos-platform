@@ -1,0 +1,15 @@
+{
+  "cluster": "7694680278363095064",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "library": "/tmp/aos_admission_modules_26b54282f7684f2a8269003ef7989a5f.so",
+  "library_sha256": "6af1fd2d3804a3ecbe574f7be3ce760bcb0878b6746ad7fad1b76c61b80e9a79",
+  "source_hashes": {
+    "aos_admission_end.c": "4b8e4759869a6302b99a2f2352b54d04c7e98fc5a565b3e11c948cf57a4fb38d",
+    "Makefile": "56080f2509ebb5f5d5de7f1b2567c0478d3c37fcbc9a9915c547a1073bb48d5d",
+    "aos_admission_end.control": "786f5ff9b0848d21160fabb996bc3b43086d462ab7deb74a598808e048b0e750",
+    "aos_admission_end--0.1.sql": "efc34b0186909d1b79ffa5d076886eaf9910c166ae38a0c66ff9084a88527d21"
+  },
+  "evidence": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/module-file-facts-1768",
+  "foreign_library": "/tmp/aos_order_19c98c11c71b44ffa9f8b6a33e0b4573.so",
+  "foreign_library_sha256": "0f22fb884fd06f27324f06316cf1c1caba9968ebb2ac0523b43e7caeeeec5e0c"
+}

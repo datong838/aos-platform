@@ -1,0 +1,19 @@
+{
+  "authority": "AOS-001768",
+  "native_tests": "7 passed, 4 deselected; no skips",
+  "new_function_rollback_absent": true,
+  "old_pending_and_paths_logic_unchanged": true,
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "formal_database_changed": false,
+  "limitations": [
+    "disk bytes only, no mapped-image provenance",
+    "complete ending arm/callback/RI fixedpoint/currentSource/finalclock/native positive COMMIT remain"
+  ],
+  "watcher_error": "ValueError: not a code file; extension checkpoint rejected by current watcher suffix gate",
+  "files": {
+    "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.c": "ec164f3f080a68c559e53df3b86505fe5bf9035c137dbcdeef84612b2b26acf0",
+    "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end--0.1.sql": "c61f73be13948a1d4656d98bcdb44d8bffde14a6f4650ac8cb9fb821a33ccdee",
+    "services/aos-api/tests/aip/test_shared_parent_native_ending_pg.py": "29dd55aae152aeb8c99c45aa568c73213c6ede4091c6f48d93821082200d2962"
+  }
+}
