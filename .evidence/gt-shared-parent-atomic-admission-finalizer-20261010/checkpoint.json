@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001720",
+  "authority_revision": "AOS-001721",
   "task_base_revision": "AOS-001698",
-  "step": "native-origin-compiled-and-no-grant-positive-origin-persisted-ledger-delegate-endchannel-next",
+  "step": "native-original-positive-verified-persisted-ledger-narrow-delegate-endchannel-next",
   "evidence_files": [
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/implementation-plan-1698.md",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/current-native-certificate-reference-1699.json",
@@ -26,7 +26,10 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/description-kernel-context-sync-1719.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-risk-review-1719.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-risk-native-readback-1719.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-risk-context-sync-1720.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-risk-context-sync-1720.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-positive-verification-1720.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-positive-1720-r6/independent-readback.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/origin-positive-context-sync-1721.json"
   ],
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
