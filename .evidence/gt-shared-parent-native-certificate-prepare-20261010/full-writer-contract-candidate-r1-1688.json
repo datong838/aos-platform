@@ -1,0 +1,188 @@
+{
+  "authority": "AOS-001688",
+  "source_generator_sha256": "a71944ef653421b7e38038fdf99de3b244cc3a793ebf0f606c0e66d63e8c6bb0",
+  "full_preparation_candidate_events": [
+    {
+      "relation": "aos_model_eval_execution_private.manifest",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.certificate_epoch",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.executor_certificate",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.identity_epoch",
+      "operation": "UPDATE"
+    },
+    {
+      "relation": "aos_model_eval_issuer_private.shared_parent_certificate_identity_binding",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.account_guard",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.account_guard",
+      "operation": "UPDATE"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.call_occupation",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.call_occupation_event",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.parent_debit_guard",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.parent_debit_guard",
+      "operation": "UPDATE"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_call_occupation",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_judge_intent",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "public.aip_budget_bucket",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "public.aip_budget_bucket",
+      "operation": "UPDATE"
+    },
+    {
+      "relation": "public.aip_budget_cost_runtime_fence",
+      "operation": "UPDATE"
+    },
+    {
+      "relation": "public.aip_model_eval_budget_reservation",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "public.aip_model_eval_budget_reservation_bucket",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "public.aip_model_judge_budget_reservation",
+      "operation": "INSERT"
+    },
+    {
+      "relation": "public.aip_model_judge_budget_reservation_bucket",
+      "operation": "INSERT"
+    }
+  ],
+  "expected_finalization_guards": [
+    {
+      "generator": "occupation_parent_debit_statements",
+      "name": "require_joint_finalization",
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "source_sql_sha256": "2a14f50481c7da2ebc134238b77afafa2ef520d3353c6fcbfb4c6cb659ce1e69"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "name": "no_unfinalized_judge_intent",
+      "relation": "aos_physical_capacity_occupation_private.prepared_judge_intent",
+      "source_sql_sha256": "a8c89b5af61197d15b3e4a342f535265a6eff61aa1b578c7288f7ca6d407edba"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "name": "no_unfinalized_plan_risk",
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "source_sql_sha256": "a1a8ba892cb504c8308db34b6c2d5a181a207d868a6375fff40f3313106f2d3f"
+    },
+    {
+      "generator": "occupation_prepared_call_statements",
+      "name": "require_joint_finalization",
+      "relation": "aos_physical_capacity_occupation_private.prepared_call_occupation",
+      "source_sql_sha256": "5a6247c8d6b48ef35d7e7d5d60e28da9e12f38968488c0437e729bbba9873502"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "name": "require_occupation_finalization",
+      "relation": "aos_physical_capacity_occupation_private.call_occupation",
+      "source_sql_sha256": "fa04e4b40cedb0105b317c14813d02af5cf880671ab7d00b86010c496c28778a"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "name": "require_occupation_event_finalization",
+      "relation": "aos_physical_capacity_occupation_private.call_occupation_event",
+      "source_sql_sha256": "6fab30295f8a265e437470d9430aa3b070a75ec8b65d05ee4303c241e7644797"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "name": "no_unfinalized_shared_description",
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "source_sql_sha256": "a41fef35c67e4821e1aa5dec4cee2e8e66ebfd1a7e87e5269bb3277dd41fbb6f"
+    }
+  ],
+  "source_constraint_name_collision_groups": [
+    {
+      "schema": "aos_physical_capacity_occupation_private",
+      "name": "require_joint_finalization",
+      "relations": [
+        "aos_physical_capacity_occupation_private.prepared_parent_debit",
+        "aos_physical_capacity_occupation_private.prepared_call_occupation"
+      ]
+    }
+  ],
+  "source_call_graph": {
+    "target_intent": [
+      "prepare_capacity_execution_intent",
+      "prepare_capacity_input_parent_debit",
+      "prepare_capacity_case_parent_debit",
+      "prepare_capacity_parent_debit"
+    ],
+    "judge_intent": [
+      "prepare_capacity_judge_execution_intent",
+      "prepare_capacity_judge_parent_debit"
+    ],
+    "target_ledger": [
+      "prepare_capacity_target_occupation",
+      "prepare_capacity_target_call"
+    ]
+  },
+  "missing_runtime_judge_call_producer": true,
+  "judge_intent_state": "awaiting_target_result",
+  "ledger_state": "prepared_only",
+  "counts_as_inflight": false,
+  "complete_execution_writer_inventory": false,
+  "complete_event_closure": false,
+  "actual_native_combined_matrix_run": false,
+  "execution_allowed": false
+}

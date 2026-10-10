@@ -1,0 +1,933 @@
+{
+  "authority": "AOS-001688",
+  "identity": {
+    "database": "aos_test_616a4d9f71e0_ti4_test",
+    "cluster": "7694680278363095064",
+    "version": "16.14",
+    "readonly": "on"
+  },
+  "original_source_sha256": "a71944ef653421b7e38038fdf99de3b244cc3a793ebf0f606c0e66d63e8c6bb0",
+  "functions": [
+    {
+      "generator": "occupation_account_guard_statements",
+      "signature": "public.capacity_occupation_source_fact(bytea,jsonb)",
+      "expected_body_sha256": "ad2b82a372ad7263ddfefe41771caf8567abac7a4e8ea4a49ca3993be7004b80",
+      "installed": false
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "signature": "public.prepare_capacity_occupation_account_guard(bytea,jsonb)",
+      "expected_body_sha256": "bb49a54d652e8d0646e32d2053f03ecd7d5f7f0cc774d84d4a6ee4825427a5c0",
+      "installed": false
+    },
+    {
+      "generator": "occupation_eval_fact_statements",
+      "signature": "public.capacity_occupation_eval_fact(bytea,jsonb,uuid,text,text)",
+      "expected_body_sha256": "000ffcb5d54d55a40f1dbf170205696be32c99106088f46a1d0559793b889a82",
+      "installed": false
+    },
+    {
+      "generator": "occupation_eval_fact_statements",
+      "signature": "public.read_capacity_occupation_eval_fact(bytea,jsonb,uuid,text,text)",
+      "expected_body_sha256": "ec7ac36116e9843b87a8031afed748c032f709a44c919acc8fa7c5b35a302ab3",
+      "installed": false
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "signature": "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+      "expected_body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "installed": true,
+      "actual_body_sha256": "1e4013ae80395514a6383d3d4f3bb2c42af036f74865118c2d0f76bc40693953",
+      "exact_original_body_match": true,
+      "actual_catalog": {
+        "signature": "aos_physical_capacity_occupation_private.reject_unfinalized_parent_debit()",
+        "owner": "aos_physical_capacity_occupation_owner",
+        "security_definer": true,
+        "config": [
+          "search_path=pg_catalog"
+        ]
+      }
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "signature": "public.prepare_capacity_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint)",
+      "expected_body_sha256": "e9d0fa1cf6f095161b355f250e3bc81be0e089876671cd468f17251c009d46e3",
+      "installed": false
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "signature": "public.capacity_occupation_eval_case_fact(bytea,jsonb,uuid,text,text,bytea,text)",
+      "expected_body_sha256": "ee12d3638c8a8f0c24badee5043efacfc1c176780789d0bbb9b71537a1e59b5a",
+      "installed": false
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "signature": "public.prepare_capacity_case_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint,bytea,text)",
+      "expected_body_sha256": "4ab87d54bf28184d0176176da517895aa438b5d421ab44870b3790c9a287963b",
+      "installed": false
+    },
+    {
+      "generator": "occupation_input_binding_statements",
+      "signature": "public.prepare_capacity_input_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint,bytea,text,bytea)",
+      "expected_body_sha256": "4d7bf58f1cbfb252e341a6e90c389093cae7c17bf4998f1c898febe5efadebb4",
+      "installed": false
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "signature": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+      "expected_body_sha256": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda",
+      "installed": true,
+      "actual_body_sha256": "42cb405e2d673f3a9ee158b09c562aae2a8e1652403de0af75b20dc174e13cda",
+      "exact_original_body_match": true,
+      "actual_catalog": {
+        "signature": "aos_physical_capacity_occupation_private.immutable_prepared_intent()",
+        "owner": "aos_physical_capacity_occupation_owner",
+        "security_definer": false,
+        "config": [
+          "search_path=pg_catalog"
+        ]
+      }
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "signature": "public.prepare_capacity_execution_intent(bytea,jsonb,uuid,text,text,uuid,bigint,bytea,text,bytea,uuid)",
+      "expected_body_sha256": "7433a25d209230cb3536d736094866e49ba453c776f801e449383edb0b6f34b7",
+      "installed": false
+    },
+    {
+      "generator": "occupation_judge_fact_statements",
+      "signature": "public.capacity_occupation_judge_fact(bytea,jsonb,uuid,text,text)",
+      "expected_body_sha256": "5584d72f66154eb42f842b9fd2b7308173d831be052feadd935264f018240e06",
+      "installed": false
+    },
+    {
+      "generator": "occupation_judge_fact_statements",
+      "signature": "public.read_capacity_occupation_judge_fact(bytea,jsonb,uuid,text,text)",
+      "expected_body_sha256": "c3223b34835849b59cde4ab32d54c1f4780e6aff11cf0239b78381be10b72c1d",
+      "installed": false
+    },
+    {
+      "generator": "occupation_judge_parent_debit_statements",
+      "signature": "public.prepare_capacity_judge_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint,text)",
+      "expected_body_sha256": "fe1c25b818b934e7f1c5abc2a3e8e4cf2ee2f55cfe00f6e62c2112e8e3759a53",
+      "installed": false
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "signature": "public.prepare_capacity_judge_execution_intent(bytea,jsonb,uuid,text,text,uuid,bigint,text,uuid,uuid)",
+      "expected_body_sha256": "f5443d804127e9e95495306b134cac9367b4bd8727e75220a246a4194a1be240",
+      "installed": false
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "signature": "public.capacity_occupation_plan_risk_fact(bytea,jsonb,uuid,text,text,uuid,text,text)",
+      "expected_body_sha256": "3a5aace830d9403807f7a20383322a9a72e3f6b052dfbf415a8bf40cbfe69f39",
+      "installed": true,
+      "actual_body_sha256": "3a5aace830d9403807f7a20383322a9a72e3f6b052dfbf415a8bf40cbfe69f39",
+      "exact_original_body_match": true,
+      "actual_catalog": {
+        "signature": "capacity_occupation_plan_risk_fact(bytea,jsonb,uuid,text,text,uuid,text,text)",
+        "owner": "aos_runtime",
+        "security_definer": true,
+        "config": [
+          "search_path=pg_catalog"
+        ]
+      }
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "signature": "public.prepare_capacity_plan_risk(bytea,jsonb,uuid,text,text,uuid,text,text,uuid)",
+      "expected_body_sha256": "eb0a4f44f6a85c3cfc3783a135ecafa36564a86ab5f06381da9f16e34d8a5b4a",
+      "installed": true,
+      "actual_body_sha256": "eb0a4f44f6a85c3cfc3783a135ecafa36564a86ab5f06381da9f16e34d8a5b4a",
+      "exact_original_body_match": true,
+      "actual_catalog": {
+        "signature": "prepare_capacity_plan_risk(bytea,jsonb,uuid,text,text,uuid,text,text,uuid)",
+        "owner": "aos_physical_capacity_occupation_owner",
+        "security_definer": true,
+        "config": [
+          "search_path=pg_catalog"
+        ]
+      }
+    },
+    {
+      "generator": "occupation_target_call_statements",
+      "signature": "public.prepare_capacity_target_call(bytea,jsonb,uuid,uuid,uuid)",
+      "expected_body_sha256": "e3f2c707ba2beca2aa89bd228d4cd1b3d4813a4f0c21c6ab00f161d37c168ea8",
+      "installed": false
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "signature": "public.prepare_capacity_target_occupation(bytea,jsonb,uuid,uuid,uuid)",
+      "expected_body_sha256": "97a0f548ce5882a9773cfb2fcfa7c1d1599b1bbbc513670978514fc3b3e20f1c",
+      "installed": false
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "signature": "public.prepare_capacity_shared_risk_description(bytea,jsonb,uuid,jsonb,text)",
+      "expected_body_sha256": "3b2f935a8c5c9eea85ba7c9f164b181ead779ae3e65351dfd024adb1de8265b4",
+      "installed": true,
+      "actual_body_sha256": "3b2f935a8c5c9eea85ba7c9f164b181ead779ae3e65351dfd024adb1de8265b4",
+      "exact_original_body_match": true,
+      "actual_catalog": {
+        "signature": "prepare_capacity_shared_risk_description(bytea,jsonb,uuid,jsonb,text)",
+        "owner": "aos_physical_capacity_occupation_owner",
+        "security_definer": true,
+        "config": [
+          "search_path=pg_catalog"
+        ]
+      }
+    }
+  ],
+  "tables": [
+    {
+      "generator": "occupation_account_guard_statements",
+      "relation": "aos_physical_capacity_occupation_private.account_guard",
+      "installed": true
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "relation": "aos_physical_capacity_occupation_private.parent_debit_guard",
+      "installed": true
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "relation": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "installed": true
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "relation": "aos_physical_capacity_occupation_private.case_input_binding",
+      "installed": true
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "relation": "aos_physical_capacity_occupation_private.prepared_execution_intent",
+      "installed": true
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "relation": "aos_physical_capacity_occupation_private.prepared_judge_intent",
+      "installed": false
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "relation": "aos_physical_capacity_occupation_private.prepared_plan_risk",
+      "installed": true
+    },
+    {
+      "generator": "occupation_prepared_call_statements",
+      "relation": "aos_physical_capacity_occupation_private.prepared_call_occupation",
+      "installed": false
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "relation": "aos_physical_capacity_occupation_private.call_occupation",
+      "installed": false
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "relation": "aos_physical_capacity_occupation_private.call_occupation_event",
+      "installed": false
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "relation": "aos_physical_capacity_occupation_private.prepared_shared_risk_description",
+      "installed": true
+    }
+  ],
+  "generated_statement_hashes": [
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "406315d1b8a91f0c1854e2fc8d0e2ee2b5f3fd453f5614d485e98981c68f25d5"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "e67fb11553d4a343ecf8b89bb09d7955206dd32fa832c30c75b20c45264fe760"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "d00066993d7ed0047b017d00cb1f0c1b39af881c541cb42e21ff8ca88608f71e"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "4fd054d30989c7d2c89ee8b25605554c699cf0e7f7a03be473aab2bd3a92f2c1"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "f6371e028b5c25dc91a0e9d4e31a505a32872117d84b5d985b97dcd3f1f073b9"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "5c2063a25d6bae2b4fee0e4d8f08bff3bcefc13a4665e6fb462e22e99cb3a163"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "1766c914fb7514a799c4772b9b62e1bce5668573850fd8750b87622b11811c10"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "849767d73ddac714abc1498309914fe5cc8f4dcf4f2ee83ca05678e754bf839c"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "faba2de62919198c0e6748b6ad77e3e3500e7b4176f131b7935fee15bf6ef100"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "390d8ffbf4debaf4e51f542d513d97b7a3c2b368c5902ae13b546aa628ae4df0"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "16cfa14d38da413bd0583cf461705bbbc419186b0ea61f5719837059842f4fe0"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "9febc37bd1c21a4cb2b1b33ebf1e611a882403caf66fa0d24b7c43463294d48a"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "22968c22b7e035b7ea7970b3fa676ed7bf58646bffef2852c7f6c6f7b9ac4873"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "c6f34b7afc491afb9e07ccae4beb639bb0ee8102df83cc8df982399e5b5993d7"
+    },
+    {
+      "generator": "occupation_account_guard_statements",
+      "sha256": "e60da7bf3b96bfa7a273936509feba327db35cb515b4b02578cb38a0a186b8f9"
+    },
+    {
+      "generator": "occupation_eval_fact_statements",
+      "sha256": "a93128593e3367b12e0531a7d3f36b83bf19b1e17f08b9e3b057feb365db301f"
+    },
+    {
+      "generator": "occupation_eval_fact_statements",
+      "sha256": "d25673ccc415c97227d43050c12205c5d5be038332c6794bdfb775b4a589c607"
+    },
+    {
+      "generator": "occupation_eval_fact_statements",
+      "sha256": "36a090e5e8a1e0d0d1a95395e3a598bcb6f7527d3aaf02c1b2545d81b4c5d307"
+    },
+    {
+      "generator": "occupation_eval_fact_statements",
+      "sha256": "9ab33237da3458b7e5430a8577cc4cb6d42d53dc5f0f9a12fbf2df95591fe965"
+    },
+    {
+      "generator": "occupation_eval_fact_statements",
+      "sha256": "120d51ee10194737973777fa15c8f2e0b63c47cceb4e8d91e706af0d4289446f"
+    },
+    {
+      "generator": "occupation_eval_fact_statements",
+      "sha256": "71feb6a0f259c9aef4fd3e84017b331404572cb9b6b9b535e5e48bb70683efe6"
+    },
+    {
+      "generator": "occupation_eval_fact_statements",
+      "sha256": "532460cb4c3ccc245db6d993c08d249f7ba7289e39c6cb63159d389accd29fed"
+    },
+    {
+      "generator": "occupation_eval_fact_statements",
+      "sha256": "2657cebd58cf3c8dd479712e023d068c3d6256606413cbf527c4b731acdee512"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "bd9faaf0e886432c6cababa96a152de29716eb0c1985297460da39b86b9a14c1"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "594539ffc5ac97b18e5f877f62b6cd37620e348bc6ffe8355829b7c787bfef1d"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "acec3547886f6dc6ffa1e9daf706ad46f0540de662a1b24cec321d7cd9510476"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "67c7ac2f38807205a00db8fbdceba59d92fb743cc41d7c3f84ee5a4d7700817c"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "f83e204c18b1b31f0321795221b23ea90ef848d54528fa7c4f62eaad728a6199"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "ea65d303327dcb59e0de2f079e2eff0d0e2d8c88b82a644c71adca7d1b262552"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "e6d54a96cce50b323029a6cbd0976e80514830d9d8c4e9ef551cc9832e30c18a"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "68fd9348e5493551a227bd282572396a66e64bc171a330d0297fa8f58653dd7f"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "8803991976fa4e4f83da868a70bba1f80de627d9c51d4bca16e29e09d953d925"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "5274141d74e97dade4b6f44c17cc6246812cf59ec4c5599a2c1d9253280124d5"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "1672c9d4b7663360ae2320648e010fad35c2de1a712c3d98914520efbcd0cf8f"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "5b44704aa66f20c6d29435f00424efc6bea45490c1c471e5e9b36b8157286c2c"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "3a9cd6282a18d4485a128928e98eeba897e44f796948df2582da2aa449adda76"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "d781e233f1f76f48a27257b7992ecda4864c21db795cd0a6af6a67c720b82ac4"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "9e4cc7d5c20ff3772d86baac0d5c8c67790d55b99a86e4505a0eec45200021d8"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "2a14f50481c7da2ebc134238b77afafa2ef520d3353c6fcbfb4c6cb659ce1e69"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "08c5f5d835dba8f4029cc45698d802e948ddca4a9f3f784bbd87fe9f11c395a4"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "de48c3884d80367afbf2b09142c391c840ebf8584428e75144671468ac8cda2a"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "729e6618cd07c9a21477c64ae8b777e1e00d9ee658c2fb9e78d8864a139252e1"
+    },
+    {
+      "generator": "occupation_parent_debit_statements",
+      "sha256": "a0be5c27beb9ea71c74e152523f7866b213c7cc4d2d728138cb116f71b653881"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "816add9b624de2ec70970cae08adbb86a233700c33c835d1bbfefcb61b7ce27b"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "3ef3fbcec9be3f670dae6ade16d5ce9332a74592e2497ec705c54b0cf8e51fe6"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "bddc3035fc0bae1a60e9070a673c44a855b84436d2653b6bbf4cc9489ac6c50a"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "a6a697334051e5adad23609f5476edbc6696e2c1ec6742dfe33734dca446ab86"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "f3a06ce4e4212de4b111d9e4fa93e785cefbd2643d99a94cc3e0be4285808e8e"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "c415faf6437c5ebcdabeaf3cc1e714c10852f72f67958fa25df7a635299e2789"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "42ee6f0e55c210d35c48f24a10fccb4567789d60be8d636041cfc44ee869ef7a"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "aa56d4368db22b71042fc59b60a5476c28337121117b565aac4f779a79cd93b2"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "64e4093baf70d34859d465a87a9f0596af0ebd6a1cc2b6e2380cb8cf791a2e5e"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "7a29e0045fcc4daf3e097a89aab7e03f5c6943779292bd7f18387095986bf24b"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "6d6b21a42c3a0f257daf427f6f5a0f5c8fecde5a0b048f04b6e064741ae42413"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "199f058ec021fecef35fee839747821b4467c4eb23d5664678a470d90d3c45c7"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "8023b3309805940d17d45b966a9b15ceb1ca86e6b4fdc0184244b0f21a8f72f1"
+    },
+    {
+      "generator": "occupation_case_binding_statements",
+      "sha256": "ab5ba65e60ab3677beb36af90e494534fb32eeaa9da77aeb09e0433e7cccec03"
+    },
+    {
+      "generator": "occupation_input_binding_statements",
+      "sha256": "0addab6f9134376c514d732a1a6b825fe7d08620dbb992bcce890abeeb1561a2"
+    },
+    {
+      "generator": "occupation_input_binding_statements",
+      "sha256": "f1443a343648cae6c69f69302f6862ca8ff89b02c1265a4f92659900be7d005b"
+    },
+    {
+      "generator": "occupation_input_binding_statements",
+      "sha256": "ea57ee19b1feaeb883ebee906d324e88a7f8fc07169aadb366346686fdb70500"
+    },
+    {
+      "generator": "occupation_input_binding_statements",
+      "sha256": "439b91df7a8bd303abef8f0625b49534e0cf1801f04c4f63baf3ca659b2a82ae"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "6709e04bb9462e68a592041ef1ecbc81d789a2a9101797cbe1d4b7a3fd5425a9"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "200cda7d66660504d8940984012b71b9be1f13e9c2e768e05ab89ee1fb1d7f36"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "e2de19e27689607184e780c9434c872170b2d1bfc4b8d0b3b170f607f548f841"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "7fa91980db2deaf924361a9d59f445790586cda42a9d4690af1c11158424eaaf"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "b1144dc624e534cb2fab412588533fa1243aa57c942b596631e9e32196eea248"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "620866fb8cd068e64ec5b417a6878167ad32e03361e2514e861533ccd9959c7a"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "e61605b91bc3f0d522de2ca540a7ed406d0228beb20f266ab3f49541692e65d1"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "8d4ef1c16a4af12b242bed0fd41d85027fa2b1ddb238453872f748a96dbf725a"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "c411e646617c1d8f5adb699d1e5a6f66f3765a02f4d231ba830f30b3c96aeae8"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "302ba8995291f258cae5d1a18527648fefd5094b487f508f63e75db3bf929c08"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "ce48dcd26cc63a6e1c0da12ed05ad8322a11ec31ee02a2a38c71ad30b61b4008"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "bd2efe0d64b0d15e45b23ef7ad697f277a745ed3b64a83c841ca81d14cda6d47"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "5c9f61c825399e70360a221ae6cf2a1fa166405227fd8e5ba51a20ab5977d5d5"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "47a4960e226714c7ac7116332ccbb761f4a8ef096d27b06d812382ee8b954545"
+    },
+    {
+      "generator": "occupation_intent_statements",
+      "sha256": "e195af9dc0298e8fe2e244ed407a8ee071de3e5f8a908bf767c81e63e2889941"
+    },
+    {
+      "generator": "occupation_judge_fact_statements",
+      "sha256": "1367b021d283506c7122d6c14daeedd17e3d221937d4bfd72b8fafe03be34c89"
+    },
+    {
+      "generator": "occupation_judge_fact_statements",
+      "sha256": "3a579b83d73e696efc8058f72d6daa931fb2c5cb1db45ba68c14dd49b030a55f"
+    },
+    {
+      "generator": "occupation_judge_fact_statements",
+      "sha256": "a9203c0af9d9e17c52f8fb2a14909c1cc92a053da728009bb1cf4d93d84209c1"
+    },
+    {
+      "generator": "occupation_judge_fact_statements",
+      "sha256": "75bd5cb045cdf9908b27631bf1ca7a112ff2379d1e44378844f81c8d24517225"
+    },
+    {
+      "generator": "occupation_judge_fact_statements",
+      "sha256": "86d822577512c8675b7a5fd293f77ff33fb2942d48f68a2fbf3be546b30d149c"
+    },
+    {
+      "generator": "occupation_judge_fact_statements",
+      "sha256": "20c4c10597ac07ddb991df81ec829cb301b81dc3ef944f0a1742306d50ef2324"
+    },
+    {
+      "generator": "occupation_judge_fact_statements",
+      "sha256": "e4b247538a0a8a0597ad98e73e9d63803da7fac3efe27c4c61c3c03eba645bfb"
+    },
+    {
+      "generator": "occupation_judge_fact_statements",
+      "sha256": "ab9ee92e04549c3078520657c0d3d2128e869c8c41b3551ec59ec45f6e8a5db2"
+    },
+    {
+      "generator": "occupation_judge_parent_debit_statements",
+      "sha256": "ae2fa41b992e244aeb995a0d32664c0e30dbdc6d2b1cda63379d32bd10260ffa"
+    },
+    {
+      "generator": "occupation_judge_parent_debit_statements",
+      "sha256": "5742099896a7a690b0567fc3dc63033820a2943234f0a7b13989e0435b94da6e"
+    },
+    {
+      "generator": "occupation_judge_parent_debit_statements",
+      "sha256": "e4037ed85883bb1f7a1fe7601d7a52b909ba8c25d511b491e40dc04ea19f8148"
+    },
+    {
+      "generator": "occupation_judge_parent_debit_statements",
+      "sha256": "051d44f4991116510d407ed919e822c363c8a9555353eb6ebaf7d58ae63a5bf2"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "sha256": "5ef6160be52bae00db1d7856b3992c9b55c544d2413a9c7929231fe665766737"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "sha256": "9552bdb85dcbda9f19fb3e6f4e615099ad3ea0c2cb7edeafe00a910c97cb7916"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "sha256": "e61c06b83a8cdd42f358dd9f30e877807d299a0babf51f6bdbd6a198cc9e5971"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "sha256": "2b065c96c29efe46e88bb1dc2a56639b986bedc00fbf71ede7b602dc1ead8e55"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "sha256": "8a729457e5ab32ecb3196bd1109fd89bc37178cd556b9b6b2db574c24c187618"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "sha256": "9f8e658e2556a493fab2a8dd1a95d8efec96d502e4d6dcec595c6f9e3d861338"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "sha256": "6584012d10a0abeb7b2c17c87aa00b9ae7ca60d4bb50d6aa5a202f15d1d6206e"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "sha256": "7598eca681d70a080d77d7748ca854d5f8cf4987881cbf319573d89ab79d1be9"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "sha256": "a8c89b5af61197d15b3e4a342f535265a6eff61aa1b578c7288f7ca6d407edba"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "sha256": "5069b3d4edddcbf0d9d508ef93f633b4e796e1f9689e3e57d39927f607beef77"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "sha256": "cc8dbed95af7a1fdde62bd6a0238510fbc84350bac4986d9f10f34a0cd9b9d9f"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "sha256": "2f8de5374f417719dccb0e8e4cc4a69d6d43b26e20cfb125ccd6afc769ec4295"
+    },
+    {
+      "generator": "occupation_judge_intent_statements",
+      "sha256": "f6eef89b2057df94053ddfcdedd5a9b0fc321cceac301cb84085f700939615c1"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "a66981f306a282347d24a57b99b187757105c474ecdc93b3fa948336f804e7b3"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "833d77307b26b598df70c674c4cd2fd73f386a29ee5a1cb15b023ee19f844997"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "a842b5478e873bf143915cef0a82d580a5c40919593a9e6838e3706e480c0cbf"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "f222355dc1e9affe6b6cfbe7f7ef8be4d10121cc659ee8c298883f8ff3447ea9"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "4b395e238582c5817b08da30392922ed5aed4034bf5a32af283cf6e892eb9c7f"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "6341683a840033e94faaaf7a6a0bffe24625e58c0e01f5c34ad9d38d603452fc"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "af2d2782d2e56cf696a7cd2187aaa9390d0e04aa57282a75601d13701be49736"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "7e9a79531aa8c637ded35e65684e476417126346f0f959fb0560ea53c63cd0a9"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "a1a8ba892cb504c8308db34b6c2d5a181a207d868a6375fff40f3313106f2d3f"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "3a5fd4c6054e575e84f4c4c63faadf252c34cea1b4184b4234ec4fe164571530"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "bacff59f84170ec482550900a2ab1dbf261181b51c9fc96059d1b7120f2a7393"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "999cd95e216d503036d954588f481d1d15882db76a8486fa8695370042b2abe9"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "25cd79bf202e87c846f69df08633ddb8a89dfd666bc36ff69eab2ed058efb53e"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "61ddfb35b268fa6c0eb9bf44b79697429d5a7908ae694d9cd2e8f633b0bfd451"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "4878b66403e1566bc6b685460e86707baf8cfce61cdc676a3bedf31bb7993e71"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "72fd314e06f6133c014eb5c81ebc59fc684b9aa208b11b624457594d7f4dbdfc"
+    },
+    {
+      "generator": "occupation_plan_risk_statements",
+      "sha256": "f31635cb9a5d926eb53349989f031283df1d0d44bd4b28ebbfc5ebb73ff3ae26"
+    },
+    {
+      "generator": "occupation_prepared_call_statements",
+      "sha256": "fc6c0a76f58a64e20cbb18c270615fc18b9ecf5c65dcd33336c0c75a18d1dd4d"
+    },
+    {
+      "generator": "occupation_prepared_call_statements",
+      "sha256": "5a8095732ffa6e6813707a615194ae96587840804596b728ec4a2ed70d415062"
+    },
+    {
+      "generator": "occupation_prepared_call_statements",
+      "sha256": "d4a10134df8a2b4930bd8cb8ab0460768bf5a93b8d4e38964c50fadfb9a3fad4"
+    },
+    {
+      "generator": "occupation_prepared_call_statements",
+      "sha256": "95ffa15e31a5712ae7cb558c177ce7a72d214064f9f1dba5e2b1d4c14e66e926"
+    },
+    {
+      "generator": "occupation_prepared_call_statements",
+      "sha256": "37234aee912728309a1eed71898f086596c1701a608a16da8482f3dfdc06d932"
+    },
+    {
+      "generator": "occupation_prepared_call_statements",
+      "sha256": "3ea9911b78e084a6871e9f43cfdae68c2e7a881bc93bc321d6aac09ae1b1d189"
+    },
+    {
+      "generator": "occupation_prepared_call_statements",
+      "sha256": "cb96d6d1f2a4d01f31cd17f0f22ee775f1ef54deb9d96bb3e13ac2bab9efc719"
+    },
+    {
+      "generator": "occupation_prepared_call_statements",
+      "sha256": "78799e68c822f415255034e4cbcab360b68086fcfe55a66fe5c92cb4c3ac1df3"
+    },
+    {
+      "generator": "occupation_prepared_call_statements",
+      "sha256": "5a6247c8d6b48ef35d7e7d5d60e28da9e12f38968488c0437e729bbba9873502"
+    },
+    {
+      "generator": "occupation_target_call_statements",
+      "sha256": "2e5a543c03d24a6551cf68134a8ffef5568f3d41f8e50a25551f1c377a67c15a"
+    },
+    {
+      "generator": "occupation_target_call_statements",
+      "sha256": "d66e9eda358a011bdeeabaedcf54f1e10ce23aea54a451649db1c4c2fec45adb"
+    },
+    {
+      "generator": "occupation_target_call_statements",
+      "sha256": "6d2a100447e289f8467f1c8efe66242b2f8546f48d6f022b5041bfb50d75a2e3"
+    },
+    {
+      "generator": "occupation_target_call_statements",
+      "sha256": "5f642c88a5628a1451d21699d24c1816731886d8d4d1eb576f8d64cb2a25fefc"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "3197547e15d44571815c66b4ca9398a913a8caf04fe38a80a238a0d101fc4556"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "5bf7fe747ca25486f622fe4fa0c1852262f115f2f52a1e130bd9aaabf1987e79"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "8bbb736ce91eca2789328f4a62c9d4b822a317265f5d74d02550dc7de2d1e78f"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "28ef1bd417095b6bba6fd2803858feac2fc1a0d580942be758e1d442e6dce661"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "aef47a20b5133ada4627f345d38b70e70d88db380f3ace3a27515b468dd9e26b"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "a6803515c71d323524663e4d4d3ab79f5a3cdfa2e4c29a1c019a0915985d0c82"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "a119ebd1602dbe475023345d7e40f283a632b793716d71de8b916ef8ef7b7164"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "80da60ac9cf8b42e19b2e8e596bc5f10c60a816be55cf13dd2e92c6a73d566e9"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "6672faf20ce83d6a420018635af00b476c999269e0b9a72d93456b6ba8782452"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "fa04e4b40cedb0105b317c14813d02af5cf880671ab7d00b86010c496c28778a"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "14ce1cbc37f24700dc4c0cebfe9c1e41574146b0ca630354b356108b878d1e84"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "8ef7bb21259ebec1c26f3906bc435b144792dc3560aacdada01733632db8d73b"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "d471136e1f3d1709fc3cf831b070b37e08c503f57bbd526c23c3a72e33b074a8"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "9d411d036a5193c864d0abfc2dd8a616b6e153665dcf614ee7c96b18e458dde0"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "3f17de2053a784e4dae072414aa6d54d958a22475b504ae37925945811c6e1c7"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "624f18e223dcdb21180ae1a9014f9a6cf234d544966be2a61a57d59478e65bcf"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "ab70552541754f84d67cd0f1abf0207a1bf24550f2b626f22bb596361ecdab89"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "6fab30295f8a265e437470d9430aa3b070a75ec8b65d05ee4303c241e7644797"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "2c3b872990d6e4b1f7bf49c47350e4f24262aac263ce691da6e5ff8408fbf5f2"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "219ffc41de95eddd3ba10054ca905c6f7f91289250a3aaad4b5ac057223df9d8"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "0e8ca941a5d444f5a81ed84b8d2e1de1587b09787bb67a7d3c83e4b57a186abd"
+    },
+    {
+      "generator": "occupation_target_ledger_statements",
+      "sha256": "5daed24cb1253c254ccad98936f2164c9823cec08626cc65bde364c7033aab20"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "sha256": "611c338a5191c840adb27483659d607ae1f1dd0dc426a1c9be91feec7d21258e"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "sha256": "1a17b2b8d8a756835d5502207c7b5300c9bc1e598201297d16c16adb53f9a7bf"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "sha256": "a4efc31c7838be2689c787cba200c7641dd756e6e50184a23140b1fda6393287"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "sha256": "929064cfdb0c19ca15aa30ebeedcb0d120c7eb11635931aafa0c57103d3f97ea"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "sha256": "e294593475849dcc1a05f262928226cb821e0b44b054481bf341cf30f69828dc"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "sha256": "59ed47ff6a335f91e6ecefbbf445fc7f5bf47db8c1b70057ebc13c4c14a1b5a0"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "sha256": "d308825b634f157c1151626e278c8b041689bd14fba671573768aef573bb27fd"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "sha256": "17c278f029ef2118c942ed4222b5c4673c4db0528abe52683f8706eb0c50fc5e"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "sha256": "a41fef35c67e4821e1aa5dec4cee2e8e66ebfd1a7e87e5269bb3277dd41fbb6f"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "sha256": "96bebdc257e8b297507f23962acbce417c69e6c6ceec59740d0cf5b837af6bfb"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "sha256": "3e7f3c32ab496f10a1c7b0b5bd1f563dcc342de415c8e575905df08c1dec90a3"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "sha256": "faabb0e70439759d4aa2be1f40a286bc0d84bb6191433a937c1cab90f5ffffed"
+    },
+    {
+      "generator": "occupation_shared_risk_description_statements",
+      "sha256": "39c08729a53381cc7237d542dadad90fca64e6b1af8b4dbb015b27b718747132"
+    }
+  ],
+  "missing_functions": [
+    "public.capacity_occupation_source_fact(bytea,jsonb)",
+    "public.prepare_capacity_occupation_account_guard(bytea,jsonb)",
+    "public.capacity_occupation_eval_fact(bytea,jsonb,uuid,text,text)",
+    "public.read_capacity_occupation_eval_fact(bytea,jsonb,uuid,text,text)",
+    "public.prepare_capacity_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint)",
+    "public.capacity_occupation_eval_case_fact(bytea,jsonb,uuid,text,text,bytea,text)",
+    "public.prepare_capacity_case_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint,bytea,text)",
+    "public.prepare_capacity_input_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint,bytea,text,bytea)",
+    "public.prepare_capacity_execution_intent(bytea,jsonb,uuid,text,text,uuid,bigint,bytea,text,bytea,uuid)",
+    "public.capacity_occupation_judge_fact(bytea,jsonb,uuid,text,text)",
+    "public.read_capacity_occupation_judge_fact(bytea,jsonb,uuid,text,text)",
+    "public.prepare_capacity_judge_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint,text)",
+    "public.prepare_capacity_judge_execution_intent(bytea,jsonb,uuid,text,text,uuid,bigint,text,uuid,uuid)",
+    "public.prepare_capacity_target_call(bytea,jsonb,uuid,uuid,uuid)",
+    "public.prepare_capacity_target_occupation(bytea,jsonb,uuid,uuid,uuid)"
+  ],
+  "drifted_function_bodies": [],
+  "missing_tables": [
+    "aos_physical_capacity_occupation_private.prepared_judge_intent",
+    "aos_physical_capacity_occupation_private.prepared_call_occupation",
+    "aos_physical_capacity_occupation_private.call_occupation",
+    "aos_physical_capacity_occupation_private.call_occupation_event"
+  ],
+  "ddl_executed": false,
+  "full_preparation_installed": false,
+  "finalizer_installed": false,
+  "execution_allowed": false
+}

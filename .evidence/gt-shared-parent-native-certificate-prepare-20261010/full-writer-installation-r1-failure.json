@@ -1,0 +1,8 @@
+{
+  "error": "AssertionError",
+  "generator": "occupation_parent_debit_statements",
+  "reason": "literal zero-argument trigger function rejected by audit extractor",
+  "failed_before_database_connection": true,
+  "database_operations": 0,
+  "execution_allowed": false
+}
