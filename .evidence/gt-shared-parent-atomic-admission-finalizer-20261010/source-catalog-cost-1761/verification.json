@@ -50,5 +50,10 @@
   "source_issued_or_replayed": false,
   "execution_allowed": false,
   "full_task_delivered": false,
-  "goal_complete": false
+  "goal_complete": false,
+  "exact_candidate_body_storage": {
+    "path": "candidate-body.json",
+    "lossless_original_prosrc": true,
+    "whitespace_check_corrected_without_changing_executed_body": true
+  }
 }

@@ -30,7 +30,7 @@ with psycopg.connect(**params,dbname=database) as c:
  body=c.execute('SELECT prosrc FROM pg_proc WHERE oid=%s::regprocedure',(original,)).fetchone()[0]
  pattern=r"\(has_column_privilege\(owner_oid,c\.oid,a\.attnum,'INSERT,REFERENCES'\)\s+OR has_column_privilege\(owner_oid,c\.oid,a\.attnum,'UPDATE'\)\)"
  candidate,n=re.subn(pattern,"EXISTS(SELECT 1 FROM aclexplode(a.attacl) acl WHERE acl.grantee IN (owner_oid,0::oid) AND acl.privilege_type IN ('INSERT','REFERENCES','UPDATE'))",body);assert n==2
- (OUT/'candidate-body.sql').write_text(candidate)
+ (OUT/'candidate-body.json').write_text(json.dumps({'prosrc':candidate,'sha256':hashlib.sha256(candidate.encode()).hexdigest()},indent=2)+'\n')
  c.execute('CREATE FUNCTION '+name+' RETURNS void LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog AS $cost$'+candidate+'$cost$')
  c.execute('REVOKE ALL ON FUNCTION '+name+' FROM PUBLIC')
  c.execute('CREATE TABLE public.test_owned_acl_cost_table(v integer)')
