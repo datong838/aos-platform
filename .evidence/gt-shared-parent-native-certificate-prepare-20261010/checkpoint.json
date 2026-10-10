@@ -4,15 +4,15 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-native-certificate-prepare-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001697",
+  "authority_revision": "AOS-001698",
   "task_base_revision": "AOS-001677",
-  "step": "native-worker-committed-intent-unknown-risk-protocol-next",
+  "step": "v3-exact-signed-target-judge-input-native-consumer-next",
   "evidence_files": [
     ".evidence/gt-shared-parent-native-certificate-prepare-20261010/task.json",
     ".evidence/gt-shared-parent-native-certificate-prepare-20261010/implementation-plan.md",
     ".evidence/gt-shared-parent-native-certificate-prepare-20261010/pure-result-r4.json",
     ".evidence/gt-shared-parent-native-certificate-prepare-20261010/independent-core-readback-r6.json",
-    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/current-native-certificate-reference-1697.json"
+    ".evidence/gt-shared-parent-native-certificate-prepare-20261010/current-native-certificate-reference-1698.json"
   ],
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py",

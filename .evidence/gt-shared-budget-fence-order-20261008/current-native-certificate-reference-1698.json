@@ -1,0 +1,38 @@
+{
+  "authority_revision": "AOS-001698",
+  "task": "gt-shared-budget-fence-order-20261008",
+  "head": "394f5c35631aeff9bb4d55ed6a7da7dfae79b098",
+  "execution_allowed": false,
+  "root_provenance_verified": false,
+  "full_task_delivered": false,
+  "references": [
+    {
+      "path": ".evidence/gt-shared-budget-fence-order-20261008/current-native-certificate-reference-1697.json",
+      "sha256": "26e2e75180889dfdad8b0cc558d2660f180b6f66065d5cadaaa7a557f693c9a6"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/shared-judge-input-plan-1697.md",
+      "sha256": "6ac6ab9f2c805e17f1eb8b4c14a78c8954754530511885e0c9ca0b4ea0728676"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/shared-judge-input-review-1697.md",
+      "sha256": "e2f26cb367ba870b823e53b699b001e4559b77ac97ac1db7b50009222e691d2c"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/shared-judge-input-diagnosis-1697.md",
+      "sha256": "0ee9bb6a6b391cc424d64c85c4a4e22a85adbddde874743b432351d8f9701b90"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/shared-judge-input-independent-1697.json",
+      "sha256": "8db8bd1c13c24c112f4a1f2d36b68b8b8766690264aae97ffec63acbc2ab0bf5"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/shared-judge-input-result-r3-1697.json",
+      "sha256": "7f4a19f4c7ab900d0e7ddddaae10fb01249c95b54f21103d6db109f4659271a6"
+    },
+    {
+      "path": ".evidence/gt-model-typed-proof-20261008/shared-judge-input-test-r3-1697.py",
+      "sha256": "d25104c3a485f202f5546eda6457146fee4d4d7b754facc48b975ef16f9100c5"
+    }
+  ]
+}
