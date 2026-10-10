@@ -1,0 +1,17 @@
+{
+  "database": "aos_test_c626967a8779_ti4_test",
+  "failure": "fixture KeyError immutable: original native return is physicalTokens",
+  "rows_zero": {
+    "aos_shared_parent_admission_private.pending_origin": 0,
+    "aos_shared_parent_admission_private.end_authority": 0,
+    "aos_shared_parent_physical_private.initial_window_obligation": 0,
+    "aos_shared_parent_physical_private.initial_call_authority": 0,
+    "aos_shared_parent_physical_private.initial_target_obligation": 0,
+    "aos_shared_parent_physical_private.target_intent": 0,
+    "aos_shared_parent_physical_private.judge_dependency": 0,
+    "aos_physical_capacity_occupation_private.prepared_parent_debit": 0
+  },
+  "role_restored": true,
+  "component_pass": false,
+  "full_task_delivered": false
+}

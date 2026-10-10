@@ -1,0 +1,567 @@
+{
+  "authority": "AOS-001734",
+  "database": "aos_test_e9920acbd5fd_ti4_test",
+  "original_debit_native_at_call_body_exact": {
+    "signature": "public.prepare_capacity_parent_debit(bytea,jsonb,uuid,text,text,uuid,bigint)",
+    "owner": "aos_physical_capacity_occupation_owner",
+    "body_sha256": "e9d0fa1cf6f095161b355f250e3bc81be0e089876671cd468f17251c009d46e3",
+    "runtime_table_dml": false
+  },
+  "current_debit_function": "absent after original fixture cleanup; not current installed body verification",
+  "legacy_prepared_rows_zero": true,
+  "role_restored": true,
+  "node_catalog": [
+    {
+      "schema": "aos_shared_parent_admission_private",
+      "table_name": "end_authority",
+      "tgname": "RI_ConstraintTrigger_c_5051782",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051782\" AFTER INSERT ON aos_shared_parent_admission_private.end_authority FROM aos_shared_parent_admission_private.pending_origin NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()"
+    },
+    {
+      "schema": "aos_shared_parent_admission_private",
+      "table_name": "end_authority",
+      "tgname": "RI_ConstraintTrigger_c_5051783",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051783\" AFTER UPDATE ON aos_shared_parent_admission_private.end_authority FROM aos_shared_parent_admission_private.pending_origin NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_admission_private",
+      "table_name": "end_authority",
+      "tgname": "exact_authority",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER exact_authority BEFORE INSERT ON aos_shared_parent_admission_private.end_authority FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_admission_private.check_end_authority()"
+    },
+    {
+      "schema": "aos_shared_parent_admission_private",
+      "table_name": "end_authority",
+      "tgname": "immutable_authority",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER immutable_authority BEFORE DELETE OR UPDATE ON aos_shared_parent_admission_private.end_authority FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_admission_private.immutable_pending_origin()"
+    },
+    {
+      "schema": "aos_shared_parent_admission_private",
+      "table_name": "end_authority",
+      "tgname": "no_truncate_authority",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER no_truncate_authority BEFORE TRUNCATE ON aos_shared_parent_admission_private.end_authority FOR EACH STATEMENT EXECUTE FUNCTION aos_shared_parent_admission_private.immutable_pending_origin()"
+    },
+    {
+      "schema": "aos_shared_parent_admission_private",
+      "table_name": "end_authority",
+      "tgname": "require_complete_authority_end",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgisinternal": false,
+      "definition": "CREATE CONSTRAINT TRIGGER require_complete_authority_end AFTER INSERT ON aos_shared_parent_admission_private.end_authority DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_admission_private.require_pending_completion()"
+    },
+    {
+      "schema": "aos_shared_parent_admission_private",
+      "table_name": "pending_origin",
+      "tgname": "RI_ConstraintTrigger_a_5051780",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051780\" AFTER DELETE ON aos_shared_parent_admission_private.pending_origin FROM aos_shared_parent_admission_private.end_authority NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()"
+    },
+    {
+      "schema": "aos_shared_parent_admission_private",
+      "table_name": "pending_origin",
+      "tgname": "RI_ConstraintTrigger_a_5051781",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051781\" AFTER UPDATE ON aos_shared_parent_admission_private.pending_origin FROM aos_shared_parent_admission_private.end_authority NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_admission_private",
+      "table_name": "pending_origin",
+      "tgname": "bind_pending_origin",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER bind_pending_origin BEFORE INSERT ON aos_shared_parent_admission_private.pending_origin FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_admission_private.check_pending_origin()"
+    },
+    {
+      "schema": "aos_shared_parent_admission_private",
+      "table_name": "pending_origin",
+      "tgname": "immutable_pending_origin",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER immutable_pending_origin BEFORE DELETE OR UPDATE ON aos_shared_parent_admission_private.pending_origin FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_admission_private.immutable_pending_origin()"
+    },
+    {
+      "schema": "aos_shared_parent_admission_private",
+      "table_name": "pending_origin",
+      "tgname": "no_truncate_pending_origin",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER no_truncate_pending_origin BEFORE TRUNCATE ON aos_shared_parent_admission_private.pending_origin FOR EACH STATEMENT EXECUTE FUNCTION aos_shared_parent_admission_private.immutable_pending_origin()"
+    },
+    {
+      "schema": "aos_shared_parent_admission_private",
+      "table_name": "pending_origin",
+      "tgname": "require_complete_admission_end",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgisinternal": false,
+      "definition": "CREATE CONSTRAINT TRIGGER require_complete_admission_end AFTER INSERT ON aos_shared_parent_admission_private.pending_origin DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_admission_private.require_pending_completion()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_call_authority",
+      "tgname": "RI_ConstraintTrigger_c_5051814",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051814\" AFTER INSERT ON aos_shared_parent_physical_private.initial_call_authority FROM aos_shared_parent_physical_private.initial_target_obligation NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_call_authority",
+      "tgname": "RI_ConstraintTrigger_c_5051815",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051815\" AFTER UPDATE ON aos_shared_parent_physical_private.initial_call_authority FROM aos_shared_parent_physical_private.initial_target_obligation NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_call_authority",
+      "tgname": "RI_ConstraintTrigger_c_5051819",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051819\" AFTER INSERT ON aos_shared_parent_physical_private.initial_call_authority FROM aos_shared_parent_physical_private.target_intent NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_call_authority",
+      "tgname": "RI_ConstraintTrigger_c_5051820",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051820\" AFTER UPDATE ON aos_shared_parent_physical_private.initial_call_authority FROM aos_shared_parent_physical_private.target_intent NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_call_authority",
+      "tgname": "RI_ConstraintTrigger_c_5051824",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051824\" AFTER INSERT ON aos_shared_parent_physical_private.initial_call_authority FROM aos_shared_parent_physical_private.judge_dependency NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_call_authority",
+      "tgname": "RI_ConstraintTrigger_c_5051825",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051825\" AFTER UPDATE ON aos_shared_parent_physical_private.initial_call_authority FROM aos_shared_parent_physical_private.judge_dependency NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_call_authority",
+      "tgname": "exact_initial_call",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER exact_initial_call BEFORE INSERT ON aos_shared_parent_physical_private.initial_call_authority FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_physical_private.bind_initial_call_authority()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_call_authority",
+      "tgname": "immutable_initial_call",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER immutable_initial_call BEFORE DELETE OR UPDATE ON aos_shared_parent_physical_private.initial_call_authority FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_physical_private.immutable_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_call_authority",
+      "tgname": "no_truncate_initial_call",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER no_truncate_initial_call BEFORE TRUNCATE ON aos_shared_parent_physical_private.initial_call_authority FOR EACH STATEMENT EXECUTE FUNCTION aos_shared_parent_physical_private.immutable_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_call_authority",
+      "tgname": "require_complete_call_end",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgisinternal": false,
+      "definition": "CREATE CONSTRAINT TRIGGER require_complete_call_end AFTER INSERT ON aos_shared_parent_physical_private.initial_call_authority DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_physical_private.require_complete_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_a_5051720",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051720\" AFTER DELETE ON aos_shared_parent_physical_private.initial_target_obligation FROM aos_shared_parent_physical_private.target_intent NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_a_5051721",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051721\" AFTER UPDATE ON aos_shared_parent_physical_private.initial_target_obligation FROM aos_shared_parent_physical_private.target_intent NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_a_5051812",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051812\" AFTER DELETE ON aos_shared_parent_physical_private.initial_target_obligation FROM aos_shared_parent_physical_private.initial_call_authority NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_a_5051813",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051813\" AFTER UPDATE ON aos_shared_parent_physical_private.initial_target_obligation FROM aos_shared_parent_physical_private.initial_call_authority NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_a_5051855",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051855\" AFTER DELETE ON aos_shared_parent_physical_private.initial_target_obligation FROM aos_shared_parent_physical_private.initial_window_obligation NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_a_5051856",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051856\" AFTER UPDATE ON aos_shared_parent_physical_private.initial_target_obligation FROM aos_shared_parent_physical_private.initial_window_obligation NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_c_5051688",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051688\" AFTER INSERT ON aos_shared_parent_physical_private.initial_target_obligation FROM aos_physical_capacity_occupation_private.account_guard NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_target_obligation",
+      "tgname": "RI_ConstraintTrigger_c_5051689",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051689\" AFTER UPDATE ON aos_shared_parent_physical_private.initial_target_obligation FROM aos_physical_capacity_occupation_private.account_guard NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_target_obligation",
+      "tgname": "immutable_obligation",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER immutable_obligation BEFORE DELETE OR UPDATE ON aos_shared_parent_physical_private.initial_target_obligation FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_physical_private.immutable_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_target_obligation",
+      "tgname": "no_truncate_obligation",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER no_truncate_obligation BEFORE TRUNCATE ON aos_shared_parent_physical_private.initial_target_obligation FOR EACH STATEMENT EXECUTE FUNCTION aos_shared_parent_physical_private.immutable_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_target_obligation",
+      "tgname": "require_complete_obligation_end",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgisinternal": false,
+      "definition": "CREATE CONSTRAINT TRIGGER require_complete_obligation_end AFTER INSERT ON aos_shared_parent_physical_private.initial_target_obligation DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_physical_private.require_complete_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_window_obligation",
+      "tgname": "RI_ConstraintTrigger_c_5051857",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051857\" AFTER INSERT ON aos_shared_parent_physical_private.initial_window_obligation FROM aos_shared_parent_physical_private.initial_target_obligation NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_window_obligation",
+      "tgname": "RI_ConstraintTrigger_c_5051858",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051858\" AFTER UPDATE ON aos_shared_parent_physical_private.initial_window_obligation FROM aos_shared_parent_physical_private.initial_target_obligation NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_window_obligation",
+      "tgname": "RI_ConstraintTrigger_c_5051862",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051862\" AFTER INSERT ON aos_shared_parent_physical_private.initial_window_obligation FROM aos_physical_capacity_occupation_private.account_guard NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_window_obligation",
+      "tgname": "RI_ConstraintTrigger_c_5051863",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051863\" AFTER UPDATE ON aos_shared_parent_physical_private.initial_window_obligation FROM aos_physical_capacity_occupation_private.account_guard NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_window_obligation",
+      "tgname": "bind_initial_window",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER bind_initial_window BEFORE INSERT ON aos_shared_parent_physical_private.initial_window_obligation FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_physical_private.bind_initial_window()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_window_obligation",
+      "tgname": "immutable_initial_window",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER immutable_initial_window BEFORE DELETE OR UPDATE ON aos_shared_parent_physical_private.initial_window_obligation FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_physical_private.immutable_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_window_obligation",
+      "tgname": "no_truncate_initial_window",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER no_truncate_initial_window BEFORE TRUNCATE ON aos_shared_parent_physical_private.initial_window_obligation FOR EACH STATEMENT EXECUTE FUNCTION aos_shared_parent_physical_private.immutable_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "initial_window_obligation",
+      "tgname": "require_complete_window_end",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgisinternal": false,
+      "definition": "CREATE CONSTRAINT TRIGGER require_complete_window_end AFTER INSERT ON aos_shared_parent_physical_private.initial_window_obligation DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_physical_private.require_complete_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "judge_dependency",
+      "tgname": "RI_ConstraintTrigger_a_5051822",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051822\" AFTER DELETE ON aos_shared_parent_physical_private.judge_dependency FROM aos_shared_parent_physical_private.initial_call_authority NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "judge_dependency",
+      "tgname": "RI_ConstraintTrigger_a_5051823",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051823\" AFTER UPDATE ON aos_shared_parent_physical_private.judge_dependency FROM aos_shared_parent_physical_private.initial_call_authority NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "judge_dependency",
+      "tgname": "RI_ConstraintTrigger_c_5051745",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051745\" AFTER INSERT ON aos_shared_parent_physical_private.judge_dependency FROM aos_shared_parent_physical_private.target_intent NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "judge_dependency",
+      "tgname": "RI_ConstraintTrigger_c_5051746",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051746\" AFTER UPDATE ON aos_shared_parent_physical_private.judge_dependency FROM aos_shared_parent_physical_private.target_intent NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "judge_dependency",
+      "tgname": "RI_ConstraintTrigger_c_5051750",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051750\" AFTER INSERT ON aos_shared_parent_physical_private.judge_dependency FROM aos_shared_parent_physical_private.target_intent NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "judge_dependency",
+      "tgname": "RI_ConstraintTrigger_c_5051751",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051751\" AFTER UPDATE ON aos_shared_parent_physical_private.judge_dependency FROM aos_shared_parent_physical_private.target_intent NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "judge_dependency",
+      "tgname": "immutable_intent",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER immutable_intent BEFORE DELETE OR UPDATE ON aos_shared_parent_physical_private.judge_dependency FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_physical_private.immutable_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "judge_dependency",
+      "tgname": "no_truncate_intent",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER no_truncate_intent BEFORE TRUNCATE ON aos_shared_parent_physical_private.judge_dependency FOR EACH STATEMENT EXECUTE FUNCTION aos_shared_parent_physical_private.immutable_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "judge_dependency",
+      "tgname": "require_complete_intent_end",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgisinternal": false,
+      "definition": "CREATE CONSTRAINT TRIGGER require_complete_intent_end AFTER INSERT ON aos_shared_parent_physical_private.judge_dependency DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_physical_private.require_complete_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "target_intent",
+      "tgname": "RI_ConstraintTrigger_a_5051743",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051743\" AFTER DELETE ON aos_shared_parent_physical_private.target_intent FROM aos_shared_parent_physical_private.judge_dependency NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "target_intent",
+      "tgname": "RI_ConstraintTrigger_a_5051744",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051744\" AFTER UPDATE ON aos_shared_parent_physical_private.target_intent FROM aos_shared_parent_physical_private.judge_dependency NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "target_intent",
+      "tgname": "RI_ConstraintTrigger_a_5051748",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051748\" AFTER DELETE ON aos_shared_parent_physical_private.target_intent FROM aos_shared_parent_physical_private.judge_dependency NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "target_intent",
+      "tgname": "RI_ConstraintTrigger_a_5051749",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051749\" AFTER UPDATE ON aos_shared_parent_physical_private.target_intent FROM aos_shared_parent_physical_private.judge_dependency NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "target_intent",
+      "tgname": "RI_ConstraintTrigger_a_5051817",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051817\" AFTER DELETE ON aos_shared_parent_physical_private.target_intent FROM aos_shared_parent_physical_private.initial_call_authority NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_del\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "target_intent",
+      "tgname": "RI_ConstraintTrigger_a_5051818",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_5051818\" AFTER UPDATE ON aos_shared_parent_physical_private.target_intent FROM aos_shared_parent_physical_private.initial_call_authority NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "target_intent",
+      "tgname": "RI_ConstraintTrigger_c_5051722",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051722\" AFTER INSERT ON aos_shared_parent_physical_private.target_intent FROM aos_shared_parent_physical_private.initial_target_obligation NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "target_intent",
+      "tgname": "RI_ConstraintTrigger_c_5051723",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": true,
+      "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_5051723\" AFTER UPDATE ON aos_shared_parent_physical_private.target_intent FROM aos_shared_parent_physical_private.initial_target_obligation NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "target_intent",
+      "tgname": "immutable_intent",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER immutable_intent BEFORE DELETE OR UPDATE ON aos_shared_parent_physical_private.target_intent FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_physical_private.immutable_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "target_intent",
+      "tgname": "no_truncate_intent",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "tgisinternal": false,
+      "definition": "CREATE TRIGGER no_truncate_intent BEFORE TRUNCATE ON aos_shared_parent_physical_private.target_intent FOR EACH STATEMENT EXECUTE FUNCTION aos_shared_parent_physical_private.immutable_obligation()"
+    },
+    {
+      "schema": "aos_shared_parent_physical_private",
+      "table_name": "target_intent",
+      "tgname": "require_complete_intent_end",
+      "tgdeferrable": true,
+      "tginitdeferred": true,
+      "tgisinternal": false,
+      "definition": "CREATE CONSTRAINT TRIGGER require_complete_intent_end AFTER INSERT ON aos_shared_parent_physical_private.target_intent DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION aos_shared_parent_physical_private.require_complete_obligation()"
+    }
+  ],
+  "catalog_is_not_actual_event_queue": true,
+  "full_end_implemented": false,
+  "execution_allowed": false
+}
