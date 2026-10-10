@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001753",
+  "authority_revision": "AOS-001754",
   "task_base_revision": "AOS-001698",
-  "step": "nested-source-epoch-write-proven-closed-final-source-and-sealed-eight-node-receipt-before-native-end-next",
+  "step": "native-nested-write-fence-green-utility-hook-package-closure-and-full-fixed-eight-node-validator-next",
   "evidence_files": [
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/persisted-origin-delegate-investigation-1721.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/certificate-delegate-verification-1721.json",
@@ -42,7 +42,8 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/native-postdrain-callback-1745-r1/verification.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-reader-closure-r1/result.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-intent-comparison-1751/verification.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-source-epoch-closure-1752/verification.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-source-epoch-closure-1752/verification.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-executor-write-fence-1753/verification.json"
   ],
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
