@@ -4,11 +4,10 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001737",
+  "authority_revision": "AOS-001738",
   "task_base_revision": "AOS-001698",
-  "step": "live-physical-wip-source-timing-investigation-next",
+  "step": "original-source-function-profiler-plan-next",
   "evidence_files": [
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/native-kernel-scope-readback-1716.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/new-admission-original-fact-review-1716.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/certificate-kernel-integration-review-1717.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/versioned-origin-investigation-1718.json",
@@ -39,7 +38,8 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/fixed-window-verification-1733.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/legacy-union-verification-1734.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/late-writer-red-verification-1735.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/live-physical-wip-verification-1736.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/live-physical-wip-verification-1736.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/source-timing-investigation-1737.json"
   ],
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
