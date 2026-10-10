@@ -1,0 +1,211 @@
+{
+  "authority": "AOS-001738",
+  "status": "LIVE_PHYSICAL_SAVEPOINT_COMPONENT_GREEN_WHOLE_SOURCE_RED",
+  "native_receipt": {
+    "status": "LIVE_PHYSICAL_NATIVE_POSITIVE_AND_LATE_WRITER_REJECTION_COMPONENT_PASS",
+    "authority": "AOS-001738",
+    "database": "aos_test_2efb53cd4fd1_ti4_test",
+    "cluster": "7694680278363095064",
+    "native_functions": [
+      {
+        "name": "aos_shared_parent_admission_private.check_end_authority",
+        "body_sha256": "a57899de91c03d3f69ea256d0f919122831d12aab2e2d4ee343defe1ce84127d",
+        "native_body_exact": true,
+        "owner": "aos_model_eval_issuer_owner"
+      },
+      {
+        "name": "public.stage_shared_parent_end_authority",
+        "body_sha256": "3203a91e6d314e78f9e564512d9d21c05fa0b5bd749ad4ad20bbf71f85a5490d",
+        "native_body_exact": true,
+        "owner": "aos_model_eval_issuer_owner"
+      },
+      {
+        "name": "public.read_shared_parent_retained_origin",
+        "body_sha256": "6cf9f79bfbaf722f609bf250621e8e610d4135cf57b05a168c5fa040e8b3914b",
+        "native_body_exact": true,
+        "owner": "aos_model_eval_issuer_owner"
+      },
+      {
+        "name": "aos_shared_parent_physical_private.bind_initial_call_authority",
+        "body_sha256": "4e309d0efb1f8471e6e5073986e2eb1822cf5387b86451b3802e9fdafae03159",
+        "native_body_exact": true,
+        "owner": "aos_physical_capacity_occupation_owner"
+      },
+      {
+        "name": "public.stage_shared_parent_initial_call_authority",
+        "body_sha256": "08680fc6f9f3fd05fd9ceaa555a2bb27e18130796bd50f363d11d9500ab3e2e5",
+        "native_body_exact": true,
+        "owner": "aos_physical_capacity_occupation_owner"
+      },
+      {
+        "name": "public.read_shared_parent_initial_call_authority",
+        "body_sha256": "cab18435847098e9e4adb4ec8b8e4a1fd65b73d5283868c0c2424a9a7c112bc0",
+        "native_body_exact": true,
+        "owner": "aos_physical_capacity_occupation_owner"
+      },
+      {
+        "name": "public.read_shared_parent_pending_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text)",
+        "body_sha256": "bdc5dd03a79655dfffb5494b94f4e25fb359464d48fcac45884c12424813154d",
+        "native_body_exact": true,
+        "owner": "aos_model_eval_issuer_owner"
+      },
+      {
+        "name": "aos_shared_parent_physical_private.bind_initial_window",
+        "body_sha256": "0362383951aa0685249a77aa841e1e8402dde33e8421b6a717b36f4a09b68dbe",
+        "native_body_exact": true,
+        "owner": "aos_physical_capacity_occupation_owner"
+      },
+      {
+        "name": "public.stage_shared_parent_initial_window_obligation",
+        "body_sha256": "64eb05e2d82fa38dbc7aece2a3ce47ecc174c58efc64368df0ea11dda5b9065e",
+        "native_body_exact": true,
+        "owner": "aos_physical_capacity_occupation_owner"
+      },
+      {
+        "name": "public.read_shared_parent_live_physical_facts(uuid,text,xid8,integer)",
+        "body_sha256": "0404c2093acd2f23b81c8770ef39e5bdc20f92bd0ec92d39ada71e71b56a52b7",
+        "native_body_exact": true,
+        "owner": "aos_physical_capacity_occupation_owner"
+      }
+    ],
+    "signed_legs": 4,
+    "native_caller_aborted": true,
+    "zero_pending_material_and_parent_holds": true,
+    "closed_credentials_field_gate": true,
+    "raw_packet_exported": false,
+    "negative_cases": [
+      "raw_input_tamper_rejected",
+      "wrong_material_hash_rejected",
+      "runtime_table_read_rejected"
+    ],
+    "whole_fixture_pass": false,
+    "fixed_window_signed_positive": false,
+    "old_unknown_cutover_positive": false,
+    "formal_root_provenance": false,
+    "formal_writes": false,
+    "full_admission_commit": false,
+    "full_task_delivered": false,
+    "execution_allowed": false
+  },
+  "parameter_acl_exact_restored": true,
+  "role_flags_all_false": true,
+  "native_successful_call_times": [
+    {
+      "function": "public.test_owned_versioned_origin",
+      "seconds": 3.600107
+    },
+    {
+      "function": "public.test_owned_pending_origin",
+      "seconds": 14.777373
+    },
+    {
+      "function": "public.test_owned_end_authority",
+      "seconds": 14.897023
+    },
+    {
+      "function": "public.test_owned_initial_obligation",
+      "seconds": 15.230819
+    },
+    {
+      "function": "public.test_owned_initial_call_authority",
+      "seconds": 25.411482
+    },
+    {
+      "function": "public.test_owned_initial_window",
+      "seconds": 17.532587
+    },
+    {
+      "function": "public.test_owned_live_physical",
+      "seconds": 1.204771
+    },
+    {
+      "function": "public.test_owned_live_union",
+      "seconds": 0.001484
+    }
+  ],
+  "exact_late_writer_rejection": "CAPACITY_PHYSICAL_CAPACITY_EXCEEDED",
+  "profiler_cumulative_after_late_writer": [
+    {
+      "schemaname": "aos_capacity_publication_private",
+      "funcname": "require_original_fact_boundary",
+      "calls": 1848,
+      "total_time": 47475.423105,
+      "self_time": 47475.423105
+    },
+    {
+      "schemaname": "aos_capacity_publication_private",
+      "funcname": "read_root_snapshot",
+      "calls": 3168,
+      "total_time": 9520.138608,
+      "self_time": 8167.273261
+    },
+    {
+      "schemaname": "aos_capacity_publication_private",
+      "funcname": "require_current_source_installation",
+      "calls": 352,
+      "total_time": 41615.359481,
+      "self_time": 6117.103213
+    },
+    {
+      "schemaname": "aos_capacity_publication_private",
+      "funcname": "canonical_signed_json",
+      "calls": 2022856,
+      "total_time": 5571.439606,
+      "self_time": 5571.439606
+    },
+    {
+      "schemaname": "public",
+      "funcname": "read_capacity_source_for_occupation",
+      "calls": 132,
+      "total_time": 83859.856404,
+      "self_time": 3783.09131
+    },
+    {
+      "schemaname": "aos_capacity_publication_private",
+      "funcname": "require_original_withdrawal_boundary",
+      "calls": 748,
+      "total_time": 23803.564257,
+      "self_time": 3722.030574
+    },
+    {
+      "schemaname": "aos_capacity_publication_private",
+      "funcname": "require_original_evidence_boundary",
+      "calls": 748,
+      "total_time": 23595.297283,
+      "self_time": 3408.882356
+    },
+    {
+      "schemaname": "public",
+      "funcname": "canonical_asset_registry_jsonb",
+      "calls": 756959,
+      "total_time": 2219.434252,
+      "self_time": 2219.434252
+    }
+  ],
+  "profiler_units": "PostgreSQL total_time/self_time are milliseconds; cumulative current transaction; inclusive total times must not be summed",
+  "profiler_finding": "Repeated original current catalog/permission boundary audits dominate self time. No current authorization/deadline guard removed; JIT local leaf comparison provides no material steady-state cure.",
+  "existing_artifact_groups_byte_exact": [
+    "shared_parent_admission_certificate_set_statements",
+    "shared_parent_admission_origin_statements",
+    "shared_parent_admission_storage_statements",
+    "shared_parent_end_authority_statements",
+    "shared_parent_initial_call_authority_statements",
+    "shared_parent_initial_intent_statements",
+    "shared_parent_initial_window_obligation_statements",
+    "shared_parent_original_fact_statements",
+    "shared_parent_pending_origin_lookup_statements",
+    "shared_parent_physical_obligation_statements"
+  ],
+  "adjacent_passed": 328,
+  "whole_fixture_pass": false,
+  "whole_failure": "Subsequent original Source neighboring call expired and signed supplier cleanup rejected; never full pass",
+  "files": {
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": "cca776981643d0237f79b22c14b28332d524562708ef760d452fce7825f9e062",
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": "2dd27bd1aaad83dc17a9890538fd2305fb9dbcc595ea72cef8d7595b02c02974"
+  },
+  "risk_review": "Guard provenance derives from actual fixed original GUARD UPDATE plus exact returned current top xid/pid/account/version under its held exclusive lock; no caller-supplied guard, no in-progress xid heuristic, no ACL/runtime grant increase. Source rechecked after waits. Complete ending must independently freeze original helper metadata and all authority.",
+  "browser_applicable": false,
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "next": "Continue registered complete ending/risk ledger/event-RI ordering plan. Original whole Source preparation ordering and nested catalog audit cost remain explicit pending; preserve original Source deadline and bodies and do not make root/audit caching authorization."
+}

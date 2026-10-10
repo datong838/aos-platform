@@ -1084,9 +1084,13 @@ def shared_parent_live_physical_fact_statements():
             fact:={_physical.SOURCE_FACT.split('(')[0]}(material.source_raw,packet->'sourceRef');
             SELECT version INTO guard_version FROM {_physical.SCHEMA}.account_guard
               WHERE physical_account_id=obligation.physical_account_id AND org_id='org-org' AND project_id='dev-project'
-                AND xmin::text::numeric=mod(pg_current_xact_id()::text::numeric,4294967296) FOR UPDATE;
+                FOR UPDATE;
+            -- The original guard just UPDATEd and still holds this account lock.
+            -- A savepoint writes a subtransaction xmin, while its xid is the top xid.
             IF NOT FOUND OR fact->>'physicalAccountId' IS DISTINCT FROM obligation.physical_account_id::text
               OR guard_doc->>'physicalAccountId' IS DISTINCT FROM obligation.physical_account_id::text
+              OR guard_doc->>'xid' IS DISTINCT FROM p_xid::text
+              OR (guard_doc->>'pid')::integer IS DISTINCT FROM p_pid
               OR (guard_doc->>'version')::bigint IS DISTINCT FROM guard_version THEN
               RAISE EXCEPTION 'SHARED_ADMISSION_LIVE_PHYSICAL_GUARD_REQUIRED' USING ERRCODE='23514'; END IF;
             SELECT count(*),coalesce(sum(token_units),0) INTO total_requests,total_tokens FROM (

@@ -1,0 +1,20 @@
+{
+  "cluster": "7694680278363095064",
+  "database": "aos_test_7efed020dfe1_ti4_test",
+  "statistics": [
+    {
+      "schemaname": "public",
+      "funcname": "canonical_asset_registry_jsonb",
+      "calls": 5,
+      "total_time": 2.352292,
+      "self_time": 2.352292
+    }
+  ],
+  "native_caller_claimed": false,
+  "parameter_acl_before": [],
+  "parameter_acl_after_rollback": [],
+  "parameter_acl_after_committed_grant_revoke": [],
+  "parameter_acl_exact_restored": true,
+  "product_code_changed": false,
+  "authority": "AOS-001738"
+}

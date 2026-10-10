@@ -164,3 +164,10 @@ RED artifact缺失→native metadata/Owner/ACL/两模式字段/early admin deny/
 RED：上一真实late writer3/30000超限2/20000+新artifact缺失。GREEN：native DDL/Owner/ACL/context拒绝/rollback21结构，加10beforeimage精确；fresh原审批Source4签名/native window后先新窄门正向2/20000，再原旧DEBIT后新窄门拒绝3/30000（原TTL和旧体不改），actual COMMIT缺end拒绝/独立全零/role恢复。若期限先拒绝，保留真实RED，不宣称新核实际overload验收。
 
 1736 live r1未到新窄门即window原Source期限RED；不宣称新核native正向或late拒绝。新核原生body/Owner/closed ACL已独立核、8表零、role恢复。328相邻及原10byte image通过只属WIP结构，whole admission未通过。下一先整条原准备链时序与重复原核调查，保留生产全部原权限/签名/期限，不用窄化夹具代替whole pipeline验收。
+
+## 1738 保存点真实行版本归属 RED 与最小修复
+函数级真实观测得到original fact boundary1848次/self47.543秒，仍不删原审核或延长期限。r1首live成功；真实第二legacy写入后，SAVEPOINT中的live先误拒SHARED_ADMISSION_LIVE_PHYSICAL_GUARD_REQUIRED，未证容量门。独立原生临时表探针确认pg_current_xact_id仍顶层而UPDATE行xmin为子事务；原试验8表零行及临时参数ACL恢复。
+
+精确产品文件仅services/aos-api/aos_api/aip_shared_parent_atomic_admission.py的READ_LIVE_PHYSICAL新构件。删除把xmin误当顶层xid的筛选，保留原GUARD实际version UPDATE并持有account写锁、后等待原SOURCE_FACT完整核验；随后固定账户tenant FOR UPDATE回读版本，显式要求实际server原GUARD返回xid/pid等于当前绑定的p_xid/p_pid、physicalAccountId精确、version精确。guard_doc只能来自刚执行的固定原函数，不来自调用方；完整终结仍需独立冻结原函数/Owner/权限。版本返回值及独占更新锁证明本调用的写入，不以pg_xact_status任意inprogress行代替，不缓存Source或借别事务版本。其他10artifacts和旧14生成器字节不变。
+
+RED是r1全原链真实错误与临时子事务差异；GREEN必须新Source/新独立审批/真SCRAM同caller的首次live回读2/20000、实际第二旧debit后的保存点live精确CAPACITY_PHYSICAL_CAPACITY_EXCEEDED、真实COMMIT拒绝与独立回滚0行/角色/参数ACL恢复；原链剩余Source邻接与供应方清理如期限RED仍记录whole失败。再串行328相邻/metadata测试及方案一致性复审，不增正式授予、不触真实库、不声称完整准入或发布完成。

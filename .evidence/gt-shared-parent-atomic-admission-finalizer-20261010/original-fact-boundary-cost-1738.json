@@ -1,0 +1,41 @@
+{
+  "database": "aos_test_2efb53cd4fd1_ti4_test",
+  "cluster": "7694680278363095064",
+  "read_only": true,
+  "original_function_body_sha256": "a58f562c97da4059549b8e18289c6a5f46b8a61553031b53961b60684231f030",
+  "measurements": [
+    {
+      "jit": "on",
+      "trial": 1,
+      "seconds": 0.10307908300455892
+    },
+    {
+      "jit": "on",
+      "trial": 2,
+      "seconds": 0.02496337499906076
+    },
+    {
+      "jit": "on",
+      "trial": 3,
+      "seconds": 0.024731417004659306
+    },
+    {
+      "jit": "off",
+      "trial": 1,
+      "seconds": 0.02373362499929499
+    },
+    {
+      "jit": "off",
+      "trial": 2,
+      "seconds": 0.02365720899979351
+    },
+    {
+      "jit": "off",
+      "trial": 3,
+      "seconds": 0.024938916001701728
+    }
+  ],
+  "source_authenticated": false,
+  "production_parameters_changed": false,
+  "function_changed": false
+}

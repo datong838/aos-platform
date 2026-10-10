@@ -1,0 +1,86 @@
+{
+  "status": "LIVE_PHYSICAL_NATIVE_POSITIVE_AND_LATE_WRITER_REJECTION_COMPONENT_PASS",
+  "authority": "AOS-001738",
+  "database": "aos_test_2efb53cd4fd1_ti4_test",
+  "cluster": "7694680278363095064",
+  "native_functions": [
+    {
+      "name": "aos_shared_parent_admission_private.check_end_authority",
+      "body_sha256": "a57899de91c03d3f69ea256d0f919122831d12aab2e2d4ee343defe1ce84127d",
+      "native_body_exact": true,
+      "owner": "aos_model_eval_issuer_owner"
+    },
+    {
+      "name": "public.stage_shared_parent_end_authority",
+      "body_sha256": "3203a91e6d314e78f9e564512d9d21c05fa0b5bd749ad4ad20bbf71f85a5490d",
+      "native_body_exact": true,
+      "owner": "aos_model_eval_issuer_owner"
+    },
+    {
+      "name": "public.read_shared_parent_retained_origin",
+      "body_sha256": "6cf9f79bfbaf722f609bf250621e8e610d4135cf57b05a168c5fa040e8b3914b",
+      "native_body_exact": true,
+      "owner": "aos_model_eval_issuer_owner"
+    },
+    {
+      "name": "aos_shared_parent_physical_private.bind_initial_call_authority",
+      "body_sha256": "4e309d0efb1f8471e6e5073986e2eb1822cf5387b86451b3802e9fdafae03159",
+      "native_body_exact": true,
+      "owner": "aos_physical_capacity_occupation_owner"
+    },
+    {
+      "name": "public.stage_shared_parent_initial_call_authority",
+      "body_sha256": "08680fc6f9f3fd05fd9ceaa555a2bb27e18130796bd50f363d11d9500ab3e2e5",
+      "native_body_exact": true,
+      "owner": "aos_physical_capacity_occupation_owner"
+    },
+    {
+      "name": "public.read_shared_parent_initial_call_authority",
+      "body_sha256": "cab18435847098e9e4adb4ec8b8e4a1fd65b73d5283868c0c2424a9a7c112bc0",
+      "native_body_exact": true,
+      "owner": "aos_physical_capacity_occupation_owner"
+    },
+    {
+      "name": "public.read_shared_parent_pending_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text)",
+      "body_sha256": "bdc5dd03a79655dfffb5494b94f4e25fb359464d48fcac45884c12424813154d",
+      "native_body_exact": true,
+      "owner": "aos_model_eval_issuer_owner"
+    },
+    {
+      "name": "aos_shared_parent_physical_private.bind_initial_window",
+      "body_sha256": "0362383951aa0685249a77aa841e1e8402dde33e8421b6a717b36f4a09b68dbe",
+      "native_body_exact": true,
+      "owner": "aos_physical_capacity_occupation_owner"
+    },
+    {
+      "name": "public.stage_shared_parent_initial_window_obligation",
+      "body_sha256": "64eb05e2d82fa38dbc7aece2a3ce47ecc174c58efc64368df0ea11dda5b9065e",
+      "native_body_exact": true,
+      "owner": "aos_physical_capacity_occupation_owner"
+    },
+    {
+      "name": "public.read_shared_parent_live_physical_facts(uuid,text,xid8,integer)",
+      "body_sha256": "0404c2093acd2f23b81c8770ef39e5bdc20f92bd0ec92d39ada71e71b56a52b7",
+      "native_body_exact": true,
+      "owner": "aos_physical_capacity_occupation_owner"
+    }
+  ],
+  "signed_legs": 4,
+  "native_caller_aborted": true,
+  "zero_pending_material_and_parent_holds": true,
+  "closed_credentials_field_gate": true,
+  "raw_packet_exported": false,
+  "negative_cases": [
+    "raw_input_tamper_rejected",
+    "wrong_material_hash_rejected",
+    "runtime_table_read_rejected"
+  ],
+  "whole_fixture_pass": false,
+  "fixed_window_signed_positive": false,
+  "old_unknown_cutover_positive": false,
+  "formal_root_provenance": false,
+  "formal_writes": false,
+  "full_admission_commit": false,
+  "full_task_delivered": false,
+  "execution_allowed": false
+}
