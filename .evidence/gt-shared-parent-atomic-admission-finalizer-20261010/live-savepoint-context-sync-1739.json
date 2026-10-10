@@ -1,0 +1,19 @@
+{
+  "authority_revision": "AOS-001739",
+  "head": "e0cc4e2655075e3d5064c1c663a017823baf8451",
+  "installation": {
+    "status": "GREEN",
+    "project_revision": "AOS-001739",
+    "projection_count": 8,
+    "schema_count": 9,
+    "task_receipt_count": 1994,
+    "delivery_receipt_count": 1962,
+    "event_count": 5801
+  },
+  "native_database": "aos_test_2efb53cd4fd1_ti4_test",
+  "exact_capacity_rejection": true,
+  "whole_fixture_pass": false,
+  "full_task_delivered": false,
+  "goal_complete": false,
+  "codex_memories_write_skipped": true
+}
