@@ -68,7 +68,7 @@ def main():
   t=mem.read_json(mem.DEFAULT_PATHS.receipts_path/'tasks'/ (TASK+'.json'));leases=mem.load_leases(mem.DEFAULT_PATHS)['leases']
   require(t['owner']==OWNER and t['status']=='ACTIVE' and datetime.fromisoformat(t['lease_expires_at'])>datetime.now(timezone.utc) and [x for x in leases if x['task_id']==TASK]==[t],'CURRENT_OWNED_TASK_LEASE_REQUIRED')
   require(not any(mem.scopes_overlap(t['scope'],x['scope']) for x in leases if x['task_id']!=TASK) and not (mem.DEFAULT_PATHS.receipts_path/'deliveries'/ (TASK+'.json')).exists(),'TASK_OVERLAP_OR_DELIVERY')
- guard();state=R.parent/'aos-recovery'/ ('window159-native-'+secrets.token_hex(6));gate.require_private_parent(state.parent);state.mkdir(mode=0o700)
+ guard();state=R.parent/'aos-recovery'/ ('window159-native-'+secrets.token_hex(6));load('window_private150',R/'scripts/a0v_current_150_restore_gate.py').require_private_parent(state.parent);state.mkdir(mode=0o700)
  labs={};tools=set();counter=0
  def save(name,data,binary=False):
   with os.fdopen(os.open(state/name,os.O_CREAT|os.O_EXCL|os.O_WRONLY|os.O_NOFOLLOW,0o600),'wb') as f:

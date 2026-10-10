@@ -1,0 +1,7 @@
+{
+  "status": "REJECTED_BEFORE_STATE_CREATION_OR_EXTERNAL_EFFECT",
+  "error": "private-parent guard belongs to original150, not142 restore module",
+  "database_effects": 0,
+  "resource_effects": 0,
+  "correction": "Reuse exact original150 require_private_parent; original142 prepare_globals unchanged"
+}
