@@ -1,0 +1,51 @@
+{
+  "authority": "AOS-001777",
+  "sync": {
+    "apply": true,
+    "changed": 4,
+    "changes": [
+      {
+        "id": "prime-milestones",
+        "status": "STALE",
+        "location": "aos-milestones"
+      },
+      {
+        "id": "prime-current-delivery",
+        "status": "STALE",
+        "location": "aos-current-delivery"
+      },
+      {
+        "id": "prime-aip-checklists",
+        "status": "STALE",
+        "location": "aos-aip-full-checklists"
+      },
+      {
+        "id": "codex-project-note",
+        "status": "CHANGE",
+        "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-001777-aos-memory-projection.md"
+      }
+    ],
+    "project_revision": "AOS-001777"
+  },
+  "validation": {
+    "status": "GREEN",
+    "project_revision": "AOS-001777",
+    "projection_count": 8,
+    "schema_count": 9,
+    "task_receipt_count": 1997,
+    "delivery_receipt_count": 1963,
+    "event_count": 5852
+  },
+  "codex_memory_projection_skipped": true,
+  "checkpoints": [
+    ".evidence/gt-capacity-source-publication-20261006/checkpoint.json",
+    ".evidence/gt-capacity-source-catalog-profile-20261011/checkpoint.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/checkpoint.json",
+    ".evidence/gt-capacity-occupation-source-20261007/checkpoint.json",
+    ".evidence/gt-judge-call-authority-20261008/checkpoint.json",
+    ".evidence/gt-shared-parent-native-ending-20261011/checkpoint.json",
+    ".evidence/gt-capacity-occupation-epoch-profile-20261007/checkpoint.json",
+    ".evidence/gt-atomic-model-admission-20261008/checkpoint.json"
+  ],
+  "prior_sync_failure": "evidence-only guard missing mode keyword; CAS succeeded before failure; fixed guard kwargs; no duplicate authority update"
+}
