@@ -1,0 +1,31 @@
+{
+  "base_revision": "AOS-001578",
+  "created_at": "2026-10-08T21:52:33+08:00",
+  "excluded_scope": [
+    "formal-DB-Host-worker-Provider",
+    "old-ModelEval-quality-eval-permission",
+    "unreleased-budget-risk-and-joint-Leases",
+    "all-existing-migrations"
+  ],
+  "expected_outputs": [
+    "Full Judge-call original request producer and independent checker/current dependency native matrix; no DTO-only Delivery",
+    "Same-caller original budget/Target committed bytes/expected authority/Intent/joint origin wiring before real dispatch; preserve existing Model and Skill behavior"
+  ],
+  "lease_expires_at": "2026-10-10T14:22:26.197222+00:00",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "schema": "aos-memory-task-receipt/v1",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/aip_action_policy.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+    "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_authorization.py",
+    "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_request_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_action.py",
+    "aos-platform/services/aos-api/aos_api/aip_model_eval_judge_authority.py",
+    "aos-platform/services/aos-api/tests/aip/test_model_eval_judge_action_boundary.py",
+    "aos-platform/services/aos-api/tests/aip/test_model_eval_judge_authority_pg.py",
+    "aos-platform/.evidence/gt-judge-call-authority-20261008"
+  ],
+  "status": "ACTIVE",
+  "task_id": "gt-judge-call-authority-20261008"
+}
