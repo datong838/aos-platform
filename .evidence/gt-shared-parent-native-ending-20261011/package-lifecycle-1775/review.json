@@ -1,0 +1,59 @@
+{
+  "status": "SCOPED_FILE_LIFETIME_SUBSTRATE_GREEN",
+  "independent_cases": {
+    "mutable": {
+      "terminal": true,
+      "no_mounts": true,
+      "exact27_byte_files_independently_read_back": true,
+      "readonly_rootfs": false,
+      "filesystem_diff": "C /opt\nC /opt/aos-native-package-owned\nC /opt/aos-native-package-owned/fixture.bin\n"
+    },
+    "protected": {
+      "terminal": true,
+      "no_mounts": true,
+      "exact27_byte_files_independently_read_back": true,
+      "readonly_rootfs": true,
+      "filesystem_diff": ""
+    }
+  },
+  "probe_substrate_hashes_match_existing_image_files": {
+    "/bin/busybox": "97d52efa149563c8d886e3670e2496d4140d3c54138017afd3a105e0397fae2e",
+    "/lib/ld-musl-aarch64.so.1": "32377e6d71725bb019e9ff6d5e9f16b4d5156d6f2c36504191c2d6a7c4d4a44d"
+  },
+  "prior_failure": "r1 inherited anonymous PGDATA volume; exited0 shell only; preserved and not deleted; protected case never started. r2 scratch has no inherited volume or mounts.",
+  "model_review_invoked": false,
+  "no_pg_process_or_formal_change": true,
+  "scope_limit": "27 data byte fixtures and filesystem write/chmod/rename denial for UID501:20 under RO rootfs/capdropALL/no-new-privileges; no mapped-memory immutability, installed module profile, signed source/build or formal Root proof",
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "file_hashes": {
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/build-intent.json": "d80c4183ddde8de184b396d11db8c2c8e41e700bac079eee4f12d48beabd2ac7",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/build.log.raw.json": "526cb2dce7c17d1a45e288d1333c6623ef8271b71149476477f6783e7a9b9ae4",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/input-manifest.json": "d26f0fc2a89c27176fd489541e69f917982fbb454ce84b56a6d49ec6db8b614b",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/mutable-create-intent.json": "9aa7e9f94e101ce5f7c17257a19d9dde05b873fb7bf5377ff0958be003b5d043",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/mutable-created.json": "c609b373e4d855783ce3dc644b0906388b7e0e97ff90b29546d1204e5132799a",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/mutable-start-intent.json": "f82f6fe027f285dc3c0eea2b3d4e079893f0445336c6ce685144e5cd5f7c08c5",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/mutable-terminal.json": "de0ec7917d9be32c8821c7fc1bb69fe372203394a2abc8ca56d4f6b136aa8856",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/plan.md": "dba1982e7905f9f02a3b540324d2f851d725f23565ec9e7d791ea92619a028d1",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/probe.sh": "5f581876e7c49f222cb2d731e60425efb32c0f00aff04c6a52acbc6dca709178",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/build-intent.json": "56c0628cb93582167cfcb7e609e8a3cdc449a691e4f192d39406d9511d599bd4",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/build.log.raw.json": "9f04c85474dc5c12566e659395ac4439a223e75f5e61db31110193c15d32f24a",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/input-manifest.json": "d26f0fc2a89c27176fd489541e69f917982fbb454ce84b56a6d49ec6db8b614b",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/mutable-create-intent.json": "964c32da611240949acd95d69a9c2c00e91069a8084ec7afa9bc0fe7ff96391c",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/mutable-created.json": "d2e2c38feb5bc4c284402394923d37f68980fac17d026d3690d4b871e1a5b383",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/mutable-filesystem-diff.json": "2bad6c4a611a920dff7ff925afaf27a2387b6d5a00c331c02ae6a8c4ba1d18db",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/mutable-start-intent.json": "d225d5345b8fe46e89a3ad8f9b71c5fe7c2d8808b83b3dfb3117565dc44579fb",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/mutable-terminal.json": "7dee93407df4477b5b5239feadd5dc0669f4b3bdef06b0f0cdef69a4cb32a844",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/probe.sh": "5f581876e7c49f222cb2d731e60425efb32c0f00aff04c6a52acbc6dca709178",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/protected-create-intent.json": "18ed60c34dfc5739ea2a29d46d6c8b8b6f7c8caeddb6c3d40e3182bd3c05759f",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/protected-created.json": "380e2a67d17a9c7765dd1bd2c574f8a58e616b1074fbd5a9ba520d9bd643cdb7",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/protected-filesystem-diff.json": "0e3d3a955b3e7d3587f31e69fa727eb2dafa22efe0d58b49bb1b370af082ff22",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/protected-start-intent.json": "a0967347be3705cc04631720405fe4e86ef8b693ede1506608c3a2f8f8eaa2ce",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/protected-terminal.json": "d3f44ecbc714a71e46ced3fb736074d779f1759bbcc850ca6979428996813763",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/run.log.raw.json": "0ca254a84783831a9d88d98411d8ab2c6cd5beaa5fa62e9c6f144289fd975e81",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/run.py": "e7be524bdba8b99cfa4a8f3233d6161302380af1bd40958cc18e27ab5afd1f32",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/r2/verification.json": "a1e66da1e1c492959e17e521470dd904a0336d56004918a2d3d285e2250cbe69",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/run.log.raw.json": "8d62185341ee02a72c5d70e9e943af437993052119d3fc43f081ee3636052291",
+    ".evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/run.py": "99233e807f4ecc221767f6962241275473ce00caff8755396784d1e1eeed8bc5"
+  }
+}

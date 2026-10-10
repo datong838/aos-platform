@@ -1,0 +1,29 @@
+{
+  "name": "aos-native-lifetime-protected-cf0f8992f218",
+  "image": "sha256:b3ad9b09276918cebe0e3728b33259537e3bb1a8ee63ac09cf7a2bbed89e0f81",
+  "args": [
+    "docker",
+    "create",
+    "--name",
+    "aos-native-lifetime-protected-cf0f8992f218",
+    "--network",
+    "none",
+    "--user",
+    "501:20",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--memory",
+    "128m",
+    "--cpus",
+    "1",
+    "--pids-limit",
+    "32",
+    "--read-only",
+    "sha256:b3ad9b09276918cebe0e3728b33259537e3bb1a8ee63ac09cf7a2bbed89e0f81",
+    "protected"
+  ],
+  "no_pg_process": true,
+  "no_original_mounts": true
+}

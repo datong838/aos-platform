@@ -1,0 +1,4 @@
+{
+  "sha256": "e2edf197e1ec1a20f9e5bd912056984853bfce8238601d737fe884885f4f4c7c",
+  "utf8": "Traceback (most recent call last):\n  File \"/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/package-lifecycle-1775/run.py\", line 38, in <module>\n    assert not after['Mounts'] and after['Config']['User']=='501:20' and after['HostConfig']['NetworkMode']=='none'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+}

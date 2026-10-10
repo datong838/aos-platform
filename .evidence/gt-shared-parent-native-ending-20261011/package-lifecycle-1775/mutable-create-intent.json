@@ -1,0 +1,28 @@
+{
+  "name": "aos-native-lifetime-mutable-8b10c29f7d1a",
+  "image": "sha256:35351cfe08a414c0b9d8a200c49b655df8c127ea57a59ddbb93a31404c81a613",
+  "args": [
+    "docker",
+    "create",
+    "--name",
+    "aos-native-lifetime-mutable-8b10c29f7d1a",
+    "--network",
+    "none",
+    "--user",
+    "501:20",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--memory",
+    "128m",
+    "--cpus",
+    "1",
+    "--pids-limit",
+    "32",
+    "sha256:35351cfe08a414c0b9d8a200c49b655df8c127ea57a59ddbb93a31404c81a613",
+    "mutable"
+  ],
+  "no_pg_process": true,
+  "no_original_mounts": true
+}

@@ -1,0 +1,29 @@
+{
+  "container": "039cb6027993b99830eb6e89f1006204e77079cfbc895c25eae890bf021d141e",
+  "state": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-10T23:04:57.622824594Z",
+    "FinishedAt": "2026-10-10T23:04:57.859521011Z"
+  },
+  "exit_code": 0,
+  "stdout": "OWNER_CHMOD_THEN_WRITE_SUCCEEDED\nuid=501 gid=20 groups=20\nPACKAGE27_HASHES_UNCHANGED\n",
+  "stderr": "/opt/aos-native-package/probe.sh: line 10: can't create /opt/aos-native-package-owned/fixture.bin: Permission denied\n",
+  "readonly_rootfs": false,
+  "mounts": [],
+  "user": "501:20",
+  "cap_drop": [
+    "ALL"
+  ],
+  "security_opt": [
+    "no-new-privileges"
+  ],
+  "network": "none"
+}

@@ -1,0 +1,29 @@
+{
+  "container": "0baa117193967d8f157679ababdcdc1d14f33a3d9a5421aca10c4af5e408c2f2",
+  "state": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-10T23:04:58.004122136Z",
+    "FinishedAt": "2026-10-10T23:04:58.228480927Z"
+  },
+  "exit_code": 0,
+  "stdout": "OWNER_AND_PACKAGE_WRITE_CHMOD_RENAME_DENIED\nuid=501 gid=20 groups=20\nPACKAGE27_HASHES_UNCHANGED\n",
+  "stderr": "/opt/aos-native-package/probe.sh: line 18: can't create /opt/aos-native-package-owned/fixture.bin: Permission denied\n/opt/aos-native-package/probe.sh: line 18: can't create /opt/aos-native-package/025eccb4f06a6d63d724cc1d8abdeb75c909f7bbb8493bf5b0e0273d67451d77.bin: Permission denied\n",
+  "readonly_rootfs": true,
+  "mounts": [],
+  "user": "501:20",
+  "cap_drop": [
+    "ALL"
+  ],
+  "security_opt": [
+    "no-new-privileges"
+  ],
+  "network": "none"
+}

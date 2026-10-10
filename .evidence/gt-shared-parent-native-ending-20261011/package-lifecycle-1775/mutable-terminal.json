@@ -1,0 +1,40 @@
+{
+  "container": "293dd0b7b2ed0dee1ccb8746d94b242f8286be17544b62fa82cbe3a59382986f",
+  "state": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-10T23:03:48.849748298Z",
+    "FinishedAt": "2026-10-10T23:03:49.082612423Z"
+  },
+  "exit_code": 0,
+  "stdout": "OWNER_CHMOD_THEN_WRITE_SUCCEEDED\nuid=501 gid=20(dialout) groups=20(dialout)\nPACKAGE27_HASHES_UNCHANGED\n",
+  "stderr": "/opt/aos-native-package/probe.sh: line 10: can't create /opt/aos-native-package-owned/fixture.bin: Permission denied\n",
+  "readonly_rootfs": false,
+  "mounts": [
+    {
+      "Type": "volume",
+      "Name": "31889338e241bf05eff56217056a1e154495e5c742cc9e57860519f4f12df478",
+      "Source": "/var/lib/docker/volumes/31889338e241bf05eff56217056a1e154495e5c742cc9e57860519f4f12df478/_data",
+      "Destination": "/var/lib/postgresql/data",
+      "Driver": "local",
+      "Mode": "",
+      "RW": true,
+      "Propagation": ""
+    }
+  ],
+  "user": "501:20",
+  "cap_drop": [
+    "ALL"
+  ],
+  "security_opt": [
+    "no-new-privileges"
+  ],
+  "network": "none"
+}

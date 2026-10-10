@@ -1,0 +1,30 @@
+{
+  "status": "ISOLATED_FILE_SUBSTRATE_GREEN",
+  "cases": {
+    "mutable": {
+      "container": "039cb6027993b99830eb6e89f1006204e77079cfbc895c25eae890bf021d141e",
+      "terminal": true,
+      "expected_marker": true,
+      "fixture_bytes_expected": true,
+      "readonly_rootfs": false
+    },
+    "protected": {
+      "container": "0baa117193967d8f157679ababdcdc1d14f33a3d9a5421aca10c4af5e408c2f2",
+      "terminal": true,
+      "expected_marker": true,
+      "fixture_bytes_expected": true,
+      "readonly_rootfs": true
+    }
+  },
+  "package_byte_files": 27,
+  "original27_module_hashes_exact": true,
+  "chmod_only_insufficient_proved": true,
+  "readonly_rootfs_file_write_chmod_rename_denied": true,
+  "no_pg_process_started": true,
+  "no_original_volumes_or_mounts": true,
+  "mapped_memory_immutable_proved": false,
+  "signed_source_build_provenance_proved": false,
+  "formal_root_issued": false,
+  "full_task_delivered": false,
+  "execution_allowed": false
+}
