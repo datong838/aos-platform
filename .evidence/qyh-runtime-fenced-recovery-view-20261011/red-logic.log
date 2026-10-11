@@ -35,7 +35,7 @@ status = 'succeeded', live = False
                     else 'operation_in_progress' if status == 'accepted' else 'fenced')
 >       assert view.effectiveState == expected
 E       AssertionError: assert 'fenced' == 'needs_attention'
-E         
+E
 E         - needs_attention
 E         + fenced
 
@@ -75,7 +75,7 @@ status = 'failed', live = False
                     else 'operation_in_progress' if status == 'accepted' else 'fenced')
 >       assert view.effectiveState == expected
 E       AssertionError: assert 'fenced' == 'needs_attention'
-E         
+E
 E         - needs_attention
 E         + fenced
 
@@ -115,7 +115,7 @@ status = 'cancelled', live = False
                     else 'operation_in_progress' if status == 'accepted' else 'fenced')
 >       assert view.effectiveState == expected
 E       AssertionError: assert 'fenced' == 'needs_attention'
-E         
+E
 E         - needs_attention
 E         + fenced
 
