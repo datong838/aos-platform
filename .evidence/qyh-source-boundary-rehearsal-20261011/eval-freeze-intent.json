@@ -1,0 +1,63 @@
+{
+  "head": "9a5a8d0d6d3a8f18e99d47dcecb68ed83f9636b6",
+  "authority": "AOS-001893",
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "containerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "cluster": "7695416748450308141",
+  "database": "qyh_source_contract_20261011",
+  "role": "aos_contract_source_issuer",
+  "historicalContractId": "eval-contract-eb2d228de06542d2a0ec",
+  "experimentalContractId": "eval-contract-ea5206e2aa8b458c956b",
+  "request": {
+    "suiteRef": {
+      "resourceType": "EvalSuiteRevision",
+      "resourceId": "ecommerce.skill.D01.contract.v1",
+      "revision": 1,
+      "contentHash": "ba76e63a33a8e2e626253e63f29c5b501cc05a6270c0d22edfbd60d78b7a7b7c"
+    },
+    "publicationRef": {
+      "resourceType": "PublicationEvent",
+      "resourceId": "published-95622330daca44c48f734e2684e83390",
+      "revision": 1,
+      "contentHash": "a3c140e2d715718dbf172ce68691e62ed0c128ba1a1561bdef6716eee45cda3c"
+    },
+    "releaseGateRef": {
+      "resourceType": "ReleaseGateDecision",
+      "resourceId": "gate-d62195976a8d76e6b440fce2a77922a2",
+      "revision": 1,
+      "contentHash": "e19ec010cb3ebf80c642d0ab20c2016bb8a01f859c7dfe79bdede994dcf8e6c6"
+    },
+    "artifactSchemaRef": {
+      "resourceType": "Schema",
+      "resourceId": "SkillPublicationContract.D01",
+      "revision": "1",
+      "authority": "aip-contract"
+    },
+    "severityThresholds": {
+      "critical": 1.0,
+      "required": 1.0
+    },
+    "gatePolicy": {
+      "evidenceKind": "isolated_skill_contract",
+      "requiredCases": 6,
+      "requiredPassRate": 1.0
+    },
+    "returnMapping": {
+      "fail": "block",
+      "pass": "publish"
+    },
+    "overridePolicy": {
+      "allowed": false
+    },
+    "expectedVersion": 2
+  },
+  "initialCounts": {
+    "aip_eval_contract_head": 17,
+    "aip_eval_contract_revision": 34,
+    "aip_production_contract_receipt": 88,
+    "aip_task_run": 6,
+    "aip_step_run": 4
+  },
+  "scriptHash": "7e8488798b4d963fbd6201af496821dad13dc2e1abbeb70b7d05b44c27c97e3b",
+  "historicalMetadataOnly": true
+}

@@ -1,0 +1,13 @@
+# 原电商评测合同冻结事务复核
+
+基线9a5a8d0d6d3a8f18e99d47dcecb68ed83f9636b6/AOS-001893。同一ACTIVE Source Task、唯一m1写者、Lease有效至2026-10-12T00:00:00Z；强投影七项CURRENT。先补第十四段方案，新增两个实验脚本，services/当前API/权威卷不修改。
+
+原历史Eval合同eb2d revision2由原Store读为frozen/READY；其ecommerce.skill.D01 Suite、真实published事件及passed ReleaseGate全行保留。原第三段实验draft revision2仍真实缺Publication/Gate；本段先实测freeze拒绝，然后用新key/CAS2原revise连接真实历史依赖，再原freeze revision4。没有重跑旧create/revise或改历史发布事件、旧报告。
+
+固定Contract LOGIN实际9次独立连接核session_user/current_user、数据库；六表必要权限及双租户policy，原guard/算法不改。9项实测涵盖缺依赖拒绝、合法revise、过期CAS、canary不存在、Receipt触发失败全事务回滚（revision/head原值及计数不变）、freeze真实提交/幂等、同键版本漂移拒绝、frozen生命周期拒绝和普通runtime Receipt伪造42501。临时角色无成员/继承/特权；仅实验clone信任认证，不称正式OIDC、SCRAM或独立OS发行身份。
+
+独立只读脚本回读新revision3/4与两Receipt exact refs；历史revision投影的version来自当前head，正确核为4，不覆盖原修订时结果3。失败请求无Receipt，原历史Eval/Suite/完整publication_id事件流/Gate与原clone全行一致；之前实验revision1/2缺发布门记录保留。Run/Step无新增，临时role/policy/故障函数及trigger已清理。原clone与当前权威库全部647表、六类原metadata精确一致。
+
+实际实验Receipt operation覆盖22/30，剩余8项及generic/BI/successor/Content完整兼容未闭合；本指标不是恢复率。历史发布门不是本轮新评测或当前安装publisher。正式登录、独立发布、预算/八配置、八工作台真实可用和自然首链仍未验收，Task/Goal保持ACTIVE；没有本轮独立模型PASS。专项原服务事务与独立读回通过，源码语法及精确diff/秘密检查完成后收口；没有页面变更，浏览器检查不能给本隔离事务增加正式准入证明。
+
+下一已登记项先核原Stage编译合法来源、Plan risk.productionContract精确绑定及ImpactPreview真实依赖；另一项是既有正式登录/独立publisher来源接入，已有入口信息问题未答，不制造另一个actor规避职责分离，也不重复索要口令。保留完整电商/栖月汇恢复目标。

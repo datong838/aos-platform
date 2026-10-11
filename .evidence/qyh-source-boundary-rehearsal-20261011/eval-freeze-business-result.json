@@ -1,0 +1,182 @@
+{
+  "cases": [
+    "ProductionContractDependencyBlocked",
+    "original-revise-real-historical-suite-publication-gate",
+    "ProductionContractConflict",
+    "ProductionContractNotFound",
+    "RaiseException",
+    "original-freeze-commit-and-idempotency",
+    "ProductionContractIdempotencyConflict",
+    "ProductionContractConflict",
+    "InsufficientPrivilege"
+  ],
+  "connections": [
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    }
+  ],
+  "revised": {
+    "suiteRef": {
+      "resourceType": "EvalSuiteRevision",
+      "resourceId": "ecommerce.skill.D01.contract.v1",
+      "revision": 1,
+      "contentHash": "ba76e63a33a8e2e626253e63f29c5b501cc05a6270c0d22edfbd60d78b7a7b7c"
+    },
+    "publicationRef": {
+      "resourceType": "PublicationEvent",
+      "resourceId": "published-95622330daca44c48f734e2684e83390",
+      "revision": 1,
+      "contentHash": "a3c140e2d715718dbf172ce68691e62ed0c128ba1a1561bdef6716eee45cda3c"
+    },
+    "releaseGateRef": {
+      "resourceType": "ReleaseGateDecision",
+      "resourceId": "gate-d62195976a8d76e6b440fce2a77922a2",
+      "revision": 1,
+      "contentHash": "e19ec010cb3ebf80c642d0ab20c2016bb8a01f859c7dfe79bdede994dcf8e6c6"
+    },
+    "artifactSchemaRef": {
+      "resourceType": "Schema",
+      "resourceId": "SkillPublicationContract.D01",
+      "revision": "1",
+      "authority": "aip-contract"
+    },
+    "severityThresholds": {
+      "critical": 1.0,
+      "required": 1.0
+    },
+    "gatePolicy": {
+      "evidenceKind": "isolated_skill_contract",
+      "requiredCases": 6,
+      "requiredPassRate": 1.0
+    },
+    "returnMapping": {
+      "fail": "block",
+      "pass": "publish"
+    },
+    "overridePolicy": {
+      "allowed": false
+    },
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "contractId": "eval-contract-ea5206e2aa8b458c956b",
+    "revision": 3,
+    "version": 3,
+    "contentHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1",
+    "lifecycle": "draft",
+    "readiness": "ready",
+    "blockers": [],
+    "createdBy": "clone:test",
+    "createdAt": "2026-10-11T17:04:59.305524Z"
+  },
+  "frozen": {
+    "suiteRef": {
+      "resourceType": "EvalSuiteRevision",
+      "resourceId": "ecommerce.skill.D01.contract.v1",
+      "revision": 1,
+      "contentHash": "ba76e63a33a8e2e626253e63f29c5b501cc05a6270c0d22edfbd60d78b7a7b7c"
+    },
+    "publicationRef": {
+      "resourceType": "PublicationEvent",
+      "resourceId": "published-95622330daca44c48f734e2684e83390",
+      "revision": 1,
+      "contentHash": "a3c140e2d715718dbf172ce68691e62ed0c128ba1a1561bdef6716eee45cda3c"
+    },
+    "releaseGateRef": {
+      "resourceType": "ReleaseGateDecision",
+      "resourceId": "gate-d62195976a8d76e6b440fce2a77922a2",
+      "revision": 1,
+      "contentHash": "e19ec010cb3ebf80c642d0ab20c2016bb8a01f859c7dfe79bdede994dcf8e6c6"
+    },
+    "artifactSchemaRef": {
+      "resourceType": "Schema",
+      "resourceId": "SkillPublicationContract.D01",
+      "revision": "1",
+      "authority": "aip-contract"
+    },
+    "severityThresholds": {
+      "critical": 1.0,
+      "required": 1.0
+    },
+    "gatePolicy": {
+      "evidenceKind": "isolated_skill_contract",
+      "requiredCases": 6,
+      "requiredPassRate": 1.0
+    },
+    "returnMapping": {
+      "fail": "block",
+      "pass": "publish"
+    },
+    "overridePolicy": {
+      "allowed": false
+    },
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "contractId": "eval-contract-ea5206e2aa8b458c956b",
+    "revision": 4,
+    "version": 4,
+    "contentHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1",
+    "lifecycle": "frozen",
+    "readiness": "ready",
+    "blockers": [],
+    "createdBy": "clone:test",
+    "createdAt": "2026-10-11T17:04:59.370743Z"
+  },
+  "finalCounts": {
+    "aip_eval_contract_head": 17,
+    "aip_eval_contract_revision": 36,
+    "aip_production_contract_receipt": 90,
+    "aip_task_run": 6,
+    "aip_step_run": 4
+  },
+  "noNewRunOrStep": true,
+  "historicalMetadataOnly": true,
+  "formalLoginConnected": false,
+  "formalPublisherConnected": false,
+  "fullRestorationAccepted": false
+}
