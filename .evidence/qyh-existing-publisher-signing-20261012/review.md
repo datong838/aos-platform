@@ -1,0 +1,7 @@
+# 方案/代码复审
+
+新入口复用已交付严格新四包qualification与原signer.validate_build，再原ManifestLoader/ReleasePolicy验证真实签名；不改旧入口或算法。私钥只能只读打开既有external/own600/regular/no-follow有限文件，源文件前后stat不变；不生成key，不写trust-root，不复制key进state；既有FileTrustRootProvider限定aos/keyId/publickey、当前有限期限、未撤销，已知local/ephemeral ID不能充当新publisher材料。
+固定Build/qualified-source/hash门未放松；receipt字节冻结并复核，复制新tree后再比较确切buildHash，contentHash最终与冻结receipt一致。独立新state700先intent；签后重读existingtrust/key，root变化/撤销/失效拒绝且保留state，原state一律不重放。签名制品不授API账号独立身份、RegistryPublish/install/budget/Owner/Host/Provider权限，返回对应false。
+13新增专项和原4组累计36PASS/0skip/7既有warnings。正向对上波真实四新包签验，但密钥/公钥均pytest隔离fixture：本波没有连接真实密钥，也没有改真实trust；该结果仅证明实现可用。负门：缺key未创建、新公钥不匹配、过期、撤销、key/trust符号链接、key权限、旧local材料、已存在输出、qualified哈希篡改；trust签中变化保留intent/no result且拒绝再执行。
+原1695已签release/candidate文件前后hash一致、原signer/newreadonlyvalidator字节均等于当前HEAD。22既有用户tracked修改保护。无页面代码变动/服务切换，浏览器不适用。source-only Eval和隔离资格不升级为实际经营Eval；八页面仍未验收。
+局部依赖继续登记：真实OIDC/独立publisher既有配置路径待答；本入口只弥补无法复用既有material的实现缺口，不能凭caller自己提供公钥或目录存在宣称已获正式发布许可。调用--sign前必须由已授权部署入口选定现有material路径；没有配置时不得改用local/ephemeral备选。完整Goal ACTIVE，不推进现有数据库或业务执行。

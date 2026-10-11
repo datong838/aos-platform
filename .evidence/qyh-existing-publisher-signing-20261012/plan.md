@@ -1,0 +1,5 @@
+# 既有publisher签名材料接线
+Rules:AGENTS/231-2/aos-engineering-delivery，m1单写，源与历史数据保留。候选一真实OIDC/publisher已有配置来源待答；候选二原signer必自生成key/self-trust的生产接线缺口可独立修复，已登记恢复主线，选择二。
+新增scripts/sign_ecommerce_qyh_existing_publisher.py和services/aos-api/tests/extension_runtime/test_qyh_existing_publisher_signing.py；不改旧signer/Loader/ReleasePolicy。固定复用qyh successor严格Build/qualification输入校验；仅用户提供的既有Ed25519密钥路径(外部/own600/no-follow/受限读取)和既有原FileTrustRootProvider公钥root，同publisher=aos/keyId/publickey/current bounded validity/not revoked；拒绝已知a0v-local/ephemeral签名材料。缺密钥、trust不匹配/撤销/过期均先拒绝，绝不generate/create-trust。
+只有--sign显式动作且预检成功才创建新独立state700，intent先写并绑定buildHash/trustRevision，copy新候选（old inputs不改），用既有key签4包，原Loader/ReleasePolicy实验签/contentHashexact，再重读trust与key复验当前性。失败留下本轮state，不重放/删旧state。--validate-only默认只读；无RegistryPublish/DB/Host/Provider/Owner动作、无OIDC登录模拟，输出formalIdentityVerified/registryPublishAuthorized=false，公钥对应性不能证明独立账号/组织授权。
+不读取机器已有真实私钥：本轮没有真实配置路径，只有pytest临时隔离密钥/原公钥fixture进行真实四包签验，test-only。专项先RED，然后正向4真实包/缺key禁止新建/错误公钥/撤销/过期/权限/符号链接/旧local材料/existingstate/原qualified tamper负门及相邻，保留1695/old4source和22用户修改；浏览器无页面改动/无服务切换不适用。真实身份仍待实际配置接入与发布审批，不能宣称恢复。
