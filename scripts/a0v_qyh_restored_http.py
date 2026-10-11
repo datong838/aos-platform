@@ -303,17 +303,29 @@ def serve_management_readonly(*, identity_file, bundle_root, trust_roots_file, s
         'PGPASSFILE': identity['pgpassFile'], 'AOS_DATABASE_URL': dsn,
         'AOS_BUNDLE_ROOT': str(bundle_root.resolve(strict=True)),
         'AOS_BUNDLE_TRUST_ROOTS_FILE': str(trust_roots_file.resolve(strict=True))})
-    os.environ.clear()
-    os.environ.update(environment)
-    sys.path.insert(0, str(source / 'services/aos-api'))
-    os.chdir(source)
-    from aos_api.main import app
-    import uvicorn
+    environment['PYTHONPATH'] = os.pathsep.join([str(source / 'services/aos-api'), str(source / 'scripts')])
     print(json.dumps({'outcome': 'RESTORED_LOCAL_MANAGEMENT_READONLY_STARTING',
         'port': LIMITED_PORT, 'databaseReadOnly': True, 'mutationRequestsAllowed': False,
         'formalIdentityVerified': False, 'runtimeAuthorized': False, 'eightPagesAccepted': False}), flush=True)
-    uvicorn.run(ReadOnlyManagementApp(app), host='127.0.0.1', port=LIMITED_PORT,
-                workers=1, access_log=False, log_level='warning')
+    os.chdir(source)
+    command = management_command()
+    os.execve(sys.executable, command, environment)
+
+
+def management_command():
+    # Schema preflight imports migration modules. A fresh interpreter prevents
+    # those working-tree imports from contaminating frozen API source loading.
+    return [sys.executable, '-m', 'uvicorn',
+            'a0v_qyh_restored_http:management_app', '--factory', '--host', '127.0.0.1',
+            '--port', str(LIMITED_PORT), '--workers', '1', '--no-access-log', '--log-level', 'warning']
+
+
+def management_app():
+    from aos_api.main import app
+    api_file = Path(sys.modules['aos_api.main'].__file__).resolve()
+    if api_file != Path.cwd() / 'services/aos-api/aos_api/main.py':
+        raise RestorationBlocked('RESTORED_MANAGEMENT_SOURCE_IMPORT_DRIFT')
+    return ReadOnlyManagementApp(app)
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

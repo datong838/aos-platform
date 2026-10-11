@@ -70,6 +70,15 @@ def test_management_and_formal_runtime_start_are_mutually_exclusive(entry, monke
         entry.main()
     assert exc.value.code == 2
 
+
+def test_management_start_uses_fresh_interpreter_and_frozen_factory(entry):
+    import sys
+    command = entry.management_command()
+    assert command[:4] == [sys.executable, '-m', 'uvicorn', 'a0v_qyh_restored_http:management_app']
+    assert '--factory' in command
+    assert command[command.index('--host')+1] == '127.0.0.1'
+    assert command[command.index('--workers')+1] == '1'
+
 @pytest.mark.parametrize('field,value', [
     ('database', 'aos_current_preview_20260927'), ('cluster', '7683855731447750695'),
     ('schema', 'a0v_092'), ('orgId', 'dev-org'), ('orgName', 'org-org'),
