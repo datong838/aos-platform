@@ -228,3 +228,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 固定基础镜像离线依赖重建1815
 新增offline-sdk-1815。先从精确1778基础镜像创建不启动提取容器，读取APK数据库，核5缺失实体包均以相同版本/C值存在。成立后使用原base digest与1813已验签归档进行networknone离线apk安装，仅新构建层；对比完整156包版本/架构/C及原world目标。不替换原SDK或运行环境、不执行PG，继承base的独立来源信任仍明确保留。
+
+## 仓库索引架构差异1816
+新增index-architecture-1816/check.py/result.json；下载原main/community aarch64 APKINDEX各上限16MiB，解析独立gzip成员、精确签名条目与APKINDEX，不解包路径。使用官方HTTPS公钥验证RSA签名（必须实际验证成功才算），对1815七差异精确P/V/C定位A；未匹配/验签失败保留。仅解释元数据来源，不归一化/修改原库，不宣称整个SDK或原核心复现。

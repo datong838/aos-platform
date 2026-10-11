@@ -1,0 +1,196 @@
+{
+  "indexes": [
+    {
+      "url": "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/aarch64/APKINDEX.tar.gz",
+      "sha256": "28053719c18be2ee9cf4dfaa9703450225628ed1f2bded0f3758d72b4fb57634",
+      "key_sha256": "d11f6b21c61b4274e182eb888883a8ba8acdbf820dcc7a6d82a7d9fc2fd2836d",
+      "signature_verified": true
+    },
+    {
+      "url": "https://dl-cdn.alpinelinux.org/alpine/v3.24/community/aarch64/APKINDEX.tar.gz",
+      "sha256": "1f16499aa3c91409911de0d6cc0f9d3afddafec96dfa6924479ed9d0b1228b64",
+      "key_sha256": "d11f6b21c61b4274e182eb888883a8ba8acdbf820dcc7a6d82a7d9fc2fd2836d",
+      "signature_verified": true
+    }
+  ],
+  "differences": [
+    {
+      "name": "bsd-compat-headers",
+      "repository": "main",
+      "index": {
+        "C": "Q1EYOhB5iH2qCsDqGzQ3psbsLWLWY=",
+        "P": "bsd-compat-headers",
+        "V": "0.7.2-r6",
+        "A": "aarch64"
+      },
+      "original": {
+        "C": "Q1EYOhB5iH2qCsDqGzQ3psbsLWLWY=",
+        "P": "bsd-compat-headers",
+        "V": "0.7.2-r6",
+        "A": "aarch64"
+      },
+      "direct_install": {
+        "C": "Q1EYOhB5iH2qCsDqGzQ3psbsLWLWY=",
+        "P": "bsd-compat-headers",
+        "V": "0.7.2-r6",
+        "A": "noarch"
+      },
+      "signed_package_arch": [
+        "arch = noarch"
+      ]
+    },
+    {
+      "name": "fortify-headers",
+      "repository": "main",
+      "index": {
+        "C": "Q1mld0RENFW1KgkRjRXjIhce1uf/4=",
+        "P": "fortify-headers",
+        "V": "3.0.1-r2",
+        "A": "aarch64"
+      },
+      "original": {
+        "C": "Q1mld0RENFW1KgkRjRXjIhce1uf/4=",
+        "P": "fortify-headers",
+        "V": "3.0.1-r2",
+        "A": "aarch64"
+      },
+      "direct_install": {
+        "C": "Q1mld0RENFW1KgkRjRXjIhce1uf/4=",
+        "P": "fortify-headers",
+        "V": "3.0.1-r2",
+        "A": "noarch"
+      },
+      "signed_package_arch": [
+        "arch = noarch"
+      ]
+    },
+    {
+      "name": "llvm21-test-utils-pyc",
+      "repository": "main",
+      "index": {
+        "C": "Q1syw0AKDE1kNKAkVDyYmTUDVPGPc=",
+        "P": "llvm21-test-utils-pyc",
+        "V": "21.1.8-r1",
+        "A": "aarch64"
+      },
+      "original": {
+        "C": "Q1syw0AKDE1kNKAkVDyYmTUDVPGPc=",
+        "P": "llvm21-test-utils-pyc",
+        "V": "21.1.8-r1",
+        "A": "aarch64"
+      },
+      "direct_install": {
+        "C": "Q1syw0AKDE1kNKAkVDyYmTUDVPGPc=",
+        "P": "llvm21-test-utils-pyc",
+        "V": "21.1.8-r1",
+        "A": "noarch"
+      },
+      "signed_package_arch": [
+        "arch = noarch"
+      ]
+    },
+    {
+      "name": "perl-ipc-run",
+      "repository": "main",
+      "index": {
+        "C": "Q1FHY2yzqdd2pMBLMetjPm2nEYQMM=",
+        "P": "perl-ipc-run",
+        "V": "20260402.0-r0",
+        "A": "aarch64"
+      },
+      "original": {
+        "C": "Q1FHY2yzqdd2pMBLMetjPm2nEYQMM=",
+        "P": "perl-ipc-run",
+        "V": "20260402.0-r0",
+        "A": "aarch64"
+      },
+      "direct_install": {
+        "C": "Q1FHY2yzqdd2pMBLMetjPm2nEYQMM=",
+        "P": "perl-ipc-run",
+        "V": "20260402.0-r0",
+        "A": "noarch"
+      },
+      "signed_package_arch": [
+        "arch = noarch"
+      ]
+    },
+    {
+      "name": "perl-utils",
+      "repository": "main",
+      "index": {
+        "C": "Q1aLMbSDAgV3XgG4J9VfR31JgDbrg=",
+        "P": "perl-utils",
+        "V": "5.42.2-r1",
+        "A": "aarch64"
+      },
+      "original": {
+        "C": "Q1aLMbSDAgV3XgG4J9VfR31JgDbrg=",
+        "P": "perl-utils",
+        "V": "5.42.2-r1",
+        "A": "aarch64"
+      },
+      "direct_install": {
+        "C": "Q1aLMbSDAgV3XgG4J9VfR31JgDbrg=",
+        "P": "perl-utils",
+        "V": "5.42.2-r1",
+        "A": "noarch"
+      },
+      "signed_package_arch": [
+        "arch = noarch"
+      ]
+    },
+    {
+      "name": "pyc",
+      "repository": "main",
+      "index": {
+        "C": "Q1Xv8PVGw9Nsb3yLTS85JJ1i05k+0=",
+        "P": "pyc",
+        "V": "3.14.8-r0",
+        "A": "aarch64"
+      },
+      "original": {
+        "C": "Q1Xv8PVGw9Nsb3yLTS85JJ1i05k+0=",
+        "P": "pyc",
+        "V": "3.14.8-r0",
+        "A": "aarch64"
+      },
+      "direct_install": {
+        "C": "Q1Xv8PVGw9Nsb3yLTS85JJ1i05k+0=",
+        "P": "pyc",
+        "V": "3.14.8-r0",
+        "A": "noarch"
+      },
+      "signed_package_arch": [
+        "arch = noarch"
+      ]
+    },
+    {
+      "name": "python3-pyc",
+      "repository": "main",
+      "index": {
+        "C": "Q1qPlcO+OWdm0FMawg6Gb84i9Rx2c=",
+        "P": "python3-pyc",
+        "V": "3.14.8-r0",
+        "A": "aarch64"
+      },
+      "original": {
+        "C": "Q1qPlcO+OWdm0FMawg6Gb84i9Rx2c=",
+        "P": "python3-pyc",
+        "V": "3.14.8-r0",
+        "A": "aarch64"
+      },
+      "direct_install": {
+        "C": "Q1qPlcO+OWdm0FMawg6Gb84i9Rx2c=",
+        "P": "python3-pyc",
+        "V": "3.14.8-r0",
+        "A": "noarch"
+      },
+      "signed_package_arch": [
+        "arch = noarch"
+      ]
+    }
+  ],
+  "all_seven_index_records_match_original": true,
+  "full_sdk_reproduced": false,
+  "execution_authorized": false
+}
