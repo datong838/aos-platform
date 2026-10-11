@@ -1,0 +1,14 @@
+{
+  "outcome": "ISOLATED_NAME_CHANGE_ONLY_META_ORG",
+  "target": "aos-qyh-name-rehearsal-20261011-r3",
+  "allTablesChecked": 626,
+  "changedTables": [
+    "public.meta_org"
+  ],
+  "rowCountsUnchanged": true,
+  "rollbackFingerprintExact": true,
+  "negativeWrongNameAffectedRows": 0,
+  "sourceFingerprintUnchanged": true,
+  "formalSourceRenamePerformed": false,
+  "formalActivationPerformed": false
+}

@@ -1,0 +1,7 @@
+{
+  "target": "aos-qyh-name-rehearsal-20261011-r3",
+  "sourcePublicPrivileges": "TEMP only, CONNECT revoked",
+  "targetBefore": "default PUBLIC CONNECT,TEMP",
+  "change": "REVOKE CONNECT ON DATABASE FROM PUBLIC",
+  "sourceWrites": false
+}

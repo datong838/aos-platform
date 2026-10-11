@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-org-name-maintenance-20261011/prepare.py", line 62, in <module>
+    if result.returncode:raise RuntimeError('Globals restore failed; inspect private log')
+RuntimeError: Globals restore failed; inspect private log

@@ -1,0 +1,8 @@
+{
+  "outcome": "FULL_DATA_RESTORE_FINGERPRINT_EQUAL",
+  "tables": 626,
+  "sourceWrites": false,
+  "target": "aos-qyh-name-rehearsal-20261011-r3",
+  "bootstrapRoleOid": 10,
+  "fullCatalogComparisonPending": true
+}

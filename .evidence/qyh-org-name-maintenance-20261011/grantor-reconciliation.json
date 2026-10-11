@@ -1,0 +1,14 @@
+{
+  "previousError": "grantor aos_app requires original granting role",
+  "target": {
+    "id": "8e7d4c6eedd716778a654470b579b01867a820bdcf5ed222aab68e850b71d24c",
+    "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "network": "none",
+    "ports": {}
+  },
+  "existingSourceMemberships": 0,
+  "restoreDatabaseExists": false,
+  "unexecutedSuffixSha256": "61a79533a2231b57a56dcee5b6c86ecf88132f3d49c385a27e59ceaf78879342",
+  "executor": "aos_app",
+  "sourceWrites": false
+}

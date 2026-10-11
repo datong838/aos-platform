@@ -1,0 +1,10 @@
+{
+  "target": "aos-qyh-name-rehearsal-20261011-r3",
+  "bootstrapRole": "aos_app",
+  "bootstrapOid": 10,
+  "sourceWrites": false,
+  "originalGlobalsHash": "f24623ebf776fe0085c4d9f5a78501387e7d6472488395125a22e8058159e031",
+  "adaptedGlobalsHash": "f980f88253d37f08ac0a9a9404252346bc2e4b3349f7207b4cf099bb66e5c23d",
+  "onlyAdaptation": "skip one exact CREATE ROLE for already matching initdb role; retain ALTER, settings and all original grantors",
+  "earlierTargetsRetained": true
+}

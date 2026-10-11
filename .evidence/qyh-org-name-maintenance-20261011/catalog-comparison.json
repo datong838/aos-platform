@@ -1,0 +1,14 @@
+{
+  "sourceSchema": {
+    "bytes": 3993408,
+    "sha256": "111955c7dc6f541cc647e21294621034e852d421b11c1f319b3f8200fb36eac4"
+  },
+  "targetSchema": {
+    "bytes": 3993336,
+    "sha256": "d40080481041cb7844a44f5d66bd2cc788a26ae2bfca29ece42af85b2720ce9d"
+  },
+  "reviewedAndRegroupConstraints": 36,
+  "roleAndMembershipAndDatabaseEqual": true,
+  "rolePasswordsCompared": false,
+  "sourceWrites": false
+}

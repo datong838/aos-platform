@@ -1,0 +1,6 @@
+{
+  "target": "aos-qyh-name-rehearsal-20261011-r3",
+  "negativeCASFailedClosed": true,
+  "sourceWrites": false,
+  "step": "restore exact old metadata only in isolated target, then run proposal once"
+}

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-org-name-maintenance-20261011/rehearse.py", line 43, in <module>
+    a=json.loads(m.psql(m.SOURCE,m.DB,role_sql));b=json.loads(m.psql(TARGET,m.DB,role_sql));assert a==b,'Role/membership/database attributes differ'
+                                                                                                   ^^^^
+AssertionError: Role/membership/database attributes differ

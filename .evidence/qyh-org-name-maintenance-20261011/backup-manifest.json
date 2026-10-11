@@ -1,0 +1,23 @@
+{
+  "source": {
+    "cluster": "7683855731447750695",
+    "migration": "a0v_159",
+    "zero": 0,
+    "name": "org-org"
+  },
+  "files": {
+    "current.dump": {
+      "bytes": 5109046,
+      "sha256": "17092dd0857e75923c0961346e62a7a99fa2be680f8d1e1a44e4f39069c2480c"
+    },
+    "current.second.dump": {
+      "bytes": 5109046,
+      "sha256": "17092dd0857e75923c0961346e62a7a99fa2be680f8d1e1a44e4f39069c2480c"
+    },
+    "globals.sql": {
+      "bytes": 7491,
+      "sha256": "f24623ebf776fe0085c4d9f5a78501387e7d6472488395125a22e8058159e031"
+    }
+  },
+  "rolesPasswordIncluded": false
+}

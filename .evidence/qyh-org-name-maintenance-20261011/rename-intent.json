@@ -1,0 +1,14 @@
+{
+  "target": "aos-qyh-name-rehearsal-20261011-r3",
+  "database": "aos_current_preview_20260927",
+  "table": "public.meta_org",
+  "row": {
+    "id": "org-org",
+    "name": "org-org",
+    "updatedAt": "2026-10-05 02:21:26.625638+00"
+  },
+  "newName": "栖月汇商贸有限公司",
+  "sourceWrites": false,
+  "rollbackPassed": true,
+  "negativeWrongNameAffectedRows": 0
+}

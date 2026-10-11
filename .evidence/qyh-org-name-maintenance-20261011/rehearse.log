@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-org-name-maintenance-20261011/rehearse.py", line 15, in <module>
+    source_schema=schema(m.SOURCE,'source');target_schema=schema(TARGET,'restored');assert source_schema==target_schema,'Schema/ownership/ACL mismatch'
+AssertionError: Schema/ownership/ACL mismatch

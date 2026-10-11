@@ -1,0 +1,8 @@
+{
+  "positiveExactlyOneRow": true,
+  "negativeDivisionByZeroAborts": true,
+  "negativeAll626FingerprintsUnchanged": true,
+  "positiveOnlyMetaOrgChanged": true,
+  "sourceFingerprintUnchanged": true,
+  "sourceWrites": false
+}

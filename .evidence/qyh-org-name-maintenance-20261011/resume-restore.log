@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-org-name-maintenance-20261011/resume-restore.py", line 16, in <module>
+    assert result.returncode==0,'Exact grant suffix failed; reconcile'
+AssertionError: Exact grant suffix failed; reconcile
