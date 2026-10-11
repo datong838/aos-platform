@@ -144,7 +144,8 @@ def _authority(client, *, failed_gate: MediaGateKind | None = None):
     manifest = _artifact(run_id, family_id, 1, "family_manifest")
     master = _artifact(run_id, family_id, 2, "master")
     variant = _artifact(run_id, family_id, 3, "variant")
-    store = _ReadyStore(stage_template_source_resolver=lambda scope, ref: True)
+    # Wiring-only Source double; this fixture does not prove signed Registry authority.
+    store = _ReadyStore(media_gate_source_resolver=lambda conn, scope, body: True)
     store.register_artifact_family(
         SCOPE,
         ACTOR,

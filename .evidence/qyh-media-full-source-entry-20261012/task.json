@@ -1,0 +1,23 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-media-full-source-entry-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001905",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/aip_production_contract_store.py",
+    "aos-platform/services/aos-api/tests/aip/test_media_full_source_entry.py",
+    "aos-platform/services/aos-api/tests/aip/test_w7_06_media_four_gate.py",
+    "aos-platform/.evidence/qyh-media-full-source-entry-20261012",
+    "docs/palantier/20_tech/\u7535\u5546\u5e73\u53f0\u63a5\u5165/\u5fae\u5546\u57ce\u7535\u5546\u63a5\u5165\u65b9\u6848/D-waves/2026-10-12-QYH-\u5a92\u4f53\u5b8c\u6574\u6765\u6e90\u6821\u9a8c\u5165\u53e3\u65b9\u6848.md"
+  ],
+  "excluded_scope": [
+    "maintenance/current-database",
+    "aos-platform/services/aos-api/aos_api/routers/aip_production_contracts.py"
+  ],
+  "expected_outputs": [
+    "Media registration requires dedicated full request plus caller transaction source resolver; legacy Stage true cannot authorize three media refs; exact bool and no receipt/write before Source check; RED, unit and original isolated media/Stage regression; actual Registry signed producer remains next exit"
+  ],
+  "lease_expires_at": "2026-10-12T07:58:09.454072+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T03:58:09+08:00"
+}

@@ -75,6 +75,7 @@ from aos_api.tenant_scope import TenantScope
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
 ResponsibilityTemplateResolver = Callable[[TenantScope, ExactRevisionRef], bool]
 StageTemplateSourceResolver = Callable[[TenantScope, ExactRevisionRef], bool]
+MediaGateSourceResolver = Callable[[Any, TenantScope, RegisterMediaGateProfileRequest], bool]
 ProductionProfileResolver = Callable[[TenantScope, ExactRevisionRef], bool]
 SchemaCompatibilityResolver = Callable[[ResourceRef, ResourceRef], bool]
 
@@ -494,6 +495,7 @@ class AipProductionContractStore:
         contract_connect_factory: ConnectFactory | None = None,
         responsibility_template_resolver: ResponsibilityTemplateResolver | None = None,
         stage_template_source_resolver: StageTemplateSourceResolver | None = None,
+        media_gate_source_resolver: MediaGateSourceResolver | None = None,
         production_profile_resolver: ProductionProfileResolver | None = None,
         schema_compatibility_resolver: SchemaCompatibilityResolver | None = None,
         task_store: AipTaskStore | None = None,
@@ -507,6 +509,7 @@ class AipProductionContractStore:
         )
         self._responsibility_template_resolver = responsibility_template_resolver
         self._stage_template_source_resolver = stage_template_source_resolver
+        self._media_gate_source_resolver = media_gate_source_resolver
         self._production_profile_resolver = (
             production_profile_resolver or InstalledProductionProfileResolver().resolve
         )
@@ -2229,9 +2232,7 @@ class AipProductionContractStore:
         key: str,
         body: RegisterMediaGateProfileRequest,
     ) -> MediaGateProfileRevision:
-        if self._stage_template_source_resolver is None or not self._stage_template_source_resolver(
-            scope, body.source_bundle_ref
-        ):
+        if self._media_gate_source_resolver is None:
             raise ProductionContractDependencyBlocked(
                 "MEDIA_GATE_PROFILE_SIGNED_SOURCE_MISSING_OR_DRIFTED"
             )
@@ -2240,6 +2241,12 @@ class AipProductionContractStore:
         request_hash = canonical_hash(payload)
         content_hash = canonical_hash(payload)
         with self._contract_connect_factory(scope) as conn:
+            # Media authority binds manifest, signature, policy and all four
+            # rules in the caller transaction; a Stage ref cannot authorize it.
+            if self._media_gate_source_resolver(conn, scope, body) is not True:
+                raise ProductionContractDependencyBlocked(
+                    "MEDIA_GATE_PROFILE_SIGNED_SOURCE_MISSING_OR_DRIFTED"
+                )
             replay = self._replay(conn, scope, "media_gate_profile.register", key, request_hash)
             if replay:
                 return self.get_media_gate_profile(

@@ -1,0 +1,18 @@
+{
+  "authority": "AOS-001905",
+  "baseHead": "6a2ae53c9392120bb108089d07930a5479e63952",
+  "red": "9 failed",
+  "final": "39 passed,0skip,7warnings",
+  "signedSourceProducerAccepted": false,
+  "formalRecoveryAccepted": false,
+  "currentDBWrites": 0,
+  "providerCalls": 0,
+  "deployment": false,
+  "dWave": "docs/palantier/20_tech/\u7535\u5546\u5e73\u53f0\u63a5\u5165/\u5fae\u5546\u57ce\u7535\u5546\u63a5\u5165\u65b9\u6848/D-waves/2026-10-12-QYH-\u5a92\u4f53\u5b8c\u6574\u6765\u6e90\u6821\u9a8c\u5165\u53e3\u65b9\u6848.md",
+  "dWaveHash": "f88c9780bdaf4e44ac86df1d14042659c35095ca578e09dd9a90dca8ac8ab458",
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_production_contract_store.py": "42d4ce39f5d499a0f04a7bd425b29a1b5e0486667a6fe42909160041f0a1ba74",
+    "services/aos-api/tests/aip/test_media_full_source_entry.py": "0a14dc4b4f8f56927e34491464e4aa4a612cb0d5514c904731774551ce6544c8",
+    "services/aos-api/tests/aip/test_w7_06_media_four_gate.py": "5a2115c1da8268b2d9f3dd55a5c05b64c70a634733df0beca7943432507eef9b"
+  }
+}
