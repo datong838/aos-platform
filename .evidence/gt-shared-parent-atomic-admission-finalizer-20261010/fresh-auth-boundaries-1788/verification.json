@@ -1,0 +1,84 @@
+{
+  "database": "aos_test_3fb45995da15_ti4_test",
+  "status": "COLLECTOR_SOURCE_EXPIRY_RECURRED_TEARDOWN_GREEN",
+  "counts": {
+    "aos_shared_parent_admission_private.end_authority": 0,
+    "aos_shared_parent_admission_private.pending_origin": 0,
+    "aos_shared_parent_physical_private.complete_parent_risk": 0,
+    "aos_shared_parent_physical_private.complete_receipt_v2": 0,
+    "aos_shared_parent_physical_private.initial_call_authority": 0,
+    "aos_shared_parent_physical_private.initial_target_obligation": 0,
+    "aos_shared_parent_physical_private.initial_window_obligation": 0,
+    "aos_shared_parent_physical_private.judge_dependency": 0,
+    "aos_shared_parent_physical_private.target_intent": 0
+  },
+  "other_sessions": 0,
+  "track_functions": "none",
+  "product_hashes_unchanged": true,
+  "teardown_failed": false,
+  "later_independent_consumer_not_reached": true,
+  "timings": [
+    {
+      "function": "public.test_owned_versioned_origin",
+      "elapsed_seconds": 2.910785,
+      "outcome": "returned",
+      "error": null
+    },
+    {
+      "function": "public.test_owned_pending_origin",
+      "elapsed_seconds": 11.457544,
+      "outcome": "returned",
+      "error": null
+    },
+    {
+      "function": "public.test_owned_end_authority",
+      "elapsed_seconds": 10.975088,
+      "outcome": "returned",
+      "error": null
+    },
+    {
+      "function": "public.test_owned_complete_risk",
+      "elapsed_seconds": 11.106852,
+      "outcome": "returned",
+      "error": null
+    },
+    {
+      "function": "public.test_owned_initial_obligation",
+      "elapsed_seconds": 11.542512,
+      "outcome": "returned",
+      "error": null
+    },
+    {
+      "function": "public.test_owned_initial_call_authority",
+      "elapsed_seconds": 18.567263,
+      "outcome": "returned",
+      "error": null
+    },
+    {
+      "function": "public.test_owned_initial_window",
+      "elapsed_seconds": 13.159737,
+      "outcome": "returned",
+      "error": null
+    },
+    {
+      "function": "public.test_owned_receipt_v2",
+      "elapsed_seconds": 23.130962,
+      "outcome": "returned",
+      "error": null
+    },
+    {
+      "function": "public.test_owned_final_physical",
+      "elapsed_seconds": 0.002609,
+      "outcome": "returned",
+      "error": null
+    },
+    {
+      "function": "public.test_owned_complete_end_facts",
+      "elapsed_seconds": 16.459629,
+      "outcome": "rejected",
+      "error": "CAPACITY_CURRENT_SOURCE_EXPIRED"
+    }
+  ],
+  "full_task_delivered": false,
+  "next": "Preserve prior collector positive, but timing stability unproven; optimize remaining repeated public column ACL scan under original deadlines. Retain explicit fresh auth fixture, later consumer repair remains unverified."
+}

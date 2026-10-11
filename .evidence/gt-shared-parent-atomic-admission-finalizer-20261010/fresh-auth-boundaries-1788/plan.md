@@ -1,0 +1,3 @@
+# 两个独立测试入口重新认证
+
+Rules231、完整原合同、Main/Judge现有证据范围。诊断两条异常链均为ExpiredSignatureError。仅在新独立请求连接之前及清理结束后新校验连接之前，由原https_signer签发默认120秒认证；复制命令并断言除bearer_token外全部字段相同。原子准入内部不得刷新，Source/批准/JWT期限、全部负例/原检查/完整测试节点不变。原受保护源码不写。通过AST在隔离进程编译完整原函数加两处显式语句，替换code object保留pytest fixture元数据；原函数无闭包才能执行。冻结原文件hash、保存补丁源码和去掉新增语句后的AST相等证据。新独立库新attempt，一次执行，不重放旧效果。

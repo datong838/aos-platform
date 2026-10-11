@@ -1,0 +1,22 @@
+{
+  "database": "aos_test_4617f60deb77_ti4_test",
+  "root_cause": "ExpiredSignatureError in both subsequent occupation and supplier teardown",
+  "counts": {
+    "aos_shared_parent_admission_private.end_authority": 0,
+    "aos_shared_parent_admission_private.pending_origin": 0,
+    "aos_shared_parent_physical_private.complete_parent_risk": 0,
+    "aos_shared_parent_physical_private.complete_receipt_v2": 0,
+    "aos_shared_parent_physical_private.initial_call_authority": 0,
+    "aos_shared_parent_physical_private.initial_target_obligation": 0,
+    "aos_shared_parent_physical_private.initial_window_obligation": 0,
+    "aos_shared_parent_physical_private.judge_dependency": 0,
+    "aos_shared_parent_physical_private.target_intent": 0
+  },
+  "other_sessions": 0,
+  "track_functions": "none",
+  "product_hashes_unchanged": true,
+  "no_auth_refresh_or_deadline_change_this_attempt": true,
+  "full_fixture_exit": 1,
+  "next": "Plan separate fresh authentication at later independent request and teardown boundaries; never refresh inside original atomic admission or lengthen Source/JWT/approval deadlines. Preserve both original and full native matrices.",
+  "full_task_delivered": false
+}

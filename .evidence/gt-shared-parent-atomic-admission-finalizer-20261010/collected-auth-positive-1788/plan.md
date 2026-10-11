@@ -1,0 +1,3 @@
+# 实际收集函数的独立认证绑定
+
+原public聚合及完整合同不变。只改当前Main证据夹具，在pytest_collection_modifyitems使用item.module绑定真实测试函数，供pytest执行的item.obj代码必须为落盘修改体；两处认证完成后记录不含秘密的入口事件。原Source/JWT期限、原子内部/所有断言保持。修复前收集对照已证明模块不相同；新的静态逆变换AST必须一致。新Main/Judge标签独立新库一次完整试验，结果后独立回读，不重放旧库。

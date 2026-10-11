@@ -1,0 +1,1 @@
+{"function": "consume_capacity_source_for_occupation", "chain": [{"type": "ProviderCapacityConsumptionBlocked", "code": "CAPACITY_OCCUPATION_SOURCE_REQUIRED"}, {"type": "ApiError", "code": null}, {"type": "ExpiredSignatureError", "code": null}], "observed_at": "2026-10-11T02:34:36.314376+00:00"}

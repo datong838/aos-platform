@@ -1,0 +1,16 @@
+{
+  "status": "PUBLIC_AGGREGATE_NATIVE_ADJACENT_GREEN_FULL_ISOLATED_NODE_GREEN",
+  "red": "Missing PUBLIC_AGGREGATE_AFTER before implementation",
+  "tests": "54 passed, 1 separately exercised real Source deselected, 7 existing warnings, 3.32s",
+  "public_native_cases": 11,
+  "legacy_reconstruction_exact": true,
+  "full_identity_binding_tested": true,
+  "review": "Same filtered column set, bool_or invalid location plus exact DISTINCT count. Owner/PUBLIC, dropped columns, multiple grants, empty/missing and rollback retained. Prior global ACL guard still rejects forbidden privileges/grant options.",
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_catalog_audit_profile.py": "2f24f064372eb4ef9a06015464353de7c70f2c743ee13ed1cdadd7ce2aa34aaa",
+    "services/aos-api/tests/aip/test_provider_capacity_catalog_audit_profile_pg.py": "55e921d0a380cbd9534198b133b542a87f421b98f1f3b9e5549680ab378a3e23"
+  },
+  "full_task_delivered": false,
+  "next": "Original native ending, durable deadline and formal Root remain incomplete.",
+  "full_source_verification": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/collected-auth-positive-1788/verification.json"
+}

@@ -1,0 +1,12 @@
+{
+  "exit": 0,
+  "records": [
+    {
+      "module": "test_physical_capacity_occupation_pg",
+      "imported_module": "tests.aip.test_physical_capacity_occupation_pg",
+      "same_module": false,
+      "same_function": false,
+      "collected_code_file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "source_issued_at": "2026-10-11T02:13:04.044470Z",
+  "source_valid_until": "2026-10-11T02:18:01.112558Z",
+  "last_nested_call_at": "2026-10-11T02:15:12.219170+00:00",
+  "signer_ttl_seconds": 120,
+  "signer_source": "services/aos-api/tests/aip/_runtime_guard_history_fixture.py:88",
+  "outer_command_created_before_nested_trial": true,
+  "source_still_valid_at_last_nested_call": true,
+  "diagnosis": "Outer authentication expiry is a supported candidate, not proven inner exception; original Source itself had remaining validity. Teardown cause also unproven.",
+  "next": "Fresh isolated diagnostic run captures exception type and fixed error codes inside two rejecting functions, no tokens/locals, original deadlines unchanged."
+}

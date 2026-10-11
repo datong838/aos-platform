@@ -13,9 +13,11 @@ def test_complete_catalog_profile_binds_every_digest_and_keeps_legacy():
     original = epoch._body(profile.store.CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL, profile.FACT)
     body = profile.catalog_fact_body()
     assert body != original
-    assert body.count(profile.COLUMN_AFTER) == 2
+    assert body.count(profile.PUBLIC_AGGREGATE_AFTER) == 1
+    restored = body.replace(profile.PUBLIC_AGGREGATE_AFTER, profile.PUBLIC_AGGREGATE_BEFORE)
+    assert restored.count(profile.COLUMN_AFTER) == 2
     assert body.count(profile.GLOBAL_AGGREGATE_AFTER) == 1
-    restored = body.replace(profile.GLOBAL_AGGREGATE_AFTER, profile.GLOBAL_AGGREGATE_BEFORE)
+    restored = restored.replace(profile.GLOBAL_AGGREGATE_AFTER, profile.GLOBAL_AGGREGATE_BEFORE)
     restored = restored.replace(profile.COLUMN_AFTER, profile.COLUMN_BEFORE)
     for before, after in profile.GLOBAL_COLUMN_FILTERS:
         assert restored.count(after) == 1
@@ -134,6 +136,32 @@ def test_native_column_acl_predicate_matches_original_privileges():
                     conn.execute(statement)
                 assert [next(iter(conn.execute(q).fetchone().values())) for q in aggregate_queries] == [True, True]
         assert [next(iter(conn.execute(q).fetchone().values())) for q in aggregate_queries] == [False, False]
+        public_queries = [
+            'SELECT ' + clause.replace('owner_oid', str(owner['oid'])).replace(
+                'jsonb_each_text(locks)', 'jsonb_each_text(' + locks_literal + '::jsonb)')
+            for clause in (profile.PUBLIC_AGGREGATE_BEFORE, profile.PUBLIC_AGGREGATE_AFTER)]
+        public_relation = sql.Identifier('public', table)
+        conn.execute(sql.SQL('CREATE TABLE {} (sample integer)').format(public_relation))
+        public_cases = [
+            ([], False),
+            ([sql.SQL('GRANT UPDATE(sample) ON {} TO aos_capacity_publication_owner').format(public_relation)], True),
+            ([sql.SQL('GRANT INSERT(sample) ON {} TO PUBLIC').format(public_relation)], True),
+            ([sql.SQL('GRANT UPDATE(subject) ON public.meta_membership TO PUBLIC')], False),
+            ([sql.SQL('GRANT INSERT(subject) ON public.meta_membership TO aos_capacity_publication_owner')], False),
+            ([sql.SQL('GRANT UPDATE(subject) ON public.meta_membership TO aos_capacity_publication_owner WITH GRANT OPTION')], False),
+            ([sql.SQL('GRANT UPDATE(sample) ON {} TO aos_capacity_publication_owner').format(relation)], False),
+            ([sql.SQL('GRANT UPDATE(sample) ON {} TO aos_capacity_publication_owner').format(public_relation),
+              sql.SQL('REVOKE UPDATE(sample) ON {} FROM aos_capacity_publication_owner').format(public_relation)], False),
+            ([sql.SQL('GRANT UPDATE(sample) ON {} TO aos_capacity_publication_owner').format(public_relation),
+              sql.SQL('ALTER TABLE {} DROP COLUMN sample').format(public_relation)], False),
+            ([sql.SQL(statement) for statement in mutations[0]], True),
+            ([sql.SQL(statement) for statement in mutations[1]], True),
+        ]
+        for statements, expected in public_cases:
+            with conn.transaction(force_rollback=True):
+                for statement in statements:
+                    conn.execute(statement)
+                assert [next(iter(conn.execute(q).fetchone().values())) for q in public_queries] == [expected, expected]
         conn.rollback()
 
 

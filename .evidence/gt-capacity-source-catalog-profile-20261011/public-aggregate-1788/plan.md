@@ -1,0 +1,3 @@
+# public列ACL重复扫描合并
+
+Rules231、原完整合同、catalog Task。候选一为已定位约4ms的public列ACL双扫描；候选二完整native结束/正式Root仍需正式来源。先只读原隔离库A/B，拟以单次聚合保留非允许锁列判定及DISTINCT五列计数。保留public/schema/attnum/attisdropped/Owner或PUBLIC/权限类型及NULL条件。禁止扩大表级权限、改变期限或减少调用。收益及真实ACL负例成立后才在原catalog模块和测试文件实现，完整新Source试验随后必需。

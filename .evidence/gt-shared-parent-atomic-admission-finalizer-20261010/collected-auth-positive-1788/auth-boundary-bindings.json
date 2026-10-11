@@ -1,0 +1,18 @@
+{
+  "module": "test_physical_capacity_occupation_pg",
+  "collected_function_bound": true,
+  "bindings": [
+    {
+      "function": "test_source_model_preparation_original_native_caller",
+      "original_sha256": "f17889fa733e2fe86a58537951d7f823d9188fff1549db5ba65abf5edf664a10",
+      "modified_sha256": "f54927ccdb2d259ce567412425302218f08cd1dde03cb909713867e1da839dfc",
+      "all_original_ast_preserved": true
+    },
+    {
+      "function": "native_original_fact_reader",
+      "original_sha256": "ef7761b484fa0f7191ab2202b56f26f5908bd0ba1f1816977d7d51317d4dc0b3",
+      "modified_sha256": "311406f42aa056c591ade8a28b5f429f51143ac67056bdd1f314c037f75cc18c",
+      "all_original_ast_preserved": true
+    }
+  ]
+}

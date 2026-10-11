@@ -1,0 +1,72 @@
+{
+  "cases": [
+    {
+      "case": "baseline",
+      "old": false,
+      "new": false,
+      "expected": false
+    },
+    {
+      "case": "missing",
+      "old": true,
+      "new": true,
+      "expected": true
+    },
+    {
+      "case": "empty",
+      "old": true,
+      "new": true,
+      "expected": true
+    },
+    {
+      "case": "extra_owner",
+      "old": true,
+      "new": true,
+      "expected": true
+    },
+    {
+      "case": "extra_public",
+      "old": true,
+      "new": true,
+      "expected": true
+    },
+    {
+      "case": "two_grantees_same_allowed_column",
+      "old": false,
+      "new": false,
+      "expected": false
+    },
+    {
+      "case": "multiple_privileges_allowed_column",
+      "old": false,
+      "new": false,
+      "expected": false
+    },
+    {
+      "case": "grant_option_allowed_column",
+      "old": false,
+      "new": false,
+      "expected": false
+    },
+    {
+      "case": "other_schema",
+      "old": false,
+      "new": false,
+      "expected": false
+    },
+    {
+      "case": "grant_revoke",
+      "old": false,
+      "new": false,
+      "expected": false
+    },
+    {
+      "case": "dropped_column",
+      "old": false,
+      "new": false,
+      "expected": false
+    }
+  ],
+  "acl_restored": true,
+  "scope": "Exact public clause only. Separate preceding global clause rejects forbidden grant options or privileges; this clause must preserve its original answers, not invent new conditions."
+}

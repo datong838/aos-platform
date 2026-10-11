@@ -1,0 +1,14 @@
+[
+  {
+    "function": "test_source_model_preparation_original_native_caller",
+    "original_sha256": "f17889fa733e2fe86a58537951d7f823d9188fff1549db5ba65abf5edf664a10",
+    "modified_sha256": "56df5101ac569ee276b27a207f78ecbcf25b5643a94e8f53d4c87d62710a73d8",
+    "all_original_ast_preserved": true
+  },
+  {
+    "function": "native_original_fact_reader",
+    "original_sha256": "ef7761b484fa0f7191ab2202b56f26f5908bd0ba1f1816977d7d51317d4dc0b3",
+    "modified_sha256": "c816ae089fb04b7a96af51e9e10da9ee9de6a994e69bb8589520a89da22a65e8",
+    "all_original_ast_preserved": true
+  }
+]

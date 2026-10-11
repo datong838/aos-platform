@@ -32,6 +32,15 @@ GLOBAL_AGGREGATE_BEFORE = """EXISTS(SELECT 1 FROM pg_class c JOIN pg_attribute x
   OR (SELECT count(DISTINCT (c.oid,x.attname)) FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid,
     LATERAL aclexplode(x.attacl) a WHERE x.attacl IS NOT NULL AND a.grantee=owner_oid)<>5"""
 GLOBAL_AGGREGATE_AFTER = """(SELECT coalesce(bool_or(a.privilege_type<>'UPDATE' OR a.is_grantable OR NOT EXISTS(SELECT 1 FROM jsonb_each_text(locks) l WHERE c.oid=to_regclass('public.'||l.key) AND x.attname=l.value)),false) OR count(DISTINCT (c.oid,x.attname))<>5 FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid,LATERAL aclexplode(x.attacl) a WHERE x.attacl IS NOT NULL AND a.grantee=owner_oid)"""
+# Keep the public writable-column set and its exact distinct cardinality.
+PUBLIC_AGGREGATE_BEFORE = """EXISTS(SELECT 1 FROM pg_class c JOIN pg_attribute a ON a.attrelid=c.oid
+   WHERE c.relnamespace='public'::regnamespace AND a.attnum>0 AND NOT a.attisdropped
+    AND (a.attacl IS NOT NULL AND EXISTS(SELECT 1 FROM aclexplode(a.attacl) acl WHERE acl.grantee IN (owner_oid,0::oid) AND acl.privilege_type IN ('INSERT','REFERENCES','UPDATE')))
+    AND NOT EXISTS(SELECT 1 FROM jsonb_each_text(locks) l WHERE c.oid=to_regclass('public.'||l.key) AND a.attname=l.value))
+  OR (SELECT count(DISTINCT (c.oid,a.attname)) FROM pg_class c JOIN pg_attribute a ON a.attrelid=c.oid
+   WHERE c.relnamespace='public'::regnamespace AND a.attnum>0 AND NOT a.attisdropped
+    AND (a.attacl IS NOT NULL AND EXISTS(SELECT 1 FROM aclexplode(a.attacl) acl WHERE acl.grantee IN (owner_oid,0::oid) AND acl.privilege_type IN ('INSERT','REFERENCES','UPDATE'))))<>5"""
+PUBLIC_AGGREGATE_AFTER = """(SELECT coalesce(bool_or(NOT EXISTS(SELECT 1 FROM jsonb_each_text(locks) l WHERE c.oid=to_regclass('public.'||l.key) AND a.attname=l.value)),false) OR count(DISTINCT (c.oid,a.attname))<>5 FROM pg_class c JOIN pg_attribute a ON a.attrelid=c.oid WHERE c.relnamespace='public'::regnamespace AND a.attnum>0 AND NOT a.attisdropped AND (a.attacl IS NOT NULL AND EXISTS(SELECT 1 FROM aclexplode(a.attacl) acl WHERE acl.grantee IN (owner_oid,0::oid) AND acl.privilege_type IN ('INSERT','REFERENCES','UPDATE'))))"""
 ERROR = 'CAPACITY_CATALOG_PROFILE_INSTALLATION_DRIFTED'
 
 
@@ -51,7 +60,8 @@ def catalog_fact_body():
     body = epoch._replace(original, COLUMN_BEFORE, COLUMN_AFTER, 2)
     for before, after in GLOBAL_COLUMN_FILTERS:
         body = epoch._replace(body, before, after)
-    return epoch._replace(body, GLOBAL_AGGREGATE_BEFORE, GLOBAL_AGGREGATE_AFTER)
+    body = epoch._replace(body, GLOBAL_AGGREGATE_BEFORE, GLOBAL_AGGREGATE_AFTER)
+    return epoch._replace(body, PUBLIC_AGGREGATE_BEFORE, PUBLIC_AGGREGATE_AFTER)
 
 
 def catalog_private_statements():
