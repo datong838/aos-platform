@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
-  "authority_revision": "AOS-001781",
+  "authority_revision": "AOS-001782",
   "task_base_revision": "AOS-001698",
-  "step": "real-eight-node-Receipt-physical-late-writer-missing-end-COMMIT-verified-full-native-ending-next",
+  "step": "closed-complete8-end-facts-native-metadata-green-full-positive-ending-pending",
   "evidence_files": [
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/checkpoint-file-bound-1755/history-index.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/late-writer-red-verification-1735.json",
@@ -37,7 +37,8 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/signed-source-1765.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/receipt-catalog-native-1765-r1/verification.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/fixture-restoration-1766/verification.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/receipt-fresh-ingress-1767-r2/verification.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/receipt-fresh-ingress-1767-r2/verification.json",
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/complete-end-facts-1781/review.json"
   ],
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
