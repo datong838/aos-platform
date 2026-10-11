@@ -1,0 +1,24 @@
+{
+  "outcome": "CATALOG_DELTA_REUSE_BOUNDARY_VERIFIED",
+  "functionsMatched": 78,
+  "metadataDifferences": 0,
+  "oidOnlyChanges": 5,
+  "mappedCatalogEdgesExact": true,
+  "connectionsIndependentlyMatched": true,
+  "currentFourSourcesMatch1824": true,
+  "nineTablesZero": true,
+  "databaseWrites": 0,
+  "businessFunctionCalls": 0,
+  "fullRuntimeClosure": false,
+  "executionAuthorized": false,
+  "sourceFiles": {
+    "plan.md": "d81a70edd66f31d9c9d0d3ee82f0d95594931d98a6d8c18dfad85d4450d20848",
+    "audit.py": "3d0fcf69aff8bf8b8f47ff7cb27b8c3f7a08f3ec15e2052f3655331e5073ef67",
+    "result.json": "7850e8a8d25cd0dc17c40f80daddb43b48f619473660b9a08f2a29ed4e8b7212"
+  },
+  "retainedEvidenceHashes": {
+    ".evidence/gt-shared-parent-native-ending-20261011/planner-indirect-1798/result.json": "c86f172e81a857a3a86ee6d948a60f4e3d0feb4f5448948b45bb8013294f8708",
+    ".evidence/gt-shared-parent-native-ending-20261011/definer-boundary-1824/result.json": "4138d6cba4aa16f49f5ad282c05783d19f7c10050f9e3407a44e244d62787c6b",
+    ".evidence/gt-shared-parent-native-ending-20261011/planner-source-1797/observed-oids.json": "4e285c27b9c13f25951090a75d84c1a6df1a02bdaa7099c5b46f9e75ccc9c028"
+  }
+}
