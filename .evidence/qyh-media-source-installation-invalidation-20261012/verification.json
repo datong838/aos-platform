@@ -1,0 +1,22 @@
+{
+  "baseHead": "8478e0fdb1d25fca2ce1b6fc0c67e334f26899fa",
+  "passed": 32,
+  "skipped": 0,
+  "warnings": 7,
+  "newNativeCases": 4,
+  "policyBytesTamperRejected": true,
+  "signatureEnvelopeTamperRejected": true,
+  "ruleUpdateRejectedSqlstate": "55000",
+  "originalRollbackRevision": 6,
+  "originalRollbackActiveRevision": null,
+  "persistedProfileReceiptCannotBypassFailedSource": true,
+  "differentOriginalApprovedInstallationRestoresSource": true,
+  "replayReceiptCount": 1,
+  "testOnlyControlPlane": true,
+  "realHostUninstallReinstallAccepted": false,
+  "formalIdentityConnected": false,
+  "currentDatabaseWrites": 0,
+  "apiChanged": false,
+  "fixtureRoleAbsentAfterTest": true,
+  "testSha256": "224dc49b7515f3282101be73209db27bed38286f63d58f4f6d26a178c719b78e"
+}

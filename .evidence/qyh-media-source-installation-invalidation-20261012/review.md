@@ -1,0 +1,9 @@
+# 来源失效及原安装恢复复审
+
+32PASS0skip7既有warnings，其中4新增native，前波7complete+2原子fail/3安装/16wiring相邻。新增测试只复用真实原Source connector和临时限定role、签名Policy、4原Rule登记Receipt与原安装，未mock reader/commit/active。策略文件追加空白字节或签名envelope改为有效长度的零签名，实际readerFalse、原Store拒绝且无Profile/Receipt；finally恢复fixture原字节，readerTrue。只修改临时私有copy，不改仓库已签包。原Rule表spec UPDATE实际被原append-only函数拒绝SQLSTATE55000/AIP4_APPEND_ONLY，前后spec/hash不变，Source仍有效；这项是数据库不可变性而不是伪造持久化损坏。
+
+先实际原Store Profile commit，再原InstallationService.rollback CAS5->6/activeNone，新Source读取失败，同key既有Receipt也不能绕过Source，因为原Store先核Source后查replay。随后原resolve与全套create/submit/独立approve/apply/verify生成不同installationUUID，而不是改原active；newSourceTrue，同keyProfile幂等回读仍只有1Receipt。此项为临时declarative控制平面原安装替换，并非生产Host卸载重装；没有启用worker/Owner/Provider或历史Run。
+
+该波没有发现需改产品的错误，只有原协议负门覆盖，不制造RED。四测试完整路径覆盖原签名/安装/Rule不可变边界，符合方案；无UI变化也不以页面200替代正式八页验收。触发器无禁用，role/passfile清理由既有fixture执行，testdb由conftest删除，独立psql源rolecount0。原恢复库/API和22tracked用户改动保留。
+
+正式IdP/publisher路径仍待原问题答复，不重复询问或假造身份。后续已登记Source项为有完整签名政策但错Rule精确内容、混版/安装歧义及生产权限收口的所有原Writer兼容覆盖；当前Source表grant迁移仍不能仅REVOKE线上runtime，首链和八工作台仍未完成，Goal ACTIVE。
