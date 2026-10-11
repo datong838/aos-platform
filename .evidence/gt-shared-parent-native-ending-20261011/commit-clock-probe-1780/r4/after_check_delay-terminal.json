@@ -1,0 +1,11 @@
+{
+  "label": "after_check_delay",
+  "xid": "61822",
+  "outcome": "committed",
+  "error": null,
+  "notices": [
+    "TEST_CLOCK_CHECK:844992143105298:844992143304839",
+    "TEST_CLOCK_DELAY_DONE:844992143710145",
+    "TEST_CLOCK_COMMITTED:844992143711616"
+  ]
+}

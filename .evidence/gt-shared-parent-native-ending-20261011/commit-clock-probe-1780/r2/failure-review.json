@@ -1,0 +1,7 @@
+{
+  "cause": "prior summary confused final artifact digest with actual SDK image identity",
+  "cancelled_confirmed_terminal": true,
+  "metadata_only": true,
+  "no_installation_intent": true,
+  "correct_sdk_id": "sha256:851765e2f8107a9014019a4431240db650318edf8cbd542f1e4514993581e992"
+}

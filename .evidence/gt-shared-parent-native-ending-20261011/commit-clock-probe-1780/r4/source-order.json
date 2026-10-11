@@ -1,0 +1,5 @@
+{
+  "sha256": "792fdf26fb7fb2fa5c30862b4ca83754ca7502dceb284b85fbdbe9ed539a8d24",
+  "precommit_before_durable_record_before_commit_callback": true,
+  "direct_flush_timestamp_measured": false
+}

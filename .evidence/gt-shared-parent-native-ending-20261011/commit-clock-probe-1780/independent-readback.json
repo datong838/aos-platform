@@ -1,0 +1,26 @@
+{
+  "status": "READONLY_COUNTEREXAMPLE_RECONCILED",
+  "schema": "test_owned_clock_3870d0a7a14d484c890b328bfe81dd78",
+  "xid_states": {
+    "expired": "aborted",
+    "no_delay": "committed",
+    "after_check_delay": "committed"
+  },
+  "markers": [
+    [
+      "after_check_delay",
+      "61822"
+    ],
+    [
+      "no_delay",
+      "61821"
+    ]
+  ],
+  "binary_exact": true,
+  "acl_runtime_closed": true,
+  "database_readback_clock": "2026-10-11 00:03:02.399377+00",
+  "gap_after_deadline_microseconds": 405306,
+  "direct_durable_flush_timestamp": false,
+  "no_probe_invocation": true,
+  "no_root_or_execution_authority": true
+}

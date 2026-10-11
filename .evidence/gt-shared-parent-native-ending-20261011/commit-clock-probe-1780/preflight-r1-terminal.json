@@ -1,0 +1,7 @@
+{
+  "exit_code": 1,
+  "phase": "readonly_preflight",
+  "cause": "proname confused with C prosrc; actual pending_relations prosrc aos_admission_pending_relations",
+  "build_or_install_intent_created": false,
+  "external_mutations": false
+}

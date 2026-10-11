@@ -1,0 +1,9 @@
+{
+  "label": "expired",
+  "xid": "61820",
+  "outcome": "rejected",
+  "error": "TEST_CLOCK_EXPIRED",
+  "notices": [
+    "TEST_CLOCK_CHECK:844992143091912:844992143091517"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "source_sha256": "e54b88cad2692f1fd19528bbde8219c201e0fdd5165e0909b5a67efe72cef361",
+  "recipe_sha256": "54c905481641b79c4181368787fd22b9380f9d40e4090713e152ebfc1fba698b",
+  "sdk_image": "sha256:e2b64beaa905db2b8519bf667e40309647f440d168bb0241639e118c64714f0e",
+  "network": "none",
+  "pg_execution": false
+}

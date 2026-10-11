@@ -1,0 +1,8 @@
+{
+  "build_exit_code": 0,
+  "extraction_create_exit_code": 1,
+  "cause": "scratch extraction create lacked required inert command",
+  "container_readback_missing": true,
+  "original_copy_or_db_write_performed": false,
+  "next_attempt_reuses_known_terminal_build": true
+}

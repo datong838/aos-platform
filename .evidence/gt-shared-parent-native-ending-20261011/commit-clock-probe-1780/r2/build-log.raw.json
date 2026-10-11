@@ -1,0 +1,4 @@
+{
+  "stdout": "",
+  "stderr": "#0 building with \"desktop-linux\" instance using docker driver\n\n#1 [internal] load build definition from Dockerfile\n#1 transferring dockerfile: 437B done\n#1 DONE 0.0s\n\n#2 [internal] load metadata for docker.io/library/aos-pg-core-sdk-1779:exact@sha256:e2b64beaa905db2b8519bf667e40309647f440d168bb0241639e118c64714f0e\n#2 CANCELED\nERROR: failed to build: failed to solve: Canceled: context canceled\n"
+}

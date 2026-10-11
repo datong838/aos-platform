@@ -1,0 +1,61 @@
+{
+  "status": "PRECOMMIT_CLOCK_WINDOW_COUNTEREXAMPLE_VERIFIED",
+  "cases": [
+    {
+      "label": "expired",
+      "xid": "61820",
+      "outcome": "rejected",
+      "error": "TEST_CLOCK_EXPIRED",
+      "notices": [
+        "TEST_CLOCK_CHECK:844992143091912:844992143091517"
+      ]
+    },
+    {
+      "label": "no_delay",
+      "xid": "61821",
+      "outcome": "committed",
+      "error": null,
+      "notices": [
+        "TEST_CLOCK_CHECK:844992143098687:844992148098287",
+        "TEST_CLOCK_COMMITTED:844992143098864"
+      ]
+    },
+    {
+      "label": "after_check_delay",
+      "xid": "61822",
+      "outcome": "committed",
+      "error": null,
+      "notices": [
+        "TEST_CLOCK_CHECK:844992143105298:844992143304839",
+        "TEST_CLOCK_DELAY_DONE:844992143710145",
+        "TEST_CLOCK_COMMITTED:844992143711616"
+      ]
+    }
+  ],
+  "independent_xid_states": {
+    "expired": "aborted",
+    "no_delay": "committed",
+    "after_check_delay": "committed"
+  },
+  "markers": [
+    [
+      "after_check_delay",
+      "61822"
+    ],
+    [
+      "no_delay",
+      "61821"
+    ]
+  ],
+  "clock_order": {
+    "check": 844992143105298,
+    "deadline": 844992143304839,
+    "after_delay": 844992143710145,
+    "postcommit_callback": 844992143711616
+  },
+  "signature_and_roles_and_pending_reader_unchanged": true,
+  "lab_not_restarted": true,
+  "full_task_delivered": false,
+  "execution_allowed": false,
+  "durable_flush_timestamp_directly_measured": false
+}

@@ -1,0 +1,25 @@
+{
+  "status": "PRECOMMIT_CLOCK_NOT_DURABLE_DEADLINE_COUNTEREXAMPLE_VERIFIED",
+  "cases": {
+    "expired": "aborted",
+    "no_delay": "committed",
+    "after_check_delay": "committed"
+  },
+  "late_callback_gap_after_deadline_microseconds": 405306,
+  "independent_xid_and_marker_and_binary_readback": true,
+  "upstream_commit_order_verified": true,
+  "direct_wal_flush_timestamp_measured": false,
+  "initial_preflight_wrong_sql_name_retained": true,
+  "wrong_sdk_summary_id_cancelled_before_build_retained": true,
+  "scratch_create_no_command_failure_reconciled_no_container": true,
+  "r4_reuses_known_terminal_build_no_unknown_replay": true,
+  "product_code_modified": false,
+  "formal_db_services_root_provider_unchanged": true,
+  "full_task_delivered": false,
+  "model_review_invoked": false,
+  "next_steps": [
+    "Preserve Main implementation-plan-1698 section4:decision clock is not WAL/ACK. Whole ending must include trustworthy postcommit confirmation and conservative expiry/unknown retention; no fake rollback after durable commit.",
+    "Audit exact full receiver lifecycle/callback/bootstrap; late delay callback is counterexample only, not permissible Main profile. Current closed gates remain.",
+    "Original strict durable-deadline semantics must not silently be replaced by precommit timestamp, measured latency buffer or presumed max fsync bound."
+  ]
+}
