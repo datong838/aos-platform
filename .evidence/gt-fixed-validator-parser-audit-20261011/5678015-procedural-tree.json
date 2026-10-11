@@ -1,0 +1,562 @@
+[
+  {
+    "PLpgSQL_function": {
+      "datums": [
+        {
+          "PLpgSQL_var": {
+            "refname": "p_plan",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_pending_hash",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "text"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_xid",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "xid8"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_pid",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "int4"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "found",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "bool"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "material",
+            "lineno": 2,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "aos_shared_parent_admission_private.end_authority%rowtype"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "original",
+            "lineno": 2,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "aos_shared_parent_admission_private.pending_origin%rowtype"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "pending",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "facts",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "body",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "packet",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_raw",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "bytea"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "verified",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "certificates",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "bytea"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 15,
+            "fields": [
+              {
+                "name": "material",
+                "varno": 5
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 19,
+            "fields": [
+              {
+                "name": "original",
+                "varno": 6
+              }
+            ]
+          }
+        }
+      ],
+      "action": {
+        "PLpgSQL_stmt_block": {
+          "lineno": 4,
+          "body": [
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 5,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "session_user<>'aos_provider_capacity_occupation'\n              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'\n              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'\n              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'\n              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'\n              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'\n              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'\n              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project'\n              OR p_xid IS DISTINCT FROM pg_current_xact_id() OR p_pid IS DISTINCT FROM pg_backend_pid()",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 14,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_RETAINED_NATIVE_CALLER_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'42501'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 15,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT *               FROM aos_shared_parent_admission_private.end_authority WHERE plan_id=p_plan FOR SHARE",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 15,
+                    "fields": [
+                      {
+                        "name": "material",
+                        "varno": 5
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 16,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "NOT FOUND OR material.pending_hash IS DISTINCT FROM p_pending_hash\n              OR material.caller_xid IS DISTINCT FROM p_xid OR material.caller_pid IS DISTINCT FROM p_pid",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 18,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_RETAINED_AUTHORITY_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 19,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT *               FROM aos_shared_parent_admission_private.pending_origin WHERE plan_id=p_plan FOR SHARE",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 19,
+                    "fields": [
+                      {
+                        "name": "original",
+                        "varno": 6
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 20,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "NOT FOUND OR original.content_hash IS DISTINCT FROM p_pending_hash\n              OR original.caller_xid IS DISTINCT FROM p_xid OR original.caller_pid IS DISTINCT FROM p_pid",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 22,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_RETAINED_PENDING_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 23,
+                "varno": 11,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "p_raw:=material.source_raw",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 24,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "p_raw IS NULL OR octet_length(p_raw) NOT BETWEEN 2 AND 1048576",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 25,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_RETAINED_PACKET_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 26,
+                "varno": 10,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "packet:=convert_from(p_raw,'UTF8')::jsonb",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 27,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "jsonb_typeof(packet) IS DISTINCT FROM 'object'\n              OR jsonb_typeof(packet->'authentication') IS DISTINCT FROM 'object'",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 29,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_RETAINED_PACKET_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 30,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "convert_to(public.canonical_asset_registry_jsonb(packet),'UTF8') IS DISTINCT FROM p_raw\n              OR (SELECT count(*) FROM jsonb_object_keys(packet))<>4\n              OR packet-ARRAY['protocol','tenant','sourceRef','authentication'] IS DISTINCT FROM '{}'::jsonb\n              OR packet->>'protocol' IS DISTINCT FROM 'aos-provider-capacity-source-consumption/v1'\n              OR packet->'tenant' IS DISTINCT FROM jsonb_build_object('orgId','org-org','projectId','dev-project')\n              OR (SELECT count(*) FROM jsonb_object_keys(packet->'authentication'))<>4\n              OR (packet->'authentication')-ARRAY['consumerSubject','oidcIssuer','oidcAudience','authenticationExpiresAt'] IS DISTINCT FROM '{}'::jsonb",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 37,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_RETAINED_PACKET_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 38,
+                "varno": 7,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "pending:=jsonb_build_object('planId',original.plan_id,'immutable',original.body,'contentHash',original.content_hash)",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 39,
+                "varno": 8,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "facts:=pending#>'{immutable,origin,immutable,originalRisk,originalFacts}'",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 40,
+                "varno": 9,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "body:=jsonb_build_object('schemaVersion','aos.shared-parent-end-authority/v1',\n              'planId',pending->'planId','pendingOriginHash',pending->>'contentHash',\n              'sourcePacketHash','sha256:'||encode(sha256(p_raw),'hex'),\n              'sourceRef',facts#>'{target,sourceRef}',\n              'targetHold',facts#>'{target,reservationId}','targetRequestId',facts#>'{target,requestId}',\n              'targetRequestHash',facts#>'{target,requestHash}',\n              'judgeHold',facts#>'{judge,reservationId}','judgeRequestId',facts#>'{judge,requestId}',\n              'judgeRequestHash',facts#>'{judge,requestHash}',\n              'manifestHash',pending#>'{immutable,origin,immutable,manifestHash}',\n              'callerLogin',session_user,'callerXid',pg_current_xact_id()::text,'callerPid',pg_backend_pid(),\n              'state','awaiting_full_admission','executionAllowed',false)",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 51,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "body IS DISTINCT FROM material.body\n              OR material.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(body),'UTF8')),'hex')\n              OR packet->'sourceRef' IS DISTINCT FROM body->'sourceRef'",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 54,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_RETAINED_BINDING_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 55,
+                "varno": 13,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "certificates:=convert_to(public.canonical_asset_registry_jsonb(original.body->'certificates'),'UTF8')",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 56,
+                "varno": 12,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "verified:=public.read_shared_parent_pending_origin(p_raw,body->'sourceRef',\n              (body->>'targetHold')::uuid,body->>'targetRequestId',body->>'targetRequestHash',\n              (body->>'judgeHold')::uuid,body->>'judgeRequestId',body->>'judgeRequestHash',p_plan,\n              original.body#>'{origin,immutable,manifest}',body->>'manifestHash',certificates,p_pending_hash)",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_return": {
+                "lineno": 60,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "verified||jsonb_build_object('authorityMaterialHash',material.content_hash,'sourcePacketHash',body->>'sourcePacketHash')",
+                    "parseMode": 2
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+]

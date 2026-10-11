@@ -1,0 +1,301 @@
+[
+  {
+    "PLpgSQL_function": {
+      "datums": [
+        {
+          "PLpgSQL_var": {
+            "refname": "p_plan",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_receipt_hash",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "text"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_xid",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "xid8"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_pid",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "int4"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "found",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "bool"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "receipt",
+            "lineno": 2,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "aos_shared_parent_physical_private.complete_receipt_v2%rowtype"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "sealed",
+            "lineno": 2,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "current_members",
+            "lineno": 2,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 14,
+            "fields": [
+              {
+                "name": "receipt",
+                "varno": 5
+              }
+            ]
+          }
+        }
+      ],
+      "action": {
+        "PLpgSQL_stmt_block": {
+          "lineno": 3,
+          "body": [
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 4,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "session_user<>'aos_provider_capacity_occupation'\n              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'\n              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'\n              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'\n              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'\n              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'\n              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'\n              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' OR p_xid IS DISTINCT FROM pg_current_xact_id()\n              OR p_pid IS DISTINCT FROM pg_backend_pid()",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 13,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_FINAL_PHYSICAL_CALLER_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'42501'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 14,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT *              FROM aos_shared_parent_physical_private.complete_receipt_v2 WHERE plan_id=p_plan FOR SHARE",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 14,
+                    "fields": [
+                      {
+                        "name": "receipt",
+                        "varno": 5
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 15,
+                "varno": 6,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "sealed:=receipt.body->'physicalFacts'",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 16,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "receipt.plan_id IS NULL OR receipt.org_id IS DISTINCT FROM 'org-org'\n              OR receipt.project_id IS DISTINCT FROM 'dev-project'\n              OR receipt.caller_xid IS DISTINCT FROM p_xid OR receipt.caller_pid IS DISTINCT FROM p_pid\n              OR receipt.content_hash IS DISTINCT FROM p_receipt_hash\n              OR receipt.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(\n                public.canonical_asset_registry_jsonb(receipt.body),'UTF8')),'hex')\n              OR receipt.body->>'schemaVersion' IS DISTINCT FROM 'aos.shared-parent-complete-receipt-preparation/v2'\n              OR receipt.body->>'planId' IS DISTINCT FROM p_plan::text\n              OR receipt.body#>>'{tenant,orgId}' IS DISTINCT FROM 'org-org'\n              OR receipt.body#>>'{tenant,projectId}' IS DISTINCT FROM 'dev-project'\n              OR receipt.body->>'callerLogin' IS DISTINCT FROM session_user\n              OR receipt.body->>'callerXid' IS DISTINCT FROM p_xid::text\n              OR receipt.body->>'callerPid' IS DISTINCT FROM p_pid::text\n              OR receipt.body->>'state' IS DISTINCT FROM 'awaiting_complete_native_end'\n              OR receipt.body->'executionAllowed' IS DISTINCT FROM 'false'::jsonb\n              OR receipt.body->'windowExpiryReleasesRisk' IS DISTINCT FROM 'false'::jsonb\n              OR receipt.body->'unknownCommitRetainsRisk' IS DISTINCT FROM 'true'::jsonb\n              OR jsonb_typeof(sealed) IS DISTINCT FROM 'object'\n              OR sealed->>'planId' IS DISTINCT FROM p_plan::text\n              OR sealed->>'callerXid' IS DISTINCT FROM p_xid::text\n              OR sealed->>'callerPid' IS DISTINCT FROM p_pid::text\n              OR sealed->>'physicalAccountId' IS DISTINCT FROM receipt.physical_account_id::text\n              OR sealed->>'initialCallAuthorityHash' IS DISTINCT FROM receipt.material_hash\n              OR sealed->>'obligationHash' IS DISTINCT FROM receipt.body#>>'{nodes,initialTargetObligation}'\n              OR sealed->'executionAllowed' IS DISTINCT FROM 'false'::jsonb\n              OR jsonb_typeof(sealed->'unresolvedMembers') IS DISTINCT FROM 'array'\n              OR jsonb_typeof(sealed->'accountMapping') IS DISTINCT FROM 'object'\n              OR receipt.body->>'physicalFactsHash' IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(\n                public.canonical_asset_registry_jsonb(sealed),'UTF8')),'hex')\n              OR sealed->>'unresolvedSetHash' IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(\n                public.canonical_asset_registry_jsonb(sealed->'unresolvedMembers'),'UTF8')),'hex')",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 47,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_FINAL_PHYSICAL_RECEIPT_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 48,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "NOT EXISTS(SELECT 1 FROM jsonb_array_elements(sealed->'unresolvedMembers') member\n              WHERE member->>'kind'='initialTarget' AND member->>'id'=p_plan::text\n                AND member#>>'{nativeRow,content_hash}'=sealed->>'obligationHash')",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 51,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_FINAL_PHYSICAL_SELF_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 52,
+                "varno": 7,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "current_members:=public.read_shared_parent_unresolved_members(receipt.physical_account_id)",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 53,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "current_members->'accountMapping' IS DISTINCT FROM sealed->'accountMapping'\n              OR current_members->'accountVersion' IS DISTINCT FROM sealed->'accountVersion'\n              OR current_members->'unresolvedMembers' IS DISTINCT FROM sealed->'unresolvedMembers'\n              OR current_members->'unresolvedSetHash' IS DISTINCT FROM sealed->'unresolvedSetHash'\n              OR current_members->'unresolvedRequests' IS DISTINCT FROM sealed->'unresolvedRequests'\n              OR current_members->'unresolvedTokenUpperBound' IS DISTINCT FROM sealed->'unresolvedTokenUpperBound'",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 59,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_FINAL_PHYSICAL_CHANGED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_return": {
+                "lineno": 60,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "jsonb_build_object('planId',p_plan,'receiptHash',receipt.content_hash,\n              'physicalFactsHash',receipt.body->>'physicalFactsHash','unresolvedSetHash',sealed->>'unresolvedSetHash',\n              'physicalComparisonMatched',true,'executionAllowed',false)",
+                    "parseMode": 2
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+]

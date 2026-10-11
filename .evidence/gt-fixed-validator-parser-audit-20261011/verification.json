@@ -1,0 +1,23 @@
+{
+  "outcome": "PARSER_ROUTE_LIMITATIONS_INDEPENDENTLY_VERIFIED",
+  "grammarMismatch": "installed18.4 vs native16.14",
+  "proceduralFunctionsExamined": 4,
+  "sqlQueryFragments": 102,
+  "parsedFragments": 77,
+  "unparsedAssignmentFragments": 25,
+  "unparsedModes": [
+    3
+  ],
+  "freshConnectionSourceOwnerSearchPathAndAclExact": true,
+  "freshNineTablesZero": true,
+  "otherClients": 0,
+  "businessFunctionsInvoked": 0,
+  "databaseWrites": 0,
+  "nativeClosureAccepted": false,
+  "executionAuthorized": false,
+  "sourceFiles": {
+    "plan.md": "b3f949b3ceeb3e858df0923caa240502761c731f7aac81e85845f9d54ddcdc45",
+    "audit.py": "0c492b697f44e4bf4c1b083063ab9e2c04e93cde1ef36afd0a8fbf11dc91455a",
+    "result.json": "435c52614904cf2a2c920ac5ac3d3b8211daee11cb0e63dc2e6b7428d6dd570e"
+  }
+}

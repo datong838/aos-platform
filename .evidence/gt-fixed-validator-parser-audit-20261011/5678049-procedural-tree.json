@@ -1,0 +1,922 @@
+[
+  {
+    "PLpgSQL_function": {
+      "datums": [
+        {
+          "PLpgSQL_var": {
+            "refname": "p_plan",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_receipt_hash",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "text"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_xid",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "xid8"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_pid",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "int4"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "found",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "bool"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "obligation",
+            "lineno": 2,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "aos_shared_parent_physical_private.initial_target_obligation%rowtype"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "target_row",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "aos_shared_parent_physical_private.target_intent%rowtype"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "judge_row",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "aos_shared_parent_physical_private.judge_dependency%rowtype"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "material",
+            "lineno": 4,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "aos_shared_parent_physical_private.initial_call_authority%rowtype"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "window_row",
+            "lineno": 4,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "aos_shared_parent_physical_private.initial_window_obligation%rowtype"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "risk_row",
+            "lineno": 5,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "aos_shared_parent_physical_private.complete_parent_risk%rowtype"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_rec": {
+            "refname": "node",
+            "dno": 11,
+            "lineno": 5
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "count_nodes",
+            "lineno": 5,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "int4"
+              }
+            },
+            "default_val": {
+              "PLpgSQL_expr": {
+                "query": "0",
+                "parseMode": 2
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "hashes",
+            "lineno": 6,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            },
+            "default_val": {
+              "PLpgSQL_expr": {
+                "query": "'{}'::jsonb",
+                "parseMode": 2
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "pending",
+            "lineno": 6,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "facts",
+            "lineno": 6,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "intents",
+            "lineno": 6,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "live",
+            "lineno": 6,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "member_set",
+            "lineno": 6,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "receipt",
+            "lineno": 7,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "aos_shared_parent_physical_private.complete_receipt_v2%rowtype"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "physical_match",
+            "lineno": 7,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 19,
+            "fields": [
+              {
+                "name": "receipt",
+                "varno": 19
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 26,
+            "fields": [
+              {
+                "name": "obligation",
+                "varno": 5
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 27,
+            "fields": [
+              {
+                "name": "target_row",
+                "varno": 6
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 28,
+            "fields": [
+              {
+                "name": "judge_row",
+                "varno": 7
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 29,
+            "fields": [
+              {
+                "name": "material",
+                "varno": 8
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 30,
+            "fields": [
+              {
+                "name": "window_row",
+                "varno": 9
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 31,
+            "fields": [
+              {
+                "name": "risk_row",
+                "varno": 10
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_recfield": {
+            "fieldname": "caller_xid",
+            "recparentno": 11
+          }
+        },
+        {
+          "PLpgSQL_recfield": {
+            "fieldname": "caller_pid",
+            "recparentno": 11
+          }
+        },
+        {
+          "PLpgSQL_recfield": {
+            "fieldname": "org_id",
+            "recparentno": 11
+          }
+        },
+        {
+          "PLpgSQL_recfield": {
+            "fieldname": "project_id",
+            "recparentno": 11
+          }
+        },
+        {
+          "PLpgSQL_recfield": {
+            "fieldname": "body",
+            "recparentno": 11
+          }
+        },
+        {
+          "PLpgSQL_recfield": {
+            "fieldname": "content_hash",
+            "recparentno": 11
+          }
+        },
+        {
+          "PLpgSQL_recfield": {
+            "fieldname": "name",
+            "recparentno": 11
+          }
+        }
+      ],
+      "action": {
+        "PLpgSQL_stmt_block": {
+          "lineno": 8,
+          "body": [
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 9,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "session_user<>'aos_provider_capacity_occupation'\n              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'\n              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'\n              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'\n              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'\n              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'\n              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'\n              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project' OR p_xid IS DISTINCT FROM pg_current_xact_id()\n              OR p_pid IS DISTINCT FROM pg_backend_pid()",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 18,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_COMPLETE_END_CALLER_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'42501'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 19,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT *              FROM aos_shared_parent_physical_private.complete_receipt_v2 WHERE plan_id=p_plan FOR SHARE",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 19,
+                    "fields": [
+                      {
+                        "name": "receipt",
+                        "varno": 19
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 20,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "NOT FOUND OR receipt.caller_xid IS DISTINCT FROM p_xid OR receipt.caller_pid IS DISTINCT FROM p_pid\n              OR receipt.org_id IS DISTINCT FROM 'org-org' OR receipt.project_id IS DISTINCT FROM 'dev-project'\n              OR receipt.content_hash IS DISTINCT FROM p_receipt_hash\n              OR receipt.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(\n                public.canonical_asset_registry_jsonb(receipt.body),'UTF8')),'hex')",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 25,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_COMPLETE_END_RECEIPT_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 26,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT *                 FROM aos_shared_parent_physical_private.initial_target_obligation WHERE plan_id=receipt.plan_id FOR SHARE",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 26,
+                    "fields": [
+                      {
+                        "name": "obligation",
+                        "varno": 5
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 27,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT *                 FROM aos_shared_parent_physical_private.target_intent WHERE plan_id=receipt.plan_id FOR SHARE",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 27,
+                    "fields": [
+                      {
+                        "name": "target_row",
+                        "varno": 6
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 28,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT *                FROM aos_shared_parent_physical_private.judge_dependency WHERE plan_id=receipt.plan_id FOR SHARE",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 28,
+                    "fields": [
+                      {
+                        "name": "judge_row",
+                        "varno": 7
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 29,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT *               FROM aos_shared_parent_physical_private.initial_call_authority WHERE plan_id=receipt.plan_id FOR SHARE",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 29,
+                    "fields": [
+                      {
+                        "name": "material",
+                        "varno": 8
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 30,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT *                 FROM aos_shared_parent_physical_private.initial_window_obligation WHERE plan_id=receipt.plan_id FOR SHARE",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 30,
+                    "fields": [
+                      {
+                        "name": "window_row",
+                        "varno": 9
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 31,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT *               FROM aos_shared_parent_physical_private.complete_parent_risk WHERE plan_id=receipt.plan_id FOR SHARE",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 31,
+                    "fields": [
+                      {
+                        "name": "risk_row",
+                        "varno": 10
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_fors": {
+                "lineno": 32,
+                "var": {
+                  "PLpgSQL_rec": {
+                    "refname": "node",
+                    "dno": 11,
+                    "lineno": 5
+                  }
+                },
+                "body": [
+                  {
+                    "PLpgSQL_stmt_if": {
+                      "lineno": 38,
+                      "cond": {
+                        "PLpgSQL_expr": {
+                          "query": "node.caller_xid IS DISTINCT FROM receipt.caller_xid OR node.caller_pid IS DISTINCT FROM receipt.caller_pid\n                OR node.org_id IS DISTINCT FROM receipt.org_id OR node.project_id IS DISTINCT FROM receipt.project_id\n                OR node.body->>'planId' IS DISTINCT FROM receipt.plan_id::text\n                OR node.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(\n                  public.canonical_asset_registry_jsonb(node.body),'UTF8')),'hex')",
+                          "parseMode": 2
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "PLpgSQL_stmt_raise": {
+                            "lineno": 43,
+                            "elog_level": 21,
+                            "message": "SHARED_ADMISSION_RECEIPT_NODE_BINDING_REQUIRED",
+                            "options": [
+                              {
+                                "PLpgSQL_raise_option": {
+                                  "opt_type": 0,
+                                  "expr": {
+                                    "PLpgSQL_expr": {
+                                      "query": "'23514'",
+                                      "parseMode": 2
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "PLpgSQL_stmt_assign": {
+                      "lineno": 44,
+                      "varno": 13,
+                      "expr": {
+                        "PLpgSQL_expr": {
+                          "query": "hashes:=hashes||jsonb_build_object(node.name,node.content_hash)",
+                          "parseMode": 3
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "PLpgSQL_stmt_assign": {
+                      "lineno": 44,
+                      "varno": 12,
+                      "expr": {
+                        "PLpgSQL_expr": {
+                          "query": "count_nodes:=count_nodes+1",
+                          "parseMode": 3
+                        }
+                      }
+                    }
+                  }
+                ],
+                "query": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT 'initialTargetObligation' AS name,body,content_hash,caller_xid,caller_pid,org_id,project_id FROM aos_shared_parent_physical_private.initial_target_obligation WHERE plan_id=receipt.plan_id\n              UNION ALL SELECT 'targetIntent' AS name,body,content_hash,caller_xid,caller_pid,org_id,project_id FROM aos_shared_parent_physical_private.target_intent WHERE plan_id=receipt.plan_id\n              UNION ALL SELECT 'judgeDependency' AS name,body,content_hash,caller_xid,caller_pid,org_id,project_id FROM aos_shared_parent_physical_private.judge_dependency WHERE plan_id=receipt.plan_id\n              UNION ALL SELECT 'initialCallAuthority' AS name,body,content_hash,caller_xid,caller_pid,org_id,project_id FROM aos_shared_parent_physical_private.initial_call_authority WHERE plan_id=receipt.plan_id\n              UNION ALL SELECT 'initialWindowObligation' AS name,body,content_hash,caller_xid,caller_pid,org_id,project_id FROM aos_shared_parent_physical_private.initial_window_obligation WHERE plan_id=receipt.plan_id\n              UNION ALL SELECT 'completeParentRisk' AS name,body,content_hash,caller_xid,caller_pid,org_id,project_id FROM aos_shared_parent_physical_private.complete_parent_risk WHERE plan_id=receipt.plan_id",
+                    "parseMode": 0
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 46,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "count_nodes<>6 OR material.content_hash IS DISTINCT FROM receipt.material_hash\n              OR window_row.material_hash IS DISTINCT FROM material.content_hash\n              OR window_row.physical_account_id IS DISTINCT FROM obligation.physical_account_id\n              OR risk_row.physical_account_id IS DISTINCT FROM obligation.physical_account_id\n              OR risk_row.pending_hash IS DISTINCT FROM obligation.pending_hash\n              OR material.target_id IS DISTINCT FROM target_row.intent_id\n              OR material.target_hash IS DISTINCT FROM target_row.content_hash\n              OR material.judge_id IS DISTINCT FROM judge_row.intent_id\n              OR material.judge_hash IS DISTINCT FROM judge_row.content_hash",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 55,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_RECEIPT_COMPLETE_NODES_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 56,
+                "varno": 14,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "pending:=public.read_shared_parent_receipt_origin(receipt.plan_id,obligation.pending_hash,receipt.caller_xid,receipt.caller_pid)",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 57,
+                "varno": 15,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "facts:=pending#>'{immutable,origin,immutable,originalRisk,originalFacts}'",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 58,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "pending->>'sourcePacketHash' IS DISTINCT FROM material.body->>'sourcePacketHash'\n              OR pending->>'sourcePacketHash' IS DISTINCT FROM 'sha256:'||encode(sha256(material.source_raw),'hex')\n              OR risk_row.body->'originalRisk' IS DISTINCT FROM pending#>'{immutable,origin,immutable,originalRisk}'\n              OR risk_row.body->>'originalRiskHash' IS DISTINCT FROM pending#>>'{immutable,origin,immutable,originalRiskHash}'\n              OR risk_row.body->>'authorityMaterialHash' IS DISTINCT FROM pending->>'authorityMaterialHash'\n              OR risk_row.target_hold::text IS DISTINCT FROM facts#>>'{target,reservationId}'\n              OR risk_row.judge_hold::text IS DISTINCT FROM facts#>>'{judge,reservationId}'\n              OR risk_row.target_request IS DISTINCT FROM facts#>>'{target,requestId}'\n              OR risk_row.judge_request IS DISTINCT FROM facts#>>'{judge,requestId}'\n              OR obligation.physical_account_id::text IS DISTINCT FROM facts#>>'{target,physicalAccountId}'\n              OR obligation.physical_account_id::text IS DISTINCT FROM facts#>>'{judge,physicalAccountId}'",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 69,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_RECEIPT_ORIGINAL_RISK_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 70,
+                "varno": 16,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "intents:=public.verify_shared_parent_final_call_authority(receipt.plan_id,material.content_hash,receipt.caller_xid,receipt.caller_pid)",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 71,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "intents->>'targetIntentHash' IS DISTINCT FROM target_row.content_hash\n              OR intents->>'judgeDependencyHash' IS DISTINCT FROM judge_row.content_hash\n              OR intents->>'initialCallAuthorityHash' IS DISTINCT FROM material.content_hash",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 74,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_RECEIPT_CURRENT_INTENTS_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 75,
+                "varno": 13,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "hashes:=hashes||jsonb_build_object('pendingOrigin',pending->>'contentHash',\n              'endAuthority',pending->>'authorityMaterialHash')",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 77,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "hashes IS DISTINCT FROM receipt.body->'nodes'\n              OR receipt.body->>'originalRiskHash' IS DISTINCT FROM risk_row.body->>'originalRiskHash'\n              OR receipt.body->>'sourcePacketHash' IS DISTINCT FROM material.body->>'sourcePacketHash'\n              OR receipt.physical_account_id IS DISTINCT FROM obligation.physical_account_id",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 81,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_COMPLETE_END_NODES_CHANGED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 82,
+                "varno": 20,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "physical_match:=public.verify_shared_parent_final_physical(p_plan,p_receipt_hash,p_xid,p_pid)",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 83,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "physical_match->'physicalComparisonMatched' IS DISTINCT FROM 'true'::jsonb",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 84,
+                      "elog_level": 21,
+                      "message": "SHARED_ADMISSION_COMPLETE_END_PHYSICAL_REQUIRED",
+                      "options": [
+                        {
+                          "PLpgSQL_raise_option": {
+                            "opt_type": 0,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "'23514'",
+                                "parseMode": 2
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_return": {
+                "lineno": 85,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "jsonb_build_object('planId',p_plan,'receiptHash',receipt.content_hash,\n              'nodes',hashes,'originalRiskHash',receipt.body->>'originalRiskHash',\n              'sourcePacketHash',receipt.body->>'sourcePacketHash','physicalComparison',physical_match,\n              'factsReadAt',clock_timestamp(),'nativeEndRequired',true,\n              'durableDeadlineEstablished',false,'executionAllowed',false)",
+                    "parseMode": 2
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+]
