@@ -33,19 +33,23 @@ ROLE = "aos_contract_source_issuer"
 @pytest.fixture
 def complete_case(tmp_path, monkeypatch, request):
     # The signing builder and authority readers remain original implementations.
+    variant = getattr(request, "param", None)
+    assert variant in (None, "ruleDigestMismatch", "testOnlyRule")
     root = tmp_path / "unsigned-inputs"
     shutil.copytree(bundles.M5_SOURCE_ROOT, root)
     gates = []
     bodies = []
     for kind in ("fact", "brand", "copyright", "platform"):
         body = RegisterReviewRuleRevisionRequest(
-            ruleId="qyh-fixture-" + kind, revision=1,
-            spec={"testOnly": False, "kind": kind, "fixtureOnly": True},
+            ruleId="qyh-fixture-" + kind + ("-" + variant if variant else ""), revision=1,
+            spec={"testOnly": variant == "testOnlyRule" and kind == "fact", "kind": kind, "fixtureOnly": True},
         )
         bodies.append(body)
         gates.append({"gateId": "media." + kind, "kind": kind, "returnStage": "review",
                       "ruleRef": {"resourceType": "EvalRuleRevision", "resourceId": body.rule_id,
                                   "revision": 1, "contentHash": canonical_hash(body.model_dump(mode="json", by_alias=True))}})
+    if variant == "ruleDigestMismatch":
+        gates[0]["ruleRef"]["contentHash"] = "d" * 64
     document = {"schema": "aos.ecommerce-media-gate-policy/v1", "policyId": "qyh-fixture-policy",
                 "revision": 1, "profileId": "qyh-fixture-full-" + uuid4().hex, "profileRevision": 1, "gates": gates}
     artifact = root / "solutions/ecommerce-growth/content/media-gate-policies/full.json"

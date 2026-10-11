@@ -1,0 +1,20 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-media-signed-rule-source-negative-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001929",
+  "scope": [
+    "aos-platform/services/aos-api/tests/asset_registry/test_qyh_complete_media_source_pg.py",
+    "aos-platform/services/aos-api/tests/asset_registry/test_qyh_signed_rule_source_pg.py",
+    "aos-platform/.evidence/qyh-media-signed-rule-source-negative-20261012"
+  ],
+  "excluded_scope": [
+    "current DB/API or real release identity"
+  ],
+  "expected_outputs": [
+    "Actual original signed-policy matching request but inaccurate Rule digest/testOnly rule rejects, full Source unique installation ambiguity refuses persisted receipt replay; no product change"
+  ],
+  "lease_expires_at": "2026-10-12T03:34:54.193305+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T07:34:54+08:00"
+}

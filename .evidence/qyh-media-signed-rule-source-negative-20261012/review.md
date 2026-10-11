@@ -1,0 +1,9 @@
+# 已签策略仍须精确规则与唯一安装
+
+35PASS0skip7既有warnings，3新增native与前波原完整Source原子性/安装失效/来源/接线相邻；仅test fixture+newtests，无产品修改，不制造RED。complete_case默认行为不变，两种精确variant使用独立RuleID避免旧回执冲突，原Store实际登记4Rule及Receipt，原temporaryEd25519签入策略后原Registry真实发布、M5全流程安装。独立原Loader实际字节/策略digest、签入gates与body、原publication material和同caller原唯一active install全部验证，不能以缺签名/安装造成False冒充Rule负门。
+
+错误digest签入Policy并与body一致，但原Rule exactref getter实际REVIEW_RULE_CONTENT_DRIFTED；改成原数据库已有正确hash后可读同Rule spec False，证明getter实际准确。第二种原Rule本身testOnly=True且实际signedPolicy准确绑定该摘要，完整reader拒绝（Policy有效不代表Rule用途批准）。两种原Store拒绝无该Profile，原Fixture真实RuleReceipts保留，无伪造变更或改不变量。
+
+第三种先原Profile合法commit，再原第二组合解析/新安装create-submit-独立approve-apply-verify，原unique reader实际ACTIVE_INSTALLATION_AMBIGUOUS，完整SourceFalse；即使原profile/receipt存在，同key重放仍拒绝，精确只有1Profile/Receipt。没有手工active/改旧运行状态或假签名。临时Role/passfile/数据库由原fixtures清理，独立clone角色count0。
+
+当前恢复卷/API/22用户tracked改动保留。所有key/actor/表只论测试协议，testOnlyFalse仍有fixtureOnly=True，不能授正式规则审批、组织Owner、生产Source或实际八工作台/自然首链。本波无UI变更，浏览器不能代替事务验收。目标仍是栖月汇电商，当前正式IdP/publisher配置来源待答，不重复请求/扫描非授权secret源。全Goal ACTIVE。下一已登记Source生产权限收口仍须完整原30operation/writer兼容证明，不能仅REVOKE上线；剩余原freeze/migration/assemble/return/stage compile须使用合法当前依赖与原操作，不能以这些临时测试填写业务回执。

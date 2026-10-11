@@ -1,0 +1,24 @@
+{
+  "baseHead": "0b2aa60610813feed69ddc91181db44d6eeb37dc",
+  "passed": 35,
+  "skipped": 0,
+  "warnings": 7,
+  "newNativeTests": 3,
+  "actualSignedPolicyAndRequestMatch": true,
+  "originalPublicationInstallationVerified": true,
+  "originalRuleCorrectedRefReadVerified": true,
+  "wrongExactRuleDigestRejected": "REVIEW_RULE_CONTENT_DRIFTED",
+  "nativeTestOnlyRuleRejected": true,
+  "actualTwoActiveApprovedInstallationsRejected": "ACTIVE_INSTALLATION_AMBIGUOUS",
+  "oldProfileReceiptReplayCannotBypassSource": true,
+  "ambiguityProfileAndReceiptCounts": 1,
+  "fixtureOnly": true,
+  "productionChanges": 0,
+  "currentApiChanged": false,
+  "formalIdentityOrWorkbenchComplete": false,
+  "sourceRoleRemoved": true,
+  "files": {
+    "services/aos-api/tests/asset_registry/test_qyh_signed_rule_source_pg.py": "28bab601bf68b2da65494d60e827f9ef111225af24f78607fcfd2803cb9205f1",
+    "services/aos-api/tests/asset_registry/test_qyh_complete_media_source_pg.py": "bf6d75a3651aacc453567ccddc5103501e7fd8c3fab8be3a1eed5ee8ba159554"
+  }
+}
