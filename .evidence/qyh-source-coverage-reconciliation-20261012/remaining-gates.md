@@ -7,6 +7,6 @@
 |review_issue.return|原实验Run queued，实际RETURN_TARGET_NOT_RUNNING；不得手工改running或制造旧Run/Step。|
 |media_gate_profile.register|专用完整Source reader已修复默认拒绝；真实签名/Registry/当前安装/批准policy与四canonical Rule引用需producer，不借Stage True。|
 |media_gate_set.assemble|依赖真实当前profile、四Rule/评测完整合法来源；无profile不能凑造。|
-|media_contract_migration.create|依赖受控当前profile/迁移源目标及原审批合同，不凭未发布候选或mock编造来源。|
+|media_contract_migration.create|原Store直接要求两个不同的frozen EvalContractRevision、source cycle既有GateSet exact contract、target cycle尚未开始；profile是新增GateSet的间接依赖，不能误写成migration直接门。当前隔离库计数见migration-prerequisites.json，不凭mock编造cycle。|
 
 source-writer-impact-r2仍表明真实库runtime源写权限不宜单独撤销；完整原Plan/Content/Contract事务及依赖须原克隆全兼容再安装。阶段transport演练已通过不等于正式接入。当前待已询问的既有OIDC/publisher路径；不再重复询问或读取未授权秘密存储。可独立下一项是媒体policy受控贡献/producer合同技术方案完整性核对，先方案与已登记授权边界，不能当实际8台恢复。
