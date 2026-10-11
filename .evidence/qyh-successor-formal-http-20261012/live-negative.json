@@ -1,0 +1,9 @@
+{
+  "outcome": "LIVE_FORMAL_SUCCESSOR_PREPARE_REFUSED",
+  "reason": "EXTERNAL_OIDC_CONFIGURATION_REQUIRED",
+  "identityDatabaseCalls": 0,
+  "apiStarted": false,
+  "currentApiStillDevMode": true,
+  "runtimeAuthorized": false,
+  "writes": 0
+}

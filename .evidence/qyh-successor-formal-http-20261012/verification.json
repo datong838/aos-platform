@@ -1,0 +1,22 @@
+{
+  "baseHead": "5455743e2f9852c63b4738675ad40ec15d4da7cd",
+  "liveMissingExternalOidcRefused": true,
+  "identityDatabaseCalls": 0,
+  "currentApiChanged": false,
+  "currentDatabaseWrites": 0,
+  "retainedPackageHashMatches": 1695,
+  "originalEntriesByteUnchanged": true,
+  "formalIdentityConnected": false,
+  "actualSuccessorInstallationVerified": false,
+  "eightWorkbenchesAccepted": false,
+  "factoryPositiveEvidence": "isolated connector and application fixture only",
+  "files": {
+    "scripts/a0v_qyh_successor_http.py": "e44a5b63a42e408c655f6edecdebca8f754b2829e57623d928f5204aaf29fe9f",
+    "services/aos-api/tests/extension_runtime/test_qyh_successor_http.py": "191e8d09157ed6dbbe7561e0d660bac4109e35b15ce6702c169ee18ec639a348"
+  },
+  "targetedAdjacent": {
+    "passed": 70,
+    "skipped": 0,
+    "warnings": 7
+  }
+}
