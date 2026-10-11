@@ -26,3 +26,6 @@ Use original snapshot_all/snapshot_supplement and exact dependency QUERY in REPE
 
 ## 维护收口复审与实例边界
 在原维护 Task 有效且无重叠 Lease 内新增 acceptance-review.md：绑定现有启动、626表只读快照、八页实际DOM、GET刷新及35项专项结果。记录电商域与栖月汇实例层级及当前目录名称/未激活修订事实。只形成维护证据复审，不替代正式身份、实例激活或自然首链；未完成的Web顺序启动验收保持待核，不签发完整维护Delivery。无产品代码或数据库写入。
+
+## 精确 Web 后置重启
+新增 web_restart.py，仅编排已验证 registered_launch159.stop_registered 与 registered_web_restore159.restore_web；不执行旧全库维护器。固定当前 authority1791/原Task/HEAD、原Web plist/argv/cwd/当前PID和helper、API8080健康。只允许原Web bootout和bootstrap，各自独占日志。停止与启动的异步观察仅轮询15次，不重发动作；任何未知效果保留日志并只读对账。执行后确认新PID/启动时间/loopback8434及HTTP，页面验收沿用专用9244浏览器。代码与日志仅在本维护scope，不改配置/数据库/业务权限。
