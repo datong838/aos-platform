@@ -1,0 +1,52 @@
+{
+  "outcome": "STAGE_REHEARSAL_ACTUAL_SCRAM_AUTHENTICATION_VERIFIED",
+  "containerId": "f5e9055abb9512765470e9480afa31effb1a20aa661614baebed3c82b9018e0d",
+  "network": "none",
+  "ports": [],
+  "actualHbaSha256": "6184e5ae4b3f08fbe1a0c491fcc515f3a55fb2b8a8a92e25462f50217b5cbbb8",
+  "loadedHba": [
+    {
+      "database": [
+        "aos_meta_head"
+      ],
+      "users": [
+        "qyh_stage_transport_rehearsal_20261011"
+      ],
+      "address": "127.0.0.1",
+      "authMethod": "scram-sha-256",
+      "error": null
+    },
+    {
+      "database": [
+        "all"
+      ],
+      "users": [
+        "all"
+      ],
+      "address": "0.0.0.0",
+      "authMethod": "reject",
+      "error": null
+    },
+    {
+      "database": [
+        "all"
+      ],
+      "users": [
+        "all"
+      ],
+      "address": "::",
+      "authMethod": "reject",
+      "error": null
+    }
+  ],
+  "passwordConnectionSucceeded": true,
+  "passwordlessConnectionRejected": true,
+  "originalQueryAndLookupSucceededAfterRepair": true,
+  "priorProvisionalTerminalAcceptedAsPasswordProof": false,
+  "sourceVolumeAttached": false,
+  "sourceRoleChanges": 0,
+  "businessWrites": 0,
+  "currentServicesRestarted": false,
+  "formalOwnerOrPublisherProven": false,
+  "fullRestorationAccepted": false
+}

@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/resume_stage_transport.py", line 64, in <module>
+    B.run(['exec','-i',B.TARGET,'psql','-X','-q','-v','ON_ERROR_STOP=1',
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/rehearse_stage_transport.py", line 41, in run
+    raise RuntimeError('rehearsal command failed; reconcile existing phase')
+RuntimeError: rehearsal command failed; reconcile existing phase

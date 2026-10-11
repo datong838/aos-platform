@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-11T12:53:14.974664+00:00",
+  "head": "5aa6d4326d085574aad10645d7361696231b05a7",
+  "source": "qyh-restored-pg-20261011",
+  "sourceIdentity": {
+    "cluster": "7695302940039200809",
+    "database": "aos_meta_head",
+    "schema": "a0v_159",
+    "activeOtherConnections": 0,
+    "loginExists": 1,
+    "name": "栖月汇商贸有限公司",
+    "nameUpdatedAt": "2026-10-11 07:54:17.109847+00",
+    "disabledBindings": true
+  },
+  "sourceVolume": "aos-qyh-history159-prepared-data-20261011",
+  "target": "qyh-stage-transport-rehearsal-20261011",
+  "sourceWrites": false
+}

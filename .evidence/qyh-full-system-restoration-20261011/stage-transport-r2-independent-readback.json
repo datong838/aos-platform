@@ -1,0 +1,44 @@
+{
+  "source": "qyh-restored-pg-20261011",
+  "rehearsal": "qyh-stage-transport-rehearsal-r2-20261011",
+  "sourceVolume": "aos-qyh-history159-prepared-data-20261011",
+  "metadataEquality": {
+    "retainedRoles": {
+      "count": 38,
+      "exact": true,
+      "sha256": "4d21b7d248cf3c98242142d5bf633b6f136fc60c89b288b3ff27f267237adc98"
+    },
+    "retainedMemberships": {
+      "count": 11,
+      "exact": true,
+      "sha256": "f8a56c448537dd9c9bc6b416e615acf820f8ea0ddc47548f3f83ce16be1c0921"
+    },
+    "relationOwnerAndRls": {
+      "count": 1887,
+      "exact": true,
+      "sha256": "91f5232dc194f2f9227893293440c1e07499d0e6c5b8d8b3935d391b0d09cfba"
+    },
+    "relationGrants": {
+      "count": 6159,
+      "exact": true,
+      "sha256": "d8704f07b2e4296e35dd34afbd9df24935b5c53105be1902528706b8c28bb0c2"
+    },
+    "columnGrants": {
+      "count": 124,
+      "exact": true,
+      "sha256": "650e15da94b0fb93b44047f3d6f051eb1522d1549e35c4de763ba37be9de974d"
+    },
+    "functions": {
+      "count": 461,
+      "exact": true,
+      "sha256": "104e3e153b8c341d860dc9aafc2ca8950e4a3e524fde8355b8919077518e2b13"
+    }
+  },
+  "businessTableFingerprintExact": true,
+  "tables": 647,
+  "actualPasswordLoginAndDenialsVerifiedBy": "stage-transport-r2-terminal.json",
+  "historicalPasswordsRestored": false,
+  "currentRoleOrSourcePermissionsChanged": false,
+  "formalOwnerOrPublisherProven": false,
+  "fullRestorationAccepted": false
+}

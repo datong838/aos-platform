@@ -1,0 +1,8 @@
+{
+  "containerId": "f5e9055abb9512765470e9480afa31effb1a20aa661614baebed3c82b9018e0d",
+  "network": "none",
+  "priorHbaHash": "2366fa203f80a6b335fb103ef2d181e5f9d2cebdd27ae5cff1eb97d991f94ff0",
+  "intendedHbaHash": "6184e5ae4b3f08fbe1a0c491fcc515f3a55fb2b8a8a92e25462f50217b5cbbb8",
+  "priorTerminalPasswordProofRejected": true,
+  "sourceWrites": false
+}

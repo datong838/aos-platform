@@ -1,0 +1,7 @@
+{
+  "target": "qyh-stage-transport-rehearsal-r2-20261011",
+  "technicalLogin": "qyh_stage_transport_rehearsal_20261011",
+  "logicalRole": "aos_configuration_stage_api",
+  "businessOwnerGranted": false,
+  "historicalLoginChanged": false
+}

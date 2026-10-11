@@ -1,0 +1,29 @@
+{
+  "source": "qyh-restored-pg-20261011",
+  "sourceIdentity": {
+    "cluster": "7695302940039200809",
+    "database": "aos_meta_head",
+    "schema": "a0v_159",
+    "activeOtherConnections": 0,
+    "loginExists": 1,
+    "name": "栖月汇商贸有限公司",
+    "nameUpdatedAt": "2026-10-11 07:54:17.109847+00",
+    "disabledBindings": true
+  },
+  "previousAttempt": {
+    "Id": "adb100ba5a3c25a5274b62a4007b4eb64d2201a23eab2c42add0f97e08d7e683",
+    "Network": "none",
+    "Ports": {}
+  },
+  "previousBusinessDatabaseExists": false,
+  "previousNonSystemMemberships": 0,
+  "target": "qyh-stage-transport-rehearsal-r2-20261011",
+  "bootstrap": "aos_app",
+  "originalDumpHash": "876d72d74260ea30b9e9dfe813738b649bfab5bafaca18111c79b6ebfcc7eb1c",
+  "originalGlobalsHash": "b3597f96fcc91b3324326d38f823d3f6ef3b08403a48c1863d484bff211b1a0e",
+  "skippedExactStatement": "CREATE ROLE aos_app;",
+  "network": "none",
+  "ports": [],
+  "sourceWrites": false,
+  "authoritativeVolumeAttached": false
+}

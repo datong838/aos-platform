@@ -1,0 +1,13 @@
+{
+  "containerId": "f5e9055abb9512765470e9480afa31effb1a20aa661614baebed3c82b9018e0d",
+  "reconciledState": {
+    "roles": [
+      "aos_app"
+    ],
+    "businessDatabase": 0
+  },
+  "pid1": "postgres",
+  "sourceWrites": false,
+  "originalDumpHash": "876d72d74260ea30b9e9dfe813738b649bfab5bafaca18111c79b6ebfcc7eb1c",
+  "originalGlobalsHash": "b3597f96fcc91b3324326d38f823d3f6ef3b08403a48c1863d484bff211b1a0e"
+}

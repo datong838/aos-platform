@@ -1,0 +1,37 @@
+{
+  "outcome": "FULL_CLONE_STAGE_SCRAM_TRANSPORT_VERIFIED",
+  "target": "qyh-stage-transport-rehearsal-r2-20261011",
+  "containerId": "f5e9055abb9512765470e9480afa31effb1a20aa661614baebed3c82b9018e0d",
+  "network": "none",
+  "ports": [],
+  "completeRestoreTables": 647,
+  "sourceFingerprintUnchanged": true,
+  "rehearsalBusinessFingerprintUnchanged": true,
+  "actualScramLogin": {
+    "session": "qyh_stage_transport_rehearsal_20261011",
+    "current": "qyh_stage_transport_rehearsal_20261011",
+    "login": true,
+    "inherit": false,
+    "super": false,
+    "bypass": false,
+    "createRole": false,
+    "createDb": false,
+    "replication": false
+  },
+  "reachableMemberRoles": [
+    "aos_configuration_stage_api"
+  ],
+  "originalQueryAndLookupSucceeded": true,
+  "denials": [
+    "direct-stage-table",
+    "direct-config-table",
+    "host-function",
+    "negative-tenant"
+  ],
+  "enqueueAttempts": 0,
+  "sourcePrivilegeChanges": 0,
+  "formalIdentityProven": false,
+  "hostReady": false,
+  "eightWorkshopsRestored": false,
+  "fullGoalAccepted": false
+}

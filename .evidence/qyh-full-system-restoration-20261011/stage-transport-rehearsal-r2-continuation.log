@@ -1,0 +1,1 @@
+{"outcome": "FULL_CLONE_STAGE_SCRAM_TRANSPORT_VERIFIED", "tables": 647, "denials": ["direct-stage-table", "direct-config-table", "host-function", "negative-tenant"]}

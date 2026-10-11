@@ -1,0 +1,12 @@
+{
+  "current.dump": {
+    "sha256": "876d72d74260ea30b9e9dfe813738b649bfab5bafaca18111c79b6ebfcc7eb1c",
+    "bytes": 16085331,
+    "secondCopyExact": true
+  },
+  "globals.sql": {
+    "sha256": "b3597f96fcc91b3324326d38f823d3f6ef3b08403a48c1863d484bff211b1a0e",
+    "bytes": 7728,
+    "secondCopyExact": true
+  }
+}
