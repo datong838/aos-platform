@@ -1,0 +1,15 @@
+{
+  "container": "73576833df879a67d818ba50b1eaa45a4fd084be074246cf1b061e8a79f0d386",
+  "image": "sha256:851765e2f8107a9014019a4431240db650318edf8cbd542f1e4514993581e992",
+  "exit_code": 1,
+  "stdout": "/tmp/input.apk: BAD signature\n",
+  "stderr": "",
+  "control_and_payload_unchanged": true,
+  "signature_bytes_changed": 1,
+  "installed_control_checksum_matches": true,
+  "installed_checksum": "Q1saErNb6eIGJ5HnEc5t/KvcfvCDk=",
+  "original_sha256": "bac4a00e73296dfebf5f587c2b304b7d110e7de658cd2b05491f87c2b228420c",
+  "negative_sha256": "995fb512e65f86f80c2c9bed41c3f019a1ea4b37e0b95f3855f4e381c3c63394",
+  "independent_key_trust": false,
+  "execution_authorized": false
+}

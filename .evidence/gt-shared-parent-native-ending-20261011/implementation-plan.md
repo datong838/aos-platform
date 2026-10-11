@@ -216,3 +216,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 精确binutils签名与篡改负门1811
 新增package-signature-1811：从1810原HTTPS精确URL下载binutils2.45.1-r1，限制8MiB；原包及独立末字节篡改副本分别在精确SDK镜像、networknone/read-only/capdropALL/no-new-privileges的唯一容器中仅执行apk verify，入口明确/sbin/apk，不执行PG或安装脚本。读取进程终态与输出；原包通过且篡改拒绝才成立。镜像继承卷如实记录保留，公钥来源仍未独立证明；不授Root或业务权限。
+
+## 结构有效错误签名负门1812
+新增package-signature-negative-1812/check.py/result.json；复用1811原APK，以zlib分段并校验tar签名项，改变512字节签名中的一字节后重新gzip，元数据和内容压缩段保持字节一致。元数据压缩段SHA1/Q1与1809安装记录匹配作为包标识证据，不当强密码学信任。精确SDK仅apk verify只读挂载、networknone、capdropALL、no-new-privileges，要求明确签名错误终态，原包已有正向记录；不安装、不运行PG。
