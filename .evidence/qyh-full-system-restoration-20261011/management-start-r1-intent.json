@@ -1,0 +1,9 @@
+{
+  "task": "qyh-full-system-restoration-20261011",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "head": "c17826e0eb53cd68ab84c5a566bc3471abe88294",
+  "port": 18080,
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "mode": "LOCAL_MANAGEMENT_READONLY_NO_RUNTIME",
+  "unknownOutcomeReconcileOnly": true
+}

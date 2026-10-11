@@ -1,0 +1,9 @@
+{
+  "head": "c17826e0eb53cd68ab84c5a566bc3471abe88294",
+  "files": {
+    "packages/ui-kit/appearance.ts": "3865072cba4550ff6a7fa5a19b9860314549026a4cb433d3df7b15b44e314980",
+    "packages/ui-kit/package.json": "c176537fa3a4bc28caad8c594677df14eb1c0f4dfac5d36d5a2b2e6fa1c6f5cd",
+    "packages/ui-kit/tokens.css": "c899a9f1277a0425d1325c87fdfb00cf8ce0717b8ca424bafe29bb14b0b7b15f"
+  },
+  "noProductChanges": true
+}

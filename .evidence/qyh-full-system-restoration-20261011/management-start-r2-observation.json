@@ -1,0 +1,29 @@
+{
+  "apiStarted": true,
+  "listeners": {
+    "8080": [
+      "17040"
+    ],
+    "8434": [
+      "19275"
+    ],
+    "18080": [
+      "83410"
+    ],
+    "18434": [
+      "82853"
+    ]
+  },
+  "apiSessionHandle": 4734,
+  "webSessionHandle": 4571,
+  "apiSourceHead": "85d96aa96fd6fe4e8b9ded8ffbdc23e5b331da5c",
+  "webSourceBytesMatchCurrentHead": true,
+  "freshFactoryImportGuardPassed": true,
+  "runtimeAuthorized": false,
+  "eightPagesAccepted": false,
+  "originalServicesRetained": true,
+  "nonAcceptedCatalogDiagnostics": [
+    "FileNotFoundError",
+    "ValueError"
+  ]
+}

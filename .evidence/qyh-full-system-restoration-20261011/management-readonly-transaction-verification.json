@@ -1,0 +1,7 @@
+{
+  "defaultTransactionReadOnly": "on",
+  "transactionReadOnly": "on",
+  "limitedLoginVerified": true,
+  "role": "aos_runtime",
+  "databaseWrites": 0
+}

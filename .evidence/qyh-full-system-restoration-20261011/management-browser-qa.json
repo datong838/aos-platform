@@ -1,0 +1,35 @@
+{
+  "outcome": "RESTORED_REAL_MANAGEMENT_BROWSER_ACCEPTED",
+  "origin": "http://127.0.0.1:18434",
+  "actual": {
+    "me": {
+      "status": 200,
+      "orgId": "org-org",
+      "orgName": "栖月汇商贸有限公司",
+      "projectId": "dev-project"
+    },
+    "installations": {
+      "status": 200,
+      "total": 135
+    },
+    "runtime": {
+      "status": 200,
+      "effectiveState": "needs_attention",
+      "allowedActions": []
+    },
+    "canary": {
+      "status": 404,
+      "code": "NOT_FOUND"
+    },
+    "mutation": {
+      "status": 405
+    }
+  },
+  "pageErrorTypes": [],
+  "requestInterception": false,
+  "mockedResponses": false,
+  "runtimeAuthorized": false,
+  "formalIdentityVerified": false,
+  "eightPagesAccepted": false,
+  "tabRetained": true
+}
