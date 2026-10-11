@@ -1,0 +1,136 @@
+{
+  "outcome": "RESTORED_WORKSHOP_ORIGINAL_SOURCES_READONLY_AUDIT",
+  "observedAt": "2026-10-11T11:15:14.315720+00:00",
+  "identity": {
+    "database": "aos_meta_head",
+    "cluster": "7695302940039200809",
+    "schema": "a0v_159",
+    "orgId": "org-org",
+    "orgName": "栖月汇商贸有限公司",
+    "projectId": "dev-project",
+    "tables": 647
+  },
+  "positive": {
+    "legacy": [],
+    "runtimeCandidates": [
+      {
+        "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+        "activeRevision": 5,
+        "bundleId": "domain.ecommerce.core",
+        "version": "1.4.2",
+        "status": "published",
+        "contentHash": "sha256:dd03a29a71b7cc8f35a36010042f8f6d7bd0d19dcde1ac107c7c588f2337d441",
+        "runtimeDeclared": true
+      },
+      {
+        "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+        "activeRevision": 5,
+        "bundleId": "platform.ecommerce.niushop",
+        "version": "1.23.2",
+        "status": "published",
+        "contentHash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90",
+        "runtimeDeclared": true
+      },
+      {
+        "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+        "activeRevision": 5,
+        "bundleId": "solution.ecommerce.growth",
+        "version": "1.10.2",
+        "status": "published",
+        "contentHash": "sha256:85ca84cb835758d40877a81510865ff6c958cc6933fdc689bf3d77a4f3bd74a6",
+        "runtimeDeclared": true
+      },
+      {
+        "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+        "activeRevision": 5,
+        "bundleId": "solution.ecommerce.operations-base",
+        "version": "1.2.2",
+        "status": "published",
+        "contentHash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec",
+        "runtimeDeclared": false
+      },
+      {
+        "installationId": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+        "activeRevision": 5,
+        "bundleId": "domain.ecommerce.core",
+        "version": "1.4.2",
+        "status": "published",
+        "contentHash": "sha256:dd03a29a71b7cc8f35a36010042f8f6d7bd0d19dcde1ac107c7c588f2337d441",
+        "runtimeDeclared": true
+      },
+      {
+        "installationId": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+        "activeRevision": 5,
+        "bundleId": "platform.ecommerce.niushop",
+        "version": "1.23.2",
+        "status": "published",
+        "contentHash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90",
+        "runtimeDeclared": true
+      },
+      {
+        "installationId": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+        "activeRevision": 5,
+        "bundleId": "solution.ecommerce.growth",
+        "version": "1.10.2",
+        "status": "published",
+        "contentHash": "sha256:85ca84cb835758d40877a81510865ff6c958cc6933fdc689bf3d77a4f3bd74a6",
+        "runtimeDeclared": true
+      },
+      {
+        "installationId": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+        "activeRevision": 5,
+        "bundleId": "solution.ecommerce.operations-base",
+        "version": "1.2.2",
+        "status": "published",
+        "contentHash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec",
+        "runtimeDeclared": false
+      },
+      {
+        "installationId": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+        "activeRevision": 5,
+        "bundleId": "domain.ecommerce.core",
+        "version": "1.4.0",
+        "status": "published",
+        "contentHash": "sha256:91bbe20c38d85f151e2d37ab6b08e48b261b1147b40d91203df4309b75def4e5",
+        "runtimeDeclared": true
+      },
+      {
+        "installationId": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+        "activeRevision": 5,
+        "bundleId": "platform.ecommerce.niushop",
+        "version": "1.23.0",
+        "status": "published",
+        "contentHash": "sha256:55b29795b73d5be0f28bd68fafc48c8dd7aa42c65eb5ea130a307326e7534117",
+        "runtimeDeclared": true
+      },
+      {
+        "installationId": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+        "activeRevision": 5,
+        "bundleId": "solution.ecommerce.growth",
+        "version": "1.10.0",
+        "status": "published",
+        "contentHash": "sha256:7fd951883b9e9fada326cae69a778297aab34625616b9203b248c375dff650a6",
+        "runtimeDeclared": true
+      },
+      {
+        "installationId": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+        "activeRevision": 5,
+        "bundleId": "solution.ecommerce.operations-base",
+        "version": "1.2.0",
+        "status": "published",
+        "contentHash": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298",
+        "runtimeDeclared": false
+      }
+    ]
+  },
+  "canary": {
+    "legacy": [],
+    "runtimeCandidates": []
+  },
+  "independentReadsStable": true,
+  "databaseWrites": 0,
+  "bindingsEnabled": false,
+  "apiStarted": false,
+  "eightPagesAccepted": false,
+  "candidateIsExecutionAuthority": false
+}

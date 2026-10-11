@@ -1,0 +1,56 @@
+{
+  "outcome": "RESTORED_PUBLISHED_HISTORICAL_MODULE_BYTES_VERIFIED",
+  "bundles": [
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.10.2",
+      "contentHash": "sha256:85ca84cb835758d40877a81510865ff6c958cc6933fdc689bf3d77a4f3bd74a6",
+      "modules": [
+        {
+          "moduleId": "ecommerce.analyst",
+          "route": "/workshop/analyst"
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "route": "/workshop/content-campaign"
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "route": "/workshop/creator-growth"
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "route": "/workshop/customer"
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "route": "/workshop/media-studio"
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "route": "/workshop/price-governance"
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "route": "/workshop/cockpit"
+        }
+      ]
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "contentHash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec",
+      "modules": [
+        {
+          "moduleId": "ecommerce.operations",
+          "route": "/workshop/operations"
+        }
+      ]
+    }
+  ],
+  "moduleCount": 8,
+  "signatureLoaderUsed": true,
+  "databaseWrites": 0,
+  "eightPagesAccepted": false,
+  "runtimeAuthorized": false
+}
