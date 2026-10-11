@@ -1,0 +1,47 @@
+{
+  "head": "009db8bdbc194b2ee27ffab0e780931aa466af34",
+  "authority": "AOS-001891",
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "diskFileMetadata": [
+    {
+      "path": "/Volumes/NVME2T/Docker/Docker.raw",
+      "size": 494384709632,
+      "allocatedBytes": 63815020544,
+      "mtimeNs": 1791720327158753999,
+      "inode": 147307,
+      "contentRead": false,
+      "contentIntegrityVerified": false
+    },
+    {
+      "path": "/Volumes/NVME2T/Docker/data/Docker.raw.aos-recovery-20260910",
+      "size": 494384709632,
+      "allocatedBytes": 22836281344,
+      "mtimeNs": 1789035692000000000,
+      "inode": 147337,
+      "contentRead": false,
+      "contentIntegrityVerified": false
+    }
+  ],
+  "desktopStatus": {
+    "Status": "stopping",
+    "SessionID": "9387be2a-5821-4cd5-843c-3ea8db321c52"
+  },
+  "desktopPing": {
+    "socketConnected": true,
+    "errorType": "TimeoutError"
+  },
+  "settingsReadDeniedByMacOS": true,
+  "historicalMinioRoundtripAccepted": false,
+  "existingEvalReaderReusableOnlyWithinOriginalNamespace": true,
+  "historicalEvidenceHash": "cc84446935d82e673977e33f3b9064662e17759047f9fb3b111fb77a9e446fb3",
+  "existingEvalReaderHash": "e69d2eddef4b162be1afac779c3ddcd82df38055ec8a62a8298fe735ad67ab04",
+  "scriptHash": "f9d394a05953bba575ba35ece8f8f489b2dcadc38b0adc2fbd21a3a036011a87",
+  "rawDiskMounted": false,
+  "engineRestarted": false,
+  "resourcesCreatedOrDeleted": false,
+  "databaseWrites": 0,
+  "objectReads": 0,
+  "objectWrites": 0,
+  "historicalMediaLocationFullyVerified": false,
+  "fullRestorationAccepted": false
+}
