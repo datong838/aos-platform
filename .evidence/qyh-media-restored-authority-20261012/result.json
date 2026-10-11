@@ -1,0 +1,51 @@
+{
+  "authority": "AOS-001904",
+  "reads": [
+    {
+      "scope": [
+        "org-org",
+        "dev-project"
+      ],
+      "identity": {
+        "role": "aos_runtime",
+        "db": "aos_meta_head",
+        "cluster": "7695302940039200809",
+        "readonly": "on",
+        "isolation": "repeatable read"
+      },
+      "totals": {
+        "aip_review_rule_revision": 0,
+        "aip_media_gate_profile_revision": 0,
+        "aip_media_gate_set_decision": 0,
+        "aip_eval_contract_revision": 32
+      },
+      "profiles": []
+    },
+    {
+      "scope": [
+        "dev-org",
+        "dev-project"
+      ],
+      "identity": {
+        "role": "aos_runtime",
+        "db": "aos_meta_head",
+        "cluster": "7695302940039200809",
+        "readonly": "on",
+        "isolation": "repeatable read"
+      },
+      "totals": {
+        "aip_review_rule_revision": 0,
+        "aip_media_gate_profile_revision": 0,
+        "aip_media_gate_set_decision": 0,
+        "aip_eval_contract_revision": 0
+      },
+      "profiles": []
+    }
+  ],
+  "databaseWrites": 0,
+  "current647DataAndMetadataUnchanged": true,
+  "formalRestorationAccepted": false,
+  "sourceProducerAuthorityGranted": false,
+  "providerCalls": 0,
+  "scriptHash": "bafd9f40b279bcebca2710de547fb8d2d36a655d898a65039e5aeb01e88d7ce2"
+}

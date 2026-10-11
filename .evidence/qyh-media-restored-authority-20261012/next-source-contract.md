@@ -1,0 +1,10 @@
+# 下一原媒体Source施工输入
+
+原方案media-source-wiring-review中的reader改造仍保留，不以本次空记录取消。
+
+1. 正式登录/独立publisher配置入口是发布依赖，当前未定位；不以开发token或维护LOGIN代替。
+2. 现有32EvalContract/40EvalRun可复用，但没有MediaGatePolicy绑定、canonical四ReviewRule或MediaGateProfile；不得把旧EvalContract转换为新媒体批准。
+3. 生产引用必须同时来自原当前Registry验签发布快照、当前本租户安装精确代次、签名policy贡献及四Rule原权威记录；只验证sourceBundleRef不足。
+4. producer合同应明确manifest/contentHash、signatureFingerprint/releaseEvidenceRevision、policy贡献文件摘要以及四Rule的稳定引用和撤回状态。资源版本由原记录派生，不使用随机ID/时间戳或请求体hash作权限。
+5. 正式接线前验证实际签名candidate与原Registry读者正向、错误签名/撤回/跨租户/混版/Rule缺失/当前代次变化负向、原Stage/BI累计；新的policy候选不得覆盖已签包。没有完整受控rule spec时如实输出未就绪。
+6. 具体下一代码范围仍为原aip_production_contract_store.py、routers/aip_production_contracts.py及专用Source reader；实施须独立Task/Lease、冻结贡献schema和完整正负证据。此次不提前注册假规则或新增运行权限。

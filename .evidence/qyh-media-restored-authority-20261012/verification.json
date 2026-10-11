@@ -1,0 +1,28 @@
+{
+  "authority": "AOS-001904",
+  "baseHead": "acc7797ff62daf9a94522e87c4fb8f72603a2e56",
+  "nativeROAudit": "PASS",
+  "frozenEvalContractCount": 16,
+  "draftEvalContractCount": 16,
+  "evalRunCountWithoutMediaPolicy": 40,
+  "reviewRuleCount": 0,
+  "mediaProfileCount": 0,
+  "mediaGateSetCount": 0,
+  "canaryZero": true,
+  "beforeAfter647Equal": true,
+  "databaseWrites": 0,
+  "formalMediaAccepted": false,
+  "files": {
+    ".evidence/qyh-media-restored-authority-20261012/lifecycle-r1-failure.log": "566b221c409f3cc537381ba635ada0d056df2328e755590718b4648ec508ffa1",
+    ".evidence/qyh-media-restored-authority-20261012/lifecycle.json": "f1cf882274d1e7c5d4948cf8826024d57567b72d8113e870055ec13cf2370de8",
+    ".evidence/qyh-media-restored-authority-20261012/lifecycle.log": "54c02695f046edd967c6ad476a7c5006cc5858fa8baa94d388c7b7886b56f97a",
+    ".evidence/qyh-media-restored-authority-20261012/next-source-contract.md": "8e4fbc0fc017bf90c4ab5752407f7c454ad51321a8ab08c82039d0e39cfa5b7b",
+    ".evidence/qyh-media-restored-authority-20261012/plan.md": "47e12fca976972027cb2c312f8de4fb41dc4f66a07b8834961f06d02790a7eba",
+    ".evidence/qyh-media-restored-authority-20261012/read_lifecycle.py": "63087aa0f53c52060f4a1a3a91144c2831ea5cd228f4052611bee6e140d54a78",
+    ".evidence/qyh-media-restored-authority-20261012/readback.log": "a17662347a6b76d468d3662f8fd5058083479776229701f0204f84623210f684",
+    ".evidence/qyh-media-restored-authority-20261012/readback.py": "bafd9f40b279bcebca2710de547fb8d2d36a655d898a65039e5aeb01e88d7ce2",
+    ".evidence/qyh-media-restored-authority-20261012/result.json": "c83abedbce864dfebf7683e7717e2ccb72ad32faa5d4655ca508b3b1770196c7",
+    ".evidence/qyh-media-restored-authority-20261012/review.md": "308ddbf0c5ff8aa7a03d07c88b03c0e1601e4841fead1af0e52e36ec14687344",
+    ".evidence/qyh-media-restored-authority-20261012/task.json": "027e23439f5821acd87e6d99f15bd37d292d2793de66a5023063a8ba5abc41b8"
+  }
+}

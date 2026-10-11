@@ -1,0 +1,1 @@
+{"reads": [{"scope": ["org-org", "dev-project"], "contracts": [{"lifecycle": "draft", "count": 16}, {"lifecycle": "frozen", "count": 16}], "evalRunPolicyTypes": [{"policy_type": null, "count": 40}]}, {"scope": ["dev-org", "dev-project"], "contracts": [], "evalRunPolicyTypes": []}], "databaseWrites": 0, "formalMediaAuthorityGranted": false}

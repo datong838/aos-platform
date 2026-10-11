@@ -1,0 +1,13 @@
+# 原媒体审核成果恢复复审
+
+实际有限原生连接确认aos_meta_head@a0v_159/cluster7695302940039200809，aos_runtime/RR/READ ONLY，两scope分别过滤。
+栖月汇原32评测合同保留：16 draft、16 frozen；40原Eval Run的gate_policy_ref全部NULL。
+原ReviewRuleRevision、MediaGateProfileRevision、MediaGateSetDecision均0；dev-org全部0。原647表和元数据前后相同。
+这限定当前恢复库，不能推导全机器或历史远端从未有媒体策略；更不能把原frozen合同当作当前媒体四门通过。
+
+两次查询范围独立，首次生命周期调查把Eval Run的gate_policy_ref误当Eval Contract字段，原native只读SQL失败exit1，未创建结果；依据w7_004实际列定义修复为两张原表各自分组后成功。失败完整保留，不重发未知效果，不改数据库。
+
+接口调查：RegisterMediaGateProfileRequest要求BundleManifestRevision/BundleSignatureVerification/MediaGatePolicyRevision及四EvalRuleRevision；生产Store只将sourceBundleRef给旧Stage resolver，无法绑定其余来源。InstalledProductionProfileResolver可复用安装/lock/文件摘要读取，但_row_matches的signature存在性不是完整当前验签/发布证明，不把它直接借成媒体权威。六媒体模板和原签名包仍复用，现有四包不修改。
+
+下一实施按既有media-source-wiring-review：专用媒体Source完整三ref/四Rule绑定、原RegistrySnapshotReader+ReleasePolicy同一当前快照、原安装/代次和本租户Rule exact读取。Producer需定义稳定资源ID/revision与撤回来源，原signed labels不能生成伪canonical规则；业务规则spec仍从受控签名贡献/原政策获取，缺失fail-closed，不用工程师给任意dict编规则。此调查不授publisher/Owner/Host权限。
+未改产品源码、原API/Web、卷、签名、会员/身份、22用户修改或旧Run。本Task只完成真实恢复来源核对；完整Goal、恢复和Source父Task仍ACTIVE。

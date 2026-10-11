@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-media-restored-authority-20261012/read_lifecycle.py", line 20, in <module>
+    rows = conn.execute("SELECT lifecycle,gate_policy_ref->>'resourceType' AS policy_type,count(*) AS count FROM public.aip_eval_contract_revision WHERE org_id=%s AND project_id=%s GROUP BY lifecycle,gate_policy_ref->>'resourceType' ORDER BY lifecycle,policy_type", (org, 'dev-project')).fetchall()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py", line 300, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UndefinedColumn: column "gate_policy_ref" does not exist
+LINE 1: SELECT lifecycle,gate_policy_ref->>'resourceType' AS policy_...
+                         ^

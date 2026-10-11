@@ -1,0 +1,19 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-media-restored-authority-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001904",
+  "scope": [
+    "aos-platform/.evidence/qyh-media-restored-authority-20261012"
+  ],
+  "excluded_scope": [
+    "maintenance/current-database",
+    "aos-platform/services/aos-api"
+  ],
+  "expected_outputs": [
+    "Native scoped READ ONLY restored media policy/profile/review-rule inventory; exact validated snapshot refs if present, no fabricated producer; both tenant canary and 647-table before/after; bind next original media Source step"
+  ],
+  "lease_expires_at": "2026-10-12T07:53:10.174837+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T03:53:11+08:00"
+}
