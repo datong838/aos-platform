@@ -229,9 +229,11 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, r
                                      status="reserved", expires_at=NOW + timedelta(hours=1))])
             raise AssertionError(query)
     conn = Conn()
-    route = SimpleNamespace(asset_id="route-1", revision=1, content_hash="2" * 64)
-    price_ref = SimpleNamespace(asset_type="ModelPriceSnapshotRevision", asset_id="price-1", revision=1, content_hash="3" * 64)
-    provider_ref = SimpleNamespace(asset_type="ProviderInstanceRevision", asset_id="provider-1", revision=1, content_hash="b" * 64)
+    from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+    route = VersionedAssetRef(asset_type="ModelRouteRevision", asset_id="route-1",
+                              revision=1, content_hash="2" * 64)
+    price_ref = VersionedAssetRef(asset_type="ModelPriceSnapshotRevision", asset_id="price-1", revision=1, content_hash="3" * 64)
+    provider_ref = VersionedAssetRef(asset_type="ProviderInstanceRevision", asset_id="provider-1", revision=1, content_hash="b" * 64)
     model_ref = SimpleNamespace(asset_id="model-1", revision=1, content_hash="c" * 64)
     model = SimpleNamespace(content_hash=model_ref.content_hash, provider=provider_ref,
                             price_snapshot_ref=price_ref, provider_model_id="provider-model-1")
@@ -273,10 +275,22 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, r
     class Resolver:
         def __init__(self, *_): pass
         def resolve(self, *_ , **__):
-            return SimpleNamespace(readiness=ModelRuntimeReadiness.READY,
-                                   route=route, selected_price_snapshot=price_ref,
-                                   selected_provider=provider_ref, selected_model=model_ref,
-                                   policy=SimpleNamespace(asset_id="policy-1", revision=1))
+            from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+            from aos_api.aip_contracts import TenantContext
+            from aos_api.aip_model_runtime_contracts import ModelRouteResolution
+            def exact(kind, value):
+                return VersionedAssetRef(asset_type=kind, asset_id=value.asset_id,
+                                         revision=value.revision, content_hash=value.content_hash)
+            return ModelRouteResolution(
+                tenant=TenantContext(org_id=SCOPE.org_id, project_id=SCOPE.project_id),
+                readiness=ModelRuntimeReadiness.READY, resolved_at=NOW,
+                route=exact("ModelRouteRevision", route),
+                selected_price_snapshot=exact("ModelPriceSnapshotRevision", price_ref),
+                selected_provider=exact("ProviderInstanceRevision", provider_ref),
+                selected_model=exact("RegisteredModelRevision", model_ref),
+                policy=VersionedAssetRef(asset_type="RuntimePolicyRevision", asset_id="policy-1",
+                                         revision=1, content_hash="d" * 64),
+            )
     monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelRuntimeResolver", Resolver)
     class Governance:
         def __init__(self, *_): pass

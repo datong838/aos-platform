@@ -1,0 +1,4 @@
+# 方案与代码复审
+run_once只捕获单项ContentBudgetCommandConflict/TimeoutError，selector和Host-ready异常未吞并；未知RuntimeError仍传播。原claim、execute_claim、预算和SQL无修改。原a104领取要求pending/attempt0且没有旧command Receipt；成功后claimed/attempt1保留，run_once不ack/requeue/retry。返回RECONCILE_REQUIRED仅待对账，不当作成功/权限。
+新7项循环行为测试及原预算15项/上游相邻14项共36通过。原四fixture基线失败独立复现；严格ModelRouteResolution契约与精确route/provider/price相等性保留后通过。实际scope仅org-org/dev-project；本波没有新增原生PG边界测试，原生生产/租户/真实Provider不据此声称通过。
+隔离clone18431原autouse创建/删除测试库，当前恢复库18446未操作。未修改现有服务进程、用户22项修改、旧Run、签名、登录、发布或Host开关。没有页面代码，无浏览器适用项。完整Goal/恢复父Task保持active。

@@ -531,9 +531,14 @@ class ContentBudgetCommandOwner:
     def run_once(self, scope: TenantScope, *, limit: int = 16) -> list[dict[str, str]]:
         results = []
         for review_key in self.list_pending(scope, limit=limit):
-            token = self.claim(scope, review_key)
-            if token is not None:
-                results.append(self.execute_claim(scope, review_key, token))
+            try:
+                token = self.claim(scope, review_key)
+                if token is not None:
+                    results.append(self.execute_claim(scope, review_key, token))
+            except (ContentBudgetCommandConflict, TimeoutError):
+                # A claim or Host commit may be durable. Never retry or requeue
+                # this item; preserve it for reconciliation and continue others.
+                results.append({"status": "RECONCILE_REQUIRED", "reviewKey": review_key})
         return results
 
     async def serve(self, stop, *, host_ready, interval_seconds: int = 15) -> None:

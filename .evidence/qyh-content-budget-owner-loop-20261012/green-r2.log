@@ -1,0 +1,790 @@
+...........FFFF.....................                                     [100%]
+=================================== FAILURES ===================================
+__ test_preflight_builds_exact_command_without_claim_or_provider[False-False] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11aa50610>
+risk_price = False, before_capacity = False
+
+    @pytest.mark.parametrize("risk_price", [False, True])
+    @pytest.mark.parametrize("before_capacity", [False, True])
+    def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, risk_price, before_capacity):
+        from aos_api.ecommerce_content_budget_command_owner import (
+            ContentBudgetCommandOwner, ContentBudgetCommandConflict,
+        )
+        from aos_api.ecommerce_growth_host_ports import HostTransaction
+        from aos_api.aip_agent_registry_contracts import AgentRunStatus
+        from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
+    
+        install, generation, group = uuid4(), uuid4(), uuid4()
+        intent = dict(state="pending", attempt=0, claim_token=None, task_run_id="run-1",
+                      agent_run_id="agent-run-1", capacity_reservation_id="capacity-1",
+                      command_key="review-1", installation_id=install,
+                      generation=generation, execution_epoch=3)
+        origin = dict(installation_id=install, generation=generation, execution_epoch=3,
+                      cutover_group_id=group, cutover_group_revision=2)
+        ref = lambda kind, name, digest="1": dict(
+            resourceType=kind, resourceId=name, revision=1,
+            contentHash="sha256:" + digest * 64,
+        )
+        response = dict(
+            handoffRef=ref("HandoffReceipt", "handoff-1"),
+            taskRef=ref("Task", "task-1"), briefRef=ref("TaskBriefRevision", "brief-1"),
+            growthPlanRef=ref("GrowthPlanRevision", "growth-1"),
+            artifactBindings=[{"artifactRef": ref("ArtifactRevision", f"artifact-{i}")}
+                              for i in range(4)],
+        )
+        dispatch_row = dict(handler_kind="extension", revision=5,
+                            installation_id=install, generation=generation,
+                            execution_epoch=3, cutover_group_id=group,
+                            cutover_group_revision=2)
+        class Conn:
+            def __init__(self):
+                self.calls = []
+            def execute(self, query, params):
+                self.calls.append(query)
+                if "FROM public.ecommerce_growth_content_budget_command_intent" in query or "FROM public.ecommerce_growth_content_capacity_intent" in query:
+                    return _Cursor([intent])
+                if "content_budget_command_current_a0v_104" in query or "content_capacity_current_a0v_103" in query:
+                    return _Cursor([{"current": True}])
+                if "FROM public.extension_operation_dispatch_binding" in query:
+                    return _Cursor([dispatch_row])
+                if "FROM public.aip_model_capacity_pool_head" in query:
+                    return _Cursor([dict(token_unit_per_reservation=6000)])
+                if "FROM public.aip_model_capacity_reservation" in query:
+                    if before_capacity: return _Cursor([])
+                    assert "JOIN public.aip_model_capacity_pool_revision" in query
+                    assert "p.model_id=%s" in query and "p.provider_id=%s" in query
+                    return _Cursor([dict(request_hash="6" * 64, token_units=6000,
+                                         status="reserved", expires_at=NOW + timedelta(hours=1))])
+                raise AssertionError(query)
+        conn = Conn()
+        route = SimpleNamespace(asset_id="route-1", revision=1, content_hash="2" * 64)
+        price_ref = SimpleNamespace(asset_type="ModelPriceSnapshotRevision", asset_id="price-1", revision=1, content_hash="3" * 64)
+        provider_ref = SimpleNamespace(asset_type="ProviderInstanceRevision", asset_id="provider-1", revision=1, content_hash="b" * 64)
+        model_ref = SimpleNamespace(asset_id="model-1", revision=1, content_hash="c" * 64)
+        model = SimpleNamespace(content_hash=model_ref.content_hash, provider=provider_ref,
+                                price_snapshot_ref=price_ref, provider_model_id="provider-model-1")
+        run_request = SimpleNamespace(model_route=route)
+        request = SimpleNamespace(task_run_ref=SimpleNamespace(resource_id="run-1"), run=run_request,
+                                  agent_run_id="agent-run-1", skill_binding_id="skill-binding-1")
+        monkeypatch.setattr("aos_api.ecommerce_content_taskrun_owner.ContentTaskRunOwner._origin",
+                            staticmethod(lambda *_: (origin, response)))
+        monkeypatch.setattr("aos_api.ecommerce_content_agentrun_owner.ContentAgentRunOwner._build_request",
+                            staticmethod(lambda *_, **__: request))
+        monkeypatch.setattr("aos_api.ecommerce_content_taskrun_owner.ContentTaskRunOwner._assignment",
+                            staticmethod(lambda *_: dict(
+                                assignee=SimpleNamespace(resource_id="agent-1", revision="1"),
+                                agent_hash="4" * 64,
+                                plan_ref=ref("ResponsibilityPlanRevision", "responsibility-1"),
+                                capabilities=[SimpleNamespace(resource_id="copy.generate", revision=1,
+                                                               content_hash="5" * 64)],
+                            )))
+        monkeypatch.setattr("aos_api.ecommerce_growth_host_ports.LockedEcommerceGrowthHostPort._lock_and_revalidate",
+                            staticmethod(lambda *_: SimpleNamespace(checked_at=NOW)))
+        monkeypatch.setattr("aos_api.aip_agent_run_service.AipAgentRunService.get",
+                            lambda *_, **__: SimpleNamespace(
+                                status=AgentRunStatus.QUEUED if before_capacity else AgentRunStatus.RUNNING,
+                                version=1, skill_binding_id="skill-binding-1", task_run_id="run-1", request=run_request))
+        class ModelStore:
+            def __init__(self, *_): pass
+            def get_policy(self, *_):
+                return SimpleNamespace(
+                    quota_policy_ref=SimpleNamespace(asset_id="quota-1", revision=1),
+                    budget_policy_ref=SimpleNamespace(asset_id="budget-policy-1", revision=1))
+            def get_price_snapshot(self, *_):
+                return SimpleNamespace(development_cost_authorization=object() if risk_price else None,
+                                       input_token_price=0.5, output_token_price=1.0,
+                                       token_unit=1000)
+            def get_model(self, scope, identifier, revision):
+                assert risk_price and scope == SCOPE and (identifier, revision) == ("model-1", 1)
+                return model
+        monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelRuntimeStore", ModelStore)
+        class Resolver:
+            def __init__(self, *_): pass
+            def resolve(self, *_ , **__):
+                from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+                from aos_api.aip_contracts import TenantContext
+                from aos_api.aip_model_runtime_contracts import ModelRouteResolution
+                def exact(kind, value):
+                    return VersionedAssetRef(asset_type=kind, asset_id=value.asset_id,
+                                             revision=value.revision, content_hash=value.content_hash)
+                return ModelRouteResolution(
+                    tenant=TenantContext(org_id=SCOPE.org_id, project_id=SCOPE.project_id),
+                    readiness=ModelRuntimeReadiness.READY, resolved_at=NOW,
+                    route=exact("ModelRouteRevision", route),
+                    selected_price_snapshot=exact("ModelPriceSnapshotRevision", price_ref),
+                    selected_provider=exact("ProviderInstanceRevision", provider_ref),
+                    selected_model=exact("ModelRevision", model_ref),
+                    policy=VersionedAssetRef(asset_type="RuntimePolicyRevision", asset_id="policy-1",
+                                             revision=1, content_hash="d" * 64),
+                )
+        monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelRuntimeResolver", Resolver)
+        class Governance:
+            def __init__(self, *_): pass
+            def require_exact_active(self, scope, policy_ref, *, now):
+                if policy_ref.asset_id == "quota-1":
+                    return SimpleNamespace(max_input_tokens=4000, max_output_tokens=2000)
+                return SimpleNamespace(budget_revision_ref=SimpleNamespace(
+                    asset_type="BudgetRevision", asset_id="budget-1", revision=1, content_hash="7" * 64))
+        monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelGovernancePolicyStore", Governance)
+        approval_reads = []
+        def approved_action(*args, **kwargs):
+            approval_reads.append((args, kwargs))
+            return (BudgetExactRef(resource_type="ActionApprovalEvent",
+                                   resource_id="approval-1", revision=1,
+                                   content_hash="sha256:" + "8" * 64), 500)
+        monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_action", staticmethod(approved_action))
+        monkeypatch.setattr("aos_api.ecommerce_growth_runtime_adapters.ReviewAdvanceHostService._revalidate_growth_plan",
+                            staticmethod(lambda **__: SimpleNamespace(sales_weapon_method=SimpleNamespace(
+                                evidence_refs=[SimpleNamespace(resource_id="facts-1", revision=1,
+                                                               content_hash="9" * 64)]))))
+        validated = []
+        monkeypatch.setattr("aos_api.ecommerce_growth_runtime_adapters.ContentGenerateHostService.revalidate",
+                            lambda self, **kwargs: validated.append(kwargs["command"]))
+        if risk_price:
+            # Wiring-only double. The real shared authority is exercised by the PG suite.
+            def approve_bound(cls, price, amount, **options):
+                assert type(options["transaction"]) is HostTransaction and options["scope"] == SCOPE
+                assert options["policy_ref"].resource_id == "budget-1"
+                assert options["pricing_ref"].content_hash == "sha256:" + "3" * 64
+                assert options["provider_ref"].resource_id == "provider-1"
+                assert options["provider_model_id"] == "provider-model-1"
+                assert options["max_input_tokens"] == 4000 and options["max_output_tokens"] == 2000
+                assert price.development_cost_authorization is not None
+                return amount
+            monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_bound", classmethod(approve_bound))
+>       sources = ContentBudgetCommandOwner._prepare_sources(HostTransaction(conn), SCOPE, "review-1",
+                                                             before_capacity=before_capacity)
+
+services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py:327: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/aos_api/ecommerce_content_budget_command_owner.py:199: in _prepare_sources
+    resolution = AipModelRuntimeResolver(model_store).resolve(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_ecommerce_content_budget_command_owner.test_preflight_builds_exact_command_without_claim_or_provider.<locals>.Resolver object at 0x117ae7610>
+_ = (TenantScope(org_id='org-org', project_id='dev-project'), 'route-1')
+__ = {'now': datetime.datetime(2026, 9, 26, 0, 0, tzinfo=datetime.timezone.utc)}
+
+    def resolve(self, *_ , **__):
+        from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+        from aos_api.aip_contracts import TenantContext
+        from aos_api.aip_model_runtime_contracts import ModelRouteResolution
+        def exact(kind, value):
+            return VersionedAssetRef(asset_type=kind, asset_id=value.asset_id,
+                                     revision=value.revision, content_hash=value.content_hash)
+>       return ModelRouteResolution(
+            tenant=TenantContext(org_id=SCOPE.org_id, project_id=SCOPE.project_id),
+            readiness=ModelRuntimeReadiness.READY, resolved_at=NOW,
+            route=exact("ModelRouteRevision", route),
+            selected_price_snapshot=exact("ModelPriceSnapshotRevision", price_ref),
+            selected_provider=exact("ProviderInstanceRevision", provider_ref),
+            selected_model=exact("ModelRevision", model_ref),
+            policy=VersionedAssetRef(asset_type="RuntimePolicyRevision", asset_id="policy-1",
+                                     revision=1, content_hash="d" * 64),
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for ModelRouteResolution
+E         Value error, selected_model must reference RegisteredModelRevision [type=value_error, input_value={'tenant': TenantContext(...ddddddddddddddddddddd')}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.13/v/value_error
+
+services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py:282: ValidationError
+__ test_preflight_builds_exact_command_without_claim_or_provider[False-True] ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11a7cf510>
+risk_price = True, before_capacity = False
+
+    @pytest.mark.parametrize("risk_price", [False, True])
+    @pytest.mark.parametrize("before_capacity", [False, True])
+    def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, risk_price, before_capacity):
+        from aos_api.ecommerce_content_budget_command_owner import (
+            ContentBudgetCommandOwner, ContentBudgetCommandConflict,
+        )
+        from aos_api.ecommerce_growth_host_ports import HostTransaction
+        from aos_api.aip_agent_registry_contracts import AgentRunStatus
+        from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
+    
+        install, generation, group = uuid4(), uuid4(), uuid4()
+        intent = dict(state="pending", attempt=0, claim_token=None, task_run_id="run-1",
+                      agent_run_id="agent-run-1", capacity_reservation_id="capacity-1",
+                      command_key="review-1", installation_id=install,
+                      generation=generation, execution_epoch=3)
+        origin = dict(installation_id=install, generation=generation, execution_epoch=3,
+                      cutover_group_id=group, cutover_group_revision=2)
+        ref = lambda kind, name, digest="1": dict(
+            resourceType=kind, resourceId=name, revision=1,
+            contentHash="sha256:" + digest * 64,
+        )
+        response = dict(
+            handoffRef=ref("HandoffReceipt", "handoff-1"),
+            taskRef=ref("Task", "task-1"), briefRef=ref("TaskBriefRevision", "brief-1"),
+            growthPlanRef=ref("GrowthPlanRevision", "growth-1"),
+            artifactBindings=[{"artifactRef": ref("ArtifactRevision", f"artifact-{i}")}
+                              for i in range(4)],
+        )
+        dispatch_row = dict(handler_kind="extension", revision=5,
+                            installation_id=install, generation=generation,
+                            execution_epoch=3, cutover_group_id=group,
+                            cutover_group_revision=2)
+        class Conn:
+            def __init__(self):
+                self.calls = []
+            def execute(self, query, params):
+                self.calls.append(query)
+                if "FROM public.ecommerce_growth_content_budget_command_intent" in query or "FROM public.ecommerce_growth_content_capacity_intent" in query:
+                    return _Cursor([intent])
+                if "content_budget_command_current_a0v_104" in query or "content_capacity_current_a0v_103" in query:
+                    return _Cursor([{"current": True}])
+                if "FROM public.extension_operation_dispatch_binding" in query:
+                    return _Cursor([dispatch_row])
+                if "FROM public.aip_model_capacity_pool_head" in query:
+                    return _Cursor([dict(token_unit_per_reservation=6000)])
+                if "FROM public.aip_model_capacity_reservation" in query:
+                    if before_capacity: return _Cursor([])
+                    assert "JOIN public.aip_model_capacity_pool_revision" in query
+                    assert "p.model_id=%s" in query and "p.provider_id=%s" in query
+                    return _Cursor([dict(request_hash="6" * 64, token_units=6000,
+                                         status="reserved", expires_at=NOW + timedelta(hours=1))])
+                raise AssertionError(query)
+        conn = Conn()
+        route = SimpleNamespace(asset_id="route-1", revision=1, content_hash="2" * 64)
+        price_ref = SimpleNamespace(asset_type="ModelPriceSnapshotRevision", asset_id="price-1", revision=1, content_hash="3" * 64)
+        provider_ref = SimpleNamespace(asset_type="ProviderInstanceRevision", asset_id="provider-1", revision=1, content_hash="b" * 64)
+        model_ref = SimpleNamespace(asset_id="model-1", revision=1, content_hash="c" * 64)
+        model = SimpleNamespace(content_hash=model_ref.content_hash, provider=provider_ref,
+                                price_snapshot_ref=price_ref, provider_model_id="provider-model-1")
+        run_request = SimpleNamespace(model_route=route)
+        request = SimpleNamespace(task_run_ref=SimpleNamespace(resource_id="run-1"), run=run_request,
+                                  agent_run_id="agent-run-1", skill_binding_id="skill-binding-1")
+        monkeypatch.setattr("aos_api.ecommerce_content_taskrun_owner.ContentTaskRunOwner._origin",
+                            staticmethod(lambda *_: (origin, response)))
+        monkeypatch.setattr("aos_api.ecommerce_content_agentrun_owner.ContentAgentRunOwner._build_request",
+                            staticmethod(lambda *_, **__: request))
+        monkeypatch.setattr("aos_api.ecommerce_content_taskrun_owner.ContentTaskRunOwner._assignment",
+                            staticmethod(lambda *_: dict(
+                                assignee=SimpleNamespace(resource_id="agent-1", revision="1"),
+                                agent_hash="4" * 64,
+                                plan_ref=ref("ResponsibilityPlanRevision", "responsibility-1"),
+                                capabilities=[SimpleNamespace(resource_id="copy.generate", revision=1,
+                                                               content_hash="5" * 64)],
+                            )))
+        monkeypatch.setattr("aos_api.ecommerce_growth_host_ports.LockedEcommerceGrowthHostPort._lock_and_revalidate",
+                            staticmethod(lambda *_: SimpleNamespace(checked_at=NOW)))
+        monkeypatch.setattr("aos_api.aip_agent_run_service.AipAgentRunService.get",
+                            lambda *_, **__: SimpleNamespace(
+                                status=AgentRunStatus.QUEUED if before_capacity else AgentRunStatus.RUNNING,
+                                version=1, skill_binding_id="skill-binding-1", task_run_id="run-1", request=run_request))
+        class ModelStore:
+            def __init__(self, *_): pass
+            def get_policy(self, *_):
+                return SimpleNamespace(
+                    quota_policy_ref=SimpleNamespace(asset_id="quota-1", revision=1),
+                    budget_policy_ref=SimpleNamespace(asset_id="budget-policy-1", revision=1))
+            def get_price_snapshot(self, *_):
+                return SimpleNamespace(development_cost_authorization=object() if risk_price else None,
+                                       input_token_price=0.5, output_token_price=1.0,
+                                       token_unit=1000)
+            def get_model(self, scope, identifier, revision):
+                assert risk_price and scope == SCOPE and (identifier, revision) == ("model-1", 1)
+                return model
+        monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelRuntimeStore", ModelStore)
+        class Resolver:
+            def __init__(self, *_): pass
+            def resolve(self, *_ , **__):
+                from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+                from aos_api.aip_contracts import TenantContext
+                from aos_api.aip_model_runtime_contracts import ModelRouteResolution
+                def exact(kind, value):
+                    return VersionedAssetRef(asset_type=kind, asset_id=value.asset_id,
+                                             revision=value.revision, content_hash=value.content_hash)
+                return ModelRouteResolution(
+                    tenant=TenantContext(org_id=SCOPE.org_id, project_id=SCOPE.project_id),
+                    readiness=ModelRuntimeReadiness.READY, resolved_at=NOW,
+                    route=exact("ModelRouteRevision", route),
+                    selected_price_snapshot=exact("ModelPriceSnapshotRevision", price_ref),
+                    selected_provider=exact("ProviderInstanceRevision", provider_ref),
+                    selected_model=exact("ModelRevision", model_ref),
+                    policy=VersionedAssetRef(asset_type="RuntimePolicyRevision", asset_id="policy-1",
+                                             revision=1, content_hash="d" * 64),
+                )
+        monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelRuntimeResolver", Resolver)
+        class Governance:
+            def __init__(self, *_): pass
+            def require_exact_active(self, scope, policy_ref, *, now):
+                if policy_ref.asset_id == "quota-1":
+                    return SimpleNamespace(max_input_tokens=4000, max_output_tokens=2000)
+                return SimpleNamespace(budget_revision_ref=SimpleNamespace(
+                    asset_type="BudgetRevision", asset_id="budget-1", revision=1, content_hash="7" * 64))
+        monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelGovernancePolicyStore", Governance)
+        approval_reads = []
+        def approved_action(*args, **kwargs):
+            approval_reads.append((args, kwargs))
+            return (BudgetExactRef(resource_type="ActionApprovalEvent",
+                                   resource_id="approval-1", revision=1,
+                                   content_hash="sha256:" + "8" * 64), 500)
+        monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_action", staticmethod(approved_action))
+        monkeypatch.setattr("aos_api.ecommerce_growth_runtime_adapters.ReviewAdvanceHostService._revalidate_growth_plan",
+                            staticmethod(lambda **__: SimpleNamespace(sales_weapon_method=SimpleNamespace(
+                                evidence_refs=[SimpleNamespace(resource_id="facts-1", revision=1,
+                                                               content_hash="9" * 64)]))))
+        validated = []
+        monkeypatch.setattr("aos_api.ecommerce_growth_runtime_adapters.ContentGenerateHostService.revalidate",
+                            lambda self, **kwargs: validated.append(kwargs["command"]))
+        if risk_price:
+            # Wiring-only double. The real shared authority is exercised by the PG suite.
+            def approve_bound(cls, price, amount, **options):
+                assert type(options["transaction"]) is HostTransaction and options["scope"] == SCOPE
+                assert options["policy_ref"].resource_id == "budget-1"
+                assert options["pricing_ref"].content_hash == "sha256:" + "3" * 64
+                assert options["provider_ref"].resource_id == "provider-1"
+                assert options["provider_model_id"] == "provider-model-1"
+                assert options["max_input_tokens"] == 4000 and options["max_output_tokens"] == 2000
+                assert price.development_cost_authorization is not None
+                return amount
+            monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_bound", classmethod(approve_bound))
+>       sources = ContentBudgetCommandOwner._prepare_sources(HostTransaction(conn), SCOPE, "review-1",
+                                                             before_capacity=before_capacity)
+
+services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py:327: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/aos_api/ecommerce_content_budget_command_owner.py:199: in _prepare_sources
+    resolution = AipModelRuntimeResolver(model_store).resolve(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_ecommerce_content_budget_command_owner.test_preflight_builds_exact_command_without_claim_or_provider.<locals>.Resolver object at 0x11aaeb190>
+_ = (TenantScope(org_id='org-org', project_id='dev-project'), 'route-1')
+__ = {'now': datetime.datetime(2026, 9, 26, 0, 0, tzinfo=datetime.timezone.utc)}
+
+    def resolve(self, *_ , **__):
+        from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+        from aos_api.aip_contracts import TenantContext
+        from aos_api.aip_model_runtime_contracts import ModelRouteResolution
+        def exact(kind, value):
+            return VersionedAssetRef(asset_type=kind, asset_id=value.asset_id,
+                                     revision=value.revision, content_hash=value.content_hash)
+>       return ModelRouteResolution(
+            tenant=TenantContext(org_id=SCOPE.org_id, project_id=SCOPE.project_id),
+            readiness=ModelRuntimeReadiness.READY, resolved_at=NOW,
+            route=exact("ModelRouteRevision", route),
+            selected_price_snapshot=exact("ModelPriceSnapshotRevision", price_ref),
+            selected_provider=exact("ProviderInstanceRevision", provider_ref),
+            selected_model=exact("ModelRevision", model_ref),
+            policy=VersionedAssetRef(asset_type="RuntimePolicyRevision", asset_id="policy-1",
+                                     revision=1, content_hash="d" * 64),
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for ModelRouteResolution
+E         Value error, selected_model must reference RegisteredModelRevision [type=value_error, input_value={'tenant': TenantContext(...ddddddddddddddddddddd')}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.13/v/value_error
+
+services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py:282: ValidationError
+__ test_preflight_builds_exact_command_without_claim_or_provider[True-False] ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11a7cf810>
+risk_price = False, before_capacity = True
+
+    @pytest.mark.parametrize("risk_price", [False, True])
+    @pytest.mark.parametrize("before_capacity", [False, True])
+    def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, risk_price, before_capacity):
+        from aos_api.ecommerce_content_budget_command_owner import (
+            ContentBudgetCommandOwner, ContentBudgetCommandConflict,
+        )
+        from aos_api.ecommerce_growth_host_ports import HostTransaction
+        from aos_api.aip_agent_registry_contracts import AgentRunStatus
+        from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
+    
+        install, generation, group = uuid4(), uuid4(), uuid4()
+        intent = dict(state="pending", attempt=0, claim_token=None, task_run_id="run-1",
+                      agent_run_id="agent-run-1", capacity_reservation_id="capacity-1",
+                      command_key="review-1", installation_id=install,
+                      generation=generation, execution_epoch=3)
+        origin = dict(installation_id=install, generation=generation, execution_epoch=3,
+                      cutover_group_id=group, cutover_group_revision=2)
+        ref = lambda kind, name, digest="1": dict(
+            resourceType=kind, resourceId=name, revision=1,
+            contentHash="sha256:" + digest * 64,
+        )
+        response = dict(
+            handoffRef=ref("HandoffReceipt", "handoff-1"),
+            taskRef=ref("Task", "task-1"), briefRef=ref("TaskBriefRevision", "brief-1"),
+            growthPlanRef=ref("GrowthPlanRevision", "growth-1"),
+            artifactBindings=[{"artifactRef": ref("ArtifactRevision", f"artifact-{i}")}
+                              for i in range(4)],
+        )
+        dispatch_row = dict(handler_kind="extension", revision=5,
+                            installation_id=install, generation=generation,
+                            execution_epoch=3, cutover_group_id=group,
+                            cutover_group_revision=2)
+        class Conn:
+            def __init__(self):
+                self.calls = []
+            def execute(self, query, params):
+                self.calls.append(query)
+                if "FROM public.ecommerce_growth_content_budget_command_intent" in query or "FROM public.ecommerce_growth_content_capacity_intent" in query:
+                    return _Cursor([intent])
+                if "content_budget_command_current_a0v_104" in query or "content_capacity_current_a0v_103" in query:
+                    return _Cursor([{"current": True}])
+                if "FROM public.extension_operation_dispatch_binding" in query:
+                    return _Cursor([dispatch_row])
+                if "FROM public.aip_model_capacity_pool_head" in query:
+                    return _Cursor([dict(token_unit_per_reservation=6000)])
+                if "FROM public.aip_model_capacity_reservation" in query:
+                    if before_capacity: return _Cursor([])
+                    assert "JOIN public.aip_model_capacity_pool_revision" in query
+                    assert "p.model_id=%s" in query and "p.provider_id=%s" in query
+                    return _Cursor([dict(request_hash="6" * 64, token_units=6000,
+                                         status="reserved", expires_at=NOW + timedelta(hours=1))])
+                raise AssertionError(query)
+        conn = Conn()
+        route = SimpleNamespace(asset_id="route-1", revision=1, content_hash="2" * 64)
+        price_ref = SimpleNamespace(asset_type="ModelPriceSnapshotRevision", asset_id="price-1", revision=1, content_hash="3" * 64)
+        provider_ref = SimpleNamespace(asset_type="ProviderInstanceRevision", asset_id="provider-1", revision=1, content_hash="b" * 64)
+        model_ref = SimpleNamespace(asset_id="model-1", revision=1, content_hash="c" * 64)
+        model = SimpleNamespace(content_hash=model_ref.content_hash, provider=provider_ref,
+                                price_snapshot_ref=price_ref, provider_model_id="provider-model-1")
+        run_request = SimpleNamespace(model_route=route)
+        request = SimpleNamespace(task_run_ref=SimpleNamespace(resource_id="run-1"), run=run_request,
+                                  agent_run_id="agent-run-1", skill_binding_id="skill-binding-1")
+        monkeypatch.setattr("aos_api.ecommerce_content_taskrun_owner.ContentTaskRunOwner._origin",
+                            staticmethod(lambda *_: (origin, response)))
+        monkeypatch.setattr("aos_api.ecommerce_content_agentrun_owner.ContentAgentRunOwner._build_request",
+                            staticmethod(lambda *_, **__: request))
+        monkeypatch.setattr("aos_api.ecommerce_content_taskrun_owner.ContentTaskRunOwner._assignment",
+                            staticmethod(lambda *_: dict(
+                                assignee=SimpleNamespace(resource_id="agent-1", revision="1"),
+                                agent_hash="4" * 64,
+                                plan_ref=ref("ResponsibilityPlanRevision", "responsibility-1"),
+                                capabilities=[SimpleNamespace(resource_id="copy.generate", revision=1,
+                                                               content_hash="5" * 64)],
+                            )))
+        monkeypatch.setattr("aos_api.ecommerce_growth_host_ports.LockedEcommerceGrowthHostPort._lock_and_revalidate",
+                            staticmethod(lambda *_: SimpleNamespace(checked_at=NOW)))
+        monkeypatch.setattr("aos_api.aip_agent_run_service.AipAgentRunService.get",
+                            lambda *_, **__: SimpleNamespace(
+                                status=AgentRunStatus.QUEUED if before_capacity else AgentRunStatus.RUNNING,
+                                version=1, skill_binding_id="skill-binding-1", task_run_id="run-1", request=run_request))
+        class ModelStore:
+            def __init__(self, *_): pass
+            def get_policy(self, *_):
+                return SimpleNamespace(
+                    quota_policy_ref=SimpleNamespace(asset_id="quota-1", revision=1),
+                    budget_policy_ref=SimpleNamespace(asset_id="budget-policy-1", revision=1))
+            def get_price_snapshot(self, *_):
+                return SimpleNamespace(development_cost_authorization=object() if risk_price else None,
+                                       input_token_price=0.5, output_token_price=1.0,
+                                       token_unit=1000)
+            def get_model(self, scope, identifier, revision):
+                assert risk_price and scope == SCOPE and (identifier, revision) == ("model-1", 1)
+                return model
+        monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelRuntimeStore", ModelStore)
+        class Resolver:
+            def __init__(self, *_): pass
+            def resolve(self, *_ , **__):
+                from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+                from aos_api.aip_contracts import TenantContext
+                from aos_api.aip_model_runtime_contracts import ModelRouteResolution
+                def exact(kind, value):
+                    return VersionedAssetRef(asset_type=kind, asset_id=value.asset_id,
+                                             revision=value.revision, content_hash=value.content_hash)
+                return ModelRouteResolution(
+                    tenant=TenantContext(org_id=SCOPE.org_id, project_id=SCOPE.project_id),
+                    readiness=ModelRuntimeReadiness.READY, resolved_at=NOW,
+                    route=exact("ModelRouteRevision", route),
+                    selected_price_snapshot=exact("ModelPriceSnapshotRevision", price_ref),
+                    selected_provider=exact("ProviderInstanceRevision", provider_ref),
+                    selected_model=exact("ModelRevision", model_ref),
+                    policy=VersionedAssetRef(asset_type="RuntimePolicyRevision", asset_id="policy-1",
+                                             revision=1, content_hash="d" * 64),
+                )
+        monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelRuntimeResolver", Resolver)
+        class Governance:
+            def __init__(self, *_): pass
+            def require_exact_active(self, scope, policy_ref, *, now):
+                if policy_ref.asset_id == "quota-1":
+                    return SimpleNamespace(max_input_tokens=4000, max_output_tokens=2000)
+                return SimpleNamespace(budget_revision_ref=SimpleNamespace(
+                    asset_type="BudgetRevision", asset_id="budget-1", revision=1, content_hash="7" * 64))
+        monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelGovernancePolicyStore", Governance)
+        approval_reads = []
+        def approved_action(*args, **kwargs):
+            approval_reads.append((args, kwargs))
+            return (BudgetExactRef(resource_type="ActionApprovalEvent",
+                                   resource_id="approval-1", revision=1,
+                                   content_hash="sha256:" + "8" * 64), 500)
+        monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_action", staticmethod(approved_action))
+        monkeypatch.setattr("aos_api.ecommerce_growth_runtime_adapters.ReviewAdvanceHostService._revalidate_growth_plan",
+                            staticmethod(lambda **__: SimpleNamespace(sales_weapon_method=SimpleNamespace(
+                                evidence_refs=[SimpleNamespace(resource_id="facts-1", revision=1,
+                                                               content_hash="9" * 64)]))))
+        validated = []
+        monkeypatch.setattr("aos_api.ecommerce_growth_runtime_adapters.ContentGenerateHostService.revalidate",
+                            lambda self, **kwargs: validated.append(kwargs["command"]))
+        if risk_price:
+            # Wiring-only double. The real shared authority is exercised by the PG suite.
+            def approve_bound(cls, price, amount, **options):
+                assert type(options["transaction"]) is HostTransaction and options["scope"] == SCOPE
+                assert options["policy_ref"].resource_id == "budget-1"
+                assert options["pricing_ref"].content_hash == "sha256:" + "3" * 64
+                assert options["provider_ref"].resource_id == "provider-1"
+                assert options["provider_model_id"] == "provider-model-1"
+                assert options["max_input_tokens"] == 4000 and options["max_output_tokens"] == 2000
+                assert price.development_cost_authorization is not None
+                return amount
+            monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_bound", classmethod(approve_bound))
+>       sources = ContentBudgetCommandOwner._prepare_sources(HostTransaction(conn), SCOPE, "review-1",
+                                                             before_capacity=before_capacity)
+
+services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py:327: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/aos_api/ecommerce_content_budget_command_owner.py:199: in _prepare_sources
+    resolution = AipModelRuntimeResolver(model_store).resolve(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_ecommerce_content_budget_command_owner.test_preflight_builds_exact_command_without_claim_or_provider.<locals>.Resolver object at 0x11aabf210>
+_ = (TenantScope(org_id='org-org', project_id='dev-project'), 'route-1')
+__ = {'now': datetime.datetime(2026, 9, 26, 0, 0, tzinfo=datetime.timezone.utc)}
+
+    def resolve(self, *_ , **__):
+        from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+        from aos_api.aip_contracts import TenantContext
+        from aos_api.aip_model_runtime_contracts import ModelRouteResolution
+        def exact(kind, value):
+            return VersionedAssetRef(asset_type=kind, asset_id=value.asset_id,
+                                     revision=value.revision, content_hash=value.content_hash)
+>       return ModelRouteResolution(
+            tenant=TenantContext(org_id=SCOPE.org_id, project_id=SCOPE.project_id),
+            readiness=ModelRuntimeReadiness.READY, resolved_at=NOW,
+            route=exact("ModelRouteRevision", route),
+            selected_price_snapshot=exact("ModelPriceSnapshotRevision", price_ref),
+            selected_provider=exact("ProviderInstanceRevision", provider_ref),
+            selected_model=exact("ModelRevision", model_ref),
+            policy=VersionedAssetRef(asset_type="RuntimePolicyRevision", asset_id="policy-1",
+                                     revision=1, content_hash="d" * 64),
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for ModelRouteResolution
+E         Value error, selected_model must reference RegisteredModelRevision [type=value_error, input_value={'tenant': TenantContext(...ddddddddddddddddddddd')}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.13/v/value_error
+
+services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py:282: ValidationError
+___ test_preflight_builds_exact_command_without_claim_or_provider[True-True] ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11aad4710>
+risk_price = True, before_capacity = True
+
+    @pytest.mark.parametrize("risk_price", [False, True])
+    @pytest.mark.parametrize("before_capacity", [False, True])
+    def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, risk_price, before_capacity):
+        from aos_api.ecommerce_content_budget_command_owner import (
+            ContentBudgetCommandOwner, ContentBudgetCommandConflict,
+        )
+        from aos_api.ecommerce_growth_host_ports import HostTransaction
+        from aos_api.aip_agent_registry_contracts import AgentRunStatus
+        from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
+    
+        install, generation, group = uuid4(), uuid4(), uuid4()
+        intent = dict(state="pending", attempt=0, claim_token=None, task_run_id="run-1",
+                      agent_run_id="agent-run-1", capacity_reservation_id="capacity-1",
+                      command_key="review-1", installation_id=install,
+                      generation=generation, execution_epoch=3)
+        origin = dict(installation_id=install, generation=generation, execution_epoch=3,
+                      cutover_group_id=group, cutover_group_revision=2)
+        ref = lambda kind, name, digest="1": dict(
+            resourceType=kind, resourceId=name, revision=1,
+            contentHash="sha256:" + digest * 64,
+        )
+        response = dict(
+            handoffRef=ref("HandoffReceipt", "handoff-1"),
+            taskRef=ref("Task", "task-1"), briefRef=ref("TaskBriefRevision", "brief-1"),
+            growthPlanRef=ref("GrowthPlanRevision", "growth-1"),
+            artifactBindings=[{"artifactRef": ref("ArtifactRevision", f"artifact-{i}")}
+                              for i in range(4)],
+        )
+        dispatch_row = dict(handler_kind="extension", revision=5,
+                            installation_id=install, generation=generation,
+                            execution_epoch=3, cutover_group_id=group,
+                            cutover_group_revision=2)
+        class Conn:
+            def __init__(self):
+                self.calls = []
+            def execute(self, query, params):
+                self.calls.append(query)
+                if "FROM public.ecommerce_growth_content_budget_command_intent" in query or "FROM public.ecommerce_growth_content_capacity_intent" in query:
+                    return _Cursor([intent])
+                if "content_budget_command_current_a0v_104" in query or "content_capacity_current_a0v_103" in query:
+                    return _Cursor([{"current": True}])
+                if "FROM public.extension_operation_dispatch_binding" in query:
+                    return _Cursor([dispatch_row])
+                if "FROM public.aip_model_capacity_pool_head" in query:
+                    return _Cursor([dict(token_unit_per_reservation=6000)])
+                if "FROM public.aip_model_capacity_reservation" in query:
+                    if before_capacity: return _Cursor([])
+                    assert "JOIN public.aip_model_capacity_pool_revision" in query
+                    assert "p.model_id=%s" in query and "p.provider_id=%s" in query
+                    return _Cursor([dict(request_hash="6" * 64, token_units=6000,
+                                         status="reserved", expires_at=NOW + timedelta(hours=1))])
+                raise AssertionError(query)
+        conn = Conn()
+        route = SimpleNamespace(asset_id="route-1", revision=1, content_hash="2" * 64)
+        price_ref = SimpleNamespace(asset_type="ModelPriceSnapshotRevision", asset_id="price-1", revision=1, content_hash="3" * 64)
+        provider_ref = SimpleNamespace(asset_type="ProviderInstanceRevision", asset_id="provider-1", revision=1, content_hash="b" * 64)
+        model_ref = SimpleNamespace(asset_id="model-1", revision=1, content_hash="c" * 64)
+        model = SimpleNamespace(content_hash=model_ref.content_hash, provider=provider_ref,
+                                price_snapshot_ref=price_ref, provider_model_id="provider-model-1")
+        run_request = SimpleNamespace(model_route=route)
+        request = SimpleNamespace(task_run_ref=SimpleNamespace(resource_id="run-1"), run=run_request,
+                                  agent_run_id="agent-run-1", skill_binding_id="skill-binding-1")
+        monkeypatch.setattr("aos_api.ecommerce_content_taskrun_owner.ContentTaskRunOwner._origin",
+                            staticmethod(lambda *_: (origin, response)))
+        monkeypatch.setattr("aos_api.ecommerce_content_agentrun_owner.ContentAgentRunOwner._build_request",
+                            staticmethod(lambda *_, **__: request))
+        monkeypatch.setattr("aos_api.ecommerce_content_taskrun_owner.ContentTaskRunOwner._assignment",
+                            staticmethod(lambda *_: dict(
+                                assignee=SimpleNamespace(resource_id="agent-1", revision="1"),
+                                agent_hash="4" * 64,
+                                plan_ref=ref("ResponsibilityPlanRevision", "responsibility-1"),
+                                capabilities=[SimpleNamespace(resource_id="copy.generate", revision=1,
+                                                               content_hash="5" * 64)],
+                            )))
+        monkeypatch.setattr("aos_api.ecommerce_growth_host_ports.LockedEcommerceGrowthHostPort._lock_and_revalidate",
+                            staticmethod(lambda *_: SimpleNamespace(checked_at=NOW)))
+        monkeypatch.setattr("aos_api.aip_agent_run_service.AipAgentRunService.get",
+                            lambda *_, **__: SimpleNamespace(
+                                status=AgentRunStatus.QUEUED if before_capacity else AgentRunStatus.RUNNING,
+                                version=1, skill_binding_id="skill-binding-1", task_run_id="run-1", request=run_request))
+        class ModelStore:
+            def __init__(self, *_): pass
+            def get_policy(self, *_):
+                return SimpleNamespace(
+                    quota_policy_ref=SimpleNamespace(asset_id="quota-1", revision=1),
+                    budget_policy_ref=SimpleNamespace(asset_id="budget-policy-1", revision=1))
+            def get_price_snapshot(self, *_):
+                return SimpleNamespace(development_cost_authorization=object() if risk_price else None,
+                                       input_token_price=0.5, output_token_price=1.0,
+                                       token_unit=1000)
+            def get_model(self, scope, identifier, revision):
+                assert risk_price and scope == SCOPE and (identifier, revision) == ("model-1", 1)
+                return model
+        monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelRuntimeStore", ModelStore)
+        class Resolver:
+            def __init__(self, *_): pass
+            def resolve(self, *_ , **__):
+                from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+                from aos_api.aip_contracts import TenantContext
+                from aos_api.aip_model_runtime_contracts import ModelRouteResolution
+                def exact(kind, value):
+                    return VersionedAssetRef(asset_type=kind, asset_id=value.asset_id,
+                                             revision=value.revision, content_hash=value.content_hash)
+                return ModelRouteResolution(
+                    tenant=TenantContext(org_id=SCOPE.org_id, project_id=SCOPE.project_id),
+                    readiness=ModelRuntimeReadiness.READY, resolved_at=NOW,
+                    route=exact("ModelRouteRevision", route),
+                    selected_price_snapshot=exact("ModelPriceSnapshotRevision", price_ref),
+                    selected_provider=exact("ProviderInstanceRevision", provider_ref),
+                    selected_model=exact("ModelRevision", model_ref),
+                    policy=VersionedAssetRef(asset_type="RuntimePolicyRevision", asset_id="policy-1",
+                                             revision=1, content_hash="d" * 64),
+                )
+        monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelRuntimeResolver", Resolver)
+        class Governance:
+            def __init__(self, *_): pass
+            def require_exact_active(self, scope, policy_ref, *, now):
+                if policy_ref.asset_id == "quota-1":
+                    return SimpleNamespace(max_input_tokens=4000, max_output_tokens=2000)
+                return SimpleNamespace(budget_revision_ref=SimpleNamespace(
+                    asset_type="BudgetRevision", asset_id="budget-1", revision=1, content_hash="7" * 64))
+        monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelGovernancePolicyStore", Governance)
+        approval_reads = []
+        def approved_action(*args, **kwargs):
+            approval_reads.append((args, kwargs))
+            return (BudgetExactRef(resource_type="ActionApprovalEvent",
+                                   resource_id="approval-1", revision=1,
+                                   content_hash="sha256:" + "8" * 64), 500)
+        monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_action", staticmethod(approved_action))
+        monkeypatch.setattr("aos_api.ecommerce_growth_runtime_adapters.ReviewAdvanceHostService._revalidate_growth_plan",
+                            staticmethod(lambda **__: SimpleNamespace(sales_weapon_method=SimpleNamespace(
+                                evidence_refs=[SimpleNamespace(resource_id="facts-1", revision=1,
+                                                               content_hash="9" * 64)]))))
+        validated = []
+        monkeypatch.setattr("aos_api.ecommerce_growth_runtime_adapters.ContentGenerateHostService.revalidate",
+                            lambda self, **kwargs: validated.append(kwargs["command"]))
+        if risk_price:
+            # Wiring-only double. The real shared authority is exercised by the PG suite.
+            def approve_bound(cls, price, amount, **options):
+                assert type(options["transaction"]) is HostTransaction and options["scope"] == SCOPE
+                assert options["policy_ref"].resource_id == "budget-1"
+                assert options["pricing_ref"].content_hash == "sha256:" + "3" * 64
+                assert options["provider_ref"].resource_id == "provider-1"
+                assert options["provider_model_id"] == "provider-model-1"
+                assert options["max_input_tokens"] == 4000 and options["max_output_tokens"] == 2000
+                assert price.development_cost_authorization is not None
+                return amount
+            monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_bound", classmethod(approve_bound))
+>       sources = ContentBudgetCommandOwner._prepare_sources(HostTransaction(conn), SCOPE, "review-1",
+                                                             before_capacity=before_capacity)
+
+services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py:327: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/aos_api/ecommerce_content_budget_command_owner.py:199: in _prepare_sources
+    resolution = AipModelRuntimeResolver(model_store).resolve(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_ecommerce_content_budget_command_owner.test_preflight_builds_exact_command_without_claim_or_provider.<locals>.Resolver object at 0x11aad5110>
+_ = (TenantScope(org_id='org-org', project_id='dev-project'), 'route-1')
+__ = {'now': datetime.datetime(2026, 9, 26, 0, 0, tzinfo=datetime.timezone.utc)}
+
+    def resolve(self, *_ , **__):
+        from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+        from aos_api.aip_contracts import TenantContext
+        from aos_api.aip_model_runtime_contracts import ModelRouteResolution
+        def exact(kind, value):
+            return VersionedAssetRef(asset_type=kind, asset_id=value.asset_id,
+                                     revision=value.revision, content_hash=value.content_hash)
+>       return ModelRouteResolution(
+            tenant=TenantContext(org_id=SCOPE.org_id, project_id=SCOPE.project_id),
+            readiness=ModelRuntimeReadiness.READY, resolved_at=NOW,
+            route=exact("ModelRouteRevision", route),
+            selected_price_snapshot=exact("ModelPriceSnapshotRevision", price_ref),
+            selected_provider=exact("ProviderInstanceRevision", provider_ref),
+            selected_model=exact("ModelRevision", model_ref),
+            policy=VersionedAssetRef(asset_type="RuntimePolicyRevision", asset_id="policy-1",
+                                     revision=1, content_hash="d" * 64),
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for ModelRouteResolution
+E         Value error, selected_model must reference RegisteredModelRevision [type=value_error, input_value={'tenant': TenantContext(...ddddddddddddddddddddd')}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.13/v/value_error
+
+services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py:282: ValidationError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py::test_preflight_builds_exact_command_without_claim_or_provider[False-False]
+FAILED services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py::test_preflight_builds_exact_command_without_claim_or_provider[False-True]
+FAILED services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py::test_preflight_builds_exact_command_without_claim_or_provider[True-False]
+FAILED services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py::test_preflight_builds_exact_command_without_claim_or_provider[True-True]
+4 failed, 32 passed, 7 warnings in 4.40s

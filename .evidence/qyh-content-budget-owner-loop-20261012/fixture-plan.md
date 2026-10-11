@@ -1,0 +1,1 @@
+原4个preflight测试在HEAD旧run_once下同样失败，capacity_exact_resolution_required。修改仅原测试Resolver返回值，使用ModelRouteResolution/VersionedAssetRef/TenantContext真实契约，保留route/provider/model/price原摘要。生产校验、SQL、预算和真实身份不改；累计36项需全部通过。

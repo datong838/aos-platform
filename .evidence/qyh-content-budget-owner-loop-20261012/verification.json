@@ -1,0 +1,18 @@
+{
+  "baseHead": "b8246b310f053a78b0374619aedc2c3fa1ee3929",
+  "authority": "AOS-001903",
+  "red": "5 failed, 2 passed",
+  "baselineAdjacent": "4 failed, 11 passed",
+  "final": "36 passed, 0 skipped, 7 warnings",
+  "currentDatabaseWrites": 0,
+  "providerCalls": 0,
+  "liveDeployment": false,
+  "formalRecoveryAccepted": false,
+  "hashes": {
+    "services/aos-api/aos_api/ecommerce_content_budget_command_owner.py": "754c453d1955b7ec8d0d11553c0df76b546eae4fcceed1c99e40db98ca2de52e",
+    "services/aos-api/tests/extension_runtime/test_content_budget_owner_loop.py": "4335b31c9423c5afbe07d1d15835386a8aa2fae2a56a4cd0587aa12ca8f10d71",
+    "services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py": "e007bc42d1235e2da42c128ca39d6f0ccf1792b5c18c6c0077f7792680fe75e6"
+  },
+  "dWave": "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-12-QYH-内容预算生产循环恢复方案.md",
+  "dWaveSha256": "b1b896b1954422c468cdc9749115d79866e135c46f33b38e2b7dc8261373bd97"
+}

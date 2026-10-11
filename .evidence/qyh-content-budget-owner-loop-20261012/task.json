@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-content-budget-owner-loop-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001903",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_content_budget_command_owner.py",
+    "aos-platform/services/aos-api/tests/extension_runtime/test_content_budget_owner_loop.py",
+    "aos-platform/.evidence/qyh-content-budget-owner-loop-20261012"
+  ],
+  "excluded_scope": [
+    "maintenance/current-database",
+    "aos-platform/services/aos-api/aos_api/aip_budget_reservation_store.py"
+  ],
+  "expected_outputs": [
+    "Original ContentBudgetCommandOwner isolates known claim/commit uncertainty per review key; no retry or requeue, exact unclassified failures propagate; RED, focused and adjacent regressions; no real DB or Provider effects"
+  ],
+  "lease_expires_at": "2026-10-12T06:35:27.805298+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T02:35:28+08:00"
+}
