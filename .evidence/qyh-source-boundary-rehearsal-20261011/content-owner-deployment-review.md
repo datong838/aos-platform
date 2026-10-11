@@ -1,0 +1,13 @@
+# 栖月汇内容来源接线调查
+
+基线019c4523543d5c595c38d761c752d75133eb5a05/AOS-001890，沿231及原33-AIP-P9-Content1的C1-1B合同。当前Goal active；Source Task/Lease同owner有效至2026-10-12T00:00:00Z，无第二写者。正式登录和独立publisher仍未接通；当前管理API只读。
+
+原实现可以复用：object_store.get_bytes已有max_bytes限制，tenant_prefix提供组织/工作区前缀；原budget reservation保留held/submitted/settled/unknown三桶暴露语义和提交时锁。不能调用INSERT桶的准备方法来做只读readiness。不能将未建立桶解释为零费用或无限余额。
+
+实际GET18080健康200；OIDC仍dev grant、无外部JWKS URL/token URL；object-store health返回ok=false及127.0.0.1:9000连接拒绝。当前权威Docker context没有minio容器候选、没有媒体/minio/object名称卷匹配；其他context不可用或查询未返回，外置盘原历史对象尚未完整定位。禁止创建空新卷代替、不删旧卷、不启动未知资源。无对象字节读取或写入。
+
+原wave_ext._media/_media_bytes都是进程内dict，因此不能将该目录直接当作重启后持久Content登记Owner。部署compose中MinIO定义只是一条历史定位线索，不能凭开发默认凭证连接或自动初始化桶。先找原卷、安装来源与持久索引；继续复用原Artifact/Receipt，不建立第二Draft真源。实验复制库预算桶0/内容草稿0仅对应该复制库切面，不是当前余额结论或全历史素材丢失结论。
+
+具体接续文件沿第十段清单：aip_content_draft_readiness.py及原测试定义预算快照的exact head/账户/周期/Usage/上界读取；aip_content_draft_store.py、routers/aip_content_drafts.py及原测试接入真实受治理对象与独立Content发行连接。object_store.py/tenant_prefix.py应优先复用而非重写，wave_ext.py内存入口不授Content权威。aip_budget_reservation_store.py当前已有非本波改动，仅只读参考，保持原字节。产品文件未改；必须先另登记精确产品Task/Lease与补充方案。
+
+审查：本段是部署/owner调查，实际代码hash和只读结果落盘；无DDL、业务/对象写、Provider或外部商城读取。未完成完整Content正向、Source Task或正式恢复。旧码、旧数据和失败记录保留；不把基础适配器可复用误报为八台运行可用。

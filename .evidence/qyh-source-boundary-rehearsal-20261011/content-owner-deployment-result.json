@@ -1,0 +1,61 @@
+{
+  "head": "019c4523543d5c595c38d761c752d75133eb5a05",
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "authority": "AOS-001890",
+  "scope": [
+    "org-org",
+    "dev-project"
+  ],
+  "liveManagement": {
+    "/v1/health": {
+      "status": 200,
+      "body": {
+        "status": "ok"
+      }
+    },
+    "/v1/auth/oidc": {
+      "status": 200,
+      "body": {
+        "issuer": "http://aos-dev-oidc",
+        "jwksUrls": [],
+        "tokenUrlConfigured": false,
+        "allowDevToken": true,
+        "grantTypes": [
+          "dev"
+        ]
+      }
+    },
+    "/v1/object-store/health": {
+      "status": 200,
+      "body": {
+        "ok": false,
+        "endpoint": "http://127.0.0.1:9000",
+        "bucket": "aos-media",
+        "detail": "<urlopen error [Errno 61] Connection refused>"
+      }
+    }
+  },
+  "existingS3AdapterReusable": true,
+  "existingTenantPrefixReusable": true,
+  "mediaDirectoryProcessMemory": true,
+  "durableContentOwnerConnected": false,
+  "storageCandidatesInAuthoritativeDockerContext": [],
+  "experimentalCloneBudgetBucketCount": 0,
+  "experimentalCloneContentDraftCount": 0,
+  "countsAreNotCurrentBudgetApproval": true,
+  "sourceHashes": {
+    "services/aos-api/aos_api/object_store.py": "a7e790b5a0b5398ce7ce75b6574118cf899418036fa027c959c8fd0e78a4fb15",
+    "services/aos-api/aos_api/tenant_prefix.py": "95d80ca4b8b2d573468d67228b06ae2ca7dd4d07472ccb9500846f3db08f42aa",
+    "services/aos-api/aos_api/routers/wave_ext.py": "36dd26155b70098dd303a7c35d95ed6f0b7544f8883b18454e049c8bd0631c2b",
+    "services/aos-api/aos_api/aip_budget_reservation_store.py": "07df0cf6575350fd96374a698325a581800319ed16c65bcc9fcafea99b3bf9d9",
+    "services/aos-api/aos_api/aip_content_draft_store.py": "20b3e67bd16f30759e005a01bf22c45fd20e1b1771e0eda7dfe3e10975c820cc"
+  },
+  "scriptHash": "07dad4ac1a6acb690deb6ea8f6014b9cdc2d6d85dd4c8f06e2a33208e379b42b",
+  "databaseWrites": 0,
+  "objectReads": 0,
+  "objectWrites": 0,
+  "provisioning": false,
+  "formalLoginConnected": false,
+  "formalPublisherConnected": false,
+  "fullRestorationAccepted": false
+}
