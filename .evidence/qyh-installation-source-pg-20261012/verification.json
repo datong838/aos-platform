@@ -1,0 +1,25 @@
+{
+  "baseHead": "49eadae07905f62f8be1a38ee9aee8ac3f29235a",
+  "passed": 20,
+  "skipped": 0,
+  "warnings": 7,
+  "newNativeTests": 3,
+  "positive": [
+    "original four ecommerce bundle signatures and separate creator/validator/publisher",
+    "original resolve/create/submit/approve/apply/verify",
+    "same caller SERIALIZABLE txid preserved across Registry and exact active installation reads"
+  ],
+  "negative": [
+    "dev-org no active installation",
+    "second original active installation ambiguous",
+    "original revoke invalidates publication and current installation release"
+  ],
+  "testOnlyIdentity": true,
+  "sourceIssuerRoleAcceptance": false,
+  "fullMediaPolicyRuleReceiptRegistrationAcceptance": false,
+  "formalOidcPublisherConnected": false,
+  "currentDatabaseWrites": 0,
+  "currentApiChanged": false,
+  "preservedUserTrackedChanges": 22,
+  "testSha256": "42ce66629de39ae34bf5f214a1c8a5adb0e7cb98423796cdb62171717528331b"
+}

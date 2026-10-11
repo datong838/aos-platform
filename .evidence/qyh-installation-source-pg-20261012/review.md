@@ -1,0 +1,9 @@
+# 实际验收与限制
+
+20 passed / 0 skip / 7既有warnings，包含3新增真实SQL+Ed25519和原生命周期/完整来源wiring相邻。原M5 helper只设置测试Scope常量org-org/dev-project，没有替换签名/Registry/安装权威reader。复用原4电商包的临时测试密钥（内存生成、无私钥落盘），原职责分离和5次安装CommandReceipt真实commit，随后新独立SERIALIZABLE caller读取发布材料和安装锁、signatureFingerprint/releaseEvidenceRevision一致；txid/status证明两读取器无内部commit。dev-org失败、真实原二次安装歧义、真实原Registry撤回使原release snapshot stale，均没有伪造active/state。
+
+首次失败是框架自动创建aos_test_*_ti4_test临时库，测试错误限定postgres；按原conftest改为host/port/user+临时库规则和实际clusterID固定。第二次19pass/1fail因测试期待CurrentReleaseEvidenceBlocked而原撤回合法返回RegistrySnapshotStaleError，已对齐原精确异常，没有改变产品错误处理。两次均不是产品漏洞RED；保留原日志，不制造失败计数。
+
+临时schema原helperfinally删除，原conftest销毁自己的测试数据库；只有owned tmpfs clone有测试DDL/写，当前恢复volume运行保持。22既有改动保留。本波仅新增测试，不部署产品，现有135安装和真库不动，不浏览商城/旧Run/Host。测试签名和fixture actors不是正式IdP或独立企业发布身份；M5 declarative_only剔除runtime，是控制平面安装来源验收，不能证明Host、UI、四Rule/Policy/Receipt、专用issuerACL或完整Source注册。
+
+下一合同沿已登记完整Source：将严格policy contribution及四原Rule登记Receipt接入临时签名包、实际专用issuer同caller事务，用原Store完成合法register/rollback与漂移负门；正式配置路径仍等待原问题答复，不能绕过或以测试身份上线。全系统/Goal继续ACTIVE，八工作台入口不可用尚未解决。

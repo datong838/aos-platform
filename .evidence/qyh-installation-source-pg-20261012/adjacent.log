@@ -1,0 +1,99 @@
+.F..................                                                     [100%]
+=================================== FAILURES ===================================
+________ test_original_revoke_invalidates_publication_and_installation _________
+
+installed = (M5ControlRuntime(connect_factory=<function m5_control_runtime.<locals>.scoped_connect at 0x11ec56c00>, org_id='org-or...atetime.datetime(2026, 10, 11, 23, 16, 13, 643706, tzinfo=TzInfo(0)))]), 'm5_control_1d8599a732fe479094ebbdda9573212d')
+
+    def test_original_revoke_invalidates_publication_and_installation(installed):
+        runtime, _, _ = installed
+        bundle = runtime.prepared.by_id("solution.ecommerce.growth").signed
+        runtime.registry_service.revoke(
+            publisher="aos", bundle_id=bundle.manifest.metadata.id,
+            version=bundle.manifest.metadata.version, actor="fixture-publisher",
+            roles={"asset-publisher"}, publisher_scopes={"aos"},
+            reason="isolated source invalidation test",
+        )
+        with pytest.raises(VerificationFailedError, match="current publication snapshot"):
+            runtime.registry_service.get_published_reference_material(
+                publisher="aos", bundle_id=bundle.manifest.metadata.id,
+                version=bundle.manifest.metadata.version,
+            )
+        with runtime.connect_factory() as conn:
+            with pytest.raises(CurrentReleaseEvidenceBlocked):
+>               read_growth(runtime, conn)
+
+services/aos-api/tests/asset_registry/test_qyh_installation_source_pg.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/tests/asset_registry/test_qyh_installation_source_pg.py:61: in read_growth
+    return _read_unique_active_in_transaction(
+services/aos-api/aos_api/extension_runtime/current_installation_release_evidence.py:235: in _read_unique_active_in_transaction
+    view, row, _ = _read_exact_in_transaction(
+services/aos-api/aos_api/extension_runtime/current_installation_release_evidence.py:127: in _read_exact_in_transaction
+    ).revalidate_in_transaction(conn, lock=lock)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <aos_api.extension_runtime.release_revalidation.RuntimeReleaseRevalidator object at 0x11ed58490>
+conn = <psycopg.Connection [BAD] at 0x11ed67490>
+lock = StoredCompositionLock(composition_id='5fa1204a-1a9c-4297-a777-634be6d13e8e', revision=1, payload=CompositionLockPayloa...8d45582dd1e11bc2975f063', created_at=datetime.datetime(2026, 10, 11, 23, 16, 13, 447832, tzinfo=datetime.timezone.utc))
+
+    def revalidate_in_transaction(self, conn, *, lock):
+        _require_transaction(conn)
+        lock=StoredCompositionLock.model_validate(lock)
+        conn.execute("SELECT pg_advisory_xact_lock(228, 1)")
+        policy=self._release_policy.snapshot()
+        row=conn.execute("SELECT clock_timestamp() AS checked_at").fetchone()
+        if row is None:
+            raise RegistryIntegrityCorruptError()
+        checked_at=_values(row,("checked_at",))[0]
+        if not isinstance(checked_at,datetime) or checked_at.utcoffset() is None:
+            raise RegistryIntegrityCorruptError()
+        indexed={}
+        for row in conn.execute(_SNAPSHOT_QUERY).fetchall():
+            key=(str(row["publisher"]),str(row["bundle_id"]),str(row["version"]))
+            if key in indexed:
+                raise RegistryIntegrityCorruptError()
+            indexed[key]=row
+        runtime_members=[]
+        backend_claims=[]
+        backend_claim_fingerprints=[]
+        for selected in lock.payload.resolved:
+            row=indexed.get((selected.publisher,selected.id,selected.version))
+            if row is None:
+>               raise RegistrySnapshotStaleError("selected release no longer available")
+E               aos_api.asset_registry.errors.RegistrySnapshotStaleError: selected release no longer available
+
+services/aos-api/aos_api/extension_runtime/release_revalidation.py:49: RegistrySnapshotStaleError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/asset_registry/test_qyh_installation_source_pg.py::test_original_revoke_invalidates_publication_and_installation
+1 failed, 19 passed, 7 warnings in 9.16s
