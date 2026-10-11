@@ -1,0 +1,90 @@
+{
+  "observedAt": "2026-10-11T05:53:31.240021+00:00",
+  "head": "87efd7c8125981149b0605003bf5f5341ba3e415",
+  "current": {
+    "database": "aos_current_preview_20260927",
+    "cluster": "7683855731447750695",
+    "migration": "a0v_159",
+    "orgs": [
+      {
+        "id": "org-org",
+        "name": "org-org"
+      }
+    ],
+    "workspaces": [
+      {
+        "orgId": "org-org",
+        "projectId": "dev-project",
+        "name": "dev-project"
+      }
+    ],
+    "installations": [
+      {
+        "orgId": "org-org",
+        "projectId": "dev-project",
+        "id": "ccdcb0f0-1040-4bc6-aa0c-d045f5689813",
+        "name": "栖月汇当前源码电商八工作台隔离首装",
+        "currentRevision": 3,
+        "activeRevision": null
+      }
+    ],
+    "states": [
+      {
+        "revision": 1,
+        "state": "draft"
+      },
+      {
+        "revision": 2,
+        "state": "submitted"
+      },
+      {
+        "revision": 3,
+        "state": "approved"
+      }
+    ],
+    "hostIdentities": 0,
+    "hostAssignments": 0,
+    "runtimeBindings": 0,
+    "runtimeOperations": 0
+  },
+  "originalTarget": {
+    "database": "aos_meta",
+    "targetOrg": [
+      {
+        "id": "org-org",
+        "name": "栖月汇商贸有限公司"
+      }
+    ],
+    "targetWorkspace": [
+      {
+        "orgId": "org-org",
+        "projectId": "dev-project",
+        "name": "默认工作区"
+      }
+    ]
+  },
+  "sourceIdentity": [
+    {
+      "file": "services/aos-api/aos_api/orgs.py",
+      "currentSha256": "a8459f554ae043dbb879c51c2bb23bbbc508d4a5e35767bde38c0b06fc34dc1a",
+      "frozenSha256": "a8459f554ae043dbb879c51c2bb23bbbc508d4a5e35767bde38c0b06fc34dc1a"
+    },
+    {
+      "file": "services/aos-api/aos_api/asset_registry/workshop_catalog_source.py",
+      "currentSha256": "3a370d3d93a676ff12572cd9ea154a74b26097030b968eb554331e09c5a02fb2",
+      "frozenSha256": "3a370d3d93a676ff12572cd9ea154a74b26097030b968eb554331e09c5a02fb2"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_runtime_workshop_catalog.py",
+      "currentSha256": "62b1feac7e648971150e536d275cb99cb189e38326046b3ddb9cff0ff80c5ebe",
+      "frozenSha256": "62b1feac7e648971150e536d275cb99cb189e38326046b3ddb9cff0ff80c5ebe"
+    },
+    {
+      "file": "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+      "currentSha256": "220aaf963a167790822c04c6e0c382903edab04c8b20bc0d21881c300e60eea0",
+      "frozenSha256": "220aaf963a167790822c04c6e0c382903edab04c8b20bc0d21881c300e60eea0"
+    }
+  ],
+  "readOnly": true,
+  "businessExecutionAuthorized": false
+}
