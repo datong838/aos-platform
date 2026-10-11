@@ -1,0 +1,12 @@
+{
+  "fixed_original_fact_restoration": true,
+  "fixed_statements_sha256": [
+    "bb5ddf23a972f023fc376cd19b9e9d2298edcf3990c39331503fe6d33a87910b",
+    "8db665bbd2fbe89804d49900c09036f65410e1ddac84c230b8bb87dff6091be9",
+    "6f232bfb328ac06c8ef641265ce6b64ad7a5963c0a5d38d54bcebc66ec21a662",
+    "31454494b3150e22d936595392acd30f1325cedba6e479eab7a2a4eb05d07bdc",
+    "a086036ac0c6ca5f3ec8b8b4480d61bc4197e3be098670a7bcfabac5ab481ecd"
+  ],
+  "product_generator_unmodified": true,
+  "fresh_attempt": true
+}

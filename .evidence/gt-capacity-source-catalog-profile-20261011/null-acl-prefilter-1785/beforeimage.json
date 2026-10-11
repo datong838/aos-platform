@@ -1,0 +1,7 @@
+{
+  "files": {
+    "services/aos-api/aos_api/aip_provider_capacity_catalog_audit_profile.py": "f4358314d86e78059d6ece59b41b1ffc76c35066b1dd19acf43fcc4846bf6714",
+    "services/aos-api/tests/aip/test_provider_capacity_catalog_audit_profile_pg.py": "b58f95ba74484fbeb7c8521b2c45878fda0e44b11a7a356038d7ae989e0a9546"
+  },
+  "old_predicate": "EXISTS(SELECT 1 FROM aclexplode(a.attacl) acl WHERE acl.grantee IN (owner_oid,0::oid) AND acl.privilege_type IN ('INSERT','REFERENCES','UPDATE'))"
+}

@@ -1,0 +1,58 @@
+{
+  "state": {
+    "cluster": "7694680278363095064",
+    "track_functions": "none",
+    "database": "aos_test_89412670243c_ti4_test"
+  },
+  "tables": [
+    {
+      "schemaname": "aos_shared_parent_admission_private",
+      "tablename": "end_authority",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_admission_private",
+      "tablename": "pending_origin",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "complete_parent_risk",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "complete_receipt_v2",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "initial_call_authority",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "initial_target_obligation",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "initial_window_obligation",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "judge_dependency",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "target_intent",
+      "rows": 0
+    }
+  ],
+  "other_sessions": [],
+  "product_hashes_exact": true,
+  "readonly": true,
+  "execution_allowed": false
+}

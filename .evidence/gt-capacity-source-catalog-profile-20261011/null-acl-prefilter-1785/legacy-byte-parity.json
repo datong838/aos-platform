@@ -1,0 +1,17 @@
+{
+  "before": {
+    "epoch": "bf39bfa6c9f4af7ac5def085035e09a8be1f9bf1e0c52effd831c34e24a6e6c1",
+    "public": "9a4ac7bd0a3808ea22839f249527fca0f859039b165907ef0bf89c31ee6983ee",
+    "occupation": "c02397173a48e6b025df9e24222239859671b12916e3487875fc977def036c99",
+    "private": "2f20609404a319f95f3f2b9799fc55d40fa9b69f08a8818df4f02880b0a73927"
+  },
+  "after": {
+    "epoch": "bf39bfa6c9f4af7ac5def085035e09a8be1f9bf1e0c52effd831c34e24a6e6c1",
+    "public": "9a4ac7bd0a3808ea22839f249527fca0f859039b165907ef0bf89c31ee6983ee",
+    "occupation": "c02397173a48e6b025df9e24222239859671b12916e3487875fc977def036c99",
+    "private": "2f20609404a319f95f3f2b9799fc55d40fa9b69f08a8818df4f02880b0a73927"
+  },
+  "legacy_byte_exact": true,
+  "candidate_only_two_predicate_changes": true,
+  "published_store_unchanged": true
+}

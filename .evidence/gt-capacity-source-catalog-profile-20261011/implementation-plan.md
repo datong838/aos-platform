@@ -11,3 +11,6 @@ Rules：仓库 AGENTS、231 八步、联合准入完整 §3/§11.3、aos-enginee
 先缺模块 RED，再编译校验与 native 隔离 transaction rollback 正负门，独立连接恢复复核；相邻测试复核原生成器 hashes。完整签名 Source 时限/消费、Receipt 与实际 COMMIT 后续实际验证，当前不写 Delivery。浏览器无页面改动，不作为此组件门。失败保留证据，rollback 测试更改；正式安装/Root/Provider/全局角色均不操作。
 
 观察器本 heartbeat 返回既有事件缓存（HEAD18093f、authority1703、Judge checkpoint），与当前 HEAD2ef3e96/authority1763 不一致；仅保留历史观察结果，不能当当前任务进展或授权。
+
+## AOS-001785 实测列ACL空值预筛
+详细编码前方案与固定A/B验证见 null-acl-prefilter-1785/plan.md。仅在新catalog家族两处现有COLUMN_AFTER外加显式NULL排除，让规划器筛除无列ACL的属性；aclexplode(NULL)空集等价，不移除任何检查或重复调用，不改原已发布SQL或期限。若实测无改善不实施。

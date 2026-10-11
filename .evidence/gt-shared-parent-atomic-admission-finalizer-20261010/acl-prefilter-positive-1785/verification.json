@@ -1,0 +1,100 @@
+{
+  "full_fixture_status": "RED",
+  "pytest_exit": 1,
+  "failure": "CAPACITY_CURRENT_SOURCE_EXPIRED at v2 Receipt",
+  "collector_positive_executed": false,
+  "comparisons": [
+    {
+      "stage": "public.test_owned_pending_origin",
+      "before": {
+        "self_ms": 5976.181711,
+        "calls": 264,
+        "stage_seconds": 13.290021
+      },
+      "after": {
+        "self_ms": 5418.486295000001,
+        "calls": 264,
+        "stage_seconds": 12.784442
+      },
+      "same_calls": true
+    },
+    {
+      "stage": "public.test_owned_end_authority",
+      "before": {
+        "self_ms": 5992.4117479999995,
+        "calls": 264,
+        "stage_seconds": 13.269925
+      },
+      "after": {
+        "self_ms": 5320.578991,
+        "calls": 264,
+        "stage_seconds": 12.520437
+      },
+      "same_calls": true
+    },
+    {
+      "stage": "public.test_owned_complete_risk",
+      "before": {
+        "self_ms": 5799.710331000002,
+        "calls": 264,
+        "stage_seconds": 13.206773
+      },
+      "after": {
+        "self_ms": 5300.226502999998,
+        "calls": 264,
+        "stage_seconds": 12.679524
+      },
+      "same_calls": true
+    },
+    {
+      "stage": "public.test_owned_initial_obligation",
+      "before": {
+        "self_ms": 5975.176835999999,
+        "calls": 288,
+        "stage_seconds": 13.159335
+      },
+      "after": {
+        "self_ms": 5430.107497000001,
+        "calls": 288,
+        "stage_seconds": 12.833727
+      },
+      "same_calls": true
+    },
+    {
+      "stage": "public.test_owned_initial_call_authority",
+      "before": {
+        "self_ms": 9754.404598000001,
+        "calls": 468,
+        "stage_seconds": 22.48981
+      },
+      "after": {
+        "self_ms": 9156.522242,
+        "calls": 468,
+        "stage_seconds": 22.691048
+      },
+      "same_calls": true
+    },
+    {
+      "stage": "public.test_owned_initial_window",
+      "before": {
+        "self_ms": 6822.435543,
+        "calls": 324,
+        "stage_seconds": 15.824151
+      },
+      "after": {
+        "self_ms": 6250.866081000004,
+        "calls": 324,
+        "stage_seconds": 15.706214
+      },
+      "same_calls": true
+    }
+  ],
+  "limited_single_run_comparison": true,
+  "source_deadlines_unchanged": true,
+  "checks_not_removed": true,
+  "all_nine_tables_zero": true,
+  "other_sessions_zero": true,
+  "profile_setting_reset": true,
+  "formal_db_touched": false,
+  "full_task_delivered": false
+}

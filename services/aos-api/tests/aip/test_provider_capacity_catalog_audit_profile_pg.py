@@ -42,6 +42,60 @@ def test_catalog_compiler_fails_closed_on_original_predicate_drift(monkeypatch):
         profile.catalog_fact_body()
 
 
+def test_native_column_acl_predicate_matches_original_privileges():
+    """Compare real ACL semantics under the existing no-inheritance guard."""
+    import os
+    from uuid import uuid4
+    import psycopg
+    from psycopg import sql
+    from psycopg.rows import dict_row
+    from psycopg.conninfo import conninfo_to_dict
+    from aos_api import aip_provider_capacity_catalog_audit_profile as profile
+
+    if not os.getenv('AOS_CATALOG_PROFILE_TEST_CLUSTER'):
+        pytest.skip('explicit owned native catalog lab required')
+    params = conninfo_to_dict(os.environ['AOS_DATABASE_URL'])
+    assert params['dbname'].startswith('aos_test_') and params['dbname'].endswith('_ti4_test')
+    assert params['host'] == '127.0.0.1' and params['port'] == '5441'
+    params.update(passfile=os.environ['AOS_TEST_PGPASSFILE'], row_factory=dict_row)
+    with psycopg.connect(**params) as conn:
+        assert conn.execute('SELECT system_identifier::text AS cluster FROM pg_control_system()').fetchone()['cluster'] == os.environ['AOS_CATALOG_PROFILE_TEST_CLUSTER']
+        owner = conn.execute("SELECT oid,rolsuper,rolinherit FROM pg_roles WHERE rolname='aos_capacity_publication_owner'").fetchone()
+        assert not owner['rolsuper'] and not owner['rolinherit']
+        assert not conn.execute('SELECT 1 FROM pg_auth_members WHERE member=%s', (owner['oid'],)).fetchall()
+        table = 'catalog_acl_' + uuid4().hex
+        relation = sql.Identifier('pg_temp', table)
+        conn.execute(sql.SQL('CREATE TEMP TABLE {} (sample integer, untouched integer)').format(sql.Identifier(table)))
+        cases = [(None, None, False, False),
+                 ('aos_capacity_publication_owner', 'SELECT', False, False),
+                 ('PUBLIC', 'SELECT', False, False),
+                 ('aos_capacity_publication_owner', 'UPDATE', False, True),
+                 ('aos_capacity_publication_owner', 'INSERT', True, True),
+                 ('aos_capacity_publication_owner', 'REFERENCES', False, True),
+                 ('PUBLIC', 'UPDATE', False, True),
+                 ('PUBLIC', 'INSERT', False, True),
+                 ('PUBLIC', 'REFERENCES', False, True)]
+        query = ('SELECT a.attname, ' + profile.COLUMN_BEFORE + ' AS original, '
+                 + profile.COLUMN_AFTER + ' AS optimized FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid '
+                 'CROSS JOIN (SELECT %s::oid AS owner_oid) own '
+                 'WHERE a.attrelid=to_regclass(%s) AND a.attnum>0 AND NOT a.attisdropped ORDER BY a.attname')
+        for grantee, privilege, grant_option, expected in cases:
+            with conn.transaction(force_rollback=True):
+                if grantee:
+                    recipient = sql.SQL('PUBLIC') if grantee == 'PUBLIC' else sql.Identifier(grantee)
+                    conn.execute(sql.SQL('GRANT {} (sample) ON {} TO {}{}').format(
+                        sql.SQL(privilege), relation, recipient,
+                        sql.SQL(' WITH GRANT OPTION' if grant_option else '')))
+                rows = conn.execute(query, (owner['oid'], 'pg_temp.' + table)).fetchall()
+                assert all(row['original'] == row['optimized'] for row in rows)
+                assert {row['attname'] for row in rows if row['optimized']} == ({'sample'} if expected else set())
+                if grantee:
+                    conn.execute(sql.SQL('REVOKE {} (sample) ON {} FROM {}').format(
+                        sql.SQL(privilege), relation, recipient))
+                    assert not any(row['original'] or row['optimized'] for row in conn.execute(query, (owner['oid'], 'pg_temp.' + table)))
+        conn.rollback()
+
+
 def test_native_complete_catalog_identity_partial_hybrid_acl_and_restoration():
     """Real catalog identities only; signed Source business positive is separate."""
     import os

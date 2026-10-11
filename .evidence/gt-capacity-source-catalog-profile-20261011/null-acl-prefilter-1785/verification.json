@@ -1,0 +1,22 @@
+{
+  "targeted": "4 passed after fixing test query missing pg_class alias; first test harness failure retained",
+  "adjacent": "54 passed, 0 skipped, 1 separately executed Source test deselected, 7 existing warnings",
+  "real_acl_matrix_cases": 9,
+  "original_generators_byte_exact": true,
+  "predicate_query_counts_exact": 5,
+  "readonly_query_ms_old": [
+    6.382,
+    5.846
+  ],
+  "readonly_query_ms_new": [
+    1.853,
+    1.541
+  ],
+  "full_source_evidence": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/acl-prefilter-positive-1785/verification.json",
+  "full_source_status": "RED",
+  "full_task_delivered": false,
+  "product_files": [
+    "services/aos-api/aos_api/aip_provider_capacity_catalog_audit_profile.py",
+    "services/aos-api/tests/aip/test_provider_capacity_catalog_audit_profile_pg.py"
+  ]
+}

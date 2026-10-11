@@ -13,8 +13,9 @@ from aos_api import aip_provider_capacity_publication_store as store
 FACT = 'aos_capacity_publication_private.require_original_fact_boundary()'
 COLUMN_BEFORE = ("(has_column_privilege(owner_oid,c.oid,a.attnum,'INSERT,REFERENCES')\n"
                  "      OR has_column_privilege(owner_oid,c.oid,a.attnum,'UPDATE'))")
-COLUMN_AFTER = ("EXISTS(SELECT 1 FROM aclexplode(a.attacl) acl WHERE acl.grantee IN (owner_oid,0::oid) "
-                "AND acl.privilege_type IN ('INSERT','REFERENCES','UPDATE'))")
+COLUMN_AFTER = ("(a.attacl IS NOT NULL AND EXISTS(SELECT 1 FROM aclexplode(a.attacl) acl "
+                "WHERE acl.grantee IN (owner_oid,0::oid) "
+                "AND acl.privilege_type IN ('INSERT','REFERENCES','UPDATE')))")
 ERROR = 'CAPACITY_CATALOG_PROFILE_INSTALLATION_DRIFTED'
 
 
