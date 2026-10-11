@@ -52,3 +52,11 @@ LANGUAGE c VOLATILE PARALLEL UNSAFE SECURITY INVOKER SET search_path=pg_catalog;
 ALTER FUNCTION aos_admission_native_private.loaded_module_readonly_facts()
 OWNER TO aos_physical_capacity_occupation_owner;
 REVOKE ALL ON FUNCTION aos_admission_native_private.loaded_module_readonly_facts() FROM PUBLIC;
+
+-- All executable kernel mappings; no lifetime stability or admission grant.
+CREATE FUNCTION aos_admission_native_private.executable_mapping_facts()
+RETURNS jsonb AS 'MODULE_PATHNAME', 'aos_admission_executable_mapping_facts'
+LANGUAGE c VOLATILE PARALLEL UNSAFE SECURITY INVOKER SET search_path=pg_catalog;
+ALTER FUNCTION aos_admission_native_private.executable_mapping_facts()
+OWNER TO aos_physical_capacity_occupation_owner;
+REVOKE ALL ON FUNCTION aos_admission_native_private.executable_mapping_facts() FROM PUBLIC;

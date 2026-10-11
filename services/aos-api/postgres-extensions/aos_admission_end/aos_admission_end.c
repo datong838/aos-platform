@@ -625,3 +625,66 @@ Datum aos_admission_loaded_module_readonly_facts(PG_FUNCTION_ARGS)
     PG_RETURN_NULL();
 #endif
 }
+
+/* Kernel executable regions, including anonymous/JIT; observation, never authority. */
+PG_FUNCTION_INFO_V1(aos_admission_executable_mapping_facts);
+Datum aos_admission_executable_mapping_facts(PG_FUNCTION_ARGS)
+{
+    if (GetUserId() != get_role_oid("aos_physical_capacity_occupation_owner", false))
+        ereport(ERROR, (errcode(ERRCODE_INSUFFICIENT_PRIVILEGE), errmsg("SHARED_ADMISSION_NATIVE_OWNER_REQUIRED")));
+#ifdef __linux__
+    {
+        FILE *volatile maps = NULL;
+        StringInfoData output;
+        char line[8192];
+        unsigned count = 0, emitted = 0;
+        unsigned long long previous_end = 0;
+        initStringInfo(&output);
+        appendStringInfoString(&output, "{\"schemaVersion\":\"aos.executable-mapping-observation/v1\",\"executionAllowed\":false,\"lifetimeStable\":false,\"mappings\":[");
+        PG_TRY();
+        {
+            maps = AllocateFile("/proc/self/maps", "r");
+            if (maps == NULL)
+                elog(ERROR, "SHARED_ADMISSION_EXECUTABLE_MAPS_REQUIRED");
+            while (fgets(line, sizeof(line), maps) != NULL) {
+                unsigned long long start, end, offset, inode;
+                unsigned major_id, minor_id;
+                char permissions[5];
+                CHECK_FOR_INTERRUPTS();
+                if (++count > 8192 || strchr(line, '\n') == NULL ||
+                    sscanf(line, "%llx-%llx %4s %llx %x:%x %llu", &start, &end, permissions,
+                        &offset, &major_id, &minor_id, &inode) != 7 || start >= end || start < previous_end ||
+                    strlen(permissions) != 4 || (permissions[0] != 'r' && permissions[0] != '-') ||
+                    (permissions[1] != 'w' && permissions[1] != '-') ||
+                    (permissions[2] != 'x' && permissions[2] != '-') ||
+                    (permissions[3] != 'p' && permissions[3] != 's'))
+                    elog(ERROR, "SHARED_ADMISSION_EXECUTABLE_MAPS_REQUIRED");
+                previous_end = end;
+                if (permissions[2] != 'x')
+                    continue;
+                line[strlen(line) - 1] = '\0';
+                if (emitted++) appendStringInfoChar(&output, ',');
+                escape_json(&output, line);
+            }
+            if (ferror(maps) || emitted == 0)
+                elog(ERROR, "SHARED_ADMISSION_EXECUTABLE_MAPS_REQUIRED");
+            if (FreeFile(maps) != 0) {
+                maps = NULL;
+                elog(ERROR, "SHARED_ADMISSION_EXECUTABLE_MAPS_REQUIRED");
+            }
+            maps = NULL;
+        }
+        PG_CATCH();
+        {
+            if (maps != NULL) FreeFile(maps);
+            PG_RE_THROW();
+        }
+        PG_END_TRY();
+        appendStringInfoString(&output, "]}");
+        PG_RETURN_DATUM(DirectFunctionCall1(jsonb_in, CStringGetDatum(output.data)));
+    }
+#else
+    ereport(ERROR, (errcode(ERRCODE_FEATURE_NOT_SUPPORTED), errmsg("SHARED_ADMISSION_NATIVE_LINUX_REQUIRED")));
+    PG_RETURN_NULL();
+#endif
+}

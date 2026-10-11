@@ -240,3 +240,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 匿名可执行映射生命周期负门1819
 在已登记package生命周期候选中，新增anonymous-mapping-1819/probe.c/Dockerfile/result。固定1817 SDK编译独立helper，scratch只复制musl加载器与helper；不启动PG、不挂任何卷，networknone/read-only/capdropALL/no-new-privileges/UID501。比较dl_iterate_phdr在匿名RW页mprotect成RX前后记录；从/proc/self/maps核该地址实际权限，页不执行。若模块枚举不变但内核出现RX，证实模块列表不足；拒绝把文件readonly等同内存闭合。失败保留，不调弱安全参数。完整Main及专用Root仍待证。
+
+## 完整可执行映射观察1820
+修改已登记产品C/安装SQL/test_shared_parent_native_ending_pg.py，新增Owner-only executable_mapping_facts()，固定/proc/self/maps，检查每行格式、地址范围、权限、排序及8192行界限；只输出所有含x行的原内核文本，包含匿名/vDSO，不用模块白名单过滤。VOLATILE/PARALLEL UNSAFE/SECURITY INVOKER/pg_catalog/PUBLIC关闭；不读取内存、不改变权限、不arm。原始行保留供独立精确比对；snapshot不证明跨时刻稳定或代码信任。先确认旧二进制无符号RED，再新编译及独立后台maps逐行比对、Owner/ACL负门和旧模块累计测试；失败不改变原安装，新增SQL仅测试事务内回滚。

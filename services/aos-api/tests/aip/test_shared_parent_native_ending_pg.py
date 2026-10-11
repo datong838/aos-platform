@@ -174,6 +174,7 @@ def native_module_lab():
         assert other.execute('SELECT to_regprocedure(%s) AS p',(MODULE_FILES,)).fetchone()['p'] is None
         assert other.execute('SELECT to_regprocedure(%s) AS p',(MODULE_MAPPING,)).fetchone()['p'] is None
         assert other.execute('SELECT to_regprocedure(%s) AS p',(MODULE_READONLY,)).fetchone()['p'] is None
+        assert other.execute("SELECT to_regprocedure('aos_admission_native_private.executable_mapping_facts()') AS p").fetchone()['p'] is None
         assert other.execute('SELECT prosrc,probin,proacl::text FROM pg_proc WHERE oid=%s::regprocedure',(NATIVE,)).fetchone()==original
     store(proof,rollback_only_installation_absent=True,original_pending_reader_exact=True)
 
@@ -481,3 +482,25 @@ def test_native_module_readonly_memory_change_denied_and_restored(native_module_
     assert read_byte()==original and c.execute('SELECT '+MODULE_READONLY+' AS facts').fetchone()['facts']==before
     assert subprocess.check_output(['docker','exec',lab['name'],'sha256sum',spec['foreign_library']],text=True).split()[0]==spec['foreign_library_sha256']
     store(proof,readonly_memory_byte_change_denied=True,readonly_memory_exactly_restored=True,readonly_error_descriptors_released=True,foreign_arm_invoked=False,readonly_test_copy_retained=copied)
+
+
+def test_native_executable_maps_include_all_kernel_executable_regions(native_module_lab):
+    import subprocess
+    c, lab, spec, proof = native_module_lab
+    function = 'aos_admission_native_private.executable_mapping_facts()'
+    meta = c.execute('SELECT pg_get_userbyid(proowner) AS owner,prosrc,prosecdef,provolatile,proparallel,proconfig FROM pg_proc WHERE oid=%s::regprocedure',(function,)).fetchone()
+    assert meta == dict(owner=OWNER,prosrc='aos_admission_executable_mapping_facts',prosecdef=False,provolatile='v',proparallel='u',proconfig=['search_path=pg_catalog'])
+    c.execute('SAVEPOINT executable_owner')
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_NATIVE_OWNER_REQUIRED'):
+        c.execute('SELECT '+function)
+    c.execute('ROLLBACK TO SAVEPOINT executable_owner')
+    c.execute('SET LOCAL ROLE '+OWNER)
+    facts = c.execute('SELECT '+function+' AS facts').fetchone()['facts']
+    pid = c.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+    raw = subprocess.check_output(['docker','exec',lab['name'],'cat',f'/proc/{pid}/maps'],text=True)
+    expected = [line for line in raw.splitlines() if 'x' in line.split()[1]]
+    assert facts['schemaVersion'] == 'aos.executable-mapping-observation/v1'
+    assert facts['executionAllowed'] is False and facts['lifetimeStable'] is False
+    assert facts['mappings'] == expected and expected
+    assert not c.execute("SELECT has_function_privilege('aos_runtime',%s,'EXECUTE') AS allowed",(function,)).fetchone()['allowed']
+    store(proof, executable_kernel_maps_exact=True, executable_owner_denied=True)

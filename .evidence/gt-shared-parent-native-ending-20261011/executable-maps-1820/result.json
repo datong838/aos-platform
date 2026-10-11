@@ -1,0 +1,19 @@
+{
+  "pytest_exit": 0,
+  "source_hashes": {
+    "aos_admission_end.c": "d0871aef7ae5995da381a302d559f0446c9d174282c889d58f0e90ce807158cc",
+    "Makefile": "56080f2509ebb5f5d5de7f1b2567c0478d3c37fcbc9a9915c547a1073bb48d5d",
+    "aos_admission_end.control": "786f5ff9b0848d21160fabb996bc3b43086d462ab7deb74a598808e048b0e750",
+    "aos_admission_end--0.1.sql": "49e716fb5951f908f15bd088e5c2f04b6d7f338754f33b8f09ef6fa8b84f9537"
+  },
+  "library_sha256": "962dc8c1253e548978ddab8c773281eeb069262a54699479d339cbfc0424a36e",
+  "original_pending_reader_exact": true,
+  "new_function_absent_after_rollback": true,
+  "owner_memberships_zero": true,
+  "original_signature_binary_exact": true,
+  "original_guard_changed": false,
+  "formal_database_changed": false,
+  "full_admission": false,
+  "full_task_delivered": false,
+  "execution_allowed": false
+}
