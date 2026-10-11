@@ -1,0 +1,199 @@
+{
+  "head": "7a687a8b6c9dd6784089cc3bf7d7d9a1575ddb21",
+  "originalExperiment": {
+    "scope": [
+      "org-org",
+      "dev-project"
+    ],
+    "receiptOperations": [
+      {
+        "operation": "artifact_family.candidate.select",
+        "n": 1
+      },
+      {
+        "operation": "artifact_family.member.attach",
+        "n": 2
+      },
+      {
+        "operation": "artifact_family.register",
+        "n": 1
+      },
+      {
+        "operation": "artifact_relation.create",
+        "n": 1
+      },
+      {
+        "operation": "eval_contract.create",
+        "n": 1
+      },
+      {
+        "operation": "eval_contract.freeze",
+        "n": 1
+      },
+      {
+        "operation": "eval_contract.revise",
+        "n": 2
+      },
+      {
+        "operation": "evidence.revoke",
+        "n": 1
+      },
+      {
+        "operation": "evidence_bundle.build",
+        "n": 1
+      },
+      {
+        "operation": "evidence_bundle.create",
+        "n": 1
+      },
+      {
+        "operation": "evidence_bundle.revoke",
+        "n": 1
+      },
+      {
+        "operation": "evidence_disclosure.resolve",
+        "n": 1
+      },
+      {
+        "operation": "impact_preview.create",
+        "n": 1
+      },
+      {
+        "operation": "impact_preview.revise",
+        "n": 1
+      },
+      {
+        "operation": "production_context.freeze",
+        "n": 1
+      },
+      {
+        "operation": "review_issue.create",
+        "n": 2
+      },
+      {
+        "operation": "review_issue.resolve",
+        "n": 1
+      },
+      {
+        "operation": "review_rule.register",
+        "n": 1
+      },
+      {
+        "operation": "stage_template.create",
+        "n": 2
+      },
+      {
+        "operation": "stage_template.freeze",
+        "n": 1
+      },
+      {
+        "operation": "stage_template.revise",
+        "n": 1
+      },
+      {
+        "operation": "task_brief.create",
+        "n": 1
+      },
+      {
+        "operation": "task_brief.freeze",
+        "n": 1
+      },
+      {
+        "operation": "task_brief.revise",
+        "n": 1
+      }
+    ],
+    "facts": {
+      "frozenEvalRevisions": 17,
+      "gateSets": 0,
+      "mediaProfiles": 0,
+      "reviewRules": 1,
+      "freshAvailableSkillBindings": 0
+    },
+    "runStates": [
+      {
+        "status": "cancelled",
+        "n": 1
+      },
+      {
+        "status": "queued",
+        "n": 1
+      },
+      {
+        "status": "succeeded",
+        "n": 4
+      }
+    ],
+    "taskStates": [
+      {
+        "status": "approved",
+        "n": 1
+      },
+      {
+        "status": "cancelled",
+        "n": 1
+      },
+      {
+        "status": "completed",
+        "n": 4
+      },
+      {
+        "status": "pending",
+        "n": 2
+      }
+    ],
+    "compileDependencies": {
+      "task": {
+        "version": 6,
+        "status": "cancelled"
+      },
+      "historicalContextReadiness": "ready",
+      "planId": "responsibility-plan-63c82d2a75614e1b95f1",
+      "planRevision": 2,
+      "planLifecycle": "frozen",
+      "planReadiness": "blocked",
+      "planBlockers": [
+        "SKILL_BINDING_STALE",
+        "SKILL_BINDING_STALE",
+        "SKILL_BINDING_STALE",
+        "SKILL_BINDING_STALE",
+        "SKILL_BINDING_STALE",
+        "SKILL_BINDING_STALE"
+      ]
+    }
+  },
+  "canary": {
+    "scope": [
+      "dev-org",
+      "dev-project"
+    ],
+    "receiptOperations": [],
+    "facts": {
+      "frozenEvalRevisions": 0,
+      "gateSets": 0,
+      "mediaProfiles": 0,
+      "reviewRules": 0,
+      "freshAvailableSkillBindings": 0
+    },
+    "runStates": [],
+    "taskStates": [],
+    "compileDependencies": {
+      "originalContextVisible": false
+    }
+  },
+  "catalogOperations": 30,
+  "actualOperationKinds": 24,
+  "remaining": [
+    "impact_preview.freeze",
+    "media_contract_migration.create",
+    "media_gate_profile.register",
+    "media_gate_set.assemble",
+    "review_issue.return",
+    "stage_template.compile"
+  ],
+  "independentReadbacksEqual": true,
+  "recentPytestReceiptsCountedHere": false,
+  "databaseWrites": 0,
+  "wholeSourceCompatibilityAccepted": false,
+  "businessRestorationAccepted": false
+}

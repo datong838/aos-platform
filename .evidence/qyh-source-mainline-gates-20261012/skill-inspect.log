@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-source-mainline-gates-20261012/read_current_skills.py", line 30, in <module>
+    before, after = observe(), observe()
+                    ^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-source-mainline-gates-20261012/read_current_skills.py", line 21, in observe
+    'bindingStatus': binding.status.value,
+                     ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'value'

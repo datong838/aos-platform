@@ -1,0 +1,189 @@
+{
+  "originalInspectorUsed": true,
+  "readOnlyConnectionsOnly": true,
+  "evaluationsPersisted": 0,
+  "twoIndependentViewsEqual": true,
+  "bindings": [
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-model-successor-r3-skill-d03",
+      "bindingStatus": "active",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-model-successor-r3-skill-d02",
+      "bindingStatus": "active",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-model-successor-r3-skill-d01",
+      "bindingStatus": "active",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-firstchain-skill-d03",
+      "bindingStatus": "suspended",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-firstchain-skill-d02",
+      "bindingStatus": "suspended",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-firstchain-skill-d01",
+      "bindingStatus": "suspended",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "data-steward",
+      "bindingId": "a0v-model-successor-r3-skill-s01",
+      "bindingStatus": "active",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "data-steward",
+      "bindingId": "a0v-firstchain-skill-s01",
+      "bindingStatus": "suspended",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "content-research",
+      "bindingId": "a0v-model-successor-r3-skill-c06",
+      "bindingStatus": "active",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "content-research",
+      "bindingId": "a0v-firstchain-skill-c06",
+      "bindingStatus": "suspended",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "customer-research",
+      "bindingId": "a0v-model-successor-r3-skill-p01",
+      "bindingStatus": "active",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "customer-research",
+      "bindingId": "a0v-firstchain-skill-p01",
+      "bindingStatus": "suspended",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "channel-research",
+      "bindingId": "a0v-model-successor-r3-skill-a02",
+      "bindingStatus": "active",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "channel-research",
+      "bindingId": "a0v-firstchain-skill-a02",
+      "bindingStatus": "suspended",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "business-reviewer",
+      "bindingId": "a0v-model-successor-r3-skill-g06",
+      "bindingStatus": "active",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    },
+    {
+      "slotId": "business-reviewer",
+      "bindingId": "a0v-firstchain-skill-g06",
+      "bindingStatus": "suspended",
+      "currentReadiness": "blocked",
+      "currentReasons": [
+        "CAPABILITY_HEALTH_STALE",
+        "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED"
+      ]
+    }
+  ],
+  "distinctReasons": [
+    "CAPABILITY_HEALTH_STALE",
+    "MODEL_ROUTE_BLOCKED",
+    "SKILL_EVAL_GATE_BLOCKED"
+  ]
+}

@@ -1,0 +1,4 @@
+# 原业务兼容主线当前依赖复核
+Rules231/01/06/AOS交付。候选A原企业OIDC/publisher来源仍待答；B已登记原30operation全兼容，选择B新只读调查。本波只scope own evidence，绝不调用原real_*写入口。独立核ownedclone381ac0/18431/noMount/cluster7695416748450308141，固定既有DB qyh_source_contract_20261011及qyh_restored_api_login/aos_runtime READ ONLY，org-org/dev-project与dev-org canary。原30固定操作AST目录和实际clone:test Receipt分组、Plan/Context/Task原getter及frozenEval/GateSet/Profile/Rule计数两次独立回读一致；截取只维护元数据、不输出业务payload或身份。原计数不混入conftest临时库7a687A测试业务，近期55/35协议证据不能变成该实验完成或实际审批。查明当前合法依赖后更新剩余顺序，禁止旧cancelledTask/queuedRun重放、伪造GateSet/Source。失败先诊断；不对未知结果重发、不授Host。纯只读脚本无产品实现，需保存fresh证据与review/精确commit/Delivery/CAS7strong。完整原兼容和全Goal继续ACTIVE。
+
+实际调查扩展：用原inspect_binding_readiness只读评估原6slot/16binding当前依赖，不持久化。确认全blocked且不只是Skill TTL，恢复顺序先核Capability/Route/Policy/Gate。原状态string序列化错误仅readonly已修复，两次独立结果一致。

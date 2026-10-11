@@ -1,0 +1,32 @@
+{
+  "baseHead": "7a687a8b6c9dd6784089cc3bf7d7d9a1575ddb21",
+  "originalExperimentOperationKinds": 24,
+  "catalogOperationKinds": 30,
+  "remaining": [
+    "impact_preview.freeze",
+    "media_contract_migration.create",
+    "media_gate_profile.register",
+    "media_gate_set.assemble",
+    "review_issue.return",
+    "stage_template.compile"
+  ],
+  "twoIndependentExperimentReadbacksEqual": true,
+  "twoIndependentOriginalReadinessViewsEqual": true,
+  "readinessInspectedBindings": 16,
+  "currentBlockedBindings": 16,
+  "slotCount": 6,
+  "currentReasons": [
+    "CAPABILITY_HEALTH_STALE",
+    "MODEL_ROUTE_BLOCKED",
+    "SKILL_EVAL_GATE_BLOCKED"
+  ],
+  "currentReasonsAreNotMeasuredEvalFailure": true,
+  "evaluationsPersisted": 0,
+  "databaseWrites": 0,
+  "recentPytestReceiptsCountedInExperiment": false,
+  "fullSourceCompatibilityOrRestorationAccepted": false,
+  "sourceHashes": {
+    "audit.py": "827e2c8ff443ccbcb1ae1308851871c185d05b40903fdafb715f1f3f633c70de",
+    "read_current_skills.py": "0b5db000ced60fa57dea4a79dc4e6b8651fd364361a737d4e16b43c06e1d20c0"
+  }
+}
