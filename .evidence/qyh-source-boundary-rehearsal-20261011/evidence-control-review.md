@@ -1,0 +1,13 @@
+# 原Evidence撤销和拒绝披露兼容性复审
+
+基线63b0f1c02/AOS-001884，仍为唯一写者的ACTIVE Task。先补第五段方案，再实现real_evidence_control.py，仅精确ID/cluster/18431绑定且无命名卷挂载的历史实验复制库写入。当前栖月汇权威库、原clone、原服务源代码和API/Web不改动。
+
+原固定Contract LOGIN无成员/特权，六依赖表精确直授和双租户policy，Evidence正文只读；10次原connect_source_issuer_write独立实际LOGIN连接相符，普通runtime Source三表INSERT仍不可用。选择未撤销、非metric-query且无Evidence依赖策略版本的实际历史Evidence，这是明确普通Evidence路径覆盖，不能推广到指标证据或其他依赖链。
+
+8项检查通过：hash漂移拒绝、dev-org隔离、被迫revoke Receipt失败后六表计数不变、原revoke event及幂等、请求漂移冲突、撤销后原披露拒绝及幂等无正文、披露请求漂移冲突、被迫disclosure Receipt失败后六表计数不变。原Evidence payload不修改，不补伪造许可或freshness；UNKNOWN/拒绝原因由原Store计算。实际decision包含EVIDENCE_REVOKED，grantedLevel为空、displayPayload为空、bodyReturned=false。evidence_disclosure.resolve的正向Receipt表示拒绝决策成功留痕，明确不是授权披露成功。
+
+独立普通只读连接重新按原current policy读取该decision仍无正文，逐项核对两个Receipt的exact result_ref和event/decision hash，撤销event只有一个，失败/隔离请求无Receipt。独立对比原clone Evidence payload相同，当前权威库与原clone全部647表及六metadata仍精确相同。角色/policy/权限已清理；历史实验副本中的撤销event与拒绝decision保留，业务不重发。clone HBA为trust，不宣称密码/OIDC认证或独立OS身份。
+
+读回证据包撤销的两项原SECURITY DEFINER source锁及精确签名/ACL/hash：当前Contract角色不是EXECUTE grantee，不能去掉锁或混入runtime成员。下一段必须先在克隆证明当前权限RED，再核定普通未发行bundle路径所需精确初始化锁EXECUTE和只读issuance/RLS；已发行source还需独立head fence，不能用普通路径代替。这是已登记剩余evidence_bundle.revoke的具体依赖，不扩为整个Goal停止。
+
+当前30个Contract operation中14个已有实际实验Receipt，包括一个拒绝披露决策；余16个及Plan/BI/successor/Content全部兼容仍待完成。完整正式登录/publisher、预算、八配置、八工作台和自然首链仍未验收，Task/Goal保持ACTIVE。语法、源码hash、秘密扫描、精确diff和方案边界检查后精确提交，不push。本段没有新增独立模型PASS。

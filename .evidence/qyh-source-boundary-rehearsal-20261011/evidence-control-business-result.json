@@ -1,0 +1,81 @@
+{
+  "cases": [
+    "ProductionContractDependencyBlocked",
+    "ProductionContractNotFound",
+    "RaiseException",
+    "original-revoke-exact-event-and-replay",
+    "ProductionContractIdempotencyConflict",
+    "original-denied-disclosure-and-replay-no-body",
+    "ProductionContractIdempotencyConflict",
+    "RaiseException"
+  ],
+  "connections": [
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    }
+  ],
+  "evidenceRef": {
+    "resourceType": "Evidence",
+    "resourceId": "evidence-05d53c75501a4e52a9ed",
+    "revision": 1,
+    "contentHash": "609bd573f831dc09e52ae2cc0ed436d1c39bb2230327a73379830efa2edd6cbc"
+  },
+  "revokeEventId": "evidence-revoke-13969761db784b63b6e0",
+  "decisionId": "disclosure-c38ea73cfe604aada49b",
+  "status": "unknown",
+  "reasons": [
+    "EVIDENCE_REVOKED",
+    "LICENSE_UNKNOWN"
+  ],
+  "noBodyOrGrantedLevel": true,
+  "originalEvidencePayloadUnchanged": true,
+  "actualDisclosureAuthorization": false,
+  "passwordOrOIDCAuthenticated": false
+}

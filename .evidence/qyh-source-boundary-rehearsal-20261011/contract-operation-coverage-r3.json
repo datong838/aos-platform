@@ -1,0 +1,39 @@
+{
+  "catalogOperations": 30,
+  "actualCurrentExperimentalReceiptOperations": {
+    "artifact_family.candidate.select": 1,
+    "artifact_family.member.attach": 2,
+    "artifact_family.register": 1,
+    "artifact_relation.create": 1,
+    "eval_contract.create": 1,
+    "eval_contract.revise": 1,
+    "evidence.revoke": 1,
+    "evidence_bundle.build": 1,
+    "evidence_bundle.create": 1,
+    "evidence_disclosure.resolve": 1,
+    "review_rule.register": 1,
+    "task_brief.create": 1,
+    "task_brief.freeze": 1,
+    "task_brief.revise": 1
+  },
+  "remainingWithoutCurrentPositiveReceipt": [
+    "eval_contract.freeze",
+    "evidence_bundle.revoke",
+    "impact_preview.create",
+    "impact_preview.freeze",
+    "impact_preview.revise",
+    "media_contract_migration.create",
+    "media_gate_profile.register",
+    "media_gate_set.assemble",
+    "production_context.freeze",
+    "review_issue.create",
+    "review_issue.resolve",
+    "review_issue.return",
+    "stage_template.compile",
+    "stage_template.create",
+    "stage_template.freeze",
+    "stage_template.revise"
+  ],
+  "disclosureReceiptIsDeniedDecisionNotAuthorization": true,
+  "allStoreCompatibilityAccepted": false
+}

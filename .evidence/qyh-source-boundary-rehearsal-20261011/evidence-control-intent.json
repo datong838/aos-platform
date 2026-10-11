@@ -1,0 +1,15 @@
+{
+  "containerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "cluster": "7695416748450308141",
+  "database": "qyh_source_contract_20261011",
+  "role": "aos_contract_source_issuer",
+  "currentDatabaseTouched": false,
+  "originalCloneDatabaseWrites": false,
+  "evidenceRef": {
+    "resourceType": "Evidence",
+    "resourceId": "evidence-05d53c75501a4e52a9ed",
+    "revision": 1,
+    "contentHash": "609bd573f831dc09e52ae2cc0ed436d1c39bb2230327a73379830efa2edd6cbc"
+  },
+  "scriptHash": "4e0bcf2e435a98eb789c7aae862864313543f1e9aeca5dd4022409fa8de2aabc"
+}

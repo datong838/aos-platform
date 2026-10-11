@@ -1,0 +1,12 @@
+{
+  "twoReceiptsExact": true,
+  "oneRevokeEventOnly": true,
+  "originalCurrentPolicyReadDeniedNoBody": true,
+  "failedRequestsHaveNoReceipt": true,
+  "temporaryRoleRemoved": true,
+  "sourceAndOriginalClone647DataExact": true,
+  "allOriginalMetadataExact": true,
+  "actualDisclosureAuthorization": false,
+  "fullRestorationAccepted": false,
+  "scriptHash": "4e0bcf2e435a98eb789c7aae862864313543f1e9aeca5dd4022409fa8de2aabc"
+}

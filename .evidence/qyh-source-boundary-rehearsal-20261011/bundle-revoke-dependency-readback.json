@@ -1,0 +1,21 @@
+{
+  "functions": [
+    {
+      "proname": "aos_license_source_initialization_lock",
+      "args": "p_org text, p_project text, p_bundle text, p_revision bigint, p_hash text, p_shared boolean",
+      "definer": true,
+      "acl": "{aos_license_source_fence_owner=X/aos_license_source_fence_owner,aos_runtime=X/aos_license_source_fence_owner,aos_source_license_approval_issuer=X/aos_license_source_fence_owner,aos_source_license_issuer=X/aos_license_source_fence_owner,aos_aip_binding_evaluator=X/aos_license_source_fence_owner}",
+      "definitionHash": "5131ba906f62a6e89853a2ed78476a48ca54ba075a7e3f3d364045a78b3829b1"
+    },
+    {
+      "proname": "aos_license_source_lock",
+      "args": "p_org text, p_project text, p_bundle text, p_revision bigint, p_hash text, p_shared boolean",
+      "definer": true,
+      "acl": "{aos_license_source_fence_owner=X/aos_license_source_fence_owner,aos_runtime=X/aos_license_source_fence_owner,aos_source_license_issuer=X/aos_license_source_fence_owner,aos_aip_binding_evaluator=X/aos_license_source_fence_owner}",
+      "definitionHash": "bd1d6c631e7ef6f6f0858740a25cabf76a0ff032b45d3c324a96bbbb3948138d"
+    }
+  ],
+  "contractIssuerIsNotCurrentExecuteGrantee": true,
+  "nextAction": "Rehearse exact initialization-lock EXECUTE plus read-only issuance scope for generic unissued bundle revoke on clone; keep issued-source head fence separate; never role-member runtime or skip original source locks.",
+  "currentDatabaseTouched": false
+}
