@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ecommerceWorkshopClient, type SourceReadinessEnvelope } from "../../api/ecommerceWorkshop";
 import { setTenant } from "../../api/tenant";
+import { assetControlClient } from "../../api/assetControl/client";
 import { EcommerceWorkshopCatalogProvider } from "./EcommerceWorkshopCatalogContext";
 import { EcommerceWorkshopHost } from "./EcommerceWorkshopHost";
 import { moduleWithReadiness, workshopCatalogFixture } from "./workshopTestFixtures";
@@ -25,11 +26,29 @@ describe("EcommerceWorkshopHost task cockpit", () => {
   afterEach(() => { vi.restoreAllMocks(); act(() => root.unmount()); host.remove(); });
 
   it("空目录不能证明模块未安装，并提供重读入口", async () => {
+    vi.spyOn(assetControlClient, "listInstallations").mockResolvedValue({ items: [], total: 0, limit: 5, offset: 0 });
     const catalog = { listModules: async () => workshopCatalogFixture({ items: [] }) };
     await act(async () => root.render(<MemoryRouter initialEntries={["/workshop/operations"]}><EcommerceWorkshopCatalogProvider client={catalog}><EcommerceWorkshopHost /></EcommerceWorkshopCatalogProvider></MemoryRouter>));
     expect(host.textContent).toContain("当前工作台入口不可用");
     expect(host.textContent).not.toContain("模块未安装");
     expect(host.querySelector("button")?.textContent).toBe("重新读取目录");
+    expect(host.querySelector('a[href="/apollo/assets"]')).not.toBeNull();
+    expect(host.textContent).toContain("当前账号没有可见安装记录");
+  });
+
+  it("空目录切换组织后不展示原组织迟到的安装记录", async () => {
+    let finish!: (value: Awaited<ReturnType<typeof assetControlClient.listInstallations>>) => void;
+    vi.spyOn(assetControlClient, "listInstallations")
+      .mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }))
+      .mockResolvedValue({ items: [], total: 0, limit: 5, offset: 0 });
+    const catalog = { listModules: async () => workshopCatalogFixture({ items: [] }) };
+    // Start with the original tenant, then let the provider's real identity events remount the diagnostic.
+    await act(async () => root.render(<MemoryRouter initialEntries={["/workshop/customer"]}><EcommerceWorkshopCatalogProvider client={catalog}><EcommerceWorkshopHost /></EcommerceWorkshopCatalogProvider></MemoryRouter>));
+    catalog.listModules = async () => workshopCatalogFixture({ orgId: "dev-org", items: [] });
+    await act(async () => setTenant({ orgId: "dev-org", projectId: "dev-project", workspaceName: "canary" }));
+    await act(async () => finish({ items: [{ installationId: "ccdcb0f0-1040-4bc6-aa0c-d045f5689813", displayName: "原组织安装", state: "approved", currentRevision: 3, activeRevision: null, previousActiveRevision: null, etagVersion: 3, createdAt: "2026-09-27T00:00:00Z", updatedAt: "2026-09-27T00:00:00Z" }], total: 1, limit: 5, offset: 0 }));
+    expect(host.textContent).not.toContain("原组织安装");
+    expect(host.textContent).toContain("当前账号没有可见安装记录");
   });
 
   it("只在 canonical task-cockpit Module 中挂载 partial read page，并保持 Shell 唯一 H1", async () => {

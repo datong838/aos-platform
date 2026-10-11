@@ -1,0 +1,5 @@
+$ vitest run src/components/workshop/WorkshopInstallationDiagnosis.test.tsx
+/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/node_modules/.bin/vitest: line 53: exec: node: not found
+/Users/ddt/work/projects/ai_agent/aos-platform/apps/web:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @aos/web@0.1.0 test: `vitest run src/components/workshop/WorkshopInstallationDiagnosis.test.tsx`
+spawn ENOENT

@@ -1,0 +1,25 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+browserType.connectOverCDP: Protocol error (Browser.setDownloadBehavior): Browser context management is not supported.
+Call log:
+[2m  - <ws preparing> retrieving websocket url from http://127.0.0.1:9244[22m
+[2m  - <ws connecting> ws://127.0.0.1:9244/devtools/browser/aced469a-93b4-4111-bdee-1da6c60259a5[22m
+[2m  - <ws connected> ws://127.0.0.1:9244/devtools/browser/aced469a-93b4-4111-bdee-1da6c60259a5[22m
+[2m  - <ws disconnecting> ws://127.0.0.1:9244/devtools/browser/aced469a-93b4-4111-bdee-1da6c60259a5[22m
+[2m  - <ws disconnected> ws://127.0.0.1:9244/devtools/browser/aced469a-93b4-4111-bdee-1da6c60259a5 code=1000 reason=[22m
+
+    at /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-workshop-empty-diagnosis-20261011/browser-qa.mjs:4:32
+    at async node:internal/modules/esm/loader:643:26 {
+  log: [
+    '  - <ws preparing> retrieving websocket url from http://127.0.0.1:9244',
+    '  - <ws connecting> ws://127.0.0.1:9244/devtools/browser/aced469a-93b4-4111-bdee-1da6c60259a5',
+    '  - <ws connected> ws://127.0.0.1:9244/devtools/browser/aced469a-93b4-4111-bdee-1da6c60259a5',
+    '  - <ws disconnecting> ws://127.0.0.1:9244/devtools/browser/aced469a-93b4-4111-bdee-1da6c60259a5',
+    '  - <ws disconnected> ws://127.0.0.1:9244/devtools/browser/aced469a-93b4-4111-bdee-1da6c60259a5 code=1000 reason='
+  ],
+  name: 'Error'
+}
+
+Node.js v24.19.0

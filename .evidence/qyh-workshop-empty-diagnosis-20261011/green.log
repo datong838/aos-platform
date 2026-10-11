@@ -1,0 +1,67 @@
+$ vitest run src/components/workshop/WorkshopInstallationDiagnosis.test.tsx src/components/workshop/EcommerceWorkshopHost.test.tsx
+
+ RUN  v2.1.9 /Users/ddt/work/projects/ai_agent/aos-platform/apps/web
+
+stderr | src/components/workshop/WorkshopInstallationDiagnosis.test.tsx > shows approved installation and verified absence of runtime preparation without activation controls
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/components/workshop/WorkshopInstallationDiagnosis.test.tsx (5 tests) 21ms
+stdout | src/components/workshop/EcommerceWorkshopHost.test.tsx > EcommerceWorkshopHost task cockpit > 空目录不能证明模块未安装，并提供重读入口
+[aos-tenant] { orgId: 'org-org', projectId: 'dev-project', workspaceName: 'real' }
+
+stderr | src/components/workshop/EcommerceWorkshopHost.test.tsx > EcommerceWorkshopHost task cockpit > 空目录不能证明模块未安装，并提供重读入口
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stdout | src/components/workshop/EcommerceWorkshopHost.test.tsx > EcommerceWorkshopHost task cockpit > 只在 canonical task-cockpit Module 中挂载 partial read page，并保持 Shell 唯一 H1
+[aos-tenant] { orgId: 'org-org', projectId: 'dev-project', workspaceName: 'real' }
+
+stderr | src/components/workshop/EcommerceWorkshopHost.test.tsx > EcommerceWorkshopHost task cockpit > 只在 canonical task-cockpit Module 中挂载 partial read page，并保持 Shell 唯一 H1
+[aos-api] {
+  method: 'GET',
+  path: '/v1/aip/capability-catalog',
+  base: '/api',
+  error: 'Failed to parse URL from /api/v1/aip/capability-catalog',
+  raw: 'Failed to parse URL from /api/v1/aip/capability-catalog'
+}
+[aos-api] {
+  method: 'GET',
+  path: '/v1/aip/agent-registry',
+  base: '/api',
+  error: 'Failed to parse URL from /api/v1/aip/agent-registry',
+  raw: 'Failed to parse URL from /api/v1/aip/agent-registry'
+}
+
+stdout | src/components/workshop/EcommerceWorkshopHost.test.tsx > EcommerceWorkshopHost task cockpit > Module authority 未验证时直接暴露正式视图，诊断信息保留在折叠详情内
+[aos-tenant] { orgId: 'org-org', projectId: 'dev-project', workspaceName: 'real' }
+
+stderr | src/components/workshop/EcommerceWorkshopHost.test.tsx > EcommerceWorkshopHost task cockpit > Module authority 未验证时直接暴露正式视图，诊断信息保留在折叠详情内
+[aos-api] {
+  method: 'GET',
+  path: '/v1/aip/capability-catalog',
+  base: '/api',
+  error: 'Failed to parse URL from /api/v1/aip/capability-catalog',
+  raw: 'Failed to parse URL from /api/v1/aip/capability-catalog'
+}
+[aos-api] {
+  method: 'GET',
+  path: '/v1/aip/agent-registry',
+  base: '/api',
+  error: 'Failed to parse URL from /api/v1/aip/agent-registry',
+  raw: 'Failed to parse URL from /api/v1/aip/agent-registry'
+}
+
+stdout | src/components/workshop/EcommerceWorkshopHost.test.tsx > EcommerceWorkshopHost task cockpit > Operations authority 未验证时直接挂载正式内部处理工作区
+[aos-tenant] { orgId: 'org-org', projectId: 'dev-project', workspaceName: 'real' }
+
+stdout | src/components/workshop/EcommerceWorkshopHost.test.tsx > EcommerceWorkshopHost task cockpit > Content Campaign authority 未验证时直接挂载正式三栏，诊断默认收起
+[aos-tenant] { orgId: 'org-org', projectId: 'dev-project', workspaceName: 'real' }
+
+ ✓ src/components/workshop/EcommerceWorkshopHost.test.tsx (5 tests) 102ms
+
+ Test Files  2 passed (2)
+      Tests  10 passed (10)
+   Start at  13:58:16
+   Duration  1.12s (transform 548ms, setup 0ms, collect 745ms, tests 123ms, environment 507ms, prepare 67ms)
+

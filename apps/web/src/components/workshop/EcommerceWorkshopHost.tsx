@@ -15,6 +15,8 @@ import { AnalystPage } from "./AnalystPage";
 import { PriceGovernancePage } from "./PriceGovernancePage";
 import { CustomerPage } from "./CustomerPage";
 import { EcommerceWorkshopSharedContext } from "./EcommerceWorkshopSharedContext";
+import { getAuthRevision, getTenant } from "../../api/tenant";
+import { WorkshopInstallationDiagnosis } from "./WorkshopInstallationDiagnosis";
 
 function HostState({
   state,
@@ -36,6 +38,7 @@ function HostState({
           ) : undefined
         }
       />
+      {state === "empty" && <WorkshopInstallationDiagnosis key={JSON.stringify([getTenant(), getAuthRevision()])} />}
     </div>
   );
 }

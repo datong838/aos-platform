@@ -1,0 +1,7 @@
+BEGIN
+                                                                                                   json_build_object                                                                                                    
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"database" : "aos_current_preview_20260927", "configuration" : 0, "configurationStageRequests" : 0, "responsibilityPlanHeads" : 0, "runtimePolicyHeads" : 0, "hostIdentity" : 0, "hostAssignment" : 0, "binding" : 0}
+(1 row)
+
+COMMIT
