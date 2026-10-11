@@ -1,0 +1,44 @@
+{
+  "outcome": "FOUR_SELECTED_PUBLIC_RELEASES_EXACT_ROOT_GREEN",
+  "versions": [
+    {
+      "id": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "contentHash": "sha256:e14e6af72dd7c89d5beb7fd002454029bbc64cf510e6b9849ae9df20ef7eba44",
+      "modules": 0,
+      "files": 24,
+      "filesHash": "ce3f042e8d68e470e77b492fc47c2f6ddfeb300441e3034df4a4ab097b853629"
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "contentHash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90",
+      "modules": 0,
+      "files": 37,
+      "filesHash": "70de318f56a6bbc6442c73a49b8fe119781cbcc7fab1abd873821ea1f8a2ffbf"
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "contentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+      "modules": 7,
+      "files": 106,
+      "filesHash": "7e629c903c4142c93bb92944b8175f6584133ea4a44b9f636466b14984eb4641"
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "contentHash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec",
+      "modules": 1,
+      "files": 12,
+      "filesHash": "f1bda1d38679de8e766db05a25b927fdf7cafc8bf8d7c66369fe507e9bf59e31"
+    }
+  ],
+  "sourceFilesUnchanged": true,
+  "privateKeysCopied": false,
+  "databaseWrites": 0,
+  "apiStarted": false,
+  "mixedImageQualification": false,
+  "eightPagesAccepted": false,
+  "runtimeAuthority": false
+}

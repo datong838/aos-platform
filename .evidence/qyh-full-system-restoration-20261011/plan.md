@@ -24,6 +24,8 @@
 
 已登记独立目录接线Task qyh-restored-bundle-alias-20261011，修复production allowlist对新不可变alias a0v-qyh-current的识别：仅使用原AOS_BUNDLE_ROOT，不增任意根或权限。90项专项/相邻通过，原有权限连接桩失败独立登记；真实Core/Growth签名树由production映射加载验签且源文件不变。下一安全步骤准备四选定版本的唯一公共bundle目录，文件哈希逐项相同、合并公共信任根、不复制私钥；再做混合版本真实镜像/schema资格验证。这些准备不授发布/安装/业务执行，不把七Growth模块加一operations模块的包解析当八页面验收。
 
+选定公共目录现已独立完成：selected-public-bundles下仅4个精确版本；production两个alias同一根、现有ManifestLoader/ReleasePolicy逐包验签；179个原文件逐文件hash和签名保持，8模块解析。未复制私钥、未修改全局配置/数据库、未启动API。准备脚本首次读取manifest错误字段在intent/目录创建之前失败，核对原BundleManifest.metadata后修正；没有重放外部写。selected-public-root-terminal.json明确mixedImageQualification=false/eightPagesAccepted=false，不继承原1.23.0/1.2.0资格报告为1.23.2/1.2.2组合通过。
+
 在本Task目录新增release_transition.py、只读preflight证据、有限两版本发布intent/terminal和fresh全库备份（private0600及第二校验副本）。public trust根只合并现有v2与新candidate公钥，不复制私钥，不改全局配置。Publish不自动安装/启Host/授权业务；必须后续当前安装、配置、API、浏览器与实际镜像/schema组合资格门。只有预检证明新坐标不存在、旧2个版本完全匹配、身份/头/Task/无未知操作符合时才能apply。已有intent按结果对账，不能重发。
 
 2026-10-11加载实测修订：Colima未挂载本机/Users配置路径，原docker run退出125；只读inspect证明目标不存在、原容器已正常停止。限定LOGIN已完成且不重放。改用docker create同一命名卷、docker cp无秘密hba到容器root拥有文件（postgres仅可读）、docker start；不依赖主机bind、不改变原卷配置。创建/复制/启动各自记录intent与terminal，失败只读对账。
