@@ -1,0 +1,56 @@
+{
+  "bundleCount": 4,
+  "bundles": [
+    {
+      "id": "domain.ecommerce.core",
+      "runtimeOperations": [
+        "ecommerce_core_product_event_windows",
+        "ecommerce_core_object_describe"
+      ],
+      "schemaCompatibilityHash": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee",
+      "sourceTreeHash": "sha256:c56585bc6e98588105020c71d898dcdfd2525288da819cf5445c97e15454a35e",
+      "version": "1.4.3"
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "runtimeOperations": [
+        "ecommerce_niushop_source_describe",
+        "ecommerce_niushop_facts_read"
+      ],
+      "schemaCompatibilityHash": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2",
+      "sourceTreeHash": "sha256:51656fc4587ad3df31f14e1c057d2f09295a3c302103848ea2c3d0765e5b0a3a",
+      "version": "1.23.0"
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "runtimeOperations": [
+        "ecommerce_growth_event_control",
+        "ecommerce_growth_investigation_describe",
+        "ecommerce_growth_case_put",
+        "ecommerce_growth_schedule_put",
+        "ecommerce_growth_schedule_trigger",
+        "ecommerce_growth_data_fulfill",
+        "ecommerce_growth_analysis_advance",
+        "ecommerce_growth_review_advance",
+        "ecommerce_growth_content_generate",
+        "ecommerce_growth_content_review",
+        "analyst_workspace_view_v1"
+      ],
+      "schemaCompatibilityHash": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4",
+      "sourceTreeHash": "sha256:5818e50bd8c28900ec324b023243b8289a4ef243413b51fd94437fb7fa1f3167",
+      "version": "1.13.0"
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "runtimeOperations": [],
+      "schemaCompatibilityHash": null,
+      "sourceTreeHash": "sha256:673f70cf99c5fe9070994547564cb874758e518840d26187c93ff8711dce48ee",
+      "version": "1.2.0"
+    }
+  ],
+  "mode": "preflight",
+  "moduleCount": 8,
+  "operationCount": 15,
+  "outcome": "PREFLIGHT_GREEN",
+  "runtimeMemberCount": 3
+}
