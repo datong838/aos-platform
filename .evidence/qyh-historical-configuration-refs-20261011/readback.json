@@ -1,0 +1,119 @@
+{
+  "observedAt": "2026-10-11T06:28:54.253005+00:00",
+  "identity": {
+    "database": "aos_meta_head",
+    "migration": "a0v_092",
+    "cluster": "7683855731447750695",
+    "readOnly": "on"
+  },
+  "configurationRef": {
+    "configurationId": "721433ba-5256-4b12-9043-0bcfab658bf0",
+    "revision": 1,
+    "hash": "sha256:dc25c6c047776b90681b33f82a089145692417afd5c7e8c0120c315d27f9241a"
+  },
+  "currentDecoderHashVerified": true,
+  "sourceChecks": [
+    {
+      "purpose": "role",
+      "ref": {
+        "authority": "aip.responsibility_plan_revision",
+        "id": "responsibility-plan-63c82d2a75614e1b95f1",
+        "revision": 2,
+        "hash": "sha256:b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a"
+      },
+      "head": {
+        "current_revision": 2,
+        "revision": 2,
+        "content_hash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+        "lifecycle": "frozen"
+      },
+      "headRefExact": true
+    },
+    {
+      "purpose": "data",
+      "ref": {
+        "authority": "aip.data_classification_policy_revision",
+        "id": "a0v-ecommerce-public-catalog-v1",
+        "revision": 1,
+        "hash": "sha256:1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477"
+      },
+      "head": {
+        "current_revision": 1,
+        "revision": 1,
+        "content_hash": "1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477",
+        "lifecycle": "active",
+        "effective_from": "2026-09-10T00:00:00+00:00",
+        "effective_until": "2027-09-10T00:00:00+00:00",
+        "effective_now": true
+      },
+      "headRefExact": true
+    },
+    {
+      "purpose": "budget",
+      "ref": {
+        "authority": "aip.budget_revision",
+        "id": "a0v-ecommerce-hard-stop-budget-v1",
+        "revision": 1,
+        "hash": "sha256:6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+      },
+      "head": {
+        "current_revision": 1,
+        "revision": 1,
+        "content_hash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126",
+        "lifecycle": "active"
+      },
+      "headRefExact": true
+    },
+    {
+      "purpose": "policy",
+      "ref": {
+        "authority": "aip.runtime_policy_revision",
+        "id": "a0v-ecommerce-runtime-policy-v1",
+        "revision": 4,
+        "hash": "sha256:e26926bfaeb245c4f381064bd2fd33f41c938c4489183770523b086cfa85c7c6"
+      },
+      "head": {
+        "current_revision": 13,
+        "revision": 13,
+        "content_hash": "bc8b9b0bace9c57c21cbd93d188b3ed8292dffe2271611abaf60cfe380abd019",
+        "lifecycle": "active"
+      },
+      "headRefExact": false
+    }
+  ],
+  "runtimePolicyBudgetRef": {
+    "budget_ref_camel": {
+      "assetId": "a0v-ecommerce-budget-policy-v1",
+      "revision": 4,
+      "assetType": "BudgetPolicyRevision",
+      "contentHash": "436dbcc1da2747fe65e973163238f591c4ef0eb6b53dff7f432d928ad73a171e"
+    },
+    "budget_ref_snake": null
+  },
+  "budgetPolicyReadback": {
+    "headRevision": 13,
+    "revisions": [
+      {
+        "revision": 4,
+        "contentHash": "436dbcc1da2747fe65e973163238f591c4ef0eb6b53dff7f432d928ad73a171e",
+        "lifecycle": "active",
+        "effectiveFrom": "2026-09-13T07:03:22.448708+00:00",
+        "effectiveUntil": "2026-09-14T07:02:28.449303+00:00",
+        "effectiveNow": false
+      },
+      {
+        "revision": 13,
+        "contentHash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696",
+        "lifecycle": "active",
+        "effectiveFrom": "2026-09-24T02:53:28.63705+00:00",
+        "effectiveUntil": "2026-09-25T02:52:33.666717+00:00",
+        "effectiveNow": false
+      }
+    ]
+  },
+  "effects": "READ ONLY; configuration decoding is offline, no current permission or full source payload authorization",
+  "sourceSha256": {
+    "services/aos-api/aos_api/extension_runtime/configuration_store.py": "f9bdb00f636d76166459e3aca07fbae883b21e94f8a480e33692783b4c1feff6",
+    "services/aos-api/aos_api/extension_runtime/configuration_contracts.py": "d46497445daa1169ef63c9023bb2c99adb242eb0776ae5df8375e03bb1aa5c0c"
+  }
+}
