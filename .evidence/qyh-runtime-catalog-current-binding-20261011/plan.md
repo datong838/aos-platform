@@ -1,0 +1,11 @@
+# 栖月汇当前可用目录与历史安装隔离
+
+Rules：231/231-3恢复、原runtime签名/权限/UI路由与资源currentness，现有唯一m1写者。用户授权全恢复，先方案再最小修复；不删除或重写历史安装。
+
+真实只读诊断management-runtime-catalog-diagnostic-r4.json：407的八route均needs_attention；随后第二历史安装的重复module在ecommerce_runtime_workshop_catalog.py:75抛RegistryIntegrityCorruptError。当前seen集合在ready门之前加入，未就绪历史安装能造成整份目录500；原目录还会加载不需要展示的旧制品，历史缺文件可能继续阻断。
+
+文件：services/aos-api/aos_api/ecommerce_runtime_workshop_catalog.py；tests/asset_registry/test_runtime_workshop_catalog.py；本Task证据。新Task/Lease精确登记，无重叠；不修改SQL/Registry/状态/签名/预算或Host开关。
+
+实现：保留_verify_installed_bundle；有workshop制品的候选先调用原view_reader，requested_route=None，只核同installation/revision的ready+enabled+unfenced当前binding。未就绪跳过，不加载其历史制品、不计入可用路由seen。已就绪候选继续原loader及_verify_loaded_bundle/permission/per-route UI currentness/精确module artifact；仅最终可见entry登记seen。两个实际可用entry重复仍抛原RegistryIntegrityCorruptError。不捏造UI，不授动作或启Host。
+
+RED涵盖未就绪候选制品不加载、未就绪历史重复不阻断当前ready项、两个当前ready重复拒绝、当前ready坏签名仍拒绝。专项与相邻保持原权限及租户门。真实恢复库只读，当前所有bindings未就绪，修后目录200/count0是准确禁入空目录，不是八页可用通过；后续继续正式当前资源/身份恢复。新源码提交后重新冻结及仅替换任务18080服务，再实际HTTP/浏览器验收。回滚仅精确代码与新服务，不回滚数据库或删卷。

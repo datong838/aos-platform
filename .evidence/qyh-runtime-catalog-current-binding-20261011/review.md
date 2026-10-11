@@ -1,0 +1,7 @@
+# 方案与代码复核
+
+未修改领域归属或栖月汇组织。未就绪历史安装的重复路线不是当前可用入口冲突；base view仍走原installation权限与current资源投影。候选本身原不可变lock/Registry验证保留，ready后原签名内容、permissions、逐route UI与artifact精确校验保留；新增base gate不直接产生entry。seen仅针对最终可见entry，两ready冲突负门保留。
+
+RED-r2三项实际缺陷失败、十五项原/负门通过。初次RED还包含测试误用dataclasses.replace对Pydantic LoadedBundle，已修正model_copy并保留原日志，不把测试写错计入产品缺陷。专项及原legacy目录/readonly入口75通过；追加UI-read生产接线和live资源currentness相邻检查。无真库DDL/写，未开Host/worker，未改预算或发token。
+
+尚需当前提交冻结API、真实恢复库HTTP与浏览器复验。预期当前runtime目录空200，只证明服务能准确描述禁入，不能声称八页正常或自然首链通过。原旧制品保留，历史签名未重写；整restoreTask/Goal仍ACTIVE。

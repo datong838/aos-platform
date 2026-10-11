@@ -68,13 +68,18 @@ class RuntimeWorkshopCatalog:
             _verify_installed_bundle(installed)
             if not any(str(artifact.get('relativePath','')).startswith('content/workshops/') for artifact in bundle.artifacts):
                 continue
+            # Historical installations retain their signed artifacts and routes.
+            # Only current ready bindings can contribute to the visible catalog.
+            current = self._view_reader.get_installation(installation_id=installed.installation_id,
+                org_id=scope.org_id, project_id=scope.project_id, roles=list(roles), markings=list(markings), requested_route=None)
+            if (current.installationId != installed.installation_id or current.installationRevision != installed.active_revision
+                    or current.effectiveState != 'ready' or current.binding is None
+                    or current.binding.installationRevision != installed.active_revision
+                    or current.binding.enabled is not True or current.binding.operationFence is not False):
+                continue
             loaded = self._loader.load(_derive_source_ref(bundle.artifacts))
             _verify_loaded_bundle(loaded=loaded, persisted=bundle)
             for module in loaded.workshop_modules:
-                if module.module_id in seen_ids or module.route in seen_routes:
-                    raise RegistryIntegrityCorruptError()
-                seen_ids.add(module.module_id)
-                seen_routes.add(module.route)
                 if (not set(module.permissions.roles).issubset(roles) or not set(module.permissions.markings).issubset(markings)
                         or not set(module.permissions.data_scopes).issubset(installed.lock.payload.permission_diff.target.data_scopes)):
                     continue
@@ -89,6 +94,10 @@ class RuntimeWorkshopCatalog:
                 artifacts = [a for a in loaded.artifacts if a.relative_path == f'content/workshops/{module.module_id}.json']
                 if len(artifacts) != 1:
                     raise RegistryIntegrityCorruptError()
+                if module.module_id in seen_ids or module.route in seen_routes:
+                    raise RegistryIntegrityCorruptError()
+                seen_ids.add(module.module_id)
+                seen_routes.add(module.route)
                 artifact = artifacts[0]
                 items.append(RuntimeWorkshopEntry(module=module, installationId=view.installationId,
                     installationRevision=view.installationRevision, generation=view.binding.generation,

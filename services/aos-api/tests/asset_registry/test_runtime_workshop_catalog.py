@@ -39,6 +39,10 @@ def test_runtime_catalog_requires_current_ready_signed_route(state):
         def get_installation(self, **kwargs):
             calls.append(kwargs)
             route=kwargs['requested_route']
+            if route is None:
+                return SimpleNamespace(installationId=INSTALLATION_ID,installationRevision=4 if state=='old-revision' else 5,
+                    effectiveState='disabled' if state=='disabled' else 'ready',
+                    binding=SimpleNamespace(enabled=state!='binding-disabled',operationFence=state=='fenced',installationRevision=5))
             ui=RuntimeUiSessionView(title='fixture',signedResourceUrl='https://ui.example.test/frontend/index.html',
                 resourceHash='sha256:'+'a'*64, initialRoute=route,routeClaims=('/other',) if state=='wrong-route' else (route,),
                 readOperationClaims=(),commandOperationClaims=())
@@ -62,3 +66,77 @@ def test_runtime_catalog_requires_current_ready_signed_route(state):
     if state == 'no-marking':
         assert all(not item.module.permissions.markings for item in result.items)
     assert all(call['org_id']=='org-org' and call['installation_id']==INSTALLATION_ID for call in calls)
+
+
+def _current_catalog_reader(disabled_ids=()):
+    from aos_api.extension_runtime.runtime_view import RuntimeUiSessionView
+    class Reader:
+        def get_installation(self, **kwargs):
+            route = kwargs['requested_route']
+            return SimpleNamespace(installationId=kwargs['installation_id'], installationRevision=5,
+                effectiveState='disabled' if kwargs['installation_id'] in disabled_ids else 'ready',
+                binding=SimpleNamespace(generation='33333333-3333-4333-8333-333333333333',
+                    executionEpoch=3, revision=4, enabled=True, operationFence=False, installationRevision=5),
+                ui=None if route is None else RuntimeUiSessionView(title='fixture',
+                    signedResourceUrl='https://ui.example.test/frontend/index.html',
+                    resourceHash='sha256:'+'a'*64, initialRoute=route, routeClaims=(route,),
+                    readOperationClaims=(), commandOperationClaims=()))
+    return Reader()
+
+
+def test_unready_history_does_not_load_unneeded_artifacts():
+    from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
+    persisted = _persisted(_loaded_growth())
+    def load(*args):
+        pytest.fail('Disabled historical artifacts must not be loaded for the current catalog')
+    catalog = RuntimeWorkshopCatalog(
+        source=SimpleNamespace(read_runtime_candidate_bundles=lambda **kw: (_active(persisted),)),
+        loader=SimpleNamespace(load=load), view_reader=_current_catalog_reader([INSTALLATION_ID]))
+    assert catalog.list_modules(org_id='org-org', project_id='dev-project', roles=['operator'], markings=['public']).count == 0
+
+
+@pytest.mark.parametrize('historical_first', [True, False])
+def test_unready_history_routes_do_not_conflict_with_current_entries(historical_first):
+    from dataclasses import replace
+    from aos_api.asset_registry.manifest_loader import ManifestLoader
+    from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
+    active = _active(_persisted(_loaded_growth()), target_data_scopes=('ecommerce.workshop.read',))
+    old_id = '22222222-2222-4222-8222-222222222222'
+    history = replace(active, installation_id=old_id)
+    candidates = (history, active) if historical_first else (active, history)
+    result = RuntimeWorkshopCatalog(
+        source=SimpleNamespace(read_runtime_candidate_bundles=lambda **kw: candidates),
+        loader=ManifestLoader({'catalog': REPOSITORY_ROOT/'bundles'}),
+        view_reader=_current_catalog_reader([old_id])).list_modules(
+            org_id='org-org', project_id='dev-project', roles=['operator'], markings=['public'])
+    assert result.count == 7
+    assert {item.installationId for item in result.items} == {INSTALLATION_ID}
+
+
+def test_two_current_ready_installations_still_reject_duplicate_routes():
+    from dataclasses import replace
+    from aos_api.asset_registry.errors import RegistryIntegrityCorruptError
+    from aos_api.asset_registry.manifest_loader import ManifestLoader
+    from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
+    active = _active(_persisted(_loaded_growth()), target_data_scopes=('ecommerce.workshop.read',))
+    duplicate = replace(active, installation_id='22222222-2222-4222-8222-222222222222')
+    with pytest.raises(RegistryIntegrityCorruptError):
+        RuntimeWorkshopCatalog(
+            source=SimpleNamespace(read_runtime_candidate_bundles=lambda **kw: (active, duplicate)),
+            loader=ManifestLoader({'catalog': REPOSITORY_ROOT/'bundles'}),
+            view_reader=_current_catalog_reader()).list_modules(
+                org_id='org-org', project_id='dev-project', roles=['operator'], markings=['public'])
+
+
+def test_current_ready_installation_still_requires_verified_bundle_content():
+    from aos_api.asset_registry.errors import RegistryIntegrityCorruptError
+    from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
+    loaded = _loaded_growth()
+    active = _active(_persisted(loaded), target_data_scopes=('ecommerce.workshop.read',))
+    corrupt = loaded.model_copy(update={'content_hash': 'sha256:'+'f'*64})
+    with pytest.raises(RegistryIntegrityCorruptError):
+        RuntimeWorkshopCatalog(
+            source=SimpleNamespace(read_runtime_candidate_bundles=lambda **kw: (active,)),
+            loader=SimpleNamespace(load=lambda ref: corrupt),
+            view_reader=_current_catalog_reader()).list_modules(
+                org_id='org-org', project_id='dev-project', roles=['operator'], markings=['public'])

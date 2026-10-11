@@ -1,0 +1,154 @@
+.............FFF..                                                       [100%]
+=================================== FAILURES ===================================
+____________ test_unready_history_does_not_load_unneeded_artifacts _____________
+
+    def test_unready_history_does_not_load_unneeded_artifacts():
+        from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
+        persisted = _persisted(_loaded_growth())
+        def load(*args):
+            pytest.fail('Disabled historical artifacts must not be loaded for the current catalog')
+        catalog = RuntimeWorkshopCatalog(
+            source=SimpleNamespace(read_runtime_candidate_bundles=lambda **kw: (_active(persisted),)),
+            loader=SimpleNamespace(load=load), view_reader=_current_catalog_reader([INSTALLATION_ID]))
+>       assert catalog.list_modules(org_id='org-org', project_id='dev-project', roles=['operator'], markings=['public']).count == 0
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/asset_registry/test_runtime_workshop_catalog.py:95:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services/aos-api/aos_api/ecommerce_runtime_workshop_catalog.py:71: in list_modules
+    loaded = self._loader.load(_derive_source_ref(bundle.artifacts))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = ('bundle://catalog/solutions/ecommerce-growth',)
+
+    def load(*args):
+>       pytest.fail('Disabled historical artifacts must not be loaded for the current catalog')
+E       Failed: Disabled historical artifacts must not be loaded for the current catalog
+
+services/aos-api/tests/asset_registry/test_runtime_workshop_catalog.py:91: Failed
+____ test_unready_history_routes_do_not_conflict_with_current_entries[True] ____
+
+historical_first = True
+
+    @pytest.mark.parametrize('historical_first', [True, False])
+    def test_unready_history_routes_do_not_conflict_with_current_entries(historical_first):
+        from dataclasses import replace
+        from aos_api.asset_registry.manifest_loader import ManifestLoader
+        from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
+        active = _active(_persisted(_loaded_growth()), target_data_scopes=('ecommerce.workshop.read',))
+        old_id = '22222222-2222-4222-8222-222222222222'
+        history = replace(active, installation_id=old_id)
+        candidates = (history, active) if historical_first else (active, history)
+        result = RuntimeWorkshopCatalog(
+            source=SimpleNamespace(read_runtime_candidate_bundles=lambda **kw: candidates),
+            loader=ManifestLoader({'catalog': REPOSITORY_ROOT/'bundles'}),
+>           view_reader=_current_catalog_reader([old_id])).list_modules(
+                org_id='org-org', project_id='dev-project', roles=['operator'], markings=['public'])
+
+services/aos-api/tests/asset_registry/test_runtime_workshop_catalog.py:110:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <aos_api.ecommerce_runtime_workshop_catalog.RuntimeWorkshopCatalog object at 0x1182b8510>
+org_id = 'org-org', project_id = 'dev-project', roles = ['operator']
+markings = ['public']
+
+    def list_modules(self, *, org_id, project_id, roles, markings):
+        scope = TenantScope(org_id, project_id)
+        candidates = self._source.read_runtime_candidate_bundles(org_id=scope.org_id,
+            project_id=scope.project_id, markings=markings)
+        items = []
+        seen_ids, seen_routes = set(), set()
+        for installed in candidates:
+            bundle = installed.bundle
+            _verify_installed_bundle(installed)
+            if not any(str(artifact.get('relativePath','')).startswith('content/workshops/') for artifact in bundle.artifacts):
+                continue
+            loaded = self._loader.load(_derive_source_ref(bundle.artifacts))
+            _verify_loaded_bundle(loaded=loaded, persisted=bundle)
+            for module in loaded.workshop_modules:
+                if module.module_id in seen_ids or module.route in seen_routes:
+>                   raise RegistryIntegrityCorruptError()
+E                   aos_api.asset_registry.errors.RegistryIntegrityCorruptError: stored Registry data failed integrity verification
+
+services/aos-api/aos_api/ecommerce_runtime_workshop_catalog.py:75: RegistryIntegrityCorruptError
+___ test_unready_history_routes_do_not_conflict_with_current_entries[False] ____
+
+historical_first = False
+
+    @pytest.mark.parametrize('historical_first', [True, False])
+    def test_unready_history_routes_do_not_conflict_with_current_entries(historical_first):
+        from dataclasses import replace
+        from aos_api.asset_registry.manifest_loader import ManifestLoader
+        from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
+        active = _active(_persisted(_loaded_growth()), target_data_scopes=('ecommerce.workshop.read',))
+        old_id = '22222222-2222-4222-8222-222222222222'
+        history = replace(active, installation_id=old_id)
+        candidates = (history, active) if historical_first else (active, history)
+        result = RuntimeWorkshopCatalog(
+            source=SimpleNamespace(read_runtime_candidate_bundles=lambda **kw: candidates),
+            loader=ManifestLoader({'catalog': REPOSITORY_ROOT/'bundles'}),
+>           view_reader=_current_catalog_reader([old_id])).list_modules(
+                org_id='org-org', project_id='dev-project', roles=['operator'], markings=['public'])
+
+services/aos-api/tests/asset_registry/test_runtime_workshop_catalog.py:110:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <aos_api.ecommerce_runtime_workshop_catalog.RuntimeWorkshopCatalog object at 0x1196a0890>
+org_id = 'org-org', project_id = 'dev-project', roles = ['operator']
+markings = ['public']
+
+    def list_modules(self, *, org_id, project_id, roles, markings):
+        scope = TenantScope(org_id, project_id)
+        candidates = self._source.read_runtime_candidate_bundles(org_id=scope.org_id,
+            project_id=scope.project_id, markings=markings)
+        items = []
+        seen_ids, seen_routes = set(), set()
+        for installed in candidates:
+            bundle = installed.bundle
+            _verify_installed_bundle(installed)
+            if not any(str(artifact.get('relativePath','')).startswith('content/workshops/') for artifact in bundle.artifacts):
+                continue
+            loaded = self._loader.load(_derive_source_ref(bundle.artifacts))
+            _verify_loaded_bundle(loaded=loaded, persisted=bundle)
+            for module in loaded.workshop_modules:
+                if module.module_id in seen_ids or module.route in seen_routes:
+>                   raise RegistryIntegrityCorruptError()
+E                   aos_api.asset_registry.errors.RegistryIntegrityCorruptError: stored Registry data failed integrity verification
+
+services/aos-api/aos_api/ecommerce_runtime_workshop_catalog.py:75: RegistryIntegrityCorruptError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/asset_registry/test_runtime_workshop_catalog.py::test_unready_history_does_not_load_unneeded_artifacts
+FAILED services/aos-api/tests/asset_registry/test_runtime_workshop_catalog.py::test_unready_history_routes_do_not_conflict_with_current_entries[True]
+FAILED services/aos-api/tests/asset_registry/test_runtime_workshop_catalog.py::test_unready_history_routes_do_not_conflict_with_current_entries[False]
+3 failed, 15 passed, 7 warnings in 1.45s
