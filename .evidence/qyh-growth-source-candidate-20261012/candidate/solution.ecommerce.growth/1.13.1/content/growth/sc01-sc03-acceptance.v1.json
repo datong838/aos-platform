@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "ecommerce.growth.sc01-sc03-acceptance.v1",
+  "id": "ecommerce.growth.sc01-sc03-acceptance",
+  "status": "code_control_draft_real_tenant_evidence_blocked",
+  "scenarios": {
+    "SC01": {
+      "name": "新客获客与成交",
+      "logicIds": ["D02", "D03", "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08", "G01", "G02", "G03", "G04", "G05", "G06", "S01", "S06"],
+      "chain": ["ContentArtifactRevision", "LeadSignalRevision", "ConsultationSessionRevision", "RecommendationRevision", "OrderFeedbackRevision", "AttributionRevision"]
+    },
+    "SC02": {
+      "name": "老客复购",
+      "logicIds": ["D01", "D03", "P02", "P03", "P04", "P05", "C02", "C03", "G02", "G04", "S02"],
+      "chain": ["CustomerLiteProjectionRevision", "ContactPolicyRevision", "ConsentEventRevision", "ContentDraftRevision", "RecommendationRevision", "OrderFeedbackRevision", "EffectReviewRevision"],
+      "hardGates": ["consent", "channel", "frequencyCap", "optOut", "complaintGuard"]
+    },
+    "SC03": {
+      "name": "客户问题反哺产品与内容",
+      "logicIds": ["S01", "S02", "S03", "S04", "S05", "S06", "D01", "D06", "C06", "C08", "G03", "G05", "A05"],
+      "chain": ["ServiceCaseAggregateRevision", "ProblemImpactRevision", "ContentCorrectionDraftRevision", "RecommendationCorrectionDraftRevision", "PromotionPauseProposalRevision", "MetricValidationRevision"],
+      "hardGates": ["aggregateCountAtLeastTwo", "noSC09SingleCaseSubstitution"]
+    }
+  },
+  "evidencePack": {
+    "independentPerScenario": true,
+    "requires": [
+      "ScenarioRevision",
+      "SourceReadinessEvidencePackRevision",
+      "TaskRevision",
+      "TaskRunRevision",
+      "LogicGraphRevision",
+      "HandoffRevision",
+      "ReceiptRevision",
+      "LineageRevision",
+      "EffectReviewRevision",
+      "sameCutoffAndTimeWindow",
+      "replayDigest"
+    ]
+  },
+  "realInputPolicy": {
+    "requiredTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "sourceReadiness": "current P01-P12 12/12 READY",
+    "forbiddenLabels": ["mock", "fixture", "sample", "fake", "placeholder"],
+    "currentBlockers": ["P02_PIPELINE_EXECUTOR_FAILED", "P04_PIPELINE_EXECUTOR_FAILED", "DATA_LEASE_ACTIVE", "M1_CAS_PENDING"]
+  },
+  "externalActions": {
+    "allowedStates": ["draft", "blocked"],
+    "authorized": false
+  },
+  "sideEffects": {
+    "databaseWrite": false,
+    "providerCall": false,
+    "actionExecution": false,
+    "memoryWrite": false,
+    "pipelineRetry": false,
+    "productionWrite": false
+  }
+}

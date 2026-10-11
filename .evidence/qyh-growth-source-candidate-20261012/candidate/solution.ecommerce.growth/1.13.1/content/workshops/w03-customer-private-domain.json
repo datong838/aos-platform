@@ -1,0 +1,61 @@
+{
+  "workshop_id": "w03-customer-private-domain",
+  "title": "客户与私域运营台",
+  "route": "workshop/customers",
+  "widgets": [
+    {
+      "id": "customer-funnel",
+      "title": "客户分层漏斗",
+      "source_ot": "CustomerLite",
+      "aggregator": "computeCustomerFunnel",
+      "description": "VIP / 高价值 / 潜力 / 沉默 四分层计数与占比"
+    },
+    {
+      "id": "churn-high-risk",
+      "title": "高流失风险队列",
+      "source_ot": "CustomerLite",
+      "filter": "decision_tag = 'churn_high'",
+      "description": "churn_high 决策标签命中，last_order_days > 30 或 order_count <= 1",
+      "decision_tag_ref": "churn_high"
+    },
+    {
+      "id": "vip-customer-list",
+      "title": "VIP 客户列表",
+      "source_ot": "CustomerLite",
+      "filter": "decision_tag = 'vip'",
+      "description": "vip 决策标签命中，order_count 高 + 消费金额头部",
+      "decision_tag_ref": "vip"
+    },
+    {
+      "id": "dormant-customer-wakeup",
+      "title": "沉默唤醒队列",
+      "source_ot": "CustomerLite",
+      "filter": "decision_tag = 'dormant'",
+      "description": "dormant 决策标签命中，last_order_days > 60",
+      "decision_tag_ref": "dormant"
+    },
+    {
+      "id": "customer-sidebar",
+      "title": "客户侧栏",
+      "source_ot": "CustomerLite+Order",
+      "description": "单客户画像 + 历史订单 + 派生指标 order_count / last_order_days 展示"
+    },
+    {
+      "id": "private-domain-task-board",
+      "title": "私域任务看板",
+      "source_ot": "CustomerLite",
+      "aggregator": "buildPrivateDomainTaskBoard",
+      "description": "分层+破冰、推荐话术确认、生日关怀、复购提醒 四类任务计数与进度"
+    }
+  ],
+  "decision_tags_contract": [
+    "churn_high",
+    "churn_low",
+    "vip",
+    "dormant",
+    "high_value",
+    "potential"
+  ],
+  "status": "CONTENT_D3_DECISION_TAGS_INJECTED",
+  "note": "D3 decision_tag 已注入：churn_high/vip/dormant 三个标签列实际取值已就位。G2 评审通过，叠加安装 1.1.0 release 可执行。"
+}

@@ -1,0 +1,6 @@
+# 原Growth源码后继候选准备
+基线d3647962e/AOS-001907。复用原prepare_ecommerce_growth_1_13及原tree_hash、ManifestLoader、runtime_registration，不覆盖旧候选或已签包。
+候选一正式登录/publisher接线来源待答；候选二已登记源码新候选准备独立无外部效果，选择二。
+仅本Task内prepare.py/candidate/solution.ecommerce.growth/1.13.1及验证；原1.13.0 copy到临时目录，精确输入hash锁三项当前backend delta，复用原8workshop selfRefs，version升级补丁号。不是新Registry版本/发布。
+三项来源：d3647962e评测类型修复、f5b924738 accepted-stage capability receipt区分、5f5a3b21b accepted-stage review区分。后两项Host未接线的拒绝保留，不减少已批准原来源约束。删除copy中的旧signature/evals/SBOM/image/dependency-lock；生成UNBUILT_UNSIGNED且runtimeReadiness blocked的provenance，必须新Build/新签名/新发布证据。
+新目录须原ManifestLoader实际解析、原SDK注册集合比对、独立进程candidatebackend评测两种type与accepted-stage拒绝guard保留。旧base与1695retained文件hash不变，重试已有目标拒绝；候选不进正式包目录，不操作真库/Host/Provider，不伪称首链或发布完成。

@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-growth-source-candidate-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001907",
+  "scope": [
+    "aos-platform/.evidence/qyh-growth-source-candidate-20261012"
+  ],
+  "excluded_scope": [
+    "maintenance/current-database",
+    "aos-platform/bundles/candidates",
+    "aos-platform/bundles/releases",
+    "aos-platform/services"
+  ],
+  "expected_outputs": [
+    "Immutable unsigned Growth1.13.1 source candidate in Task directory carrying exactly3 reviewed source deltas, original8 module refs; actual ManifestLoader/runtime registration/package isolated parity; old signature/eval/SBOM/image/lock not recycled; no build/publish/install authorization"
+  ],
+  "lease_expires_at": "2026-10-12T08:10:00.384432+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T04:10:00+08:00"
+}

@@ -1,0 +1,17 @@
+{
+  "schema":"aos.ecommerce-media-stage-template/v1",
+  "templateId":"ecommerce.media-studio.full.stage",
+  "revision":1,
+  "profile":"FULL",
+  "responsibilityTemplateId":"ecommerce.media-studio.full.responsibility",
+  "stages":[
+    {"stageId":"plan","title":"制片与创意计划","dependsOn":[],"responsibilitySlotIds":["media.producer","media.director"],"requiredCapabilityIds":["strategy.plan","material.collect","performance.review","copy.generate","script.compose"],"liveStage":false},
+    {"stageId":"script","title":"脚本创作","dependsOn":["plan"],"responsibilitySlotIds":["media.screenwriter"],"requiredCapabilityIds":["copy.generate","script.compose"],"liveStage":false},
+    {"stageId":"design","title":"美术与分镜","dependsOn":["script"],"responsibilitySlotIds":["media.art","media.storyboard"],"requiredCapabilityIds":["material.collect","strategy.plan","platform.adapt","script.compose","video.compose"],"liveStage":false},
+    {"stageId":"generate","title":"摄影或生成","dependsOn":["design"],"responsibilitySlotIds":["media.capture"],"requiredCapabilityIds":["material.collect","speech.synthesize","video.compose"],"liveStage":false},
+    {"stageId":"post","title":"剪辑与后期","dependsOn":["generate"],"responsibilitySlotIds":["media.post"],"requiredCapabilityIds":["speech.synthesize","video.compose","platform.adapt"],"liveStage":false},
+    {"stageId":"live","title":"直播编排","dependsOn":["post"],"responsibilitySlotIds":["media.producer","media.director","media.capture"],"requiredCapabilityIds":["live.orchestrate","strategy.plan","material.collect","video.compose"],"liveStage":true},
+    {"stageId":"review","title":"独立评审","dependsOn":["live"],"responsibilitySlotIds":["media.review"],"requiredCapabilityIds":["content.review","performance.review"],"liveStage":false}
+  ],
+  "requiredCapabilityIds":["material.collect","strategy.plan","copy.generate","script.compose","speech.synthesize","video.compose","content.review","live.orchestrate","platform.adapt","performance.review"]
+}

@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "<string>", line 20, in <module>
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-growth-source-candidate-20261012/candidate/solution.ecommerce.growth/1.13.1/backend/ecommerce_growth/content_capability_runtime.py", line 359, in execute_content_capability
+    if dispatch_ref.operation_id != CONTENT_GENERATE_OPERATION or dispatch_ref.handler_kind != "extension":
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'operation_id'

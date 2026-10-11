@@ -1,0 +1,150 @@
+{
+  "eval_set_id": "d3-w03-l05-dryrun-matrix",
+  "version": 1,
+  "description": "D3 波次 W03 客户与私域运营台 + L05 分润异常检测 Evals dryRun 测试矩阵。本矩阵只覆盖 Decision Gate 输出与 Widget 数据结构断言，不触发真实 LLM 调用，不修改业务数据。",
+  "cases": [
+    {
+      "case_id": "L05-C01-NORMAL-EXACT-MATCH",
+      "graph_id": "l05-commission-anomaly",
+      "title": "实际佣金与预期一致 → normal",
+      "input": {
+        "order_id": "O-1001",
+        "order_line_id": "OL-1001-1",
+        "pay_price": 299.00,
+        "commission_rate": 0.10,
+        "actual_commission": 29.90
+      },
+      "expected_branch": "normal",
+      "tolerance": 0.001
+    },
+    {
+      "case_id": "L05-C02-OVERPAID-GT20PCT",
+      "graph_id": "l05-commission-anomaly",
+      "title": "实际佣金比预期高 30% → overpaid",
+      "input": {
+        "order_id": "O-1002",
+        "order_line_id": "OL-1002-1",
+        "pay_price": 500.00,
+        "commission_rate": 0.10,
+        "actual_commission": 65.00
+      },
+      "expected_branch": "overpaid",
+      "assert_diff_ratio_min": 0.20
+    },
+    {
+      "case_id": "L05-C03-UNDERPAID-GT20PCT",
+      "graph_id": "l05-commission-anomaly",
+      "title": "实际佣金比预期低 30% → underpaid",
+      "input": {
+        "order_id": "O-1003",
+        "order_line_id": "OL-1003-1",
+        "pay_price": 800.00,
+        "commission_rate": 0.10,
+        "actual_commission": 56.00
+      },
+      "expected_branch": "underpaid",
+      "assert_diff_ratio_min_abs": 0.20
+    },
+    {
+      "case_id": "L05-C04-WITHIN-TOLERANCE-NORMAL",
+      "graph_id": "l05-commission-anomaly",
+      "title": "偏差 10% 在阈值内 → normal",
+      "input": {
+        "order_id": "O-1004",
+        "order_line_id": "OL-1004-1",
+        "pay_price": 100.00,
+        "commission_rate": 0.10,
+        "actual_commission": 11.00
+      },
+      "expected_branch": "normal"
+    },
+    {
+      "case_id": "L05-C05-NO-ACTUAL-COMMISSION-MANUAL-REVIEW",
+      "graph_id": "l05-commission-anomaly",
+      "title": "actual_commission=null（微商城） → manual_review 降级",
+      "input": {
+        "order_id": "O-1005",
+        "order_line_id": "OL-1005-1",
+        "pay_price": 150.00,
+        "commission_rate": 0.10,
+        "actual_commission": null
+      },
+      "expected_branch": "manual_review",
+      "note": "微商城 Niushop 无分润表时，D3 所有订单行会落本分支。本分支需 G2+BLOCKED 解除前人工审核，不自动判定异常。"
+    },
+    {
+      "case_id": "L05-C06-DEFAULT-RATE-FALLBACK",
+      "graph_id": "l05-commission-anomaly",
+      "title": "commission_rate=null 用默认 10% 估算",
+      "input": {
+        "order_id": "O-1006",
+        "order_line_id": "OL-1006-1",
+        "pay_price": 200.00,
+        "commission_rate": null,
+        "actual_commission": 28.00
+      },
+      "expected_branch": "normal",
+      "note": "预期佣金=200×10%=20，实际佣金 28 偏差 +40%？实际 assert 时 28/20=1.4，diff_ratio_calc=0.40 > 0.20 → overpaid。本 case 用于验证默认费率生效。",
+      "expected_branch_override_if_impl_strict": "overpaid"
+    },
+    {
+      "case_id": "W03-C01-FUNNEL-STRUCTURE",
+      "widget_id": "customer-funnel",
+      "title": "客户分层漏斗结构包含 4 层",
+      "input": {
+        "customer_lite_rows": [
+          {"decision_tag": "vip"},
+          {"decision_tag": "high_value"},
+          {"decision_tag": "potential"},
+          {"decision_tag": "dormant"}
+        ]
+      },
+      "expected_structure": {
+        "layers": ["VIP", "高价值", "潜力", "沉默"],
+        "layer_keys": ["vip", "high_value", "potential", "dormant"],
+        "counts_sum_match_total": true
+      }
+    },
+    {
+      "case_id": "W03-C02-CHURN-LIST-FILTER",
+      "widget_id": "churn-high-risk",
+      "title": "高流失队列筛选条件：decision_tag=churn_high OR (last_order_days > 30 AND order_count <= 1)",
+      "input_rows": [
+        {"member_id": 1, "decision_tag": "churn_high", "last_order_days": 5, "order_count": 10},
+        {"member_id": 2, "decision_tag": null, "last_order_days": 45, "order_count": 1},
+        {"member_id": 3, "decision_tag": null, "last_order_days": 10, "order_count": 5}
+      ],
+      "expected_member_ids": [1, 2],
+      "note": "D3 阶段 decision_tag 为空时，fallback 规则（last_order_days > 30 AND order_count <= 1）必须生效，保证 widget 非空。"
+    },
+    {
+      "case_id": "W03-C03-TASK-BOARD-4-CATEGORIES",
+      "widget_id": "private-domain-task-board",
+      "title": "私域任务看板四类任务必须全部可见",
+      "expected_task_categories": [
+        "customer_segment_break_the_ice",
+        "recommend_sales_talk_review",
+        "birthday_care",
+        "repurchase_reminder"
+      ]
+    },
+    {
+      "case_id": "W03-C04-SIDEBAR-DERIVED-METRICS",
+      "widget_id": "customer-sidebar",
+      "title": "客户侧栏必须展示派生指标 order_count + last_order_days",
+      "required_fields": [
+        "member_id",
+        "memberLevel",
+        "order_count",
+        "last_order_days",
+        "createdAt",
+        "updatedAt"
+      ],
+      "note": "派生指标即使为 null 也必须有占位列（D1.5 AC-D1.5-4 对齐）。"
+    }
+  ],
+  "matrix_total": 10,
+  "l05_logic_cases": 6,
+  "w03_workshop_cases": 4,
+  "d3_note": "D3 Evals 全部 10 case 覆盖 L05 4 分支 + 2 边界 + W03 结构 + 筛选 + 任务 + 侧栏。实际 pytest 执行文件见 services/aos-api/tests/test_ec_d3_w03_l05_dryrun.py（如果尚未创建则为下一波 D3.5 TODO）。"
+}

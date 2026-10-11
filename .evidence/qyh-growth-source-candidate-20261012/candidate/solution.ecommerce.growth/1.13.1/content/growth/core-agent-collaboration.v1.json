@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "ecommerce.growth.core-agent-collaboration.v1",
+  "id": "ecommerce.growth.core-agent-collaboration",
+  "status": "draft_only_blocked_until_operational_dependencies_ready",
+  "customerLite": {
+    "authority": "P08 CustomerLiteProjectionRevision",
+    "requiredMarking": "PII_MINIMIZED",
+    "allowed": [
+      "pseudonymousSubjectRef",
+      "lifecycleStage",
+      "memberLevelBand",
+      "paidCountBand",
+      "paidAmountBand",
+      "lastPaidRecencyBand",
+      "serviceRiskLevel",
+      "consentRefs",
+      "deletionState",
+      "markings",
+      "freshness"
+    ],
+    "forbidden": [
+      "name",
+      "mobile",
+      "phone",
+      "address",
+      "openId",
+      "accountCredential",
+      "chatRaw",
+      "secretPayload"
+    ]
+  },
+  "roles": [
+    {
+      "agentId": "ecommerce.content_officer",
+      "logicIds": ["C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08"],
+      "output": "ContentAssetDraft.DRAFT"
+    },
+    {
+      "agentId": "ecommerce.shopping_advisor",
+      "logicIds": ["G01", "G02", "G03", "G04", "G05", "G06"],
+      "output": "ConsultationCaseDraft.DRAFT+RecommendationDraft.DRAFT"
+    },
+    {
+      "agentId": "ecommerce.customer_service",
+      "logicIds": ["S01", "S02", "S03", "S04", "S05", "S06"],
+      "output": "ServiceCaseDraft.DRAFT"
+    }
+  ],
+  "immutableExistingAuthorities": ["C02", "G04", "S04"],
+  "sourceReadiness": {
+    "authority": "SourceReadinessEvidencePackRevision",
+    "requiredStatus": "ready",
+    "requiredCoverage": "12/12",
+    "freshness": "freshUntil > requestedAt",
+    "cutoffRule": "all commerce facts share the exact evidence cutoff"
+  },
+  "hardGates": [
+    "tenant_explicit",
+    "customer_projection_fresh",
+    "consultation_and_service_consent_granted",
+    "customer_not_deleted_or_invalidated",
+    "pii_minimized",
+    "source_readiness_12_of_12_ready_and_fresh",
+    "twenty_exact_logic_revisions",
+    "same_cutoff_product_price_inventory",
+    "price_consistent",
+    "inventory_available",
+    "policy_and_wiki_exact_refs"
+  ],
+  "handoffReplay": [
+    "content_to_shopping",
+    "shopping_to_service",
+    "service_to_content"
+  ],
+  "forbiddenActions": [
+    "external_publish_or_message",
+    "automatic_recommendation_send",
+    "discount_or_scarcity_claim",
+    "customer_reply",
+    "order_create_or_update",
+    "price_or_inventory_write",
+    "refund_or_compensation",
+    "production_tool_or_action",
+    "database_write",
+    "provider_call"
+  ]
+}

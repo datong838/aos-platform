@@ -1,0 +1,15 @@
+{
+  "changedSelfReferences": [
+    "content/workshops/ecommerce-analyst-query-templates.json",
+    "content/workshops/ecommerce.analyst.json",
+    "content/workshops/ecommerce.content-campaign.json",
+    "content/workshops/ecommerce.creator-growth.json",
+    "content/workshops/ecommerce.customer.json",
+    "content/workshops/ecommerce.media-studio.json",
+    "content/workshops/ecommerce.price-governance.json",
+    "content/workshops/ecommerce.task-cockpit.json"
+  ],
+  "state": "UNBUILT_UNSIGNED",
+  "treeHash": "472c37b7783b81387b50e6879f0641ebc14301adc1ad1601dbca544e7a91a9fc",
+  "version": "1.13.1"
+}

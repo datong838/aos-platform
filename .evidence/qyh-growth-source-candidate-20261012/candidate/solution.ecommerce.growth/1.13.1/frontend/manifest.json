@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "aos.dev/frontend-runtime/v1alpha1",
+  "title": "经营参谋",
+  "entrypoint": "frontend/index.html",
+  "initialRoute": "/workshop/analyst",
+  "routeClaims": [
+    "/workshop/analyst"
+  ],
+  "readOperationClaims": [
+    "analyst_workspace_view_v1"
+  ],
+  "commandOperationClaims": []
+}

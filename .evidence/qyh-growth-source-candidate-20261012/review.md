@@ -1,0 +1,5 @@
+# 方案与实现复核
+本波仅Task目录，当前源码三项既有改动完整带入；8原workshop自引用改为候选补丁版本。原候选/发布1695文件哈希不变。原ManifestLoader、11原API注册和schema兼容原检查通过；新候选独立进程两种策略类型真实dispatch通过，禁止平台导入且未接线Host拒绝保持。相邻15测试通过/7既有警告。
+验证脚本初次缺dispatch_ref、第二次None均失败，保留两次日志；修正为仅测试的精确操作身份后成功，没有外部调用或真库写入。没有以失败exit0或旧证据伪称通过。
+本候选UNBUILT_UNSIGNED，移除旧signature/evals/SBOM/image/dependency-lock，provenance明确Host未接线。实际构建、正式企业登录、独立publisher、安装可见性、真实首链仍未完成。不是栖月汇正式系统恢复成功。
+准备算法沿用原冻结builder，输入base及3delta hash锁定，目标已有即拒绝；原生产代码和22用户修改不变。浏览器不适用：本波不改运行页面或当前安装。下一已登记入口为新候选原构建流程前置依赖检查；正式登录/publisher接线仍等待已有配置位置，不伪造身份。
