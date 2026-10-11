@@ -1,0 +1,11 @@
+# 方案与证据复审
+
+两次独立隔离库REPEATABLE READ READ ONLY完全相等，容器/image/cluster绑定且九表零/无其它client。种子为r5实际257条表达式记录中43类型OID，递归44类型、202目录边、130回调，其中17也在原197个planner/PlanState函数OID记录，113没有记录。不能将113描述为未执行、危险或自动授权；目录边覆盖input/output/receive/send/modifier/analyze/subscript等，部分与本次SELECT无关。
+
+旧声明类型22个与当前实际类型44个差异保留comparison，不把跨数据库不同自定义类型OID直接当业务变化。43种子中的自定义类型来自r5指定同一DB，只读该DB解析。泛型函数声明和表达式实际类型仍不等于底层fmgr实际参数，ScalarArray的数组类型不改述为scalar元素，record/unknown/void不作违规结论。
+
+15个CoerceViaIO表达式绑定17个潜在input/output函数，17个均存在于原观察OID集合；集合相交不证明对应转换实际执行，NULL/缓存/初始化/其它分支可能不同。execExpr与arrayfuncs本地源码hash已保留，它们说明getTypeInputInfo/getTypeOutputInfo/get_type_io_data的动态解析路径，本波未重新证明运行二进制与该源码身份一致。不能据此宣称完整native闭包。
+
+io_edges第一次断言错误假定探针使用switch case，实际为IsA判断；查询未执行/文件未产出，改为核真实IsA及InvalidOid观测路径后成功。源码数字tag不作为未经核对的通用PG版本枚举常量。文件范围仅本Task，原代码和数据库零写、旧Source不重发。正式Root/自然COMMIT/栖月汇八工作台仍不通过。
+
+下一登记步骤：按实际类型核对typecache的比较/等值/哈希与operator family策略函数目录，明确目前八种type回调表未涵盖的边；之后设计固定范围原生事件观察，单纯目录列举不得当运行闭合。

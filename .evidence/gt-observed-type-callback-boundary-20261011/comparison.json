@@ -1,0 +1,46 @@
+{
+  "declared_type_seed_baseline": 22,
+  "actual_expression_recursive_types": 44,
+  "newly_resolved_type_oids": [
+    22,
+    28,
+    30,
+    114,
+    701,
+    705,
+    1002,
+    1003,
+    1005,
+    1007,
+    1028,
+    1033,
+    1034,
+    1114,
+    1186,
+    2202,
+    2249,
+    2278,
+    3807,
+    4096,
+    5791110,
+    5801985,
+    5802013,
+    5802059,
+    5802109,
+    5802771,
+    5802980
+  ],
+  "old_not_current_type_oids": [
+    2275,
+    2276,
+    2277,
+    2281,
+    2283
+  ],
+  "callbacks_with_security_definer": [],
+  "callback_language_counts": {
+    "internal": 130
+  },
+  "callbacks_without_planner_record": 113,
+  "unrecorded_not_proven_unexecuted": true
+}

@@ -1,0 +1,9 @@
+{
+  ".evidence/gt-observed-type-callback-boundary-20261011/audit.py": "c54521fe15b44e2ce3a24843fd19e04d95bd924d8db95fac9c8753043dc75495",
+  ".evidence/gt-observed-type-callback-boundary-20261011/plan.md": "1882e513e9f491e95cb4a123b41665b2014f0b3602a1fd3760ef168908c7764a",
+  ".evidence/gt-expression-types-transient-catalog-20261011/r5/result-r2.json": "eab2353f0401492979310768c3e63db914ff61a2de8785828fc29c6df0badcff",
+  ".evidence/gt-expression-types-transient-catalog-20261011/r5/typed-records.json": "0e2f122ba744c0e5e6c4fc19cd1758e19985a3d4f427f61c3fcb8e07793f8649",
+  ".evidence/gt-expression-types-transient-catalog-20261011/r5/observed-oids.json": "9af393e2d9a18edc984e2248a11f2ac08e4f3db69834e005c8490ab7cfc4a3cc",
+  ".evidence/gt-expression-types-transient-catalog-20261011/r5/independent-readback.json": "5134f77da21c9bdcaf6be24e805de9c8ef9eb889daa8bf4c2e83b7701bfb4ca9",
+  ".evidence/gt-expression-types-transient-catalog-20261011/r5/witness-reconciliation.json": "2d04b7d4921368a63c12703e2d5f47a1bb47a786d656d61ec43dfff96dc8e0e3"
+}

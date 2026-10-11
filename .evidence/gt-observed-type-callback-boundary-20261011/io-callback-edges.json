@@ -1,0 +1,468 @@
+{
+  "coerceViaIORecordCount": 15,
+  "ioCatalogEdges": [
+    {
+      "record": [
+        26,
+        0,
+        20,
+        25
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 25,
+      "functionOid": 47,
+      "signature": "textout(text)",
+      "functionSourceHash": "0c11527480620e7ca48ee5dadd835c141014bf6a5cc9f08369c37759b4801e3e",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        20,
+        25
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 20,
+      "functionOid": 460,
+      "signature": "int8in(cstring)",
+      "functionSourceHash": "8822d77c072c315f5fa029db8b55f2231e944dec25dcba4e2de4a0209fc1fa12",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        23,
+        25
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 25,
+      "functionOid": 47,
+      "signature": "textout(text)",
+      "functionSourceHash": "0c11527480620e7ca48ee5dadd835c141014bf6a5cc9f08369c37759b4801e3e",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        23,
+        25
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 23,
+      "functionOid": 42,
+      "signature": "int4in(cstring)",
+      "functionSourceHash": "22847e612949a149d1ab17a751adb24dd17e19985aacea85f55b69f5bc21b75c",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        20
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 20,
+      "functionOid": 461,
+      "signature": "int8out(bigint)",
+      "functionSourceHash": "62fe94b27bb0aadbf6c4d91e558230e3aa92462e8a0cb1f0e7bff03923d7309d",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        20
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 25,
+      "functionOid": 46,
+      "signature": "textin(cstring)",
+      "functionSourceHash": "d5c4749aaccb566ec2c4dc3d3f76dc8a6ad9570655179289110f09dbbd158fcf",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        22
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 22,
+      "functionOid": 41,
+      "signature": "int2vectorout(int2vector)",
+      "functionSourceHash": "6f5412cb4bb02b00ece224a29cc49eda21293abdd0d217f5da454a70415cdf86",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        22
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 25,
+      "functionOid": 46,
+      "signature": "textin(cstring)",
+      "functionSourceHash": "d5c4749aaccb566ec2c4dc3d3f76dc8a6ad9570655179289110f09dbbd158fcf",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        26
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 26,
+      "functionOid": 1799,
+      "signature": "oidout(oid)",
+      "functionSourceHash": "4f25d1d256e704fd073bd1e5e17927efa738e9f8b724bdd01035ddf7ad385771",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        26
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 25,
+      "functionOid": 46,
+      "signature": "textin(cstring)",
+      "functionSourceHash": "d5c4749aaccb566ec2c4dc3d3f76dc8a6ad9570655179289110f09dbbd158fcf",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        28
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 28,
+      "functionOid": 51,
+      "signature": "xidout(xid)",
+      "functionSourceHash": "45534445d4b04848330bae8b08918aebf4166e32578fbf7bbdd898f9068f46e9",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        28
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 25,
+      "functionOid": 46,
+      "signature": "textin(cstring)",
+      "functionSourceHash": "d5c4749aaccb566ec2c4dc3d3f76dc8a6ad9570655179289110f09dbbd158fcf",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        30
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 30,
+      "functionOid": 55,
+      "signature": "oidvectorout(oidvector)",
+      "functionSourceHash": "e7f83b5a6a393bd7b3fb641f530b06ac049bb7e8df11a2e4fdfe909f7b8139bb",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        30
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 25,
+      "functionOid": 46,
+      "signature": "textin(cstring)",
+      "functionSourceHash": "d5c4749aaccb566ec2c4dc3d3f76dc8a6ad9570655179289110f09dbbd158fcf",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        114
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 114,
+      "functionOid": 322,
+      "signature": "json_out(json)",
+      "functionSourceHash": "e23f204d32a838b7e87115ade6f3e5015565ede2116f3fed3f2e6ff1ca297770",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        114
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 25,
+      "functionOid": 46,
+      "signature": "textin(cstring)",
+      "functionSourceHash": "d5c4749aaccb566ec2c4dc3d3f76dc8a6ad9570655179289110f09dbbd158fcf",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        2205
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 2205,
+      "functionOid": 2219,
+      "signature": "regclassout(regclass)",
+      "functionSourceHash": "561df66851728f1131e3a3980da3c9775e86c3ca02e4081bef4ab2538ef9ad96",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        2205
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 25,
+      "functionOid": 46,
+      "signature": "textin(cstring)",
+      "functionSourceHash": "d5c4749aaccb566ec2c4dc3d3f76dc8a6ad9570655179289110f09dbbd158fcf",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        2950
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 2950,
+      "functionOid": 2953,
+      "signature": "uuid_out(uuid)",
+      "functionSourceHash": "12a02f24298a254f481bb015f375240a462124acbd7df5eaa81f0756af240f65",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        2950
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 25,
+      "functionOid": 46,
+      "signature": "textin(cstring)",
+      "functionSourceHash": "d5c4749aaccb566ec2c4dc3d3f76dc8a6ad9570655179289110f09dbbd158fcf",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        3802
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 3802,
+      "functionOid": 3804,
+      "signature": "jsonb_out(jsonb)",
+      "functionSourceHash": "1df57baa08d31195d70174c051592573025966d4b56343393d641b2b9d56551b",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        25,
+        3802
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 25,
+      "functionOid": 46,
+      "signature": "textin(cstring)",
+      "functionSourceHash": "d5c4749aaccb566ec2c4dc3d3f76dc8a6ad9570655179289110f09dbbd158fcf",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        114,
+        3802
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 3802,
+      "functionOid": 3804,
+      "signature": "jsonb_out(jsonb)",
+      "functionSourceHash": "1df57baa08d31195d70174c051592573025966d4b56343393d641b2b9d56551b",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        114,
+        3802
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 114,
+      "functionOid": 321,
+      "signature": "json_in(cstring)",
+      "functionSourceHash": "4687acdadc1f5dee78b57b215717738bfc4a0bba272033de03688a7cf9575472",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        1184,
+        25
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 25,
+      "functionOid": 47,
+      "signature": "textout(text)",
+      "functionSourceHash": "0c11527480620e7ca48ee5dadd835c141014bf6a5cc9f08369c37759b4801e3e",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        1184,
+        25
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 1184,
+      "functionOid": 1150,
+      "signature": "timestamptz_in(cstring,oid,integer)",
+      "functionSourceHash": "e5f1ac6e7bee790f3d21c3259e7cd59720d074c0611fda56813597b87241ca7d",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        1700,
+        25
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 25,
+      "functionOid": 47,
+      "signature": "textout(text)",
+      "functionSourceHash": "0c11527480620e7ca48ee5dadd835c141014bf6a5cc9f08369c37759b4801e3e",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        1700,
+        25
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 1700,
+      "functionOid": 1701,
+      "signature": "numeric_in(cstring,oid,integer)",
+      "functionSourceHash": "398e7fa233e48593ff91e23b442e26b0eb102993ebf5f2118cd5d4996456ffe7",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        3802,
+        25
+      ],
+      "kind": "typoutput",
+      "sourceTypeOid": 25,
+      "functionOid": 47,
+      "signature": "textout(text)",
+      "functionSourceHash": "0c11527480620e7ca48ee5dadd835c141014bf6a5cc9f08369c37759b4801e3e",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    },
+    {
+      "record": [
+        26,
+        0,
+        3802,
+        25
+      ],
+      "kind": "typinput",
+      "sourceTypeOid": 3802,
+      "functionOid": 3806,
+      "signature": "jsonb_in(cstring)",
+      "functionSourceHash": "f7afc7d275691fc2639f21d2343b6ef2b7be5a3dc558a43398d9161d4bf749fb",
+      "recordedByPlannerObserver": true,
+      "actualNativeCallProven": false
+    }
+  ],
+  "probeSourceSha256": "81a19a7d8f6f9a6252622a10dcb188d16fbccf1a941fb23ab7f6e54114e439c1",
+  "localBackendSourceHashes": {
+    "src/backend/executor/execExpr.c": "606f16a9f018cdedeb7d985bebf995d2b898b6a07b23399018e5c570716123a5",
+    "src/backend/executor/execExprInterp.c": "12e48cd9072758447172e9353d6ceb4e196717c8d47f03d65617d32a17169b93",
+    "src/backend/utils/adt/arrayfuncs.c": "85cc1264b4fff1e5bcca54c9d374c4a12f15d08185bf87fcbd553a7ec5ad917b"
+  },
+  "sourceReview": [
+    "execExpr.c resolves source typoutput and destination typinput with getTypeOutputInfo/getTypeInputInfo and fmgr_info",
+    "arrayfuncs.c obtains element input/output/receive/send via get_type_io_data"
+  ],
+  "runtimeBinarySourceIdentityProvenByThisAudit": false,
+  "actualNativeEventCoverageProven": false,
+  "executionAuthorized": false
+}

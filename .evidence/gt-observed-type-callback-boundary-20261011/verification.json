@@ -1,0 +1,14 @@
+{
+  "two_independent_read_only_connections_equal": true,
+  "actual_seed_types": 43,
+  "resolved_types": 44,
+  "callback_functions": 130,
+  "callback_edges": 202,
+  "unrecorded_callbacks": 113,
+  "io_expression_records": 15,
+  "database_writes": 0,
+  "business_functions_invoked": 0,
+  "nine_tables_zero": true,
+  "full_native_closure": false,
+  "formal_business_accepted": false
+}
