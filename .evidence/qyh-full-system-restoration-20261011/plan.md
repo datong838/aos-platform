@@ -55,6 +55,12 @@ API准备独立候选：新增本Task证据目录freeze_current_api.py。从精�
 
 ## 当前恢复身份来源对账
 
+### 只读恢复服务目录依赖补齐（2026-10-11 r3）
+
+真实18080 GET复现：ecommerce-workshop/modules=500 INTERNAL；runtime-workshop/modules=500 REGISTRY_INTEGRITY_CORRUPT。前者original build_ecommerce_workshop_catalog固定repository_root/bundles，原冻结仅services/scripts导致FileNotFoundError/allowlist root does not exist；后者安装/资源门独立，不因前者修复放行。
+
+精确修改本Task freeze_current_api.py，git archive同一当前m1提交的services/aos-api、scripts及bundles，不创建空包目录、不改product loader、Registry、配置或预算。1827个已提交bundles文件逐项纳入原hash manifest，保持0700/0600与排除.env/非普通文件。先保存现有真实500为RED，固定Git blob与归档hash核验，提交后产生新候选；新intent后仅停任务所属18080 API并以原fresh interpreter入口启动，18434及原8080/8434保留。实际HTTP普通目录应200原真实结果（可为空，不等于八页恢复），runtime结果如实保留并继续调查；浏览器重新验证栖月汇组织、135安装、只读405及canary404。不覆盖旧候选/未知结果、不复制私钥、不访问商城源。管理目录恢复属于既有全恢复Task中间步骤，完整目标仍ACTIVE。
+
 ### 本机只读管理接入（2026-10-11增量）
 
 实际8080公开/v1/auth/oidc只支持dev，Web tenant.ts默认Bearer dev；方案132保留非生产登录。原restore脚本external-only仅适用于正式受限运行启动，不应阻止已授权的本机管理查看。新增明确管理只读模式，保留原serve-limited所有正式身份与四包门不变；不发token、不伪造publisher/Owner、不开放runtime目录或执行。

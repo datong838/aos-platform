@@ -1,0 +1,18 @@
+{
+  "head": "b924dbe966a7b6b5da3095d039284dbd8e339de5",
+  "actualHttp": [
+    {
+      "route": "/v1/ecommerce-workshop/modules",
+      "status": 500,
+      "code": "INTERNAL"
+    },
+    {
+      "route": "/v1/runtime-workshop/modules",
+      "status": 500,
+      "code": "REGISTRY_INTEGRITY_CORRUPT"
+    }
+  ],
+  "gitBundleFileCount": 1827,
+  "credentialFilenameScanPassed": true,
+  "runtimeAuthorized": false
+}

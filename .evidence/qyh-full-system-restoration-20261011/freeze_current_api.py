@@ -30,14 +30,14 @@ if __name__ == '__main__':
     destination = R / 'private' / ('api-source-' + head)
     assert not result_path.exists() and not intent_path.exists() and not destination.exists(), 'Existing candidate: reconcile only'
     archive = subprocess.check_output(['git', 'archive', '--format=tar', head,
-        'services/aos-api', 'scripts'], cwd=ROOT, timeout=60)
+        'services/aos-api', 'scripts', 'bundles'], cwd=ROOT, timeout=60)
     members = []
     with tarfile.open(fileobj=io.BytesIO(archive), mode='r:') as tar:
         for member in tar.getmembers():
             relative = PurePosixPath(member.name)
             assert not relative.is_absolute() and '..' not in relative.parts
             assert member.isfile() or member.isdir(), 'Regular Git sources only'
-            assert relative.parts[0] in {'services', 'scripts'}
+            assert relative.parts[0] in {'services', 'scripts', 'bundles'}
             assert '.env' not in relative.parts, 'Environment credentials forbidden'
             if member.isfile():
                 stream = tar.extractfile(member)
@@ -45,6 +45,10 @@ if __name__ == '__main__':
                 members.append((member.name, stream.read()))
     manifest = {name: digest(data) for name, data in members}
     assert len(manifest) == len(members) and len(manifest) > 1000
+    # The original legacy catalog always resolves repository_root/bundles,
+    # independently of the configured, signed runtime-release root.
+    bundle_files = {name: sha for name, sha in manifest.items() if name.startswith('bundles/')}
+    assert 'bundles/README.md' in bundle_files and len(bundle_files) > 1, 'Real committed catalog assets required'
     source = dict(members)
     main = ast.parse(source['services/aos-api/aos_api/main.py'])
     enabled_names = {n.value for n in ast.walk(main) if isinstance(n, ast.Constant)
@@ -87,6 +91,8 @@ if __name__ == '__main__':
     report = {'outcome': 'CURRENT_M1_API_SOURCE_CANDIDATE_FROZEN_NO_START',
         'head': head, 'source': str(destination), 'fileCount': len(manifest),
         'manifestSha256': digest(manifest_bytes),
+        'repositoryBundleFileCount': len(bundle_files),
+        'repositoryBundleManifestSha256': digest(json.dumps(bundle_files, sort_keys=True).encode()),
         'mainSha256': manifest['services/aos-api/aos_api/main.py'],
         'originalPreviewEntrySha256': manifest['scripts/a0v_current_preview_http.py'],
         'explicitStartupEnabledSwitches': sorted(enabled_names), 'startupFlags': flags,
