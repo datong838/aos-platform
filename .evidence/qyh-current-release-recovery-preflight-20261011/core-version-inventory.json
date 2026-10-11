@@ -1,0 +1,32 @@
+[
+  {
+    "version": "1.1.0",
+    "content_hash": "sha256:cff310a440dcd75cd70cf8b31a56a237fccb39fabcdecda2b4ae3a1f77f4e4e1",
+    "status": "published"
+  },
+  {
+    "version": "1.2.0",
+    "content_hash": "sha256:98aa65e8a3bcbe319a25fc59da6497b278ba98c86434dbfb019e7afb6fe4a0f6",
+    "status": "published"
+  },
+  {
+    "version": "1.3.0",
+    "content_hash": "sha256:a7e986882ea1e121fe510d662540f8f153bab1e862b0335ebcec3b7e2c1ed872",
+    "status": "published"
+  },
+  {
+    "version": "1.4.0",
+    "content_hash": "sha256:91bbe20c38d85f151e2d37ab6b08e48b261b1147b40d91203df4309b75def4e5",
+    "status": "published"
+  },
+  {
+    "version": "1.4.1",
+    "content_hash": "sha256:f573b97f786140668562ce8b07fb6ae86a8cb7027392a07a78fe6fbc68816524",
+    "status": "published"
+  },
+  {
+    "version": "1.4.2",
+    "content_hash": "sha256:dd03a29a71b7cc8f35a36010042f8f6d7bd0d19dcde1ac107c7c588f2337d441",
+    "status": "published"
+  }
+]

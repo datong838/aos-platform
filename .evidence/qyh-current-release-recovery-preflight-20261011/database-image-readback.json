@@ -1,0 +1,294 @@
+{
+  "identity": {
+    "cluster": "7695302940039200809",
+    "version": "a0v_159"
+  },
+  "items": [
+    {
+      "bundle": "domain.ecommerce.core",
+      "version": "1.4.0",
+      "registry": [
+        {
+          "version": "1.4.0",
+          "content_hash": "sha256:91bbe20c38d85f151e2d37ab6b08e48b261b1147b40d91203df4309b75def4e5",
+          "status": "published"
+        }
+      ],
+      "registryExact": false,
+      "schemaReceipts": [
+        {
+          "packageId": "bundle-de982d07b154219ff69d3d3e8e3e1e172937bd5d403afada17bf898e2e372328",
+          "required": {
+            "migrationHash": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee",
+            "version": "aos-platform-a0v-001"
+          },
+          "registered": [
+            {
+              "migration_hash": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee"
+            }
+          ],
+          "exact": true
+        }
+      ],
+      "requiredRelations": [
+        {
+          "relation": "public.asset_bundle",
+          "exists": true
+        },
+        {
+          "relation": "public.asset_bundle_artifact",
+          "exists": true
+        },
+        {
+          "relation": "public.asset_bundle_evidence",
+          "exists": true
+        },
+        {
+          "relation": "public.asset_bundle_version",
+          "exists": true
+        },
+        {
+          "relation": "public.bundle_composition",
+          "exists": true
+        },
+        {
+          "relation": "public.bundle_composition_lock",
+          "exists": true
+        },
+        {
+          "relation": "public.bundle_installation",
+          "exists": true
+        },
+        {
+          "relation": "public.bundle_installation_revision",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_operation_dispatch_binding",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_runtime_binding",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_runtime_operation",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_runtime_resource_lease",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_schema_installation",
+          "exists": true
+        }
+      ],
+      "imagePresence": [
+        {
+          "imageDigest": "sha256:15bb1e2248bdfde4f91d405764ea585d34f47e03987d723f07b1efa5b532c087",
+          "localRef": "127.0.0.1:18438/domain-ecommerce-core@sha256:15bb1e2248bdfde4f91d405764ea585d34f47e03987d723f07b1efa5b532c087",
+          "expectedConfigDigest": "sha256:0ce4ef73edb33d41ba687575ea1fab0851e0ddfb9663360d4ec2d1ec5b89c186",
+          "inspectExit": 0,
+          "localConfigDigest": "sha256:0ce4ef73edb33d41ba687575ea1fab0851e0ddfb9663360d4ec2d1ec5b89c186",
+          "exact": true
+        }
+      ]
+    },
+    {
+      "bundle": "platform.ecommerce.niushop",
+      "version": "1.23.0",
+      "registry": [
+        {
+          "version": "1.23.0",
+          "content_hash": "sha256:55b29795b73d5be0f28bd68fafc48c8dd7aa42c65eb5ea130a307326e7534117",
+          "status": "published"
+        }
+      ],
+      "registryExact": true,
+      "schemaReceipts": [
+        {
+          "packageId": "bundle-98d43bb435a5fa7b5d84d7861149d784f7147d25cb28101fe21e3b647d37d78d",
+          "required": {
+            "migrationHash": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2",
+            "version": "aos-platform-a0v-001"
+          },
+          "registered": [
+            {
+              "migration_hash": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2"
+            }
+          ],
+          "exact": true
+        }
+      ],
+      "requiredRelations": [
+        {
+          "relation": "public.asset_bundle",
+          "exists": true
+        },
+        {
+          "relation": "public.asset_bundle_artifact",
+          "exists": true
+        },
+        {
+          "relation": "public.asset_bundle_evidence",
+          "exists": true
+        },
+        {
+          "relation": "public.asset_bundle_version",
+          "exists": true
+        },
+        {
+          "relation": "public.bundle_composition",
+          "exists": true
+        },
+        {
+          "relation": "public.bundle_composition_lock",
+          "exists": true
+        },
+        {
+          "relation": "public.bundle_installation",
+          "exists": true
+        },
+        {
+          "relation": "public.bundle_installation_revision",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_operation_dispatch_binding",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_runtime_binding",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_runtime_operation",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_runtime_resource_lease",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_schema_installation",
+          "exists": true
+        }
+      ],
+      "imagePresence": [
+        {
+          "imageDigest": "sha256:1453fff29afdf8cd1e218539b28212a6833b186a19ec3ffea9c1bee2b05d9a0f",
+          "localRef": "127.0.0.1:18438/platform-ecommerce-niushop@sha256:1453fff29afdf8cd1e218539b28212a6833b186a19ec3ffea9c1bee2b05d9a0f",
+          "expectedConfigDigest": "sha256:3cb783e202e739ab7256b77115456a8420acff7345ab04bfd4660daa46bfbbdb",
+          "inspectExit": 0,
+          "localConfigDigest": "sha256:3cb783e202e739ab7256b77115456a8420acff7345ab04bfd4660daa46bfbbdb",
+          "exact": true
+        }
+      ]
+    },
+    {
+      "bundle": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "registry": [],
+      "registryExact": false,
+      "schemaReceipts": [
+        {
+          "packageId": "bundle-b88d3561086b0bbf1f2dc64e04020c26b662d6b18b876a668ab6e8b4398ac7df",
+          "required": {
+            "migrationHash": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4",
+            "version": "aos-platform-a0v-001"
+          },
+          "registered": [
+            {
+              "migration_hash": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4"
+            }
+          ],
+          "exact": true
+        }
+      ],
+      "requiredRelations": [
+        {
+          "relation": "public.asset_bundle",
+          "exists": true
+        },
+        {
+          "relation": "public.asset_bundle_artifact",
+          "exists": true
+        },
+        {
+          "relation": "public.asset_bundle_evidence",
+          "exists": true
+        },
+        {
+          "relation": "public.asset_bundle_version",
+          "exists": true
+        },
+        {
+          "relation": "public.bundle_composition",
+          "exists": true
+        },
+        {
+          "relation": "public.bundle_composition_lock",
+          "exists": true
+        },
+        {
+          "relation": "public.bundle_installation",
+          "exists": true
+        },
+        {
+          "relation": "public.bundle_installation_revision",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_operation_dispatch_binding",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_runtime_binding",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_runtime_operation",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_runtime_resource_lease",
+          "exists": true
+        },
+        {
+          "relation": "public.extension_schema_installation",
+          "exists": true
+        }
+      ],
+      "imagePresence": [
+        {
+          "imageDigest": "sha256:dc619ab1556fd16ec98d9985f8870373651c83cedb6bfd9d5c5ceeb1e9d59f53",
+          "localRef": "127.0.0.1:18438/solution-ecommerce-growth@sha256:dc619ab1556fd16ec98d9985f8870373651c83cedb6bfd9d5c5ceeb1e9d59f53",
+          "expectedConfigDigest": "sha256:4483d2e202762ebde78f3b9fb622726c0cf6b04b77a7746b58c4b90b6cd44674",
+          "inspectExit": 0,
+          "localConfigDigest": "sha256:4483d2e202762ebde78f3b9fb622726c0cf6b04b77a7746b58c4b90b6cd44674",
+          "exact": true
+        }
+      ]
+    },
+    {
+      "bundle": "solution.ecommerce.operations-base",
+      "version": "1.2.0",
+      "registry": [
+        {
+          "version": "1.2.0",
+          "content_hash": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298",
+          "status": "published"
+        }
+      ],
+      "registryExact": true,
+      "schemaReceipts": [],
+      "requiredRelations": [],
+      "imagePresence": []
+    }
+  ],
+  "effects": 0,
+  "registryPublished": false,
+  "schemaReceiptsCreated": false,
+  "imagesPulledOrStarted": false
+}

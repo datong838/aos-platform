@@ -1,0 +1,21 @@
+{
+  "outcome": "CURRENT113_SIGNATURE_IMAGE_SCHEMA_VERIFIED_REGISTRY_RECOVERY_NOT_READY",
+  "signedBundles": 4,
+  "moduleCount": 8,
+  "runtimeImagesExact": 3,
+  "schemaReceiptsExact": 3,
+  "requiredRelationsPresent": true,
+  "registryMatches": {
+    "domain.ecommerce.core": false,
+    "platform.ecommerce.niushop": true,
+    "solution.ecommerce.growth": false,
+    "solution.ecommerce.operations-base": true
+  },
+  "coreSameVersionHashConflict": true,
+  "growth113RegistryMissing": true,
+  "proposedUnoccupiedCoreSuccessor": "1.4.3",
+  "dependenciesAcceptCoreSuccessor": true,
+  "formalSwitch": false,
+  "runtimeStart": false,
+  "browserAcceptance": false
+}

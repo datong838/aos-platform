@@ -1,0 +1,177 @@
+{
+  "observedAt": "2026-10-11T07:13:39.270368+00:00",
+  "qualificationInputsPassed": true,
+  "signingReceiptSha256": "2998e5c5b6a7c6b617c916ff31e27e3cd2f9e9fb0986b6f4623aef0f25d2569e",
+  "trustRootsSha256": "ff09999f9843247235b2ed167c9ec92e68a9bd2c332bcce7a8b4dfe63e51b8bd",
+  "items": [
+    {
+      "bundle": "domain.ecommerce.core",
+      "version": "1.4.0",
+      "contentHash": "sha256:5224ea1150f24c8943317d8dae89159c85637e34dd128b65df9d3623f9a39590",
+      "signatureValid": true,
+      "releasePolicyPassed": true,
+      "moduleIds": [],
+      "artifacts/schema-requirements.json": {
+        "requirements": [
+          {
+            "migrationHash": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee",
+            "version": "aos-platform-a0v-001"
+          }
+        ],
+        "schemaVersion": 1
+      },
+      "artifacts/schema-compatibility.json": {
+        "alembicRevision": "a0v_001",
+        "bundleId": "domain.ecommerce.core",
+        "noPackageOwnedMigration": true,
+        "requiredRelations": [
+          "public.asset_bundle",
+          "public.asset_bundle_artifact",
+          "public.asset_bundle_evidence",
+          "public.asset_bundle_version",
+          "public.bundle_composition",
+          "public.bundle_composition_lock",
+          "public.bundle_installation",
+          "public.bundle_installation_revision",
+          "public.extension_operation_dispatch_binding",
+          "public.extension_runtime_binding",
+          "public.extension_runtime_operation",
+          "public.extension_runtime_resource_lease",
+          "public.extension_schema_installation"
+        ],
+        "schemaVersion": 1
+      },
+      "artifacts/runtime-image-index.json": {
+        "images": [
+          {
+            "configDigest": "sha256:0ce4ef73edb33d41ba687575ea1fab0851e0ddfb9663360d4ec2d1ec5b89c186",
+            "dependencyLockHash": "sha256:7082d71d73dfa0ef7a607045bfa22242621728e3346d99542087d6c629fbcacb",
+            "imageDigest": "sha256:15bb1e2248bdfde4f91d405764ea585d34f47e03987d723f07b1efa5b532c087",
+            "platform": "linux/arm64",
+            "sbomPath": "evidence/sbom.json"
+          }
+        ],
+        "schemaVersion": 1
+      }
+    },
+    {
+      "bundle": "platform.ecommerce.niushop",
+      "version": "1.23.0",
+      "contentHash": "sha256:55b29795b73d5be0f28bd68fafc48c8dd7aa42c65eb5ea130a307326e7534117",
+      "signatureValid": true,
+      "releasePolicyPassed": true,
+      "moduleIds": [],
+      "artifacts/schema-requirements.json": {
+        "requirements": [
+          {
+            "migrationHash": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2",
+            "version": "aos-platform-a0v-001"
+          }
+        ],
+        "schemaVersion": 1
+      },
+      "artifacts/schema-compatibility.json": {
+        "alembicRevision": "a0v_001",
+        "bundleId": "platform.ecommerce.niushop",
+        "noPackageOwnedMigration": true,
+        "requiredRelations": [
+          "public.asset_bundle",
+          "public.asset_bundle_artifact",
+          "public.asset_bundle_evidence",
+          "public.asset_bundle_version",
+          "public.bundle_composition",
+          "public.bundle_composition_lock",
+          "public.bundle_installation",
+          "public.bundle_installation_revision",
+          "public.extension_operation_dispatch_binding",
+          "public.extension_runtime_binding",
+          "public.extension_runtime_operation",
+          "public.extension_runtime_resource_lease",
+          "public.extension_schema_installation"
+        ],
+        "schemaVersion": 1
+      },
+      "artifacts/runtime-image-index.json": {
+        "images": [
+          {
+            "configDigest": "sha256:3cb783e202e739ab7256b77115456a8420acff7345ab04bfd4660daa46bfbbdb",
+            "dependencyLockHash": "sha256:7082d71d73dfa0ef7a607045bfa22242621728e3346d99542087d6c629fbcacb",
+            "imageDigest": "sha256:1453fff29afdf8cd1e218539b28212a6833b186a19ec3ffea9c1bee2b05d9a0f",
+            "platform": "linux/arm64",
+            "sbomPath": "evidence/sbom.json"
+          }
+        ],
+        "schemaVersion": 1
+      }
+    },
+    {
+      "bundle": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "contentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+      "signatureValid": true,
+      "releasePolicyPassed": true,
+      "moduleIds": [
+        "ecommerce.analyst",
+        "ecommerce.content-campaign",
+        "ecommerce.creator-growth",
+        "ecommerce.customer",
+        "ecommerce.media-studio",
+        "ecommerce.price-governance",
+        "ecommerce.task-cockpit"
+      ],
+      "artifacts/schema-requirements.json": {
+        "requirements": [
+          {
+            "migrationHash": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4",
+            "version": "aos-platform-a0v-001"
+          }
+        ],
+        "schemaVersion": 1
+      },
+      "artifacts/schema-compatibility.json": {
+        "alembicRevision": "a0v_001",
+        "bundleId": "solution.ecommerce.growth",
+        "noPackageOwnedMigration": true,
+        "requiredRelations": [
+          "public.asset_bundle",
+          "public.asset_bundle_artifact",
+          "public.asset_bundle_evidence",
+          "public.asset_bundle_version",
+          "public.bundle_composition",
+          "public.bundle_composition_lock",
+          "public.bundle_installation",
+          "public.bundle_installation_revision",
+          "public.extension_operation_dispatch_binding",
+          "public.extension_runtime_binding",
+          "public.extension_runtime_operation",
+          "public.extension_runtime_resource_lease",
+          "public.extension_schema_installation"
+        ],
+        "schemaVersion": 1
+      },
+      "artifacts/runtime-image-index.json": {
+        "images": [
+          {
+            "configDigest": "sha256:4483d2e202762ebde78f3b9fb622726c0cf6b04b77a7746b58c4b90b6cd44674",
+            "dependencyLockHash": "sha256:7082d71d73dfa0ef7a607045bfa22242621728e3346d99542087d6c629fbcacb",
+            "imageDigest": "sha256:dc619ab1556fd16ec98d9985f8870373651c83cedb6bfd9d5c5ceeb1e9d59f53",
+            "platform": "linux/arm64",
+            "sbomPath": "evidence/sbom.json"
+          }
+        ],
+        "schemaVersion": 1
+      }
+    },
+    {
+      "bundle": "solution.ecommerce.operations-base",
+      "version": "1.2.0",
+      "contentHash": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298",
+      "signatureValid": true,
+      "releasePolicyPassed": true,
+      "moduleIds": [
+        "ecommerce.operations"
+      ]
+    }
+  ],
+  "runtimeStart": false
+}
