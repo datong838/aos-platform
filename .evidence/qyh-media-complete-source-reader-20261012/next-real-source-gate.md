@@ -1,0 +1,1 @@
+下一已登记项：在owned clone与完整原Scope/issuer事务中，以临时明确test-only的真实Registry+签名贡献/Rule/登记回执/原activeinstall锁建立完整SQL+crypto正负夹具；不能使用lambdaTrue/patchRegistry或手工running/旧Run回放来声称完整Source。必须验证原Store registration正常commit、Source失败回滚及发布撤回/安装代次/跨tenant/混版/Policy/Rule/hash/Receipt缺失。夹具只论协议，不能替代真实IdP/publisher或正式批准。在real source尚缺时不接Router。现有只读管理NoWrite/ClassRole不满足Sourceconn，当前实际False证据保存。

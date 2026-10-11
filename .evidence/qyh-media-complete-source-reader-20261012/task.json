@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-media-complete-source-reader-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001924",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/aip_media_gate_source_reader.py",
+    "aos-platform/services/aos-api/tests/aip/test_media_complete_source_reader.py",
+    "aos-platform/.evidence/qyh-media-complete-source-reader-20261012"
+  ],
+  "excluded_scope": [
+    "maintenance/current-database",
+    "router activation/current install/Rule creation"
+  ],
+  "expected_outputs": [
+    "CompleteMediaSource same-caller reader composition, real dependencies reused, missing identity/source reject; no callbackTrue inrouter"
+  ],
+  "lease_expires_at": "2026-10-12T10:54:30.352062+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T06:54:31+08:00"
+}

@@ -1,0 +1,20 @@
+{
+  "baseHead": "ae14dd118c552b7b5ba24f4cb0cceeef3ca6efb0",
+  "targetedAdjacent": {
+    "passed": 97,
+    "skipped": 0,
+    "warnings": 7
+  },
+  "positiveReaderTestIsWiringDouble": true,
+  "completeRealSqlCryptoPositiveAccepted": false,
+  "actualCurrentReadonlyConnectionRejected": true,
+  "newRuleOrPolicyCreated": false,
+  "databaseWrites": 0,
+  "currentApiChanged": false,
+  "productionReaderWired": false,
+  "retainedArtifactHashMatches": 1695,
+  "files": {
+    "services/aos-api/aos_api/aip_media_gate_source_reader.py": "45d8d79f9461f53fe85e1a2859503bb3b3ceeac8d283157121f807b8b1ea198a",
+    "services/aos-api/tests/aip/test_media_complete_source_reader.py": "07f3cbe1090c2e8ef087729d1f8fcb27248d505e2252d471e63bc7aa8b2bd1dd"
+  }
+}

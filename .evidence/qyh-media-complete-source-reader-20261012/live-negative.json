@@ -1,0 +1,9 @@
+{
+  "outcome": "ACTUAL_READONLY_MANAGEMENT_CONNECTION_CANNOT_AUTHORIZE_MEDIA_SOURCE",
+  "readerRejected": true,
+  "ruleOrPolicyCreated": false,
+  "sourceApprovalCreated": false,
+  "databaseWrites": 0,
+  "productionReaderActivated": false,
+  "realCompletePositiveSourceAccepted": false
+}
