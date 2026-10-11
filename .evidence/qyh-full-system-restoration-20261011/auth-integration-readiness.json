@@ -1,0 +1,43 @@
+{
+  "observedAt": "2026-10-11T12:37:37.889666+00:00",
+  "head": "e5c84ae58afbca74ffe2fa0088f7e9fbf67c163e",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "observations": {
+    "authenticationMode": "development",
+    "externalJwksConfigured": false,
+    "enterprisePasswordGrantConfigured": false,
+    "advertisedJwksConfigured": true,
+    "advertisedGrantTypes": [
+      "dev"
+    ],
+    "existingDevMeStatus": 200,
+    "meResponseKeys": [
+      "displayName",
+      "email",
+      "markings",
+      "orgId",
+      "orgName",
+      "orgs",
+      "phone",
+      "profile",
+      "projectId",
+      "roles",
+      "subject",
+      "title",
+      "tokenKind",
+      "workspaceName"
+    ],
+    "tenantHeaders": [
+      "org-org",
+      "dev-project"
+    ],
+    "formalLoginProven": false,
+    "independentPublisherProven": false
+  },
+  "independentReadsStable": true,
+  "databaseWrites": 0,
+  "tokensIssued": 0,
+  "publishAttempts": 0,
+  "eightWorkshopsRestored": false,
+  "sourceSha256": "9483ffdeb1f1f2862026383edda9527cb40fc16de34c321baaf1ab6bf4b58c46"
+}

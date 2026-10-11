@@ -78,3 +78,6 @@ RED→GREEN验证写请求在鉴权/路由前拒绝、WS拒绝、读请求与lif
 仅新增本Task evidence/identity_route_audit.py及脱敏result、verification、review；不修改产品/正式身份/数据库配置。候选一现有身份和启动配置的主线补齐，候选二已登记固定验证器语义闭合；先主线。白名单只读meta_membership结构与org-org/dev-project成员聚合，不读凭证、邮件或业务payload，不把成员记录当OIDC认证/发布授权。docker两现有context只取身份服务名称/镜像/状态/端口，既有supabase-auth停用不启动、不接管不相关账号。当前进程/已知plist/.env只查OIDC五项是否非空，不输出值或读取秘密存储。
 
 通过有限LOGIN固定目标预检，READ ONLY与原TenantScope核成员角色计数、dev与非dev主体计数和摘要；缺表/权限拒绝保留原错误，不提权绕过。独立新连接重复聚合证明一致，Source/Registry写为零。若真实publisher/OIDC仍不能确认，准确登记缺失入口，不发新token、换actor、伪造Root或强开Host。整Task仍未完成。
+
+## 登录模式与正式接入合同对账（2026-10-11接续）
+上一轮仅状态答复，无恢复状态推进。本轮候选A既有132开发登录与正式发布合同核对，候选B已登记native生命周期实验；B在LOAD前docker exec报126/openat input/output error且无intent，不重发。优先A：132允许非生产Dev登录，不能把企业OIDC缺失扩大为管理查看禁入；正式Registry actor仍取原principal.subject，原职责分离及publisher scope不更改。仅新增本目录auth_integration_readiness.py、auth-integration-readiness.json和auth-integration-readiness.md，绑定当前HEAD/恢复卷预检/真实18080公开OIDC与受鉴权me，只输出白名单配置摘要和身份种类，不读取token/key/用户主体原值。没有真实独立publisher不得制造第二主体；八页恢复仍独立待验收。保留已有登录配置、数据、22个外部tracked改动，无产品修改、DB写、token发行、发布、服务重启。
