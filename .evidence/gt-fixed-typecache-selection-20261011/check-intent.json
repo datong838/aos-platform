@@ -1,0 +1,8 @@
+{
+  "database": "aos_test_9da5ae38343d_ti4_test",
+  "cluster": "7694680278363095064",
+  "librarySha256": "2bef02655b22e6310b0e9ab4acbc873299570ec7aa05c8f6f4728001980e9567",
+  "fixedSeedCount": 44,
+  "temporaryDdlWillRollback": true,
+  "callbacksWillNotBeExecuted": true
+}

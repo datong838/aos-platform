@@ -1,0 +1,11 @@
+# 固定typecache观察复审
+
+固定离线SDK镜像编译-Wall/-Wextra/-Werror，禁网络；新artifact scratch容器未启动，新库独立hash路径未覆盖旧so。C入口仅aos_app superuser且精确r5测试DB；44固定OID、bool仅触发错误，不接受外部SQL/任意OID。原PG lookup_type_cache真实完成默认btree/hash family和eq/lt/gt/cmp/hash/extended hash选择，脚本不复刻GetDefaultOpClass规则。
+
+旧so无新符号RED、强制错误SAVEPOINT恢复、三次正常44行精确一致、SET ROLE aos_runtime经临时schema/function权限放行后在C入口被TEST_TYPECACHE_IDENTITY_REQUIRED拒绝。该拒绝证明C身份guard，不混同SQL权限拒绝。临时GRANT、helper及marker均ROLLBACK；独立连接callerXID aborted、helper消失、九表零/无其它client、194个原持久观察函数源码hash未变。正式库/服务/Host/worker/Provider零变更，业务表写0；实际临时DDL发生，不宣称全数据库写0。
+
+118个选定函数全部在原8种类型callback列之外，99个也未被planner/PlanState观察器记录。差集不证明未执行或越权，Owner/SECDEF/ACL/config/probin/sourceHash仅目录身份。校准主动请求了全部相关flags，不证明原Source实际请求同样flags或选择同样缓存路径；字段为0表示该固定flags当前未选择函数，不是该类型不能执行其他原生代码。
+
+数组与复合类型可能递归查element/field，校准得到其各自实际默认选择，不证明所有动态子调用。未选callbacks未调用，完整原生事件/隐式cast/缓存初始化/未访问分支/正式Root和自然COMMIT仍不闭合。方案/实现自洽，更改仅本Task实验目录与允许的隔离scratch/lab暂态资源，现有22处工作树改动保留。
+
+下一登记项：设计固定受限原生调用事件探针并先证明其正/负覆盖边界，尤其内联/直接C调用和typecache缓存路径；不得将fmgr_hook等有限入口当全部调用覆盖。随后在新独立Source尝试中绑定事件和类型/函数身份，旧Source不重发。正式栖月汇恢复仍需既有登录来源和独立发布身份信息。

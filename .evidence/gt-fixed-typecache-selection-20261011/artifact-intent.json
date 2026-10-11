@@ -1,0 +1,7 @@
+{
+  "artifactContainer": "aos-typecache-artifact-20261011",
+  "image": "sha256:565e8ef7a4e563592565118a1b4f41a5a42af04532d187aa9a3d6389c420705d",
+  "labContainer": "aos-source-desktop-shm-20261009",
+  "labCluster": "7694680278363095064",
+  "artifactWillNotStart": true
+}

@@ -1,0 +1,20 @@
+{
+  "strictOfflineBuild": true,
+  "oldSymbolAbsentRed": true,
+  "forcedErrorRecovered": true,
+  "threeSelectionsExact": true,
+  "runtimeIdentityRejected": true,
+  "fixedTypeCount": 44,
+  "selectedFunctions": 118,
+  "notInPriorTypeCallbackColumns": 118,
+  "notInPriorPlannerRecord": 99,
+  "independentCallerXidAborted": true,
+  "independentNineTablesZero": true,
+  "temporaryHelperAbsent": true,
+  "temporaryDdlOccurred": true,
+  "businessTableWrites": 0,
+  "sourceRerun": false,
+  "formalRootAccepted": false,
+  "fullNativeClosure": false,
+  "localTypcacheSourceSha256": "88e8b13fc88137e981eec217be20018e6d44a65af87429f0412c6f8d75840d3e"
+}

@@ -1,0 +1,44 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 360B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/aos-offline-indexed-sdk-1817:proof@sha256:0a6a90eb65ee9921e51943f54a89825dfe35a2a02b423b5d3c53f3f730184dec
+#2 DONE 1.4s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.1s
+
+#4 [build 1/3] FROM docker.io/library/aos-offline-indexed-sdk-1817:proof@sha256:0a6a90eb65ee9921e51943f54a89825dfe35a2a02b423b5d3c53f3f730184dec
+#4 resolve docker.io/library/aos-offline-indexed-sdk-1817:proof@sha256:0a6a90eb65ee9921e51943f54a89825dfe35a2a02b423b5d3c53f3f730184dec done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 1.54kB done
+#5 DONE 0.0s
+
+#4 [build 1/3] FROM docker.io/library/aos-offline-indexed-sdk-1817:proof@sha256:0a6a90eb65ee9921e51943f54a89825dfe35a2a02b423b5d3c53f3f730184dec
+#4 CACHED
+
+#6 [build 2/3] COPY probe.c /probe.c
+#6 DONE 0.0s
+
+#7 [build 3/3] RUN gcc -Wall -Wextra -Werror -Wno-unused-parameter -fPIC -shared -I/usr/local/include/postgresql/server -o /probe.so /probe.c
+#7 DONE 0.3s
+
+#8 [stage-1 1/1] COPY --from=build /probe.so /probe.so
+#8 DONE 0.0s
+
+#9 exporting to image
+#9 exporting layers 0.0s done
+#9 exporting manifest sha256:d8c999a9ba3955c6bbe8e11e2c10d93678f6857c5366736fbb600b1ce0f23479 done
+#9 exporting config sha256:67af090928c1d44165e3adaab33b4633030e49175b8719c10f9e209c9afc925a done
+#9 exporting attestation manifest sha256:dbd06e8ff923f835ea7f46c02a15d7847300e17faf48c22469557d81267f3db2 done
+#9 exporting manifest list sha256:565e8ef7a4e563592565118a1b4f41a5a42af04532d187aa9a3d6389c420705d done
+#9 naming to docker.io/library/aos-fixed-typecache-20261011:proof done
+#9 unpacking to docker.io/library/aos-fixed-typecache-20261011:proof 0.0s done
+#9 DONE 0.1s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/owfi2gwv10bb0wldzhhxwo6de

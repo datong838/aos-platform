@@ -1,0 +1,9 @@
+# 固定实际类型的PG typecache选择观察
+
+Rules231，唯一m1，不更新Codex，先复习native-ending1824/上波实际类型目录与PG typcache.c选择逻辑。候选一正式栖月汇恢复需既有独立publisher/OIDC入口；候选二A1861已登记实际类型比较/等值/哈希依赖核对，选择二。不能自行复刻GetDefaultOpClass选择为权威，因此使用固定只读选择探针实际调用原PG lookup_type_cache。
+
+文件仅本Task目录plan.md/probe.c/Dockerfile/check.py及构建/校准/复审证据。固定44类型来自上波同一r5隔离数据库，不收任意OID/SQL；仅aos_app superuser且精确aos_test_9da5ae38343d_ti4_test身份、容器/image/cluster通过。C函数只取typecache选出的btree/hash family及eq/lt/gt operator、cmp/hash/hash_extended函数OID，不调用这些业务回调、不重放Source。pure数字NOTICE，bool仅触发固定收尾错误。
+
+复用固定离线SDK/hash/PG16头文件，禁网络严格编译，独立scratch导出不启动其进程；library新唯一hash路径，不覆盖旧so。旧库无新symbol为RED。事务内pg_temp helper，仅本次临时DDL，强制ERROR后SAVEPOINT恢复→两次正常选择精确相等→runtime身份真实拒绝→再次选择相同；全部ROLLBACK，独立连接核helper消失、原九表零/无其它client/当前cluster和原函数hash。正式库和22处已有修改不动。
+
+校准只证明实际PG默认typecache选择，不证明主Source请求了所有flags/实际原生函数调用或完整闭包。arrays/composites选择可能依赖递归element/field且NULL/default fallback变化，记录未解决部分，不能把全部被选函数当已执行。最终目录回读选定OID的Owner/SECDEF/config/ACL/bodyhash并与原197观察OID求交，仅资料对账，不授Root/业务。
