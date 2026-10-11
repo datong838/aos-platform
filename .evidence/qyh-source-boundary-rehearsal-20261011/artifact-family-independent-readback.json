@@ -1,0 +1,59 @@
+{
+  "receipts": [
+    {
+      "operation": "artifact_family.candidate.select",
+      "result_ref": {
+        "resourceId": "qyh-clone-protocol-family",
+        "resourceType": "ArtifactFamily"
+      }
+    },
+    {
+      "operation": "artifact_family.member.attach",
+      "result_ref": {
+        "resourceId": "qyh-clone-protocol-family",
+        "resourceType": "ArtifactFamily"
+      }
+    },
+    {
+      "operation": "artifact_family.member.attach",
+      "result_ref": {
+        "resourceId": "qyh-clone-protocol-family",
+        "resourceType": "ArtifactFamily"
+      }
+    },
+    {
+      "operation": "artifact_family.register",
+      "result_ref": {
+        "resourceId": "qyh-clone-protocol-family",
+        "resourceType": "ArtifactFamily"
+      }
+    },
+    {
+      "operation": "artifact_relation.create",
+      "result_ref": {
+        "resourceId": "artifact-relation-562b3a48c49b4ceeae63",
+        "resourceType": "ArtifactRelation"
+      }
+    },
+    {
+      "operation": "review_rule.register",
+      "result_ref": {
+        "revision": 1,
+        "resourceId": "qyh-clone-test-rule",
+        "contentHash": "46b75fe4e958fe7a73e94c3524dac0c4541d4ac04e8e89b4504a27c1732d1a37",
+        "resourceType": "EvalRuleRevision"
+      }
+    }
+  ],
+  "actualOriginalFamilyReaderAccepted": true,
+  "exactCandidateSelectionMatched": true,
+  "threeRelationsOnly": true,
+  "failedRequestsHaveNoReceipt": true,
+  "runQueuedAndNoStepRun": true,
+  "temporaryRoleRemoved": true,
+  "sourceAndOriginalClone647DataExact": true,
+  "allOriginalMetadataExact": true,
+  "formalPolicyOrRenderedBusinessOutput": false,
+  "fullRestorationAccepted": false,
+  "scriptHash": "370e271ec57ef8cce7d10725f86b7c68abfb2f7dd574a7124fd5c4975e91bb6d"
+}

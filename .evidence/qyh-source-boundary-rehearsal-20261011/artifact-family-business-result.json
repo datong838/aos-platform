@@ -1,0 +1,131 @@
+{
+  "cases": [
+    "original-family-register-replay",
+    "original-two-master-members",
+    "ProductionContractConflict",
+    "original-conflict-selection-replay-test-policy-only",
+    "ProductionContractIdempotencyConflict",
+    "original-relation-and-rule-register",
+    "ProductionContractDependencyBlocked",
+    "ProductionContractNotFound",
+    "RaiseException"
+  ],
+  "connections": [
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    }
+  ],
+  "familyId": "qyh-clone-protocol-family",
+  "runId": "run-f6e26071a12845119e01",
+  "taskId": "task-6927a43af2aa41ddaf60",
+  "fixtures": [
+    {
+      "artifactId": "artifact-50e06ee4515d4161ab53",
+      "contentHash": "74efce2f800e47795412f2c931d6cb3ae5c96a6b92002a7d7fe4ce547966f129"
+    },
+    {
+      "artifactId": "artifact-5c30dbca96464cafbe0b",
+      "contentHash": "0b6b9d38180eddadb341a2861224a219b996162e1cbd9aa056abf844e56115ba"
+    },
+    {
+      "artifactId": "artifact-e7193c79bba64dc3ae9f",
+      "contentHash": "431ff4053268e7eaff9a418ebc5300cdd5d7638f8778b6133b6ee608a19c5fdb"
+    }
+  ],
+  "familyVersion": 4,
+  "rule": {
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "ruleId": "qyh-clone-test-rule",
+    "revision": 1,
+    "spec": {
+      "testOnly": true,
+      "businessDomain": "ecommerce"
+    },
+    "contentHash": "46b75fe4e958fe7a73e94c3524dac0c4541d4ac04e8e89b4504a27c1732d1a37",
+    "createdBy": "clone:test",
+    "createdAt": "2026-10-11T15:21:09.603852Z"
+  },
+  "relation": {
+    "relationType": "derived_from",
+    "fromArtifact": {
+      "artifactId": "artifact-5c30dbca96464cafbe0b",
+      "contentHash": "0b6b9d38180eddadb341a2861224a219b996162e1cbd9aa056abf844e56115ba"
+    },
+    "toArtifact": {
+      "artifactId": "artifact-e7193c79bba64dc3ae9f",
+      "contentHash": "431ff4053268e7eaff9a418ebc5300cdd5d7638f8778b6133b6ee608a19c5fdb"
+    },
+    "reason": "\u9694\u79bb\u6d4b\u8bd5\u5173\u7cfb",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "relationId": "artifact-relation-562b3a48c49b4ceeae63",
+    "createdBy": "clone:test",
+    "createdAt": "2026-10-11T15:21:09.656666Z"
+  },
+  "formalPolicyVerified": false,
+  "renderedBusinessArtifacts": false,
+  "passwordOrOIDCAuthenticated": false,
+  "queuedRunNoSteps": true
+}

@@ -1,0 +1,11 @@
+# 原Artifact family兼容性复审
+
+基线77d62bd94/AOS-001883，唯一写者与ACTIVE Task不变，仅同一无命名卷挂载、精确ID/cluster/18431绑定的qyh_source_contract_20261011历史实验复制库。当前栖月汇权威库与原clone不写入；本段新增实验脚本和证据，没有修改services或当前API/Web。方案先补第四段，再实现和运行。
+
+原AipTaskStore创建明确电商/栖月汇测试Task、Plan、测试批准和全新queued Run，原record_artifact登记三个带testOnly元数据的协议夹具；没有真实渲染成果或正式业务批准。lineage使用历史实际StageTemplate exact ref。固定Contract LOGIN无角色成员/特权，六张依赖表精确直授及双租户policy，Artifact仅SELECT；12次实际独立连接读回session_user=current_user固定角色。普通runtime Source三表INSERT不可用。clone网络trust，因此不宣称密码/OIDC认证或独立系统身份。
+
+9项检查通过：family登记/幂等，两个master成员加入，过期CAS拒绝，冲突候选选择/幂等，漂移请求冲突，原relation和Rule登记，关系循环拒绝，dev-org隔离，被迫Receipt失败后六表计数不变。候选policy明确TestOnlyPolicyRevision，仅原DTO/Store协议接受，不是正式政策核验或业务权限。独立普通只读连接再次由原family reader接受，六个Receipt覆盖五个新增operation；候选精确Artifact/hash相符、只有两条成员关系和一条派生关系，失败请求无Receipt。新Run仍queued且StepRun为零。
+
+独立读回时首个查询误用了不存在的resource_ref列，SQL只读失败，无业务重发；查回原Store使用result_ref后修正只读对账程序。保留一次业务intent，未重跑业务脚本。临时固定角色/policy/授权已清理，测试数据库、测试元数据和克隆保留。当前权威库与原clone全部647表及六类权限metadata仍精确相符。
+
+实际实验正向Receipt覆盖原30个Contract operation中的12个，余18个未完成；Plan/BI/successor/Content兼容也仍待验证，Task保持ACTIVE。正式登录/独立publisher、当前预算、八配置、八工作台及自然首链未验收。没有以测试结果宣称完整恢复，没有本段新独立模型PASS。语法、源码绑定、秘密扫描、精确diff及方案边界检查后精确提交，不push。

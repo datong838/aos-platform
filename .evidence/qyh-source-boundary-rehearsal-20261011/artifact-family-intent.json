@@ -1,0 +1,16 @@
+{
+  "containerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "cluster": "7695416748450308141",
+  "database": "qyh_source_contract_20261011",
+  "role": "aos_contract_source_issuer",
+  "currentDatabaseTouched": false,
+  "originalCloneDatabaseWrites": false,
+  "newQueuedRunOnly": true,
+  "lineageRef": {
+    "resourceType": "StageTemplateRevision",
+    "resourceId": "stage-template-9a16f2cf2f6f410aa555",
+    "revision": 1,
+    "contentHash": "fdcd7aaa34096b489aa01ac3f314bcc86e878bd866869531bd1106305e43567e"
+  },
+  "scriptHash": "370e271ec57ef8cce7d10725f86b7c68abfb2f7dd574a7124fd5c4975e91bb6d"
+}
