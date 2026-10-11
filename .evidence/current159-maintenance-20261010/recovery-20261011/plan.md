@@ -17,3 +17,9 @@ Use original snapshot_all/snapshot_supplement and exact dependency QUERY in REPE
 
 ## Post-startup full readonly comparison
 Use original snapshot_all/snapshot_supplement and exact dependency QUERY in REPEATABLE READ READ ONLY against original cluster159. Compare base/supplement/bindings to prior after-canary-refresh-full159-readonly.json without normalization or ignored fields. Private0600 snapshot, public hashes/counts/categories only; no schema/data writes.
+
+## Isolated AOS browser acceptance
+Dedicated fresh profile, localhost9244 only, no existing business browser mutation or session copying. Eight localhost8434 routes only; read rendered text and capture own-page screenshots, refresh directory is GET-only. No localStorage/cookie/credential inspection or injection. Retain own browser for review. Profile lives in private current recovery state. HTTP shell results remain separate from actual DOM acceptance.
+
+## Post-startup full readonly comparison
+Use original snapshot_all/snapshot_supplement and exact dependency QUERY in REPEATABLE READ READ ONLY against original cluster159. Compare base/supplement/bindings to prior after-canary-refresh-full159-readonly.json without normalization or ignored fields. Private0600 snapshot, public hashes/counts/categories only; no schema/data writes.

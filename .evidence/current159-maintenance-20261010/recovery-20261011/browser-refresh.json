@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-11T03:03:48.385Z",
+  "response_status": 200,
+  "requests": [
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET"
+    }
+  ],
+  "denial_still_visible": true,
+  "tenant_visible": true,
+  "browser_retained": true
+}
