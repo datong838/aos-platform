@@ -1,0 +1,40 @@
+{
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "authority": "AOS-001898",
+  "independentOriginalSourceQueryAndRuntimeBindings": [
+    {
+      "scope": [
+        "org-org",
+        "dev-project"
+      ],
+      "originalCurrentPublishedBISourceRows": 0,
+      "runtimeBindings": {
+        "total": 126,
+        "enabled": 0,
+        "fenced": 126
+      }
+    },
+    {
+      "scope": [
+        "dev-org",
+        "dev-project"
+      ],
+      "originalCurrentPublishedBISourceRows": 0,
+      "runtimeBindings": {
+        "total": 0,
+        "enabled": 0,
+        "fenced": 0
+      }
+    }
+  ],
+  "normalReadonlyRegistryFactoryNotCalled": true,
+  "resolverNoneIsCorroboratedByOriginalEmptySourceRowsNotExceptionMasking": true,
+  "historicalActiveInstallationCountNotRuntimeEnablement": true,
+  "all179SignedPackageFilesUnchanged": true,
+  "databaseWrites": 0,
+  "formalLoginConnected": false,
+  "formalPublisherConnected": false,
+  "fullRestorationAccepted": false,
+  "auditScriptHash": "8b0fcc2ce67b2309466f11eac6b081a746f4edfe39fbcbac499fbe7e23b86d94",
+  "scriptHash": "0f46339f6fda0427bcc3dbd4dc366a54c0d97db3d307acc1e36df99e3c21275a"
+}

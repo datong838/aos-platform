@@ -1,0 +1,95 @@
+{
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "authority": "AOS-001898",
+  "originalRebindRejectsActualResolvedDevelopmentIdentityBeforeConnection": [
+    {
+      "scope": [
+        "org-org",
+        "dev-project"
+      ],
+      "tokenKind": "dev",
+      "code": "formal authenticated actor required"
+    },
+    {
+      "scope": [
+        "dev-org",
+        "dev-project"
+      ],
+      "tokenKind": "dev",
+      "code": "formal authenticated actor required"
+    }
+  ],
+  "rebindDatabaseConnections": 0,
+  "readonlyCurrentDatabaseConnections": [
+    {
+      "role": "aos_runtime",
+      "db": "aos_meta_head",
+      "readonly": "on",
+      "cluster": "7695302940039200809"
+    },
+    {
+      "role": "aos_runtime",
+      "db": "aos_meta_head",
+      "readonly": "on",
+      "cluster": "7695302940039200809"
+    },
+    {
+      "role": "aos_runtime",
+      "db": "aos_meta_head",
+      "readonly": "on",
+      "cluster": "7695302940039200809"
+    },
+    {
+      "role": "aos_runtime",
+      "db": "aos_meta_head",
+      "readonly": "on",
+      "cluster": "7695302940039200809"
+    }
+  ],
+  "currentSourceLookup": [
+    {
+      "scope": [
+        "org-org",
+        "dev-project"
+      ],
+      "installationStates": [
+        {
+          "state": "active",
+          "n": 111,
+          "current_active_pointer": 111
+        },
+        {
+          "state": "uninstalled",
+          "n": 24,
+          "current_active_pointer": 0
+        }
+      ],
+      "originalActiveBISelection": null
+    },
+    {
+      "scope": [
+        "dev-org",
+        "dev-project"
+      ],
+      "installationStates": [],
+      "originalActiveBISelection": null
+    }
+  ],
+  "liveOIDCConfiguration": {
+    "status": 200,
+    "issuer": "http://aos-dev-oidc",
+    "jwksUrls": [],
+    "tokenUrlConfigured": false,
+    "allowDevToken": true,
+    "grantTypes": [
+      "dev"
+    ]
+  },
+  "selectedPackagesUnchanged": true,
+  "databaseWrites": 0,
+  "installationStateChanged": false,
+  "principalOIDCIdentityFabricated": false,
+  "formalPublisherConnected": false,
+  "fullRestorationAccepted": false,
+  "scriptHash": "8b0fcc2ce67b2309466f11eac6b081a746f4edfe39fbcbac499fbe7e23b86d94"
+}
