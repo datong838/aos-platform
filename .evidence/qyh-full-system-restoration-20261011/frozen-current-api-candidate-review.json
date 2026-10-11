@@ -1,0 +1,14 @@
+{
+  "outcome": "FROZEN_CURRENT_API_CANDIDATE_INDEPENDENT_REVIEW_GREEN",
+  "sourceHead": "9feb5d0a714e61c3cf41803e9a85461608c9dcb9",
+  "files": 6763,
+  "runtimePythonSyntaxParsed": 2128,
+  "independentManifestAndPrivatePermissionsVerified": true,
+  "startupDisabledFlagsAndExternalOnlyVerified": true,
+  "originalApi8080AndWeb8434ListenersRemain": true,
+  "databaseWrites": 0,
+  "servicesRestarted": 0,
+  "apiStartAuthorized": false,
+  "fullRestorationAccepted": false,
+  "requiresFormalLoginInformation": true
+}

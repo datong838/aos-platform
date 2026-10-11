@@ -28,6 +28,8 @@ RED：旧Growth/错误基础包/漏包多包重复包/跨tenant/错误安装id/�
 
 ## 未知与回滚
 
+API准备独立候选：新增本Task证据目录freeze_current_api.py。从精确当前m1提交导出services/aos-api和scripts到本Task/private下0700冻结目录，普通文件0600、git归档逐文件hash核验，不复制工作树其他未提交改动或.env/凭据，不修改原preview入口/进程/端口。核冻结源码原main语法及全部显式ENABLED开关由原preview关闭配置覆盖，Host关闭、migration disabled、dev登录禁用且external-only；这里只保存无凭据启动配置参考，不启动API、不注入正式OIDC、不授Owner。完整结果绑定代码commit、文件manifest hash、具体源码与原开关。未来正式启动必须重新核当前代码和安装/身份/配置，不把本候选称为最新运行中的API。整套授权继续；当前正式OIDC配置来源待用户补齐。
+
 本轮追加只读配置依赖与旧执行记录关联核对：在同一证据目录新增audit_restored_configuration_dependencies.py。使用当前有限LOGIN和READ ONLY事务读取当前runtime policy的五类策略引用及有效窗口；仅汇总三个历史安装关联的Schedule/Run状态和operation状态，不读取业务payload、不调用旧执行器。原正式reader包含FOR SHARE锁，禁止为了在只读调查中调用它而去掉锁或改用可写事务；本次只做元数据候选审计，明确不等于正式reader准入。产出新配置恢复输入清单，旧不可变配置、预算、绑定及Run均保留。
 
 2026-10-11当前发布来源核对后的安装选型：两个已发布基础包使用现有较新平台1.23.2/operations1.2.2（a0v-local-ecommerce-recovery-v2），与新core1.4.3/Growth1.13.0组合。平台源除version、构建lock/image/SBOM/signature外逐文件相同；operations除version、bundleRef及signature外逐文件相同。需逐项核验已有Registry manifest/artifact/content/signature与保留树精确相等，不能因为contentHash相同更写旧1.23.0/1.2.0签名。新core/Growth只在新坐标由现有RegistryService create→validate→publish；所有旧记录与安装保留。采用登记的有限LOGIN与SET ROLE aos_runtime进行本地维保，actor明确为用户授权维保代理，不冒充正式OIDC/业务Owner。

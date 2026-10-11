@@ -1,0 +1,50 @@
+{
+  "outcome": "FORMAL_LOGIN_CONFIGURATION_MISSING_IN_KNOWN_STARTUP_SOURCES",
+  "observedAt": "2026-10-11T09:08:12.812968+00:00",
+  "task": "qyh-full-system-restoration-20261011",
+  "authority": "AOS-001849",
+  "allowlistedConfigurationPresence": [
+    {
+      "path": "/Users/ddt/Library/LaunchAgents/com.aos.a0v-api-daily0900.plist",
+      "exists": true,
+      "configuredNonempty": {
+        "AOS_OIDC_JWKS_URLS": false,
+        "AOS_OIDC_JWKS_URL": false,
+        "AOS_OIDC_ISSUERS": false,
+        "AOS_OIDC_ISSUER": false,
+        "AOS_OIDC_AUDIENCE": false
+      }
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/aos-platform/.env",
+      "exists": true,
+      "configuredNonempty": {
+        "AOS_OIDC_JWKS_URLS": false,
+        "AOS_OIDC_JWKS_URL": false,
+        "AOS_OIDC_ISSUERS": false,
+        "AOS_OIDC_ISSUER": false,
+        "AOS_OIDC_AUDIENCE": false
+      }
+    },
+    {
+      "path": "services/aos-api/.env",
+      "exists": false
+    },
+    {
+      "path": "current_process_allowlisted_settings",
+      "configuredNonempty": {
+        "AOS_OIDC_JWKS_URLS": false,
+        "AOS_OIDC_JWKS_URL": false,
+        "AOS_OIDC_ISSUERS": false,
+        "AOS_OIDC_ISSUER": false,
+        "AOS_OIDC_AUDIENCE": false
+      }
+    }
+  ],
+  "valuesEmitted": false,
+  "configurationChanged": false,
+  "credentialStoresOpened": false,
+  "restorationApprovalAlreadyGranted": true,
+  "newWholeApprovalRequired": false,
+  "formalIdentityVerified": false
+}
