@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001788",
+  "authority_revision": "AOS-001789",
   "code_files": [
     "services/aos-api/aos_api/aip_provider_capacity_occupation_source.py"
   ],

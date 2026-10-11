@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001788",
+  "authority_revision": "AOS-001789",
   "code_files": [
     "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.c",
     "services/aos-api/postgres-extensions/aos_admission_end/aos_admission_end.control",
