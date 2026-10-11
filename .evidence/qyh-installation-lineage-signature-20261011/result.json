@@ -1,0 +1,42 @@
+{
+  "outcome": "LINEAGE_AND_RETAINED_SIGNED_EIGHT_MODULES_VERIFIED_RUNTIME_NOT_AUTHORIZED",
+  "activeRecords": 111,
+  "candidateChainLengths": [
+    1,
+    100,
+    10
+  ],
+  "original97Successor": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+  "canonicalIndependent": "407059df-6f1f-4927-acd7-8e388692838e",
+  "old12RunSuccessor": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+  "retainedSignedExactBundles": 4,
+  "olderVersionsAbsentFromSelectedRoot": 4,
+  "allConfigurationsDecoded": true,
+  "configurationReadiness": [
+    {
+      "installation": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+      "policyRefMatchesHead": false,
+      "budgetEffectiveNow": false
+    },
+    {
+      "installation": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+      "policyRefMatchesHead": false,
+      "budgetEffectiveNow": false
+    },
+    {
+      "installation": "407059df-6f1f-4927-acd7-8e388692838e",
+      "policyRefMatchesHead": true,
+      "budgetEffectiveNow": false
+    }
+  ],
+  "frozenSourceHashes": {
+    "services/aos-api/aos_api/asset_registry/manifest_loader.py": "c01d63f6799fe7477d3433eafb15e576a759dba7567b3e6a285ed70c41b20dd3",
+    "services/aos-api/aos_api/asset_registry/signature.py": "68ce8e3644527ba7d2eb0d551b74753f6a158264194a9f55532f0e600044201c",
+    "services/aos-api/aos_api/asset_registry/workshop_catalog_source.py": "3a370d3d93a676ff12572cd9ea154a74b26097030b968eb554331e09c5a02fb2",
+    "services/aos-api/aos_api/extension_runtime/configuration_store.py": "f9bdb00f636d76166459e3aca07fbae883b21e94f8a480e33692783b4c1feff6",
+    "services/aos-api/aos_api/extension_runtime/configuration_contracts.py": "d46497445daa1169ef63c9023bb2c99adb242eb0776ae5df8375e03bb1aa5c0c"
+  },
+  "formalDbWrites": false,
+  "runtimeActivated": false,
+  "browserAcceptance": false
+}

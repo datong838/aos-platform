@@ -1,0 +1,26 @@
+[
+  {
+    "installation_id": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+    "generation": "c26edf1c-5170-4158-9f30-36dc1f2ba07f",
+    "revision": 8,
+    "enabled": false,
+    "operation_fence": true,
+    "configurations": 1
+  },
+  {
+    "installation_id": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+    "generation": "c78b2e2e-57ef-47ad-be07-9acf689e578c",
+    "revision": 9,
+    "enabled": false,
+    "operation_fence": true,
+    "configurations": 1
+  },
+  {
+    "installation_id": "407059df-6f1f-4927-acd7-8e388692838e",
+    "generation": "7571af17-e2bb-4437-9f04-75812bae56c0",
+    "revision": 7,
+    "enabled": false,
+    "operation_fence": true,
+    "configurations": 1
+  }
+]

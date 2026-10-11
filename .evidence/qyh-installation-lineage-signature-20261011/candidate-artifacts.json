@@ -1,0 +1,2070 @@
+[
+  {
+    "publisher": "aos",
+    "bundle": "domain.ecommerce.core",
+    "version": "1.4.0",
+    "sources": [
+      "bundle://a0v-canonical/domain.ecommerce.core/1.4.0"
+    ],
+    "artifactCount": 20,
+    "artifacts": [
+      {
+        "relative_path": "artifacts/python-dependencies.lock",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/artifacts/python-dependencies.lock",
+        "digest": "sha256:7082d71d73dfa0ef7a607045bfa22242621728e3346d99542087d6c629fbcacb",
+        "size": 41
+      },
+      {
+        "relative_path": "artifacts/runtime-image-index.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/artifacts/runtime-image-index.json",
+        "digest": "sha256:c9ad9c195f6b1ba157a660386d6ee6d5ff45c011c3539fcb9c0ef40b8ad2e70e",
+        "size": 362
+      },
+      {
+        "relative_path": "artifacts/schema-compatibility.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/artifacts/schema-compatibility.json",
+        "digest": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee",
+        "size": 577
+      },
+      {
+        "relative_path": "artifacts/schema-requirements.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/artifacts/schema-requirements.json",
+        "digest": "sha256:c276d55f7add07597c881b452c90db3d7d0aafb4fb43cc355db54b636b2afef0",
+        "size": 162
+      },
+      {
+        "relative_path": "backend/ecommerce_core/__init__.py",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/backend/ecommerce_core/__init__.py",
+        "digest": "sha256:f888f9972388ac7c3e14fb40a1dfea6f7a6cd1dfbd9d31dc63bf9d90d29fb83a",
+        "size": 958
+      },
+      {
+        "relative_path": "backend/ecommerce_core/product_source_event.py",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/backend/ecommerce_core/product_source_event.py",
+        "digest": "sha256:d61d673f42084354f9b7b740b114d6ead585cbd1fdd0360049846e9ab3d4537e",
+        "size": 4013
+      },
+      {
+        "relative_path": "backend/ecommerce_core/product_source_event_window.py",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/backend/ecommerce_core/product_source_event_window.py",
+        "digest": "sha256:7368a10ed3f7b10aa418c0dc754eff336d3e463bb0cc1ec00e11ea5092b9f4e3",
+        "size": 3248
+      },
+      {
+        "relative_path": "backend/ecommerce_core/product_source_event_window_operation.py",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/backend/ecommerce_core/product_source_event_window_operation.py",
+        "digest": "sha256:25a2e42526476daa9dafd38268bb333ef43d1af10fd49114e526caba72c7e39a",
+        "size": 2480
+      },
+      {
+        "relative_path": "content/ontology/derived-metrics.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/content/ontology/derived-metrics.json",
+        "digest": "sha256:50304558982725a980f20a1394803b6ea09afcff4764d03b133b4f6bcedcc0b4",
+        "size": 2073
+      },
+      {
+        "relative_path": "content/ontology/link-types.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/content/ontology/link-types.json",
+        "digest": "sha256:4b40eff91f4d3eb937ce0f8b9942acaf1c2381dfb8b4351aa36e0564abea1d56",
+        "size": 1322
+      },
+      {
+        "relative_path": "content/ontology/object-types.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/content/ontology/object-types.json",
+        "digest": "sha256:6dfc83472a1f7ce7bc57a247e75a82375c6ebcb17e83d43e341715eac14d0003",
+        "size": 1853
+      },
+      {
+        "relative_path": "content/policies/pii-exclusion.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/content/policies/pii-exclusion.json",
+        "digest": "sha256:a036c1f0e02c5e18b2ce09f6d3cbf2927534d5b437857c2e6d365c9b2b76449a",
+        "size": 1074
+      },
+      {
+        "relative_path": "content/schemas/ecommerce-brief-spec.v1.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/content/schemas/ecommerce-brief-spec.v1.schema.json",
+        "digest": "sha256:fbcdd4ba5310e46c44b96a1332c9858c4a3008803df588c858fae147f319b027",
+        "size": 476
+      },
+      {
+        "relative_path": "content/schemas/ecommerce-eval-profile.v1.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/content/schemas/ecommerce-eval-profile.v1.schema.json",
+        "digest": "sha256:2acbd18b34d3bbd90f2f5b415ac76f20071746cf1523fbf96c9c5ad85b1760d8",
+        "size": 377
+      },
+      {
+        "relative_path": "content/schemas/ecommerce-evidence-selection.v1.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/content/schemas/ecommerce-evidence-selection.v1.schema.json",
+        "digest": "sha256:2960bc0089cb2c1496da8ecacecbeab2262d7547dd063aeca9bee8e815bc3a43",
+        "size": 472
+      },
+      {
+        "relative_path": "content/schemas/ecommerce-production-profile.v1.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/content/schemas/ecommerce-production-profile.v1.schema.json",
+        "digest": "sha256:cbeb7c1096aa5572116a50f16c34c3beed19fd7b5a2c0e584b7027e4abfa2747",
+        "size": 1058
+      },
+      {
+        "relative_path": "content/schemas/ecommerce-responsibility-template.v1.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/content/schemas/ecommerce-responsibility-template.v1.schema.json",
+        "digest": "sha256:e03caa7e2de2dbf7594adf47096184085cc07920d38d36c29ea5eb5b26554768",
+        "size": 859
+      },
+      {
+        "relative_path": "content/schemas/pipeline-skeleton.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/content/schemas/pipeline-skeleton.json",
+        "digest": "sha256:ba4b4c5d1fc63023943690b48ac54c5a19c4446cd83a2ba04c7cab399ede1e28",
+        "size": 2716
+      },
+      {
+        "relative_path": "evidence/bundle-evals.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/evidence/bundle-evals.json",
+        "digest": "sha256:e276a5b5ee52a043efcde3aaad2c4261aa4652c4580aad336a925b5c966996e4",
+        "size": 31
+      },
+      {
+        "relative_path": "evidence/sbom.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0/evidence/sbom.json",
+        "digest": "sha256:9e47bf115fb6422e1767664e54123a5313fa61e5d66321203c34d44d8c8b7567",
+        "size": 301
+      }
+    ]
+  },
+  {
+    "publisher": "aos",
+    "bundle": "domain.ecommerce.core",
+    "version": "1.4.2",
+    "sources": [
+      "bundle://a0v-canonical/domain.ecommerce.core/1.4.2"
+    ],
+    "artifactCount": 21,
+    "artifacts": [
+      {
+        "relative_path": "artifacts/python-dependencies.lock",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/artifacts/python-dependencies.lock",
+        "digest": "sha256:7082d71d73dfa0ef7a607045bfa22242621728e3346d99542087d6c629fbcacb",
+        "size": 41
+      },
+      {
+        "relative_path": "artifacts/runtime-image-index.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/artifacts/runtime-image-index.json",
+        "digest": "sha256:7eb64fb6e736c858d61baac178a4fc09ca417ac6f5f01f7779018a0c0156de70",
+        "size": 362
+      },
+      {
+        "relative_path": "artifacts/schema-compatibility.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/artifacts/schema-compatibility.json",
+        "digest": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee",
+        "size": 577
+      },
+      {
+        "relative_path": "artifacts/schema-requirements.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/artifacts/schema-requirements.json",
+        "digest": "sha256:c276d55f7add07597c881b452c90db3d7d0aafb4fb43cc355db54b636b2afef0",
+        "size": 162
+      },
+      {
+        "relative_path": "backend/ecommerce_core/__init__.py",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/backend/ecommerce_core/__init__.py",
+        "digest": "sha256:f888f9972388ac7c3e14fb40a1dfea6f7a6cd1dfbd9d31dc63bf9d90d29fb83a",
+        "size": 958
+      },
+      {
+        "relative_path": "backend/ecommerce_core/__pycache__/__init__.cpython-311.pyc",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/backend/ecommerce_core/__pycache__/__init__.cpython-311.pyc",
+        "digest": "sha256:57f639424211e76762b162b5fd5c409bde8fe18b12cacbacbd381bd08e7ac46d",
+        "size": 1821
+      },
+      {
+        "relative_path": "backend/ecommerce_core/product_source_event.py",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/backend/ecommerce_core/product_source_event.py",
+        "digest": "sha256:d61d673f42084354f9b7b740b114d6ead585cbd1fdd0360049846e9ab3d4537e",
+        "size": 4013
+      },
+      {
+        "relative_path": "backend/ecommerce_core/product_source_event_window.py",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/backend/ecommerce_core/product_source_event_window.py",
+        "digest": "sha256:7368a10ed3f7b10aa418c0dc754eff336d3e463bb0cc1ec00e11ea5092b9f4e3",
+        "size": 3248
+      },
+      {
+        "relative_path": "backend/ecommerce_core/product_source_event_window_operation.py",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/backend/ecommerce_core/product_source_event_window_operation.py",
+        "digest": "sha256:25a2e42526476daa9dafd38268bb333ef43d1af10fd49114e526caba72c7e39a",
+        "size": 2480
+      },
+      {
+        "relative_path": "content/ontology/derived-metrics.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/content/ontology/derived-metrics.json",
+        "digest": "sha256:50304558982725a980f20a1394803b6ea09afcff4764d03b133b4f6bcedcc0b4",
+        "size": 2073
+      },
+      {
+        "relative_path": "content/ontology/link-types.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/content/ontology/link-types.json",
+        "digest": "sha256:4b40eff91f4d3eb937ce0f8b9942acaf1c2381dfb8b4351aa36e0564abea1d56",
+        "size": 1322
+      },
+      {
+        "relative_path": "content/ontology/object-types.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/content/ontology/object-types.json",
+        "digest": "sha256:6dfc83472a1f7ce7bc57a247e75a82375c6ebcb17e83d43e341715eac14d0003",
+        "size": 1853
+      },
+      {
+        "relative_path": "content/policies/pii-exclusion.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/content/policies/pii-exclusion.json",
+        "digest": "sha256:a036c1f0e02c5e18b2ce09f6d3cbf2927534d5b437857c2e6d365c9b2b76449a",
+        "size": 1074
+      },
+      {
+        "relative_path": "content/schemas/ecommerce-brief-spec.v1.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/content/schemas/ecommerce-brief-spec.v1.schema.json",
+        "digest": "sha256:fbcdd4ba5310e46c44b96a1332c9858c4a3008803df588c858fae147f319b027",
+        "size": 476
+      },
+      {
+        "relative_path": "content/schemas/ecommerce-eval-profile.v1.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/content/schemas/ecommerce-eval-profile.v1.schema.json",
+        "digest": "sha256:2acbd18b34d3bbd90f2f5b415ac76f20071746cf1523fbf96c9c5ad85b1760d8",
+        "size": 377
+      },
+      {
+        "relative_path": "content/schemas/ecommerce-evidence-selection.v1.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/content/schemas/ecommerce-evidence-selection.v1.schema.json",
+        "digest": "sha256:2960bc0089cb2c1496da8ecacecbeab2262d7547dd063aeca9bee8e815bc3a43",
+        "size": 472
+      },
+      {
+        "relative_path": "content/schemas/ecommerce-production-profile.v1.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/content/schemas/ecommerce-production-profile.v1.schema.json",
+        "digest": "sha256:cbeb7c1096aa5572116a50f16c34c3beed19fd7b5a2c0e584b7027e4abfa2747",
+        "size": 1058
+      },
+      {
+        "relative_path": "content/schemas/ecommerce-responsibility-template.v1.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/content/schemas/ecommerce-responsibility-template.v1.schema.json",
+        "digest": "sha256:e03caa7e2de2dbf7594adf47096184085cc07920d38d36c29ea5eb5b26554768",
+        "size": 859
+      },
+      {
+        "relative_path": "content/schemas/pipeline-skeleton.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/content/schemas/pipeline-skeleton.json",
+        "digest": "sha256:ba4b4c5d1fc63023943690b48ac54c5a19c4446cd83a2ba04c7cab399ede1e28",
+        "size": 2716
+      },
+      {
+        "relative_path": "evidence/bundle-evals.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/evidence/bundle-evals.json",
+        "digest": "sha256:e276a5b5ee52a043efcde3aaad2c4261aa4652c4580aad336a925b5c966996e4",
+        "size": 31
+      },
+      {
+        "relative_path": "evidence/sbom.json",
+        "artifact_ref": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/evidence/sbom.json",
+        "digest": "sha256:9e47bf115fb6422e1767664e54123a5313fa61e5d66321203c34d44d8c8b7567",
+        "size": 301
+      }
+    ]
+  },
+  {
+    "publisher": "aos",
+    "bundle": "platform.ecommerce.niushop",
+    "version": "1.23.0",
+    "sources": [
+      "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0"
+    ],
+    "artifactCount": 35,
+    "artifacts": [
+      {
+        "relative_path": "artifacts/python-dependencies.lock",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/artifacts/python-dependencies.lock",
+        "digest": "sha256:7082d71d73dfa0ef7a607045bfa22242621728e3346d99542087d6c629fbcacb",
+        "size": 41
+      },
+      {
+        "relative_path": "artifacts/runtime-image-index.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/artifacts/runtime-image-index.json",
+        "digest": "sha256:a0b22e0fa02eec40c47027ac15be133d93b87a0ebdc1b5606a989b6dbf1fd48c",
+        "size": 362
+      },
+      {
+        "relative_path": "artifacts/schema-compatibility.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/artifacts/schema-compatibility.json",
+        "digest": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2",
+        "size": 582
+      },
+      {
+        "relative_path": "artifacts/schema-requirements.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/artifacts/schema-requirements.json",
+        "digest": "sha256:111782e74011c1c1304972294d3b72e76b8ed858584094e5816b1e68796e8070",
+        "size": 162
+      },
+      {
+        "relative_path": "backend/ecommerce_niushop/__init__.py",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/backend/ecommerce_niushop/__init__.py",
+        "digest": "sha256:c3fd19f75078a92f41f2a33fd903711eb08c4af740f013f9c5c27dd4ee1d678e",
+        "size": 758
+      },
+      {
+        "relative_path": "backend/ecommerce_niushop/__pycache__/__init__.cpython-311.pyc",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/backend/ecommerce_niushop/__pycache__/__init__.cpython-311.pyc",
+        "digest": "sha256:df9df80541c1ff437add96e4de1b272a183b3cf41a4a919efadf4f2b1a15f530",
+        "size": 1599
+      },
+      {
+        "relative_path": "backend/ecommerce_niushop/business_investigation_niushop_profile.py",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/backend/ecommerce_niushop/business_investigation_niushop_profile.py",
+        "digest": "sha256:f3235fcb0dd80f741ad0e31bfa892de62e936eeae293dbd1049bf9c2ea637bb4",
+        "size": 7488
+      },
+      {
+        "relative_path": "backend/ecommerce_niushop/connector.py",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/backend/ecommerce_niushop/connector.py",
+        "digest": "sha256:5c53d528df282609d0c2cda7bf1d848f266cf69d45933fb1fc7a49c4310db5bc",
+        "size": 9214
+      },
+      {
+        "relative_path": "backend/ecommerce_niushop/sdk_ports.py",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/backend/ecommerce_niushop/sdk_ports.py",
+        "digest": "sha256:aedab6650d941d2282deed8890ee25ae5510eaf0adfd5ff286b983da8a3503ba",
+        "size": 859
+      },
+      {
+        "relative_path": "content/connectors/niushop-mysql.manifest.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/connectors/niushop-mysql.manifest.json",
+        "digest": "sha256:cd1d0dd90ac30fed06b7ca394f2f69b2391b4e08be5308e50382b0486e0145b6",
+        "size": 1231
+      },
+      {
+        "relative_path": "content/mappings/_pii-exclusion.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/mappings/_pii-exclusion.yaml",
+        "digest": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97",
+        "size": 2056
+      },
+      {
+        "relative_path": "content/mappings/p01-shop.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/mappings/p01-shop.yaml",
+        "digest": "sha256:893691a4bd11d52f40da19a0435390a5beb2195e594dd19f506b80a90505f4bc",
+        "size": 1345
+      },
+      {
+        "relative_path": "content/mappings/p02-product.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/mappings/p02-product.yaml",
+        "digest": "sha256:4ef146db758ca22e756857dc6cb6e8f615374dc2dccb96bc8835c93f8123d7f0",
+        "size": 2863
+      },
+      {
+        "relative_path": "content/mappings/p03-product-sku.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/mappings/p03-product-sku.yaml",
+        "digest": "sha256:60f8de20de644bde825d174d08c214e18a4fec5de5a62a068809fec4ea9ffa47",
+        "size": 2137
+      },
+      {
+        "relative_path": "content/mappings/p04-category.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/mappings/p04-category.yaml",
+        "digest": "sha256:07eb63d373af249557f8b9c970430ceea89ea0e1841d4fd30f18c6e890b747bd",
+        "size": 1783
+      },
+      {
+        "relative_path": "content/mappings/p05-order.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/mappings/p05-order.yaml",
+        "digest": "sha256:c56213d59b4a68755786b1645e05d1e761042035b358ca33851864d26f103f85",
+        "size": 3326
+      },
+      {
+        "relative_path": "content/mappings/p06-order-line.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/mappings/p06-order-line.yaml",
+        "digest": "sha256:be4f4a01881789964578cc4682f379164c0ce92d4c6a3a409920487f36318eef",
+        "size": 2488
+      },
+      {
+        "relative_path": "content/mappings/p07-shipment.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/mappings/p07-shipment.yaml",
+        "digest": "sha256:1dca12ebd494d9abdb130fdddca4780538c2874fb5a2557f10b11c72642bb17b",
+        "size": 1725
+      },
+      {
+        "relative_path": "content/mappings/p08-customer-lite.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/mappings/p08-customer-lite.yaml",
+        "digest": "sha256:599bd3b58ac836049e1867557995aa411581eca08b715a66848178c1a6adac96",
+        "size": 2177
+      },
+      {
+        "relative_path": "content/mappings/p09-weapp.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/mappings/p09-weapp.yaml",
+        "digest": "sha256:fd828a44591ee0f0f360ec3fb965db1f305a099a6f3d013ecfee6c7555ec3117",
+        "size": 1248
+      },
+      {
+        "relative_path": "content/mappings/p10-system-config.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/mappings/p10-system-config.yaml",
+        "digest": "sha256:f9dd1731fefb9bca5b1f0c399c5bf71540400932a6b75ef4be084989b9142da2",
+        "size": 1290
+      },
+      {
+        "relative_path": "content/mappings/p11-product-review.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/mappings/p11-product-review.yaml",
+        "digest": "sha256:d260f275d3ed110660a322b7dc1a0797168df363964b4743518b29a679cf002d",
+        "size": 1686
+      },
+      {
+        "relative_path": "content/mappings/p12-payment.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/mappings/p12-payment.yaml",
+        "digest": "sha256:d2cca07cb0fc041f9b63b60e1097ea120c129704f850edbc952dffe1ba6c9e1b",
+        "size": 2378
+      },
+      {
+        "relative_path": "content/policies/business-cohort.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/policies/business-cohort.v1.json",
+        "digest": "sha256:7cf0a7cf9e6ff115523668f7cc8690351e61d4a9ba345a8388addcac8b089bc5",
+        "size": 1972
+      },
+      {
+        "relative_path": "content/policies/business-facts.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/policies/business-facts.v1.json",
+        "digest": "sha256:adf838ae2cc53d6d251f0a1a97fced7d0ef6a81f23a9c0043beedd859b4fda64",
+        "size": 2136
+      },
+      {
+        "relative_path": "content/policies/fact-quality.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/policies/fact-quality.v1.json",
+        "digest": "sha256:da50ab62b1feb6b850d9ad50f44c7fb8700c3619a56cb2155173e6a3434fe129",
+        "size": 7740
+      },
+      {
+        "relative_path": "content/policies/relationship-quality.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/policies/relationship-quality.v1.json",
+        "digest": "sha256:a3bc57a0f780fe457e0fed4159eb46a1131b99c54fc20b685b2a6a20ccc4ce81",
+        "size": 3153
+      },
+      {
+        "relative_path": "content/policies/snapshot-readiness.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/policies/snapshot-readiness.v1.json",
+        "digest": "sha256:43f509ce8d1968a1f03993e2b242ab19f62d9555536ae24b915d3e898b83e709",
+        "size": 1524
+      },
+      {
+        "relative_path": "content/policies/snapshot-relationships.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/policies/snapshot-relationships.v1.json",
+        "digest": "sha256:c6e5783c17ad16a1aac9612667aadf75b52127406c3a531f1ff144478d1d00b0",
+        "size": 3916
+      },
+      {
+        "relative_path": "content/policies/source-freshness.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/policies/source-freshness.v1.json",
+        "digest": "sha256:05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+        "size": 691
+      },
+      {
+        "relative_path": "content/policies/source-quality.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/policies/source-quality.v1.json",
+        "digest": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+        "size": 443
+      },
+      {
+        "relative_path": "content/policies/source-reconciliation.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/policies/source-reconciliation.v1.json",
+        "digest": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+        "size": 410
+      },
+      {
+        "relative_path": "content/schemas/niushop-schema-fingerprint.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/content/schemas/niushop-schema-fingerprint.json",
+        "digest": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a",
+        "size": 20946
+      },
+      {
+        "relative_path": "evidence/bundle-evals.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/evidence/bundle-evals.json",
+        "digest": "sha256:c736bdfc6c6bfe21d286bd8f22ad72470d247c8d547c51aafef8eed98b9f0faf",
+        "size": 1587
+      },
+      {
+        "relative_path": "evidence/sbom.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0/evidence/sbom.json",
+        "digest": "sha256:9e47bf115fb6422e1767664e54123a5313fa61e5d66321203c34d44d8c8b7567",
+        "size": 301
+      }
+    ]
+  },
+  {
+    "publisher": "aos",
+    "bundle": "platform.ecommerce.niushop",
+    "version": "1.23.2",
+    "sources": [
+      "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2"
+    ],
+    "artifactCount": 35,
+    "artifacts": [
+      {
+        "relative_path": "artifacts/python-dependencies.lock",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/artifacts/python-dependencies.lock",
+        "digest": "sha256:7082d71d73dfa0ef7a607045bfa22242621728e3346d99542087d6c629fbcacb",
+        "size": 41
+      },
+      {
+        "relative_path": "artifacts/runtime-image-index.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/artifacts/runtime-image-index.json",
+        "digest": "sha256:1539aeca607a4b1d4b8ec007d8869a809badcefbfb2dc5540a2f7866b5a35192",
+        "size": 362
+      },
+      {
+        "relative_path": "artifacts/schema-compatibility.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/artifacts/schema-compatibility.json",
+        "digest": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2",
+        "size": 582
+      },
+      {
+        "relative_path": "artifacts/schema-requirements.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/artifacts/schema-requirements.json",
+        "digest": "sha256:111782e74011c1c1304972294d3b72e76b8ed858584094e5816b1e68796e8070",
+        "size": 162
+      },
+      {
+        "relative_path": "backend/ecommerce_niushop/__init__.py",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/backend/ecommerce_niushop/__init__.py",
+        "digest": "sha256:c3fd19f75078a92f41f2a33fd903711eb08c4af740f013f9c5c27dd4ee1d678e",
+        "size": 758
+      },
+      {
+        "relative_path": "backend/ecommerce_niushop/__pycache__/__init__.cpython-311.pyc",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/backend/ecommerce_niushop/__pycache__/__init__.cpython-311.pyc",
+        "digest": "sha256:df9df80541c1ff437add96e4de1b272a183b3cf41a4a919efadf4f2b1a15f530",
+        "size": 1599
+      },
+      {
+        "relative_path": "backend/ecommerce_niushop/business_investigation_niushop_profile.py",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/backend/ecommerce_niushop/business_investigation_niushop_profile.py",
+        "digest": "sha256:f3235fcb0dd80f741ad0e31bfa892de62e936eeae293dbd1049bf9c2ea637bb4",
+        "size": 7488
+      },
+      {
+        "relative_path": "backend/ecommerce_niushop/connector.py",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/backend/ecommerce_niushop/connector.py",
+        "digest": "sha256:5c53d528df282609d0c2cda7bf1d848f266cf69d45933fb1fc7a49c4310db5bc",
+        "size": 9214
+      },
+      {
+        "relative_path": "backend/ecommerce_niushop/sdk_ports.py",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/backend/ecommerce_niushop/sdk_ports.py",
+        "digest": "sha256:aedab6650d941d2282deed8890ee25ae5510eaf0adfd5ff286b983da8a3503ba",
+        "size": 859
+      },
+      {
+        "relative_path": "content/connectors/niushop-mysql.manifest.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/connectors/niushop-mysql.manifest.json",
+        "digest": "sha256:cd1d0dd90ac30fed06b7ca394f2f69b2391b4e08be5308e50382b0486e0145b6",
+        "size": 1231
+      },
+      {
+        "relative_path": "content/mappings/_pii-exclusion.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/mappings/_pii-exclusion.yaml",
+        "digest": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97",
+        "size": 2056
+      },
+      {
+        "relative_path": "content/mappings/p01-shop.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/mappings/p01-shop.yaml",
+        "digest": "sha256:893691a4bd11d52f40da19a0435390a5beb2195e594dd19f506b80a90505f4bc",
+        "size": 1345
+      },
+      {
+        "relative_path": "content/mappings/p02-product.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/mappings/p02-product.yaml",
+        "digest": "sha256:4ef146db758ca22e756857dc6cb6e8f615374dc2dccb96bc8835c93f8123d7f0",
+        "size": 2863
+      },
+      {
+        "relative_path": "content/mappings/p03-product-sku.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/mappings/p03-product-sku.yaml",
+        "digest": "sha256:60f8de20de644bde825d174d08c214e18a4fec5de5a62a068809fec4ea9ffa47",
+        "size": 2137
+      },
+      {
+        "relative_path": "content/mappings/p04-category.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/mappings/p04-category.yaml",
+        "digest": "sha256:07eb63d373af249557f8b9c970430ceea89ea0e1841d4fd30f18c6e890b747bd",
+        "size": 1783
+      },
+      {
+        "relative_path": "content/mappings/p05-order.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/mappings/p05-order.yaml",
+        "digest": "sha256:c56213d59b4a68755786b1645e05d1e761042035b358ca33851864d26f103f85",
+        "size": 3326
+      },
+      {
+        "relative_path": "content/mappings/p06-order-line.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/mappings/p06-order-line.yaml",
+        "digest": "sha256:be4f4a01881789964578cc4682f379164c0ce92d4c6a3a409920487f36318eef",
+        "size": 2488
+      },
+      {
+        "relative_path": "content/mappings/p07-shipment.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/mappings/p07-shipment.yaml",
+        "digest": "sha256:1dca12ebd494d9abdb130fdddca4780538c2874fb5a2557f10b11c72642bb17b",
+        "size": 1725
+      },
+      {
+        "relative_path": "content/mappings/p08-customer-lite.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/mappings/p08-customer-lite.yaml",
+        "digest": "sha256:599bd3b58ac836049e1867557995aa411581eca08b715a66848178c1a6adac96",
+        "size": 2177
+      },
+      {
+        "relative_path": "content/mappings/p09-weapp.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/mappings/p09-weapp.yaml",
+        "digest": "sha256:fd828a44591ee0f0f360ec3fb965db1f305a099a6f3d013ecfee6c7555ec3117",
+        "size": 1248
+      },
+      {
+        "relative_path": "content/mappings/p10-system-config.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/mappings/p10-system-config.yaml",
+        "digest": "sha256:f9dd1731fefb9bca5b1f0c399c5bf71540400932a6b75ef4be084989b9142da2",
+        "size": 1290
+      },
+      {
+        "relative_path": "content/mappings/p11-product-review.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/mappings/p11-product-review.yaml",
+        "digest": "sha256:d260f275d3ed110660a322b7dc1a0797168df363964b4743518b29a679cf002d",
+        "size": 1686
+      },
+      {
+        "relative_path": "content/mappings/p12-payment.yaml",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/mappings/p12-payment.yaml",
+        "digest": "sha256:d2cca07cb0fc041f9b63b60e1097ea120c129704f850edbc952dffe1ba6c9e1b",
+        "size": 2378
+      },
+      {
+        "relative_path": "content/policies/business-cohort.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/policies/business-cohort.v1.json",
+        "digest": "sha256:7cf0a7cf9e6ff115523668f7cc8690351e61d4a9ba345a8388addcac8b089bc5",
+        "size": 1972
+      },
+      {
+        "relative_path": "content/policies/business-facts.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/policies/business-facts.v1.json",
+        "digest": "sha256:adf838ae2cc53d6d251f0a1a97fced7d0ef6a81f23a9c0043beedd859b4fda64",
+        "size": 2136
+      },
+      {
+        "relative_path": "content/policies/fact-quality.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/policies/fact-quality.v1.json",
+        "digest": "sha256:da50ab62b1feb6b850d9ad50f44c7fb8700c3619a56cb2155173e6a3434fe129",
+        "size": 7740
+      },
+      {
+        "relative_path": "content/policies/relationship-quality.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/policies/relationship-quality.v1.json",
+        "digest": "sha256:a3bc57a0f780fe457e0fed4159eb46a1131b99c54fc20b685b2a6a20ccc4ce81",
+        "size": 3153
+      },
+      {
+        "relative_path": "content/policies/snapshot-readiness.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/policies/snapshot-readiness.v1.json",
+        "digest": "sha256:43f509ce8d1968a1f03993e2b242ab19f62d9555536ae24b915d3e898b83e709",
+        "size": 1524
+      },
+      {
+        "relative_path": "content/policies/snapshot-relationships.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/policies/snapshot-relationships.v1.json",
+        "digest": "sha256:c6e5783c17ad16a1aac9612667aadf75b52127406c3a531f1ff144478d1d00b0",
+        "size": 3916
+      },
+      {
+        "relative_path": "content/policies/source-freshness.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/policies/source-freshness.v1.json",
+        "digest": "sha256:05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+        "size": 691
+      },
+      {
+        "relative_path": "content/policies/source-quality.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/policies/source-quality.v1.json",
+        "digest": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+        "size": 443
+      },
+      {
+        "relative_path": "content/policies/source-reconciliation.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/policies/source-reconciliation.v1.json",
+        "digest": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+        "size": 410
+      },
+      {
+        "relative_path": "content/schemas/niushop-schema-fingerprint.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/content/schemas/niushop-schema-fingerprint.json",
+        "digest": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a",
+        "size": 20946
+      },
+      {
+        "relative_path": "evidence/bundle-evals.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/evidence/bundle-evals.json",
+        "digest": "sha256:c736bdfc6c6bfe21d286bd8f22ad72470d247c8d547c51aafef8eed98b9f0faf",
+        "size": 1587
+      },
+      {
+        "relative_path": "evidence/sbom.json",
+        "artifact_ref": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/evidence/sbom.json",
+        "digest": "sha256:9e47bf115fb6422e1767664e54123a5313fa61e5d66321203c34d44d8c8b7567",
+        "size": 301
+      }
+    ]
+  },
+  {
+    "publisher": "aos",
+    "bundle": "solution.ecommerce.growth",
+    "version": "1.10.0",
+    "sources": [
+      "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0"
+    ],
+    "artifactCount": 99,
+    "artifacts": [
+      {
+        "relative_path": "artifacts/python-dependencies.lock",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/artifacts/python-dependencies.lock",
+        "digest": "sha256:7082d71d73dfa0ef7a607045bfa22242621728e3346d99542087d6c629fbcacb",
+        "size": 41
+      },
+      {
+        "relative_path": "artifacts/runtime-image-index.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/artifacts/runtime-image-index.json",
+        "digest": "sha256:b0d23ff9ccd78a2fa01399b83ad7d9c7777a7ad0afcbe012a6b312835b4c7f78",
+        "size": 362
+      },
+      {
+        "relative_path": "artifacts/schema-compatibility.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/artifacts/schema-compatibility.json",
+        "digest": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4",
+        "size": 581
+      },
+      {
+        "relative_path": "artifacts/schema-requirements.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/artifacts/schema-requirements.json",
+        "digest": "sha256:6e619c5a3980c2a9cbd8453cd1c86c34c5d8a9ff5983868a568d97c6c761ace7",
+        "size": 162
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/__init__.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/__init__.py",
+        "digest": "sha256:70ea21e1ca5ffe0f239c919cb2d2852cdccdc7f3b4d637f5dea9ca6417c4f2e5",
+        "size": 4811
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/aip_business_investigation_compile_saga.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/aip_business_investigation_compile_saga.py",
+        "digest": "sha256:7dbd38bfdbd6284ab3d48eb6f460b54b927382bd340648f4b48631cff38ba700",
+        "size": 840
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/aip_business_investigation_compiler.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/aip_business_investigation_compiler.py",
+        "digest": "sha256:4be26370a0f25b457aa3eb5aa825e0f7c852f54f18e5dd10957826d2195ea10d",
+        "size": 432
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/aip_business_investigation_data_saga.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/aip_business_investigation_data_saga.py",
+        "digest": "sha256:dfa01a54b4ab18b1249bbd320e22e8c4daf09ecfe8f9223fc53068bbfd43ccbd",
+        "size": 2390
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/aip_business_investigation_runtime.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/aip_business_investigation_runtime.py",
+        "digest": "sha256:60f962d3bf21dcab96ccba7b98b7e60db05187d925dc64c0564270d130d48207",
+        "size": 1007
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analysis_compilation_blueprint.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/analysis_compilation_blueprint.py",
+        "digest": "sha256:efad9be76309d29cd8d4987f72c4b1625829257cde5416fab1b87dfc287512a8",
+        "size": 3116
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analysis_runtime.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/analysis_runtime.py",
+        "digest": "sha256:c7f398cd061ff5b4bfb7ab3d02666b17ef86eff61b64f11d0f95f70ebaed4221",
+        "size": 19423
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analysis_start_operation.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/analysis_start_operation.py",
+        "digest": "sha256:c324568193aab81ef5cb2495ec332d22b77e842c7c7433a2e6e17f0cd4684d48",
+        "size": 2083
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analyst_stage_review_runtime_operation.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/analyst_stage_review_runtime_operation.py",
+        "digest": "sha256:216105dc5035f3ea7e048d131a403390e977f2ba6afe540df98054fe9e4eeed7",
+        "size": 5042
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analyst_structure_case.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/analyst_structure_case.py",
+        "digest": "sha256:1c903f9e7781d1952d38c3847a670ee329e95a08bf8f9db205b8111471217109",
+        "size": 4593
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analyst_structure_eval.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/analyst_structure_eval.py",
+        "digest": "sha256:12215ca3d4a6c53bf869d54f2b9855319e3120a05a4046ee7bd6eb009af4b0f4",
+        "size": 4236
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analyst_workspace_view.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/analyst_workspace_view.py",
+        "digest": "sha256:2103a547d5a20f234980ae63be00ea599beadc978e86ed201df137218ea3c38a",
+        "size": 5550
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/audit_projection.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/audit_projection.py",
+        "digest": "sha256:8b7221e60fc6a5787dafcc0ff98ea14fc842c91fe9b5c0a07d4d63bb7b3736bc",
+        "size": 1854
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/content_artifact_review.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/content_artifact_review.py",
+        "digest": "sha256:d7eb9b15ee97a51b122c083ed52a70f47139f1fdcc55e8c80728b04d7921e9d2",
+        "size": 11050
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/content_capability_runtime.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/content_capability_runtime.py",
+        "digest": "sha256:7135b5f20efb6c19145d23d177bff78bd39b565f47d94cbf8732d5bf3e95d9c6",
+        "size": 14153
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/data_fulfillment.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/data_fulfillment.py",
+        "digest": "sha256:a911b0a04c10b9fd3695900ae8401be6ef499cee17cbe45570ac684a30c74166",
+        "size": 9430
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_analysis_proposal.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_analyst_analysis_proposal.py",
+        "digest": "sha256:4a4316fa1f4f7f4532148fbe3bcae9e19b68988c1cb22ef6143a69681e44ca0e",
+        "size": 3221
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_analysis_sources.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_analyst_analysis_sources.py",
+        "digest": "sha256:d79357fc1aacf96889b76fc0508ffc54b7c15eeabc19ce34904f9c5e7f91fc4a",
+        "size": 9390
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_authority_contracts.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_analyst_authority_contracts.py",
+        "digest": "sha256:f1b25967829edd0a597f2a7b713f59ee3a42f25b2c043b3bb2cbabcd571675b0",
+        "size": 14479
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_growth_plan_approval.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_analyst_growth_plan_approval.py",
+        "digest": "sha256:89f4afe1633b5e298a2fd8cd2eeaf3d8cd9d07c9100ac02394a30233780e81f2",
+        "size": 3215
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_growth_plan_draft.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_analyst_growth_plan_draft.py",
+        "digest": "sha256:74129df3c3ea51a0a9632984b1d26124c4c5fdda8e17bbcdf256c0718541221c",
+        "size": 2747
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_materializer.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_analyst_materializer.py",
+        "digest": "sha256:189612b5c630608c68a7ba43bd31b7b7f212506d5fa5fff5c9931da1b8c48b25",
+        "size": 4838
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_stage_decision.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_analyst_stage_decision.py",
+        "digest": "sha256:43911d6d7b1255a81d592f6803bff5df48b778688c5513e4876cecc3bda7c352",
+        "size": 6912
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_stage_eval_report.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_analyst_stage_eval_report.py",
+        "digest": "sha256:09330f7238ddc238b69c0a7349cb58bd3624794a5258580f836d39b0da7af367",
+        "size": 3170
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_stage_review_authority.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_analyst_stage_review_authority.py",
+        "digest": "sha256:3af9697c38a94d544510aed0458e18763ae6af563d21c31097365c57c75b7462",
+        "size": 1998
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_stage_review_command.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_analyst_stage_review_command.py",
+        "digest": "sha256:5ece350a645d0a9269c48efb970079a9d0590f104545ebb256bdfc6ab2222206",
+        "size": 2564
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_stage_review_runtime.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_analyst_stage_review_runtime.py",
+        "digest": "sha256:cf0055eb757adc7100c6f3a67a6bd5cefbc59090656b50751d38441b7154a477",
+        "size": 3132
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_business_investigation_application.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_business_investigation_application.py",
+        "digest": "sha256:828bdac469a72f3a99776539655df0e358858b4ad09f0d5eda380d3740544a9f",
+        "size": 7109
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_business_investigation_case.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_business_investigation_case.py",
+        "digest": "sha256:37176e565a2d54eeb4f81de911a0ff4787d10eb4024937a9a5828d025500ba58",
+        "size": 9055
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_business_investigation_handoff.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_business_investigation_handoff.py",
+        "digest": "sha256:555197d28238ba3616110dcaae36ef70d9334a67aff6b27fe9c3e6ec069967d1",
+        "size": 439
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_business_investigation_review_command.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_business_investigation_review_command.py",
+        "digest": "sha256:17812042c5002edd57c6fb5b7c87948eb56c031d034fcfc67cd9b1a678962b9d",
+        "size": 9277
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_business_investigation_run.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_business_investigation_run.py",
+        "digest": "sha256:a5eece1252888d05e48dec33e2497404e12c73cc11c87dc8665ceb6b99b24082",
+        "size": 1014
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_business_investigation_schedule.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_business_investigation_schedule.py",
+        "digest": "sha256:dd1f0620deecfc8fb283f3cfd348ebc6142a216ba43a3331dd10c0b17b77ede9",
+        "size": 7444
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_content_campaign_workflow.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_content_campaign_workflow.py",
+        "digest": "sha256:b2fac831ae658d935ddc5d1db8b06dbd22463f3dcf2529fdfb729de9cf516a44",
+        "size": 8824
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_content_campaign_workflow_contracts.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_content_campaign_workflow_contracts.py",
+        "digest": "sha256:2d4b9bc9aa548a54799c5b2175d5e52eea9ddb02ac7f39338125d5436ad7f085",
+        "size": 2319
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_product_event_binding.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_product_event_binding.py",
+        "digest": "sha256:f5daff339d18214864a78a01767d6dc7b8f2a6fdd9edfb8ad6d40e45e6abe011",
+        "size": 3017
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_product_event_command.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_product_event_command.py",
+        "digest": "sha256:44b216eee44d4dceb6700e242c5630bd9b2320f4e8ef4f01ce973e7fcbb371d3",
+        "size": 1996
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_product_event_control.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_product_event_control.py",
+        "digest": "sha256:b7b392d3f85dc85cc0b96d84b8ee8517239da312d85a8576197dda76c288b82b",
+        "size": 5301
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_product_event_schedule.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/ecommerce_product_event_schedule.py",
+        "digest": "sha256:07cc9387bee74bcc9f66cdcfead0fb39ca621689058abfb6a408f736285e51ed",
+        "size": 6440
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/result_feedback.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/result_feedback.py",
+        "digest": "sha256:88be9cac4f9d89a56beed20be301540481ba76c196c15f8c41d62b32bdfa12f4",
+        "size": 6455
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/sdk_ports.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/backend/ecommerce_growth/sdk_ports.py",
+        "digest": "sha256:c36cda9fdbfcae6bbea1915ae7ee70ae0f8f5b00cbf008ca87694967c84b9cdb",
+        "size": 4540
+      },
+      {
+        "relative_path": "content/agents/ecommerce-capability-catalog.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/agents/ecommerce-capability-catalog.json",
+        "digest": "sha256:0d33aac853f9f7cac835ea97cd8409388a9c4afe22ddec3b4a8eb668c72acf5a",
+        "size": 2482
+      },
+      {
+        "relative_path": "content/agents/ecommerce-six-coworkers.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/agents/ecommerce-six-coworkers.json",
+        "digest": "sha256:ae351d4265f3c6757c17e6742dc32e7c7f0697d2a9676d379ab3cb5085192ba3",
+        "size": 1324
+      },
+      {
+        "relative_path": "content/cost-projection-contracts/media.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/cost-projection-contracts/media.v1.json",
+        "digest": "sha256:65b26cc86024485b00781902640fbbb9190e0b8c482d753a2f4dfe7bf061266a",
+        "size": 997
+      },
+      {
+        "relative_path": "content/evals/placeholder.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/evals/placeholder.json",
+        "digest": "sha256:e90c23c9234793da6f76f82cc78ceddd677ce47c4c6ed7ced8397bb11d0a69c2",
+        "size": 154
+      },
+      {
+        "relative_path": "content/evals/w03-l05-dry-run-cases.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/evals/w03-l05-dry-run-cases.json",
+        "digest": "sha256:e6b2f45d025adb071636b4c2f1f93ab1a59098357d52885819bda791cc93f78c",
+        "size": 5639
+      },
+      {
+        "relative_path": "content/growth/connector-action-governance.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/growth/connector-action-governance.v1.json",
+        "digest": "sha256:cb0da02b335d7d6665b7f108463ba5a25c725e2678c773ac3d35fbb105424940",
+        "size": 2479
+      },
+      {
+        "relative_path": "content/growth/core-agent-collaboration.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/growth/core-agent-collaboration.v1.json",
+        "digest": "sha256:910ada47e6464abeb1d6d95a53d83f8bbb1f731714b94025780ff795c7dd6c01",
+        "size": 2473
+      },
+      {
+        "relative_path": "content/growth/daily-operating-loop.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/growth/daily-operating-loop.v1.json",
+        "digest": "sha256:2346ffc0c81f27a3aa1cfa3aac794c8f0cdb2c3a44f5a426aa9034399f2dfa30",
+        "size": 1704
+      },
+      {
+        "relative_path": "content/growth/private-campaign-memory.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/growth/private-campaign-memory.v1.json",
+        "digest": "sha256:0a9ac4f883ff4807b5b4375c653845c1f7cd8cab4a9225ee412d7a09706793f0",
+        "size": 2751
+      },
+      {
+        "relative_path": "content/growth/sc01-sc03-acceptance.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/growth/sc01-sc03-acceptance.v1.json",
+        "digest": "sha256:5d43b09dcc96f74977053fcbe51068a014b11bd7c20648bd2d93887f3a461269",
+        "size": 2535
+      },
+      {
+        "relative_path": "content/growth/sc04-sc06-acceptance.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/growth/sc04-sc06-acceptance.v1.json",
+        "digest": "sha256:d98dc09260c55e445ba616213befb3ad6c10ee0464c7f93f522b5c444f08a15d",
+        "size": 2626
+      },
+      {
+        "relative_path": "content/growth/sc07-sc09-acceptance.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/growth/sc07-sc09-acceptance.v1.json",
+        "digest": "sha256:e2e4a1bfc90586b0f75b5926e0acebce1d264b5a910ba02dca579b584f4433b7",
+        "size": 2856
+      },
+      {
+        "relative_path": "content/harness/platform-harnesses.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/harness/platform-harnesses.v1.json",
+        "digest": "sha256:154dc19b826e2777e4f2cbc3d3ed8b9ffd797f2edca49a539bcb7155ddf34448",
+        "size": 10619
+      },
+      {
+        "relative_path": "content/knowledge/internal/qyh-customer-service-escalation-v1.md",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/knowledge/internal/qyh-customer-service-escalation-v1.md",
+        "digest": "sha256:530c40af166370df4be135a76d85d51632aa6aee9d61d3ba85d3565fc69c180a",
+        "size": 2402
+      },
+      {
+        "relative_path": "content/live/digital-human-live-sandbox.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/live/digital-human-live-sandbox.v1.json",
+        "digest": "sha256:30a073b8221f6d66a7877765e48c0041a897f88a3f7c8d52f13952e147f22634",
+        "size": 1982
+      },
+      {
+        "relative_path": "content/logic/ecommerce-37-logic-catalog.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/logic/ecommerce-37-logic-catalog.json",
+        "digest": "sha256:2ebfba4bc26a308f4d93882eaa5105ae364b857cea667ed769fbb1fcb8e4463b",
+        "size": 5375
+      },
+      {
+        "relative_path": "content/logic/ecommerce-37-skill-compatibility-map.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/logic/ecommerce-37-skill-compatibility-map.json",
+        "digest": "sha256:4855fdd0131ce35f4ad06afbeb3febd3789795e2f937e7fd24b7ccc14a6f6d9d",
+        "size": 7980
+      },
+      {
+        "relative_path": "content/logic/l05-commission-anomaly.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/logic/l05-commission-anomaly.json",
+        "digest": "sha256:3cae12bc303c6b26d4b2cc8d5ec3a9866add4b286b554b91996e3bd5bf6ff257",
+        "size": 4829
+      },
+      {
+        "relative_path": "content/media-production-templates/full.responsibility.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/media-production-templates/full.responsibility.json",
+        "digest": "sha256:eb48d34b2db2fb531273159e4cb203807bc1560e6c76bcd48fd51c867c52f6ef",
+        "size": 2082
+      },
+      {
+        "relative_path": "content/media-production-templates/full.stage.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/media-production-templates/full.stage.json",
+        "digest": "sha256:61ebaa1abf049e98f94cf016fc746a868e3b8bd008f4008168eaf9bb47321479",
+        "size": 2040
+      },
+      {
+        "relative_path": "content/media-production-templates/lite.responsibility.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/media-production-templates/lite.responsibility.json",
+        "digest": "sha256:f5d289eebd9fa928036e6412efdcb861236a24e7f0f91a68d49a584da4badba6",
+        "size": 2066
+      },
+      {
+        "relative_path": "content/media-production-templates/lite.stage.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/media-production-templates/lite.stage.json",
+        "digest": "sha256:890196be9f756195b8a7d84fb0aad991c4906d8f5a6cc36121ebd890d89143df",
+        "size": 1326
+      },
+      {
+        "relative_path": "content/media-production-templates/standard.responsibility.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/media-production-templates/standard.responsibility.json",
+        "digest": "sha256:4f09ba944f6dfc3eea24ed9580339017278278d76aeedc333a5181992e692658",
+        "size": 2072
+      },
+      {
+        "relative_path": "content/media-production-templates/standard.stage.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/media-production-templates/standard.stage.json",
+        "digest": "sha256:7b497bc524627df284fd9e60f7441639aa046aa6cdbf9c70128ee0be1480a56c",
+        "size": 1776
+      },
+      {
+        "relative_path": "content/media/short-video-pipeline.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/media/short-video-pipeline.v1.json",
+        "digest": "sha256:812b41fb5d18ec74efe2f94315f6bfa1e5c63bf2af57bd885561ca224b36f791",
+        "size": 1232
+      },
+      {
+        "relative_path": "content/policies/aip6-runtime-policies.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/policies/aip6-runtime-policies.json",
+        "digest": "sha256:2ff91b4c0b34906fcc18b40a467cb786835d6168a6301f8abc9647476417cd4f",
+        "size": 967
+      },
+      {
+        "relative_path": "content/policies/growth-gates.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/policies/growth-gates.json",
+        "digest": "sha256:06f8b1453cc7297c23802ce1ef0a13f97ccd807f2ffca97a63d3572e682a33ac",
+        "size": 4316
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.analyst.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/production-profiles/ecommerce.analyst.json",
+        "digest": "sha256:488ff4747040f59f4270ff519efab6ca3a4df8397af232a7c4b720487263fe49",
+        "size": 1230
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.content-campaign.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/production-profiles/ecommerce.content-campaign.json",
+        "digest": "sha256:89f9c0dfee27d4863af7ff10a2d6316e9af5a7480a141bf86981f58c1132a866",
+        "size": 1183
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.creator-growth.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/production-profiles/ecommerce.creator-growth.json",
+        "digest": "sha256:8a585599f7ae653a06fd8667b410d87832f1bc0cef7b9048e58eb05b4a0bdaee",
+        "size": 1259
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.customer.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/production-profiles/ecommerce.customer.json",
+        "digest": "sha256:12e189333f7984d9f748aeb5dc73544196a4419f07a90057bef48e61fc4c2fe6",
+        "size": 1227
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.media-studio.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/production-profiles/ecommerce.media-studio.json",
+        "digest": "sha256:c535d661c2f3e45aaffd50621df520e023a997af2eabe6b59ba26945f755ba34",
+        "size": 1233
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.price-governance.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/production-profiles/ecommerce.price-governance.json",
+        "digest": "sha256:b45fc3af93d8641a0563af5270afd09cc80f1e0c98f52d4941913342bc4ea056",
+        "size": 1253
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.task-cockpit.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/production-profiles/ecommerce.task-cockpit.json",
+        "digest": "sha256:2fe1e0609f632118efda5d47ae06e92f101a82a92cf35199fd8c41357c54469f",
+        "size": 1191
+      },
+      {
+        "relative_path": "content/schemas/aip6-contribution-schemas.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/schemas/aip6-contribution-schemas.json",
+        "digest": "sha256:c3e4f9503222fed59eb150f6ac89b3fb49991123f15699fb36c9702ab35048b7",
+        "size": 862
+      },
+      {
+        "relative_path": "content/schemas/content-brief.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/schemas/content-brief.schema.json",
+        "digest": "sha256:792d5116f614c4a02a8bff4246d510008b3ece4c605832d370ca297c05a99c2c",
+        "size": 2616
+      },
+      {
+        "relative_path": "content/schemas/content-draft.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/schemas/content-draft.schema.json",
+        "digest": "sha256:1ef706fb9901ac27854c31b56519e103ea18d5fe858d47d32864eb81fb962f64",
+        "size": 4191
+      },
+      {
+        "relative_path": "content/schemas/content-pipeline.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/schemas/content-pipeline.schema.json",
+        "digest": "sha256:6c3e377bbb7bbfe21ad6e0e6d1fb493aa90cd89aff8e3e9e9e64b7693b45c28f",
+        "size": 4996
+      },
+      {
+        "relative_path": "content/schemas/product-event-control.contract.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/schemas/product-event-control.contract.v1.json",
+        "digest": "sha256:e89fad0608fc8b1d234a7d006104f12b83ed3585eed7134068b9f58142c1778e",
+        "size": 429
+      },
+      {
+        "relative_path": "content/schemas/product-event-save.contract.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/schemas/product-event-save.contract.v1.json",
+        "digest": "sha256:7b489c715ca6638fe4d3ce759d254b328f0bf47a0158b8a42354ac412be2f085",
+        "size": 527
+      },
+      {
+        "relative_path": "content/schemas/publish-proposal.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/schemas/publish-proposal.schema.json",
+        "digest": "sha256:42ca52b3d15749fc1d97d42494b91919c4921dc1df44dc6ef74fa90cc5b6d4ca",
+        "size": 3317
+      },
+      {
+        "relative_path": "content/workshops/ecommerce-analyst-query-templates.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/workshops/ecommerce-analyst-query-templates.json",
+        "digest": "sha256:d15e7e8bc7e7bcc94c68f878c5c595084b7d34d688a98959f5648a5e422af95c",
+        "size": 3637
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.analyst.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/workshops/ecommerce.analyst.json",
+        "digest": "sha256:fb8e3c53940f4d34bba7b600b42c3166991184973fa6b7f0f1137a86f236e666",
+        "size": 1391
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.content-campaign.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/workshops/ecommerce.content-campaign.json",
+        "digest": "sha256:0470486055b5ece4c9c9e5610fbd8f3022e57970a181fcb3ada3ed818e6c8b71",
+        "size": 1444
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.creator-growth.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/workshops/ecommerce.creator-growth.json",
+        "digest": "sha256:caa2701fcd820d2bc2e179c1ea079362077489a7431bd8ddcf8f0cd2cc5abffc",
+        "size": 1414
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.customer.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/workshops/ecommerce.customer.json",
+        "digest": "sha256:77b1d700e40f7d6cb9d9608944bbac935ea92afaed14ae97f859b25901517a92",
+        "size": 1523
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.media-studio.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/workshops/ecommerce.media-studio.json",
+        "digest": "sha256:e96a8786dc894c3ab70cf2b964e37211aacfc885f16b730b3bbd957da40259bc",
+        "size": 2065
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.price-governance.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/workshops/ecommerce.price-governance.json",
+        "digest": "sha256:5d10311bcbc2a1cecfd1046989ab7a79b372b4be3b82065fa9e313de2ecd43a3",
+        "size": 1397
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.task-cockpit.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/workshops/ecommerce.task-cockpit.json",
+        "digest": "sha256:929ca1b39435240b76cf07af496594bdad21c729566474098255b42a97e00d7c",
+        "size": 1234
+      },
+      {
+        "relative_path": "content/workshops/w03-customer-private-domain.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/content/workshops/w03-customer-private-domain.json",
+        "digest": "sha256:25a34e673c4042088b6fe6e1025a7d40f1317c26c85cd277d65fe2bb621c4642",
+        "size": 2096
+      },
+      {
+        "relative_path": "evidence/bundle-evals.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/evidence/bundle-evals.json",
+        "digest": "sha256:02b181ca7d55990bbca1e2e923a24eddefe97cc34f596c82def301d22563c4f6",
+        "size": 1227
+      },
+      {
+        "relative_path": "evidence/sbom.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/evidence/sbom.json",
+        "digest": "sha256:14804c76eaa72c73b5bc6b7424d678535daf0f71547da96407f0a00a444bbabc",
+        "size": 1131
+      },
+      {
+        "relative_path": "frontend/index.html",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/frontend/index.html",
+        "digest": "sha256:43c779eff6ec959f51b06452a146d96754ef65907c3e2681a656707832b78d77",
+        "size": 11293
+      },
+      {
+        "relative_path": "frontend/manifest.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0/frontend/manifest.json",
+        "digest": "sha256:8fe67617e00386bbc4c9003d61ff43600042763d376a0079515fe231f667aa7c",
+        "size": 308
+      }
+    ]
+  },
+  {
+    "publisher": "aos",
+    "bundle": "solution.ecommerce.growth",
+    "version": "1.10.2",
+    "sources": [
+      "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2"
+    ],
+    "artifactCount": 100,
+    "artifacts": [
+      {
+        "relative_path": "artifacts/python-dependencies.lock",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/artifacts/python-dependencies.lock",
+        "digest": "sha256:7082d71d73dfa0ef7a607045bfa22242621728e3346d99542087d6c629fbcacb",
+        "size": 41
+      },
+      {
+        "relative_path": "artifacts/runtime-image-index.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/artifacts/runtime-image-index.json",
+        "digest": "sha256:e12cbf9842e607893d649ac3b76f52940b1bd4751ab3af9ed8ce8bf5b6314853",
+        "size": 362
+      },
+      {
+        "relative_path": "artifacts/schema-compatibility.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/artifacts/schema-compatibility.json",
+        "digest": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4",
+        "size": 581
+      },
+      {
+        "relative_path": "artifacts/schema-requirements.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/artifacts/schema-requirements.json",
+        "digest": "sha256:6e619c5a3980c2a9cbd8453cd1c86c34c5d8a9ff5983868a568d97c6c761ace7",
+        "size": 162
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/__init__.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/__init__.py",
+        "digest": "sha256:70ea21e1ca5ffe0f239c919cb2d2852cdccdc7f3b4d637f5dea9ca6417c4f2e5",
+        "size": 4811
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/__pycache__/__init__.cpython-311.pyc",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/__pycache__/__init__.cpython-311.pyc",
+        "digest": "sha256:5f847ab1f61934370072cb6ea1eb286ab156e9ebd1c4398a589ba9f4c91ccf7a",
+        "size": 5807
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/aip_business_investigation_compile_saga.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/aip_business_investigation_compile_saga.py",
+        "digest": "sha256:7dbd38bfdbd6284ab3d48eb6f460b54b927382bd340648f4b48631cff38ba700",
+        "size": 840
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/aip_business_investigation_compiler.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/aip_business_investigation_compiler.py",
+        "digest": "sha256:4be26370a0f25b457aa3eb5aa825e0f7c852f54f18e5dd10957826d2195ea10d",
+        "size": 432
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/aip_business_investigation_data_saga.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/aip_business_investigation_data_saga.py",
+        "digest": "sha256:dfa01a54b4ab18b1249bbd320e22e8c4daf09ecfe8f9223fc53068bbfd43ccbd",
+        "size": 2390
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/aip_business_investigation_runtime.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/aip_business_investigation_runtime.py",
+        "digest": "sha256:60f962d3bf21dcab96ccba7b98b7e60db05187d925dc64c0564270d130d48207",
+        "size": 1007
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analysis_compilation_blueprint.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/analysis_compilation_blueprint.py",
+        "digest": "sha256:efad9be76309d29cd8d4987f72c4b1625829257cde5416fab1b87dfc287512a8",
+        "size": 3116
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analysis_runtime.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/analysis_runtime.py",
+        "digest": "sha256:c7f398cd061ff5b4bfb7ab3d02666b17ef86eff61b64f11d0f95f70ebaed4221",
+        "size": 19423
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analysis_start_operation.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/analysis_start_operation.py",
+        "digest": "sha256:c324568193aab81ef5cb2495ec332d22b77e842c7c7433a2e6e17f0cd4684d48",
+        "size": 2083
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analyst_stage_review_runtime_operation.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/analyst_stage_review_runtime_operation.py",
+        "digest": "sha256:216105dc5035f3ea7e048d131a403390e977f2ba6afe540df98054fe9e4eeed7",
+        "size": 5042
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analyst_structure_case.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/analyst_structure_case.py",
+        "digest": "sha256:1c903f9e7781d1952d38c3847a670ee329e95a08bf8f9db205b8111471217109",
+        "size": 4593
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analyst_structure_eval.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/analyst_structure_eval.py",
+        "digest": "sha256:12215ca3d4a6c53bf869d54f2b9855319e3120a05a4046ee7bd6eb009af4b0f4",
+        "size": 4236
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/analyst_workspace_view.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/analyst_workspace_view.py",
+        "digest": "sha256:2103a547d5a20f234980ae63be00ea599beadc978e86ed201df137218ea3c38a",
+        "size": 5550
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/audit_projection.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/audit_projection.py",
+        "digest": "sha256:8b7221e60fc6a5787dafcc0ff98ea14fc842c91fe9b5c0a07d4d63bb7b3736bc",
+        "size": 1854
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/content_artifact_review.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/content_artifact_review.py",
+        "digest": "sha256:d7eb9b15ee97a51b122c083ed52a70f47139f1fdcc55e8c80728b04d7921e9d2",
+        "size": 11050
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/content_capability_runtime.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/content_capability_runtime.py",
+        "digest": "sha256:7135b5f20efb6c19145d23d177bff78bd39b565f47d94cbf8732d5bf3e95d9c6",
+        "size": 14153
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/data_fulfillment.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/data_fulfillment.py",
+        "digest": "sha256:a911b0a04c10b9fd3695900ae8401be6ef499cee17cbe45570ac684a30c74166",
+        "size": 9430
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_analysis_proposal.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_analyst_analysis_proposal.py",
+        "digest": "sha256:4a4316fa1f4f7f4532148fbe3bcae9e19b68988c1cb22ef6143a69681e44ca0e",
+        "size": 3221
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_analysis_sources.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_analyst_analysis_sources.py",
+        "digest": "sha256:d79357fc1aacf96889b76fc0508ffc54b7c15eeabc19ce34904f9c5e7f91fc4a",
+        "size": 9390
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_authority_contracts.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_analyst_authority_contracts.py",
+        "digest": "sha256:f1b25967829edd0a597f2a7b713f59ee3a42f25b2c043b3bb2cbabcd571675b0",
+        "size": 14479
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_growth_plan_approval.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_analyst_growth_plan_approval.py",
+        "digest": "sha256:89f4afe1633b5e298a2fd8cd2eeaf3d8cd9d07c9100ac02394a30233780e81f2",
+        "size": 3215
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_growth_plan_draft.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_analyst_growth_plan_draft.py",
+        "digest": "sha256:74129df3c3ea51a0a9632984b1d26124c4c5fdda8e17bbcdf256c0718541221c",
+        "size": 2747
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_materializer.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_analyst_materializer.py",
+        "digest": "sha256:189612b5c630608c68a7ba43bd31b7b7f212506d5fa5fff5c9931da1b8c48b25",
+        "size": 4838
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_stage_decision.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_analyst_stage_decision.py",
+        "digest": "sha256:43911d6d7b1255a81d592f6803bff5df48b778688c5513e4876cecc3bda7c352",
+        "size": 6912
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_stage_eval_report.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_analyst_stage_eval_report.py",
+        "digest": "sha256:09330f7238ddc238b69c0a7349cb58bd3624794a5258580f836d39b0da7af367",
+        "size": 3170
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_stage_review_authority.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_analyst_stage_review_authority.py",
+        "digest": "sha256:3af9697c38a94d544510aed0458e18763ae6af563d21c31097365c57c75b7462",
+        "size": 1998
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_stage_review_command.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_analyst_stage_review_command.py",
+        "digest": "sha256:5ece350a645d0a9269c48efb970079a9d0590f104545ebb256bdfc6ab2222206",
+        "size": 2564
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_analyst_stage_review_runtime.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_analyst_stage_review_runtime.py",
+        "digest": "sha256:cf0055eb757adc7100c6f3a67a6bd5cefbc59090656b50751d38441b7154a477",
+        "size": 3132
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_business_investigation_application.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_business_investigation_application.py",
+        "digest": "sha256:828bdac469a72f3a99776539655df0e358858b4ad09f0d5eda380d3740544a9f",
+        "size": 7109
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_business_investigation_case.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_business_investigation_case.py",
+        "digest": "sha256:37176e565a2d54eeb4f81de911a0ff4787d10eb4024937a9a5828d025500ba58",
+        "size": 9055
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_business_investigation_handoff.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_business_investigation_handoff.py",
+        "digest": "sha256:555197d28238ba3616110dcaae36ef70d9334a67aff6b27fe9c3e6ec069967d1",
+        "size": 439
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_business_investigation_review_command.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_business_investigation_review_command.py",
+        "digest": "sha256:17812042c5002edd57c6fb5b7c87948eb56c031d034fcfc67cd9b1a678962b9d",
+        "size": 9277
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_business_investigation_run.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_business_investigation_run.py",
+        "digest": "sha256:a5eece1252888d05e48dec33e2497404e12c73cc11c87dc8665ceb6b99b24082",
+        "size": 1014
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_business_investigation_schedule.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_business_investigation_schedule.py",
+        "digest": "sha256:dd1f0620deecfc8fb283f3cfd348ebc6142a216ba43a3331dd10c0b17b77ede9",
+        "size": 7444
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_content_campaign_workflow.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_content_campaign_workflow.py",
+        "digest": "sha256:b2fac831ae658d935ddc5d1db8b06dbd22463f3dcf2529fdfb729de9cf516a44",
+        "size": 8824
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_content_campaign_workflow_contracts.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_content_campaign_workflow_contracts.py",
+        "digest": "sha256:2d4b9bc9aa548a54799c5b2175d5e52eea9ddb02ac7f39338125d5436ad7f085",
+        "size": 2319
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_product_event_binding.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_product_event_binding.py",
+        "digest": "sha256:f5daff339d18214864a78a01767d6dc7b8f2a6fdd9edfb8ad6d40e45e6abe011",
+        "size": 3017
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_product_event_command.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_product_event_command.py",
+        "digest": "sha256:44b216eee44d4dceb6700e242c5630bd9b2320f4e8ef4f01ce973e7fcbb371d3",
+        "size": 1996
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_product_event_control.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_product_event_control.py",
+        "digest": "sha256:b7b392d3f85dc85cc0b96d84b8ee8517239da312d85a8576197dda76c288b82b",
+        "size": 5301
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/ecommerce_product_event_schedule.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/ecommerce_product_event_schedule.py",
+        "digest": "sha256:07cc9387bee74bcc9f66cdcfead0fb39ca621689058abfb6a408f736285e51ed",
+        "size": 6440
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/result_feedback.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/result_feedback.py",
+        "digest": "sha256:88be9cac4f9d89a56beed20be301540481ba76c196c15f8c41d62b32bdfa12f4",
+        "size": 6455
+      },
+      {
+        "relative_path": "backend/ecommerce_growth/sdk_ports.py",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/backend/ecommerce_growth/sdk_ports.py",
+        "digest": "sha256:c36cda9fdbfcae6bbea1915ae7ee70ae0f8f5b00cbf008ca87694967c84b9cdb",
+        "size": 4540
+      },
+      {
+        "relative_path": "content/agents/ecommerce-capability-catalog.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/agents/ecommerce-capability-catalog.json",
+        "digest": "sha256:0d33aac853f9f7cac835ea97cd8409388a9c4afe22ddec3b4a8eb668c72acf5a",
+        "size": 2482
+      },
+      {
+        "relative_path": "content/agents/ecommerce-six-coworkers.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/agents/ecommerce-six-coworkers.json",
+        "digest": "sha256:ae351d4265f3c6757c17e6742dc32e7c7f0697d2a9676d379ab3cb5085192ba3",
+        "size": 1324
+      },
+      {
+        "relative_path": "content/cost-projection-contracts/media.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/cost-projection-contracts/media.v1.json",
+        "digest": "sha256:65b26cc86024485b00781902640fbbb9190e0b8c482d753a2f4dfe7bf061266a",
+        "size": 997
+      },
+      {
+        "relative_path": "content/evals/placeholder.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/evals/placeholder.json",
+        "digest": "sha256:e90c23c9234793da6f76f82cc78ceddd677ce47c4c6ed7ced8397bb11d0a69c2",
+        "size": 154
+      },
+      {
+        "relative_path": "content/evals/w03-l05-dry-run-cases.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/evals/w03-l05-dry-run-cases.json",
+        "digest": "sha256:e6b2f45d025adb071636b4c2f1f93ab1a59098357d52885819bda791cc93f78c",
+        "size": 5639
+      },
+      {
+        "relative_path": "content/growth/connector-action-governance.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/growth/connector-action-governance.v1.json",
+        "digest": "sha256:cb0da02b335d7d6665b7f108463ba5a25c725e2678c773ac3d35fbb105424940",
+        "size": 2479
+      },
+      {
+        "relative_path": "content/growth/core-agent-collaboration.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/growth/core-agent-collaboration.v1.json",
+        "digest": "sha256:910ada47e6464abeb1d6d95a53d83f8bbb1f731714b94025780ff795c7dd6c01",
+        "size": 2473
+      },
+      {
+        "relative_path": "content/growth/daily-operating-loop.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/growth/daily-operating-loop.v1.json",
+        "digest": "sha256:2346ffc0c81f27a3aa1cfa3aac794c8f0cdb2c3a44f5a426aa9034399f2dfa30",
+        "size": 1704
+      },
+      {
+        "relative_path": "content/growth/private-campaign-memory.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/growth/private-campaign-memory.v1.json",
+        "digest": "sha256:0a9ac4f883ff4807b5b4375c653845c1f7cd8cab4a9225ee412d7a09706793f0",
+        "size": 2751
+      },
+      {
+        "relative_path": "content/growth/sc01-sc03-acceptance.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/growth/sc01-sc03-acceptance.v1.json",
+        "digest": "sha256:5d43b09dcc96f74977053fcbe51068a014b11bd7c20648bd2d93887f3a461269",
+        "size": 2535
+      },
+      {
+        "relative_path": "content/growth/sc04-sc06-acceptance.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/growth/sc04-sc06-acceptance.v1.json",
+        "digest": "sha256:d98dc09260c55e445ba616213befb3ad6c10ee0464c7f93f522b5c444f08a15d",
+        "size": 2626
+      },
+      {
+        "relative_path": "content/growth/sc07-sc09-acceptance.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/growth/sc07-sc09-acceptance.v1.json",
+        "digest": "sha256:e2e4a1bfc90586b0f75b5926e0acebce1d264b5a910ba02dca579b584f4433b7",
+        "size": 2856
+      },
+      {
+        "relative_path": "content/harness/platform-harnesses.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/harness/platform-harnesses.v1.json",
+        "digest": "sha256:154dc19b826e2777e4f2cbc3d3ed8b9ffd797f2edca49a539bcb7155ddf34448",
+        "size": 10619
+      },
+      {
+        "relative_path": "content/knowledge/internal/qyh-customer-service-escalation-v1.md",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/knowledge/internal/qyh-customer-service-escalation-v1.md",
+        "digest": "sha256:530c40af166370df4be135a76d85d51632aa6aee9d61d3ba85d3565fc69c180a",
+        "size": 2402
+      },
+      {
+        "relative_path": "content/live/digital-human-live-sandbox.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/live/digital-human-live-sandbox.v1.json",
+        "digest": "sha256:30a073b8221f6d66a7877765e48c0041a897f88a3f7c8d52f13952e147f22634",
+        "size": 1982
+      },
+      {
+        "relative_path": "content/logic/ecommerce-37-logic-catalog.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/logic/ecommerce-37-logic-catalog.json",
+        "digest": "sha256:2ebfba4bc26a308f4d93882eaa5105ae364b857cea667ed769fbb1fcb8e4463b",
+        "size": 5375
+      },
+      {
+        "relative_path": "content/logic/ecommerce-37-skill-compatibility-map.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/logic/ecommerce-37-skill-compatibility-map.json",
+        "digest": "sha256:4855fdd0131ce35f4ad06afbeb3febd3789795e2f937e7fd24b7ccc14a6f6d9d",
+        "size": 7980
+      },
+      {
+        "relative_path": "content/logic/l05-commission-anomaly.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/logic/l05-commission-anomaly.json",
+        "digest": "sha256:3cae12bc303c6b26d4b2cc8d5ec3a9866add4b286b554b91996e3bd5bf6ff257",
+        "size": 4829
+      },
+      {
+        "relative_path": "content/media-production-templates/full.responsibility.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/media-production-templates/full.responsibility.json",
+        "digest": "sha256:eb48d34b2db2fb531273159e4cb203807bc1560e6c76bcd48fd51c867c52f6ef",
+        "size": 2082
+      },
+      {
+        "relative_path": "content/media-production-templates/full.stage.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/media-production-templates/full.stage.json",
+        "digest": "sha256:61ebaa1abf049e98f94cf016fc746a868e3b8bd008f4008168eaf9bb47321479",
+        "size": 2040
+      },
+      {
+        "relative_path": "content/media-production-templates/lite.responsibility.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/media-production-templates/lite.responsibility.json",
+        "digest": "sha256:f5d289eebd9fa928036e6412efdcb861236a24e7f0f91a68d49a584da4badba6",
+        "size": 2066
+      },
+      {
+        "relative_path": "content/media-production-templates/lite.stage.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/media-production-templates/lite.stage.json",
+        "digest": "sha256:890196be9f756195b8a7d84fb0aad991c4906d8f5a6cc36121ebd890d89143df",
+        "size": 1326
+      },
+      {
+        "relative_path": "content/media-production-templates/standard.responsibility.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/media-production-templates/standard.responsibility.json",
+        "digest": "sha256:4f09ba944f6dfc3eea24ed9580339017278278d76aeedc333a5181992e692658",
+        "size": 2072
+      },
+      {
+        "relative_path": "content/media-production-templates/standard.stage.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/media-production-templates/standard.stage.json",
+        "digest": "sha256:7b497bc524627df284fd9e60f7441639aa046aa6cdbf9c70128ee0be1480a56c",
+        "size": 1776
+      },
+      {
+        "relative_path": "content/media/short-video-pipeline.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/media/short-video-pipeline.v1.json",
+        "digest": "sha256:812b41fb5d18ec74efe2f94315f6bfa1e5c63bf2af57bd885561ca224b36f791",
+        "size": 1232
+      },
+      {
+        "relative_path": "content/policies/aip6-runtime-policies.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/policies/aip6-runtime-policies.json",
+        "digest": "sha256:2ff91b4c0b34906fcc18b40a467cb786835d6168a6301f8abc9647476417cd4f",
+        "size": 967
+      },
+      {
+        "relative_path": "content/policies/growth-gates.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/policies/growth-gates.json",
+        "digest": "sha256:06f8b1453cc7297c23802ce1ef0a13f97ccd807f2ffca97a63d3572e682a33ac",
+        "size": 4316
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.analyst.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/production-profiles/ecommerce.analyst.json",
+        "digest": "sha256:488ff4747040f59f4270ff519efab6ca3a4df8397af232a7c4b720487263fe49",
+        "size": 1230
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.content-campaign.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/production-profiles/ecommerce.content-campaign.json",
+        "digest": "sha256:89f9c0dfee27d4863af7ff10a2d6316e9af5a7480a141bf86981f58c1132a866",
+        "size": 1183
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.creator-growth.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/production-profiles/ecommerce.creator-growth.json",
+        "digest": "sha256:8a585599f7ae653a06fd8667b410d87832f1bc0cef7b9048e58eb05b4a0bdaee",
+        "size": 1259
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.customer.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/production-profiles/ecommerce.customer.json",
+        "digest": "sha256:12e189333f7984d9f748aeb5dc73544196a4419f07a90057bef48e61fc4c2fe6",
+        "size": 1227
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.media-studio.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/production-profiles/ecommerce.media-studio.json",
+        "digest": "sha256:c535d661c2f3e45aaffd50621df520e023a997af2eabe6b59ba26945f755ba34",
+        "size": 1233
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.price-governance.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/production-profiles/ecommerce.price-governance.json",
+        "digest": "sha256:b45fc3af93d8641a0563af5270afd09cc80f1e0c98f52d4941913342bc4ea056",
+        "size": 1253
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.task-cockpit.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/production-profiles/ecommerce.task-cockpit.json",
+        "digest": "sha256:2fe1e0609f632118efda5d47ae06e92f101a82a92cf35199fd8c41357c54469f",
+        "size": 1191
+      },
+      {
+        "relative_path": "content/schemas/aip6-contribution-schemas.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/schemas/aip6-contribution-schemas.json",
+        "digest": "sha256:c3e4f9503222fed59eb150f6ac89b3fb49991123f15699fb36c9702ab35048b7",
+        "size": 862
+      },
+      {
+        "relative_path": "content/schemas/content-brief.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/schemas/content-brief.schema.json",
+        "digest": "sha256:792d5116f614c4a02a8bff4246d510008b3ece4c605832d370ca297c05a99c2c",
+        "size": 2616
+      },
+      {
+        "relative_path": "content/schemas/content-draft.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/schemas/content-draft.schema.json",
+        "digest": "sha256:1ef706fb9901ac27854c31b56519e103ea18d5fe858d47d32864eb81fb962f64",
+        "size": 4191
+      },
+      {
+        "relative_path": "content/schemas/content-pipeline.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/schemas/content-pipeline.schema.json",
+        "digest": "sha256:6c3e377bbb7bbfe21ad6e0e6d1fb493aa90cd89aff8e3e9e9e64b7693b45c28f",
+        "size": 4996
+      },
+      {
+        "relative_path": "content/schemas/product-event-control.contract.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/schemas/product-event-control.contract.v1.json",
+        "digest": "sha256:e89fad0608fc8b1d234a7d006104f12b83ed3585eed7134068b9f58142c1778e",
+        "size": 429
+      },
+      {
+        "relative_path": "content/schemas/product-event-save.contract.v1.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/schemas/product-event-save.contract.v1.json",
+        "digest": "sha256:7b489c715ca6638fe4d3ce759d254b328f0bf47a0158b8a42354ac412be2f085",
+        "size": 527
+      },
+      {
+        "relative_path": "content/schemas/publish-proposal.schema.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/schemas/publish-proposal.schema.json",
+        "digest": "sha256:42ca52b3d15749fc1d97d42494b91919c4921dc1df44dc6ef74fa90cc5b6d4ca",
+        "size": 3317
+      },
+      {
+        "relative_path": "content/workshops/ecommerce-analyst-query-templates.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/workshops/ecommerce-analyst-query-templates.json",
+        "digest": "sha256:ed84d5a6505f5359dc6cb36d442b5ad1eb68bf150b3eb214e605aae455bb6937",
+        "size": 3637
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.analyst.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/workshops/ecommerce.analyst.json",
+        "digest": "sha256:f7c32fcc7a7be1372af520d810f5eb71d49c6a320c7340401bfe87a1e744d724",
+        "size": 1391
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.content-campaign.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/workshops/ecommerce.content-campaign.json",
+        "digest": "sha256:d6731016605f8f36c727d9c832cf13c196277b2bd78658a2dfc80175200484ac",
+        "size": 1444
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.creator-growth.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/workshops/ecommerce.creator-growth.json",
+        "digest": "sha256:ee52914d72e555597fb87c3df60453fa474fc3b45540a69f6358d5d387dfe263",
+        "size": 1414
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.customer.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/workshops/ecommerce.customer.json",
+        "digest": "sha256:3ab2a97b63d947fb09d52c32e36c5ce1495d22f3e6f00a2b49e26ef2d2ecb146",
+        "size": 1523
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.media-studio.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/workshops/ecommerce.media-studio.json",
+        "digest": "sha256:a74e3fa5e89e93e460cab73c95437d61ae2770918dc01c2facbaf971f51305d2",
+        "size": 2065
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.price-governance.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/workshops/ecommerce.price-governance.json",
+        "digest": "sha256:a121140c0983bffecb5307564b1217ad1ddde275cd7c98278a67f4e59b7af930",
+        "size": 1397
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.task-cockpit.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/workshops/ecommerce.task-cockpit.json",
+        "digest": "sha256:f7db676ec94a08aeccdfc760cb9b941516d666b4136361d93aa4b4b3c797fbb4",
+        "size": 1234
+      },
+      {
+        "relative_path": "content/workshops/w03-customer-private-domain.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/content/workshops/w03-customer-private-domain.json",
+        "digest": "sha256:25a34e673c4042088b6fe6e1025a7d40f1317c26c85cd277d65fe2bb621c4642",
+        "size": 2096
+      },
+      {
+        "relative_path": "evidence/bundle-evals.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/evidence/bundle-evals.json",
+        "digest": "sha256:02b181ca7d55990bbca1e2e923a24eddefe97cc34f596c82def301d22563c4f6",
+        "size": 1227
+      },
+      {
+        "relative_path": "evidence/sbom.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/evidence/sbom.json",
+        "digest": "sha256:14804c76eaa72c73b5bc6b7424d678535daf0f71547da96407f0a00a444bbabc",
+        "size": 1131
+      },
+      {
+        "relative_path": "frontend/index.html",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/frontend/index.html",
+        "digest": "sha256:43c779eff6ec959f51b06452a146d96754ef65907c3e2681a656707832b78d77",
+        "size": 11293
+      },
+      {
+        "relative_path": "frontend/manifest.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/frontend/manifest.json",
+        "digest": "sha256:8fe67617e00386bbc4c9003d61ff43600042763d376a0079515fe231f667aa7c",
+        "size": 308
+      }
+    ]
+  },
+  {
+    "publisher": "aos",
+    "bundle": "solution.ecommerce.operations-base",
+    "version": "1.2.0",
+    "sources": [
+      "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.0"
+    ],
+    "artifactCount": 10,
+    "artifacts": [
+      {
+        "relative_path": "content/evals/logic-dry-run-cases.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.0/content/evals/logic-dry-run-cases.json",
+        "digest": "sha256:ad57598fb4d17dc41e7208b0c3ac721b5a6e08a6f9ffc7e7df69d117533ce148",
+        "size": 6028
+      },
+      {
+        "relative_path": "content/logic/l01-product-launch.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.0/content/logic/l01-product-launch.json",
+        "digest": "sha256:645d391d2a3790d7eac16aff4a9659d71d117e2baa6b90f50364bb7a21ab4229",
+        "size": 2748
+      },
+      {
+        "relative_path": "content/logic/l02-order-fulfillment.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.0/content/logic/l02-order-fulfillment.json",
+        "digest": "sha256:7ef2d449725f818e339f2326018b8b047d38f2bffe50f08e3a258e2250c09499",
+        "size": 1824
+      },
+      {
+        "relative_path": "content/logic/l03-shipment-overdue.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.0/content/logic/l03-shipment-overdue.json",
+        "digest": "sha256:1753ec4e6a992cd3b6995729413b6d5afb14f3f58e120c0f367ea67bebbe070c",
+        "size": 1937
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.operations.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.0/content/production-profiles/ecommerce.operations.json",
+        "digest": "sha256:2edbc788bd7009186d712b3592f001ce803ac0b02c65e798e30dc328215ece45",
+        "size": 1259
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.operations.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.0/content/workshops/ecommerce.operations.json",
+        "digest": "sha256:7a203315e2ade2b77d1542d6e4d84adae1c3fbf9568d213717c0a2416a5eb247",
+        "size": 1472
+      },
+      {
+        "relative_path": "content/workshops/w01-order-management.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.0/content/workshops/w01-order-management.json",
+        "digest": "sha256:11c285d88ecb18f87591ac7dd5bed4f2c9c3c507024687b63515f3c38ef53120",
+        "size": 696
+      },
+      {
+        "relative_path": "content/workshops/w02-product-inventory.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.0/content/workshops/w02-product-inventory.json",
+        "digest": "sha256:c26ee8d1a4fc9a72c9c5ed21c2ed87f9062a27649764c7b916df1b8066e3e6fa",
+        "size": 774
+      },
+      {
+        "relative_path": "evidence/bundle-evals.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.0/evidence/bundle-evals.json",
+        "digest": "sha256:ee6098af889097a92fdc293d0e699834d83cd5325d4ecacd9c81e8f963ea2a39",
+        "size": 750
+      },
+      {
+        "relative_path": "evidence/sbom.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.0/evidence/sbom.json",
+        "digest": "sha256:6ce0aad42c30d72912766b3033f878f1d2bdb9757b54553cf0f5ae6c54415af5",
+        "size": 343
+      }
+    ]
+  },
+  {
+    "publisher": "aos",
+    "bundle": "solution.ecommerce.operations-base",
+    "version": "1.2.2",
+    "sources": [
+      "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2"
+    ],
+    "artifactCount": 10,
+    "artifacts": [
+      {
+        "relative_path": "content/evals/logic-dry-run-cases.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2/content/evals/logic-dry-run-cases.json",
+        "digest": "sha256:ad57598fb4d17dc41e7208b0c3ac721b5a6e08a6f9ffc7e7df69d117533ce148",
+        "size": 6028
+      },
+      {
+        "relative_path": "content/logic/l01-product-launch.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2/content/logic/l01-product-launch.json",
+        "digest": "sha256:645d391d2a3790d7eac16aff4a9659d71d117e2baa6b90f50364bb7a21ab4229",
+        "size": 2748
+      },
+      {
+        "relative_path": "content/logic/l02-order-fulfillment.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2/content/logic/l02-order-fulfillment.json",
+        "digest": "sha256:7ef2d449725f818e339f2326018b8b047d38f2bffe50f08e3a258e2250c09499",
+        "size": 1824
+      },
+      {
+        "relative_path": "content/logic/l03-shipment-overdue.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2/content/logic/l03-shipment-overdue.json",
+        "digest": "sha256:1753ec4e6a992cd3b6995729413b6d5afb14f3f58e120c0f367ea67bebbe070c",
+        "size": 1937
+      },
+      {
+        "relative_path": "content/production-profiles/ecommerce.operations.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2/content/production-profiles/ecommerce.operations.json",
+        "digest": "sha256:2edbc788bd7009186d712b3592f001ce803ac0b02c65e798e30dc328215ece45",
+        "size": 1259
+      },
+      {
+        "relative_path": "content/workshops/ecommerce.operations.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2/content/workshops/ecommerce.operations.json",
+        "digest": "sha256:dde892c7b9f896b6fc09c361c0620e5cf4517c0dcba86e9e70f61ef90028dd5a",
+        "size": 1472
+      },
+      {
+        "relative_path": "content/workshops/w01-order-management.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2/content/workshops/w01-order-management.json",
+        "digest": "sha256:11c285d88ecb18f87591ac7dd5bed4f2c9c3c507024687b63515f3c38ef53120",
+        "size": 696
+      },
+      {
+        "relative_path": "content/workshops/w02-product-inventory.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2/content/workshops/w02-product-inventory.json",
+        "digest": "sha256:c26ee8d1a4fc9a72c9c5ed21c2ed87f9062a27649764c7b916df1b8066e3e6fa",
+        "size": 774
+      },
+      {
+        "relative_path": "evidence/bundle-evals.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2/evidence/bundle-evals.json",
+        "digest": "sha256:ee6098af889097a92fdc293d0e699834d83cd5325d4ecacd9c81e8f963ea2a39",
+        "size": 750
+      },
+      {
+        "relative_path": "evidence/sbom.json",
+        "artifact_ref": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2/evidence/sbom.json",
+        "digest": "sha256:6ce0aad42c30d72912766b3033f878f1d2bdb9757b54553cf0f5ae6c54415af5",
+        "size": 343
+      }
+    ]
+  }
+]

@@ -1,0 +1,151 @@
+{
+  "trustRootSha256": "89d23978bfd50439d97b8368905898143459e59d8ac40eb62c901f1f746f1271",
+  "items": [
+    {
+      "source": "bundle://a0v-canonical/domain.ecommerce.core/1.4.0",
+      "root": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/bn-canonical-alias-registry/signed-bundles",
+      "directoryPresent": false,
+      "loaded": false,
+      "errorType": "ManifestInvalidError",
+      "error": "symbolic links are forbidden or bundle source was not found"
+    },
+    {
+      "source": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2",
+      "root": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/bn-canonical-alias-registry/signed-bundles",
+      "directoryPresent": true,
+      "loaded": true,
+      "artifactIndexExact": true,
+      "contentHash": "sha256:dd03a29a71b7cc8f35a36010042f8f6d7bd0d19dcde1ac107c7c588f2337d441",
+      "signatureEvidence": [
+        {
+          "type": "signature_verification",
+          "artifactRef": "bundle://a0v-canonical/domain.ecommerce.core/1.4.2/bundle.signature.json",
+          "artifactHash": "sha256:f996f5bf6c6e64b04923418cdde5e7b27a63e71675a15f83033d4aacde2a8ba2",
+          "status": "valid",
+          "observedAt": "2026-10-11T07:00:58.319887Z",
+          "expiresAt": "2036-09-17T08:39:17.498609Z",
+          "revokedAt": null,
+          "metadata": {
+            "keyId": "a0v-local-ecommerce-recovery-v2",
+            "reason": "verified",
+            "signatureHashProfile": "canonical-envelope-v1",
+            "trustRootRevision": "sha256:d2254e25330e449fe6cb5d76a9269609ecfaa6f49e53ec6e0b1a4287d31e8de6"
+          }
+        }
+      ],
+      "moduleIds": []
+    },
+    {
+      "source": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.0",
+      "root": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/bn-canonical-alias-registry/signed-bundles",
+      "directoryPresent": false,
+      "loaded": false,
+      "errorType": "ManifestInvalidError",
+      "error": "symbolic links are forbidden or bundle source was not found"
+    },
+    {
+      "source": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2",
+      "root": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/bn-canonical-alias-registry/signed-bundles",
+      "directoryPresent": true,
+      "loaded": true,
+      "artifactIndexExact": true,
+      "contentHash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90",
+      "signatureEvidence": [
+        {
+          "type": "signature_verification",
+          "artifactRef": "bundle://a0v-canonical/platform.ecommerce.niushop/1.23.2/bundle.signature.json",
+          "artifactHash": "sha256:32d4746295c0f692ccf1f9f31590d835ad00ea9c554ebdf8bf587796ab295395",
+          "status": "valid",
+          "observedAt": "2026-10-11T07:00:58.336276Z",
+          "expiresAt": "2036-09-17T08:39:17.498609Z",
+          "revokedAt": null,
+          "metadata": {
+            "keyId": "a0v-local-ecommerce-recovery-v2",
+            "reason": "verified",
+            "signatureHashProfile": "canonical-envelope-v1",
+            "trustRootRevision": "sha256:d2254e25330e449fe6cb5d76a9269609ecfaa6f49e53ec6e0b1a4287d31e8de6"
+          }
+        }
+      ],
+      "moduleIds": []
+    },
+    {
+      "source": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.0",
+      "root": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/bn-canonical-alias-registry/signed-bundles",
+      "directoryPresent": false,
+      "loaded": false,
+      "errorType": "ManifestInvalidError",
+      "error": "symbolic links are forbidden or bundle source was not found"
+    },
+    {
+      "source": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2",
+      "root": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/bn-canonical-alias-registry/signed-bundles",
+      "directoryPresent": true,
+      "loaded": true,
+      "artifactIndexExact": true,
+      "contentHash": "sha256:85ca84cb835758d40877a81510865ff6c958cc6933fdc689bf3d77a4f3bd74a6",
+      "signatureEvidence": [
+        {
+          "type": "signature_verification",
+          "artifactRef": "bundle://a0v-canonical/solution.ecommerce.growth/1.10.2/bundle.signature.json",
+          "artifactHash": "sha256:326c72f69a1d978646b13347cedc084e7270c073010ea05c618a69e92f465b21",
+          "status": "valid",
+          "observedAt": "2026-10-11T07:00:58.363767Z",
+          "expiresAt": "2036-09-17T08:39:17.498609Z",
+          "revokedAt": null,
+          "metadata": {
+            "keyId": "a0v-local-ecommerce-recovery-v2",
+            "reason": "verified",
+            "signatureHashProfile": "canonical-envelope-v1",
+            "trustRootRevision": "sha256:d2254e25330e449fe6cb5d76a9269609ecfaa6f49e53ec6e0b1a4287d31e8de6"
+          }
+        }
+      ],
+      "moduleIds": [
+        "ecommerce.analyst",
+        "ecommerce.content-campaign",
+        "ecommerce.creator-growth",
+        "ecommerce.customer",
+        "ecommerce.media-studio",
+        "ecommerce.price-governance",
+        "ecommerce.task-cockpit"
+      ]
+    },
+    {
+      "source": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.0",
+      "root": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/bn-canonical-alias-registry/signed-bundles",
+      "directoryPresent": false,
+      "loaded": false,
+      "errorType": "ManifestInvalidError",
+      "error": "symbolic links are forbidden or bundle source was not found"
+    },
+    {
+      "source": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2",
+      "root": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/bn-canonical-alias-registry/signed-bundles",
+      "directoryPresent": true,
+      "loaded": true,
+      "artifactIndexExact": true,
+      "contentHash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec",
+      "signatureEvidence": [
+        {
+          "type": "signature_verification",
+          "artifactRef": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2/bundle.signature.json",
+          "artifactHash": "sha256:18357d9c6d2cfb2f106fba57a8cffdb7ccf005869efa8cc5cf07a5338aedaec6",
+          "status": "valid",
+          "observedAt": "2026-10-11T07:00:58.368057Z",
+          "expiresAt": "2036-09-17T08:39:17.498609Z",
+          "revokedAt": null,
+          "metadata": {
+            "keyId": "a0v-local-ecommerce-recovery-v2",
+            "reason": "verified",
+            "signatureHashProfile": "canonical-envelope-v1",
+            "trustRootRevision": "sha256:d2254e25330e449fe6cb5d76a9269609ecfaa6f49e53ec6e0b1a4287d31e8de6"
+          }
+        }
+      ],
+      "moduleIds": [
+        "ecommerce.operations"
+      ]
+    }
+  ]
+}
