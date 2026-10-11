@@ -210,3 +210,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 已有SDK依赖冻结1809
 从1779已记录精确SDK image创建永不启动、networknone的提取容器；复制/lib/apk/db/installed及/etc/apk/repositories，解析每包P/V/A/C/o字段并拒重名、缺版本/架构/校验。新增build-dependency-lock-1809/check.py、dependency-lock.json。不联网安装、不重建、不运行PG、不改原镜像。镜像ID与APK数据库校验仅固定已观察材料，不等于独立签名验证/源到产物证明；正式Root仍未签发。
+
+## 精确依赖归档可得性1810
+原SDK /var/cache/apk为空、/etc/apk/keys仅两公钥；先对1809固定156包在原两个HTTPS仓库执行有界HEAD检查，8线程、单次15秒，无重试/下载/安装/验签。新增package-availability-1810/check.py/result.json。404/网络错误分别记录，不以可获取或镜像公钥等于签名可信。无数据库或容器启动。
