@@ -1,0 +1,25 @@
+{
+  "outcome": "REAL_LIMITED_START_REJECTED_BEFORE_DATABASE_OR_PROCESS",
+  "returncode": 2,
+  "startupReport": {
+    "outcome": "RESTORED_HTTP_STARTUP_REJECTED",
+    "reason": "EXTERNAL_OIDC_CONFIG_REQUIRED",
+    "apiStarted": false,
+    "runtimeAuthorized": false
+  },
+  "port18080AbsentBeforeAndAfter": true,
+  "actualFrozenSourceManifestVerified": true,
+  "restoredIdentityAfter": {
+    "database": "aos_meta_head",
+    "cluster": "7695302940039200809",
+    "schema": "a0v_159",
+    "orgId": "org-org",
+    "orgName": "栖月汇商贸有限公司",
+    "projectId": "dev-project",
+    "tables": 647
+  },
+  "apiStartAuthorized": false,
+  "eightPagesAccepted": false,
+  "providerCalls": 0,
+  "databaseWrites": 0
+}

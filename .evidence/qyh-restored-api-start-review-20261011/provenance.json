@@ -1,0 +1,35 @@
+{
+  "head": "932e758d068bb8dab795e77edb71ddd99a341ce4",
+  "snapshots": {
+    "a0v_qyh_restored_http.py": {
+      "original": "scripts/a0v_qyh_restored_http.py",
+      "sha256": "55f7a2412735636acaf0598352c8957e6e181a852ecad0277969cb6a860e49aa",
+      "exactSnapshot": true
+    },
+    "a0v_current_preview_http.py": {
+      "original": "scripts/a0v_current_preview_http.py",
+      "sha256": "5f684010ba7c6876a9e9718f1a48aeb44d3ac4f0bc6074b8c060b417ccd638b4",
+      "exactSnapshot": true
+    },
+    "test_qyh_restored_http.py": {
+      "original": "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py",
+      "sha256": "c0c6dc288ec2add0c70cafd170afc836f8f5a0f64b6f564676303a4ec06d47f9",
+      "exactSnapshot": true
+    },
+    "limited-start-entry-verification.json": {
+      "original": ".evidence/qyh-full-system-restoration-20261011/limited-start-entry-verification.json",
+      "sha256": "9a10d8358e43988e6cc2e2d404c9f100b8645552f10b182c7f09ad2213d2813e",
+      "exactSnapshot": true
+    },
+    "limited-start-real-negative-terminal.json": {
+      "original": ".evidence/qyh-full-system-restoration-20261011/limited-start-real-negative-terminal.json",
+      "sha256": "c8a8f8cccc91c5624156fdae32f6a67da0cac91f408be5e56af2046e3b332b4e",
+      "exactSnapshot": true
+    },
+    "frozen-current-api-start-entry-review.json": {
+      "original": ".evidence/qyh-full-system-restoration-20261011/frozen-current-api-start-entry-review.json",
+      "sha256": "7f32c5db6c018952c4fccf18cca1ab26925df2690850aa772cc1b3fb2489ff50",
+      "exactSnapshot": true
+    }
+  }
+}

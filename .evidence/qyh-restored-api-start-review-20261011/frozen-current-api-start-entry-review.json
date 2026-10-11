@@ -1,0 +1,13 @@
+{
+  "outcome": "CURRENT_LIMITED_START_ENTRY_FROZEN_SOURCE_RECONCILED",
+  "sourceHead": "932e758d068bb8dab795e77edb71ddd99a341ce4",
+  "fileCount": 6763,
+  "runtimePythonSyntaxParsed": 2128,
+  "newCandidateOriginalGuardAccepted": true,
+  "liveEntryAndFrozenEntryBytesExact": true,
+  "oldCandidateRejected": "RESTORED_CURRENT_API_SOURCE_DRIFT",
+  "oldCandidateFilesRetained": true,
+  "currentEntrySha256": "55f7a2412735636acaf0598352c8957e6e181a852ecad0277969cb6a860e49aa",
+  "servicesStarted": 0,
+  "fullRestorationAccepted": false
+}

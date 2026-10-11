@@ -1,0 +1,34 @@
+{
+  "outcome": "REVIEW_TRANSPORT_FORMAT_FAILURE_READONLY_RECONCILED",
+  "request_id": "qyh-restored-api-start-quality-20261011-r1",
+  "baseline": {
+    "head": "932e758d068bb8dab795e77edb71ddd99a341ce4",
+    "authority_revision": "AOS-001850",
+    "files": {
+      ".evidence/qyh-restored-api-start-review-20261011/a0v_qyh_restored_http.py": "55f7a2412735636acaf0598352c8957e6e181a852ecad0277969cb6a860e49aa",
+      ".evidence/qyh-restored-api-start-review-20261011/a0v_current_preview_http.py": "5f684010ba7c6876a9e9718f1a48aeb44d3ac4f0bc6074b8c060b417ccd638b4",
+      ".evidence/qyh-restored-api-start-review-20261011/test_qyh_restored_http.py": "c0c6dc288ec2add0c70cafd170afc836f8f5a0f64b6f564676303a4ec06d47f9",
+      ".evidence/qyh-restored-api-start-review-20261011/limited-start-entry-verification.json": "9a10d8358e43988e6cc2e2d404c9f100b8645552f10b182c7f09ad2213d2813e",
+      ".evidence/qyh-restored-api-start-review-20261011/limited-start-real-negative-terminal.json": "c8a8f8cccc91c5624156fdae32f6a67da0cac91f408be5e56af2046e3b332b4e",
+      ".evidence/qyh-restored-api-start-review-20261011/frozen-current-api-start-entry-review.json": "7f32c5db6c018952c4fccf18cca1ab26925df2690850aa772cc1b3fb2489ff50",
+      ".evidence/qyh-restored-api-start-review-20261011/plan.md": "dc23406c35725065d468b1401491f93dd8e5b9c10fa6b5642d7d64f9db73f8ea",
+      ".evidence/qyh-restored-api-start-review-20261011/provenance.json": "783edde0bccd61a279bf7c7dae6e618731176955a773036a1014621071911280"
+    }
+  },
+  "runnerExit": 1,
+  "providerProcessExit": 0,
+  "terminalStopReason": "stop",
+  "toolExecutionStarts": 0,
+  "formalResultExists": false,
+  "consumptionRecorded": false,
+  "acceptedReviewVerdict": null,
+  "unconsumedTextBodyVerdict": "PASS",
+  "rejection": "Strict JSON parser rejected Markdown code fence",
+  "transportSha256": "8fd0235dd889695e9908b6541576114f4b6ff1cef9bb584bbb30824c32854cf5",
+  "transportRetainedPrivatelyNotCommitted": true,
+  "sameRequestResent": false,
+  "attemptMarkerUntouched": true,
+  "authorityGranted": false,
+  "mainGoalBlocked": false,
+  "nextSafeAction": "Continue authorized main restoration work while keeping independent review format acceptance pending; no model-suggested trust-root or permission changes."
+}
