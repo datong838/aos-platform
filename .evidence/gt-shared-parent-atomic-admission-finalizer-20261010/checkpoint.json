@@ -1,5 +1,5 @@
 {
-  "authority_revision": "AOS-001786",
+  "authority_revision": "AOS-001787",
   "code_files": [
     "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
     "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py"
@@ -35,12 +35,12 @@
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/receipt-catalog-native-1765-r1/verification.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/fixture-restoration-1766/verification.json",
     ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/receipt-fresh-ingress-1767-r2/verification.json",
-    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/acl-prefilter-positive-1785/verification.json"
+    ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/global-acl-positive-1786/verification.json"
   ],
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "schema": "aos-engineering-checkpoint/v1",
-  "step": "null-acl-optimized-full-source-still-expiry-red",
+  "step": "receipt-physical-returned-collector-source-expiry-red",
   "task_base_revision": "AOS-001698",
   "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010",
   "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2"
