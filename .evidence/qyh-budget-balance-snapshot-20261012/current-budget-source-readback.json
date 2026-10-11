@@ -1,0 +1,66 @@
+{
+  "authority": "AOS-001900",
+  "task": "qyh-budget-balance-snapshot-20261012",
+  "nativeReadonlyScopedConnections": [
+    {
+      "role": "aos_runtime",
+      "db": "aos_meta_head",
+      "cluster": "7695302940039200809"
+    },
+    {
+      "role": "aos_runtime",
+      "db": "aos_meta_head",
+      "cluster": "7695302940039200809"
+    },
+    {
+      "role": "aos_runtime",
+      "db": "aos_meta_head",
+      "cluster": "7695302940039200809"
+    },
+    {
+      "role": "aos_runtime",
+      "db": "aos_meta_head",
+      "cluster": "7695302940039200809"
+    }
+  ],
+  "canonicalCurrentSources": [
+    {
+      "scope": [
+        "org-org",
+        "dev-project"
+      ],
+      "currentHeads": 1,
+      "observed": true,
+      "executionAuthorized": false,
+      "costUpperBoundAuthorized": false,
+      "bucketBlockers": [
+        [
+          "BUDGET_BUCKET_UNAVAILABLE"
+        ],
+        [
+          "BUDGET_BUCKET_UNAVAILABLE"
+        ],
+        [
+          "BUDGET_BUCKET_UNAVAILABLE"
+        ]
+      ]
+    },
+    {
+      "scope": [
+        "dev-org",
+        "dev-project"
+      ],
+      "currentHeads": 0,
+      "observed": false,
+      "sourceUnavailable": true,
+      "executionAuthorized": false,
+      "costUpperBoundAuthorized": false
+    }
+  ],
+  "current647DataAndOriginalMetadataUnchanged": true,
+  "databaseWrites": 0,
+  "contentReadinessConnected": false,
+  "formalRestorationAccepted": false,
+  "readerSourceHash": "2cd5f4505ec540183c238cd6628d5fa9b5a802b70ed0b0e6b002f089cabfd2ad",
+  "scriptHash": "31d7b4f950f7c38253556fca2b71fe3f360863bb77a69e169f0c03b91a6dfba2"
+}

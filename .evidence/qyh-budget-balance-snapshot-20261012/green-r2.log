@@ -1,0 +1,406 @@
+...............EEEEEE                                                    [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_pg_exact_current_three_buckets_do_not_authorize_proposed_cost _
+
+    @pytest.fixture
+    def seeded_budget():
+        now=datetime.now(timezone.utc)
+        bid='test-snapshot-'+uuid.uuid4().hex[:12]
+        budget=materialize_revision(SCOPE,'isolated:test',BudgetRevisionCreate(budgetId=bid,revision=1,
+            dailyLimitMinor=100,monthlyLimitMinor=1000,alertThresholdPct=80,
+            effectiveFrom=now-timedelta(days=1),effectiveUntil=now+timedelta(days=2),
+            owner='isolated:owner',overBudgetApprover='isolated:checker',lifecycle='active'))
+        ref=lambda kind,rid:{'resourceType':kind,'resourceId':rid,'revision':1,'contentHash':'sha256:'+'a'*64}
+        request=ReserveBudgetRequest(operationId='isolated:snapshot',invocationKey=uuid.uuid4().hex,
+            taskRef=ref('Task','test-only:unapproved-task'),policyRef={**ref('BudgetRevision',bid),'contentHash':'sha256:'+budget.content_hash},
+            pricingRef=ref('ModelPriceSnapshotRevision','test-only:no-price-grant'),
+            approvalRef=ref('ActionApprovalEvent','test-only:no-execution-approval'),upperBoundMinor=30)
+        targets=derive_bucket_authorities(request,checked_at=now,budget_effective_from=budget.effective_from,
+            budget_effective_until=budget.effective_until,daily_limit_minor=100,pilot_limit_minor=1000)
+        with psycopg.connect(os.environ['AOS_DATABASE_URL'],row_factory=dict_row) as c:
+            assert c.info.dbname.startswith('aos_test_') and c.info.dbname.endswith('_ti4_test')
+            c.execute('INSERT INTO aip_budget_head(org_id,project_id,budget_id,current_revision,version) VALUES(%s,%s,%s,1,1)',(*SCOPE.key,bid))
+>           insert_budget(c,budget)
+
+services/aos-api/tests/aip/test_budget_balance_snapshot.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/tests/aip/test_budget_balance_snapshot.py:80: in insert_budget
+    c.execute(sql.SQL('INSERT INTO aip_budget_revision({}) VALUES({})').format(sql.SQL(',').join(map(sql.Identifier,names)),sql.SQL(',').join(sql.Placeholder() for _ in names)),[data[n] for n in names])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [BAD] at 0x11aa757d0>
+query = Composed([SQL('INSERT INTO aip_budget_revision('), Composed([Identifier('org_id'), SQL(','), Identifier('project_id'),...der(), SQL(','), Placeholder(), SQL(','), Placeholder(), SQL(','), Placeholder(), SQL(','), Placeholder()]), SQL(')')])
+params = ['org-org', 'dev-project', 'test-snapshot-82b24ac8ea18', 1, '97a15115aa008c2dcf6191bd80d65ea4be338d3620b447eef1ec795e889e984e', 'active', ...]
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.CheckViolation: BUDGET_ACTIVATION_CONSUMPTION_REQUIRED
+E           CONTEXT:  PL/pgSQL function public.aip_budget_active_insert_guard() line 3 at RAISE
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: CheckViolation
+_ ERROR at setup of test_pg_actual_ledger_fault_is_observed[unknown-BUDGET_USAGE_UNKNOWN] _
+
+    @pytest.fixture
+    def seeded_budget():
+        now=datetime.now(timezone.utc)
+        bid='test-snapshot-'+uuid.uuid4().hex[:12]
+        budget=materialize_revision(SCOPE,'isolated:test',BudgetRevisionCreate(budgetId=bid,revision=1,
+            dailyLimitMinor=100,monthlyLimitMinor=1000,alertThresholdPct=80,
+            effectiveFrom=now-timedelta(days=1),effectiveUntil=now+timedelta(days=2),
+            owner='isolated:owner',overBudgetApprover='isolated:checker',lifecycle='active'))
+        ref=lambda kind,rid:{'resourceType':kind,'resourceId':rid,'revision':1,'contentHash':'sha256:'+'a'*64}
+        request=ReserveBudgetRequest(operationId='isolated:snapshot',invocationKey=uuid.uuid4().hex,
+            taskRef=ref('Task','test-only:unapproved-task'),policyRef={**ref('BudgetRevision',bid),'contentHash':'sha256:'+budget.content_hash},
+            pricingRef=ref('ModelPriceSnapshotRevision','test-only:no-price-grant'),
+            approvalRef=ref('ActionApprovalEvent','test-only:no-execution-approval'),upperBoundMinor=30)
+        targets=derive_bucket_authorities(request,checked_at=now,budget_effective_from=budget.effective_from,
+            budget_effective_until=budget.effective_until,daily_limit_minor=100,pilot_limit_minor=1000)
+        with psycopg.connect(os.environ['AOS_DATABASE_URL'],row_factory=dict_row) as c:
+            assert c.info.dbname.startswith('aos_test_') and c.info.dbname.endswith('_ti4_test')
+            c.execute('INSERT INTO aip_budget_head(org_id,project_id,budget_id,current_revision,version) VALUES(%s,%s,%s,1,1)',(*SCOPE.key,bid))
+>           insert_budget(c,budget)
+
+services/aos-api/tests/aip/test_budget_balance_snapshot.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/tests/aip/test_budget_balance_snapshot.py:80: in insert_budget
+    c.execute(sql.SQL('INSERT INTO aip_budget_revision({}) VALUES({})').format(sql.SQL(',').join(map(sql.Identifier,names)),sql.SQL(',').join(sql.Placeholder() for _ in names)),[data[n] for n in names])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [BAD] at 0x11ab9c8d0>
+query = Composed([SQL('INSERT INTO aip_budget_revision('), Composed([Identifier('org_id'), SQL(','), Identifier('project_id'),...der(), SQL(','), Placeholder(), SQL(','), Placeholder(), SQL(','), Placeholder(), SQL(','), Placeholder()]), SQL(')')])
+params = ['org-org', 'dev-project', 'test-snapshot-2fee51ae61d2', 1, '3dc30de7e6b81b6884b505c65f6c3e24212e7e509b53520dff548e6ebd3e4f95', 'active', ...]
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.CheckViolation: BUDGET_ACTIVATION_CONSUMPTION_REQUIRED
+E           CONTEXT:  PL/pgSQL function public.aip_budget_active_insert_guard() line 3 at RAISE
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: CheckViolation
+_ ERROR at setup of test_pg_actual_ledger_fault_is_observed[limit-BUDGET_BUCKET_AUTHORITY_DRIFTED] _
+
+    @pytest.fixture
+    def seeded_budget():
+        now=datetime.now(timezone.utc)
+        bid='test-snapshot-'+uuid.uuid4().hex[:12]
+        budget=materialize_revision(SCOPE,'isolated:test',BudgetRevisionCreate(budgetId=bid,revision=1,
+            dailyLimitMinor=100,monthlyLimitMinor=1000,alertThresholdPct=80,
+            effectiveFrom=now-timedelta(days=1),effectiveUntil=now+timedelta(days=2),
+            owner='isolated:owner',overBudgetApprover='isolated:checker',lifecycle='active'))
+        ref=lambda kind,rid:{'resourceType':kind,'resourceId':rid,'revision':1,'contentHash':'sha256:'+'a'*64}
+        request=ReserveBudgetRequest(operationId='isolated:snapshot',invocationKey=uuid.uuid4().hex,
+            taskRef=ref('Task','test-only:unapproved-task'),policyRef={**ref('BudgetRevision',bid),'contentHash':'sha256:'+budget.content_hash},
+            pricingRef=ref('ModelPriceSnapshotRevision','test-only:no-price-grant'),
+            approvalRef=ref('ActionApprovalEvent','test-only:no-execution-approval'),upperBoundMinor=30)
+        targets=derive_bucket_authorities(request,checked_at=now,budget_effective_from=budget.effective_from,
+            budget_effective_until=budget.effective_until,daily_limit_minor=100,pilot_limit_minor=1000)
+        with psycopg.connect(os.environ['AOS_DATABASE_URL'],row_factory=dict_row) as c:
+            assert c.info.dbname.startswith('aos_test_') and c.info.dbname.endswith('_ti4_test')
+            c.execute('INSERT INTO aip_budget_head(org_id,project_id,budget_id,current_revision,version) VALUES(%s,%s,%s,1,1)',(*SCOPE.key,bid))
+>           insert_budget(c,budget)
+
+services/aos-api/tests/aip/test_budget_balance_snapshot.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/tests/aip/test_budget_balance_snapshot.py:80: in insert_budget
+    c.execute(sql.SQL('INSERT INTO aip_budget_revision({}) VALUES({})').format(sql.SQL(',').join(map(sql.Identifier,names)),sql.SQL(',').join(sql.Placeholder() for _ in names)),[data[n] for n in names])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [BAD] at 0x11aa74090>
+query = Composed([SQL('INSERT INTO aip_budget_revision('), Composed([Identifier('org_id'), SQL(','), Identifier('project_id'),...der(), SQL(','), Placeholder(), SQL(','), Placeholder(), SQL(','), Placeholder(), SQL(','), Placeholder()]), SQL(')')])
+params = ['org-org', 'dev-project', 'test-snapshot-611988f561a8', 1, '3626d73105150a1dbb576968dcbd36f573dffb085bd2c56d44a51ed80e3985a0', 'active', ...]
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.CheckViolation: BUDGET_ACTIVATION_CONSUMPTION_REQUIRED
+E           CONTEXT:  PL/pgSQL function public.aip_budget_active_insert_guard() line 3 at RAISE
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: CheckViolation
+_ ERROR at setup of test_pg_actual_ledger_fault_is_observed[missing-BUDGET_BUCKET_UNAVAILABLE] _
+
+    @pytest.fixture
+    def seeded_budget():
+        now=datetime.now(timezone.utc)
+        bid='test-snapshot-'+uuid.uuid4().hex[:12]
+        budget=materialize_revision(SCOPE,'isolated:test',BudgetRevisionCreate(budgetId=bid,revision=1,
+            dailyLimitMinor=100,monthlyLimitMinor=1000,alertThresholdPct=80,
+            effectiveFrom=now-timedelta(days=1),effectiveUntil=now+timedelta(days=2),
+            owner='isolated:owner',overBudgetApprover='isolated:checker',lifecycle='active'))
+        ref=lambda kind,rid:{'resourceType':kind,'resourceId':rid,'revision':1,'contentHash':'sha256:'+'a'*64}
+        request=ReserveBudgetRequest(operationId='isolated:snapshot',invocationKey=uuid.uuid4().hex,
+            taskRef=ref('Task','test-only:unapproved-task'),policyRef={**ref('BudgetRevision',bid),'contentHash':'sha256:'+budget.content_hash},
+            pricingRef=ref('ModelPriceSnapshotRevision','test-only:no-price-grant'),
+            approvalRef=ref('ActionApprovalEvent','test-only:no-execution-approval'),upperBoundMinor=30)
+        targets=derive_bucket_authorities(request,checked_at=now,budget_effective_from=budget.effective_from,
+            budget_effective_until=budget.effective_until,daily_limit_minor=100,pilot_limit_minor=1000)
+        with psycopg.connect(os.environ['AOS_DATABASE_URL'],row_factory=dict_row) as c:
+            assert c.info.dbname.startswith('aos_test_') and c.info.dbname.endswith('_ti4_test')
+            c.execute('INSERT INTO aip_budget_head(org_id,project_id,budget_id,current_revision,version) VALUES(%s,%s,%s,1,1)',(*SCOPE.key,bid))
+>           insert_budget(c,budget)
+
+services/aos-api/tests/aip/test_budget_balance_snapshot.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/tests/aip/test_budget_balance_snapshot.py:80: in insert_budget
+    c.execute(sql.SQL('INSERT INTO aip_budget_revision({}) VALUES({})').format(sql.SQL(',').join(map(sql.Identifier,names)),sql.SQL(',').join(sql.Placeholder() for _ in names)),[data[n] for n in names])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [BAD] at 0x11aa2c090>
+query = Composed([SQL('INSERT INTO aip_budget_revision('), Composed([Identifier('org_id'), SQL(','), Identifier('project_id'),...der(), SQL(','), Placeholder(), SQL(','), Placeholder(), SQL(','), Placeholder(), SQL(','), Placeholder()]), SQL(')')])
+params = ['org-org', 'dev-project', 'test-snapshot-17655bdb1cbb', 1, 'b4edae63ff7687961aeed431a7dd20065e54eca7736070f3c97e35f47ea51c78', 'active', ...]
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.CheckViolation: BUDGET_ACTIVATION_CONSUMPTION_REQUIRED
+E           CONTEXT:  PL/pgSQL function public.aip_budget_active_insert_guard() line 3 at RAISE
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: CheckViolation
+_ ERROR at setup of test_pg_head_change_and_cross_tenant_are_not_old_authority _
+
+    @pytest.fixture
+    def seeded_budget():
+        now=datetime.now(timezone.utc)
+        bid='test-snapshot-'+uuid.uuid4().hex[:12]
+        budget=materialize_revision(SCOPE,'isolated:test',BudgetRevisionCreate(budgetId=bid,revision=1,
+            dailyLimitMinor=100,monthlyLimitMinor=1000,alertThresholdPct=80,
+            effectiveFrom=now-timedelta(days=1),effectiveUntil=now+timedelta(days=2),
+            owner='isolated:owner',overBudgetApprover='isolated:checker',lifecycle='active'))
+        ref=lambda kind,rid:{'resourceType':kind,'resourceId':rid,'revision':1,'contentHash':'sha256:'+'a'*64}
+        request=ReserveBudgetRequest(operationId='isolated:snapshot',invocationKey=uuid.uuid4().hex,
+            taskRef=ref('Task','test-only:unapproved-task'),policyRef={**ref('BudgetRevision',bid),'contentHash':'sha256:'+budget.content_hash},
+            pricingRef=ref('ModelPriceSnapshotRevision','test-only:no-price-grant'),
+            approvalRef=ref('ActionApprovalEvent','test-only:no-execution-approval'),upperBoundMinor=30)
+        targets=derive_bucket_authorities(request,checked_at=now,budget_effective_from=budget.effective_from,
+            budget_effective_until=budget.effective_until,daily_limit_minor=100,pilot_limit_minor=1000)
+        with psycopg.connect(os.environ['AOS_DATABASE_URL'],row_factory=dict_row) as c:
+            assert c.info.dbname.startswith('aos_test_') and c.info.dbname.endswith('_ti4_test')
+            c.execute('INSERT INTO aip_budget_head(org_id,project_id,budget_id,current_revision,version) VALUES(%s,%s,%s,1,1)',(*SCOPE.key,bid))
+>           insert_budget(c,budget)
+
+services/aos-api/tests/aip/test_budget_balance_snapshot.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/tests/aip/test_budget_balance_snapshot.py:80: in insert_budget
+    c.execute(sql.SQL('INSERT INTO aip_budget_revision({}) VALUES({})').format(sql.SQL(',').join(map(sql.Identifier,names)),sql.SQL(',').join(sql.Placeholder() for _ in names)),[data[n] for n in names])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [BAD] at 0x11aa3a090>
+query = Composed([SQL('INSERT INTO aip_budget_revision('), Composed([Identifier('org_id'), SQL(','), Identifier('project_id'),...der(), SQL(','), Placeholder(), SQL(','), Placeholder(), SQL(','), Placeholder(), SQL(','), Placeholder()]), SQL(')')])
+params = ['org-org', 'dev-project', 'test-snapshot-e7b7e44d455d', 1, '4a1541865d10a4e53a43d68ea824bb58efb2f36476904c3e142e7dd828a84471', 'active', ...]
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.CheckViolation: BUDGET_ACTIVATION_CONSUMPTION_REQUIRED
+E           CONTEXT:  PL/pgSQL function public.aip_budget_active_insert_guard() line 3 at RAISE
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: CheckViolation
+__________ ERROR at setup of test_pg_readwrite_connection_is_rejected __________
+
+    @pytest.fixture
+    def seeded_budget():
+        now=datetime.now(timezone.utc)
+        bid='test-snapshot-'+uuid.uuid4().hex[:12]
+        budget=materialize_revision(SCOPE,'isolated:test',BudgetRevisionCreate(budgetId=bid,revision=1,
+            dailyLimitMinor=100,monthlyLimitMinor=1000,alertThresholdPct=80,
+            effectiveFrom=now-timedelta(days=1),effectiveUntil=now+timedelta(days=2),
+            owner='isolated:owner',overBudgetApprover='isolated:checker',lifecycle='active'))
+        ref=lambda kind,rid:{'resourceType':kind,'resourceId':rid,'revision':1,'contentHash':'sha256:'+'a'*64}
+        request=ReserveBudgetRequest(operationId='isolated:snapshot',invocationKey=uuid.uuid4().hex,
+            taskRef=ref('Task','test-only:unapproved-task'),policyRef={**ref('BudgetRevision',bid),'contentHash':'sha256:'+budget.content_hash},
+            pricingRef=ref('ModelPriceSnapshotRevision','test-only:no-price-grant'),
+            approvalRef=ref('ActionApprovalEvent','test-only:no-execution-approval'),upperBoundMinor=30)
+        targets=derive_bucket_authorities(request,checked_at=now,budget_effective_from=budget.effective_from,
+            budget_effective_until=budget.effective_until,daily_limit_minor=100,pilot_limit_minor=1000)
+        with psycopg.connect(os.environ['AOS_DATABASE_URL'],row_factory=dict_row) as c:
+            assert c.info.dbname.startswith('aos_test_') and c.info.dbname.endswith('_ti4_test')
+            c.execute('INSERT INTO aip_budget_head(org_id,project_id,budget_id,current_revision,version) VALUES(%s,%s,%s,1,1)',(*SCOPE.key,bid))
+>           insert_budget(c,budget)
+
+services/aos-api/tests/aip/test_budget_balance_snapshot.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/tests/aip/test_budget_balance_snapshot.py:80: in insert_budget
+    c.execute(sql.SQL('INSERT INTO aip_budget_revision({}) VALUES({})').format(sql.SQL(',').join(map(sql.Identifier,names)),sql.SQL(',').join(sql.Placeholder() for _ in names)),[data[n] for n in names])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [BAD] at 0x11ab65850>
+query = Composed([SQL('INSERT INTO aip_budget_revision('), Composed([Identifier('org_id'), SQL(','), Identifier('project_id'),...der(), SQL(','), Placeholder(), SQL(','), Placeholder(), SQL(','), Placeholder(), SQL(','), Placeholder()]), SQL(')')])
+params = ['org-org', 'dev-project', 'test-snapshot-2eeb9b156fa7', 1, 'ad5dff67eaf5fc9a6ef22fb498825d7f34e40aa58ac7c2f0297828ce9fb3b9f5', 'active', ...]
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.CheckViolation: BUDGET_ACTIVATION_CONSUMPTION_REQUIRED
+E           CONTEXT:  PL/pgSQL function public.aip_budget_active_insert_guard() line 3 at RAISE
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: CheckViolation
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR services/aos-api/tests/aip/test_budget_balance_snapshot.py::test_pg_exact_current_three_buckets_do_not_authorize_proposed_cost
+ERROR services/aos-api/tests/aip/test_budget_balance_snapshot.py::test_pg_actual_ledger_fault_is_observed[unknown-BUDGET_USAGE_UNKNOWN]
+ERROR services/aos-api/tests/aip/test_budget_balance_snapshot.py::test_pg_actual_ledger_fault_is_observed[limit-BUDGET_BUCKET_AUTHORITY_DRIFTED]
+ERROR services/aos-api/tests/aip/test_budget_balance_snapshot.py::test_pg_actual_ledger_fault_is_observed[missing-BUDGET_BUCKET_UNAVAILABLE]
+ERROR services/aos-api/tests/aip/test_budget_balance_snapshot.py::test_pg_head_change_and_cross_tenant_are_not_old_authority
+ERROR services/aos-api/tests/aip/test_budget_balance_snapshot.py::test_pg_readwrite_connection_is_rejected
+15 passed, 7 warnings, 6 errors in 4.77s

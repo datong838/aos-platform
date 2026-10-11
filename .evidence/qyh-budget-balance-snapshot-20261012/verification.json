@@ -1,0 +1,21 @@
+{
+  "task": "qyh-budget-balance-snapshot-20261012",
+  "authority": "AOS-001900",
+  "readerHash": "2cd5f4505ec540183c238cd6628d5fa9b5a802b70ed0b0e6b002f089cabfd2ad",
+  "testHash": "236fac71ce4b9aca3a75a6f7d52bf8abe3f256d25c7f3dbdd5745a6740975822",
+  "newTests": 25,
+  "newActualPGTests": 10,
+  "targetedAndAdjacentPassed": 37,
+  "skipped": 0,
+  "moduleSQLOnlySelect": true,
+  "currentDatabaseWrites": 0,
+  "originalCurrent647DataAndMetadataUnchanged": true,
+  "publicActivationTriggerRetained": true,
+  "positivePGUsesObservationFixtureNotFormalActivation": true,
+  "costUpperBoundAuthorized": false,
+  "executionAuthorized": false,
+  "contentReadinessConnected": false,
+  "formalRestorationAccepted": false,
+  "checklistPath": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-12-QYH-内容预算只读快照恢复清单.md",
+  "checklistHash": "1e3631d703de3dfd7abaac73d7307cfeff07fd722f12fd9a231412c9f73e11b1"
+}

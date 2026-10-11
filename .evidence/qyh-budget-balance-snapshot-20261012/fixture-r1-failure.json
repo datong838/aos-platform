@@ -1,0 +1,7 @@
+{
+  "phase": "originalAutousePGFixture",
+  "error": "defaultPort5433Unavailable",
+  "testLogicExecuted": false,
+  "databaseCreated": false,
+  "next": "useBoundIsolated18431WithOriginalDisposableDatabaseFixture"
+}
