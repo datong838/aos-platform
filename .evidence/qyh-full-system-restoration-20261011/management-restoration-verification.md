@@ -13,3 +13,5 @@ Web私有原HEAD快照758文件、排除1环境文件；仅依赖解析使用现
 当前可访问http://127.0.0.1:18434/org/membership查看真实组织和历史安装。管理Web/接口为只读，不代表正式身份接入或八工作台运行通过；三历史绑定仍禁入，正式当前配置/Owner/资源及最新两包发布继续原恢复Task。全恢复Task及Goal保持ACTIVE。没有将这一子验收替代自然经营首链。
 
 r2最终：API head85d96aa96fd6fe4e8b9ded8ffbdc23e5b331da5c，全新解释器/factory import路径门实际通过，运行日志中路径均为私有冻结API且未出现工作树API源路径。API handle4734、Web handle4571均监听；原8080 PID17040及8434 PID19275保持。Web源码字节与r2 HEAD无差异。management-browser-qa-r2.json再次真实组织/135安装/零动作/canary404/POST405通过，r2截图保留。专项最终56通过。后台日志仍有其他目录缺文件/ValueError诊断，不能声称全部API或八页健康；它们继续恢复主线排障，不以组织页成功消除未完成项。
+
+当前r4进展：同HEAD真实仓库bundles纳入冻结，修复legacy目录缺目录500；current ready-binding门提前、仅可见项做冲突检查，修复历史禁入安装重复route导致runtime500。两目录org-org/dev-project真实GET200/count0，dev-org0。专项相邻96通过、14隔离PG未运行。真实管理浏览器r4再次组织名/135安装/零动作/404canary/405写阻断通过；八route逐页仍无可用入口，未完成正式恢复。新API handle30679/PID88122，原8080/8434及Web18434不变。证据qyh-runtime-catalog-current-binding-20261011/verification.md。

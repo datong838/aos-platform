@@ -1,0 +1,11 @@
+{
+  "head": "33d2683a0b4506c63ca974df928bf217e633daef",
+  "apiPort": 18080,
+  "priorOwnedPid": 86364,
+  "mode": "LOCAL_READONLY_MANAGEMENT_CURRENT_BINDING_CATALOG",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "frozenSourceVerified": true,
+  "originalPreviewTouched": false,
+  "runtimeAuthorized": false,
+  "unknownOutcomeReconcileOnly": true
+}

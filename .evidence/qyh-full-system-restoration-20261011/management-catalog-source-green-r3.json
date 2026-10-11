@@ -1,0 +1,9 @@
+{
+  "outcome": "ORIGINAL_CATALOG_LOADER_REAL_COMMITTED_ASSETS_GREEN",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-dcb4890493b4d222e09457faa0736f4c619b8522",
+  "bundleFileCount": 1827,
+  "exactGitBlobSha256Verified": true,
+  "originalManifestLoaderConstructed": true,
+  "runtimeAuthorized": false,
+  "databaseMutated": false
+}

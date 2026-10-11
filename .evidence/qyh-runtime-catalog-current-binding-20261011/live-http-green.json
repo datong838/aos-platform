@@ -1,0 +1,49 @@
+{
+  "outcome": "RESTORED_CURRENT_BINDING_CATALOG_HTTP_GREEN",
+  "head": "33d2683a0b4506c63ca974df928bf217e633daef",
+  "rows": [
+    {
+      "org": "org-org",
+      "route": "/v1/ecommerce-workshop/modules",
+      "status": 200,
+      "count": 0,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      }
+    },
+    {
+      "org": "org-org",
+      "route": "/v1/runtime-workshop/modules",
+      "status": 200,
+      "count": 0,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      }
+    },
+    {
+      "org": "dev-org",
+      "route": "/v1/ecommerce-workshop/modules",
+      "status": 200,
+      "count": 0,
+      "tenant": {
+        "orgId": "dev-org",
+        "projectId": "dev-project"
+      }
+    },
+    {
+      "org": "dev-org",
+      "route": "/v1/runtime-workshop/modules",
+      "status": 200,
+      "count": 0,
+      "tenant": {
+        "orgId": "dev-org",
+        "projectId": "dev-project"
+      }
+    }
+  ],
+  "eightPagesAccepted": false,
+  "runtimeAuthorized": false,
+  "databaseWrites": 0
+}

@@ -1,0 +1,50 @@
+{
+  "rows": [
+    {
+      "route": "/workshop/cockpit",
+      "documentStatus": 200,
+      "actualState": "UNAVAILABLE_NO_CURRENT_READY_INSTALLATION"
+    },
+    {
+      "route": "/workshop/content-campaign",
+      "documentStatus": 200,
+      "actualState": "UNAVAILABLE_NO_CURRENT_READY_INSTALLATION"
+    },
+    {
+      "route": "/workshop/operations",
+      "documentStatus": 200,
+      "actualState": "UNAVAILABLE_NO_CURRENT_READY_INSTALLATION"
+    },
+    {
+      "route": "/workshop/creator-growth",
+      "documentStatus": 200,
+      "actualState": "UNAVAILABLE_NO_CURRENT_READY_INSTALLATION"
+    },
+    {
+      "route": "/workshop/media-studio",
+      "documentStatus": 200,
+      "actualState": "UNAVAILABLE_NO_CURRENT_READY_INSTALLATION"
+    },
+    {
+      "route": "/workshop/analyst",
+      "documentStatus": 200,
+      "actualState": "UNAVAILABLE_NO_CURRENT_READY_INSTALLATION"
+    },
+    {
+      "route": "/workshop/price-governance",
+      "documentStatus": 200,
+      "actualState": "UNAVAILABLE_NO_CURRENT_READY_INSTALLATION"
+    },
+    {
+      "route": "/workshop/customer",
+      "documentStatus": 200,
+      "actualState": "UNAVAILABLE_NO_CURRENT_READY_INSTALLATION"
+    }
+  ],
+  "pageErrorTypes": [],
+  "requestInterception": false,
+  "mockedResponses": false,
+  "eightPagesAccepted": false,
+  "runtimeAuthorized": false,
+  "tabRetained": true
+}

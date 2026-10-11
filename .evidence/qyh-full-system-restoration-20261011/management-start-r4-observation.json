@@ -1,0 +1,23 @@
+{
+  "apiSessionHandle": 30679,
+  "webSessionHandle": 4571,
+  "apiSourceHead": "33d2683a0b4506c63ca974df928bf217e633daef",
+  "runtimeAuthorized": false,
+  "eightPagesAccepted": false,
+  "listeners": {
+    "8080": [
+      "17040"
+    ],
+    "8434": [
+      "19275"
+    ],
+    "18080": [
+      "88122"
+    ],
+    "18434": [
+      "82853"
+    ]
+  },
+  "originalServicesRetained": true,
+  "errorEventCount": 0
+}

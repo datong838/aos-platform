@@ -1,0 +1,63 @@
+{
+  "outcome": "RUNTIME_CATALOG_ORIGINAL_READER_DIAGNOSTIC",
+  "strictJsonRoundTrip": true,
+  "actualCalls": [
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "route": "/workshop/analyst",
+      "state": "needs_attention"
+    },
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "route": "/workshop/content-campaign",
+      "state": "needs_attention"
+    },
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "route": "/workshop/creator-growth",
+      "state": "needs_attention"
+    },
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "route": "/workshop/customer",
+      "state": "needs_attention"
+    },
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "route": "/workshop/media-studio",
+      "state": "needs_attention"
+    },
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "route": "/workshop/price-governance",
+      "state": "needs_attention"
+    },
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "route": "/workshop/cockpit",
+      "state": "needs_attention"
+    },
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "route": "/workshop/operations",
+      "state": "needs_attention"
+    }
+  ],
+  "result": {
+    "errorType": "RegistryIntegrityCorruptError",
+    "trace": [
+      {
+        "file": "<stdin>",
+        "line": 21,
+        "function": "<module>"
+      },
+      {
+        "file": "ecommerce_runtime_workshop_catalog.py",
+        "line": 75,
+        "function": "list_modules"
+      }
+    ]
+  },
+  "databaseWrites": 0,
+  "runtimeAuthorized": false
+}

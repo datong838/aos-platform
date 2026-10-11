@@ -1,0 +1,80 @@
+{
+  "head": "dcb4890493b4d222e09457faa0736f4c619b8522",
+  "apiSessionHandle": 51046,
+  "actualHttp": [
+    {
+      "org": "org-org",
+      "route": "/v1/ecommerce-workshop/modules",
+      "status": 200,
+      "code": null,
+      "count": 0,
+      "fields": [
+        "count",
+        "dataCutoff",
+        "evaluatedAt",
+        "items",
+        "schemaVersion",
+        "tenant"
+      ]
+    },
+    {
+      "org": "org-org",
+      "route": "/v1/runtime-workshop/modules",
+      "status": 500,
+      "code": "REGISTRY_INTEGRITY_CORRUPT",
+      "count": null,
+      "fields": [
+        "code",
+        "details",
+        "message",
+        "traceId"
+      ]
+    },
+    {
+      "org": "dev-org",
+      "route": "/v1/ecommerce-workshop/modules",
+      "status": 200,
+      "code": null,
+      "count": 0,
+      "fields": [
+        "count",
+        "dataCutoff",
+        "evaluatedAt",
+        "items",
+        "schemaVersion",
+        "tenant"
+      ]
+    },
+    {
+      "org": "dev-org",
+      "route": "/v1/runtime-workshop/modules",
+      "status": 200,
+      "code": null,
+      "count": 0,
+      "fields": [
+        "count",
+        "dataCutoff",
+        "evaluatedAt",
+        "items",
+        "schemaVersion",
+        "tenant"
+      ]
+    }
+  ],
+  "listeners": {
+    "8080": [
+      "17040"
+    ],
+    "8434": [
+      "19275"
+    ],
+    "18080": [
+      "86364"
+    ],
+    "18434": [
+      "82853"
+    ]
+  },
+  "runtimeAuthorized": false,
+  "eightPagesAccepted": false
+}

@@ -1,0 +1,37 @@
+{
+  "outcome": "RUNTIME_CATALOG_ORIGINAL_READER_DIAGNOSTIC",
+  "actualCalls": [
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "route": "/workshop/analyst",
+      "state": "needs_attention"
+    }
+  ],
+  "result": {
+    "errorType": "ValidationError",
+    "trace": [
+      {
+        "file": "<stdin>",
+        "line": 22,
+        "function": "<module>"
+      },
+      {
+        "file": "ecommerce_runtime_workshop_catalog.py",
+        "line": 81,
+        "function": "list_modules"
+      },
+      {
+        "file": "<stdin>",
+        "line": 19,
+        "function": "get_installation"
+      },
+      {
+        "file": "main.py",
+        "line": 732,
+        "function": "model_validate"
+      }
+    ]
+  },
+  "databaseWrites": 0,
+  "runtimeAuthorized": false
+}
