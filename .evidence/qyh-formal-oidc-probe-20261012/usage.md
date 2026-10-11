@@ -1,0 +1,1 @@
+只有既有正式issuer/audience/JWKS部署且external-only开启后，才使用本脚本--token-file指向repo外已有600令牌文件、--expected-issuer/--expected-audience公开参数。不要粘贴token/密码。--inspect-only不会读取token，不证明身份接入。固定org-org/dev-project，原/v1/auth/principal需先由正式API源部署。发布身份单独由既有签名入口验收，不由此probe授权。当前18080实际负门拒绝dev模式，禁止切换为伪身份。

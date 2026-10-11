@@ -1,0 +1,1 @@
+复用require_principal验证JWT及只读workspace查询，新增GET /v1/auth/principal；仅external_only且allow_dev=False且principal.token_kind=oidc返回最小scope/externalOnly/authenticated元数据。开发模式403。不读写成员/组织/配置，不输出subject/roles/token，不更换当前API。专项dependency override只证明route边界，原OIDC测试证明原验证器，不宣称真实IdP。

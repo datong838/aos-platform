@@ -1,0 +1,7 @@
+# 栖月汇正式OIDC验收入口
+Rules:231/AGENTS/aos-engineering-delivery，复用既有routers/auth_oidc.py public_config与routers/auth_oidc.py新增只读principal入口，不重新编写JWT算法。候选一真实既有OIDC/publisher来源路径待答；候选二旧生产IdP验收脚本hardcoded dev-org和token argv不符合QYH正式恢复，已登记接线范围，选择二。
+新增scripts/ci/probe_qyh_formal_oidc.py及services/aos-api/tests/test_qyh_formal_oidc_probe.py，不改旧脚本；原router补充只读接口由qyh-readonly-principal-20261012独立文件Lease保护，不切换活跃服务。默认api18080，GET publicconfig先检查allowDevToken=False/grantTypes无dev/jwksConfigured真实externalhttps/issuerhttps与expectedissuer/audience精确相同；不接受publicconfig本地JWKS hint代替externalJWKS。inspect-only只查公共前置；正式--token-file指定已有外部owned600/regular/nosymlink/有限文件，默认不读取机器任何credentials且不能读取repo内token；不允许token/env/密码参数，不复制令牌。
+只发送两条GET原API，不跟重定向，API-base只http-loopback或https、拒绝userinfo/query/fragment。请求token仅内存HTTPheader，无subprocess/argv/env/日志。固定X-Org-Id org-org、X-Project-Id dev-project，/v1/auth/principal必须实际返回同scope、tokenKind原oidc、externalOnly=True、authenticated=True；roles/subject值不输出；未授权/跨租户/开发或未知tokenKind/错误JSON/redirect/network一律失败脱敏。server报告身份匹配不能授publisher/Runtime/Host/业务权限，对应结果false。
+先RED入口缺失，然后HTTP真实本地fixture positive与负门、原external_only/requiredclaims累积。fixture不是真实IdP。对当前活跃18080只读负门必须实际拒绝dev模式且不读tokenfile；记录true当前缺口，不声称正式身份已连接。保护22用户mod/旧4包/当前数据；无service change、浏览器此前实际8页缺口保留，本波纯验收入口不重复8页。Delivery精确m1/CAS/7strongsync，完整Goal ACTIVE。
+
+核查纠正：原GET /v1/me会ensure_default_membership/ensure_org，禁止作为本验收读接口；本轮未调用/me。publicconfig不能单独证明external-only，新增route读取服务器实际external_only门。

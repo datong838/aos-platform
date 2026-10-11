@@ -1,0 +1,31 @@
+{
+  "baseHead": "c606cfdad5bd3f358a95daf0b93421a4e260b021",
+  "retainedPackageFiles": 1695,
+  "retainedPackageHashMismatches": 0,
+  "realOidcConnected": false,
+  "publisherIdentityConnected": false,
+  "eightPagesAccepted": false,
+  "currentApiChanged": false,
+  "currentDatabaseWrites": 0,
+  "livePublicNegative": {
+    "status": "REFUSED",
+    "reason": "formal external OIDC configuration required"
+  },
+  "files": {
+    "scripts/ci/probe_qyh_formal_oidc.py": "0a75dc9ae6b38232d6e7ac9c21d41009fc7972fc095448c78e91214770be414c",
+    "services/aos-api/aos_api/routers/auth_oidc.py": "7f2d4711942d97079416816e35fb22167267dcec0490799902bb76dd6badb803",
+    "services/aos-api/tests/test_qyh_formal_oidc_probe.py": "9689735562ea0d19be61d0cb349c1484571bb49f6f77a56a71c9af00108f3e01",
+    "services/aos-api/tests/test_qyh_readonly_principal.py": "ff06ffdf2395f8f720482d845dcf26cdb8873720c32c7fc32ecdabcb6cd92457"
+  },
+  "adjacentKnownFailure": "test_jwt_login_non_dev_token: org-b/prj-b absent; unchanged HEAD also 403; baseline-adjacent.log retained",
+  "targetedAdjacent": {
+    "passed": 36,
+    "skipped": 0,
+    "warnings": 7
+  },
+  "broadAdjacent": {
+    "passed": 39,
+    "failed": 1,
+    "baselineSameFailure": true
+  }
+}

@@ -3,12 +3,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from aos_api.errors import ApiError
+from aos_api.auth import Principal, require_principal
 from aos_api.oidc import (
     allow_dev,
+    external_only,
     issue_dev_token,
     issue_password_token,
     local_jwks,
@@ -17,6 +19,22 @@ from aos_api.oidc import (
 )
 
 router = APIRouter(tags=["auth"])
+
+
+@router.get("/v1/auth/principal")
+def authenticated_principal(
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """Read verified scope without provisioning memberships or organizations."""
+    if not external_only() or allow_dev() or principal.token_kind != "oidc":
+        raise HTTPException(status_code=403, detail="external OIDC identity required")
+    return {
+        "orgId": principal.org_id,
+        "projectId": principal.project_id,
+        "tokenKind": principal.token_kind,
+        "authenticated": True,
+        "externalOnly": True,
+    }
 
 
 class TokenIn(BaseModel):
