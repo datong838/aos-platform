@@ -113,8 +113,12 @@ def _step_safety(
 
 
 class AipResponsibilityAssignmentStore:
-    def __init__(self, connect_factory: Callable[[TenantScope], Any] = connect) -> None:
+    def __init__(self, connect_factory: Callable[[TenantScope], Any] = connect, *,
+                 plan_connect_factory: Callable[[TenantScope], Any] | None = None) -> None:
         self._connect = connect_factory
+        self._plan_connect = (
+            plan_connect_factory if plan_connect_factory is not None else self._connect
+        )
 
     @staticmethod
     def _idempotent_row(
@@ -163,7 +167,7 @@ class AipResponsibilityAssignmentStore:
         observed_at = now or datetime.now(UTC)
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = _hash(payload)
-        with self._connect(scope) as conn:
+        with self._plan_connect(scope) as conn:
             replay = self._idempotent_row(
                 conn, scope, "aip_responsibility_successor", idempotency_key, request_hash
             )

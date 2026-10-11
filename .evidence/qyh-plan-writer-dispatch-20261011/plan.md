@@ -1,0 +1,9 @@
+# 栖月汇原Plan写入分派实施
+
+复习231-1四层/同调用方事务、08 Workshop产品方案以及source-caller-dispatch-review。基线m1 eefc1abc2、AOS-001876；本Task精确租约覆盖两个原Store及新完整签名测试，当前真库与服务排除。
+
+原AipProductionContractStore新增仅keyword的plan_connect_factory，默认沿用原connect_factory以保护未切换入口；仅create/revise/freeze_responsibility_plan开连接时选择Plan factory。三个in_transaction函数与内部conn helper、普通合同/运行态/读取均保持。原AipResponsibilityAssignmentStore新增同名keyword连接，仅create_successor选择它，接管/观测仍原连接。选择仅发生事务开始前，不切换会话角色、不拆分事务、不自动重试、不代替业务授权。正式部署须明确注入上波固定身份连接，不以默认兼容行为当Source边界关闭。
+
+RED新test_qyh_plan_dispatch_full_schema_pg复用原完整签名安装函数及原受限issuer夹具，只调整测试构造注入：generic/successor原writer作为plan factory，普通factory主动抛错。旧产品应因缺新参数失败；实现后原真实Plan/Receipt创建、修订、重放/冲突、版本、冻结禁入、强制回滚/canary及successor缺条件负门完整执行。测试包装器不伪造数据库或业务结果；successor旧夹具只是负门，不能称successor正式正向完成。原BI调用方自持事务完全未改。
+
+完成后跑原完整签名流程兼容基准、Plan连接与既有责任接续专项。校验实际源hash、临时角色与测试DB清理、方案/代码一致性。当前真库不DDL/撤权/重启；Content/Contract连接及调用方授权、ACLguard、部署凭据、8既有xfail仍待后续关闭，全系统Goal不完成。

@@ -1,0 +1,11 @@
+# 原Plan分派实现与验证
+
+两个原Store只增加keyword Plan factory与事务入口选择，普通默认连接仍保持兼容，未声称默认fallback关闭runtime Source伪造能力。create/revise/freeze的三个in_transaction函数独立AST对比原HEAD完全一致，原conn/Receipt/CAS/helper没有拆开或重写。successor只在原事务打开前选择Plan；接管、观测、普通合同和读取仍原连接。
+
+RED实际完整签名隔离PG执行到原受限Plan夹具，旧构造拒绝plan_connect_factory而失败。实现后新完整签名流程独立1 passed/exit0：夹具原writer身份经实际SELECT核对，所有generic Plan事务使用新Plan factory，普通factory一旦被使用直接抛错；successor同身份但原真实前置门仍拒绝未冻结来源，不能称successor正式正向完成。BI服务自身的caller-held事务未被测试包装器替换。
+
+第一次把新完整流程、旧完整流程和责任接续合并运行得到11 passed/2 failed：新流程通过，旧流程由于同一个session DB已经存在注册bundle而撞unique，责任接续静态迁移测试从repo根查相对路径失败。失败日志保留；修正验证组织而不改产品。分别独立运行新完整签名1 passed、原完整签名1 passed，API工作目录运行责任接续/原BI连接/Source连接29 passed，全部exit0。
+
+当前权威栖月汇647表与完整恢复克隆逐表fingerprint精确一致，六原metadata作用域精确相符；固定三临时issuer角色与测试DB清理读回0。该检查是只读，没有当前真库DDL/授权/服务重启。源码hash与最终工作树核对，Python语法和精确diff检查通过。当前API仍未部署本波新连接、配置写入口未正式接入，8旧runtime Source/Receipt伪造xfail未在此组件关闭。独立模型复审没有执行，本记录只为方案/代码自审。
+
+本Task只交付原Plan事务按用途选择连接的实施步骤；父全恢复Task与Goal继续ACTIVE。下一项仍是Content/Contract共享Receipt分派、正式调用方装配及完整Source ACL/guard正向/负向验证；真实企业登录/独立发布身份、当期预算、8工作台及自然经营首链未完成。

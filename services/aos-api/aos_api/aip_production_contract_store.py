@@ -490,6 +490,7 @@ class AipProductionContractStore:
         self,
         connect_factory: ConnectFactory | None = None,
         *,
+        plan_connect_factory: ConnectFactory | None = None,
         responsibility_template_resolver: ResponsibilityTemplateResolver | None = None,
         stage_template_source_resolver: StageTemplateSourceResolver | None = None,
         production_profile_resolver: ProductionProfileResolver | None = None,
@@ -497,6 +498,9 @@ class AipProductionContractStore:
         task_store: AipTaskStore | None = None,
     ) -> None:
         self._connect_factory = connect_factory or db_connect
+        self._plan_connect_factory = (
+            plan_connect_factory if plan_connect_factory is not None else self._connect_factory
+        )
         self._responsibility_template_resolver = responsibility_template_resolver
         self._stage_template_source_resolver = stage_template_source_resolver
         self._production_profile_resolver = (
@@ -616,7 +620,7 @@ class AipProductionContractStore:
 
     def create_responsibility_plan(self, scope: TenantScope, actor: str, key: str,
                                    body: CreateResponsibilityPlanRequest) -> ResponsibilityPlanRevision:
-        with self._connect_factory(scope) as conn:
+        with self._plan_connect_factory(scope) as conn:
             result = self.create_responsibility_plan_in_transaction(
                 conn, scope, actor, key, body)
             conn.commit()
@@ -657,7 +661,7 @@ class AipProductionContractStore:
 
     def revise_responsibility_plan(self, scope: TenantScope, actor: str, plan_id: str,
                                    key: str, body: ReviseResponsibilityPlanRequest) -> ResponsibilityPlanRevision:
-        with self._connect_factory(scope) as conn:
+        with self._plan_connect_factory(scope) as conn:
             result = self.revise_responsibility_plan_in_transaction(
                 conn, scope, actor, plan_id, key, body)
             conn.commit()
@@ -719,7 +723,7 @@ class AipProductionContractStore:
 
     def freeze_responsibility_plan(self, scope: TenantScope, actor: str, plan_id: str,
                                    expected_version: int, key: str) -> ResponsibilityPlanRevision:
-        with self._connect_factory(scope) as conn:
+        with self._plan_connect_factory(scope) as conn:
             result = self.freeze_responsibility_plan_in_transaction(
                 conn, scope, actor, plan_id, expected_version, key)
             conn.commit()
