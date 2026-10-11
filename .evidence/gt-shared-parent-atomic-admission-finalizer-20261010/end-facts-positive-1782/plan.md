@@ -1,0 +1,6 @@
+# 原合法完整Source八节点结束facts正向
+Rules231、原完整joint§3/11.3、Main/对应Judge原Owner唯一Lease、m1单写、正式库只读。上一波closed complete end facts原生元数据和50累计PASS不等于真实全正向。候选一新合法完整Source/两独立批准/四cert/v2Receipt调用固定collector（本轮），候选二完整native package/bootstrap/lifetime（仍依赖专用Root，独立隔离研究可继续）。原整个Task不缩小。
+具体新增文件：本目录run.py/source_newjudge_native_trial_1606.py/catalog_fixture_restore.py/shared_identity_certificate_fixture.py及原fixture精确副本/终态/时序/只读回读证据；Judge对应新唯一end-facts-positive-1782目录，已对账续Lease。无产品修改。
+复用前次已知terminal完整fixture模板，仅在新全库/新Source/新Judge独立原申请与批准/新签名Root和四证书/newnonce上运行一次；旧Root仅模板不是当前权限，不复用旧attempt或假事实。原120s独立consumer身份只在整次入口前用原OIDC协议真实验证发行，调用开始后不刷新，不延长Source/批准窗口。
+安装新固定collector原SQL及一个隔离test-owned固定Owner窄桥，不向runtime授产品函数或任意SQL。原v2Receipt创建和所有八节点真实保存完成后，原同caller/xid/pid调用collector，验证八hash/Sourcepacket/originalRisk/receipt绑定、当前物理封闭set与executionAllowed=false/nativeEndRequired=true/durableDeadlineEstablished=false；观察原Intent写计数不变。保持原迟写3/30000物理拒绝、缺完整末门actualCOMMIT拒绝与rollback、原Source相邻。
+若整fixture后续自然过期/清理仍RED，分别报告component和整体，不删除旧负门或延长期限使其通过。未知结果按新库/xid/marker只读对账，禁止重发。test Root不是formalRoot，不做真实Provider/Host/业务。完整positive COMMIT/fullnativeRoot/后确认unknown仍pending。浏览器不适用。

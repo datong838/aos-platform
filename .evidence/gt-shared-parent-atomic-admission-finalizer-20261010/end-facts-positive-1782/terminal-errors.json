@@ -1,0 +1,17 @@
+[
+  "E           aos_api.aip_provider_capacity_source_issuer.ProviderCapacityIssuanceBlocked: CAPACITY_NATIVE_SIGNED_SUPPLIER_INPUTS_REQUIRED",
+  "E           psycopg.errors.InvalidParameterValue: CAPACITY_CURRENT_SOURCE_EXPIRED",
+  "E           CONTEXT:  PL/pgSQL function public.read_capacity_source_for_occupation(bytea,jsonb) line 5878 at RAISE",
+  "E           SQL statement \"SELECT *               FROM public.read_capacity_source_for_occupation(p_raw,p_source)\"",
+  "E           PL/pgSQL function public.capacity_occupation_source_fact(bytea,jsonb) line 4 at SQL statement",
+  "E           PL/pgSQL function public.build_shared_parent_admission_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text) line 8 at assignment",
+  "E           PL/pgSQL function public.validate_shared_parent_admission_certificate_set(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea) line 20 at assignment",
+  "E           PL/pgSQL function public.read_shared_parent_pending_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text) line 31 at assignment",
+  "E           PL/pgSQL function public.verify_shared_parent_final_intents(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text,text,bytea,bytea,uuid,uuid) line 50 at assignment",
+  "E           PL/pgSQL function public.verify_shared_parent_final_call_authority(uuid,text,xid8,integer) line 72 at assignment",
+  "E           PL/pgSQL function aos_shared_parent_physical_private.bind_complete_receipt_v2() line 63 at assignment",
+  "E           SQL statement \"INSERT INTO aos_shared_parent_physical_private.complete_receipt_v2(plan_id,org_id,project_id,material_hash,caller_xid,caller_pid)",
+  "E                         VALUES(p_plan,'org-org','dev-project',p_material_hash,p_xid,p_pid) RETURNING *\"",
+  "E           PL/pgSQL function public.stage_shared_parent_complete_receipt_v2(uuid,text,xid8,integer) line 16 at SQL statement",
+  "E           SQL function \"test_owned_receipt_v2\" statement 1"
+]
