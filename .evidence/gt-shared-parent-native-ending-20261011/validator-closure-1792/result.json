@@ -1,0 +1,260 @@
+{
+  "head": "43d497da5d36e71283963958760209f91f2215f4",
+  "source_sha256": "cae91ea29333b6e7d3365cc6e320e6cf904565ce17d99b95889b8a990ae6dd6b",
+  "root": "public.read_shared_parent_complete_end_facts",
+  "reachable": {
+    "public.build_shared_parent_admission_origin": {
+      "sha256": "d0d68b8279f42bad607fb7db3f001bc2abeeb83a54a37a3b7739eea2a87566a0",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.capacity_occupation_source_fact",
+        "public.read_shared_parent_admission_original_facts"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "cases",
+        "convert_to",
+        "encode",
+        "jsonb_agg",
+        "jsonb_array_elements",
+        "jsonb_array_length",
+        "jsonb_build_array",
+        "jsonb_build_object",
+        "jsonb_typeof",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_admission_origin_statements"
+    },
+    "public.read_shared_parent_admission_original_facts": {
+      "sha256": "571b9f119ea10d069251e6feb93ced3fdad13278d94a21ed0928ccc6e83eb387",
+      "qualified_candidates": [
+        "public.capacity_occupation_plan_risk_fact"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "current_setting"
+      ],
+      "generator": "shared_parent_original_fact_statements"
+    },
+    "public.read_shared_parent_complete_end_facts": {
+      "sha256": "58f0fe100e24449b5b8249628f8230b531a152114bd3f44c0ff4ec840fa5d35e",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.read_shared_parent_receipt_origin",
+        "public.verify_shared_parent_final_call_authority",
+        "public.verify_shared_parent_final_physical"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "clock_timestamp",
+        "convert_to",
+        "current_setting",
+        "encode",
+        "jsonb_build_object",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_complete_end_fact_statements"
+    },
+    "public.read_shared_parent_pending_origin": {
+      "sha256": "49ee9ca6b9588ed48b72e25c72550e0ca9255af4a041f842c0d5ef7c7b2dfbb5",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.validate_shared_parent_admission_certificate_set"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "convert_from",
+        "convert_to",
+        "current_setting",
+        "encode",
+        "jsonb_build_object",
+        "octet_length",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_pending_origin_lookup_statements"
+    },
+    "public.read_shared_parent_receipt_origin": {
+      "sha256": "0574740dbff8dc9ceea7658245bbce7f2ef39a01e309b87286ea2550c8d71915",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.read_shared_parent_pending_origin"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "convert_from",
+        "convert_to",
+        "count",
+        "current_setting",
+        "encode",
+        "jsonb_build_object",
+        "jsonb_object_keys",
+        "jsonb_typeof",
+        "octet_length",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_complete_receipt_statements"
+    },
+    "public.read_shared_parent_retained_origin": {
+      "sha256": "e4e130142d602c7d15e7e0052f656b9e29a896912ed5de2cec247f60f65f7397",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.read_shared_parent_pending_origin"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "convert_from",
+        "convert_to",
+        "count",
+        "current_setting",
+        "encode",
+        "jsonb_build_object",
+        "jsonb_object_keys",
+        "jsonb_typeof",
+        "octet_length",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_end_authority_statements"
+    },
+    "public.read_shared_parent_unresolved_members": {
+      "sha256": "e553a5b8488e0293a679f50b03193d8eea700eeae68df346c012576e97a4cdb7",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "coalesce",
+        "convert_to",
+        "count",
+        "current_setting",
+        "encode",
+        "jsonb_agg",
+        "jsonb_build_object",
+        "sha256",
+        "sum",
+        "to_jsonb"
+      ],
+      "generator": "shared_parent_exact_receipt_statements"
+    },
+    "public.validate_shared_parent_admission_certificate_set": {
+      "sha256": "7b1ed2a532d3f765bc3b327f145ee78a5ef8d1f356bc0eb6ab23704bb07f43fa",
+      "qualified_candidates": [
+        "public.build_shared_parent_admission_origin",
+        "public.canonical_asset_registry_jsonb",
+        "public.verify_model_shared_parent_certificate_signature"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "chr",
+        "clock_timestamp",
+        "convert_from",
+        "convert_to",
+        "count",
+        "current_setting",
+        "decode",
+        "encode",
+        "jsonb_array_elements",
+        "jsonb_array_length",
+        "jsonb_build_object",
+        "jsonb_typeof",
+        "octet_length",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "replace",
+        "sha256"
+      ],
+      "generator": "shared_parent_admission_certificate_set_statements"
+    },
+    "public.verify_shared_parent_final_call_authority": {
+      "sha256": "9620ee390329b34a3ae3876da16d923ebf3c61f8ed48012cad25c6374f12e5e1",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.read_shared_parent_retained_origin",
+        "public.verify_shared_parent_final_intents"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "convert_from",
+        "convert_to",
+        "count",
+        "current_setting",
+        "encode",
+        "jsonb_build_object",
+        "jsonb_object_keys",
+        "jsonb_typeof",
+        "octet_length",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_final_call_validation_statements"
+    },
+    "public.verify_shared_parent_final_intents": {
+      "sha256": "b4accbb35852a209308ef3f6ddc78396094f9e0950d968c7b25f5d2cc1df9f72",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.capacity_occupation_eval_case_fact",
+        "public.read_shared_parent_admission_original_facts",
+        "public.read_shared_parent_pending_origin"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "clock_timestamp",
+        "convert_from",
+        "convert_to",
+        "current_setting",
+        "encode",
+        "jsonb_array_elements",
+        "jsonb_build_object",
+        "octet_length",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_final_intent_validation_statements"
+    },
+    "public.verify_shared_parent_final_physical": {
+      "sha256": "69f163b289d719fdb34deb4398707dc3aaa12ddff065cf211f2bbd6f3bc74562",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.read_shared_parent_unresolved_members"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "convert_to",
+        "current_setting",
+        "encode",
+        "jsonb_array_elements",
+        "jsonb_build_object",
+        "jsonb_typeof",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_final_physical_comparison_statements"
+    }
+  },
+  "unresolved_qualified_candidates": [
+    "public.canonical_asset_registry_jsonb",
+    "public.capacity_occupation_eval_case_fact",
+    "public.capacity_occupation_plan_risk_fact",
+    "public.capacity_occupation_source_fact",
+    "public.verify_model_shared_parent_certificate_signature"
+  ],
+  "semantic_closure_proven": false,
+  "execution_authorized": false,
+  "limits": [
+    "lexical candidates include possible relation/type syntax",
+    "unqualified overloads/operators/casts/dynamic SQL and native callbacks are not resolved",
+    "no runtime installation/Owner/ACL verification"
+  ]
+}

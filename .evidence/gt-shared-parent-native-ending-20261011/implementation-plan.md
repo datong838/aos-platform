@@ -132,3 +132,6 @@ commit-clock-probe-1780 在原 NativeEnding Task 唯一 Lease 内固定三案例
 r1错误按 proname 查询 C prosrc，止于只读预检；r2误用历史摘要制品digest作为SDK，元数据阶段明确取消；r3构建0但scratch create缺惰性command明确1且对象不存在；r4复用已知terminal构建仅修提取command，新唯一schema/backend试验全部终态。失败均保留，无未知提交重发。原签名、五闭角色、pending reader 与容器启动身份保持；未改产品C/SQL，正式库/Root/业务权限不动。
 
 此反例落实原 Main implementation-plan-1698 必须流程第4项：决策点不是 WAL/ACK。完整ending必须保留提交后可信确认及过期/unknown非执行和风险保留，不能靠native PRE_COMMIT时钟、固定安全余量或COMMIT后报错假回滚宣称严格durable期限通过。测试延迟库不是允许的完整Main profile。下一仍需完整包来源/生命周期/固定validator/实际Main8节点四证书Source风险物理Receipt/fixedpoint/最后时钟/COMMIT与unknown；本Task ACTIVE，无组件Delivery。
+
+## 当前结束验证调用范围冻结（1792后）
+候选一：完整fixed-validator函数/表达式闭合（已登记，依赖当前全8节点collector及原Source）；候选二：完整包来源/生命周期bootstrap（已登记，依赖独立专用Root与安装合同）。本步先冻结候选一当前生成SQL的有向调用图，避免重复已完成的Intent写入剥离。新增本证据目录validator-closure-1792/{audit.py,result.json}；只导入纯SQL生成器，不连接数据库。逐函数hash、从真实collector可达节点、未解析schema-qualified依赖、未限定名称调用线索和直接DML词记录。此静态词法图不是SQL解析器、运行期Owner/重载/动态SQL/操作符/cast闭合证明；无法解析的依赖保留，不宣称只读或native可放行。原产品文件不改。
