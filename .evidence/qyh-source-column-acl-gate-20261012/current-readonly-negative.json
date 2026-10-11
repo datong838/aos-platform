@@ -1,0 +1,8 @@
+{
+  "outcome": "CURRENT_REAL_SOURCE_ACL_REMAINS_NOT_READY",
+  "limitedLoginReadOnly": true,
+  "currentRightsChanged": false,
+  "databaseWrites": 0,
+  "sourceWriterDeployed": false,
+  "hostOrRuntimeEnabled": false
+}

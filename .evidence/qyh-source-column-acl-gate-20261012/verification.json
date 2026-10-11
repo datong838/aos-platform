@@ -1,0 +1,20 @@
+{
+  "baseHead": "9cde232e176a3a0bbd5aec8215ba484f6053ab86",
+  "nativeAndAdjacentDistinctPass": 64,
+  "newAndAdjacentPass": 27,
+  "originalStageOwnedClonePass": 37,
+  "initialSkip37LaterActuallyRun": true,
+  "nativeOriginalGateRed": {
+    "failed": 6,
+    "passed": 2
+  },
+  "actualRuntimeColumnWriteRollbackProven": 2,
+  "temporarySchemasRemaining": 0,
+  "currentSourceGateReady": false,
+  "trueAclChanges": 0,
+  "sourceWriterDeployed": false,
+  "currentApiChanged": false,
+  "retainedArtifactHashMatches": 1695,
+  "completeMediaSourceAccepted": false,
+  "eightWorkbenchesAccepted": false
+}

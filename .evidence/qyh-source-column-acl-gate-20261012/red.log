@@ -1,0 +1,160 @@
+.FFFFFF.                                                                 [100%]
+=================================== FAILURES ===================================
+_ test_column_write_cannot_hide_behind_absent_table_grant[INSERT-aip_responsibility_plan_head] _
+
+acl = (<psycopg.Connection [IDLE] (host=127.0.0.1 port=18431 user=aos_app database=postgres) at 0x11c06a3d0>, 'qyh_acl_f3c2112b35bc4b0ba37563ccf4553564')
+name = 'aip_responsibility_plan_head', right = 'INSERT'
+
+    @pytest.mark.parametrize('name',NAMES)
+    @pytest.mark.parametrize('right',['INSERT','UPDATE'])
+    def test_column_write_cannot_hide_behind_absent_table_grant(acl,name,right):
+        conn,schema=acl
+        conn.execute(sql.SQL('GRANT {}(id) ON {} TO aos_runtime').format(sql.SQL(right),sql.Identifier(schema,name)))
+        table=schema+'.'+name
+        assert conn.execute("SELECT has_table_privilege('aos_runtime',%s,%s)",(table,right)).fetchone()[0] is False
+        assert conn.execute("SELECT has_any_column_privilege('aos_runtime',%s,%s)",(table,right)).fetchone()[0] is True
+>       with conn.transaction():assert gate.configuration_source_acl_ready(conn) is False
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert True is False
+E        +  where True = <function configuration_source_acl_ready at 0x11b7c1ee0>(<psycopg.Connection [INTRANS] (host=127.0.0.1 port=18431 user=aos_app database=postgres) at 0x11c06a3d0>)
+E        +    where <function configuration_source_acl_ready at 0x11b7c1ee0> = gate.configuration_source_acl_ready
+
+services/aos-api/tests/extension_runtime/test_source_column_acl_gate.py:46: AssertionError
+_ test_column_write_cannot_hide_behind_absent_table_grant[INSERT-aip_responsibility_plan_revision] _
+
+acl = (<psycopg.Connection [IDLE] (host=127.0.0.1 port=18431 user=aos_app database=postgres) at 0x11c6a0d90>, 'qyh_acl_c764f9c64fab494d95874828c330eb37')
+name = 'aip_responsibility_plan_revision', right = 'INSERT'
+
+    @pytest.mark.parametrize('name',NAMES)
+    @pytest.mark.parametrize('right',['INSERT','UPDATE'])
+    def test_column_write_cannot_hide_behind_absent_table_grant(acl,name,right):
+        conn,schema=acl
+        conn.execute(sql.SQL('GRANT {}(id) ON {} TO aos_runtime').format(sql.SQL(right),sql.Identifier(schema,name)))
+        table=schema+'.'+name
+        assert conn.execute("SELECT has_table_privilege('aos_runtime',%s,%s)",(table,right)).fetchone()[0] is False
+        assert conn.execute("SELECT has_any_column_privilege('aos_runtime',%s,%s)",(table,right)).fetchone()[0] is True
+>       with conn.transaction():assert gate.configuration_source_acl_ready(conn) is False
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert True is False
+E        +  where True = <function configuration_source_acl_ready at 0x11b7c1ee0>(<psycopg.Connection [INTRANS] (host=127.0.0.1 port=18431 user=aos_app database=postgres) at 0x11c6a0d90>)
+E        +    where <function configuration_source_acl_ready at 0x11b7c1ee0> = gate.configuration_source_acl_ready
+
+services/aos-api/tests/extension_runtime/test_source_column_acl_gate.py:46: AssertionError
+_ test_column_write_cannot_hide_behind_absent_table_grant[INSERT-aip_production_contract_receipt] _
+
+acl = (<psycopg.Connection [IDLE] (host=127.0.0.1 port=18431 user=aos_app database=postgres) at 0x11c79b3d0>, 'qyh_acl_3b25e37bd7694fbf928f2ddcd15788d7')
+name = 'aip_production_contract_receipt', right = 'INSERT'
+
+    @pytest.mark.parametrize('name',NAMES)
+    @pytest.mark.parametrize('right',['INSERT','UPDATE'])
+    def test_column_write_cannot_hide_behind_absent_table_grant(acl,name,right):
+        conn,schema=acl
+        conn.execute(sql.SQL('GRANT {}(id) ON {} TO aos_runtime').format(sql.SQL(right),sql.Identifier(schema,name)))
+        table=schema+'.'+name
+        assert conn.execute("SELECT has_table_privilege('aos_runtime',%s,%s)",(table,right)).fetchone()[0] is False
+        assert conn.execute("SELECT has_any_column_privilege('aos_runtime',%s,%s)",(table,right)).fetchone()[0] is True
+>       with conn.transaction():assert gate.configuration_source_acl_ready(conn) is False
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert True is False
+E        +  where True = <function configuration_source_acl_ready at 0x11b7c1ee0>(<psycopg.Connection [INTRANS] (host=127.0.0.1 port=18431 user=aos_app database=postgres) at 0x11c79b3d0>)
+E        +    where <function configuration_source_acl_ready at 0x11b7c1ee0> = gate.configuration_source_acl_ready
+
+services/aos-api/tests/extension_runtime/test_source_column_acl_gate.py:46: AssertionError
+_ test_column_write_cannot_hide_behind_absent_table_grant[UPDATE-aip_responsibility_plan_head] _
+
+acl = (<psycopg.Connection [IDLE] (host=127.0.0.1 port=18431 user=aos_app database=postgres) at 0x11c6611d0>, 'qyh_acl_f1e5b6fc3b3340dd9fa9ee1c1f2ecb6f')
+name = 'aip_responsibility_plan_head', right = 'UPDATE'
+
+    @pytest.mark.parametrize('name',NAMES)
+    @pytest.mark.parametrize('right',['INSERT','UPDATE'])
+    def test_column_write_cannot_hide_behind_absent_table_grant(acl,name,right):
+        conn,schema=acl
+        conn.execute(sql.SQL('GRANT {}(id) ON {} TO aos_runtime').format(sql.SQL(right),sql.Identifier(schema,name)))
+        table=schema+'.'+name
+        assert conn.execute("SELECT has_table_privilege('aos_runtime',%s,%s)",(table,right)).fetchone()[0] is False
+        assert conn.execute("SELECT has_any_column_privilege('aos_runtime',%s,%s)",(table,right)).fetchone()[0] is True
+>       with conn.transaction():assert gate.configuration_source_acl_ready(conn) is False
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert True is False
+E        +  where True = <function configuration_source_acl_ready at 0x11b7c1ee0>(<psycopg.Connection [INTRANS] (host=127.0.0.1 port=18431 user=aos_app database=postgres) at 0x11c6611d0>)
+E        +    where <function configuration_source_acl_ready at 0x11b7c1ee0> = gate.configuration_source_acl_ready
+
+services/aos-api/tests/extension_runtime/test_source_column_acl_gate.py:46: AssertionError
+_ test_column_write_cannot_hide_behind_absent_table_grant[UPDATE-aip_responsibility_plan_revision] _
+
+acl = (<psycopg.Connection [IDLE] (host=127.0.0.1 port=18431 user=aos_app database=postgres) at 0x11c6c3c50>, 'qyh_acl_f3f95470916c4b8da9af5c347f00127f')
+name = 'aip_responsibility_plan_revision', right = 'UPDATE'
+
+    @pytest.mark.parametrize('name',NAMES)
+    @pytest.mark.parametrize('right',['INSERT','UPDATE'])
+    def test_column_write_cannot_hide_behind_absent_table_grant(acl,name,right):
+        conn,schema=acl
+        conn.execute(sql.SQL('GRANT {}(id) ON {} TO aos_runtime').format(sql.SQL(right),sql.Identifier(schema,name)))
+        table=schema+'.'+name
+        assert conn.execute("SELECT has_table_privilege('aos_runtime',%s,%s)",(table,right)).fetchone()[0] is False
+        assert conn.execute("SELECT has_any_column_privilege('aos_runtime',%s,%s)",(table,right)).fetchone()[0] is True
+>       with conn.transaction():assert gate.configuration_source_acl_ready(conn) is False
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert True is False
+E        +  where True = <function configuration_source_acl_ready at 0x11b7c1ee0>(<psycopg.Connection [INTRANS] (host=127.0.0.1 port=18431 user=aos_app database=postgres) at 0x11c6c3c50>)
+E        +    where <function configuration_source_acl_ready at 0x11b7c1ee0> = gate.configuration_source_acl_ready
+
+services/aos-api/tests/extension_runtime/test_source_column_acl_gate.py:46: AssertionError
+_ test_column_write_cannot_hide_behind_absent_table_grant[UPDATE-aip_production_contract_receipt] _
+
+acl = (<psycopg.Connection [IDLE] (host=127.0.0.1 port=18431 user=aos_app database=postgres) at 0x11c670810>, 'qyh_acl_bbc6d8eafb724921a30e6ecf777d1c95')
+name = 'aip_production_contract_receipt', right = 'UPDATE'
+
+    @pytest.mark.parametrize('name',NAMES)
+    @pytest.mark.parametrize('right',['INSERT','UPDATE'])
+    def test_column_write_cannot_hide_behind_absent_table_grant(acl,name,right):
+        conn,schema=acl
+        conn.execute(sql.SQL('GRANT {}(id) ON {} TO aos_runtime').format(sql.SQL(right),sql.Identifier(schema,name)))
+        table=schema+'.'+name
+        assert conn.execute("SELECT has_table_privilege('aos_runtime',%s,%s)",(table,right)).fetchone()[0] is False
+        assert conn.execute("SELECT has_any_column_privilege('aos_runtime',%s,%s)",(table,right)).fetchone()[0] is True
+>       with conn.transaction():assert gate.configuration_source_acl_ready(conn) is False
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert True is False
+E        +  where True = <function configuration_source_acl_ready at 0x11b7c1ee0>(<psycopg.Connection [INTRANS] (host=127.0.0.1 port=18431 user=aos_app database=postgres) at 0x11c670810>)
+E        +    where <function configuration_source_acl_ready at 0x11b7c1ee0> = gate.configuration_source_acl_ready
+
+services/aos-api/tests/extension_runtime/test_source_column_acl_gate.py:46: AssertionError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/extension_runtime/test_source_column_acl_gate.py::test_column_write_cannot_hide_behind_absent_table_grant[INSERT-aip_responsibility_plan_head]
+FAILED services/aos-api/tests/extension_runtime/test_source_column_acl_gate.py::test_column_write_cannot_hide_behind_absent_table_grant[INSERT-aip_responsibility_plan_revision]
+FAILED services/aos-api/tests/extension_runtime/test_source_column_acl_gate.py::test_column_write_cannot_hide_behind_absent_table_grant[INSERT-aip_production_contract_receipt]
+FAILED services/aos-api/tests/extension_runtime/test_source_column_acl_gate.py::test_column_write_cannot_hide_behind_absent_table_grant[UPDATE-aip_responsibility_plan_head]
+FAILED services/aos-api/tests/extension_runtime/test_source_column_acl_gate.py::test_column_write_cannot_hide_behind_absent_table_grant[UPDATE-aip_responsibility_plan_revision]
+FAILED services/aos-api/tests/extension_runtime/test_source_column_acl_gate.py::test_column_write_cannot_hide_behind_absent_table_grant[UPDATE-aip_production_contract_receipt]
+6 failed, 2 passed, 7 warnings in 4.97s

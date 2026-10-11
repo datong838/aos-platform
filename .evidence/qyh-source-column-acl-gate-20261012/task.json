@@ -1,0 +1,20 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-source-column-acl-gate-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001923",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/extension_runtime/configuration_stage_preflight.py",
+    "aos-platform/services/aos-api/tests/extension_runtime/test_source_column_acl_gate.py",
+    "aos-platform/.evidence/qyh-source-column-acl-gate-20261012"
+  ],
+  "excluded_scope": [
+    "maintenance/current-database"
+  ],
+  "expected_outputs": [
+    "Original sourceACL gate rejects per-column INSERT/UPDATE leftovers; actual disposablePG RED/GREEN; trueACL unchanged"
+  ],
+  "lease_expires_at": "2026-10-12T10:41:43.053650+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T06:41:43+08:00"
+}

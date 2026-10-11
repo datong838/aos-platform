@@ -18,14 +18,17 @@ def configuration_source_acl_ready(conn):
         has_table_privilege('aos_runtime',c.oid,'INSERT') AS insertable,
         has_table_privilege('aos_runtime',c.oid,'UPDATE') AS updatable,
         has_table_privilege('aos_runtime',c.oid,'DELETE') AS deletable,
-        has_table_privilege('aos_runtime',c.oid,'TRUNCATE') AS truncatable
+        has_table_privilege('aos_runtime',c.oid,'TRUNCATE') AS truncatable,
+        has_any_column_privilege('aos_runtime',c.oid,'INSERT') AS column_insertable,
+        has_any_column_privilege('aos_runtime',c.oid,'UPDATE') AS column_updatable
         FROM (VALUES (%s::text),(%s::text),(%s::text)) AS source(name)
         LEFT JOIN pg_class c ON c.oid=to_regclass(source.name)''',
         _SOURCE_TABLES).fetchall()
     return len(sources) == len(_SOURCE_TABLES) and all(
         _values(row, ('relrowsecurity','relforcerowsecurity','readable',
-                      'insertable','updatable','deletable','truncatable'))
-        == (True,True,True,False,False,False,False) for row in sources)
+                      'insertable','updatable','deletable','truncatable',
+                      'column_insertable','column_updatable'))
+        == (True,True,True,False,False,False,False,False,False) for row in sources)
 
 
 def configuration_stage_ready(conn):
