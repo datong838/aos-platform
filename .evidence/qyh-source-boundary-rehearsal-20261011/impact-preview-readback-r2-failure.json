@@ -1,0 +1,7 @@
+{
+  "phase": "readonlyIndependentReadback",
+  "errorType": "AssertionError",
+  "reason": "Original GET historical revision returns current head version: created revision1 version now2; all immutable revision fields exact",
+  "databaseWrites": 0,
+  "businessOperationsReplayed": false
+}

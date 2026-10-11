@@ -1,0 +1,14 @@
+{
+  "database": "qyh_source_contract_20261011",
+  "cluster": "7695416748450308141",
+  "containerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "initialCounts": {
+    "aip_impact_preview_head": 1,
+    "aip_impact_preview_revision": 2,
+    "aip_production_contract_receipt": 90,
+    "aip_task_run": 6,
+    "aip_step_run": 4
+  },
+  "currentDatabaseTouched": false,
+  "scriptHash": "6d59b943cd598e8dd2144dd3b18fb30e9d66808b983a97422e31a512558f236a"
+}

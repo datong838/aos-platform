@@ -1,0 +1,26 @@
+{
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "authority": "AOS-001899",
+  "twoOriginalRevisionsExact": true,
+  "twoReceiptReferencesExact": true,
+  "allEightImpactDimensionsUnknown": true,
+  "failedOperationsNoReceipt": true,
+  "oldTaskStillCancelled": true,
+  "noNewRunOrStep": true,
+  "canaryNoRows": true,
+  "temporaryRoleAndTriggerAbsent": true,
+  "positiveOriginalOperations": [
+    "impact_preview.create",
+    "impact_preview.revise"
+  ],
+  "freezeAccepted": false,
+  "formalRestorationAccepted": false,
+  "experimentCounts": {
+    "aip_impact_preview_head": 2,
+    "aip_impact_preview_revision": 4,
+    "aip_production_contract_receipt": 92,
+    "aip_task_run": 6,
+    "aip_step_run": 4
+  },
+  "scriptHash": "e24bfc2052ad9966de18a366844ec63b5269963db3727bd086779c8037d3c220"
+}
