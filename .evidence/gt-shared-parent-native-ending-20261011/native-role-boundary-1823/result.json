@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "role": "aos_physical_capacity_occupation_owner",
+      "case": "load_absolute",
+      "sqlstate": "42501",
+      "message": "access to library \"/tmp/aos_admission_modules_28a79fac6f14488d80b94171e0763476.so\" is not allowed"
+    },
+    {
+      "role": "aos_physical_capacity_occupation_owner",
+      "case": "set_library_path",
+      "sqlstate": "42501",
+      "message": "permission denied to set parameter \"dynamic_library_path\""
+    },
+    {
+      "role": "aos_physical_capacity_occupation_owner",
+      "case": "create_c",
+      "sqlstate": "42501",
+      "message": "permission denied for language c"
+    },
+    {
+      "role": "aos_runtime",
+      "case": "load_absolute",
+      "sqlstate": "42501",
+      "message": "access to library \"/tmp/aos_admission_modules_28a79fac6f14488d80b94171e0763476.so\" is not allowed"
+    },
+    {
+      "role": "aos_runtime",
+      "case": "set_library_path",
+      "sqlstate": "42501",
+      "message": "permission denied to set parameter \"dynamic_library_path\""
+    },
+    {
+      "role": "aos_runtime",
+      "case": "create_c",
+      "sqlstate": "42501",
+      "message": "permission denied for schema test_owned_role_boundary_110f3cce5d38420fa55b595590a3447c"
+    }
+  ],
+  "role_flags": {
+    "aos_physical_capacity_occupation_owner": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "aos_runtime": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "rollback_verified": true,
+  "original_reader_unchanged": true,
+  "full_reachable_native_closure": false,
+  "execution_authorized": false
+}

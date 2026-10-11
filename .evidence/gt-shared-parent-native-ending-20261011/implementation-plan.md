@@ -249,3 +249,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 映射生命周期隔离约束可行性1822
 候选固定验证器闭合依赖完整Main语义，生命周期候选依赖独立包Root与进程约束。先对独立scratch辅助进程验证seccomp拒绝mmap/mprotect的PROT_EXEC参数，同时普通RW分配/写入/释放可用。固定AArch64架构、no_new_privs、原进程内不可撤销过滤；不安装到PG，不修改全局Docker安全策略，不改正式服务。文件mapping-enforcement-1822/probe.c/Dockerfile/result。此仅两syscall可行性，不覆盖已有可写执行页、proc mem/ptrace、其他映射路径、多线程、完整Main兼容性与动态加载；不得作为生产授权或完整防护宣称。
+
+## 原生入口实际角色边界1823
+候选一固定验证器闭合，候选二生命周期约束；先核第二项攻击路径是否对原正式Owner/runtime可达。新增native-role-boundary-1823/check.py/result.json。精确原隔离cluster/容器/测试库，随机临时schema仅事务内，Owner与runtime各自实际LOAD已核hash的1820观察库、设置dynamic_library_path、创建C函数（Owner自有schema）。逐项SAVEPOINT并要求42501，异常非预期保留；不调用新增函数、不授权权限、不运行helper页面/正式DB/Provider。每步回滚，终局确认schema消失/原reader不变；实际权限拒绝不证明既有SECURITY DEFINER或已加载可信模块闭合。
