@@ -231,3 +231,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 仓库索引架构差异1816
 新增index-architecture-1816/check.py/result.json；下载原main/community aarch64 APKINDEX各上限16MiB，解析独立gzip成员、精确签名条目与APKINDEX，不解包路径。使用官方HTTPS公钥验证RSA签名（必须实际验证成功才算），对1815七差异精确P/V/C定位A；未匹配/验签失败保留。仅解释元数据来源，不归一化/修改原库，不宣称整个SDK或原核心复现。
+
+## 已签名索引离线SDK1817
+新增offline-indexed-sdk-1817，原base摘要、1816签名索引与1813归档固定。仓库离线安装150精确name=version，由索引生成A字段；之后COPY原SDK/etc/apk/world恢复原显式需求（不修改installed记录），该操作作为配方明确部分。精确回读完整P/V/A/C及world，继续核工具/头文件；不宣称完整文件系统/原核心复现。仅新构建，不启动PG/替换原SDK。

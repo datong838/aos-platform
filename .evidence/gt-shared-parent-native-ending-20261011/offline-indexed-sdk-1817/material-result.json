@@ -1,0 +1,52 @@
+{
+  "checks": [
+    {
+      "path": "/usr/bin/gcc",
+      "reference_entries": 1,
+      "rebuilt_entries": 1,
+      "differences": [],
+      "equal": true,
+      "reference_manifest_sha256": "c7b6e8ae18fafd20c34e5d021251dc8928a04bc3eb6ebd1d7c121dc49a1249d3",
+      "rebuilt_manifest_sha256": "c7b6e8ae18fafd20c34e5d021251dc8928a04bc3eb6ebd1d7c121dc49a1249d3"
+    },
+    {
+      "path": "/usr/bin/ld",
+      "reference_entries": 1,
+      "rebuilt_entries": 1,
+      "differences": [],
+      "equal": true,
+      "reference_manifest_sha256": "85ee29c69717c218a110a3b5522bed38fb1f283c00f4eeb94254c8cc9fe4de2e",
+      "rebuilt_manifest_sha256": "85ee29c69717c218a110a3b5522bed38fb1f283c00f4eeb94254c8cc9fe4de2e"
+    },
+    {
+      "path": "/usr/bin/ar",
+      "reference_entries": 1,
+      "rebuilt_entries": 1,
+      "differences": [],
+      "equal": true,
+      "reference_manifest_sha256": "0f9547fc427248b3f30dbe084702693bb6058f218d73a1e23265afa6569486fc",
+      "rebuilt_manifest_sha256": "0f9547fc427248b3f30dbe084702693bb6058f218d73a1e23265afa6569486fc"
+    },
+    {
+      "path": "/usr/include",
+      "reference_entries": 3237,
+      "rebuilt_entries": 3237,
+      "differences": [],
+      "equal": true,
+      "reference_manifest_sha256": "83cab8ade611d948a4ac3e8b367ddca1fd0a082ec33f3a35098371dbcbf1d2a8",
+      "rebuilt_manifest_sha256": "83cab8ade611d948a4ac3e8b367ddca1fd0a082ec33f3a35098371dbcbf1d2a8"
+    },
+    {
+      "path": "/usr/local/include",
+      "reference_entries": 947,
+      "rebuilt_entries": 947,
+      "differences": [],
+      "equal": true,
+      "reference_manifest_sha256": "eaceb6e7da2d4943f9f2ef2f24624954d92c95fddb6be22a30e935b576b4325c",
+      "rebuilt_manifest_sha256": "eaceb6e7da2d4943f9f2ef2f24624954d92c95fddb6be22a30e935b576b4325c"
+    }
+  ],
+  "containers_never_started": true,
+  "full_source_build_trust": false,
+  "execution_authorized": false
+}

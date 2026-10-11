@@ -1,0 +1,9 @@
+{
+  "reference_packages": 156,
+  "rebuilt_packages": 156,
+  "differences": [],
+  "world_equal": true,
+  "world_sha256": "f1a39fc4414198357ad14549a7fe85c882be470d970bbaa377cd578ce3b71a4f",
+  "full_source_build_trust": false,
+  "execution_authorized": false
+}
