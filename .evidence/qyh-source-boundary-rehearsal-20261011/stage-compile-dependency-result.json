@@ -1,0 +1,73 @@
+{
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "authority": "AOS-001896",
+  "contextHistoricalReadyNotCurrentExecutionProof": true,
+  "taskStatus": "cancelled",
+  "responsibilityCurrentBlockers": [
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE"
+  ],
+  "originalCompilationDenials": [
+    {
+      "scope": [
+        "org-org",
+        "dev-project"
+      ],
+      "errorType": "ProductionContractDependencyBlocked",
+      "code": "RESPONSIBILITY_PLAN_NOT_READY"
+    },
+    {
+      "scope": [
+        "org-org",
+        "dev-project"
+      ],
+      "errorType": "ProductionContractDependencyBlocked",
+      "code": "STAGE_TEMPLATE_DRIFTED"
+    },
+    {
+      "scope": [
+        "dev-org",
+        "dev-project"
+      ],
+      "errorType": "ProductionContractNotFound",
+      "code": null
+    }
+  ],
+  "readonlySourceConnections": [
+    {
+      "db": "qyh_source_contract_20261011",
+      "role": "aos_runtime",
+      "readonly": "on",
+      "cluster": "7695416748450308141"
+    },
+    {
+      "db": "qyh_source_contract_20261011",
+      "role": "aos_runtime",
+      "readonly": "on",
+      "cluster": "7695416748450308141"
+    },
+    {
+      "db": "qyh_source_contract_20261011",
+      "role": "aos_runtime",
+      "readonly": "on",
+      "cluster": "7695416748450308141"
+    }
+  ],
+  "fiveTableCountsUnchanged": {
+    "aip_task": 8,
+    "aip_plan_revision": 6,
+    "aip_task_run": 6,
+    "aip_step_run": 4,
+    "aip_production_contract_receipt": 90
+  },
+  "originalTaskAndResponsibilityUnchanged": true,
+  "databaseWrites": 0,
+  "currentAuthoritativeDatabaseConnected": false,
+  "cancelledTaskOrOldRunReplayed": false,
+  "fullRestorationAccepted": false,
+  "scriptHash": "1b7b0009d2c2a0fb193db06fbc69c28b0c3ecc913b4d27aa92288f3ce47b0ce7"
+}
