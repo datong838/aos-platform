@@ -1,0 +1,20 @@
+{
+  "sourceBeforeAfterExact": true,
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_bi_plan_issuer_connection.py": "4e442aa85b791ed5b193b2881409421f02458faae7ef7674cf67a606dacaece2",
+    "services/aos-api/aos_api/aip_source_issuer_connection.py": "107a4e6cc1c6e79a5bedcb9e638900949ffc910dad2ade67faa34a643a1ff1da",
+    "services/aos-api/tests/aip/test_aip_source_issuer_connection_pg.py": "ff4ec898247c52705fab2fbf34a0166af552e4688f2e64c3adab6943c22849dd"
+  },
+  "adjacentPassed": 54,
+  "preExistingSourceBoundaryXfails": 8,
+  "signedFullSchemaPassed": 1,
+  "actualLegacyOtherGroupAcceptanceClosed": true,
+  "temporaryIssuerLoginsOrTestDbsRemaining": 0,
+  "current647DataAndSixOldMetadataScopesUnchanged": true,
+  "currentSourceAclChanged": false,
+  "currentApiStartupChanged": false,
+  "formalPublisherConnected": false,
+  "completeWriterCallerCutover": false,
+  "eightWorkbenchesRestored": false,
+  "fullGoalAccepted": false
+}

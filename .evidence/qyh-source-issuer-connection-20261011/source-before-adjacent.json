@@ -1,0 +1,5 @@
+{
+  "services/aos-api/aos_api/aip_bi_plan_issuer_connection.py": "4e442aa85b791ed5b193b2881409421f02458faae7ef7674cf67a606dacaece2",
+  "services/aos-api/aos_api/aip_source_issuer_connection.py": "107a4e6cc1c6e79a5bedcb9e638900949ffc910dad2ade67faa34a643a1ff1da",
+  "services/aos-api/tests/aip/test_aip_source_issuer_connection_pg.py": "34d808fbe7fd9b329111463641974eaf6415381b1bcb3ce82115d341906cbbb3"
+}

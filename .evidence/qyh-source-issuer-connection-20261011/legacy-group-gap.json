@@ -1,0 +1,10 @@
+{
+  "originalCommittedIdentityAcceptedOtherGroup": true,
+  "newIdentityRejectedSameConnection": true,
+  "fixedLogin": "aos_bi_plan_issuer",
+  "runtimeMember": false,
+  "ownerMember": false,
+  "isolatedPort": 18432,
+  "currentDatabaseWrites": 0,
+  "formalIssuerAccepted": false
+}

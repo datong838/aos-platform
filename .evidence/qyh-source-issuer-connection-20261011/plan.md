@@ -1,0 +1,11 @@
+# 栖月汇Source固定发行连接实施计划
+
+复习231及原s3o-w-c/h/k/n合同，基线m1 f43d8682a、AOS-001874。本thread唯一施工，Task qyh-source-issuer-connection-20261011精确lease。原完整签名安装基准1pass、发行及Source预检36pass/8未闭合xfail；当前真库三Source仍普通runtime可写，先连接实施不切当前ACL。
+
+新增aip_source_issuer_connection.py：严格SourceIssuerDatabaseConfig绑定purpose(plan/content/contract)与原BIIssuerDatabaseConfig；固定plan=aos_bi_plan_issuer，content=aos_content_source_issuer，contract=aos_contract_source_issuer，不允许客户端自选登录名、任意DSN或fallback。连接仍精确loopback数据库/private0700+0600、禁止PG环境覆盖、重新校验credential、SERIALIZABLE写/REPEATABLE READ只读、短timeout/事务级TenantScope。复用原BI _connect_bi_issuer和Scoped wrapper，不复制scope/commit状态机；原public BI调用固定默认Plan身份行为保持。
+
+修改原BI模块仅内部函数增加固定预期login（3名白名单），Scoped wrapper在原Store commit/rollback后按同一login复验scope/identity。原session/current user必须同名且恰为选择角色，非super/BYPASS/inherit/CREATE角色库/replication；拒绝任何其他角色成员资格，防止通过第三方group间接写普通来源，原BI固定直授夹具无成员资格应保持通过。原caller事务不拆分、不自动提交/重试，不自动配置环境或发行角色。
+
+RED先新增test_aip_source_issuer_connection_pg.py导入新功能应失败。隔离固定18432当前lab（核专用container/cluster/无权威volume），创建三个固定临时NOINHERIT最小LOGIN，私密测试passfile；原root/其他逻辑角色不改。真实PG测三个目的各session=current/事务隔离/作用域、commit和rollback重绑、GUC事务结束后清理、wrong-kind及unsafe-role-membership拒绝、环境污染/凭据变权拒绝。RLS原双租户policy附于临时scope表，正向合法INSERT与canary无权读取/跨scope拒绝；测试后删自身表/schema/三账户，保留原NOLOGIN迁移角色。测试登录只隔离，不视作真实发布/Owner，不向真库发DDL。
+
+先专项RED→实现→专项GREEN，再原BI连接 tests与原完整签名安装/发行36pass相邻验证；新源码工作树hash在测试前绑定并回读。评审方案一致性/泄密/事务与默认行为，不以单测计八页或全Goal。无UI更改，本波不做无关截图；Task只在自身全部判据通过时Delivery，父全恢复Goal继续ACTIVE。下一完整写者分派和部署/迁移将复用此连接，但必须包含generic/BI/successor/Content/Contract与完整依赖ACL及既有来源，不能现在撤权。
