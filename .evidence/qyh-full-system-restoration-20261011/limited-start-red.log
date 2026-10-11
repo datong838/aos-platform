@@ -1,0 +1,147 @@
+.....................FFFFFFF                                             [100%]
+=================================== FAILURES ===================================
+_ test_limited_start_rejects_missing_or_invalid_formal_login_before_database[None] _
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b1c0090>
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-31/test_limited_start_rejects_mis0')
+issuer = None
+
+    @pytest.mark.parametrize('issuer', [None, 'http://idp.example.test',
+        'https://localhost', 'https://user:secret@idp.example.test'])
+    def test_limited_start_rejects_missing_or_invalid_formal_login_before_database(entry, monkeypatch, tmp_path, issuer):
+        for name in ['AOS_OIDC_JWKS_URLS','AOS_OIDC_JWKS_URL','AOS_OIDC_ISSUERS','AOS_OIDC_ISSUER','AOS_OIDC_AUDIENCE']:
+            monkeypatch.delenv(name, raising=False)
+        if issuer is not None:
+            monkeypatch.setenv('AOS_OIDC_ISSUER', issuer)
+            monkeypatch.setenv('AOS_OIDC_JWKS_URL', 'https://idp.example.test/jwks')
+            monkeypatch.setenv('AOS_OIDC_AUDIENCE', 'aos-api')
+        monkeypatch.setattr(entry, 'select_current_installation', lambda **kw: pytest.fail('database gate reached'))
+        with pytest.raises(entry.RestorationBlocked, match='EXTERNAL_OIDC_CONFIG'):
+>           entry.prepare_limited_launch(**launch_arguments(tmp_path))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'a0v_qyh_restored_http' has no attribute 'prepare_limited_launch'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:106: AttributeError
+_ test_limited_start_rejects_missing_or_invalid_formal_login_before_database[http://idp.example.test] _
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b1c09d0>
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-31/test_limited_start_rejects_mis1')
+issuer = 'http://idp.example.test'
+
+    @pytest.mark.parametrize('issuer', [None, 'http://idp.example.test',
+        'https://localhost', 'https://user:secret@idp.example.test'])
+    def test_limited_start_rejects_missing_or_invalid_formal_login_before_database(entry, monkeypatch, tmp_path, issuer):
+        for name in ['AOS_OIDC_JWKS_URLS','AOS_OIDC_JWKS_URL','AOS_OIDC_ISSUERS','AOS_OIDC_ISSUER','AOS_OIDC_AUDIENCE']:
+            monkeypatch.delenv(name, raising=False)
+        if issuer is not None:
+            monkeypatch.setenv('AOS_OIDC_ISSUER', issuer)
+            monkeypatch.setenv('AOS_OIDC_JWKS_URL', 'https://idp.example.test/jwks')
+            monkeypatch.setenv('AOS_OIDC_AUDIENCE', 'aos-api')
+        monkeypatch.setattr(entry, 'select_current_installation', lambda **kw: pytest.fail('database gate reached'))
+        with pytest.raises(entry.RestorationBlocked, match='EXTERNAL_OIDC_CONFIG'):
+>           entry.prepare_limited_launch(**launch_arguments(tmp_path))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'a0v_qyh_restored_http' has no attribute 'prepare_limited_launch'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:106: AttributeError
+_ test_limited_start_rejects_missing_or_invalid_formal_login_before_database[https://localhost] _
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b21e7d0>
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-31/test_limited_start_rejects_mis2')
+issuer = 'https://localhost'
+
+    @pytest.mark.parametrize('issuer', [None, 'http://idp.example.test',
+        'https://localhost', 'https://user:secret@idp.example.test'])
+    def test_limited_start_rejects_missing_or_invalid_formal_login_before_database(entry, monkeypatch, tmp_path, issuer):
+        for name in ['AOS_OIDC_JWKS_URLS','AOS_OIDC_JWKS_URL','AOS_OIDC_ISSUERS','AOS_OIDC_ISSUER','AOS_OIDC_AUDIENCE']:
+            monkeypatch.delenv(name, raising=False)
+        if issuer is not None:
+            monkeypatch.setenv('AOS_OIDC_ISSUER', issuer)
+            monkeypatch.setenv('AOS_OIDC_JWKS_URL', 'https://idp.example.test/jwks')
+            monkeypatch.setenv('AOS_OIDC_AUDIENCE', 'aos-api')
+        monkeypatch.setattr(entry, 'select_current_installation', lambda **kw: pytest.fail('database gate reached'))
+        with pytest.raises(entry.RestorationBlocked, match='EXTERNAL_OIDC_CONFIG'):
+>           entry.prepare_limited_launch(**launch_arguments(tmp_path))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'a0v_qyh_restored_http' has no attribute 'prepare_limited_launch'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:106: AttributeError
+_ test_limited_start_rejects_missing_or_invalid_formal_login_before_database[https://user:secret@idp.example.test] _
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b24c950>
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-31/test_limited_start_rejects_mis3')
+issuer = 'https://user:secret@idp.example.test'
+
+    @pytest.mark.parametrize('issuer', [None, 'http://idp.example.test',
+        'https://localhost', 'https://user:secret@idp.example.test'])
+    def test_limited_start_rejects_missing_or_invalid_formal_login_before_database(entry, monkeypatch, tmp_path, issuer):
+        for name in ['AOS_OIDC_JWKS_URLS','AOS_OIDC_JWKS_URL','AOS_OIDC_ISSUERS','AOS_OIDC_ISSUER','AOS_OIDC_AUDIENCE']:
+            monkeypatch.delenv(name, raising=False)
+        if issuer is not None:
+            monkeypatch.setenv('AOS_OIDC_ISSUER', issuer)
+            monkeypatch.setenv('AOS_OIDC_JWKS_URL', 'https://idp.example.test/jwks')
+            monkeypatch.setenv('AOS_OIDC_AUDIENCE', 'aos-api')
+        monkeypatch.setattr(entry, 'select_current_installation', lambda **kw: pytest.fail('database gate reached'))
+        with pytest.raises(entry.RestorationBlocked, match='EXTERNAL_OIDC_CONFIG'):
+>           entry.prepare_limited_launch(**launch_arguments(tmp_path))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'a0v_qyh_restored_http' has no attribute 'prepare_limited_launch'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:106: AttributeError
+_______________ test_limited_start_does_not_reuse_occupied_port ________________
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1081d4110>
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-31/test_limited_start_does_not_re0')
+
+    def test_limited_start_does_not_reuse_occupied_port(entry, monkeypatch, tmp_path):
+        formal_login(monkeypatch)
+        monkeypatch.setattr(entry.previous, '_port_free', lambda port: False)
+        monkeypatch.setattr(entry, 'select_current_installation', lambda **kw: pytest.fail('database gate reached'))
+        with pytest.raises(entry.RestorationBlocked, match='RESTORED_HTTP_PORT_OCCUPIED'):
+>           entry.prepare_limited_launch(**launch_arguments(tmp_path))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'a0v_qyh_restored_http' has no attribute 'prepare_limited_launch'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:122: AttributeError
+_ test_limited_launch_replaces_inherited_database_code_and_execution_environment _
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b25d350>
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-31/test_limited_launch_replaces_i0')
+
+    def test_limited_launch_replaces_inherited_database_code_and_execution_environment(entry, monkeypatch, tmp_path):
+        formal_login(monkeypatch)
+        monkeypatch.setattr(entry.previous, '_port_free', lambda port: port == 18080)
+>       monkeypatch.setattr(entry, 'require_api_source_candidate', lambda path: tmp_path/'frozen')
+E       AttributeError: <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'> has no attribute 'require_api_source_candidate'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:128: AttributeError
+____ test_frozen_source_candidate_cannot_accept_a_source_path_outside_task _____
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-31/test_frozen_source_candidate_c0')
+
+    def test_frozen_source_candidate_cannot_accept_a_source_path_outside_task(entry, tmp_path):
+        import json
+        report = tmp_path/'candidate.json'
+        report.write_text(json.dumps({'source':str(tmp_path/'outside')}))
+        with pytest.raises(entry.RestorationBlocked, match='RESTORED_API_SOURCE_CANDIDATE_INVALID'):
+>           entry.require_api_source_candidate(report)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'a0v_qyh_restored_http' has no attribute 'require_api_source_candidate'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:158: AttributeError
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_limited_start_rejects_missing_or_invalid_formal_login_before_database[None]
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_limited_start_rejects_missing_or_invalid_formal_login_before_database[http://idp.example.test]
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_limited_start_rejects_missing_or_invalid_formal_login_before_database[https://localhost]
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_limited_start_rejects_missing_or_invalid_formal_login_before_database[https://user:secret@idp.example.test]
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_limited_start_does_not_reuse_occupied_port
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_limited_launch_replaces_inherited_database_code_and_execution_environment
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_frozen_source_candidate_cannot_accept_a_source_path_outside_task
+7 failed, 21 passed in 0.28s

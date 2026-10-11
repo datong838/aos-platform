@@ -28,6 +28,10 @@ RED：旧Growth/错误基础包/漏包多包重复包/跨tenant/错误安装id/�
 
 ## 未知与回滚
 
+受控入口提交后必须生成新的冻结候选，以包含本轮已提交scripts/tests；旧6763文件候选保持不覆盖。freeze_current_api.py增加--receipt-stem（受限文件名、默认原值不变），每次source目录仍以精确HEAD命名且O_EXCL，已有intent/结果/目录一律拒绝；续冻只在新HEAD且新receipt-stem运行。旧与新候选均保留；元数据提交不能把旧候选误称新代码通过。
+
+下一施工步骤为受控HTTP启动接线：精确修改scripts/a0v_qyh_restored_http.py、services/aos-api/tests/extension_runtime/test_qyh_restored_http.py。只增加显式--serve-limited及冻结候选参数，默认只读inventory/current-installation行为不变。复用原外部OIDC合法性门、有限LOGIN/当前647表库身份、原真实published安装release reader及四包选型门；校验冻结报告、6763文件manifest和0700/0600权限，再以当前m1已提交API文件的Git blob逐项对照冻结API，原关闭开关来源亦必须与当前提交一致。不得启动混入其他未提交API改动的源码。固定loopback18080候选端口必须空闲，保留原8080/8434；关闭所有原worker/Host/migration，强制external-only/dev off，PG密码只走私密passfile，清除继承数据库身份和PYTHONPATH，子进程仅加载冻结API。启动本身不授运行Owner/预算/正式配置/八页面通过；生产请求仍经原认证和租户权限，Host及Provider始终关闭。正式登录/独立发布仍未齐备时仅通过原门真实拒绝，不启动候选服务。先RED覆盖缺失/非法OIDC、端口冲突、源码漂移和危险继承环境，再最小实现与专项/相邻验证；mock只证明入口拒绝顺序/环境构造，不能当真实安装或API启动验收。
+
 API准备独立候选：新增本Task证据目录freeze_current_api.py。从精确当前m1提交导出services/aos-api和scripts到本Task/private下0700冻结目录，普通文件0600、git归档逐文件hash核验，不复制工作树其他未提交改动或.env/凭据，不修改原preview入口/进程/端口。核冻结源码原main语法及全部显式ENABLED开关由原preview关闭配置覆盖，Host关闭、migration disabled、dev登录禁用且external-only；这里只保存无凭据启动配置参考，不启动API、不注入正式OIDC、不授Owner。完整结果绑定代码commit、文件manifest hash、具体源码与原开关。未来正式启动必须重新核当前代码和安装/身份/配置，不把本候选称为最新运行中的API。整套授权继续；当前正式OIDC配置来源待用户补齐。
 
 本轮追加只读配置依赖与旧执行记录关联核对：在同一证据目录新增audit_restored_configuration_dependencies.py。使用当前有限LOGIN和READ ONLY事务读取当前runtime policy的五类策略引用及有效窗口；仅汇总三个历史安装关联的Schedule/Run状态和operation状态，不读取业务payload、不调用旧执行器。原正式reader包含FOR SHARE锁，禁止为了在只读调查中调用它而去掉锁或改用可写事务；本次只做元数据候选审计，明确不等于正式reader准入。产出新配置恢复输入清单，旧不可变配置、预算、绑定及Run均保留。

@@ -1,9 +1,11 @@
 """Freeze exact committed API sources privately; never start or switch a service."""
 import ast
+import argparse
 import hashlib
 import io
 import json
 import os
+import re
 import subprocess
 import tarfile
 from pathlib import Path, PurePosixPath
@@ -15,12 +17,18 @@ def digest(value):
     return hashlib.sha256(value).hexdigest()
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--receipt-stem', default='frozen-current-api-candidate')
+    args = parser.parse_args()
+    if not re.fullmatch(r'[a-z][a-z0-9-]{0,100}', args.receipt_stem):
+        parser.error('receipt stem must be a bounded lowercase filename')
     assert subprocess.check_output(['git', 'branch', '--show-current'], cwd=ROOT,
         text=True).strip() == 'm1'
     head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
-    result_path = R / 'frozen-current-api-candidate.json'
+    result_path = R / (args.receipt_stem + '.json')
+    intent_path = R / (args.receipt_stem + '-intent.json')
     destination = R / 'private' / ('api-source-' + head)
-    assert not result_path.exists() and not destination.exists(), 'Existing candidate: reconcile only'
+    assert not result_path.exists() and not intent_path.exists() and not destination.exists(), 'Existing candidate: reconcile only'
     archive = subprocess.check_output(['git', 'archive', '--format=tar', head,
         'services/aos-api', 'scripts'], cwd=ROOT, timeout=60)
     members = []
@@ -53,7 +61,7 @@ if __name__ == '__main__':
     flags.update({'AOS_AUTH_ALLOW_DEV': '0', 'AOS_AUTH_EXTERNAL_ONLY': '1',
         'AOS_REST_CONNECTOR_MOCK': '0'})
     # All checks precede filesystem creation. Intent is durable before copying.
-    with (R / 'frozen-current-api-candidate-intent.json').open('x') as stream:
+    with intent_path.open('x') as stream:
         json.dump({'head': head, 'destination': str(destination), 'fileCount': len(members),
             'serviceStart': False, 'originalPreviewTouched': False}, stream, indent=2)
         stream.write('\n')

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Read-only HTTP attachment preflight for the preserved Qiyuehui cluster.
 
-This stage has no serve/write command. It can inspect an exact current
-installation through the original release reader; OIDC, current configuration,
-process switching and browser acceptance remain separate gates.
+Default operation inspects an exact current installation through the original
+release reader. Explicit limited serving additionally requires formal OIDC and
+an independently verified frozen API source; Host and all workers remain off.
 """
 from __future__ import annotations
 import argparse
+import hashlib
 import json
 import os
 import stat
@@ -28,6 +29,7 @@ EXPECTED = {'database': 'aos_meta_head', 'cluster': '7695302940039200809',
 SELECTED_VERSIONS = {'domain.ecommerce.core': '1.4.3',
     'platform.ecommerce.niushop': '1.23.2', 'solution.ecommerce.growth': '1.13.0',
     'solution.ecommerce.operations-base': '1.2.2'}
+LIMITED_PORT = 18080
 
 class RestorationBlocked(RuntimeError):
     pass
@@ -157,14 +159,126 @@ def select_current_installation(*, identity_file, bundle_root, trust_roots_file,
     return {**report, 'outcome': 'RESTORED_CURRENT_INSTALLATION_EVIDENCE_ONLY',
             'currentInstallation': selected}
 
+def require_api_source_candidate(report_path):
+    task = ROOT / '.evidence/qyh-full-system-restoration-20261011'
+    if (report_path.is_symlink() or not report_path.is_file()
+        or report_path.resolve().parent != task.resolve()
+        or report_path.stat().st_uid != os.getuid()):
+        raise RestorationBlocked('RESTORED_API_SOURCE_CANDIDATE_INVALID')
+    report = json.loads(report_path.read_text())
+    head = report.get('head', '')
+    if (type(head) is not str or len(head) != 40
+        or any(c not in '0123456789abcdef' for c in head)
+        or report.get('outcome') != 'CURRENT_M1_API_SOURCE_CANDIDATE_FROZEN_NO_START'):
+        raise RestorationBlocked('RESTORED_API_SOURCE_CANDIDATE_INVALID')
+    source = task / 'private' / ('api-source-' + head)
+    if report.get('source') != str(source) or source.resolve() != source or not source.is_dir():
+        raise RestorationBlocked('RESTORED_API_SOURCE_CANDIDATE_INVALID')
+    manifest_path = _private(source.parent / ('api-manifest-' + head + '.json'))
+    raw = manifest_path.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != report.get('manifestSha256'):
+        raise RestorationBlocked('RESTORED_API_SOURCE_MANIFEST_DRIFT')
+    manifest = json.loads(raw)
+    observed = {}
+    for path in [source, *source.rglob('*')]:
+        mode = stat.S_IMODE(path.stat().st_mode)
+        if (path.is_symlink() or path.stat().st_uid != os.getuid()
+            or (not path.is_file() and not path.is_dir())
+            or mode != (0o600 if path.is_file() else 0o700)):
+            raise RestorationBlocked('RESTORED_API_SOURCE_PERMISSION_DRIFT')
+        if path.is_file():
+            observed[str(path.relative_to(source))] = hashlib.sha256(path.read_bytes()).hexdigest()
+    if observed != manifest or len(observed) != report.get('fileCount'):
+        raise RestorationBlocked('RESTORED_API_SOURCE_FILES_DRIFT')
+    def git(*args):
+        return subprocess.check_output(['git', *args], cwd=ROOT, timeout=30)
+    if git('branch', '--show-current').strip() != b'm1' or git('rev-parse', '--show-object-format').strip() != b'sha1':
+        raise RestorationBlocked('RESTORED_API_SOURCE_BRANCH_OR_FORMAT_DRIFT')
+    tree = git('ls-tree', '-rz', 'HEAD', '--', 'services/aos-api',
+               'scripts/a0v_current_preview_http.py')
+    api_paths = set()
+    for item in tree.split(b'\0'):
+        if not item:
+            continue
+        metadata, raw_path = item.split(b'\t', 1)
+        mode, kind, oid = metadata.split()
+        name = raw_path.decode('utf-8')
+        if mode not in {b'100644', b'100755'} or kind != b'blob' or name not in manifest:
+            raise RestorationBlocked('RESTORED_CURRENT_API_SOURCE_DRIFT')
+        data = (source / name).read_bytes()
+        actual_oid = hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest().encode()
+        if actual_oid != oid:
+            raise RestorationBlocked('RESTORED_CURRENT_API_SOURCE_DRIFT')
+        if name.startswith('services/aos-api/'):
+            api_paths.add(name)
+    if not api_paths or api_paths != {p for p in manifest if p.startswith('services/aos-api/')}:
+        raise RestorationBlocked('RESTORED_CURRENT_API_SOURCE_DRIFT')
+    if Path(previous.__file__).read_bytes() != (source / 'scripts/a0v_current_preview_http.py').read_bytes():
+        raise RestorationBlocked('RESTORED_CURRENT_STARTUP_FLAGS_SOURCE_DRIFT')
+    return source
+
+def prepare_limited_launch(*, identity_file, bundle_root, trust_roots_file,
+                           installation_id, source_candidate):
+    # Existing authentication gate runs before any DB or process action.
+    try:
+        previous._require_external_oidc()
+    except previous.PreviewBlocked as exc:
+        raise RestorationBlocked(str(exc)) from None
+    if not previous._port_free(LIMITED_PORT):
+        raise RestorationBlocked('RESTORED_HTTP_PORT_OCCUPIED')
+    source = require_api_source_candidate(source_candidate)
+    report = select_current_installation(identity_file=identity_file,
+        bundle_root=bundle_root, trust_roots_file=trust_roots_file,
+        installation_id=installation_id)
+    identity = _identity_parameters(identity_file)
+    from psycopg.conninfo import make_conninfo
+    forbidden = {'AOS_DATABASE_URL', 'PGPASSWORD', 'PGPASSFILE', 'PGHOST', 'PGPORT', 'PGOPTIONS',
+        'PGDATABASE', 'PGUSER', 'PGSERVICE', 'PGSERVICEFILE', 'PYTHONPATH', 'PYTHONHOME'}
+    environment = {k:v for k,v in os.environ.items() if k not in forbidden}
+    environment.update(previous.FLAGS)
+    environment.update({'AOS_AUTH_ALLOW_DEV': '0', 'AOS_AUTH_EXTERNAL_ONLY': '1',
+        'AOS_REST_CONNECTOR_MOCK': '0', 'PYTHONDONTWRITEBYTECODE': '1',
+        'PYTHONPATH': str(source / 'services/aos-api'),
+        'PGPASSFILE': identity['pgpassFile'],
+        'AOS_DATABASE_URL': make_conninfo(host=identity['host'], port=identity['port'],
+            dbname=identity['dbname'], user=identity['user']),
+        'AOS_BUNDLE_ROOT': str(bundle_root.resolve(strict=True)),
+        'AOS_BUNDLE_TRUST_ROOTS_FILE': str(trust_roots_file.resolve(strict=True))})
+    command = [sys.executable, '-m', 'uvicorn', 'aos_api.main:app', '--host',
+        '127.0.0.1', '--port', str(LIMITED_PORT), '--workers', '1',
+        '--no-access-log', '--log-level', 'warning']
+    public = {'outcome': 'RESTORED_HTTP_LIMITED_STARTING', 'database': EXPECTED['database'],
+        'installationId': report['currentInstallation']['installationId'],
+        'port': LIMITED_PORT, 'runtimeAuthorized': False, 'workersEnabled': 0,
+        'eightPagesAccepted': False, 'migrationMode': 'disabled',
+        'currentConfigurationVerified': False, 'formalOwnerVerified': False}
+    return command, environment, public
+
+def serve_limited(**arguments):
+    command, environment, public = prepare_limited_launch(**arguments)
+    print(json.dumps(public, ensure_ascii=False), flush=True)
+    os.chdir(Path(environment['PYTHONPATH']).parents[1])
+    os.execve(sys.executable, command, environment)
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--api-identity-file',type=Path,required=True)
     parser.add_argument('--current-installation')
     parser.add_argument('--bundle-root',type=Path)
     parser.add_argument('--trust-roots-file',type=Path)
+    parser.add_argument('--serve-limited', action='store_true')
+    parser.add_argument('--source-candidate', type=Path)
     args = parser.parse_args()
     values = (args.current_installation, args.bundle_root, args.trust_roots_file)
+    if args.serve_limited:
+        if any(value is None for value in values) or args.source_candidate is None:
+            parser.error('limited start requires current installation, bundle root, trust roots and source candidate')
+        serve_limited(identity_file=args.api_identity_file, bundle_root=args.bundle_root,
+            trust_roots_file=args.trust_roots_file, installation_id=args.current_installation,
+            source_candidate=args.source_candidate)
+        return
+    if args.source_candidate is not None:
+        parser.error('source candidate requires explicit limited start')
     if any(value is not None for value in values):
         if any(value is None for value in values):
             parser.error('current installation, bundle root and trust roots are required together')
@@ -176,4 +290,9 @@ def main():
     print(json.dumps(report,ensure_ascii=False,indent=2))
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except RestorationBlocked as exc:
+        print(json.dumps({'outcome': 'RESTORED_HTTP_STARTUP_REJECTED', 'reason': str(exc),
+            'apiStarted': False, 'runtimeAuthorized': False}, ensure_ascii=False), flush=True)
+        raise SystemExit(2)
