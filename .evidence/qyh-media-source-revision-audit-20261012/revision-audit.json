@@ -1,0 +1,185 @@
+{
+  "metadata": {
+    "database": "aos_meta_head",
+    "cluster": "7695302940039200809",
+    "schema": "a0v_159",
+    "columns": [
+      {
+        "column_name": "actor",
+        "data_type": "text"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone"
+      },
+      {
+        "column_name": "event_pk",
+        "data_type": "uuid"
+      },
+      {
+        "column_name": "evidence_revision",
+        "data_type": "text"
+      },
+      {
+        "column_name": "evidence_snapshot",
+        "data_type": "jsonb"
+      },
+      {
+        "column_name": "from_status",
+        "data_type": "text"
+      },
+      {
+        "column_name": "reason",
+        "data_type": "text"
+      },
+      {
+        "column_name": "sequence",
+        "data_type": "bigint"
+      },
+      {
+        "column_name": "to_status",
+        "data_type": "text"
+      },
+      {
+        "column_name": "version_pk",
+        "data_type": "uuid"
+      }
+    ],
+    "constraints": [
+      {
+        "conname": "asset_bundle_version_event_actor_check",
+        "definition": "CHECK ((btrim(actor) <> ''::text))"
+      },
+      {
+        "conname": "asset_bundle_version_event_check",
+        "definition": "CHECK ((from_status <> to_status))"
+      },
+      {
+        "conname": "asset_bundle_version_event_evidence_revision_check",
+        "definition": "CHECK ((evidence_revision ~ '^sha256:[0-9a-f]{64}$'::text))"
+      },
+      {
+        "conname": "asset_bundle_version_event_evidence_snapshot_check",
+        "definition": "CHECK (((evidence_snapshot IS NULL) OR (jsonb_typeof(evidence_snapshot) = 'array'::text)))"
+      },
+      {
+        "conname": "asset_bundle_version_event_from_status_check",
+        "definition": "CHECK ((from_status = ANY (ARRAY['draft'::text, 'validated'::text, 'published'::text, 'deprecated'::text, 'revoked'::text, 'rejected'::text])))"
+      },
+      {
+        "conname": "asset_bundle_version_event_pkey",
+        "definition": "PRIMARY KEY (event_pk)"
+      },
+      {
+        "conname": "asset_bundle_version_event_sequence_check",
+        "definition": "CHECK ((sequence > 0))"
+      },
+      {
+        "conname": "asset_bundle_version_event_to_status_check",
+        "definition": "CHECK ((to_status = ANY (ARRAY['draft'::text, 'validated'::text, 'published'::text, 'deprecated'::text, 'revoked'::text, 'rejected'::text])))"
+      },
+      {
+        "conname": "asset_bundle_version_event_version_pk_fkey",
+        "definition": "FOREIGN KEY (version_pk) REFERENCES asset_bundle_version(version_pk) ON DELETE RESTRICT"
+      },
+      {
+        "conname": "asset_bundle_version_event_version_pk_sequence_key",
+        "definition": "UNIQUE (version_pk, sequence)"
+      }
+    ],
+    "triggers": [
+      {
+        "tgname": "trg_asset_bundle_version_event_guard",
+        "tgenabled": "O",
+        "definition": "CREATE TRIGGER trg_asset_bundle_version_event_guard BEFORE INSERT OR DELETE OR UPDATE ON public.asset_bundle_version_event FOR EACH ROW EXECUTE FUNCTION guard_asset_bundle_version_event_mutation()",
+        "function_hash": "261c497b761d970048c50a8405ad6589"
+      },
+      {
+        "tgname": "trg_asset_bundle_version_event_truncate_guard",
+        "tgenabled": "O",
+        "definition": "CREATE TRIGGER trg_asset_bundle_version_event_truncate_guard BEFORE TRUNCATE ON public.asset_bundle_version_event FOR EACH STATEMENT EXECUTE FUNCTION guard_asset_bundle_version_event_mutation()",
+        "function_hash": "261c497b761d970048c50a8405ad6589"
+      }
+    ],
+    "versions": [
+      {
+        "bundle_id": "domain.ecommerce.core",
+        "version": "1.4.3",
+        "status": "validated",
+        "content_hash": "sha256:e14e6af72dd7c89d5beb7fd002454029bbc64cf510e6b9849ae9df20ef7eba44",
+        "sequence": 1,
+        "from_status": "draft",
+        "to_status": "validated",
+        "evidence_revision": "sha256:520a4207ae4e7e7b8fcb8d67df24271969c6d09ec47d07cb9f44df03c4fb5fb1",
+        "has_snapshot": true,
+        "legacy_zero_sentinel": false
+      },
+      {
+        "bundle_id": "platform.ecommerce.niushop",
+        "version": "1.23.2",
+        "status": "published",
+        "content_hash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90",
+        "sequence": 1,
+        "from_status": "draft",
+        "to_status": "validated",
+        "evidence_revision": "sha256:92a1c5ed8f338d1d6b999d6130b9e9c535bb58e8dcc193a11b3345b31b83cf9c",
+        "has_snapshot": true,
+        "legacy_zero_sentinel": false
+      },
+      {
+        "bundle_id": "platform.ecommerce.niushop",
+        "version": "1.23.2",
+        "status": "published",
+        "content_hash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90",
+        "sequence": 2,
+        "from_status": "validated",
+        "to_status": "published",
+        "evidence_revision": "sha256:92a1c5ed8f338d1d6b999d6130b9e9c535bb58e8dcc193a11b3345b31b83cf9c",
+        "has_snapshot": true,
+        "legacy_zero_sentinel": false
+      },
+      {
+        "bundle_id": "solution.ecommerce.growth",
+        "version": "1.13.0",
+        "status": "validated",
+        "content_hash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+        "sequence": 1,
+        "from_status": "draft",
+        "to_status": "validated",
+        "evidence_revision": "sha256:2f0ee0e21500fe873182bd95310b89b3451594f081c779f62a9c71bd98dcddd2",
+        "has_snapshot": true,
+        "legacy_zero_sentinel": false
+      },
+      {
+        "bundle_id": "solution.ecommerce.operations-base",
+        "version": "1.2.2",
+        "status": "published",
+        "content_hash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec",
+        "sequence": 1,
+        "from_status": "draft",
+        "to_status": "validated",
+        "evidence_revision": "sha256:b56aa9efff245209271751fee5df2a732b07691646b57bea5a29fd8254cc295e",
+        "has_snapshot": true,
+        "legacy_zero_sentinel": false
+      },
+      {
+        "bundle_id": "solution.ecommerce.operations-base",
+        "version": "1.2.2",
+        "status": "published",
+        "content_hash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec",
+        "sequence": 2,
+        "from_status": "validated",
+        "to_status": "published",
+        "evidence_revision": "sha256:b56aa9efff245209271751fee5df2a732b07691646b57bea5a29fd8254cc295e",
+        "has_snapshot": true,
+        "legacy_zero_sentinel": false
+      }
+    ]
+  },
+  "twoIndependentReadsEqual": true,
+  "databaseWrites": 0,
+  "registryTransitions": 0,
+  "referenceAuthorityCreated": false,
+  "snapshotSequenceIsNotSignatureApproval": true,
+  "legacySentinelCannotAuthorizeMedia": true
+}

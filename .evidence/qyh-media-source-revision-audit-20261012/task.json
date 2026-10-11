@@ -1,0 +1,18 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-media-source-revision-audit-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001921",
+  "scope": [
+    "aos-platform/.evidence/qyh-media-source-revision-audit-20261012"
+  ],
+  "excluded_scope": [
+    "services/current-database/registry-transitions"
+  ],
+  "expected_outputs": [
+    "Actual immutable Registry publication sequence/evidence snapshot metadata read-only audit; no hash-to-int or synthetic version authority"
+  ],
+  "lease_expires_at": "2026-10-12T10:11:05.276761+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T06:11:06+08:00"
+}

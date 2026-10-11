@@ -1,0 +1,1 @@
+纯证据调查，原少量SELECT/READONLY两次相等。只公开列/constraints/trigger定义hash/公开坐标/status/seq/hash/snapshotbool，无actor/reason/业务payload。真实原signed基础包验证材料由下一独立Task提供，此Task不写services/库。0Registrytransition/Source权限生成，新reader独立scope无第二写者。

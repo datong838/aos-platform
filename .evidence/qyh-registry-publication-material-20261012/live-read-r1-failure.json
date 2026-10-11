@@ -1,0 +1,1 @@
+{"errorType": "TypeError", "reason": "apply_asset_transaction_scope requires keyword org_id/project_id", "stage": "beforeRegistryStore query", "writes": 0, "unknownExternalEffect": false}

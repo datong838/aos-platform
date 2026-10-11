@@ -1,0 +1,17 @@
+{
+  "baseHead": "e1fe9e9f937c2d63ebd93210b9f6aec693979fd8",
+  "targetedAdjacent": {
+    "passed": 97,
+    "skipped": 0,
+    "warnings": 7
+  },
+  "livePublishedPositive": 2,
+  "liveNotPublishedRejected": 2,
+  "limitedLoginReadOnly": true,
+  "nativePublicationSeq": 2,
+  "newRefsGenerated": false,
+  "currentDbWrites": 0,
+  "completeMediaSourceAccepted": false,
+  "liveApiChanged": false,
+  "retainedArtifactHashMatches": 1695
+}

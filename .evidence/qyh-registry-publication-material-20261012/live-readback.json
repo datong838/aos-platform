@@ -1,0 +1,57 @@
+{
+  "rows": [
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "status": "VERIFIED_PUBLISHED_MATERIAL",
+      "material": {
+        "publisher": "aos",
+        "bundleId": "platform.ecommerce.niushop",
+        "version": "1.23.2",
+        "publicationSequence": 2,
+        "contentHash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90",
+        "signatureFingerprint": "sha256:32d4746295c0f692ccf1f9f31590d835ad00ea9c554ebdf8bf587796ab295395",
+        "releaseEvidenceRevision": "sha256:2840b8b3f25fe4393195ceef11b86f5062163415d309d926b29268b599edbcc6",
+        "publicationEvidenceRevision": "sha256:92a1c5ed8f338d1d6b999d6130b9e9c535bb58e8dcc193a11b3345b31b83cf9c",
+        "tenantInstallationVerified": false,
+        "mediaPolicyVerified": false,
+        "ruleAuthorityVerified": false
+      }
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "status": "VERIFIED_PUBLISHED_MATERIAL",
+      "material": {
+        "publisher": "aos",
+        "bundleId": "solution.ecommerce.operations-base",
+        "version": "1.2.2",
+        "publicationSequence": 2,
+        "contentHash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec",
+        "signatureFingerprint": "sha256:18357d9c6d2cfb2f106fba57a8cffdb7ccf005869efa8cc5cf07a5338aedaec6",
+        "releaseEvidenceRevision": "sha256:666518683f6c1b1c4b55cb9dae9b4ab2603d6e82062b7bcb24504bfdcb8f571e",
+        "publicationEvidenceRevision": "sha256:b56aa9efff245209271751fee5df2a732b07691646b57bea5a29fd8254cc295e",
+        "tenantInstallationVerified": false,
+        "mediaPolicyVerified": false,
+        "ruleAuthorityVerified": false
+      }
+    },
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "status": "REFUSED_NOT_PUBLISHED",
+      "errorType": "VerificationFailedError"
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "status": "REFUSED_NOT_PUBLISHED",
+      "errorType": "VerificationFailedError"
+    }
+  ],
+  "limitedLoginReadOnly": true,
+  "databaseWrites": 0,
+  "registryTransitions": 0,
+  "newRefGenerated": false,
+  "wholeMediaSourceAccepted": false
+}

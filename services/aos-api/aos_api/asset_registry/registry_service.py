@@ -333,6 +333,49 @@ class RegistryService:
             publisher_scopes=publisher_scopes,
         )
 
+    def get_published_reference_material(
+        self, *, bundle_id: str, version: str, publisher: str
+    ) -> dict[str, Any]:
+        """Read persistent publication coordinates, without tenant authority.
+
+        The Store connection factory may adopt the caller's transaction. No
+        lifecycle transition or numeric revision derived from a hash is issued.
+        """
+        record = self._load_version_record(
+            bundle_id=bundle_id, version=version, publisher=publisher
+        )
+        events = record.lifecycle_events
+        if (
+            record.status != BundleVersionStatus.PUBLISHED
+            or not events
+            or events[-1]["toStatus"] != BundleVersionStatus.PUBLISHED
+            or events[-1]["evidenceRevision"] == LEGACY_EVIDENCE_REVISION
+            or events[-1]["evidenceSnapshot"] is None
+        ):
+            raise VerificationFailedError("current publication snapshot is required")
+        publication = events[-1]
+        snapshot_evidence = _parse_evidence(publication["evidenceSnapshot"])
+        order = lambda item: (item.type.value, item.artifact_ref)
+        if sorted(snapshot_evidence, key=order) != sorted(record.evidence, key=order):
+            raise VerificationFailedError("publication evidence differs from current evidence")
+        _assert_publish_duty_separation(record, actor=publication["actor"])
+        release = self._release_policy.snapshot().evaluate(
+            record, checked_at=self._clock()
+        )
+        return {
+            "publisher": record.publisher,
+            "bundleId": record.bundle_id,
+            "version": record.version,
+            "publicationSequence": publication["sequence"],
+            "contentHash": record.content_hash,
+            "signatureFingerprint": release.signature_fingerprint,
+            "releaseEvidenceRevision": release.release_evidence_revision,
+            "publicationEvidenceRevision": publication["evidenceRevision"],
+            "tenantInstallationVerified": False,
+            "mediaPolicyVerified": False,
+            "ruleAuthorityVerified": False,
+        }
+
     def _load_version_record(
         self,
         *,
