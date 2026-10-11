@@ -1,0 +1,9 @@
+{
+  "library": "/tmp/aos-fmgr-coverage-509602b8d8242a5de934c8de6332f118e3625058332f82c6d28505e0044a179e.so",
+  "librarySha256": "509602b8d8242a5de934c8de6332f118e3625058332f82c6d28505e0044a179e",
+  "image": "sha256:05502f04c736d28615d2642c6bc594a11985b35c355c29bd02f1e297b858709a",
+  "artifactContainerId": "bf14b3fcd8262105e8c1e3a6d567d99aa4bcaaed9a99df0805875f01b9654cfa",
+  "artifactNotStarted": true,
+  "labContainerId": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+  "cluster": "7694680278363095064"
+}

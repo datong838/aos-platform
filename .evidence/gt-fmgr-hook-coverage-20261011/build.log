@@ -1,0 +1,50 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 360B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/aos-offline-indexed-sdk-1817:proof@sha256:0a6a90eb65ee9921e51943f54a89825dfe35a2a02b423b5d3c53f3f730184dec
+#2 DONE 0.3s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [internal] load build context
+#4 transferring context: 2.67kB done
+#4 DONE 0.0s
+
+#5 [build 1/3] FROM docker.io/library/aos-offline-indexed-sdk-1817:proof@sha256:0a6a90eb65ee9921e51943f54a89825dfe35a2a02b423b5d3c53f3f730184dec
+#5 resolve docker.io/library/aos-offline-indexed-sdk-1817:proof@sha256:0a6a90eb65ee9921e51943f54a89825dfe35a2a02b423b5d3c53f3f730184dec done
+#5 CACHED
+
+#6 [build 2/3] COPY probe.c /probe.c
+#6 DONE 0.0s
+
+#7 [build 3/3] RUN gcc -Wall -Wextra -Werror -Wno-unused-parameter -fPIC -shared -I/usr/local/include/postgresql/server -o /probe.so /probe.c
+#7 0.093 /probe.c: In function 'probe_fmgr_calibration':
+#7 0.093 /probe.c:48:19: error: implicit declaration of function 'FunctionCall0'; did you mean 'FunctionCall5'? [-Wimplicit-function-declaration]
+#7 0.093    48 |             (void)FunctionCall0(&aborter);
+#7 0.093       |                   ^~~~~~~~~~~~~
+#7 0.093       |                   FunctionCall5
+#7 ERROR: process "/bin/sh -c gcc -Wall -Wextra -Werror -Wno-unused-parameter -fPIC -shared -I/usr/local/include/postgresql/server -o /probe.so /probe.c" did not complete successfully: exit code: 1
+------
+ > [build 3/3] RUN gcc -Wall -Wextra -Werror -Wno-unused-parameter -fPIC -shared -I/usr/local/include/postgresql/server -o /probe.so /probe.c:
+0.093 /probe.c: In function 'probe_fmgr_calibration':
+0.093 /probe.c:48:19: error: implicit declaration of function 'FunctionCall0'; did you mean 'FunctionCall5'? [-Wimplicit-function-declaration]
+0.093    48 |             (void)FunctionCall0(&aborter);
+0.093       |                   ^~~~~~~~~~~~~
+0.093       |                   FunctionCall5
+------
+Dockerfile:3
+--------------------
+   1 |     FROM aos-offline-indexed-sdk-1817:proof@sha256:0a6a90eb65ee9921e51943f54a89825dfe35a2a02b423b5d3c53f3f730184dec AS build
+   2 |     COPY probe.c /probe.c
+   3 | >>> RUN gcc -Wall -Wextra -Werror -Wno-unused-parameter -fPIC -shared -I/usr/local/include/postgresql/server -o /probe.so /probe.c
+   4 |     FROM scratch
+   5 |     COPY --from=build /probe.so /probe.so
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c gcc -Wall -Wextra -Werror -Wno-unused-parameter -fPIC -shared -I/usr/local/include/postgresql/server -o /probe.so /probe.c" did not complete successfully: exit code: 1
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/wx5coiblis6w6677z5jkhb9us

@@ -1,0 +1,7 @@
+{
+  "database": "aos_test_9da5ae38343d_ti4_test",
+  "cluster": "7694680278363095064",
+  "librarySha256": "509602b8d8242a5de934c8de6332f118e3625058332f82c6d28505e0044a179e",
+  "temporaryDDLWillRollback": true,
+  "businessSourceWillNotRun": true
+}

@@ -1,0 +1,11 @@
+# fmgr覆盖正例/反例复审
+
+当前固定离线SDK严格编译r2通过，r1缺FunctionCall0编译RED已保留，改为当前头文件FunctionCall0Coll。不降低告警、不改全局配置；scratch artifact未启动、新so新hash路径不覆盖旧库。C函数无_PG_init，只有受限显式校准入口安装hooks；拒绝现有hooks/active，不收任意OID/SQL、固定superuser/aos_app/精确r5数据库。
+
+正例为事务内固定SQL wrapper：VOLATILE+SETsearch_path=pg_catalog，精确bodyhash/Owner/proconfig/SECDEF由driver读取，防内联只供校准。正常调用确有START与END；固定abort wrapper实际除零产生START/ABORT。PG_CATCH恢复两hook和active后，第二次正常调用成功且记录完全相等；runtime身份在C入口被真实拒绝后第三次相等，原始hooks必须NULL的前置条件再次通过。已有非空hook拒绝分支仅代码复审，未另挂外部hook做动态测试，不能宣称该分支专项全部通过。
+
+builtin length经fmgr_info调用及DirectFunctionCall1(textlen)均实际返回8，事件计数2→2→2；是已执行但未观察的真实反例，不能说未记录就是未执行。与本地fmgr.c builtin fastpath先返回、fmgr_security_definer才发事件的代码一致；本次证明运行路径的有限覆盖，不重新宣称所有运行二进制源码身份相等。fn_addr包装会改变部分初始化路径，缓存已有FmgrInfo、inline与直接C调用仍可绕过。
+
+临时helper/wrapper/GRANT/marker全部ROLLBACK，独立callerXID aborted、九表零、helper全消失、194持久函数hash未变、无other client。实际临时DDL发生，不报整个数据库写0。正式库/服务/Provider/Host/worker和22个原修改不动，原Source不重放，无Root/自然COMMIT/栖月汇正式八工作台验收授权。
+
+方案后续修正：不得把fmgr_hook作为完整Source原生闭包的单一证明；下一已登记步骤形成覆盖矩阵，核对已知direct/inline/cache路径是否能由冻结原生制品/进程执行边界给出真实限制，无法证明的明确保留；任何新技术观察方案先校准正负覆盖再考虑新独立Source联验，不改变原Source语义来制造被观察轨迹。

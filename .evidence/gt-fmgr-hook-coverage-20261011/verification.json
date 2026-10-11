@@ -1,0 +1,24 @@
+{
+  "strictOfflineBuildR2": true,
+  "buildR1FailedBeforeArtifact": true,
+  "oldSymbolAbsentRed": true,
+  "positiveStartAndEnd": true,
+  "actualAbortStartAndAbort": true,
+  "builtinFmgrReturned8WithoutEvents": true,
+  "directCReturned8WithoutEvents": true,
+  "threeNormalRunsExact": true,
+  "errorCleanupAndRuntimeDenialVerified": true,
+  "existingForeignHookRejectionDynamicallyTested": false,
+  "independentCallerXidAborted": true,
+  "independentNineTablesZero": true,
+  "helperAbsent": true,
+  "temporaryDdlOccurred": true,
+  "businessTableWrites": 0,
+  "SourceReplayed": false,
+  "fullNativeCoverage": false,
+  "formalBusinessAccepted": false,
+  "backendSourceHashes": {
+    "src/backend/utils/fmgr/fmgr.c": "bbd18adf8af5806d03cc5cbbf1e7ec211dac6da0bc2f10dc03c0dc091efc831b",
+    "src/include/fmgr.h": "fd781147ec3f936a4628b97c5df595b60cb06ea1756ac9966f5f3fc118827135"
+  }
+}

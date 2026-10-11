@@ -1,0 +1,133 @@
+{
+  "outcome": "FMGR_POSITIVE_AND_BYPASS_COVERAGE_CALIBRATION_GREEN",
+  "database": "aos_test_9da5ae38343d_ti4_test",
+  "cluster": "7694680278363095064",
+  "librarySha256": "509602b8d8242a5de934c8de6332f118e3625058332f82c6d28505e0044a179e",
+  "normalRecords": [
+    {
+      "kind": "event",
+      "values": [
+        5803308,
+        0
+      ]
+    },
+    {
+      "kind": "event",
+      "values": [
+        5803308,
+        1
+      ]
+    },
+    {
+      "kind": "coverage",
+      "values": [
+        5803308,
+        8,
+        1317,
+        8,
+        2,
+        2,
+        2,
+        8
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "phase": "old_symbol_red",
+      "sqlstate": "42883"
+    },
+    {
+      "phase": "actual_division_abort",
+      "sqlstate": "22012",
+      "events": [
+        {
+          "kind": "event",
+          "values": [
+            5803308,
+            0
+          ]
+        },
+        {
+          "kind": "event",
+          "values": [
+            5803308,
+            1
+          ]
+        },
+        {
+          "kind": "coverage",
+          "values": [
+            5803308,
+            8,
+            1317,
+            8,
+            2,
+            2,
+            2,
+            8
+          ]
+        },
+        {
+          "kind": "event",
+          "values": [
+            5803309,
+            0
+          ]
+        },
+        {
+          "kind": "event",
+          "values": [
+            5803309,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "phase": "runtime_identity_rejected",
+      "sqlstate": "XX000"
+    }
+  ],
+  "wrappers": [
+    {
+      "oid": 5803309,
+      "proname": "fmgr_abort",
+      "prosrc": "SELECT 1/0",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": false,
+      "provolatile": "v"
+    },
+    {
+      "oid": 5803308,
+      "proname": "fmgr_positive",
+      "prosrc": "SELECT pg_catalog.length($1)",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": false,
+      "provolatile": "v"
+    }
+  ],
+  "caller": {
+    "xid": "69941",
+    "pid": 23122
+  },
+  "threeNormalRecordsExact": true,
+  "actualAbortStartAndAbortEvents": true,
+  "hooksRestoredAfterErrorAndNormal": true,
+  "builtinFmgrResult8WithoutEvents": true,
+  "directCResult8WithoutEvents": true,
+  "runtimeIdentityRejected": true,
+  "callerXidAborted": true,
+  "independentNineTablesZero": true,
+  "temporaryObjectsAbsent": true,
+  "originalPersistentFunctionHashesUnchanged": true,
+  "temporaryDdlExecuted": true,
+  "businessTableWrites": 0,
+  "originalSourceRerun": false,
+  "completeNativeEventCoverage": false,
+  "formalRootOrBusinessAccepted": false
+}

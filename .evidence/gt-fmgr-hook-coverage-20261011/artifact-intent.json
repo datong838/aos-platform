@@ -1,0 +1,7 @@
+{
+  "artifactContainer": "aos-fmgr-artifact-20261011",
+  "image": "sha256:05502f04c736d28615d2642c6bc594a11985b35c355c29bd02f1e297b858709a",
+  "labContainer": "aos-source-desktop-shm-20261009",
+  "labCluster": "7694680278363095064",
+  "artifactWillNotStart": true
+}
