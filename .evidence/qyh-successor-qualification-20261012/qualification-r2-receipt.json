@@ -1,0 +1,106 @@
+{
+  "outcome": "QUALIFICATION_GREEN",
+  "mode": "qualification",
+  "gitHead": "87a956d8e0160192e3432b9a8aac33a13a047cc5",
+  "buildReceipt": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-successor-qualification-20261012/build-r2-receipt.json",
+  "buildReceiptHash": "sha256:a5afe665ead72a442c0d6d6fd9c556e568516ea66560a122ccaca8dac09f8243",
+  "outputTreeHash": "sha256:7572c6c1e18849d860b0e593fa15d9c4d980362b7148a9d977b5ef511350f5a0",
+  "snapshotHash": "sha256:d8ec689f370d321069699bb569f68e69515b3d98a8619d898aedad05ad78f46b",
+  "resolved": [
+    {
+      "id": "domain.ecommerce.core",
+      "version": "1.4.4",
+      "reason": "dependency"
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "version": "1.23.3",
+      "reason": "requested"
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "version": "1.13.1",
+      "reason": "requested"
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "reason": "requested"
+    }
+  ],
+  "runtimeAdmissions": {
+    "domain.ecommerce.core": {
+      "imageId": "sha256:b1cf815c95abcded6a8d6021e37a01653787f548d62cdc2a01d371f107ebbe43",
+      "packageHash": "sha256:a1b12cede7db4e29691908a8c79ab1180a8071900ecfdc0e3560b5b2939e9c56"
+    },
+    "platform.ecommerce.niushop": {
+      "imageId": "sha256:0595bfaf0c83681a0413c1165f95a7c24176fffd1f51fbfa294a093ba9cbb0a0",
+      "packageHash": "sha256:f6cb116d5fe5ad831759de6771cece32e7340387a0f1761dd51167c81fa6c7ce"
+    },
+    "solution.ecommerce.growth": {
+      "imageId": "sha256:3cd8acea3ae563946189b27927fcfa3e043f7bc16a2db40971360fdcb7d56dc6",
+      "packageHash": "sha256:89ca1b784995665c886d972ee1554b1909f50cdf6b484246a753825349029ba7"
+    }
+  },
+  "runtimeSessions": {
+    "domain.ecommerce.core": {
+      "registration": "exact",
+      "heartbeat": "alive",
+      "cleanup": "released",
+      "contributionCount": 2,
+      "heartbeatChecks": 2048,
+      "journal": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-successor-qualification-20261012/qualification-session-journal/be0670c05f6748819a60098f498b660d.jsonl"
+    },
+    "platform.ecommerce.niushop": {
+      "registration": "exact",
+      "heartbeat": "alive",
+      "cleanup": "released",
+      "contributionCount": 2,
+      "heartbeatChecks": 2048,
+      "journal": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-successor-qualification-20261012/qualification-session-journal/cb25353e443b4071836231842871a090.jsonl"
+    },
+    "solution.ecommerce.growth": {
+      "registration": "exact",
+      "heartbeat": "alive",
+      "cleanup": "released",
+      "contributionCount": 25,
+      "heartbeatChecks": 2048,
+      "journal": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-successor-qualification-20261012/qualification-session-journal/88d06649aae94119abd05674993d2938.jsonl"
+    }
+  },
+  "schemaRequirements": {
+    "domain.ecommerce.core": {
+      "packageId": "bundle-de982d07b154219ff69d3d3e8e3e1e172937bd5d403afada17bf898e2e372328",
+      "schemaVersion": "aos-platform-a0v-001",
+      "migrationHash": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee"
+    },
+    "platform.ecommerce.niushop": {
+      "packageId": "bundle-98d43bb435a5fa7b5d84d7861149d784f7147d25cb28101fe21e3b647d37d78d",
+      "schemaVersion": "aos-platform-a0v-001",
+      "migrationHash": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2"
+    },
+    "solution.ecommerce.growth": {
+      "packageId": "bundle-b88d3561086b0bbf1f2dc64e04020c26b662d6b18b876a668ab6e8b4398ac7df",
+      "schemaVersion": "aos-platform-a0v-001",
+      "migrationHash": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4"
+    }
+  },
+  "moduleCount": 8,
+  "runtimeMemberCount": 3,
+  "tamperRejections": [
+    "imageIndexBytes",
+    "imageDigest",
+    "dependencyLock",
+    "sbom",
+    "backend",
+    "schemaCompatibility",
+    "schemaRequirements"
+  ],
+  "ephemeralSignaturePersisted": false,
+  "effects": {
+    "registryPublishCount": 0,
+    "installationMutationCount": 0,
+    "providerInvocationCount": 0,
+    "externalPublicationCount": 0
+  }
+}

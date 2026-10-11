@@ -1,0 +1,50 @@
+{
+  "outcome": "QYH_SUCCESSOR_ISOLATED_QUALIFIED_NO_FORMAL_IDENTITY",
+  "sourceHead": "87a956d8e0160192e3432b9a8aac33a13a047cc5",
+  "retained1695Exact": true,
+  "oldFourContentHashesExact": true,
+  "immutableFourSourceExact": true,
+  "runtimeSessions": [
+    {
+      "id": "domain.ecommerce.core",
+      "resource": "aos-ext-be0670c05f6748819a60098f498b660d",
+      "heartbeatChecks": 2048,
+      "independentlyAbsent": true
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "resource": "aos-ext-cb25353e443b4071836231842871a090",
+      "heartbeatChecks": 2048,
+      "independentlyAbsent": true
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "resource": "aos-ext-88d06649aae94119abd05674993d2938",
+      "heartbeatChecks": 2048,
+      "independentlyAbsent": true
+    }
+  ],
+  "tamperRejections": [
+    "imageIndexBytes",
+    "imageDigest",
+    "dependencyLock",
+    "sbom",
+    "backend",
+    "schemaCompatibility",
+    "schemaRequirements"
+  ],
+  "ephemeralSignaturePersisted": false,
+  "tests": "42 passed,0 skipped,7 existing warnings",
+  "publisherIdentityConnected": false,
+  "formalRuntimeReady": false,
+  "currentInstallationChanged": false,
+  "realOIDCConnected": false,
+  "effects": {
+    "registryPublishCount": 0,
+    "installationMutationCount": 0,
+    "providerInvocationCount": 0,
+    "externalPublicationCount": 0
+  },
+  "sourceEvalScope": "source-preflight-only",
+  "failedR1Retained": true
+}

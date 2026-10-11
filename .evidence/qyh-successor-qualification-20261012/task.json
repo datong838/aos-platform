@@ -1,0 +1,25 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-successor-qualification-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001911",
+  "scope": [
+    "aos-platform/scripts/build_ecommerce_runtime_candidates.py",
+    "aos-platform/scripts/build_ecommerce_qyh_successor_candidates.py",
+    "aos-platform/scripts/validate_ecommerce_qyh_successor_signing.py",
+    "aos-platform/services/aos-api/tests/extension_runtime/test_qyh_successor_signing_inputs.py",
+    "aos-platform/.evidence/qyh-successor-qualification-20261012",
+    "aos-recovery/qyh-four-bundle-qualified-20261012-r1"
+  ],
+  "excluded_scope": [
+    "maintenance/current-database",
+    "aos-platform/bundles/releases",
+    "aos-platform/bundles/candidates"
+  ],
+  "expected_outputs": [
+    "Independent latest4 source profile, optional new-output-only inherited signature stripping, read-only exact-qualified signing input validator; sameHEAD real full Build and isolated original qualification with in-memory ephemeral test key only, no persisted key/real signing/publish/install"
+  ],
+  "lease_expires_at": "2026-10-12T08:46:58.076229+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T04:46:58+08:00"
+}

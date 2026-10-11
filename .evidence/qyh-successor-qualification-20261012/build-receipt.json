@@ -1,0 +1,100 @@
+{
+  "outcome": "BUILD_GREEN",
+  "mode": "build",
+  "bundleCount": 4,
+  "runtimeMemberCount": 3,
+  "moduleCount": 8,
+  "operationCount": 15,
+  "bundles": [
+    {
+      "id": "domain.ecommerce.core",
+      "version": "1.4.4",
+      "sourceTreeHash": "sha256:c31034af3caed03648624adb1911b8166beccb1c8df6d3d17ab36c4ba72b3b80",
+      "runtimeOperations": [
+        "ecommerce_core_product_event_windows",
+        "ecommerce_core_object_describe"
+      ],
+      "schemaCompatibilityHash": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee"
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "version": "1.23.3",
+      "sourceTreeHash": "sha256:3bc65c8fae3afcf9a3dfa9543c9180f13179352ffb1ed7406a8586822235de8a",
+      "runtimeOperations": [
+        "ecommerce_niushop_source_describe",
+        "ecommerce_niushop_facts_read"
+      ],
+      "schemaCompatibilityHash": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2"
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "version": "1.13.1",
+      "sourceTreeHash": "sha256:6d7fc9dab99b327764e59a53f7f7568047b96592def96ef0579afa09ace93291",
+      "runtimeOperations": [
+        "ecommerce_growth_event_control",
+        "ecommerce_growth_investigation_describe",
+        "ecommerce_growth_case_put",
+        "ecommerce_growth_schedule_put",
+        "ecommerce_growth_schedule_trigger",
+        "ecommerce_growth_data_fulfill",
+        "ecommerce_growth_analysis_advance",
+        "ecommerce_growth_review_advance",
+        "ecommerce_growth_content_generate",
+        "ecommerce_growth_content_review",
+        "analyst_workspace_view_v1"
+      ],
+      "schemaCompatibilityHash": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4"
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "sourceTreeHash": "sha256:f17618ee08b8c0571a6791c5e815ef548f8af265a819779edfb965ed0c6f03f8",
+      "runtimeOperations": [],
+      "schemaCompatibilityHash": null
+    }
+  ],
+  "gitHead": "87a956d8e0160192e3432b9a8aac33a13a047cc5",
+  "output": "/Users/ddt/work/projects/ai_agent/aos-recovery/qyh-four-bundle-qualified-20261012-r1",
+  "outputTreeHash": "sha256:fecaa43209e9da68569d4e35555079ceb6181608b642fadd866aa678a09d3b7d",
+  "engine": {
+    "platform": "linux/arm64",
+    "baseImage": "python:3.11-alpine",
+    "baseConfigDigest": "sha256:0505371492f8406a47d406e1d1ea3bcf707a95fc1ddf785bf6c95c84df55922a"
+  },
+  "sdkTreeHash": "sha256:328ddd63fc4baaa53eeb7446bfa5fd7509124c60d00ce93768716048682c0660",
+  "dependencyLockHash": "sha256:a98707d14d16b0da9c7362ed281b9f343eb9143b58cffd1181bf8e930952abe1",
+  "dependencyLockHashes": {
+    "domain.ecommerce.core": "sha256:7082d71d73dfa0ef7a607045bfa22242621728e3346d99542087d6c629fbcacb",
+    "platform.ecommerce.niushop": "sha256:040f740c6f9f784f3cce14e854f72217da35adddd15787682c9ff097c2e5262b",
+    "solution.ecommerce.growth": "sha256:040f740c6f9f784f3cce14e854f72217da35adddd15787682c9ff097c2e5262b"
+  },
+  "contentHashes": {
+    "domain.ecommerce.core": "sha256:86415b4f765faedd58e55f15cfd511433f1038d4983f59d7794cddd5f4d544b0",
+    "platform.ecommerce.niushop": "sha256:cc69c7120bf8c35870719a853ef3eb4fb5f4ca4a25de006609557fb925cb9638",
+    "solution.ecommerce.growth": "sha256:09dea14b074d9a59722615f8883081f8a98319ec2e2a4fab8dd52ed0d884b29f",
+    "solution.ecommerce.operations-base": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec"
+  },
+  "images": {
+    "domain-ecommerce-core": {
+      "imageDigest": "sha256:289fcbd2de021f1ccbd5120b2ca819b66e9ca9ce3391bcf2b075fc279fa7611c",
+      "configDigest": "sha256:0b8adf7f0b88172091e5d2849e4bb422926a1e7f2cc0efccbac916b35b68bd6b",
+      "localRef": "127.0.0.1:18439/domain-ecommerce-core@sha256:289fcbd2de021f1ccbd5120b2ca819b66e9ca9ce3391bcf2b075fc279fa7611c"
+    },
+    "platform-ecommerce-niushop": {
+      "imageDigest": "sha256:d1cf44f8beb2d36c3e56180eebbccbc4c430dc7e223b0661d3aaffd279076dc0",
+      "configDigest": "sha256:5e0d97deafd5bc22d0e52729769a27ef823d6e5b4676d5a306975ce280940909",
+      "localRef": "127.0.0.1:18439/platform-ecommerce-niushop@sha256:d1cf44f8beb2d36c3e56180eebbccbc4c430dc7e223b0661d3aaffd279076dc0"
+    },
+    "solution-ecommerce-growth": {
+      "imageDigest": "sha256:7e33e7b58d383dbc62372b1e6f7c93838d1731bbf27b376555ebbd1fff88e98c",
+      "configDigest": "sha256:4c049fa395977e3d57333cc93384cdb5108ce4f945f3abb80e8fec8c81d5c019",
+      "localRef": "127.0.0.1:18439/solution-ecommerce-growth@sha256:7e33e7b58d383dbc62372b1e6f7c93838d1731bbf27b376555ebbd1fff88e98c"
+    }
+  },
+  "effects": {
+    "registryPublishCount": 0,
+    "installationMutationCount": 0,
+    "providerInvocationCount": 0,
+    "externalPublicationCount": 0
+  }
+}

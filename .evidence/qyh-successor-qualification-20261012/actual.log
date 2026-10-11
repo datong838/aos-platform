@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-successor-qualification-20261012/run_qualification.py", line 18, in <module>
+    q=b.qualify(output=OUTPUT,build_receipt=D/'build-receipt.json',context='colima-aos-extension')
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/build_ecommerce_runtime_candidates.py", line 1021, in qualify
+    approved = policy.evaluate(_release_record(bundle), checked_at=checked_at)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/asset_registry/release_policy.py", line 124, in evaluate
+    return self._evaluate(
+           ^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/asset_registry/release_policy.py", line 165, in _evaluate
+    evidence_by_type = self._assert_release_evidence(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/asset_registry/release_policy.py", line 231, in _assert_release_evidence
+    _raise_evidence_gate_error(evidence_type)
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/asset_registry/release_policy.py", line 500, in _raise_evidence_gate_error
+    raise VerificationFailedError(
+aos_api.asset_registry.errors.VerificationFailedError: bundle release evidence is not valid and current

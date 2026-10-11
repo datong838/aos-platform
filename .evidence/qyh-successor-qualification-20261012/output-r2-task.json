@@ -1,0 +1,18 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-successor-qualified-output-r2-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001911",
+  "scope": [
+    "aos-recovery/qyh-four-bundle-qualified-20261012-r2"
+  ],
+  "excluded_scope": [
+    "maintenance/current-database"
+  ],
+  "expected_outputs": [
+    "same sole writer supplemental output Lease for isolated corrected SBOM build/qualification; no private publisher or install"
+  ],
+  "lease_expires_at": "2026-10-12T08:54:36.422186+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T04:54:37+08:00"
+}

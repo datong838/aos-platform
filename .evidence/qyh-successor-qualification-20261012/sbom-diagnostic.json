@@ -1,0 +1,31 @@
+[
+  {
+    "bundle": "domain.ecommerce.core",
+    "status": "invalid",
+    "metadata": {
+      "reason": "invalid_sbom"
+    }
+  },
+  {
+    "bundle": "platform.ecommerce.niushop",
+    "status": "invalid",
+    "metadata": {
+      "reason": "invalid_sbom"
+    }
+  },
+  {
+    "bundle": "solution.ecommerce.growth",
+    "status": "invalid",
+    "metadata": {
+      "reason": "invalid_sbom"
+    }
+  },
+  {
+    "bundle": "solution.ecommerce.operations-base",
+    "status": "valid",
+    "metadata": {
+      "format": "CycloneDX",
+      "componentCount": 3
+    }
+  }
+]

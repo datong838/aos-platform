@@ -1,0 +1,10 @@
+# 新四包资格与只读签名输入接线
+基线87a956d8e/AOS-001911，已有新4包真实Build；旧signer固定旧版本、运营保留签名与新输入unsigned约束冲突。候选一正式OIDC/独立publisher缺已有配置路径待答；候选二支持新四包qualified输入、安全独立已登记，选择二。
+修改scripts/build_ecommerce_runtime_candidates.py仅新增STRIP_INHERITED_SIGNATURES默认False，copy之后仅新输出移除signature；原模式不变，新profileTrue，旧source/旧release均不改。新增scripts/build_ecommerce_qyh_successor_candidates.py固定core1.4.4/platform1.23.3/Growth1.13.1/ops1.2.2，复用已提交新SourceHash和原builder/augment，默认源为上一Task不可变4包；source-only eval仍blocked。
+新增scripts/validate_ecommerce_qyh_successor_signing.py只读校验：复用原严格qualification validator/exact版本/session2048/tamper7/hash/effects和原validate_build（真实sourceHash、ancestor、路径、所有unsigned），不提供sign动作/不调用_key。未接入publisher必须明确false，不能以通过输入校验授正式身份。
+新增services/aos-api/tests/extension_runtime/test_qyh_successor_signing_inputs.py，RED确认缺入口；新version精准/缺qual回执/校验路径与no-key无效果，加真实qualified输入正向与篡改拒绝。原旧signer/profile保持，不扩展private config或其他分支。
+原新profile同一当前HEAD重新受控Build到新独立输出，再原qualify：原资格函数仅临时内存Ed25519 testkey（QUALIFICATION_KEY_ID），不persist_privatekey/不改真实trust、不把资格签名借为正式身份；retain_artifacts=False只清本次临时资格副本（原行为），3scope闭会话/每个2048heartbeat/7篡改拒绝。未知效果不重发；真实PG只读，无Host/Provider/Owner/业务函数执行。资格与sign-input校验在同HEAD窗口完成后提交，signer原ancestor+sourcehash门不改，绝不编辑receiptHEAD。
+通过后Delivery/CAS/7strongsync，正式登录/publisher/当前安装/8页面/首链继续待验收。浏览器本波不切服务，不适用。
+
+## 实际失败对账与最小修复
+原Build已终态BUILD_GREEN，原qualify于ReleasePolicy前端终态失败，尚未创建runtime session；诊断3新SBOM缺`format`，仅有`bomFormat`；运营原SBOMvalid。保留r1产物与receipt原字节，不改HEAD或收据。仅新profile包装augment为新输出SBOM写`format: CycloneDX`，保留bomFormat/components/hash；不修改通用Loader/ReleasePolicy，不将source-only Eval升级为业务完成。先新增原Loader格式测试RED，再最小修复GREEN。补登记同一writer独立r2输出Lease再构建；旧r1不重放，不伪造资格结果。

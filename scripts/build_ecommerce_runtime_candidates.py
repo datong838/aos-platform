@@ -37,6 +37,7 @@ DEFAULT_REGISTRY_PORT = 18436
 BASE_IMAGE = "python:3.11-alpine"
 PLATFORM = "linux/arm64"
 RUNTIME_LOCK = b"aos-extension-sdk=repository-source-tree\n"
+STRIP_INHERITED_SIGNATURES = False
 QUALIFICATION_KEY_ID = "a0v-ephemeral-candidate-qualification"
 SCHEMA_REQUIREMENT_VERSION = "aos-platform-a0v-001"
 SCHEMA_COMPATIBILITY_REVISION = "a0v_001"
@@ -1158,6 +1159,8 @@ def build(*, context: str, port: int, output: Path,
         output.mkdir(parents=True)
         for relative, _bundle_id, _version, _package in ALL_CASES:
             shutil.copytree(CANDIDATE_ROOT / relative, output / relative)
+            if STRIP_INHERITED_SIGNATURES:
+                (output / relative / "bundle.signature.json").unlink(missing_ok=True)
         for relative, _bundle_id, _version, package in RUNTIME_CASES:
             bundle = output / relative
             artifacts = bundle / "artifacts"
