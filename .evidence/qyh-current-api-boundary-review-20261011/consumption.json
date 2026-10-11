@@ -1,0 +1,21 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-current-api-boundary-review-20261011-r1",
+  "task_id": "qyh-current-api-boundary-review-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "facb07a7dd9a17f2e5d617b3d34a81f3159dce5a",
+    "authority_revision": "AOS-001854",
+    "files": {
+      ".evidence/qyh-current-api-boundary-review-20261011/a0v_qyh_restored_http.py": "55f7a2412735636acaf0598352c8957e6e181a852ecad0277969cb6a860e49aa",
+      ".evidence/qyh-current-api-boundary-review-20261011/a0v_current_preview_http.py": "5f684010ba7c6876a9e9718f1a48aeb44d3ac4f0bc6074b8c060b417ccd638b4",
+      ".evidence/qyh-current-api-boundary-review-20261011/limited-start-real-negative-terminal.json": "c8a8f8cccc91c5624156fdae32f6a67da0cac91f408be5e56af2046e3b332b4e",
+      ".evidence/qyh-current-api-boundary-review-20261011/limited-start-entry-verification.json": "9a10d8358e43988e6cc2e2d404c9f100b8645552f10b182c7f09ad2213d2813e",
+      ".evidence/qyh-current-api-boundary-review-20261011/plan.md": "89738947fd84e68ef191fcb9d31f2aade42fc93898e28ebe37a9b7ffcfdb61b7"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "82deb8f0e9c36e03528bf2dcefa892cad571ba6e1740b3c2887a9d5e2dc2944e",
+  "transport_sha256": "b2369d336978bb70e742310a66a0fb344556678cd76c7f41f6e1cd0f3f39cf5e"
+}

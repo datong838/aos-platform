@@ -1,0 +1,28 @@
+{
+  "outcome": "CURRENT_API_BOUNDARY_INDEPENDENT_REVIEW_CONSUMED",
+  "baseline": {
+    "head": "facb07a7dd9a17f2e5d617b3d34a81f3159dce5a",
+    "authority_revision": "AOS-001854",
+    "files": {
+      ".evidence/qyh-current-api-boundary-review-20261011/a0v_qyh_restored_http.py": "55f7a2412735636acaf0598352c8957e6e181a852ecad0277969cb6a860e49aa",
+      ".evidence/qyh-current-api-boundary-review-20261011/a0v_current_preview_http.py": "5f684010ba7c6876a9e9718f1a48aeb44d3ac4f0bc6074b8c060b417ccd638b4",
+      ".evidence/qyh-current-api-boundary-review-20261011/limited-start-real-negative-terminal.json": "c8a8f8cccc91c5624156fdae32f6a67da0cac91f408be5e56af2046e3b332b4e",
+      ".evidence/qyh-current-api-boundary-review-20261011/limited-start-entry-verification.json": "9a10d8358e43988e6cc2e2d404c9f100b8645552f10b182c7f09ad2213d2813e",
+      ".evidence/qyh-current-api-boundary-review-20261011/plan.md": "89738947fd84e68ef191fcb9d31f2aade42fc93898e28ebe37a9b7ffcfdb61b7"
+    }
+  },
+  "task_id": "qyh-current-api-boundary-review-20261011",
+  "request_id": "qyh-current-api-boundary-review-20261011-r1",
+  "verdict": "PASS",
+  "claimsSupported": 2,
+  "toolExecutionStarts": 0,
+  "providerProcessExit": 0,
+  "strictJsonAccepted": true,
+  "strictIdentityAndClaimsValidated": true,
+  "consumedStatus": "CONSUMED_MATERIAL_REVIEW",
+  "executionAuthorized": false,
+  "formalApiWebEightPagesAccepted": false,
+  "oldFailureReused": false,
+  "transportSha256": "7663de1b7ea18a06a73154b54d97f0482cbef464d593b435caa435b1b5955830",
+  "transportRetainedPrivatelyNotCommitted": true
+}

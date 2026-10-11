@@ -1,0 +1,30 @@
+{
+  "outcome": "LIMITED_HTTP_ENTRY_IMPLEMENTED_AND_GATED_START_VERIFIED",
+  "sourceFiles": {
+    "scripts/a0v_qyh_restored_http.py": "55f7a2412735636acaf0598352c8957e6e181a852ecad0277969cb6a860e49aa",
+    "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py": "c0c6dc288ec2add0c70cafd170afc836f8f5a0f64b6f564676303a4ec06d47f9",
+    ".evidence/qyh-full-system-restoration-20261011/freeze_current_api.py": "fd83db777e5766ceb673175e3316a0a1f81b49ec85c3830d2023152c4132d447",
+    ".evidence/qyh-full-system-restoration-20261011/plan.md": "ddfa6fbdec126b203875b48fca3ff240e85ef564d77fb9ebe01e5285ceb3fc82"
+  },
+  "red": {
+    "failed": 7,
+    "existingPassed": 21
+  },
+  "specialPassed": 32,
+  "adjacentPassed": 34,
+  "databaseTestsSkipped": 9,
+  "actualSourceManifestReviewed": true,
+  "actualStartupRejected": "EXTERNAL_OIDC_CONFIG_REQUIRED",
+  "apiStarted": false,
+  "originalServicesTouched": false,
+  "configurationOrOwnerAuthorityGranted": false,
+  "databaseWrites": 0,
+  "providerCalls": 0,
+  "fullRestorationAccepted": false,
+  "requiresNewFrozenCandidateAfterCommit": true,
+  "knownLimits": [
+    "mock launch environment evidence is not formal identity or Registry publication",
+    "current configuration/Owner and eight pages not accepted",
+    "actual server lifespan/authenticated requests remain unexecuted"
+  ]
+}

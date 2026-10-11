@@ -1,0 +1,37 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-api-boundary-review-20261011-r1",
+    "task_id": "qyh-current-api-boundary-review-20261011",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "facb07a7dd9a17f2e5d617b3d34a81f3159dce5a",
+      "authority_revision": "AOS-001854",
+      "files": {
+        ".evidence/qyh-current-api-boundary-review-20261011/a0v_qyh_restored_http.py": "55f7a2412735636acaf0598352c8957e6e181a852ecad0277969cb6a860e49aa",
+        ".evidence/qyh-current-api-boundary-review-20261011/a0v_current_preview_http.py": "5f684010ba7c6876a9e9718f1a48aeb44d3ac4f0bc6074b8c060b417ccd638b4",
+        ".evidence/qyh-current-api-boundary-review-20261011/limited-start-real-negative-terminal.json": "c8a8f8cccc91c5624156fdae32f6a67da0cac91f408be5e56af2046e3b332b4e",
+        ".evidence/qyh-current-api-boundary-review-20261011/limited-start-entry-verification.json": "9a10d8358e43988e6cc2e2d404c9f100b8645552f10b182c7f09ad2213d2813e",
+        ".evidence/qyh-current-api-boundary-review-20261011/plan.md": "89738947fd84e68ef191fcb9d31f2aade42fc93898e28ebe37a9b7ffcfdb61b7"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "候选API在正式OIDC配置缺失时先拒绝启动，未用开发身份绕过原门。",
+        "evidence": "来源文件 `.evidence/qyh-current-api-boundary-review-20261011/a0v_qyh_restored_http.py` 函数 `prepare_limited_launch` 中先调用 `previous._require_external_oidc()`，失败则直接抛出 `RestorationBlocked`，之后才进行端口检查、源码候选校验和安装选择；同文件 `serve_limited` / `main` 入口在异常分支固定输出 `apiStarted: False, runtimeAuthorized: False`。实测负样本 `.evidence/qyh-current-api-boundary-review-20261011/limited-start-real-negative-terminal.json` 记录 `outcome: REAL_LIMITED_START_REJECTED_BEFORE_DATABASE_OR_PROCESS`、`startupReport.reason: EXTERNAL_OIDC_CONFIG_REQUIRED`、`port18080AbsentBeforeAndAfter: true`、`databaseWrites: 0`、`providerCalls: 0`；复核摘要 `.evidence/qyh-current-api-boundary-review-20261011/limited-start-entry-verification.json` 记录 `actualStartupRejected: EXTERNAL_OIDC_CONFIG_REQUIRED`、`apiStarted: false`、`configurationOrOwnerAuthorityGranted: false`。对照 `a0v_current_preview_http.py` 中 `_require_external_oidc` 要求 `AOS_OIDC_JWKS_URLS/JWKS_URL`、`AOS_OIDC_ISSUERS/ISSUER`、`AOS_OIDC_AUDIENCE` 均为非空且为外部 HTTPS 地址，确认OIDC原门为前置硬门而非开发身份可绕过的可选开关。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前接线资料不证明安装、配置、八工作台或业务执行已经获准。",
+        "evidence": "复核摘要 `.evidence/qyh-current-api-boundary-review-20261011/limited-start-entry-verification.json` 明确 `configurationOrOwnerAuthorityGranted: false`、`fullRestorationAccepted: false`、`apiStarted: false`、`databaseWrites: 0`、`providerCalls: 0`，`knownLimits` 列出三项已知缺口：\"mock launch environment evidence is not formal identity or Registry publication\"、\"current configuration/Owner and eight pages not accepted\"、\"actual server lifespan/authenticated requests remain unexecuted\"；候选 API 源码 `.evidence/qyh-current-api-boundary-review-20261011/a0v_qyh_restored_http.py` 输出结构中 `apiStartAuthorized`、`eightWorkbenchesVerified`、`runtimeHostEnabled`、`currentConfigurationVerified`、`formalOwnerVerified` 均为 `False`，`authorization` 取值分别为 `EVIDENCE_ONLY_NO_START` 与 `CURRENT_INSTALLATION_EVIDENCE_ONLY_NO_START`；计划 `.evidence/qyh-current-api-boundary-review-20261011/plan.md` 声明\"仅一次调用\"、\"不替代真实发布、OIDC、配置、八页面或自然首链\"，无安装批准、配置审批、八工作台验收或业务执行证据。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前冻结边界和拒绝门；如需推进下一步，建议由 owner 明确选择（a）补齐正式OIDC/Registry发行与安装配置审批后再发起新基线复审，或（b）关闭本Task并归档当前证据。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}
