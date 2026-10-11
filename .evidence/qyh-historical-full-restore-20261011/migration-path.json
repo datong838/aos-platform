@@ -1,0 +1,409 @@
+{
+  "from": "a0v_092",
+  "to": "a0v_159",
+  "steps": [
+    {
+      "revision": "a0v_093",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_093_host_lease_foundation.py",
+      "down": "a0v_092",
+      "sha256": "20da25988d08c80cc92298cd61f68be608c8c626e460c417330ca55e64f3cfeb"
+    },
+    {
+      "revision": "a0v_094",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_094_host_lease_worker_fence.py",
+      "down": "a0v_093",
+      "sha256": "317748e7c0f3f9ead648f0df04cc6d71c959f191268d3f1a8af26a7f1eade4d1"
+    },
+    {
+      "revision": "a0v_095",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_095_analysis_outbox_strict_pending_claim.py",
+      "down": "a0v_094",
+      "sha256": "fd2d02127fae37b1bd0331fde112955a835071cc9af4f7ab131b003c05f97bf8"
+    },
+    {
+      "revision": "a0v_096",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_096_revoke_legacy_unknown_reconcile.py",
+      "down": "a0v_095",
+      "sha256": "0e91261e3b0c7674ba70ff36bffa24f03b274cdd9217246fb052a8b0f2e420d8"
+    },
+    {
+      "revision": "a0v_097",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_097_snapshot_group_canonical_witness_sidecar.py",
+      "down": "a0v_096",
+      "sha256": "a505979ccfd5b237eb242c415085d318813bd28866338fa6bddd456eed0af0d3"
+    },
+    {
+      "revision": "a0v_098",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_098_snapshot_group_witness_backfill_gate.py",
+      "down": "a0v_097",
+      "sha256": "d2fc99c1739adcd0103735ea76847ad5fb888d55b0866694f9c9a2e0d88bd968"
+    },
+    {
+      "revision": "a0v_099",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_099_ecommerce_daily_review_target.py",
+      "down": "a0v_098",
+      "sha256": "5ab15d845a2fa99ac55fb8811f0971c1c0204046d42b5a652122a23193aed351"
+    },
+    {
+      "revision": "a0v_100",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_100_ecommerce_daily_review_terminal_gate.py",
+      "down": "a0v_099",
+      "sha256": "832e442d9b5a310c322f208ddfab5f4eec2ec5e5c0ae1f043c490318dd348bca"
+    },
+    {
+      "revision": "a0v_101",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_101_ecommerce_content_taskrun_intent.py",
+      "down": "a0v_100",
+      "sha256": "ad4f6add3873a73c6467b7540ae3e5bf6748af9b7842475990867fb86ba04bd7"
+    },
+    {
+      "revision": "a0v_102",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_102_ecommerce_content_agentrun_intent.py",
+      "down": "a0v_101",
+      "sha256": "ce26dba8dd05461f5fdcfddc3dd64f30a82ce34947a1cc01aaac184d3bfe232c"
+    },
+    {
+      "revision": "a0v_103",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_103_ecommerce_content_capacity_intent.py",
+      "down": "a0v_102",
+      "sha256": "fd3f721d4849feae91d3318b22b0f8469d26916aa0b4240bdc7292f4adb3ef37"
+    },
+    {
+      "revision": "a0v_104",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_104_ecommerce_content_budget_command_intent.py",
+      "down": "a0v_103",
+      "sha256": "97d3bc0bd57b729cbcff097eaa5f160d57ae56d3b1f9066db037ce0ca1dcfe49"
+    },
+    {
+      "revision": "a0v_105",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_105_content_eval_contract_policy_ref.py",
+      "down": "a0v_104",
+      "sha256": "3d52f1052919eb00e1eae32f68897532ec3dc14bf4cb81912b07cf85043690ef"
+    },
+    {
+      "revision": "a0v_106",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_106_ecommerce_improvement_pending_target.py",
+      "down": "a0v_105",
+      "sha256": "9229b870cd92b9b63c68480f09e7d08f8f2674b000e94a899f4142c35041d759"
+    },
+    {
+      "revision": "a0v_107",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_107_ecommerce_d01_source_selection.py",
+      "down": "a0v_106",
+      "sha256": "9a99859706015517c529e05020abb488c341a20cc858ff1de8a6f5e7f9cfb79a"
+    },
+    {
+      "revision": "a0v_108",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_108_source_registration_receipt.py",
+      "down": "a0v_107",
+      "sha256": "8aa3966c50217fc2e4521d8a4bc747755aa373ce91fa37f26c47115f4bc473b1"
+    },
+    {
+      "revision": "a0v_109",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_109_pipeline_registration_receipt.py",
+      "down": "a0v_108",
+      "sha256": "66416aeb2a4a51f73905af744bb08b1082c00df625340fc8c697e7a35002a9b3"
+    },
+    {
+      "revision": "a0v_110",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_110_budget_activation_preview_approval.py",
+      "down": "a0v_109",
+      "sha256": "eedb0e4f718b62371933a6b740c181cc1f6fe83523f44f4394d57e6672e7811e"
+    },
+    {
+      "revision": "a0v_111",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_111_budget_active_insert_gate.py",
+      "down": "a0v_110",
+      "sha256": "f47b2a68fdfb8c553ac12563ad1ab3fb7dd01321ac1c9b4dbad0902efd4d7eb9"
+    },
+    {
+      "revision": "a0v_112",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_112_eval_execution_authority.py",
+      "down": "a0v_111",
+      "sha256": "4424a07b92869894a395a444aaebbe30ded515991506681fb4f96f9449c804a9"
+    },
+    {
+      "revision": "a0v_113",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_113_eval_execution_acl_fix.py",
+      "down": "a0v_112",
+      "sha256": "01078ae9af615ae6e7c100bfbadbb7390975b399c42ab59e1c26c38b5f8b358b"
+    },
+    {
+      "revision": "a0v_114",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_114_skill_eval_case_proof_sidecar.py",
+      "down": "a0v_113",
+      "sha256": "a8eb09778082c3779e183e31e6907ea52ce0939e3d88193d8ac84c5346ace523"
+    },
+    {
+      "revision": "a0v_115",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_115_policy_system_action_metadata.py",
+      "down": "a0v_114",
+      "sha256": "bbbf8c3f95b5ae1197064f0807e54890c7f29aa09f22198065873baa57dade77"
+    },
+    {
+      "revision": "a0v_116",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_116_network_active_insert_gate.py",
+      "down": "a0v_115",
+      "sha256": "7c894be77f1755567dd67518bc74e1cf936440abc99cae596ddc6c4120d4c9d3"
+    },
+    {
+      "revision": "a0v_117",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_117_network_formal_metadata.py",
+      "down": "a0v_116",
+      "sha256": "a650b2e5b17876aa711d2f6b9ee2ef111875ba6733536d87be45ff054b1b5945"
+    },
+    {
+      "revision": "a0v_118",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_118_network_approval_issuer_gate.py",
+      "down": "a0v_117",
+      "sha256": "8cf49bd98b2c6796deb8bef11454a9f697a4db28e8fa39f4b8ba2ad00b7773fb"
+    },
+    {
+      "revision": "a0v_119",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_119_network_consumer_boundary.py",
+      "down": "a0v_118",
+      "sha256": "7c06826b65127721db6e8d4c70aad58ee17a483aa5cd5ac1c00396bf2c177c8d"
+    },
+    {
+      "revision": "a0v_120",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_120_network_atomic_consumer.py",
+      "down": "a0v_119",
+      "sha256": "ee2db2b24f04fbfbe64a4c96f2b0287997f1c99ef2fada6bea7b930748bd9c70"
+    },
+    {
+      "revision": "a0v_121",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_121_network_receipt_reconcile.py",
+      "down": "a0v_120",
+      "sha256": "257cfc0d6d83bfc723549c5b6ff8e9e40081609702cf6b3ba2419375c24e829c"
+    },
+    {
+      "revision": "a0v_122",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_122_network_consumer_actor.py",
+      "down": "a0v_121",
+      "sha256": "e687cc25090a454018c79824685a1fdbcb3fca506676a0c9c2a978efca26a792"
+    },
+    {
+      "revision": "a0v_123",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_123_network_approval_delivery.py",
+      "down": "a0v_122",
+      "sha256": "93e93bae7b4168e8e3af3046117d10e91cd4e4e2960ac60494ab80a3d3b127f5"
+    },
+    {
+      "revision": "a0v_124",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_124_budget_cost_proposals.py",
+      "down": "a0v_123",
+      "sha256": "1d0dbbe412fe0acd94cff532cff12ccdfcaffe897eb599bad83979e585ea04e9"
+    },
+    {
+      "revision": "a0v_125",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_125_budget_cost_issuer.py",
+      "down": "a0v_124",
+      "sha256": "41fe7212469620dc251a0c543c1ebcde06d108f2f40d269106842569f6b94e26"
+    },
+    {
+      "revision": "a0v_126",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_126_budget_cost_consumer.py",
+      "down": "a0v_125",
+      "sha256": "269e6a4a550764e485736413bde5744fe6d508b5dac069db0484bb255efa9ff7"
+    },
+    {
+      "revision": "a0v_127",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_127_budget_consumer_actor_reconcile.py",
+      "down": "a0v_126",
+      "sha256": "d2276003a134c5729839dffefbef748e4834654a56e205d4f8a277fef5146a64"
+    },
+    {
+      "revision": "a0v_128",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_128_budget_cost_configuration.py",
+      "down": "a0v_127",
+      "sha256": "d8de1426f3878f0dbb21961d4219a7e9a64ebd39d0b968373c57c00899d84c8b"
+    },
+    {
+      "revision": "a0v_129",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_129_guard_policy_activation.py",
+      "down": "a0v_128",
+      "sha256": "fb598af016ffc41a846f6b267b5664797b20f4f391d29cb2378bd84f98f4cc28"
+    },
+    {
+      "revision": "a0v_130",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_130_quota_policy_activation.py",
+      "down": "a0v_129",
+      "sha256": "cf506502bac2cda792b84f96a6ce3f83fa38cf118c62438287ee1ef8670918ae"
+    },
+    {
+      "revision": "a0v_131",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_131_subject_review_persistence.py",
+      "down": "a0v_130",
+      "sha256": "772dcdd4da41bdd4f1499e8930d1c5ba059fa6c76f3b0ad3114c53a791efacce"
+    },
+    {
+      "revision": "a0v_132",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_132_subject_report_case_proof.py",
+      "down": "a0v_131",
+      "sha256": "f85b297526035ec9de3e2540dd849a91e44bb1462703b571ba8cd1c9ff031fb9"
+    },
+    {
+      "revision": "a0v_133",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_133_model_eval_request.py",
+      "down": "a0v_132",
+      "sha256": "bfd15fdcfae6a6843fe9fd6fa50722d4b3cc66fe6780afe30f0c619ed5c88533"
+    },
+    {
+      "revision": "a0v_134",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_134_model_eval_budget_reservation.py",
+      "down": "a0v_133",
+      "sha256": "ceba02772f96dc4d0d05e6c40a5cc2f2ffaf832db4b521e8e41ff93404618209"
+    },
+    {
+      "revision": "a0v_135",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_135_extension_schema_acl.py",
+      "down": "a0v_134",
+      "sha256": "447229956b63f2b3b05c0e04e97f48da8dfec8860d0487bf824e650c30e271a0"
+    },
+    {
+      "revision": "a0v_136",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_136_binding_source_authority.py",
+      "down": "a0v_135",
+      "sha256": "a4eb2996da8d48eadf623a78e3facc54132deadd3da197b4d26a41bbfe6ec223"
+    },
+    {
+      "revision": "a0v_137",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_137_license_source_fence.py",
+      "down": "a0v_136",
+      "sha256": "397544e47ef827d83559a870dfec8369600a218d1481346ba56bb88c6b971244"
+    },
+    {
+      "revision": "a0v_138",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_138_evidence_build_provenance.py",
+      "down": "a0v_137",
+      "sha256": "44edfc95777c0d6cc8941b07b4373ab612131005e4b050d95d01948dee4f5b5e"
+    },
+    {
+      "revision": "a0v_139",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_139_license_initialization_fence.py",
+      "down": "a0v_138",
+      "sha256": "ca743c8c74f5101dfac3bde1b3660b73ad4fab4650b181fd7d74194b2acf74c8"
+    },
+    {
+      "revision": "a0v_140",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_140_source_license_action_metadata.py",
+      "down": "a0v_139",
+      "sha256": "07f8cb1aad6b381d6dbecea64a5fc752aa97a761951ac505fa5c549e2a0ad9d5"
+    },
+    {
+      "revision": "a0v_141",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_141_source_license_approval_acl.py",
+      "down": "a0v_140",
+      "sha256": "949a81a33c296e558accb47786c94920408b36aef5fad2edd9fe04f70848a518"
+    },
+    {
+      "revision": "a0v_142",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_142_source_license_issuer_boundary.py",
+      "down": "a0v_141",
+      "sha256": "ff6f3296d9555e40d195546e3c73e7bb034e103e8f737fb1131b9b73c1480941"
+    },
+    {
+      "revision": "a0v_143",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_143_provider_health_epoch_fence.py",
+      "down": "a0v_142",
+      "sha256": "40b823638a4bea4e107eed39fa0cbb6b6a8f5947a75abf0d45ea0cc7c5e69c4d"
+    },
+    {
+      "revision": "a0v_144",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_144_binding_evaluator_boundary.py",
+      "down": "a0v_143",
+      "sha256": "c426eb11ce86bda01a7cb37fed738814ec4fadff10061891471a08f56f9fb61e"
+    },
+    {
+      "revision": "a0v_145",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_145_provider_capacity_request.py",
+      "down": "a0v_144",
+      "sha256": "3aba059d54a3c65a4e90712d507017c8250d572ae7db12b599ef0ec33e4219d3"
+    },
+    {
+      "revision": "a0v_146",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_146_provider_capacity_action.py",
+      "down": "a0v_145",
+      "sha256": "dad16389f49a76375cc9da554ba59287f8e6428b90af94352628bb764d3f7bad"
+    },
+    {
+      "revision": "a0v_147",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_147_provider_capacity_source.py",
+      "down": "a0v_146",
+      "sha256": "ecef954374deabaad0739bdd00ec8e139be5179cb4556635703a9e9024ee13c4"
+    },
+    {
+      "revision": "a0v_148",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_148_provider_capacity_source_action.py",
+      "down": "a0v_147",
+      "sha256": "a161ab74de871465d995cd094f7c148c64d4bc98ff7dfdc146250146b6b8a042"
+    },
+    {
+      "revision": "a0v_149",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_149_capacity_evidence_epoch.py",
+      "down": "a0v_148",
+      "sha256": "1354858a8271644a50724c3573dd935dea07a191ea7057b3ebc66a83e584ab3f"
+    },
+    {
+      "revision": "a0v_150",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_150_provider_capacity_issuance_boundary.py",
+      "down": "a0v_149",
+      "sha256": "42c5447bb89c20561ead962699d1c6734cd7a53b0d6b99c8321941ce913474b8"
+    },
+    {
+      "revision": "a0v_151",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_151_capacity_withdrawal_epoch.py",
+      "down": "a0v_150",
+      "sha256": "9b7890d28cfd383defcb3f40b645dbd1ddbd368452bf3893a1b2c54e4a103f82"
+    },
+    {
+      "revision": "a0v_152",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_152_provider_capacity_publication_registry.py",
+      "down": "a0v_151",
+      "sha256": "d027589919fea2159f142dbac0f8f48decc337e64f2b6658d16496648edc9d9a"
+    },
+    {
+      "revision": "a0v_153",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_153_capacity_document_registry.py",
+      "down": "a0v_152",
+      "sha256": "6a14795a38930d8473693d8325a08d3e078385454e3aa2a617facf511020b1af"
+    },
+    {
+      "revision": "a0v_154",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_154_capacity_signed_withdrawal.py",
+      "down": "a0v_153",
+      "sha256": "c2673a27d93c95abb0f5a380fcea309ef79b3c227e6d9b3a21177d68047b9021"
+    },
+    {
+      "revision": "a0v_155",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_155_capacity_source_publication.py",
+      "down": "a0v_154",
+      "sha256": "5c0b06c78b76c9c65079b400be92f8dfadcc25915dc23d5aa0669114f46b9b9d"
+    },
+    {
+      "revision": "a0v_156",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_156_capacity_publication_epoch_locks.py",
+      "down": "a0v_155",
+      "sha256": "7295c3dff81c8d90ea502b1bf02d02a936346a428b4fcc6b1b814b02a5f65b2f"
+    },
+    {
+      "revision": "a0v_157",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_157_capacity_source_publication_transaction.py",
+      "down": "a0v_156",
+      "sha256": "968d7f6e6464016d62a47bb365112780f110e6da9e7121263dca1fb7377c1199"
+    },
+    {
+      "revision": "a0v_158",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_158_model_eval_execution_authority.py",
+      "down": "a0v_157",
+      "sha256": "1422a7c1d8bc2c61d89e8def855e1a68d2db41e97352753616fe4233025c1758"
+    },
+    {
+      "revision": "a0v_159",
+      "file": "aos-platform/services/aos-api/alembic/versions/a0v_159_model_judge_budget.py",
+      "down": "a0v_158",
+      "sha256": "f2ea449b8c0b1a8af5047e07d56c616b3f8bcd54579b0b90ac37abaae9fda72f"
+    }
+  ],
+  "executed": false
+}

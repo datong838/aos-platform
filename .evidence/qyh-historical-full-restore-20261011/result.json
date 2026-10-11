@@ -1,0 +1,8 @@
+{
+  "outcome": "FULL_HISTORICAL_DATA_RESTORE_FINGERPRINT_EQUAL",
+  "tables": 578,
+  "target": "aos-qyh-history-restore-20261011",
+  "sourceWrites": false,
+  "schemaRolesAclFullReviewPending": true,
+  "migrationPending": true
+}

@@ -1,0 +1,13 @@
+{
+  "source": {
+    "cluster": "7683855731447750695",
+    "migration": "a0v_092",
+    "bootstrapOid": "10",
+    "otherSessions": 0
+  },
+  "database": "aos_meta_head",
+  "target": "aos-qyh-history-restore-20261011",
+  "helperSha256": "0f1895ddf8744eb99e34ab86b779d49c33759b42c9e5925003884dcb964fe806",
+  "sourceWrites": false,
+  "network": "none"
+}

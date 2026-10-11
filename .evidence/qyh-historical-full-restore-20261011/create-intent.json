@@ -1,0 +1,7 @@
+{
+  "target": "aos-qyh-history-restore-20261011",
+  "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+  "ports": [],
+  "sourceVolumeAttached": false,
+  "data": "independent tmpfs1G"
+}

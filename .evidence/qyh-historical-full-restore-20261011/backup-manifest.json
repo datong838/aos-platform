@@ -1,0 +1,18 @@
+{
+  "files": {
+    "history.dump": {
+      "bytes": 14669212,
+      "sha256": "bf71e6e7c9f25c1abb751a476d599b6b83d810508d28c47b525f68ebcf7129c0"
+    },
+    "history.second.dump": {
+      "bytes": 14669212,
+      "sha256": "bf71e6e7c9f25c1abb751a476d599b6b83d810508d28c47b525f68ebcf7129c0"
+    },
+    "globals.sql": {
+      "bytes": 7491,
+      "sha256": "5bcf5a66452a8a9679909e3a1f37c503b364f4baf8812d83cd9dd4d13888253a"
+    }
+  },
+  "secondIsCopy": true,
+  "rolePasswordsIncluded": false
+}
