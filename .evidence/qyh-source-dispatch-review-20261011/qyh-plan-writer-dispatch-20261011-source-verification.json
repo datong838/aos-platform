@@ -1,0 +1,10 @@
+{
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_production_contract_store.py": "a17d10e9a158ade0e15d6a7ae26f400ba814396c55b0e137b9400569b67dad37",
+    "services/aos-api/aos_api/aip_responsibility_assignment_store.py": "075d3e16cd899b89ed63d20995d255a47445b2b00672d8f7ef8b978ed98e32d5",
+    "services/aos-api/tests/extension_runtime/test_qyh_plan_dispatch_full_schema_pg.py": "cc49b6e912135a69deaeb2f3895786c9ccb851394cdd317331aabc7d0e3531d6"
+  },
+  "originalCallerHeldPlanTransactionAstExact": true,
+  "currentProductionAclOrStartupChanged": false,
+  "fullRestorationAccepted": false
+}

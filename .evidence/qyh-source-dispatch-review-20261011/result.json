@@ -1,0 +1,51 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-source-dispatch-review-20261011-r1",
+    "task_id": "qyh-source-dispatch-review-20261011",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "8133fe9208087f1b1e7bee000fe39de3ca52b10d",
+      "authority_revision": "AOS-001878",
+      "files": {
+        ".evidence/qyh-source-dispatch-review-20261011/plan.md": "1dbf530505730f437659804ee9a2eca1a89faf57ed2229df61ddb1501d11edaa",
+        ".evidence/qyh-source-dispatch-review-20261011/source-manifest.json": "016322a3b7efb10e0098fb3b718ebbf21dce20dcd6b125537e5b4340a55e237b",
+        ".evidence/qyh-source-dispatch-review-20261011/identity-connection-exact-excerpts.py": "a261f4bc6795cb931001ca1ae273e830760c6dc15085ce45fad8cde392fde325",
+        ".evidence/qyh-source-dispatch-review-20261011/source-fixed-connection.py": "107a4e6cc1c6e79a5bedcb9e638900949ffc910dad2ade67faa34a643a1ff1da",
+        ".evidence/qyh-source-dispatch-review-20261011/original-bi-process.py": "53a4c7102776525d20f7819644eec91d20f6b569a92b1dd29e6540aa0fe53ded",
+        ".evidence/qyh-source-dispatch-review-20261011/cumulative-dispatch.patch": "ca1c88bcd8fa66d0a2db4624522d7bd907182710b8dc4f9723e4c92ce5b8f302",
+        ".evidence/qyh-source-dispatch-review-20261011/qyh-source-issuer-connection-20261011-review.md": "b4ab08da974516c10c4c166c17b7dbe6d6a0646668bd71831d4b5687a1f18dd8",
+        ".evidence/qyh-source-dispatch-review-20261011/qyh-source-issuer-connection-20261011-verification.json": "6b3e6b9bd3e128db2074671e5a4339b0a75dee3d63b54352226d5077ca64c163",
+        ".evidence/qyh-source-dispatch-review-20261011/qyh-plan-writer-dispatch-20261011-review.md": "0f98ece0b449a343d4c6dbaf0c45a28cb16ba6dc77834087a7a164659609f9eb",
+        ".evidence/qyh-source-dispatch-review-20261011/qyh-plan-writer-dispatch-20261011-source-verification.json": "b7b236d6e7d0e5b71925a5ca376219d267164c048c79a1992dfaa14acd6aa7df",
+        ".evidence/qyh-source-dispatch-review-20261011/qyh-plan-writer-dispatch-20261011-current-readback.json": "57978b75b462b69b05c9d0aff97befaf34bf191223553162abbbe78f3a455812",
+        ".evidence/qyh-source-dispatch-review-20261011/qyh-contract-writer-dispatch-20261011-review.md": "2e717297e10d23154d143048d81e3e5677bf3412727c1d5c0ab1ab2b53cab1e8",
+        ".evidence/qyh-source-dispatch-review-20261011/qyh-contract-writer-dispatch-20261011-source-verification.json": "9a400485f36e9d0834ddf980b56a89490d065a1e1ca44ff15bd17ce6be2d810d",
+        ".evidence/qyh-source-dispatch-review-20261011/qyh-contract-writer-dispatch-20261011-current-readback.json": "1745d18bd724a40bc9ff1ceff4877227b1f6f522e49a125c72c445e6a9ea014f"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "本次累计分派保留原Plan调用方事务与合同SQL逻辑，不宣称已关闭全部Source权限缺口。",
+        "evidence": "plan.md声明'保留自审与实际验证局限，不宣称所有合同发行权限闭合'；original-bi-process.py维持原BIIssuerProcessConfig/signed source/receipt reader边界；cumulative-dispatch.patch仅注入plan_connect_factory/contract_connect_factory而不改写Plan/CAS/事务/SQL主体。plan-writer-dispatch-source-verification.json与contract-writer-dispatch-source-verification.json均标记原方法AST/签名完整保留。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "现有独立发行进程要求API与发行者不同系统身份，不能把三个发行账户凭据装入普通API绕过该门。",
+        "evidence": "original-bi-process.py要求api_uid != issuer_uid且issuer_uid == os.geteuid()/ipc_gid == os.getegid()；identity-connection-exact-excerpts.py的_source_issuer_logins包含三固定login，source-fixed-connection.py强制按purpose分发；verification.json中formal_publisher_connected=false、current_api_startup_changed=false、current_source_acl_changed=false。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前验收仅覆盖已交付连接与分派组件，不能据此宣称正式发布、八工作台恢复或自然首链完成。",
+        "evidence": "plan.md明示'模型只能复核限定断言，不能授正式启动、publisher、Host、八工作台或业务权限'；source verification显式eight_workbenches_restored=false/full_goal_accepted=false/formal_publisher_connected=false；review md反复声明'当前API仍未部署/未配置/未重启'，并提示8个既有xfail未闭合。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保持当前Task CLOSED但父qyh-full-system-restoration-20261011继续ACTIVE；如需推进，下一可执行的有限断言是独立模型对source_fixed_connection.py与cumulative-dispatch.patch做第二轮复审，并以只读对账核实当前真实库是否仍无ACL/部署/SCRAM凭证安装（不得重发写操作）。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

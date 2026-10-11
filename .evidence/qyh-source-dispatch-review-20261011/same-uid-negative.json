@@ -1,0 +1,9 @@
+{
+  "sameApiIssuerUidRejected": true,
+  "actualUid": 501,
+  "errorCode": "BI_ISSUER_PROCESS_CONFIG_REQUIRED",
+  "credentialPlaceholderOnly": true,
+  "databaseConnections": 0,
+  "listenerStarted": false,
+  "businessAuthorized": false
+}

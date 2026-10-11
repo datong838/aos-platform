@@ -1,0 +1,7 @@
+{
+  "services/aos-api/aos_api/aip_bi_plan_issuer_connection.py": "4e442aa85b791ed5b193b2881409421f02458faae7ef7674cf67a606dacaece2",
+  "services/aos-api/aos_api/aip_source_issuer_connection.py": "107a4e6cc1c6e79a5bedcb9e638900949ffc910dad2ade67faa34a643a1ff1da",
+  "services/aos-api/aos_api/aip_bi_plan_issuer_process.py": "53a4c7102776525d20f7819644eec91d20f6b569a92b1dd29e6540aa0fe53ded",
+  "services/aos-api/aos_api/aip_production_contract_store.py": "fdff0533c5a109aa1a86b1b20b631ad7837a693824bad7d0c72b4389979c174b",
+  "services/aos-api/aos_api/aip_responsibility_assignment_store.py": "075d3e16cd899b89ed63d20995d255a47445b2b00672d8f7ef8b978ed98e32d5"
+}

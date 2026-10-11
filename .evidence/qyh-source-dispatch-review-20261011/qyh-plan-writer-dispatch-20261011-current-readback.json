@@ -1,0 +1,13 @@
+{
+  "tables": 647,
+  "sourceAndFullCloneDataExact": true,
+  "originalMetadataExact": {
+    "retainedRoles": true,
+    "retainedMemberships": true,
+    "relationOwnerAndRls": true,
+    "relationGrants": true,
+    "columnGrants": true,
+    "functions": true
+  },
+  "databaseWrites": 0
+}

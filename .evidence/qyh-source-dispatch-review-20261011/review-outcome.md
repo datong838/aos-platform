@@ -1,0 +1,13 @@
+# 累计Source分派独立模型复审结果
+
+冻结m1 8133fe920与AOS-001878、14项精确资料hash、当前独立review Task/Lease/owner。原aos_review执行一次真实Prime请求，全部模型工具关闭，私密transport保留且不提交。结果PASS，三项断言assessment全为supported；原--consume以新的consumed.json输出重新验证HEAD/authority/文件hash及Task并成功CONSUMED_MATERIAL_REVIEW，execution_authorized=false。
+
+第一次消费把--output误指向已存在result，原工具拒绝existing result；没有第二模型请求或重发未知效果。改为新的消费输出后成功，原result与attempt未覆盖。模型的next_safe_step建议不能自动执行或授业务权限；其中“当前Task CLOSED”只涉及给定资料里的已交付组件，不能当成当前review Task或父Goal的实际状态，本review Task在Delivery后单独收口。
+
+另按原BIIssuerProcessConfig做真实当前UID501同API/issuer负门：BI_ISSUER_PROCESS_CONFIG_REQUIRED，零数据库连接/未启listener；临时0700目录与0600空占位文件仅用于参数前置验证，不是正式凭据。当前普通API不持有Source发行账户凭据。后续完整Source装配必须沿独立系统身份与原认证/IPC边界，不能把三个账户塞入当前普通API求恢复。
+
+复审限定支持原连接/Plan/Contract分派保持原事务且不夸大权限闭合、不同OS身份门保留、组件验收不代表真实publisher/八页/经营首链。没有独立证明完整Source生产迁移、所有29Contract操作、Content正向、OIDC真实性或当前预算。当前API/数据库/Host均未因此改动。父qyh-full-system-restoration-20261011与长期Goal继续ACTIVE。
+
+下一安全已登记步骤是完整恢复克隆上的各来源精确ACL/operation guard与既有发行进程装配，正式系统身份/登录来源仍需既有配置证据。不重复已通过资料复审，不因PASS开启正式执行。
+
+提交检查：冻结cumulative-dispatch.patch中的原git diff空白上下文行保留单个上下文空格，普通diff --check把这些字面资料行提示为尾空白；不修剪已冻结资料以改变模型绑定hash。该patch以外的所有提交文件diff --check通过，原产品改动已在各组件提交前通过检查。

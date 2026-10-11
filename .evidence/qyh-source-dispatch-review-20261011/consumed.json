@@ -1,0 +1,30 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-source-dispatch-review-20261011-r1",
+  "task_id": "qyh-source-dispatch-review-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "8133fe9208087f1b1e7bee000fe39de3ca52b10d",
+    "authority_revision": "AOS-001878",
+    "files": {
+      ".evidence/qyh-source-dispatch-review-20261011/plan.md": "1dbf530505730f437659804ee9a2eca1a89faf57ed2229df61ddb1501d11edaa",
+      ".evidence/qyh-source-dispatch-review-20261011/source-manifest.json": "016322a3b7efb10e0098fb3b718ebbf21dce20dcd6b125537e5b4340a55e237b",
+      ".evidence/qyh-source-dispatch-review-20261011/identity-connection-exact-excerpts.py": "a261f4bc6795cb931001ca1ae273e830760c6dc15085ce45fad8cde392fde325",
+      ".evidence/qyh-source-dispatch-review-20261011/source-fixed-connection.py": "107a4e6cc1c6e79a5bedcb9e638900949ffc910dad2ade67faa34a643a1ff1da",
+      ".evidence/qyh-source-dispatch-review-20261011/original-bi-process.py": "53a4c7102776525d20f7819644eec91d20f6b569a92b1dd29e6540aa0fe53ded",
+      ".evidence/qyh-source-dispatch-review-20261011/cumulative-dispatch.patch": "ca1c88bcd8fa66d0a2db4624522d7bd907182710b8dc4f9723e4c92ce5b8f302",
+      ".evidence/qyh-source-dispatch-review-20261011/qyh-source-issuer-connection-20261011-review.md": "b4ab08da974516c10c4c166c17b7dbe6d6a0646668bd71831d4b5687a1f18dd8",
+      ".evidence/qyh-source-dispatch-review-20261011/qyh-source-issuer-connection-20261011-verification.json": "6b3e6b9bd3e128db2074671e5a4339b0a75dee3d63b54352226d5077ca64c163",
+      ".evidence/qyh-source-dispatch-review-20261011/qyh-plan-writer-dispatch-20261011-review.md": "0f98ece0b449a343d4c6dbaf0c45a28cb16ba6dc77834087a7a164659609f9eb",
+      ".evidence/qyh-source-dispatch-review-20261011/qyh-plan-writer-dispatch-20261011-source-verification.json": "b7b236d6e7d0e5b71925a5ca376219d267164c048c79a1992dfaa14acd6aa7df",
+      ".evidence/qyh-source-dispatch-review-20261011/qyh-plan-writer-dispatch-20261011-current-readback.json": "57978b75b462b69b05c9d0aff97befaf34bf191223553162abbbe78f3a455812",
+      ".evidence/qyh-source-dispatch-review-20261011/qyh-contract-writer-dispatch-20261011-review.md": "2e717297e10d23154d143048d81e3e5677bf3412727c1d5c0ab1ab2b53cab1e8",
+      ".evidence/qyh-source-dispatch-review-20261011/qyh-contract-writer-dispatch-20261011-source-verification.json": "9a400485f36e9d0834ddf980b56a89490d065a1e1ca44ff15bd17ce6be2d810d",
+      ".evidence/qyh-source-dispatch-review-20261011/qyh-contract-writer-dispatch-20261011-current-readback.json": "1745d18bd724a40bc9ff1ceff4877227b1f6f522e49a125c72c445e6a9ea014f"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "f62d92976e28d041c8098146852c9ed30957d2703f75aa3f942f1a9609b9dabd",
+  "transport_sha256": "fe3da9532c60ad3be1acba48c91abc524e56cd3bcc5aef8f00c5993cd9a1dcf3"
+}

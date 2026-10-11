@@ -1,0 +1,13 @@
+# Source固定发行连接复审
+
+按本Task计划完成新SourceIssuerDatabaseConfig/连接入口，固定Plan沿用aos_bi_plan_issuer，Content/Contract使用各自固定身份。严格复用原BIIssuerDatabaseConfig、_connect_bi_issuer及Scoped commit/rollback重绑，不复制事务状态机。原公共BI入口签名与默认login不变，不回落普通API/runtime，未向当前DB安装角色或调整ACL。
+
+补齐原identity检查的CREATE ROLE/DB/replication及任意其他角色成员资格拒绝。该收紧有实际前后反证：在独立18432 lab把Plan加入第三方NOLOGIN group，f43d8682提交的原_require_identity实际接受同一连接（非owner、非runtime成员）；新检查实际拒绝。旧ModuleNotFound的RED只证明API不存在，legacy-group-gap.json才是行为缺口实证，不能混称所有旧安全门已通过。
+
+新真实PG测试覆盖三个固定purpose session/current身份、serializable事务、原Store commit/rollback后scope重绑、readOnly、真实双租户RLS正向及canary、跨租户INSERT42501、其他group成员资格、CREATE ROLE/DB/replication拒绝、PG环境及passfile权限变化拒绝。独立lab默认trust是测试身份环境，本波不宣称新三个账户密码SCRAM认证；真实恢复stage账户上波已单独验证SCRAM，正式Source发行凭据仍需部署验证。
+
+最终相邻54 passed/8既有xfail，exit0；旧完整签名安装测试1 passed/exit0，14.58s。8xfail是原runtime可伪造Source/Receipt的未完成生产边界，本连接不会自动关闭它们。source-before-final.json精确prod/test文件hash与最终读回一致；完整签名测试使用相同产品源码hash。真实Source647表和六原metadata精确不变，三个临时issuer LOGIN/额外group及一次性测试数据库0残留，原迁移NOLOGIN逻辑角色保留。
+
+风险与限制：调用方授权、Source表ACL/guard/完整generic/BI/successor/Content/Contract分派尚未切换；本库不存在这些正式发行LOGIN时新入口正确失败，不自动创建账号。现有API未配置该入口、未重启。没有绕过Source预检、安装enable、预算、publisher或Host门。尚不能据此宣称八工作台恢复或自然经营首链。独立模型复审未在本波执行；本记录是方案和代码自审，不能冒充Prime PASS。
+
+本Task只验收固定最小连接组件，父qyh-full-system-restoration-20261011与完整Goal保持ACTIVE。下一已登记兼容切换采用该组件为原写者分派事务，复用原签名安装、Plan/Receipt配对、幂等/CAS/回滚和正式来源reader；再做完整恢复克隆迁移与部署凭据/HBA认证，当前真库权限暂保持，真实publisher/当前预算仍各自待完成。
