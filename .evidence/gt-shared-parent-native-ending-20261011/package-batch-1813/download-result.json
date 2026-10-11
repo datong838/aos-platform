@@ -1,0 +1,1052 @@
+[
+  {
+    "name": "acl-libs",
+    "file": "acl-libs-2.3.2-r1.apk",
+    "size": 15295,
+    "sha256": "5bfce1fc46a3625268a7a60c10b5680aa846534d98856a108e692824a1f1b710",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "alpine-baselayout",
+    "file": "alpine-baselayout-3.7.2-r1.apk",
+    "size": 8265,
+    "sha256": "5576f7b7807627f019dcc1f4a27c8b2a39101eaeffea2eb1c7a6d22bd087258d",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "alpine-baselayout-data",
+    "file": "alpine-baselayout-data-3.7.2-r1.apk",
+    "size": 10780,
+    "sha256": "01afabfafb08de6f694b7d764f4cfa965e6adabba05afca0b8efd1b6f9b4cd85",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "alpine-keys",
+    "file": "alpine-keys-2.6-r0.apk",
+    "size": 12708,
+    "sha256": "883cfeda387f655cfc2c466995036b82abd77f8f78e1b23dc70e5154bcf9cc0b",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "bash",
+    "file": "bash-5.3.9-r1.apk",
+    "size": 542084,
+    "sha256": "95f4f976bdf2f4ca18ff41c32916eb6d7b12a0dae12504d55d04427460d6542f",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "binutils",
+    "file": "binutils-2.45.1-r1.apk",
+    "size": 3321769,
+    "sha256": "bac4a00e73296dfebf5f587c2b304b7d110e7de658cd2b05491f87c2b228420c",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "bison",
+    "file": "bison-3.8.2-r3.apk",
+    "size": 456035,
+    "sha256": "8e2ecd264379a79d0c9aa6e1d633f9e6d756e5680b015195eb4886b0824954fb",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "brotli-libs",
+    "file": "brotli-libs-1.2.0-r1.apk",
+    "size": 424924,
+    "sha256": "e0e7a7892f28326a9f18e09607b1aea72baedda470bc4e3d2b11262b9ae5dda3",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "bsd-compat-headers",
+    "file": "bsd-compat-headers-0.7.2-r6.apk",
+    "size": 12019,
+    "sha256": "16b7f8b09b067649dfcfb25e366ffcf781fffb9a60e96fc14001f88035b10389",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "busybox",
+    "file": "busybox-1.37.0-r31.apk",
+    "size": 521974,
+    "sha256": "18e3490a6f024004b2b13dd4b54bd50ccd82894938023b2d4eab389a4edcba70",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "busybox-binsh",
+    "file": "busybox-binsh-1.37.0-r31.apk",
+    "size": 1547,
+    "sha256": "f3a1b2257cfa114ff20de05c665f380695385d589908bfc9af5768f39fef9ef5",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "c-ares",
+    "file": "c-ares-1.34.8-r0.apk",
+    "size": 108771,
+    "sha256": "689603d300dc56f0b99e313506e4d7b3a3ffb87cec536324f8a306bc218afe67",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "clang21",
+    "file": "clang21-21.1.8-r3.apk",
+    "size": 637924,
+    "sha256": "49635a7ad418c9638851206de66bf5df74cea3a5c45dbb51ecacd8e0e1ee33f1",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "clang21-headers",
+    "file": "clang21-headers-21.1.8-r3.apk",
+    "size": 1030942,
+    "sha256": "75f5eedd66231b608fddf70947e4a68d1a1c7a4d12278900c2610ba91eb7a2d0",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "clang21-libs",
+    "file": "clang21-libs-21.1.8-r3.apk",
+    "size": 33082368,
+    "sha256": "0a41210a666883b5adfbf85e0bfb05a404f291fe3f41ac331e3e59ae582ef339",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "coreutils",
+    "file": "coreutils-9.11-r0.apk",
+    "size": 568053,
+    "sha256": "956fa3cb70fbf556a3e11d3cc630e655e8d8ec855b12568302f9910f4deaf812",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "coreutils-env",
+    "file": "coreutils-env-9.11-r0.apk",
+    "size": 18552,
+    "sha256": "f243dcfe52ce4f5f334a69f2c398052a4517f85e951095dfc49297845eed93d4",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "coreutils-fmt",
+    "file": "coreutils-fmt-9.11-r0.apk",
+    "size": 16424,
+    "sha256": "be7eaad9e000824cab11689c83d43c696f25034f57611924006fab346f4f5de1",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "coreutils-sha512sum",
+    "file": "coreutils-sha512sum-9.11-r0.apk",
+    "size": 16491,
+    "sha256": "e7d0c65f543146f3000cbcf51b7a3ce9c19cd6bc5ad63a20ecf709d5c6b88c81",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "cyrus-sasl-dev",
+    "file": "cyrus-sasl-dev-2.1.28-r9.apk",
+    "size": 29414,
+    "sha256": "31f6c5350a8c9a552897163910b92484e9942ef8723b5e380611dca346b751b3",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "dpkg",
+    "file": "dpkg-1.23.7-r0.apk",
+    "size": 474397,
+    "sha256": "090aff9dd43565a0a0fc4fdbc4d64ecc21ad406d6332b32c71e7d4885f3732ec",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "dpkg-dev",
+    "file": "dpkg-dev-1.23.7-r0.apk",
+    "size": 407212,
+    "sha256": "d7478d46f5e9692ef28232645ced62833b35ffc323abbc64b8b63e6c2a5f4225",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "e2fsprogs-dev",
+    "file": "e2fsprogs-dev-1.47.4-r0.apk",
+    "size": 53583,
+    "sha256": "9b52c8c9fa3fac7f9a2a1f2f33564122a8e56ae9a627bd8daeda0579e368f414",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "e2fsprogs-libs",
+    "file": "e2fsprogs-libs-1.47.4-r0.apk",
+    "size": 216701,
+    "sha256": "52124971ae397d599aadd79263fcd68fc9e271922ccf8185b124f35fe24c60c8",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "flex",
+    "file": "flex-2.6.4-r8.apk",
+    "size": 104823,
+    "sha256": "ec916fbf6c5e2b576668f835eb087ee8c84b0d267e5ad543933e7c87aa1b72d7",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "fortify-headers",
+    "file": "fortify-headers-3.0.1-r2.apk",
+    "size": 7328,
+    "sha256": "72bf2a77475f2550a7345683c77b39487ee94ecbc2ca11ed5314161f3b927d76",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "g++",
+    "file": "g++-15.2.0-r5.apk",
+    "size": 17241310,
+    "sha256": "dc16babd6fdd7154ece263ca625ff832b03528d58f5060f9e92ca3b0bc0c079a",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "gawk",
+    "file": "gawk-5.3.2-r2.apk",
+    "size": 317028,
+    "sha256": "bad00ada6b8136ccbea9e3dee271884895241bf9e3ab031496286bf5cfb80ff8",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "gcc",
+    "file": "gcc-15.2.0-r5.apk",
+    "size": 52501295,
+    "sha256": "ff3fecfc32c9a1bed4a47a32ccfee6f6f575708258f912c218dce8ed0d892221",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "gdbm",
+    "file": "gdbm-1.26-r0.apk",
+    "size": 33830,
+    "sha256": "bad50eb26533e2f58e014fbcd3c1744f2fdb79954af6e3c188ccd059251c7790",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "glib",
+    "file": "glib-2.88.1-r1.apk",
+    "size": 1995383,
+    "sha256": "0ae89191a79ea5d5a02515e41f29b62e5e0a0a80fb059804bbbacac2d77cce4e",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "gmp",
+    "file": "gmp-6.3.0-r4.apk",
+    "size": 221014,
+    "sha256": "4dab6e86b850fe1b5bc0cf2fac17efa4d7f648bea44f3d9019694cc1e1cb12b7",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "icu",
+    "file": "icu-78.1-r0.apk",
+    "size": 296533,
+    "sha256": "268239134f87d52bae6647c44497ca04529f9a825aae0f51ae640b5303f84ffe",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "icu-data-full",
+    "file": "icu-data-full-78.1-r0.apk",
+    "size": 12731006,
+    "sha256": "e5034d8b51ad6f4b2a934afb39bde070dcaafaafa8251b56948e9d480978d092",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "icu-dev",
+    "file": "icu-dev-78.1-r0.apk",
+    "size": 1072263,
+    "sha256": "dc1f89c8e15f6e06ec9d066a357377c490953458936d9968ba021a780073c62a",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "icu-libs",
+    "file": "icu-libs-78.1-r0.apk",
+    "size": 1957437,
+    "sha256": "2393882dcf1e3f5be98696665c3468dd0d2a85cd568d50abd232729863df9738",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "isl26",
+    "file": "isl26-0.26-r2.apk",
+    "size": 870482,
+    "sha256": "c195ea26929ada2bb9e66b7bc6d64b340123591b8f4c8ed158693e4dac0923d8",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "jansson",
+    "file": "jansson-2.15.0-r0.apk",
+    "size": 49825,
+    "sha256": "a13822f5ca1772cced4bb7d3d178ec5dee770d8accba5b4816b2ddc413e6f055",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "keyutils-libs",
+    "file": "keyutils-libs-1.6.3-r4.apk",
+    "size": 8191,
+    "sha256": "ff992a1a3ec0733710782107fc0d6cbb2c72eb66a58bd80de91d72b623cbcfc8",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "krb5-conf",
+    "file": "krb5-conf-1.0-r2.apk",
+    "size": 1731,
+    "sha256": "14cf4469b1aa931c30a05b5dca4f516faac46ac1c28147c99634b0f7b6f0442f",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "krb5-dev",
+    "file": "krb5-dev-1.22.2-r1.apk",
+    "size": 150352,
+    "sha256": "d5b7bba0a6f6cdc5fbd476819bbbe7864c117749d07275674b5dde3362da8922",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "krb5-libs",
+    "file": "krb5-libs-1.22.2-r1.apk",
+    "size": 785752,
+    "sha256": "6ea86f0c4b700fdd1880bf03c9b7651a1086a787f8a4573534840291240d31c6",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "krb5-server-ldap",
+    "file": "krb5-server-ldap-1.22.2-r1.apk",
+    "size": 48769,
+    "sha256": "eb960ec12825b6b4ed102c3900f9ec4b8532d89f502d5e463c4722a97cd92b48",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libatomic",
+    "file": "libatomic-15.2.0-r5.apk",
+    "size": 10362,
+    "sha256": "31a45fec053c43a006370f83238f16f959838a9a703fbf26bfd1a36da4f538b2",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libattr",
+    "file": "libattr-2.5.2-r2.apk",
+    "size": 8733,
+    "sha256": "81d6c5b5eca04c2a1499407b4fbaf94bfb2ddb6c535ff4260dee862cf9803b2a",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libblkid",
+    "file": "libblkid-2.42.3-r1.apk",
+    "size": 97097,
+    "sha256": "9d0f24976c575c53c12526b6e078edf34c980c153bc8e5f1c1053cbece5b8cfa",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libbz2",
+    "file": "libbz2-1.0.8-r6.apk",
+    "size": 34259,
+    "sha256": "28cb76bb6d11d2a55c3061b5fcb2ab84996412a248b2c9fe52bb710d0a2a84e7",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libcom_err",
+    "file": "libcom_err-1.47.4-r0.apk",
+    "size": 6577,
+    "sha256": "a75b5955ff57046e33fc2842cfe466dc77d8e68305d5c86c6646b38a069490a2",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libcrypto3",
+    "file": "libcrypto3-3.5.9-r0.apk",
+    "size": 2286800,
+    "sha256": "2676a2b0b6e23ea2edccf3ee982b9842a665d52603d047de3d0a185dc316d983",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libcurl",
+    "file": "libcurl-8.22.0-r0.apk",
+    "size": 358024,
+    "sha256": "cbec830a63888be570c06d20d87c85649aff1db38c3b4dcc17884b14471e39e3",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libeconf",
+    "file": "libeconf-0.8.3-r0.apk",
+    "size": 27259,
+    "sha256": "cf0899d49ded0a6891e3cdf1b37887f2ecd77293afe1d8f3cb8937763c83f183",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libedit",
+    "file": "libedit-20260508.3.1-r1.apk",
+    "size": 78226,
+    "sha256": "3055936ce398b3657fe6b0c7c6ce95618bfb2b21364d7aea823a192bb8237ac3",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libedit-dev",
+    "file": "libedit-dev-20260508.3.1-r1.apk",
+    "size": 7755,
+    "sha256": "ffe81eaafcd8a41802efadf52e4f79ef133373418d199bd23a8e0668dfba8336",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libev",
+    "file": "libev-4.33-r1.apk",
+    "size": 23987,
+    "sha256": "4847096245f3c97cd5560d9cb7c0395568be0aec53964a2f382c69859d1435a9",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libevent",
+    "file": "libevent-2.1.13-r0.apk",
+    "size": 283201,
+    "sha256": "7618eac5177ec3779fc2ed4ad4d533f5dfed2fc0aecf6c6274c9bf795f0e9991",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libevent-dev",
+    "file": "libevent-dev-2.1.13-r0.apk",
+    "size": 103535,
+    "sha256": "895ee0be7c4895d2f5bf8e539c792e71197ede98c3463598924e2d19f2a9e680",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libexpat",
+    "file": "libexpat-2.8.5-r0.apk",
+    "size": 60926,
+    "sha256": "568a12a4889a00711d1c80c197a5540ee1cdec26c1c59da38f8342ad69e7eff9",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libfdisk",
+    "file": "libfdisk-2.42.3-r1.apk",
+    "size": 121449,
+    "sha256": "061e5c9c82eff00f806bd51bdd414d3ff6aaec99de02ed4c1b60f3e13578e2b7",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libffi",
+    "file": "libffi-3.5.2-r1.apk",
+    "size": 17799,
+    "sha256": "9a67280b0c7c62db658c2d4d32ed1199903bef859c32dd4245e1a7e35c89ab4b",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libffi-dev",
+    "file": "libffi-dev-3.5.2-r1.apk",
+    "size": 81975,
+    "sha256": "9ab907b5cc736e136eba457ad144034bbb7a2345d4085986c49be3c75d80f765",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libformw",
+    "file": "libformw-6.6_p20260516-r0.apk",
+    "size": 28611,
+    "sha256": "a31d3d6dfc0525885684d64220afa7e8411b5f8fbf3d04375e7eabe4ea2947c0",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libgcc",
+    "file": "libgcc-15.2.0-r5.apk",
+    "size": 66323,
+    "sha256": "369aaa6e9d099a737bad6dd3e6c2fe7bb1547ca26d22b94ee0411228f709b403",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libgcc-static",
+    "file": "libgcc-static-15.2.0-r5.apk",
+    "size": 2187958,
+    "sha256": "2ec3dc4be953d842cc51193248367d86829ed699a1ed094fb5149b1b3fc62919",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libgomp",
+    "file": "libgomp-15.2.0-r5.apk",
+    "size": 146527,
+    "sha256": "90576a8899c560d3983b8ac8442b5b75957a917bc1c4e950e005945080f8682f",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libidn2",
+    "file": "libidn2-2.3.8-r0.apk",
+    "size": 105430,
+    "sha256": "d02ffda4510652f89c5fb89cd2e7ff721afb0c74e7d75476ad60bebe7ac0ae20",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libintl",
+    "file": "libintl-1.0-r0.apk",
+    "size": 41483,
+    "sha256": "d106a13e3e68103d3a8217406aae6186289baf352d0f3d10fc21938d2dd8adb1",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "liblastlog2",
+    "file": "liblastlog2-2.42.3-r1.apk",
+    "size": 11770,
+    "sha256": "e0f4211e59637c0c7699b9e0ba34c80f17361ed14870260f12c8714f2c241d96",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libldap",
+    "file": "libldap-2.6.15-r0.apk",
+    "size": 167579,
+    "sha256": "2cb81082866cc8571a89fd9c29c8d3cf0bde83d604275492a24bb9563c9466bf",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libmd",
+    "file": "libmd-1.2.0-r0.apk",
+    "size": 26213,
+    "sha256": "cb94430ebc45dbd5dd6882bfd296bb73ea3c337691f469bd1438e696a6e867eb",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libmenuw",
+    "file": "libmenuw-6.6_p20260516-r0.apk",
+    "size": 14359,
+    "sha256": "99bc3e1e94dd37124fd5c8fc01e7c49184621b06092165f64d9855e1de7583a2",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libmount",
+    "file": "libmount-2.42.3-r1.apk",
+    "size": 128579,
+    "sha256": "a2a6fc6aab7a59c70ec060f5fb8c950be42d1a017934bf32e5dd6984eaab15cc",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libncurses++",
+    "file": "libncurses++-6.6_p20260516-r0.apk",
+    "size": 25541,
+    "sha256": "8fdd193bd17ba4cc13904121d28092926a6015a0f084c5aa12931a5918d16923",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libncursesw",
+    "file": "libncursesw-6.6_p20260516-r0.apk",
+    "size": 161906,
+    "sha256": "51a7aa4b3ec40b144d0801c0544e0a9f62e2a41d04b6067bb5e95786040741c6",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libpanelw",
+    "file": "libpanelw-6.6_p20260516-r0.apk",
+    "size": 5903,
+    "sha256": "a6912c654c821db4f8a801321709205bd482b0e515b862f2d02045e21b73d97d",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libpsl",
+    "file": "libpsl-0.21.5-r3.apk",
+    "size": 55302,
+    "sha256": "b31e91371425d5f80c1db5cba2a849956b65c802add0b49de844b2ca961aa8da",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libsasl",
+    "file": "libsasl-2.1.28-r9.apk",
+    "size": 77509,
+    "sha256": "0be9020fdb51705c6f393bad6e533bbcd70f68c148ab0b88d35ef39a4ce8959f",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libsmartcols",
+    "file": "libsmartcols-2.42.3-r1.apk",
+    "size": 56563,
+    "sha256": "e2a4b6c2e2f493100305b0e62b9b10454611a49625534b1b06a3bc8aa0087818",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libsodium",
+    "file": "libsodium-1.0.22-r0.apk",
+    "size": 163569,
+    "sha256": "22caea234463bf7cc58b2612c62da686e9b4f6ca863540a18747847d7add70e8",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libsodium-dev",
+    "file": "libsodium-dev-1.0.22-r0.apk",
+    "size": 26307,
+    "sha256": "9e621f49d2d166b0fc56a62012328eb877f2a6b6f94e6cd343df5f1c4ebb4c07",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libssl3",
+    "file": "libssl3-3.5.9-r0.apk",
+    "size": 373023,
+    "sha256": "20ac252b276d73f2c69c1d25f84537c7fba81caefc026c6be1094b394af2082e",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libstdc++",
+    "file": "libstdc++-15.2.0-r5.apk",
+    "size": 908984,
+    "sha256": "2302e766d4e4926038ec166ecb85837ee884576115236ddb565e3a5fca4a11d7",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libstdc++-dev",
+    "file": "libstdc++-dev-15.2.0-r5.apk",
+    "size": 4132711,
+    "sha256": "8385c811d93b64ee1877005a5473cde8ebabe82d346301f2b153ff8cb6a71510",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libunistring",
+    "file": "libunistring-1.4.2-r0.apk",
+    "size": 746169,
+    "sha256": "58abfcbce2459071c505771a572a79953d6043d72b643ed0d5285ca39cdaf85c",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libuuid",
+    "file": "libuuid-2.42.3-r1.apk",
+    "size": 15385,
+    "sha256": "9ce20c7ffe2ccaa7c321893c10564abbca13c3f2edb82f60a35f1f68e004f86c",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libverto",
+    "file": "libverto-0.3.2-r2.apk",
+    "size": 9568,
+    "sha256": "0a11f278b99992f365518a0e2763f55542637aabb8515db5e87d3ead4d3bb06a",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libverto-dev",
+    "file": "libverto-dev-0.3.2-r2.apk",
+    "size": 23786,
+    "sha256": "0840ecaec2fa1adb212e33aec256caf9cf37d6deae97a2a820a45ba2b0f92cb5",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libverto-glib",
+    "file": "libverto-glib-0.3.2-r2.apk",
+    "size": 5238,
+    "sha256": "92ae7b4f2d80732bfc9a991125fb2de0ddbc12e631abda4598778570faae70d2",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libverto-libev",
+    "file": "libverto-libev-0.3.2-r2.apk",
+    "size": 4804,
+    "sha256": "fdd2c67d52d7051b71243118b72d68fed1e392a1e74e68c941154713dc675435",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libverto-libevent",
+    "file": "libverto-libevent-0.3.2-r2.apk",
+    "size": 4530,
+    "sha256": "5e57ccb5244f66cd3ce19007710dd799a33fb68651d6ec40e5aaab982d7f0b5e",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libxml2",
+    "file": "libxml2-2.13.9-r2.apk",
+    "size": 496747,
+    "sha256": "0a860a26ebdfea491498386fe682130f4c5565e46ee8e0a2281256db2ef1be27",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libxml2-dev",
+    "file": "libxml2-dev-2.13.9-r2.apk",
+    "size": 87402,
+    "sha256": "ef259d1d0c9488e9dd5591816c7f1f8c756870507a4192bee5da9185a23e8570",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libxml2-utils",
+    "file": "libxml2-utils-2.13.9-r2.apk",
+    "size": 29683,
+    "sha256": "140c758e3be95ce72b344ca66c7b16a21e4e3f32a6a0ee78557f58554c352082",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libxslt",
+    "file": "libxslt-1.1.43-r3.apk",
+    "size": 131054,
+    "sha256": "c0f82af1a465343cde84e53f41f0941d66d6d7b28f66ed7ca11943f64ecc4c9e",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "libxslt-dev",
+    "file": "libxslt-dev-1.1.43-r3.apk",
+    "size": 32131,
+    "sha256": "ac245af5149fffb8d32cf4469028d0b6f2ac43885d26084bf73ba6e10fc39688",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "linux-headers",
+    "file": "linux-headers-7.0.0-r1.apk",
+    "size": 1964140,
+    "sha256": "d61656e81116040ebac0bc8d9046a3ba97f01a00ee085809103576e8a437468f",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "linux-pam",
+    "file": "linux-pam-1.7.1-r2.apk",
+    "size": 274955,
+    "sha256": "bc60d95c8a0fd16fbd72d41bc1e40510b9bd085f088a63ca1ad28778b0712efc",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "llvm21",
+    "file": "llvm21-21.1.8-r1.apk",
+    "size": 42215159,
+    "sha256": "f0100c08a0d7320a993666855591a41ad67439549b0ae2e84fbf69aa12e35fc0",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "llvm21-dev",
+    "file": "llvm21-dev-21.1.8-r1.apk",
+    "size": 6324267,
+    "sha256": "ecca97b3b9189a11cef6de10fce2f9d7c4855cb99d77fd9a9617f076263ac201",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "llvm21-libs",
+    "file": "llvm21-libs-21.1.8-r1.apk",
+    "size": 61628486,
+    "sha256": "072ede6a71dca8bcf5f9e2c7115f5d4ff5d4a476e37288ed2bb65440e95fc6c3",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "llvm21-linker-tools",
+    "file": "llvm21-linker-tools-21.1.8-r1.apk",
+    "size": 74749,
+    "sha256": "de996957a1860c1b4817623cea2e18c2b4cec30826d3e4cdf029ce4d85a44963",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "llvm21-test-utils",
+    "file": "llvm21-test-utils-21.1.8-r1.apk",
+    "size": 455613,
+    "sha256": "94bdce2de5128c148d1732ba65bccfbc520e2852d179edc0b5325276138cdfd3",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "llvm21-test-utils-pyc",
+    "file": "llvm21-test-utils-pyc-21.1.8-r1.apk",
+    "size": 164209,
+    "sha256": "f02200a3758dfb37f019b5d26f853de4908a7d3dfb7d8113391deb9fcd2820c2",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "lz4-dev",
+    "file": "lz4-dev-1.10.0-r1.apk",
+    "size": 32856,
+    "sha256": "81688ff10bb001eabd0e0cdafcd42612985858637de37d167f37caf54288a93c",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "lz4-libs",
+    "file": "lz4-libs-1.10.0-r1.apk",
+    "size": 82505,
+    "sha256": "af6cbe553adda941e04ac40cf0123455b714d65392472389113e7d6dcebbd8d8",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "m4",
+    "file": "m4-1.4.20-r1.apk",
+    "size": 114502,
+    "sha256": "2550f7b1dae60fcd0e9c49b21e4c44a1ab65c83600383c73375d4ef52dd4ad9a",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "make",
+    "file": "make-4.4.1-r4.apk",
+    "size": 117543,
+    "sha256": "0a2c6c3fa0d90b652bbaeac362d1bfe54b75aae57631a6b448826f8b51c85170",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "mpc1",
+    "file": "mpc1-1.3.1-r1.apk",
+    "size": 53688,
+    "sha256": "c4e03923cf1b958ba0d3665196f521a00fb091132e79c39493298019fb59ae60",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "mpdecimal",
+    "file": "mpdecimal-4.0.1-r0.apk",
+    "size": 81031,
+    "sha256": "358959600f99f58deee30ca9089c7f6f0f1bd73cc0021e321a7dbf6f735935c6",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "mpfr4",
+    "file": "mpfr4-4.2.2-r0.apk",
+    "size": 294772,
+    "sha256": "81cb276c1e050138fed90c8f1ef584cf5bfce26739733753fce138fc0a092b35",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "musl",
+    "file": "musl-1.2.6-r2.apk",
+    "size": 417710,
+    "sha256": "5e9674b7f41152fe2119093b5cb4c13eaaadb19c2d5422b2d7267913e663ee6e",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "musl-dev",
+    "file": "musl-dev-1.2.6-r2.apk",
+    "size": 2539434,
+    "sha256": "ca72b84f4eb3c36bbbec04d919eb10159d414c7a43413cc2253841d301fa9486",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "musl-utils",
+    "file": "musl-utils-1.2.6-r2.apk",
+    "size": 16890,
+    "sha256": "164e3347b214313fe95994038ce76eeba67f98f42df1dd13fae2ffa770e4747b",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "ncurses-dev",
+    "file": "ncurses-dev-6.6_p20260516-r0.apk",
+    "size": 72006,
+    "sha256": "922779f40033893f813eb887ab58c59516b8e51a9ec0576758ade65167952af4",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "ncurses-terminfo-base",
+    "file": "ncurses-terminfo-base-6.6_p20260516-r0.apk",
+    "size": 22150,
+    "sha256": "e0c546b9461bdce206a90bc720cb69aa4628b5a5b8d908c3e5084e00f28f6a9d",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "nghttp2-libs",
+    "file": "nghttp2-libs-1.70.0-r0.apk",
+    "size": 63644,
+    "sha256": "7ef451f4dcdc065aa872c2f3c78b9d9bb4348caa5bcc70dee0c9e1fcf8e4c1fd",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "nss_wrapper",
+    "file": "nss_wrapper-1.1.12-r1.apk",
+    "size": 23583,
+    "sha256": "341386193525e21a673f4371160336096cec4685688f7936d64979a3b478c3ee",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "openldap-dev",
+    "file": "openldap-dev-2.6.15-r0.apk",
+    "size": 367101,
+    "sha256": "fba13487b980de65cda972ad7a07f3980ec28aae28b23167ecf5ca28f3c6e422",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "openssl-dev",
+    "file": "openssl-dev-3.5.9-r0.apk",
+    "size": 366001,
+    "sha256": "9d9c83f93181eb781f76ee451a5f096d7faecd5bec1187dc00ed39453cc2cc09",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "pcre2",
+    "file": "pcre2-10.49-r0.apk",
+    "size": 320291,
+    "sha256": "03efd0b29f7f38deb10a9ccb54f56e19683eb7ac27eb1f347e6dbd2e59ea000d",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "perl",
+    "file": "perl-5.42.2-r1.apk",
+    "size": 10089390,
+    "sha256": "442045cbd2c9703dbbc43bb48bcaa6278ac27f37e342f72cf31c5185c15f3967",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "perl-dev",
+    "file": "perl-dev-5.42.2-r1.apk",
+    "size": 1021667,
+    "sha256": "cc8140f0767d52bfc176041f07ff28a6d509273cce195f739611225232398ce3",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "perl-io-tty",
+    "file": "perl-io-tty-1.31-r0.apk",
+    "size": 21195,
+    "sha256": "83fc7d424ad4948010f7dfd5ac5565171ba8d85afe94d13a874257282b9f6a40",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "perl-ipc-run",
+    "file": "perl-ipc-run-20260402.0-r0.apk",
+    "size": 79299,
+    "sha256": "28b927dc63f840a5e53feae84225f1336a8f8e28cebc3fc7048520ef0ed1e99f",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "perl-utils",
+    "file": "perl-utils-5.42.2-r1.apk",
+    "size": 119640,
+    "sha256": "fb8727c354b136889d3ddb385e9eddcbad3efae0fca592f360853adddd213dfb",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "pkgconf",
+    "file": "pkgconf-2.5.1-r0.apk",
+    "size": 56279,
+    "sha256": "6b716719ac9457bd35c8ea5373da1dc33ae86863bbb0f411aed0cb5e71b9cf2d",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "pyc",
+    "file": "pyc-3.14.8-r0.apk",
+    "size": 1250,
+    "sha256": "3ccfef8bdd65ea445079696e5d2539f4b5513442d8b02fb7a0fb964ced2065f3",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "python3",
+    "file": "python3-3.14.8-r0.apk",
+    "size": 8302633,
+    "sha256": "fb5cc51e45afd7cc78b3189d8019a554e48c6751f0ccbe1aa551d6d94453db5c",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "python3-dev",
+    "file": "python3-dev-3.14.8-r0.apk",
+    "size": 58289381,
+    "sha256": "0d537a8255fcc172c7689df156c1687d461348f6f6f9bd62519a00545e87a30c",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "python3-pyc",
+    "file": "python3-pyc-3.14.8-r0.apk",
+    "size": 1302,
+    "sha256": "52814cbdfffe2c956c2882c05695237cbea4b92d015b14a43f79441bc348699a",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "python3-pycache-pyc0",
+    "file": "python3-pycache-pyc0-3.14.8-r0.apk",
+    "size": 4489292,
+    "sha256": "1835aa8bdc8c03a58556053ca2ed23300babab08ce1cb7b7443e5fae0dc48cba",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "readline",
+    "file": "readline-8.3.3-r1.apk",
+    "size": 129706,
+    "sha256": "9f0ae0923c02b0d6aba62e9173542b65396ba3f0efefcbf087ea32f1120e7b34",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "scanelf",
+    "file": "scanelf-1.3.9-r1.apk",
+    "size": 31798,
+    "sha256": "fb3aba7485ba455883488f02569995c8ba8003638c5d36b7d8fdd1241d219a6e",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "skalibs-libs",
+    "file": "skalibs-libs-2.15.0.0-r0.apk",
+    "size": 91460,
+    "sha256": "7ea58fb512067402b519079fcce8a48381eb2b9c690341c4a017aa15f719c198",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "sqlite",
+    "file": "sqlite-3.53.4-r0.apk",
+    "size": 1062424,
+    "sha256": "753f39e446fa0208a58323147e568326c8426454dc4f7ccc4b375d7e6dd19b3b",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "sqlite-dev",
+    "file": "sqlite-dev-3.53.4-r0.apk",
+    "size": 186436,
+    "sha256": "1f407625d425902a7230a62edb80aba78470277a55a4edd5dac3d4e087e15495",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "sqlite-libs",
+    "file": "sqlite-libs-3.53.4-r0.apk",
+    "size": 852532,
+    "sha256": "b39d8d73c1208838a436f2d481ba605b52a095f8d6ff781556eafc81cd1a13e9",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "ssl_client",
+    "file": "ssl_client-1.37.0-r31.apk",
+    "size": 5078,
+    "sha256": "fa2911d412b7922b17a07829914ee630c2cd7091ef558abd4329ffb6020f879d",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "tar",
+    "file": "tar-1.35-r5.apk",
+    "size": 209555,
+    "sha256": "4172426271a516475f63be96208f77af7bd77966e7bffc2d0acb344ccf0a745d",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "tcl",
+    "file": "tcl-8.6.17-r1.apk",
+    "size": 1501223,
+    "sha256": "89eac799bf4f36bf963aa6b9892ff37c2b3c24509580015b0397e7cf6a519503",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "tcl-dev",
+    "file": "tcl-dev-8.6.17-r1.apk",
+    "size": 186178,
+    "sha256": "6537eb18cb346f20dbdd68b38b02d80956a77e1e177d5bd6257436d101e1c264",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "util-linux-dev",
+    "file": "util-linux-dev-2.42.3-r1.apk",
+    "size": 28189,
+    "sha256": "3ef4663393d8822b9373fd149d1ea41d1fe672c28ea177bd46960d979d477d73",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "utmps-libs",
+    "file": "utmps-libs-0.1.3.3-r0.apk",
+    "size": 5758,
+    "sha256": "d6487b6f260728969191314f6706d4cc62527370e757ec3ac6f7fee8ed38cf88",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "xz",
+    "file": "xz-5.8.4-r0.apk",
+    "size": 72092,
+    "sha256": "05e4e19bc47caf6d2dcf22c493ae5a44a6d7c395b4cedead2328698e52dc6bad",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "xz-dev",
+    "file": "xz-dev-5.8.4-r0.apk",
+    "size": 56190,
+    "sha256": "08fbfc790ff5acb404ca0006fe4727b88c39e2ef96449b9a468ea0fc7352b902",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "xz-libs",
+    "file": "xz-libs-5.8.4-r0.apk",
+    "size": 119423,
+    "sha256": "9be375832e747afe14f98e400e8b55d8f6fde25e41663090c81600628daab093",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "zlib",
+    "file": "zlib-1.3.2-r1.apk",
+    "size": 54334,
+    "sha256": "1f77a542ac6634761b9fe38d8bdca19b154071dcfa25432e73f2bc8a0740a33f",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "zlib-dev",
+    "file": "zlib-dev-1.3.2-r1.apk",
+    "size": 34416,
+    "sha256": "ed8acbc6e524accefbf62e236216c6f3f3141e45abc015caf05a4304ee11f0c6",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "zstd",
+    "file": "zstd-1.5.7-r2.apk",
+    "size": 124718,
+    "sha256": "0e4d6b9bcb7db12e3fcd580c6226a88884ddfa561ebc7f64285baef5e789b541",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "zstd-dev",
+    "file": "zstd-dev-1.5.7-r2.apk",
+    "size": 54934,
+    "sha256": "6f9331f803c518aff5a902e131b230b31e7b502d325a6765a60bf17ff0a49c19",
+    "installed_control_checksum_matches": true
+  },
+  {
+    "name": "zstd-libs",
+    "file": "zstd-libs-1.5.7-r2.apk",
+    "size": 365383,
+    "sha256": "2bb5136c89f5b0bbe1554c8915a3b520d5aa63ae2a51d4d821eb81698db5a818",
+    "installed_control_checksum_matches": true
+  }
+]

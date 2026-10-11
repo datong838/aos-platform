@@ -219,3 +219,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 结构有效错误签名负门1812
 新增package-signature-negative-1812/check.py/result.json；复用1811原APK，以zlib分段并校验tar签名项，改变512字节签名中的一字节后重新gzip，元数据和内容压缩段保持字节一致。元数据压缩段SHA1/Q1与1809安装记录匹配作为包标识证据，不当强密码学信任。精确SDK仅apk verify只读挂载、networknone、capdropALL、no-new-privileges，要求明确签名错误终态，原包已有正向记录；不安装、不运行PG。
+
+## 可得精确依赖全批验签1813
+新增package-batch-1813/check.py及结果。原150可得版本总352219635字节，4线程下载单包80MiB上限/60秒，流式SHA256；gzip元数据压缩段Q1逐项比1809安装记录，错误保留。只读bind归档到精确SDK、networknone/read-only/capdropALL/no-new-privileges，入口apk verify全部精确文件，无安装/PG/正式数据。独立公钥来源、5历史缺包及原生完整合同仍待证。
