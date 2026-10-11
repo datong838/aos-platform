@@ -161,3 +161,8 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 原生行类型编译验证1796
 新增server-rowtype-1796/check.py/result.json。仅原隔离终态库SER READ ONLY，核container/cluster/server、原函数精确签名及hash、prepared_plan_risk字段与类型；使用PG16内置plpgsql_validator编译原安装函数，check_function_bodies局部on，无调用业务函数/DDL。该编译仅证明目录行类型可绑定，不证明所有SQL表达式已规划或运行，不消除operator/cast/native/生命周期未闭合。正式库不动。
+
+## PG16固定collector规划观察1797
+新增planner-observer-1797/probe.c、Dockerfile、构建结果。沿用1792固定四参数身份/上下文/两写门，增加受支持planner_hook，在standard_planner前遍历已分析Query；仅输出FuncExpr、OpExpr、ScalarArrayOpExpr、Aggref、WindowFunc、CoerceViaIO解析OID，不输出SQL/参数。异常与正常出口恢复三hook；拒既有planner hook。观测不作允许列表，cached plans、未执行分支、native内部、规划器隐式支持调用及生命周期仍未闭合。先严格编译，再新Source原身份全链集成，正式库/产品不改。
+
+1797探针编译及admin/null拒绝通过，XID65551 aborted/临时schema不存在。新增planner-source-1797复用完整cleanup fixture，新库/Source/两审批/四证书，唯一替换新hash验证库路径；连接notice handler只接精确OID前缀数字，不记录SQL/参数，原结果断言全保留。
