@@ -1,0 +1,34 @@
+{
+  "outcome": "HISTORICAL_RESTORE_CATALOG_BASELINE_VERIFIED",
+  "schemaLines": 60850,
+  "schemaHashes": [
+    "574c987624712045836d97ec2ee23f542363532346c2973762f6398d52043c15",
+    "1c7febc1702bac276be793f04b6a1c0ac3b214d17fe5fd0e229ce4c1511fd2b1"
+  ],
+  "andRegroupConstraints": [
+    "extension_dispatch_configuration_refresh__idempotency_key_check",
+    "extension_dispatch_configuration_refresh_receipt_actor_check",
+    "extension_dispatch_registration_receipt_idempotency_key_check",
+    "extension_dispatch_successor_registration_idempotency_key_check",
+    "extension_dispatch_withdrawal_receipt_idempotency_key_check",
+    "extension_operation_dispatch_binding_operation_id_check",
+    "extension_runtime_configuration_stage_req_idempotency_key_check",
+    "extension_runtime_configuration_stage_request_subject_check",
+    "extension_runtime_ui_read_request_subject_check",
+    "pipeline_controlled_source_claim_actor_check",
+    "pipeline_schedule_control_binding_actor_check",
+    "pipeline_snapshot_group_claim_actor_check",
+    "pipeline_snapshot_group_recovery_receipt_actor_check",
+    "pipeline_snapshot_group_recovery_receipt_executor_check",
+    "pipeline_snapshot_schedule_claim_actor_check"
+  ],
+  "normalization": "restrict token removal; locations and adjacentAND original order only",
+  "parserGrammar": 180004,
+  "rolesMembershipDatabaseAclExact": true,
+  "sequences": 11,
+  "sequenceParametersAndLastValueAndIsCalledExact": true,
+  "tablesPreserved": 578,
+  "sourceWrites": false,
+  "passwordRestoreProven": false,
+  "migrationOrBusinessAcceptance": false
+}

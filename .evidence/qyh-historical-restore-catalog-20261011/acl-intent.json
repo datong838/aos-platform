@@ -1,0 +1,12 @@
+{
+  "target": {
+    "id": "ccaaaa4655a86f0beba1bcbcce8891def8146abfd55b3561c5872be53791216e",
+    "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "network": "none",
+    "ports": {},
+    "mounts": []
+  },
+  "database": "aos_meta_head",
+  "onlyChange": "two original transport CONNECT grants",
+  "sourceWrites": false
+}
