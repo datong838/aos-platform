@@ -207,3 +207,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 原生包与现有发布信任边界1808
 候选一专用原生包信任入口，候选二观察计划剩余路径。先一：只读审核current_installation_release_evidence、release_policy、signature、admission，绑定精确文件hash与当前HEAD。运行现有release policy和installation evidence单测验证原EVIDENCE_ONLY_NO_START与签名撤销边界，不访问真实DB/商城、不签发Root。新增package-trust-routing-1808/review.md/source-binding.json及测试日志；形成具体专用purpose、完整build/profile/lifecycle与当前安装联合核对要求，不扩权现有Bundle发布者。
+
+## 已有SDK依赖冻结1809
+从1779已记录精确SDK image创建永不启动、networknone的提取容器；复制/lib/apk/db/installed及/etc/apk/repositories，解析每包P/V/A/C/o字段并拒重名、缺版本/架构/校验。新增build-dependency-lock-1809/check.py、dependency-lock.json。不联网安装、不重建、不运行PG、不改原镜像。镜像ID与APK数据库校验仅固定已观察材料，不等于独立签名验证/源到产物证明；正式Root仍未签发。

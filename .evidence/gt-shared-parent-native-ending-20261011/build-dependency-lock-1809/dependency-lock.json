@@ -1,0 +1,1117 @@
+{
+  "image": "sha256:851765e2f8107a9014019a4431240db650318edf8cbd542f1e4514993581e992",
+  "container": "e2cc506b3057e8bf4a0eeb93db9a27de7c90d38d4325068479f8812db2b080b1",
+  "never_started": true,
+  "mounts": [
+    {
+      "Type": "volume",
+      "Name": "7ce8008e5fb936bd663db1381d987a5dcfb7056c909000be0dee82dc8e4122cc",
+      "Source": "/var/lib/docker/volumes/7ce8008e5fb936bd663db1381d987a5dcfb7056c909000be0dee82dc8e4122cc/_data",
+      "Destination": "/var/lib/postgresql/data",
+      "Driver": "local",
+      "Mode": "",
+      "RW": true,
+      "Propagation": ""
+    }
+  ],
+  "installed_database_sha256": "355deb882814ce26636fdc1c27211c5f04d1074831ce068cb6c324cfa086eddf",
+  "repository_configuration_sha256": "7b8b3e6fe030eeb4ee7619b42c9419aa846bff1c632442d3f00ed9fb97c6fa36",
+  "packages": [
+    {
+      "name": ".postgresql-rundeps",
+      "version": "20260707.174721",
+      "architecture": "noarch",
+      "apk_checksum": "Q1s6/tQN2XRqjyDkjO8MseEG5e1p0=",
+      "origin": null
+    },
+    {
+      "name": "acl-libs",
+      "version": "2.3.2-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1P2R6ni0G+WAKe/797LKimvlOrNE=",
+      "origin": "acl"
+    },
+    {
+      "name": "alpine-baselayout",
+      "version": "3.7.2-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q17hOhjufinXWHIBdAPVnASE2s2WM=",
+      "origin": "alpine-baselayout"
+    },
+    {
+      "name": "alpine-baselayout-data",
+      "version": "3.7.2-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1MzfIPSHI6xFODUuydeVh3TSTvbg=",
+      "origin": "alpine-baselayout"
+    },
+    {
+      "name": "alpine-keys",
+      "version": "2.6-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1ZEDSgayIcU2W6hJkHMark83sG4w=",
+      "origin": "alpine-keys"
+    },
+    {
+      "name": "alpine-release",
+      "version": "3.24.1-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1srTYd8Ietr2ZhZNqJoODYQuD5nU=",
+      "origin": "alpine-base"
+    },
+    {
+      "name": "apk-tools",
+      "version": "3.0.6-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1wxUlCO3X8R4oUQpsfE4WGa6G2/Y=",
+      "origin": "apk-tools"
+    },
+    {
+      "name": "bash",
+      "version": "5.3.9-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1Tmocg1FubGlvWQ6+OAUIG9yLWko=",
+      "origin": "bash"
+    },
+    {
+      "name": "binutils",
+      "version": "2.45.1-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1saErNb6eIGJ5HnEc5t/KvcfvCDk=",
+      "origin": "binutils"
+    },
+    {
+      "name": "bison",
+      "version": "3.8.2-r3",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1Rkso8VgPP8LlrBRBcZ+G7ZhYWvo=",
+      "origin": "bison"
+    },
+    {
+      "name": "brotli-libs",
+      "version": "1.2.0-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1jq1LOdvq62wod78X4dZTz2KeJX4=",
+      "origin": "brotli"
+    },
+    {
+      "name": "bsd-compat-headers",
+      "version": "0.7.2-r6",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1EYOhB5iH2qCsDqGzQ3psbsLWLWY=",
+      "origin": "bsd-compat-headers"
+    },
+    {
+      "name": "busybox",
+      "version": "1.37.0-r31",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1cc/8KYHy1Us5N8Jb4vUWmz+wRTI=",
+      "origin": "busybox"
+    },
+    {
+      "name": "busybox-binsh",
+      "version": "1.37.0-r31",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1ax93IqPnu5fQTo75Bv1ywGZ7pdA=",
+      "origin": "busybox"
+    },
+    {
+      "name": "c-ares",
+      "version": "1.34.8-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1pxEWaTTJhJYN8jU07J9ARNwDAoU=",
+      "origin": "c-ares"
+    },
+    {
+      "name": "ca-certificates-bundle",
+      "version": "20260611-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1WhW3ZzVE6UZ72ipQaQ0dtBrIPNA=",
+      "origin": "ca-certificates"
+    },
+    {
+      "name": "clang21",
+      "version": "21.1.8-r3",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1h4R+cPXPCtTUvGAW3Gh60G527ys=",
+      "origin": "clang21"
+    },
+    {
+      "name": "clang21-headers",
+      "version": "21.1.8-r3",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1TRaPktXQL885KncmyjI35fY5/iw=",
+      "origin": "clang21"
+    },
+    {
+      "name": "clang21-libs",
+      "version": "21.1.8-r3",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1NKXJxTtu5z6oWWE7j699Mcb0/UA=",
+      "origin": "clang21"
+    },
+    {
+      "name": "coreutils",
+      "version": "9.11-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q17hNqwLIyh8Xh8N/Ymnp4R3sAK6Q=",
+      "origin": "coreutils"
+    },
+    {
+      "name": "coreutils-env",
+      "version": "9.11-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1qMyxsrQqMC/RpBJd8S9GluFIsMc=",
+      "origin": "coreutils"
+    },
+    {
+      "name": "coreutils-fmt",
+      "version": "9.11-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1cxAPHcooX0tqr5Rb13QgF5RsSQE=",
+      "origin": "coreutils"
+    },
+    {
+      "name": "coreutils-sha512sum",
+      "version": "9.11-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1RhGsR260ZwrxFNBchn2f7Mi57SY=",
+      "origin": "coreutils"
+    },
+    {
+      "name": "cyrus-sasl-dev",
+      "version": "2.1.28-r9",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1blQfG7gPy1ovL0IQsOQIwwF12bQ=",
+      "origin": "cyrus-sasl"
+    },
+    {
+      "name": "dpkg",
+      "version": "1.23.7-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q15cU5F3c6fxxfGsE6JibvBotRUjM=",
+      "origin": "dpkg"
+    },
+    {
+      "name": "dpkg-dev",
+      "version": "1.23.7-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1MgU9PAQs1X3VYQb6X8UQGzWosxw=",
+      "origin": "dpkg"
+    },
+    {
+      "name": "e2fsprogs-dev",
+      "version": "1.47.4-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1XLvcENSKt6RMhhlaSpgbUmFbkaM=",
+      "origin": "e2fsprogs"
+    },
+    {
+      "name": "e2fsprogs-libs",
+      "version": "1.47.4-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q13aRbORYNvPbK6EdK9/4WZ7H53T4=",
+      "origin": "e2fsprogs"
+    },
+    {
+      "name": "flex",
+      "version": "2.6.4-r8",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1NmH1PfcQkQf1Z6tU5QIEjU/1uvk=",
+      "origin": "flex"
+    },
+    {
+      "name": "fortify-headers",
+      "version": "3.0.1-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1mld0RENFW1KgkRjRXjIhce1uf/4=",
+      "origin": "fortify-headers"
+    },
+    {
+      "name": "g++",
+      "version": "15.2.0-r5",
+      "architecture": "aarch64",
+      "apk_checksum": "Q15FHGrQQmss3dNlo6sVcAjNlriEA=",
+      "origin": "gcc"
+    },
+    {
+      "name": "gawk",
+      "version": "5.3.2-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1DRU14NsbExMPKyqtEJvo+X2BUcY=",
+      "origin": "gawk"
+    },
+    {
+      "name": "gcc",
+      "version": "15.2.0-r5",
+      "architecture": "aarch64",
+      "apk_checksum": "Q159IW0ZsfYdBhbhXo2LGhBkOKnlg=",
+      "origin": "gcc"
+    },
+    {
+      "name": "gdbm",
+      "version": "1.26-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1XYNjSqO84cdMMgnYAJDAxy7Owuk=",
+      "origin": "gdbm"
+    },
+    {
+      "name": "glib",
+      "version": "2.88.1-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1xr4x8nY4GI+moMoc22rMXA3XG8o=",
+      "origin": "glib"
+    },
+    {
+      "name": "gmp",
+      "version": "6.3.0-r4",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1DJzr9ZbIpl8s1zSomENWF6MQREM=",
+      "origin": "gmp"
+    },
+    {
+      "name": "icu",
+      "version": "78.1-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q18r40v6Dw0SOLdG1NlF2mp+gGP7A=",
+      "origin": "icu"
+    },
+    {
+      "name": "icu-data-full",
+      "version": "78.1-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1y4knpuZaL9nyBYp5NEwgC+TsRAk=",
+      "origin": "icu"
+    },
+    {
+      "name": "icu-dev",
+      "version": "78.1-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1ap6mBkqp4XJhhtJI/yVgwy3IwGk=",
+      "origin": "icu"
+    },
+    {
+      "name": "icu-libs",
+      "version": "78.1-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1YULmZdkQfFs4QsGjjH+pMK5XHR8=",
+      "origin": "icu"
+    },
+    {
+      "name": "isl26",
+      "version": "0.26-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1MTgBAk78IopvzkRedHLFYW2Ei0U=",
+      "origin": "isl26"
+    },
+    {
+      "name": "jansson",
+      "version": "2.15.0-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q185lBVZZFfo04G/qflaBhcPayHJs=",
+      "origin": "jansson"
+    },
+    {
+      "name": "keyutils-libs",
+      "version": "1.6.3-r4",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1Juh2z3Zsr91DNwkzySscDpkwRKo=",
+      "origin": "keyutils"
+    },
+    {
+      "name": "krb5-conf",
+      "version": "1.0-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q17YLR/NgBjVj9fT+irH6OEDxBKiQ=",
+      "origin": "krb5-conf"
+    },
+    {
+      "name": "krb5-dev",
+      "version": "1.22.2-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1SzCt0MtqYulkGLigw5IF82RbCqY=",
+      "origin": "krb5"
+    },
+    {
+      "name": "krb5-libs",
+      "version": "1.22.2-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1PqtOIvG5QM6aniGYycm3K1JiXPo=",
+      "origin": "krb5"
+    },
+    {
+      "name": "krb5-server-ldap",
+      "version": "1.22.2-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q10ZyFDWt64uorqN+aoQGDzYpOznk=",
+      "origin": "krb5"
+    },
+    {
+      "name": "libapk",
+      "version": "3.0.6-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1cOZpgjaw9qHEeqG3qG38joQ/hFo=",
+      "origin": "apk-tools"
+    },
+    {
+      "name": "libatomic",
+      "version": "15.2.0-r5",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1+C05PC+bIc2dudfNkojDZ1Zi8zo=",
+      "origin": "gcc"
+    },
+    {
+      "name": "libattr",
+      "version": "2.5.2-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1mhGb1sS2mVRHzw63e4C/MfssMvM=",
+      "origin": "attr"
+    },
+    {
+      "name": "libblkid",
+      "version": "2.42.3-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1v0pQIphzK5s0T7f5OR4sJDLwgzI=",
+      "origin": "util-linux"
+    },
+    {
+      "name": "libbz2",
+      "version": "1.0.8-r6",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1ZK5fja6KZjk14isO1bkD0fdooe4=",
+      "origin": "bzip2"
+    },
+    {
+      "name": "libcom_err",
+      "version": "1.47.4-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1SFJf5C4Zg5AwT77WolxGkRLj06M=",
+      "origin": "e2fsprogs"
+    },
+    {
+      "name": "libcrypto3",
+      "version": "3.5.9-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1nd3DZ6uRv/vKf+I4jGECIMBUisw=",
+      "origin": "openssl"
+    },
+    {
+      "name": "libcurl",
+      "version": "8.22.0-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1wkp3CIK+DBzFWVoEvCa81NpDDMw=",
+      "origin": "curl"
+    },
+    {
+      "name": "libeconf",
+      "version": "0.8.3-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1Eaq8MdffqVIRD9EtBavIZ5eJqSI=",
+      "origin": "libeconf"
+    },
+    {
+      "name": "libedit",
+      "version": "20260508.3.1-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q15xy7z/gBItTVwWTKbTLivH0/1Z8=",
+      "origin": "libedit"
+    },
+    {
+      "name": "libedit-dev",
+      "version": "20260508.3.1-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1UGuYo2I0NNiMNKJ/0JN5zc0N3Fs=",
+      "origin": "libedit"
+    },
+    {
+      "name": "libev",
+      "version": "4.33-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q17XpDN8/zbx4VCcyi2vvQTQyWmyI=",
+      "origin": "libev"
+    },
+    {
+      "name": "libevent",
+      "version": "2.1.13-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1z+dnW98WAKlXZ7T70rkZncVR98k=",
+      "origin": "libevent"
+    },
+    {
+      "name": "libevent-dev",
+      "version": "2.1.13-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1LvYR08Z1Wy1FlSKtxK8pegYcs2o=",
+      "origin": "libevent"
+    },
+    {
+      "name": "libexpat",
+      "version": "2.8.5-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1gu/0K4CAhLRRQcP0EyW2FGL1Nz4=",
+      "origin": "expat"
+    },
+    {
+      "name": "libfdisk",
+      "version": "2.42.3-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q13AB8eJKt5eMn+RTkRWsh70dDM/k=",
+      "origin": "util-linux"
+    },
+    {
+      "name": "libffi",
+      "version": "3.5.2-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1uqo6H3qMZYL1m9s+pdzqCQl4r0A=",
+      "origin": "libffi"
+    },
+    {
+      "name": "libffi-dev",
+      "version": "3.5.2-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1Jp1eyvZJvDhspTbaBNqk1E9tqwA=",
+      "origin": "libffi"
+    },
+    {
+      "name": "libformw",
+      "version": "6.6_p20260516-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1CmrJGO3STg5NDxqrZv2o+u84Q1w=",
+      "origin": "ncurses"
+    },
+    {
+      "name": "libgcc",
+      "version": "15.2.0-r5",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1JLUL+2dMZ+EpWBoaIsHD7VI7bUg=",
+      "origin": "gcc"
+    },
+    {
+      "name": "libgcc-static",
+      "version": "15.2.0-r5",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1cc9PA5tSON9VdVdHTaiJarrYRT4=",
+      "origin": "gcc"
+    },
+    {
+      "name": "libgomp",
+      "version": "15.2.0-r5",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1yTo+otIMEV9HfHaQfLvq60J1/a8=",
+      "origin": "gcc"
+    },
+    {
+      "name": "libidn2",
+      "version": "2.3.8-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1zvilitDGXxjOFoXaG8ZJKsSrCeM=",
+      "origin": "libidn2"
+    },
+    {
+      "name": "libintl",
+      "version": "1.0-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1BIfqVgHJRKhMQ+eM1LTUYlY24q8=",
+      "origin": "gettext"
+    },
+    {
+      "name": "liblastlog2",
+      "version": "2.42.3-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1qoyUz4MV6us0fCYz2eb6AWXtrgY=",
+      "origin": "util-linux"
+    },
+    {
+      "name": "libldap",
+      "version": "2.6.15-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1jHJ3RCVJd6fQONGqJ/ufKgeS2vU=",
+      "origin": "openldap"
+    },
+    {
+      "name": "libmd",
+      "version": "1.2.0-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q11/X8F6WgoMpSQJpmegXim1doPNc=",
+      "origin": "libmd"
+    },
+    {
+      "name": "libmenuw",
+      "version": "6.6_p20260516-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1La2N7m1ts32tu4nNAZt/mu8Zzeo=",
+      "origin": "ncurses"
+    },
+    {
+      "name": "libmount",
+      "version": "2.42.3-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1O97hkdg5maEN3JdC2MJaz5BcNpE=",
+      "origin": "util-linux"
+    },
+    {
+      "name": "libncurses++",
+      "version": "6.6_p20260516-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q19XjtjfGhggMZ5YlXv9SnhfKgA90=",
+      "origin": "ncurses"
+    },
+    {
+      "name": "libncursesw",
+      "version": "6.6_p20260516-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1wNl5+kek1M3VEWlcXl8M4+jPHqI=",
+      "origin": "ncurses"
+    },
+    {
+      "name": "libpanelw",
+      "version": "6.6_p20260516-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q16C1TT7gQUT+eauK8JD6rRnJIsIQ=",
+      "origin": "ncurses"
+    },
+    {
+      "name": "libpsl",
+      "version": "0.21.5-r3",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1H8lLDChibFToqCKIZfSVqiTlq2c=",
+      "origin": "libpsl"
+    },
+    {
+      "name": "libsasl",
+      "version": "2.1.28-r9",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1yf+ZK9Tt9Q/Fk6lAdpgu6PACJG0=",
+      "origin": "cyrus-sasl"
+    },
+    {
+      "name": "libsmartcols",
+      "version": "2.42.3-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1+Cm4ZgHHjfmFz1LQrR7FYdpq73A=",
+      "origin": "util-linux"
+    },
+    {
+      "name": "libsodium",
+      "version": "1.0.22-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1t04K4UZPCQSiDRQCjCaiYBjjmsA=",
+      "origin": "libsodium"
+    },
+    {
+      "name": "libsodium-dev",
+      "version": "1.0.22-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1UHjPcpu/BSyjTKovv5rVXer8bNI=",
+      "origin": "libsodium"
+    },
+    {
+      "name": "libssl3",
+      "version": "3.5.9-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1fPvgmLY6scIS37WtG8V+V3AmPLY=",
+      "origin": "openssl"
+    },
+    {
+      "name": "libstdc++",
+      "version": "15.2.0-r5",
+      "architecture": "aarch64",
+      "apk_checksum": "Q16WWaNCGe8kVn4lkwb/3DGo6OyqY=",
+      "origin": "gcc"
+    },
+    {
+      "name": "libstdc++-dev",
+      "version": "15.2.0-r5",
+      "architecture": "aarch64",
+      "apk_checksum": "Q189t+nMPIpCQK7zaeDmJknT/Z46c=",
+      "origin": "gcc"
+    },
+    {
+      "name": "libunistring",
+      "version": "1.4.2-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1iQdlV+ylR4F/KgWhQ4xXrXvpq1Y=",
+      "origin": "libunistring"
+    },
+    {
+      "name": "libuuid",
+      "version": "2.42.3-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1LKMmQqcKc24+HxRtpDpV4z9SEMY=",
+      "origin": "util-linux"
+    },
+    {
+      "name": "libverto",
+      "version": "0.3.2-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q16DJgZjq/KSDZFUVtxcwnFB3XTWs=",
+      "origin": "libverto"
+    },
+    {
+      "name": "libverto-dev",
+      "version": "0.3.2-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1r1IibttwASebgIBcI4i+lNtI3AU=",
+      "origin": "libverto"
+    },
+    {
+      "name": "libverto-glib",
+      "version": "0.3.2-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1SeXEGhN2R87N3M2InzDkxd0NCAY=",
+      "origin": "libverto"
+    },
+    {
+      "name": "libverto-libev",
+      "version": "0.3.2-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1VZI0Gy2EUx0lvwTewYdSoSVxVdM=",
+      "origin": "libverto"
+    },
+    {
+      "name": "libverto-libevent",
+      "version": "0.3.2-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1/M313eDlQbp4UjzX4lmiRkEuXHY=",
+      "origin": "libverto"
+    },
+    {
+      "name": "libxml2",
+      "version": "2.13.9-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1XqQkBQptIO/m8hIOcwc4bK4yAnU=",
+      "origin": "libxml2"
+    },
+    {
+      "name": "libxml2-dev",
+      "version": "2.13.9-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1qSDiN/DOS/Hgxec/+rxHZqqbiUU=",
+      "origin": "libxml2"
+    },
+    {
+      "name": "libxml2-utils",
+      "version": "2.13.9-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1gPZuckoUIYKU6wKQ3fgex6Kqbd0=",
+      "origin": "libxml2"
+    },
+    {
+      "name": "libxslt",
+      "version": "1.1.43-r3",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1F73umexr7gfVsry38fEn9d6I8cE=",
+      "origin": "libxslt"
+    },
+    {
+      "name": "libxslt-dev",
+      "version": "1.1.43-r3",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1KwzjlJ7zR1ohclh3MzPoaB7xhFM=",
+      "origin": "libxslt"
+    },
+    {
+      "name": "linux-headers",
+      "version": "7.0.0-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q10L75G8gal3VsCE6vAfDSjwSwkPE=",
+      "origin": "linux-headers"
+    },
+    {
+      "name": "linux-pam",
+      "version": "1.7.1-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q173JvGHNIdo6rklO3ffC8MlQ3Wfo=",
+      "origin": "linux-pam"
+    },
+    {
+      "name": "llvm21",
+      "version": "21.1.8-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1ZCaSkaQI9wg9miLnaUJT1s6PVGY=",
+      "origin": "llvm21"
+    },
+    {
+      "name": "llvm21-dev",
+      "version": "21.1.8-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1lCkV7a97l0RvixZpwOmzNpMdNJs=",
+      "origin": "llvm21"
+    },
+    {
+      "name": "llvm21-libs",
+      "version": "21.1.8-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1Eq4u5UV+ko0rUUl435FNX9eBGo0=",
+      "origin": "llvm21"
+    },
+    {
+      "name": "llvm21-linker-tools",
+      "version": "21.1.8-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1IB6Qi7XJAdzcGfCOxQDWe/9hBqA=",
+      "origin": "llvm21"
+    },
+    {
+      "name": "llvm21-test-utils",
+      "version": "21.1.8-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1JC3wOMgus6ekPbUarqbKSvQOKKA=",
+      "origin": "llvm21"
+    },
+    {
+      "name": "llvm21-test-utils-pyc",
+      "version": "21.1.8-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1syw0AKDE1kNKAkVDyYmTUDVPGPc=",
+      "origin": "llvm21"
+    },
+    {
+      "name": "lz4-dev",
+      "version": "1.10.0-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1EUSg0slOpy5MqtmpFuexpSz7e/o=",
+      "origin": "lz4"
+    },
+    {
+      "name": "lz4-libs",
+      "version": "1.10.0-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1RioRKt15XaaI2RhIih1C8TkbOTU=",
+      "origin": "lz4"
+    },
+    {
+      "name": "m4",
+      "version": "1.4.20-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1KXEFjl09yp9XZhw3fCkk00bCezw=",
+      "origin": "m4"
+    },
+    {
+      "name": "make",
+      "version": "4.4.1-r4",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1OIxsJSFfsqQBcZyBEm8+ePSCRYI=",
+      "origin": "make"
+    },
+    {
+      "name": "mpc1",
+      "version": "1.3.1-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1KcM+czq2KrMeUP+HZ4cM4IpFVDQ=",
+      "origin": "mpc1"
+    },
+    {
+      "name": "mpdecimal",
+      "version": "4.0.1-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1EBAm/IsRrsQaPnHsNnlng2lDdl4=",
+      "origin": "mpdecimal"
+    },
+    {
+      "name": "mpfr4",
+      "version": "4.2.2-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q15Pae/zmzR2i3ki+1o1j8tHsv0KI=",
+      "origin": "mpfr4"
+    },
+    {
+      "name": "musl",
+      "version": "1.2.6-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1JNQts+O/Z+jaJ4QHLMXQ5svftIU=",
+      "origin": "musl"
+    },
+    {
+      "name": "musl-dev",
+      "version": "1.2.6-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1fd1f//8oIPvl7Tx7qmQcaJh84FQ=",
+      "origin": "musl"
+    },
+    {
+      "name": "musl-utils",
+      "version": "1.2.6-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1hGTPIwkax/QcCU2jiheeLotaa38=",
+      "origin": "musl"
+    },
+    {
+      "name": "ncurses-dev",
+      "version": "6.6_p20260516-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1zfO7KO9wmxbQlVGUn7iV2S/rxlI=",
+      "origin": "ncurses"
+    },
+    {
+      "name": "ncurses-terminfo-base",
+      "version": "6.6_p20260516-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1/MzFElM7Tf9vRK02sG+bQ+iEjR8=",
+      "origin": "ncurses"
+    },
+    {
+      "name": "nghttp2-libs",
+      "version": "1.70.0-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1oTifXm7i5p3OauTSX1L9ZHst41g=",
+      "origin": "nghttp2"
+    },
+    {
+      "name": "nss_wrapper",
+      "version": "1.1.12-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1BG8gy2QDf3mzwM3KfT5FAlhj2E0=",
+      "origin": "nss_wrapper"
+    },
+    {
+      "name": "openldap-dev",
+      "version": "2.6.15-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q15CzYUpXa+wsSei4b9i/HooEHGqM=",
+      "origin": "openldap"
+    },
+    {
+      "name": "openssl-dev",
+      "version": "3.5.9-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q12aRCI22d4f6O385ycvE05yIbzvk=",
+      "origin": "openssl"
+    },
+    {
+      "name": "pcre2",
+      "version": "10.49-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q10e5Tm6BjCkQImS9ju5aGYjeAfu4=",
+      "origin": "pcre2"
+    },
+    {
+      "name": "perl",
+      "version": "5.42.2-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1OD5gxBl2Sfdq+i+WVLzIpBUYlLo=",
+      "origin": "perl"
+    },
+    {
+      "name": "perl-dev",
+      "version": "5.42.2-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q17uzXeTpNWlQ20iv9KZxWCucufzQ=",
+      "origin": "perl"
+    },
+    {
+      "name": "perl-io-tty",
+      "version": "1.31-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1W5IpvNaZoE5nC8mf+2OsOKMNgkI=",
+      "origin": "perl-io-tty"
+    },
+    {
+      "name": "perl-ipc-run",
+      "version": "20260402.0-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1FHY2yzqdd2pMBLMetjPm2nEYQMM=",
+      "origin": "perl-ipc-run"
+    },
+    {
+      "name": "perl-utils",
+      "version": "5.42.2-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1aLMbSDAgV3XgG4J9VfR31JgDbrg=",
+      "origin": "perl"
+    },
+    {
+      "name": "pkgconf",
+      "version": "2.5.1-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1PMQRkQTC7cl4aHi2R5185JoJqto=",
+      "origin": "pkgconf"
+    },
+    {
+      "name": "pyc",
+      "version": "3.14.8-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1Xv8PVGw9Nsb3yLTS85JJ1i05k+0=",
+      "origin": "python3"
+    },
+    {
+      "name": "python3",
+      "version": "3.14.8-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1sBBYjBwVUo+KXpG+Ah9r4bhJMHA=",
+      "origin": "python3"
+    },
+    {
+      "name": "python3-dev",
+      "version": "3.14.8-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q16ypqTlSTtgiLbj4vzThPN3giqoI=",
+      "origin": "python3"
+    },
+    {
+      "name": "python3-pyc",
+      "version": "3.14.8-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1qPlcO+OWdm0FMawg6Gb84i9Rx2c=",
+      "origin": "python3"
+    },
+    {
+      "name": "python3-pycache-pyc0",
+      "version": "3.14.8-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1mx6MezOuUOTBh3O8Em8UDGU/xmA=",
+      "origin": "python3"
+    },
+    {
+      "name": "readline",
+      "version": "8.3.3-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1GPvWxvOSv5J0EQfi4YdIeWwjGK8=",
+      "origin": "readline"
+    },
+    {
+      "name": "scanelf",
+      "version": "1.3.9-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q13IwcpjYtZI8DZAGEuviRS2K2Q/s=",
+      "origin": "pax-utils"
+    },
+    {
+      "name": "skalibs-libs",
+      "version": "2.15.0.0-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1Y6K44Yue4AVAa38FvkbXDlDQ/Bw=",
+      "origin": "skalibs"
+    },
+    {
+      "name": "sqlite",
+      "version": "3.53.4-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1ulcvsTjMPimpHjQZ5ofRi+NUicA=",
+      "origin": "sqlite"
+    },
+    {
+      "name": "sqlite-dev",
+      "version": "3.53.4-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1nW7GIaJP+v+GhoQ+GCo0PFdGWlE=",
+      "origin": "sqlite"
+    },
+    {
+      "name": "sqlite-libs",
+      "version": "3.53.4-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1OWsp/zpMxhhT4AEyP8P+zIs8g+U=",
+      "origin": "sqlite"
+    },
+    {
+      "name": "ssl_client",
+      "version": "1.37.0-r31",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1QQfD9w3aMC4MPtRimUGSRaiigLQ=",
+      "origin": "busybox"
+    },
+    {
+      "name": "tar",
+      "version": "1.35-r5",
+      "architecture": "aarch64",
+      "apk_checksum": "Q15+Gw6gQgXDIFoJlrAJ2TnLJGHDo=",
+      "origin": "tar"
+    },
+    {
+      "name": "tcl",
+      "version": "8.6.17-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1JtRL5uMvfxd39QdGENNPKNZiaKg=",
+      "origin": "tcl"
+    },
+    {
+      "name": "tcl-dev",
+      "version": "8.6.17-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1AvrjhKrOVJCRMF2gDuX7ZUTyHUw=",
+      "origin": "tcl"
+    },
+    {
+      "name": "tzdata",
+      "version": "2026b-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1Hlr4Vtz1fUjvdWr8gyzn083A6TY=",
+      "origin": "tzdata"
+    },
+    {
+      "name": "util-linux-dev",
+      "version": "2.42.3-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q14JWyFZP/RsBfIMZ45eL05Z4Y6D8=",
+      "origin": "util-linux"
+    },
+    {
+      "name": "utmps-libs",
+      "version": "0.1.3.3-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1nu3S9ZuzqNCoOZhqBLTzEXyhHhM=",
+      "origin": "utmps"
+    },
+    {
+      "name": "xz",
+      "version": "5.8.4-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1g0Z0a9t1M/DEEvkQQX/gPc7PKTM=",
+      "origin": "xz"
+    },
+    {
+      "name": "xz-dev",
+      "version": "5.8.4-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1a7Nopne83/If1vnLB5tLGLxUKpI=",
+      "origin": "xz"
+    },
+    {
+      "name": "xz-libs",
+      "version": "5.8.4-r0",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1Fees+uhwysD9zTWYVVONXWbxQCA=",
+      "origin": "xz"
+    },
+    {
+      "name": "zlib",
+      "version": "1.3.2-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1jP3JcWVZiDTJ6FovhLCh8M8Qt1I=",
+      "origin": "zlib"
+    },
+    {
+      "name": "zlib-dev",
+      "version": "1.3.2-r1",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1U8Lu1zoR55eutoGtRHSQ75mbwvo=",
+      "origin": "zlib"
+    },
+    {
+      "name": "zstd",
+      "version": "1.5.7-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q156R492+dbtmD9B5b2yIiOtP9hYM=",
+      "origin": "zstd"
+    },
+    {
+      "name": "zstd-dev",
+      "version": "1.5.7-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q13wJahakOHy4kY3JqEHpsuRDZ9sI=",
+      "origin": "zstd"
+    },
+    {
+      "name": "zstd-libs",
+      "version": "1.5.7-r2",
+      "architecture": "aarch64",
+      "apk_checksum": "Q1UrGFE6B78rsNBjRohoH37c42uco=",
+      "origin": "zstd"
+    }
+  ],
+  "package_count": 156,
+  "independent_package_signatures_verified": false,
+  "historical_source_build_trust": false,
+  "execution_authorized": false
+}
