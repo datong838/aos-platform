@@ -1,0 +1,14 @@
+{
+  "status": "COMMITTED_STARTUP_SOURCE_MATERIALIZED",
+  "files": 5608,
+  "archive_sha256": "dd216384b272cf756587afe5c9faa67b4e8f69618563dbb93f3f6b0749c45382",
+  "manifest_sha256": "d89e6587fd2d81999128f142a29544806c48c2a9b37fd61ecf4b6c383679a92e",
+  "database_effects": 0,
+  "service_start_attempted": false,
+  "head": "3df1e2d421eb4bc4e48ebb26e85307e0f52c6d39",
+  "state": "/Users/ddt/work/projects/ai_agent/aos-recovery/api159-reboot-ba05d7d655ea",
+  "entry": "/Users/ddt/work/projects/ai_agent/aos-recovery/api159-reboot-ba05d7d655ea/api159-registered-entry.py",
+  "entry_sha256": "30b7c9663b8d74cacfa95d938d5ec251d2dee659fe9dcd0a1aeefee2a224159c",
+  "guard_only_literal_bindings_changed": true,
+  "alembic_and_bundles_unchanged": true
+}

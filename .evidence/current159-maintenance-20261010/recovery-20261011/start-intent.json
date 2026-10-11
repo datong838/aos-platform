@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-11T02:50:11.043483+00:00",
+  "argv": [
+    "colima",
+    "start",
+    "--profile",
+    "aos-extension"
+  ],
+  "authority": "AOS-001789"
+}

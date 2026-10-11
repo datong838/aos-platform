@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-11T02:53:11.450755+00:00",
+  "old_job": "com.aos.a0v-api-8080",
+  "legacy_unregistered": true,
+  "legacy_disabled": true,
+  "plist_retained": true,
+  "port8080_free": true,
+  "signed_api_currently_running": false,
+  "frozen_source_head": "836b28f73d52e75794fb77700423de460d246106",
+  "current_head": "3df1e2d421eb4bc4e48ebb26e85307e0f52c6d39",
+  "changed_source_files": [
+    "scripts/long-task-watchdog/aos_wake_progress.py",
+    "scripts/long-task-watchdog/test_aos_wake_progress.py",
+    "services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py",
+    "services/aos-api/aos_api/aip_provider_capacity_catalog_audit_profile.py",
+    "services/aos-api/aos_api/aip_provider_capacity_occupation_epoch_profile.py",
+    "services/aos-api/aos_api/aip_provider_capacity_occupation_source.py",
+    "services/aos-api/aos_api/aip_provider_capacity_publication_transaction.py",
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
+    "services/aos-api/aos_api/aip_shared_parent_certificate_prepare.py"
+  ],
+  "changed_source_count": 9,
+  "database_mutations": 0,
+  "next": "Prepare and validate current committed source and exact signed startup; do not reuse old frozen source as latest or restore legacy uvicorn."
+}

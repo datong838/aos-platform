@@ -1,0 +1,28 @@
+{
+  "at": "2026-10-11T02:51:16.270542+00:00",
+  "authority": "AOS-001789",
+  "head": "3df1e2d421eb4bc4e48ebb26e85307e0f52c6d39",
+  "container_id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+  "started_at": "2026-10-11T02:50:47.831230595Z",
+  "original_named_volume": "aos-a0v-recovery-pg-data",
+  "cluster": "7683855731447750695",
+  "version": "a0v_159",
+  "prepared_transactions": 0,
+  "other_database_clients": 0,
+  "http": {
+    "8080/v1/health": 200,
+    "8080/v1/ready": 200,
+    "8080/v1/ecommerce-workshop/modules": 401,
+    "8080/v1/runtime-workshop/modules": 401,
+    "8434/": 200
+  },
+  "migration_replayed": false,
+  "host_worker_provider_started_by_this_action": false,
+  "full_latest_stack_acceptance": false,
+  "business_first_chain": false,
+  "remaining": [
+    "verify current API/Web code provenance and exact latest startup",
+    "eight workbench browser and tenant/canary readback",
+    "native full ending and formal admission still pending"
+  ]
+}

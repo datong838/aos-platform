@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-11T02:55:59.010875+00:00",
+  "status": "CURRENT_COMMITTED_SIGNED_API_RESTORED",
+  "head": "3df1e2d421eb4bc4e48ebb26e85307e0f52c6d39",
+  "pid": 17040,
+  "started": "Sun Oct 11 10:55:23 2026",
+  "argv_exact": true,
+  "cwd_exact": true,
+  "single_listener_exact": true,
+  "http": {
+    "/v1/health": 200,
+    "/v1/ready": 200,
+    "/v1/ecommerce-workshop/modules": 401,
+    "/v1/runtime-workshop/modules": 401
+  },
+  "database_version": "a0v_159",
+  "runtime_bindings": 0,
+  "legacy_disabled": true,
+  "migration_replayed": false,
+  "browser_acceptance": false,
+  "business_first_chain": false
+}

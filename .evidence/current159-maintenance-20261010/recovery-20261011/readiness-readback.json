@@ -1,0 +1,49 @@
+{
+  "at": "2026-10-11T02:57:05.068432+00:00",
+  "native_execution_counts": {
+    "cluster": "7683855731447750695",
+    "runtime_bindings": 0,
+    "host_assignments": 0,
+    "enabled_host_identities": 0,
+    "enabled_meta_schedules": 0,
+    "host_leases": 0
+  },
+  "route_shells": {
+    "cockpit": {
+      "http": 200,
+      "shell_bytes": 617
+    },
+    "content-campaign": {
+      "http": 200,
+      "shell_bytes": 617
+    },
+    "operations": {
+      "http": 200,
+      "shell_bytes": 617
+    },
+    "creator-growth": {
+      "http": 200,
+      "shell_bytes": 617
+    },
+    "media-studio": {
+      "http": 200,
+      "shell_bytes": 617
+    },
+    "analyst": {
+      "http": 200,
+      "shell_bytes": 617
+    },
+    "price-governance": {
+      "http": 200,
+      "shell_bytes": 617
+    },
+    "customer": {
+      "http": 200,
+      "shell_bytes": 617
+    }
+  },
+  "rendered_browser_verified": false,
+  "authenticated_tenant_canary_verified": false,
+  "reason": "No AOS browser session available through current tools; other business profiles excluded",
+  "business_first_chain": false
+}
