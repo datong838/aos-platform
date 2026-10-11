@@ -185,3 +185,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 原事务观察目录冻结1802
 新增planstate-catalog-1802，新Source fixture复用已验dedup探针；collector返回后在同caller/xid只读pg_proc/namespace/language，精确全部observed OID的signature/bodyhash/Owner/config/ACL/xmin。先证明无缺失，再保持原latewriter/COMMIT拒绝；独立回读核仍存在的逐项一致，缺失项必须有原事务快照且xmin绑定本XID才归因回滚创建。仅测试证据不赋权限，不复用旧Source。
+
+## 目录清理差异归因1803
+新增catalog-reconcile-1803/check.py/result.json。导入原fixture纯SQL恢复生成器，核生成语句hash与1802当轮fixture-restoration-binding逐项一致；只读原终态库将3变化边界prosrc与精确恢复body逐字比较、Owner/ACL/config与事务快照核对，3消失函数映射原两个finally清理位置。冻结相关源码hash，不重执行DDL或完整Source。不能把清理后等价当调用期间不可变保证。
