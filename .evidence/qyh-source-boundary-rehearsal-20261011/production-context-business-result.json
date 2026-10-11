@@ -1,0 +1,132 @@
+{
+  "cases": [
+    "original-context-freeze-commit-and-idempotency",
+    "ProductionContractIdempotencyConflict",
+    "ProductionContractDependencyBlocked",
+    "ProductionContractDependencyBlocked",
+    "ProductionContractNotFound",
+    "RaiseException",
+    "InsufficientPrivilege"
+  ],
+  "connections": [
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    }
+  ],
+  "context": {
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "contextId": "ctx-9127a8a5b1be4996a253",
+    "revision": 1,
+    "taskId": "task-19f4698041d34fd9bcda",
+    "briefRef": {
+      "resourceType": "TaskBriefRevision",
+      "resourceId": "brief-1a32ccf253034d39ac0d",
+      "revision": 2,
+      "contentHash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2"
+    },
+    "evidenceBundleRef": {
+      "resourceType": "EvidenceBundleRevision",
+      "resourceId": "evidence-bundle-811958acc0cc4743bc48",
+      "revision": 1,
+      "contentHash": "43baa94317e1aa56bb25bc2c540397eee94f3c0969f5d7467cdbe1e0a6d81b7c"
+    },
+    "evalContractRef": {
+      "resourceType": "EvalContractRevision",
+      "resourceId": "eval-contract-eb2d228de06542d2a0ec",
+      "revision": 2,
+      "contentHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1"
+    },
+    "responsibilityPlanRef": {
+      "resourceType": "ResponsibilityPlanRevision",
+      "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+      "revision": 2,
+      "contentHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a"
+    },
+    "productionProfileRef": null,
+    "preparationRef": null,
+    "profile": "ecommerce.business-investigation.readonly",
+    "dependencySnapshot": [
+      {
+        "lifecycle": "frozen",
+        "resourceId": "brief-1a32ccf253034d39ac0d",
+        "expectedHash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+        "observedHash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+        "resourceType": "TaskBriefRevision",
+        "expectedRevision": 2,
+        "observedRevision": 2
+      },
+      {
+        "revoked": false,
+        "coverage": "complete",
+        "freshness": "fresh",
+        "resourceId": "evidence-bundle-811958acc0cc4743bc48",
+        "expectedHash": "43baa94317e1aa56bb25bc2c540397eee94f3c0969f5d7467cdbe1e0a6d81b7c",
+        "observedHash": "43baa94317e1aa56bb25bc2c540397eee94f3c0969f5d7467cdbe1e0a6d81b7c",
+        "resourceType": "EvidenceBundleRevision",
+        "revokeReason": null
+      },
+      {
+        "lifecycle": "frozen",
+        "resourceId": "eval-contract-eb2d228de06542d2a0ec",
+        "expectedHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1",
+        "observedHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1",
+        "resourceType": "EvalContractRevision"
+      },
+      {
+        "lifecycle": "frozen",
+        "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+        "expectedHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+        "observedHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+        "resourceType": "ResponsibilityPlanRevision"
+      }
+    ],
+    "dependencySnapshotHash": "e8efb527e4d9d4159e8a5d8e0c5974a31f392eb0c6b782b372aff0843fdad66c",
+    "contentHash": "90ecb9b0794681cb92016bfc0edabceef27ee7a1236a5317907142168c2d190d",
+    "lifecycle": "frozen",
+    "readiness": "ready",
+    "blockers": [],
+    "createdBy": "clone:test",
+    "createdAt": "2026-10-11T16:50:00.664221Z"
+  },
+  "finalCounts": {
+    "aip_production_context_revision": 2,
+    "aip_production_contract_receipt": 88,
+    "aip_task_run": 6,
+    "aip_step_run": 4
+  },
+  "historicalStoredFreshnessOnly": true,
+  "noNewRunOrStep": true,
+  "currentSignedInstallationVerified": false,
+  "formalIdentityVerified": false,
+  "fullRestorationAccepted": false
+}

@@ -1,0 +1,18 @@
+{
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "exactNewContextAndReceipt": true,
+  "failedRequestsNoReceipt": true,
+  "fourHistoricalDependencyRowsAndOldContextUnchanged": true,
+  "noNewRunOrStep": true,
+  "temporaryRoleAndPolicyAndFaultTriggerRemoved": true,
+  "originalAndCurrent647DataExact": true,
+  "allOriginalMetadataExact": true,
+  "historicalStoredFreshnessOnly": true,
+  "currentSignedInstallationVerified": false,
+  "fullRestorationAccepted": false,
+  "originalScriptHash": "e4154137eaf6f874460646591464c99ed019346c2d9aeaa4c10c561ccaa3b038",
+  "readbackScriptHash": "44ef886ad0d9dc6a4d205ccdb080abd1d25ce5b685f6ae09e02a5d206b7dc06b",
+  "storeHash": "fdff0533c5a109aa1a86b1b20b631ad7837a693824bad7d0c72b4389979c174b"
+}

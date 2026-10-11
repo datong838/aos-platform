@@ -1,0 +1,13 @@
+# 原生产上下文冻结事务兼容复审
+
+基线m1 daaf9e19ce45b6d6576d6507a5cd801f85ba0d84/AOS-001892。同一ACTIVE Source Task、owner与有效Lease，只新增本目录文件，services/当前恢复卷 excluded。文件级方案为plan第十三段；原231/多媒体14要求冻结编译与运行准入分离，本段遵守该边界。
+
+实际固定Contract LOGIN使用原connect_source_issuer_write和Store.freeze_production_context；七表必要SELECT及Context/Receipt INSERT，角色无继承/成员/超级权限，使用原s3owe_guard，未改已有算法或门。复用原历史ctx-daeec3f5a06049a08783的真实task与四个冻结exact依赖，不替换READY服务、resolver或数据。不授签名安装/生产Start/Provider权。克隆仍trust，本段不证明密码、企业OIDC或独立操作系统身份隔离。
+
+7项：原freeze实际COMMIT与同键回读幂等；同键payload漂移拒绝；新key Brief exact hash漂移拒绝；dev-org冻结被拒绝；dev-org不能读取新Context；原Receipt触发P0001使Context+Receipt整事务回滚；普通runtime伪造production_context.freeze Receipt收到42501。6个固定角色连接，只有一个新Context与一个正常Receipt。TaskRun/StepRun数量保持，没有启动或回放任务。
+
+独立read_production_context.py读回新Context与Receipt精确一致，失败请求无Receipt，旧Context和四个依赖的完整行与原clone相符；角色/租户policy/故障trigger与function均清理。原clone及当前恢复647表全量指纹和六metadata相符。原合同操作实验Receipt覆盖21/30，仍9项没有正向Receipt；此计数仅实验操作覆盖，不是完整Source兼容率或业务验收率。
+
+边界：原Bundle存储freshness=fresh是历史记录值；不能据此宣称当前真实经营Evidence新鲜。原Context.production_profile_ref/preparation_ref均None，冻结仅验证四原合同exact数据，不证明当前安装签名、template Source、 assignee、Binding、预算或Start。这些门还必须在原编译/启动链重新读取。泛型/BI/successor/Content完整正向及当前签名发布/企业身份/八工作台/自然首链仍未验收；Task不关闭。
+
+下一登记项：原Eval合同冻结的真实suite/publication/release gate依赖重读，只有原门真的READY才做固定Source完整事务；原Stage编译与ImpactPreview仍要求当前可解析模板与合法编译Plan，不使用lambda True或手工改历史Plan。Docker Desktop stopping/原存储卷调查单独待用户退出/迁移意图，不能据此停止全部安全开发。
