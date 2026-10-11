@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Read-only HTTP attachment preflight for the preserved Qiyuehui cluster.
 
-This stage deliberately has no serve/write command. Signature/current release,
-OIDC, installation configuration and browser acceptance remain separate gates.
+This stage has no serve/write command. It can inspect an exact current
+installation through the original release reader; OIDC, current configuration,
+process switching and browser acceptance remain separate gates.
 """
 from __future__ import annotations
 import argparse
@@ -10,7 +11,10 @@ import json
 import os
 import stat
 import subprocess
+import sys
+from contextlib import contextmanager
 from pathlib import Path
+from uuid import UUID
 import a0v_current_preview_http as previous
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,6 +25,9 @@ IMAGE = 'sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd
 EXPECTED = {'database': 'aos_meta_head', 'cluster': '7695302940039200809',
     'schema': 'a0v_159', 'orgId': 'org-org', 'orgName': '栖月汇商贸有限公司',
     'projectId': 'dev-project', 'tables': 647}
+SELECTED_VERSIONS = {'domain.ecommerce.core': '1.4.3',
+    'platform.ecommerce.niushop': '1.23.2', 'solution.ecommerce.growth': '1.13.0',
+    'solution.ecommerce.operations-base': '1.2.2'}
 
 class RestorationBlocked(RuntimeError):
     pass
@@ -47,7 +54,7 @@ def _private(path):
         raise RestorationBlocked('RESTORED_IDENTITY_FILE_PERMISSION')
     return path.resolve(strict=True)
 
-def preflight(identity_file):
+def _identity_parameters(identity_file):
     data = json.loads(_private(identity_file).read_text())
     if (set(data) != {'host','port','dbname','user','pgpassfile'}
         or data['host'] != '127.0.0.1' or type(data['port']) is not int
@@ -55,6 +62,10 @@ def preflight(identity_file):
         or data['user'] != 'qyh_restored_api_login'):
         raise RestorationBlocked('RESTORED_LOGIN_TARGET_DRIFT')
     data['pgpassFile'] = str(_private(Path(data.pop('pgpassfile'))))
+    return data
+
+def preflight(identity_file):
+    data = _identity_parameters(identity_file)
     previous._verify_limited_login(data)
     proc = subprocess.run(['docker','--context',CONTEXT,'inspect','--format',
         '{"Image":{{json .Image}},"Mounts":{{json .Mounts}},"Ports":{{json .NetworkSettings.Ports}},"State":{{json .State}}}',TARGET],
@@ -92,11 +103,77 @@ def preflight(identity_file):
     report['databaseStartedAt'] = container['State']['StartedAt']
     return report
 
+def require_selected_installation(view, *, installation_id):
+    try:
+        exact_id = str(UUID(installation_id))
+    except (ValueError, TypeError, AttributeError):
+        raise RestorationBlocked('RESTORED_INSTALLATION_ID_INVALID') from None
+    if (view.scope != ('org-org', 'dev-project') or view.installation_id != exact_id
+        or view.authorization != 'EVIDENCE_ONLY_NO_START'):
+        raise RestorationBlocked('RESTORED_INSTALLATION_SCOPE_OR_AUTHORITY_DRIFT')
+    versions = {(r.publisher, r.bundle_id): r.version for r in view.releases}
+    if (len(view.releases) != 4 or len(versions) != 4
+        or versions != {('aos', bid): version for bid, version in SELECTED_VERSIONS.items()}):
+        raise RestorationBlocked('RESTORED_SELECTED_RELEASE_SET_DRIFT')
+    return {'installationId': exact_id, 'installationRevision': view.current_revision,
+        'etagVersion': view.etag_version, 'growthVersion': SELECTED_VERSIONS['solution.ecommerce.growth'],
+        'releases': [{'publisher': r.publisher, 'id': r.bundle_id, 'version': r.version,
+                      'contentHash': r.content_hash} for r in view.releases],
+        'authorization': 'CURRENT_INSTALLATION_EVIDENCE_ONLY_NO_START',
+        'apiStartAuthorized': False, 'runtimeHostEnabled': False,
+        'currentConfigurationVerified': False, 'eightWorkbenchesVerified': False}
+
+def select_current_installation(*, identity_file, bundle_root, trust_roots_file, installation_id):
+    report = preflight(identity_file)
+    parameters = _identity_parameters(identity_file)
+    sys.path.insert(0, str(ROOT / 'services/aos-api'))
+    from psycopg import connect
+    from psycopg.rows import dict_row
+    from aos_api.asset_registry.manifest_loader import ManifestLoader
+    from aos_api.asset_registry.release_policy import ReleasePolicy
+    from aos_api.asset_registry.signature import FileTrustRootProvider
+    from aos_api.extension_runtime.current_installation_release_evidence import (
+        CurrentReleaseEvidenceBlocked, read_current_installation_release_evidence,
+    )
+    from aos_api.tenant_scope import TenantScope
+    trust = FileTrustRootProvider(trust_roots_file).snapshot()
+    loader = ManifestLoader({'a0v-canonical': bundle_root, 'a0v-qyh-current': bundle_root,
+                             'a0v-current': bundle_root}, trust_roots=trust)
+
+    @contextmanager
+    def factory():
+        with connect(host=parameters['host'], port=parameters['port'],
+                     dbname=parameters['dbname'], user=parameters['user'],
+                     passfile=parameters['pgpassFile'], row_factory=dict_row) as conn:
+            conn.read_only = True
+            yield conn
+    try:
+        view = read_current_installation_release_evidence(connect_factory=factory,
+            scope=TenantScope('org-org', 'dev-project'), installation_id=installation_id,
+            release_policy=ReleasePolicy(trust_roots=trust), loader=loader)
+    except CurrentReleaseEvidenceBlocked as exc:
+        raise RestorationBlocked('RESTORED_CURRENT_RELEASE_REJECTED:' + str(exc)) from None
+    selected = require_selected_installation(view, installation_id=installation_id)
+    return {**report, 'outcome': 'RESTORED_CURRENT_INSTALLATION_EVIDENCE_ONLY',
+            'currentInstallation': selected}
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--api-identity-file',type=Path,required=True)
+    parser.add_argument('--current-installation')
+    parser.add_argument('--bundle-root',type=Path)
+    parser.add_argument('--trust-roots-file',type=Path)
     args = parser.parse_args()
-    print(json.dumps(preflight(args.api_identity_file),ensure_ascii=False,indent=2))
+    values = (args.current_installation, args.bundle_root, args.trust_roots_file)
+    if any(value is not None for value in values):
+        if any(value is None for value in values):
+            parser.error('current installation, bundle root and trust roots are required together')
+        report = select_current_installation(identity_file=args.api_identity_file,
+            bundle_root=args.bundle_root, trust_roots_file=args.trust_roots_file,
+            installation_id=args.current_installation)
+    else:
+        report = preflight(args.api_identity_file)
+    print(json.dumps(report,ensure_ascii=False,indent=2))
 
 if __name__ == '__main__':
     main()

@@ -2,6 +2,7 @@
 import importlib
 import pytest
 from pathlib import Path
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[4]
 
@@ -36,3 +37,50 @@ def test_preserved_data_does_not_grant_start_or_workshop_readiness(entry):
     assert report['apiStartAuthorized'] is False
     assert report['eightWorkbenchesVerified'] is False
     assert report['runtimeHostEnabled'] is False
+
+
+def selected_view():
+    versions = {'domain.ecommerce.core': '1.4.3', 'platform.ecommerce.niushop': '1.23.2',
+                'solution.ecommerce.growth': '1.13.0', 'solution.ecommerce.operations-base': '1.2.2'}
+    return SimpleNamespace(scope=('org-org', 'dev-project'),
+        installation_id='11111111-1111-4111-8111-111111111111',
+        authorization='EVIDENCE_ONLY_NO_START', current_revision=4, etag_version=7,
+        releases=tuple(SimpleNamespace(publisher='aos', bundle_id=bid, version=version,
+            content_hash='sha256:'+'a'*64) for bid, version in versions.items()))
+
+
+@pytest.mark.parametrize('drift', ['old-growth', 'old-core', 'old-platform', 'old-operations',
+    'missing', 'extra', 'duplicate', 'publisher', 'tenant', 'installation', 'authorization'])
+def test_current_installation_cannot_use_historical_or_ambiguous_releases(entry, drift):
+    view = selected_view()
+    if drift.startswith('old-'):
+        bid = {'old-growth':'solution.ecommerce.growth', 'old-core':'domain.ecommerce.core',
+            'old-platform':'platform.ecommerce.niushop',
+            'old-operations':'solution.ecommerce.operations-base'}[drift]
+        next(r for r in view.releases if r.bundle_id == bid).version = '1.0.0'
+    elif drift == 'missing':
+        view.releases = view.releases[:-1]
+    elif drift in {'extra', 'duplicate'}:
+        view.releases += (SimpleNamespace(publisher='aos',
+            bundle_id='other' if drift == 'extra' else 'domain.ecommerce.core',
+            version='1.4.3', content_hash='sha256:'+'a'*64),)
+    elif drift == 'publisher':
+        view.releases[0].publisher = 'other'
+    elif drift == 'tenant':
+        view.scope = ('dev-org', 'dev-project')
+    elif drift == 'installation':
+        view.installation_id = '22222222-2222-4222-8222-222222222222'
+    else:
+        view.authorization = 'START_AUTHORIZED'
+    with pytest.raises(entry.RestorationBlocked):
+        entry.require_selected_installation(view,
+            installation_id='11111111-1111-4111-8111-111111111111')
+
+
+def test_exact_installation_evidence_does_not_grant_api_or_runtime_start(entry):
+    view = selected_view()
+    result = entry.require_selected_installation(view, installation_id=view.installation_id)
+    assert result['growthVersion'] == '1.13.0'
+    assert result['apiStartAuthorized'] is False
+    assert result['runtimeHostEnabled'] is False
+    assert result['currentConfigurationVerified'] is False

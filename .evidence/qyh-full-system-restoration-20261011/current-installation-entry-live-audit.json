@@ -1,0 +1,38 @@
+{
+  "outcome": "THREE_RETAINED_INSTALLATIONS_CURRENT_ENTRY_READONLY_AUDIT",
+  "identity": {
+    "database": "aos_meta_head",
+    "cluster": "7695302940039200809",
+    "schema": "a0v_159",
+    "orgId": "org-org",
+    "orgName": "栖月汇商贸有限公司",
+    "projectId": "dev-project",
+    "tables": 647
+  },
+  "results": [
+    {
+      "installationId": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+      "acceptedCurrent": false,
+      "reason": "RESTORED_CURRENT_RELEASE_REJECTED:RELEASE_EVIDENCE_INVALID",
+      "sourceTree": "retained signed releases"
+    },
+    {
+      "installationId": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+      "acceptedCurrent": false,
+      "reason": "RESTORED_SELECTED_RELEASE_SET_DRIFT",
+      "sourceTree": "retained signed releases"
+    },
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "acceptedCurrent": false,
+      "reason": "RESTORED_SELECTED_RELEASE_SET_DRIFT",
+      "sourceTree": "retained signed releases"
+    }
+  ],
+  "databaseWrites": 0,
+  "unknownEffectReplay": false,
+  "apiStarted": false,
+  "runtimeHostEnabled": false,
+  "currentPublishedInstallationProven": false,
+  "eightPagesAccepted": false
+}

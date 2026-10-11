@@ -16,6 +16,12 @@
 
 最后维护时序PG→最新m1 API→Web，真实浏览器栖月汇组织选择/默认工作区、8页面与核心只读交互、签名/安装/禁入/canary证据；保留可查看浏览器。运行Host/Provider只在正式身份/Owner/8config/current审批预算完整后开启。全Task仅到真实验收才Delivery，局部checkpoint不宣称完成。
 
+本接续波新增当前安装只读选择入口，精确修改scripts/a0v_qyh_restored_http.py及services/aos-api/tests/extension_runtime/test_qyh_restored_http.py。复用原read_current_installation_release_evidence及其tenant/lock/Registry status/验签/currentness校验，再限定已选定四坐标（core1.4.3/platform1.23.2/Growth1.13.0/operations1.2.2）与当前m1 schema。不得把构建诊断的PUBLISHED投影用于真实安装读取。CLI只有提供安装id/签名根/公共trust根完整参数才进入只读选择；默认库存预检不变、无serve或写操作。
+
+方案核对发现原runtime-image evidence读取要求有当前live resource leases；API全workers/Host关闭的预备阶段不能以此门强迫先开Host。故本步骤仅采用原安装release evidence（不要求live Host），离线镜像/schema诊断证据单独保留；报告显式apiStartAuthorized=false/runtimeHostEnabled=false/currentConfigurationVerified=false。后续正式有限身份/OIDC、安装配置、受支持进程切换和真实八页面仍是独立验收，不删原门。
+
+RED：旧Growth/错误基础包/漏包多包重复包/跨tenant/错误安装id/旧schema及伪造start授权均拒绝或不授予。专项相邻包含原preview与current-installation evidence测试；真实恢复库对当前三个已登记叶只读审计，不新建安装、不重发publish，不伪造正向验收。
+
 ## 未知与回滚
 
 2026-10-11当前发布来源核对后的安装选型：两个已发布基础包使用现有较新平台1.23.2/operations1.2.2（a0v-local-ecommerce-recovery-v2），与新core1.4.3/Growth1.13.0组合。平台源除version、构建lock/image/SBOM/signature外逐文件相同；operations除version、bundleRef及signature外逐文件相同。需逐项核验已有Registry manifest/artifact/content/signature与保留树精确相等，不能因为contentHash相同更写旧1.23.0/1.2.0签名。新core/Growth只在新坐标由现有RegistryService create→validate→publish；所有旧记录与安装保留。采用登记的有限LOGIN与SET ROLE aos_runtime进行本地维保，actor明确为用户授权维保代理，不冒充正式OIDC/业务Owner。

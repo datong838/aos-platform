@@ -1,0 +1,90 @@
+{
+  "outcome": "THREE_RETAINED_EXACT_LOCK_COORDINATES_READONLY",
+  "installations": [
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "state": "active",
+      "currentRevision": 5,
+      "activeRevision": 5,
+      "resolved": [
+        {
+          "id": "domain.ecommerce.core",
+          "version": "1.4.2",
+          "contentHash": "sha256:dd03a29a71b7cc8f35a36010042f8f6d7bd0d19dcde1ac107c7c588f2337d441"
+        },
+        {
+          "id": "platform.ecommerce.niushop",
+          "version": "1.23.2",
+          "contentHash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90"
+        },
+        {
+          "id": "solution.ecommerce.growth",
+          "version": "1.10.2",
+          "contentHash": "sha256:85ca84cb835758d40877a81510865ff6c958cc6933fdc689bf3d77a4f3bd74a6"
+        },
+        {
+          "id": "solution.ecommerce.operations-base",
+          "version": "1.2.2",
+          "contentHash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec"
+        }
+      ]
+    },
+    {
+      "installationId": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+      "state": "active",
+      "currentRevision": 5,
+      "activeRevision": 5,
+      "resolved": [
+        {
+          "id": "domain.ecommerce.core",
+          "version": "1.4.2",
+          "contentHash": "sha256:dd03a29a71b7cc8f35a36010042f8f6d7bd0d19dcde1ac107c7c588f2337d441"
+        },
+        {
+          "id": "platform.ecommerce.niushop",
+          "version": "1.23.2",
+          "contentHash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90"
+        },
+        {
+          "id": "solution.ecommerce.growth",
+          "version": "1.10.2",
+          "contentHash": "sha256:85ca84cb835758d40877a81510865ff6c958cc6933fdc689bf3d77a4f3bd74a6"
+        },
+        {
+          "id": "solution.ecommerce.operations-base",
+          "version": "1.2.2",
+          "contentHash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec"
+        }
+      ]
+    },
+    {
+      "installationId": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+      "state": "active",
+      "currentRevision": 5,
+      "activeRevision": 5,
+      "resolved": [
+        {
+          "id": "domain.ecommerce.core",
+          "version": "1.4.0",
+          "contentHash": "sha256:91bbe20c38d85f151e2d37ab6b08e48b261b1147b40d91203df4309b75def4e5"
+        },
+        {
+          "id": "platform.ecommerce.niushop",
+          "version": "1.23.0",
+          "contentHash": "sha256:55b29795b73d5be0f28bd68fafc48c8dd7aa42c65eb5ea130a307326e7534117"
+        },
+        {
+          "id": "solution.ecommerce.growth",
+          "version": "1.10.0",
+          "contentHash": "sha256:7fd951883b9e9fada326cae69a778297aab34625616b9203b248c375dff650a6"
+        },
+        {
+          "id": "solution.ecommerce.operations-base",
+          "version": "1.2.0",
+          "contentHash": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298"
+        }
+      ]
+    }
+  ],
+  "writes": 0
+}
