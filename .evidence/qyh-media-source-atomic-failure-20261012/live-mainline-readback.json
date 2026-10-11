@@ -1,0 +1,39 @@
+{
+  "observedAt": "2026-10-11T23:28:06.046609+00:00",
+  "readOnlyRequests": true,
+  "meRouteNotCalled": true,
+  "checks": [
+    {
+      "path": "/v1/ecommerce-workshop/modules",
+      "status": 200,
+      "count": 0,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      }
+    },
+    {
+      "path": "/v1/runtime-workshop/modules",
+      "status": 200,
+      "count": 0,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      }
+    },
+    {
+      "path": "/v1/auth/oidc",
+      "status": 200,
+      "allowDevToken": true,
+      "grantTypes": [
+        "dev"
+      ],
+      "jwksUrlCount": 0
+    },
+    {
+      "path": "/v1/auth/principal",
+      "status": 403
+    }
+  ],
+  "eightWorkbenchRestorationAccepted": false
+}

@@ -1,0 +1,9 @@
+# 原注册原子性与恢复主线复审
+
+28PASS0skip7既有warnings，2新增native+前波完整7/安装3/wiring16；无产品代码修改。本波是已登记负门覆盖，不制造产品RED。复用原专用Source connector、真实临时LOGIN/Scope/ACL、实际临时signed政策/4RuleReceipt/原发布与5步安装，Reader每个场景先真实True。临时库BEFORE INSERT约束拒绝原Profile插入与原Receipt插入；后者在当事务内先查询实际Profile已存在，若不存在抛不同SQLSTATE，故23514精确消息证明真正晚期写入失败。外部独立autocommit查exactprofile及operation+key均0，原connection退出真实rollback，未用mockcommit/SourceTrue。只有明确失败已回滚后移除本fixture触发器并重试原Store同key，成功再回读幂等，精确各1行。不是未知效果重发。fixture ProfileID现每例UUID，防止合法相邻记录掩盖写阶段；原Rule keys/body不变。
+
+事务临时触发器/function通过finally删除，role/passfile由原完整fixture删除，conftest删除own临时数据库；独立clone角色count0。无当前卷或业务Source策略权限改动，不接Router，不启用Host/worker/Provider，不读商城，不重放Run。产品修复仍前波30187015未部署，本波无产品变化可做UI验收；不拿测试作为八页可用证明。
+
+已实时仅GET18080的两目录/oidc/principal：两目录count0、tenant确为org-org/dev-project；dev登录可用、grantTypes仅dev/JWKSUrlCount0、正式principal403。不是租户切错；实际运行目录仍禁入。未调用会写成员的GET/me、未发行token/扫描外部secret。两个限制分别是当前运行绑定/配置正式恢复与新包独立发布身份，不能因缺发布者否认已有管理恢复，也不能默认放开绑定。
+
+当前Task可收口真实事务失败回滚子项；当前正式登录/发布接入问题待原来源答复，保持整Goal ACTIVE。下一已登记Source工作仍为实际Policy/Rule内容漂移、安装代次/混版负门，以及专用Source生产迁移和原调用兼容完整边界（不能仅REVOKE或以隔离fixture授权）。

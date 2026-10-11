@@ -1,0 +1,20 @@
+{
+  "baseHead": "30187015be58b0c41aaf7aaa7fbc648da7e0e06d",
+  "passed": 28,
+  "skipped": 0,
+  "warnings": 7,
+  "newNativeCases": 2,
+  "actualFailureSqlstate": "23514",
+  "lateFailureSeesInsertedProfileInSameTransaction": true,
+  "independentRollbackReadbackProfilesAndReceipts": 0,
+  "knownFailedOutcomeThenSafeRetryAndReplay": "one Profile and one Receipt per key",
+  "sourceRoleRemoved": true,
+  "testOnly": true,
+  "currentDatabaseWrites": 0,
+  "currentApiChanges": false,
+  "formalIdentityOrWorkbenchCompletion": false,
+  "files": {
+    "services/aos-api/tests/asset_registry/test_qyh_media_source_atomic_failure_pg.py": "8a87bf13d7e4b7a6944937b21ffb1e1f00649d5deba3ad8f708a70991b02a2cc",
+    "services/aos-api/tests/asset_registry/test_qyh_complete_media_source_pg.py": "edf21b5dab8b50583ec477eff6be68ec3c7717cda05c4637001aaf6ecb3fb6cb"
+  }
+}

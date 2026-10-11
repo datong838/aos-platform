@@ -4,6 +4,7 @@ import json
 import os
 import secrets
 import shutil
+from uuid import uuid4
 from contextlib import contextmanager
 
 import psycopg
@@ -46,7 +47,7 @@ def complete_case(tmp_path, monkeypatch, request):
                       "ruleRef": {"resourceType": "EvalRuleRevision", "resourceId": body.rule_id,
                                   "revision": 1, "contentHash": canonical_hash(body.model_dump(mode="json", by_alias=True))}})
     document = {"schema": "aos.ecommerce-media-gate-policy/v1", "policyId": "qyh-fixture-policy",
-                "revision": 1, "profileId": "qyh-fixture-full", "profileRevision": 1, "gates": gates}
+                "revision": 1, "profileId": "qyh-fixture-full-" + uuid4().hex, "profileRevision": 1, "gates": gates}
     artifact = root / "solutions/ecommerce-growth/content/media-gate-policies/full.json"
     artifact.parent.mkdir(parents=True)
     artifact.write_text(json.dumps(document))
