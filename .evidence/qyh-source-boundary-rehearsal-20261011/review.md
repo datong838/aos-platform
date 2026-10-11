@@ -1,0 +1,9 @@
+# 原协议克隆演练第一段复审
+
+绑定已登记权限忠实clone的精确container/cluster/18431、无Source命名卷；复用原SQL协议的6项Plan及30项Contract operation目录和原guard SQL表达式，未重新定义guard逻辑。临时角色无成员、非super/非BYPASS/NOINHERIT，直授精确权限，原双租户policy保持。真实PostgreSQL一次事务11项通过：runtime head/Receipt写42501；Plan head/Receipt、Content Receipt、Contract Receipt允许；三种跨purpose冒用、未知operation及dev-org canary均42501。全部ROLLBACK后647表及六权限元数据精确相同，没有触碰当前权威库或服务。
+
+此为SQL协议及原Store._receipt形状验证；发行角色采用原测试协议SET SESSION AUTHORIZATION，并非真实LOGIN认证，更不是正式企业登录/独立OS进程/publisher。Receipt正向未证明resource来源存在、业务前置依赖及完整原Store兼容。结果中的originalStoreFullCompatibilityAccepted与fullRestorationAccepted均false。不能声称漏洞已经在当前库修复。
+
+执行后代码复核收紧原f-string插值检查：仅允许五个已知名称，无call、conversion或format_spec。该纯执行前校验改变未重放已完成SQL；intent与结果保留，后续通过读回核对，不用新提交刷新业务进展。未新增业务代码，原用户22项tracked改动未覆盖。
+
+下一段仍属于同一ACTIVE Task：真实固定Source连接与原generic/BI/successor/Content/全部Contract完整事务依赖权限验证；必要兼容范围未闭合不得改当前库。正式登录配置与独立publisher、预算、八工作台及自然首链持续待验收，完整Goal保持ACTIVE。

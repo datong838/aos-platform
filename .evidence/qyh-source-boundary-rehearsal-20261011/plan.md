@@ -1,0 +1,11 @@
+# 权限一致克隆的Source边界演练
+
+基线f77feba5d/AOS-001880，沿231、原s3owc合同、当前恢复方案及已证明的同租户Plan/Receipt伪造RED继续。唯一施工线程与正向org-org/dev-project不变。候选一：克隆Source分工及原合法调用兼容，已授权且独立；候选二：正式登录与独立publisher接入，既有配置来源仍待定位。先一，完整恢复目标不缩小。
+
+本Task覆盖本目录和独立克隆维护；不修改services、不连接当前库做写入、不改当前服务。当前克隆647表/39角色全权限忠实恢复已通过；任何DDL只在绑定原clone ID/cluster/18431且无命名卷挂载的独立资源内。不得把当前只读API的客户端设置当数据库来源隔离。
+
+第一段reuse_protocol.py复用原test_plan_receipt_writer_protocol_pg.py中的operation目录及s3owe_guard SQL表达式，不重新发明运行时规则。一次未提交事务中创建三个明确测试发行角色、原角色精确GRANT与租户policy，撤普通runtime三表写权；按原协议SET SESSION AUTHORIZATION检查角色来源与operation分工，测试普通runtime伪造、发行角色互相冒用、未知operation、跨租户拒绝及合法三类Receipt。所有数据/DDL/角色finally rollback；全647表与原六权限元数据读回完全一致。测试身份模拟属于SQL协议验证，不是正式LOGIN认证、独立系统身份或业务正向。
+
+本段仅验证已登记原协议在原数据/权限环境的适用性。之后必须使用真实固定Source LOGIN连接及原generic/BI/successor/Content/全部Contract Store事务验证精确依赖权限、幂等、冲突、回滚和相邻全链；不能只凭三类Receipt或Brief完成整个Task。完整兼容之后才生成正式迁移方案并进入当前库独立安全门。正式OIDC/publisher、当前预算、八配置、八页面和自然首链仍待真实证据；不将协议通过视作这些事项已恢复。
+
+任何已有intent不重发；未知结果只读对账。保留失败输出、克隆和私密备份，不push，不删原库卷。每一段复核方案一致性与证据边界，Task保持ACTIVE直至完整预期成立。

@@ -1,0 +1,65 @@
+{
+  "cases": [
+    {
+      "label": "runtime-head",
+      "sqlstate": "42501",
+      "expected": "42501"
+    },
+    {
+      "label": "runtime-receipt",
+      "sqlstate": "42501",
+      "expected": "42501"
+    },
+    {
+      "label": "plan-head",
+      "sqlstate": null,
+      "expected": null
+    },
+    {
+      "label": "plan-receipt",
+      "sqlstate": null,
+      "expected": null
+    },
+    {
+      "label": "content-receipt",
+      "sqlstate": null,
+      "expected": null
+    },
+    {
+      "label": "contract-receipt",
+      "sqlstate": null,
+      "expected": null
+    },
+    {
+      "label": "content-forged-plan",
+      "sqlstate": "42501",
+      "expected": "42501"
+    },
+    {
+      "label": "contract-forged-content",
+      "sqlstate": "42501",
+      "expected": "42501"
+    },
+    {
+      "label": "plan-forged-contract",
+      "sqlstate": "42501",
+      "expected": "42501"
+    },
+    {
+      "label": "unknown-operation",
+      "sqlstate": "42501",
+      "expected": "42501"
+    },
+    {
+      "label": "canary",
+      "sqlstate": "42501",
+      "expected": "42501"
+    }
+  ],
+  "full647RollbackExact": true,
+  "allOriginalMetadataExact": true,
+  "currentDatabaseTouched": false,
+  "formalLoginAuthenticated": false,
+  "originalStoreFullCompatibilityAccepted": false,
+  "fullRestorationAccepted": false
+}
