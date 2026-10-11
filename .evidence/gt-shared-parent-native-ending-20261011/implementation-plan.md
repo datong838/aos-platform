@@ -198,3 +198,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 新增sort-support-1805/probe.c及Dockerfile。复习PG16.14 sortsupport.c：排序操作符解析到opfamily/opcintype，优先BTSORTSUPPORT_PROC、无comparator时BTORDER_PROC。仅记录两候选OID，不主动调用支持函数；覆盖Sort/IncrementalSort/MergeAppend排序键，继续标记未审查（collation/native comparator及生命周期）。不改变固定collector身份、三hook恢复、原验证断言和TTL。先严格编译，再独立完整Source复验；编译不代表运行通过。
 
 1805严格编译及身份负门通过；sort-source-1805使用全新Source/测试库，唯一替换已核验库路径，保持原四证书/八节点/异常恢复/latewriter/COMMIT拒绝及事务内目录冻结，终态独立核验回滚与清理。
+
+## 聚合已初始化状态观察1806
+新增aggregate-state-1806/probe.c/Dockerfile，复习PG16.14 nodeAgg.h/execnodes.h；在已有ExecutorStart后观察AggState pertrans转换/序列化/反序列化OID、单列DISTINCT相等函数、排序操作符，peragg最终函数及Aggref表达式。不调用任何支持函数，不把状态OID视为native函数指针来源保证；保留Agg未审查标记。身份/三hook/原完整合同不变。先严格编译和身份负门，后新完整Source联验。
