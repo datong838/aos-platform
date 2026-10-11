@@ -1,0 +1,19 @@
+{
+  "authority": "AOS-001906",
+  "baseHead": "4f2a0c51e60d680a66622dfd49b4a935086a5da9",
+  "red": "4 failed,5passed",
+  "final": "82passed,0skip,7warnings",
+  "retainedReleaseCandidateFileCount": 1695,
+  "retainedFilesUnchanged": true,
+  "runtimeDispatchValidated": true,
+  "formalBusinessAccepted": false,
+  "currentDBWrites": 0,
+  "providerCalls": 0,
+  "deployed": false,
+  "sourceHashes": {
+    "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_eval_report.py": "c4db063f9cab83a57a5d7b6698fd8d5d33604f229c12ad14ad2f34d4f82dfeae",
+    "services/aos-api/tests/extension_runtime/test_analyst_eval_policy_contract_alignment.py": "2dba321c2cec9c217478ad18a093603ea69d59d84f7aa4807992b8c36d975f1c"
+  },
+  "dWave": "docs/palantier/20_tech/\u7535\u5546\u5e73\u53f0\u63a5\u5165/\u5fae\u5546\u57ce\u7535\u5546\u63a5\u5165\u65b9\u6848/D-waves/2026-10-12-QYH-\u539f\u9636\u6bb5\u8bc4\u6d4b\u7b56\u7565\u7c7b\u578b\u5bf9\u9f50\u65b9\u6848.md",
+  "dWaveHash": "1bc9bac5d13ff4287320ff0edba47e152b5ba7e1527b6fbd9680095962ae0e52"
+}

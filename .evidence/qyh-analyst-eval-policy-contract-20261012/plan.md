@@ -1,0 +1,6 @@
+# 原增长包阶段评测策略类型对齐
+基线4f2a0c51/AOS-001906，231-5自动评审续跑与231-9原增长包复用，不将Media策略缺口泛化为所有阶段无法评测。
+候选一完整Media签名Policy/四Rule生产接线，已登记但具体受控规则/正式publisher来源仍待；候选二增长包既有StageEvalProof类型对齐，原aip_eval_contracts已支持MediaGatePolicyRevision/EvalContractRevision两种，bundle仍单一Media类型，独立于登录和外部执行，可安全修复，选择二。
+修改仅bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_eval_report.py的EvalGatePolicyRef Literal集合，使其与原平台契约一致，保持默认Media、StrictInt和hash。不是将评测合同改名为Media策略。
+新增services/aos-api/tests/extension_runtime/test_analyst_eval_policy_contract_alignment.py：用原平台DTO生成payload，经原Growth运行dispatch validate_eval_proof验证两种精确类型；测试错误类型、同ID/hash的类型漂移、布尔revision、跨租户继续拒绝。原原生报告currentness、ReleaseGate、签名、预算和Source校验不变。
+RED后最小修复，原报告proof/runtime/identity/slot/structure相邻累计，独立包禁止导入aos_api检查；不调用自然Run或真实Provider。候选源码不更新已签包、Registry/当前服务或旧Run；新版本正式签名发布仍需原publisher和当前验收。完整Goal ACTIVE。

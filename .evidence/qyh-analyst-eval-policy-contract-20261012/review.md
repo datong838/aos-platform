@@ -1,0 +1,9 @@
+# 原平台与增长包阶段评测契约复审
+
+根因是同一业务接口两侧Literal不一致：平台aip_eval_contracts.EvalGatePolicyRef已支持MediaGatePolicyRevision/EvalContractRevision；原Growth独立proof仍只支持前者。此修复只改source bundle的一行Literal，不修改a105或平台真源，不把普通评测重新命名为Media策略。
+
+RED4失败/5通过，修复后新9项及原proof/runtime/command/slot/runtime-binding累计82PASS/0skip/7既有warning。新测试以原平台DTO生成JSON后经过原Growth handle validate_eval_proof实际消息分发；两个资源类型都保留原值，类型漂移即使ID/revision/hash相同仍拒绝，跨租户/hash漂移/未知类型/StrictInt布尔版本继续拒绝。既有独立包禁止导入aos_api的子进程检查通过。
+
+本轮都是组件/运行消息合同测试，没有真实自然Run、Provider、商城读取或当前库业务写；原autouse fixture只在clone18431创建清理隔离测试库。没有使用测试消息作为真实Source/Approval/Owner证据。没有改原native报告最新性、ReleaseGate currentness、签名和执行授权校验。
+
+1695个Git跟踪release/candidate文件前后字节hash一致；原发布包和当前四包保持。源码候选尚未打成新签名包或切当前服务，故旧运行包的此处风险仍保留。新包发布/安装必须用真实publisher、当前Registry和完整原闭包，不覆盖既有版本。方案和单行代码一致；全Goal/恢复/Source父Task仍ACTIVE。

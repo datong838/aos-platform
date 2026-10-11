@@ -27,7 +27,7 @@ class EvalSubjectArtifactRef(AipContractModel):
 
 
 class EvalGatePolicyRef(AipContractModel):
-    resource_type: Literal["MediaGatePolicyRevision"] = "MediaGatePolicyRevision"
+    resource_type: Literal["MediaGatePolicyRevision", "EvalContractRevision"] = "MediaGatePolicyRevision"
     resource_id: str = Field(min_length=1, max_length=200)
     revision: StrictInt = Field(ge=1)
     content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
