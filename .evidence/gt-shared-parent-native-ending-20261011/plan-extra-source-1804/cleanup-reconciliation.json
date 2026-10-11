@@ -1,0 +1,83 @@
+{
+  "restoration_statement_hashes_match": true,
+  "exact_body_proofs": [
+    {
+      "signature": "aos_capacity_publication_private.require_original_fact_boundary()",
+      "restored_body_exact": true,
+      "owner_acl_config_unchanged": true,
+      "restored_sha256": "a58f562c97da4059549b8e18289c6a5f46b8a61553031b53961b60684231f030"
+    },
+    {
+      "signature": "aos_capacity_publication_private.require_original_epoch_pair_boundary()",
+      "restored_body_exact": true,
+      "owner_acl_config_unchanged": true,
+      "restored_sha256": "14a149a2aeb315ec72b22fdfbb6e2823fcee42b6d0c2fefb0f9e95543266662f"
+    },
+    {
+      "signature": "aos_capacity_publication_private.require_original_evidence_boundary()",
+      "restored_body_exact": true,
+      "owner_acl_config_unchanged": true,
+      "restored_sha256": "46c58a291d3b782a43368231aacd840c859a80645c41f95aa808c0812155641f"
+    }
+  ],
+  "absent_functions": [
+    {
+      "signature": "aos_capacity_publication_private.require_current_source_installation()",
+      "declared_drop_locations": [
+        {
+          "path": "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py",
+          "line": 222
+        },
+        {
+          "path": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+          "line": 4684
+        },
+        {
+          "path": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+          "line": 4751
+        },
+        {
+          "path": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+          "line": 4812
+        },
+        {
+          "path": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+          "line": 4858
+        },
+        {
+          "path": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+          "line": 4912
+        },
+        {
+          "path": "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py",
+          "line": 4939
+        }
+      ]
+    },
+    {
+      "signature": "read_capacity_source_for_occupation(bytea,jsonb)",
+      "declared_drop_locations": [
+        {
+          "path": "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py",
+          "line": 565
+        }
+      ]
+    },
+    {
+      "signature": "require_capacity_occupation_source_installation()",
+      "declared_drop_locations": [
+        {
+          "path": "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py",
+          "line": 566
+        }
+      ]
+    }
+  ],
+  "source_hashes": {
+    "services/aos-api/tests/aip/test_physical_capacity_occupation_pg.py": "e1384ab91c03099203d56fe814c588483d7915ee0e418a2cb39d08b5c5e68eb2",
+    "services/aos-api/tests/aip/test_capacity_source_publication_transaction_pg.py": "720ab180267ef17ff3413fa5c8c0d94f797904787a2d45c28892ecaa8ea5dc96"
+  },
+  "database_writes": false,
+  "runtime_immutability_proved": false,
+  "execution_allowed": false
+}

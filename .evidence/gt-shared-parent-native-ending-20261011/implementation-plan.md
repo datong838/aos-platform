@@ -188,3 +188,8 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 目录清理差异归因1803
 新增catalog-reconcile-1803/check.py/result.json。导入原fixture纯SQL恢复生成器，核生成语句hash与1802当轮fixture-restoration-binding逐项一致；只读原终态库将3变化边界prosrc与精确恢复body逐字比较、Owner/ACL/config与事务快照核对，3消失函数映射原两个finally清理位置。冻结相关源码hash，不重执行DDL或完整Source。不能把清理后等价当调用期间不可变保证。
+
+## 已观察计划附加表达式1804
+新增plan-extra-1804固定测试探针，沿用dedup及三hook恢复；补BitmapIndex indexqual/indexqualorig、Memoize param_exprs、Hash/HashJoin hashkeys，记录hash operator实现及get_op_hash_functions左右函数。Memoize/Hash/HashJoin仍记录未审查tag（collation/type支持及native内部未闭合），不从记录存在推导无效果。先严格编译、身份门，再新完整Source/事务内元数据fixture复验。不改产品/TTL/Source算法或正式库。
+
+1804严格编译及身份门通过，新增plan-extra-source-1804完整新Sourcefixture；继续原事务内OID元数据全量冻结和清理后差异显式记录，不改原assertions。
