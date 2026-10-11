@@ -1,0 +1,132 @@
+pipeline_id: P02
+source_table: ns_goods
+target_ot: Product
+primary_key: goods_id
+site_filter: site_id=1
+incremental_strategy: snapshot
+unique_key_pattern: niushop:{site_id}:{pk}
+validation:
+  non_negative:
+  - price
+  - market_price
+  - cost_price
+  required:
+  - goods_id
+  - site_id
+  - goods_name
+  - category_id
+  - create_time
+field_mappings:
+- source: goods_id
+  target: id
+  type: int
+- source: goods_name
+  target: title
+  type: string
+- source: goods_class
+  target: goodsClass
+  type: int
+- source: goods_class_name
+  target: goodsClassName
+  type: string
+- source: site_id
+  target: shopId
+  type: int
+- source: site_name
+  target: siteName
+  type: string
+- source: goods_image
+  target: image
+  type: string
+- source: goods_content
+  target: content
+  type: text
+- source: goods_state
+  target: state
+  type: int
+- source: category_id
+  target: categoryId
+  type: string
+- source: brand_id
+  target: brandId
+  type: int
+- source: brand_name
+  target: brandName
+  type: string
+- source: price
+  target: price
+  type: decimal
+- source: market_price
+  target: marketPrice
+  type: decimal
+- source: cost_price
+  target: costPrice
+  type: decimal
+- source: goods_stock
+  target: stock
+  type: decimal
+- source: is_virtual
+  target: isVirtual
+  type: int
+- source: is_free_shipping
+  target: isFreeShipping
+  type: int
+- source: introduction
+  target: introduction
+  type: string
+- source: keywords
+  target: keywords
+  type: string
+- source: unit
+  target: unit
+  type: string
+- source: sort
+  target: sort
+  type: int
+- source: sku_id
+  target: skuId
+  type: int
+- source: supplier_id
+  target: supplierId
+  type: int
+- source: sale_num
+  target: saleNum
+  type: decimal
+- source: is_delete
+  target: isDelete
+  type: int
+- source: create_time
+  target: createdAt
+  type: timestamp
+- source: modify_time
+  target: modifyTime
+  type: timestamp
+pii_exclusion: []
+notes:
+- Candidate full site Product snapshot, including off-shelf and explicit deleted rows.
+- No row count or current business-state assertion is made by this declaration.
+- Unknown state, missing valid source time, negative declared money or truncated snapshot
+  fails closed.
+- Physical absence does not imply deletion; only explicit is_delete yields a tombstone.
+- Complete Product observations use host observation time because stock and sales
+  may change without modify_time.
+- Source create_time/modify_time remain mapped business facts and are not asserted
+  as a reliable version clock.
+snapshot_materialization:
+  schema_version: aos.snapshot-materialization/v3
+  platform: niushop
+  shop_key: site_id
+  source_timezone: +08:00
+  property_defaults:
+    currency: CNY
+  time_basis: observation
+  deletion_basis:
+    field: is_delete
+    live_value: 0
+    deleted_value: 1
+  status:
+    field: goods_state
+    property_target: status
+    values:
+      '0': INACTIVE
+      '1': ACTIVE

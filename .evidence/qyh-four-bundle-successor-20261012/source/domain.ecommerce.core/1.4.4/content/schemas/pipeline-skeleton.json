@@ -1,0 +1,83 @@
+{
+  "name": "ecommerce-core-pipeline-skeleton",
+  "description": "通用 Pipeline 骨架，所有 OT 采集流水线统一遵循 Source -> TenantFilter -> Normalize -> Validate -> Deduplicate -> QualityGate -> (DatasetSink + OTWriter) / DLQ",
+  "source_ref": "frozen/02-pipeline-manifest.yaml#通用骨架",
+  "nodes": [
+    {
+      "name": "Source",
+      "description": "源表读取，按 site_id 过滤与增量游标 (watermark, primary_key) 稳定二元组拉取"
+    },
+    {
+      "name": "TenantFilter",
+      "description": "租户过滤 site_id=1；org_id/project_id 由实施上下文注入；唯一键命名空间 niushop:1:{source_pk}"
+    },
+    {
+      "name": "Normalize",
+      "description": "字段标准化：Unix 秒转 UTC（0 转 null）；金额 decimal 非负；状态枚举映射；派生指标由本节点或 QualityGate 计算写入 row.properties"
+    },
+    {
+      "name": "Validate",
+      "description": "必填字段校验（REQUIRED_PROPERTIES）；金额/数量非负；枚举值校验；软删 is_delete=1 不入 OT"
+    },
+    {
+      "name": "Deduplicate",
+      "description": "按唯一键 niushop:1:{source_pk} 去重，持久层做最终去重"
+    },
+    {
+      "name": "QualityGate",
+      "description": "质量门禁：完整性校验（Link 指向对象必须存在，缺失进 DLQ 不自动造对象）；派生指标落盘；软删行进 DLQ 计数"
+    },
+    {
+      "name": "DatasetSink",
+      "description": "数据集落地，按 P 按 Link 独立落地（D1 不做多表 JOIN Sink）"
+    },
+    {
+      "name": "OTWriter",
+      "description": "OT 写入 ecom_ot 表 properties 字段，派生指标与源字段对齐 ec_ot_writer._build_object"
+    },
+    {
+      "name": "DLQ",
+      "description": "死信队列，只存键、错误码与脱敏摘要；孤儿数据/校验失败/软删计数"
+    }
+  ],
+  "edges": [
+    {
+      "from": "Source",
+      "to": "TenantFilter"
+    },
+    {
+      "from": "TenantFilter",
+      "to": "Normalize"
+    },
+    {
+      "from": "Normalize",
+      "to": "Validate"
+    },
+    {
+      "from": "Validate",
+      "to": "Deduplicate"
+    },
+    {
+      "from": "Deduplicate",
+      "to": "QualityGate"
+    },
+    {
+      "from": "QualityGate",
+      "to": "DatasetSink"
+    },
+    {
+      "from": "QualityGate",
+      "to": "OTWriter"
+    },
+    {
+      "from": "QualityGate",
+      "to": "DLQ"
+    }
+  ],
+  "constraints": [
+    "Pipeline 通过 /v1/pipelines 运行时创建到 meta_pipeline 表，不入 bundle 资产",
+    "增量游标 (watermark, primary_key) 稳定二元组",
+    "D1 不做多表 JOIN Sink，按 P 按 Link 独立落地",
+    "派生指标变更等同于 OT schema 变更，需走审批"
+  ]
+}

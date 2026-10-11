@@ -1,0 +1,56 @@
+{
+  "outcome": "PREFLIGHT_GREEN",
+  "mode": "preflight",
+  "bundleCount": 4,
+  "runtimeMemberCount": 3,
+  "moduleCount": 8,
+  "operationCount": 15,
+  "bundles": [
+    {
+      "id": "domain.ecommerce.core",
+      "version": "1.4.4",
+      "sourceTreeHash": "sha256:c31034af3caed03648624adb1911b8166beccb1c8df6d3d17ab36c4ba72b3b80",
+      "runtimeOperations": [
+        "ecommerce_core_product_event_windows",
+        "ecommerce_core_object_describe"
+      ],
+      "schemaCompatibilityHash": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee"
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "version": "1.23.3",
+      "sourceTreeHash": "sha256:3bc65c8fae3afcf9a3dfa9543c9180f13179352ffb1ed7406a8586822235de8a",
+      "runtimeOperations": [
+        "ecommerce_niushop_source_describe",
+        "ecommerce_niushop_facts_read"
+      ],
+      "schemaCompatibilityHash": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2"
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "version": "1.13.1",
+      "sourceTreeHash": "sha256:6d7fc9dab99b327764e59a53f7f7568047b96592def96ef0579afa09ace93291",
+      "runtimeOperations": [
+        "ecommerce_growth_event_control",
+        "ecommerce_growth_investigation_describe",
+        "ecommerce_growth_case_put",
+        "ecommerce_growth_schedule_put",
+        "ecommerce_growth_schedule_trigger",
+        "ecommerce_growth_data_fulfill",
+        "ecommerce_growth_analysis_advance",
+        "ecommerce_growth_review_advance",
+        "ecommerce_growth_content_generate",
+        "ecommerce_growth_content_review",
+        "analyst_workspace_view_v1"
+      ],
+      "schemaCompatibilityHash": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4"
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "sourceTreeHash": "sha256:f17618ee08b8c0571a6791c5e815ef548f8af265a819779edfb965ed0c6f03f8",
+      "runtimeOperations": [],
+      "schemaCompatibilityHash": null
+    }
+  ]
+}

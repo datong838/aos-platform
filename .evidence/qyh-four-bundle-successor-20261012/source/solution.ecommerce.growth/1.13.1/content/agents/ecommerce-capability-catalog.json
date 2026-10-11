@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "capabilities": [
+    {"id":"material.collect","displayName":"素材采集","inputSchema":"MaterialCollectRequest","outputSchema":"MaterialBundleRef","risk":"medium","aliases":["product.fact.collect","knowledge.collect","research.collect","media.asset.collect"]},
+    {"id":"strategy.plan","displayName":"策略规划","inputSchema":"StrategyPlanningRequest","outputSchema":"StrategyPlanDraftRef","risk":"medium","aliases":["content.strategy.plan","campaign.strategy.plan","growth.strategy.plan"]},
+    {"id":"copy.generate","displayName":"文案生成","inputSchema":"CopyGenerationRequest","outputSchema":"ContentVariantListRef","risk":"medium","aliases":["title.generate","product.copy.generate","outreach.copy.generate","service.copy.generate"]},
+    {"id":"script.compose","displayName":"脚本撰写","inputSchema":"ScriptCompositionRequest","outputSchema":"ScriptArtifactRef","risk":"medium","aliases":["short_video.script","live.script","storyboard.compose"]},
+    {"id":"speech.synthesize","displayName":"语音合成","inputSchema":"SpeechSynthesisRequest","outputSchema":"AudioArtifactRef","risk":"high","aliases":["tts.synthesize","voiceover.synthesize"]},
+    {"id":"video.compose","displayName":"视频合成","inputSchema":"VideoCompositionRequest","outputSchema":"VideoArtifactRef","risk":"high","aliases":["short_video.compose","subtitle.compose"]},
+    {"id":"content.review","displayName":"内容审核","inputSchema":"ContentReviewRequest","outputSchema":"ContentEvalReportRef","risk":"high","aliases":["fact.review","brand.review","compliance.review","technical.review"]},
+    {"id":"live.orchestrate","displayName":"直播编排","inputSchema":"LiveOrchestrationRequest","outputSchema":"LivePlanRef","risk":"critical","aliases":["live.plan","live.interaction.orchestrate","live.direct"]},
+    {"id":"platform.adapt","displayName":"平台适配","inputSchema":"PlatformAdaptationRequest","outputSchema":"PlatformVariantRef","risk":"high","aliases":["douyin.adapt","kuaishou.adapt","wechat_shop.adapt","xiaohongshu.adapt"]},
+    {"id":"performance.review","displayName":"数据复盘","inputSchema":"PerformanceReviewRequest","outputSchema":"EffectReviewRef","risk":"medium","aliases":["content.performance.review","campaign.performance.review","growth.performance.review"]}
+  ],
+  "readiness":"blocked",
+  "readinessReasons":["provider_unknown","eval_pack_unavailable","w0b_contracts_unavailable","aip7_route_authority_unavailable"]
+}

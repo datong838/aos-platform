@@ -1,0 +1,77 @@
+{
+  "id": "l02-order-fulfillment",
+  "name": "L02 订单履约",
+  "description": "基于 P05 Order / P06 OrderLine 数据底座的订单履约 Logic Graph。输出 OrderFulfillmentDecision（risk_high/risk_normal）；risk_score=null 时降级为 risk_normal。",
+  "status": "draft",
+  "schema_version": 1,
+  "nodes": [
+    {
+      "id": "order_read",
+      "kind": "input",
+      "label": "读取订单履约上下文",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "schema": {
+          "required": [
+            "order_id",
+            "risk_score",
+            "order_status"
+          ]
+        }
+      }
+    },
+    {
+      "id": "risk_score_check",
+      "kind": "transform",
+      "label": "透传风险分",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "expression": "risk_score"
+      }
+    },
+    {
+      "id": "anomaly_detect",
+      "kind": "branch",
+      "label": "异常检测",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "paths": [
+          {
+            "id": "risk_high",
+            "condition": "risk_score != null && risk_score > 0.6"
+          },
+          {
+            "id": "risk_normal",
+            "default": true
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-order_read-to-risk_score_check",
+      "source_node_id": "order_read",
+      "source_port": "out",
+      "target_node_id": "risk_score_check",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 0
+    },
+    {
+      "id": "edge-risk_score_check-to-anomaly_detect",
+      "source_node_id": "risk_score_check",
+      "source_port": "out",
+      "target_node_id": "anomaly_detect",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 0
+    }
+  ],
+  "entry_node_ids": [
+    "order_read"
+  ]
+}

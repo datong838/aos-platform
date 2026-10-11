@@ -1,0 +1,30 @@
+{
+  "bases": [
+    {
+      "id": "domain.ecommerce.core",
+      "baseVersion": "1.4.3",
+      "version": "1.4.4",
+      "baseHash": "sha256:0a7f65b9862ee4a822a34d16528913f39fb3765ca3526e0467e4c1add42b072a"
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "baseVersion": "1.23.2",
+      "version": "1.23.3",
+      "baseHash": "sha256:5b2269455320780083729211b8fae41ae9283a8d90500b9aaa509616de1ca1b9"
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "baseVersion": "1.13.0",
+      "version": "1.13.1",
+      "baseHash": "sha256:d6c84672b1e488b04532d5a5d3fd7382f39954f86132d6401ee85cfb0acb89d2"
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "baseVersion": "1.2.2",
+      "version": "1.2.2",
+      "baseHash": "sha256:f17618ee08b8c0571a6791c5e815ef548f8af265a819779edfb965ed0c6f03f8"
+    }
+  ],
+  "growthSourceHash": "sha256:472c37b7783b81387b50e6879f0641ebc14301adc1ad1601dbca544e7a91a9fc",
+  "head": "5d57578fa090a917a923fe22e0cbacc0253afcb2"
+}

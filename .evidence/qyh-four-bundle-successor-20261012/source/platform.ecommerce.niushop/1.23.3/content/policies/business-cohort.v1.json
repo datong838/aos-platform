@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "aos.snapshot-business-cohort/v1",
+  "relationshipPolicyHash": "sha256:03cd5157f54ed2c7156d82bf4903cff96c2c83459ce3e91b4637cdf59ee86ae6",
+  "purposeCode": "initial_store_analysis",
+  "windowBoundary": "start-inclusive-end-exclusive",
+  "rules": [
+    {
+      "objectType": "Shop",
+      "basis": "snapshot",
+      "statusFilter": null
+    },
+    {
+      "objectType": "Product",
+      "basis": "snapshot",
+      "statusFilter": {
+        "property": "status",
+        "known": [
+          "ACTIVE",
+          "INACTIVE"
+        ],
+        "accepted": [
+          "ACTIVE"
+        ]
+      }
+    },
+    {
+      "objectType": "ProductSku",
+      "basis": "snapshot",
+      "statusFilter": null
+    },
+    {
+      "objectType": "Category",
+      "basis": "snapshot",
+      "statusFilter": null
+    },
+    {
+      "objectType": "Order",
+      "basis": "own-time",
+      "statusFilter": null,
+      "timeProperty": "createdAt"
+    },
+    {
+      "objectType": "OrderLine",
+      "basis": "parent-time",
+      "statusFilter": null,
+      "parentType": "Order",
+      "referenceProperty": "orderId",
+      "timeProperty": "createdAt"
+    },
+    {
+      "objectType": "Shipment",
+      "basis": "parent-time",
+      "statusFilter": null,
+      "parentType": "Order",
+      "referenceProperty": "orderId",
+      "timeProperty": "createdAt"
+    },
+    {
+      "objectType": "CustomerLite",
+      "basis": "snapshot",
+      "statusFilter": null
+    },
+    {
+      "objectType": "Weapp",
+      "basis": "snapshot",
+      "statusFilter": null
+    },
+    {
+      "objectType": "SystemConfig",
+      "basis": "snapshot",
+      "statusFilter": null
+    },
+    {
+      "objectType": "ProductReview",
+      "basis": "snapshot",
+      "statusFilter": null
+    },
+    {
+      "objectType": "Payment",
+      "basis": "parent-time",
+      "statusFilter": null,
+      "parentType": "Order",
+      "referenceProperty": "orderId",
+      "timeProperty": "createdAt"
+    }
+  ]
+}

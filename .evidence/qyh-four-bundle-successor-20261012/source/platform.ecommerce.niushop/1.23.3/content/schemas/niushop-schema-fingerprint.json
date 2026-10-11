@@ -1,0 +1,829 @@
+{
+  "version": 1,
+  "source_ref": "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/frozen/01-schema-fingerprint.md",
+  "generatedAt": "2026-08-05T08:16:51.688314+00:00",
+  "method": "qyh_discover_readonly 只读连接 recommend_ro@niushop_b2c_v5（只聚合不取值）",
+  "constraint": "PII_DIRECT 字段不出库",
+  "tableCount": 12,
+  "tables": [
+    {
+      "name": "ns_site",
+      "pipelineId": "P01",
+      "targetOt": "Shop",
+      "primaryKey": "site_id",
+      "rowCount": 1,
+      "softDelete": null,
+      "indices": [
+        {
+          "name": "PRIMARY",
+          "kind": "UNIQUE",
+          "columns": [
+            "site_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ns_goods",
+      "pipelineId": "P02",
+      "targetOt": "Product",
+      "primaryKey": "goods_id",
+      "rowCount": 65,
+      "validRows": 57,
+      "softDelete": {
+        "field": "is_delete",
+        "dropped": 8
+      },
+      "indices": [
+        {
+          "name": "PRIMARY",
+          "kind": "UNIQUE",
+          "columns": [
+            "goods_id"
+          ]
+        },
+        {
+          "name": "IDX_ns_goods_site_id",
+          "kind": "INDEX",
+          "columns": [
+            "site_id"
+          ]
+        },
+        {
+          "name": "IDX_ns_goods_is_delete",
+          "kind": "INDEX",
+          "columns": [
+            "is_delete"
+          ]
+        },
+        {
+          "name": "IDX_ns_goods_state",
+          "kind": "INDEX",
+          "columns": [
+            "goods_state"
+          ]
+        },
+        {
+          "name": "IDX_ns_goods_category_id",
+          "kind": "INDEX",
+          "columns": [
+            "category_id"
+          ]
+        },
+        {
+          "name": "IDX_ns_goods_sku_id",
+          "kind": "INDEX",
+          "columns": [
+            "sku_id"
+          ]
+        }
+      ],
+      "cursorIndexWarning": "增量游标 modify_time 无独立索引，全表扫描风险"
+    },
+    {
+      "name": "ns_goods_sku",
+      "pipelineId": "P03",
+      "targetOt": "ProductSku",
+      "primaryKey": "sku_id",
+      "rowCount": 73,
+      "softDelete": {
+        "field": "is_delete"
+      },
+      "indices": [
+        {
+          "name": "PRIMARY",
+          "kind": "UNIQUE",
+          "columns": [
+            "sku_id"
+          ]
+        },
+        {
+          "name": "IDX_ns_goods_site_id",
+          "kind": "INDEX",
+          "columns": [
+            "site_id"
+          ]
+        },
+        {
+          "name": "IDX_ns_goods_is_delete",
+          "kind": "INDEX",
+          "columns": [
+            "is_delete"
+          ]
+        }
+      ],
+      "cursorIndexWarning": "增量游标 modify_time 无独立索引"
+    },
+    {
+      "name": "ns_goods_category",
+      "pipelineId": "P04",
+      "targetOt": "Category",
+      "primaryKey": "category_id",
+      "rowCount": 11,
+      "softDelete": null,
+      "indices": [
+        {
+          "name": "PRIMARY",
+          "kind": "UNIQUE",
+          "columns": [
+            "category_id"
+          ]
+        },
+        {
+          "name": "pid_level",
+          "kind": "INDEX",
+          "columns": [
+            "pid",
+            "level"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ns_order",
+      "pipelineId": "P05",
+      "targetOt": "Order",
+      "primaryKey": "order_id",
+      "rowCount": 177,
+      "validRows": 117,
+      "softDelete": {
+        "field": "is_delete",
+        "dropped": 60
+      },
+      "indices": [
+        {
+          "name": "PRIMARY",
+          "kind": "UNIQUE",
+          "columns": [
+            "order_id"
+          ]
+        },
+        {
+          "name": "IDX_ns_order_create_time",
+          "kind": "INDEX",
+          "columns": [
+            "create_time"
+          ]
+        },
+        {
+          "name": "IDX_ns_order_member_id",
+          "kind": "INDEX",
+          "columns": [
+            "member_id"
+          ]
+        },
+        {
+          "name": "IDX_ns_order_order_status",
+          "kind": "INDEX",
+          "columns": [
+            "order_status"
+          ]
+        },
+        {
+          "name": "IDX_ns_order_pay_status",
+          "kind": "INDEX",
+          "columns": [
+            "pay_status"
+          ]
+        },
+        {
+          "name": "IDX_ns_order_finish_time",
+          "kind": "INDEX",
+          "columns": [
+            "finish_time"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ns_order_goods",
+      "pipelineId": "P06",
+      "targetOt": "OrderLine",
+      "primaryKey": "order_goods_id",
+      "rowCount": 227,
+      "softDelete": null,
+      "indices": [
+        {
+          "name": "PRIMARY",
+          "kind": "UNIQUE",
+          "columns": [
+            "order_goods_id"
+          ]
+        },
+        {
+          "name": "IDX_ns_order_goods_order_id",
+          "kind": "INDEX",
+          "columns": [
+            "order_id"
+          ]
+        },
+        {
+          "name": "IDX_ns_order_goods_goods_id",
+          "kind": "INDEX",
+          "columns": [
+            "goods_id"
+          ]
+        },
+        {
+          "name": "IDX_ns_order_goods_sku_id",
+          "kind": "INDEX",
+          "columns": [
+            "sku_id"
+          ]
+        },
+        {
+          "name": "IDX_ns_order_goods_member_id",
+          "kind": "INDEX",
+          "columns": [
+            "member_id"
+          ]
+        },
+        {
+          "name": "IDX_ns_order_goods_refund_status",
+          "kind": "INDEX",
+          "columns": [
+            "refund_status"
+          ]
+        }
+      ],
+      "cursorAnomaly": "create_time 227 行全为 0（D-002），不可用作游标"
+    },
+    {
+      "name": "ns_express_delivery_package",
+      "pipelineId": "P07",
+      "targetOt": "Shipment",
+      "primaryKey": "id",
+      "rowCount": 19,
+      "softDelete": null,
+      "indices": [
+        {
+          "name": "PRIMARY",
+          "kind": "UNIQUE",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "IDX_ns_express_delivery_package_site_id",
+          "kind": "INDEX",
+          "columns": [
+            "site_id"
+          ]
+        },
+        {
+          "name": "IDX_ns_express_delivery_package_order_id",
+          "kind": "INDEX",
+          "columns": [
+            "order_id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ns_member",
+      "pipelineId": "P08",
+      "targetOt": "CustomerLite",
+      "primaryKey": "member_id",
+      "rowCount": 53,
+      "softDelete": null,
+      "indices": [],
+      "wave": "D1.5",
+      "note": "frozen/01 未列 ns_member 列清单与索引；rowCount/pk 来自 frozen/02 P08"
+    },
+    {
+      "name": "ns_weapp",
+      "pipelineId": "P09",
+      "targetOt": "Weapp",
+      "primaryKey": "weapp_id",
+      "rowCount": 3,
+      "columns": [
+        {
+          "column_name": "weapp_id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "weapp_name",
+          "column_type": "varchar(100)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "appid",
+          "column_type": "varchar(100)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "appsecret",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "weapp_original",
+          "column_type": "varchar(100)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "qrcode",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "status",
+          "column_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_default",
+          "column_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "token",
+          "column_type": "varchar(100)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "encodingaeskey",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "create_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "modify_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "observationRef": "sha256:6ef53e8f516137f95907c66caa919ed34190ef32606ef12af71f556fa7db2ca0",
+      "observedAt": "2026-09-14T06:42:36.486972+00:00"
+    },
+    {
+      "name": "ns_config",
+      "pipelineId": "P10",
+      "targetOt": "SystemConfig",
+      "primaryKey": "id",
+      "rowCount": 38,
+      "columns": [
+        {
+          "column_name": "id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "weapp_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "app_module",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "config_key",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "value",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "config_desc",
+          "column_type": "varchar(1000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_use",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "create_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "modify_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "observationRef": "sha256:6ef53e8f516137f95907c66caa919ed34190ef32606ef12af71f556fa7db2ca0",
+      "observedAt": "2026-09-14T06:42:36.486972+00:00"
+    },
+    {
+      "name": "ns_goods_evaluate",
+      "pipelineId": "P11",
+      "targetOt": "ProductReview",
+      "primaryKey": "evaluate_id",
+      "rowCount": 5,
+      "columns": [
+        {
+          "column_name": "evaluate_id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "website_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_no",
+          "column_type": "bigint(20) unsigned",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_goods_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_name",
+          "column_type": "varchar(100)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_price",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_image",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "content",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "images",
+          "column_type": "varchar(3000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "videos",
+          "column_type": "varchar(3000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "explain_first",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_name",
+          "column_type": "varchar(100)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_headimg",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_anonymous",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "scores",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "again_content",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "again_images",
+          "column_type": "varchar(3000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "again_explain",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "explain_type",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_show",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "create_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "again_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shop_desccredit",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shop_servicecredit",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shop_deliverycredit",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_audit",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "again_is_audit",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "observationRef": "sha256:6ef53e8f516137f95907c66caa919ed34190ef32606ef12af71f556fa7db2ca0",
+      "observedAt": "2026-09-14T06:42:36.486972+00:00"
+    },
+    {
+      "name": "ns_pay",
+      "pipelineId": "P12",
+      "targetOt": "Payment",
+      "primaryKey": "id",
+      "rowCount": 211,
+      "columns": [
+        {
+          "column_name": "id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "weapp_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "mch_id",
+          "column_type": "varchar(32)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_appid",
+          "column_type": "varchar(32)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "out_trade_no",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": "UNI"
+        },
+        {
+          "column_name": "pay_type",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "trade_no",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_no",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_body",
+          "column_type": "varchar(1000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_detail",
+          "column_type": "varchar(1000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_addon",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_voucher",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_status",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "return_url",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "event",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "mch_info",
+          "column_type": "varchar(1000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "create_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "balance",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "balance_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_json",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_delete",
+          "column_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "relate_id",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "observationRef": "sha256:6ef53e8f516137f95907c66caa919ed34190ef32606ef12af71f556fa7db2ca0",
+      "observedAt": "2026-09-14T06:42:36.486972+00:00"
+    }
+  ],
+  "extensionObservation": {
+    "sha256": "6ef53e8f516137f95907c66caa919ed34190ef32606ef12af71f556fa7db2ca0",
+    "observedAt": "2026-09-14T06:42:36.486972+00:00",
+    "scope": "P09-P12 metadata only; earlier entries retain historical provenance"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "aos.source-readiness.reconciliation-policy/v1",
+  "policyId": "platform.ecommerce.niushop.source-reconciliation",
+  "revision": "1",
+  "checks": [
+    "source-total-observed",
+    "projection-total-observed",
+    "projection-total-equals-source-total",
+    "unexplained-delta-equals-zero"
+  ],
+  "claimBoundary": "Counts must come from the same tenant-scoped repeatable-read snapshot."
+}

@@ -1,0 +1,7 @@
+# 栖月汇四包后继全构建复核
+当前已选原4签名包经原ManifestLoader和ReleasePolicy只读核验，当前contentHash精确吻合原179文件public-root记录。原source1695与selected-public-root所有4treehash构建前后不变，22原用户修改未触碰。
+后继版本core1.4.4/platform1.23.3/Growth1.13.1，运营1.2.2原contentHash与签名保留；两个原runtime只改metadata补丁号（未发现自引用需改），Growth使用上Task完整3delta源码，不覆盖原包。三个后继源移除旧signature/eval/SBOM/image/lock，新source-only报告明确runtimeReadiness blocked。
+原更新builder真实全build完成：4包/8UI模块/8routes/15operation/3OCI镜像；依赖锁逐包digest、SBOM5依赖version/hash和OCI精确pull均独立回读，原Scope/Schema/Runtime定义保留。3本次镜像导入probe实际exit0、readonly/networknone/无挂载；临时registry仅loopback18438，原builder明确stop，本次helper终态exit137（服务有意停止，未假称exit0）。旧端口存在历史helper导致第一次唯一性只读断言失败，补充当前Task创建时点与新镜像绑定后通过，未重发构建/清理任何历史对象。
+专项/原构建器/评测类型/QYH相邻33PASS，7既有警告，0skip。新组合verify_build内容/hash/OCI/原签名来源与无效果声明通过。浏览器不适用：本波不切当前API/Web或安装。
+只完成原Build组件验收；未调用原qualification的临时签名，不借dev身份、不写Registry或生产库、不开Host/Provider/Owner，不宣称正式登录、发布、八页面或首链完成。source-only报告不等同真实经营Eval。本Build receipt绑定当前代码HEAD5d57578fa；下次原qualification强制HEAD一致，提交后的receipt不可手工改HEAD以绕过门，须在后续新HEAD的新独立受控构建窗口连同资格核验收口。已完成本次构建不得当未知效果重发。
+下一已登记项：新四包资格及独立正式publisher接线分离，先核支持的签名输入范围/正式身份路径与原qualification精确HEAD要求；旧Root只作原包只读核验，不授新正式身份。完整Goal ACTIVE。

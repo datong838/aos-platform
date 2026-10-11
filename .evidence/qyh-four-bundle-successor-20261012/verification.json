@@ -1,0 +1,72 @@
+{
+  "outcome": "FULL_UNSIGNED_CANDIDATE_BUILD_READBACK_PASS",
+  "versions": [
+    {
+      "id": "domain.ecommerce.core",
+      "version": "1.4.4",
+      "imageDigest": "sha256:289fcbd2de021f1ccbd5120b2ca819b66e9ca9ce3391bcf2b075fc279fa7611c",
+      "configDigest": "sha256:0b8adf7f0b88172091e5d2849e4bb422926a1e7f2cc0efccbac916b35b68bd6b",
+      "dependencyCount": 0,
+      "sourceEvalScope": "source-preflight-only",
+      "signed": false
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "version": "1.23.3",
+      "imageDigest": "sha256:d1cf44f8beb2d36c3e56180eebbccbc4c430dc7e223b0661d3aaffd279076dc0",
+      "configDigest": "sha256:5e0d97deafd5bc22d0e52729769a27ef823d6e5b4676d5a306975ce280940909",
+      "dependencyCount": 5,
+      "sourceEvalScope": "source-preflight-only",
+      "signed": false
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "version": "1.13.1",
+      "imageDigest": "sha256:7e33e7b58d383dbc62372b1e6f7c93838d1731bbf27b376555ebbd1fff88e98c",
+      "configDigest": "sha256:4c049fa395977e3d57333cc93384cdb5108ce4f945f3abb80e8fec8c81d5c019",
+      "dependencyCount": 5,
+      "sourceEvalScope": "source-preflight-only",
+      "signed": false
+    }
+  ],
+  "operationsPackageRetainedExact": true,
+  "eightModules": 8,
+  "runtimeOperations": 15,
+  "runtimeProbes": [
+    {
+      "name": "a0v-runtime-import-f855c1a11c2a45ca8be7056bbb33811a",
+      "imageId": "sha256:4c049fa395977e3d57333cc93384cdb5108ce4f945f3abb80e8fec8c81d5c019",
+      "exitCode": 0,
+      "mounts": 0,
+      "network": "none"
+    },
+    {
+      "name": "a0v-runtime-import-41fb67ee49a1481ca448719e1dd4b8f4",
+      "imageId": "sha256:5e0d97deafd5bc22d0e52729769a27ef823d6e5b4676d5a306975ce280940909",
+      "exitCode": 0,
+      "mounts": 0,
+      "network": "none"
+    },
+    {
+      "name": "a0v-runtime-import-7e67914a0e814b9693f86c3f9c69ec4d",
+      "imageId": "sha256:0b8adf7f0b88172091e5d2849e4bb422926a1e7f2cc0efccbac916b35b68bd6b",
+      "exitCode": 0,
+      "mounts": 0,
+      "network": "none"
+    }
+  ],
+  "localRegistryHelper": [
+    {
+      "name": "a0v-candidate-registry-7ef2f3fe3e4b4726aae013d8a458baf0",
+      "state": "exited",
+      "exitCode": 137,
+      "stoppedByOriginalBuild": true
+    }
+  ],
+  "retained1695Exact": true,
+  "oldFourSignedRootsExact": true,
+  "formalPublishingAuthority": false,
+  "currentInstallationChanged": false,
+  "formalRuntimeReady": false,
+  "builderHash": "0ac68753a560f4a29056de18d254842c3e73cc57431207860a5af9bdae9be381"
+}

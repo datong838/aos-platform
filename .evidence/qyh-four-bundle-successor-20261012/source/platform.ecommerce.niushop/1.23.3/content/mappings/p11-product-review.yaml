@@ -1,0 +1,78 @@
+pipeline_id: P11
+source_table: ns_goods_evaluate
+target_ot: ProductReview
+primary_key: evaluate_id
+site_filter: site_id=1
+incremental_strategy: snapshot
+unique_key_pattern: niushop:{site_id}:{pk}
+validation:
+  required:
+  - evaluate_id
+  - site_id
+  - goods_id
+field_mappings:
+- source: evaluate_id
+  target: id
+  type: int
+- source: site_id
+  target: siteId
+  type: int
+- source: order_id
+  target: orderId
+  type: int
+- source: order_goods_id
+  target: orderGoodsId
+  type: int
+- source: goods_id
+  target: productId
+  type: int
+- source: sku_id
+  target: skuId
+  type: int
+- source: scores
+  target: score
+  type: int
+- source: is_show
+  target: isShow
+  type: int
+- source: is_audit
+  target: isAudit
+  type: int
+- source: member_id
+  target: memberId
+  type: int
+- source: create_time
+  target: createTime
+  type: timestamp
+pii_exclusion:
+- again_content
+- again_explain
+- again_images
+- content
+- explain_first
+- images
+- member_headimg
+- member_name
+- videos
+notes:
+- Explicit minimal snapshot with observation provenance; no source modification time
+  claim.
+- Configuration values, customer free text/media and secrets are excluded before source
+  read.
+- Configuration inventory is not configuration-value interpretation; review scores
+  are not review-text diagnosis.
+- Relationships and downstream data quality/Fulfillment remain pending.
+snapshot_materialization:
+  schema_version: aos.snapshot-materialization/v3
+  platform: niushop
+  shop_key: site_id
+  source_timezone: +08:00
+  property_defaults: {}
+  time_basis: observation
+  deletion_basis: row-presence-only
+  status:
+    field: is_show
+    property_target: status
+    values:
+      '0': INACTIVE
+      '1': ACTIVE

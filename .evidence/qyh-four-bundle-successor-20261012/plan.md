@@ -1,0 +1,5 @@
+# 栖月汇最新四包继任候选全构建
+基线5d57578fa/AOS-001910，231-9原四包复用与八工作台恢复，新运行依赖闭包已验收。候选一正式登录/独立publisher来源待答；候选二当前已登记原四包后继构建独立无经营效果，选择二。
+新增仅Task内prepare_profile.py/build_profile.py/新资料和source目录；外部新输出aos-recovery/qyh-four-bundle-build-20261012-r1。原selected-public-bundles4包签名/hash当前只读核对，原1695候选/发布文件保护。core1.4.3→1.4.4、platform1.23.2→1.23.3（镜像依赖变化不得占用旧坐标）；Growth使用已冻结1.13.1源码候选；运营无runtime保持1.2.2内容，仅独立copy，原release不改。
+只修改两个metadata补丁号/发现的精确selfrefs；三个runtime来源copy移除旧signature/eval/SBOM/image/lock，创建UNBUILT_UNSIGNED provenance，旧证据不可冒称新包测试pass。保留schema兼容资料，原runtimeRegistration/ManifestLoader实际加载核8模块/8routes/15operation；当前范围source测试资料新生成，新评测明确source-only/runtimeReadiness blocked，不证明首链。
+原builder动态加载配置ALL_CASES/RUNTIME_CASES/CANDIDATE_ROOT，仅augment hook在外部新输出加入本轮原预检source-only报告及新空SBOM后调用原augment；每包lock/hash由原更新build计算。镜像本地离线构建、3实际只读无网模块导入门、独立OCI导出/本地临时registry精确拉取；retain_artifacts=true保留构建失败/成功资料与终止helper，不重发未知效果。这里只完整Build组件验收，不调用qualification临时签名、不借用dev signer或正式publish/install/真库/Host/Provider。下一项独立新四包资格核验；正式身份仍等待已有来源。

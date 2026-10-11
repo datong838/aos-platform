@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "aos.source-readiness.freshness-policy/v1",
+  "policyId": "platform.ecommerce.niushop.source-freshness",
+  "revision": "1",
+  "timezone": "Asia/Shanghai",
+  "graceMinutes": 120,
+  "expectedCronByPipeline": {
+    "P01-shop-qyh": "0 2 * * *",
+    "P02-product-qyh": "0 3 * * *",
+    "P03-product-sku-qyh": "0 4 * * *",
+    "P04-category-qyh": "0 5 * * *",
+    "P05-order-qyh": "0 6 * * *",
+    "P06-order-line-qyh": "0 7 * * *",
+    "P07-shipment-qyh": "0 8 * * *",
+    "P08-customer-lite-qyh": "0 9 * * *",
+    "P09-weapp-qyh": "0 10 * * *",
+    "P10-system-config-qyh": "0 11 * * *",
+    "P11-product-review-qyh": "0 12 * * *",
+    "P12-payment-qyh": "0 13 * * *"
+  }
+}

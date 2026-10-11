@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "ecommerce.growth.connector-action-governance.v1",
+  "id": "ecommerce.growth.connector-action-governance",
+  "status": "draft_only_platform_writes_deferred",
+  "logicSequence": ["G05", "G06"],
+  "canonicalAuthorities": [
+    "ConnectorCapabilitySnapshotRevision",
+    "ActionProposalRevision",
+    "ApprovalEventRevision",
+    "ExecutionLeaseRevision",
+    "ActionReceiptRevision",
+    "LivePlanRevision",
+    "AvatarSessionRevision",
+    "HarnessRevision"
+  ],
+  "legacyNonAuthorities": [
+    "connector_registry_disk_plugin_state",
+    "connector_runtime_mock_or_direct_write_path"
+  ],
+  "capabilityStates": [
+    "unknown",
+    "unsupported",
+    "manual_only",
+    "read_only",
+    "write_requires_review",
+    "supported"
+  ],
+  "capabilityRules": [
+    "unverified_or_expired_is_unknown_or_blocked",
+    "non_unknown_requires_exact_official_evidence",
+    "status_query_idempotency_and_reconcile_must_be_verified",
+    "no_static_platform_capability_claim"
+  ],
+  "webhookPreParseGates": [
+    "signature",
+    "timestamp_window",
+    "nonce_replay",
+    "raw_body_hash",
+    "schema_compatibility"
+  ],
+  "actionGates": [
+    "exact_proposal_version_and_hash",
+    "exact_payload_hash",
+    "unexpired_approved_proposal",
+    "server_risk_floor",
+    "maker_checker_and_minimum_approvals",
+    "exact_unexpired_initial_execution_lease",
+    "proposal_reserve_invoke_kill_gates",
+    "unknown_requires_reconcile_without_retry",
+    "compensation_requires_separate_action_proposal"
+  ],
+  "permanentlyBlocked": [
+    "R4_payment_refund_order_price_inventory_or_financial_action",
+    "blind_retry_after_unknown",
+    "direct_reverse_compensation",
+    "platform_write_without_platform_adapter_and_side_effect_lease"
+  ],
+  "operationalDependencies": [
+    "org-org/dev-project SourceReadiness P01-P12 current 12/12 READY",
+    "Data Lease legally released or transferred",
+    "m1 serialized CAS and Prime readback",
+    "platform-specific official CapabilitySnapshot and PlatformAdapter",
+    "separate real-side-effect Lease"
+  ],
+  "forbiddenData": [
+    "secretPayload",
+    "token",
+    "cookie",
+    "openId",
+    "mobile",
+    "address",
+    "rawChat",
+    "chainOfThought",
+    "fullRetrievalContext"
+  ],
+  "sideEffects": {
+    "connectorCall": false,
+    "providerCall": false,
+    "toolCall": false,
+    "actionExecution": false,
+    "databaseWrite": false,
+    "memoryWrite": false,
+    "wikiWrite": false,
+    "platformWrite": false
+  }
+}

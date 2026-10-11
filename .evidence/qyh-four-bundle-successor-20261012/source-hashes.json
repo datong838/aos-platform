@@ -1,0 +1,6 @@
+{
+  "domain.ecommerce.core/1.4.4": "sha256:c31034af3caed03648624adb1911b8166beccb1c8df6d3d17ab36c4ba72b3b80",
+  "platform.ecommerce.niushop/1.23.3": "sha256:3bc65c8fae3afcf9a3dfa9543c9180f13179352ffb1ed7406a8586822235de8a",
+  "solution.ecommerce.growth/1.13.1": "sha256:6d7fc9dab99b327764e59a53f7f7568047b96592def96ef0579afa09ace93291",
+  "solution.ecommerce.operations-base/1.2.2": "sha256:f17618ee08b8c0571a6791c5e815ef548f8af265a819779edfb965ed0c6f03f8"
+}

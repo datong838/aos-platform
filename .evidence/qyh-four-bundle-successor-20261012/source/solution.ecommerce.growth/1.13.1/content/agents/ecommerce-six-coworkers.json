@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "agents": [
+    {"id":"ecommerce.data_advisor","displayName":"数据参谋","roleKey":"data_advisor","logicIds":["D01","D02","D03","D04","D05","D06"],"responsibility":"growth.coordination"},
+    {"id":"ecommerce.content_officer","displayName":"内容官","roleKey":"content_officer","logicIds":["C01","C02","C03","C04","C05","C06","C07","C08"],"responsibility":"production.coordination"},
+    {"id":"ecommerce.shopping_advisor","displayName":"导购顾问","roleKey":"shopping_advisor","logicIds":["G01","G02","G03","G04","G05","G06"],"responsibility":"commerce.advisory"},
+    {"id":"ecommerce.customer_service","displayName":"客服专员","roleKey":"customer_service","logicIds":["S01","S02","S03","S04","S05","S06"],"responsibility":"service.escalation"},
+    {"id":"ecommerce.private_domain_manager","displayName":"私域管家","roleKey":"private_domain_manager","logicIds":["P01","P02","P03","P04","P05"],"responsibility":"relationship.stewardship"},
+    {"id":"ecommerce.campaign_planner","displayName":"活动策划师","roleKey":"campaign_planner","logicIds":["A01","A02","A03","A04","A05","A06"],"responsibility":"campaign.coordination"}
+  ],
+  "runtimeReadiness":"blocked",
+  "blockers":["agent_instance_not_installed","skill_bindings_unavailable","aip7_route_authority_unavailable"]
+}

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "artifacts": [
+    {"assetType":"MemoryPolicy","id":"ecommerce.memory.default","rules":["exact_instance_subject","tenant_scope","no_payload_in_handoff"]},
+    {"assetType":"HandoffPolicy","id":"ecommerce.handoff.default","rules":["HandoffEnvelope_only","minimal_disclosure","one_time_token"]},
+    {"assetType":"EffectReviewSchema","id":"ecommerce.effect-review.default","rules":["metric_definition","evidence_refs","assumptions","uncertainty"]},
+    {"assetType":"LicensePolicy","id":"ecommerce.license.default","rules":["source_license_required","derived_asset_traceable"]},
+    {"assetType":"ReadinessPolicy","id":"ecommerce.readiness.default","states":["available","degraded","disabled","blocked","unknown"],"productionStart":["available"]},
+    {"assetType":"ResponsibilityPolicy","id":"ecommerce.responsibility.default","rules":["coordinator_is_responsibility_not_identity","maker_checker","external_publish_requires_approval"]}
+  ]
+}

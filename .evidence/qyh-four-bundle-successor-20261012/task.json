@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-four-bundle-successor-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001910",
+  "scope": [
+    "aos-platform/.evidence/qyh-four-bundle-successor-20261012",
+    "aos-recovery/qyh-four-bundle-build-20261012-r1"
+  ],
+  "excluded_scope": [
+    "maintenance/current-database",
+    "aos-platform/bundles/candidates",
+    "aos-platform/bundles/releases"
+  ],
+  "expected_outputs": [
+    "Immutable exact current4-source successors core1.4.4 platform1.23.3 Growth1.13.1 operations1.2.2 with original8 modules15operations and newly scoped eval evidence; actual original full offline build4 and three immutable runtime module probes/OCI pulls; no real signing/publish/install"
+  ],
+  "lease_expires_at": "2026-10-12T08:32:09.951823+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T04:32:10+08:00"
+}

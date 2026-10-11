@@ -1,0 +1,102 @@
+pipeline_id: P03
+source_table: ns_goods_sku
+target_ot: ProductSku
+primary_key: sku_id
+site_filter: site_id=1
+incremental_strategy: snapshot
+unique_key_pattern: niushop:{site_id}:{pk}
+validation:
+  non_negative:
+  - price
+  - market_price
+  - cost_price
+  - stock
+  required:
+  - sku_id
+  - site_id
+  - goods_id
+  - sku_name
+  - create_time
+field_mappings:
+- source: sku_id
+  target: id
+  type: int
+- source: site_id
+  target: siteId
+  type: int
+- source: goods_id
+  target: productId
+  type: int
+- source: sku_name
+  target: name
+  type: string
+- source: sku_no
+  target: barcode
+  type: string
+- source: price
+  target: price
+  type: decimal
+- source: market_price
+  target: marketPrice
+  type: decimal
+- source: cost_price
+  target: costPrice
+  type: decimal
+- source: discount_price
+  target: discountPrice
+  type: decimal
+- source: stock
+  target: stock
+  type: decimal
+- source: sku_image
+  target: image
+  type: string
+- source: goods_state
+  target: goodsState
+  type: int
+- source: is_virtual
+  target: isVirtual
+  type: int
+- source: is_default
+  target: isDefault
+  type: int
+- source: is_delete
+  target: isDelete
+  type: int
+- source: sale_num
+  target: saleNum
+  type: decimal
+- source: create_time
+  target: createTime
+  type: timestamp
+- source: modify_time
+  target: modifyTime
+  type: timestamp
+pii_exclusion: []
+notes:
+- Full-site SKU object snapshot, including off-shelf and explicitly deleted rows.
+- Retains goods_id as productId; hasSku relation materialization and orphan checks
+  remain pending.
+- No claim that redundant SKU goods_state matches the parent Product state.
+- Physical absence is not deletion; source timestamps never advance just because observation
+  repeats.
+snapshot_materialization:
+  schema_version: aos.snapshot-materialization/v2
+  platform: niushop
+  shop_key: site_id
+  source_timezone: +08:00
+  property_defaults:
+    currency: CNY
+  source_updated_at:
+    primary: modify_time
+    fallback: create_time
+  tombstone:
+    field: is_delete
+    live_value: 0
+    deleted_value: 1
+  status:
+    field: goods_state
+    property_target: status
+    values:
+      '0': INACTIVE
+      '1': ACTIVE

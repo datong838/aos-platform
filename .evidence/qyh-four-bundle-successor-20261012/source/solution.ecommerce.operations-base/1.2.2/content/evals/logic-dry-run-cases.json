@@ -1,0 +1,254 @@
+{
+  "id": "logic-dry-run-cases",
+  "name": "L01-L03 Logic Graph dryRun 用例矩阵",
+  "description": "D1.5 附录 A.5 测试矩阵的 fixture 投影：覆盖 L01 商品上架检测 / L02 订单履约 / L03 发货超时的正常、边界与 null 降级路径，以及结构合法性与 dryRun 成功断言。逐行追溯 AC-D1.5-5。",
+  "cases": [
+    {
+      "case_id": "l01-pass",
+      "graph_id": "l01-product-launch",
+      "title": "L01 pass",
+      "input": {
+        "product_id": "p-1",
+        "quality_score": 0.9,
+        "sku_count": 3,
+        "category_id": "cat-5"
+      },
+      "assertion": {
+        "type": "selected_branch_path",
+        "expected": "pass"
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    },
+    {
+      "case_id": "l01-block-low-score",
+      "graph_id": "l01-product-launch",
+      "title": "L01 block（低分）",
+      "input": {
+        "product_id": "p-2",
+        "quality_score": 0.5,
+        "sku_count": 3,
+        "category_id": "cat-5"
+      },
+      "assertion": {
+        "type": "selected_branch_path",
+        "expected": "block"
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    },
+    {
+      "case_id": "l01-block-no-sku",
+      "graph_id": "l01-product-launch",
+      "title": "L01 block（无 SKU）",
+      "input": {
+        "product_id": "p-3",
+        "quality_score": 0.9,
+        "sku_count": 0,
+        "category_id": "cat-5"
+      },
+      "assertion": {
+        "type": "selected_branch_path",
+        "expected": "block"
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    },
+    {
+      "case_id": "l01-block-no-category",
+      "graph_id": "l01-product-launch",
+      "title": "L01 block（无分类）",
+      "input": {
+        "product_id": "p-4",
+        "quality_score": 0.9,
+        "sku_count": 3,
+        "category_id": ""
+      },
+      "assertion": {
+        "type": "selected_branch_path",
+        "expected": "block"
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    },
+    {
+      "case_id": "l01-needs-review-null",
+      "graph_id": "l01-product-launch",
+      "title": "L01 needs_review（null 降级）",
+      "input": {
+        "product_id": "p-5",
+        "quality_score": null,
+        "sku_count": 3,
+        "category_id": "cat-5"
+      },
+      "assertion": {
+        "type": "selected_branch_path",
+        "expected": "needs_review"
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    },
+    {
+      "case_id": "l02-risk-high",
+      "graph_id": "l02-order-fulfillment",
+      "title": "L02 risk_high",
+      "input": {
+        "order_id": "o-1",
+        "risk_score": 0.7,
+        "order_status": "pending"
+      },
+      "assertion": {
+        "type": "selected_branch_path",
+        "expected": "risk_high"
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    },
+    {
+      "case_id": "l02-risk-normal-low",
+      "graph_id": "l02-order-fulfillment",
+      "title": "L02 risk_normal（低风险）",
+      "input": {
+        "order_id": "o-2",
+        "risk_score": 0.3,
+        "order_status": "pending"
+      },
+      "assertion": {
+        "type": "selected_branch_path",
+        "expected": "risk_normal"
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    },
+    {
+      "case_id": "l02-risk-normal-null",
+      "graph_id": "l02-order-fulfillment",
+      "title": "L02 risk_normal（null 降级）",
+      "input": {
+        "order_id": "o-3",
+        "risk_score": null,
+        "order_status": "pending"
+      },
+      "assertion": {
+        "type": "selected_branch_path",
+        "expected": "risk_normal"
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    },
+    {
+      "case_id": "l03-overdue",
+      "graph_id": "l03-shipment-overdue",
+      "title": "L03 overdue",
+      "input": {
+        "order_id": "o-4",
+        "overdue_hours": 50,
+        "shipment_status": "pending"
+      },
+      "assertion": {
+        "type": "selected_branch_path",
+        "expected": "overdue"
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    },
+    {
+      "case_id": "l03-watch",
+      "graph_id": "l03-shipment-overdue",
+      "title": "L03 watch",
+      "input": {
+        "order_id": "o-5",
+        "overdue_hours": 10,
+        "shipment_status": "pending"
+      },
+      "assertion": {
+        "type": "selected_branch_path",
+        "expected": "watch"
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    },
+    {
+      "case_id": "l03-ok-zero",
+      "graph_id": "l03-shipment-overdue",
+      "title": "L03 ok（零超时）",
+      "input": {
+        "order_id": "o-6",
+        "overdue_hours": 0,
+        "shipment_status": "shipped"
+      },
+      "assertion": {
+        "type": "selected_branch_path",
+        "expected": "ok"
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    },
+    {
+      "case_id": "l03-ok-null",
+      "graph_id": "l03-shipment-overdue",
+      "title": "L03 ok（null 降级）",
+      "input": {
+        "order_id": "o-7",
+        "overdue_hours": null,
+        "shipment_status": "pending"
+      },
+      "assertion": {
+        "type": "selected_branch_path",
+        "expected": "ok"
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    },
+    {
+      "case_id": "structure-valid",
+      "graph_ids": [
+        "l01-product-launch",
+        "l02-order-fulfillment",
+        "l03-shipment-overdue"
+      ],
+      "title": "结构合法性",
+      "input": null,
+      "assertion": {
+        "type": "validate_logic_graph",
+        "expected": {
+          "valid": true
+        }
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    },
+    {
+      "case_id": "dry-run-succeeded",
+      "graph_ids": [
+        "l01-product-launch",
+        "l02-order-fulfillment",
+        "l03-shipment-overdue"
+      ],
+      "title": "dryRun succeeded",
+      "input": "each graph one sample",
+      "assertion": {
+        "type": "dry_run_status",
+        "expected": {
+          "status": "succeeded"
+        }
+      },
+      "coverage": [
+        "AC-D1.5-5"
+      ]
+    }
+  ]
+}

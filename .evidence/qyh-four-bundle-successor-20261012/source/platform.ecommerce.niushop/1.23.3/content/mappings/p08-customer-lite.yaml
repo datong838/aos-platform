@@ -1,0 +1,109 @@
+pipeline_id: P08
+source_table: ns_member
+target_ot: CustomerLite
+primary_key: member_id
+site_filter: site_id=1
+incremental_strategy: snapshot
+unique_key_pattern: niushop:{site_id}:{pk}
+wave: D1.5
+field_mappings:
+- source: member_id
+  target: id
+  type: int
+- source: member_level
+  target: memberLevel
+  type: int
+- source: reg_time
+  target: createdAt
+  type: timestamp
+- source: status
+  target: sourceStatus
+  type: int
+- source: site_id
+  target: siteId
+  type: int
+- source: is_delete
+  target: isDelete
+  type: int
+public_source_allowlist:
+- member_id
+- member_level
+- status
+- site_id
+- is_delete
+- reg_time
+- create_time
+- modify_time
+- last_visit_time
+- login_time
+- last_login_time
+customer_lite_schema_version: 2
+pii_exclusion:
+- password
+- pay_password
+- wx_openid
+- weapp_openid
+- wx_unionid
+- ali_openid
+- baidu_openid
+- toutiao_openid
+- douyin_openid
+- qq_openid
+- login_ip
+- last_login_ip
+- source_member
+- fenxiao_id
+- share_member
+- username
+- member_code
+- nickname
+- mobile
+- email
+- headimg
+- realname
+- sex
+- birthday
+- province_id
+- city_id
+- district_id
+- address
+- full_address
+source_field_count: 77
+notes:
+- Public schema v2 business properties plus mandatory explicit observation provenance
+  only.
+- Only currently verified source status 1 is accepted; unknown account states require
+  an explicit successor policy.
+- Registration time is actual reg_time; no inferred creation or modification time.
+- Source selected columns remain within the existing CustomerLite allowlist; identity
+  resolver is not invoked.
+- Order relationship and order_count/last_order_days derived receipts remain pending.
+validation:
+  required:
+  - member_id
+  - site_id
+  - reg_time
+  - status
+  - is_delete
+snapshot_materialization:
+  schema_version: aos.snapshot-materialization/v3
+  platform: niushop
+  shop_key: site_id
+  source_timezone: +08:00
+  time_basis: observation
+  deletion_basis:
+    field: is_delete
+    live_value: 0
+    deleted_value: 1
+  property_defaults: {}
+  status:
+    field: status
+    property_target: status
+    values:
+      '1': ACTIVE
+  public_projection:
+    schema_version: 2
+    properties:
+    - memberLevel
+    - status
+    - createdAt

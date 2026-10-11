@@ -1,0 +1,78 @@
+pipeline_id: P04
+source_table: ns_goods_category
+target_ot: Category
+primary_key: category_id
+site_filter: site_id=1
+incremental_strategy: snapshot
+unique_key_pattern: niushop:{site_id}:{pk}
+validation:
+  required:
+  - category_id
+  - site_id
+  - category_name
+  hierarchy:
+    parent_field: pid
+    root_value: 0
+field_mappings:
+- source: category_id
+  target: id
+  type: int
+- source: site_id
+  target: siteId
+  type: int
+- source: category_name
+  target: name
+  type: string
+- source: short_name
+  target: shortName
+  type: string
+- source: pid
+  target: parentCategoryId
+  type: int
+- source: level
+  target: level
+  type: int
+- source: is_show
+  target: isShow
+  type: int
+- source: sort
+  target: sort
+  type: int
+- source: image
+  target: image
+  type: string
+- source: category_id_1
+  target: categoryId1
+  type: int
+- source: category_id_2
+  target: categoryId2
+  type: int
+- source: category_id_3
+  target: categoryId3
+  type: int
+- source: category_full_name
+  target: fullName
+  type: string
+pii_exclusion: []
+notes:
+- Category has no source modification timestamp; explicit observation metadata is
+  not historical source time.
+- Complete snapshot hierarchy rejects missing parents and cycles; physical absence
+  is never a delete instruction.
+- Product.inCategory relationship materialization remains pending; category source
+  fields are retained.
+- Unknown visibility states fail closed. No current source population claim is made.
+snapshot_materialization:
+  schema_version: aos.snapshot-materialization/v3
+  platform: niushop
+  shop_key: site_id
+  source_timezone: +08:00
+  property_defaults: {}
+  time_basis: observation
+  deletion_basis: row-presence-only
+  status:
+    field: is_show
+    property_target: status
+    values:
+      '0': INACTIVE
+      '1': ACTIVE

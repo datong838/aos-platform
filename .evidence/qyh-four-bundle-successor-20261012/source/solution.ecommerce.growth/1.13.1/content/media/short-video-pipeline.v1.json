@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "aos.ecommerce.short-video-pipeline.v1",
+  "pipelineId": "ecommerce.content.short-video.v1",
+  "deliverableKind": "short_video",
+  "durationMs": {"minimum": 30000, "maximum": 60000},
+  "canvas": {"width": 1080, "height": 1920, "fps": 25},
+  "stages": [
+    {"id": "script", "capability": "script.compose", "outputRole": "script"},
+    {"id": "tts", "capability": "speech.synthesize", "outputRole": "voiceover"},
+    {"id": "subtitle", "capability": "video.compose", "outputRole": "subtitle"},
+    {"id": "render", "capability": "video.compose", "outputRole": "video"},
+    {"id": "review", "capability": "content.review", "outputRole": "eval_report"}
+  ],
+  "requiredAssetRoles": ["product_image", "voiceover", "subtitle"],
+  "optionalAssetRoles": ["bgm", "font"],
+  "requiredAuthorities": [
+    "Artifact",
+    "AssetProvenanceRevision",
+    "AssetLicenseRevision",
+    "EvidenceBundleRevision",
+    "AssetWithdrawalPolicyRevision",
+    "CapabilityBinding",
+    "BudgetRevision",
+    "ExecutorLease"
+  ],
+  "execution": {
+    "shell": false,
+    "networkInputs": false,
+    "overwriteOutput": false,
+    "unknownRetry": false
+  },
+  "operationalStatus": "blocked_until_exact_assets_tts_and_ffmpeg_are_ready"
+}

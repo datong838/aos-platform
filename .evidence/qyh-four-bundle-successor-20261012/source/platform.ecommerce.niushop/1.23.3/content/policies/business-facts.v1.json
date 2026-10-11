@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "aos.snapshot-business-facts/v1",
+  "fieldPolicyHash": "sha256:79c6a340984fb2e3b2e4cd918476da5378a70ca06c2ae00b771bdaebd0ba697d",
+  "purposeCode": "initial_store_analysis",
+  "facts": [
+    {
+      "objectType": "Shop",
+      "mode": "records",
+      "fields": [
+        "name",
+        "status",
+        "currency",
+        "timezone"
+      ]
+    },
+    {
+      "objectType": "Product",
+      "mode": "records",
+      "fields": [
+        "title",
+        "status",
+        "price",
+        "stock",
+        "currency",
+        "createdAt"
+      ]
+    },
+    {
+      "objectType": "ProductSku",
+      "mode": "records",
+      "fields": [
+        "name",
+        "status",
+        "price",
+        "stock",
+        "currency"
+      ]
+    },
+    {
+      "objectType": "Category",
+      "mode": "records",
+      "fields": [
+        "name",
+        "status",
+        "level"
+      ]
+    },
+    {
+      "objectType": "Order",
+      "mode": "group-counts",
+      "fields": [
+        "orderStatus",
+        "payStatus"
+      ]
+    },
+    {
+      "objectType": "OrderLine",
+      "mode": "records",
+      "fields": [
+        "goodsName",
+        "quantity",
+        "unitPrice",
+        "lineAmount",
+        "refundStatus",
+        "currency"
+      ]
+    },
+    {
+      "objectType": "Shipment",
+      "mode": "group-counts",
+      "fields": [
+        "status",
+        "deliveryType"
+      ]
+    },
+    {
+      "objectType": "CustomerLite",
+      "mode": "group-counts",
+      "fields": [
+        "memberLevel",
+        "status"
+      ]
+    },
+    {
+      "objectType": "Weapp",
+      "mode": "records",
+      "fields": [
+        "name",
+        "status"
+      ]
+    },
+    {
+      "objectType": "SystemConfig",
+      "mode": "records",
+      "fields": [
+        "key",
+        "status",
+        "isUse"
+      ]
+    },
+    {
+      "objectType": "ProductReview",
+      "mode": "group-counts",
+      "fields": [
+        "status",
+        "score",
+        "isAudit"
+      ]
+    },
+    {
+      "objectType": "Payment",
+      "mode": "group-counts",
+      "fields": [
+        "status",
+        "payStatus"
+      ]
+    }
+  ]
+}

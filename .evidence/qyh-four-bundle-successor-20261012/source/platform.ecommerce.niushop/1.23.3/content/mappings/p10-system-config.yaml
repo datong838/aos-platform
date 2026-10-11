@@ -1,0 +1,56 @@
+pipeline_id: P10
+source_table: ns_config
+target_ot: SystemConfig
+primary_key: id
+site_filter: site_id=1
+incremental_strategy: snapshot
+unique_key_pattern: niushop:{site_id}:{pk}
+validation:
+  required:
+  - id
+  - site_id
+  - config_key
+field_mappings:
+- source: id
+  target: id
+  type: int
+- source: site_id
+  target: siteId
+  type: int
+- source: weapp_id
+  target: weappId
+  type: int
+- source: app_module
+  target: module
+  type: string
+- source: config_key
+  target: key
+  type: string
+- source: is_use
+  target: isUse
+  type: int
+pii_exclusion:
+- config_desc
+- value
+notes:
+- Explicit minimal snapshot with observation provenance; no source modification time
+  claim.
+- Configuration values, customer free text/media and secrets are excluded before source
+  read.
+- Configuration inventory is not configuration-value interpretation; review scores
+  are not review-text diagnosis.
+- Relationships and downstream data quality/Fulfillment remain pending.
+snapshot_materialization:
+  schema_version: aos.snapshot-materialization/v3
+  platform: niushop
+  shop_key: site_id
+  source_timezone: +08:00
+  property_defaults: {}
+  time_basis: observation
+  deletion_basis: row-presence-only
+  status:
+    field: is_use
+    property_target: status
+    values:
+      '0': INACTIVE
+      '1': ACTIVE

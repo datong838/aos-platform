@@ -1,0 +1,32 @@
+{
+  "workshop_id": "w02-product-inventory",
+  "title": "商品与库存运营台",
+  "route": "workshop/inventory",
+  "widgets": [
+    {
+      "id": "product-sku-list",
+      "title": "商品/SKU 列表",
+      "source_ot": "Product+ProductSku",
+      "aggregator": "mergeProductSkuView"
+    },
+    {
+      "id": "low-stock-queue",
+      "title": "低库存队列",
+      "source_ot": "ProductSku",
+      "filter": "stock_health == 'low'"
+    },
+    {
+      "id": "category-tree",
+      "title": "分类树",
+      "source_ot": "Category",
+      "aggregator": "buildCategoryTree"
+    },
+    {
+      "id": "quality-alert",
+      "title": "质量告警",
+      "source_ot": "Product",
+      "filter": "quality_score < 0.8"
+    }
+  ],
+  "decision_tags": "BLOCKED_PENDING_G2"
+}
