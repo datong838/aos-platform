@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-11T02:59:38.608822+00:00",
+  "cluster": "7683855731447750695",
+  "table_count": 626,
+  "baseline_sha256": "3054964cca1e9ac25d121a74a3633e7ac84ae653bba3ab997392bc026d0ce6dd",
+  "current_sha256": "e2117e4dc089ae9b9d51a525f254fe3517b370ec09d056158796c32dfbe1bf35",
+  "exact_equal": true,
+  "difference_categories": {},
+  "read_only": true,
+  "private_snapshot": "/Users/ddt/work/projects/ai_agent/aos-recovery/api159-reboot-ba05d7d655ea/post-startup-full-snapshot.json",
+  "business_first_chain": false
+}

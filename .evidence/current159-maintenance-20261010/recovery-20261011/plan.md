@@ -11,3 +11,6 @@ Export exact HEAD3df1e2d42 using existing prepare_api159_source archive validato
 
 ## Exact signed launch replacement
 Preflight159/signature4/bindings0 and full1554module import passed. Original daily job registered without PID and8080 free. Preserve private original plist. Bootout this inactive exact label once, CAS replace only source cwd/entry path, bootstrap same label once. Intent/terminal per operation, no retry unknown. KeepAlive remains false, signed receipt/flags unchanged; retain all old artifacts. Verify new PID/starttime/port and current-source cwd before HTTP acceptance.
+
+## Post-startup full readonly comparison
+Use original snapshot_all/snapshot_supplement and exact dependency QUERY in REPEATABLE READ READ ONLY against original cluster159. Compare base/supplement/bindings to prior after-canary-refresh-full159-readonly.json without normalization or ignored fields. Private0600 snapshot, public hashes/counts/categories only; no schema/data writes.
