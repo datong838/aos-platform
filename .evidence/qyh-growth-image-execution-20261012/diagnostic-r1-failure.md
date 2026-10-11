@@ -1,0 +1,1 @@
+前置源码hash比较失败，未构建镜像或创建容器。原build _tree_hash返回sha256:前缀，原prepare tree_hash不含前缀；诊断输入按同一算法精确加前缀后复验，未改源码或放宽hash校验。

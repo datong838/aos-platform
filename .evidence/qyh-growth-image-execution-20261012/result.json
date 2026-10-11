@@ -1,0 +1,20 @@
+{
+  "imageId": "sha256:dc25481510ca184b6f2f3a44a8d3401395875c1cb582079f13aced6d481cd773",
+  "archiveHash": "2853bcab54e5aee89f1f914a8c22bbfcb97bb2296e20893f8e8a17e47db6e4a8",
+  "base": {
+    "platform": "linux/arm64",
+    "baseImage": "python:3.11-alpine",
+    "baseConfigDigest": "sha256:0505371492f8406a47d406e1d1ea3bcf707a95fc1ddf785bf6c95c84df55922a"
+  },
+  "sdkHash": "sha256:328ddd63fc4baaa53eeb7446bfa5fd7509124c60d00ce93768716048682c0660",
+  "sourceHash": "sha256:472c37b7783b81387b50e6879f0641ebc14301adc1ad1601dbca544e7a91a9fc",
+  "container": "qyh-growth-image-execution-20261012",
+  "state": "exited",
+  "exitCode": 1,
+  "diagnosticPassed": false,
+  "mountCount": 0,
+  "readonlyRootfs": true,
+  "network": "none",
+  "retainedFilesUnchanged": 1695,
+  "formalRuntimeReady": false
+}

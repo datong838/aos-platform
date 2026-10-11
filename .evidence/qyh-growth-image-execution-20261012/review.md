@@ -1,0 +1,6 @@
+# 原镜像实际执行复核与后续入口
+原构建器真实离线生成镜像dc2548，原注册PASS但阶段评测实际ModuleNotFoundError:pydantic，exit1。因此旧registration-only验收不能支撑阶段业务可执行结论。失败日志与镜像保留，未重发未知结果。
+同Task独立修复配方遵循原API uv.lock五依赖闭包/CP311musllinux_aarch64和通用wheel精确SHA256；仅下载锁中URL，构建networknone/pullfalse/no-index/no-deps/require-hashes。无macOS虚拟环境复制、无全局依赖改动。
+新镜像真实42原Growth模块导入、Media/EvalContract正向及无关类型/布尔版本拒绝、未接线Host拒绝通过；终态exit0、零挂载、零网络、只读根、UID65534，原1695包和sourcehash独立再读不变。两只诊断容器和新旧镜像保留供只读复核，不改真库或当前服务。
+边界：这是候选镜像配方证据，不是新完整四包Build/独立publisher/Registry发布/安装或自然经营首链。原冻结builder尚未改；正式登录配置和独立publisher未接入，不声明栖月汇全恢复。
+下一已登记安全项：原候选构建器运行依赖闭包修复，新增原Growth声明依赖lock和构建时离线受控wheel门，真实业务模块导入检查进入原qualification；先方案和文件范围Task，不能仅将本Task诊断脚本当生产修复完成。正式全系统接线并行保持原配置路径请求待答。

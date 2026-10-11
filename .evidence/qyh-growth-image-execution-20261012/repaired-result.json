@@ -1,0 +1,11 @@
+{
+  "imageId": "sha256:7ac252b7c5829150431302ebc2bf43f5aa2d8299025faba73a3e57f735f75676",
+  "container": "qyh-growth-image-repaired-20261012",
+  "state": "exited",
+  "exitCode": 0,
+  "diagnosticPassed": true,
+  "mountCount": 0,
+  "readonlyRootfs": true,
+  "network": "none",
+  "formalRuntimeReady": false
+}

@@ -1,0 +1,12 @@
+{
+  "state": "SOURCE_PREPARED_UNBUILT_UNSIGNED",
+  "apiRegistrations": 11,
+  "workshopSelfReferences": 8,
+  "retainedFilesUnchanged": 1695,
+  "sourceDeltaFiles": 3,
+  "isolatedCandidateChecks": "PASS",
+  "existingTargetRefusal": "PASS",
+  "runtimeReady": false,
+  "formalLoginConnected": false,
+  "independentPublisherConnected": false
+}

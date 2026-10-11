@@ -1,0 +1,6 @@
+original registration PASS
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/aos/bundle/backend/ecommerce_growth/ecommerce_analyst_stage_eval_report.py", line 6, in <module>
+    from pydantic import Field, StrictInt, model_validator
+ModuleNotFoundError: No module named 'pydantic'
