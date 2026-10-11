@@ -1,0 +1,13 @@
+{
+  "exactFrozenRevisionAndSeal": true,
+  "threeLifecycleReceiptsExact": true,
+  "driftedDraftNotFrozen": true,
+  "failedRequestsNoReceipt": true,
+  "temporaryRoleRemoved": true,
+  "sourceAndOriginalClone647DataExact": true,
+  "allOriginalMetadataExact": true,
+  "legacyStaticSourceOnly": true,
+  "currentSignedInstallationVerified": false,
+  "fullRestorationAccepted": false,
+  "scriptHash": "3af7e3cbd69d6f68c88e734dcc80748079ab81bb574df5f92661f7f1d79e46f9"
+}

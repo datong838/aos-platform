@@ -1,0 +1,385 @@
+{
+  "cases": [
+    "original-create-and-idempotency",
+    "ProductionContractIdempotencyConflict",
+    "original-revise-and-idempotency",
+    "ProductionContractConflict",
+    "original-freeze-seal-and-idempotency",
+    "ProductionContractConflict",
+    "ProductionContractNotFound",
+    "ProductionContractDependencyBlocked",
+    "RaiseException",
+    "InsufficientPrivilege"
+  ],
+  "connections": [
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    }
+  ],
+  "frozen": {
+    "profile": "ecommerce.business-investigation.readonly",
+    "sourceBundleRef": {
+      "resourceType": "SolutionPack",
+      "resourceId": "solution.ecommerce.growth",
+      "revision": 1,
+      "contentHash": "f34d764b2fbd2d5e7278a96edb9926c35024253c37d3a6d89cc05a9752eabf3e"
+    },
+    "stages": [
+      {
+        "stageId": "portrait",
+        "title": "\u7ecf\u8425\u753b\u50cf",
+        "dependsOn": [],
+        "applicability": {
+          "kind": "always",
+          "profiles": []
+        },
+        "requiredSlotIds": [
+          "investigation-owner",
+          "data-steward",
+          "content-research",
+          "customer-research",
+          "channel-research"
+        ],
+        "inputSchemaRef": {
+          "resourceType": "JsonSchema",
+          "resourceId": "business-investigation.portrait.input",
+          "revision": "1",
+          "authority": "aos.ecommerce.business-investigation"
+        },
+        "outputSchemaRef": {
+          "resourceType": "JsonSchema",
+          "resourceId": "business-investigation.portrait.output",
+          "revision": "1",
+          "authority": "aos.ecommerce.business-investigation"
+        },
+        "gateRefs": [],
+        "checkpointPolicy": {
+          "mode": "receipt-first",
+          "unknown": "pause"
+        },
+        "retryPolicy": {
+          "automatic": false
+        },
+        "compensationPolicy": {
+          "externalEffect": "none"
+        }
+      },
+      {
+        "stageId": "diagnosis",
+        "title": "\u95ee\u9898\u4e0e\u673a\u4f1a\u8bca\u65ad",
+        "dependsOn": [
+          "portrait"
+        ],
+        "applicability": {
+          "kind": "always",
+          "profiles": []
+        },
+        "requiredSlotIds": [
+          "investigation-owner",
+          "data-steward",
+          "customer-research",
+          "channel-research",
+          "business-reviewer"
+        ],
+        "inputSchemaRef": {
+          "resourceType": "JsonSchema",
+          "resourceId": "business-investigation.diagnosis.input",
+          "revision": "1",
+          "authority": "aos.ecommerce.business-investigation"
+        },
+        "outputSchemaRef": {
+          "resourceType": "JsonSchema",
+          "resourceId": "business-investigation.diagnosis.output",
+          "revision": "1",
+          "authority": "aos.ecommerce.business-investigation"
+        },
+        "gateRefs": [],
+        "checkpointPolicy": {
+          "mode": "receipt-first",
+          "unknown": "pause"
+        },
+        "retryPolicy": {
+          "automatic": false
+        },
+        "compensationPolicy": {
+          "externalEffect": "none"
+        }
+      },
+      {
+        "stageId": "solution-design",
+        "title": "\u65b9\u6848\u8bbe\u8ba1",
+        "dependsOn": [
+          "diagnosis"
+        ],
+        "applicability": {
+          "kind": "always",
+          "profiles": []
+        },
+        "requiredSlotIds": [
+          "investigation-owner",
+          "content-research",
+          "channel-research",
+          "business-reviewer"
+        ],
+        "inputSchemaRef": {
+          "resourceType": "JsonSchema",
+          "resourceId": "business-investigation.solution-design.input",
+          "revision": "1",
+          "authority": "aos.ecommerce.business-investigation"
+        },
+        "outputSchemaRef": {
+          "resourceType": "JsonSchema",
+          "resourceId": "business-investigation.solution-design.output",
+          "revision": "1",
+          "authority": "aos.ecommerce.business-investigation"
+        },
+        "gateRefs": [],
+        "checkpointPolicy": {
+          "mode": "receipt-first",
+          "unknown": "pause"
+        },
+        "retryPolicy": {
+          "automatic": false
+        },
+        "compensationPolicy": {
+          "externalEffect": "none"
+        }
+      }
+    ],
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "templateId": "stage-template-4e782c0cddbe4050a6cb",
+    "revision": 3,
+    "version": 3,
+    "contentHash": "fa8a8bce94f0504d511a7dffce30ab1c1251cd7692236ea4ed97bce3455f67f9",
+    "lifecycle": "frozen",
+    "sealedBy": "clone:test",
+    "sealedAt": "2026-10-11T16:05:18.983330Z",
+    "sealHash": "08696759dbc2ea3344746f688910a9b8aa6cdb024e3e5357a269a9557417153c",
+    "readiness": "ready",
+    "blockers": [],
+    "createdBy": "clone:test",
+    "createdAt": "2026-10-11T16:05:18.966201Z"
+  },
+  "drifted": {
+    "profile": "ecommerce.business-investigation.readonly",
+    "sourceBundleRef": {
+      "resourceType": "SolutionPack",
+      "resourceId": "solution.ecommerce.growth",
+      "revision": 1,
+      "contentHash": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "stages": [
+      {
+        "stageId": "portrait",
+        "title": "\u7ecf\u8425\u753b\u50cf",
+        "dependsOn": [],
+        "applicability": {
+          "kind": "always",
+          "profiles": []
+        },
+        "requiredSlotIds": [
+          "investigation-owner",
+          "data-steward",
+          "content-research",
+          "customer-research",
+          "channel-research"
+        ],
+        "inputSchemaRef": {
+          "resourceType": "JsonSchema",
+          "resourceId": "business-investigation.portrait.input",
+          "revision": "1",
+          "authority": "aos.ecommerce.business-investigation"
+        },
+        "outputSchemaRef": {
+          "resourceType": "JsonSchema",
+          "resourceId": "business-investigation.portrait.output",
+          "revision": "1",
+          "authority": "aos.ecommerce.business-investigation"
+        },
+        "gateRefs": [],
+        "checkpointPolicy": {
+          "mode": "receipt-first",
+          "unknown": "pause"
+        },
+        "retryPolicy": {
+          "automatic": false
+        },
+        "compensationPolicy": {
+          "externalEffect": "none"
+        }
+      },
+      {
+        "stageId": "diagnosis",
+        "title": "\u95ee\u9898\u4e0e\u673a\u4f1a\u8bca\u65ad",
+        "dependsOn": [
+          "portrait"
+        ],
+        "applicability": {
+          "kind": "always",
+          "profiles": []
+        },
+        "requiredSlotIds": [
+          "investigation-owner",
+          "data-steward",
+          "customer-research",
+          "channel-research",
+          "business-reviewer"
+        ],
+        "inputSchemaRef": {
+          "resourceType": "JsonSchema",
+          "resourceId": "business-investigation.diagnosis.input",
+          "revision": "1",
+          "authority": "aos.ecommerce.business-investigation"
+        },
+        "outputSchemaRef": {
+          "resourceType": "JsonSchema",
+          "resourceId": "business-investigation.diagnosis.output",
+          "revision": "1",
+          "authority": "aos.ecommerce.business-investigation"
+        },
+        "gateRefs": [],
+        "checkpointPolicy": {
+          "mode": "receipt-first",
+          "unknown": "pause"
+        },
+        "retryPolicy": {
+          "automatic": false
+        },
+        "compensationPolicy": {
+          "externalEffect": "none"
+        }
+      },
+      {
+        "stageId": "solution-design",
+        "title": "\u65b9\u6848\u8bbe\u8ba1",
+        "dependsOn": [
+          "diagnosis"
+        ],
+        "applicability": {
+          "kind": "always",
+          "profiles": []
+        },
+        "requiredSlotIds": [
+          "investigation-owner",
+          "content-research",
+          "channel-research",
+          "business-reviewer"
+        ],
+        "inputSchemaRef": {
+          "resourceType": "JsonSchema",
+          "resourceId": "business-investigation.solution-design.input",
+          "revision": "1",
+          "authority": "aos.ecommerce.business-investigation"
+        },
+        "outputSchemaRef": {
+          "resourceType": "JsonSchema",
+          "resourceId": "business-investigation.solution-design.output",
+          "revision": "1",
+          "authority": "aos.ecommerce.business-investigation"
+        },
+        "gateRefs": [],
+        "checkpointPolicy": {
+          "mode": "receipt-first",
+          "unknown": "pause"
+        },
+        "retryPolicy": {
+          "automatic": false
+        },
+        "compensationPolicy": {
+          "externalEffect": "none"
+        }
+      }
+    ],
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "templateId": "stage-template-474282e77b414a6ea28b",
+    "revision": 1,
+    "version": 1,
+    "contentHash": "40d3e59716028edc5e3d995dcc7fb23937b8593b1f1c7a2a6cbe8f53c5b7e74d",
+    "lifecycle": "draft",
+    "sealedBy": null,
+    "sealedAt": null,
+    "sealHash": null,
+    "readiness": "blocked",
+    "blockers": [
+      {
+        "code": "STAGE_SOURCE_MISSING_OR_DRIFTED",
+        "message": "StageTemplate sourceBundleRef \u7f3a\u5931\u6216 exact ref \u6f02\u79fb",
+        "resourceRef": {
+          "resourceType": "SolutionPack",
+          "resourceId": "solution.ecommerce.growth",
+          "revision": 1,
+          "contentHash": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    ],
+    "createdBy": "clone:test",
+    "createdAt": "2026-10-11T16:05:19.017961Z"
+  },
+  "sourceIsLegacyStaticAllowlist": true,
+  "actualSignedInstallationVerified": false,
+  "passwordOrOIDCAuthenticated": false,
+  "fullRestorationAccepted": false
+}

@@ -1,0 +1,9 @@
+# 原流程模板发行兼容复审
+
+沿231和本Task第八段执行，仅同一独立无命名卷clone中的实验复制库写入。原AipProductionContractStore通过固定aos_contract_source_issuer LOGIN完成StageTemplate create/revise/freeze，12次原连接、10项检查。原plan factory明确拒绝；三表精确权限和双租户policy，既有运行身份伪造Receipt被42501拒绝；幂等、CAS、冻结后修订拒绝、canary、source hash漂移阻断、Receipt故障整体回滚均实际执行。原历史stage exact row保持一致。
+
+独立只读连接核验三版draft/draft/frozen及完整seal、三个正常生命周期Receipt exact ref、漂移draft保持blocked、失败无Receipt和新角色已清理。原clone与当前恢复卷647表及六类元数据一致。只保留明确实验模板和一个指定实验key的故障trigger，不触碰当前库、API/Web、Host/worker/Provider、原Run或商城源。两个新工具语法、原intent脚本hash和暂存区空状态已检查。
+
+原resolve_stage_template_source是Growth1.3.0静态allowlist；本轮忠实保留该原行为，并没有验证当前Growth1.13.0签名安装。不能据此认定正式publisher、企业登录、八工作台或自然首链已恢复。当前实验操作Receipt覆盖18/30，其中披露仍是拒绝决定、bundle撤销仍是未发行路径。Plan/BI/successor/Content与其余12合同操作尚待完整兼容，整个Task保持ACTIVE；当前库来源写入权限尚未收紧。
+
+下一已登记独立项：原ReviewIssue/EvalReport依赖与内容来源兼容，先读实际历史可用资源及原Store前置门；正式登录和独立发布仍等待已有来源定位，不制造身份、不重复索要口令。保留所有历史结果并继续完整恢复目标。

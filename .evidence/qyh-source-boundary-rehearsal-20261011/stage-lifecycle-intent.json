@@ -1,0 +1,24 @@
+{
+  "containerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "cluster": "7695416748450308141",
+  "database": "qyh_source_contract_20261011",
+  "head": "f0c5e5479c9065e94095667ae19f4d219582b397",
+  "authority": "AOS-001887",
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "role": "aos_contract_source_issuer",
+  "historicalStageRef": {
+    "template_id": "stage-template-9a16f2cf2f6f410aa555",
+    "revision": 1,
+    "content_hash": "fdcd7aaa34096b489aa01ac3f314bcc86e878bd866869531bd1106305e43567e"
+  },
+  "sourceRef": {
+    "resourceType": "SolutionPack",
+    "resourceId": "solution.ecommerce.growth",
+    "revision": 1,
+    "contentHash": "f34d764b2fbd2d5e7278a96edb9926c35024253c37d3a6d89cc05a9752eabf3e"
+  },
+  "sourceIsLegacyStaticAllowlist": true,
+  "currentSignedInstallationVerified": false,
+  "currentDatabaseTouched": false,
+  "scriptHash": "3af7e3cbd69d6f68c88e734dcc80748079ab81bb574df5f92661f7f1d79e46f9"
+}
