@@ -14,3 +14,6 @@ Rules：仓库 AGENTS、231 八步、联合准入完整 §3/§11.3、aos-enginee
 
 ## AOS-001785 实测列ACL空值预筛
 详细编码前方案与固定A/B验证见 null-acl-prefilter-1785/plan.md。仅在新catalog家族两处现有COLUMN_AFTER外加显式NULL排除，让规划器筛除无列ACL的属性；aclexplode(NULL)空集等价，不移除任何检查或重复调用，不改原已发布SQL或期限。若实测无改善不实施。
+
+## AOS-001786 全目录列ACL空值预筛
+编码前计划global-acl-prefilter-1786/plan.md已先落盘。新catalog家族额外两条全目录列授权审计仅添加x.attacl IS NOT NULL，不限制schema/relkind，不减少授权检查。跨schema权限/转授权/撤销矩阵与Main54PASS；全新Source推进到Receipt和物理比较返回，collector仍因原Source期限RED。完整验收未完成，见该目录verification.json。

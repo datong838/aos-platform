@@ -1,8 +1,9 @@
 """Explicit catalog audit family; no automatic installation or execution grant.
 
 Role/table guards in the original audit exclude inherited and table privileges
-before inspecting column ACLs. Only the two proved column scans change; trusted
-original SQL and every legacy compiler remain unchanged.
+before inspecting column ACLs. Equivalent explicit ACL predicates and NULL
+prefilters retain every grant check; trusted original SQL and every legacy
+compiler remain unchanged.
 """
 import hashlib
 import re
@@ -16,6 +17,13 @@ COLUMN_BEFORE = ("(has_column_privilege(owner_oid,c.oid,a.attnum,'INSERT,REFEREN
 COLUMN_AFTER = ("(a.attacl IS NOT NULL AND EXISTS(SELECT 1 FROM aclexplode(a.attacl) acl "
                 "WHERE acl.grantee IN (owner_oid,0::oid) "
                 "AND acl.privilege_type IN ('INSERT','REFERENCES','UPDATE')))")
+# NULL ACLs produce no aclexplode rows. Expose this filter before the catalog
+# joins while retaining scans across every schema and every original grant.
+GLOBAL_COLUMN_FILTERS = tuple(
+    ('LATERAL aclexplode(x.attacl) a' + gap + 'WHERE a.grantee=owner_oid',
+     'LATERAL aclexplode(x.attacl) a' + gap + 'WHERE x.attacl IS NOT NULL AND a.grantee=owner_oid')
+    for gap in ('\n   ', ' ')
+)
 ERROR = 'CAPACITY_CATALOG_PROFILE_INSTALLATION_DRIFTED'
 
 
@@ -32,7 +40,10 @@ def _digest(body):
 
 def catalog_fact_body():
     original = epoch._body(store.CAPACITY_ORIGINAL_WITHDRAWAL_BOUNDARY_SQL, FACT)
-    return epoch._replace(original, COLUMN_BEFORE, COLUMN_AFTER, 2)
+    body = epoch._replace(original, COLUMN_BEFORE, COLUMN_AFTER, 2)
+    for before, after in GLOBAL_COLUMN_FILTERS:
+        body = epoch._replace(body, before, after)
+    return body
 
 
 def catalog_private_statements():

@@ -1,0 +1,104 @@
+{
+  "status": "FULL_FIXTURE_RED_AT_COLLECTOR_SOURCE_EXPIRY",
+  "pytest_exit": 1,
+  "returned_receipt_and_final_physical_calls": [
+    "public.test_owned_receipt_v2",
+    "public.test_owned_final_physical"
+  ],
+  "receipt_assertions_reached_before_collector": true,
+  "receipt_payload_proof_not_saved_before_failure": true,
+  "collector_positive_executed_successfully": false,
+  "late_writer_and_actual_commit_negative_not_reached_this_attempt": true,
+  "comparisons": [
+    {
+      "stage": "public.test_owned_pending_origin",
+      "before": {
+        "calls": 264,
+        "self_ms": 5418.486295000001,
+        "elapsed_seconds": 12.784442
+      },
+      "after": {
+        "calls": 264,
+        "self_ms": 3638.710001,
+        "elapsed_seconds": 10.869051
+      },
+      "same_calls": true
+    },
+    {
+      "stage": "public.test_owned_end_authority",
+      "before": {
+        "calls": 264,
+        "self_ms": 5320.578991,
+        "elapsed_seconds": 12.520437
+      },
+      "after": {
+        "calls": 264,
+        "self_ms": 3625.0462979999993,
+        "elapsed_seconds": 10.728357
+      },
+      "same_calls": true
+    },
+    {
+      "stage": "public.test_owned_complete_risk",
+      "before": {
+        "calls": 264,
+        "self_ms": 5300.226502999998,
+        "elapsed_seconds": 12.679524
+      },
+      "after": {
+        "calls": 264,
+        "self_ms": 3601.5842970000012,
+        "elapsed_seconds": 10.80675
+      },
+      "same_calls": true
+    },
+    {
+      "stage": "public.test_owned_initial_obligation",
+      "before": {
+        "calls": 288,
+        "self_ms": 5430.107497000001,
+        "elapsed_seconds": 12.833727
+      },
+      "after": {
+        "calls": 288,
+        "self_ms": 3629.4104609999995,
+        "elapsed_seconds": 10.980753
+      },
+      "same_calls": true
+    },
+    {
+      "stage": "public.test_owned_initial_call_authority",
+      "before": {
+        "calls": 468,
+        "self_ms": 9156.522242,
+        "elapsed_seconds": 22.691048
+      },
+      "after": {
+        "calls": 468,
+        "self_ms": 5644.283255999999,
+        "elapsed_seconds": 18.677271
+      },
+      "same_calls": true
+    },
+    {
+      "stage": "public.test_owned_initial_window",
+      "before": {
+        "calls": 324,
+        "self_ms": 6250.866081000004,
+        "elapsed_seconds": 15.706214
+      },
+      "after": {
+        "calls": 324,
+        "self_ms": 3816.513589000002,
+        "elapsed_seconds": 12.695261
+      },
+      "same_calls": true
+    }
+  ],
+  "same_call_counts_on_comparable_stages": true,
+  "all_nine_tables_zero": true,
+  "other_sessions_zero": true,
+  "profile_reset": true,
+  "formal_database_touched": false,
+  "full_task_delivered": false
+}

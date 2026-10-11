@@ -14,7 +14,11 @@ def test_complete_catalog_profile_binds_every_digest_and_keeps_legacy():
     body = profile.catalog_fact_body()
     assert body != original
     assert body.count(profile.COLUMN_AFTER) == 2
-    assert body.replace(profile.COLUMN_AFTER, profile.COLUMN_BEFORE) == original
+    restored = body.replace(profile.COLUMN_AFTER, profile.COLUMN_BEFORE)
+    for before, after in profile.GLOBAL_COLUMN_FILTERS:
+        assert body.count(after) == 1
+        restored = restored.replace(after, before)
+    assert restored == original
     private = profile.catalog_private_statements()
     audit = profile._profile_body(private[-1])
     assert hashlib.sha256(body.encode()).hexdigest() in audit
@@ -89,10 +93,22 @@ def test_native_column_acl_predicate_matches_original_privileges():
                 rows = conn.execute(query, (owner['oid'], 'pg_temp.' + table)).fetchall()
                 assert all(row['original'] == row['optimized'] for row in rows)
                 assert {row['attname'] for row in rows if row['optimized']} == ({'sample'} if expected else set())
+                # pg_temp is outside public: the global grant scan must still
+                # see direct Owner column privileges and grant options there.
+                global_query = ('SELECT x.attname,a.privilege_type,a.is_grantable '
+                                'FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid, '
+                                'LATERAL aclexplode(x.attacl) a '
+                                'WHERE a.grantee=%s AND c.oid=to_regclass(%s) ORDER BY 1,2,3')
+                filtered = global_query.replace('WHERE a.grantee=', 'WHERE x.attacl IS NOT NULL AND a.grantee=')
+                original_grants = conn.execute(global_query, (owner['oid'], 'pg_temp.' + table)).fetchall()
+                assert conn.execute(filtered, (owner['oid'], 'pg_temp.' + table)).fetchall() == original_grants
+                assert original_grants == ([dict(attname='sample', privilege_type=privilege, is_grantable=grant_option)]
+                                            if grantee == 'aos_capacity_publication_owner' else [])
                 if grantee:
                     conn.execute(sql.SQL('REVOKE {} (sample) ON {} FROM {}').format(
                         sql.SQL(privilege), relation, recipient))
                     assert not any(row['original'] or row['optimized'] for row in conn.execute(query, (owner['oid'], 'pg_temp.' + table)))
+                    assert conn.execute(filtered, (owner['oid'], 'pg_temp.' + table)).fetchall() == []
         conn.rollback()
 
 

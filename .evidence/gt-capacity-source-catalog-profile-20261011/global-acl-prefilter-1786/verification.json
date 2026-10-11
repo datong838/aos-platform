@@ -1,0 +1,18 @@
+{
+  "query_counts_exact": 5,
+  "old_query_ms": [
+    9.433,
+    8.672
+  ],
+  "new_query_ms": [
+    1.779,
+    1.645
+  ],
+  "adjacent": "54 passed, 0 skipped, separately run full Source deselected, 7 existing warnings",
+  "real_acl_cases": 9,
+  "cross_schema_direct_grants_grantoption_revoke_equivalent": true,
+  "full_source_report": ".evidence/gt-shared-parent-atomic-admission-finalizer-20261010/global-acl-positive-1786/verification.json",
+  "full_source": "Receipt and physical comparison return; collector Source expiry RED; later negative cases unexecuted",
+  "execution_allowed": false,
+  "full_task_delivered": false
+}
