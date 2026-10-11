@@ -1,0 +1,58 @@
+[
+  {
+    "route": "/workshop/analyst",
+    "moduleId": "ecommerce.analyst",
+    "name": "经营参谋 · 增长指挥中心",
+    "bundle": "solution.ecommerce.growth",
+    "version": "1.13.0"
+  },
+  {
+    "route": "/workshop/content-campaign",
+    "moduleId": "ecommerce.content-campaign",
+    "name": "内容与活动工作台",
+    "bundle": "solution.ecommerce.growth",
+    "version": "1.13.0"
+  },
+  {
+    "route": "/workshop/creator-growth",
+    "moduleId": "ecommerce.creator-growth",
+    "name": "达人邀约与签约驾驶舱",
+    "bundle": "solution.ecommerce.growth",
+    "version": "1.13.0"
+  },
+  {
+    "route": "/workshop/customer",
+    "moduleId": "ecommerce.customer",
+    "name": "客户关系工作台",
+    "bundle": "solution.ecommerce.growth",
+    "version": "1.13.0"
+  },
+  {
+    "route": "/workshop/media-studio",
+    "moduleId": "ecommerce.media-studio",
+    "name": "多媒体任务全过程闭环工作台",
+    "bundle": "solution.ecommerce.growth",
+    "version": "1.13.0"
+  },
+  {
+    "route": "/workshop/price-governance",
+    "moduleId": "ecommerce.price-governance",
+    "name": "价格治理驾驶舱",
+    "bundle": "solution.ecommerce.growth",
+    "version": "1.13.0"
+  },
+  {
+    "route": "/workshop/cockpit",
+    "moduleId": "ecommerce.task-cockpit",
+    "name": "电商日常任务总控大屏",
+    "bundle": "solution.ecommerce.growth",
+    "version": "1.13.0"
+  },
+  {
+    "route": "/workshop/operations",
+    "moduleId": "ecommerce.operations",
+    "name": "统一运营驾驶舱",
+    "bundle": "solution.ecommerce.operations-base",
+    "version": "1.2.2"
+  }
+]

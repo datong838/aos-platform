@@ -1,0 +1,4 @@
+实际浏览器及真PG只读对账，资料不是新授运行权限。独立tab仅导航与查看安装事件，mutationRequests0；无请求拦截/无mock/no session stores read。浏览器保留供查看。当前8页面的缺口不能用测试、8静态描述或HTTP200掩盖。
+最初将所有workshops JSON当模块导致数量assert失败，随后使用原ManifestLoader.workshop_modules得到精确8模块（无源码执行）。displayName字段按原contract修正。最初配置区域刚可见尚未加载的false结果保留；r2等待实际预算缺口/服务关闭提示后记录true，旧失败/早期记录不覆盖。
+Node persistent runtime原import方式两种模块错误，createRequire载入同已安装Playwright后成功复用CDP9244；没有创建新的浏览器/更改配置。仅source阅读，未改产品代码，本波不增加镜像实现的单测。JSON断言只核本次真实捕获完整性，不作为业务验收。
+风险/局部依赖：真实OIDC及独立publisher配置来源仍待；预算策略无当前候选、登记服务未启用；八页全部未验收，自然首链未发生。支持预算/Source合同独立推进，不能将局部待配置扩大成整个Goal停止。

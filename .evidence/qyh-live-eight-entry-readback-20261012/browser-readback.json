@@ -1,0 +1,265 @@
+{
+  "outcome": "CURRENT_QYH_TENANT_CATALOG_EMPTY_EIGHT_ENTRIES_UNAVAILABLE",
+  "pages": [
+    {
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "httpStatus": 200,
+      "entryUnavailable": true,
+      "catalogEmpty": true,
+      "qyhNameVisible": true,
+      "pageErrors": []
+    },
+    {
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "httpStatus": 200,
+      "entryUnavailable": true,
+      "catalogEmpty": true,
+      "qyhNameVisible": true,
+      "pageErrors": []
+    },
+    {
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-growth",
+      "httpStatus": 200,
+      "entryUnavailable": true,
+      "catalogEmpty": true,
+      "qyhNameVisible": true,
+      "pageErrors": []
+    },
+    {
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "httpStatus": 200,
+      "entryUnavailable": true,
+      "catalogEmpty": true,
+      "qyhNameVisible": true,
+      "pageErrors": []
+    },
+    {
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "httpStatus": 200,
+      "entryUnavailable": true,
+      "catalogEmpty": true,
+      "qyhNameVisible": true,
+      "pageErrors": []
+    },
+    {
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/price-governance",
+      "httpStatus": 200,
+      "entryUnavailable": true,
+      "catalogEmpty": true,
+      "qyhNameVisible": true,
+      "pageErrors": []
+    },
+    {
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/cockpit",
+      "httpStatus": 200,
+      "entryUnavailable": true,
+      "catalogEmpty": true,
+      "qyhNameVisible": true,
+      "pageErrors": []
+    },
+    {
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "httpStatus": 200,
+      "entryUnavailable": true,
+      "catalogEmpty": true,
+      "qyhNameVisible": true,
+      "pageErrors": []
+    }
+  ],
+  "catalogReplies": [
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null,
+      "moduleIds": []
+    }
+  ],
+  "mutationRequests": 0,
+  "tabRetained": true,
+  "requestInterception": false,
+  "mockedResponses": false,
+  "formalIdentityVerified": false,
+  "eightPagesAccepted": false
+}

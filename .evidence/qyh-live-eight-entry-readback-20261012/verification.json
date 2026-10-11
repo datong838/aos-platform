@@ -1,0 +1,17 @@
+{
+  "outcome": "CURRENT_QYH_EIGHT_ENTRY_UNAVAILABLE_PROVEN",
+  "tenantExact": true,
+  "qyhNameVisible8of8": true,
+  "eightEntriesUnavailable": true,
+  "legacyCatalogEmpty": true,
+  "runtimeCatalogEmpty": true,
+  "enabledBindings": 0,
+  "budgetCandidateMissing": true,
+  "registrationServiceUnavailable": true,
+  "devOnlyLogin": true,
+  "mutationRequests": 0,
+  "restorationComplete": false,
+  "formalRuntimeReady": false,
+  "sourceChangeCount": 0,
+  "browserTabsRetained": true
+}

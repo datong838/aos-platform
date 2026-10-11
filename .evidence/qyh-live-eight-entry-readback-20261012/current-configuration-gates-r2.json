@@ -1,0 +1,28 @@
+{
+  "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+  "budgetCandidateMissing": true,
+  "registrationServiceUnavailable": true,
+  "registrationDisabled": true,
+  "mutationRequests": 0,
+  "runtimeCatalogReplies": [
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "code": null
+    }
+  ],
+  "earlierCaptureBeforeLoadRetained": true
+}

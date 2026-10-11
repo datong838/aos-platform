@@ -1,0 +1,11 @@
+{
+  "issuer": "http://aos-dev-oidc",
+  "audience": "aos-api",
+  "jwksConfigured": true,
+  "jwksUrls": [],
+  "tokenUrlConfigured": false,
+  "allowDevToken": true,
+  "grantTypes": [
+    "dev"
+  ]
+}
