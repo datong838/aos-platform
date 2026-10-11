@@ -169,3 +169,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 实测规划OID的间接目录依赖1798
 新增planner-indirect-1798/check.py/result.json；核原终态隔离库及64个已观察OID精确签名/sourcehash，REPEATABLE READ READ ONLY递归prosupport与pg_aggregate transition/final/combine/serialize/deserialize/moving函数；解析聚合sort operator实际oprcode。只读目录，无执行函数。全部边属于目录声明的候选，并非本轮实际调用证明；native内部、cached/unvisited分支、类型/operator策略及包生命周期仍待闭合。
+
+## 函数管理器观察覆盖门1799
+候选一受支持fmgr hook补缓存路径；候选二完整已绑定包/执行计划表达式验证。先对原PG16.14冻结源码检查候选一，不部署探针。新增fmgr-coverage-1799/result.json/review.md，绑定archive/fmgr.c hash和关键源码行，核builtin fastpath在hook判定前return；据此拒将fmgr当全函数观察器。无函数/SQL/库修改。

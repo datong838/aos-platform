@@ -1,0 +1,32 @@
+{
+  "archive_sha256": "f6d077142737920858ce958ccdb75c6ee137a63b5b0853c70693d401ac7e3471",
+  "source_sha256": "bbd18adf8af5806d03cc5cbbf1e7ec211dac6da0bc2f10dc03c0dc091efc831b",
+  "source_member": "postgresql-16.14/src/backend/utils/fmgr/fmgr.c",
+  "builtin_returns_before_hook_check": true,
+  "hook_events_in_security_definer_wrapper": true,
+  "all_function_coverage": false,
+  "decision": "reject fmgr-hook-only closure",
+  "excerpts": [
+    {
+      "start_line": 159,
+      "end_line": 181,
+      "text": "\t * elogs.\n\t */\n\tfinfo->fn_oid = InvalidOid;\n\tfinfo->fn_extra = NULL;\n\tfinfo->fn_mcxt = mcxt;\n\tfinfo->fn_expr = NULL;\t\t/* caller may set this later */\n\n\tif ((fbp = fmgr_isbuiltin(functionId)) != NULL)\n\t{\n\t\t/*\n\t\t * Fast path for builtin functions: don't bother consulting pg_proc\n\t\t */\n\t\tfinfo->fn_nargs = fbp->nargs;\n\t\tfinfo->fn_strict = fbp->strict;\n\t\tfinfo->fn_retset = fbp->retset;\n\t\tfinfo->fn_stats = TRACK_FUNC_ALL;\t/* ie, never track */\n\t\tfinfo->fn_addr = fbp->func;\n\t\tfinfo->fn_oid = functionId;\n\t\treturn;\n\t}\n\n\t/* Otherwise we need the pg_proc entry */\n\tprocedureTuple = SearchSysCache1(PROCOID, ObjectIdGetDatum(functionId));"
+    },
+    {
+      "start_line": 198,
+      "end_line": 215,
+      "text": "\t * fmgr_security_definer's private flinfo and implement the tracking\n\t * inside fmgr_security_definer.  This loses the ability to charge the\n\t * overhead of fmgr_security_definer to the function, but gains the\n\t * ability to set the track_functions GUC as a local GUC parameter of an\n\t * interesting function and have the right things happen.\n\t */\n\tif (!ignore_security &&\n\t\t(procedureStruct->prosecdef ||\n\t\t !heap_attisnull(procedureTuple, Anum_pg_proc_proconfig, NULL) ||\n\t\t FmgrHookIsNeeded(functionId)))\n\t{\n\t\tfinfo->fn_addr = fmgr_security_definer;\n\t\tfinfo->fn_stats = TRACK_FUNC_ALL;\t/* ie, never track */\n\t\tfinfo->fn_oid = functionId;\n\t\tReleaseSysCache(procedureTuple);\n\t\treturn;\n\t}\n"
+    },
+    {
+      "start_line": 697,
+      "end_line": 705,
+      "text": "\t\t\t\t\t\tGUC_ACTION_SAVE);\n\t}\n\n\t/* function manager hook */\n\tif (fmgr_hook)\n\t\t(*fmgr_hook) (FHET_START, &fcache->flinfo, &fcache->arg);\n\n\t/*\n\t * We don't need to restore GUC or userid settings on error, because the"
+    },
+    {
+      "start_line": 728,
+      "end_line": 747,
+      "text": "\t}\n\tPG_CATCH();\n\t{\n\t\tfcinfo->flinfo = save_flinfo;\n\t\tif (fmgr_hook)\n\t\t\t(*fmgr_hook) (FHET_ABORT, &fcache->flinfo, &fcache->arg);\n\t\tPG_RE_THROW();\n\t}\n\tPG_END_TRY();\n\n\tfcinfo->flinfo = save_flinfo;\n\n\tif (fcache->proconfig)\n\t\tAtEOXact_GUC(true, save_nestlevel);\n\tif (OidIsValid(fcache->userid))\n\t\tSetUserIdAndSecContext(save_userid, save_sec_context);\n\tif (fmgr_hook)\n\t\t(*fmgr_hook) (FHET_END, &fcache->flinfo, &fcache->arg);\n\n\treturn result;"
+    }
+  ],
+  "execution_allowed": false
+}

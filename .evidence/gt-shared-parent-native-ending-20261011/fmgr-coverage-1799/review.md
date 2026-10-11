@@ -1,0 +1,5 @@
+# 函数调用hook覆盖否证
+
+原PG16.14归档fmgr.c第166起builtin fastpath直接赋fn_addr并return，第207行之后才评估FmgrHookIsNeeded；START/ABORT/END位于security-definer包装。不能依赖needs_fmgr_hook=true观察所有builtin，也不能从未观察到副作用推导没有副作用。
+
+拒绝fmgr-hook-only补全方案，不为此安装无效探针。下一完整方案必须依据原生Query/Plan及可信固定包验证处理builtin/polytype内部依赖，并覆盖cached计划/未来分支；生命周期、事件固定点和durable/unknown仍独立必须。此为明确接口能力边界，不是完整Goal阻塞或业务许可。
