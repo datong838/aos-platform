@@ -1,0 +1,21 @@
+{
+  "container": {
+    "Id": "4bee3825bdea27ba232538a14152c3cf050050814ae90baa4acb8fec0af2c83c",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Mounts": [],
+    "Tmpfs": {
+      "/var/lib/postgresql/data": "rw,nosuid,size=512m"
+    },
+    "Ports": {
+      "5432/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "18432"
+        }
+      ]
+    }
+  },
+  "testCluster": "7695402775127154735",
+  "source647Unchanged": true,
+  "formalRestorationAccepted": false
+}

@@ -1,0 +1,9 @@
+{
+  "name": "qyh-source-writer-lab-20261011",
+  "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+  "authority": "existing isolated implementation and restoration testing",
+  "port": "127.0.0.1:18432",
+  "data": "tmpfs disposable",
+  "sourceVolumeAttached": false,
+  "testIdentityIsBusinessAuthority": false
+}

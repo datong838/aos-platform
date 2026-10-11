@@ -1,0 +1,21 @@
+{
+  "head": "b10afb9d865b711660d7d27db0a7117e06f176be",
+  "workingTreePythonFiles": 5178,
+  "workingTreePythonManifestSha256": "1c78f8b402ccefc6f203f37f51f97a775953fb412aa14b706c44c8882af38bea",
+  "manifestCaptured": "after baseline execution only; not claimed pre-frozen source",
+  "specializedResult": {
+    "passed": 36,
+    "xfailed": 8,
+    "exitCode": 0
+  },
+  "signedFullSchemaResult": {
+    "passed": 1,
+    "exitCode": 0
+  },
+  "testOnlySignedReceiptPath": "/Users/ddt/work/projects/ai_agent/aos-recovery/.aos-growth-113-signing-receipt-20261002-r1.json",
+  "originalUnresolvedXfailsAcceptedAsPassed": false,
+  "userDirtyProductFilesModified": false,
+  "formalPublisherProven": false,
+  "eightWorkbenchesAccepted": false,
+  "goalAccepted": false
+}

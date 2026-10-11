@@ -1,0 +1,11 @@
+{
+  "userTestDatabasesRemaining": 0,
+  "temporaryIssuerLoginsRemaining": 0,
+  "migrationLogicalNoLoginRolesRetained": 30,
+  "source647ExactToPriorFullRehearsal": true,
+  "sourceSixOldMetadataScopesExact": true,
+  "sourcePermissionChanges": 0,
+  "labAuthorityIsBusinessAuthority": false,
+  "initialCleanupExpectationCorrected": "full migrations intentionally retain NOLOGIN roles on disposable cluster; do not delete to claim zero roles",
+  "fullRestorationAccepted": false
+}
