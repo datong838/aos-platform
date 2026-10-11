@@ -295,3 +295,9 @@ Native component verification extension: explicitly test-owned rows in the origi
 ## Fixed final physical comparison (1760)
 
 Exact files: services/aos-api/aos_api/aip_shared_parent_atomic_admission.py and services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py. New four-argument Owner-only explicit verify_shared_parent_final_physical(uuid,text,xid8,integer) locks existing v2 Receipt, verifies native scope/topxid/pid/login/schema/closed state and canonical outer/physical facts/member hashes, binding plan/account and nonempty self obligation member. Read exact current native member set with fixed existing member reader; compare account mapping/version/members/hash/totals. No live GUARD UPSERT, caller facts/member list, resealing, DML or execute permission. Final original Source/signature/approval/currentness/final clock/full event/RI/module/callback closure are separate complete collector requirements; this function is only a necessary physical comparison and cannot install as PHYSICAL_END or commit guard. Native component metadata/context/missing Receipt denial plus original SQL byte equality. Full v2 Receipt positive requires original Source timing recovery and will remain explicitly pending, no trigger bypass/test fake Receipt.
+
+## 固定完整八节点结束事实收集入口 AOS-001781 后
+
+文件级计划见 complete-end-facts-1781/plan.md。原完整 v2 Receipt 准备仍未提供native end；按原核复用封闭全部六物理节点+pendingOrigin/endAuthority当前性及完整Source/四证书/两父风险、历史物理set，新增一个固定无执行权事实入口供后续原生receiver使用。原生成器精确不改；nativeEndRequired=true/durableDeadlineEstablished=false，不能替代完整ending、正式Root、COMMIT/unknown验收或完整TaskDelivery。
+
+本构件已完成：真正逻辑RED为缺少新入口（环境默认5433连接失败不计RED）；新入口原生PG编译、Owner/search_path/ACL与恶意caller拒绝并rollback absent，专项4PASS与全部Main累计50PASS/noSKIP。独立回读原19生成SQL hash及两产品原字节前缀完全保持、五闭角色与原signature/pending reader保持。没有执行本轮合法完整8节点Source正向，不能称完整nativeending/TaskDelivery。下一按新唯一fixture/对应活跃Lease推进真实v2Receipt调用新collector，再完成原native/最后deadline/COMMIT/unknown协议。

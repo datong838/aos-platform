@@ -1,0 +1,29 @@
+{
+  "status": "COMPLETE_END_FACTS_COMPONENT_READBACK_GREEN",
+  "original_generators_exact": 19,
+  "original_product_prefixes": {
+    "services/aos-api/aos_api/aip_shared_parent_atomic_admission.py": {
+      "original_sha256": "35aaceb8c1d08949ea9015f6f69e7b09fe94fa84d6fbf2fc684619fb84d24a8f",
+      "current_sha256": "cae91ea29333b6e7d3365cc6e320e6cf904565ce17d99b95889b8a990ae6dd6b",
+      "original_bytes_unchanged": true
+    },
+    "services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py": {
+      "original_sha256": "546eb9be810c9b519acb425732ccef6885f57d1bee1fc67324be620b8d33d434",
+      "current_sha256": "d4b528877eff7f9ffbad3507362b512f421794e89801a89ad2a31609f10279b6",
+      "original_bytes_unchanged": true
+    }
+  },
+  "native_definition_rolled_back_absent": true,
+  "original_pending_reader": [
+    [
+      "aos_admission_pending_relations",
+      "/tmp/aos_admission_end_25913075ff7145d485a5509d8d55d142.so",
+      "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}"
+    ]
+  ],
+  "five_roles_closed": true,
+  "signature_binary_unchanged": "6054f5dd98337b2da957ba7984333f96e26c7141b0a8d8fbd4e3981d2bc4745e",
+  "full_eight_node_legitimate_source_positive_executed_this_wave": false,
+  "full_native_ending_or_task_delivery": false,
+  "execution_allowed": false
+}

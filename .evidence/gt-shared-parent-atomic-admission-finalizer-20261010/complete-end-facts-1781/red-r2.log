@@ -1,0 +1,14 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__ test_complete_end_facts_consumes_original_binding_without_physical_writer ___
+
+    def test_complete_end_facts_consumes_original_binding_without_physical_writer():
+        from aos_api import aip_shared_parent_atomic_admission as api
+>       statements = api.shared_parent_complete_end_fact_statements()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.aip_shared_parent_atomic_admission' has no attribute 'shared_parent_complete_end_fact_statements'
+
+services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py:785: AttributeError
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py::test_complete_end_facts_consumes_original_binding_without_physical_writer
+1 failed, 49 deselected, 7 warnings in 0.41s

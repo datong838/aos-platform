@@ -1646,3 +1646,79 @@ def shared_parent_complete_parent_risk_statements():
         f'ALTER FUNCTION {STAGE_PARENT_RISK} OWNER TO {OWNER}',
         f'REVOKE ALL ON FUNCTION {STAGE_PARENT_RISK} FROM {denied}',
     )
+
+
+COMPLETE_END_FACTS = 'public.read_shared_parent_complete_end_facts(uuid,text,xid8,integer)'
+
+
+def shared_parent_complete_end_fact_statements():
+    """Collect the original eight-node end facts without admitting execution.
+
+    Reuse the exact v2 Receipt binding kernel, retaining all original Source,
+    certificate, parent-risk and Intent checks. Physical state is compared,
+    never produced here. Native drain/lifecycle, final deadline and durable
+    confirmation still belong to the complete ending protocol.
+    """
+    schema = PHYSICAL_SCHEMA
+    name = schema + '.bind_complete_receipt_v2()'
+    definitions = [statement for statement in shared_parent_exact_receipt_statements()
+                   if statement.startswith('CREATE FUNCTION ' + name)]
+    if len(definitions) != 1:
+        raise ValueError('SHARED_ADMISSION_COMPLETE_END_BINDER_REQUIRED')
+    original = definitions[0]
+    begin = '            SELECT * INTO obligation FROM '
+    end = '            NEW.physical_account_id:=obligation.physical_account_id;'
+    physical = f'''            -- This original account update/capacity check occurs before native drain.
+            live:={READ_LIVE_PHYSICAL.split('(')[0]}(NEW.plan_id,window_row.content_hash,NEW.caller_xid,NEW.caller_pid);
+'''
+    origin_hashes = '''            hashes:=hashes||jsonb_build_object('pendingOrigin',pending->>'contentHash',
+              'endAuthority',pending->>'authorityMaterialHash');
+'''
+    if any(original.count(marker) != 1 for marker in (begin, end, physical, origin_hashes)):
+        raise ValueError('SHARED_ADMISSION_COMPLETE_END_BINDING_BOUNDARY_REQUIRED')
+    declaration_start = '          DECLARE obligation '
+    declaration_end = '          BEGIN\n'
+    if original.count(declaration_start) != 1 or original.count(declaration_end) != 1:
+        raise ValueError('SHARED_ADMISSION_COMPLETE_END_DECLARATION_REQUIRED')
+    declarations = original[original.index(declaration_start):original.index(declaration_end)]
+    kernel = original[original.index(begin):original.index(physical)] + origin_hashes
+    if original.index(physical) >= original.index(end):
+        raise ValueError('SHARED_ADMISSION_COMPLETE_END_PHYSICAL_BOUNDARY_REQUIRED')
+    if re.search(r'\b(?:INSERT|UPDATE|DELETE|MERGE|TRUNCATE)\b', kernel, re.I):
+        raise ValueError('SHARED_ADMISSION_COMPLETE_END_DIRECT_WRITER_FORBIDDEN')
+    if READ_LIVE_PHYSICAL.split('(')[0] in kernel:
+        raise ValueError('SHARED_ADMISSION_COMPLETE_END_PHYSICAL_PRODUCER_FORBIDDEN')
+    kernel = kernel.replace('NEW.', 'receipt.')
+    signature = COMPLETE_END_FACTS.split('(')[0]
+    return (
+        f'''CREATE FUNCTION {signature}(p_plan uuid,p_receipt_hash text,p_xid xid8,p_pid integer)
+          RETURNS jsonb LANGUAGE plpgsql VOLATILE SECURITY DEFINER PARALLEL UNSAFE SET search_path=pg_catalog AS $end_facts$
+{declarations}            receipt {schema}.complete_receipt_v2%ROWTYPE;physical_match jsonb;
+          BEGIN
+            IF {_end_authority_native_context_sql()} OR p_xid IS DISTINCT FROM pg_current_xact_id()
+              OR p_pid IS DISTINCT FROM pg_backend_pid() THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_COMPLETE_END_CALLER_REQUIRED' USING ERRCODE='42501'; END IF;
+            SELECT * INTO receipt FROM {schema}.complete_receipt_v2 WHERE plan_id=p_plan FOR SHARE;
+            IF NOT FOUND OR receipt.caller_xid IS DISTINCT FROM p_xid OR receipt.caller_pid IS DISTINCT FROM p_pid
+              OR receipt.org_id IS DISTINCT FROM 'org-org' OR receipt.project_id IS DISTINCT FROM 'dev-project'
+              OR receipt.content_hash IS DISTINCT FROM p_receipt_hash
+              OR receipt.content_hash IS DISTINCT FROM 'sha256:'||encode(sha256(convert_to(
+                public.canonical_asset_registry_jsonb(receipt.body),'UTF8')),'hex') THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_COMPLETE_END_RECEIPT_REQUIRED' USING ERRCODE='23514'; END IF;
+{kernel}            IF hashes IS DISTINCT FROM receipt.body->'nodes'
+              OR receipt.body->>'originalRiskHash' IS DISTINCT FROM risk_row.body->>'originalRiskHash'
+              OR receipt.body->>'sourcePacketHash' IS DISTINCT FROM material.body->>'sourcePacketHash'
+              OR receipt.physical_account_id IS DISTINCT FROM obligation.physical_account_id THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_COMPLETE_END_NODES_CHANGED' USING ERRCODE='23514'; END IF;
+            physical_match:={FINAL_PHYSICAL.split('(')[0]}(p_plan,p_receipt_hash,p_xid,p_pid);
+            IF physical_match->'physicalComparisonMatched' IS DISTINCT FROM 'true'::jsonb THEN
+              RAISE EXCEPTION 'SHARED_ADMISSION_COMPLETE_END_PHYSICAL_REQUIRED' USING ERRCODE='23514'; END IF;
+            RETURN jsonb_build_object('planId',p_plan,'receiptHash',receipt.content_hash,
+              'nodes',hashes,'originalRiskHash',receipt.body->>'originalRiskHash',
+              'sourcePacketHash',receipt.body->>'sourcePacketHash','physicalComparison',physical_match,
+              'factsReadAt',clock_timestamp(),'nativeEndRequired',true,
+              'durableDeadlineEstablished',false,'executionAllowed',false);
+          END $end_facts$''',
+        f'ALTER FUNCTION {COMPLETE_END_FACTS} OWNER TO {OWNER}',
+        f'REVOKE ALL ON FUNCTION {COMPLETE_END_FACTS} FROM PUBLIC,aos_runtime,aos_provider_capacity_issuer',
+    )

@@ -1,0 +1,56 @@
+{
+  "before": {
+    "base_revision": "AOS-001698",
+    "created_at": "2026-10-10T10:26:49+08:00",
+    "excluded_scope": [
+      "formal-DB-Host-worker-Provider",
+      "old-published-migration-or-trigger-function-rewrite",
+      "Root-bootstrap-trust-or-execution-grant",
+      "Mall-source-old-runs"
+    ],
+    "expected_outputs": [
+      "Complete original section3 same-transaction atomic admission: current signed Source, exact independent Target/Judge parent hold, full manifest/certificates, unique Target Intent/Judge pending dependency and initial physical obligation; no actual result required before admission",
+      "Explicit versioned trusted finalizer/end-channel/currentness and whole event/effect/RI ordering; preserve existing seven preparation denial bodies and closed old path, no SET ALL/no trigger disabling/no fake commit or deadline",
+      "Native same-caller real-source/hold full admission positive and rollback/replay/canary/current withdrawal/deadline/commit-control/unknown retention matrices; original budget/physical/Intent algorithms not replaced by mock sources or mere DTO proof. Formal Root/transport/cutover deployment and business first chain remain separate full Goal gates"
+    ],
+    "lease_expires_at": "2026-10-10T23:39:24.709028+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
+      "aos-platform/services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py",
+      "aos-platform/.evidence/gt-shared-parent-atomic-admission-finalizer-20261010"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010"
+  },
+  "after": {
+    "base_revision": "AOS-001698",
+    "created_at": "2026-10-10T10:26:49+08:00",
+    "excluded_scope": [
+      "formal-DB-Host-worker-Provider",
+      "old-published-migration-or-trigger-function-rewrite",
+      "Root-bootstrap-trust-or-execution-grant",
+      "Mall-source-old-runs"
+    ],
+    "expected_outputs": [
+      "Complete original section3 same-transaction atomic admission: current signed Source, exact independent Target/Judge parent hold, full manifest/certificates, unique Target Intent/Judge pending dependency and initial physical obligation; no actual result required before admission",
+      "Explicit versioned trusted finalizer/end-channel/currentness and whole event/effect/RI ordering; preserve existing seven preparation denial bodies and closed old path, no SET ALL/no trigger disabling/no fake commit or deadline",
+      "Native same-caller real-source/hold full admission positive and rollback/replay/canary/current withdrawal/deadline/commit-control/unknown retention matrices; original budget/physical/Intent algorithms not replaced by mock sources or mere DTO proof. Formal Root/transport/cutover deployment and business first chain remain separate full Goal gates"
+    ],
+    "lease_expires_at": "2026-10-11T03:08:26.886866+00:00",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/aip_shared_parent_atomic_admission.py",
+      "aos-platform/services/aos-api/tests/aip/test_shared_parent_atomic_admission_pg.py",
+      "aos-platform/.evidence/gt-shared-parent-atomic-admission-finalizer-20261010"
+    ],
+    "status": "ACTIVE",
+    "task_id": "gt-shared-parent-atomic-admission-finalizer-20261010"
+  },
+  "overlapping_leases": [
+    "gt-shared-parent-atomic-admission-finalizer-20261010"
+  ],
+  "authority": "AOS-001781"
+}

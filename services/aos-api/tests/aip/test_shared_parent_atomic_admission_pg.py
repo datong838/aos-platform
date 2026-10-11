@@ -778,3 +778,77 @@ def test_final_physical_fixed_receipt_binding_and_no_writer():
     frozen = json.loads((root / '.evidence/gt-shared-parent-atomic-admission-finalizer-20261010/final-physical-comparison-1760/beforeimage.json').read_text())
     for name, digest in frozen.items():
         assert hashlib.sha256('\n'.join(getattr(api, name)()).encode()).hexdigest() == digest, name
+
+
+def test_complete_end_facts_consumes_original_binding_without_physical_writer():
+    from aos_api import aip_shared_parent_atomic_admission as api
+    statements = api.shared_parent_complete_end_fact_statements()
+    body = statements[0]
+    assert not re.search(r'\b(?:INSERT|UPDATE|DELETE|MERGE|TRUNCATE)\b', body, re.I)
+    assert api.READ_LIVE_PHYSICAL.split('(')[0] not in body
+    assert api.FINAL_PHYSICAL.split('(')[0] in body
+    assert api.FINAL_CALL.split('(')[0] in body
+    assert api.READ_RECEIPT_ORIGIN.split('(')[0] in body
+    assert "hashes IS DISTINCT FROM receipt.body->'nodes'" in body
+    assert "'nativeEndRequired',true" in body
+    assert "'durableDeadlineEstablished',false" in body
+    assert "'executionAllowed',false" in body
+    root = Path(__file__).resolve().parents[4]
+    before = json.loads((root / '.evidence/gt-shared-parent-atomic-admission-finalizer-20261010/complete-end-facts-1781/beforeimage.json').read_text())
+    for name, digest in before.items():
+        assert hashlib.sha256('\n'.join(getattr(api, name)()).encode()).hexdigest() == digest, name
+
+
+@pytest.mark.parametrize('drift', ['origin_hash', 'writer', 'physical_producer'])
+def test_complete_end_facts_compiler_refuses_original_drift(monkeypatch, drift):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    original = api.shared_parent_exact_receipt_statements
+    def changed():
+        result = list(original())
+        for i, statement in enumerate(result):
+            if statement.startswith('CREATE FUNCTION '+api.PHYSICAL_SCHEMA+'.bind_complete_receipt_v2()'):
+                if drift == 'origin_hash':
+                    statement = statement.replace("hashes:=hashes||jsonb_build_object('pendingOrigin'", "hashes:=hashes ||jsonb_build_object('pendingOrigin'", 1)
+                elif drift == 'writer':
+                    statement = statement.replace('SELECT * INTO obligation', 'DELETE FROM unexpected_table; SELECT * INTO obligation', 1)
+                else:
+                    statement = statement.replace(api.READ_LIVE_PHYSICAL.split('(')[0], 'public.unrecognized_physical_producer', 1)
+                result[i] = statement
+        return tuple(result)
+    monkeypatch.setattr(api, 'shared_parent_exact_receipt_statements', changed)
+    with pytest.raises(ValueError, match='SHARED_ADMISSION_COMPLETE_END_'):
+        api.shared_parent_complete_end_fact_statements()
+
+
+def test_native_complete_end_facts_closed_metadata_and_rollback(native):
+    from aos_api import aip_shared_parent_atomic_admission as api
+    for generator in (api.shared_parent_admission_origin_statements,
+                      api.shared_parent_admission_certificate_set_statements,
+                      api.shared_parent_admission_storage_statements,
+                      api.shared_parent_pending_origin_lookup_statements,
+                      api.shared_parent_physical_obligation_statements,
+                      api.shared_parent_initial_intent_statements,
+                      api.shared_parent_final_intent_validation_statements,
+                      api.shared_parent_end_authority_statements,
+                      api.shared_parent_initial_call_authority_statements,
+                      api.shared_parent_final_call_validation_statements,
+                      api.shared_parent_initial_window_obligation_statements,
+                      api.shared_parent_live_physical_fact_statements,
+                      api.shared_parent_complete_parent_risk_statements,
+                      api.shared_parent_exact_receipt_statements,
+                      api.shared_parent_final_physical_comparison_statements,
+                      api.shared_parent_complete_end_fact_statements):
+        for statement in generator():
+            native.execute(statement)
+    signature = api.COMPLETE_END_FACTS
+    row = native.execute('SELECT pg_get_userbyid(proowner),prosecdef,provolatile,proparallel,proconfig FROM pg_proc WHERE oid=%s::regprocedure', (signature,)).fetchone()
+    assert row == (OWNER, True, 'v', 'u', ['search_path=pg_catalog'])
+    assert not native.execute("SELECT EXISTS(SELECT 1 FROM pg_proc p, LATERAL aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE p.oid=%s::regprocedure AND a.grantee=0 AND a.privilege_type='EXECUTE')", (signature,)).fetchone()[0]
+    for role in ('aos_runtime','aos_provider_capacity_issuer'):
+        assert not native.execute("SELECT has_function_privilege(%s,%s,'EXECUTE')", (role,signature)).fetchone()[0]
+    with pytest.raises(psycopg.errors.InsufficientPrivilege, match='SHARED_ADMISSION_COMPLETE_END_CALLER_REQUIRED'):
+        with native.transaction():
+            native.execute('SELECT '+signature.split('(')[0]+'(NULL,NULL,NULL,NULL)')
+    native.rollback()
+    assert native.execute('SELECT to_regprocedure(%s)', (signature,)).fetchone()[0] is None
+    native.rollback()
