@@ -1,0 +1,302 @@
+{
+  "state": {
+    "cluster": "7694680278363095064",
+    "database": "aos_test_42cfc62da20b_ti4_test",
+    "version": "16.14",
+    "track_functions": "none",
+    "started_at": "2026-10-11 01:35:52.038241+00:00"
+  },
+  "tables": [
+    {
+      "schemaname": "aos_shared_parent_admission_private",
+      "tablename": "end_authority",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_admission_private",
+      "tablename": "pending_origin",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "complete_parent_risk",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "complete_receipt_v2",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "initial_call_authority",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "initial_target_obligation",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "initial_window_obligation",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "judge_dependency",
+      "rows": 0
+    },
+    {
+      "schemaname": "aos_shared_parent_physical_private",
+      "tablename": "target_intent",
+      "rows": 0
+    }
+  ],
+  "other_sessions": [],
+  "functions": [
+    {
+      "nspname": "public",
+      "proname": "build_shared_parent_admission_origin",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner,aos_model_eval_issuer_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "bf77e5029c15c745907fa76beedc79cee84893aaae02a810733cd266750d56d2"
+    },
+    {
+      "nspname": "public",
+      "proname": "persist_shared_parent_admission_origin",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_model_eval_issuer_owner",
+      "proacl": "{aos_model_eval_issuer_owner=X/aos_model_eval_issuer_owner}",
+      "body_sha256": "52ea6339ee4c8f3ed8adb5911ac21c648beb38f28f1a78f730e65558c7201577"
+    },
+    {
+      "nspname": "public",
+      "proname": "prepare_shared_parent_initial_intents",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "494777622aa8ea32ba3240710d431a4603f2cc1e230f38f680052c5a86c370ed"
+    },
+    {
+      "nspname": "public",
+      "proname": "prepare_shared_parent_initial_target_obligation",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "018c8a862d4e085ec7dffcf8390628444528faafa7d25e5d516954090e285048"
+    },
+    {
+      "nspname": "public",
+      "proname": "read_shared_parent_admission_original_facts",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "7f32540c7113c978058a44e747510e50b5a735fd61328e7e04282b060db6ffe2"
+    },
+    {
+      "nspname": "public",
+      "proname": "read_shared_parent_complete_end_facts",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "1bb627e5494be5ddb405c34016ca724e5f315ddb700f2a51b273f8853bbcfc66"
+    },
+    {
+      "nspname": "public",
+      "proname": "read_shared_parent_initial_call_authority",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "cab18435847098e9e4adb4ec8b8e4a1fd65b73d5283868c0c2424a9a7c112bc0"
+    },
+    {
+      "nspname": "public",
+      "proname": "read_shared_parent_live_physical_facts",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "0404c2093acd2f23b81c8770ef39e5bdc20f92bd0ec92d39ada71e71b56a52b7"
+    },
+    {
+      "nspname": "public",
+      "proname": "read_shared_parent_pending_origin",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_model_eval_issuer_owner",
+      "proacl": "{aos_model_eval_issuer_owner=X/aos_model_eval_issuer_owner,aos_physical_capacity_occupation_owner=X/aos_model_eval_issuer_owner}",
+      "body_sha256": "bdc5dd03a79655dfffb5494b94f4e25fb359464d48fcac45884c12424813154d"
+    },
+    {
+      "nspname": "public",
+      "proname": "read_shared_parent_receipt_origin",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_model_eval_issuer_owner",
+      "proacl": "{aos_model_eval_issuer_owner=X/aos_model_eval_issuer_owner,aos_physical_capacity_occupation_owner=X/aos_model_eval_issuer_owner}",
+      "body_sha256": "93cbcf5619479047d29d18dd9c95121ac86f1e0064be1fdb172c538f300c6bb0"
+    },
+    {
+      "nspname": "public",
+      "proname": "read_shared_parent_retained_origin",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_model_eval_issuer_owner",
+      "proacl": "{aos_model_eval_issuer_owner=X/aos_model_eval_issuer_owner,aos_physical_capacity_occupation_owner=X/aos_model_eval_issuer_owner}",
+      "body_sha256": "6cf9f79bfbaf722f609bf250621e8e610d4135cf57b05a168c5fa040e8b3914b"
+    },
+    {
+      "nspname": "public",
+      "proname": "read_shared_parent_unresolved_members",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "26a571b350968027e71d0a5fb7d9c452f9a489531b1966f7384bbaa98a03511b"
+    },
+    {
+      "nspname": "public",
+      "proname": "stage_shared_parent_complete_receipt_v2",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "38b558f11d280f8eddf24ad10471caa4729b8095352efa9d5b4217339e793d5c"
+    },
+    {
+      "nspname": "public",
+      "proname": "stage_shared_parent_complete_risk",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "15e95e139c3e42c334fc3e7a50759b9a862b1da8605219bdae74de8661c92320"
+    },
+    {
+      "nspname": "public",
+      "proname": "stage_shared_parent_end_authority",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_model_eval_issuer_owner",
+      "proacl": "{aos_model_eval_issuer_owner=X/aos_model_eval_issuer_owner}",
+      "body_sha256": "3203a91e6d314e78f9e564512d9d21c05fa0b5bd749ad4ad20bbf71f85a5490d"
+    },
+    {
+      "nspname": "public",
+      "proname": "stage_shared_parent_initial_call_authority",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "08680fc6f9f3fd05fd9ceaa555a2bb27e18130796bd50f363d11d9500ab3e2e5"
+    },
+    {
+      "nspname": "public",
+      "proname": "stage_shared_parent_initial_window_obligation",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "64eb05e2d82fa38dbc7aece2a3ce47ecc174c58efc64368df0ea11dda5b9065e"
+    },
+    {
+      "nspname": "public",
+      "proname": "validate_shared_parent_admission_certificate_set",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_model_eval_issuer_owner",
+      "proacl": "{aos_model_eval_issuer_owner=X/aos_model_eval_issuer_owner}",
+      "body_sha256": "30e82fdb7be148dd611500a47774765d63aead3659c800c44611581593bf4039"
+    },
+    {
+      "nspname": "public",
+      "proname": "verify_model_shared_parent_certificate_signature",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_capacity_publication_owner",
+      "proacl": "{aos_capacity_publication_owner=X/aos_capacity_publication_owner,aos_model_eval_issuer_owner=X/aos_capacity_publication_owner}",
+      "body_sha256": "c74a9bb51b574c8a008f479dbff0cbf58a91895aaff678236e350460889c85b2"
+    },
+    {
+      "nspname": "public",
+      "proname": "verify_shared_parent_final_call_authority",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "7cf524d8836a7afec21635e20425cdd8a5ba58399fdd00f4fd9f2dc31a2a5419"
+    },
+    {
+      "nspname": "public",
+      "proname": "verify_shared_parent_final_intents",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "c8fc99d2b10859ea72c6509f1555c2f6225acec45761ef4489c0b450d94bba03"
+    },
+    {
+      "nspname": "public",
+      "proname": "verify_shared_parent_final_physical",
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "prosecdef": true,
+      "owner": "aos_physical_capacity_occupation_owner",
+      "proacl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "body_sha256": "cbe39674a1af8552798819c6a4bed84acfdcaae30eaf82a8c22715dbeeb7c28b"
+    }
+  ],
+  "readonly": true
+}

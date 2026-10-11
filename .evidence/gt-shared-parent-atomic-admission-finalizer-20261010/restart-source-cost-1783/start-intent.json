@@ -1,0 +1,9 @@
+{
+  "container_id": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+  "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+  "status_before": "exited",
+  "original_named_volume": "aos-source-desktop-shm-20261009-data",
+  "head": "f101de37835e644000e363bbef54eee70d2a8c12",
+  "action": "start existing isolated lab once",
+  "formal_services_touched": false
+}
