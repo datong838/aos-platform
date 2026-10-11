@@ -1,0 +1,27 @@
+{
+  "isolatedCurrentReceiptOperationCount": 24,
+  "catalogOperationCount": 30,
+  "remaining": [
+    "impact_preview.freeze",
+    "media_contract_migration.create",
+    "media_gate_profile.register",
+    "media_gate_set.assemble",
+    "review_issue.return",
+    "stage_template.compile"
+  ],
+  "newSinceR8": [
+    "impact_preview.create",
+    "impact_preview.revise"
+  ],
+  "twoReadonlyQueriesEqual": true,
+  "originalImpactRevisionAndReceiptMetadataExact": true,
+  "currentAuthorityDbConnected": false,
+  "databaseWrites": 0,
+  "oldOperationReplay": false,
+  "wholeSourceAccepted": false,
+  "formalIdentityConnected": false,
+  "eightPagesAccepted": false,
+  "retainedFileHashMatches": 1695,
+  "userModificationsRetained": 22,
+  "scriptSha256": "1bfedc8024c89ac4e1b7201b5a71314dbf1d8d9155f9ffd09d40e1cf1913e613"
+}
