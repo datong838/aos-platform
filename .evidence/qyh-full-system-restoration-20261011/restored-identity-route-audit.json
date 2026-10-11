@@ -1,0 +1,20 @@
+{
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "memberships": 4,
+  "uniqueSubjects": 4,
+  "devSubjects": 1,
+  "nonDevSubjects": 3,
+  "roles": {
+    "admin": 4
+  },
+  "membershipFingerprint": "160b960b967d7d19febf76b3005421b3e24438f2bb5665426f34b4d61cdf6176",
+  "transactionReadOnly": true,
+  "formalIdentityVerified": false,
+  "formalPublisherVerified": false,
+  "databaseWrites": 0,
+  "subjectValuesEmitted": false,
+  "independentConnectionAggregateExact": true
+}

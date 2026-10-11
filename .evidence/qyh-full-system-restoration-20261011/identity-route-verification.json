@@ -1,0 +1,72 @@
+{
+  "outcome": "RESTORED_TENANT_IDENTITY_ENTRY_READONLY_RECONCILIATION",
+  "observedAt": "2026-10-11T09:59:25.414197+00:00",
+  "authority": "AOS-001853",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "knownStartupPresence": [
+    {
+      "path": "/Users/ddt/Library/LaunchAgents/com.aos.a0v-api-daily0900.plist",
+      "exists": true,
+      "configuredNonempty": {
+        "AOS_OIDC_JWKS_URLS": false,
+        "AOS_OIDC_JWKS_URL": false,
+        "AOS_OIDC_ISSUERS": false,
+        "AOS_OIDC_ISSUER": false,
+        "AOS_OIDC_AUDIENCE": false
+      }
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/aos-platform/.env",
+      "exists": true,
+      "configuredNonempty": {
+        "AOS_OIDC_JWKS_URLS": false,
+        "AOS_OIDC_JWKS_URL": false,
+        "AOS_OIDC_ISSUERS": false,
+        "AOS_OIDC_ISSUER": false,
+        "AOS_OIDC_AUDIENCE": false
+      }
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.env",
+      "exists": false,
+      "configuredNonempty": {
+        "AOS_OIDC_JWKS_URLS": false,
+        "AOS_OIDC_JWKS_URL": false,
+        "AOS_OIDC_ISSUERS": false,
+        "AOS_OIDC_ISSUER": false,
+        "AOS_OIDC_AUDIENCE": false
+      }
+    },
+    {
+      "path": "current_process_allowlisted_settings",
+      "configuredNonempty": {
+        "AOS_OIDC_JWKS_URLS": false,
+        "AOS_OIDC_JWKS_URL": false,
+        "AOS_OIDC_ISSUERS": false,
+        "AOS_OIDC_ISSUER": false,
+        "AOS_OIDC_AUDIENCE": false
+      }
+    }
+  ],
+  "localIdentityServiceCandidates": {
+    "desktop-linux": [
+      {
+        "Names": "supabase-auth",
+        "Image": "supabase/gotrue:v2.196.0",
+        "Status": "Exited (0) 2 weeks ago",
+        "Ports": ""
+      }
+    ],
+    "colima-aos-extension": []
+  },
+  "credentialValuesEmitted": false,
+  "credentialStoresOpened": false,
+  "formalPublisherVerified": false,
+  "formalLoginVerified": false,
+  "servicesStarted": false,
+  "databaseWrites": 0,
+  "sourceFiles": {
+    "identity_route_audit.py": "53792d01e40c9684415f0674f18348e3eaa5058e5e1c8166bef3cd9ca1b79f21",
+    "restored-identity-route-audit.json": "6e2b67039ce094befd393a909a417524065bc9ea0deacf3cc582ec54b916c410"
+  }
+}

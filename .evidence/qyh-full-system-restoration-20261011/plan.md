@@ -52,3 +52,9 @@ API准备独立候选：新增本Task证据目录freeze_current_api.py。从精�
 
 2026-10-11加载实测修订：Colima未挂载本机/Users配置路径，原docker run退出125；只读inspect证明目标不存在、原容器已正常停止。限定LOGIN已完成且不重放。改用docker create同一命名卷、docker cp无秘密hba到容器root拥有文件（postgres仅可读）、docker start；不依赖主机bind、不改变原卷配置。创建/复制/启动各自记录intent与terminal，失败只读对账。
 每次操作intent/terminal。未知只读核对，不重试写；没有运行记录不代替证明。新transport失败先停新候选，不删旧容器/库/卷；原preview仍维持原identity和数据。恢复历史卷不改变original092。API登录/运行门失败只限制该动作，继续安全恢复主线。
+
+## 当前恢复身份来源对账
+
+仅新增本Task evidence/identity_route_audit.py及脱敏result、verification、review；不修改产品/正式身份/数据库配置。候选一现有身份和启动配置的主线补齐，候选二已登记固定验证器语义闭合；先主线。白名单只读meta_membership结构与org-org/dev-project成员聚合，不读凭证、邮件或业务payload，不把成员记录当OIDC认证/发布授权。docker两现有context只取身份服务名称/镜像/状态/端口，既有supabase-auth停用不启动、不接管不相关账号。当前进程/已知plist/.env只查OIDC五项是否非空，不输出值或读取秘密存储。
+
+通过有限LOGIN固定目标预检，READ ONLY与原TenantScope核成员角色计数、dev与非dev主体计数和摘要；缺表/权限拒绝保留原错误，不提权绕过。独立新连接重复聚合证明一致，Source/Registry写为零。若真实publisher/OIDC仍不能确认，准确登记缺失入口，不发新token、换actor、伪造Root或强开Host。整Task仍未完成。
