@@ -1,0 +1,18 @@
+{
+  "files": {
+    "history159.second.dump": {
+      "bytes": 16075637,
+      "sha256": "77cd1009d2e634f03feba9df69f84c11c81bfb526b861b9ea903b830be54b79e"
+    },
+    "globals.sql": {
+      "bytes": 7491,
+      "sha256": "34d1396bd688dca9c05cf5691124e2bed1e43b5a6a6d19a2f4514621f5475f31"
+    },
+    "history159.dump": {
+      "bytes": 16075637,
+      "sha256": "77cd1009d2e634f03feba9df69f84c11c81bfb526b861b9ea903b830be54b79e"
+    }
+  },
+  "secondIsChecksumCopy": true,
+  "rolePasswordsIncluded": false
+}

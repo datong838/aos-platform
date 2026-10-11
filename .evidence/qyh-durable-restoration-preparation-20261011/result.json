@@ -1,0 +1,18 @@
+{
+  "outcome": "DURABLE_ISOLATED_HISTORY159_FULL_DATA_RESTORE_VERIFIED",
+  "tables": 647,
+  "targetId": "9e8e903010304d33a801065e96c38693c9cbdc7687b7fd35a76e2fe8dbb7ae82",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "identity": {
+    "cluster": "7695302940039200809",
+    "version": "a0v_159"
+  },
+  "source159Unchanged": true,
+  "original092Unchanged": true,
+  "rolesAclCatalogFinalReviewPending": false,
+  "formalSwitch": false,
+  "runtimeEnabled": false,
+  "catalogEvidence": "catalog-result.json",
+  "formalImplementationPlan": "formal-implementation-plan.md",
+  "browserAcceptance": false
+}

@@ -1,0 +1,20 @@
+{
+  "name": "org-org",
+  "targetBindings": [
+    {
+      "installation": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+      "enabled": false,
+      "fence": true
+    },
+    {
+      "installation": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+      "enabled": false,
+      "fence": true
+    },
+    {
+      "installation": "407059df-6f1f-4927-acd7-8e388692838e",
+      "enabled": false,
+      "fence": true
+    }
+  ]
+}

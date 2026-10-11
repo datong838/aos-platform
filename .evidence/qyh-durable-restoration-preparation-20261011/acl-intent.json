@@ -1,0 +1,23 @@
+{
+  "target": {
+    "id": "9e8e903010304d33a801065e96c38693c9cbdc7687b7fd35a76e2fe8dbb7ae82",
+    "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "network": "none",
+    "ports": {},
+    "mounts": [
+      {
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "z",
+        "Name": "aos-qyh-history159-prepared-data-20261011",
+        "Propagation": "",
+        "RW": true,
+        "Source": "/var/lib/docker/100000.100000/volumes/aos-qyh-history159-prepared-data-20261011/_data",
+        "Type": "volume"
+      }
+    ]
+  },
+  "database": "aos_meta_head",
+  "onlyChange": "two original transport CONNECT grants",
+  "sourceWrites": false
+}

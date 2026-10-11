@@ -1,0 +1,416 @@
+{
+  "count": 12,
+  "source": [
+    {
+      "schemaname": "public",
+      "sequencename": "aip_kv_ownership_ledger_ledger_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 23,
+      "state": {
+        "last_value": 23,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "decision_lineage_ownership_ledger_ledger_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 631,
+      "state": {
+        "last_value": 631,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "extension_runtime_host_lease_event_a0v_093_event_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": null,
+      "state": {
+        "last_value": 1,
+        "is_called": false
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "meta_dataset_history_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 13557,
+      "state": {
+        "last_value": 13557,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "projection_input_revision_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 1742,
+      "state": {
+        "last_value": 1742,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "projection_outbox_outbox_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 1741,
+      "state": {
+        "last_value": 1741,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "tenant_backfill_batch_event_event_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 21,
+      "state": {
+        "last_value": 21,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "tenant_dual_write_ledger_ledger_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": null,
+      "state": {
+        "last_value": 1,
+        "is_called": false
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "tenant_ownership_decision_decision_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 2634,
+      "state": {
+        "last_value": 2634,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "tenant_ownership_decision_event_event_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 3110,
+      "state": {
+        "last_value": 3110,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "tenant_quarantine_record_quarantine_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 393,
+      "state": {
+        "last_value": 393,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "wiki_page_version_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 65,
+      "state": {
+        "last_value": 65,
+        "is_called": true
+      }
+    }
+  ],
+  "target": [
+    {
+      "schemaname": "public",
+      "sequencename": "aip_kv_ownership_ledger_ledger_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 23,
+      "state": {
+        "last_value": 23,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "decision_lineage_ownership_ledger_ledger_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 631,
+      "state": {
+        "last_value": 631,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "extension_runtime_host_lease_event_a0v_093_event_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": null,
+      "state": {
+        "last_value": 1,
+        "is_called": false
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "meta_dataset_history_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 13557,
+      "state": {
+        "last_value": 13557,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "projection_input_revision_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 1742,
+      "state": {
+        "last_value": 1742,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "projection_outbox_outbox_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 1741,
+      "state": {
+        "last_value": 1741,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "tenant_backfill_batch_event_event_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 21,
+      "state": {
+        "last_value": 21,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "tenant_dual_write_ledger_ledger_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": null,
+      "state": {
+        "last_value": 1,
+        "is_called": false
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "tenant_ownership_decision_decision_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 2634,
+      "state": {
+        "last_value": 2634,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "tenant_ownership_decision_event_event_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 3110,
+      "state": {
+        "last_value": 3110,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "tenant_quarantine_record_quarantine_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 393,
+      "state": {
+        "last_value": 393,
+        "is_called": true
+      }
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "wiki_page_version_id_seq",
+      "sequenceowner": "aos_app",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1,
+      "last_value": 65,
+      "state": {
+        "last_value": 65,
+        "is_called": true
+      }
+    }
+  ],
+  "equal": true
+}
