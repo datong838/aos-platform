@@ -237,3 +237,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 离线SDK受控源码产物复现1818
 候选一1817 SDK与1778r3精确输入复现；候选二剩余计划观察。先一，新增offline-core-build-1818/Dockerfile、input-manifest.json与验证结果。核源码归档SHA256与旧输入，原build.py/configure-flags.json逐字节复制；仅以固定1817 SDK替换联网依赖安装，networknone构建world-bin。独立导出postgres/plpgsql/pgcrypto及三个头文件，与1778r3逐字节比较；差异必须保留，不以受控产物一致替代历史原核心或完整信任。构建不启动PG、不接触正式卷，Task保持ACTIVE。
+
+## 匿名可执行映射生命周期负门1819
+在已登记package生命周期候选中，新增anonymous-mapping-1819/probe.c/Dockerfile/result。固定1817 SDK编译独立helper，scratch只复制musl加载器与helper；不启动PG、不挂任何卷，networknone/read-only/capdropALL/no-new-privileges/UID501。比较dl_iterate_phdr在匿名RW页mprotect成RX前后记录；从/proc/self/maps核该地址实际权限，页不执行。若模块枚举不变但内核出现RX，证实模块列表不足；拒绝把文件readonly等同内存闭合。失败保留，不调弱安全参数。完整Main及专用Root仍待证。

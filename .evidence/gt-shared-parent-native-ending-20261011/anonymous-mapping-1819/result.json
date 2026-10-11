@@ -1,0 +1,12 @@
+{
+  "container": "9509aa0204b071f724aee3e6783f30f88a2373b326d3d0c1dad04349e086983d",
+  "image": "sha256:667f5c151c0dc08cafe5039e5af0de3777e7986987b3fa7f7e88b67e53b6ab25",
+  "client_exit": 0,
+  "exit_code": 0,
+  "status": "exited",
+  "stdout": "{\"loader_records\":3,\"loader_unchanged\":true,\"anonymous_rx_observed\":true,\"page_executed\":false}\n",
+  "stderr": "",
+  "no_mounts": true,
+  "readonly_rootfs": true,
+  "execution_authorized": false
+}
