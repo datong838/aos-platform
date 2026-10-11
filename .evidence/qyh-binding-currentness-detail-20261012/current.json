@@ -1,0 +1,680 @@
+{
+  "twoIndependentViewsEqual": true,
+  "originalReadOnlyFactories": true,
+  "databaseWrites": 0,
+  "modelCalls": 0,
+  "rows": [
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-model-successor-r3-skill-d03",
+      "bindingStatus": "active",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-model-successor-r3-d03-strategy.plan",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-model-successor-r3-skill-d02",
+      "bindingStatus": "active",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-model-successor-r3-d02-material.collect",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-model-successor-r3-skill-d01",
+      "bindingStatus": "active",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-model-successor-r3-d01-material.collect",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-firstchain-skill-d03",
+      "bindingStatus": "suspended",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-firstchain-d03-strategy.plan",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-firstchain-skill-d02",
+      "bindingStatus": "suspended",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-firstchain-d02-material.collect",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-firstchain-skill-d01",
+      "bindingStatus": "suspended",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-firstchain-d01-material.collect",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "data-steward",
+      "bindingId": "a0v-model-successor-r3-skill-s01",
+      "bindingStatus": "active",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-model-successor-r3-s01-material.collect",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "data-steward",
+      "bindingId": "a0v-firstchain-skill-s01",
+      "bindingStatus": "suspended",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-firstchain-s01-material.collect",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "content-research",
+      "bindingId": "a0v-model-successor-r3-skill-c06",
+      "bindingStatus": "active",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-model-successor-r3-c06-content.review",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "content-research",
+      "bindingId": "a0v-firstchain-skill-c06",
+      "bindingStatus": "suspended",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-firstchain-c06-content.review",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "customer-research",
+      "bindingId": "a0v-model-successor-r3-skill-p01",
+      "bindingStatus": "active",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-model-successor-r3-p01-material.collect",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "customer-research",
+      "bindingId": "a0v-firstchain-skill-p01",
+      "bindingStatus": "suspended",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-firstchain-p01-material.collect",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "channel-research",
+      "bindingId": "a0v-model-successor-r3-skill-a02",
+      "bindingStatus": "active",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-model-successor-r3-a02-strategy.plan",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "channel-research",
+      "bindingId": "a0v-firstchain-skill-a02",
+      "bindingStatus": "suspended",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-firstchain-a02-strategy.plan",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "business-reviewer",
+      "bindingId": "a0v-model-successor-r3-skill-g06",
+      "bindingStatus": "active",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-model-successor-r3-g06-strategy.plan",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    },
+    {
+      "slotId": "business-reviewer",
+      "bindingId": "a0v-firstchain-skill-g06",
+      "bindingStatus": "suspended",
+      "skillGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "capabilities": [
+        {
+          "binding_id": "a0v-firstchain-g06-strategy.plan",
+          "status": "active",
+          "operational_readiness": "available",
+          "snapshot_present": true,
+          "expired": true,
+          "expiry_present": true
+        }
+      ],
+      "routePolicy": {
+        "referencesPresent": true,
+        "routeHashMatches": true,
+        "routeLifecycle": "active",
+        "routePolicyMatches": true,
+        "policyHashMatches": true,
+        "policyLifecycle": "active",
+        "killSwitch": false
+      },
+      "routeGate": {
+        "present": true,
+        "status": "passed",
+        "hashMatches": true,
+        "started": true,
+        "expired": false,
+        "invalidated": false
+      },
+      "originalRouteGateRejection": "Model/Route signed execution evidence is not supported"
+    }
+  ],
+  "summary": {
+    "bindings": 16,
+    "skillGateExpired": 0,
+    "skillGateStatus": {
+      "passed": 16
+    },
+    "routeGateExpired": 0,
+    "routeGateStatus": {
+      "passed": 16
+    },
+    "routeRejections": {
+      "Model/Route signed execution evidence is not supported": 16
+    },
+    "expiredCapabilityOccurrences": 16
+  },
+  "realWorkbenchRestoreOrApprovalAccepted": false
+}

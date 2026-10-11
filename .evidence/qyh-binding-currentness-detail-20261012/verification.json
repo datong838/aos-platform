@@ -1,0 +1,24 @@
+{
+  "baseHead": "e22e4080868ac91143b7bb231f167528c7092f64",
+  "twoIndependentMetadataViewsEqual": true,
+  "twoIndependentOriginalSkillProofViewsEqual": true,
+  "bindingCount": 16,
+  "skillGatePassedHashMatchingUnexpiredNotInvalidated": true,
+  "routeGatePassedHashMatchingUnexpiredNotInvalidated": true,
+  "routeAndPolicyExactActiveKillSwitchOff": true,
+  "originalRouteRejections": {
+    "Model/Route signed execution evidence is not supported": 16
+  },
+  "originalSkillRejections": {
+    "{'errorType': 'AipReleaseGateRejected', 'reason': 'formal Skill Eval executor authority unavailable'}": 16
+  },
+  "expiredCapabilityOccurrences": 16,
+  "databaseWrites": 0,
+  "modelCalls": 0,
+  "productionDependenciesDiagnosedFromClone": false,
+  "realWorkstationOrReleaseAuthorityGranted": false,
+  "sources": {
+    "audit.py": "f39c3e0a3dfbfaafa5a7c49b257b8dd28479d9cddb37a790acfcf70d154611a6",
+    "read_skill_proof.py": "7952038097f88e8e98794e902f7759a0338d62138cc246152fb34ce02b6986cc"
+  }
+}

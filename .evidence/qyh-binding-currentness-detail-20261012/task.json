@@ -1,0 +1,18 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-binding-currentness-detail-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001931",
+  "scope": [
+    "aos-platform/.evidence/qyh-binding-currentness-detail-20261012"
+  ],
+  "excluded_scope": [
+    "DB writes/readiness refresh/route activation/Provider/model calls"
+  ],
+  "expected_outputs": [
+    "Exact original 6slot16binding currentness causes with original Model route/policy/Eval authority getters and native expiry/hash/state predicates; readonly no fabricated refresh"
+  ],
+  "lease_expires_at": "2026-10-12T03:48:44.935274+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T07:48:45+08:00"
+}

@@ -1,0 +1,11 @@
+# 当前评测门标签与原证据权威分解
+
+固定原ownedclone/DB/READONLY同前波factory、6slot16binding，两次原ModelStore/SkillStore/原EvalAuthority查询结果相同。所有16 SkillGate和RouteGate存在/statuspassed/hashMatches/started、未过期且未撤回；16 Route和Policy精确hash匹配/active、killswitchFalse。故不能把MODEL_ROUTE_BLOCKED或SKILL_EVAL_GATE_BLOCKED一律归成Gate TTL或实测报告失败。Capability binding本身的readiness期限过期16次出现，这不是当前Provider网络测量，也不授权伪造健康观察。
+
+原AipEvalAuthorityStore.require_exact_passed以原evaluation_candidate_ref检查后16项均拒绝Model/Route signed execution evidence is not supported（源码523-534即明确关闭未支持类型）。独立原AipReleasePublicationService._verify_gate_evidence检查16 SkillGate，全部formal Skill Eval executor authority unavailable；这不是引用字段不一致的推断，而是原完整报告证明reader实际拒绝。所有权威验证保持不变，零模型请求、未保存评估/续期/新Gate/Health。
+
+代码边界复习：aip_model_eval_execution_reader.py开头明确只读取descriptive execution plan，不证明issuer trust/current approval/joint admission/Usage/settlement/verified Report；不可将已持久化私表hash、签名片段或旧passed标签改成Model/Route完整权威，也不可删除unsupported guard。Skill完整原report proof缺失/不满足需原合法producer当前真实执行与签名，历史PASSED不补签、不复制到新case。
+
+该调查改变下一行动：优先核原signed Skill Eval执行证明及Model/Route完整Report consumer/producer链，沿现有闭合Model来源工程和隔离批准方案，保持release failclosed；独立另需当前Capability health合法来源。仅刷新Skill TTL、强制ModelRouteactive或延长Gate不能解锁。Producer正式身份、Owner、预算、Provider与完整Source授权依然分别必需，缺配置路径的问题待已询问答复，不能用测试身份代替。
+
+这是原实验兼容依赖诊断，不将其作为当前恢复库八工作台不可见原因的直接证明；当前恢复目录0/禁入有自己的真实接口证据。未改产品代码/真库/API/22用户tracked变更；本Task是只读审计，不以空readplan宣称完整业务恢复。脚本原getter/判据实查，无测试替身。Goal ACTIVE，六剩余操作/实际八页/自然首链仍未完成。

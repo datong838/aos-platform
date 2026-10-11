@@ -1,0 +1,137 @@
+{
+  "twoIndependentViewsEqual": true,
+  "databaseWrites": 0,
+  "rows": [
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-model-successor-r3-skill-d03",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-model-successor-r3-skill-d02",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-model-successor-r3-skill-d01",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-firstchain-skill-d03",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-firstchain-skill-d02",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "investigation-owner",
+      "bindingId": "a0v-firstchain-skill-d01",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "data-steward",
+      "bindingId": "a0v-model-successor-r3-skill-s01",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "data-steward",
+      "bindingId": "a0v-firstchain-skill-s01",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "content-research",
+      "bindingId": "a0v-model-successor-r3-skill-c06",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "content-research",
+      "bindingId": "a0v-firstchain-skill-c06",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "customer-research",
+      "bindingId": "a0v-model-successor-r3-skill-p01",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "customer-research",
+      "bindingId": "a0v-firstchain-skill-p01",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "channel-research",
+      "bindingId": "a0v-model-successor-r3-skill-a02",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "channel-research",
+      "bindingId": "a0v-firstchain-skill-a02",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "business-reviewer",
+      "bindingId": "a0v-model-successor-r3-skill-g06",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    },
+    {
+      "slotId": "business-reviewer",
+      "bindingId": "a0v-firstchain-skill-g06",
+      "originalEvidenceOutcome": {
+        "errorType": "AipReleaseGateRejected",
+        "reason": "formal Skill Eval executor authority unavailable"
+      }
+    }
+  ],
+  "reasons": {
+    "{'errorType': 'AipReleaseGateRejected', 'reason': 'formal Skill Eval executor authority unavailable'}": 16
+  }
+}
