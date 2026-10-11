@@ -1,0 +1,324 @@
+{
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_production_contract_store.py": "717727f73c4cc8e74c5b952b81e92a8be3dfd50bce9cd54a3c809a9929c03e26",
+    "services/aos-api/aos_api/aip_content_draft_store.py": "20b3e67bd16f30759e005a01bf22c45fd20e1b1771e0eda7dfe3e10975c820cc",
+    "services/aos-api/aos_api/aip_bi_plan_issuer_connection.py": "0b71d6b2e5d5674a141d4e92d0f8cc33aa45fa2b3cd5b8a77b6053d3ba10444c",
+    "services/aos-api/aos_api/routers/aip_production_contracts.py": "e3bd0833883c6cfdfbd886654cde02cb5f975c717d795f9242feeabcce9db5d6",
+    "services/aos-api/tests/extension_runtime/test_plan_receipt_writer_protocol_pg.py": "e71929fdc2f43c5358f377d09d239a7d0d0b8cd93de34b15b0bf4a942d49dbc7",
+    "services/aos-api/aos_api/ecommerce_runtime_workshop_catalog.py": "b68be1e0ca1abe21c9746ecbd8486e059ca48b5eb694729ad7115797dcf189a8"
+  },
+  "fixedProductionReceiptCallSites": [
+    {
+      "method": "create_eval_contract",
+      "line": 524,
+      "operation": "eval_contract.create"
+    },
+    {
+      "method": "revise_eval_contract",
+      "line": 551,
+      "operation": "eval_contract.revise"
+    },
+    {
+      "method": "freeze_eval_contract",
+      "line": 585,
+      "operation": "eval_contract.freeze"
+    },
+    {
+      "method": "create_impact_preview",
+      "line": 850,
+      "operation": "impact_preview.create"
+    },
+    {
+      "method": "revise_impact_preview",
+      "line": 925,
+      "operation": "impact_preview.revise"
+    },
+    {
+      "method": "freeze_impact_preview",
+      "line": 1009,
+      "operation": "impact_preview.freeze"
+    },
+    {
+      "method": "create_stage_template",
+      "line": 1134,
+      "operation": "stage_template.create"
+    },
+    {
+      "method": "revise_stage_template",
+      "line": 1207,
+      "operation": "stage_template.revise"
+    },
+    {
+      "method": "freeze_stage_template",
+      "line": 1302,
+      "operation": "stage_template.freeze"
+    },
+    {
+      "method": "compile_stage_template",
+      "line": 1678,
+      "operation": "stage_template.compile"
+    },
+    {
+      "method": "create_artifact_relation",
+      "line": 1900,
+      "operation": "artifact_relation.create"
+    },
+    {
+      "method": "register_artifact_family",
+      "line": 1985,
+      "operation": "artifact_family.register"
+    },
+    {
+      "method": "attach_artifact_family_member",
+      "line": 2080,
+      "operation": "artifact_family.member.attach"
+    },
+    {
+      "method": "select_artifact_family_candidate",
+      "line": 2180,
+      "operation": "artifact_family.candidate.select"
+    },
+    {
+      "method": "register_media_gate_profile",
+      "line": 2269,
+      "operation": "media_gate_profile.register"
+    },
+    {
+      "method": "create_contract_migration_decision",
+      "line": 2372,
+      "operation": "media_contract_migration.create"
+    },
+    {
+      "method": "assemble_media_gate_set",
+      "line": 2597,
+      "operation": "media_gate_set.assemble"
+    },
+    {
+      "method": "register_review_rule_revision",
+      "line": 2668,
+      "operation": "review_rule.register"
+    },
+    {
+      "method": "create_review_issue",
+      "line": 2762,
+      "operation": "review_issue.create"
+    },
+    {
+      "method": "resolve_review_issue",
+      "line": 2850,
+      "operation": "review_issue.resolve"
+    },
+    {
+      "method": "return_review_issue",
+      "line": 3028,
+      "operation": "review_issue.return"
+    },
+    {
+      "method": "create_brief",
+      "line": 3107,
+      "operation": "task_brief.create"
+    },
+    {
+      "method": "revise_brief",
+      "line": 3127,
+      "operation": "task_brief.revise"
+    },
+    {
+      "method": "freeze_brief",
+      "line": 3146,
+      "operation": "task_brief.freeze"
+    },
+    {
+      "method": "build_evidence_bundle",
+      "line": 3259,
+      "operation": "evidence_bundle.build"
+    },
+    {
+      "method": "build_evidence_bundle",
+      "line": 3262,
+      "operation": "evidence_bundle.create"
+    },
+    {
+      "method": "revoke_evidence_bundle",
+      "line": 3482,
+      "operation": "evidence_bundle.revoke"
+    },
+    {
+      "method": "revoke_evidence",
+      "line": 3557,
+      "operation": "evidence.revoke"
+    },
+    {
+      "method": "resolve_evidence_disclosure",
+      "line": 3641,
+      "operation": "evidence_disclosure.resolve"
+    },
+    {
+      "method": "freeze_production_context",
+      "line": 3903,
+      "operation": "production_context.freeze"
+    }
+  ],
+  "dynamicPlanReceiptCallSites": [
+    {
+      "method": "create_responsibility_plan_in_transaction",
+      "line": 655,
+      "expression": "operation"
+    },
+    {
+      "method": "revise_responsibility_plan_in_transaction",
+      "line": 717,
+      "expression": "operation"
+    },
+    {
+      "method": "freeze_responsibility_plan_in_transaction",
+      "line": 780,
+      "expression": "operation"
+    }
+  ],
+  "protocolOperationCatalog": {
+    "PLAN_OPERATIONS": [
+      "responsibility_plan.create",
+      "responsibility_plan.revise",
+      "responsibility_plan.freeze",
+      "bi_responsibility_plan.prepare",
+      "bi_responsibility_plan.rebind",
+      "bi_responsibility_plan.freeze"
+    ],
+    "CONTRACT_OPERATIONS": [
+      "eval_contract.create",
+      "eval_contract.revise",
+      "eval_contract.freeze",
+      "impact_preview.create",
+      "impact_preview.revise",
+      "impact_preview.freeze",
+      "stage_template.create",
+      "stage_template.revise",
+      "stage_template.freeze",
+      "stage_template.compile",
+      "artifact_relation.create",
+      "artifact_family.register",
+      "artifact_family.member.attach",
+      "artifact_family.candidate.select",
+      "media_gate_profile.register",
+      "media_contract_migration.create",
+      "media_gate_set.assemble",
+      "review_rule.register",
+      "review_issue.create",
+      "review_issue.resolve",
+      "review_issue.return",
+      "task_brief.create",
+      "task_brief.revise",
+      "task_brief.freeze",
+      "evidence_bundle.build",
+      "evidence_bundle.create",
+      "evidence_bundle.revoke",
+      "evidence.revoke",
+      "evidence_disclosure.resolve",
+      "production_context.freeze"
+    ]
+  },
+  "fixedOperationsMissingFromProtocol": [],
+  "protocolIsProductionMigration": false,
+  "threeDynamicPlanCallsRequireOriginalPerMethodAllowlist": true,
+  "contentDraftHasSeparateDirectReceiptInsert": true,
+  "existingIssuerConnectorMustNotBeReplacedByRuntimeMember": true,
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "receiptOperationCounts": [
+    {
+      "operation": "eval_contract.create",
+      "count": 16
+    },
+    {
+      "operation": "eval_contract.freeze",
+      "count": 16
+    },
+    {
+      "operation": "evidence_bundle.build",
+      "count": 5
+    },
+    {
+      "operation": "evidence_bundle.create",
+      "count": 5
+    },
+    {
+      "operation": "impact_preview.create",
+      "count": 1
+    },
+    {
+      "operation": "impact_preview.freeze",
+      "count": 1
+    },
+    {
+      "operation": "production_context.freeze",
+      "count": 1
+    },
+    {
+      "operation": "responsibility_plan.create",
+      "count": 1
+    },
+    {
+      "operation": "responsibility_plan.freeze",
+      "count": 1
+    },
+    {
+      "operation": "stage_template.compile",
+      "count": 1
+    },
+    {
+      "operation": "stage_template.create",
+      "count": 2
+    },
+    {
+      "operation": "stage_template.freeze",
+      "count": 2
+    },
+    {
+      "operation": "task_brief.create",
+      "count": 6
+    },
+    {
+      "operation": "task_brief.freeze",
+      "count": 6
+    }
+  ],
+  "sourceRuntimeAcl": [
+    {
+      "name": "public.aip_production_contract_receipt",
+      "read": true,
+      "insert": true,
+      "update": false,
+      "delete": true
+    },
+    {
+      "name": "public.aip_responsibility_plan_head",
+      "read": true,
+      "insert": true,
+      "update": true,
+      "delete": true
+    },
+    {
+      "name": "public.aip_responsibility_plan_revision",
+      "read": true,
+      "insert": true,
+      "update": true,
+      "delete": true
+    }
+  ],
+  "existingBiIssuerRole": [],
+  "independentReadbackExact": true,
+  "databaseWrites": 0,
+  "sourceAclChanged": false,
+  "runtimeSourceWriteRemovalSafeNow": false,
+  "nextImplementationRequirements": [
+    "Separate Plan, Content and Contract issuer connections with complete existing caller transactions",
+    "Map all original receipt operation allowlists and full dependency SELECT/write grants",
+    "Preserve original BI Plan issuer identity, serializable scopes, Receipt/CAS/commit and rollback",
+    "Full restored-clone original Store positive/canary/forgery regression before current ACL tightening"
+  ],
+  "catalogVisibilityRequiresReadyEnabledUnfencedUiResource": true,
+  "formalPublisherOrEightWorkbenchesAccepted": false
+}

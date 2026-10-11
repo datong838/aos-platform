@@ -1,0 +1,11 @@
+# 当前栖月汇来源写入切换兼容性验证
+
+复习231/231-1/231-3、原s3o-w-c/g/k/n方案后，当前源码扫描确认三类Source的直接写者只有AipProductionContractStore、AipContentDraftStore及AipResponsibilityAssignmentStore。最终盘点source-writer-impact-r2.json补齐successor独立创建Plan但不写共享Receipt的原路径；初版source-writer-impact.json保留，不能当全部写者清册。30个固定Production Receipt调用点、3个动态Plan方法均绑定文件hash/行号，原test-only协议固定操作集无缺项，但不能据此称生产连接已安装。Content还需原aip_artifact及对象readiness，同调用方事务不能拆开。
+
+当前真库有限API身份READ ONLY两次独立查询相等：14类原Receipt历史操作保留，不读取业务payload或主体；3个Source表仍有普通runtime写权限，aos_bi_plan_issuer正式角色未安装。缺角色不表示原Plan/Content成果无效，表示生产发行身份尚未完成部署。八页面目录要求ready、enabled、无fence且UI资源可用；技术stage连接不改变该准入事实，也不解锁页面。
+
+隔离完整恢复r2容器真实RED：network none、无ports、无权威卷，BEGIN内收紧三表runtime写权限后，原只读Source ACL三表检查为true；但原Plan UPDATE语义WHERE false仍真实42501，说明只撤权会破坏原合法路径。立即ROLLBACK；六类克隆metadata及Source/clone各647表指纹均完全不变。psql进程exit0包含SQL错误，判定是Writer RED而非正向通过。没有提交任何业务行/ACL，不启动Host，不放宽权限。
+
+本波结论：必须一次完整接线generic Plan、BI、successor、Content、Contract各原事务与依赖权限，再安装Source边界。现有BI issuer service/connection/auth/IPC、原同事务Plan方法及测试协议应复用；禁止授予issuer aos_runtime成员资格求绿。下一实施先复用s3o-w-h/k/n后续完整隔离正向夹具建立兼容基准，形成正式固定NOLOGIN角色与精确连接/部署方案，继而全恢复克隆切换和完整原Store回归；真实库只在该完整门通过后收紧。正式独立publisher、当前预算、八页面和自然首链仍待验收。
+
+新增文件仅本Task evidence；没有产品代码修改，因此浏览器沿用上一波真实管理界面禁入证据，本波不重复截图申报页面通过。源码AST自检、实际只读两次回读、真实PG回滚反证及目标diff/秘密扫描完成后精确提交。完整Task与Goal保持ACTIVE。

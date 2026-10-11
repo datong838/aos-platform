@@ -1,0 +1,15 @@
+{
+  "outcome": "INCOMPLETE_SOURCE_ACL_CUTOVER_REAL_WRITER_RED",
+  "threeSourceReadonlyAclWouldPass": true,
+  "existingPlanWriterSqlState": "42501",
+  "probeWhereFalse": true,
+  "businessRowsInserted": 0,
+  "transactionRolledBack": true,
+  "processExit": 0,
+  "exitZeroIsNotWriterSuccess": true,
+  "cloneSixMetadataScopesRestored": true,
+  "cloneAndSource647TablesUnchanged": true,
+  "sourceAclChanged": false,
+  "needsCompleteIssuerCallerCutover": true,
+  "fullRestorationAccepted": false
+}
