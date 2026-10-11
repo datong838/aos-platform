@@ -30,4 +30,3 @@ services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 36 passed, 8 xfailed, 7 warnings in 6.97s
-
