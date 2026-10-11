@@ -1,0 +1,52 @@
+{
+  "outcome": "CURRENT_QYH_TECHNICAL_STAGE_CONNECTION_VERIFIED",
+  "tables": 647,
+  "businessFingerprintUnchanged": true,
+  "sixOldMetadataScopesUnchanged": true,
+  "correctPasswordOriginalConnectorSucceeded": true,
+  "passwordlessRejected": true,
+  "queryLookupAbsent": true,
+  "denials": [
+    "wrongTenant",
+    "directStage",
+    "directConfiguration",
+    "hostFunction"
+  ],
+  "loadedHba": [
+    {
+      "users": [
+        "qyh_restored_api_login"
+      ],
+      "method": "scram-sha-256",
+      "error": null
+    },
+    {
+      "users": [
+        "qyh_restored_stage_login_20261011"
+      ],
+      "method": "scram-sha-256",
+      "error": null
+    },
+    {
+      "users": [
+        "all"
+      ],
+      "method": "reject",
+      "error": null
+    },
+    {
+      "users": [
+        "all"
+      ],
+      "method": "reject",
+      "error": null
+    }
+  ],
+  "databaseRestarted": false,
+  "apiStartupCredentialInjected": false,
+  "businessRowsWritten": 0,
+  "sourceAclChanged": false,
+  "formalPublisherConnected": false,
+  "eightWorkbenchesRestored": false,
+  "fullRestorationAccepted": false
+}

@@ -1,0 +1,45 @@
+{
+  "task": "qyh-full-system-restoration-20261011",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "at": "2026-10-11T13:18:39.072709+00:00",
+  "head": "3c05902bfa292c4adcb28155c49ff8d8a910bebd",
+  "container": {
+    "Id": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Mounts": [
+      {
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "z",
+        "Name": "aos-qyh-history159-prepared-data-20261011",
+        "Propagation": "",
+        "RW": true,
+        "Source": "/var/lib/docker/100000.100000/volumes/aos-qyh-history159-prepared-data-20261011/_data",
+        "Type": "volume"
+      }
+    ],
+    "Ports": {
+      "5432/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "18446"
+        }
+      ]
+    },
+    "StartedAt": "2026-10-11T07:53:24.989993294Z"
+  },
+  "database": {
+    "cluster": "7695302940039200809",
+    "database": "aos_meta_head",
+    "schema": "a0v_159",
+    "activeOtherConnections": 0,
+    "loginExists": 1,
+    "name": "栖月汇商贸有限公司",
+    "nameUpdatedAt": "2026-10-11 07:54:17.109847+00",
+    "disabledBindings": true
+  },
+  "newTechnicalLogin": "qyh_restored_stage_login_20261011",
+  "businessIdentityCreated": false,
+  "businessWritesAuthorized": false,
+  "phase": "FRESH_BACKUP_BEFORE_ROLE_AND_HBA"
+}

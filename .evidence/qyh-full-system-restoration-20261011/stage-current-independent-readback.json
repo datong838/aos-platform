@@ -1,0 +1,19 @@
+{
+  "retainedMetadataExact": true,
+  "sixMetadataCounts": {
+    "retainedRoles": 38,
+    "retainedMemberships": 11,
+    "relationOwnerAndRls": 1887,
+    "relationGrants": 6159,
+    "columnGrants": 124,
+    "functions": 461
+  },
+  "tablesExactToPriorRehearsal": 647,
+  "originalConnectorIdentityPolicyVerified": true,
+  "nonPgRolesAfter": 39,
+  "oneTechnicalLoginAdded": true,
+  "noBusinessIdentityCreated": true,
+  "currentApiAuthenticatedReadStatus": 200,
+  "initialIndependentBaselineMismatch": "older pre-registry snapshot unsuitable; compared latest full rehearsal instead",
+  "fullRestorationAccepted": false
+}
