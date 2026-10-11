@@ -1,0 +1,9 @@
+{
+  "originalBriefThreeReceiptsPairedToExactRevisions": true,
+  "temporaryIssuerRoleAbsent": true,
+  "failedTransactionReceiptAbsent": true,
+  "realFixedConnections": 8,
+  "cases": 9,
+  "passwordOIDCOrFullRestorationProven": false,
+  "sourceHash": "aa170c2a47404c771419458d2ef1355c74c7d2d66c4af6f57abcdda9a90e84a1"
+}

@@ -1,0 +1,60 @@
+{
+  "cases": [
+    "create-and-idempotency",
+    "ProductionContractIdempotencyConflict",
+    "revise-freeze-and-runtime-readback",
+    "ProductionContractNotFound",
+    "RaiseException",
+    "forced-failure-all-three-table-rollback",
+    "InsufficientPrivilege",
+    "InsufficientPrivilege",
+    "InsufficientPrivilege"
+  ],
+  "connections": [
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    }
+  ],
+  "actualThreeOriginalReceipts": true,
+  "originalBriefLifecycleAccepted": true,
+  "sameTenantForgeryRejected": true,
+  "all29ContractOperationsAccepted": false,
+  "formalPasswordOrOIDCAuthenticated": false
+}
