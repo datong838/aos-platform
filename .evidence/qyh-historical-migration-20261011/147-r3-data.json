@@ -1,0 +1,91 @@
+{
+  "oldTablesChecked": 577,
+  "historicalRowsUnchanged": true,
+  "originalMigrationMetadataAdditions": [
+    {
+      "table": "public.meta_action_type",
+      "id": "aip_activate_network_policy",
+      "sourceStep": 117,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_action_type",
+      "id": "aip_activate_egress_policy",
+      "sourceStep": 129,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_action_type",
+      "id": "aip_activate_data_policy",
+      "sourceStep": 129,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_action_type",
+      "id": "aip_activate_quota_policy",
+      "sourceStep": 130,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_action_type",
+      "id": "aip_request_model_eval",
+      "sourceStep": 133,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_action_type",
+      "id": "aip_issue_source_license",
+      "sourceStep": 140,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_action_type",
+      "id": "aip_request_provider_capacity",
+      "sourceStep": 146,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_object_type",
+      "id": "NetworkPolicyRevision",
+      "sourceStep": 117,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_object_type",
+      "id": "EgressPolicyRevision",
+      "sourceStep": 129,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_object_type",
+      "id": "DataClassificationPolicyRevision",
+      "sourceStep": 129,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_object_type",
+      "id": "QuotaPolicyRevision",
+      "sourceStep": 130,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_object_type",
+      "id": "ModelEvalRequest",
+      "sourceStep": 133,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_object_type",
+      "id": "SourceLicenseRequest",
+      "sourceStep": 140,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_object_type",
+      "id": "ProviderCapacityRequest",
+      "sourceStep": 146,
+      "fieldsExact": true
+    }
+  ],
+  "currentTables": 622
+}

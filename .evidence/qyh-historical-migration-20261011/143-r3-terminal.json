@@ -1,0 +1,5 @@
+{
+  "exit": 0,
+  "stderr": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\n",
+  "stdout": "{\"ts\": \"2026-10-11T06:46:17.185721+00:00\", \"level\": \"info\", \"service\": \"aos-api\", \"logger\": \"alembic.runtime.migration\", \"msg\": \"Running upgrade a0v_142 -> a0v_143, Fence original Health DML by tenant/provider; never replicate health facts.\", \"trace_id\": \"-\", \"org_id\": \"-\", \"project_id\": \"-\"}\n{\"step\": 143, \"committed\": true, \"cluster\": \"7695294217975042088\"}\n"
+}

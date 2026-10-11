@@ -1,0 +1,15 @@
+{
+  "oldTablesChecked": 577,
+  "changed": [],
+  "newTables": [
+    "public.ecommerce_growth_content_agentrun_intent",
+    "public.ecommerce_growth_content_budget_command_intent",
+    "public.ecommerce_growth_content_capacity_intent",
+    "public.ecommerce_growth_content_taskrun_intent",
+    "public.ecommerce_growth_daily_review_target",
+    "public.ecommerce_growth_improvement_target",
+    "public.extension_runtime_host_lease_a0v_093",
+    "public.extension_runtime_host_lease_event_a0v_093",
+    "public.pipeline_snapshot_group_canonical_witness_a0v_097"
+  ]
+}

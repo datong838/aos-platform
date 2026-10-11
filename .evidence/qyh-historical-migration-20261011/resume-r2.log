@@ -1,0 +1,28 @@
+{"step": 93, "historicalTablesUnchanged": true}
+{"step": 94, "historicalTablesUnchanged": true}
+{"step": 95, "historicalTablesUnchanged": true}
+{"step": 96, "historicalTablesUnchanged": true}
+{"step": 97, "historicalTablesUnchanged": true}
+{"step": 98, "historicalTablesUnchanged": true}
+{"step": 99, "historicalTablesUnchanged": true}
+{"step": 100, "historicalTablesUnchanged": true}
+{"step": 101, "historicalTablesUnchanged": true}
+{"step": 102, "historicalTablesUnchanged": true}
+{"step": 103, "historicalTablesUnchanged": true}
+{"step": 104, "historicalTablesUnchanged": true}
+{"step": 105, "historicalTablesUnchanged": true}
+{"step": 106, "historicalTablesUnchanged": true}
+{"step": 107, "historicalTablesUnchanged": true}
+{"step": 108, "historicalTablesUnchanged": true}
+{"step": 109, "historicalTablesUnchanged": true}
+{"step": 110, "historicalTablesUnchanged": true}
+{"step": 111, "historicalTablesUnchanged": true}
+{"step": 112, "historicalTablesUnchanged": true}
+{"step": 113, "historicalTablesUnchanged": true}
+{"step": 114, "historicalTablesUnchanged": true}
+{"step": 115, "historicalTablesUnchanged": true}
+{"step": 116, "historicalTablesUnchanged": true}
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-historical-migration-20261011/resume.py", line 57, in <module>
+    assert not changed,'Historical data drift; no automatic exemption'
+AssertionError: Historical data drift; no automatic exemption

@@ -1,0 +1,159 @@
+{
+  "outcome": "ISOLATED_67_MIGRATION_DATA_AND_DISABLED_BINDING_VERIFIED",
+  "target": {
+    "database": "aos_meta_head",
+    "cluster": "7695294217975042088",
+    "version": "a0v_159",
+    "installation": [
+      {
+        "revision": 5,
+        "activeRevision": 5
+      }
+    ],
+    "bindings": [
+      {
+        "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+        "revision": 7,
+        "enabled": false,
+        "fence": true,
+        "observed": "unknown"
+      }
+    ],
+    "configurations": 1
+  },
+  "source": {
+    "database": "aos_meta_head",
+    "cluster": "7683855731447750695",
+    "version": "a0v_092",
+    "installation": [
+      {
+        "revision": 5,
+        "activeRevision": 5
+      }
+    ],
+    "bindings": [
+      {
+        "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+        "revision": 7,
+        "enabled": false,
+        "fence": true,
+        "observed": "unknown"
+      }
+    ],
+    "configurations": 1
+  },
+  "preservation": {
+    "oldTablesChecked": 577,
+    "historicalRowsUnchanged": true,
+    "originalMigrationMetadataAdditions": [
+      {
+        "table": "public.meta_action_type",
+        "id": "aip_activate_network_policy",
+        "sourceStep": 117,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_action_type",
+        "id": "aip_activate_egress_policy",
+        "sourceStep": 129,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_action_type",
+        "id": "aip_activate_data_policy",
+        "sourceStep": 129,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_action_type",
+        "id": "aip_activate_quota_policy",
+        "sourceStep": 130,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_action_type",
+        "id": "aip_request_model_eval",
+        "sourceStep": 133,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_action_type",
+        "id": "aip_issue_source_license",
+        "sourceStep": 140,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_action_type",
+        "id": "aip_request_provider_capacity",
+        "sourceStep": 146,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_action_type",
+        "id": "aip_review_provider_capacity_source",
+        "sourceStep": 148,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_object_type",
+        "id": "NetworkPolicyRevision",
+        "sourceStep": 117,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_object_type",
+        "id": "EgressPolicyRevision",
+        "sourceStep": 129,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_object_type",
+        "id": "DataClassificationPolicyRevision",
+        "sourceStep": 129,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_object_type",
+        "id": "QuotaPolicyRevision",
+        "sourceStep": 130,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_object_type",
+        "id": "ModelEvalRequest",
+        "sourceStep": 133,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_object_type",
+        "id": "SourceLicenseRequest",
+        "sourceStep": 140,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_object_type",
+        "id": "ProviderCapacityRequest",
+        "sourceStep": 146,
+        "fieldsExact": true
+      },
+      {
+        "table": "public.meta_object_type",
+        "id": "ProviderCapacitySourceReview",
+        "sourceStep": 148,
+        "fieldsExact": true
+      }
+    ],
+    "currentTables": 647
+  },
+  "newTables": 69,
+  "emptyNewTables": 68,
+  "withdrawalEpochBackfill": {
+    "rows": 182,
+    "differences": 0
+  },
+  "backfillSourceSha256": "9b7890d28cfd383defcb3f40b645dbd1ddbd368452bf3893a1b2c54e4a103f82",
+  "stepsCommitted": 67,
+  "sourceUnchanged": true,
+  "formalRecovery": false,
+  "browserAcceptance": false
+}

@@ -1,0 +1,14 @@
+{
+  "outcome": "ORIGINAL67_HISTORICAL_MIGRATION_STEPS_COMMITTED_EXISTING_ROWS_PRESERVED",
+  "target": {
+    "cluster": "7695294217975042088",
+    "database": "aos_meta_head",
+    "version": "a0v_159"
+  },
+  "steps": 67,
+  "oldTablesChecked": 577,
+  "sourceUnchanged": true,
+  "reviewedMetadataAdditions": 16,
+  "businessExecution": false,
+  "catalogAndReadinessFinalReviewPending": true
+}

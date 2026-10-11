@@ -1,0 +1,210 @@
+[
+  {
+    "step": 117,
+    "table": "public.meta_object_type",
+    "fields": {
+      "id": "NetworkPolicyRevision",
+      "name": "网络策略修订",
+      "description": "受控网络策略激活目标",
+      "published": true,
+      "properties": [],
+      "required_markings": []
+    },
+    "sourceSha256": "a650b2e5b17876aa711d2f6b9ee2ef111875ba6733536d87be45ff054b1b5945"
+  },
+  {
+    "step": 117,
+    "table": "public.meta_action_type",
+    "fields": {
+      "id": "aip_activate_network_policy",
+      "name": "激活网络策略",
+      "object_type": "NetworkPolicyRevision",
+      "parameters": [],
+      "required_markings": [],
+      "submission_criteria": []
+    },
+    "sourceSha256": "a650b2e5b17876aa711d2f6b9ee2ef111875ba6733536d87be45ff054b1b5945"
+  },
+  {
+    "step": 129,
+    "table": "public.meta_object_type",
+    "fields": {
+      "id": "EgressPolicyRevision",
+      "name": "出口策略修订",
+      "description": "受控出口策略激活目标",
+      "published": true,
+      "properties": [],
+      "required_markings": []
+    },
+    "sourceSha256": "fb598af016ffc41a846f6b267b5664797b20f4f391d29cb2378bd84f98f4cc28"
+  },
+  {
+    "step": 129,
+    "table": "public.meta_object_type",
+    "fields": {
+      "id": "DataClassificationPolicyRevision",
+      "name": "数据分类策略修订",
+      "description": "受控数据分类策略激活目标",
+      "published": true,
+      "properties": [],
+      "required_markings": []
+    },
+    "sourceSha256": "fb598af016ffc41a846f6b267b5664797b20f4f391d29cb2378bd84f98f4cc28"
+  },
+  {
+    "step": 129,
+    "table": "public.meta_action_type",
+    "fields": {
+      "id": "aip_activate_egress_policy",
+      "name": "激活出口策略",
+      "object_type": "EgressPolicyRevision",
+      "parameters": [],
+      "required_markings": [],
+      "submission_criteria": []
+    },
+    "sourceSha256": "fb598af016ffc41a846f6b267b5664797b20f4f391d29cb2378bd84f98f4cc28"
+  },
+  {
+    "step": 129,
+    "table": "public.meta_action_type",
+    "fields": {
+      "id": "aip_activate_data_policy",
+      "name": "激活数据分类策略",
+      "object_type": "DataClassificationPolicyRevision",
+      "parameters": [],
+      "required_markings": [],
+      "submission_criteria": []
+    },
+    "sourceSha256": "fb598af016ffc41a846f6b267b5664797b20f4f391d29cb2378bd84f98f4cc28"
+  },
+  {
+    "step": 130,
+    "table": "public.meta_object_type",
+    "fields": {
+      "id": "QuotaPolicyRevision",
+      "name": "配额策略修订",
+      "description": "受控配额策略激活目标",
+      "published": true,
+      "properties": [],
+      "required_markings": []
+    },
+    "sourceSha256": "cf506502bac2cda792b84f96a6ce3f83fa38cf118c62438287ee1ef8670918ae"
+  },
+  {
+    "step": 130,
+    "table": "public.meta_action_type",
+    "fields": {
+      "id": "aip_activate_quota_policy",
+      "name": "激活配额策略",
+      "object_type": "QuotaPolicyRevision",
+      "parameters": [],
+      "required_markings": [],
+      "submission_criteria": []
+    },
+    "sourceSha256": "cf506502bac2cda792b84f96a6ce3f83fa38cf118c62438287ee1ef8670918ae"
+  },
+  {
+    "step": 133,
+    "table": "public.meta_object_type",
+    "fields": {
+      "id": "ModelEvalRequest",
+      "name": "模型首次评测申请",
+      "description": "仅供独立审批的不可执行申请",
+      "published": true,
+      "properties": [],
+      "required_markings": []
+    },
+    "sourceSha256": "bfd15fdcfae6a6843fe9fd6fa50722d4b3cc66fe6780afe30f0c619ed5c88533"
+  },
+  {
+    "step": 133,
+    "table": "public.meta_action_type",
+    "fields": {
+      "id": "aip_request_model_eval",
+      "name": "申请模型首次评测",
+      "object_type": "ModelEvalRequest",
+      "parameters": [],
+      "required_markings": [],
+      "submission_criteria": []
+    },
+    "sourceSha256": "bfd15fdcfae6a6843fe9fd6fa50722d4b3cc66fe6780afe30f0c619ed5c88533"
+  },
+  {
+    "step": 140,
+    "table": "public.meta_object_type",
+    "fields": {
+      "id": "SourceLicenseRequest",
+      "name": "来源许可请求",
+      "description": "原Proposal内的精确来源许可声明",
+      "published": true,
+      "properties": [],
+      "required_markings": []
+    },
+    "sourceSha256": "07f8cb1aad6b381d6dbecea64a5fc752aa97a761951ac505fa5c549e2a0ad9d5"
+  },
+  {
+    "step": 140,
+    "table": "public.meta_action_type",
+    "fields": {
+      "id": "aip_issue_source_license",
+      "name": "申请精确来源许可",
+      "object_type": "SourceLicenseRequest",
+      "parameters": [],
+      "required_markings": [],
+      "submission_criteria": []
+    },
+    "sourceSha256": "07f8cb1aad6b381d6dbecea64a5fc752aa97a761951ac505fa5c549e2a0ad9d5"
+  },
+  {
+    "step": 146,
+    "table": "public.meta_object_type",
+    "fields": {
+      "id": "ProviderCapacityRequest",
+      "name": "Provider容量配置申请",
+      "description": "仅供独立审批的不可执行申请",
+      "published": true,
+      "properties": [],
+      "required_markings": []
+    },
+    "sourceSha256": "dad16389f49a76375cc9da554ba59287f8e6428b90af94352628bb764d3f7bad"
+  },
+  {
+    "step": 146,
+    "table": "public.meta_action_type",
+    "fields": {
+      "id": "aip_request_provider_capacity",
+      "name": "申请Provider容量配置",
+      "object_type": "ProviderCapacityRequest",
+      "parameters": [],
+      "required_markings": [],
+      "submission_criteria": []
+    },
+    "sourceSha256": "dad16389f49a76375cc9da554ba59287f8e6428b90af94352628bb764d3f7bad"
+  },
+  {
+    "step": 148,
+    "table": "public.meta_object_type",
+    "fields": {
+      "id": "ProviderCapacitySourceReview",
+      "name": "Provider容量来源审查",
+      "description": "仅供独立审批的不可执行Source条款",
+      "published": true,
+      "properties": [],
+      "required_markings": []
+    },
+    "sourceSha256": "a161ab74de871465d995cd094f7c148c64d4bc98ff7dfdc146250146b6b8a042"
+  },
+  {
+    "step": 148,
+    "table": "public.meta_action_type",
+    "fields": {
+      "id": "aip_review_provider_capacity_source",
+      "name": "审查Provider容量来源",
+      "object_type": "ProviderCapacitySourceReview",
+      "parameters": [],
+      "required_markings": [],
+      "submission_criteria": []
+    },
+    "sourceSha256": "a161ab74de871465d995cd094f7c148c64d4bc98ff7dfdc146250146b6b8a042"
+  }
+]

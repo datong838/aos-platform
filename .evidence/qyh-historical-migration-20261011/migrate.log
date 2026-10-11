@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-historical-migration-20261011/migrate.py", line 71, in <module>
+    assert p.returncode==0,'Migration failed; preserve target and terminal'
+AssertionError: Migration failed; preserve target and terminal

@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-historical-migration-20261011/migrate.py", line 32, in <module>
+    for step in chain:assert manifest[str(Path(step['file']).relative_to(REPO))]==step['sha256']
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 929, in relative_to
+    raise ValueError("{!r} is not in the subpath of {!r}"
+ValueError: 'aos-platform/services/aos-api/alembic/versions/a0v_093_host_lease_foundation.py' is not in the subpath of '/Users/ddt/work/projects/ai_agent/aos-platform' OR one path is relative and the other is absolute.

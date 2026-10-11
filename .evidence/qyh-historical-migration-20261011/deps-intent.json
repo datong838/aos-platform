@@ -1,0 +1,14 @@
+{
+  "volume": "qyh-historical-migration-deps-20261011",
+  "cachedWheels": {
+    "fastapi-0.141.1-py3-none-any.whl": "bfb91aa2d334c61cb35ba9a116fc123b3d3df31640b801cf57a7a78ec3f603b3",
+    "starlette-1.7.0-py3-none-any.whl": "67f8e99895493dd2911a03f11314af6ceebeae4e704bb9f43dfc6a9db151c93e",
+    "anyio-4.15.1-py3-none-any.whl": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101",
+    "annotated_doc-0.0.5-py3-none-any.whl": "117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101",
+    "idna-3.20-py3-none-any.whl": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+    "exceptiongroup-1.3.1-py3-none-any.whl": "a7a39a3bd276781e98394987d3a5701d0c4edffb633bb7a5144577f82c773598"
+  },
+  "baseTool": "sha256:2376642dd6f7f8645411408371ea354046448d7b65f182dba762fb4df1f10312",
+  "targetUnchangedAt092": true,
+  "basePydanticUnchanged": true
+}

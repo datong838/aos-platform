@@ -1,0 +1,19 @@
+{
+  "oldTablesChecked": 577,
+  "historicalRowsUnchanged": true,
+  "originalMigrationMetadataAdditions": [
+    {
+      "table": "public.meta_action_type",
+      "id": "aip_activate_network_policy",
+      "sourceStep": 117,
+      "fieldsExact": true
+    },
+    {
+      "table": "public.meta_object_type",
+      "id": "NetworkPolicyRevision",
+      "sourceStep": 117,
+      "fieldsExact": true
+    }
+  ],
+  "currentTables": 608
+}

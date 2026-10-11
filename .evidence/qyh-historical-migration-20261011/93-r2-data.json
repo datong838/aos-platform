@@ -1,0 +1,8 @@
+{
+  "oldTablesChecked": 577,
+  "changed": [],
+  "newTables": [
+    "public.extension_runtime_host_lease_a0v_093",
+    "public.extension_runtime_host_lease_event_a0v_093"
+  ]
+}

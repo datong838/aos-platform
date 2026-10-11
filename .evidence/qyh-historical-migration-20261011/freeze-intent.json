@@ -1,0 +1,13 @@
+{
+  "head": "0502b7d6661755d8b5c1c5afc8a19c70eed0d094",
+  "volume": "qyh-historical-migration-code-20261011",
+  "tool": "sha256:2376642dd6f7f8645411408371ea354046448d7b65f182dba762fb4df1f10312",
+  "archiveSha256": "b2ddcfc815ccf2b765a80dd13d855770036f8a2298f40a5b8adc709e37365933",
+  "target": {
+    "cluster": "7695294217975042088",
+    "database": "aos_meta_head",
+    "version": "a0v_092"
+  },
+  "containerId": "ccaaaa4655a86f0beba1bcbcce8891def8146abfd55b3561c5872be53791216e",
+  "sourceWrites": false
+}
