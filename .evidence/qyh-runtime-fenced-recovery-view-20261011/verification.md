@@ -1,0 +1,9 @@
+# 终态禁入恢复诊断验证
+
+RED初次受到默认5433隔离测试库不可达影响，属于环境失败，不计逻辑RED；原日志仅本机保留未提交。随后仅运行不访问数据库的测试，设置无效loopback DSN及现有fixture跳过开库选项，得到3个期望needs_attention却实为fenced的失败、7个反证通过。测试没有访问共享数据库。
+
+最小实现仅在get_installation原状态/资源读回之后改终态fenced且无live资源的投影，allowedActions仍为空，绑定不变。无operation、active operation、资源仍live、合法disabled均保持原分支。相邻安装API、UI和runtime目录一起60通过；14项隔离PG专项未运行，不计通过。此前与本轮真正恢复库的有限LOGIN/READ ONLY原资源查询另有实测，不能将其视为14项覆盖。
+
+真实读回live-readonly-view.json：原PostgresInstallationStore及RuntimeViewReader、legacy谓词、有限身份READ ONLY连接；407059df显示needs_attention零动作，另2项disabled；三项仍enabled=false/fenced=true/ui=null。维护诊断调用使用原Store元数据，不构造Principal、不通过角色字符串证明登录/Owner/执行权。Web/API未重载，页面未验收。
+
+方案与代码复审：符合231-3未终态/未知状态零动作、resource liveness不授权限的边界；未改变原ready缺失资源可disable分支，不新增DB写入、控制接口、迁移或自动恢复。此修复只纠正长期正在排空的提示；正式恢复登录、当前配置/资源与八页继续在全恢复Task处理。原用户22个修改保持。

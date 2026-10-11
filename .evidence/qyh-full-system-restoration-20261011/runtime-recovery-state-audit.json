@@ -1,0 +1,120 @@
+{
+  "outcome": "RESTORED_RUNTIME_RECOVERY_METADATA_READONLY",
+  "observed": {
+    "installations": [
+      {
+        "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+        "installationState": "active",
+        "currentRevision": 5,
+        "effectiveStateBeforeLiveGate": "fenced",
+        "descriptiveActionsOnly": [],
+        "reasons": [
+          "运行实例正在禁入或排空，请刷新查看进度。"
+        ],
+        "binding": {
+          "generation": "7571af17-e2bb-4437-9f04-75812bae56c0",
+          "revision": 7,
+          "desiredState": "enabled",
+          "observedState": "unknown",
+          "enabled": false,
+          "operationFence": true,
+          "configured": true
+        },
+        "operation": {
+          "operationId": "a159b4c1-ccad-4949-94d0-f0a931280581",
+          "kind": "enable",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "failureCode": null
+        },
+        "currentResourcesLive": false,
+        "resources": {
+          "count": 3,
+          "released": 3,
+          "unexpired": 0
+        }
+      },
+      {
+        "installationId": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+        "installationState": "active",
+        "currentRevision": 5,
+        "effectiveStateBeforeLiveGate": "disabled",
+        "descriptiveActionsOnly": [
+          "configure",
+          "enable"
+        ],
+        "reasons": [
+          "运行实例已完成配置或停用，可调整配置后重新启用。"
+        ],
+        "binding": {
+          "generation": "c78b2e2e-57ef-47ad-be07-9acf689e578c",
+          "revision": 9,
+          "desiredState": "disabled",
+          "observedState": "unknown",
+          "enabled": false,
+          "operationFence": true,
+          "configured": true
+        },
+        "operation": {
+          "operationId": "4528ffba-a300-4675-81b0-e0182a268cef",
+          "kind": "disable",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "failureCode": null
+        },
+        "currentResourcesLive": false,
+        "resources": {
+          "count": 3,
+          "released": 3,
+          "unexpired": 0
+        }
+      },
+      {
+        "installationId": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+        "installationState": "active",
+        "currentRevision": 5,
+        "effectiveStateBeforeLiveGate": "disabled",
+        "descriptiveActionsOnly": [
+          "configure",
+          "enable"
+        ],
+        "reasons": [
+          "运行实例已完成配置或停用，可调整配置后重新启用。"
+        ],
+        "binding": {
+          "generation": "c26edf1c-5170-4158-9f30-36dc1f2ba07f",
+          "revision": 8,
+          "desiredState": "disabled",
+          "observedState": "unknown",
+          "enabled": false,
+          "operationFence": true,
+          "configured": true
+        },
+        "operation": {
+          "operationId": "375a6255-1aa8-458e-ad6b-e2d62ae58a93",
+          "kind": "disable",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "failureCode": null
+        },
+        "currentResourcesLive": false,
+        "resources": {
+          "count": 3,
+          "released": 3,
+          "unexpired": 0
+        }
+      }
+    ],
+    "canaryRejected": [
+      "407059df-6f1f-4927-acd7-8e388692838e",
+      "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+      "ef5bc0c3-1dbe-4659-b839-2350f70232bf"
+    ]
+  },
+  "independentReadsStable": true,
+  "databaseWrites": 0,
+  "userPrincipalAuthenticated": false,
+  "actionsAuthorized": false,
+  "apiStarted": false,
+  "eightPagesAccepted": false
+}

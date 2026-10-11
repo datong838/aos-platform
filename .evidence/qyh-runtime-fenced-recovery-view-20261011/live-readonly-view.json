@@ -1,0 +1,49 @@
+{
+  "outcome": "ACTUAL_RESTORED_RUNTIME_VIEW_RECOVERY_DIAGNOSIS",
+  "results": [
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "effectiveState": "needs_attention",
+      "descriptiveActionsOnly": [],
+      "reasons": [
+        "运行实例保持禁入，当前操作已结束且运行资源存活证据不足；请完成恢复对账。"
+      ],
+      "uiAbsent": true,
+      "enabled": false,
+      "fenced": true
+    },
+    {
+      "installationId": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+      "effectiveState": "disabled",
+      "descriptiveActionsOnly": [
+        "configure",
+        "enable"
+      ],
+      "reasons": [
+        "运行实例已完成配置或停用，可调整配置后重新启用。"
+      ],
+      "uiAbsent": true,
+      "enabled": false,
+      "fenced": true
+    },
+    {
+      "installationId": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+      "effectiveState": "disabled",
+      "descriptiveActionsOnly": [
+        "configure",
+        "enable"
+      ],
+      "reasons": [
+        "运行实例已完成配置或停用，可调整配置后重新启用。"
+      ],
+      "uiAbsent": true,
+      "enabled": false,
+      "fenced": true
+    }
+  ],
+  "userAuthenticated": false,
+  "controlGrant": false,
+  "databaseWrites": 0,
+  "apiReloaded": false,
+  "eightPagesAccepted": false
+}

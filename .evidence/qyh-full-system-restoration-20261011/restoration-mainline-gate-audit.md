@@ -23,3 +23,5 @@
 ## 目录实测步骤
 
 新增本Task范围内audit_workshop_routes.py，调用现有PostgresWorkshopCatalogSource的两条只读目录来源，通过现有有限LOGIN、aos_runtime及READ ONLY事务读取。仅输出安装ID、不可变版本、模块声明与目录分类，不输出业务payload或身份凭证。正向org-org/dev-project、零污染canary dev-org/dev-project各两次独立连接读回，摘要比对；不能绕过原租户RLS、replacement选择或legacy/runtime排除逻辑。前端路由接线另只读核对。当前步骤不启动服务、不改变正式绑定、不授业务权限。
+
+下一只读步骤audit_runtime_recovery.py使用原PostgresInstallationStore、RuntimeViewReader原绑定/操作解码、_derive_control_state及current_resources_live读取三个当前安装。该调用仅为维护元数据诊断，不构造用户Principal，不把allowedActions当作登录用户权限或实际可执行许可。两次独立读取状态摘要一致、canary原Store拒绝读取为验收；只输出状态、拒绝原因和资源数量/有效性，不输出actor、配置payload、DSN或容器参数。原运行对象/Lease保留，无新建、续租、重发。

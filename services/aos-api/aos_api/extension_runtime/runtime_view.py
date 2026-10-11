@@ -238,6 +238,17 @@ class RuntimeViewReader:
             effective_state, actions, reasons = "needs_attention", ("disable",), (
                 "运行资源已释放、租约已过期或存活证据不足；请先禁入并完成恢复对账。",
             )
+        elif (
+            effective_state == "fenced"
+            and not resources_live
+            and operation is not None
+            and operation.status in {"succeeded", "failed", "cancelled"}
+        ):
+            # A terminal operation is not an ongoing drain. Keep the existing
+            # fence and zero control grants while recovery reconciles resources.
+            effective_state, actions, reasons = "needs_attention", (), (
+                "运行实例保持禁入，当前操作已结束且运行资源存活证据不足；请完成恢复对账。",
+            )
         ui = None
         if effective_state == "ready" and binding is not None:
             if self._ui_session_resolver is None:

@@ -1,4 +1,6 @@
 import os
+from datetime import datetime, timezone
+from types import SimpleNamespace
 from uuid import uuid4
 
 import psycopg
@@ -6,6 +8,42 @@ import pytest
 from aos_api.extension_runtime.runtime_resource_health import current_resources_live
 from aos_api.extension_runtime.runtime_view import RuntimeViewReader
 from test_runtime_installations_api import _ReadyRuntimeConnection,_Result,_InstallationReader,INSTALLATION_ID
+
+
+@pytest.mark.parametrize('status', ['succeeded', 'failed', 'cancelled', 'accepted', None])
+@pytest.mark.parametrize('live', [False, True])
+def test_terminal_fenced_resource_loss_is_attention_without_control_grant(status, live):
+    now = datetime.now(timezone.utc)
+    class Connection(_ReadyRuntimeConnection):
+        def execute(self, query, params):
+            if 'FROM extension_runtime_resource_lease' in query:
+                return _Result({'resource_count': 3, 'live': live})
+            if 'FROM extension_runtime_binding' in query:
+                row = super().execute(query, params).fetchone()
+                return _Result({**row, 'enabled': False, 'operation_fence': True,
+                               'observed_state': 'unknown'})
+            if 'FROM extension_runtime_operation' in query:
+                if status is None:
+                    return _Result(None)
+                return _Result({'operation_id': uuid4(), 'installation_id': INSTALLATION_ID,
+                    'kind': 'enable', 'phase': status, 'status': status, 'revision': 1,
+                    'requested_by': 'test-only', 'approved_by': None,
+                    'expected_installation_etag': 3, 'expected_binding_revision': 4,
+                    'deadline': now, 'failure_code': None, 'created_at': now})
+            if 'FROM extension_runtime_event' in query:
+                return SimpleNamespace(fetchall=lambda: [])
+            return super().execute(query, params)
+    reader = RuntimeViewReader(installation_reader=_InstallationReader(), connect_factory=Connection,
+        ui_session_resolver=lambda **kw: pytest.fail('fenced installation reached UI resolver'))
+    view = reader.get_installation(installation_id=INSTALLATION_ID, org_id='org-org',
+        project_id='dev-project', roles=['admin'], markings=[])
+    expected = ('needs_attention' if status in {'succeeded', 'failed', 'cancelled'} and not live
+                else 'operation_in_progress' if status == 'accepted' else 'fenced')
+    assert view.effectiveState == expected
+    assert view.allowedActions == () and view.ui is None
+    assert view.binding.operationFence is True and view.binding.enabled is False
+    if expected == 'needs_attention':
+        assert '恢复对账' in view.reasons[0] and '正在' not in view.reasons[0]
 
 
 @pytest.mark.parametrize('count,live',[(0,False),(3,False),(3,None)])
