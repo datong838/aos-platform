@@ -1,0 +1,46 @@
+{
+  "observedAt": "2026-10-11T06:25:31.650672+00:00",
+  "history": {
+    "database": "aos_meta_head",
+    "migration": "a0v_092",
+    "cluster": "7683855731447750695",
+    "readOnly": "on",
+    "installation": [
+      {
+        "id": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+        "name": "栖月汇电商商品接入版本替换",
+        "revision": 5,
+        "activeRevision": 5
+      }
+    ],
+    "bindings": [
+      {
+        "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+        "installationRevision": 5,
+        "desiredState": "disabled",
+        "observedState": "unknown",
+        "enabled": false,
+        "fence": true,
+        "configRefPresent": true,
+        "revision": 7
+      }
+    ],
+    "configurationRows": 1
+  },
+  "currentQuerySourceSha256": "32f1947992d361b6443b6602eb675ad292d94f8ce474aa6359f9b0841b774f9c",
+  "historicalCandidates": {
+    "status": "read",
+    "counts": {
+      "responsibility_plans": 1,
+      "runtime_policies": 1,
+      "data_policies": 1,
+      "egress_policies": 1,
+      "network_policies": 1,
+      "quota_policies": 1,
+      "budget_policies": 0,
+      "budgets": 1
+    }
+  },
+  "effects": "Read-only metadata; no source business data, no runtime replay or DB switch",
+  "limitation": "Historical candidates and active/binding states grant no current installation authority; separate snapshots."
+}
