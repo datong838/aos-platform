@@ -1,0 +1,21 @@
+{
+  "database": "aos_test_f1c5892b0ca5_ti4_test",
+  "cluster": "7694680278363095064",
+  "pytest_exit": 1,
+  "failure": "Catalog witness adapter expected tuple but connection uses dict row",
+  "table_counts": {
+    "aos_shared_parent_admission_private.end_authority": 0,
+    "aos_shared_parent_admission_private.pending_origin": 0,
+    "aos_shared_parent_physical_private.complete_parent_risk": 0,
+    "aos_shared_parent_physical_private.complete_receipt_v2": 0,
+    "aos_shared_parent_physical_private.initial_call_authority": 0,
+    "aos_shared_parent_physical_private.initial_target_obligation": 0,
+    "aos_shared_parent_physical_private.initial_window_obligation": 0,
+    "aos_shared_parent_physical_private.judge_dependency": 0,
+    "aos_shared_parent_physical_private.target_intent": 0
+  },
+  "missing_not_zero": true,
+  "other_clients": 0,
+  "profile_reset": true,
+  "old_source_replayed": false
+}

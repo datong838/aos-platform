@@ -1,0 +1,70 @@
+{
+  "original_source_passed": true,
+  "terminal_xid_aborted": true,
+  "nine_tables_zero": true,
+  "typed_records": 257,
+  "observed_function_oids": 197,
+  "terminal_function_identities": 194,
+  "pre_rollback_missing_function_witnesses": [
+    {
+      "oid": 5802710,
+      "signature": "aos_capacity_publication_private.require_current_source_installation()",
+      "language": "plpgsql",
+      "owner": "aos_capacity_publication_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "provolatile": "v",
+      "return_type_oid": 2278,
+      "declared_arg_type_oids": "",
+      "source_sha256": "75338b956fb6079ece845bb98f60633a8d1ba2d55476d265443df07cfd4dbe15",
+      "before_function": "public.test_owned_initial_window",
+      "caller_pid": 15877
+    },
+    {
+      "oid": 5802731,
+      "signature": "read_capacity_source_for_occupation(bytea,jsonb)",
+      "language": "plpgsql",
+      "owner": "aos_capacity_publication_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "provolatile": "v",
+      "return_type_oid": 2249,
+      "declared_arg_type_oids": "17 3802",
+      "source_sha256": "085e53bf988e71876f5927f684865c19d5807f4149a807c4fee39557e50e99f3",
+      "before_function": "public.test_owned_initial_window",
+      "caller_pid": 15877
+    },
+    {
+      "oid": 5802736,
+      "signature": "require_capacity_occupation_source_installation()",
+      "language": "plpgsql",
+      "owner": "aos_capacity_publication_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "provolatile": "v",
+      "return_type_oid": 2278,
+      "declared_arg_type_oids": "",
+      "source_sha256": "e9ade4b2ba8e3606f3f5358175f8b6088d5f1b1ef618541a52deeff3878e4229",
+      "before_function": "public.test_owned_initial_window",
+      "caller_pid": 15877
+    }
+  ],
+  "unbound_missing_function_oids": [],
+  "same_caller_pre_call_catalog": true,
+  "typed_function_oids": 180,
+  "typed_missing_function_witnesses_bound": true,
+  "full_native_closure": false,
+  "formal_root_or_business_authorized": false,
+  "retained_witness_count": 44,
+  "limits": [
+    "Caller-visible pre-call catalog identity is not execution authority",
+    "No complete native event or unvisited-branch proof",
+    "No formal Root, natural COMMIT or QYH runtime acceptance"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "internal_error": "SHARED_ADMISSION_COMPLETE_END_RECEIPT_REQUIRED",
+  "utility_after_error": true,
+  "same_caller": true,
+  "caller": {
+    "xid": "69900",
+    "pid": 15877
+  },
+  "full_native_ending": false
+}

@@ -1,0 +1,21 @@
+{
+  "database": "aos_test_5be2a7370571_ti4_test",
+  "cluster": "7694680278363095064",
+  "pytest_exit": 1,
+  "failure": "Missing shared_identity_certificate_fixture",
+  "table_counts": {
+    "aos_shared_parent_admission_private.end_authority": null,
+    "aos_shared_parent_admission_private.pending_origin": null,
+    "aos_shared_parent_physical_private.complete_parent_risk": null,
+    "aos_shared_parent_physical_private.complete_receipt_v2": null,
+    "aos_shared_parent_physical_private.initial_call_authority": null,
+    "aos_shared_parent_physical_private.initial_target_obligation": null,
+    "aos_shared_parent_physical_private.initial_window_obligation": null,
+    "aos_shared_parent_physical_private.judge_dependency": null,
+    "aos_shared_parent_physical_private.target_intent": null
+  },
+  "missing_not_zero": true,
+  "other_clients": 0,
+  "profile_reset": true,
+  "old_source_replayed": false
+}

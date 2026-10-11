@@ -1,0 +1,703 @@
+[
+  {
+    "oid": 16388,
+    "signature": "aos_ed25519.verify(bytea,bytea,bytea)",
+    "language": "c",
+    "owner": "aos_ed25519_owner",
+    "prosecdef": false,
+    "proconfig": null,
+    "provolatile": "i",
+    "return_type_oid": 16,
+    "declared_arg_type_oids": "17 17 17",
+    "source_sha256": "1caca9c86b135d3fea2cd71475d5bd027b40bc5376b4790f211c90753b8aee1e",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5787981,
+    "signature": "digest(bytea,text)",
+    "language": "c",
+    "owner": "aos_app",
+    "prosecdef": false,
+    "proconfig": null,
+    "provolatile": "i",
+    "return_type_oid": 17,
+    "declared_arg_type_oids": "17 25",
+    "source_sha256": "dab440e06d2ec1df36f3287fec02eac12a47a62063938e1aac6648560f8a6f3e",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5788017,
+    "signature": "canonical_asset_registry_jsonb(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_app",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog, public, pg_temp"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 25,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "dba60596e4719d8bf97b001618036bc44c431eca3a86dfd6518fddfd93d0557c",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5801977,
+    "signature": "aos_capacity_publication_private.read_root_snapshot(bytea)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 2249,
+    "declared_arg_type_oids": "17",
+    "source_sha256": "8ad0a9df61437c99337e5645d33d2b2704e01639b7ec1f43f66d327c117226cb",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802087,
+    "signature": "aos_capacity_publication_private.canonical_signed_json(json,integer)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 25,
+    "declared_arg_type_oids": "114 23",
+    "source_sha256": "f350cbf8e8742d181332224583a3cf3b27666269f84007c7e3197b5804f356d3",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802089,
+    "signature": "aos_capacity_publication_private.read_identifier(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 25,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "38219d56402c7a1c05cffa15f3ee8ec81886389e431f04ab3f5e54ebc2af7d7a",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802092,
+    "signature": "aos_capacity_publication_private.read_deployment_target(bytea)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "17",
+    "source_sha256": "0aab0c32f2ef85aa9459ded57fed540b149803571a9dbd1f92de0475955f99db",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802093,
+    "signature": "aos_capacity_publication_private.read_signed_time(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 1184,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "724b4af83aaea776117e325a695666cb5396c8bfba47410dcfda875858e72bdf",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802094,
+    "signature": "aos_capacity_publication_private.read_signing_permit(bytea)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "17",
+    "source_sha256": "5c72d339eeb7489d57852432351b1a201c04998e064fa7005df44cb4e48ac748",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802095,
+    "signature": "aos_capacity_publication_private.read_origin_bootstrap(bytea)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "17",
+    "source_sha256": "c6276fea17840730c195ea8ec275d902ba95e3998adb43a02941494d896d7c96",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802105,
+    "signature": "aos_capacity_publication_private.read_source_policy(bytea)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "17",
+    "source_sha256": "d646feac8ba780eb9041af9f9eaa2fc87c301167be808eea48439a1d6814001e",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802106,
+    "signature": "aos_capacity_publication_private.read_supplier_attestation(bytea)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "17",
+    "source_sha256": "1c50c016d68e6b591758b5a00c23ea4a5104a9f6210d28380c53ea7a75f5f0dc",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802221,
+    "signature": "aos_capacity_publication_private.original_source_field(jsonb,text,text)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "3802 25 25",
+    "source_sha256": "3c29d165ee0c9a0088c2722adb12f74edc93e257dbec31286ad7eb4704b3c68e",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802222,
+    "signature": "aos_capacity_publication_private.original_source_ref(jsonb,text)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "3802 25",
+    "source_sha256": "1113a35e4fd4d8bcb537b65b9acda453a035a235e847afd386ecdd2d09a0e3f3",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802223,
+    "signature": "aos_capacity_publication_private.original_source_time(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 2249,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "a6e74dbee08f18eb26864caa47bb29a5990bb52ba479b2300c426f290594e5d0",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802224,
+    "signature": "aos_capacity_publication_private.read_original_source_candidate(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "fdb586d5b806d88b28b4e17b03aead4c37d85ccbd9d2d6d947ef804aa947d266",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802225,
+    "signature": "aos_capacity_publication_private.read_original_capacity_application(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "7293f310295e184ea1c171c884b3c169200a20173db2b4dc4f46aa20ac8339f6",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802228,
+    "signature": "aos_capacity_publication_private.original_claim_identity(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 25,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "baa432d58f318581f9dc1f7f776711092eed79fdcc6ee4ba679138ba8b01d5c0",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802229,
+    "signature": "aos_capacity_publication_private.original_claim_integer(jsonb,bigint)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "3802 20",
+    "source_sha256": "6c4f5aec32709e6fdc676ec6fa6f87578c35884d85bf9e1200e08aa589cd55e4",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802231,
+    "signature": "aos_capacity_publication_private.read_original_physical_account(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "9a809073808d6d6597a0152ca2f584d8e883aef020c212820997042b3298a7b4",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802232,
+    "signature": "aos_capacity_publication_private.read_original_capacity_basis(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "024e074047c77f17976269003010adce11daf890f383727136d43b7078ae67f7",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802233,
+    "signature": "aos_capacity_publication_private.original_provider_string(jsonb,integer,boolean)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 25,
+    "declared_arg_type_oids": "3802 23 16",
+    "source_sha256": "8b32b852a768c763503b420732fde3b92b8315360b3ee1deb731990a4dd2fa37",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802234,
+    "signature": "aos_capacity_publication_private.original_provider_integer(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "7fc17cc2984b40b18e79d9c36121c502552d582d1b888e3174c33d060b71c19a",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802237,
+    "signature": "aos_capacity_publication_private.read_original_provider(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "b343241ef8d26f1fb694312b6718d6ceeb1b8c5b89a7360ba10abed67f94915d",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802238,
+    "signature": "aos_capacity_publication_private.original_build_exact_ref(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "7e221de578be74f547b29fb48db916fd549b5e7a8d1e50366ddfc96c4c1ebbee",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802240,
+    "signature": "aos_capacity_publication_private.read_original_build_request(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "4136765f220e5cee7510b099d89c0c6072ea2ef14d2ef912881ff8d4b9a4bc60",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802241,
+    "signature": "aos_capacity_publication_private.original_build_json(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog",
+      "extra_float_digits=3"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 25,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "616634fda01217dcd3749f2e97bbc102250e62b35802896c5a4863766ff7b55b",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802243,
+    "signature": "aos_capacity_publication_private.original_build_equal(jsonb,jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 16,
+    "declared_arg_type_oids": "3802 3802",
+    "source_sha256": "2eac1d1d4f07d5875039750381e0300480e253bdfbd357f006afdb95f3cd0294",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802244,
+    "signature": "aos_capacity_publication_private.original_evidence_fields(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 16,
+    "declared_arg_type_oids": "3802 3802 3802 3802 3802 3802 3802 3802",
+    "source_sha256": "979b519eaa93f169aaf81e21d7623c4db05a627e56d3e1d74067ad800d629351",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802245,
+    "signature": "aos_capacity_publication_private.require_original_fact_boundary()",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 2278,
+    "declared_arg_type_oids": "",
+    "source_sha256": "751d60aec7b93ee0de6bdcf111d699f6e6279197a75e2896395dc5d8e734ea6d",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802249,
+    "signature": "aos_capacity_publication_private.require_original_epoch_pair_boundary()",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 2278,
+    "declared_arg_type_oids": "",
+    "source_sha256": "e4615248f577432d28748be0d0171481b8bfb315610ab126d763d9685dc87383",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802250,
+    "signature": "aos_capacity_publication_private.require_original_withdrawal_boundary()",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 2278,
+    "declared_arg_type_oids": "",
+    "source_sha256": "2014546ab4d63fbe764082fcdaf52e439ef39af4e2aa881756c7e7316b7eb17d",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802254,
+    "signature": "aos_capacity_publication_private.require_original_evidence_boundary()",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 2278,
+    "declared_arg_type_oids": "",
+    "source_sha256": "51b7dfea18b14c8100b3bc1077641490d8e6c5d59077a2a85962f480b4f956a2",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802258,
+    "signature": "aos_capacity_publication_private.require_original_owner(text)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 2278,
+    "declared_arg_type_oids": "25",
+    "source_sha256": "afcd3eaa1cd3e5b406d798ba647eb6be43fbf94d8b1c063245d7e500376135f8",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802259,
+    "signature": "aos_capacity_publication_private.read_original_fact_provider(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "786a0db74372553b756269e8828b7f8dadc950d5c7ec52b9603cfb134d3ac281",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802260,
+    "signature": "aos_capacity_publication_private.require_original_fact_evidence(jsonb,boolean)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 2278,
+    "declared_arg_type_oids": "3802 16",
+    "source_sha256": "2690eca9b7d0f645bf5bb2f107211b0d5b10f5d8e90f836ddf40d05475d345aa",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802266,
+    "signature": "aos_capacity_publication_private.read_source_issuer_url(jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "i",
+    "return_type_oid": 25,
+    "declared_arg_type_oids": "3802",
+    "source_sha256": "2bb9bb72783d6d4d073b5c9049c5dc4793168ad84affd0b48e6dbc54d72ee2c3",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802710,
+    "signature": "aos_capacity_publication_private.require_current_source_installation()",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 2278,
+    "declared_arg_type_oids": "",
+    "source_sha256": "75338b956fb6079ece845bb98f60633a8d1ba2d55476d265443df07cfd4dbe15",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802731,
+    "signature": "read_capacity_source_for_occupation(bytea,jsonb)",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": true,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 2249,
+    "declared_arg_type_oids": "17 3802",
+    "source_sha256": "085e53bf988e71876f5927f684865c19d5807f4149a807c4fee39557e50e99f3",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5802736,
+    "signature": "require_capacity_occupation_source_installation()",
+    "language": "plpgsql",
+    "owner": "aos_capacity_publication_owner",
+    "prosecdef": false,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 2278,
+    "declared_arg_type_oids": "",
+    "source_sha256": "e9ade4b2ba8e3606f3f5358175f8b6088d5f1b1ef618541a52deeff3878e4229",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5803211,
+    "signature": "verify_shared_parent_final_call_authority(uuid,text,xid8,integer)",
+    "language": "plpgsql",
+    "owner": "aos_physical_capacity_occupation_owner",
+    "prosecdef": true,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "2950 25 5069 23",
+    "source_sha256": "7cf524d8836a7afec21635e20425cdd8a5ba58399fdd00f4fd9f2dc31a2a5419",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5803216,
+    "signature": "read_shared_parent_receipt_origin(uuid,text,xid8,integer)",
+    "language": "plpgsql",
+    "owner": "aos_model_eval_issuer_owner",
+    "prosecdef": true,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "2950 25 5069 23",
+    "source_sha256": "93cbcf5619479047d29d18dd9c95121ac86f1e0064be1fdb172c538f300c6bb0",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5803249,
+    "signature": "verify_shared_parent_final_physical(uuid,text,xid8,integer)",
+    "language": "plpgsql",
+    "owner": "aos_physical_capacity_occupation_owner",
+    "prosecdef": true,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "2950 25 5069 23",
+    "source_sha256": "cbe39674a1af8552798819c6a4bed84acfdcaae30eaf82a8c22715dbeeb7c28b",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  },
+  {
+    "oid": 5803250,
+    "signature": "read_shared_parent_complete_end_facts(uuid,text,xid8,integer)",
+    "language": "plpgsql",
+    "owner": "aos_physical_capacity_occupation_owner",
+    "prosecdef": true,
+    "proconfig": [
+      "search_path=pg_catalog"
+    ],
+    "provolatile": "v",
+    "return_type_oid": 3802,
+    "declared_arg_type_oids": "2950 25 5069 23",
+    "source_sha256": "1bb627e5494be5ddb405c34016ca724e5f315ddb700f2a51b273f8853bbcfc66",
+    "before_function": "public.test_owned_initial_window",
+    "caller_pid": 15877
+  }
+]

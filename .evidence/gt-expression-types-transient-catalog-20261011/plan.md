@@ -1,0 +1,15 @@
+# 瞬态函数目录证据补齐
+
+Rules231，唯一m1，不更新Codex。候选一正式栖月汇恢复仍依赖既有publisher/OIDC定位，不替换正式身份；候选二A1859已登记新隔离Source回滚前目录冻结，选择二。文件仅本Task目录run.py、isolated_evidence_scope_adapter.py、四个原fixture辅助副本、readback及结果；不修改产品代码或旧结果。
+
+RED：上一波257类型记录包含3个回滚后缺失函数OID，终态无法绑定。最小修复在隔离runner每次原test_owned调用前，只读同一caller可见的public函数目录，将signature/Owner/config/语言/源码hash/返回参数类型冻结。不得读业务payload，不改原SQL、TTL150秒、Source/四证书/八节点断言及权限；新DB/新证据/新审批，一次调用，不重放旧Source。错误态不追加同事务查询；终态独立回读原事务aborted/9表0/无otherclient/profilingreset。捕获结果只对实际观察OID作交集，缺失仍显式报告，不宣称所有nativecallback闭包或正式Root。
+
+保存完整输入hash后运行，既有guard已有结果分支只保留不虚报实测。运行后校验产品文件hash、原fixturehash、瞬态目录数据纯metadata以及catalog witness来自同caller调用前。真正业务八页面/自然首链仍未完成。
+
+首次新尝试漏带shared_identity_certificate_fixture，Source前失败；独立回读保存r1-reconciliation.json。r2补齐原辅助文件精确hash，另建新DB/新label/新审批，旧结果不改。导入依赖检查先于联验。
+
+r2目录捕获适配假定tuple，实际caller为dict_row导致KeyError0，原Source调用尚未发出，失败已独立对账。r3仅兼容既有dict/tuple行形状，先以两种实际Python输入做专项，原业务参数/SQL不变；新DB/新审批单独尝试。
+
+r3新增目录查询两个text列缺少唯一alias，dict_row覆盖后剩9列，Source调用前失败。r4为每列加唯一alias，不改业务SQL。必须先以失败库READ ONLY实际执行该目录查询，在dict_row和tuple_row均验证10列，记录专项后才另开新Source联验。
+
+r4完整Source通过且独立终态零表/回滚成立；三个临时函数已捕获两个，仍一个缺失，不能报3/3。原捕获限制public排除了AOS private函数，下一最小修正只将同caller只读目录范围扩展到public及现有aos_命名空间，不读函数业务payload，仍只保存观察OID交集。r5新DB/审批独立联验，之前成功结果保留；正式库不变。

@@ -1,0 +1,14 @@
+[
+  {
+    "factory": "dict_row",
+    "rows": 399,
+    "ten_unique_columns": true,
+    "read_only": true
+  },
+  {
+    "factory": "tuple_row",
+    "rows": 399,
+    "ten_unique_columns": true,
+    "read_only": true
+  }
+]

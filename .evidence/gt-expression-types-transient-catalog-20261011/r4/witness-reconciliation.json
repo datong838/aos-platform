@@ -1,0 +1,47 @@
+{
+  "original_source_passed": true,
+  "three_missing_oids": [
+    5786894,
+    5786915,
+    5786920
+  ],
+  "pre_rollback_bound": [
+    {
+      "oid": 5786915,
+      "signature": "read_capacity_source_for_occupation(bytea,jsonb)",
+      "language": "plpgsql",
+      "owner": "aos_capacity_publication_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "provolatile": "v",
+      "return_type_oid": 2249,
+      "declared_arg_type_oids": "17 3802",
+      "source_sha256": "085e53bf988e71876f5927f684865c19d5807f4149a807c4fee39557e50e99f3",
+      "before_function": "public.test_owned_initial_window",
+      "caller_pid": 13725
+    },
+    {
+      "oid": 5786920,
+      "signature": "require_capacity_occupation_source_installation()",
+      "language": "plpgsql",
+      "owner": "aos_capacity_publication_owner",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "provolatile": "v",
+      "return_type_oid": 2278,
+      "declared_arg_type_oids": "",
+      "source_sha256": "e9ade4b2ba8e3606f3f5358175f8b6088d5f1b1ef618541a52deeff3878e4229",
+      "before_function": "public.test_owned_initial_window",
+      "caller_pid": 13725
+    }
+  ],
+  "unbound_missing_oids": [
+    5786894
+  ],
+  "full_witness_acceptance": false,
+  "reason": "public-only namespace filter insufficient; caller-visible private catalog also needs capture"
+}
