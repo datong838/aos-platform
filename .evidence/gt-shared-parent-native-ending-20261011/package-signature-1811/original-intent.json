@@ -1,0 +1,1 @@
+{"name": "aos-apk-verify-a225d0d786a44cbf88c009341d8c89c0", "image": "sha256:851765e2f8107a9014019a4431240db650318edf8cbd542f1e4514993581e992", "entrypoint": "/sbin/apk", "arguments": ["verify", "/tmp/input.apk"]}

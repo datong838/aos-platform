@@ -1,0 +1,68 @@
+{
+  "package": "binutils",
+  "version": "2.45.1-r1",
+  "url": "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/aarch64/binutils-2.45.1-r1.apk",
+  "sha256": "bac4a00e73296dfebf5f587c2b304b7d110e7de658cd2b05491f87c2b228420c",
+  "cases": [
+    {
+      "case": "original",
+      "container": "6b7f58db5b6c06aeae64d0f720112d4740990a2807cdf0bfd1f7d9f12c0b7f0c",
+      "exit_code": 0,
+      "stdout": "/tmp/input.apk: OK\n",
+      "stderr": "",
+      "readonly": true,
+      "network": "none",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/package-signature-1811/original.apk",
+          "Destination": "/tmp/input.apk",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "volume",
+          "Name": "52477b99d5eaf9bc39f28986092ca47ca658a6e29f596b71cddc7a93fd46caf1",
+          "Source": "/var/lib/docker/volumes/52477b99d5eaf9bc39f28986092ca47ca658a6e29f596b71cddc7a93fd46caf1/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        }
+      ]
+    },
+    {
+      "case": "tampered",
+      "container": "1fad20273895d6a78d4e491cab1e129690edd750b557e795e6be373fa1c48074",
+      "exit_code": 1,
+      "stdout": "/tmp/input.apk: file format is invalid or inconsistent\n",
+      "stderr": "",
+      "readonly": true,
+      "network": "none",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/package-signature-1811/tampered.apk",
+          "Destination": "/tmp/input.apk",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "volume",
+          "Name": "243c77213b21677c0c8016511e8582698c4582082d238dd54aab1fef2107a19f",
+          "Source": "/var/lib/docker/volumes/243c77213b21677c0c8016511e8582698c4582082d238dd54aab1fef2107a19f/_data",
+          "Destination": "/var/lib/postgresql/data",
+          "Driver": "local",
+          "Mode": "",
+          "RW": true,
+          "Propagation": ""
+        }
+      ]
+    }
+  ],
+  "independent_key_trust": false,
+  "execution_authorized": false
+}

@@ -213,3 +213,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 精确依赖归档可得性1810
 原SDK /var/cache/apk为空、/etc/apk/keys仅两公钥；先对1809固定156包在原两个HTTPS仓库执行有界HEAD检查，8线程、单次15秒，无重试/下载/安装/验签。新增package-availability-1810/check.py/result.json。404/网络错误分别记录，不以可获取或镜像公钥等于签名可信。无数据库或容器启动。
+
+## 精确binutils签名与篡改负门1811
+新增package-signature-1811：从1810原HTTPS精确URL下载binutils2.45.1-r1，限制8MiB；原包及独立末字节篡改副本分别在精确SDK镜像、networknone/read-only/capdropALL/no-new-privileges的唯一容器中仅执行apk verify，入口明确/sbin/apk，不执行PG或安装脚本。读取进程终态与输出；原包通过且篡改拒绝才成立。镜像继承卷如实记录保留，公钥来源仍未独立证明；不授Root或业务权限。
