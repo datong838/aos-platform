@@ -1,0 +1,13 @@
+# 原责任计划来源、生命周期及接续负门复审
+
+基线5a0d4760e/AOS-001886，唯一写者及同一ACTIVE Task，先补第七段方案后实现。绑定原clone ID/cluster/18431、无命名卷挂载，只对历史实验复制库临时角色/权限DDL；当前栖月汇权威库、原完整clone、服务源代码及API/Web不写入。
+
+只读核对真实历史frozen Plan仍保留六职责及原exact revision/hash。旧templateRef为ecommerce.business-investigation.readonly名称，不是bundle://签名安装来源，原InstalledProductionProfileResolver实际拒绝；原ApprovedBIPreparationResolver查询approved候选0并select=None。没有lambda True、没有覆写resolver/历史templateRef，没有伪造签名批准安装。此事实说明历史记录保存与当前生效来源是不同恢复条件，不能将旧记录直接当作新正式Plan授权。
+
+原固定Plan LOGIN使用0700/0600私密passfile、无成员/特权、真实独立连接，Plan head/revision/Receipt精确写权限和明确十张租户表双scope policy；successor仅SELECT，公共SkillTemplate目录仅SELECT且不造org字段policy。6次Plan独立连接身份读回相符，Contract factory若误调用直接失败。
+
+7项检查通过：原Plan reader在固定身份下读到历史frozen六slots、当前门禁BLOCKED；旧模板source新建Plan真实RESPONSIBILITY_TEMPLATE_MISSING_OR_DRIFTED；dev-org隔离；frozen Plan禁止revise/freeze；已有且无Run的实验Task创建successor时ASSIGNEE_RESOLUTION_MISSING真实拒绝；Plan身份冒用Contract Receipt被原source guard 42501拒绝。未生成新Plan、Successor或Receipt，十张相关表计数全部不变，历史Plan整行及head version精确不变。没有为了通过修改Agent/SkillBinding/freshness/resolution或启用执行器。
+
+独立普通只读连接再次核对原Plan exact ref/六slots/原blockers、无qyh-plan Receipt/Successor、原resolver拒绝和approved候选0。临时角色/policy/权限清理，当前栖月汇权威库与原clone全647表及六metadata精确一致。HBA trust不等于密码/OIDC认证或独立OS身份；本段只有实际来源/生命周期负门，不能算generic/BI/successor正向完成，原30 Contract operation覆盖仍15个。
+
+完整Task和Goal保持ACTIVE，正式登录/publisher、签名批准安装、当前预算/八配置/八工作台和自然首链仍未验收。已登记候选仍包括原ImpactPreview/剩余Contract兼容及Content边界；先独立核其真实依赖，缺来源不伪造，非缺权安全步骤继续。语法、源码hash绑定、秘密扫描、精确diff和方案自洽核验后精确提交，不push；没有新增独立模型PASS。

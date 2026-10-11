@@ -1,0 +1,20 @@
+{
+  "historicalExactFrozenPlanAndSixSlotsPreserved": true,
+  "originalCurrentBlockers": [
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE"
+  ],
+  "originalSignedInstalledResolverRejectedHistoricalRef": true,
+  "signedApprovedCandidateCount": 0,
+  "noNewPlanOrSuccessorReceipt": true,
+  "temporaryRoleRemoved": true,
+  "sourceAndOriginalClone647DataExact": true,
+  "allOriginalMetadataExact": true,
+  "genericBISuccessorPositiveAccepted": false,
+  "fullRestorationAccepted": false,
+  "scriptHash": "9f340414e7b05ce4c4916cf56c878a10622198b1f8552e1eeeaddaf1414ee2f6"
+}

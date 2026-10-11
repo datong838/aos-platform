@@ -1,0 +1,60 @@
+{
+  "cases": [
+    "original-historical-six-slot-frozen-plan-read-current-blockers",
+    "original-historical-template-not-signed-source-denied",
+    "ProductionContractNotFound",
+    "ProductionContractConflict",
+    "ProductionContractConflict",
+    "original-successor-missing-resolution-no-write",
+    "InsufficientPrivilege"
+  ],
+  "connections": [
+    {
+      "login": "aos_bi_plan_issuer",
+      "role": "aos_bi_plan_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_bi_plan_issuer",
+      "role": "aos_bi_plan_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_bi_plan_issuer",
+      "role": "aos_bi_plan_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_bi_plan_issuer",
+      "role": "aos_bi_plan_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_bi_plan_issuer",
+      "role": "aos_bi_plan_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_bi_plan_issuer",
+      "role": "aos_bi_plan_issuer",
+      "db": "qyh_source_contract_20261011"
+    }
+  ],
+  "historicalPlanId": "responsibility-plan-63c82d2a75614e1b95f1",
+  "historicalRevision": 2,
+  "historicalHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+  "historicalVersion": 2,
+  "originalBlockers": [
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE",
+    "SKILL_BINDING_STALE"
+  ],
+  "allRelatedTableCountsUnchanged": true,
+  "originalHistoricalPlanUnchanged": true,
+  "signedApprovedCandidateCount": 0,
+  "genericBISuccessorPositiveAccepted": false,
+  "passwordOrOIDCAuthenticated": false
+}

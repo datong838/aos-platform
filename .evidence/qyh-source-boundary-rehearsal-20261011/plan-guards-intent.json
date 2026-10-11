@@ -1,0 +1,16 @@
+{
+  "containerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "cluster": "7695416748450308141",
+  "database": "qyh_source_contract_20261011",
+  "role": "aos_bi_plan_issuer",
+  "historicalPlanId": "responsibility-plan-63c82d2a75614e1b95f1",
+  "historicalTemplateRef": {
+    "revision": 1,
+    "resourceId": "ecommerce.business-investigation.readonly",
+    "contentHash": "fb2228e4754c959fecb43dc53498246f3dde2ad3b6c43f07337618a5fd3b4d70",
+    "resourceType": "ResponsibilityTemplateRevision"
+  },
+  "signedApprovedCandidateCount": 0,
+  "currentDatabaseTouched": false,
+  "scriptHash": "9f340414e7b05ce4c4916cf56c878a10622198b1f8552e1eeeaddaf1414ee2f6"
+}
