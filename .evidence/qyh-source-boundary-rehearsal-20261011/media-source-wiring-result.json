@@ -1,0 +1,41 @@
+{
+  "head": "f3dd8fa52eb4d500af0b6cb4ff4bf0f5c8970959",
+  "authority": "AOS-001894",
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "formalRouterUsesOriginalResolver": true,
+  "requestModelRequiresBundleManifestRevision": true,
+  "originalResolverRejectsAllBundleManifestRevisionBeforeLookup": true,
+  "originalMediaProfileEntryRejectsBeforeDatabaseFactory": [
+    {
+      "scope": [
+        "org-org",
+        "dev-project"
+      ],
+      "code": "MEDIA_GATE_PROFILE_SIGNED_SOURCE_MISSING_OR_DRIFTED"
+    },
+    {
+      "scope": [
+        "dev-org",
+        "dev-project"
+      ],
+      "code": "MEDIA_GATE_PROFILE_SIGNED_SOURCE_MISSING_OR_DRIFTED"
+    }
+  ],
+  "historicalAcceptanceReplacesSourceResolverWithLambdaTrue": true,
+  "requestIsExplicitTestOnlyNotSignedOrGoverned": true,
+  "databaseConnections": 0,
+  "databaseWrites": 0,
+  "objectReads": 0,
+  "objectWrites": 0,
+  "currentServiceChanged": false,
+  "formalPublisherConnected": false,
+  "fullRestorationAccepted": false,
+  "sourceHashes": {
+    "resolver": "fd062cb1db3c436dcada1949d1bc19fb7765ad6b1ce2173ea9e22d153b365541",
+    "model": "562354dc813c52c073c91c9c480516fe382e34f2ae86e5bd63b27cbbf7fd3105",
+    "store": "fdff0533c5a109aa1a86b1b20b631ad7837a693824bad7d0c72b4389979c174b",
+    "router": "e3bd0833883c6cfdfbd886654cde02cb5f975c717d795f9242feeabcce9db5d6",
+    "historicalTest": "e94c7adffc2585430ab5759928d9290b302506a7c41aaa31f71c31dfa7737488"
+  },
+  "scriptHash": "09d3a7c8b232fa1d5607d7726c711da9ab2c3e4706855a7650c25023cdf0f179"
+}

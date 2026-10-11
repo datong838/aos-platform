@@ -1,0 +1,19 @@
+# 电商多媒体正式来源接线 RED 与修复依赖
+
+基线f3dd8fa52eb4d500af0b6cb4ff4bf0f5c8970959/AOS-001894。Source Task ACTIVE、同owner有效Lease；scope只允许本证据目录，不借此修改services。第十五段先登记；复习231-1、原64-W7-06 ADR及产品v2多媒体旅程，保留原canonical Eval/Issue/Return/Approval边界。
+
+## 已复现的结构问题
+
+原RegisterMediaGateProfileRequest要求sourceBundleRef.resourceType为BundleManifestRevision。正式router的_STORE实际注入resolve_stage_template_source；原函数只认INITIAL_STORE_PROFILE或SolutionPack静态1.3.0目录，对所有BundleManifestRevision直接False。AST验证原guard与真实接线，原模型验证四门请求通过；原Store实际入口在org-org/dev-project及dev-org/dev-project两scope均返回MEDIA_GATE_PROFILE_SIGNED_SOURCE_MISSING_OR_DRIFTED，三个连接factory调用数为0。
+
+请求明确是test-only类型反例，未伪称引用真实manifest/signature/policy或规则。本结果证明合法请求类型在当前正式wiring不可达，不证明真实签名候选已满足所有门。原W7-06测试用_ReadyStore及lambda True替换来源resolver，手工构造签名/policy refs；历史ADR明确NO_EXTERNAL_EFFECT/NO_RELEASE，不能据其代码/浏览器绿认定本次正式来源接通。本轮不重跑其收费/运行fixture，不改历史报告。
+
+## 最小修复实施清单与依赖
+
+1. services/aos-api/aos_api/aip_production_contract_store.py：增加专用媒体签名来源reader合同，接受整个三ref绑定与四gate spec；同一authority snapshot逐项复核，不能只调用只接受Stage类型的resolver。保留Stage/BI接口和已有失败关闭行为。
+2. services/aos-api/aos_api/routers/aip_production_contracts.py及独立媒体来源reader：接现有RegistrySnapshotReader/ReleasePolicy签名、公钥信任、发布状态及currentness读取，tenant与scope沿原机制；manifest/signature/policy绑定同版哈希和四Rule refs。原reader使用单repeatable-read只读快照，可复用，不复制第二套签名算法。
+3. 先核BundleSignatureVerification及MediaGatePolicyRevision的原受控producer、稳定revision映射、撤回及policy Owner。当前aos_api中这两个类型只在请求/评价合同声明发现，没有已定位producer；有限源码搜索不是全部署无此资源证明。不能凭类型名、客户端hash、随手生成签名或手工Registry行构造权威。缺少正式publisher仍不由本reader修复自动授权。
+4. 专项验收必须用实际签名文件、原trust根和真实Registry快照：合法同版电商/栖月汇来源可接受；类型/hash漂移、跨scope、签名/信任/发布撤回、policy/rule缺失或混版拒绝。相邻Stage/BI旧行为必须保持。不能以lambda True或仅这个结构反例作为正向验收。
+5. 产品代码须独立精确Task/Lease及方案后实施。当前Source任务还需generic/BI/successor/Content和剩余8合同完整兼容，未Delivery；真库来源写迁移不得提前。本轮仅证据脚本/方案变更，数据库连接0、对象/网络/模型效果0，当前权威卷/API/Web无改动。
+
+现有代码复用与新缺口分别保留；四门仅允许进入独立Approval，不放宽缺依赖来恢复菜单。Goal保持ACTIVE，正式企业登录、独立publisher、八配置/预算、八页与自然首链仍待完整真实验收。
