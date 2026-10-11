@@ -1,0 +1,48 @@
+{
+  "observedAt": "2026-10-11T06:21:49.580398+00:00",
+  "identity": {
+    "database": "aos_current_preview_20260927",
+    "cluster": "7683855731447750695",
+    "migration": "a0v_159",
+    "readOnly": "on"
+  },
+  "sourceSha256": "32f1947992d361b6443b6602eb675ad292d94f8ce474aa6359f9b0841b774f9c",
+  "querySha256": "ea798b06f54f0d5ac8d29fadd1e1e8d1a5c536787535aa6da12c79f3cf42b2cd",
+  "counts": {
+    "org-org": {
+      "responsibility_plans": 0,
+      "runtime_policies": 0,
+      "data_policies": 0,
+      "egress_policies": 0,
+      "network_policies": 0,
+      "quota_policies": 0,
+      "budget_policies": 0,
+      "budgets": 0
+    },
+    "dev-org": {
+      "responsibility_plans": 0,
+      "runtime_policies": 0,
+      "data_policies": 0,
+      "egress_policies": 0,
+      "network_policies": 0,
+      "quota_policies": 0,
+      "budget_policies": 0,
+      "budgets": 0
+    }
+  },
+  "facts": {
+    "installation": [
+      {
+        "id": "ccdcb0f0-1040-4bc6-aa0c-d045f5689813",
+        "currentRevision": 3,
+        "activeRevision": null
+      }
+    ],
+    "hostIdentities": 0,
+    "hostAssignments": 0,
+    "bindings": 0,
+    "operations": 0
+  },
+  "businessExecutionAuthorized": false,
+  "limitation": "Candidate counts do not prove installation binding or live process readiness. Reads are separate snapshots."
+}
