@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-shared-parent-native-ending-20261011/anonymous-pg-1821/run.py", line 21, in <module>
+    c.execute(sql.SQL('CREATE FUNCTION {}.probe(boolean) RETURNS bigint AS {}, %s LANGUAGE C STRICT').format(sql.Identifier(schema),sql.Literal(lib)),('test_mapping',))
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py", line 300, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.SyntaxError: syntax error at or near "$1"
+LINE 1: ...ymous_probe_851949ec8c8f48e09f7b373c6a743558.so', $1 LANGUAG...
+                                                             ^

@@ -243,3 +243,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 完整可执行映射观察1820
 修改已登记产品C/安装SQL/test_shared_parent_native_ending_pg.py，新增Owner-only executable_mapping_facts()，固定/proc/self/maps，检查每行格式、地址范围、权限、排序及8192行界限；只输出所有含x行的原内核文本，包含匿名/vDSO，不用模块白名单过滤。VOLATILE/PARALLEL UNSAFE/SECURITY INVOKER/pg_catalog/PUBLIC关闭；不读取内存、不改变权限、不arm。原始行保留供独立精确比对；snapshot不证明跨时刻稳定或代码信任。先确认旧二进制无符号RED，再新编译及独立后台maps逐行比对、Owner/ACL负门和旧模块累计测试；失败不改变原安装，新增SQL仅测试事务内回滚。
+
+## PG匿名RX集成1821
+新增anonymous-pg-1821/probe.c/Dockerfile/run.py，仅测试helper，固定1817 SDK离线编译。精确隔离lab容器/cluster/metadata测试库，事务内随机schema、PUBLIC拒绝helper和1820原SQL；不改产品代码。先显式加载helper但不分配，建立loader/kernel基线；创建一页RW后RX（不执行），新观察输出与独立/proc/backend/maps比对且含地址，旧loader列表保持；释放后地址消失。原reader保持，新SQL回滚并只读确认消失；异常退出后台自动释放，不重发未知SQL。helper只在superuser测试身份允许，不给正式Owner新权限。

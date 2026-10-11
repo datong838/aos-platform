@@ -1,0 +1,13 @@
+{
+  "helper_sha256": "8902a818beca5e22b17c74d8a2c1e31f16a7554d902231546be26d3f25dc015b",
+  "backend_pid": 98172,
+  "anonymous_rx_address": "0xffff8fb09000",
+  "loader_unchanged": true,
+  "new_reader_matches_independent_kernel_maps": true,
+  "anonymous_rx_seen_then_released": true,
+  "page_executed": false,
+  "sql_rollback_verified": true,
+  "original_reader_unchanged": true,
+  "execution_authorized": false,
+  "full_task_delivered": false
+}

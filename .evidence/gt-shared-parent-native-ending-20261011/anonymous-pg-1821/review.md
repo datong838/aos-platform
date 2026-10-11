@@ -1,0 +1,7 @@
+# PG匿名RX集成1821
+
+固定离线SDK编译测试helper，精确原隔离容器/cluster/metadata库校验后在随机schema事务内操作。先加载helper并不分配；再分配RW页转RX，不执行页面。实际backend98172的旧loader列表不变，新原生入口与独立/proc/backend/maps逐行一致且包含页地址；释放后地址消失。事务回滚后schema/新入口消失，原pending reader元数据保持。
+
+首次DDL绑定参数语法错误在函数创建前失败，连接上下文回滚；原脚本/log/artifact记录以.r1保留。改为psycopg Literal后新随机schema/backend通过，不复用失败事务。两个提取容器与复制的临时helper保留，未启动提取容器；无正式DB/Provider/业务执行。测试helper未进入产品模块或正式权限。
+
+方案一致；补齐真实PG匿名映射可见性，而非单独helper替代。生命周期稳定仍为false，映射可见不等于阻止未来变更或专用Root信任；完整arm/COMMIT待证。下一已登记生命周期候选需处理检查后mprotect/新loader变化的约束，不以重复快照冒充不可变保证。
