@@ -1,0 +1,11 @@
+# 配置登记恢复：真实权限前置缺口
+
+两独立恢复卷连接实际读取647表库与原stage预检，结果一致。库中保留aos_configuration_stage_transport_20260914（LOGIN/NOINHERIT/non-super/non-BYPASSRLS），三个原stage API函数仍在、SECURITY DEFINER、stage角色可执行而aos_runtime不可执行。原部署脚本声明的main/clone私密身份文件均不存在；未扫描钥匙串、未打开其他历史凭据、不认定未知来源不存在。
+
+原configuration_stage_ready=False。三个Source表RLS/FORCE均启用但aos_runtime仍可写：职责head与revision为INSERT/UPDATE/DELETE，生产contract receipt为INSERT/DELETE。原configuration_source_acl_ready明确拒绝全部这些权限；这不是只开环境开关即可解决。把角色存在、函数存在、RLS存在当正式可用，会掩盖消费Host可改写自己授权来源的风险。
+
+核对现有test_plan_receipt_writer_protocol_pg.py原文件：独立Plan/content/contract issuer与Source revoke在disposable SQL fixture中，明确不是正式迁移/凭据配置。因此不能为让本次预检通过，直接在恢复库REVOKE而破坏原AIP直写功能；需要原完整Writer控制面迁移、原调用入口和实际业务回归、独立全库恢复演练后再精确安装。消费者角色隔离不是新增电商域，仍服务栖月汇电商实例。
+
+本轮只新增Task证据脚本和报告；全部SQL为元数据SELECT与READ ONLY事务/会话设置，0业务写、0权限变更、0历史密码变更、Host/worker/Provider未启动。原22个tracked用户/其他工作改动未触及；原数据、安装、签名、预算、旧Run不变。未宣称stage可用、正式登录/publisher或八工作台恢复通过，主Task/Goal仍ACTIVE。
+
+下一关键步骤：先复用/受支持重建登记服务最小transport（不授业务Owner），同时沿原Source Writer安装协议闭合当前Host的源写权限隔离；缺真实发布身份/Owner与预算时维持对应动作禁入，不替代为另一租户或虚构主体。完整退出仍须当前真实发布/配置/安装、八页实际交互与自然首链，不能把本报告当完成。

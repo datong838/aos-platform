@@ -81,3 +81,6 @@ RED→GREEN验证写请求在鉴权/路由前拒绝、WS拒绝、读请求与lif
 
 ## 登录模式与正式接入合同对账（2026-10-11接续）
 上一轮仅状态答复，无恢复状态推进。本轮候选A既有132开发登录与正式发布合同核对，候选B已登记native生命周期实验；B在LOAD前docker exec报126/openat input/output error且无intent，不重发。优先A：132允许非生产Dev登录，不能把企业OIDC缺失扩大为管理查看禁入；正式Registry actor仍取原principal.subject，原职责分离及publisher scope不更改。仅新增本目录auth_integration_readiness.py、auth-integration-readiness.json和auth-integration-readiness.md，绑定当前HEAD/恢复卷预检/真实18080公开OIDC与受鉴权me，只输出白名单配置摘要和身份种类，不读取token/key/用户主体原值。没有真实独立publisher不得制造第二主体；八页恢复仍独立待验收。保留已有登录配置、数据、22个外部tracked改动，无产品修改、DB写、token发行、发布、服务重启。
+
+## 配置登记恢复缺口的精确定位
+候选A原配置登记transport/消费预检，候选B新包独立发布（依赖真实认证身份，问题已待答）。选择A实际调查：保留库已存在aos_configuration_stage_transport_20260914，但原部署脚本声明的main/clone配置文件均未找到；不能冒充已接入。实际原configuration_stage_ready=False、configuration_source_acl_ready=False，三Source表的aos_runtime仍有写权限。只新增本目录audit_configuration_stage_recovery.py、configuration-stage-recovery-audit.json、configuration-stage-recovery-review.md。使用已登记恢复API有限LOGIN与READ ONLY、原TenantScope、两独立读取；逐项取原Role最小权限、API固定函数、五表ACL/触发器/允许更新列，保存纯元数据不读取业务/口令。完整记录失败原因，不把存在LOGIN当身份可用。原源Writer隔离测试明确只是disposable协议，未装正式迁移；不直接REVOKE旧权限破坏原AIP写功能。不新建身份、不重置历史密码、不启动Host、不绕过stage预检。下一实施必须接入既有可信凭据或受控维护transport，并先安装经过完整恢复演练的独立Source Writer路径后收紧Host权限；预算/正式publisher/八页仍按原门。
