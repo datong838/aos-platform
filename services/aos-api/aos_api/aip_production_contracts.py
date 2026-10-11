@@ -664,6 +664,14 @@ class MediaGateDefinition(AipContractModel):
         return self
 
 
+def require_four_media_gates(gates: list[MediaGateDefinition]) -> None:
+    """Shared structure invariant; does not verify signatures or Rule authority."""
+    if len(gates) != 4 or {item.kind for item in gates} != set(MediaGateKind):
+        raise ValueError("media gate profile requires fact/brand/copyright/platform")
+    if len({item.gate_id for item in gates}) != 4:
+        raise ValueError("media gate IDs must be unique")
+
+
 class RegisterMediaGateProfileRequest(AipContractModel):
     profile_id: str = Field(min_length=1, max_length=200)
     revision: int = Field(ge=1)
@@ -680,10 +688,7 @@ class RegisterMediaGateProfileRequest(AipContractModel):
             raise ValueError("signatureRef must reference BundleSignatureVerification")
         if self.policy_ref.resource_type != "MediaGatePolicyRevision":
             raise ValueError("policyRef must reference MediaGatePolicyRevision")
-        if {item.kind for item in self.gates} != set(MediaGateKind):
-            raise ValueError("media gate profile requires fact/brand/copyright/platform")
-        if len({item.gate_id for item in self.gates}) != 4:
-            raise ValueError("media gate IDs must be unique")
+        require_four_media_gates(self.gates)
         return self
 
 

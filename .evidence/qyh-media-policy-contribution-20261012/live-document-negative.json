@@ -1,0 +1,11 @@
+{
+  "outcome": "VERIFIED_SIGNED_PRODUCTION_PROFILE_IS_NOT_CANONICAL_FOUR_RULE_POLICY",
+  "originalLoaderSignatureVerified": true,
+  "bundleContentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+  "documentSha256": "c535d661c2f3e45aaffd50621df520e023a997af2eabe6b59ba26945f755ba34",
+  "documentSchema": "aos.ecommerce-production-profile/v1",
+  "newContributionModelRefused": true,
+  "ruleOrPolicyCreated": false,
+  "databaseWrites": 0,
+  "sourceResolverAuthorized": false
+}
