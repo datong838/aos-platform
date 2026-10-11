@@ -1,0 +1,11 @@
+# 固定验证器实际表达式类型观察候选
+
+Rules231，唯一m1，先方案后隔离最小改动。候选一栖月汇正式恢复，当前发布者/OIDC信息未齐；候选二已登记Plan/PlanState类型观察补齐，选择二。现有1800探针只记录函数OID和plan tag，仅CoerceViaIO内部临时读exprType，未输出实际FuncExpr/OpExpr参数和返回类型；不能从旧notice补造类型证据。
+
+仅本目录新增probe.c/Dockerfile、build.log/制品hash、check.py/result/verification/review。复制原探针不改原文件：原Collector身份/Source/TTL/只读执行和Utility门完整保留，在既有已分析Query和PlanState表达式遍历处输出tag、函数OID、返回类型OID、参数类型OID的纯数字记录，Aggref解TargetEntry；不记录SQL/参数值/字段名。每调用精确字符串hash去重（上限4096，超限拒绝）并在正常/异常出口清理。ScalarArray输入保留原数组类型，不能当作fmgr逐元素真实参数；CoerceViaIO只输出表达式type，不宣称内部callbacks运行全覆盖。
+
+严格PG16编译，固定已加载镜像sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883，Docker build网络关闭且使用已有编译层，禁止改变原镜像/容器/DB。制品先固定hash再复制到隔离lab独立路径，不覆盖旧library。校准入口固定SELECT pg_catalog.array_append/JSON构造和固定UUID转text，不接受任意SQL/Source/业务ID，只限原实验库aos_app且无既有hook。bool参数仅在执行后产生受控异常，用SAVEPOINT验证所有hook恢复，再正常调用；隔离临时DDL事务最终ROLLBACK且独立验证临时对象不存在/九表仍零。原collector不允许admin身份仍实测拒绝。
+
+校准只证明观察器能捕获builtin真实类型绑定和异常清理，不证明原四提权函数已经运行或自然首链完成。后续真正完整新Source/四证书/八节点仍需另建有效合同，旧未知请求不重放，不调TTL/预算。此次局部实现自测后复审、精确m1提交/Delivery/上下文；长期目标仍active。
+
+首次编译r1在networknone的apk安装阶段失败，未编译源码或接触数据库，原Dockerfile/log保留。已找到1817固定离线SDK sha256:0a6a90eb65ee9921e51943f54a89825dfe35a2a02b423b5d3c53f3f730184dec；其FROM精确等于本实验运行base bcdf...，仅继承既有已验签/锁版本工具链。改用该离线SDK并保持networknone，不下载依赖、不改原SDK。编译headers仍来自相同base/usr/local/include/postgresql/server，记录新构建独立终态。

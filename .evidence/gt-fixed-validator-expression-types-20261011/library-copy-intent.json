@@ -1,0 +1,8 @@
+{
+  "labId": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+  "newLibrary": "/tmp/aos-type-observer-389f66b9d1b2cab31af375f9827b38165f560a34307c193054dc5b1e08701f87.so",
+  "newSha256": "389f66b9d1b2cab31af375f9827b38165f560a34307c193054dc5b1e08701f87",
+  "oldLibrary": "/tmp/aos-type-observer-prior-3ac0ba96e5a40c14c0ecb835806a06833173b13d0f90a94c4634e2ec08f08320.so",
+  "oldSha256": "3ac0ba96e5a40c14c0ecb835806a06833173b13d0f90a94c4634e2ec08f08320",
+  "businessFunctionsInvoked": 0
+}

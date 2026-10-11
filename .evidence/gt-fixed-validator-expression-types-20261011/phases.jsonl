@@ -1,0 +1,4 @@
+{"phase": "old-capability-red", "sqlstate": "42883", "symbolAbsent": true}
+{"phase": "forced-error", "sqlstate": "XX000", "expected": true}
+{"phase": "original-identity-rejected", "sqlstate": "XX000", "expected": true}
+{"phase": "typed-calibration-green", "records": [[13, 378, 1007, 1007, 23], [13, 3273, 3802, 705, 23], [26, 0, 25, 2950]], "arrayAppendFunctionOid": 378, "repeatedExact": true}

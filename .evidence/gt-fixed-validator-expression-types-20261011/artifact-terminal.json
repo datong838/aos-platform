@@ -1,0 +1,10 @@
+{
+  "image": "sha256:5ce8886d7237968f2cfaa1d5bbd3322bdb476f63cc9e7c039258962380e2c93d",
+  "containerId": "70a333a0926126e85cd65373742923030539f0c9b654a6fc2cc6e304ad33b15a",
+  "artifactContainerStarted": false,
+  "library": "/tmp/aos-type-observer-389f66b9d1b2cab31af375f9827b38165f560a34307c193054dc5b1e08701f87.so",
+  "librarySha256": "389f66b9d1b2cab31af375f9827b38165f560a34307c193054dc5b1e08701f87",
+  "priorLibrary": "/tmp/aos-type-observer-prior-3ac0ba96e5a40c14c0ecb835806a06833173b13d0f90a94c4634e2ec08f08320.so",
+  "priorSha256": "3ac0ba96e5a40c14c0ecb835806a06833173b13d0f90a94c4634e2ec08f08320",
+  "labFilesHashesExact": true
+}

@@ -1,0 +1,46 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 374B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/aos-precommit-probe-20261009-base:exact
+#2 DONE 0.7s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [build 1/4] FROM docker.io/library/aos-precommit-probe-20261009-base:exact@sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883
+#4 resolve docker.io/library/aos-precommit-probe-20261009-base:exact@sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883 done
+#4 CACHED
+
+#5 [internal] load build context
+#5 transferring context: 14.94kB done
+#5 DONE 0.0s
+
+#6 [build 2/4] RUN apk add --no-cache build-base
+#6 5.335 WARNING: fetching https://dl-cdn.alpinelinux.org/alpine/v3.24/main/aarch64/APKINDEX.tar.gz: DNS: transient error (try again later)
+#6 10.36 WARNING: fetching https://dl-cdn.alpinelinux.org/alpine/v3.24/community/aarch64/APKINDEX.tar.gz: DNS: transient error (try again later)
+#6 10.36 ERROR: unable to select packages:
+#6 10.36   build-base (no such package):
+#6 10.36     required by: world[build-base]
+#6 ERROR: process "/bin/sh -c apk add --no-cache build-base" did not complete successfully: exit code: 1
+------
+ > [build 2/4] RUN apk add --no-cache build-base:
+5.335 WARNING: fetching https://dl-cdn.alpinelinux.org/alpine/v3.24/main/aarch64/APKINDEX.tar.gz: DNS: transient error (try again later)
+10.36 WARNING: fetching https://dl-cdn.alpinelinux.org/alpine/v3.24/community/aarch64/APKINDEX.tar.gz: DNS: transient error (try again later)
+10.36 ERROR: unable to select packages:
+10.36   build-base (no such package):
+10.36     required by: world[build-base]
+------
+Dockerfile:2
+--------------------
+   1 |     FROM aos-precommit-probe-20261009-base:exact AS build
+   2 | >>> RUN apk add --no-cache build-base
+   3 |     COPY probe.c /build/probe.c
+   4 |     RUN cc -Wall -Wextra -Werror -Wno-unused-parameter -fPIC -shared -I$(pg_config --includedir-server) -I$(pg_config --includedir) -o /build/probe.so /build/probe.c
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c apk add --no-cache build-base" did not complete successfully: exit code: 1
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/s7a4vvw7zdl8i2ongi8k2vo1n

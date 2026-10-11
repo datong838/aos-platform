@@ -1,0 +1,8 @@
+{
+  "outcome": "BUILD_FAILED_BEFORE_SOURCE_COMPILATION",
+  "reason": "network-none apk add had no usable compiler layer",
+  "dockerExit": 1,
+  "logSha256": "f8a9749ae38870fe26c86d7c5beee164e6834841e46d5052cd9361a1d4f643c7",
+  "sourceCompiled": false,
+  "databaseTouched": false
+}

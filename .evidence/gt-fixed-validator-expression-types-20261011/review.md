@@ -1,0 +1,9 @@
+# 实际表达式类型观察候选复审
+
+原1800观察器只输出函数OID/Plan tag，不能保留实际参数类型；旧模块创建新校准符号实际失败，构成新增能力RED。新模块在既有Query/PlanState walker上新增纯数字tag/function/result/argument type记录，Aggref参数解TargetEntry；精确字符串hash去重，有界4096，错误拒绝。原collector身份、上下文、Sourcehash、只读Executor与Utility门均保留；新增校准入口无任意SQL或业务输入，只限原实验库aos_app，三项固定builtin表达式。
+
+r1关闭网络apk工具准备失败未进入源码编译，原Dockerfile/log保留。复用1817已存离线SDK，同一运行base/headers，networknone严格-Wall/-Wextra/-Werror编译r2成功。制品摘要在提取/独立路径复制及实验容器回读一致；未覆盖旧library、原镜像或服务。原SDK来源边界继承而非新增正式Root证明。
+
+实库受控异常、同backend后续正常校准与再次重复全部通过；array_append实际Expr输入1007/23、返回1007，与int4[]/int4相符。管理员调用原collector仍得到原身份拒绝。校准只证明观察器机械能力与该builtin表达式，不证明原四提权函数或八节点完整Source链已经通过。类型记录发生在已分析Query或初始化后PlanState，不是执行前全部native/callback防护；ScalarArray记录的数组Expr不代表逐元素fmgr参数，未覆盖分支仍保留。4096上限真实超限测试尚未执行，不宣称压力稳定性已通过。
+
+临时表/函数在最终ROLLBACK后消失，独立连接核九表零。该波执行了明确隔离的临时DDL，不能写成全程数据库写入零；业务表写入/原Source重放/原业务函数调用为零。方案与代码一致，自测范围如上，不能授执行权限。后续登记完整新Source/有效四证书/八节点联验候选，先读原合同和当前终态，禁止重发旧请求、延TTL或改审批。正式栖月汇发布/OIDC信息仍单独待核，不被该局部实现代替。

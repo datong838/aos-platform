@@ -1,0 +1,45 @@
+{
+  "outcome": "ISOLATED_EXPRESSION_TYPE_CALIBRATION_GREEN",
+  "database": "aos_test_5b8ce7041195_ti4_test",
+  "cluster": "7694680278363095064",
+  "oldSymbolAbsentRed": true,
+  "forcedErrorAndCleanupVerified": true,
+  "originalCollectorIdentityRejected": true,
+  "typedRecords": [
+    [
+      13,
+      378,
+      1007,
+      1007,
+      23
+    ],
+    [
+      13,
+      3273,
+      3802,
+      705,
+      23
+    ],
+    [
+      26,
+      0,
+      25,
+      2950
+    ]
+  ],
+  "arrayAppendFunctionOid": 378,
+  "actualArrayAppendExpressionTypeBindings": {
+    "returnType": 1007,
+    "inputTypes": [
+      1007,
+      23
+    ]
+  },
+  "repeatedCalibrationExact": true,
+  "temporaryObjectsRolledBackAndAbsent": true,
+  "independentNineTablesZero": true,
+  "originalBusinessFunctionsInvoked": 0,
+  "fullSourceRunAccepted": false,
+  "nativeRootAccepted": false,
+  "executionAuthorized": false
+}

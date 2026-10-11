@@ -1,0 +1,37 @@
+{
+  "outcome": "ISOLATED_TYPED_OBSERVER_IMPLEMENTATION_AND_CALIBRATION_VERIFIED",
+  "strictCompilerExit": 0,
+  "offlineSdkImage": "sha256:0a6a90eb65ee9921e51943f54a89825dfe35a2a02b423b5d3c53f3f730184dec",
+  "sameRuntimeBaseImage": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+  "networkDuringBuild": "none",
+  "initialCompilerDependencyFailureRetained": true,
+  "oldCapabilityRed": true,
+  "actualPolymorphicExpressionObserved": {
+    "returnType": 1007,
+    "inputTypes": [
+      1007,
+      23
+    ]
+  },
+  "forcedErrorCleanupAndRepeatExact": true,
+  "originalCollectorAdminRejected": true,
+  "temporaryDdlRolledBack": true,
+  "independentNineTablesZero": true,
+  "businessTableWrites": 0,
+  "originalBusinessFunctionsInvoked": 0,
+  "originalSourceRequestsReplayed": 0,
+  "fullSourceRunAccepted": false,
+  "nativeRootAccepted": false,
+  "executionAuthorized": false,
+  "librarySha256": "389f66b9d1b2cab31af375f9827b38165f560a34307c193054dc5b1e08701f87",
+  "libraryRetainedLocallyNotCommitted": true,
+  "sourceFiles": {
+    "plan.md": "f466ec5f6257b83bbecdbee7bcd52133fa7f02de2425f49aecf139509503f71b",
+    "probe.c": "81a19a7d8f6f9a6252622a10dcb188d16fbccf1a941fb23ab7f6e54114e439c1",
+    "Dockerfile": "45f1c3be403d6c16558aca7228e608dd2e5a217c8b89a9fbf4153720cdbedefe",
+    "check.py": "c66bb2a33ef328244b5f070dc9c1dfa821aae25d8674a3df8fd9e1186887939b",
+    "result.json": "5774dc40b0f88f881f1b144c83f4948a78fec1e49c56aaf9632e6eee32d1f31f",
+    "build-r2-terminal.json": "c4f29de64f46f4fba20fe5e724bedb1305cd9c1e68211049e416eb89f3a7a313",
+    "artifact-terminal.json": "917566016027295060285fa909adc5258a060fde7331c9d74b052065aab3c498"
+  }
+}

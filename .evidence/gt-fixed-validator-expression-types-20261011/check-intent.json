@@ -1,0 +1,8 @@
+{
+  "task": "gt-fixed-validator-expression-types-20261011",
+  "database": "aos_test_5b8ce7041195_ti4_test",
+  "cluster": "7694680278363095064",
+  "librarySha256": "389f66b9d1b2cab31af375f9827b38165f560a34307c193054dc5b1e08701f87",
+  "businessFunctionsWillBeInvoked": false,
+  "temporaryDdlWillRollback": true
+}

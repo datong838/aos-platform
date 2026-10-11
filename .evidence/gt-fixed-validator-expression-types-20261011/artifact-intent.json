@@ -1,0 +1,6 @@
+{
+  "task": "gt-fixed-validator-expression-types-20261011",
+  "name": "aos-type-observer-artifact-20261011-r2",
+  "image": "sha256:5ce8886d7237968f2cfaa1d5bbd3322bdb476f63cc9e7c039258962380e2c93d",
+  "processWillStart": false
+}
