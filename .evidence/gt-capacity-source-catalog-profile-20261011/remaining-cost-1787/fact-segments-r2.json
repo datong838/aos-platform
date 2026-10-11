@@ -1,0 +1,138 @@
+{
+  "observed_at": "2026-10-11T02:08:31.941078+00:00",
+  "body_sha256": "d4a526d4a97b9db0b36c25b7af9701783bd6048b5d1d4ba64d0c00465385c214",
+  "markers": [
+    {
+      "label": "segment_00",
+      "next_statement": " IF NOT FOUND OR r.rolcanlogin OR r.rolinherit OR r.rolsuper OR r.rolcreatedb OR r.rolcreaterole"
+    },
+    {
+      "label": "segment_01",
+      "next_statement": " IF EXISTS(SELECT 1 FROM pg_default_acl d WHERE d.defaclrole=owner_oid"
+    },
+    {
+      "label": "segment_02",
+      "next_statement": " IF array_position(fact_oids,NULL) IS NOT NULL OR (SELECT count(DISTINCT x) FROM unnest(fact_oids) x)<>15"
+    },
+    {
+      "label": "segment_03",
+      "next_statement": " IF EXISTS(SELECT 1 FROM pg_class c,LATERAL aclexplode(c.relacl) a"
+    },
+    {
+      "label": "segment_04",
+      "next_statement": " IF EXISTS(SELECT 1 FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid,LATERAL aclexplode(x.attacl) a"
+    },
+    {
+      "label": "segment_05",
+      "next_statement": " IF EXISTS(SELECT 1 FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relkind IN('r','v','m','p','f')"
+    },
+    {
+      "label": "segment_06",
+      "next_statement": " IF EXISTS(SELECT 1 FROM pg_class c JOIN pg_attribute a ON a.attrelid=c.oid"
+    },
+    {
+      "label": "segment_07",
+      "next_statement": " FOREACH tab IN ARRAY tables LOOP"
+    },
+    {
+      "label": "segment_08",
+      "next_statement": " IF NOT FOUND OR g.proowner<>owner_oid OR g.prosecdef OR g.proconfig IS DISTINCT FROM ARRAY['search_path=pg_catalog']"
+    },
+    {
+      "label": "segment_09",
+      "next_statement": " IF (SELECT count(*) FROM pg_trigger WHERE tgname='capacity_publication_owner_read_lock_only_a0v155')<>5"
+    },
+    {
+      "label": "segment_10",
+      "next_statement": "END "
+    }
+  ],
+  "rounds": [
+    {
+      "index": 0,
+      "notices": [
+        "segment_00 1.551000",
+        "segment_01 1.894000",
+        "segment_02 2.959000",
+        "segment_03 3.177000",
+        "segment_04 7.091000",
+        "segment_05 13.689000",
+        "segment_06 48.941000",
+        "segment_07 54.549000",
+        "segment_08 62.225000",
+        "segment_09 62.697000",
+        "segment_10 63.951000"
+      ]
+    },
+    {
+      "index": 1,
+      "notices": [
+        "segment_00 0.131000",
+        "segment_01 0.220000",
+        "segment_02 0.411000",
+        "segment_03 0.489000",
+        "segment_04 2.275000",
+        "segment_05 5.683000",
+        "segment_06 6.762000",
+        "segment_07 11.134000",
+        "segment_08 13.564000",
+        "segment_09 13.658000",
+        "segment_10 13.986000"
+      ]
+    },
+    {
+      "index": 2,
+      "notices": [
+        "segment_00 0.111000",
+        "segment_01 0.186000",
+        "segment_02 0.350000",
+        "segment_03 0.409000",
+        "segment_04 2.144000",
+        "segment_05 5.313000",
+        "segment_06 6.390000",
+        "segment_07 10.639000",
+        "segment_08 13.243000",
+        "segment_09 13.352000",
+        "segment_10 13.699000"
+      ]
+    },
+    {
+      "index": 3,
+      "notices": [
+        "segment_00 0.134000",
+        "segment_01 0.216000",
+        "segment_02 0.390000",
+        "segment_03 0.450000",
+        "segment_04 2.096000",
+        "segment_05 5.055000",
+        "segment_06 6.074000",
+        "segment_07 10.120000",
+        "segment_08 12.605000",
+        "segment_09 12.705000",
+        "segment_10 13.053000"
+      ]
+    },
+    {
+      "index": 4,
+      "notices": [
+        "segment_00 0.109000",
+        "segment_01 0.169000",
+        "segment_02 0.316000",
+        "segment_03 0.376000",
+        "segment_04 2.325000",
+        "segment_05 5.584000",
+        "segment_06 6.656000",
+        "segment_07 10.616000",
+        "segment_08 13.148000",
+        "segment_09 13.265000",
+        "segment_10 13.592000"
+      ]
+    }
+  ],
+  "limitations": [
+    "DO includes fresh parsing; not a cached production function.",
+    "Admin invoker; role privilege checks still use original explicit Owner.",
+    "No Source, expiration refresh, function installation or business write."
+  ],
+  "status": "RETURNED"
+}

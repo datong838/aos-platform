@@ -24,6 +24,14 @@ GLOBAL_COLUMN_FILTERS = tuple(
      'LATERAL aclexplode(x.attacl) a' + gap + 'WHERE x.attacl IS NOT NULL AND a.grantee=owner_oid')
     for gap in ('\n   ', ' ')
 )
+# Audit the same complete Owner ACL set once. DISTINCT still counts columns,
+# while bool_or catches every forbidden privilege, grant option and location.
+GLOBAL_AGGREGATE_BEFORE = """EXISTS(SELECT 1 FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid,LATERAL aclexplode(x.attacl) a
+   WHERE x.attacl IS NOT NULL AND a.grantee=owner_oid AND (a.privilege_type<>'UPDATE' OR a.is_grantable OR NOT EXISTS(
+    SELECT 1 FROM jsonb_each_text(locks) l WHERE c.oid=to_regclass('public.'||l.key) AND x.attname=l.value)))
+  OR (SELECT count(DISTINCT (c.oid,x.attname)) FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid,
+    LATERAL aclexplode(x.attacl) a WHERE x.attacl IS NOT NULL AND a.grantee=owner_oid)<>5"""
+GLOBAL_AGGREGATE_AFTER = """(SELECT coalesce(bool_or(a.privilege_type<>'UPDATE' OR a.is_grantable OR NOT EXISTS(SELECT 1 FROM jsonb_each_text(locks) l WHERE c.oid=to_regclass('public.'||l.key) AND x.attname=l.value)),false) OR count(DISTINCT (c.oid,x.attname))<>5 FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid,LATERAL aclexplode(x.attacl) a WHERE x.attacl IS NOT NULL AND a.grantee=owner_oid)"""
 ERROR = 'CAPACITY_CATALOG_PROFILE_INSTALLATION_DRIFTED'
 
 
@@ -43,7 +51,7 @@ def catalog_fact_body():
     body = epoch._replace(original, COLUMN_BEFORE, COLUMN_AFTER, 2)
     for before, after in GLOBAL_COLUMN_FILTERS:
         body = epoch._replace(body, before, after)
-    return body
+    return epoch._replace(body, GLOBAL_AGGREGATE_BEFORE, GLOBAL_AGGREGATE_AFTER)
 
 
 def catalog_private_statements():

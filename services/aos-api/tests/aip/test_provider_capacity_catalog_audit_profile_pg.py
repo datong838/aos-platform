@@ -14,9 +14,11 @@ def test_complete_catalog_profile_binds_every_digest_and_keeps_legacy():
     body = profile.catalog_fact_body()
     assert body != original
     assert body.count(profile.COLUMN_AFTER) == 2
-    restored = body.replace(profile.COLUMN_AFTER, profile.COLUMN_BEFORE)
+    assert body.count(profile.GLOBAL_AGGREGATE_AFTER) == 1
+    restored = body.replace(profile.GLOBAL_AGGREGATE_AFTER, profile.GLOBAL_AGGREGATE_BEFORE)
+    restored = restored.replace(profile.COLUMN_AFTER, profile.COLUMN_BEFORE)
     for before, after in profile.GLOBAL_COLUMN_FILTERS:
-        assert body.count(after) == 1
+        assert restored.count(after) == 1
         restored = restored.replace(after, before)
     assert restored == original
     private = profile.catalog_private_statements()
@@ -83,6 +85,11 @@ def test_native_column_acl_predicate_matches_original_privileges():
                  + profile.COLUMN_AFTER + ' AS optimized FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid '
                  'CROSS JOIN (SELECT %s::oid AS owner_oid) own '
                  'WHERE a.attrelid=to_regclass(%s) AND a.attnum>0 AND NOT a.attisdropped ORDER BY a.attname')
+        locks_literal = profile.catalog_fact_body().split('locks jsonb := ', 1)[1].split(';', 1)[0]
+        aggregate_queries = [
+            'SELECT ' + clause.replace('owner_oid', str(owner['oid'])).replace(
+                'jsonb_each_text(locks)', 'jsonb_each_text(' + locks_literal + '::jsonb)')
+            for clause in (profile.GLOBAL_AGGREGATE_BEFORE, profile.GLOBAL_AGGREGATE_AFTER)]
         for grantee, privilege, grant_option, expected in cases:
             with conn.transaction(force_rollback=True):
                 if grantee:
@@ -93,6 +100,7 @@ def test_native_column_acl_predicate_matches_original_privileges():
                 rows = conn.execute(query, (owner['oid'], 'pg_temp.' + table)).fetchall()
                 assert all(row['original'] == row['optimized'] for row in rows)
                 assert {row['attname'] for row in rows if row['optimized']} == ({'sample'} if expected else set())
+                assert [next(iter(conn.execute(q).fetchone().values())) for q in aggregate_queries] == [grantee == 'aos_capacity_publication_owner'] * 2
                 # pg_temp is outside public: the global grant scan must still
                 # see direct Owner column privileges and grant options there.
                 global_query = ('SELECT x.attname,a.privilege_type,a.is_grantable '
@@ -109,6 +117,23 @@ def test_native_column_acl_predicate_matches_original_privileges():
                         sql.SQL(privilege), relation, recipient))
                     assert not any(row['original'] or row['optimized'] for row in conn.execute(query, (owner['oid'], 'pg_temp.' + table)))
                     assert conn.execute(filtered, (owner['oid'], 'pg_temp.' + table)).fetchall() == []
+        # Native empty/missing/grant-option/multiple-privilege cases preserve
+        # both exact column cardinality and rejection of any forbidden grant.
+        import json
+        locks = json.loads(locks_literal[1:-1])
+        mutations = [
+            ['REVOKE UPDATE(subject) ON public.meta_membership FROM aos_capacity_publication_owner'],
+            ['REVOKE UPDATE(' + column + ') ON public.' + name + ' FROM aos_capacity_publication_owner'
+             for name, column in locks.items()],
+            ['GRANT UPDATE(subject) ON public.meta_membership TO aos_capacity_publication_owner WITH GRANT OPTION'],
+            ['GRANT SELECT(subject) ON public.meta_membership TO aos_capacity_publication_owner'],
+        ]
+        for statements in mutations:
+            with conn.transaction(force_rollback=True):
+                for statement in statements:
+                    conn.execute(statement)
+                assert [next(iter(conn.execute(q).fetchone().values())) for q in aggregate_queries] == [True, True]
+        assert [next(iter(conn.execute(q).fetchone().values())) for q in aggregate_queries] == [False, False]
         conn.rollback()
 
 

@@ -1,0 +1,68 @@
+{
+  "observed_at": "2026-10-11T02:08:18.231873+00:00",
+  "body_sha256": "d4a526d4a97b9db0b36c25b7af9701783bd6048b5d1d4ba64d0c00465385c214",
+  "markers": [
+    {
+      "label": "segment_00",
+      "next_statement": " IF NOT FOUND OR r.rolcanlogin OR r.rolinherit OR r.rolsuper OR r.rolcreatedb OR r.rolcreaterole"
+    },
+    {
+      "label": "segment_01",
+      "next_statement": " IF EXISTS(SELECT 1 FROM pg_default_acl d WHERE d.defaclrole=owner_oid"
+    },
+    {
+      "label": "segment_02",
+      "next_statement": " IF array_position(fact_oids,NULL) IS NOT NULL OR (SELECT count(DISTINCT x) FROM unnest(fact_oids) x)<>15"
+    },
+    {
+      "label": "segment_03",
+      "next_statement": " IF EXISTS(SELECT 1 FROM pg_class c,LATERAL aclexplode(c.relacl) a"
+    },
+    {
+      "label": "segment_04",
+      "next_statement": " IF EXISTS(SELECT 1 FROM pg_class c JOIN pg_attribute x ON x.attrelid=c.oid,LATERAL aclexplode(x.attacl) a"
+    },
+    {
+      "label": "segment_05",
+      "next_statement": " IF EXISTS(SELECT 1 FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relkind IN('r','v','m','p','f')"
+    },
+    {
+      "label": "segment_06",
+      "next_statement": " IF EXISTS(SELECT 1 FROM pg_class c JOIN pg_attribute a ON a.attrelid=c.oid"
+    },
+    {
+      "label": "segment_07",
+      "next_statement": " FOREACH tab IN ARRAY tables LOOP"
+    },
+    {
+      "label": "segment_08",
+      "next_statement": " IF NOT FOUND OR g.proowner<>owner_oid OR g.prosecdef OR g.proconfig IS DISTINCT FROM ARRAY['search_path=pg_catalog']"
+    },
+    {
+      "label": "segment_09",
+      "next_statement": " IF (SELECT count(*) FROM pg_trigger WHERE tgname='capacity_publication_owner_read_lock_only_a0v155')<>5"
+    },
+    {
+      "label": "segment_10",
+      "next_statement": "END "
+    }
+  ],
+  "rounds": [],
+  "limitations": [
+    "DO includes fresh parsing; not a cached production function.",
+    "Admin invoker; role privilege checks still use original explicit Owner.",
+    "No Source, expiration refresh, function installation or business write."
+  ],
+  "status": "REJECTED",
+  "error": "CAPACITY_PUBLICATION_ORIGINAL_FACT_BOUNDARY_DRIFTED\nCONTEXT:  PL/pgSQL function inline_code_block line 81 at RAISE",
+  "notices": [
+    "segment_00 3.025000",
+    "segment_01 3.505000",
+    "segment_02 5.158000",
+    "segment_03 5.365000",
+    "segment_04 10.269000",
+    "segment_05 20.628000",
+    "segment_06 58.781000",
+    "segment_07 64.297000"
+  ]
+}

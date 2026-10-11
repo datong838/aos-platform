@@ -1,0 +1,87 @@
+{
+  "observed_at": "2026-10-11T02:07:15.885829+00:00",
+  "query": "SELECT EXISTS(SELECT 1 FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relkind IN('r','v','m','p','f')\n   AND (has_table_privilege(owner_oid,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER,REFERENCES')\n    OR (NOT(c.oid=ANY(fact_oids)) AND (has_table_privilege(owner_oid,c.oid,'SELECT')\n     OR has_any_column_privilege(owner_oid,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')))))",
+  "catalog_body_sha256": "d4a526d4a97b9db0b36c25b7af9701783bd6048b5d1d4ba64d0c00465385c214",
+  "rounds": 30,
+  "answers": [
+    false
+  ],
+  "median_ms": 1.4918334998128557,
+  "min_ms": 1.1184999998476997,
+  "max_ms": 2.354624999952648,
+  "explain": [
+    {
+      "Plan": {
+        "Node Type": "Result",
+        "Parallel Aware": false,
+        "Async Capable": false,
+        "Startup Cost": 1.44,
+        "Total Cost": 1.45,
+        "Plan Rows": 1,
+        "Plan Width": 1,
+        "Actual Startup Time": 0.831,
+        "Actual Total Time": 0.831,
+        "Actual Rows": 1,
+        "Actual Loops": 1,
+        "Shared Hit Blocks": 225,
+        "Shared Read Blocks": 0,
+        "Shared Dirtied Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Local Hit Blocks": 0,
+        "Local Read Blocks": 0,
+        "Local Dirtied Blocks": 0,
+        "Local Written Blocks": 0,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0,
+        "Plans": [
+          {
+            "Node Type": "Seq Scan",
+            "Parent Relationship": "InitPlan",
+            "Subplan Name": "InitPlan 1 (returns $0)",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Relation Name": "pg_class",
+            "Alias": "c",
+            "Startup Cost": 0.04,
+            "Total Cost": 416.76,
+            "Plan Rows": 297,
+            "Plan Width": 0,
+            "Actual Startup Time": 0.831,
+            "Actual Total Time": 0.831,
+            "Actual Rows": 0,
+            "Actual Loops": 1,
+            "Filter": "((relnamespace = '2200'::oid) AND (relkind = ANY ('{r,v,m,p,f}'::\"char\"[])) AND (has_table_privilege('30909'::oid, oid, 'INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER,REFERENCES'::text) OR ((oid <> ALL ('{5403387,5416528,5416561,5407225,5407236,5407186,5416213,5408654,5407207,5412735,5402181,5403231,5405801,5405834,5405854}'::oid[])) AND (has_table_privilege('30909'::oid, oid, 'SELECT'::text) OR has_any_column_privilege('30909'::oid, oid, 'SELECT,INSERT,UPDATE,REFERENCES'::text)))))",
+            "Rows Removed by Filter": 3567,
+            "Shared Hit Blocks": 225,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          }
+        ]
+      },
+      "Planning": {
+        "Shared Hit Blocks": 0,
+        "Shared Read Blocks": 0,
+        "Shared Dirtied Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Local Hit Blocks": 0,
+        "Local Read Blocks": 0,
+        "Local Dirtied Blocks": 0,
+        "Local Written Blocks": 0,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0
+      },
+      "Planning Time": 0.075,
+      "Triggers": [],
+      "Execution Time": 0.837
+    }
+  ],
+  "limits": "Exact permission IF expression only; not full FACT or Source. No mutation/replay.",
+  "prior_attempt": "Regex extraction failed before connecting; corrected to unique exact delimiter."
+}

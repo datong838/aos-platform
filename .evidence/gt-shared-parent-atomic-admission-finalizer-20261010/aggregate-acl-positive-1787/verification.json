@@ -1,0 +1,31 @@
+{
+  "status": "COMPLETE_END_FACTS_POSITIVE_FULL_FIXTURE_LATER_RED",
+  "database": "aos_test_89b0b5865def_ti4_test",
+  "cluster": "7694680278363095064",
+  "counts": {
+    "aos_shared_parent_admission_private.end_authority": 0,
+    "aos_shared_parent_admission_private.pending_origin": 0,
+    "aos_shared_parent_physical_private.complete_parent_risk": 0,
+    "aos_shared_parent_physical_private.complete_receipt_v2": 0,
+    "aos_shared_parent_physical_private.initial_call_authority": 0,
+    "aos_shared_parent_physical_private.initial_target_obligation": 0,
+    "aos_shared_parent_physical_private.initial_window_obligation": 0,
+    "aos_shared_parent_physical_private.judge_dependency": 0,
+    "aos_shared_parent_physical_private.target_intent": 0
+  },
+  "other_sessions": 0,
+  "track_functions": "none",
+  "product_hashes_unchanged": true,
+  "actual_commit_rejected_missing_native_end": true,
+  "eight_nodes_receipt_physical_collector_positive": true,
+  "late_writer_rejected": true,
+  "whole_pytest_exit": 1,
+  "remaining_failures": [
+    "CAPACITY_OCCUPATION_SOURCE_REQUIRED in subsequent original path",
+    "CAPACITY_NATIVE_SIGNED_SUPPLIER_INPUTS_REQUIRED in teardown"
+  ],
+  "readback_correction": "First readback assertion queried only one of the two shared namespaces; corrected exact two namespaces, no mutation.",
+  "formal_root_provenance": false,
+  "durable_deadline_established": false,
+  "full_task_delivered": false
+}

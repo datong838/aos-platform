@@ -1,0 +1,54 @@
+{
+  "cases": [
+    {
+      "case": "baseline",
+      "old": false,
+      "new": false,
+      "expected": false
+    },
+    {
+      "case": "missing_one",
+      "old": true,
+      "new": true,
+      "expected": true
+    },
+    {
+      "case": "empty_all",
+      "old": true,
+      "new": true,
+      "expected": true
+    },
+    {
+      "case": "grant_option",
+      "old": true,
+      "new": true,
+      "expected": true
+    },
+    {
+      "case": "additional_privilege_same_column",
+      "old": true,
+      "new": true,
+      "expected": true
+    },
+    {
+      "case": "other_schema",
+      "old": true,
+      "new": true,
+      "expected": true
+    },
+    {
+      "case": "public_ignored_by_owner_scan",
+      "old": false,
+      "new": false,
+      "expected": false
+    },
+    {
+      "case": "grant_then_revoke",
+      "old": false,
+      "new": false,
+      "expected": false
+    }
+  ],
+  "acl_snapshot_restored": true,
+  "scope": "Native real ACL matrix on retained isolated database, all mutations rolled back; PUBLIC is intentionally outside this Owner-only clause, protected by separate original checks."
+}

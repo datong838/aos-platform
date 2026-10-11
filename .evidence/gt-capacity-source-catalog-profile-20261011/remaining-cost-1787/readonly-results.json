@@ -1,0 +1,48 @@
+{
+  "head": "1228474e70fd0120a7777cb99a59ee7ae16e1da3",
+  "task": "gt-capacity-source-catalog-profile-20261011",
+  "observed_at": "2026-10-11T02:06:22.962719+00:00",
+  "database": "aos_test_83510ad98496_ti4_test",
+  "readonly": "on",
+  "results": [
+    {
+      "name": "table_write",
+      "sql": "SELECT count(*) FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relkind IN('r','v','m','p','f') AND has_table_privilege(%s,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER,REFERENCES')",
+      "rounds": 30,
+      "counts": [
+        0
+      ],
+      "median_ms": 1.877083000181301,
+      "min_ms": 1.5086250000422297,
+      "max_ms": 2.7025000003959576
+    },
+    {
+      "name": "table_select",
+      "sql": "SELECT count(*) FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relkind IN('r','v','m','p','f') AND has_table_privilege(%s,c.oid,'SELECT')",
+      "rounds": 30,
+      "counts": [
+        15
+      ],
+      "median_ms": 0.9786460000213992,
+      "min_ms": 0.8363750002899906,
+      "max_ms": 1.5427079997607507
+    },
+    {
+      "name": "any_column",
+      "sql": "SELECT count(*) FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relkind IN('r','v','m','p','f') AND has_any_column_privilege(%s,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')",
+      "rounds": 30,
+      "counts": [
+        15
+      ],
+      "median_ms": 0.9951040001396905,
+      "min_ms": 0.8159580002029543,
+      "max_ms": 2.0134999999754655
+    }
+  ],
+  "limits": [
+    "Client wall timing; no full Source replay.",
+    "Separate component queries omit fact_oids exclusion and are not exact complete predicate costs.",
+    "No claim of full chain improvement or permission equivalence."
+  ],
+  "next": "Measure exact FACT statement groups before selecting another transformation; canonical signed JSON changes need separate complete identity plan and scope."
+}
