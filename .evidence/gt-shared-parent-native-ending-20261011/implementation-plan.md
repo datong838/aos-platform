@@ -246,3 +246,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## PG匿名RX集成1821
 新增anonymous-pg-1821/probe.c/Dockerfile/run.py，仅测试helper，固定1817 SDK离线编译。精确隔离lab容器/cluster/metadata测试库，事务内随机schema、PUBLIC拒绝helper和1820原SQL；不改产品代码。先显式加载helper但不分配，建立loader/kernel基线；创建一页RW后RX（不执行），新观察输出与独立/proc/backend/maps比对且含地址，旧loader列表保持；释放后地址消失。原reader保持，新SQL回滚并只读确认消失；异常退出后台自动释放，不重发未知SQL。helper只在superuser测试身份允许，不给正式Owner新权限。
+
+## 映射生命周期隔离约束可行性1822
+候选固定验证器闭合依赖完整Main语义，生命周期候选依赖独立包Root与进程约束。先对独立scratch辅助进程验证seccomp拒绝mmap/mprotect的PROT_EXEC参数，同时普通RW分配/写入/释放可用。固定AArch64架构、no_new_privs、原进程内不可撤销过滤；不安装到PG，不修改全局Docker安全策略，不改正式服务。文件mapping-enforcement-1822/probe.c/Dockerfile/result。此仅两syscall可行性，不覆盖已有可写执行页、proc mem/ptrace、其他映射路径、多线程、完整Main兼容性与动态加载；不得作为生产授权或完整防护宣称。

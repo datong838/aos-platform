@@ -1,0 +1,13 @@
+{
+  "container": "e0eb5d9a118545c53a48adb99f9fedea330d0fbb097c8eee1a4ba03356368fc9",
+  "image": "sha256:72700ac9a67251d130cb1a8a8dc26eff5b4382508d92820eb06c46191593bce6",
+  "client_exit": 8,
+  "exit_code": 8,
+  "status": "exited",
+  "stdout": "{\"mprotect_exec_denied\":true,\"mmap_exec_denied\":false,\"rw_memory_usable\":true,\"full_lifecycle_protection\":false}\n",
+  "stderr": "",
+  "no_mounts": true,
+  "readonly_rootfs": true,
+  "production_installed": false,
+  "execution_authorized": false
+}
