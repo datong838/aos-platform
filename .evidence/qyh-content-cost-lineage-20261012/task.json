@@ -1,0 +1,19 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-content-cost-lineage-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001901",
+  "scope": [
+    "aos-platform/.evidence/qyh-content-cost-lineage-20261012"
+  ],
+  "excluded_scope": [
+    "aos-platform/services",
+    "maintenance/current-database"
+  ],
+  "expected_outputs": [
+    "Native scoped read-only current Content/AgentRun/Task/price/budget/reservation lineage aggregate; identify actual canonical producer gap, preserve all current data, no authority or execution"
+  ],
+  "lease_expires_at": "2026-10-12T06:13:00.567516+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T02:13:00+08:00"
+}

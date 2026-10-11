@@ -1,0 +1,135 @@
+{
+  "task": "qyh-content-cost-lineage-20261012",
+  "authority": "AOS-001901",
+  "reads": [
+    {
+      "scope": [
+        "org-org",
+        "dev-project"
+      ],
+      "identity": {
+        "role": "aos_runtime",
+        "db": "aos_meta_head",
+        "cluster": "7695302940039200809",
+        "readonly": "on",
+        "isolation": "repeatable read",
+        "snapshot_started_at": "2026-10-11 18:14:28.506915+00:00"
+      },
+      "observed": {
+        "taskRunStates": [
+          {
+            "status": "cancelled",
+            "count": 1
+          },
+          {
+            "status": "succeeded",
+            "count": 4
+          }
+        ],
+        "agentRunStates": [],
+        "attemptStates": [],
+        "reservationStates": [],
+        "proposalStates": [],
+        "decisionStates": [],
+        "costActivationReceipts": [
+          {
+            "count": 0
+          }
+        ],
+        "costIssuerOperations": [],
+        "priceHeads": [
+          {
+            "count": 1
+          }
+        ],
+        "contentDraftArtifacts": [
+          {
+            "count": 0
+          }
+        ],
+        "contentDraftReceipts": [
+          {
+            "count": 0
+          }
+        ],
+        "agentTaskBinding": [
+          {
+            "agents": 0,
+            "missing_task_run": 0,
+            "id_binding_drift": 0,
+            "both_running": 0
+          }
+        ],
+        "attemptBudgetReservation": [
+          {
+            "attempts": 0,
+            "locator_matches_only": 0
+          }
+        ]
+      }
+    },
+    {
+      "scope": [
+        "dev-org",
+        "dev-project"
+      ],
+      "identity": {
+        "role": "aos_runtime",
+        "db": "aos_meta_head",
+        "cluster": "7695302940039200809",
+        "readonly": "on",
+        "isolation": "repeatable read",
+        "snapshot_started_at": "2026-10-11 18:14:28.528750+00:00"
+      },
+      "observed": {
+        "taskRunStates": [],
+        "agentRunStates": [],
+        "attemptStates": [],
+        "reservationStates": [],
+        "proposalStates": [],
+        "decisionStates": [],
+        "costActivationReceipts": [
+          {
+            "count": 0
+          }
+        ],
+        "costIssuerOperations": [],
+        "priceHeads": [
+          {
+            "count": 0
+          }
+        ],
+        "contentDraftArtifacts": [
+          {
+            "count": 0
+          }
+        ],
+        "contentDraftReceipts": [
+          {
+            "count": 0
+          }
+        ],
+        "agentTaskBinding": [
+          {
+            "agents": 0,
+            "missing_task_run": 0,
+            "id_binding_drift": 0,
+            "both_running": 0
+          }
+        ],
+        "attemptBudgetReservation": [
+          {
+            "attempts": 0,
+            "locator_matches_only": 0
+          }
+        ]
+      }
+    }
+  ],
+  "databaseWrites": 0,
+  "current647DataAndMetadataUnchanged": true,
+  "sourceHash": "d6eba99234d65fd3d4b636ef218dfd965038bd18487b744ce58ba564aec66b51",
+  "locatorMatchesAreNotExactHashOrApprovalProof": true,
+  "formalRestorationAccepted": false,
+  "executionAuthorized": false
+}

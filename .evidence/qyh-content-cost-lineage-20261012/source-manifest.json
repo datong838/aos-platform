@@ -1,0 +1,25 @@
+{
+  "head": "aa5d9c0b77bc4680747ce18d8418997ce18736ab",
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_content_contracts.py": "67fd4e1e87d63ee75dbd6fbe0ea103d6e5d8eb41ac6b4ec44f0f10dd0abc609e",
+    "services/aos-api/aos_api/aip_content_draft_readiness.py": "3b2952d2253cb8dccc7dfe86e1da13c7077d9af7454fbd5660d20336a497a8b2",
+    "services/aos-api/aos_api/aip_agent_run_executor.py": "f5dcb41673ec1802d9cddedc3aa3acd5ac88f53071845b9e25f4687994e6a48d",
+    "services/aos-api/aos_api/aip_llm_adapter.py": "94ad9245b3a84143da2a74dacd6fb35055c8b565a6be3a59fb6c20c51af28d1c",
+    "services/aos-api/aos_api/aip_exact_provider_invoker.py": "8b83b6c85066f33841c2d604831627bc59a76cb7c77182efda897850e30f2c9d",
+    "services/aos-api/aos_api/aip_budget_reservation_store.py": "07df0cf6575350fd96374a698325a581800319ed16c65bcc9fcafea99b3bf9d9",
+    "services/aos-api/aos_api/aip_budget_cost_runtime.py": "30ff850dc1bbc6d03298f68bd12c6184ecad8d0e3896da9a20a1ffbcc9b58be0"
+  },
+  "contentReadinessRequestFields": [
+    "agent_run_ref",
+    "brief_ref",
+    "channel",
+    "pipeline",
+    "task_run_ref",
+    "variant_key"
+  ],
+  "limitations": [
+    "Source hashes describe current worktree, not frozen running API",
+    "Reservation store has existing user edits; inspected only, not altered",
+    "Locator joins do not verify hash or approval; zero matches does not prove global permission state"
+  ]
+}

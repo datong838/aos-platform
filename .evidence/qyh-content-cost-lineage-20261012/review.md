@@ -1,0 +1,11 @@
+# 当前内容费用接线复核
+
+此Task交付只读调查，不声明内容首链、八页面或正式登录完成。当前权威恢复库aos_meta_head@a0v_159，cluster7695302940039200809；原有限LOGIN转换aos_runtime，两个scope原生RR/READ ONLY。每项非时间相关聚合在同一快照二次读回一致。全647表数据指纹与metadata前后完全相符，数据库写0。
+
+栖月汇TaskRun共5（cancelled1/succeeded4），AgentRun0、executionAttempt0、普通费用reservation0、费用proposal/decision/issuer/activate_cost receipt0、Content artifact/registrationReceipt0；price head1只证明记录存在，不证明当前可调用。dev-org同范围0。不能据此说65历史Run丢失，它们不属于本次AIP TaskRun表的统计范围；不能将5历史TaskRun当自然内容新链，不重放旧12Run。
+
+本次源代码精确hash清单另存，描述当前worktree而非已冻结18080 API。ContentDraftReadinessRequest只有brief/pipeline/taskRun/agentRun/variant/channel，没有attempt/预留/批准费用上界输入；原_budget仍统一余额unavailable，上一波只读观察reader未接入。原AgentRunExecutor→LLMAdapter→ExactProviderInvoker当前调用参数没有传入该Task的费用预留身份；capacity reservation是容量，不是费用账本。这里仅证实所检查调用链的缺口，不能断言其他调用路径均缺费用门。不得删除原余额阻断以伪造READY。
+
+231-5第6节明确费用在通用capability执行入口一次扣额，不在Content自建账本。后续已登记主线：先沿原BudgetCost提案/审批/消费、Task创建Receipt、价格/审批/代次和原reservation authority，确认持久新任务→agentRun→invocation费用身份映射及提交前held门；针对未知结果保留hold，禁止TTL释放或重发。再给Content readiness读取同一原证据，而非接客户端费用数字；对象Verifier需真实对象Owner。当前缺实际OIDC/publisher配置不授开发代填身份，Provider/Host/worker保持OFF。
+
+无服务或页面改动。readback脚本AST可解析、SQL仅SELECT、输出无主体/对象/凭证；结果文件使用排他创建以防覆盖旧证据。正常恢复库数据不变，本Task可调查交付，父Source与完整Goal继续active。
