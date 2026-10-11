@@ -1,0 +1,24 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-runtime-dependency-build-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001909",
+  "scope": [
+    "aos-platform/scripts/build_ecommerce_runtime_candidates.py",
+    "aos-platform/scripts/ecommerce-runtime-dependencies.json",
+    "aos-platform/services/aos-api/tests/extension_runtime/test_ecommerce_runtime_dependency_build.py",
+    "aos-platform/.evidence/qyh-runtime-dependency-build-20261012",
+    "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-12-QYH-原构建器运行依赖闭包方案.md"
+  ],
+  "excluded_scope": [
+    "maintenance/current-database",
+    "aos-platform/bundles/candidates",
+    "aos-platform/bundles/releases"
+  ],
+  "expected_outputs": [
+    "Original OCI builder per-source pydantic locked dependencies, exact5 wheel closure/checksum/offline install, per-bundle lock hash and SBOM, actual image original module import gate; new RED and adjacent and actual isolated build validation; no signed source/current deployment mutation"
+  ],
+  "lease_expires_at": "2026-10-12T08:22:24.706167+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T04:22:25+08:00"
+}

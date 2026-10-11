@@ -1,0 +1,41 @@
+{
+  "engine": {
+    "platform": "linux/arm64",
+    "baseImage": "python:3.11-alpine",
+    "baseConfigDigest": "sha256:0505371492f8406a47d406e1d1ea3bcf707a95fc1ddf785bf6c95c84df55922a"
+  },
+  "images": [
+    {
+      "package": "ecommerce_growth",
+      "sourceHash": "sha256:472c37b7783b81387b50e6879f0641ebc14301adc1ad1601dbca544e7a91a9fc",
+      "imageId": "sha256:7ac252b7c5829150431302ebc2bf43f5aa2d8299025faba73a3e57f735f75676",
+      "archiveHash": "232ae3011dd770db40e69220329c5cb9d093a398e63cc1763135ab71814d5614",
+      "dependencyLockHash": "sha256:040f740c6f9f784f3cce14e854f72217da35adddd15787682c9ff097c2e5262b",
+      "probe": {
+        "container": "a0v-runtime-import-ab7dee6a2cab4ce6af869e52646fafad",
+        "imageId": "sha256:7ac252b7c5829150431302ebc2bf43f5aa2d8299025faba73a3e57f735f75676",
+        "exitCode": 0,
+        "passed": true,
+        "moduleImportOnly": true
+      }
+    },
+    {
+      "package": "ecommerce_niushop",
+      "sourceHash": "sha256:51656fc4587ad3df31f14e1c057d2f09295a3c302103848ea2c3d0765e5b0a3a",
+      "imageId": "sha256:1d295a1c0d0cd1058734ec9c00b65d6dcc473f96b87625dee704fd2c22965e5e",
+      "archiveHash": "2d6bb09c24af34c47b18e0810da37563b3e33bfcf40c4927ec4edfa5f7d853a3",
+      "dependencyLockHash": "sha256:040f740c6f9f784f3cce14e854f72217da35adddd15787682c9ff097c2e5262b",
+      "probe": {
+        "container": "a0v-runtime-import-ce01c071336f4160801bb68879a835cf",
+        "imageId": "sha256:1d295a1c0d0cd1058734ec9c00b65d6dcc473f96b87625dee704fd2c22965e5e",
+        "exitCode": 0,
+        "passed": true,
+        "moduleImportOnly": true
+      }
+    }
+  ],
+  "retainedFilesUnchanged": 1695,
+  "formalRuntimeReady": false,
+  "builderHash": "0ac68753a560f4a29056de18d254842c3e73cc57431207860a5af9bdae9be381",
+  "dependencySpecHash": "f8182dfa17646a9b0c617672d60255f5ca20756f25eb71104d59174cda771da8"
+}

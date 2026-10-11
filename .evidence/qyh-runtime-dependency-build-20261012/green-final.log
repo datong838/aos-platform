@@ -1,0 +1,177 @@
+.......F.....................................                            [100%]
+=================================== FAILURES ===================================
+_____________ test_build_image_index_binds_each_bundle_actual_lock _____________
+
+manifest_bytes = b'spec:\n  runtime:\n    backend:\n      pythonPackage: core\n'
+
+    @staticmethod
+    def _parse_manifest(manifest_bytes: bytes) -> BundleManifest:
+        try:
+            text = manifest_bytes.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise ManifestInvalidError("bundle.yaml must be UTF-8") from exc
+        try:
+            payload = yaml.load(text, Loader=_UniqueKeySafeLoader)
+        except yaml.YAMLError as exc:
+            raise ManifestInvalidError("bundle.yaml is not valid safe YAML") from exc
+        if not isinstance(payload, dict):
+            raise ManifestInvalidError("bundle.yaml must contain an object")
+        ManifestLoader._scan_sensitive_value(payload)
+        try:
+>           return BundleManifest.model_validate(payload)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           pydantic_core._pydantic_core.ValidationError: 19 validation errors for BundleManifest
+E           apiVersion
+E             Field required [type=missing, input_value={'spec': {'runtime': {'ba...thonPackage': 'core'}}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           kind
+E             Field required [type=missing, input_value={'spec': {'runtime': {'ba...thonPackage': 'core'}}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           metadata
+E             Field required [type=missing, input_value={'spec': {'runtime': {'ba...thonPackage': 'core'}}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.runtime.apiVersion
+E             Field required [type=missing, input_value={'backend': {'pythonPackage': 'core'}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.runtime.backend.entrypoint
+E             Field required [type=missing, input_value={'pythonPackage': 'core'}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.runtime.backend.schemaNamespace
+E             Field required [type=missing, input_value={'pythonPackage': 'core'}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.runtime.backend.profileId
+E             Field required [type=missing, input_value={'pythonPackage': 'core'}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.runtime.backend.imageIndex
+E             Field required [type=missing, input_value={'pythonPackage': 'core'}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.platformApi
+E             Field required [type=missing, input_value={'runtime': {'backend': {...ythonPackage': 'core'}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.dependencies
+E             Field required [type=missing, input_value={'runtime': {'backend': {...ythonPackage': 'core'}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.optionalDependencies
+E             Field required [type=missing, input_value={'runtime': {'backend': {...ythonPackage': 'core'}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.conflicts
+E             Field required [type=missing, input_value={'runtime': {'backend': {...ythonPackage': 'core'}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.exports
+E             Field required [type=missing, input_value={'runtime': {'backend': {...ythonPackage': 'core'}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.capabilities
+E             Field required [type=missing, input_value={'runtime': {'backend': {...ythonPackage': 'core'}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.permissions
+E             Field required [type=missing, input_value={'runtime': {'backend': {...ythonPackage': 'core'}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.migrations
+E             Field required [type=missing, input_value={'runtime': {'backend': {...ythonPackage': 'core'}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.preflight
+E             Field required [type=missing, input_value={'runtime': {'backend': {...ythonPackage': 'core'}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.regression
+E             Field required [type=missing, input_value={'runtime': {'backend': {...ythonPackage': 'core'}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+E           spec.rollback
+E             Field required [type=missing, input_value={'runtime': {'backend': {...ythonPackage': 'core'}}}, input_type=dict]
+E               For further information visit https://errors.pydantic.dev/2.13/v/missing
+
+services/aos-api/aos_api/asset_registry/manifest_loader.py:942: ValidationError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-65/test_build_image_index_binds_e0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11cb1ec10>
+
+    def test_build_image_index_binds_each_bundle_actual_lock(tmp_path,monkeypatch):
+        import yaml
+        source=tmp_path/'source';source.mkdir()
+        cases=(('core/1','core','1','core'),('growth/1','growth','1','growth'))
+        for relative,_,_,package in cases:
+            root=bundle(source/relative,'from pydantic import BaseModel\n' if package=='growth' else 'value=1\n')
+            (root/'bundle.yaml').write_text(yaml.safe_dump({'spec':{'runtime':{'backend':{'pythonPackage':package}}}}))
+            (root/'evidence').mkdir();(root/'evidence/sbom.json').write_text('{"components":[]}')
+        monkeypatch.setattr(B,'CANDIDATE_ROOT',source);monkeypatch.setattr(B,'RUNTIME_CASES',cases);monkeypatch.setattr(B,'ALL_CASES',cases)
+        monkeypatch.setattr(B,'preflight',lambda:{'scope':'fixture-only'})
+        monkeypatch.setattr(B,'_require_isolated_engine',lambda context:{'baseConfigDigest':'sha256:'+'b'*64})
+        monkeypatch.setattr(B,'_build_image',lambda **kw:('sha256:'+'c'*64,Path(kw['package']+'.tar')))
+        monkeypatch.setattr(B,'_export_registry_manifest',lambda archive,fixture,repository:{'imageDigest':'sha256:'+'d'*64,'configDigest':'sha256:'+'e'*64})
+        monkeypatch.setattr(B,'_pull_exact_images',lambda **kw:kw['images'])
+>       output=tmp_path/'output';report=B.build(context='isolated',port=18436,output=output)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/extension_runtime/test_ecommerce_runtime_dependency_build.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/build_ecommerce_runtime_candidates.py:1210: in build
+    content_hashes = _content_hashes(output)
+                     ^^^^^^^^^^^^^^^^^^^^^^^
+scripts/build_ecommerce_runtime_candidates.py:706: in _content_hashes
+    return {
+scripts/build_ecommerce_runtime_candidates.py:707: in <dictcomp>
+    bundle_id: loader.load(f"bundle://a0v-candidate/{relative}").content_hash
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/aos_api/asset_registry/manifest_loader.py:218: in load
+    manifest = self._parse_manifest(manifest_bytes)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+manifest_bytes = b'spec:\n  runtime:\n    backend:\n      pythonPackage: core\n'
+
+    @staticmethod
+    def _parse_manifest(manifest_bytes: bytes) -> BundleManifest:
+        try:
+            text = manifest_bytes.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise ManifestInvalidError("bundle.yaml must be UTF-8") from exc
+        try:
+            payload = yaml.load(text, Loader=_UniqueKeySafeLoader)
+        except yaml.YAMLError as exc:
+            raise ManifestInvalidError("bundle.yaml is not valid safe YAML") from exc
+        if not isinstance(payload, dict):
+            raise ManifestInvalidError("bundle.yaml must contain an object")
+        ManifestLoader._scan_sensitive_value(payload)
+        try:
+            return BundleManifest.model_validate(payload)
+        except ValidationError as exc:
+>           raise ManifestInvalidError(
+                "bundle.yaml failed the canonical manifest contract"
+            ) from exc
+E           aos_api.asset_registry.errors.ManifestInvalidError: bundle.yaml failed the canonical manifest contract
+
+services/aos-api/aos_api/asset_registry/manifest_loader.py:944: ManifestInvalidError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/extension_runtime/test_ecommerce_runtime_dependency_build.py::test_build_image_index_binds_each_bundle_actual_lock
+1 failed, 44 passed, 7 warnings in 5.76s

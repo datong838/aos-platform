@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import asyncio
 import base64
 import hashlib
@@ -315,6 +316,88 @@ def _require_isolated_engine(context: str) -> dict[str, str]:
     return {"platform": PLATFORM, "baseImage": BASE_IMAGE, "baseConfigDigest": base[0]["Id"]}
 
 
+DEPENDENCY_SPEC = Path(__file__).with_name("ecommerce-runtime-dependencies.json")
+DEPENDENCY_SPEC_HASH = "f8182dfa17646a9b0c617672d60255f5ca20756f25eb71104d59174cda771da8"
+
+
+def _runtime_dependencies(bundle: Path) -> list[dict[str, str]]:
+    requires_pydantic = False
+    for source in (bundle / "backend").rglob("*.py"):
+        for node in ast.walk(ast.parse(source.read_text(encoding="utf-8"))):
+            if isinstance(node, ast.ImportFrom) and not node.level:
+                requires_pydantic |= (node.module or "").split(".")[0] == "pydantic"
+            elif isinstance(node, ast.Import):
+                requires_pydantic |= any(item.name.split(".")[0] == "pydantic" for item in node.names)
+    if not requires_pydantic:
+        return []
+    if DEPENDENCY_SPEC.is_symlink():
+        raise CandidateBuildBlocked("DEPENDENCY_LOCK_INVALID", "dependency lock symlink")
+    raw = DEPENDENCY_SPEC.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != DEPENDENCY_SPEC_HASH:
+        raise CandidateBuildBlocked("DEPENDENCY_LOCK_DRIFT", "runtime wheel lock drifted")
+    return json.loads(raw)["dependencies"]
+
+
+def _dependency_lock(bundle: Path) -> bytes:
+    return RUNTIME_LOCK + "".join(
+        f"{item['name']}=={item['version']} --hash={item['hash']}\n"
+        for item in _runtime_dependencies(bundle)
+    ).encode("utf-8")
+
+
+def _stage_runtime_dependencies(bundle: Path, build: Path) -> bool:
+    dependencies = _runtime_dependencies(bundle)
+    if not dependencies:
+        return False
+    wheelhouse = build / "wheelhouse"
+    wheelhouse.mkdir(exist_ok=True)
+    for item in dependencies:
+        wheel = wheelhouse / item["file"]
+        if wheel.is_symlink():
+            raise CandidateBuildBlocked("DEPENDENCY_WHEEL_INVALID", "runtime wheel symlink")
+        if wheel.exists():
+            raw = wheel.read_bytes()
+        else:
+            with urllib.request.urlopen(item["url"], timeout=30) as response:
+                raw = response.read(16 * 1024 * 1024 + 1)
+        if len(raw) > 16 * 1024 * 1024 or _sha256(raw) != item["hash"]:
+            raise CandidateBuildBlocked("DEPENDENCY_WHEEL_DRIFT", "runtime wheel hash mismatch")
+        if not wheel.exists():
+            wheel.write_bytes(raw)
+    (build / "runtime-requirements.txt").write_bytes(_dependency_lock(bundle)[len(RUNTIME_LOCK):])
+    return True
+
+
+def _probe_runtime_imports(*, context: str, image_id: str, package: str, work: Path) -> None:
+    name = "a0v-runtime-import-" + uuid.uuid4().hex
+    evidence = work / f"{package}-import-probe.json"
+    evidence.write_text(json.dumps({"container": name, "imageId": image_id, "state": "planned"}) + "\n")
+    program = (
+        "import sys,importlib,pkgutil;sys.path.insert(0,'/aos/bundle/backend');"
+        f"m=importlib.import_module({package!r});"
+        "modules=list(pkgutil.iter_modules(m.__path__));"
+        "[importlib.import_module(m.__name__+'.'+i.name) for i in modules];"
+        "assert not any(i.startswith('aos_api') for i in sys.modules);"
+        "print('original package modules imported:',len(modules))"
+    )
+    _docker(context, "create", "--name", name, "--network=none", "--read-only",
+            "--cap-drop=ALL", "--security-opt=no-new-privileges", "--memory=512m",
+            "--cpus=1", "--pids-limit=64", image_id, "python", "-I", "-c", program)
+    completed = subprocess.run(["docker", "--context", context, "start", "-a", name],
+                               capture_output=True, text=True, timeout=60)
+    (work / f"{package}-import-probe.log").write_text(completed.stdout + completed.stderr)
+    state = json.loads(_docker(context, "inspect", name))[0]
+    passed = (completed.returncode == 0 and state["State"]["ExitCode"] == 0
+              and not state["State"]["Running"] and not state["Mounts"]
+              and state["HostConfig"]["ReadonlyRootfs"]
+              and state["HostConfig"]["NetworkMode"] == "none")
+    evidence.write_text(json.dumps({"container": name, "imageId": image_id,
+                                   "exitCode": state["State"]["ExitCode"], "passed": passed,
+                                   "moduleImportOnly": True}) + "\n")
+    if not passed:
+        raise CandidateBuildBlocked("RUNTIME_IMPORT_FAILED", package)
+
+
 def _augment_sbom(bundle: Path, *, sdk_hash: str, base_config_digest: str) -> None:
     path = bundle / "evidence/sbom.json"
     document = json.loads(path.read_text(encoding="utf-8"))
@@ -325,7 +408,16 @@ def _augment_sbom(bundle: Path, *, sdk_hash: str, base_config_digest: str) -> No
         {"type": "library", "name": "aos-extension-sdk", "version": sdk_hash},
         {"type": "container", "name": BASE_IMAGE, "version": base_config_digest},
     ]
+    runtime_components.extend(
+        {"type": "library", "name": item["name"], "version": item["version"],
+         "hashes": [{"alg": "SHA-256", "content": item["hash"][7:]}]}
+        for item in _runtime_dependencies(bundle)
+    )
     names = {item.get("name") for item in components if isinstance(item, dict)}
+    for dependency in runtime_components[2:]:
+        existing = [item for item in components if isinstance(item, dict) and item.get("name") == dependency["name"]]
+        if existing and existing != [dependency]:
+            raise CandidateBuildBlocked("SBOM_DEPENDENCY_DRIFT", dependency["name"])
     components.extend(item for item in runtime_components if item["name"] not in names)
     path.write_text(
         json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n",
@@ -338,8 +430,9 @@ def _build_image(
 ) -> tuple[str, Path]:
     build = work / f"build-{package}"
     build.mkdir()
-    shutil.copytree(SDK_ROOT, build / "aos_extension_sdk")
-    shutil.copytree(bundle, build / "bundle")
+    shutil.copytree(SDK_ROOT, build / "aos_extension_sdk", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    shutil.copytree(bundle, build / "bundle", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    has_dependencies = _stage_runtime_dependencies(bundle, build)
     manifest = _load_manifest(bundle)
     backend = manifest["spec"]["runtime"]["backend"]
     (build / "runtime.json").write_text(
@@ -359,7 +452,12 @@ def _build_image(
         "COPY aos_extension_sdk /usr/local/lib/python3.11/site-packages/aos_extension_sdk\n"
         "COPY bundle /aos/bundle\n"
         "COPY runtime.json runner.py /aos/\n"
-        "USER 65534:65534\n",
+        + ("COPY wheelhouse /aos/wheelhouse\n"
+           "COPY runtime-requirements.txt /aos/runtime-requirements.txt\n"
+           "RUN python -m pip install --no-index --no-deps --require-hashes "
+           "--find-links=/aos/wheelhouse -r /aos/runtime-requirements.txt\n"
+           if has_dependencies else "")
+        + "USER 65534:65534\n",
         encoding="utf-8",
     )
     image_id = _docker(
@@ -373,6 +471,7 @@ def _build_image(
     )
     if not re.fullmatch(r"sha256:[0-9a-f]{64}", image_id):
         raise CandidateBuildBlocked("IMAGE_BUILD_ID_INVALID", package)
+    _probe_runtime_imports(context=context, image_id=image_id, package=package, work=work)
     archive = work / f"{package}.tar"
     _docker(context, "image", "save", "-o", str(archive), image_id, timeout=120)
     return image_id, archive
@@ -1063,7 +1162,7 @@ def build(*, context: str, port: int, output: Path,
             bundle = output / relative
             artifacts = bundle / "artifacts"
             artifacts.mkdir(exist_ok=True)
-            (artifacts / "python-dependencies.lock").write_bytes(RUNTIME_LOCK)
+            (artifacts / "python-dependencies.lock").write_bytes(_dependency_lock(bundle))
             _augment_sbom(
                 bundle,
                 sdk_hash=sdk_hash,
@@ -1085,7 +1184,9 @@ def build(*, context: str, port: int, output: Path,
             context=context, port=port, work=work, images=images,
             retain_artifacts=retain_artifacts,
         )
-        lock_hash = _sha256(RUNTIME_LOCK)
+        lock_hashes = {bundle_id: _sha256((output / relative / "artifacts/python-dependencies.lock").read_bytes())
+                       for relative, bundle_id, _version, _package in RUNTIME_CASES}
+        lock_hash = _sha256(json.dumps(lock_hashes, sort_keys=True, separators=(",", ":")).encode())
         for relative, bundle_id, _version, _package in RUNTIME_CASES:
             repository = bundle_id.replace(".", "-")
             identity = pulled[repository]
@@ -1096,7 +1197,7 @@ def build(*, context: str, port: int, output: Path,
                         "platform": PLATFORM,
                         "imageDigest": identity["imageDigest"],
                         "configDigest": identity["configDigest"],
-                        "dependencyLockHash": lock_hash,
+                        "dependencyLockHash": lock_hashes[bundle_id],
                         "sbomPath": "evidence/sbom.json",
                     }
                 ],
@@ -1119,6 +1220,7 @@ def build(*, context: str, port: int, output: Path,
             "engine": engine,
             "sdkTreeHash": sdk_hash,
             "dependencyLockHash": lock_hash,
+            "dependencyLockHashes": lock_hashes,
             "contentHashes": content_hashes,
             "images": pulled,
             "effects": {

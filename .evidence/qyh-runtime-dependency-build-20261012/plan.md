@@ -1,0 +1,6 @@
+# 原候选构建器运行依赖闭包
+基线3d33c70d8/AOS-001909，231-9原四包/八工作台恢复与真实运行验收。上一波原镜像真实RED缺pydantic、独立锁定离线修复后42Growth模块通过。
+候选一正式登录/独立publisher来源待答；候选二本缺陷修复安全独立、已登记，选择二。
+修改scripts/build_ecommerce_runtime_candidates.py；新增scripts/ecommerce-runtime-dependencies.json（从现有API uv.lock固定五包URL/version/wheelSHA，CP311musllinux_aarch64/通用，后续改锁需再review）及services/aos-api/tests/extension_runtime/test_ecommerce_runtime_dependency_build.py。
+原构建流程源码AST发现pydantic导入则注入这五包；无该导入原SDK-only配方保持。下载锁定URL、限size/timeout、严格hash，不在Docker构建阶段联网；无全局依赖更改/虚拟环境复制。每包python-dependencies.lock包含真实依赖，image-index使用本包lockhash；顶层lockhash汇总绑定各包映射，新增dependencyLockHashes。SBOM新增版本/hash精确匹配，不复用不符旧组件。镜像实际只读无网无挂载非root有限导入所有原模块，错误阻止BUILD_GREEN，日志和exit留证，无业务函数执行。
+仅输出外部新候选或Task诊断，不覆盖原包/签名、真库/Host/Provider/旧Run；原SDK接口及返回tuple保持。新版镜像证明导入闭包不授经营执行或正式发布。RED/专项+原builder/profile累计+实际最新源码镜像验证，原1695包hash回读，保护22用户修改。浏览器不适用，本波不切服务。
