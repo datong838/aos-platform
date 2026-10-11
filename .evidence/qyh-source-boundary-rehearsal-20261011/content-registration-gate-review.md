@@ -1,0 +1,16 @@
+# 内容登记真实缺口与下一实施依赖
+
+原服务与同一独立复制库READ ONLY连接实际返回blocked：预算余额权威不可用、缺AgentRun、无ModelRoute、尚未绑定pipeline。Brief/Stage/责任计划/Eval/Budget输入均采用数据库实际exact ref；AgentRun为明确不存在的负门ID，不创建运行记录。原Store.register在进入写连接前拒绝，默认UnavailableContentObjectVerifier独立调用也拒绝。没有换READY服务、mock余额或假对象校验器。
+
+三个源文件hash及AST确认两项结构缺口：原readiness._budget在读到合法预算版本后的函数末尾无条件追加CONTENT_DRAFT_BUDGET_BALANCE_AUTHORITY_UNAVAILABLE；正式router _STORE=AipContentDraftStore()没有注入实际content_verifier，且代码中只找到Protocol和Unavailable实现。接通正式OIDC不能单独闭合该登记链。AST证明实现不可达，不等同于已经用完整正式身份、全READY依赖完成正向实测。当前预算ref用于原合同负门，未证明它是当前安装绑定或已批准费用。
+
+四类业务表计数、原clone与当前恢复卷647表/六metadata完全相同；无角色、DDL、预算发布/审批、模型/Provider、业务写或服务变动。本段是实际RED与实现依赖定位，不能计为Content正向Source兼容，不能关闭整个Task或宣称八工作台恢复。
+
+下一实施文件级依赖清单：
+
+1. services/aos-api/aos_api/aip_content_draft_readiness.py及对应tests/aip/test_aip9_content_draft_readiness.py：将余额读取接入实际Canonical budget authority。复用aip_budget_reservation_store.py的原三桶exposure（held/submitted/settled/unknown）语义，读余额不能调用会INSERT并加锁的_prepare_and_lock_buckets，也不能把未知费用当零；先定义当前预算head、三桶身份/周期、Usage当前性与费用上界绑定。只读snapshot不授reserve/Provider执行权，提交时仍由原reservation事务做最终锁/CAS。
+2. services/aos-api/aos_api/aip_content_draft_store.py、routers/aip_content_drafts.py及对应tests/aip/test_aip9_content_draft_store.py/test_aip9_content_draft_api.py：接入实际governed对象权威与固定Content issuer，保持hash/byte-size/media-type/schema/租户精确核验。先确定当前已部署的对象owner与安全读取接口；不能信任客户端contentRef/hash、任意本地路径/远程URI，也不能凭Artifact元数据替代实际字节。
+3. 上述产品文件本轮没有重叠Lease，但当前Source Task明文excluded services；实现须另行登记精确Task/Lease及完善对应产品/技术方案，不能借本实验Task改服务。固定Source身份需独立执行边界，不能把issuer私密文件注入普通API；正式OIDC/publisher仍沿真实原配置接入，既有信息问题待答。
+4. 之后在忠实独立全库克隆，以当前正式依赖或明确isolated test fixtures分别验证原完整Content登记事务、幂等/hash/CAS、byte拒绝、跨tenant、Receipt故障整体回滚、runtime伪造拒绝，并核原正常电商功能；完整兼容才进入当前库备份/全恢复/零执行迁移门。测试夹具、费用快照或代码门通过不替代自然首链。
+
+以上是下一具体施工输入，尚未实现，不扩大现有业务权限、不更改预算或绕过门。完整Source兼容、正式登录、独立publisher与八工作台运行均继续未完成。

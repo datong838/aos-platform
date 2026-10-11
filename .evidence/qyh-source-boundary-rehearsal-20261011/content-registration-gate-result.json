@@ -1,0 +1,62 @@
+{
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "authority": "AOS-001889",
+  "head": "305e15c4115d60d24c3264e703de97f0733a5e8a",
+  "containerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "database": "qyh_source_contract_20261011",
+  "exactDependencyRefs": {
+    "briefRef": {
+      "resourceType": "TaskBriefRevision",
+      "resourceId": "brief-fa6a4c065a654c86a23a",
+      "revision": 3,
+      "contentHash": "95f36890d1eb7ac4b01caf1a0b9055a7e4de0f3975985d6fd855df0c393e956b"
+    },
+    "stageTemplateRef": {
+      "resourceType": "StageTemplateRevision",
+      "resourceId": "stage-template-4e782c0cddbe4050a6cb",
+      "revision": 3,
+      "contentHash": "fa8a8bce94f0504d511a7dffce30ab1c1251cd7692236ea4ed97bce3455f67f9"
+    },
+    "responsibilityPlanRef": {
+      "resourceType": "ResponsibilityPlanRevision",
+      "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+      "revision": 2,
+      "contentHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a"
+    },
+    "evalContractRef": {
+      "resourceType": "EvalContractRevision",
+      "resourceId": "eval-contract-10913b08643a4e1887ed",
+      "revision": 2,
+      "contentHash": "93f0e26550bb6df34e64639e4a63642f8eefcb074fa7fe5d214fa2874263b3c4"
+    },
+    "budgetRef": {
+      "resourceType": "BudgetRevision",
+      "resourceId": "a0v-ecommerce-hard-stop-budget-v1",
+      "revision": 1,
+      "contentHash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+    }
+  },
+  "actualBlockers": [
+    "CONTENT_DRAFT_BUDGET_BALANCE_AUTHORITY_UNAVAILABLE",
+    "CONTENT_DRAFT_DEPENDENCY_NOT_FOUND",
+    "CONTENT_DRAFT_MODEL_ROUTE_UNAVAILABLE",
+    "CURRENT_PIPELINE_NOT_BOUND"
+  ],
+  "registerError": "CONTENT_DRAFT_NOT_READY:CONTENT_DRAFT_DEPENDENCY_NOT_FOUND,CURRENT_PIPELINE_NOT_BOUND,CONTENT_DRAFT_BUDGET_BALANCE_AUTHORITY_UNAVAILABLE,CONTENT_DRAFT_MODEL_ROUTE_UNAVAILABLE",
+  "verifierError": "CONTENT_OBJECT_AUTHORITY_UNAVAILABLE: governed object verifier is unavailable",
+  "budgetBalanceUnconditionalBlocker": true,
+  "formalRouterVerifierUnconfigured": true,
+  "writeConnectionOpened": false,
+  "businessRowCountsUnchanged": true,
+  "originalAndCurrent647DataExact": true,
+  "allOriginalMetadataExact": true,
+  "positiveContentCompatibilityAccepted": false,
+  "onlyOIDCConfigurationMissing": false,
+  "fullRestorationAccepted": false,
+  "sourceHashes": {
+    "aip_content_draft_readiness.py": "3b2952d2253cb8dccc7dfe86e1da13c7077d9af7454fbd5660d20336a497a8b2",
+    "aip_content_draft_store.py": "20b3e67bd16f30759e005a01bf22c45fd20e1b1771e0eda7dfe3e10975c820cc",
+    "routers/aip_content_drafts.py": "dd50bf556fd7a276a0145c766ee52670d6f767587816debccff85a08f269314f"
+  },
+  "scriptHash": "0aa0c64fe832dd4257fb440278ddc4ad471e1297544d3dca6a10ce5e900c231e"
+}
