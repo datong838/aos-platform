@@ -1,0 +1,14 @@
+{
+  "errorType": "InsufficientPrivilege",
+  "sqlstate": "42501",
+  "completedCases": [
+    "ProductionContractDependencyBlocked",
+    "original-create-and-idempotency",
+    "ProductionContractIdempotencyConflict",
+    "ProductionContractNotFound",
+    "ProductionContractConflict",
+    "original-resolve-nonempty-ref-and-idempotency",
+    "ProductionContractConflict"
+  ],
+  "unknownEffectReplayAllowed": false
+}

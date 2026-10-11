@@ -1,0 +1,127 @@
+{
+  "cases": [
+    "ProductionContractDependencyBlocked",
+    "original-create-and-idempotency",
+    "ProductionContractIdempotencyConflict",
+    "ProductionContractNotFound",
+    "ProductionContractConflict",
+    "original-resolve-nonempty-ref-and-idempotency",
+    "ProductionContractConflict",
+    "InsufficientPrivilege",
+    "InsufficientPrivilege",
+    "original-return-business-denial-after-column-lock-grant",
+    "RaiseException"
+  ],
+  "finishConnections": [
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    }
+  ],
+  "resolved": {
+    "ruleRef": {
+      "resourceType": "EvalRuleRevision",
+      "resourceId": "qyh-clone-test-rule",
+      "revision": 1,
+      "contentHash": "46b75fe4e958fe7a73e94c3524dac0c4541d4ac04e8e89b4504a27c1732d1a37"
+    },
+    "severity": "warning",
+    "artifactRef": {
+      "artifactId": "artifact-5c30dbca96464cafbe0b",
+      "contentHash": "0b6b9d38180eddadb341a2861224a219b996162e1cbd9aa056abf844e56115ba"
+    },
+    "evalReportRef": {
+      "resourceType": "EvalReportRevision",
+      "resourceId": "eval-report-094d5235324d47919bb6627dffd7f1d4",
+      "revision": 1,
+      "contentHash": "458df452a6cdb36e7cd70e2f8375cb09f6c65223c5eb5330a07296b82227e0b9"
+    },
+    "location": {
+      "path": "metadata",
+      "testOnly": true,
+      "businessDomain": "ecommerce"
+    },
+    "evidenceRefs": [],
+    "suggestedFix": "\u9694\u79bb\u5408\u540c\u517c\u5bb9\u6838\u9a8c\uff1b\u4e0d\u662f\u672c\u8f6e\u5b9e\u9645\u5a92\u4f53\u8bc4\u6d4b",
+    "returnStage": "fixture",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "issueId": "review-issue-89ac57928dcb4cc6892c",
+    "status": "resolved",
+    "version": 2,
+    "createdBy": "clone:test",
+    "createdAt": "2026-10-11T16:12:27.720034Z",
+    "updatedBy": "clone:test",
+    "updatedAt": "2026-10-11T16:12:27.774397Z"
+  },
+  "openForReturn": {
+    "ruleRef": {
+      "resourceType": "EvalRuleRevision",
+      "resourceId": "qyh-clone-test-rule",
+      "revision": 1,
+      "contentHash": "46b75fe4e958fe7a73e94c3524dac0c4541d4ac04e8e89b4504a27c1732d1a37"
+    },
+    "severity": "warning",
+    "artifactRef": {
+      "artifactId": "artifact-5c30dbca96464cafbe0b",
+      "contentHash": "0b6b9d38180eddadb341a2861224a219b996162e1cbd9aa056abf844e56115ba"
+    },
+    "evalReportRef": {
+      "resourceType": "EvalReportRevision",
+      "resourceId": "eval-report-094d5235324d47919bb6627dffd7f1d4",
+      "revision": 1,
+      "contentHash": "458df452a6cdb36e7cd70e2f8375cb09f6c65223c5eb5330a07296b82227e0b9"
+    },
+    "location": {
+      "path": "metadata",
+      "testOnly": true,
+      "businessDomain": "ecommerce"
+    },
+    "evidenceRefs": [],
+    "suggestedFix": "\u9694\u79bb\u5408\u540c\u517c\u5bb9\u6838\u9a8c\uff1b\u4e0d\u662f\u672c\u8f6e\u5b9e\u9645\u5a92\u4f53\u8bc4\u6d4b",
+    "returnStage": "fixture",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "issueId": "review-issue-8e112b7adbd54b0e9b45",
+    "status": "open",
+    "version": 1,
+    "createdBy": "clone:test",
+    "createdAt": "2026-10-11T16:12:27.811858Z",
+    "updatedBy": "clone:test",
+    "updatedAt": "2026-10-11T16:12:27.811858Z"
+  },
+  "sourceReportRef": {
+    "resourceType": "EvalReportRevision",
+    "resourceId": "eval-report-094d5235324d47919bb6627dffd7f1d4",
+    "revision": 1,
+    "contentHash": "458df452a6cdb36e7cd70e2f8375cb09f6c65223c5eb5330a07296b82227e0b9"
+  },
+  "queuedRunUntouched": true,
+  "timestampWriteExposureRemains": true,
+  "ordinaryMediaPathOnly": true,
+  "contentEvalSubjectAccepted": false,
+  "returnPositiveAccepted": false,
+  "newEvaluationPerformed": false,
+  "completedReceiptsReplayed": false,
+  "fullRestorationAccepted": false
+}

@@ -1,0 +1,25 @@
+{
+  "containerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "cluster": "7695416748450308141",
+  "database": "qyh_source_contract_20261011",
+  "role": "aos_contract_source_issuer",
+  "head": "da757eebe63c870c438cc4237041eb8282fe22e0",
+  "authority": "AOS-001888",
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "artifactRef": {
+    "artifactId": "artifact-5c30dbca96464cafbe0b",
+    "contentHash": "0b6b9d38180eddadb341a2861224a219b996162e1cbd9aa056abf844e56115ba"
+  },
+  "historicalEvalReportRef": {
+    "resourceType": "EvalReportRevision",
+    "resourceId": "eval-report-094d5235324d47919bb6627dffd7f1d4",
+    "revision": 1,
+    "contentHash": "458df452a6cdb36e7cd70e2f8375cb09f6c65223c5eb5330a07296b82227e0b9"
+  },
+  "existingExperimentalQueuedRun": "run-f6e26071a12845119e01",
+  "ordinaryMediaPathOnly": true,
+  "contentEvalSubjectAccepted": false,
+  "newEvaluationPerformed": false,
+  "scriptHash": "5a16c666bda232682afb473039dde763d7091bc81431a357e6e503bf74860b1b",
+  "currentDatabaseTouched": false
+}

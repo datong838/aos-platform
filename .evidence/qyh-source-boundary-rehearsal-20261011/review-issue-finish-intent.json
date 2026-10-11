@@ -1,0 +1,30 @@
+{
+  "originalFailure": {
+    "errorType": "InsufficientPrivilege",
+    "sqlstate": "42501",
+    "completedCases": [
+      "ProductionContractDependencyBlocked",
+      "original-create-and-idempotency",
+      "ProductionContractIdempotencyConflict",
+      "ProductionContractNotFound",
+      "ProductionContractConflict",
+      "original-resolve-nonempty-ref-and-idempotency",
+      "ProductionContractConflict"
+    ],
+    "unknownEffectReplayAllowed": false
+  },
+  "oldIntentHash": "2c50033e11b7660945bf34ed167b78c5ed8cfc5749afa317d0ea7339ed4566a1",
+  "containerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "cluster": "7695416748450308141",
+  "database": "qyh_source_contract_20261011",
+  "sourceScriptHash": "5a16c666bda232682afb473039dde763d7091bc81431a357e6e503bf74860b1b",
+  "finishScriptHash": "6be500a46642709e4134e7814d4ddffbb6d34ba9e27c25b6822c5a5dcdec7bab",
+  "completedReceiptsReplayed": false,
+  "queuedRunId": "run-f6e26071a12845119e01",
+  "lockColumnsOnly": [
+    "aip_task_run.updated_at",
+    "aip_task.updated_at"
+  ],
+  "timestampWriteExposureRemains": true,
+  "currentDatabaseTouched": false
+}
