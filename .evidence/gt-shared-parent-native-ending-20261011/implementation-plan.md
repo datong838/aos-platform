@@ -149,3 +149,6 @@ r1错误按 proname 查询 C prosrc，止于只读预检；r2误用历史摘要�
 新增fixed-collector-source-1792目录，复用1788原完整fixture与独立边界短JWT，使用新独立测试库和新Source/审批/证书，不重用原请求。所有证据写本Task目录，包括judge-evidence子目录。仅把原test_owned_complete_end_facts包装的被调用函数替换为已hash核验的固定C探针，C为admin Owner/SECURITY INVOKER、仅PhysicalOwner可EXECUTE；原包装仍原PhysicalOwner/原session/runtime role，全部八节点/四证书/物理/latewriter/实际COMMIT拒绝断言保留。无TTL延长或产品修改。原profile统计仅新测试库启用并在finally恢复。明确测试Root不是正式Root；即使通过也仅证明这条完整collector在两hook内运行，不能证明任意SELECT无效果或完整nativeending。
 
 r1原fixture目录门明确终态失败，未到collector，profile恢复成功。r2只纠正证据落点：回读同owner原Judge Task/Lease有效且无重叠，在其唯一新子目录保留原三helper及新Judge材料。原目录安全门不改，原r1全量保留，新Source不重发旧结果。
+
+## 原调用异常清理联验1793
+新增fixed-collector-cleanup-1793，沿用1792-r2完整新Source fixture，新隔离库/审批/证书。原成功collector之前，savepoint中传入格式合法的错误Receipt hash，必须得到原collector COMPLETE_END_RECEIPT_REQUIRED；回滚savepoint后同backend/topxid执行SET LOCAL UTC并核身份，再执行原完整八节点collector及latewriter/实际COMMIT拒绝。仅验证异常hook恢复，不授完整结束或SELECT纯度。错误不重发，原r2材料不改。
