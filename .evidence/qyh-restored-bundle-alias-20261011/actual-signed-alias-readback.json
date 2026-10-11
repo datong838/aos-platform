@@ -1,0 +1,24 @@
+{
+  "outcome": "PRODUCTION_ALIAS_ACTUAL_SIGNATURE_GREEN",
+  "versions": [
+    {
+      "id": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "contentHash": "sha256:e14e6af72dd7c89d5beb7fd002454029bbc64cf510e6b9849ae9df20ef7eba44",
+      "modules": 0,
+      "sourceRef": "bundle://a0v-qyh-current/domain.ecommerce.core/1.4.3"
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "contentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+      "modules": 7,
+      "sourceRef": "bundle://a0v-qyh-current/solution.ecommerce.growth/1.13.0"
+    }
+  ],
+  "signedTreeUnchanged": true,
+  "databaseWrites": 0,
+  "apiStarted": false,
+  "eightPagesAccepted": false,
+  "runtimeAuthority": false
+}

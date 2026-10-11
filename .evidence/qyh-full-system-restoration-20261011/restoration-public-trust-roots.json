@@ -1,0 +1,24 @@
+{
+  "trustRoots": [
+    {
+      "algorithm": "Ed25519",
+      "keyId": "a0v-local-ecommerce-recovery-v2",
+      "notAfter": "2036-09-17T08:39:17.498609+00:00",
+      "notBefore": "2026-09-19T08:39:17.498609+00:00",
+      "publicKey": "rkmqO7WTE1FhBrsHRUqHMaSQvx2EQ9p962aiKzkRmkM=",
+      "publisher": "aos",
+      "revision": "sha256:d2254e25330e449fe6cb5d76a9269609ecfaa6f49e53ec6e0b1a4287d31e8de6",
+      "revokedAt": null
+    },
+    {
+      "algorithm": "Ed25519",
+      "keyId": "a0v-local-qyh-core143-growth113-v1",
+      "notAfter": "2036-01-01T00:00:00+00:00",
+      "notBefore": "2026-01-01T00:00:00+00:00",
+      "publicKey": "b6LA8TIRaG0ROZRvpxRKwhrQVWzuFrpDAxSl6GN76kE=",
+      "publisher": "aos",
+      "revision": "sha256:f54a05c590ff3c19caa6b15e4660759075f999387ec5d511d9f182d76b580c13",
+      "revokedAt": null
+    }
+  ]
+}

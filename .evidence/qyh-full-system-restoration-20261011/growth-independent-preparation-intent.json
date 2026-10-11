@@ -1,0 +1,21 @@
+{
+  "id": "solution.ecommerce.growth",
+  "version": "1.13.0",
+  "contentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+  "coreStatus": "validated",
+  "actions": [
+    "create",
+    "validate"
+  ],
+  "publishActionIncluded": false,
+  "actor": "qyh-user-authorized-restoration-maintainer-20261011",
+  "identity": {
+    "database": "aos_meta_head",
+    "cluster": "7695302940039200809",
+    "schema": "a0v_159",
+    "orgId": "org-org",
+    "orgName": "栖月汇商贸有限公司",
+    "projectId": "dev-project",
+    "tables": 647
+  }
+}

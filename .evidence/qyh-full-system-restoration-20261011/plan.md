@@ -18,5 +18,13 @@
 
 ## 未知与回滚
 
+2026-10-11当前发布来源核对后的安装选型：两个已发布基础包使用现有较新平台1.23.2/operations1.2.2（a0v-local-ecommerce-recovery-v2），与新core1.4.3/Growth1.13.0组合。平台源除version、构建lock/image/SBOM/signature外逐文件相同；operations除version、bundleRef及signature外逐文件相同。需逐项核验已有Registry manifest/artifact/content/signature与保留树精确相等，不能因为contentHash相同更写旧1.23.0/1.2.0签名。新core/Growth只在新坐标由现有RegistryService create→validate→publish；所有旧记录与安装保留。采用登记的有限LOGIN与SET ROLE aos_runtime进行本地维保，actor明确为用户授权维保代理，不冒充正式OIDC/业务Owner。
+
+实际职责分离门：core1.4.3与Growth1.13.0均已由原Registry create+validate；Core同actor的publish被DutySeparationRequiredError拒绝。只读回读两个新版本均validated且无published事件，平台1.23.2/operations1.2.2原published签名精确一致。647表指纹仅五个Registry表发生预期登记变化，其余642表精确保持。请求用户提供独立的现有发布身份，禁止仅换actor字串伪造独立身份。等待期间仅沿独立授权继续来源兼容、安装/浏览器恢复准备；不重发已完成create/validate或拒绝的publish，不改变Goal。
+
+已登记独立目录接线Task qyh-restored-bundle-alias-20261011，修复production allowlist对新不可变alias a0v-qyh-current的识别：仅使用原AOS_BUNDLE_ROOT，不增任意根或权限。90项专项/相邻通过，原有权限连接桩失败独立登记；真实Core/Growth签名树由production映射加载验签且源文件不变。下一安全步骤准备四选定版本的唯一公共bundle目录，文件哈希逐项相同、合并公共信任根、不复制私钥；再做混合版本真实镜像/schema资格验证。这些准备不授发布/安装/业务执行，不把七Growth模块加一operations模块的包解析当八页面验收。
+
+在本Task目录新增release_transition.py、只读preflight证据、有限两版本发布intent/terminal和fresh全库备份（private0600及第二校验副本）。public trust根只合并现有v2与新candidate公钥，不复制私钥，不改全局配置。Publish不自动安装/启Host/授权业务；必须后续当前安装、配置、API、浏览器与实际镜像/schema组合资格门。只有预检证明新坐标不存在、旧2个版本完全匹配、身份/头/Task/无未知操作符合时才能apply。已有intent按结果对账，不能重发。
+
 2026-10-11加载实测修订：Colima未挂载本机/Users配置路径，原docker run退出125；只读inspect证明目标不存在、原容器已正常停止。限定LOGIN已完成且不重放。改用docker create同一命名卷、docker cp无秘密hba到容器root拥有文件（postgres仅可读）、docker start；不依赖主机bind、不改变原卷配置。创建/复制/启动各自记录intent与terminal，失败只读对账。
 每次操作intent/terminal。未知只读核对，不重试写；没有运行记录不代替证明。新transport失败先停新候选，不删旧容器/库/卷；原preview仍维持原identity和数据。恢复历史卷不改变original092。API登录/运行门失败只限制该动作，继续安全恢复主线。

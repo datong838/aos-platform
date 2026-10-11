@@ -1,0 +1,12 @@
+{
+  "registry-before.dump": {
+    "sha256": "4de28c7f0a0646c752f1c8b3a31d50eaa5a2ae0db559951a7029e1396e1882ea",
+    "bytes": 16075637,
+    "secondChecksumCopy": true
+  },
+  "registry-before-globals.sql": {
+    "sha256": "2b99b7bb2d364e56aa6f3e51913658f6e10c9ff79c3241288275819737895b5e",
+    "bytes": 7728,
+    "secondChecksumCopy": true
+  }
+}

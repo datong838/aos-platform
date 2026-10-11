@@ -601,6 +601,9 @@ def _allowlist_roots(*, repository_root: Path) -> dict[str, Path]:
         # Current isolated releases carry this immutable alias. Signature and
         # trust-root verification still apply to every loaded bundle.
         roots["a0v-current"] = server_root
+        # Restored Qiyuehui releases persist this alias in Registry as well.
+        # It uses the same configured root and existing signature verification.
+        roots["a0v-qyh-current"] = server_root
     return roots
 
 

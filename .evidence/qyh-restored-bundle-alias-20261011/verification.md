@@ -1,0 +1,13 @@
+# 目录接线验证与风险
+
+RED：production builder缺少a0v-qyh-current，新增契约失败；同轮全文件另有修改前已存在的权限测试桩缺info事务状态，red.log明确2 failed/9 passed。未修改权限逻辑或把该失败称为GREEN。
+
+最小实现：control_wiring.py新增三个说明/映射行；test_control_wiring.py增加一行精确映射期待。未配置目录时原测试仍仅catalog，原signature/trust-root加载路径不变。
+
+专项及相邻：控制接线、ManifestLoader、signature、ReleasePolicy共90 passed；唯一排除的test_runtime_control_plane_permission_locks_the_current_installation为上述既有失败。green.log。完整控制接线文件尚非全绿，后续独立登记修复测试桩，不能据此降低实际事务要求。
+
+实际候选验证：verify_signed_alias.py使用生产_allowlist_roots→原ManifestLoader→原ReleasePolicy。Core1.4.3/Growth1.13.0签名、发布政策加载通过；Growth包含7模块；源签名目录所有文件哈希前后不变。actual-signed-alias-readback.json。未启动API/未验收八页面/未增加runtime权限。
+
+恢复库只读对账：两个新版本validated、无published事件；两保留版本仍published且精确匹配；647表仅public.asset_bundle_artifact/dependency/evidence/version/version_event变化，其余642表指纹一致。证据在全恢复Task目录registry-two-validated-readonly-reconciliation.json。首次对账脚本误以fingerprint为dict报AttributeError，已按原list表指纹格式修正；全部为READ ONLY，无写操作重发。
+
+复审：方案与代码一致，固定别名只映射已有受控根；保留先验签再加载及默认拒绝，不迁移任何旧坐标、不会自动发布或解除绑定fence。仍待真实独立发布身份、混合镜像/schema、当前安装配置、API/Web与栖月汇八页面；全系统恢复Task和Goal保持ACTIVE。
