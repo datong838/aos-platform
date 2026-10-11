@@ -1,0 +1,8 @@
+{
+  "outcome": "INDEPENDENT_LIVE_NAME_READBACK_MATCHES",
+  "name": "栖月汇商贸有限公司",
+  "cluster": "7683855731447750695",
+  "otherFieldsUnchanged": true,
+  "browserAcceptance": false,
+  "browserReason": "CDP9244 no matching AOS target; Playwright BrowserContext unsupported; no relaunch or credentials read"
+}

@@ -1,0 +1,17 @@
+{
+  "outcome": "FRESH_BACKUP_BASELINE_EXACT_NO_WRITE",
+  "tableCount": 626,
+  "files": {
+    "current.dump": {
+      "sha256": "ff72c0d0471a286c4837ae8aa16d9429198ce7b4048d79faef887dcfd0becb27",
+      "bytes": 5109046,
+      "secondCopyChecksumMatches": true
+    },
+    "globals.sql": {
+      "sha256": "83dd1f3b8058227ad98baede0155a4b9fbd5ddf51d84c986ae5a5dfd72e9f53a",
+      "bytes": 7491,
+      "secondCopyChecksumMatches": true
+    }
+  },
+  "independentRestoreBaselineAlreadyVerified": true
+}

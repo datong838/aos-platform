@@ -1,0 +1,9 @@
+{
+  "database": "aos_current_preview_20260927",
+  "container": "aos-a0v-recovery-pg",
+  "cluster": "7683855731447750695",
+  "sqlSha256": "fbcdc63d38dd05747c7fd08ccbb832a66da7b5fd60c6d48b92b61bbd28149b84",
+  "humanAuthorization": "2026-10-11 full Qiyuehui restoration and domain correction",
+  "expectedOldName": "org-org",
+  "expectedNewName": "栖月汇商贸有限公司"
+}

@@ -1,0 +1,9 @@
+# 用户最新完整恢复授权下的组织名称维护
+
+2026-10-11用户明确：今天恢复栖月汇租户AOS全系统、数据卷加载及全量重启；只有电商域，偏离配置可纠正。本波同唯一thread续原current159-maintenance-20261010 Task/Lease，已只读对账原启动terminals和当前cluster/schema/activeconnections=0，不因TTL删Lease。
+
+先只读固定original container/image/namedvolume/cluster7683855731447750695/aos_current_preview_20260927@a0v159/唯一org-org行/name及updated_at；完整626表fingerprint与已完整独立恢复验收的name-maintenance源baseline对账。再次创建private0700/full pg_dump0600与第二sha256核验副本，备份前后全表fingerprint一致；不得假称第二份独立snapshot。
+
+对已独立全库恢复/正向回滚/CAS负门实际演练通过的原proposed-name-update.sql，只删除说明性注释，正文保持一次执行。必须先freshCAS元数据与原updated_at一致，intent先落盘；执行SQL结果或连接中断未知均只读对账、不重发。维护仅public.meta_org一行name/updated_at，期望栖月汇商贸有限公司；所有其他626表及该行其他字段保持。独立读回与全表差异仅meta_org；这只恢复显示名，不构成历史数据/API/八工作台/经营首链恢复完成。
+
+下一阶段接入已保全647表的historical159数据卷，原预览库/卷/备份保留；不能直接放开三旧disabled/fenced bindings或继承expired预算。当前完整恢复主线继续，运行权限门独立。

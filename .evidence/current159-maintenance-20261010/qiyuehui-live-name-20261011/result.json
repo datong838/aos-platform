@@ -1,0 +1,11 @@
+{
+  "outcome": "LIVE_QIYUEHUI_ORG_NAME_RESTORED",
+  "database": "aos_current_preview_20260927",
+  "tables": 626,
+  "changedTables": [
+    "public.meta_org"
+  ],
+  "otherOrgRowFieldsUnchanged": true,
+  "historyVolumeAttachedToApi": false,
+  "eightWorkbenchAccepted": false
+}
