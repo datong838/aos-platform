@@ -491,6 +491,7 @@ class AipProductionContractStore:
         connect_factory: ConnectFactory | None = None,
         *,
         plan_connect_factory: ConnectFactory | None = None,
+        contract_connect_factory: ConnectFactory | None = None,
         responsibility_template_resolver: ResponsibilityTemplateResolver | None = None,
         stage_template_source_resolver: StageTemplateSourceResolver | None = None,
         production_profile_resolver: ProductionProfileResolver | None = None,
@@ -500,6 +501,9 @@ class AipProductionContractStore:
         self._connect_factory = connect_factory or db_connect
         self._plan_connect_factory = (
             plan_connect_factory if plan_connect_factory is not None else self._connect_factory
+        )
+        self._contract_connect_factory = (
+            contract_connect_factory if contract_connect_factory is not None else self._connect_factory
         )
         self._responsibility_template_resolver = responsibility_template_resolver
         self._stage_template_source_resolver = stage_template_source_resolver
@@ -516,7 +520,7 @@ class AipProductionContractStore:
                              body: CreateEvalContractRequest) -> EvalContractRevision:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash(payload)
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "eval_contract.create", key, request_hash)
             if replay:
                 return self.get_eval_contract(scope, replay["resourceId"], int(replay["revision"]), conn=conn)
@@ -534,7 +538,7 @@ class AipProductionContractStore:
                              key: str, body: ReviseEvalContractRequest) -> EvalContractRevision:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash({"contractId": contract_id, **payload})
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "eval_contract.revise", key, request_hash)
             if replay:
                 return self.get_eval_contract(scope, contract_id, int(replay["revision"]), conn=conn)
@@ -560,7 +564,7 @@ class AipProductionContractStore:
     def freeze_eval_contract(self, scope: TenantScope, actor: str, contract_id: str,
                              expected_version: int, key: str) -> EvalContractRevision:
         request_hash = canonical_hash({"contractId": contract_id, "expectedVersion": expected_version})
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "eval_contract.freeze", key, request_hash)
             if replay:
                 return self.get_eval_contract(scope, contract_id, int(replay["revision"]), conn=conn)
@@ -820,7 +824,7 @@ class AipProductionContractStore:
     ) -> ImpactPreviewRevision:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash(payload)
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "impact_preview.create", key, request_hash)
             if replay:
                 return self.get_impact_preview(
@@ -878,7 +882,7 @@ class AipProductionContractStore:
     ) -> ImpactPreviewRevision:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash({"previewId": preview_id, **payload})
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "impact_preview.revise", key, request_hash)
             if replay:
                 return self.get_impact_preview(
@@ -954,7 +958,7 @@ class AipProductionContractStore:
         request_hash = canonical_hash(
             {"previewId": preview_id, "expectedVersion": expected_version}
         )
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "impact_preview.freeze", key, request_hash)
             if replay:
                 return self.get_impact_preview(
@@ -1111,7 +1115,7 @@ class AipProductionContractStore:
         self._validate_stage_graph(body.stages)
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash(payload)
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "stage_template.create", key, request_hash)
             if replay:
                 return self.get_stage_template(
@@ -1163,7 +1167,7 @@ class AipProductionContractStore:
         self._validate_stage_graph(body.stages)
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash({"templateId": template_id, **payload})
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "stage_template.revise", key, request_hash)
             if replay:
                 return self.get_stage_template(
@@ -1236,7 +1240,7 @@ class AipProductionContractStore:
         request_hash = canonical_hash(
             {"templateId": template_id, "expectedVersion": expected_version}
         )
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "stage_template.freeze", key, request_hash)
             if replay:
                 return self.get_stage_template(
@@ -1381,7 +1385,7 @@ class AipProductionContractStore:
     ) -> StageCompilationResult:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash({"templateId": template_id, **payload})
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "stage_template.compile", key, request_hash)
             if replay:
                 return StageCompilationResult.model_validate(replay)
@@ -1675,7 +1679,7 @@ class AipProductionContractStore:
             not_applicable_stage_ids=not_applicable,
             created_at=canonical_plan.created_at,
         )
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "stage_template.compile", key, request_hash)
             if replay:
                 return StageCompilationResult.model_validate(replay)
@@ -1859,7 +1863,7 @@ class AipProductionContractStore:
     ) -> ArtifactRelation:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash(payload)
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "artifact_relation.create", key, request_hash)
             if replay:
                 return self.get_artifact_relation(scope, replay["resourceId"], conn=conn)
@@ -1959,7 +1963,7 @@ class AipProductionContractStore:
     ) -> ArtifactFamilyView:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash(payload)
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "artifact_family.register", key, request_hash)
             if replay:
                 return self.get_artifact_family(scope, replay["resourceId"], conn=conn)
@@ -2008,7 +2012,7 @@ class AipProductionContractStore:
     ) -> ArtifactFamilyView:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash({"familyId": family_id, **payload})
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "artifact_family.member.attach", key, request_hash)
             if replay:
                 return self.get_artifact_family(scope, family_id, conn=conn)
@@ -2103,7 +2107,7 @@ class AipProductionContractStore:
     ) -> ArtifactFamilyView:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash({"familyId": family_id, **payload})
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "artifact_family.candidate.select", key, request_hash)
             if replay:
                 return self.get_artifact_family(scope, family_id, conn=conn)
@@ -2235,7 +2239,7 @@ class AipProductionContractStore:
         payload["gates"] = sorted(payload["gates"], key=lambda item: item["gateId"])
         request_hash = canonical_hash(payload)
         content_hash = canonical_hash(payload)
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "media_gate_profile.register", key, request_hash)
             if replay:
                 return self.get_media_gate_profile(
@@ -2332,7 +2336,7 @@ class AipProductionContractStore:
     ) -> ContractMigrationDecision:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash(payload)
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "media_contract_migration.create", key, request_hash)
             if replay:
                 return self.get_contract_migration_decision(scope, replay["resourceId"], conn=conn)
@@ -2432,7 +2436,7 @@ class AipProductionContractStore:
         payload = body.model_dump(mode="json", by_alias=True)
         payload["gateResults"] = sorted(payload["gateResults"], key=lambda item: item["gateId"])
         request_hash = canonical_hash(payload)
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "media_gate_set.assemble", key, request_hash)
             if replay:
                 return self.get_media_gate_set(scope, replay["resourceId"], conn=conn)
@@ -2657,7 +2661,7 @@ class AipProductionContractStore:
         content_hash = canonical_hash(
             {"ruleId": body.rule_id, "revision": body.revision, "spec": body.spec}
         )
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "review_rule.register", key, request_hash)
             if replay:
                 return self.get_review_rule_revision(
@@ -2716,7 +2720,7 @@ class AipProductionContractStore:
     ) -> ReviewIssue:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash(payload)
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "review_issue.create", key, request_hash)
             if replay:
                 return self.get_review_issue(scope, replay["resourceId"], conn=conn)
@@ -2822,7 +2826,7 @@ class AipProductionContractStore:
     ) -> ReviewIssue:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash({"issueId": issue_id, **payload})
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "review_issue.resolve", key, request_hash)
             if replay:
                 return self.get_review_issue(scope, issue_id, conn=conn)
@@ -2877,7 +2881,7 @@ class AipProductionContractStore:
     ) -> ReturnDecision:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash({"issueId": issue_id, **payload})
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "review_issue.return", key, request_hash)
             if replay:
                 return self._return_decision_by_id(
@@ -3096,7 +3100,7 @@ class AipProductionContractStore:
     def create_brief(self, scope: TenantScope, actor: str, key: str, body: CreateBriefRequest) -> TaskBriefRevision:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash(payload)
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "task_brief.create", key, request_hash)
             if replay:
                 return self.get_brief(scope, replay["resourceId"], int(replay["revision"]), conn=conn)
@@ -3114,7 +3118,7 @@ class AipProductionContractStore:
 
     def revise_brief(self, scope: TenantScope, actor: str, brief_id: str, key: str, body: ReviseBriefRequest) -> TaskBriefRevision:
         payload = body.model_dump(mode="json", by_alias=True); request_hash = canonical_hash({"briefId":brief_id, **payload})
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "task_brief.revise", key, request_hash)
             if replay: return self.get_brief(scope, brief_id, int(replay["revision"]), conn=conn)
             head = conn.execute("SELECT * FROM aip_task_brief_head WHERE org_id=%s AND project_id=%s AND brief_id=%s FOR UPDATE", (*scope.key, brief_id)).fetchone()
@@ -3133,7 +3137,7 @@ class AipProductionContractStore:
 
     def freeze_brief(self, scope: TenantScope, actor: str, brief_id: str, expected_version: int, key: str) -> TaskBriefRevision:
         request_hash=canonical_hash({"briefId":brief_id,"expectedVersion":expected_version})
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay=self._replay(conn,scope,"task_brief.freeze",key,request_hash)
             if replay: return self.get_brief(scope,brief_id,int(replay["revision"]),conn=conn)
             head=conn.execute("SELECT * FROM aip_task_brief_head WHERE org_id=%s AND project_id=%s AND brief_id=%s FOR UPDATE",(*scope.key,brief_id)).fetchone()
@@ -3193,7 +3197,7 @@ class AipProductionContractStore:
     ) -> EvidenceBundleRevision:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash(payload)
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "evidence_bundle.build", key, request_hash)
             if replay:
                 return self.get_evidence_bundle(
@@ -3439,7 +3443,7 @@ class AipProductionContractStore:
                 **body.model_dump(mode="json", by_alias=True),
             }
         )
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             self._lock_evidence_revoke_key(conn, scope, key)
             from aos_api.aip_license_source_authority import LicenseSourceUnavailable, lock_existing_license_source_for_revoke
             try:
@@ -3514,7 +3518,7 @@ class AipProductionContractStore:
         request_hash = canonical_hash(
             {"evidenceId": evidence_id, **body.model_dump(mode="json", by_alias=True)}
         )
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(conn, scope, "evidence.revoke", key, request_hash)
             if replay:
                 row = conn.execute(
@@ -3602,7 +3606,7 @@ class AipProductionContractStore:
     ) -> EvidenceDisclosureDecision:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash(payload)
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(
                 conn, scope, "evidence_disclosure.resolve", key, request_hash
             )
@@ -3811,7 +3815,7 @@ class AipProductionContractStore:
     ) -> ProductionContextRevision:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash(payload)
-        with self._connect_factory(scope) as conn:
+        with self._contract_connect_factory(scope) as conn:
             replay = self._replay(
                 conn, scope, "production_context.freeze", key, request_hash
             )

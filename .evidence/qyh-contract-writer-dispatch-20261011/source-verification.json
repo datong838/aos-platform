@@ -1,0 +1,8 @@
+{
+  "allOriginalNonConstructorMethodsExactExceptContractFactory": true,
+  "methodsChecked": 143,
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_production_contract_store.py": "fdff0533c5a109aa1a86b1b20b631ad7837a693824bad7d0c72b4389979c174b",
+    "services/aos-api/tests/extension_runtime/test_qyh_contract_dispatch_pg.py": "ba95f6ccc71208c09f06f0ebc4bc680c67662101e76a90be9bedb5e9326c0109"
+  }
+}

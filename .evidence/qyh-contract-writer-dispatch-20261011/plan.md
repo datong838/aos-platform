@@ -1,0 +1,9 @@
+# 原共享Contract Receipt分派
+
+基线54fd025ba/AOS-001877；复用上波231/08、source-caller-dispatch-review与固定Source连接合同。唯一精确Task覆盖原production Store、新真实PG测试和本证据目录，不含当前真库/服务。
+
+原Store新增keyword contract_connect_factory，未配置时沿用原factory保持兼容，正式Source安全切换必须显式注入上波固定contract身份。按self调用图抵达_receipt且实际自己开_connect_factory的29个非Plan方法，30处连接开口选择contract factory；Plan和caller-held函数保持，所有读取及普通运行态保持原factory。compile_stage_template原两段合同事务均切同一Contract用途，不重写原逻辑或假称两段变原子。任何给定conn不替换；不自动创建账号/授权/重试。Content Store只有register原写事务，现有connect_factory已正确支持独立Content注入，无需新增冗余factory。
+
+RED新增真实全迁移临时PG测试，固定contractLOGIN私密passfile、NOINHERIT/非super/非BYPASS/无成员，仅对task SELECT、brief head/revision和共享Receipt必要SELECT/INSERT/UPDATE及精确双租户policy。普通factory为原connect_read_only，Planfactory禁止该路径。调用原create/revise/freeze Brief，验证固定身份、原Receipt、幂等/冲突、canary、事务rollback；绝非真实发布或密码认证证明，lab仍测试trust。测试退出清理自己role/policy/凭据，保留原logical roles。
+
+专项后原w2a/w2b生产合同真实PG回归、Content原Store测试和原完整签名流程各在正确API cwd/独立session执行。AST逐项对比29方法除连接名外与原体完全相同，其他方法完全相同。完整数据与原metadata只读对账；代码/方案自审、Delivery、精确m1提交/上下文同步。不能把Brief正向当全部29合同操作正式发行成功；全部Source ACL/guard部署、正式OIDC/publisher/当期预算和八工作台仍待后续。
