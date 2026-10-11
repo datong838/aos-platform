@@ -1,0 +1,11 @@
+{
+  "image": "sha256:0a6a90eb65ee9921e51943f54a89825dfe35a2a02b423b5d3c53f3f730184dec",
+  "inputs": {
+    "postgresql-16.14.tar.bz2": "f6d077142737920858ce958ccdb75c6ee137a63b5b0853c70693d401ac7e3471",
+    "build.py": "02979fd659a8264a2eafcaaf8b70efef721df59c77a4818a788b81e153e8f73d",
+    "configure-flags.json": "acf6440dde8f747890e8091abb91fbb3612715890fa010ad1d4960a64e4675ad"
+  },
+  "network": "none",
+  "reference": "pg-core-build-1778/r3",
+  "execution_authorized": false
+}

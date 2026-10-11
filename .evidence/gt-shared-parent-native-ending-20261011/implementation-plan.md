@@ -234,3 +234,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 已签名索引离线SDK1817
 新增offline-indexed-sdk-1817，原base摘要、1816签名索引与1813归档固定。仓库离线安装150精确name=version，由索引生成A字段；之后COPY原SDK/etc/apk/world恢复原显式需求（不修改installed记录），该操作作为配方明确部分。精确回读完整P/V/A/C及world，继续核工具/头文件；不宣称完整文件系统/原核心复现。仅新构建，不启动PG/替换原SDK。
+
+## 离线SDK受控源码产物复现1818
+候选一1817 SDK与1778r3精确输入复现；候选二剩余计划观察。先一，新增offline-core-build-1818/Dockerfile、input-manifest.json与验证结果。核源码归档SHA256与旧输入，原build.py/configure-flags.json逐字节复制；仅以固定1817 SDK替换联网依赖安装，networknone构建world-bin。独立导出postgres/plpgsql/pgcrypto及三个头文件，与1778r3逐字节比较；差异必须保留，不以受控产物一致替代历史原核心或完整信任。构建不启动PG、不接触正式卷，Task保持ACTIVE。

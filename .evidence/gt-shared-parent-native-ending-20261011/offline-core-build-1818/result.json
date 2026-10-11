@@ -1,0 +1,44 @@
+{
+  "checks": {
+    "postgres": {
+      "sha256": "66684918da41eefe2d97881e6a44eba68103de44afe7d31299e2a46ae132d6e8",
+      "reference_sha256": "66684918da41eefe2d97881e6a44eba68103de44afe7d31299e2a46ae132d6e8",
+      "controlled_build_equal": true,
+      "historical_installed_equal": false
+    },
+    "plpgsql.so": {
+      "sha256": "c8e33f978d81ebbe5296ae02ec3c42d810787cc7ac854437371f6974fa41a21e",
+      "reference_sha256": "c8e33f978d81ebbe5296ae02ec3c42d810787cc7ac854437371f6974fa41a21e",
+      "controlled_build_equal": true,
+      "historical_installed_equal": true
+    },
+    "pgcrypto.so": {
+      "sha256": "5244bf9d2d9740ef3f65aaf4770f110ac3db862664c073656767ca40ec8507ff",
+      "reference_sha256": "5244bf9d2d9740ef3f65aaf4770f110ac3db862664c073656767ca40ec8507ff",
+      "controlled_build_equal": true,
+      "historical_installed_equal": true
+    },
+    "pg_config.h": {
+      "sha256": "5709fbef6e0fc407920071e00de88767fec1ea096f39ed429767c6628be432bc",
+      "reference_sha256": "5709fbef6e0fc407920071e00de88767fec1ea096f39ed429767c6628be432bc",
+      "controlled_build_equal": true,
+      "historical_installed_equal": true
+    },
+    "pg_config_ext.h": {
+      "sha256": "ad524b12408615b768d82461fd513b107ca6850a9e5a8584f486f2ecdbe4b678",
+      "reference_sha256": "ad524b12408615b768d82461fd513b107ca6850a9e5a8584f486f2ecdbe4b678",
+      "controlled_build_equal": true,
+      "historical_installed_equal": true
+    },
+    "probes.h": {
+      "sha256": "3f87fbd490b995cd6feb59714ea54c4765375a18738f52e9552429f261dd1195",
+      "reference_sha256": "3f87fbd490b995cd6feb59714ea54c4765375a18738f52e9552429f261dd1195",
+      "controlled_build_equal": true,
+      "historical_installed_equal": true
+    }
+  },
+  "controlled_build_equal": true,
+  "full_source_build_trust": false,
+  "execution_authorized": false,
+  "full_task_delivered": false
+}
