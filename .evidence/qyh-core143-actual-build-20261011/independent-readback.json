@@ -1,0 +1,36 @@
+{
+  "browserAcceptance": false,
+  "businessFirstChain": false,
+  "candidateStillUnsigned": true,
+  "formalSwitch": false,
+  "historicalSourceUnchanged": true,
+  "images": {
+    "domain-ecommerce-core": {
+      "configDigest": "sha256:7fda74795f57ff8a2e3fc8f3384ab17b9b9537a4688495b4e3787a8e5aa11e65",
+      "exact": true,
+      "localRef": "127.0.0.1:18442/domain-ecommerce-core@sha256:ea8162a848c9898ffd6d39bdf949dd7eb6be868062bd78225894eea69702e854"
+    },
+    "platform-ecommerce-niushop": {
+      "configDigest": "sha256:3cb783e202e739ab7256b77115456a8420acff7345ab04bfd4660daa46bfbbdb",
+      "exact": true,
+      "localRef": "127.0.0.1:18442/platform-ecommerce-niushop@sha256:1453fff29afdf8cd1e218539b28212a6833b186a19ec3ffea9c1bee2b05d9a0f"
+    },
+    "solution-ecommerce-growth": {
+      "configDigest": "sha256:4483d2e202762ebde78f3b9fb622726c0cf6b04b77a7746b58c4b90b6cd44674",
+      "exact": true,
+      "localRef": "127.0.0.1:18442/solution-ecommerce-growth@sha256:dc619ab1556fd16ec98d9985f8870373651c83cedb6bfd9d5c5ceeb1e9d59f53"
+    }
+  },
+  "modules": 8,
+  "outcome": "CORE143_CURRENT113_ACTUAL_BUILD_QUALIFICATION_VERIFIED",
+  "outputTreeHash": "sha256:c23b5399b29084c41d967cb20b9bfe869a90a6adcda6e140301435864b7c8bfb",
+  "tamperRejections": [
+    "imageIndexBytes",
+    "imageDigest",
+    "dependencyLock",
+    "sbom",
+    "backend",
+    "schemaCompatibility",
+    "schemaRequirements"
+  ]
+}
