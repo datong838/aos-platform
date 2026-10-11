@@ -1,0 +1,13 @@
+{
+  "head": "93b6272e2cc8ad7ef60df4c4621a99f7a3eecba2",
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "errorType": "KeyError",
+  "missingField": "content_hash",
+  "cause": "Registry Store returns public DTO contentHash, not the database column content_hash",
+  "terminalExitCode": 1,
+  "resultFileCreated": false,
+  "allConnectionsReadOnly": true,
+  "databaseWrites": 0,
+  "objectWrites": 0,
+  "retryIsReadOnlyNotExternalEffectReplay": true
+}

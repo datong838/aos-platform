@@ -1,0 +1,13 @@
+# 既有签名电商成果复用与媒体审核来源修复
+
+基线93b6272e2cc8ad7ef60df4c4621a99f7a3eecba2/AOS-001895。同一ACTIVE Source Task、有效Lease及唯一m1写者；第十六段先方案后脚本。仅读取已有公开签名包和四Registry版本，有限aos_runtime LOGIN所有事务transaction_read_only=on，不改API/卷/原包/签名/trust配置，不启动进程或Provider。
+
+原ManifestLoader使用既有公开trust根真实加载四选定包，Registry Store四版本contentHash和原signature精确一致。核心1.4.3及增长1.13.0为validated；平台1.23.2及operations1.2.2为published。本地签名有效不授新publisher权限，两validated不能被登记为published。初次读取误用数据库content_hash字段，原DTO实际contentHash：只读失败exit1保留，结果尚未创建；修正字段后原只读调用通过，不重放任何写操作。
+
+签名四包179文件before/after哈希一致，八Module定义及六media stage/responsibility模板完整保留。独立原loader再次验四签名/包hash，复读每模板schema/id/revision。media-studio production profile真实含fact/brand/copyright/safety/platform/humanApproval、sameRevisionRequired/failClosed；这些目标标签可以复用，但本身没有canonical四Rule exact refs。growth-gates实际是G2_DECISION_TAGS、A6E_ECOMMERCE_DEFINITION_CATALOG及G1/D3业务门，不能冒充四类media审核策略。Stage模板含capability/职责映射，不能直接替代规则绑定。
+
+审计中扫描完整RegisterMediaGateProfileRequest文档为0仅是有限扫描结果，不当作signed policy缺失证明；包含自身manifest/signature hash的请求应在包外由server派生，不能要求自引用哈希塞入包内。独立读回明确这一点，保留旧扫描结果真实值而不覆盖。当前有限源码与选定四包调查尚未定位稳定BundleSignatureVerification/MediaGatePolicyRevision producer或canonical Rule映射，不扩大为远端/全机器无此资源结论。
+
+下一最小产品实施范围：复用原RegistrySnapshotReader/ReleasePolicy与已签policy贡献，将同一权威快照中的manifest内容、原签名验签结果和canonical四Rule/policy映射生成server exact refs，再接专用media source reader。先冻结贡献schema/producer稳定revision及撤回门；若需新增policy贡献，只形成新候选版本，不修改已签包或手工发布。服务修复/包候选各自独立Task/Lease，原Stage/BI接口保持。独立publisher/正式登录问题仍待已有来源，不用新造actor规避职责分离。原Eval/Issue/Return/Approval和预算/licence/state真源复用，不重写工作台。
+
+专项签名/Registry读核、独立源哈希/模板/策略语义回读、语法和公开证据检查完成后精确提交；没有本轮模型PASS，没改页面，无需用浏览器空页给该调查加业务证明。完整Source Task与Goal保持ACTIVE；八工作台真实可用、自然首链/连续观察/发布都未验收。

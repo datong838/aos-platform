@@ -1,0 +1,1177 @@
+{
+  "head": "93b6272e2cc8ad7ef60df4c4621a99f7a3eecba2",
+  "authority": "AOS-001895",
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "observedAt": "2026-10-11T17:18:28.551674+00:00",
+  "versions": [
+    {
+      "id": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "contentHash": "sha256:e14e6af72dd7c89d5beb7fd002454029bbc64cf510e6b9849ae9df20ef7eba44",
+      "registryStatus": "validated",
+      "signatureVerifiedByOriginalLoader": true,
+      "registrySignatureExact": true,
+      "modules": 0,
+      "artifactCount": 22
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "contentHash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90",
+      "registryStatus": "published",
+      "signatureVerifiedByOriginalLoader": true,
+      "registrySignatureExact": true,
+      "modules": 0,
+      "artifactCount": 35
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "contentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+      "registryStatus": "validated",
+      "signatureVerifiedByOriginalLoader": true,
+      "registrySignatureExact": true,
+      "modules": 7,
+      "artifactCount": 104
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "contentHash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec",
+      "registryStatus": "published",
+      "signatureVerifiedByOriginalLoader": true,
+      "registrySignatureExact": true,
+      "modules": 1,
+      "artifactCount": 10
+    }
+  ],
+  "signedDocuments": [
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "path": "artifacts/runtime-image-index.json",
+      "sha256": "935a3149c8e4f1ea0dc375e7f41fa98e195a71cf9b09c40a9f3dac137c180b03",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "path": "artifacts/schema-compatibility.json",
+      "sha256": "d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "path": "artifacts/schema-requirements.json",
+      "sha256": "c276d55f7add07597c881b452c90db3d7d0aafb4fb43cc355db54b636b2afef0",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "path": "content/policies/pii-exclusion.json",
+      "sha256": "a036c1f0e02c5e18b2ce09f6d3cbf2927534d5b437857c2e6d365c9b2b76449a",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "path": "content/schemas/ecommerce-brief-spec.v1.schema.json",
+      "sha256": "fbcdd4ba5310e46c44b96a1332c9858c4a3008803df588c858fae147f319b027",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "path": "content/schemas/ecommerce-eval-profile.v1.schema.json",
+      "sha256": "2acbd18b34d3bbd90f2f5b415ac76f20071746cf1523fbf96c9c5ad85b1760d8",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "path": "content/schemas/ecommerce-evidence-selection.v1.schema.json",
+      "sha256": "2960bc0089cb2c1496da8ecacecbeab2262d7547dd063aeca9bee8e815bc3a43",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "path": "content/schemas/ecommerce-production-profile.v1.schema.json",
+      "sha256": "cbeb7c1096aa5572116a50f16c34c3beed19fd7b5a2c0e584b7027e4abfa2747",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "path": "content/schemas/ecommerce-responsibility-template.v1.schema.json",
+      "sha256": "e03caa7e2de2dbf7594adf47096184085cc07920d38d36c29ea5eb5b26554768",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "path": "content/schemas/pipeline-skeleton.json",
+      "sha256": "ba4b4c5d1fc63023943690b48ac54c5a19c4446cd83a2ba04c7cab399ede1e28",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "path": "evidence/bundle-evals.json",
+      "sha256": "22a053606ff126e73d624f49e74a8d33d7061c32bf81cb792d09cea432813d39",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "path": "evidence/content-source-provenance.json",
+      "sha256": "83d4d5dc619f2a4c685efb4ef18d971339a9f9952e19b6b50a16878a6e17b552",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "path": "evidence/sbom.json",
+      "sha256": "9e47bf115fb6422e1767664e54123a5313fa61e5d66321203c34d44d8c8b7567",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "artifacts/runtime-image-index.json",
+      "sha256": "1539aeca607a4b1d4b8ec007d8869a809badcefbfb2dc5540a2f7866b5a35192",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "artifacts/schema-compatibility.json",
+      "sha256": "53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "artifacts/schema-requirements.json",
+      "sha256": "111782e74011c1c1304972294d3b72e76b8ed858584094e5816b1e68796e8070",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/connectors/niushop-mysql.manifest.json",
+      "sha256": "cd1d0dd90ac30fed06b7ca394f2f69b2391b4e08be5308e50382b0486e0145b6",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/mappings/_pii-exclusion.yaml",
+      "sha256": "e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/mappings/p01-shop.yaml",
+      "sha256": "893691a4bd11d52f40da19a0435390a5beb2195e594dd19f506b80a90505f4bc",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/mappings/p02-product.yaml",
+      "sha256": "4ef146db758ca22e756857dc6cb6e8f615374dc2dccb96bc8835c93f8123d7f0",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/mappings/p03-product-sku.yaml",
+      "sha256": "60f8de20de644bde825d174d08c214e18a4fec5de5a62a068809fec4ea9ffa47",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/mappings/p04-category.yaml",
+      "sha256": "07eb63d373af249557f8b9c970430ceea89ea0e1841d4fd30f18c6e890b747bd",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/mappings/p05-order.yaml",
+      "sha256": "c56213d59b4a68755786b1645e05d1e761042035b358ca33851864d26f103f85",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/mappings/p06-order-line.yaml",
+      "sha256": "be4f4a01881789964578cc4682f379164c0ce92d4c6a3a409920487f36318eef",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/mappings/p07-shipment.yaml",
+      "sha256": "1dca12ebd494d9abdb130fdddca4780538c2874fb5a2557f10b11c72642bb17b",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/mappings/p08-customer-lite.yaml",
+      "sha256": "599bd3b58ac836049e1867557995aa411581eca08b715a66848178c1a6adac96",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/mappings/p09-weapp.yaml",
+      "sha256": "fd828a44591ee0f0f360ec3fb965db1f305a099a6f3d013ecfee6c7555ec3117",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/mappings/p10-system-config.yaml",
+      "sha256": "f9dd1731fefb9bca5b1f0c399c5bf71540400932a6b75ef4be084989b9142da2",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/mappings/p11-product-review.yaml",
+      "sha256": "d260f275d3ed110660a322b7dc1a0797168df363964b4743518b29a679cf002d",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/mappings/p12-payment.yaml",
+      "sha256": "d2cca07cb0fc041f9b63b60e1097ea120c129704f850edbc952dffe1ba6c9e1b",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/policies/business-cohort.v1.json",
+      "sha256": "7cf0a7cf9e6ff115523668f7cc8690351e61d4a9ba345a8388addcac8b089bc5",
+      "declaredSchema": "aos.snapshot-business-cohort/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/policies/business-facts.v1.json",
+      "sha256": "adf838ae2cc53d6d251f0a1a97fced7d0ef6a81f23a9c0043beedd859b4fda64",
+      "declaredSchema": "aos.snapshot-business-facts/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/policies/fact-quality.v1.json",
+      "sha256": "da50ab62b1feb6b850d9ad50f44c7fb8700c3619a56cb2155173e6a3434fe129",
+      "declaredSchema": "aos.snapshot-fact-quality/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/policies/relationship-quality.v1.json",
+      "sha256": "a3bc57a0f780fe457e0fed4159eb46a1131b99c54fc20b685b2a6a20ccc4ce81",
+      "declaredSchema": "aos.snapshot-relationship-quality/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/policies/snapshot-readiness.v1.json",
+      "sha256": "43f509ce8d1968a1f03993e2b242ab19f62d9555536ae24b915d3e898b83e709",
+      "declaredSchema": "aos.snapshot-readiness-policy/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/policies/snapshot-relationships.v1.json",
+      "sha256": "c6e5783c17ad16a1aac9612667aadf75b52127406c3a531f1ff144478d1d00b0",
+      "declaredSchema": "aos.snapshot-relationships/v2",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/policies/source-freshness.v1.json",
+      "sha256": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+      "declaredSchema": "aos.source-readiness.freshness-policy/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/policies/source-quality.v1.json",
+      "sha256": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+      "declaredSchema": "aos.source-readiness.quality-policy/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/policies/source-reconciliation.v1.json",
+      "sha256": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+      "declaredSchema": "aos.source-readiness.reconciliation-policy/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "content/schemas/niushop-schema-fingerprint.json",
+      "sha256": "a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "evidence/bundle-evals.json",
+      "sha256": "c736bdfc6c6bfe21d286bd8f22ad72470d247c8d547c51aafef8eed98b9f0faf",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "path": "evidence/sbom.json",
+      "sha256": "9e47bf115fb6422e1767664e54123a5313fa61e5d66321203c34d44d8c8b7567",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "artifacts/runtime-image-index.json",
+      "sha256": "040e0a839d46c9b9dbccb6f6341d40da776785b1c442353e1184f865608797a4",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "artifacts/schema-compatibility.json",
+      "sha256": "0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "artifacts/schema-requirements.json",
+      "sha256": "6e619c5a3980c2a9cbd8453cd1c86c34c5d8a9ff5983868a568d97c6c761ace7",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/agents/ecommerce-capability-catalog.json",
+      "sha256": "0d33aac853f9f7cac835ea97cd8409388a9c4afe22ddec3b4a8eb668c72acf5a",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/agents/ecommerce-six-coworkers.json",
+      "sha256": "ae351d4265f3c6757c17e6742dc32e7c7f0697d2a9676d379ab3cb5085192ba3",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/cost-projection-contracts/media.v1.json",
+      "sha256": "65b26cc86024485b00781902640fbbb9190e0b8c482d753a2f4dfe7bf061266a",
+      "declaredSchema": "aos.ecommerce-media-cost-projection-contract/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/evals/placeholder.json",
+      "sha256": "e90c23c9234793da6f76f82cc78ceddd677ce47c4c6ed7ced8397bb11d0a69c2",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/evals/w03-l05-dry-run-cases.json",
+      "sha256": "e6b2f45d025adb071636b4c2f1f93ab1a59098357d52885819bda791cc93f78c",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/growth/connector-action-governance.v1.json",
+      "sha256": "cb0da02b335d7d6665b7f108463ba5a25c725e2678c773ac3d35fbb105424940",
+      "declaredSchema": "ecommerce.growth.connector-action-governance.v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/growth/core-agent-collaboration.v1.json",
+      "sha256": "910ada47e6464abeb1d6d95a53d83f8bbb1f731714b94025780ff795c7dd6c01",
+      "declaredSchema": "ecommerce.growth.core-agent-collaboration.v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/growth/daily-operating-loop.v1.json",
+      "sha256": "2346ffc0c81f27a3aa1cfa3aac794c8f0cdb2c3a44f5a426aa9034399f2dfa30",
+      "declaredSchema": "ecommerce.growth.daily-operating-loop.v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/growth/private-campaign-memory.v1.json",
+      "sha256": "0a9ac4f883ff4807b5b4375c653845c1f7cd8cab4a9225ee412d7a09706793f0",
+      "declaredSchema": "ecommerce.growth.private-campaign-memory.v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/growth/sc01-sc03-acceptance.v1.json",
+      "sha256": "5d43b09dcc96f74977053fcbe51068a014b11bd7c20648bd2d93887f3a461269",
+      "declaredSchema": "ecommerce.growth.sc01-sc03-acceptance.v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/growth/sc04-sc06-acceptance.v1.json",
+      "sha256": "d98dc09260c55e445ba616213befb3ad6c10ee0464c7f93f522b5c444f08a15d",
+      "declaredSchema": "ecommerce.growth.sc04-sc06-acceptance.v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/growth/sc07-sc09-acceptance.v1.json",
+      "sha256": "e2e4a1bfc90586b0f75b5926e0acebce1d264b5a910ba02dca579b584f4433b7",
+      "declaredSchema": "ecommerce.growth.sc07-sc09-acceptance.v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/harness/platform-harnesses.v1.json",
+      "sha256": "154dc19b826e2777e4f2cbc3d3ed8b9ffd797f2edca49a539bcb7155ddf34448",
+      "declaredSchema": "aos.content.platform-harness/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/live/digital-human-live-sandbox.v1.json",
+      "sha256": "30a073b8221f6d66a7877765e48c0041a897f88a3f7c8d52f13952e147f22634",
+      "declaredSchema": "aip.live-sandbox.v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/logic/ecommerce-37-logic-catalog.json",
+      "sha256": "2ebfba4bc26a308f4d93882eaa5105ae364b857cea667ed769fbb1fcb8e4463b",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/logic/ecommerce-37-skill-compatibility-map.json",
+      "sha256": "4855fdd0131ce35f4ad06afbeb3febd3789795e2f937e7fd24b7ccc14a6f6d9d",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/logic/l05-commission-anomaly.json",
+      "sha256": "3cae12bc303c6b26d4b2cc8d5ec3a9866add4b286b554b91996e3bd5bf6ff257",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/media-production-templates/full.responsibility.json",
+      "sha256": "eb48d34b2db2fb531273159e4cb203807bc1560e6c76bcd48fd51c867c52f6ef",
+      "declaredSchema": "aos.ecommerce-media-responsibility-template/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/media-production-templates/full.stage.json",
+      "sha256": "61ebaa1abf049e98f94cf016fc746a868e3b8bd008f4008168eaf9bb47321479",
+      "declaredSchema": "aos.ecommerce-media-stage-template/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/media-production-templates/lite.responsibility.json",
+      "sha256": "f5d289eebd9fa928036e6412efdcb861236a24e7f0f91a68d49a584da4badba6",
+      "declaredSchema": "aos.ecommerce-media-responsibility-template/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/media-production-templates/lite.stage.json",
+      "sha256": "890196be9f756195b8a7d84fb0aad991c4906d8f5a6cc36121ebd890d89143df",
+      "declaredSchema": "aos.ecommerce-media-stage-template/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/media-production-templates/standard.responsibility.json",
+      "sha256": "4f09ba944f6dfc3eea24ed9580339017278278d76aeedc333a5181992e692658",
+      "declaredSchema": "aos.ecommerce-media-responsibility-template/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/media-production-templates/standard.stage.json",
+      "sha256": "7b497bc524627df284fd9e60f7441639aa046aa6cdbf9c70128ee0be1480a56c",
+      "declaredSchema": "aos.ecommerce-media-stage-template/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/media/short-video-pipeline.v1.json",
+      "sha256": "812b41fb5d18ec74efe2f94315f6bfa1e5c63bf2af57bd885561ca224b36f791",
+      "declaredSchema": "aos.ecommerce.short-video-pipeline.v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/policies/aip6-runtime-policies.json",
+      "sha256": "2ff91b4c0b34906fcc18b40a467cb786835d6168a6301f8abc9647476417cd4f",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/policies/growth-gates.json",
+      "sha256": "06f8b1453cc7297c23802ce1ef0a13f97ccd807f2ffca97a63d3572e682a33ac",
+      "declaredSchema": null,
+      "hasGateField": true,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/production-profiles/ecommerce.analyst.json",
+      "sha256": "488ff4747040f59f4270ff519efab6ca3a4df8397af232a7c4b720487263fe49",
+      "declaredSchema": "aos.ecommerce-production-profile/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/production-profiles/ecommerce.content-campaign.json",
+      "sha256": "89f9c0dfee27d4863af7ff10a2d6316e9af5a7480a141bf86981f58c1132a866",
+      "declaredSchema": "aos.ecommerce-production-profile/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/production-profiles/ecommerce.creator-growth.json",
+      "sha256": "8a585599f7ae653a06fd8667b410d87832f1bc0cef7b9048e58eb05b4a0bdaee",
+      "declaredSchema": "aos.ecommerce-production-profile/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/production-profiles/ecommerce.customer.json",
+      "sha256": "12e189333f7984d9f748aeb5dc73544196a4419f07a90057bef48e61fc4c2fe6",
+      "declaredSchema": "aos.ecommerce-production-profile/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/production-profiles/ecommerce.media-studio.json",
+      "sha256": "c535d661c2f3e45aaffd50621df520e023a997af2eabe6b59ba26945f755ba34",
+      "declaredSchema": "aos.ecommerce-production-profile/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/production-profiles/ecommerce.price-governance.json",
+      "sha256": "b45fc3af93d8641a0563af5270afd09cc80f1e0c98f52d4941913342bc4ea056",
+      "declaredSchema": "aos.ecommerce-production-profile/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/production-profiles/ecommerce.task-cockpit.json",
+      "sha256": "2fe1e0609f632118efda5d47ae06e92f101a82a92cf35199fd8c41357c54469f",
+      "declaredSchema": "aos.ecommerce-production-profile/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/responsibility-templates/business-investigation.readonly.json",
+      "sha256": "76036401433342f95328c43ecbcb618deb3c6adba335532b6bfc11af896d0f3b",
+      "declaredSchema": "aos.ecommerce-business-investigation-responsibility-template/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/schemas/aip6-contribution-schemas.json",
+      "sha256": "c3e4f9503222fed59eb150f6ac89b3fb49991123f15699fb36c9702ab35048b7",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/schemas/content-brief.schema.json",
+      "sha256": "792d5116f614c4a02a8bff4246d510008b3ece4c605832d370ca297c05a99c2c",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/schemas/content-draft.schema.json",
+      "sha256": "1ef706fb9901ac27854c31b56519e103ea18d5fe858d47d32864eb81fb962f64",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/schemas/content-pipeline.schema.json",
+      "sha256": "6c3e377bbb7bbfe21ad6e0e6d1fb493aa90cd89aff8e3e9e9e64b7693b45c28f",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/schemas/product-event-control.contract.v1.json",
+      "sha256": "e89fad0608fc8b1d234a7d006104f12b83ed3585eed7134068b9f58142c1778e",
+      "declaredSchema": "aos.ecommerce.product-event-control-contract/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/schemas/product-event-save.contract.v1.json",
+      "sha256": "7b489c715ca6638fe4d3ce759d254b328f0bf47a0158b8a42354ac412be2f085",
+      "declaredSchema": "aos.ecommerce.product-event-save-contract/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/schemas/publish-proposal.schema.json",
+      "sha256": "42ca52b3d15749fc1d97d42494b91919c4921dc1df44dc6ef74fa90cc5b6d4ca",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/workshops/ecommerce-analyst-query-templates.json",
+      "sha256": "495bde78ec8c77883281147477a22563647b57b50c036b94c28f43a5bb6d6e0b",
+      "declaredSchema": 1,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/workshops/ecommerce.analyst.json",
+      "sha256": "74368970d43416b96ac191d69c26f657ed64ca23616116819dcacdf4778a056a",
+      "declaredSchema": "aos.workshop-module/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/workshops/ecommerce.content-campaign.json",
+      "sha256": "2ba137cde2ac882247e1406d2389c952e5c66409f887825c25a0ba291096bfe5",
+      "declaredSchema": "aos.workshop-module/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/workshops/ecommerce.creator-growth.json",
+      "sha256": "644aae6100ec3a550a8a21d84c25635a6dcb1836653b1b31e9332c543fe19935",
+      "declaredSchema": "aos.workshop-module/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/workshops/ecommerce.customer.json",
+      "sha256": "a3a79128a23eeff277f79eabe0419cd7695c934b418109f797b4f430410b1a3a",
+      "declaredSchema": "aos.workshop-module/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/workshops/ecommerce.media-studio.json",
+      "sha256": "be84d03fe909dc19af1b3fc743310ed1567ad379afc79ea17a46e8cd2b99cea3",
+      "declaredSchema": "aos.workshop-module/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/workshops/ecommerce.price-governance.json",
+      "sha256": "c3fc9b4d16c6d613045ecb87fe9213f62db6725af9fee04d08846d2024dc1396",
+      "declaredSchema": "aos.workshop-module/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/workshops/ecommerce.task-cockpit.json",
+      "sha256": "5de3fe61847173eca8bfbc28e0562e1bf8e40f278201cffdf9374eedaf696c30",
+      "declaredSchema": "aos.workshop-module/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "content/workshops/w03-customer-private-domain.json",
+      "sha256": "25a34e673c4042088b6fe6e1025a7d40f1317c26c85cd277d65fe2bb621c4642",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "evidence/bundle-evals.json",
+      "sha256": "ba6d57886b546d7f7637d1871f1ddd267c08f22dc5b4bc7358302e815fa435f7",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "evidence/content-source-provenance.json",
+      "sha256": "51142106489af45928e773565ccbb4aca8ff292b0d2a2d0704d75f381458423d",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "evidence/sbom.json",
+      "sha256": "d65cd20cc6ec06c8aef30a30c0aeb3b4c701fb685b9387ebfbf2e50ac156afec",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "path": "frontend/manifest.json",
+      "sha256": "8fe67617e00386bbc4c9003d61ff43600042763d376a0079515fe231f667aa7c",
+      "declaredSchema": "aos.dev/frontend-runtime/v1alpha1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "path": "content/evals/logic-dry-run-cases.json",
+      "sha256": "ad57598fb4d17dc41e7208b0c3ac721b5a6e08a6f9ffc7e7df69d117533ce148",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "path": "content/logic/l01-product-launch.json",
+      "sha256": "645d391d2a3790d7eac16aff4a9659d71d117e2baa6b90f50364bb7a21ab4229",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "path": "content/logic/l02-order-fulfillment.json",
+      "sha256": "7ef2d449725f818e339f2326018b8b047d38f2bffe50f08e3a258e2250c09499",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "path": "content/logic/l03-shipment-overdue.json",
+      "sha256": "1753ec4e6a992cd3b6995729413b6d5afb14f3f58e120c0f367ea67bebbe070c",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "path": "content/production-profiles/ecommerce.operations.json",
+      "sha256": "2edbc788bd7009186d712b3592f001ce803ac0b02c65e798e30dc328215ece45",
+      "declaredSchema": "aos.ecommerce-production-profile/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "path": "content/workshops/ecommerce.operations.json",
+      "sha256": "dde892c7b9f896b6fc09c361c0620e5cf4517c0dcba86e9e70f61ef90028dd5a",
+      "declaredSchema": "aos.workshop-module/v1",
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "path": "content/workshops/w01-order-management.json",
+      "sha256": "11c285d88ecb18f87591ac7dd5bed4f2c9c3c507024687b63515f3c38ef53120",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "path": "content/workshops/w02-product-inventory.json",
+      "sha256": "c26ee8d1a4fc9a72c9c5ed21c2ed87f9062a27649764c7b916df1b8066e3e6fa",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "path": "evidence/bundle-evals.json",
+      "sha256": "ee6098af889097a92fdc293d0e699834d83cd5325d4ecacd9c81e8f963ea2a39",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "path": "evidence/sbom.json",
+      "sha256": "6ce0aad42c30d72912766b3033f878f1d2bdb9757b54553cf0f5ae6c54415af5",
+      "declaredSchema": null,
+      "hasGateField": false,
+      "hasSourceSignaturePolicyTriple": false,
+      "completeMediaGateRequestDocument": false
+    }
+  ],
+  "completeMediaGateRequestDocuments": 0,
+  "sixSignedMediaProductionTemplatesRetained": true,
+  "eightSignedModuleDefinitionsRetained": true,
+  "fourSelectedPackagesFilesUnchanged": true,
+  "filesCount": 179,
+  "filesHash": "e15d81992c75047cb7bb268b3f86e85a922dfdbb63f1377f9bbfcf4e96b4b7ed",
+  "databaseConnections": [
+    {
+      "role": "aos_runtime",
+      "db": "aos_meta_head",
+      "readonly": "on"
+    },
+    {
+      "role": "aos_runtime",
+      "db": "aos_meta_head",
+      "readonly": "on"
+    },
+    {
+      "role": "aos_runtime",
+      "db": "aos_meta_head",
+      "readonly": "on"
+    },
+    {
+      "role": "aos_runtime",
+      "db": "aos_meta_head",
+      "readonly": "on"
+    }
+  ],
+  "databaseWrites": 0,
+  "objectWrites": 0,
+  "signatureOrPublisherCreated": false,
+  "localSignatureCheckDoesNotProveCurrentPublishedAdmission": true,
+  "remoteOrAllMachineProducerAbsenceNotProven": true,
+  "formalLoginConnected": false,
+  "formalPublisherConnected": false,
+  "fullRestorationAccepted": false,
+  "scriptHash": "f8b3b3641687ecdc999a0b4d58f9ac1f39bda6f532eddc7e3211a6731fea02ea"
+}

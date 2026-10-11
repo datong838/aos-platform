@@ -1,0 +1,86 @@
+{
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "authority": "AOS-001895",
+  "originalLoaderIndependentlyVerifiedFourSignatures": true,
+  "allSelectedPackageFileHashesUnchanged": true,
+  "eightModuleDefinitionsAndSixMediaTemplatesPreserved": true,
+  "mediaProductionProfileSchema": "aos.ecommerce-production-profile/v1",
+  "mediaEvalGateNames": [
+    "fact",
+    "brand",
+    "copyright",
+    "safety",
+    "platform",
+    "humanApproval"
+  ],
+  "mediaEvalRequiresSameRevisionAndFailClosed": true,
+  "growthGateIds": [
+    "G2_DECISION_TAGS",
+    "A6E_ECOMMERCE_DEFINITION_CATALOG",
+    "G1_L04_INVENTORY_RISK",
+    "G1_L06_DAILY_OPS_DIGEST",
+    "D3_L05_COMMISSION_ANOMALY"
+  ],
+  "growthGateDocumentIsNotFourMediaRuleExactRefs": true,
+  "mediaTemplateDocuments": [
+    {
+      "path": "content/media-production-templates/full.responsibility.json",
+      "schema": "aos.ecommerce-media-responsibility-template/v1",
+      "templateId": "ecommerce.media-studio.full.responsibility",
+      "revision": 1,
+      "profile": "FULL",
+      "sha256": "eb48d34b2db2fb531273159e4cb203807bc1560e6c76bcd48fd51c867c52f6ef"
+    },
+    {
+      "path": "content/media-production-templates/full.stage.json",
+      "schema": "aos.ecommerce-media-stage-template/v1",
+      "templateId": "ecommerce.media-studio.full.stage",
+      "revision": 1,
+      "profile": "FULL",
+      "sha256": "61ebaa1abf049e98f94cf016fc746a868e3b8bd008f4008168eaf9bb47321479"
+    },
+    {
+      "path": "content/media-production-templates/lite.responsibility.json",
+      "schema": "aos.ecommerce-media-responsibility-template/v1",
+      "templateId": "ecommerce.media-studio.lite.responsibility",
+      "revision": 1,
+      "profile": "LITE",
+      "sha256": "f5d289eebd9fa928036e6412efdcb861236a24e7f0f91a68d49a584da4badba6"
+    },
+    {
+      "path": "content/media-production-templates/lite.stage.json",
+      "schema": "aos.ecommerce-media-stage-template/v1",
+      "templateId": "ecommerce.media-studio.lite.stage",
+      "revision": 1,
+      "profile": "LITE",
+      "sha256": "890196be9f756195b8a7d84fb0aad991c4906d8f5a6cc36121ebd890d89143df"
+    },
+    {
+      "path": "content/media-production-templates/standard.responsibility.json",
+      "schema": "aos.ecommerce-media-responsibility-template/v1",
+      "templateId": "ecommerce.media-studio.standard.responsibility",
+      "revision": 1,
+      "profile": "STANDARD",
+      "sha256": "4f09ba944f6dfc3eea24ed9580339017278278d76aeedc333a5181992e692658"
+    },
+    {
+      "path": "content/media-production-templates/standard.stage.json",
+      "schema": "aos.ecommerce-media-stage-template/v1",
+      "templateId": "ecommerce.media-studio.standard.stage",
+      "revision": 1,
+      "profile": "STANDARD",
+      "sha256": "7b497bc524627df284fd9e60f7441639aa046aa6cdbf9c70128ee0be1480a56c"
+    }
+  ],
+  "fullRegistrationRequestAbsenceNotProofOfMissingSignedPolicy": true,
+  "registrationSourceSignatureRefsMustBeDerivedOutsideTheirOwnSignedBundle": true,
+  "productionProfileGateNamesAloneNotCanonicalRulesOrPolicyProducer": true,
+  "requiredRepair": "Bind signed policy contribution schema and canonical Rule refs to server-derived manifest/signature/policy exact refs in one original authority snapshot; preserve templates and original Eval/Issue/Return.",
+  "databaseWrites": 0,
+  "registryTransitions": 0,
+  "privateKeysRead": false,
+  "formalPublisherConnected": false,
+  "fullRestorationAccepted": false,
+  "auditScriptHash": "f8b3b3641687ecdc999a0b4d58f9ac1f39bda6f532eddc7e3211a6731fea02ea",
+  "scriptHash": "03c1f1b1905dcb321124cd12a383db240b514966614cb6b6f29d6391b638090c"
+}
