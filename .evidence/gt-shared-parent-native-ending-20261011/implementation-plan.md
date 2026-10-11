@@ -193,3 +193,8 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 新增plan-extra-1804固定测试探针，沿用dedup及三hook恢复；补BitmapIndex indexqual/indexqualorig、Memoize param_exprs、Hash/HashJoin hashkeys，记录hash operator实现及get_op_hash_functions左右函数。Memoize/Hash/HashJoin仍记录未审查tag（collation/type支持及native内部未闭合），不从记录存在推导无效果。先严格编译、身份门，再新完整Source/事务内元数据fixture复验。不改产品/TTL/Source算法或正式库。
 
 1804严格编译及身份门通过，新增plan-extra-source-1804完整新Sourcefixture；继续原事务内OID元数据全量冻结和清理后差异显式记录，不改原assertions。
+
+## 排序支持目录观察1805
+新增sort-support-1805/probe.c及Dockerfile。复习PG16.14 sortsupport.c：排序操作符解析到opfamily/opcintype，优先BTSORTSUPPORT_PROC、无comparator时BTORDER_PROC。仅记录两候选OID，不主动调用支持函数；覆盖Sort/IncrementalSort/MergeAppend排序键，继续标记未审查（collation/native comparator及生命周期）。不改变固定collector身份、三hook恢复、原验证断言和TTL。先严格编译，再独立完整Source复验；编译不代表运行通过。
+
+1805严格编译及身份负门通过；sort-source-1805使用全新Source/测试库，唯一替换已核验库路径，保持原四证书/八节点/异常恢复/latewriter/COMMIT拒绝及事务内目录冻结，终态独立核验回滚与清理。

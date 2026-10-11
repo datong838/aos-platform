@@ -1,0 +1,8 @@
+{
+  "guard_and_identity_tail_unchanged": true,
+  "original_fixture_helpers_unchanged": true,
+  "probe_sha256": "5309f764495d69d3a0095c5989b53eb61eb9579f9c0e7b1edc1538d77be0148d",
+  "strict_compile_passed": true,
+  "runtime_full_result_pending": true,
+  "execution_authorized": false
+}

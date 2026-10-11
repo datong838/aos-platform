@@ -1,0 +1,7 @@
+# 排序支持观察1805复核
+
+固定collector仅增加Sort/IncrementalSort/MergeAppend排序操作符族的比较函数和排序支持函数候选记录；不主动调用支持函数。原身份/三hook恢复与fixture辅助文件不变。严格编译和admin/null负门通过。
+
+完整新Source联验1 passed、8 warnings、154.18秒。隔离库aos_test_6cd88905cf15_ti4_test，XID67308 aborted。228个观察函数在原事务冻结，225个清理后仍存在；九表0、无其他客户端、profile恢复。三个恢复函数正文逐字相符且Owner/ACL/config未变，三个缺失函数对应原DROP路径。
+
+目录候选不是所有实际调用证明。排序原生comparator函数指针、collation、聚合及未走分支、包来源和生命周期仍未闭合；不授业务权限，不作组件Delivery或完整Goal完成。
