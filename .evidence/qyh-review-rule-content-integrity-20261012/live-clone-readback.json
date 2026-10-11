@@ -1,0 +1,11 @@
+{
+  "outcome": "EXISTING_ISOLATED_RULE_CONTENT_INTEGRITY_VERIFIED",
+  "exactCloneIdentityVerified": true,
+  "callerTransactionUsed": true,
+  "existingRuleContentDigestExact": true,
+  "newRuleCreated": false,
+  "databaseWrites": 0,
+  "currentAuthoritativeDatabaseConnected": false,
+  "canonicalProductionRuleAccepted": false,
+  "signedMediaSourceAccepted": false
+}

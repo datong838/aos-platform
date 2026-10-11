@@ -1,0 +1,21 @@
+{
+  "baseHead": "08c814b7bf3493efa717e5dcef985b7b6601e57c",
+  "targetedAdjacent": {
+    "passed": 47,
+    "skipped": 0,
+    "warnings": 7
+  },
+  "existingIsolatedRuleDigestVerified": true,
+  "sameCallerTransaction": true,
+  "historicalGetterUnchanged": true,
+  "databaseWrites": 0,
+  "newRuleOrApprovalCreated": false,
+  "canonicalProductionRuleApproved": false,
+  "completeMediaSourceConnected": false,
+  "currentServiceChanged": false,
+  "retainedArtifactHashMatches": 1695,
+  "files": {
+    "services/aos-api/aos_api/aip_production_contract_store.py": "731e7d278dde3c19f95f08b032df77a12ff6871d050e4f24af9e4eb5425b47b8",
+    "services/aos-api/tests/aip/test_review_rule_content_integrity.py": "bcff3085389f0e97542ffc408ec2f996ba802eda259f84fea51269bff0993569"
+  }
+}

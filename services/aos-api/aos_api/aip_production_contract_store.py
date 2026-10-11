@@ -2706,6 +2706,29 @@ class AipProductionContractStore:
         with self._connect_factory(scope) as connection:
             return read(connection)
 
+    def get_review_rule_revision_with_content_integrity(
+        self, scope: TenantScope, ref: ExactRevisionRef, *, conn: Any
+    ) -> ReviewRuleRevision:
+        """Read exact Rule bytes in the caller transaction; this is not approval.
+
+        Historical readers retain their behavior. Complete Source consumers
+        must separately prove signed policy, installation and governance.
+        """
+        if conn is None or not isinstance(ref, ExactRevisionRef) or ref.resource_type != "EvalRuleRevision":
+            raise ProductionContractDependencyBlocked("REVIEW_RULE_REF_TYPE_INVALID")
+        rule = self.get_review_rule_revision(
+            scope, ref.resource_id, ref.revision, conn=conn
+        )
+        computed = canonical_hash({
+            "ruleId": rule.rule_id, "revision": rule.revision, "spec": rule.spec,
+        })
+        if (
+            rule.rule_id != ref.resource_id or rule.revision != ref.revision
+            or rule.content_hash != ref.content_hash or computed != rule.content_hash
+        ):
+            raise ProductionContractDependencyBlocked("REVIEW_RULE_CONTENT_DRIFTED")
+        return rule
+
     def list_review_rule_revisions(self, scope: TenantScope) -> ReviewRuleRevisionListResponse:
         with self._connect_factory(scope) as conn:
             rows = conn.execute(

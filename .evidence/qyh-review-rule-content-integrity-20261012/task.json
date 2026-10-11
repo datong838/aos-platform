@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-review-rule-content-integrity-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001922",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/aip_production_contract_store.py",
+    "aos-platform/services/aos-api/tests/aip/test_review_rule_content_integrity.py",
+    "aos-platform/.evidence/qyh-review-rule-content-integrity-20261012"
+  ],
+  "excluded_scope": [
+    "maintenance/current-database",
+    "rule registration/approval/consumer activation"
+  ],
+  "expected_outputs": [
+    "Dedicated exact ReviewRule content-integrity read in original caller transaction, original historical getter unchanged; not approval"
+  ],
+  "lease_expires_at": "2026-10-12T10:29:07.524228+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T06:29:08+08:00"
+}
