@@ -1,0 +1,23 @@
+{
+  "checked_at": "2026-10-11T04:55:04.706835+00:00",
+  "image": "sha256:851765e2f8107a9014019a4431240db650318edf8cbd542f1e4514993581e992",
+  "container_never_started": true,
+  "keys": [
+    {
+      "name": "alpine-devel@lists.alpinelinux.org-58199dcc.rsa.pub",
+      "url": "https://alpinelinux.org/keys/alpine-devel@lists.alpinelinux.org-58199dcc.rsa.pub",
+      "sha256": "73867d92083f2f8ab899a26ccda7ef63dfaa0032a938620eda605558958a8041",
+      "size": 451,
+      "official_https_bytes_equal": true
+    },
+    {
+      "name": "alpine-devel@lists.alpinelinux.org-616ae350.rsa.pub",
+      "url": "https://alpinelinux.org/keys/alpine-devel@lists.alpinelinux.org-616ae350.rsa.pub",
+      "sha256": "d11f6b21c61b4274e182eb888883a8ba8acdbf820dcc7a6d82a7d9fc2fd2836d",
+      "size": 800,
+      "official_https_bytes_equal": true
+    }
+  ],
+  "aos_native_root_authorized": false,
+  "whole_source_build_proven": false
+}

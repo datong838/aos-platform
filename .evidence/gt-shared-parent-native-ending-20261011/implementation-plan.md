@@ -222,3 +222,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 可得精确依赖全批验签1813
 新增package-batch-1813/check.py及结果。原150可得版本总352219635字节，4线程下载单包80MiB上限/60秒，流式SHA256；gzip元数据压缩段Q1逐项比1809安装记录，错误保留。只读bind归档到精确SDK、networknone/read-only/capdropALL/no-new-privileges，入口apk verify全部精确文件，无安装/PG/正式数据。独立公钥来源、5历史缺包及原生完整合同仍待证。
+
+## 公钥外部官方来源核对1814
+新增package-key-origin-1814/check.py/result.json。官方keys目录403，不绕过；两个精确公开公钥HTTPS地址200。对1809从未启动提取容器/etc/apk/keys的两个文件与官方返回原字节逐项比较，绑定SHA256/URL/容器image。只读内存tar解析，不解包任意路径、不修改信任库。官方HTTPS一致性不是AOS专用purpose/Root或完整source-build证明。
