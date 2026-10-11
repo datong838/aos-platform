@@ -1,0 +1,136 @@
+{
+  "packages": 156,
+  "name_version_checksum_all_equal": true,
+  "full_records_equal": false,
+  "differences": [
+    {
+      "name": "bsd-compat-headers",
+      "before": {
+        "C": "Q1EYOhB5iH2qCsDqGzQ3psbsLWLWY=",
+        "P": "bsd-compat-headers",
+        "V": "0.7.2-r6",
+        "A": "aarch64"
+      },
+      "after": {
+        "C": "Q1EYOhB5iH2qCsDqGzQ3psbsLWLWY=",
+        "P": "bsd-compat-headers",
+        "V": "0.7.2-r6",
+        "A": "noarch"
+      },
+      "signed_metadata_arch": [
+        "arch = noarch"
+      ]
+    },
+    {
+      "name": "fortify-headers",
+      "before": {
+        "C": "Q1mld0RENFW1KgkRjRXjIhce1uf/4=",
+        "P": "fortify-headers",
+        "V": "3.0.1-r2",
+        "A": "aarch64"
+      },
+      "after": {
+        "C": "Q1mld0RENFW1KgkRjRXjIhce1uf/4=",
+        "P": "fortify-headers",
+        "V": "3.0.1-r2",
+        "A": "noarch"
+      },
+      "signed_metadata_arch": [
+        "arch = noarch"
+      ]
+    },
+    {
+      "name": "llvm21-test-utils-pyc",
+      "before": {
+        "C": "Q1syw0AKDE1kNKAkVDyYmTUDVPGPc=",
+        "P": "llvm21-test-utils-pyc",
+        "V": "21.1.8-r1",
+        "A": "aarch64"
+      },
+      "after": {
+        "C": "Q1syw0AKDE1kNKAkVDyYmTUDVPGPc=",
+        "P": "llvm21-test-utils-pyc",
+        "V": "21.1.8-r1",
+        "A": "noarch"
+      },
+      "signed_metadata_arch": [
+        "arch = noarch"
+      ]
+    },
+    {
+      "name": "perl-ipc-run",
+      "before": {
+        "C": "Q1FHY2yzqdd2pMBLMetjPm2nEYQMM=",
+        "P": "perl-ipc-run",
+        "V": "20260402.0-r0",
+        "A": "aarch64"
+      },
+      "after": {
+        "C": "Q1FHY2yzqdd2pMBLMetjPm2nEYQMM=",
+        "P": "perl-ipc-run",
+        "V": "20260402.0-r0",
+        "A": "noarch"
+      },
+      "signed_metadata_arch": [
+        "arch = noarch"
+      ]
+    },
+    {
+      "name": "perl-utils",
+      "before": {
+        "C": "Q1aLMbSDAgV3XgG4J9VfR31JgDbrg=",
+        "P": "perl-utils",
+        "V": "5.42.2-r1",
+        "A": "aarch64"
+      },
+      "after": {
+        "C": "Q1aLMbSDAgV3XgG4J9VfR31JgDbrg=",
+        "P": "perl-utils",
+        "V": "5.42.2-r1",
+        "A": "noarch"
+      },
+      "signed_metadata_arch": [
+        "arch = noarch"
+      ]
+    },
+    {
+      "name": "pyc",
+      "before": {
+        "C": "Q1Xv8PVGw9Nsb3yLTS85JJ1i05k+0=",
+        "P": "pyc",
+        "V": "3.14.8-r0",
+        "A": "aarch64"
+      },
+      "after": {
+        "C": "Q1Xv8PVGw9Nsb3yLTS85JJ1i05k+0=",
+        "P": "pyc",
+        "V": "3.14.8-r0",
+        "A": "noarch"
+      },
+      "signed_metadata_arch": [
+        "arch = noarch"
+      ]
+    },
+    {
+      "name": "python3-pyc",
+      "before": {
+        "C": "Q1qPlcO+OWdm0FMawg6Gb84i9Rx2c=",
+        "P": "python3-pyc",
+        "V": "3.14.8-r0",
+        "A": "aarch64"
+      },
+      "after": {
+        "C": "Q1qPlcO+OWdm0FMawg6Gb84i9Rx2c=",
+        "P": "python3-pyc",
+        "V": "3.14.8-r0",
+        "A": "noarch"
+      },
+      "signed_metadata_arch": [
+        "arch = noarch"
+      ]
+    }
+  ],
+  "build_exit": 0,
+  "network_disabled_install": true,
+  "execution_authorized": false
+}

@@ -1,0 +1,15 @@
+{
+  "container": "c8cce41e23ebbfb07ea7c6d86cc6f74f21a53873f54d0f97fbb47c92a197a46e",
+  "base": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+  "inherited_exact_packages": [
+    ".postgresql-rundeps",
+    "alpine-release",
+    "apk-tools",
+    "ca-certificates-bundle",
+    "libapk",
+    "tzdata"
+  ],
+  "base_package_count": 45,
+  "sdk_package_count": 156,
+  "historical_base_trust_proven": false
+}

@@ -225,3 +225,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 公钥外部官方来源核对1814
 新增package-key-origin-1814/check.py/result.json。官方keys目录403，不绕过；两个精确公开公钥HTTPS地址200。对1809从未启动提取容器/etc/apk/keys的两个文件与官方返回原字节逐项比较，绑定SHA256/URL/容器image。只读内存tar解析，不解包任意路径、不修改信任库。官方HTTPS一致性不是AOS专用purpose/Root或完整source-build证明。
+
+## 固定基础镜像离线依赖重建1815
+新增offline-sdk-1815。先从精确1778基础镜像创建不启动提取容器，读取APK数据库，核5缺失实体包均以相同版本/C值存在。成立后使用原base digest与1813已验签归档进行networknone离线apk安装，仅新构建层；对比完整156包版本/架构/C及原world目标。不替换原SDK或运行环境、不执行PG，继承base的独立来源信任仍明确保留。

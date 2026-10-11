@@ -1,0 +1,3 @@
+FROM sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883
+COPY packages /packages
+RUN apk add --no-network /packages/*.apk
