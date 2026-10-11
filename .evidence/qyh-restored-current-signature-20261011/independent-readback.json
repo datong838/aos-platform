@@ -1,0 +1,19 @@
+{
+  "outcome": "CURRENT_FOUR_SIGNATURES_INDEPENDENT_GREEN",
+  "versions": {
+    "domain.ecommerce.core": "1.4.3",
+    "platform.ecommerce.niushop": "1.23.0",
+    "solution.ecommerce.growth": "1.13.0",
+    "solution.ecommerce.operations-base": "1.2.0"
+  },
+  "signedTreeHash": "sha256:12e26dc538b09b8b5b30fb525ed15974287931612d0f1324fea8d28cc5f73a4f",
+  "buildUnchangedUnsigned": true,
+  "signatureCount": 4,
+  "runtimeAuthorized": false,
+  "effects": {
+    "externalPublicationCount": 0,
+    "installationMutationCount": 0,
+    "providerInvocationCount": 0,
+    "registryPublishCount": 0
+  }
+}

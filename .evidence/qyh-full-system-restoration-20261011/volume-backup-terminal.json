@@ -1,0 +1,28 @@
+{
+  "outcome": "EXACT647_VOLUME_FRESH_FULL_BACKUP_GREEN",
+  "tables": 647,
+  "files": {
+    "globals.sql": {
+      "sha256": "663cd9645872fb11cb7b0b87323736be523185c3adce9dd2dd80394e8e063d7c",
+      "bytes": 7491,
+      "secondCopyExact": true
+    },
+    "history159.dump": {
+      "sha256": "4dfb8dd30eb6566aa1387ec881e2f2aee1ecf4eceb0e3feab6a981173577d8d4",
+      "bytes": 16075602,
+      "secondCopyExact": true
+    },
+    "original-pg_hba.conf": {
+      "sha256": "2366fa203f80a6b335fb103ef2d181e5f9d2cebdd27ae5cff1eb97d991f94ff0",
+      "bytes": 5839,
+      "secondCopyExact": true
+    },
+    "original-postgresql.conf": {
+      "sha256": "4584bae6ead767b2e3f4771bc57964223b5625795930f4e56287936448f5dc83",
+      "bytes": 29829,
+      "secondCopyExact": true
+    }
+  },
+  "independentSecondSnapshot": false,
+  "originalRestorationBaselineExact": true
+}

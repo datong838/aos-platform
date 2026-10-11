@@ -1,0 +1,8 @@
+{
+  "exit": 1,
+  "reason": "Signer deliberately forbids output receipt inside repository",
+  "stateExists": false,
+  "keyCreated": false,
+  "signatureProduced": false,
+  "unknownEffects": false
+}

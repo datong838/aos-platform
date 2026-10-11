@@ -1,0 +1,20 @@
+{
+  "buildTreeHash": "sha256:c23b5399b29084c41d967cb20b9bfe869a90a6adcda6e140301435864b7c8bfb",
+  "contentHashes": {
+    "domain.ecommerce.core": "sha256:e14e6af72dd7c89d5beb7fd002454029bbc64cf510e6b9849ae9df20ef7eba44",
+    "platform.ecommerce.niushop": "sha256:55b29795b73d5be0f28bd68fafc48c8dd7aa42c65eb5ea130a307326e7534117",
+    "solution.ecommerce.growth": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+    "solution.ecommerce.operations-base": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298"
+  },
+  "effects": {
+    "externalPublicationCount": 0,
+    "installationMutationCount": 0,
+    "providerInvocationCount": 0,
+    "registryPublishCount": 0
+  },
+  "keyId": "a0v-local-qyh-core143-growth113-v1",
+  "outcome": "SIGNED_TREE_GREEN",
+  "signedTree": "/Users/ddt/work/projects/ai_agent/aos-recovery/.aos-qyh-core143-signing-state-20261011-r1/signed-bundles",
+  "signedTreeHash": "sha256:12e26dc538b09b8b5b30fb525ed15974287931612d0f1324fea8d28cc5f73a4f",
+  "trustRootRevision": "sha256:f54a05c590ff3c19caa6b15e4660759075f999387ec5d511d9f182d76b580c13"
+}

@@ -1,0 +1,53 @@
+{
+  "outcome": "RETAINED647_VOLUME_LOADED_GREEN",
+  "identity": {
+    "cluster": "7695302940039200809",
+    "database": "aos_meta_head",
+    "schema": "a0v_159",
+    "activeOtherConnections": 0,
+    "loginExists": 1,
+    "name": "org-org",
+    "nameUpdatedAt": "2026-09-19 02:23:47.200537+00",
+    "disabledBindings": true
+  },
+  "container": {
+    "State": {
+      "Status": "running",
+      "Running": true,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 37557,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-10-11T07:53:24.989993294Z",
+      "FinishedAt": "0001-01-01T00:00:00Z"
+    },
+    "Ports": {
+      "5432/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "18446"
+        }
+      ]
+    },
+    "Mounts": [
+      {
+        "Type": "volume",
+        "Name": "aos-qyh-history159-prepared-data-20261011",
+        "Source": "/var/lib/docker/100000.100000/volumes/aos-qyh-history159-prepared-data-20261011/_data",
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "z",
+        "RW": true,
+        "Propagation": ""
+      }
+    ],
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd"
+  },
+  "fingerprintsExact": true,
+  "originalContainerRetainedStopped": true,
+  "apiAttached": false,
+  "eightWorkbenchesVisible": false
+}

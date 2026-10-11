@@ -1,0 +1,18 @@
+{
+  "outcome": "RETAINED_VOLUME_QIYUEHUI_NAME_GREEN",
+  "identity": {
+    "cluster": "7695302940039200809",
+    "database": "aos_meta_head",
+    "schema": "a0v_159",
+    "activeOtherConnections": 0,
+    "loginExists": 1,
+    "name": "栖月汇商贸有限公司",
+    "nameUpdatedAt": "2026-10-11 07:54:17.109847+00",
+    "disabledBindings": true
+  },
+  "tableCount": 647,
+  "changedTables": [
+    "public.meta_org"
+  ],
+  "businessExecutionStarted": false
+}
