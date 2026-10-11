@@ -55,6 +55,12 @@ API准备独立候选：新增本Task证据目录freeze_current_api.py。从精�
 
 ## 当前恢复身份来源对账
 
+### 当前正式配置入口实际复验（目录故障收口后）
+
+已登记候选：一、完整恢复Task中的既有登录/新四包发布和当前配置入口，依赖真实独立发布身份、当前预算审批，不重复授权整套恢复；二、已登记gt-native-freeze-lifecycle-20261011安全独立实现，依赖其原冻结合同，暂不优先于本次用户栖月汇恢复。选择第一项可独立完成的实际配置入口调查。
+
+新增本Task audit_live_configuration_entry.py及fresh receipt：只对当前18080已恢复服务执行GET，org-org/dev-project三历史目标的configuration-candidates/configuration-sources/configurations，输出source数量、当前精确revision/hash、目标binding和submissionConfigured，拒绝读/写凭据、业务payload、旧Run。canary相同installation三端点404；原服务current源码候选/volume preflight先核，独立重复GET和哈希比较不能证明正式Owner准入，只证明当前展示读取。现场浏览器新Task专属标签进入安装管理，选择已核安装查看配置提示，不点击提交、启用、创建草稿或任何业务mutation。核缺失预算提示、登记disabled和历史配置可见，落截图供复核。若界面错误另独立登记精确文件/Task后再修，不以假source/延长旧预算修复。
+
 ### 只读恢复服务目录依赖补齐（2026-10-11 r3）
 
 真实18080 GET复现：ecommerce-workshop/modules=500 INTERNAL；runtime-workshop/modules=500 REGISTRY_INTEGRITY_CORRUPT。前者original build_ecommerce_workshop_catalog固定repository_root/bundles，原冻结仅services/scripts导致FileNotFoundError/allowlist root does not exist；后者安装/资源门独立，不因前者修复放行。

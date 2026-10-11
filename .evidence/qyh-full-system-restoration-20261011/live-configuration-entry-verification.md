@@ -1,0 +1,13 @@
+# 当前恢复配置入口实测
+
+Rules：231、132非生产/正式身份边界、AOS工程交付、用户授权栖月汇整套恢复。上一波目录修复是实质进展，已Delivery；本轮不重复该验收，选择已登记完整恢复Task的当前配置入口。
+
+实际18080、18434仍为同一恢复volume/current提交源码；audit_live_configuration_entry.py在require_api_source_candidate及original preflight后，经现有非生产身份进行实际GET。三个历史安装的configurations、configuration-sources、configuration-candidates各两遍独立读，精确摘要相同；同IID三端点dev-org均404。仅输出Ref、revision/hash、count与目标，不输出actor、凭据或业务payload，不执行POST/PUT或SQL写。
+
+结果：三个安装均各有1个已登记配置、1个职责计划源和1个运行策略源。当前八类正式候选中七类各1，budget_policies为0；missing仅预算策略，allPresent=false。来源submissionConfigured=false。候选不是installation绑定或执行授权，旧政策/预算不自动续期，不重用旧Schedule或Run。这些既有职责与配置作为新安装恢复输入保留，不能以缺预算当作数据丢失。
+
+实际浏览器选择407059df安装，栖月汇组织下显示预算策略“缺少当前候选”与“配置登记服务尚未启用，可查看来源”，登记按钮disabled；r2/r3断言通过，pageerror为空，无模拟、拦截或mutation点击。初次定位把role=tab误当button导致超时；失败结果保留，按原BpTabs实际语义修正，不改产品代码、不重发未知业务效果。最初独立临时探查页面closed，CDP/API/Web后续即时健康GET200确认，未重启Chrome。r2整页截图未包含内部滚动区的配置面板，r3改为两个真实element截图并逐图检查，实际证据以r3为准，旧截图不改写。
+
+本轮新文件仅原恢复Task证据目录的audit脚本/浏览器脚本/receipt及本文件；业务源码、数据库、签名、安装状态、历史Run和其他22个tracked修改不变。实际页面证据不代表正式登录/独立发布/Host就绪或八页面恢复完成。已向用户请求现有企业登录入口/独立发布身份或配置路径，不索要密码、token或私钥；公共身份来源未确认前不伪造用户/Owner。整恢复Task及Goal保持ACTIVE。
+
+下一实际主线：接入可核验的既有登录来源与独立发布身份，经原职责分离门完成两新版本发布；当前Owner/预算通过原不可变修订与审批后登记新配置及新安装，不启用关联未知旧执行的历史407。既有四包签名和原电商模板沿用，八实际工作台仍须实际运行/交互与自然首链验收。不可把本七类候选或只读管理入口作为完成。

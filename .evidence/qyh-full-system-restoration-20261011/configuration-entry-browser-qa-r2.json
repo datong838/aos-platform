@@ -1,0 +1,15 @@
+{
+  "outcome": "RESTORED_CONFIGURATION_ENTRY_BROWSER_ACCEPTED",
+  "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+  "actualBudgetPolicyMissing": true,
+  "currentSourcesVisible": true,
+  "stageDisabled": true,
+  "pageErrorTypes": [],
+  "mutationClicks": 0,
+  "mockedResponses": false,
+  "requestInterception": false,
+  "formalIdentityVerified": false,
+  "runtimeAuthorized": false,
+  "eightPagesAccepted": false,
+  "tabRetained": true
+}

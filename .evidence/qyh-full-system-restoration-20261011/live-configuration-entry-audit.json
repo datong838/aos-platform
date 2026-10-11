@@ -1,0 +1,223 @@
+{
+  "outcome": "LIVE_RESTORED_CONFIGURATION_ENTRY_RECONCILED",
+  "head": "c056914c0530d9b967853adf68aacd65fa3c46bf",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "scope": [
+    "org-org",
+    "dev-project"
+  ],
+  "rows": [
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "candidates": {
+        "counts": {
+          "responsibility_plans": 1,
+          "runtime_policies": 1,
+          "data_policies": 1,
+          "egress_policies": 1,
+          "network_policies": 1,
+          "quota_policies": 1,
+          "budget_policies": 0,
+          "budgets": 1
+        },
+        "missing": [
+          "budget_policies"
+        ],
+        "allPresent": false,
+        "authorityKind": "tenant_candidates_not_installation_binding",
+        "installationRevision": 5,
+        "installationEtag": 5
+      },
+      "canary": {
+        "configuration-candidates": {
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        "configuration-sources": {
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        "configurations": {
+          "status": 404,
+          "code": "NOT_FOUND"
+        }
+      },
+      "sources": {
+        "target": {
+          "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+          "installationEtag": 5,
+          "generation": "7571af17-e2bb-4437-9f04-75812bae56c0",
+          "bindingRevision": 7
+        },
+        "installationRevision": 5,
+        "roleRefs": [
+          {
+            "authority": "aip.responsibility_plan_revision",
+            "id": "responsibility-plan-63c82d2a75614e1b95f1",
+            "revision": 2,
+            "hash": "sha256:b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a"
+          }
+        ],
+        "policyRefs": [
+          {
+            "authority": "aip.runtime_policy_revision",
+            "id": "a0v-ecommerce-runtime-policy-v1",
+            "revision": 13,
+            "hash": "sha256:bc8b9b0bace9c57c21cbd93d188b3ed8292dffe2271611abaf60cfe380abd019"
+          }
+        ],
+        "submissionConfigured": false
+      },
+      "configurations": {
+        "count": 1,
+        "hasMore": false,
+        "generation": "7571af17-e2bb-4437-9f04-75812bae56c0",
+        "bindingRevision": 7
+      }
+    },
+    {
+      "installationId": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+      "candidates": {
+        "counts": {
+          "responsibility_plans": 1,
+          "runtime_policies": 1,
+          "data_policies": 1,
+          "egress_policies": 1,
+          "network_policies": 1,
+          "quota_policies": 1,
+          "budget_policies": 0,
+          "budgets": 1
+        },
+        "missing": [
+          "budget_policies"
+        ],
+        "allPresent": false,
+        "authorityKind": "tenant_candidates_not_installation_binding",
+        "installationRevision": 5,
+        "installationEtag": 5
+      },
+      "canary": {
+        "configuration-candidates": {
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        "configuration-sources": {
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        "configurations": {
+          "status": 404,
+          "code": "NOT_FOUND"
+        }
+      },
+      "sources": {
+        "target": {
+          "installationId": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+          "installationEtag": 5,
+          "generation": "c78b2e2e-57ef-47ad-be07-9acf689e578c",
+          "bindingRevision": 9
+        },
+        "installationRevision": 5,
+        "roleRefs": [
+          {
+            "authority": "aip.responsibility_plan_revision",
+            "id": "responsibility-plan-63c82d2a75614e1b95f1",
+            "revision": 2,
+            "hash": "sha256:b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a"
+          }
+        ],
+        "policyRefs": [
+          {
+            "authority": "aip.runtime_policy_revision",
+            "id": "a0v-ecommerce-runtime-policy-v1",
+            "revision": 13,
+            "hash": "sha256:bc8b9b0bace9c57c21cbd93d188b3ed8292dffe2271611abaf60cfe380abd019"
+          }
+        ],
+        "submissionConfigured": false
+      },
+      "configurations": {
+        "count": 1,
+        "hasMore": false,
+        "generation": "c78b2e2e-57ef-47ad-be07-9acf689e578c",
+        "bindingRevision": 9
+      }
+    },
+    {
+      "installationId": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+      "candidates": {
+        "counts": {
+          "responsibility_plans": 1,
+          "runtime_policies": 1,
+          "data_policies": 1,
+          "egress_policies": 1,
+          "network_policies": 1,
+          "quota_policies": 1,
+          "budget_policies": 0,
+          "budgets": 1
+        },
+        "missing": [
+          "budget_policies"
+        ],
+        "allPresent": false,
+        "authorityKind": "tenant_candidates_not_installation_binding",
+        "installationRevision": 5,
+        "installationEtag": 5
+      },
+      "canary": {
+        "configuration-candidates": {
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        "configuration-sources": {
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        "configurations": {
+          "status": 404,
+          "code": "NOT_FOUND"
+        }
+      },
+      "sources": {
+        "target": {
+          "installationId": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+          "installationEtag": 5,
+          "generation": "c26edf1c-5170-4158-9f30-36dc1f2ba07f",
+          "bindingRevision": 8
+        },
+        "installationRevision": 5,
+        "roleRefs": [
+          {
+            "authority": "aip.responsibility_plan_revision",
+            "id": "responsibility-plan-63c82d2a75614e1b95f1",
+            "revision": 2,
+            "hash": "sha256:b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a"
+          }
+        ],
+        "policyRefs": [
+          {
+            "authority": "aip.runtime_policy_revision",
+            "id": "a0v-ecommerce-runtime-policy-v1",
+            "revision": 13,
+            "hash": "sha256:bc8b9b0bace9c57c21cbd93d188b3ed8292dffe2271611abaf60cfe380abd019"
+          }
+        ],
+        "submissionConfigured": false
+      },
+      "configurations": {
+        "count": 1,
+        "hasMore": false,
+        "generation": "c26edf1c-5170-4158-9f30-36dc1f2ba07f",
+        "bindingRevision": 8
+      }
+    }
+  ],
+  "independentReadsStable": true,
+  "databaseWrites": 0,
+  "marketplaceSourceReads": 0,
+  "formalOwnerVerified": false,
+  "formalPublisherVerified": false,
+  "eightPagesAccepted": false,
+  "runtimeAuthorized": false,
+  "sourceSha256": "617d08cee852e3b722ff88de117d5a2fd4f071dced27550c6c4ef97d453a9737"
+}

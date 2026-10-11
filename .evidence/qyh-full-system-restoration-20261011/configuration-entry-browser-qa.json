@@ -1,0 +1,8 @@
+{
+  "outcome": "BROWSER_ACCEPTANCE_FAILED",
+  "errorType": "TimeoutError",
+  "message": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: '安装管理', exact: true })\u001b[22m\n",
+  "mutationClicks": 0,
+  "runtimeAuthorized": false,
+  "eightPagesAccepted": false
+}
