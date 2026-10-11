@@ -1,0 +1,22 @@
+{
+  "outcome": "LATEST_FROZEN_SOURCE_ORIGINAL_AND_SUCCESSOR_GATES_GREEN",
+  "head": "28f620202a708b34d26928efef772e8b14d145d7",
+  "fileCount": 8614,
+  "apiRuntimePythonAstCount": 2130,
+  "launchFileCount": 5,
+  "originalSourceGatePassed": true,
+  "successorSourceGatePassed": true,
+  "sourcePermissionsVerified": true,
+  "uncommittedUserModificationsCopied": false,
+  "retainedPackageHashMatches": 1695,
+  "serviceChanged": false,
+  "apiStarted": false,
+  "databaseWrites": 0,
+  "formalIdentityVerified": false,
+  "eightPagesAccepted": false,
+  "freshInterpreterImport": {
+    "outcome": "FROZEN_SUCCESSOR_LAUNCH_MODULE_IMPORTED_NO_DB_NETWORK_PROCESS",
+    "originalFactoryCallable": true,
+    "startupInvoked": false
+  }
+}

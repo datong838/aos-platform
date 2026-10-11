@@ -1,0 +1,22 @@
+{
+  "base_revision": "AOS-001842",
+  "created_at": "2026-10-11T15:47:30+08:00",
+  "excluded_scope": [
+    "old current-preview services/DB (original current159 Task owns those); mall/oldRun/manual/unknown replay/Provider activation"
+  ],
+  "expected_outputs": [
+    "Human authorized full Qiyuehui ecommerce restoration: exact existing647-table volume safely loaded, current signed release/identity/configuration reviewed, PG→API→Web and real eight-page acceptance; retain all old data and no fake flags"
+  ],
+  "lease_expires_at": "2026-10-12T09:43:06.318675+00:00",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "schema": "aos-memory-task-receipt/v1",
+  "scope": [
+    "aos-platform/.evidence/qyh-full-system-restoration-20261011",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume",
+    "aos-platform/maintenance/qiyuehui-restored-api",
+    "aos-platform/scripts/a0v_qyh_restored_http.py",
+    "aos-platform/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py"
+  ],
+  "status": "ACTIVE",
+  "task_id": "qyh-full-system-restoration-20261011"
+}

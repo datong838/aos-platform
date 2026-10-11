@@ -1,0 +1,6 @@
+{
+  "outcome": "OLD_FROZEN_SOURCE_REJECTED_AGAINST_CURRENT_HEAD",
+  "reason": "RESTORED_CURRENT_API_SOURCE_DRIFT",
+  "currentServiceChanged": false,
+  "databaseWrites": 0
+}
