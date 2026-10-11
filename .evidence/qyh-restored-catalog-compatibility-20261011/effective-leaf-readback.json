@@ -1,0 +1,57 @@
+{
+  "runtimeCandidateInstallationIds": [
+    "407059df-6f1f-4927-acd7-8e388692838e",
+    "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+    "ef5bc0c3-1dbe-4659-b839-2350f70232bf"
+  ],
+  "items": [
+    {
+      "installation_id": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+      "display_name": "栖月汇电商商品接入版本替换",
+      "current_revision": 5,
+      "active_revision": 5,
+      "generation": "c26edf1c-5170-4158-9f30-36dc1f2ba07f",
+      "binding_revision": 8,
+      "enabled": false,
+      "operation_fence": true,
+      "observed_state": "unknown"
+    },
+    {
+      "installation_id": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+      "display_name": "栖月汇电商商品接入版本替换",
+      "current_revision": 5,
+      "active_revision": 5,
+      "generation": "c78b2e2e-57ef-47ad-be07-9acf689e578c",
+      "binding_revision": 9,
+      "enabled": false,
+      "operation_fence": true,
+      "observed_state": "unknown"
+    },
+    {
+      "installation_id": "407059df-6f1f-4927-acd7-8e388692838e",
+      "display_name": "A0-V Canonical 电商八工作台首装",
+      "current_revision": 5,
+      "active_revision": 5,
+      "generation": "7571af17-e2bb-4437-9f04-75812bae56c0",
+      "binding_revision": 7,
+      "enabled": false,
+      "operation_fence": true,
+      "observed_state": "unknown"
+    }
+  ],
+  "workshopResourcePaths": [
+    "content/workshops/ecommerce-analyst-query-templates.json",
+    "content/workshops/ecommerce.analyst.json",
+    "content/workshops/ecommerce.content-campaign.json",
+    "content/workshops/ecommerce.creator-growth.json",
+    "content/workshops/ecommerce.customer.json",
+    "content/workshops/ecommerce.media-studio.json",
+    "content/workshops/ecommerce.operations.json",
+    "content/workshops/ecommerce.price-governance.json",
+    "content/workshops/ecommerce.task-cockpit.json",
+    "content/workshops/w01-order-management.json",
+    "content/workshops/w02-product-inventory.json",
+    "content/workshops/w03-customer-private-domain.json"
+  ],
+  "notUiAcceptance": true
+}

@@ -1,0 +1,21 @@
+{
+  "outcome": "RESTORED159_CATALOG_CANDIDATES_AND_CONFIGURATION_DECODE_VERIFIED_NOT_READY",
+  "runtimeInstallations": 3,
+  "eightModuleResourcePaths": [
+    "content/workshops/ecommerce.analyst.json",
+    "content/workshops/ecommerce.content-campaign.json",
+    "content/workshops/ecommerce.creator-growth.json",
+    "content/workshops/ecommerce.customer.json",
+    "content/workshops/ecommerce.media-studio.json",
+    "content/workshops/ecommerce.operations.json",
+    "content/workshops/ecommerce.price-governance.json",
+    "content/workshops/ecommerce.task-cockpit.json"
+  ],
+  "allBindingsDisabledFenced": true,
+  "originalConfigurationDecode": true,
+  "originalPolicyHeadMismatch": true,
+  "uniqueRecoveryInstallationUnproven": true,
+  "formalDbWrites": false,
+  "browserPass": false,
+  "signaturesVerified": false
+}
