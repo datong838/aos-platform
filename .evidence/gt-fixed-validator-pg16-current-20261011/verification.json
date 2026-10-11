@@ -1,0 +1,26 @@
+{
+  "outcome": "CURRENT_PG16_CANDIDATE_SYNTAX_INDEPENDENTLY_VERIFIED",
+  "dependencyFileHashesVerified": 23,
+  "nativeServerVersion": "16.14",
+  "parserVersion": "v6.16",
+  "parserGrammarVersion": "16.1",
+  "sameMajorGrammar": true,
+  "exactMinorVersionMatches": false,
+  "proceduralFunctionsParsed": 4,
+  "queryFragments": 102,
+  "candidateSyntaxParsed": 102,
+  "simpleAssignmentRhsTransformations": 25,
+  "freshFourSourcesOwnerSearchPathAclExact": true,
+  "freshNineTablesZero": true,
+  "otherClients": 0,
+  "businessFunctionCalls": 0,
+  "databaseWrites": 0,
+  "actualSemanticBindingVerified": false,
+  "nativeRootAccepted": false,
+  "executionAuthorized": false,
+  "sourceFiles": {
+    "plan.md": "34e27da588bb6bdb4233c4065577ab6dfd63a145e669305c1094f7876e991aaf",
+    "audit.py": "1cabcd45f502f340d0dc53ba4b12a9be3faef1f3624a212b739f0625c2c27813",
+    "result.json": "8a452acaf4943b3f3af9af9b49c34b2c10f8dc1726b05883a8664fd7445c1220"
+  }
+}
