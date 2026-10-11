@@ -1,0 +1,10 @@
+{
+  "containerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "cluster": "7695416748450308141",
+  "database": "qyh_source_contract_20261011",
+  "guardHash": "a6a60767c84ffe263ec1d357f686677dbac36323e10ef03734254ef2c6ff62a9",
+  "role": "aos_contract_source_issuer",
+  "currentDatabaseTouched": false,
+  "originalCloneDatabaseWrites": false,
+  "historicalCutoffOnly": true
+}

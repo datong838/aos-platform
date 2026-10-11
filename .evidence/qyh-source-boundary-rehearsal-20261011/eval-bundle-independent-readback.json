@@ -1,0 +1,11 @@
+{
+  "actualFourReceiptsPairedToExactRevisions": true,
+  "originalProvenanceReaderIndependentlyAccepted": true,
+  "failedAndBlockedRequestsHaveNoReceipt": true,
+  "issuerRoleAbsent": true,
+  "sourceAndOriginalClone647DataExact": true,
+  "allOriginalMetadataExact": true,
+  "historicalCutoffOnly": true,
+  "fullRestorationAccepted": false,
+  "sourceHash": "e90c23f19214724103e1fe4439fa0feb0202e70bbad04d7e2fdf203513d431e4"
+}

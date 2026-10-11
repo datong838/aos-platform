@@ -1,0 +1,17 @@
+{
+  "blockedFreezeAndStaleCASDidNotAdvanceHead": true,
+  "head": {
+    "current_revision": 2,
+    "version": 2
+  },
+  "history": [
+    {
+      "revision": 1,
+      "lifecycle": "draft"
+    },
+    {
+      "revision": 2,
+      "lifecycle": "draft"
+    }
+  ]
+}

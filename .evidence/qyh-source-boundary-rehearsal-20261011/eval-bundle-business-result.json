@@ -1,0 +1,97 @@
+{
+  "cases": [
+    "actual-retained-suite-create-replay-original-blockers",
+    "ProductionContractIdempotencyConflict",
+    "ProductionContractConflict",
+    "ProductionContractDependencyBlocked",
+    "ProductionContractNotFound",
+    "nonempty-historical-evidence-build-replay-exact-provenance",
+    "ProductionContractDependencyBlocked",
+    "RaiseException",
+    "RaiseException"
+  ],
+  "connections": [
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    }
+  ],
+  "suiteRef": {
+    "resourceType": "EvalSuiteRevision",
+    "resourceId": "a0v-model-213bf6d90899f0014c99b8d6",
+    "revision": 1,
+    "contentHash": "093224e893e8b30bd3aa50d6f464044f6cff14822d516337e7942c512961eee6"
+  },
+  "evalContractId": "eval-contract-ea5206e2aa8b458c956b",
+  "bundleRef": {
+    "resourceType": "EvidenceBundleRevision",
+    "resourceId": "evidence-bundle-19cf2b3207f645ad9035",
+    "revision": 1,
+    "contentHash": "9eff03ab37253ee058344ff34a79fb210c9960e37cb7ae9eb2daed2b3c78889c"
+  },
+  "historicalEvidenceCutoff": "2026-09-12 03:06:24.460500+00:00",
+  "requiredFacts": [
+    "firstchain.skill.internal-license",
+    "firstchain.user.development-scope"
+  ],
+  "originalBuildProvenanceVerified": true,
+  "originalEvalFreezeRemainsBlocked": true,
+  "all29OperationsOrNaturalFirstChainAccepted": false,
+  "passwordOrOIDCAuthenticated": false
+}

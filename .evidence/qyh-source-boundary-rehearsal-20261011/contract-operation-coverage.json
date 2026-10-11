@@ -1,0 +1,40 @@
+{
+  "protocolHash": "e71929fdc2f43c5358f377d09d239a7d0d0b8cd93de34b15b0bf4a942d49dbc7",
+  "catalogOperations": 30,
+  "actualCurrentExperimentalReceiptOperations": {
+    "eval_contract.create": 1,
+    "eval_contract.revise": 1,
+    "evidence_bundle.build": 1,
+    "evidence_bundle.create": 1,
+    "task_brief.create": 1,
+    "task_brief.freeze": 1,
+    "task_brief.revise": 1
+  },
+  "remainingWithoutCurrentPositiveReceipt": [
+    "artifact_family.candidate.select",
+    "artifact_family.member.attach",
+    "artifact_family.register",
+    "artifact_relation.create",
+    "eval_contract.freeze",
+    "evidence.revoke",
+    "evidence_bundle.revoke",
+    "evidence_disclosure.resolve",
+    "impact_preview.create",
+    "impact_preview.freeze",
+    "impact_preview.revise",
+    "media_contract_migration.create",
+    "media_gate_profile.register",
+    "media_gate_set.assemble",
+    "production_context.freeze",
+    "review_issue.create",
+    "review_issue.resolve",
+    "review_issue.return",
+    "review_rule.register",
+    "stage_template.compile",
+    "stage_template.create",
+    "stage_template.freeze",
+    "stage_template.revise"
+  ],
+  "evalFreezeDeliberatelyRejectedNotPositive": true,
+  "allStoreCompatibilityAccepted": false
+}
