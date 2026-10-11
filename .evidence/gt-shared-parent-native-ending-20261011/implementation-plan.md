@@ -138,3 +138,6 @@ r1错误按 proname 查询 C prosrc，止于只读预检；r2误用历史摘要�
 
 ### 当前调用图第二层
 继续同一scope追加validator-closure-1792/audit-expanded.py与expanded-result.json，保留首轮结果。仅显式调用原Physical Source/Case/Plan及Occupation Source的无参SQL生成器，来源文件分别绑定hash；不执行SQL。签名native实现和canonical递归实现尚未归入静态闭合；元数据字符串中的函数名可能形成词法假边，必须列为候选而非真实运行调用。
+
+### 原隔离库实际锁与签名包装核查
+在原cluster7694680278363095064、aos_test_05f1a1dcd51f_ti4_test只读事务读取四个精确函数的定义/hash/Owner/语言/ACL及aos_ed25519.verify元数据；不调用业务或验证器。新增validator-closure-1792/native-functions.json，固定当前容器身份和cluster，失败不回退其他库。用于确认词法候选对应的真实函数，不作为新安装授权或全调用闭合证明。

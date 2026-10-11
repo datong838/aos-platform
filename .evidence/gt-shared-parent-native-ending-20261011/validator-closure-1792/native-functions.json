@@ -1,0 +1,84 @@
+{
+  "cluster": "7694680278363095064",
+  "functions": [
+    {
+      "signature": "aos_ed25519.verify(bytea,bytea,bytea)",
+      "owner": "aos_ed25519_owner",
+      "language": "c",
+      "provolatile": "i",
+      "prosecdef": false,
+      "proconfig": null,
+      "proacl": "{aos_ed25519_owner=X/aos_ed25519_owner,aos_capacity_publication_owner=X/aos_ed25519_owner}",
+      "probin": "$libdir/aos_ed25519",
+      "prosrc": "aos_ed25519_verify",
+      "definition": "CREATE OR REPLACE FUNCTION aos_ed25519.verify(signature bytea, message bytea, public_key bytea)\n RETURNS boolean\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/aos_ed25519', $function$aos_ed25519_verify$function$\n",
+      "definition_sha256": "e51da056b7cb77e9645aad186c8e3afaa807d095c3b7a53808f2f8263c2ad801"
+    },
+    {
+      "signature": "aos_capacity_evidence_epoch_lock(text,text,text)",
+      "owner": "aos_capacity_evidence_epoch_owner",
+      "language": "plpgsql",
+      "provolatile": "v",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "proacl": "{aos_capacity_evidence_epoch_owner=X/aos_capacity_evidence_epoch_owner,aos_runtime=X/aos_capacity_evidence_epoch_owner}",
+      "probin": null,
+      "prosrc": "\nDECLARE result bigint; BEGIN\n  IF p_org IS DISTINCT FROM 'org-org' OR p_project IS DISTINCT FROM 'dev-project'\n    OR p_org IS DISTINCT FROM NULLIF(current_setting('aos.org_id',true),'')\n    OR p_project IS DISTINCT FROM NULLIF(current_setting('aos.project_id',true),'')\n    OR p_id IS NULL OR p_id='' OR p_id<>btrim(p_id) OR length(p_id)>200 THEN\n    RAISE EXCEPTION 'CAPACITY_EVIDENCE_READER_SCOPE_REQUIRED' USING ERRCODE='42501';\n  END IF;\n  SELECT epoch INTO result FROM public.aip_capacity_evidence_epoch\n    WHERE org_id=p_org AND project_id=p_project AND bundle_id=p_id FOR SHARE;\n  IF NOT FOUND THEN\n    INSERT INTO public.aip_capacity_evidence_epoch(org_id,project_id,bundle_id)\n      VALUES(p_org,p_project,p_id) ON CONFLICT DO NOTHING;\n    SELECT epoch INTO result FROM public.aip_capacity_evidence_epoch\n      WHERE org_id=p_org AND project_id=p_project AND bundle_id=p_id FOR SHARE;\n  END IF;\n  IF NOT FOUND THEN RAISE EXCEPTION 'CAPACITY_EVIDENCE_EPOCH_MISSING' USING ERRCODE='42501'; END IF;\n  RETURN result;\nEND;\n",
+      "definition": "CREATE OR REPLACE FUNCTION public.aos_capacity_evidence_epoch_lock(p_org text, p_project text, p_id text)\n RETURNS bigint\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog'\nAS $function$\nDECLARE result bigint; BEGIN\n  IF p_org IS DISTINCT FROM 'org-org' OR p_project IS DISTINCT FROM 'dev-project'\n    OR p_org IS DISTINCT FROM NULLIF(current_setting('aos.org_id',true),'')\n    OR p_project IS DISTINCT FROM NULLIF(current_setting('aos.project_id',true),'')\n    OR p_id IS NULL OR p_id='' OR p_id<>btrim(p_id) OR length(p_id)>200 THEN\n    RAISE EXCEPTION 'CAPACITY_EVIDENCE_READER_SCOPE_REQUIRED' USING ERRCODE='42501';\n  END IF;\n  SELECT epoch INTO result FROM public.aip_capacity_evidence_epoch\n    WHERE org_id=p_org AND project_id=p_project AND bundle_id=p_id FOR SHARE;\n  IF NOT FOUND THEN\n    INSERT INTO public.aip_capacity_evidence_epoch(org_id,project_id,bundle_id)\n      VALUES(p_org,p_project,p_id) ON CONFLICT DO NOTHING;\n    SELECT epoch INTO result FROM public.aip_capacity_evidence_epoch\n      WHERE org_id=p_org AND project_id=p_project AND bundle_id=p_id FOR SHARE;\n  END IF;\n  IF NOT FOUND THEN RAISE EXCEPTION 'CAPACITY_EVIDENCE_EPOCH_MISSING' USING ERRCODE='42501'; END IF;\n  RETURN result;\nEND;\n$function$\n",
+      "definition_sha256": "dba97fcafb8b1f3ddc866fae571af7358acb3edf50573717f5dd4d59a09bff57"
+    },
+    {
+      "signature": "aos_capacity_withdrawal_epoch_lock(text,text,text)",
+      "owner": "aos_capacity_withdrawal_epoch_owner",
+      "language": "plpgsql",
+      "provolatile": "v",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "proacl": "{aos_capacity_withdrawal_epoch_owner=X/aos_capacity_withdrawal_epoch_owner,aos_runtime=X/aos_capacity_withdrawal_epoch_owner,aos_provider_capacity_issuer=X/aos_capacity_withdrawal_epoch_owner,aos_capacity_publication_owner=X/aos_capacity_withdrawal_epoch_owner}",
+      "probin": null,
+      "prosrc": "\nDECLARE result bigint; BEGIN\n IF p_org IS DISTINCT FROM 'org-org' OR p_project IS DISTINCT FROM 'dev-project'\n OR p_org IS DISTINCT FROM NULLIF(current_setting('aos.org_id',true),'')\n OR p_project IS DISTINCT FROM NULLIF(current_setting('aos.project_id',true),'')\n OR p_id IS NULL OR p_id='' OR p_id<>btrim(p_id) THEN\n  RAISE EXCEPTION 'CAPACITY_WITHDRAWAL_SCOPE_REQUIRED' USING ERRCODE='42501';\n END IF;\n SELECT epoch INTO result FROM public.aip_capacity_withdrawal_epoch\n WHERE org_id=p_org AND project_id=p_project AND proposal_id=p_id FOR SHARE;\n IF NOT FOUND THEN RAISE EXCEPTION 'CAPACITY_WITHDRAWAL_EPOCH_MISSING' USING ERRCODE='42501'; END IF;\n IF result<>0 THEN RAISE EXCEPTION 'CAPACITY_APPROVAL_WITHDRAWN' USING ERRCODE='42501'; END IF;\n RETURN result;\nEND;\n",
+      "definition": "CREATE OR REPLACE FUNCTION public.aos_capacity_withdrawal_epoch_lock(p_org text, p_project text, p_id text)\n RETURNS bigint\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog'\nAS $function$\nDECLARE result bigint; BEGIN\n IF p_org IS DISTINCT FROM 'org-org' OR p_project IS DISTINCT FROM 'dev-project'\n OR p_org IS DISTINCT FROM NULLIF(current_setting('aos.org_id',true),'')\n OR p_project IS DISTINCT FROM NULLIF(current_setting('aos.project_id',true),'')\n OR p_id IS NULL OR p_id='' OR p_id<>btrim(p_id) THEN\n  RAISE EXCEPTION 'CAPACITY_WITHDRAWAL_SCOPE_REQUIRED' USING ERRCODE='42501';\n END IF;\n SELECT epoch INTO result FROM public.aip_capacity_withdrawal_epoch\n WHERE org_id=p_org AND project_id=p_project AND proposal_id=p_id FOR SHARE;\n IF NOT FOUND THEN RAISE EXCEPTION 'CAPACITY_WITHDRAWAL_EPOCH_MISSING' USING ERRCODE='42501'; END IF;\n IF result<>0 THEN RAISE EXCEPTION 'CAPACITY_APPROVAL_WITHDRAWN' USING ERRCODE='42501'; END IF;\n RETURN result;\nEND;\n$function$\n",
+      "definition_sha256": "77c012866a04f9c65dddc985d55f37aadaa2bd2a66ff6e268f15e9feffc475d7"
+    },
+    {
+      "signature": "canonical_asset_registry_jsonb(jsonb)",
+      "owner": "aos_app",
+      "language": "plpgsql",
+      "provolatile": "i",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "proacl": "{=X/aos_app,aos_app=X/aos_app,aos_aip_binding_evaluator=X/aos_app}",
+      "probin": null,
+      "prosrc": "\n        DECLARE\n          value_type TEXT;\n          rendered TEXT;\n        BEGIN\n          value_type := jsonb_typeof(input_value);\n          CASE value_type\n            WHEN 'object' THEN\n              SELECT '{' || COALESCE(\n                       string_agg(\n                         to_jsonb(item.key)::TEXT || ':' ||\n                           canonical_asset_registry_jsonb(item.value),\n                         ',' ORDER BY item.key COLLATE \"C\"\n                       ),\n                       ''\n                     ) || '}'\n                INTO rendered\n                FROM jsonb_each(input_value) AS item;\n              RETURN rendered;\n            WHEN 'array' THEN\n              SELECT '[' || COALESCE(\n                       string_agg(\n                         canonical_asset_registry_jsonb(item.value),\n                         ',' ORDER BY item.ordinality\n                       ),\n                       ''\n                     ) || ']'\n                INTO rendered\n                FROM jsonb_array_elements(input_value)\n                     WITH ORDINALITY AS item(value, ordinality);\n              RETURN rendered;\n            WHEN 'number' THEN\n              rendered := input_value::TEXT;\n              IF POSITION('.' IN rendered) > 0 THEN\n                rendered := (rendered::DOUBLE PRECISION)::TEXT;\n                IF POSITION('.' IN rendered) = 0\n                   AND POSITION('e' IN rendered) = 0 THEN\n                  rendered := rendered || '.0';\n                END IF;\n              END IF;\n              RETURN rendered;\n            ELSE\n              RETURN input_value::TEXT;\n          END CASE;\n        END;\n        ",
+      "definition": "CREATE OR REPLACE FUNCTION public.canonical_asset_registry_jsonb(input_value jsonb)\n RETURNS text\n LANGUAGE plpgsql\n IMMUTABLE PARALLEL SAFE STRICT\n SET search_path TO 'pg_catalog', 'public', 'pg_temp'\nAS $function$\n        DECLARE\n          value_type TEXT;\n          rendered TEXT;\n        BEGIN\n          value_type := jsonb_typeof(input_value);\n          CASE value_type\n            WHEN 'object' THEN\n              SELECT '{' || COALESCE(\n                       string_agg(\n                         to_jsonb(item.key)::TEXT || ':' ||\n                           canonical_asset_registry_jsonb(item.value),\n                         ',' ORDER BY item.key COLLATE \"C\"\n                       ),\n                       ''\n                     ) || '}'\n                INTO rendered\n                FROM jsonb_each(input_value) AS item;\n              RETURN rendered;\n            WHEN 'array' THEN\n              SELECT '[' || COALESCE(\n                       string_agg(\n                         canonical_asset_registry_jsonb(item.value),\n                         ',' ORDER BY item.ordinality\n                       ),\n                       ''\n                     ) || ']'\n                INTO rendered\n                FROM jsonb_array_elements(input_value)\n                     WITH ORDINALITY AS item(value, ordinality);\n              RETURN rendered;\n            WHEN 'number' THEN\n              rendered := input_value::TEXT;\n              IF POSITION('.' IN rendered) > 0 THEN\n                rendered := (rendered::DOUBLE PRECISION)::TEXT;\n                IF POSITION('.' IN rendered) = 0\n                   AND POSITION('e' IN rendered) = 0 THEN\n                  rendered := rendered || '.0';\n                END IF;\n              END IF;\n              RETURN rendered;\n            ELSE\n              RETURN input_value::TEXT;\n          END CASE;\n        END;\n        $function$\n",
+      "definition_sha256": "53880ca6a74d07d8bc39229b1f3c0e27a7c6c6e72d2417240f72806b4b6c71a0"
+    },
+    {
+      "signature": "verify_model_shared_parent_certificate_signature(bytea,bytea,bytea)",
+      "owner": "aos_capacity_publication_owner",
+      "language": "plpgsql",
+      "provolatile": "v",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "proacl": "{aos_capacity_publication_owner=X/aos_capacity_publication_owner,aos_model_eval_issuer_owner=X/aos_capacity_publication_owner}",
+      "probin": null,
+      "prosrc": "\n          BEGIN\n            IF session_user<>'aos_provider_capacity_occupation'\n              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'\n              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'\n              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'\n              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'\n              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'\n              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'\n              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project'\n              OR octet_length(p_signature) IS DISTINCT FROM 64\n              OR octet_length(p_public_key) IS DISTINCT FROM 32\n              OR p_message IS NULL OR octet_length(p_message) NOT BETWEEN 59 AND 1048576\n              OR substring(p_message FROM 1 FOR octet_length(convert_to('AOS-MODEL-EVAL-SHARED-PARENT-CERTIFICATE-SIGNING-INPUT-v3'||chr(10),'UTF8')))\n                IS DISTINCT FROM convert_to('AOS-MODEL-EVAL-SHARED-PARENT-CERTIFICATE-SIGNING-INPUT-v3'||chr(10),'UTF8') THEN\n              RAISE EXCEPTION 'SHARED_CERTIFICATE_VERIFIER_SCOPE_REQUIRED' USING ERRCODE='42501'; END IF;\n            PERFORM aos_capacity_publication_private.require_current_source_installation();\n            RETURN aos_ed25519.verify(p_signature,p_message,p_public_key);\n          END ",
+      "definition": "CREATE OR REPLACE FUNCTION public.verify_model_shared_parent_certificate_signature(p_signature bytea, p_message bytea, p_public_key bytea)\n RETURNS boolean\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog'\nAS $function$\n          BEGIN\n            IF session_user<>'aos_provider_capacity_occupation'\n              OR current_setting('role',true) IS DISTINCT FROM 'aos_runtime'\n              OR current_setting('transaction_isolation') IS DISTINCT FROM 'serializable'\n              OR current_setting('transaction_read_only') IS DISTINCT FROM 'off'\n              OR current_setting('TimeZone') IS DISTINCT FROM 'UTC'\n              OR current_setting('session_replication_role') IS DISTINCT FROM 'origin'\n              OR current_setting('aos.org_id',true) IS DISTINCT FROM 'org-org'\n              OR current_setting('aos.project_id',true) IS DISTINCT FROM 'dev-project'\n              OR octet_length(p_signature) IS DISTINCT FROM 64\n              OR octet_length(p_public_key) IS DISTINCT FROM 32\n              OR p_message IS NULL OR octet_length(p_message) NOT BETWEEN 59 AND 1048576\n              OR substring(p_message FROM 1 FOR octet_length(convert_to('AOS-MODEL-EVAL-SHARED-PARENT-CERTIFICATE-SIGNING-INPUT-v3'||chr(10),'UTF8')))\n                IS DISTINCT FROM convert_to('AOS-MODEL-EVAL-SHARED-PARENT-CERTIFICATE-SIGNING-INPUT-v3'||chr(10),'UTF8') THEN\n              RAISE EXCEPTION 'SHARED_CERTIFICATE_VERIFIER_SCOPE_REQUIRED' USING ERRCODE='42501'; END IF;\n            PERFORM aos_capacity_publication_private.require_current_source_installation();\n            RETURN aos_ed25519.verify(p_signature,p_message,p_public_key);\n          END $function$\n",
+      "definition_sha256": "ba1dbea7be55ba37e4cd043061b1b84511b7820d1eac23d805a8486252bc4c46"
+    }
+  ],
+  "container_id": "8d2a50eb82cd8e5a8feea0ee647ad63090edb685416c777fcf9deafa9b877d3f",
+  "image": "sha256:bcdf34e61bae2345234063d6fa3dd31dbd89b9dd97d9a669b59edc0f1212d883",
+  "database": "aos_test_05f1a1dcd51f_ti4_test",
+  "read_only": true,
+  "functions_invoked": false,
+  "full_closure_proven": false
+}
