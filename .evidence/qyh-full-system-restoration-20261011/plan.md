@@ -22,7 +22,13 @@
 
 RED：旧Growth/错误基础包/漏包多包重复包/跨tenant/错误安装id/旧schema及伪造start授权均拒绝或不授予。专项相邻包含原preview与current-installation evidence测试；真实恢复库对当前三个已登记叶只读审计，不新建安装、不重发publish，不伪造正向验收。
 
+本接续调查两个已登记候选：①三个历史叶的ConfigurationDocument/current Source head及预算窗口精确核对，已获用户恢复/元数据只读授权，独立于发布账号；②原产品当前版本安装/configure入口，整体施工已授权，但依赖两新版本真实publish与当前Owner/Source权限，不能先执行。选择①，同轮实际READ ONLY读取恢复卷并用原configuration_store._decode核完整不可变hash；静态白名单Source表/参数化SQL只取ref/head/lifecycle/effective窗口，不读商城源/凭证/业务payload、不修改配置或续预算。
+
+新增仅本Task证据文件audit_restored_configuration.py与脱敏报告/复核文档。输出各类refs数量与hash、当前头匹配及预算有效性，区分4类ConfigurationDocument引用与8工作台界面，不能把旧配置解码当八配置运行授权。所有Ref只作为恢复资料，不伪造当前身份/Owner，不因过期而直接改有效期或fence。无需为一次只读调查写实现镜像单测；验证用真实数据库原解码与当前head对账、前后配置binding元数据精确保持。
+
 ## 未知与回滚
+
+本轮追加只读配置依赖与旧执行记录关联核对：在同一证据目录新增audit_restored_configuration_dependencies.py。使用当前有限LOGIN和READ ONLY事务读取当前runtime policy的五类策略引用及有效窗口；仅汇总三个历史安装关联的Schedule/Run状态和operation状态，不读取业务payload、不调用旧执行器。原正式reader包含FOR SHARE锁，禁止为了在只读调查中调用它而去掉锁或改用可写事务；本次只做元数据候选审计，明确不等于正式reader准入。产出新配置恢复输入清单，旧不可变配置、预算、绑定及Run均保留。
 
 2026-10-11当前发布来源核对后的安装选型：两个已发布基础包使用现有较新平台1.23.2/operations1.2.2（a0v-local-ecommerce-recovery-v2），与新core1.4.3/Growth1.13.0组合。平台源除version、构建lock/image/SBOM/signature外逐文件相同；operations除version、bundleRef及signature外逐文件相同。需逐项核验已有Registry manifest/artifact/content/signature与保留树精确相等，不能因为contentHash相同更写旧1.23.0/1.2.0签名。新core/Growth只在新坐标由现有RegistryService create→validate→publish；所有旧记录与安装保留。采用登记的有限LOGIN与SET ROLE aos_runtime进行本地维保，actor明确为用户授权维保代理，不冒充正式OIDC/业务Owner。
 

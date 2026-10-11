@@ -1,0 +1,319 @@
+{
+  "outcome": "RESTORED_CURRENT_CONFIGURATION_METADATA_READONLY_AUDIT",
+  "identity": {
+    "database": "aos_meta_head",
+    "cluster": "7695302940039200809",
+    "schema": "a0v_159",
+    "orgId": "org-org",
+    "orgName": "栖月汇商贸有限公司",
+    "projectId": "dev-project",
+    "tables": 647
+  },
+  "observedAt": "2026-10-11 08:53:00.226832+00:00",
+  "configurations": [
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "generation": "7571af17-e2bb-4437-9f04-75812bae56c0",
+      "configurationRef": {
+        "configurationId": "f8d1f58f-9a49-48e2-b1a4-262e22f929f0",
+        "revision": 1,
+        "hash": "sha256:f21169b03b4aba5dec2e6bbaa8ee8921e5ed833eee558f051b6e564aa068e359"
+      },
+      "hashVerifiedByOriginalDecoder": true,
+      "bindingDisabledFenced": true,
+      "roleRefCount": 1,
+      "dataRefCount": 1,
+      "sourceChecks": [
+        {
+          "purpose": "role",
+          "authority": "aip.responsibility_plan_revision",
+          "sourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+          "referencedRevision": 2,
+          "referencedHash": "sha256:b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+          "head": {
+            "current_revision": 2,
+            "revision": 2,
+            "content_hash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+            "lifecycle": "frozen"
+          },
+          "headRefExact": true
+        },
+        {
+          "purpose": "data",
+          "authority": "aip.data_classification_policy_revision",
+          "sourceId": "a0v-ecommerce-public-catalog-v1",
+          "referencedRevision": 1,
+          "referencedHash": "sha256:1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477",
+          "head": {
+            "current_revision": 1,
+            "revision": 1,
+            "content_hash": "1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "headRefExact": true
+        },
+        {
+          "purpose": "budget",
+          "authority": "aip.budget_revision",
+          "sourceId": "a0v-ecommerce-hard-stop-budget-v1",
+          "referencedRevision": 1,
+          "referencedHash": "sha256:6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126",
+          "head": {
+            "current_revision": 1,
+            "revision": 1,
+            "content_hash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126",
+            "lifecycle": "active"
+          },
+          "headRefExact": true
+        },
+        {
+          "purpose": "policy",
+          "authority": "aip.runtime_policy_revision",
+          "sourceId": "a0v-ecommerce-runtime-policy-v1",
+          "referencedRevision": 13,
+          "referencedHash": "sha256:bc8b9b0bace9c57c21cbd93d188b3ed8292dffe2271611abaf60cfe380abd019",
+          "head": {
+            "current_revision": 13,
+            "revision": 13,
+            "content_hash": "bc8b9b0bace9c57c21cbd93d188b3ed8292dffe2271611abaf60cfe380abd019",
+            "lifecycle": "active"
+          },
+          "headRefExact": true
+        }
+      ],
+      "policyBudgetRef": {
+        "assetId": "a0v-ecommerce-budget-policy-v1",
+        "revision": 13,
+        "assetType": "BudgetPolicyRevision",
+        "contentHash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696"
+      },
+      "budgetWindows": [
+        {
+          "current_revision": 13,
+          "revision": 13,
+          "content_hash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696",
+          "lifecycle": "active",
+          "effective_from": "2026-09-24 02:53:28.637050+00:00",
+          "effective_until": "2026-09-25 02:52:33.666717+00:00",
+          "effective_now": false
+        }
+      ],
+      "currentOwnerVerified": false,
+      "currentConfigurationPermissionVerified": false
+    },
+    {
+      "installationId": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+      "generation": "c78b2e2e-57ef-47ad-be07-9acf689e578c",
+      "configurationRef": {
+        "configurationId": "e4b10c10-1801-40bd-a9d4-46e42d5b4b31",
+        "revision": 1,
+        "hash": "sha256:82e1f59fa2365b5eb0f4c61187fa47133465a91f793f1df0435ef236d45e747f"
+      },
+      "hashVerifiedByOriginalDecoder": true,
+      "bindingDisabledFenced": true,
+      "roleRefCount": 1,
+      "dataRefCount": 1,
+      "sourceChecks": [
+        {
+          "purpose": "role",
+          "authority": "aip.responsibility_plan_revision",
+          "sourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+          "referencedRevision": 2,
+          "referencedHash": "sha256:b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+          "head": {
+            "current_revision": 2,
+            "revision": 2,
+            "content_hash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+            "lifecycle": "frozen"
+          },
+          "headRefExact": true
+        },
+        {
+          "purpose": "data",
+          "authority": "aip.data_classification_policy_revision",
+          "sourceId": "a0v-ecommerce-public-catalog-v1",
+          "referencedRevision": 1,
+          "referencedHash": "sha256:1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477",
+          "head": {
+            "current_revision": 1,
+            "revision": 1,
+            "content_hash": "1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "headRefExact": true
+        },
+        {
+          "purpose": "budget",
+          "authority": "aip.budget_revision",
+          "sourceId": "a0v-ecommerce-hard-stop-budget-v1",
+          "referencedRevision": 1,
+          "referencedHash": "sha256:6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126",
+          "head": {
+            "current_revision": 1,
+            "revision": 1,
+            "content_hash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126",
+            "lifecycle": "active"
+          },
+          "headRefExact": true
+        },
+        {
+          "purpose": "policy",
+          "authority": "aip.runtime_policy_revision",
+          "sourceId": "a0v-ecommerce-runtime-policy-v1",
+          "referencedRevision": 12,
+          "referencedHash": "sha256:186c8c240543498b3658153a2d5694a3b1f2631eb187a42a9fb7b0dac297aa8b",
+          "head": {
+            "current_revision": 13,
+            "revision": 13,
+            "content_hash": "bc8b9b0bace9c57c21cbd93d188b3ed8292dffe2271611abaf60cfe380abd019",
+            "lifecycle": "active"
+          },
+          "headRefExact": false
+        }
+      ],
+      "policyBudgetRef": {
+        "assetId": "a0v-ecommerce-budget-policy-v1",
+        "revision": 12,
+        "assetType": "BudgetPolicyRevision",
+        "contentHash": "93db8a9566aac8bd0bafe22d3ffec5eab491d27c76a0277e2e569baa805ac2ce"
+      },
+      "budgetWindows": [
+        {
+          "current_revision": 13,
+          "revision": 12,
+          "content_hash": "93db8a9566aac8bd0bafe22d3ffec5eab491d27c76a0277e2e569baa805ac2ce",
+          "lifecycle": "active",
+          "effective_from": "2026-09-22 16:18:41.743505+00:00",
+          "effective_until": "2026-09-23 16:17:45.943129+00:00",
+          "effective_now": false
+        },
+        {
+          "current_revision": 13,
+          "revision": 13,
+          "content_hash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696",
+          "lifecycle": "active",
+          "effective_from": "2026-09-24 02:53:28.637050+00:00",
+          "effective_until": "2026-09-25 02:52:33.666717+00:00",
+          "effective_now": false
+        }
+      ],
+      "currentOwnerVerified": false,
+      "currentConfigurationPermissionVerified": false
+    },
+    {
+      "installationId": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+      "generation": "c26edf1c-5170-4158-9f30-36dc1f2ba07f",
+      "configurationRef": {
+        "configurationId": "e9da1644-e00a-4ea2-8bac-0dc1429d339b",
+        "revision": 1,
+        "hash": "sha256:417d5ff383fe171626bdfd71322b66767ae975930ee4a4607ec18f12955860b9"
+      },
+      "hashVerifiedByOriginalDecoder": true,
+      "bindingDisabledFenced": true,
+      "roleRefCount": 1,
+      "dataRefCount": 1,
+      "sourceChecks": [
+        {
+          "purpose": "role",
+          "authority": "aip.responsibility_plan_revision",
+          "sourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+          "referencedRevision": 2,
+          "referencedHash": "sha256:b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+          "head": {
+            "current_revision": 2,
+            "revision": 2,
+            "content_hash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+            "lifecycle": "frozen"
+          },
+          "headRefExact": true
+        },
+        {
+          "purpose": "data",
+          "authority": "aip.data_classification_policy_revision",
+          "sourceId": "a0v-ecommerce-public-catalog-v1",
+          "referencedRevision": 1,
+          "referencedHash": "sha256:1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477",
+          "head": {
+            "current_revision": 1,
+            "revision": 1,
+            "content_hash": "1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "headRefExact": true
+        },
+        {
+          "purpose": "budget",
+          "authority": "aip.budget_revision",
+          "sourceId": "a0v-ecommerce-hard-stop-budget-v1",
+          "referencedRevision": 1,
+          "referencedHash": "sha256:6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126",
+          "head": {
+            "current_revision": 1,
+            "revision": 1,
+            "content_hash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126",
+            "lifecycle": "active"
+          },
+          "headRefExact": true
+        },
+        {
+          "purpose": "policy",
+          "authority": "aip.runtime_policy_revision",
+          "sourceId": "a0v-ecommerce-runtime-policy-v1",
+          "referencedRevision": 5,
+          "referencedHash": "sha256:ede2de2dffa1cf0f3e012c54f5cc943b7470d90aa7b4a7575ea75d9dcd4ffbab",
+          "head": {
+            "current_revision": 13,
+            "revision": 13,
+            "content_hash": "bc8b9b0bace9c57c21cbd93d188b3ed8292dffe2271611abaf60cfe380abd019",
+            "lifecycle": "active"
+          },
+          "headRefExact": false
+        }
+      ],
+      "policyBudgetRef": {
+        "assetId": "a0v-ecommerce-budget-policy-v1",
+        "revision": 5,
+        "assetType": "BudgetPolicyRevision",
+        "contentHash": "223d909346f3b43e6df4aac1ce32e44e18f48e12b16e3aab468e9cd898b8d60b"
+      },
+      "budgetWindows": [
+        {
+          "current_revision": 13,
+          "revision": 5,
+          "content_hash": "223d909346f3b43e6df4aac1ce32e44e18f48e12b16e3aab468e9cd898b8d60b",
+          "lifecycle": "active",
+          "effective_from": "2026-09-15 06:30:19.774674+00:00",
+          "effective_until": "2026-09-16 06:29:53.243094+00:00",
+          "effective_now": false
+        },
+        {
+          "current_revision": 13,
+          "revision": 13,
+          "content_hash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696",
+          "lifecycle": "active",
+          "effective_from": "2026-09-24 02:53:28.637050+00:00",
+          "effective_until": "2026-09-25 02:52:33.666717+00:00",
+          "effective_now": false
+        }
+      ],
+      "currentOwnerVerified": false,
+      "currentConfigurationPermissionVerified": false
+    }
+  ],
+  "configurationAndBindingRowsUnchanged": true,
+  "originalDecoderUsed": true,
+  "databaseWrites": 0,
+  "marketplaceSourceReads": 0,
+  "credentialReads": 0,
+  "currentRuntimeAuthorization": false,
+  "eightPagesAccepted": false
+}

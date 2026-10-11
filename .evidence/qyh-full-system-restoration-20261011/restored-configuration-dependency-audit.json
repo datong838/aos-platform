@@ -1,0 +1,482 @@
+{
+  "outcome": "RESTORED_CONFIGURATION_DEPENDENCY_METADATA_AUDIT",
+  "observedAt": "2026-10-11 08:59:59.291272+00:00",
+  "identity": {
+    "database": "aos_meta_head",
+    "cluster": "7695302940039200809",
+    "schema": "a0v_159",
+    "orgId": "org-org",
+    "orgName": "栖月汇商贸有限公司",
+    "projectId": "dev-project",
+    "tables": 647
+  },
+  "installations": [
+    {
+      "installationId": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+      "currentRuntimePolicyRevision": 13,
+      "dependencyMetadataChecks": [
+        {
+          "dependency": "networkPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-network-v1",
+            "revision": 1,
+            "assetType": "NetworkPolicyRevision",
+            "contentHash": "c9a51ac325d19145f4554f670becedf43d8227b83db51e6c237e8576b9249d7f"
+          },
+          "head": {
+            "current_revision": 1,
+            "content_hash": "c9a51ac325d19145f4554f670becedf43d8227b83db51e6c237e8576b9249d7f",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "currentRefExact": true
+        },
+        {
+          "dependency": "egressPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-egress-v1",
+            "revision": 1,
+            "assetType": "EgressPolicyRevision",
+            "contentHash": "c896eedb60d538552f1ee7a93b4130c2f87e8e90635328594f454a0c75864b8e"
+          },
+          "head": {
+            "current_revision": 1,
+            "content_hash": "c896eedb60d538552f1ee7a93b4130c2f87e8e90635328594f454a0c75864b8e",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "currentRefExact": true
+        },
+        {
+          "dependency": "dataClassificationPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-public-catalog-v1",
+            "revision": 1,
+            "assetType": "DataClassificationPolicyRevision",
+            "contentHash": "1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477"
+          },
+          "head": {
+            "current_revision": 1,
+            "content_hash": "1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "currentRefExact": true
+        },
+        {
+          "dependency": "quotaPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-quota-v1",
+            "revision": 1,
+            "assetType": "QuotaPolicyRevision",
+            "contentHash": "5e1566ba09ed56e130afe5222c47978228d9bc05d77ef0d4c9771cbf94c54c66"
+          },
+          "head": {
+            "current_revision": 1,
+            "content_hash": "5e1566ba09ed56e130afe5222c47978228d9bc05d77ef0d4c9771cbf94c54c66",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "currentRefExact": true
+        },
+        {
+          "dependency": "budgetPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-budget-policy-v1",
+            "revision": 13,
+            "assetType": "BudgetPolicyRevision",
+            "contentHash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696"
+          },
+          "head": {
+            "current_revision": 13,
+            "content_hash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696",
+            "lifecycle": "active",
+            "effective_from": "2026-09-24 02:53:28.637050+00:00",
+            "effective_until": "2026-09-25 02:52:33.666717+00:00",
+            "effective_now": false
+          },
+          "currentRefExact": true
+        }
+      ],
+      "operationStateCounts": [
+        {
+          "kind": "configure",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        },
+        {
+          "kind": "disable",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        },
+        {
+          "kind": "enable",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        },
+        {
+          "kind": "runtime-apply",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        },
+        {
+          "kind": "runtime-verify",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        }
+      ],
+      "currentScheduleAssociations": [],
+      "formalAdmissionChecked": false,
+      "replayAuthorized": false
+    },
+    {
+      "installationId": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+      "currentRuntimePolicyRevision": 13,
+      "dependencyMetadataChecks": [
+        {
+          "dependency": "networkPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-network-v1",
+            "revision": 1,
+            "assetType": "NetworkPolicyRevision",
+            "contentHash": "c9a51ac325d19145f4554f670becedf43d8227b83db51e6c237e8576b9249d7f"
+          },
+          "head": {
+            "current_revision": 1,
+            "content_hash": "c9a51ac325d19145f4554f670becedf43d8227b83db51e6c237e8576b9249d7f",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "currentRefExact": true
+        },
+        {
+          "dependency": "egressPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-egress-v1",
+            "revision": 1,
+            "assetType": "EgressPolicyRevision",
+            "contentHash": "c896eedb60d538552f1ee7a93b4130c2f87e8e90635328594f454a0c75864b8e"
+          },
+          "head": {
+            "current_revision": 1,
+            "content_hash": "c896eedb60d538552f1ee7a93b4130c2f87e8e90635328594f454a0c75864b8e",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "currentRefExact": true
+        },
+        {
+          "dependency": "dataClassificationPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-public-catalog-v1",
+            "revision": 1,
+            "assetType": "DataClassificationPolicyRevision",
+            "contentHash": "1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477"
+          },
+          "head": {
+            "current_revision": 1,
+            "content_hash": "1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "currentRefExact": true
+        },
+        {
+          "dependency": "quotaPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-quota-v1",
+            "revision": 1,
+            "assetType": "QuotaPolicyRevision",
+            "contentHash": "5e1566ba09ed56e130afe5222c47978228d9bc05d77ef0d4c9771cbf94c54c66"
+          },
+          "head": {
+            "current_revision": 1,
+            "content_hash": "5e1566ba09ed56e130afe5222c47978228d9bc05d77ef0d4c9771cbf94c54c66",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "currentRefExact": true
+        },
+        {
+          "dependency": "budgetPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-budget-policy-v1",
+            "revision": 13,
+            "assetType": "BudgetPolicyRevision",
+            "contentHash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696"
+          },
+          "head": {
+            "current_revision": 13,
+            "content_hash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696",
+            "lifecycle": "active",
+            "effective_from": "2026-09-24 02:53:28.637050+00:00",
+            "effective_until": "2026-09-25 02:52:33.666717+00:00",
+            "effective_now": false
+          },
+          "currentRefExact": true
+        }
+      ],
+      "operationStateCounts": [
+        {
+          "kind": "configure",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        },
+        {
+          "kind": "disable",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        },
+        {
+          "kind": "enable",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        },
+        {
+          "kind": "runtime-apply",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        },
+        {
+          "kind": "runtime-verify",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        }
+      ],
+      "currentScheduleAssociations": [],
+      "formalAdmissionChecked": false,
+      "replayAuthorized": false
+    },
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "currentRuntimePolicyRevision": 13,
+      "dependencyMetadataChecks": [
+        {
+          "dependency": "networkPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-network-v1",
+            "revision": 1,
+            "assetType": "NetworkPolicyRevision",
+            "contentHash": "c9a51ac325d19145f4554f670becedf43d8227b83db51e6c237e8576b9249d7f"
+          },
+          "head": {
+            "current_revision": 1,
+            "content_hash": "c9a51ac325d19145f4554f670becedf43d8227b83db51e6c237e8576b9249d7f",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "currentRefExact": true
+        },
+        {
+          "dependency": "egressPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-egress-v1",
+            "revision": 1,
+            "assetType": "EgressPolicyRevision",
+            "contentHash": "c896eedb60d538552f1ee7a93b4130c2f87e8e90635328594f454a0c75864b8e"
+          },
+          "head": {
+            "current_revision": 1,
+            "content_hash": "c896eedb60d538552f1ee7a93b4130c2f87e8e90635328594f454a0c75864b8e",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "currentRefExact": true
+        },
+        {
+          "dependency": "dataClassificationPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-public-catalog-v1",
+            "revision": 1,
+            "assetType": "DataClassificationPolicyRevision",
+            "contentHash": "1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477"
+          },
+          "head": {
+            "current_revision": 1,
+            "content_hash": "1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "currentRefExact": true
+        },
+        {
+          "dependency": "quotaPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-quota-v1",
+            "revision": 1,
+            "assetType": "QuotaPolicyRevision",
+            "contentHash": "5e1566ba09ed56e130afe5222c47978228d9bc05d77ef0d4c9771cbf94c54c66"
+          },
+          "head": {
+            "current_revision": 1,
+            "content_hash": "5e1566ba09ed56e130afe5222c47978228d9bc05d77ef0d4c9771cbf94c54c66",
+            "lifecycle": "active",
+            "effective_from": "2026-09-10 00:00:00+00:00",
+            "effective_until": "2027-09-10 00:00:00+00:00",
+            "effective_now": true
+          },
+          "currentRefExact": true
+        },
+        {
+          "dependency": "budgetPolicyRef",
+          "reference": {
+            "assetId": "a0v-ecommerce-budget-policy-v1",
+            "revision": 13,
+            "assetType": "BudgetPolicyRevision",
+            "contentHash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696"
+          },
+          "head": {
+            "current_revision": 13,
+            "content_hash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696",
+            "lifecycle": "active",
+            "effective_from": "2026-09-24 02:53:28.637050+00:00",
+            "effective_until": "2026-09-25 02:52:33.666717+00:00",
+            "effective_now": false
+          },
+          "currentRefExact": true
+        }
+      ],
+      "operationStateCounts": [
+        {
+          "kind": "configure",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        },
+        {
+          "kind": "enable",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        },
+        {
+          "kind": "runtime-apply",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        },
+        {
+          "kind": "runtime-verify",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "count": 1
+        }
+      ],
+      "currentScheduleAssociations": [
+        {
+          "id": "sch-p01-qyh-controlled-20260913-v1",
+          "enabled": false,
+          "retained_run_count": 6,
+          "executor_stop_unproven_count": 1
+        },
+        {
+          "id": "sch-p02-qyh-controlled-20260913-v1",
+          "enabled": false,
+          "retained_run_count": 19,
+          "executor_stop_unproven_count": 1
+        },
+        {
+          "id": "sch-p03-product-sku-qyh-snapshot-y5-20260916",
+          "enabled": false,
+          "retained_run_count": 4,
+          "executor_stop_unproven_count": 1
+        },
+        {
+          "id": "sch-p04-category-qyh-snapshot-y5-20260916",
+          "enabled": false,
+          "retained_run_count": 4,
+          "executor_stop_unproven_count": 1
+        },
+        {
+          "id": "sch-p05-order-qyh-snapshot-y5-20260916",
+          "enabled": false,
+          "retained_run_count": 4,
+          "executor_stop_unproven_count": 1
+        },
+        {
+          "id": "sch-p06-order-line-qyh-snapshot-y5-20260916",
+          "enabled": false,
+          "retained_run_count": 4,
+          "executor_stop_unproven_count": 1
+        },
+        {
+          "id": "sch-p07-shipment-qyh-snapshot-y5-20260916",
+          "enabled": false,
+          "retained_run_count": 4,
+          "executor_stop_unproven_count": 1
+        },
+        {
+          "id": "sch-p08-customer-lite-qyh-snapshot-y5-20260916",
+          "enabled": false,
+          "retained_run_count": 4,
+          "executor_stop_unproven_count": 1
+        },
+        {
+          "id": "sch-p09-weapp-qyh-snapshot-y5-20260916",
+          "enabled": false,
+          "retained_run_count": 4,
+          "executor_stop_unproven_count": 1
+        },
+        {
+          "id": "sch-p10-system-config-qyh-snapshot-y5-20260916",
+          "enabled": false,
+          "retained_run_count": 4,
+          "executor_stop_unproven_count": 1
+        },
+        {
+          "id": "sch-p11-product-review-qyh-snapshot-y5-20260916",
+          "enabled": false,
+          "retained_run_count": 4,
+          "executor_stop_unproven_count": 1
+        },
+        {
+          "id": "sch-p12-payment-qyh-snapshot-y5-20260916",
+          "enabled": false,
+          "retained_run_count": 4,
+          "executor_stop_unproven_count": 1
+        }
+      ],
+      "formalAdmissionChecked": false,
+      "replayAuthorized": false
+    }
+  ],
+  "databaseWrites": 0,
+  "businessPayloadReads": 0,
+  "oldExecutorsInvoked": 0,
+  "configurationAndBindingRowsUnchanged": true,
+  "formalOwnerVerified": false,
+  "productionLockingReadersNotInvoked": true,
+  "runtimeAuthorization": false
+}

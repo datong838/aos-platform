@@ -1,0 +1,20 @@
+{
+  "outcome": "CURRENT_CONFIGURATION_RECOVERY_INPUTS_REVIEWED",
+  "task": "qyh-full-system-restoration-20261011",
+  "authority": "AOS-001848",
+  "sourceFiles": {
+    "plan.md": "1a9ba354819f29e04c9006750df04d5a5a67837d981c8df52b869e22ffb50fb7",
+    "audit_restored_configuration.py": "de058bc49a59acb378377c8ef02fccc91d16c273cf3d8748c5f155d72b7da535",
+    "audit_restored_configuration_dependencies.py": "cefb03c46156780750064423ff217152438bc34557c9debb4f99d90082dc294e",
+    "restored-current-configuration-audit.json": "522a5ba7e4753f0a3495de7340d8235a19a1eed9eb247d5ffbbd20b2b0417fad",
+    "restored-configuration-dependency-audit.json": "88ed290e8de3e58a98be6ec54f572ee0e9d4d3d9e6df0c9c5884104b74b5ed3b",
+    "configuration-recovery-inputs.md": "2bf2786c8c53867fb4e6c746dec018d66711339f5d51e63e8d2bfcd3d4021d45"
+  },
+  "realDatabaseMetadataAudit": true,
+  "productionCodeChanges": 0,
+  "databaseWrites": 0,
+  "historicalRowsPreserved": true,
+  "originalFormalSourceAdmissionChecked": false,
+  "fullRestorationAccepted": false,
+  "currentApiOrEightPagesAccepted": false
+}
