@@ -1,0 +1,111 @@
+{
+  "api": {
+    "outcome": "LATEST_MANAGEMENT_API_CUTOVER_LIVE_GREEN",
+    "newPid": 49734,
+    "sourceHead": "28f620202a708b34d26928efef772e8b14d145d7",
+    "newSourceCwdVerified": true,
+    "checks": [
+      {
+        "path": "/v1/ecommerce-workshop/modules",
+        "status": 200,
+        "keys": [
+          "schemaVersion",
+          "tenant",
+          "evaluatedAt",
+          "dataCutoff",
+          "items",
+          "count"
+        ],
+        "count": 0
+      },
+      {
+        "path": "/v1/runtime-workshop/modules",
+        "status": 200,
+        "keys": [
+          "schemaVersion",
+          "tenant",
+          "evaluatedAt",
+          "dataCutoff",
+          "items",
+          "count"
+        ],
+        "count": 0
+      },
+      {
+        "path": "/v1/auth/principal",
+        "status": 403,
+        "formalRoutePresentButDevRefused": true
+      },
+      {
+        "path": "/v1/auth/token",
+        "method": "POST",
+        "status": 405,
+        "tokenIssued": false
+      },
+      {
+        "canary": "dev-org",
+        "status": 404
+      }
+    ],
+    "originalListenersRetained": true,
+    "sameVolumeAndInventory": true,
+    "databaseWrites": 0,
+    "runtimeAuthorized": false,
+    "formalIdentityVerified": false,
+    "eightPagesAccepted": false,
+    "apiSessionHandle": 37385
+  },
+  "browser": {
+    "routes": [
+      {
+        "route": "/workshop/analyst",
+        "qyhNameVisible": true,
+        "entryUnavailable": true
+      },
+      {
+        "route": "/workshop/content-campaign",
+        "qyhNameVisible": true,
+        "entryUnavailable": true
+      },
+      {
+        "route": "/workshop/creator-growth",
+        "qyhNameVisible": true,
+        "entryUnavailable": true
+      },
+      {
+        "route": "/workshop/customer",
+        "qyhNameVisible": true,
+        "entryUnavailable": true
+      },
+      {
+        "route": "/workshop/media-studio",
+        "qyhNameVisible": true,
+        "entryUnavailable": true
+      },
+      {
+        "route": "/workshop/price-governance",
+        "qyhNameVisible": true,
+        "entryUnavailable": true
+      },
+      {
+        "route": "/workshop/cockpit",
+        "qyhNameVisible": true,
+        "entryUnavailable": true
+      },
+      {
+        "route": "/workshop/operations",
+        "qyhNameVisible": true,
+        "entryUnavailable": true
+      }
+    ],
+    "pageErrors": [],
+    "mutationRequests": [],
+    "eightPagesAccepted": false
+  },
+  "retainedPackageHashMatches": 1695,
+  "uncommittedUserModificationsPreserved": 22,
+  "serviceMode": "LOCAL_MANAGEMENT_READ_ONLY_NOT_FORMAL",
+  "newSignatureOrInstallationCreated": false,
+  "bindingEnabledChanged": false,
+  "fullRestorationAccepted": false
+}

@@ -1,0 +1,47 @@
+{
+  "routes": [
+    {
+      "route": "/workshop/analyst",
+      "qyhNameVisible": true,
+      "entryUnavailable": true
+    },
+    {
+      "route": "/workshop/content-campaign",
+      "qyhNameVisible": true,
+      "entryUnavailable": true
+    },
+    {
+      "route": "/workshop/creator-growth",
+      "qyhNameVisible": true,
+      "entryUnavailable": true
+    },
+    {
+      "route": "/workshop/customer",
+      "qyhNameVisible": true,
+      "entryUnavailable": true
+    },
+    {
+      "route": "/workshop/media-studio",
+      "qyhNameVisible": true,
+      "entryUnavailable": true
+    },
+    {
+      "route": "/workshop/price-governance",
+      "qyhNameVisible": true,
+      "entryUnavailable": true
+    },
+    {
+      "route": "/workshop/cockpit",
+      "qyhNameVisible": true,
+      "entryUnavailable": true
+    },
+    {
+      "route": "/workshop/operations",
+      "qyhNameVisible": true,
+      "entryUnavailable": true
+    }
+  ],
+  "pageErrors": [],
+  "mutationRequests": [],
+  "eightPagesAccepted": false
+}

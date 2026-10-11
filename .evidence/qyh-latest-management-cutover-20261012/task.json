@@ -1,0 +1,18 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-latest-management-cutover-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001918",
+  "scope": [
+    "aos-platform/.evidence/qyh-latest-management-cutover-20261012"
+  ],
+  "excluded_scope": [
+    "maintenance/current-database"
+  ],
+  "expected_outputs": [
+    "Latest committed readonly managementAPI18080 cutover via owned parentTask, real PID/source/volume/read-only/tenant/canary/browser verification; preserve rollback source and old services"
+  ],
+  "lease_expires_at": "2026-10-12T09:46:54.995236+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T05:46:55+08:00"
+}
