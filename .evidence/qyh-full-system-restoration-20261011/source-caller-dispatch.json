@@ -1,0 +1,5063 @@
+{
+  "head": "d5acab7264f8215cc592dcc539ee1b706fa9d124",
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_action_store.py": "e1225e9b096fb00230a9d819137eb0416b320eed4fbf9c316e4bb6d3b7cfe7b0",
+    "services/aos-api/aos_api/aip_binding_formal_evaluator.py": "b849072770842eb28a5da8cb0b5682200996968783d0aabc8a68b0b50a645da0",
+    "services/aos-api/aos_api/aip_content_draft_store.py": "20b3e67bd16f30759e005a01bf22c45fd20e1b1771e0eda7dfe3e10975c820cc",
+    "services/aos-api/aos_api/aip_eval_runner.py": "3b4c54d1e2f12dd320d15aafaf25daa1b92893b9e8114e1d241c548ed1f9d3cf",
+    "services/aos-api/aos_api/aip_metric_query_evidence.py": "2c507c8093311084f4daa5305fd129dad44c23d67ca42b8ae7b10f42c7a83ece",
+    "services/aos-api/aos_api/aip_model_eval_execution_owner.py": "41356488500495d4abc7d7e64d9dc024eef4849f0214d22ed77748b8c920c64f",
+    "services/aos-api/aos_api/aip_model_eval_request_store.py": "f18777ae5cd22b8de3db52d5daa3679fe06ee6ae8888e846fd21ec4768187830",
+    "services/aos-api/aos_api/aip_production_contract_store.py": "717727f73c4cc8e74c5b952b81e92a8be3dfd50bce9cd54a3c809a9929c03e26",
+    "services/aos-api/aos_api/aip_production_start_service.py": "5eda5c6c3e4f4b69a2bdd9e9d95a64e10cd439fb142dcf3759438233c95b4346",
+    "services/aos-api/aos_api/aip_provider_capacity_action.py": "d03de45f01d498d68ebeda0da99a0b35b7744ab4deda9a012511531f2dfe9048",
+    "services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py": "047c4b301036bbfb5dd036531d0002c6eb1e257ceb6a31515d5765cd01bc42ab",
+    "services/aos-api/aos_api/aip_provider_capacity_request_store.py": "e8ad17aad1f566b68283afd42942412aee4ef15cca861c35cd9323429b7791e5",
+    "services/aos-api/aos_api/aip_provider_capacity_source_authority.py": "7c25c116243c3e2583de55aa91e48873ebc2185d2779dcb95199c4d81a2720ed",
+    "services/aos-api/aos_api/aip_responsibility_assignment_store.py": "0739c1963ca22fbc729f9e8db7740e68bb7f90fb0cf3949e51e157fc6355d7d5",
+    "services/aos-api/aos_api/ecommerce_analysis_bootstrap_authority.py": "e8521d580c2472b6aa028c3b2b64138aabeb178fc43b01895aba06d09c8fc3c6",
+    "services/aos-api/aos_api/ecommerce_analysis_compilation_preparation.py": "9cccca399f11ba23b912ccd0e167e502655b0703bf10aa7e70a49bf7e4e7a445",
+    "services/aos-api/aos_api/ecommerce_analysis_compilation_roles.py": "60d321789aae7d953195e475953d1e86904b5d4d2fd65640fe8b3549cf5054ba",
+    "services/aos-api/aos_api/ecommerce_analysis_context_preparation.py": "cacee2412528f0aa8474be626af4274cdedd5877909b7c48630a498d63995f5a",
+    "services/aos-api/aos_api/ecommerce_analysis_snapshot_brief.py": "cc489e49d14d422e4329ee6478bef3c16b40042753a70c0ee69da7e526c27841",
+    "services/aos-api/aos_api/ecommerce_analysis_snapshot_resume_context.py": "d8013431b5132b446399b0145b8c68ebe829886992e59123419872e9ecbc9814",
+    "services/aos-api/aos_api/ecommerce_analysis_startup_eval.py": "d9684ae8b117c84dc8a0314d14f56337f3729b67e99d7cbc2a1495f174cf5b52",
+    "services/aos-api/aos_api/ecommerce_analysis_startup_preview.py": "300c67aa2e7bada9118c0062c10f6215a65524811d6e8e7a176ade37fcfcd7f8",
+    "services/aos-api/aos_api/ecommerce_analysis_task_preparation.py": "6f11b68b5c08c14c1c07491c964277b949de5f90655deaf8da6a735eae38f7c9",
+    "services/aos-api/aos_api/ecommerce_analysis_template_preparation.py": "3923986f8970c6dc776c556a622a52fce63b60426b5eb6d8323986a6a5482e66",
+    "services/aos-api/aos_api/ecommerce_analyst_analysis_sources.py": "e3b2bec141e929e2c7aa6d69227cf7c042359be744caa1ba129c54b8bc10467a",
+    "services/aos-api/aos_api/ecommerce_analyst_growth_plan_sources.py": "7fa6125be35a312c5c4ecded4777a404014e145534ef467e51fb043bf435b99c",
+    "services/aos-api/aos_api/ecommerce_analyst_portrait_sources.py": "2d3069016b381322fd3fb6558287d879a54dad9bbf5a998271872f955d5f9259",
+    "services/aos-api/aos_api/ecommerce_analyst_stage_review_authority.py": "08a88647c32b92e9e967aded1492fcfc7c67b833c0de970af2e4c028ba519ee5",
+    "services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py": "2fd9084fcc148f104e878bce2c3177f059f788c685cf82fbf4c8d9ba6a4849de",
+    "services/aos-api/aos_api/ecommerce_business_investigation_aip_authority.py": "40be5c7da5b92f449650fdef94f222f13d1785f0cc786426be134b11d28bf334",
+    "services/aos-api/aos_api/ecommerce_business_investigation_aip_readiness.py": "b7faa777cf4fc648136fc8067b783305e881d0f651d629cd0851028be715d6da",
+    "services/aos-api/aos_api/ecommerce_business_investigation_review_command.py": "914022653bf447a5ca06bef2e10ceac6f5a5734521a46f5e866e6e6fc0ef5789",
+    "services/aos-api/aos_api/ecommerce_content_campaign_workflow.py": "fad7222eb332284767b07f4ec2254426cb1b2f504d6413f91feaafb044ac6e70",
+    "services/aos-api/aos_api/ecommerce_content_pre_review_authority.py": "7ddcb0f9afcace8c55b964488279f15649ccf663579f011096cd46b6e30f3aa6",
+    "services/aos-api/aos_api/ecommerce_content_review_pending.py": "60e10231f586e6c0a75ac79e4fe7f028231033395075464d8eb28afbf354ca94",
+    "services/aos-api/aos_api/ecommerce_content_taskrun_owner.py": "30ae61c338e7338938b05409bee0d3800c9ae486c289b7614e55bda7501d5f43",
+    "services/aos-api/aos_api/ecommerce_creator_internal_workflow.py": "0b5067fdffcf84448065798ef8c85e7349a757ab517a3b305d6de003554d13ad",
+    "services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py": "86db8d7c55280c8f5ab6127f340090442b389c9a481d3e983939a1cb46584689",
+    "services/aos-api/aos_api/ecommerce_media_internal_workflow.py": "92c9e9723590d703e5f945f91c002340fc6597cbe10f8500cbef6a7f87d220fe",
+    "services/aos-api/aos_api/ecommerce_workshop_evidence_build_service.py": "7815eed33f5b21fef13f653f381989e94871ed94cf96c1d40a531af13d5a3a4a",
+    "services/aos-api/aos_api/ecommerce_workshop_freeze_service.py": "5f14292cdb629b2c74bdfc63950143cf35eed11b370d77335c39184971e185c3",
+    "services/aos-api/aos_api/ecommerce_workshop_prepare_service.py": "8621298372e346a35e929a0c069acd0c39c032c2bd3d87bbc5f1a592b193e3f4",
+    "services/aos-api/aos_api/routers/aip_content_drafts.py": "dd50bf556fd7a276a0145c766ee52670d6f767587816debccff85a08f269314f",
+    "services/aos-api/aos_api/routers/aip_production_contracts.py": "e3bd0833883c6cfdfbd886654cde02cb5f975c717d795f9242feeabcce9db5d6",
+    "services/aos-api/aos_api/routers/aip_responsibility_assignment.py": "fd55c51d9e3bc8cbaf4e2a8b4d16f5fc1a8648305f653f3dc34b39d2c4fca78d",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "220aaf963a167790822c04c6e0c382903edab04c8b20bc0d21881c300e60eea0"
+  },
+  "constructors": [
+    {
+      "file": "services/aos-api/aos_api/aip_action_store.py",
+      "line": 1511,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_binding_formal_evaluator.py",
+      "line": 69,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_binding_formal_evaluator.py",
+      "line": 83,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_eval_runner.py",
+      "line": 91,
+      "store": "AipProductionContractStore",
+      "factory": "self._connect_factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_metric_query_evidence.py",
+      "line": 84,
+      "store": "AipProductionContractStore",
+      "factory": "bound"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_execution_owner.py",
+      "line": 540,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_execution_owner.py",
+      "line": 492,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_model_eval_request_store.py",
+      "line": 148,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_start_service.py",
+      "line": 42,
+      "store": "AipProductionContractStore",
+      "factory": "self._connect_factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_provider_capacity_action.py",
+      "line": 111,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_provider_capacity_evidence_fence.py",
+      "line": 125,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_provider_capacity_request_store.py",
+      "line": 55,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_provider_capacity_source_authority.py",
+      "line": 45,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analysis_bootstrap_authority.py",
+      "line": 134,
+      "store": "AipProductionContractStore",
+      "factory": "factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analysis_compilation_preparation.py",
+      "line": 34,
+      "store": "AipProductionContractStore",
+      "factory": "factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analysis_compilation_roles.py",
+      "line": 94,
+      "store": "AipProductionContractStore",
+      "factory": "TransactionBoundConnectFactory(HostTransaction(conn), scope)"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analysis_compilation_roles.py",
+      "line": 37,
+      "store": "AipProductionContractStore",
+      "factory": "TransactionBoundConnectFactory(HostTransaction(conn), scope)"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analysis_context_preparation.py",
+      "line": 42,
+      "store": "AipProductionContractStore",
+      "factory": "factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analysis_snapshot_brief.py",
+      "line": 75,
+      "store": "AipProductionContractStore",
+      "factory": "TransactionBoundConnectFactory(tx, self.scope)"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analysis_snapshot_resume_context.py",
+      "line": 116,
+      "store": "AipProductionContractStore",
+      "factory": "factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analysis_startup_eval.py",
+      "line": 31,
+      "store": "AipProductionContractStore",
+      "factory": "factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analysis_startup_preview.py",
+      "line": 31,
+      "store": "AipProductionContractStore",
+      "factory": "factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analysis_task_preparation.py",
+      "line": 64,
+      "store": "AipProductionContractStore",
+      "factory": "factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analysis_template_preparation.py",
+      "line": 31,
+      "store": "AipProductionContractStore",
+      "factory": "TransactionBoundConnectFactory(HostTransaction(conn), scope)"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analyst_analysis_sources.py",
+      "line": 41,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analyst_growth_plan_sources.py",
+      "line": 62,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analyst_portrait_sources.py",
+      "line": 53,
+      "store": "AipProductionContractStore",
+      "factory": "bound"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analyst_stage_review_authority.py",
+      "line": 28,
+      "store": "AipProductionContractStore",
+      "factory": "TransactionBoundConnectFactory(transaction, scope)"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py",
+      "line": 148,
+      "store": "AipProductionContractStore",
+      "factory": "factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_business_investigation_aip_authority.py",
+      "line": 347,
+      "store": "AipProductionContractStore",
+      "factory": "connect_factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_business_investigation_aip_authority.py",
+      "line": 427,
+      "store": "AipProductionContractStore",
+      "factory": "connect_factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_business_investigation_aip_authority.py",
+      "line": 238,
+      "store": "AipProductionContractStore",
+      "factory": "connect_factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_business_investigation_aip_readiness.py",
+      "line": 66,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_business_investigation_review_command.py",
+      "line": 160,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_content_campaign_workflow.py",
+      "line": 78,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_content_pre_review_authority.py",
+      "line": 63,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_content_review_pending.py",
+      "line": 140,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_content_taskrun_owner.py",
+      "line": 174,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_creator_internal_workflow.py",
+      "line": 43,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py",
+      "line": 1781,
+      "store": "AipProductionContractStore",
+      "factory": "factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py",
+      "line": 6604,
+      "store": "AipProductionContractStore",
+      "factory": "TransactionBoundConnectFactory(transaction, scope)"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py",
+      "line": 3261,
+      "store": "AipProductionContractStore",
+      "factory": "factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py",
+      "line": 3631,
+      "store": "AipProductionContractStore",
+      "factory": "factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py",
+      "line": 4932,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py",
+      "line": 6404,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_media_internal_workflow.py",
+      "line": 58,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_evidence_build_service.py",
+      "line": 119,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_freeze_service.py",
+      "line": 96,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_prepare_service.py",
+      "line": 96,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/routers/aip_content_drafts.py",
+      "line": 22,
+      "store": "AipContentDraftStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/routers/aip_production_contracts.py",
+      "line": 82,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/routers/aip_responsibility_assignment.py",
+      "line": 33,
+      "store": "AipResponsibilityAssignmentStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+      "line": 514,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+      "line": 555,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    },
+    {
+      "file": "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+      "line": 556,
+      "store": "AipProductionContractStore",
+      "factory": "DEFAULT"
+    }
+  ],
+  "methods": [
+    {
+      "file": "services/aos-api/aos_api/aip_content_draft_store.py",
+      "store": "AipContentDraftStore",
+      "method": "__init__",
+      "line": 46,
+      "parameters": [
+        "self",
+        "connect_factory",
+        "readiness_service",
+        "content_verifier"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_content_draft_store.py",
+      "store": "AipContentDraftStore",
+      "method": "register",
+      "line": 57,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "idempotency_key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_artifact"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_production_contract_receipt"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_production_contract_receipt"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact"
+        }
+      ],
+      "calls": [
+        "','.join",
+        "ContentDraftRegistrationReceipt.model_validate",
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('SELECT content_hash FROM aip_artifact WHERE org_id=%s AND project_id=%s AND artifact_id=%s', (*scope.key, artifact_id)).fetchone",
+        "conn.execute('SELECT content_hash FROM aip_artifact WHERE org_id=%s AND project_id=%s AND artifact_id=%s', (*scope.key, receipt.draft.artifact_ref.artifact_id)).fetchone",
+        "conn.execute('SELECT request_hash,result_ref FROM aip_production_contract_receipt WHERE org_id=%s AND project_id=%s AND operation=%s AND idempotency_key=%s', (*scope.key, operation, idempotency_key)).fetchone",
+        "datetime.now",
+        "receipt.model_dump",
+        "self._connect",
+        "self._content_verifier.verify",
+        "self._hash",
+        "self._json",
+        "self._load",
+        "self._readiness.evaluate",
+        "self._require_exact_run"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_content_draft_store.py",
+      "store": "AipContentDraftStore",
+      "method": "_require_exact_run",
+      "line": 214,
+      "parameters": [
+        "conn",
+        "scope",
+        "table",
+        "id_column",
+        "identifier",
+        "expected_version",
+        "require_running"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "conn.execute",
+        "conn.execute(f'SELECT version,status FROM {table} WHERE org_id=%s AND project_id=%s AND {id_column}=%s FOR SHARE', (*scope.key, identifier)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_content_draft_store.py",
+      "store": "AipContentDraftStore",
+      "method": "_hash",
+      "line": 235,
+      "parameters": [
+        "value"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "hashlib.sha256",
+        "hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'), default=str).encode()).hexdigest",
+        "json.dumps",
+        "json.dumps(value, sort_keys=True, separators=(',', ':'), default=str).encode"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_content_draft_store.py",
+      "store": "AipContentDraftStore",
+      "method": "_json",
+      "line": 243,
+      "parameters": [
+        "value"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "json.dumps"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_content_draft_store.py",
+      "store": "AipContentDraftStore",
+      "method": "_load",
+      "line": 247,
+      "parameters": [
+        "value"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "json.loads"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "__init__",
+      "line": 489,
+      "parameters": [
+        "self",
+        "connect_factory",
+        "responsibility_template_resolver",
+        "stage_template_source_resolver",
+        "production_profile_resolver",
+        "schema_compatibility_resolver",
+        "task_store"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "create_eval_contract",
+      "line": 511,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_eval_contract_head"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "self._connect_factory",
+        "self._eval_contract",
+        "self._insert_eval",
+        "self._receipt",
+        "self._replay",
+        "self._require_eval_suite",
+        "self.get_eval_contract",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "revise_eval_contract",
+      "line": 529,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "contract_id",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "self._advance_head",
+        "self._connect_factory",
+        "self._eval_contract",
+        "self._head",
+        "self._insert_eval",
+        "self._receipt",
+        "self._replay",
+        "self._require_eval_suite",
+        "self.get_eval_contract"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "freeze_eval_contract",
+      "line": 556,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "contract_id",
+        "expected_version",
+        "key"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_eval_contract_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_eval_contract_revision"
+        }
+      ],
+      "calls": [
+        "','.join",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute(\"INSERT INTO aip_eval_contract_revision\\n                (org_id,project_id,contract_id,revision,suite_ref,publication_ref,release_gate_ref,\\n                 artifact_schema_ref,severity_thresholds,gate_policy,return_mapping,override_policy,\\n                 content_hash,lifecycle,created_by)\\n                SELECT org_id,project_id,contract_id,%s,suite_ref,publication_ref,release_gate_ref,\\n                 artifact_schema_ref,severity_thresholds,gate_policy,return_mapping,override_policy,\\n                 content_hash,'frozen',%s FROM aip_eval_contract_revision\\n                WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s RETURNING *\", (revision, actor, *scope.key, contract_id, head['current_revision'])).fetchone",
+        "self._advance_head",
+        "self._connect_factory",
+        "self._eval_contract",
+        "self._head",
+        "self._receipt",
+        "self._replay",
+        "self.get_eval_contract"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_eval_contract",
+      "line": 590,
+      "parameters": [
+        "self",
+        "scope",
+        "contract_id",
+        "revision",
+        "conn"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_eval_contract_head"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_eval_contract_revision"
+        }
+      ],
+      "calls": [
+        "c.execute",
+        "c.execute('SELECT * FROM aip_eval_contract_head WHERE org_id=%s AND project_id=%s AND contract_id=%s', (*scope.key, contract_id)).fetchone",
+        "c.execute('SELECT * FROM aip_eval_contract_revision WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s', (*scope.key, contract_id, selected)).fetchone",
+        "self._connect_factory",
+        "self._eval_contract"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_eval_contracts",
+      "line": 606,
+      "parameters": [
+        "self",
+        "scope"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_eval_contract_head"
+        },
+        {
+          "operation": "JOIN",
+          "relation": "aip_eval_contract_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT revision.*,head.version FROM aip_eval_contract_head head\\n                JOIN aip_eval_contract_revision revision ON revision.org_id=head.org_id\\n                 AND revision.project_id=head.project_id AND revision.contract_id=head.contract_id\\n                 AND revision.revision=head.current_revision\\n                WHERE head.org_id=%s AND head.project_id=%s\\n                ORDER BY revision.created_at DESC,revision.contract_id', scope.key).fetchall",
+        "self._connect_factory",
+        "self._eval_contract",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "create_responsibility_plan",
+      "line": 617,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "conn.commit",
+        "self._connect_factory",
+        "self.create_responsibility_plan_in_transaction"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "create_responsibility_plan_in_transaction",
+      "line": 625,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "actor",
+        "key",
+        "body",
+        "operation",
+        "request_context"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_responsibility_plan_head"
+        }
+      ],
+      "calls": [
+        "ExactRevisionRef.model_validate",
+        "body.model_dump",
+        "conn.execute",
+        "self._insert_responsibility",
+        "self._receipt",
+        "self._replay",
+        "self._require_responsibility_dependencies",
+        "self._responsibility_plan",
+        "self.get_responsibility_plan",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "revise_responsibility_plan",
+      "line": 658,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "plan_id",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "conn.commit",
+        "self._connect_factory",
+        "self.revise_responsibility_plan_in_transaction"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "revise_responsibility_plan_in_transaction",
+      "line": 666,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "actor",
+        "plan_id",
+        "key",
+        "body",
+        "operation",
+        "request_context"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "body.model_dump",
+        "self._advance_head",
+        "self._head",
+        "self._insert_responsibility",
+        "self._receipt",
+        "self._replay",
+        "self._require_responsibility_dependencies",
+        "self._responsibility_plan",
+        "self.get_responsibility_plan"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "freeze_responsibility_plan",
+      "line": 720,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "plan_id",
+        "expected_version",
+        "key"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "conn.commit",
+        "self._connect_factory",
+        "self.freeze_responsibility_plan_in_transaction"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "freeze_responsibility_plan_in_transaction",
+      "line": 728,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "actor",
+        "plan_id",
+        "expected_version",
+        "key",
+        "operation",
+        "request_context"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_responsibility_plan_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_responsibility_plan_revision"
+        }
+      ],
+      "calls": [
+        "','.join",
+        "conn.execute",
+        "conn.execute(\"INSERT INTO aip_responsibility_plan_revision\\n                (org_id,project_id,plan_id,revision,profile,template_ref,slots,merge_decisions,\\n                 profile_recommendation_ref,profile_confirmation_id,merge_policy_ref,\\n                 merge_decision_receipt_ids,\\n                 content_hash,lifecycle,created_by)\\n                SELECT org_id,project_id,plan_id,%s,profile,template_ref,slots,merge_decisions,\\n                 profile_recommendation_ref,profile_confirmation_id,merge_policy_ref,\\n                 merge_decision_receipt_ids,\\n                 content_hash,'frozen',%s FROM aip_responsibility_plan_revision\\n                WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s RETURNING *\", (revision, actor, *scope.key, plan_id, head['current_revision'])).fetchone",
+        "self._advance_head",
+        "self._head",
+        "self._receipt",
+        "self._replay",
+        "self._require_responsibility_dependencies",
+        "self._responsibility_plan",
+        "self.get_responsibility_plan"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_responsibility_plan",
+      "line": 783,
+      "parameters": [
+        "self",
+        "scope",
+        "plan_id",
+        "revision",
+        "conn"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_responsibility_plan_head"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_responsibility_plan_revision"
+        }
+      ],
+      "calls": [
+        "c.execute",
+        "c.execute('SELECT * FROM public.aip_responsibility_plan_head WHERE org_id=%s AND project_id=%s AND plan_id=%s', (*scope.key, plan_id)).fetchone",
+        "c.execute('SELECT * FROM public.aip_responsibility_plan_revision WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s', (*scope.key, plan_id, selected)).fetchone",
+        "self._connect_factory",
+        "self._responsibility_plan"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_responsibility_plans",
+      "line": 799,
+      "parameters": [
+        "self",
+        "scope"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_responsibility_plan_head"
+        },
+        {
+          "operation": "JOIN",
+          "relation": "aip_responsibility_plan_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT revision.*,head.version FROM aip_responsibility_plan_head head\\n                JOIN aip_responsibility_plan_revision revision ON revision.org_id=head.org_id\\n                 AND revision.project_id=head.project_id AND revision.plan_id=head.plan_id\\n                 AND revision.revision=head.current_revision\\n                WHERE head.org_id=%s AND head.project_id=%s\\n                ORDER BY revision.created_at DESC,revision.plan_id', scope.key).fetchall",
+        "self._connect_factory",
+        "self._responsibility_plan",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "create_impact_preview",
+      "line": 810,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_impact_preview_head"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "self._connect_factory",
+        "self._impact_preview",
+        "self._insert_impact_preview",
+        "self._preview_dependency_state",
+        "self._receipt",
+        "self._replay",
+        "self._require_task_plan",
+        "self.get_impact_preview",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "revise_impact_preview",
+      "line": 867,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "preview_id",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "self._advance_head",
+        "self._connect_factory",
+        "self._head",
+        "self._impact_preview",
+        "self._insert_impact_preview",
+        "self._preview_dependency_state",
+        "self._receipt",
+        "self._replay",
+        "self._require_task_plan",
+        "self.get_impact_preview"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "freeze_impact_preview",
+      "line": 942,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "preview_id",
+        "expected_version",
+        "key"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "','.join",
+        "CreateImpactPreviewRequest.model_validate",
+        "conn.commit",
+        "current.model_dump",
+        "self._advance_head",
+        "self._connect_factory",
+        "self._head",
+        "self._impact_preview",
+        "self._insert_impact_preview",
+        "self._preview_dependency_state",
+        "self._receipt",
+        "self._replay",
+        "self.get_impact_preview"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_impact_preview",
+      "line": 1026,
+      "parameters": [
+        "self",
+        "scope",
+        "preview_id",
+        "revision",
+        "conn"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_impact_preview_head"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_impact_preview_revision"
+        }
+      ],
+      "calls": [
+        "connection.execute",
+        "connection.execute('SELECT * FROM aip_impact_preview_head\\n                WHERE org_id=%s AND project_id=%s AND preview_id=%s', (*scope.key, preview_id)).fetchone",
+        "connection.execute('SELECT * FROM aip_impact_preview_revision\\n                WHERE org_id=%s AND project_id=%s AND preview_id=%s AND revision=%s', (*scope.key, preview_id, selected)).fetchone",
+        "self._connect_factory",
+        "self._impact_preview"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_impact_previews",
+      "line": 1057,
+      "parameters": [
+        "self",
+        "scope"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_impact_preview_head"
+        },
+        {
+          "operation": "JOIN",
+          "relation": "aip_impact_preview_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT revision.*,head.version FROM aip_impact_preview_head head\\n                JOIN aip_impact_preview_revision revision ON revision.org_id=head.org_id\\n                  AND revision.project_id=head.project_id\\n                  AND revision.preview_id=head.preview_id\\n                  AND revision.revision=head.current_revision\\n                WHERE head.org_id=%s AND head.project_id=%s\\n                ORDER BY revision.created_at DESC,revision.preview_id', scope.key).fetchall",
+        "self._connect_factory",
+        "self._impact_preview",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "assert_frozen_preview_current",
+      "line": 1074,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "ref"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_impact_preview_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_impact_preview_revision\\n            WHERE org_id=%s AND project_id=%s AND preview_id=%s AND revision=%s', (*scope.key, ref.resource_id, ref.revision)).fetchone",
+        "datetime.now",
+        "self._impact_body",
+        "self._preview_dependency_state"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "create_stage_template",
+      "line": 1100,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_stage_template_head"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "self._connect_factory",
+        "self._insert_stage_template",
+        "self._receipt",
+        "self._replay",
+        "self._stage_template",
+        "self._validate_stage_graph",
+        "self.get_stage_template",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "revise_stage_template",
+      "line": 1151,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "template_id",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "self._advance_head",
+        "self._connect_factory",
+        "self._head",
+        "self._insert_stage_template",
+        "self._receipt",
+        "self._replay",
+        "self._stage_template",
+        "self._validate_stage_graph",
+        "self.get_stage_template"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "freeze_stage_template",
+      "line": 1224,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "template_id",
+        "expected_version",
+        "key"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_stage_template_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_stage_template_revision"
+        }
+      ],
+      "calls": [
+        "','.join",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute(\"INSERT INTO aip_stage_template_revision\\n                (org_id,project_id,template_id,revision,profile,source_bundle_ref,stages,\\n                 content_hash,lifecycle,sealed_by,sealed_at,seal_hash,created_by)\\n                SELECT org_id,project_id,template_id,%s,profile,source_bundle_ref,stages,\\n                 content_hash,'frozen',%s,%s,%s,%s\\n                FROM aip_stage_template_revision\\n                WHERE org_id=%s AND project_id=%s AND template_id=%s AND revision=%s\\n                RETURNING *\", (revision, actor, sealed_at, seal_hash, actor, *scope.key, template_id, head['current_revision'])).fetchone",
+        "datetime.now",
+        "sealed_at.isoformat",
+        "self._advance_head",
+        "self._connect_factory",
+        "self._head",
+        "self._receipt",
+        "self._replay",
+        "self._stage_template",
+        "self.get_stage_template"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_stage_template",
+      "line": 1319,
+      "parameters": [
+        "self",
+        "scope",
+        "template_id",
+        "revision",
+        "conn"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_stage_template_head"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_stage_template_revision"
+        }
+      ],
+      "calls": [
+        "connection.execute",
+        "connection.execute('SELECT * FROM aip_stage_template_head\\n                WHERE org_id=%s AND project_id=%s AND template_id=%s', (*scope.key, template_id)).fetchone",
+        "connection.execute('SELECT * FROM aip_stage_template_revision\\n                WHERE org_id=%s AND project_id=%s AND template_id=%s AND revision=%s', (*scope.key, template_id, selected)).fetchone",
+        "self._connect_factory",
+        "self._stage_template"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_stage_templates",
+      "line": 1350,
+      "parameters": [
+        "self",
+        "scope"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_stage_template_head"
+        },
+        {
+          "operation": "JOIN",
+          "relation": "aip_stage_template_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT revision.*,head.version\\n                FROM aip_stage_template_head head\\n                JOIN aip_stage_template_revision revision\\n                  ON revision.org_id=head.org_id AND revision.project_id=head.project_id\\n                 AND revision.template_id=head.template_id\\n                 AND revision.revision=head.current_revision\\n                WHERE head.org_id=%s AND head.project_id=%s\\n                ORDER BY revision.created_at DESC,revision.template_id', scope.key).fetchall",
+        "self._connect_factory",
+        "self._stage_template",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "compile_stage_template",
+      "line": 1370,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "template_id",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "','.join",
+        "(applicable if is_applicable else not_applicable).append",
+        "ExactContractRef.model_validate",
+        "StageCompilationResult.model_validate",
+        "body.capability_refs[item].model_dump",
+        "body.model_dump",
+        "body.production_context_ref.model_dump",
+        "body.responsibility_plan_ref.model_dump",
+        "conn.commit",
+        "dependencies.extend",
+        "item.model_dump",
+        "result.model_dump",
+        "self._connect_factory",
+        "self._governed_compilation_snapshot",
+        "self._normalized_stage_order",
+        "self._receipt",
+        "self._replay",
+        "self._schema_compatibility_resolver",
+        "self._task_store.create_plan",
+        "self._tenant",
+        "self.get_production_context",
+        "self.get_responsibility_plan",
+        "self.get_stage_template",
+        "stage.model_dump",
+        "stage_compilation.append",
+        "step.model_dump",
+        "steps.append"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_normalized_stage_order",
+      "line": 1691,
+      "parameters": [
+        "stages"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "','.join",
+        "indegree.items",
+        "ordered.append",
+        "outgoing[dependency].append",
+        "ready.append",
+        "ready.pop",
+        "ready.sort"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_governed_compilation_snapshot",
+      "line": 1727,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "body",
+        "plan",
+        "context"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_profile_confirmation_receipt"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_profile_recommendation_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_merge_policy_revision"
+        }
+      ],
+      "calls": [
+        "body.brief_ref.model_dump",
+        "body.capability_refs.items",
+        "body.eval_contract_ref.model_dump",
+        "body.evidence_bundle_ref.model_dump",
+        "body.merge_policy_ref.model_dump",
+        "body.profile_recommendation_ref.model_dump",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_merge_policy_revision\\n               WHERE org_id=%s AND project_id=%s AND policy_id=%s AND revision=%s', (*scope.key, body.merge_policy_ref.resource_id, body.merge_policy_ref.revision)).fetchone",
+        "conn.execute('SELECT * FROM aip_profile_confirmation_receipt\\n               WHERE org_id=%s AND project_id=%s AND confirmation_id=%s', (*scope.key, body.profile_confirmation_id)).fetchone",
+        "conn.execute('SELECT * FROM aip_profile_recommendation_revision\\n               WHERE org_id=%s AND project_id=%s AND recommendation_id=%s\\n                 AND revision=%s', (*scope.key, body.profile_recommendation_ref.resource_id, body.profile_recommendation_ref.revision)).fetchone",
+        "datetime.now",
+        "item.model_dump",
+        "plan.template_ref.model_dump",
+        "self._load"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "create_artifact_relation",
+      "line": 1849,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact_relation"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact_relation"
+        },
+        {
+          "operation": "JOIN",
+          "relation": "reachable"
+        },
+        {
+          "operation": "FROM",
+          "relation": "reachable"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_artifact_relation"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_artifact_relation\\n                (org_id,project_id,relation_id,relation_type,from_artifact_id,\\n                 from_content_hash,to_artifact_id,to_content_hash,reason,created_by)\\n                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *', (*scope.key, relation_id, body.relation_type.value, body.from_artifact.artifact_id, body.from_artifact.content_hash, body.to_artifact.artifact_id, body.to_artifact.content_hash, body.reason, actor)).fetchone",
+        "conn.execute('WITH RECURSIVE reachable(artifact_id) AS (\\n                  SELECT to_artifact_id FROM aip_artifact_relation\\n                   WHERE org_id=%s AND project_id=%s AND from_artifact_id=%s\\n                  UNION\\n                  SELECT relation.to_artifact_id FROM aip_artifact_relation relation\\n                  JOIN reachable path ON relation.from_artifact_id=path.artifact_id\\n                   WHERE relation.org_id=%s AND relation.project_id=%s)\\n                SELECT 1 FROM reachable WHERE artifact_id=%s LIMIT 1', (*scope.key, body.to_artifact.artifact_id, *scope.key, body.from_artifact.artifact_id)).fetchone",
+        "self._artifact_relation",
+        "self._connect_factory",
+        "self._receipt",
+        "self._replay",
+        "self._require_artifact",
+        "self.get_artifact_relation",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_artifact_relation",
+      "line": 1912,
+      "parameters": [
+        "self",
+        "scope",
+        "relation_id",
+        "conn"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact_relation"
+        }
+      ],
+      "calls": [
+        "connection.execute",
+        "connection.execute('SELECT * FROM aip_artifact_relation\\n                WHERE org_id=%s AND project_id=%s AND relation_id=%s', (*scope.key, relation_id)).fetchone",
+        "self._artifact_relation",
+        "self._connect_factory"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_artifact_relations",
+      "line": 1934,
+      "parameters": [
+        "self",
+        "scope"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact_relation"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_artifact_relation\\n                WHERE org_id=%s AND project_id=%s\\n                ORDER BY created_at DESC,relation_id', scope.key).fetchall",
+        "self._artifact_relation",
+        "self._connect_factory",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "register_artifact_family",
+      "line": 1949,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_artifact_family_head"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "self._artifact_row",
+        "self._connect_factory",
+        "self._receipt",
+        "self._replay",
+        "self.get_artifact_family"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "attach_artifact_family_member",
+      "line": 1997,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "family_id",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "UPDATE",
+          "relation": "aip_artifact_family_head"
+        }
+      ],
+      "calls": [
+        "ExactRevisionRef.model_validate",
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('UPDATE aip_artifact_family_head\\n                SET current_revision=%s,version=version+1,updated_at=NOW()\\n                WHERE org_id=%s AND project_id=%s AND family_id=%s AND version=%s\\n                RETURNING *', (next_revision, *scope.key, family_id, body.expected_family_version)).fetchone",
+        "self._artifact_family_compatible",
+        "self._artifact_family_head",
+        "self._artifact_row",
+        "self._connect_factory",
+        "self._insert_artifact_relation",
+        "self._load",
+        "self._receipt",
+        "self._replay",
+        "self._require_family_member",
+        "self.get_artifact_family"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "select_artifact_family_candidate",
+      "line": 2092,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "family_id",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_artifact_family_selection_revision"
+        },
+        {
+          "operation": "UPDATE",
+          "relation": "aip_artifact_family_head"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact_family_selection_revision"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "body.policy_ref.model_dump",
+        "body.policy_ref.resource_type.endswith",
+        "body.selected_ref.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('SELECT COALESCE(MAX(revision),0)+1 AS revision\\n                    FROM aip_artifact_family_selection_revision\\n                    WHERE org_id=%s AND project_id=%s AND family_id=%s\\n                      AND selection_key=%s', (*scope.key, family_id, body.selection_key)).fetchone",
+        "conn.execute('UPDATE aip_artifact_family_head SET version=version+1,updated_at=NOW()\\n                WHERE org_id=%s AND project_id=%s AND family_id=%s AND version=%s\\n                RETURNING *', (*scope.key, family_id, body.expected_family_version)).fetchone",
+        "self._artifact_family_head",
+        "self._artifact_family_view",
+        "self._connect_factory",
+        "self._json",
+        "self._receipt",
+        "self._replay",
+        "self._sorted_artifact_refs",
+        "self.get_artifact_family"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_artifact_family",
+      "line": 2192,
+      "parameters": [
+        "self",
+        "scope",
+        "family_id",
+        "conn"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "self._artifact_family_head",
+        "self._artifact_family_view",
+        "self._connect_factory"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_artifact_families",
+      "line": 2204,
+      "parameters": [
+        "self",
+        "scope"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact_family_head"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_artifact_family_head\\n                WHERE org_id=%s AND project_id=%s\\n                ORDER BY updated_at DESC,family_id', scope.key).fetchall",
+        "self._artifact_family_view",
+        "self._connect_factory",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "register_media_gate_profile",
+      "line": 2217,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_media_gate_profile_revision"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_media_gate_profile_revision"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_media_gate_profile_revision\\n                (org_id,project_id,profile_id,revision,source_bundle_ref,signature_ref,\\n                 policy_ref,gates,content_hash,created_by)\\n                VALUES(%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s)\\n                RETURNING *', (*scope.key, body.profile_id, body.revision, self._json(payload['sourceBundleRef']), self._json(payload['signatureRef']), self._json(payload['policyRef']), self._json(payload['gates']), content_hash, actor)).fetchone",
+        "conn.execute('SELECT * FROM aip_media_gate_profile_revision\\n                WHERE org_id=%s AND project_id=%s AND profile_id=%s AND revision=%s', (*scope.key, body.profile_id, body.revision)).fetchone",
+        "self._connect_factory",
+        "self._json",
+        "self._media_gate_profile",
+        "self._receipt",
+        "self._replay",
+        "self._require_review_rule",
+        "self._stage_template_source_resolver",
+        "self.get_media_gate_profile"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_media_gate_profile",
+      "line": 2286,
+      "parameters": [
+        "self",
+        "scope",
+        "profile_id",
+        "revision",
+        "conn"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_media_gate_profile_revision"
+        }
+      ],
+      "calls": [
+        "connection.execute",
+        "connection.execute('SELECT * FROM aip_media_gate_profile_revision\\n                WHERE org_id=%s AND project_id=%s AND profile_id=%s AND revision=%s', (*scope.key, profile_id, revision)).fetchone",
+        "self._connect_factory",
+        "self._media_gate_profile"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_media_gate_profiles",
+      "line": 2309,
+      "parameters": [
+        "self",
+        "scope"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_media_gate_profile_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_media_gate_profile_revision\\n                WHERE org_id=%s AND project_id=%s\\n                ORDER BY created_at DESC,profile_id,revision DESC', scope.key).fetchall",
+        "self._connect_factory",
+        "self._media_gate_profile",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "create_contract_migration_decision",
+      "line": 2322,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_media_gate_set_decision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_media_gate_set_decision"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_contract_migration_decision"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_contract_migration_decision\\n                (org_id,project_id,decision_id,source_review_cycle_id,review_cycle_id,\\n                 source_contract_ref,target_contract_ref,reason,decision_hash,actor)\\n                VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s) RETURNING *', (*scope.key, decision_id, body.source_review_cycle_id, body.target_review_cycle_id, self._json(payload['sourceContractRef']), self._json(payload['targetContractRef']), body.reason, decision_hash, actor)).fetchone",
+        "conn.execute('SELECT 1 FROM aip_media_gate_set_decision\\n                WHERE org_id=%s AND project_id=%s AND review_cycle_id=%s LIMIT 1', (*scope.key, body.target_review_cycle_id)).fetchone",
+        "conn.execute('SELECT eval_contract_ref FROM aip_media_gate_set_decision\\n                WHERE org_id=%s AND project_id=%s AND review_cycle_id=%s\\n                ORDER BY created_at DESC LIMIT 1', (*scope.key, body.source_review_cycle_id)).fetchone",
+        "self._connect_factory",
+        "self._contract_migration",
+        "self._exact_eval_contract_row",
+        "self._json",
+        "self._load",
+        "self._receipt",
+        "self._replay",
+        "self.get_contract_migration_decision",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_contract_migration_decision",
+      "line": 2389,
+      "parameters": [
+        "self",
+        "scope",
+        "decision_id",
+        "conn"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_contract_migration_decision"
+        }
+      ],
+      "calls": [
+        "connection.execute",
+        "connection.execute('SELECT * FROM aip_contract_migration_decision\\n                WHERE org_id=%s AND project_id=%s AND decision_id=%s', (*scope.key, decision_id)).fetchone",
+        "self._connect_factory",
+        "self._contract_migration"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_contract_migration_decisions",
+      "line": 2407,
+      "parameters": [
+        "self",
+        "scope"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_contract_migration_decision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_contract_migration_decision\\n                WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,decision_id', scope.key).fetchall",
+        "self._connect_factory",
+        "self._contract_migration",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "assemble_media_gate_set",
+      "line": 2421,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_media_gate_set_decision"
+        }
+      ],
+      "calls": [
+        "blocker_codes.append",
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_media_gate_set_decision\\n                (org_id,project_id,gate_set_id,review_cycle_id,artifact_ref,family_id,\\n                 variant_profile,variant_platform,rendition_spec_hash,eval_contract_ref,\\n                 gate_profile_ref,policy_ref,cutoff_at,stage_attempt_ref,gate_results,\\n                 contract_migration_ref,readiness,eligible_for_approval,blocker_codes,\\n                 content_hash,actor)\\n                VALUES(%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s,%s::jsonb,%s::jsonb,\\n                 %s::jsonb,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s::jsonb,%s,%s)\\n                RETURNING *', (*scope.key, gate_set_id, body.review_cycle_id, self._json(payload['artifactRef']), artifact['family_id'], artifact['profile'], artifact['platform'], artifact['rendition_spec_hash'], self._json(payload['evalContractRef']), self._json(payload['gateProfileRef']), self._json(payload['policyRef']), body.cutoff_at, self._json(payload['stageAttemptRef']), self._json(normalized['gateResults']), self._json(payload['contractMigrationRef']) if payload['contractMigrationRef'] else None, readiness.value, not blocker_codes, self._json(blocker_codes), content_hash, actor)).fetchone",
+        "definition.kind.value.upper",
+        "definitions.items",
+        "item.model_dump",
+        "reports.append",
+        "result.model_dump",
+        "result.outcome.value.upper",
+        "return_mapping.get",
+        "self._artifact_row",
+        "self._connect_factory",
+        "self._eval_blockers",
+        "self._exact_eval_contract_row",
+        "self._json",
+        "self._load",
+        "self._media_gate_report_row",
+        "self._media_gate_set",
+        "self._receipt",
+        "self._replay",
+        "self._require_contract_migration_for_cycle",
+        "self._require_latest_stage_attempt",
+        "self._require_review_rule",
+        "self.get_artifact_family",
+        "self.get_media_gate_profile",
+        "self.get_media_gate_set",
+        "self.get_review_issue",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_media_gate_set",
+      "line": 2614,
+      "parameters": [
+        "self",
+        "scope",
+        "gate_set_id",
+        "conn"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_media_gate_set_decision"
+        }
+      ],
+      "calls": [
+        "connection.execute",
+        "connection.execute('SELECT * FROM aip_media_gate_set_decision\\n                WHERE org_id=%s AND project_id=%s AND gate_set_id=%s', (*scope.key, gate_set_id)).fetchone",
+        "self._connect_factory",
+        "self._media_gate_set"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_media_gate_sets",
+      "line": 2632,
+      "parameters": [
+        "self",
+        "scope"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_media_gate_set_decision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_media_gate_set_decision\\n                WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,gate_set_id', scope.key).fetchall",
+        "self._connect_factory",
+        "self._media_gate_set",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "register_review_rule_revision",
+      "line": 2644,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_review_rule_revision"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_review_rule_revision\\n                (org_id,project_id,rule_id,revision,spec,content_hash,created_by)\\n                VALUES(%s,%s,%s,%s,%s::jsonb,%s,%s) RETURNING *', (*scope.key, body.rule_id, body.revision, self._json(body.spec), content_hash, actor)).fetchone",
+        "self._connect_factory",
+        "self._json",
+        "self._receipt",
+        "self._replay",
+        "self._review_rule",
+        "self.get_review_rule_revision"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_review_rule_revision",
+      "line": 2676,
+      "parameters": [
+        "self",
+        "scope",
+        "rule_id",
+        "revision",
+        "conn"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_review_rule_revision"
+        }
+      ],
+      "calls": [
+        "connection.execute",
+        "connection.execute('SELECT * FROM aip_review_rule_revision\\n                WHERE org_id=%s AND project_id=%s AND rule_id=%s AND revision=%s', (*scope.key, rule_id, revision)).fetchone",
+        "self._connect_factory",
+        "self._review_rule"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_review_rule_revisions",
+      "line": 2694,
+      "parameters": [
+        "self",
+        "scope"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_review_rule_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_review_rule_revision\\n                WHERE org_id=%s AND project_id=%s\\n                ORDER BY created_at DESC,rule_id,revision DESC', scope.key).fetchall",
+        "self._connect_factory",
+        "self._review_rule",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "create_review_issue",
+      "line": 2706,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_review_issue"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute(\"INSERT INTO aip_review_issue\\n                (org_id,project_id,issue_id,rule_ref,severity,artifact_id,artifact_hash,\\n                 eval_report_id,eval_report_revision,eval_report_hash,location,evidence_refs,\\n                 suggested_fix,return_stage,status,version,created_by,updated_by)\\n                VALUES(%s,%s,%s,%s::jsonb,%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,\\n                 %s,%s,'open',1,%s,%s) RETURNING *\", (*scope.key, issue_id, self._json(payload['ruleRef']), body.severity.value, body.artifact_ref.artifact_id, body.artifact_ref.content_hash, body.eval_report_ref.resource_id, body.eval_report_ref.revision, body.eval_report_ref.content_hash, self._json(body.location), self._json(payload['evidenceRefs']), body.suggested_fix, body.return_stage, actor, actor)).fetchone",
+        "self._connect_factory",
+        "self._json",
+        "self._receipt",
+        "self._replay",
+        "self._require_artifact",
+        "self._require_content_eval_subject",
+        "self._require_eval_report",
+        "self._require_evidence",
+        "self._require_review_rule",
+        "self._review_event",
+        "self._review_issue",
+        "self.get_review_issue",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_review_issue",
+      "line": 2774,
+      "parameters": [
+        "self",
+        "scope",
+        "issue_id",
+        "conn",
+        "for_update"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_review_issue"
+        }
+      ],
+      "calls": [
+        "connection.execute",
+        "connection.execute('SELECT * FROM aip_review_issue\\n                WHERE org_id=%s AND project_id=%s AND issue_id=%s' + suffix, (*scope.key, issue_id)).fetchone",
+        "self._connect_factory",
+        "self._review_issue"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_review_issues",
+      "line": 2798,
+      "parameters": [
+        "self",
+        "scope"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_review_issue"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_review_issue\\n                WHERE org_id=%s AND project_id=%s\\n                ORDER BY updated_at DESC,issue_id', scope.key).fetchall",
+        "self._connect_factory",
+        "self._review_issue",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "resolve_review_issue",
+      "line": 2811,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "issue_id",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "UPDATE",
+          "relation": "aip_review_issue"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute(\"UPDATE aip_review_issue SET status='resolved',version=version+1,\\n                 updated_by=%s,updated_at=NOW()\\n                WHERE org_id=%s AND project_id=%s AND issue_id=%s AND version=%s\\n                RETURNING *\", (actor, *scope.key, issue_id, body.expected_version)).fetchone",
+        "self._connect_factory",
+        "self._receipt",
+        "self._replay",
+        "self._require_resolution_refs",
+        "self._review_event",
+        "self._review_issue",
+        "self.get_review_issue"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "return_review_issue",
+      "line": 2866,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "issue_id",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_step_run"
+        },
+        {
+          "operation": "UPDATE",
+          "relation": "aip_review_issue"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_task_run"
+        },
+        {
+          "operation": "JOIN",
+          "relation": "aip_task"
+        },
+        {
+          "operation": "UPDATE",
+          "relation": "of"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_plan_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_return_decision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_step_run"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_return_decision"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_return_decision\\n                (org_id,project_id,decision_id,issue_id,issue_version,run_id,step_key,\\n                 step_run_id,attempt,attempt_idempotency_key,reason,decision_hash,\\n                 impact_decisions,actor)\\n                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s) RETURNING *', (*scope.key, decision_id, issue_id, body.expected_version, body.run_id, body.target_stage, step_run_id, attempt, body.attempt_idempotency_key, body.reason, decision_hash, self._json([item.model_dump(mode='json', by_alias=True) for item in impact_decisions]), actor)).fetchone",
+        "conn.execute('SELECT * FROM aip_return_decision\\n                WHERE org_id=%s AND project_id=%s AND attempt_idempotency_key=%s', (*scope.key, body.attempt_idempotency_key)).fetchone",
+        "conn.execute('SELECT * FROM aip_step_run\\n                WHERE org_id=%s AND project_id=%s AND run_id=%s AND step_key=%s\\n                ORDER BY attempt DESC LIMIT 1 FOR UPDATE', (*scope.key, body.run_id, body.target_stage)).fetchone",
+        "conn.execute('SELECT run.*,task.status AS task_status,task.version AS task_version\\n                FROM aip_task_run run\\n                JOIN aip_task task ON task.org_id=run.org_id AND task.project_id=run.project_id\\n                 AND task.task_id=run.task_id\\n                WHERE run.org_id=%s AND run.project_id=%s AND run.run_id=%s\\n                FOR UPDATE OF run,task', (*scope.key, body.run_id)).fetchone",
+        "conn.execute('SELECT steps,dependencies FROM aip_plan_revision\\n                WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s', (*scope.key, run['plan_revision_id'])).fetchone",
+        "item.get",
+        "item.model_dump",
+        "self._connect_factory",
+        "self._json",
+        "self._load",
+        "self._receipt",
+        "self._replay",
+        "self._require_artifact",
+        "self._require_eval_report",
+        "self._require_evidence",
+        "self._return_decision",
+        "self._return_decision_by_id",
+        "self._review_event",
+        "self._review_return_impact",
+        "self.get_review_issue",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_return_decision_by_id",
+      "line": 3044,
+      "parameters": [
+        "self",
+        "scope",
+        "decision_id",
+        "conn"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_return_decision"
+        }
+      ],
+      "calls": [
+        "connection.execute",
+        "connection.execute('SELECT * FROM aip_return_decision\\n                WHERE org_id=%s AND project_id=%s AND decision_id=%s', (*scope.key, decision_id)).fetchone",
+        "self._connect_factory",
+        "self._return_decision"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_return_decision",
+      "line": 3066,
+      "parameters": [
+        "self",
+        "scope",
+        "decision_id"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "self._return_decision_by_id"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_return_decisions",
+      "line": 3069,
+      "parameters": [
+        "self",
+        "scope",
+        "issue_id"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_return_decision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_return_decision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_return_decision\\n                       WHERE org_id=%s AND project_id=%s AND issue_id=%s\\n                       ORDER BY created_at DESC, decision_id DESC', (*scope.key, issue_id)).fetchall",
+        "conn.execute('SELECT * FROM aip_return_decision\\n                       WHERE org_id=%s AND project_id=%s\\n                       ORDER BY created_at DESC, decision_id DESC', scope.key).fetchall",
+        "self._connect_factory",
+        "self._return_decision",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "create_brief",
+      "line": 3092,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_task_brief_head"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_task_brief_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_task"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute(\"INSERT INTO aip_task_brief_revision(org_id,project_id,brief_id,revision,task_id,brief_type,schema_ref,spec,content_hash,lifecycle,created_by)\\n                VALUES(%s,%s,%s,1,%s,%s,%s::jsonb,%s::jsonb,%s,'draft',%s) RETURNING *\", (*scope.key, brief_id, body.task_id, body.brief_type, self._json(payload['schemaRef']), self._json(body.spec), content_hash, actor)).fetchone",
+        "conn.execute('SELECT 1 FROM aip_task WHERE org_id=%s AND project_id=%s AND task_id=%s', (*scope.key, body.task_id)).fetchone",
+        "self._brief",
+        "self._connect_factory",
+        "self._json",
+        "self._receipt",
+        "self._replay",
+        "self.get_brief",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "revise_brief",
+      "line": 3111,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "brief_id",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "UPDATE",
+          "relation": "aip_task_brief_head"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_task_brief_head"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_task_brief_revision"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute(\"INSERT INTO aip_task_brief_revision(org_id,project_id,brief_id,revision,task_id,brief_type,schema_ref,spec,content_hash,lifecycle,created_by)\\n                VALUES(%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,'draft',%s) RETURNING *\", (*scope.key, brief_id, revision, head['task_id'], body.brief_type, self._json(payload['schemaRef']), self._json(body.spec), content_hash, actor)).fetchone",
+        "conn.execute('SELECT * FROM aip_task_brief_head WHERE org_id=%s AND project_id=%s AND brief_id=%s FOR UPDATE', (*scope.key, brief_id)).fetchone",
+        "self._brief",
+        "self._connect_factory",
+        "self._json",
+        "self._receipt",
+        "self._replay",
+        "self.get_brief"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "freeze_brief",
+      "line": 3130,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "brief_id",
+        "expected_version",
+        "key"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "UPDATE",
+          "relation": "aip_task_brief_head"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_task_brief_head"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_task_brief_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_task_brief_revision"
+        }
+      ],
+      "calls": [
+        "conn.commit",
+        "conn.execute",
+        "conn.execute(\"INSERT INTO aip_task_brief_revision(org_id,project_id,brief_id,revision,task_id,brief_type,schema_ref,spec,content_hash,lifecycle,created_by)\\n                SELECT org_id,project_id,brief_id,%s,task_id,brief_type,schema_ref,spec,content_hash,'frozen',%s\\n                FROM aip_task_brief_revision WHERE org_id=%s AND project_id=%s AND brief_id=%s AND revision=%s RETURNING *\", (revision, actor, *scope.key, brief_id, head['current_revision'])).fetchone",
+        "conn.execute('SELECT * FROM aip_task_brief_head WHERE org_id=%s AND project_id=%s AND brief_id=%s FOR UPDATE', (*scope.key, brief_id)).fetchone",
+        "self._brief",
+        "self._connect_factory",
+        "self._receipt",
+        "self._replay",
+        "self.get_brief"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_brief",
+      "line": 3149,
+      "parameters": [
+        "self",
+        "scope",
+        "brief_id",
+        "revision",
+        "conn"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_task_brief_head"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_task_brief_revision"
+        }
+      ],
+      "calls": [
+        "c.execute",
+        "c.execute('SELECT * FROM aip_task_brief_head WHERE org_id=%s AND project_id=%s AND brief_id=%s', (*scope.key, brief_id)).fetchone",
+        "c.execute('SELECT * FROM aip_task_brief_revision WHERE org_id=%s AND project_id=%s AND brief_id=%s AND revision=%s', (*scope.key, brief_id, rev)).fetchone",
+        "self._brief",
+        "self._connect_factory"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_briefs",
+      "line": 3160,
+      "parameters": [
+        "self",
+        "scope"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_task_brief_head"
+        },
+        {
+          "operation": "JOIN",
+          "relation": "aip_task_brief_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT revision.*, head.version\\n                FROM aip_task_brief_head head\\n                JOIN aip_task_brief_revision revision\\n                  ON revision.org_id=head.org_id AND revision.project_id=head.project_id\\n                 AND revision.brief_id=head.brief_id AND revision.revision=head.current_revision\\n                WHERE head.org_id=%s AND head.project_id=%s\\n                ORDER BY revision.created_at DESC, revision.brief_id', scope.key).fetchall",
+        "self._brief",
+        "self._connect_factory"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "create_evidence_bundle",
+      "line": 3179,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "BuildEvidenceBundleRequest.model_validate",
+        "body.model_dump",
+        "self.build_evidence_bundle"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "build_evidence_bundle",
+      "line": 3183,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_evidence_bundle_revision"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute(\"INSERT INTO aip_evidence_bundle_revision(\\n                   org_id,project_id,bundle_id,revision,brief_ref,subject_refs,cutoff_at,\\n                   item_refs,coverage,missing,conflicts,uncertainties,freshness,marking,\\n                   license_summary,content_hash,lifecycle,created_by)\\n                   VALUES(%s,%s,%s,1,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s,%s::jsonb,\\n                          %s::jsonb,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,'frozen',%s)\\n                   RETURNING *\", (*scope.key, bundle_id, self._json(payload['briefRef']), self._json(payload['subjectRefs']), body.cutoff_at, self._json(payload['itemRefs']), coverage.value, self._json(missing), self._json(conflicts), self._json(uncertainties), freshness.value, self._json(body.marking), self._json(body.license_summary), content_hash, actor)).fetchone",
+        "self._bundle",
+        "self._compute_evidence_bundle_coverage",
+        "self._connect_factory",
+        "self._json",
+        "self._receipt",
+        "self._replay",
+        "self.get_brief",
+        "self.get_evidence_bundle",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_compute_evidence_bundle_coverage",
+      "line": 3271,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence_revoke_event"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT evidence_id,content_hash,payload,freshness_at,\\n                          EXISTS(\\n                            SELECT 1 FROM public.aip_evidence_revoke_event revoked\\n                             WHERE revoked.org_id=public.aip_evidence.org_id\\n                               AND revoked.project_id=public.aip_evidence.project_id\\n                               AND revoked.evidence_id=public.aip_evidence.evidence_id\\n                               AND revoked.revision=1\\n                               AND revoked.content_hash=public.aip_evidence.content_hash\\n                          ) AS revoked\\n                     FROM public.aip_evidence\\n                    WHERE org_id=%s AND project_id=%s AND evidence_id=%s', (*scope.key, item.resource_id)).fetchone",
+        "cutoff.replace",
+        "freshness_at.replace",
+        "provided.add",
+        "providers.items",
+        "providers.setdefault",
+        "providers.setdefault(fact_id, []).append",
+        "self._evidence_fact_ids"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_evidence_fact_ids",
+      "line": 3346,
+      "parameters": [
+        "payload"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "json.loads",
+        "raw.keys",
+        "str(item).strip",
+        "str(key).strip",
+        "value.get",
+        "value['stepKey'].strip",
+        "value['stepRunId'].strip"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_evidence_bundle",
+      "line": 3366,
+      "parameters": [
+        "self",
+        "scope",
+        "bundle_id",
+        "revision",
+        "conn",
+        "markings"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence_bundle_revision"
+        }
+      ],
+      "calls": [
+        "c.execute",
+        "c.execute('SELECT * FROM public.aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s', (*scope.key, bundle_id, revision)).fetchone",
+        "self._assert_bundle_marking_access",
+        "self._bundle",
+        "self._connect_factory"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_evidence_bundles",
+      "line": 3397,
+      "parameters": [
+        "self",
+        "scope",
+        "markings"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence_bundle_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_evidence_bundle_revision\\n                WHERE org_id=%s AND project_id=%s\\n                ORDER BY created_at DESC, bundle_id, revision DESC', scope.key).fetchall",
+        "items.append",
+        "self._assert_bundle_marking_access",
+        "self._bundle",
+        "self._connect_factory"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "revoke_evidence_bundle",
+      "line": 3424,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "bundle_id",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_evidence_bundle_revoke_event"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence_bundle_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence_bundle_revoke_event"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_evidence_bundle_revision\\n                   WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s', (*scope.key, bundle_id, body.expected_revision)).fetchone",
+        "conn.execute('SELECT event_id FROM aip_evidence_bundle_revoke_event\\n                   WHERE org_id=%s AND project_id=%s AND bundle_id=%s\\n                     AND revision=%s AND content_hash=%s', (*scope.key, bundle_id, body.expected_revision, body.expected_content_hash)).fetchone",
+        "self._connect_factory",
+        "self._lock_evidence_revoke_key",
+        "self._receipt",
+        "self._replay",
+        "self.get_evidence_bundle",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "revoke_evidence",
+      "line": 3502,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "evidence_id",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence_revoke_event"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence_revoke_event"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_evidence_revoke_event"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_evidence_revoke_event(\\n                       org_id,project_id,event_id,evidence_id,revision,content_hash,\\n                       reason,actor)\\n                       VALUES(%s,%s,%s,%s,1,%s,%s,%s) RETURNING *', (*scope.key, event_id, evidence_id, body.expected_content_hash, body.reason, actor)).fetchone",
+        "conn.execute('SELECT * FROM aip_evidence_revoke_event\\n                       WHERE org_id=%s AND project_id=%s AND event_id=%s', (*scope.key, replay['resourceId'])).fetchone",
+        "conn.execute('SELECT * FROM aip_evidence_revoke_event\\n                   WHERE org_id=%s AND project_id=%s AND evidence_id=%s\\n                     AND revision=1 AND content_hash=%s', (*scope.key, evidence_id, body.expected_content_hash)).fetchone",
+        "conn.execute('SELECT evidence_id,content_hash FROM aip_evidence\\n                   WHERE org_id=%s AND project_id=%s AND evidence_id=%s', (*scope.key, evidence_id)).fetchone",
+        "self._connect_factory",
+        "self._evidence_revocation",
+        "self._receipt",
+        "self._replay",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_evidence_revocation",
+      "line": 3575,
+      "parameters": [
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "resolve_evidence_disclosure",
+      "line": 3590,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body",
+        "markings"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_evidence_disclosure_decision"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "self._connect_factory",
+        "self._evaluate_disclosure",
+        "self._json",
+        "self._receipt",
+        "self._replay",
+        "self.get_evidence_disclosure"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_evidence_disclosure",
+      "line": 3658,
+      "parameters": [
+        "self",
+        "scope",
+        "decision_id",
+        "conn",
+        "markings",
+        "enforce_current_policy"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence_disclosure_decision"
+        }
+      ],
+      "calls": [
+        "c.execute",
+        "c.execute('SELECT * FROM aip_evidence_disclosure_decision\\n                   WHERE org_id=%s AND project_id=%s AND decision_id=%s', (*scope.key, decision_id)).fetchone",
+        "datetime.now",
+        "decision.evidence_ref.model_dump",
+        "self._connect_factory",
+        "self._evaluate_disclosure",
+        "self._load",
+        "self._tenant"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "read_disclosed_evidence_source",
+      "line": 3729,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "actor",
+        "decision_id",
+        "body",
+        "markings"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_production_contract_receipt"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence"
+        }
+      ],
+      "calls": [
+        "body.evidence_ref.model_dump",
+        "body.model_dump",
+        "conn.execute",
+        "conn.execute(\"SELECT receipt_id FROM aip_production_contract_receipt\\n               WHERE org_id=%s AND project_id=%s\\n                 AND operation='evidence_disclosure.resolve' AND created_by=%s\\n                 AND request_hash=%s AND result_ref=%s::jsonb\", (*scope.key, actor, canonical_hash(body.model_dump(mode='json', by_alias=True)), self._json(decision_ref))).fetchone",
+        "conn.execute('SELECT content_hash,payload FROM aip_evidence\\n               WHERE org_id=%s AND project_id=%s AND evidence_id=%s', (*scope.key, body.evidence_ref.resource_id)).fetchone",
+        "datetime.now",
+        "decision.evidence_ref.model_dump",
+        "decision.expires_at.isoformat",
+        "self._evaluate_disclosure",
+        "self._json",
+        "self._load",
+        "self.get_evidence_disclosure"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "freeze_production_context",
+      "line": 3801,
+      "parameters": [
+        "self",
+        "scope",
+        "actor",
+        "key",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_production_context_revision"
+        }
+      ],
+      "calls": [
+        "blockers.append",
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "payload.get",
+        "self._assert_context_brief",
+        "self._assert_context_bundle",
+        "self._assert_context_eval",
+        "self._assert_context_responsibility",
+        "self._connect_factory",
+        "self._json",
+        "self._production_profile_resolver",
+        "self._receipt",
+        "self._replay",
+        "self.get_production_context",
+        "snapshot.append",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "get_production_context",
+      "line": 3920,
+      "parameters": [
+        "self",
+        "scope",
+        "context_id",
+        "revision",
+        "conn"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_production_context_revision"
+        }
+      ],
+      "calls": [
+        "c.execute",
+        "c.execute('SELECT * FROM aip_production_context_revision\\n                   WHERE org_id=%s AND project_id=%s AND context_id=%s AND revision=%s', (*scope.key, context_id, revision)).fetchone",
+        "self._connect_factory",
+        "self._production_context"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "list_production_contexts",
+      "line": 3943,
+      "parameters": [
+        "self",
+        "scope"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_production_context_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_production_context_revision\\n                   WHERE org_id=%s AND project_id=%s\\n                   ORDER BY created_at DESC, context_id, revision DESC', scope.key).fetchall",
+        "self._connect_factory",
+        "self._production_context",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_production_context",
+      "line": 3958,
+      "parameters": [
+        "self",
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "ContractBlocker.model_validate",
+        "ExactRevisionRef.model_validate",
+        "self._load",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_assert_context_brief",
+      "line": 3999,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "ref",
+        "snapshot",
+        "blockers",
+        "task_id"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_task_brief_revision"
+        }
+      ],
+      "calls": [
+        "blockers.append",
+        "conn.execute",
+        "conn.execute('SELECT revision,content_hash,lifecycle,task_id FROM aip_task_brief_revision\\n               WHERE org_id=%s AND project_id=%s AND brief_id=%s AND revision=%s', (*scope.key, ref.resource_id, ref.revision)).fetchone",
+        "snapshot.append"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_assert_context_bundle",
+      "line": 4059,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "ref",
+        "snapshot",
+        "blockers",
+        "brief_ref"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence_bundle_revision"
+        }
+      ],
+      "calls": [
+        "blockers.append",
+        "brief_ref.model_dump",
+        "conn.execute",
+        "conn.execute('SELECT revision,content_hash,lifecycle,coverage,freshness,brief_ref\\n               FROM aip_evidence_bundle_revision\\n               WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s', (*scope.key, ref.resource_id, ref.revision)).fetchone",
+        "self._bundle_revoke",
+        "self._load",
+        "snapshot.append"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_assert_context_eval",
+      "line": 4142,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "ref",
+        "snapshot",
+        "blockers"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_eval_contract_revision"
+        }
+      ],
+      "calls": [
+        "blockers.append",
+        "conn.execute",
+        "conn.execute('SELECT revision,content_hash,lifecycle FROM aip_eval_contract_revision\\n               WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s', (*scope.key, ref.resource_id, ref.revision)).fetchone",
+        "snapshot.append"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_assert_context_responsibility",
+      "line": 4182,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "ref",
+        "snapshot",
+        "blockers"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_responsibility_plan_revision"
+        }
+      ],
+      "calls": [
+        "blockers.append",
+        "conn.execute",
+        "conn.execute('SELECT revision,content_hash,lifecycle FROM aip_responsibility_plan_revision\\n               WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s', (*scope.key, ref.resource_id, ref.revision)).fetchone",
+        "snapshot.append"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_evaluate_disclosure",
+      "line": 4223,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "actor",
+        "body",
+        "markings"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence_revoke_event"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence_bundle_revision"
+        }
+      ],
+      "calls": [
+        "applicability_payload.get",
+        "body.evidence_ref.model_dump",
+        "citation.update",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_evidence\\n               WHERE org_id=%s AND project_id=%s AND evidence_id=%s', (*scope.key, body.evidence_ref.resource_id)).fetchone",
+        "conn.execute('SELECT bundle_id,revision,content_hash,item_refs\\n                   FROM aip_evidence_bundle_revision\\n                   WHERE org_id=%s AND project_id=%s', scope.key).fetchall",
+        "conn.execute('SELECT event_id FROM aip_evidence_revoke_event\\n                   WHERE org_id=%s AND project_id=%s AND evidence_id=%s\\n                     AND revision=%s AND content_hash=%s', (*scope.key, body.evidence_ref.resource_id, body.evidence_ref.revision, body.evidence_ref.content_hash)).fetchone",
+        "datetime.fromisoformat",
+        "datetime.now",
+        "display.get",
+        "expires_at.isoformat",
+        "explicit_excerpt.strip",
+        "fresh_until_at.replace",
+        "item.get",
+        "json.dumps",
+        "license_payload.get",
+        "payload.get",
+        "purpose_max_level.get",
+        "reasons.append",
+        "row['freshness_at'].isoformat",
+        "row['observed_at'].isoformat",
+        "self._bundle_revoke",
+        "self._load",
+        "self._tenant",
+        "set(required_markings).issubset",
+        "str(applicability_payload.get('status') or 'unknown').strip",
+        "str(applicability_payload.get('status') or 'unknown').strip().lower",
+        "str(fresh_until).replace",
+        "str(item).strip",
+        "str(license_payload.get('status') or 'unknown').strip",
+        "str(license_payload.get('status') or 'unknown').strip().lower",
+        "str(value).strip",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_assert_bundle_marking_access",
+      "line": 4512,
+      "parameters": [
+        "bundle",
+        "markings"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "set(required).issubset"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_bundle_revoke",
+      "line": 4521,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "bundle_id",
+        "revision",
+        "content_hash"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence_bundle_revoke_event"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT reason FROM public.aip_evidence_bundle_revoke_event\\n               WHERE org_id=%s AND project_id=%s AND bundle_id=%s\\n                 AND revision=%s AND content_hash=%s\\n               ORDER BY occurred_at DESC LIMIT 1', (*scope.key, bundle_id, revision, content_hash)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_validate_stage_graph",
+      "line": 4536,
+      "parameters": [
+        "stages"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "','.join",
+        "dependencies.items",
+        "ready.append",
+        "ready.pop",
+        "ready.sort",
+        "refs.remove",
+        "visited.add"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_insert_stage_template",
+      "line": 4572,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "template_id",
+        "revision",
+        "actor",
+        "body",
+        "content_hash",
+        "lifecycle"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_stage_template_revision"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_stage_template_revision\\n            (org_id,project_id,template_id,revision,profile,source_bundle_ref,stages,\\n             content_hash,lifecycle,created_by)\\n            VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s)\\n            RETURNING *', (*scope.key, template_id, revision, body.profile, self._json(payload['sourceBundleRef']), self._json(payload['stages']), content_hash, lifecycle.value, actor)).fetchone",
+        "self._json"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_stage_template",
+      "line": 4605,
+      "parameters": [
+        "self",
+        "scope",
+        "row",
+        "version"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "ExactRevisionRef.model_validate",
+        "StageDefinition.model_validate",
+        "blockers.append",
+        "self._load",
+        "self._stage_template_source_resolver",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_artifact",
+      "line": 4648,
+      "parameters": [
+        "conn",
+        "scope",
+        "ref"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT content_hash FROM aip_artifact\\n            WHERE org_id=%s AND project_id=%s AND artifact_id=%s', (*scope.key, ref.artifact_id)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_eval_report",
+      "line": 4662,
+      "parameters": [
+        "conn",
+        "scope",
+        "ref"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_eval_report_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT content_hash FROM aip_eval_report_revision\\n            WHERE org_id=%s AND project_id=%s AND report_id=%s AND revision=%s', (*scope.key, ref.resource_id, ref.revision)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_content_eval_subject",
+      "line": 4678,
+      "parameters": [
+        "conn",
+        "scope",
+        "artifact_ref",
+        "report_ref"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_eval_report_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_step_run"
+        }
+      ],
+      "calls": [
+        "AipProductionContractStore._load",
+        "attempt.get",
+        "conn.execute",
+        "conn.execute(\"SELECT step_run_id,attempt,input_hash,status FROM aip_step_run\\n            WHERE org_id=%s AND project_id=%s AND run_id=%s AND step_key='content_generate'\\n            ORDER BY attempt DESC LIMIT 1\", (*scope.key, artifact['run_id'])).fetchone",
+        "conn.execute('SELECT artifact_type,run_id FROM aip_artifact\\n            WHERE org_id=%s AND project_id=%s AND artifact_id=%s', (*scope.key, artifact_ref.artifact_id)).fetchone",
+        "conn.execute('SELECT subject_artifact_ref,stage_attempt_ref,eval_contract_ref,gate_policy_ref\\n            FROM aip_eval_report_revision\\n            WHERE org_id=%s AND project_id=%s AND report_id=%s AND revision=%s', (*scope.key, report_ref.resource_id, report_ref.revision)).fetchone",
+        "contract_ref.get"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_evidence",
+      "line": 4734,
+      "parameters": [
+        "conn",
+        "scope",
+        "refs"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_evidence"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT content_hash FROM aip_evidence\\n                WHERE org_id=%s AND project_id=%s AND evidence_id=%s', (*scope.key, ref.resource_id)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_review_rule",
+      "line": 4751,
+      "parameters": [
+        "conn",
+        "scope",
+        "ref"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_review_rule_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT content_hash FROM aip_review_rule_revision\\n            WHERE org_id=%s AND project_id=%s AND rule_id=%s AND revision=%s', (*scope.key, ref.resource_id, ref.revision)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_resolution_refs",
+      "line": 4764,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "refs"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_return_decision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT decision_hash FROM aip_return_decision\\n                    WHERE org_id=%s AND project_id=%s AND decision_id=%s', (*scope.key, ref.resource_id)).fetchone",
+        "self._require_artifact",
+        "self._require_eval_report",
+        "self._require_evidence"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_review_return_impact",
+      "line": 4795,
+      "parameters": [
+        "raw_steps",
+        "raw_dependencies",
+        "target_stage"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "adjacency[source].add",
+        "frontier.append",
+        "frontier.pop",
+        "invalidated.add",
+        "item.get",
+        "queue.append",
+        "queue.pop",
+        "visited.append"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_review_rule",
+      "line": 4847,
+      "parameters": [
+        "self",
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "self._load",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_exact_eval_contract_row",
+      "line": 4855,
+      "parameters": [
+        "conn",
+        "scope",
+        "ref"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_eval_contract_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_eval_contract_revision\\n            WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s', (*scope.key, ref.resource_id, ref.revision)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_latest_stage_attempt",
+      "line": 4870,
+      "parameters": [
+        "conn",
+        "scope",
+        "ref"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_step_run"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_step_run"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT step_run_id,attempt FROM aip_step_run\\n            WHERE org_id=%s AND project_id=%s AND run_id=%s AND step_key=%s\\n            ORDER BY attempt DESC LIMIT 1', (*scope.key, ref.run_id, ref.step_key)).fetchone",
+        "conn.execute('SELECT step_run_id,run_id,step_key,attempt,input_hash FROM aip_step_run\\n            WHERE org_id=%s AND project_id=%s AND step_run_id=%s', (*scope.key, ref.step_run_id)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_media_gate_report_row",
+      "line": 4894,
+      "parameters": [
+        "conn",
+        "scope",
+        "ref"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_eval_report_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_eval_report_revision\\n            WHERE org_id=%s AND project_id=%s AND report_id=%s AND revision=%s', (*scope.key, ref.resource_id, ref.revision)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_contract_migration_for_cycle",
+      "line": 4919,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_media_gate_set_decision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_contract_migration_decision"
+        }
+      ],
+      "calls": [
+        "body.eval_contract_ref.model_dump",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_contract_migration_decision\\n            WHERE org_id=%s AND project_id=%s AND decision_id=%s', (*scope.key, migration_ref.resource_id)).fetchone",
+        "conn.execute('SELECT eval_contract_ref FROM aip_media_gate_set_decision\\n            WHERE org_id=%s AND project_id=%s AND review_cycle_id=%s\\n            ORDER BY created_at DESC', (*scope.key, body.review_cycle_id)).fetchall",
+        "self._load"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_media_gate_profile",
+      "line": 4952,
+      "parameters": [
+        "self",
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "MediaGateDefinition.model_validate",
+        "self._load",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_contract_migration",
+      "line": 4966,
+      "parameters": [
+        "self",
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "self._load",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_media_gate_set",
+      "line": 4980,
+      "parameters": [
+        "self",
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "MediaGateResult.model_validate",
+        "self._load",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_sorted_artifact_refs",
+      "line": 5010,
+      "parameters": [
+        "refs"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "item.model_dump"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_artifact_family_compatible",
+      "line": 5017,
+      "parameters": [
+        "source",
+        "target",
+        "master"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_artifact_family_head",
+      "line": 5037,
+      "parameters": [
+        "conn",
+        "scope",
+        "family_id",
+        "for_update"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact_family_head"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_artifact_family_head\\n            WHERE org_id=%s AND project_id=%s AND family_id=%s' + suffix, (*scope.key, family_id)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_artifact_row",
+      "line": 5051,
+      "parameters": [
+        "conn",
+        "scope",
+        "ref"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_artifact\\n            WHERE org_id=%s AND project_id=%s AND artifact_id=%s', (*scope.key, ref.artifact_id)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_family_member",
+      "line": 5064,
+      "parameters": [
+        "conn",
+        "scope",
+        "family_id",
+        "ref"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact_relation"
+        },
+        {
+          "operation": "JOIN",
+          "relation": "aip_artifact"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute(\"SELECT 1 FROM aip_artifact_relation relation\\n            JOIN aip_artifact manifest\\n              ON manifest.org_id=relation.org_id\\n             AND manifest.project_id=relation.project_id\\n             AND manifest.artifact_id=relation.to_artifact_id\\n            WHERE relation.org_id=%s AND relation.project_id=%s\\n              AND relation.relation_type='family_member'\\n              AND relation.from_artifact_id=%s\\n              AND relation.from_content_hash=%s\\n              AND manifest.family_id=%s AND manifest.family_role='family_manifest'\", (*scope.key, ref.artifact_id, ref.content_hash, family_id)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_insert_artifact_relation",
+      "line": 5084,
+      "parameters": [
+        "conn",
+        "scope",
+        "actor",
+        "relation_type",
+        "source",
+        "target",
+        "reason"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_artifact_relation"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_artifact_family_view",
+      "line": 5111,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "head"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact"
+        },
+        {
+          "operation": "JOIN",
+          "relation": "aip_artifact_relation"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact_relation"
+        },
+        {
+          "operation": "JOIN",
+          "relation": "aip_artifact"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_artifact_family_selection_revision"
+        }
+      ],
+      "calls": [
+        "':'.join",
+        "ExactRevisionRef.model_validate",
+        "candidate_groups.append",
+        "conn.execute",
+        "conn.execute(\"SELECT artifact.* FROM aip_artifact artifact\\n            JOIN aip_artifact_relation membership\\n              ON membership.org_id=artifact.org_id\\n             AND membership.project_id=artifact.project_id\\n             AND membership.from_artifact_id=artifact.artifact_id\\n             AND membership.from_content_hash=artifact.content_hash\\n             AND membership.relation_type='family_member'\\n            WHERE artifact.org_id=%s AND artifact.project_id=%s\\n              AND artifact.family_id=%s\\n              AND membership.to_artifact_id=%s\\n              AND membership.to_content_hash=%s\\n            ORDER BY artifact.family_revision,artifact.artifact_id\", (*scope.key, family_id, head['manifest_artifact_id'], head['manifest_content_hash'])).fetchall",
+        "conn.execute(\"SELECT relation.* FROM aip_artifact_relation relation\\n            JOIN aip_artifact source\\n              ON source.org_id=relation.org_id\\n             AND source.project_id=relation.project_id\\n             AND source.artifact_id=relation.from_artifact_id\\n            WHERE relation.org_id=%s AND relation.project_id=%s\\n              AND source.family_id=%s\\n              AND relation.relation_type IN ('variant_of','supersedes')\", (*scope.key, family_id)).fetchall",
+        "conn.execute('SELECT * FROM aip_artifact_family_selection_revision\\n            WHERE org_id=%s AND project_id=%s AND family_id=%s\\n            ORDER BY selection_key,revision', (*scope.key, family_id)).fetchall",
+        "grouped.items",
+        "grouped.setdefault",
+        "grouped.setdefault(group_key, []).append",
+        "master_by_member.get",
+        "self._artifact_family_decision",
+        "self._load",
+        "self._sorted_artifact_refs",
+        "self._tenant",
+        "supersedes_by_member.get"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_artifact_family_decision",
+      "line": 5265,
+      "parameters": [
+        "self",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "ExactArtifactRef.model_validate",
+        "ExactRevisionRef.model_validate",
+        "self._load"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_artifact_relation",
+      "line": 5287,
+      "parameters": [
+        "self",
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_review_event",
+      "line": 5305,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "issue_id",
+        "sequence",
+        "event_type",
+        "issue_version",
+        "payload",
+        "actor"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_review_issue_event"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "self._json",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_review_issue",
+      "line": 5334,
+      "parameters": [
+        "self",
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "ExactRevisionRef.model_validate",
+        "self._load",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_return_decision",
+      "line": 5364,
+      "parameters": [
+        "self",
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "ReviewImpactDecision.model_validate",
+        "row.get",
+        "self._load",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_task_plan",
+      "line": 5384,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_task"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_plan_revision"
+        }
+      ],
+      "calls": [
+        "body.production_context_ref.model_dump",
+        "conn.execute",
+        "conn.execute('SELECT task_id FROM aip_task\\n            WHERE org_id=%s AND project_id=%s AND task_id=%s', (*scope.key, body.task_id)).fetchone",
+        "conn.execute('SELECT task_id,revision,content_hash,risk FROM aip_plan_revision\\n            WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s', (*scope.key, body.plan_ref.resource_id)).fetchone",
+        "production_contract.get",
+        "risk.get",
+        "self._load"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_preview_dependency_state",
+      "line": 5427,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "body"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_eval_contract_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_production_context_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_capability_revision"
+        }
+      ],
+      "calls": [
+        "blockers.append",
+        "blockers.extend",
+        "body.impact.model_dump",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_eval_contract_revision\\n               WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s', (*scope.key, body.eval_contract_ref.resource_id, body.eval_contract_ref.revision)).fetchone",
+        "conn.execute('SELECT * FROM aip_production_context_revision\\n                   WHERE org_id=%s AND project_id=%s AND context_id=%s AND revision=%s', (*scope.key, body.production_context_ref.resource_id, body.production_context_ref.revision)).fetchone",
+        "conn.execute('SELECT revision,content_hash,lifecycle,readiness\\n                FROM aip_capability_revision WHERE capability_id=%s AND revision=%s', (ref.resource_id, ref.revision)).fetchone",
+        "conn.execute(f'SELECT version,{status_column} AS status FROM {table}\\n                WHERE org_id=%s AND project_id=%s AND {id_column}=%s', (*scope.key, ref.resource_id)).fetchone",
+        "datetime.now",
+        "exact_specs.append",
+        "impact.values",
+        "publication.get",
+        "ref.model_dump",
+        "ref.resource_type.upper",
+        "self._bundle_revoke",
+        "self._eval_blockers",
+        "self._load",
+        "self._publication_effective_type",
+        "self._snapshot_exact",
+        "snapshot.append"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_snapshot_exact",
+      "line": 5749,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "ref",
+        "table",
+        "id_column",
+        "snapshot",
+        "blockers",
+        "require_frozen"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "blockers.append",
+        "conn.execute",
+        "conn.execute(f\"SELECT revision,content_hash{(',lifecycle' if require_frozen else '')}\\n            FROM {table} WHERE org_id=%s AND project_id=%s\\n              AND {id_column}=%s AND revision=%s\", (*scope.key, ref.resource_id, ref.revision)).fetchone",
+        "ref.resource_type.upper",
+        "snapshot.append"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_insert_impact_preview",
+      "line": 5802,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "preview_id",
+        "revision",
+        "actor",
+        "body",
+        "content_hash",
+        "snapshot",
+        "blockers",
+        "readiness",
+        "lifecycle",
+        "frozen_by"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_impact_preview_revision"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_impact_preview_revision\\n            (org_id,project_id,preview_id,revision,task_id,plan_ref,production_context_ref,brief_ref,\\n             evidence_bundle_ref,eval_contract_ref,responsibility_plan_ref,stage_template_ref,\\n             model_route_ref,runtime_policy_ref,binding_refs,capability_ref,account_ref,\\n             external_action_binding,\\n             impact,expires_at,content_hash,dependency_snapshot_hash,dependency_snapshot,\\n             lifecycle,readiness,blockers,frozen_by,frozen_at,created_by)\\n            VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,\\n             %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,\\n             %s,%s,%s::jsonb,%s,%s,%s::jsonb,%s,\\n             CASE WHEN %s::text IS NULL THEN NULL ELSE NOW() END,%s) RETURNING *', (*scope.key, preview_id, revision, body.task_id, self._json(payload['planRef']), self._json(payload.get('productionContextRef')), self._json(payload['briefRef']), self._json(payload['evidenceBundleRef']), self._json(payload['evalContractRef']), self._json(payload['responsibilityPlanRef']), self._json(payload['stageTemplateRef']), self._json(payload.get('modelRouteRef')), self._json(payload.get('runtimePolicyRef')), self._json(payload['bindingRefs']), self._json(payload.get('capabilityRef')), self._json(payload.get('accountRef')), self._json(payload['externalActionBinding']) if payload.get('externalActionBinding') is not None else None, self._json(payload['impact']), body.expires_at, content_hash, canonical_hash(snapshot), self._json(snapshot), lifecycle.value, readiness.value, self._json(blocker_payload), frozen_by, frozen_by, actor)).fetchone",
+        "item.model_dump",
+        "payload.get",
+        "self._json"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_impact_body",
+      "line": 5868,
+      "parameters": [
+        "self",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "self._load"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_impact_preview",
+      "line": 5888,
+      "parameters": [
+        "self",
+        "scope",
+        "row",
+        "version"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "body.model_dump",
+        "self._impact_body",
+        "self._load",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_eval_suite",
+      "line": 5923,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "ref"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_eval_suite_revision"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT content_hash FROM aip_eval_suite_revision\\n            WHERE org_id=%s AND project_id=%s AND suite_id=%s AND revision=%s', (*scope.key, ref.resource_id, ref.revision)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_eval_blockers",
+      "line": 5934,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_publication_event"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_release_gate_decision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_publication_event"
+        }
+      ],
+      "calls": [
+        "ExactRevisionRef.model_validate",
+        "blockers.append",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_publication_event\\n                       WHERE org_id=%s AND project_id=%s AND publication_id=%s\\n                       ORDER BY occurred_at DESC, event_id DESC LIMIT 1', (*scope.key, publication_row['publication_id'])).fetchone",
+        "conn.execute('SELECT * FROM aip_publication_event\\n                WHERE org_id=%s AND project_id=%s AND event_id=%s', (*scope.key, ref.resource_id)).fetchone",
+        "conn.execute('SELECT * FROM aip_release_gate_decision\\n                WHERE org_id=%s AND project_id=%s AND decision_id=%s', (*scope.key, ref.resource_id)).fetchone",
+        "self._load",
+        "self._publication_snapshot",
+        "self._require_eval_suite"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_responsibility_dependencies",
+      "line": 5986,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "body",
+        "expected_merge_base_ref",
+        "existing_plan_id"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_agent_instance"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute(\"SELECT version FROM aip_agent_instance\\n                WHERE org_id=%s AND project_id=%s AND instance_id=%s AND status='active'\", (*scope.key, slot.assignee.resource_id)).fetchone",
+        "self._require_exact_assignee_resolution",
+        "self._require_profile_governance",
+        "self._responsibility_template_resolver"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_profile_governance",
+      "line": 6032,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "body",
+        "expected_merge_base_ref",
+        "existing_plan_id"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_profile_recommendation_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_profile_confirmation_receipt"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_merge_policy_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_merge_decision_receipt"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_responsibility_plan_revision"
+        }
+      ],
+      "calls": [
+        "body.template_ref.model_dump",
+        "conn.execute",
+        "conn.execute('SELECT content_hash FROM aip_responsibility_plan_revision\\n                    WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s', (*scope.key, plan_ref.get('resourceId'), plan_ref.get('revision'))).fetchone",
+        "conn.execute('SELECT content_hash,expires_at FROM aip_merge_policy_revision\\n                WHERE org_id=%s AND project_id=%s AND policy_id=%s AND revision=%s', (*scope.key, policy_ref.resource_id, policy_ref.revision)).fetchone",
+        "conn.execute('SELECT receipt_id,plan_ref,policy_ref,confirmation_id,source_slot_ids,target_slot_id,\\n                          merged_responsibility_types\\n                     FROM aip_merge_decision_receipt\\n                    WHERE org_id=%s AND project_id=%s AND receipt_id=ANY(%s)', (*scope.key, body.merge_decision_receipt_ids)).fetchall",
+        "conn.execute('SELECT recommendation_id,recommendation_revision,recommendation_hash,\\n                      selected_profile,selected_template_ref,policy_ref\\n                 FROM aip_profile_confirmation_receipt\\n                WHERE org_id=%s AND project_id=%s AND confirmation_id=%s', (*scope.key, body.profile_confirmation_id)).fetchone",
+        "conn.execute('SELECT recommended_profile,candidate_template_refs,policy_ref,content_hash,expires_at\\n                 FROM aip_profile_recommendation_revision\\n                WHERE org_id=%s AND project_id=%s AND recommendation_id=%s AND revision=%s', (*scope.key, recommendation_ref.resource_id, recommendation_ref.revision)).fetchone",
+        "datetime.now",
+        "expected_merge_base_ref.model_dump",
+        "plan_ref.get",
+        "policy_ref.model_dump",
+        "self._load"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_require_exact_assignee_resolution",
+      "line": 6140,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "receipt_id",
+        "assignee",
+        "required_capability_ids",
+        "slot_id",
+        "lock_human_membership",
+        "lock_provider_binding",
+        "lock_tool_binding",
+        "lock_agent_binding"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_assignee_resolution_receipt"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_capability_binding"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_tool_binding"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_agent_instance"
+        },
+        {
+          "operation": "FROM",
+          "relation": "meta_membership"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_agent_instance"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_capability_binding"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_skill_binding"
+        },
+        {
+          "operation": "JOIN",
+          "relation": "aip_skill_template_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_skill_template_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_agent_registry_receipt"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_agent_registry_receipt"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_agent_registry_receipt"
+        }
+      ],
+      "calls": [
+        "AipAssigneeResolutionStore()._evaluate_candidate",
+        "AipAssigneeResolutionStore._binding_ids",
+        "VersionedAssetRef.model_validate",
+        "assignee.model_dump",
+        "conn.execute",
+        "conn.execute(\"SELECT 1 FROM aip_skill_binding b\\n                            JOIN aip_skill_template_revision s\\n                              ON s.skill_id=b.skill_id AND s.revision=b.skill_revision\\n                            WHERE b.org_id=%s AND b.project_id=%s\\n                              AND b.binding_id=%s AND b.instance_id=%s\\n                              AND b.version=%s AND b.status='active'\\n                              AND s.lifecycle='published'\\n                              AND s.publication_tenant->>'orgId'=%s\\n                              AND s.publication_tenant->>'projectId'=%s\\n                              AND (SELECT latest.lifecycle\\n                                   FROM aip_skill_template_revision latest\\n                                   WHERE latest.skill_id=b.skill_id\\n                                   ORDER BY latest.revision DESC LIMIT 1)='published'\\n                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r\\n                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                    AND r.operation='skill_binding.create'\\n                                    AND r.status='applied'\\n                                    AND r.result_ref->>'resourceId'=b.binding_id)\\n                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r\\n                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                    AND r.operation='skill_binding.evaluate'\\n                                    AND r.status='applied'\\n                                    AND r.result_ref->>'resourceId'=b.binding_id)\\n                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r\\n                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                    AND r.operation='skill_binding.update'\\n                                    AND r.status='applied'\\n                                    AND r.result_ref->>'resourceId'=b.binding_id)\", (*scope.key, ref.asset_id, assignee.resource_id, ref.revision, *scope.key)).fetchone",
+        "conn.execute('SELECT 1 FROM aip_agent_instance\\n                            WHERE org_id=%s AND project_id=%s AND instance_id=%s\\n                            FOR SHARE', (*scope.key, tool_row['agent_instance_id'])).fetchone",
+        "conn.execute('SELECT 1 FROM aip_agent_instance\\n                        WHERE org_id=%s AND project_id=%s AND instance_id=%s\\n                        FOR SHARE', (*scope.key, assignee.resource_id)).fetchone",
+        "conn.execute('SELECT 1 FROM aip_capability_binding\\n                                WHERE org_id=%s AND project_id=%s\\n                                  AND binding_id=ANY(%s)\\n                                ORDER BY binding_id FOR SHARE', (*scope.key, sorted(set(binding_ids)))).fetchall",
+        "conn.execute('SELECT 1 FROM aip_capability_binding\\n                        WHERE org_id=%s AND project_id=%s AND binding_id=%s\\n                        FOR SHARE', (*scope.key, assignee.resource_id)).fetchone",
+        "conn.execute('SELECT 1 FROM meta_membership\\n                WHERE org_id=%s AND project_id=%s AND subject=%s' + (' FOR SHARE' if lock_human_membership else ''), (*scope.key, assignee.resource_id)).fetchone",
+        "conn.execute('SELECT agent_instance_id,capability_binding_ids\\n                        FROM aip_tool_binding\\n                        WHERE org_id=%s AND project_id=%s AND binding_id=%s\\n                        FOR SHARE', (*scope.key, assignee.resource_id)).fetchone",
+        "conn.execute('SELECT subject_id,kind,resource_id,version,status,selected_assignee,\\n                      required_capability_refs,binding_refs,snapshot_hash,expires_at\\n                 FROM public.aip_assignee_resolution_receipt\\n                WHERE org_id=%s AND project_id=%s AND receipt_id=%s', (*scope.key, receipt_id)).fetchone",
+        "conn.execute(f'SELECT 1 FROM {table}\\n                                WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)\\n                                ORDER BY binding_id FOR SHARE', (*scope.key, ids)).fetchall",
+        "datetime.now",
+        "item.get",
+        "ref.get",
+        "self._load"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_responsibility_blockers",
+      "line": 6344,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_skill_template_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_skill_template_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_agent_registry_receipt"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_agent_registry_receipt"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_agent_registry_receipt"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_skill_binding"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_capability_binding"
+        }
+      ],
+      "calls": [
+        "AssigneeRef.model_validate",
+        "binding_ids.append",
+        "blockers.append",
+        "candidates.items",
+        "candidates[cap_id].append",
+        "conn.execute",
+        "conn.execute(\"SELECT b.capability_refs,b.readiness,b.dependency_snapshot_hash,\\n                          b.readiness_expires_at,\\n                          (EXISTS (\\n                              SELECT 1 FROM public.aip_skill_template_revision s\\n                              WHERE s.skill_id=b.skill_id AND s.revision=b.skill_revision\\n                                AND s.lifecycle='published'\\n                                AND s.publication_tenant @> jsonb_build_object(\\n                                    'orgId',b.org_id,'projectId',b.project_id)\\n                          ) AND (\\n                              SELECT latest.lifecycle\\n                              FROM public.aip_skill_template_revision latest\\n                              WHERE latest.skill_id=b.skill_id\\n                              ORDER BY latest.revision DESC LIMIT 1\\n                          )='published' AND EXISTS (\\n                              SELECT 1 FROM public.aip_agent_registry_receipt r\\n                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                AND r.operation='skill_binding.create' AND r.status='applied'\\n                                AND r.result_ref->>'resourceId'=b.binding_id\\n                          ) AND EXISTS (\\n                              SELECT 1 FROM public.aip_agent_registry_receipt r\\n                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                AND r.operation='skill_binding.evaluate' AND r.status='applied'\\n                                AND r.result_ref->>'resourceId'=b.binding_id\\n                          ) AND EXISTS (\\n                              SELECT 1 FROM public.aip_agent_registry_receipt r\\n                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                AND r.operation='skill_binding.update' AND r.status='applied'\\n                                AND r.result_ref->>'resourceId'=b.binding_id\\n                          )) AS source_valid\\n                   FROM public.aip_skill_binding b\\n                   WHERE b.org_id=%s AND b.project_id=%s AND b.instance_id=%s\\n                     AND b.status='active'\", (*scope.key, instance_id)).fetchall",
+        "conn.execute('SELECT * FROM public.aip_capability_binding\\n                   WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)', (*scope.key, binding_ids)).fetchall",
+        "datetime.now",
+        "identifier.strip",
+        "ref.get",
+        "ref.strip",
+        "self._capability_identifier",
+        "self._load",
+        "self._require_exact_assignee_resolution",
+        "slot.get",
+        "slot_codes.add",
+        "uncovered.append"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_insert_eval",
+      "line": 6539,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "contract_id",
+        "revision",
+        "actor",
+        "body",
+        "content_hash",
+        "lifecycle"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_eval_contract_revision"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_eval_contract_revision\\n            (org_id,project_id,contract_id,revision,suite_ref,publication_ref,release_gate_ref,\\n             artifact_schema_ref,severity_thresholds,gate_policy,return_mapping,override_policy,\\n             content_hash,lifecycle,created_by)\\n            VALUES(%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,\\n             %s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s) RETURNING *', (*scope.key, contract_id, revision, self._json(payload['suiteRef']), self._json(payload.get('publicationRef')), self._json(payload.get('releaseGateRef')), self._json(payload['artifactSchemaRef']), self._json(payload['severityThresholds']), self._json(payload['gatePolicy']), self._json(payload['returnMapping']), self._json(payload['overridePolicy']), content_hash, lifecycle.value, actor)).fetchone",
+        "payload.get",
+        "self._json"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_insert_responsibility",
+      "line": 6555,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "plan_id",
+        "revision",
+        "actor",
+        "body",
+        "content_hash",
+        "lifecycle"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_responsibility_plan_revision"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_responsibility_plan_revision\\n            (org_id,project_id,plan_id,revision,profile,template_ref,slots,merge_decisions,\\n             profile_recommendation_ref,profile_confirmation_id,merge_policy_ref,\\n             merge_decision_receipt_ids,content_hash,lifecycle,created_by)\\n            VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,%s,%s) RETURNING *', (*scope.key, plan_id, revision, body.profile, self._json(payload['templateRef']), self._json(payload['slots']), self._json(payload['mergeDecisions']), self._json(payload.get('profileRecommendationRef')), payload.get('profileConfirmationId'), self._json(payload.get('mergePolicyRef')), self._json(payload['mergeDecisionReceiptIds']), content_hash, lifecycle.value, actor)).fetchone",
+        "payload.get",
+        "self._json"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_eval_contract",
+      "line": 6570,
+      "parameters": [
+        "self",
+        "scope",
+        "row",
+        "version",
+        "conn"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "self._eval_blockers",
+        "self._load",
+        "self._tenant"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_responsibility_plan",
+      "line": 6582,
+      "parameters": [
+        "self",
+        "scope",
+        "row",
+        "version",
+        "conn"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "row.get",
+        "self._load",
+        "self._responsibility_blockers",
+        "self._tenant"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_publication_snapshot",
+      "line": 6598,
+      "parameters": [
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_publication_effective_type",
+      "line": 6603,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "eval_row"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_publication_event"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_publication_event"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT event_type FROM aip_publication_event\\n               WHERE org_id=%s AND project_id=%s AND publication_id=%s\\n               ORDER BY occurred_at DESC, event_id DESC LIMIT 1', (*scope.key, bound['publication_id'])).fetchone",
+        "conn.execute('SELECT publication_id FROM aip_publication_event\\n               WHERE org_id=%s AND project_id=%s AND event_id=%s', (*scope.key, publication['resourceId'])).fetchone",
+        "publication.get",
+        "self._load"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "diff_eval_contract",
+      "line": 6624,
+      "parameters": [
+        "self",
+        "scope",
+        "contract_id",
+        "from_revision",
+        "to_revision"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_eval_contract_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_eval_contract_revision"
+        }
+      ],
+      "calls": [
+        "changes.append",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_eval_contract_revision\\n                   WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s', (*scope.key, contract_id, from_revision)).fetchone",
+        "conn.execute('SELECT * FROM aip_eval_contract_revision\\n                   WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s', (*scope.key, contract_id, to_revision)).fetchone",
+        "self._connect_factory",
+        "self._load",
+        "self._tenant"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_capability_identifier",
+      "line": 6697,
+      "parameters": [
+        "ref"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "ref.get",
+        "ref.strip",
+        "value.strip"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_tenant",
+      "line": 6710,
+      "parameters": [
+        "scope"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_head",
+      "line": 6714,
+      "parameters": [
+        "conn",
+        "scope",
+        "table",
+        "column",
+        "identifier"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "conn.execute",
+        "conn.execute(f'SELECT * FROM {table} WHERE org_id=%s AND project_id=%s AND {column}=%s FOR UPDATE', (*scope.key, identifier)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_advance_head",
+      "line": 6718,
+      "parameters": [
+        "conn",
+        "scope",
+        "table",
+        "column",
+        "identifier",
+        "revision"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "conn.execute"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_json",
+      "line": 6722,
+      "parameters": [
+        "value"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "json.dumps"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_load",
+      "line": 6724,
+      "parameters": [
+        "value"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "json.loads"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_lock_evidence_revoke_key",
+      "line": 6726,
+      "parameters": [
+        "conn",
+        "scope",
+        "key"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "AipProductionContractStore._json",
+        "conn.execute"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_replay",
+      "line": 6734,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "operation",
+        "key",
+        "request_hash"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_production_contract_receipt"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_production_contract_receipt WHERE org_id=%s AND project_id=%s AND operation=%s AND idempotency_key=%s', (*scope.key, operation, key)).fetchone",
+        "self._load"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_receipt",
+      "line": 6738,
+      "parameters": [
+        "self",
+        "conn",
+        "scope",
+        "operation",
+        "key",
+        "request_hash",
+        "result",
+        "actor"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_production_contract_receipt"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "self._json",
+        "uuid.uuid4"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_brief",
+      "line": 6740,
+      "parameters": [
+        "self",
+        "scope",
+        "row",
+        "version"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "ResourceRef.model_validate",
+        "self._load"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "store": "AipProductionContractStore",
+      "method": "_bundle",
+      "line": 6742,
+      "parameters": [
+        "self",
+        "scope",
+        "row",
+        "conn"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "ExactRevisionRef.model_validate",
+        "ResourceRef.model_validate",
+        "self._bundle_revoke",
+        "self._load"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_responsibility_assignment_store.py",
+      "store": "AipResponsibilityAssignmentStore",
+      "method": "__init__",
+      "line": 116,
+      "parameters": [
+        "self",
+        "connect_factory"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_responsibility_assignment_store.py",
+      "store": "AipResponsibilityAssignmentStore",
+      "method": "_idempotent_row",
+      "line": 120,
+      "parameters": [
+        "conn",
+        "scope",
+        "table",
+        "key",
+        "request_hash"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "conn.execute",
+        "conn.execute(f'SELECT * FROM {table} WHERE org_id=%s AND project_id=%s AND idempotency_key=%s', (*scope.key, key)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_responsibility_assignment_store.py",
+      "store": "AipResponsibilityAssignmentStore",
+      "method": "_require_resolution",
+      "line": 132,
+      "parameters": [
+        "conn",
+        "scope",
+        "receipt_id",
+        "assignee"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_assignee_resolution_receipt"
+        }
+      ],
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT kind,resource_id,version,status FROM aip_assignee_resolution_receipt\\n               WHERE org_id=%s AND project_id=%s AND receipt_id=%s', (*scope.key, receipt_id)).fetchone"
+      ],
+      "usesCallerConnection": true
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_responsibility_assignment_store.py",
+      "store": "AipResponsibilityAssignmentStore",
+      "method": "create_successor",
+      "line": 154,
+      "parameters": [
+        "self",
+        "scope",
+        "body",
+        "actor",
+        "idempotency_key",
+        "now"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_responsibility_plan_head"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_responsibility_plan_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_responsibility_plan_head"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_responsibility_plan_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_task_run"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_responsibility_successor"
+        }
+      ],
+      "calls": [
+        "AssigneeRef.model_validate",
+        "body.model_dump",
+        "body.source_plan_ref.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_responsibility_successor\\n                   (org_id,project_id,successor_id,task_id,source_plan_ref,successor_plan_ref,\\n                    slot_id,source_assignee,target_assignee,resolution_receipt_id,reason_code,\\n                    actor,idempotency_key,request_hash,content_hash,created_at)\\n                   VALUES(%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,%s,\\n                    %s,%s,%s,%s,%s) RETURNING *', (*scope.key, successor_id, body.task_id, _json(authority_payload['sourcePlanRef']), _json(authority_payload['successorPlanRef']), body.slot_id, _json(authority_payload['sourceAssignee']), _json(authority_payload['targetAssignee']), body.resolution_receipt_id, body.reason_code, actor, idempotency_key, request_hash, content_hash, observed_at)).fetchone",
+        "conn.execute('SELECT * FROM aip_responsibility_plan_head\\n                   WHERE org_id=%s AND project_id=%s AND plan_id=%s FOR UPDATE', (*scope.key, body.source_plan_ref.resource_id)).fetchone",
+        "conn.execute('SELECT * FROM aip_responsibility_plan_revision\\n                   WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s', (*scope.key, body.source_plan_ref.resource_id, body.source_plan_ref.revision)).fetchone",
+        "conn.execute('SELECT 1 FROM aip_task_run\\n                   WHERE org_id=%s AND project_id=%s AND task_id=%s LIMIT 1', (*scope.key, body.task_id)).fetchone",
+        "datetime.now",
+        "selected.get",
+        "self._connect",
+        "self._idempotent_row",
+        "self._require_resolution",
+        "self._successor",
+        "slot.get",
+        "successor_ref.model_dump"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_responsibility_assignment_store.py",
+      "store": "AipResponsibilityAssignmentStore",
+      "method": "create_takeover_request",
+      "line": 309,
+      "parameters": [
+        "self",
+        "scope",
+        "body",
+        "actor",
+        "idempotency_key",
+        "now"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_task_run"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_step_run"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_execution_assignment_head"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_takeover_request"
+        }
+      ],
+      "calls": [
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_takeover_request\\n                   (org_id,project_id,request_id,task_run_ref,step_run_ref,attempt,\\n                    source_owner,target_owner,resolution_receipt_id,expected_fence,reason_code,\\n                    safety_state,status,blockers,maker,idempotency_key,request_hash,content_hash,created_at)\\n                   VALUES(%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,%s,%s,\\n                    %s,%s,%s::jsonb,%s,%s,%s,%s,%s) RETURNING *', (*scope.key, request_id, _json(payload['taskRunRef']), _json(payload['stepRunRef']), body.attempt, _json(payload['sourceOwner']), _json(payload['targetOwner']), body.resolution_receipt_id, body.expected_fence, body.reason_code, safety.value, status.value, _json(authority_payload['blockers']), actor, idempotency_key, request_hash, content_hash, observed_at)).fetchone",
+        "conn.execute('SELECT * FROM aip_step_run WHERE org_id=%s AND project_id=%s\\n                   AND step_run_id=%s', (*scope.key, body.step_run_ref.resource_id)).fetchone",
+        "conn.execute('SELECT * FROM aip_task_run WHERE org_id=%s AND project_id=%s\\n                   AND run_id=%s', (*scope.key, body.task_run_ref.resource_id)).fetchone",
+        "conn.execute('SELECT current_fence FROM aip_execution_assignment_head\\n                   WHERE org_id=%s AND project_id=%s AND step_run_id=%s AND attempt=%s', (*scope.key, body.step_run_ref.resource_id, body.attempt)).fetchone",
+        "datetime.now",
+        "item.model_dump",
+        "self._connect",
+        "self._idempotent_row",
+        "self._require_resolution",
+        "self._takeover_request"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_responsibility_assignment_store.py",
+      "store": "AipResponsibilityAssignmentStore",
+      "method": "decide_takeover",
+      "line": 392,
+      "parameters": [
+        "self",
+        "scope",
+        "request_id",
+        "body",
+        "actor",
+        "idempotency_key",
+        "now"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "UPDATE",
+          "relation": "aip_step_run"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_takeover_request"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_takeover_decision_revision"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_execution_assignment_head"
+        },
+        {
+          "operation": "UPDATE",
+          "relation": "aip_execution_assignment_head"
+        },
+        {
+          "operation": "INSERT INTO",
+          "relation": "aip_takeover_decision_revision"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_step_run"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_execution_assignment_head"
+        }
+      ],
+      "calls": [
+        "AssigneeRef.model_validate",
+        "RuntimeAuthorityRef.model_validate",
+        "body.model_dump",
+        "conn.commit",
+        "conn.execute",
+        "conn.execute('INSERT INTO aip_takeover_decision_revision\\n                   (org_id,project_id,decision_id,request_id,revision,decision,reason_code,\\n                    checker,assignment_lease,idempotency_key,request_hash,content_hash,created_at)\\n                   VALUES(%s,%s,%s,%s,1,%s,%s,%s,%s::jsonb,%s,%s,%s,%s) RETURNING *', (*scope.key, decision_id, request_id, body.decision.value, body.reason_code, actor, _json(authority_payload['assignmentLease']), idempotency_key, request_hash, content_hash, observed_at)).fetchone",
+        "conn.execute('SELECT * FROM aip_execution_assignment_head WHERE org_id=%s\\n                       AND project_id=%s AND step_run_id=%s AND attempt=%s FOR UPDATE', (*scope.key, step_ref.resource_id, int(request['attempt']))).fetchone",
+        "conn.execute('SELECT * FROM aip_takeover_request WHERE org_id=%s AND project_id=%s\\n                   AND request_id=%s FOR UPDATE', (*scope.key, request_id)).fetchone",
+        "conn.execute('SELECT 1 FROM aip_takeover_decision_revision WHERE org_id=%s\\n                   AND project_id=%s AND request_id=%s', (*scope.key, request_id)).fetchone",
+        "conn.execute('SELECT status,lease_expires_at,action_ref,verify_ref\\n                       FROM aip_step_run WHERE org_id=%s AND project_id=%s\\n                       AND step_run_id=%s AND attempt=%s FOR UPDATE', (*scope.key, step_ref.resource_id, int(request['attempt']))).fetchone",
+        "datetime.now",
+        "lease.model_dump",
+        "self._connect",
+        "self._decision",
+        "self._idempotent_row"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_responsibility_assignment_store.py",
+      "store": "AipResponsibilityAssignmentStore",
+      "method": "assert_fence",
+      "line": 515,
+      "parameters": [
+        "self",
+        "scope",
+        "body",
+        "now"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_execution_assignment_head"
+        },
+        {
+          "operation": "JOIN",
+          "relation": "aip_task_run"
+        }
+      ],
+      "calls": [
+        "AssigneeRef.model_validate",
+        "blockers.append",
+        "conn.execute",
+        "conn.execute('SELECT head.*,run.version AS run_version\\n                   FROM aip_execution_assignment_head head\\n                   JOIN aip_task_run run ON run.org_id=head.org_id\\n                    AND run.project_id=head.project_id AND run.run_id=head.run_id\\n                   WHERE head.org_id=%s AND head.project_id=%s\\n                    AND head.step_run_id=%s AND head.attempt=%s', (*scope.key, body.step_run_ref.resource_id, body.attempt)).fetchone",
+        "datetime.now",
+        "self._connect"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_responsibility_assignment_store.py",
+      "store": "AipResponsibilityAssignmentStore",
+      "method": "observe_run",
+      "line": 559,
+      "parameters": [
+        "self",
+        "scope",
+        "run_id",
+        "now"
+      ],
+      "sqlLiteralReferences": [
+        {
+          "operation": "FROM",
+          "relation": "aip_task_run"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_takeover_request"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_takeover_decision_revision"
+        },
+        {
+          "operation": "JOIN",
+          "relation": "aip_takeover_request"
+        },
+        {
+          "operation": "FROM",
+          "relation": "aip_execution_assignment_head"
+        }
+      ],
+      "calls": [
+        "AssigneeRef.model_validate",
+        "conn.execute",
+        "conn.execute(\"SELECT * FROM aip_takeover_request\\n                   WHERE org_id=%s AND project_id=%s\\n                    AND task_run_ref->>'resourceId'=%s\\n                   ORDER BY created_at,request_id\", (*scope.key, run_id)).fetchall",
+        "conn.execute(\"SELECT decision.* FROM aip_takeover_decision_revision decision\\n                   JOIN aip_takeover_request request\\n                    ON request.org_id=decision.org_id\\n                    AND request.project_id=decision.project_id\\n                    AND request.request_id=decision.request_id\\n                   WHERE decision.org_id=%s AND decision.project_id=%s\\n                    AND request.task_run_ref->>'resourceId'=%s\\n                   ORDER BY decision.created_at,decision.decision_id\", (*scope.key, run_id)).fetchall",
+        "conn.execute('SELECT * FROM aip_execution_assignment_head\\n                   WHERE org_id=%s AND project_id=%s AND run_id=%s\\n                   ORDER BY step_run_id,attempt', (*scope.key, run_id)).fetchall",
+        "conn.execute('SELECT run_id,version FROM aip_task_run\\n                   WHERE org_id=%s AND project_id=%s AND run_id=%s', (*scope.key, run_id)).fetchone",
+        "datetime.now",
+        "self._connect",
+        "self._decision",
+        "self._takeover_request"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_responsibility_assignment_store.py",
+      "store": "AipResponsibilityAssignmentStore",
+      "method": "_successor",
+      "line": 630,
+      "parameters": [
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "AssigneeRef.model_validate",
+        "ExactRevisionRef.model_validate"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_responsibility_assignment_store.py",
+      "store": "AipResponsibilityAssignmentStore",
+      "method": "_takeover_request",
+      "line": 642,
+      "parameters": [
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "AssigneeRef.model_validate",
+        "AssignmentBlocker.model_validate",
+        "RuntimeAuthorityRef.model_validate"
+      ],
+      "usesCallerConnection": false
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_responsibility_assignment_store.py",
+      "store": "AipResponsibilityAssignmentStore",
+      "method": "_decision",
+      "line": 656,
+      "parameters": [
+        "scope",
+        "row"
+      ],
+      "sqlLiteralReferences": [],
+      "calls": [
+        "ExecutionAssignmentLease.model_validate"
+      ],
+      "usesCallerConnection": false
+    }
+  ],
+  "limitations": [
+    "AST names and SQL literals are routing evidence, not complete dynamic SQL ACL proof",
+    "Injected or caller-owned transactions must not be replaced or split",
+    "Default constructors include readers; constructor replacement alone is unsafe"
+  ],
+  "databaseOperations": 0,
+  "productionChanges": false
+}
