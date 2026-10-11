@@ -1,0 +1,9 @@
+# 原生包信任接入边界1808
+
+现有asset_registry.signature.TrustRoot包含publisher/key_id/public_key/revision/有效期/撤销时间；未声明原生包专用purpose、cluster、ABI、source/build/profile/lifecycle绑定。ReleasePolicy校验Bundle发布证据及当前发布者Root；不能推导其可签发原生结束器权限。
+
+current_installation_release_evidence返回EVIDENCE_ONLY_NO_START，核对租户、当前安装/锁/签名源/运行镜像。此接口可作为安装绑定输入，但不可替代独立原生包授权。不得扩大原Bundle Root权限或把镜像digest等同来源信任。
+
+下一实现要求：单独定义原生包精确purpose/domain和有界签名字节，独立Root当前性与撤销、当前安装及cluster/ABI、完整source/build/profile/lifecycle绑定；消费端拒绝缺项与跨用途。先做隔离正负合同验证，正式Root发放和bootstrap仍独立受控。当前Native Task范围不包含现有asset_registry模块，任何产品扩展须先按原Task/Lease协调精确文件；本轮未改产品代码。
+
+验证：首次默认数据库端口连接失败，30 setup errors/9 skipped，未进断言；纠正为已核验隔离实验配置后30 passed/9 skipped/7 warnings，5.84秒。9项跳过原因为缺少AOS_E17_READONLY_SIGNED_RECEIPT；没有绕过门禁或声称安装联验通过。证据不能证明自然首链、完整native结束或正式权限。

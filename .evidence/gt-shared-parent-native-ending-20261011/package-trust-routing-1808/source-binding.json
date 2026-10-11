@@ -1,0 +1,14 @@
+{
+  "head": "c9d4c158828de1daa6245c4b63c9f583ef3b1597",
+  "files": {
+    "services/aos-api/aos_api/asset_registry/signature.py": "68ce8e3644527ba7d2eb0d551b74753f6a158264194a9f55532f0e600044201c",
+    "services/aos-api/aos_api/asset_registry/release_policy.py": "29e8a3f64cc5da0d661363fc43651bca071610f7e73626ccbc9bf477dd58988e",
+    "services/aos-api/aos_api/extension_runtime/admission.py": "eb57b133d05bb5eddc8f2539eb3ef172c21bb5139e74b09a71157a533fc57fde",
+    "services/aos-api/aos_api/extension_runtime/current_installation_release_evidence.py": "f7ec9f1e572a4bcbaebef59d22ff0a4bea211b07e20572fd5366afb41322fc13",
+    "services/aos-api/tests/asset_registry/test_release_policy.py": "e187be55581a4420f4c07eb96f3b29084316be595faa42fc0af8f18862c52ae6",
+    "services/aos-api/tests/extension_runtime/test_current_installation_release_evidence.py": "4f712fa22488bf3a80c75360acd5187978126a12fa4027abb7d4943c399d90e6"
+  },
+  "policy_tests_passed": 30,
+  "signed_preview_tests_skipped": 9,
+  "native_authorization": false
+}

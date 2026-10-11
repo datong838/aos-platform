@@ -204,3 +204,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 聚合分组阶段观察1807
 新增aggregate-group-1807，复用1806，补AggState perhash各组已初始化hashfunctions.fn_oid/eqfuncoids，以及phases中sortnode排序键、aggnode分组比较操作符。PG16 nodeAgg.h字段为依据，零数项不解引用；只记录候选，不调用支持函数。保持Agg未审查标记及原身份/三hook/完整Source门。编译身份门后aggregate-group-source-1807全新完整联验并独立核清理。
+
+## 原生包与现有发布信任边界1808
+候选一专用原生包信任入口，候选二观察计划剩余路径。先一：只读审核current_installation_release_evidence、release_policy、signature、admission，绑定精确文件hash与当前HEAD。运行现有release policy和installation evidence单测验证原EVIDENCE_ONLY_NO_START与签名撤销边界，不访问真实DB/商城、不签发Root。新增package-trust-routing-1808/review.md/source-binding.json及测试日志；形成具体专用purpose、完整build/profile/lifecycle与当前安装联合核对要求，不扩权现有Bundle发布者。
