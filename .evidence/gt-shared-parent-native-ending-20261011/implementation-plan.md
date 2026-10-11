@@ -182,3 +182,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 去重观察完整复验1801
 新增planstate-dedup-1801绑定已编译r3制品和身份负门，planstate-source-1801新完整Source fixture；仅替换精确hash核验后的新探针库路径，不改TTL/证书/Source断言。原r1全部保留。完整结果与节点候选观察分开，失败先只读对账。
+
+## 原事务观察目录冻结1802
+新增planstate-catalog-1802，新Source fixture复用已验dedup探针；collector返回后在同caller/xid只读pg_proc/namespace/language，精确全部observed OID的signature/bodyhash/Owner/config/ACL/xmin。先证明无缺失，再保持原latewriter/COMMIT拒绝；独立回读核仍存在的逐项一致，缺失项必须有原事务快照且xmin绑定本XID才归因回滚创建。仅测试证据不赋权限，不复用旧Source。
