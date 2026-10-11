@@ -152,3 +152,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 原调用异常清理联验1793
 新增fixed-collector-cleanup-1793，沿用1792-r2完整新Source fixture，新隔离库/审批/证书。原成功collector之前，savepoint中传入格式合法的错误Receipt hash，必须得到原collector COMPLETE_END_RECEIPT_REQUIRED；回滚savepoint后同backend/topxid执行SET LOCAL UTC并核身份，再执行原完整八节点collector及latewriter/实际COMMIT拒绝。仅验证异常hook恢复，不授完整结束或SELECT纯度。错误不重发，原r2材料不改。
+
+## 实际安装函数语法依赖候选1794
+候选一固定验证器表达式闭合，候选二独立签名包/lifecycle bootstrap；先一。新增semantic-closure-1794/audit.py/result.json，只读原隔离cluster最新终态测试库，从固定collector出发读pg_get_functiondef/Owner/ACL/proconfig/bodyhash；用pglast解析PLpgSQL语句里的SQL/表达式，收集显式FuncCall/A_Expr/TypeCast与动态SQL。每个调用保留所有目录重载候选，不擅自按名称选择；解析失败、PG解析器版本差异、implicit cast/operator/native内部调用保留未闭合。不得将静态候选当执行轨迹或允许列表。无产品及DB写入。
