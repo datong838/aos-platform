@@ -1,0 +1,12 @@
+{
+  "login": "qyh_restored_api_login",
+  "role": "aos_runtime",
+  "headAccepted": true,
+  "receiptAccepted": true,
+  "sqlstate": null,
+  "committed": false,
+  "canaryRejectedSqlstate": "42501",
+  "full647RollbackExact": true,
+  "runtimeSourceBoundaryClosed": false,
+  "passwordAuthenticationProven": false
+}

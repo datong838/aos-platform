@@ -1,0 +1,11 @@
+{
+  "login": "qyh_restored_api_login",
+  "role": "aos_runtime",
+  "headAccepted": true,
+  "receiptAccepted": false,
+  "sqlstate": "23502",
+  "committed": false,
+  "full647RollbackExact": true,
+  "runtimeSourceBoundaryClosed": false,
+  "passwordAuthenticationProven": false
+}

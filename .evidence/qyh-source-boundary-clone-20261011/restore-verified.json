@@ -1,0 +1,39 @@
+{
+  "tables": 647,
+  "sourceAndCloneDataExact": true,
+  "allMetadataExact": {
+    "retainedRoles": 39,
+    "retainedMemberships": 12,
+    "relationOwnerAndRls": 1887,
+    "relationGrants": 6159,
+    "columnGrants": 124,
+    "functions": 461
+  },
+  "sourceUnchanged": true,
+  "cloneIdentity": {
+    "cluster": "7695416748450308141",
+    "database": "aos_meta_head",
+    "schema": "a0v_159",
+    "activeOtherConnections": 0,
+    "loginExists": 1,
+    "name": "栖月汇商贸有限公司",
+    "nameUpdatedAt": "2026-10-11 07:54:17.109847+00",
+    "disabledBindings": true
+  },
+  "container": {
+    "Id": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Mounts": [],
+    "Ports": {
+      "5432/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "18431"
+        }
+      ]
+    }
+  },
+  "credentialsAuthenticated": false,
+  "sourceBoundaryAccepted": false,
+  "fullGoalAccepted": false
+}

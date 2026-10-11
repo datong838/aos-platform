@@ -1,0 +1,13 @@
+{
+  "sourceAndClone647DataExact": true,
+  "all39RolesAndSixMetadataScopesExact": true,
+  "twoCheckedBackupCopiesPrivate": true,
+  "sourceBoundary": "RED_RUNTIME_CAN_FORGE_SAME_TENANT_PLAN_AND_RECEIPT",
+  "cloneProbeFullyRolledBack": true,
+  "currentDbOrApiChanged": false,
+  "formalCredentialsOrGoalAccepted": false,
+  "sourceHashes": {
+    "prepare_clone.py": "c52a6877e7e5689a525e036c08c767b399f656751d365b3dbbfe72eee5ecbb46",
+    "probe_runtime_source.py": "e5c39d72a65872be7e18b0ccd9afc90cc1cff9c2a50bb5bed569e55666a138b1"
+  }
+}

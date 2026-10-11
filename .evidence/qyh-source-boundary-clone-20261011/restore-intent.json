@@ -1,0 +1,16 @@
+{
+  "target": "qyh-source-boundary-clone-20261011",
+  "backupHashes": {
+    "current.dump": {
+      "sha256": "92883fc818245a1f3d32f34214f9eaccef2a40a4db1c3e6ff317a7012b46546c",
+      "bytes": 16085331,
+      "secondCopyExact": true
+    },
+    "globals.sql": {
+      "sha256": "b644404de47988f17e8d67d2c707bb223f25900e1caef76f38971884fb28f715",
+      "bytes": 8014,
+      "secondCopyExact": true
+    }
+  },
+  "restoreAllOwnersAndAcls": true
+}

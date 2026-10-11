@@ -1,0 +1,11 @@
+# 当前完整恢复克隆与Source真实RED
+
+按本Task计划完成当前权威栖月汇完整custom备份与不含角色密码的globals备份，各两份0600文件/0700目录逐项SHA256相符。第二份为精确副本，不是独立快照。源备份时activeOtherConnections0、全部runtime binding关闭。源原命名卷、container/image、cluster/schema精确绑定，恢复全过程当前源数据/权限不变。
+
+新独立clone使用相同PG image、tmpfs512m、仅127.0.0.1:18431、无Source卷。bootstrap原aos_app，globals仅省掉已存在的CREATE ROLE aos_app，其余完整恢复；全pg_restore --exit-on-error保留owner/ACL，无忽略失败对象。647表逐表hash精确相符；39原roles/12memberships、1887relation owner/RLS、6159relation grants、124column grants、461functions相符。clone cluster不同；没有恢复/复制原密码，不宣称SCRAM认证。
+
+实际原API LOGIN qyh_restored_api_login→aos_runtime，在clone的READ WRITE事务按原租户绑定，首次随机Plan head INSERT成功；Receipt SQL缺必填receipt_id导致23502，并非独立发行权限拒绝。完整647表回滚相符，旧结果保留。该已知无持久效果后使用新键r2按原Store._receipt形状：Plan head和Plan操作Receipt均被接受，sqlstate无错误；同一事务内独立savepoint的dev-org canary被42501拒绝。finally rollback后Source与clone全部647表再次相符、六原metadata相符。此为原权限克隆上的真实同租户Source伪造RED，不能用跨租户绿掩盖。
+
+此组件只交付权限一致完整clone及真实反证，未修复该漏洞。运行中的当前API只读检查边界未变，当前库没有探针连接/写入，Host/worker/Provider未启动。下一项须在clone实现精确Plan/Content/Contract角色直授与共享Receipt operation/来源guard，证明原合法generic/BI/successor/Content/Contract写者兼容后，才进入正式Source迁移门。正式OIDC/独立OS发行身份/publisher、当前预算和八工作台仍待闭合。
+
+本记录为方案/脚本自审；没有新独立模型PASS，不把上波资料复审授予clone写者权限。Source脚本hash/语法、私密文件权限、独立数据/metadata读回通过，公共证据秘密扫描与精确diff检查通过。保留clone/完整备份，不删除原卷，不push。父恢复Task与完整Goal保持ACTIVE。
