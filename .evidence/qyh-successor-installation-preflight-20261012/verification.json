@@ -1,0 +1,24 @@
+{
+  "baseHead": "d03e2eacab046c8121746f9dd3d839b0d34f5225",
+  "tests": {
+    "passed": 72,
+    "skipped": 9,
+    "warnings": 7,
+    "skipReason": "explicit read-only signed preview receipt absent"
+  },
+  "retainedPackageFiles": 1695,
+  "retainedPackageHashMismatches": 0,
+  "originalEntryAndTestsByteUnchanged": true,
+  "userTrackedModificationsPreserved": 22,
+  "liveUnsignedCandidateRefused": true,
+  "identityOrDatabaseEntryCalls": 0,
+  "databaseWrites": 0,
+  "currentServiceChanged": false,
+  "realPublisherConnected": false,
+  "currentSuccessorInstallationVerified": false,
+  "eightPagesAccepted": false,
+  "files": {
+    "scripts/a0v_qyh_successor_installation.py": "44696d8e5b274399e45ac86fd6b7e9ee9b4d2994e78f608b177d6a637edf0927",
+    "services/aos-api/tests/extension_runtime/test_qyh_successor_installation.py": "d5cc42dc35a647e3cbb75ba3baaf4575b0f405563afc10ef0921e99255799f3f"
+  }
+}

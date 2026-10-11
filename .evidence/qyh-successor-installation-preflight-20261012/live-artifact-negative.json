@@ -1,0 +1,15 @@
+{
+  "outcome": "ACTUAL_QUALIFIED_UNSIGNED_SUCCESSOR_REFUSED",
+  "reason": "QUALIFIED_SIGNED_ARTIFACT_REJECTED",
+  "identityOrDatabaseEntryCalls": 0,
+  "versions": {
+    "domain.ecommerce.core": "1.4.4",
+    "platform.ecommerce.niushop": "1.23.3",
+    "solution.ecommerce.growth": "1.13.1",
+    "solution.ecommerce.operations-base": "1.2.2"
+  },
+  "sourceBuildHead": "87a956d8e0160192e3432b9a8aac33a13a047cc5",
+  "runtimeAuthorized": false,
+  "formalIdentityVerified": false,
+  "writes": 0
+}

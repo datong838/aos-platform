@@ -1,0 +1,1 @@
+提供既有qualification/build receipt与对应真实签名产物/public trust roots、现有有限LOGIN identity file以及实际新installation ID，仅按原current Registry/PUBLISHED/lock读取。不得用旧407版本、未签名候选、测试key或改actor代替正式恢复。当前新四包build已资格通过但真实独立publisher未接入，禁止先创建空安装伪造通过。本入口不会serve；后续继任API冻结/serve必须独立任务门，原入口143/1130保留。
