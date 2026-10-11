@@ -26,6 +26,10 @@
 
 选定公共目录现已独立完成：selected-public-bundles下仅4个精确版本；production两个alias同一根、现有ManifestLoader/ReleasePolicy逐包验签；179个原文件逐文件hash和签名保持，8模块解析。未复制私钥、未修改全局配置/数据库、未启动API。准备脚本首次读取manifest错误字段在intent/目录创建之前失败，核对原BundleManifest.metadata后修正；没有重放外部写。selected-public-root-terminal.json明确mixedImageQualification=false/eightPagesAccepted=false，不继承原1.23.0/1.2.0资格报告为1.23.2/1.2.2组合通过。
 
+下一实际资格步骤新增qualify_selected_candidates.py（仅本Task证据目录）：原resolver固定四坐标，原ReleasePolicy/RuntimeArtifact admission核已缓存精确镜像，原SchemaRequirement/require_installed在有限LOGIN的READ ONLY事务核现有schema；三隔离OciDriver会话按原诊断助手登记/heartbeat/清理，无网络、只读root、无真库mount、无Provider/业务调用。candidate资格策略使用原构建诊断ReleaseRecord投影，不声称Registry已publish；真实Registry两版本validated事实保持。每会话原工具一用journal，若未知容器结果只inspect不重发。输出明确fixture/diagnostic only，不能授Host或安装/运行/八页面权限。
+
+该混合组合实际诊断现已通过：三个精确本地镜像admission、原resolver四版本、恢复647表库READ ONLY三个installed schema receipts符合；三个网络none诊断会话各2048次heartbeat及声明精确登记，清理成功并独立inspect确认资源已不存在，179文件不变。mix-candidate资格首次在加载前冻结时间，被原证据currentness门拒绝、intent和容器均未创建；改为读完所有包后冻结统一评估时间，没有降低原currentness规则。证据mixed-candidate-qualification-terminal.json与mixed-qualification-independent-cleanup.json。Registry两新版本仍未publish，独立发布身份/正式安装配置/API/Web/八页面仍待；这是真实缓存镜像诊断，不是自然业务首链或正式Host运行。
+
 在本Task目录新增release_transition.py、只读preflight证据、有限两版本发布intent/terminal和fresh全库备份（private0600及第二校验副本）。public trust根只合并现有v2与新candidate公钥，不复制私钥，不改全局配置。Publish不自动安装/启Host/授权业务；必须后续当前安装、配置、API、浏览器与实际镜像/schema组合资格门。只有预检证明新坐标不存在、旧2个版本完全匹配、身份/头/Task/无未知操作符合时才能apply。已有intent按结果对账，不能重发。
 
 2026-10-11加载实测修订：Colima未挂载本机/Users配置路径，原docker run退出125；只读inspect证明目标不存在、原容器已正常停止。限定LOGIN已完成且不重放。改用docker create同一命名卷、docker cp无秘密hba到容器root拥有文件（postgres仅可读）、docker start；不依赖主机bind、不改变原卷配置。创建/复制/启动各自记录intent与terminal，失败只读对账。

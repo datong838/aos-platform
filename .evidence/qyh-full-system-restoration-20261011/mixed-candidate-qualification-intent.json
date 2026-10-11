@@ -1,0 +1,46 @@
+{
+  "task": "qyh-full-system-restoration-20261011",
+  "candidateDiagnosticOnly": true,
+  "admissions": {
+    "domain.ecommerce.core": {
+      "imageId": "sha256:7fda74795f57ff8a2e3fc8f3384ab17b9b9537a4688495b4e3787a8e5aa11e65",
+      "packageHash": "sha256:e14e6af72dd7c89d5beb7fd002454029bbc64cf510e6b9849ae9df20ef7eba44"
+    },
+    "platform.ecommerce.niushop": {
+      "imageId": "sha256:c19962b1e9ba201e64663c574a93b93c8e2f33a8f259e273647afbc7eecad341",
+      "packageHash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90"
+    },
+    "solution.ecommerce.growth": {
+      "imageId": "sha256:4483d2e202762ebde78f3b9fb622726c0cf6b04b77a7746b58c4b90b6cd44674",
+      "packageHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669"
+    }
+  },
+  "schemaRequirements": {
+    "domain.ecommerce.core": [
+      {
+        "packageId": "bundle-de982d07b154219ff69d3d3e8e3e1e172937bd5d403afada17bf898e2e372328",
+        "schemaVersion": "aos-platform-a0v-001",
+        "migrationHash": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee"
+      }
+    ],
+    "platform.ecommerce.niushop": [
+      {
+        "packageId": "bundle-98d43bb435a5fa7b5d84d7861149d784f7147d25cb28101fe21e3b647d37d78d",
+        "schemaVersion": "aos-platform-a0v-001",
+        "migrationHash": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2"
+      }
+    ],
+    "solution.ecommerce.growth": [
+      {
+        "packageId": "bundle-b88d3561086b0bbf1f2dc64e04020c26b662d6b18b876a668ab6e8b4398ac7df",
+        "schemaVersion": "aos-platform-a0v-001",
+        "migrationHash": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4"
+      }
+    ]
+  },
+  "databaseWrites": 0,
+  "businessCalls": 0,
+  "providerCalls": 0,
+  "registryStatusNotOverridden": true,
+  "network": "none"
+}

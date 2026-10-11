@@ -1,0 +1,28 @@
+{
+  "outcome": "THREE_DIAGNOSTIC_CONTAINERS_RELEASED_INDEPENDENT_GREEN",
+  "resources": [
+    {
+      "bundle": "domain.ecommerce.core",
+      "resourceName": "aos-ext-7a387b5e17eb40f3a482719f5fea77cd",
+      "owner": "7a387b5e17eb40f3a482719f5fea77cd",
+      "released": true,
+      "containerAbsent": true
+    },
+    {
+      "bundle": "platform.ecommerce.niushop",
+      "resourceName": "aos-ext-9f2a15ac380e476594ba68ca53f9b324",
+      "owner": "9f2a15ac380e476594ba68ca53f9b324",
+      "released": true,
+      "containerAbsent": true
+    },
+    {
+      "bundle": "solution.ecommerce.growth",
+      "resourceName": "aos-ext-de960204793049d499b95164c702bc7a",
+      "owner": "de960204793049d499b95164c702bc7a",
+      "released": true,
+      "containerAbsent": true
+    }
+  ],
+  "replayed": false,
+  "businessCalls": 0
+}
