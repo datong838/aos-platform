@@ -1,0 +1,9 @@
+# 完整Source协议验收及最小修复
+
+真实RED：原Source connector的write返回_ScopedBIIssuerConnection；已有reader直接isinstance(Connection)拒绝。原合法LOGIN身份、SERIALIZABLE、签名策略/4原Rule+回执/真实原安装准备完毕后，reader=False，1fail3pass。最小修复6行：只精确识别原支持wrapper并使用同一_raw；原Role/session/Scope/txstatus/isolation/readonly/Source table+column ACL、签名发布/安装/Policy/4Rule/Receipt校验均未削弱，Reader无commit/自行开连接，Store仍用原wrapper的commit rebind。没有改Connector、默认Router或对未知包装鸭子放行。
+
+修复首次真实正向PASS，3负门错误期待整表为0但前一正向已有合法Profile；修正为读前后profiles/receipts数不增，每个负门先实际完整reader=True再改一条件，避免包装拒绝带来的空洞通过。原signed publication revoke、本租户->dev-org、signedPolicy摘要/请求GateRuleRef漂移、runtime Source grant恢复、RLS隐藏真实Rule Receipt均进入原Store并拒绝无新增记录。Receipt负门没有删除不可变记录。最终55pass0skip7既有warnings，其中7新增真实PG路径；相邻上一波3真实原安装测试、完整readerwiring16、Rule/Policy合同通过。
+
+测试身份与权限严格位于已批准ownedclone18431/cluster7695416748450308141的conftest随机新库；仅fixture创建原固定contract role（断言不存在，NOINHERIT/无super/bypass/createdb/createrole/replication/member），无真实用户或组织Owner权限。passfile私密0700/0600，仅临时测试password；finally DROP OWNED/ROLE并删除passfile；测试后独立psql角色数0。SQL身份/Scope原connector验证实际执行。测试策略spec.testOnly=False仅是输入分支，另fixtureOnly=True且原测试trustRoot/actors，明确非实际四Rule批准或真实组织上线。原M5 declarative_only不授runtime/Host执行。
+
+原真库/现有API/Web/135安装/22用户改动均未修改；本波内部Source逻辑无UI变更，没有借浏览器200证明八工作台已恢复。新6行产品逻辑未部署，只提交验收。全系统Goal仍ACTIVE、八页仍待正式入口。后续完整Source协议仍需原专用Source注册失败异常rollback、Policy/Rule实际内容与安装代次/混版/缺回执更多负门；正式OIDC/publisher接入路径问题保持待答，不重复索要/伪造身份。此波可关闭wrapper兼容和完整正向协议子任务，不能关闭总体Source权限生产迁移、真实签名发布或正式业务首链。

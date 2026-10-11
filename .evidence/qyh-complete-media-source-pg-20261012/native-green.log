@@ -1,0 +1,100 @@
+.FFF                                                                     [100%]
+=================================== FAILURES ===================================
+____ test_complete_original_source_rejects_without_profile_receipt[tenant] _____
+
+complete_case = (<aos_api.aip_production_contract_store.AipProductionContractStore object at 0x11e45aa10>, <function complete_case.<lo...444250>, installation_service=<aos_api.asset_registry.installation_service.InstallationService object at 0x11dec8690>))
+change = 'tenant'
+
+    @pytest.mark.parametrize("change", ["tenant", "policyHash", "ruleDrift"])
+    def test_complete_original_source_rejects_without_profile_receipt(complete_case, change):
+        store, _, _, body, admin, _ = complete_case
+        scope = SCOPE
+        if change == "tenant":
+            scope = TenantScope("dev-org", "dev-project")
+        elif change == "policyHash":
+            body = body.model_copy(update={"policy_ref": body.policy_ref.model_copy(update={"content_hash": "d" * 64})})
+        else:
+            body = body.model_copy(update={"gates": [body.gates[0].model_copy(update={"rule_ref": body.gates[0].rule_ref.model_copy(update={"content_hash": "d" * 64})}), *body.gates[1:]]})
+        with pytest.raises(ProductionContractDependencyBlocked):
+            store.register_media_gate_profile(scope, "fixture-source-maker", "complete-negative", body)
+>       assert admin.execute("SELECT count(*) AS n FROM public.aip_media_gate_profile_revision").fetchone()["n"] == 0
+E       assert 1 == 0
+
+services/aos-api/tests/asset_registry/test_qyh_complete_media_source_pg.py:141: AssertionError
+__ test_complete_original_source_rejects_without_profile_receipt[policyHash] ___
+
+complete_case = (<aos_api.aip_production_contract_store.AipProductionContractStore object at 0x11e443a50>, <function complete_case.<lo...32d710>, installation_service=<aos_api.asset_registry.installation_service.InstallationService object at 0x11e60c650>))
+change = 'policyHash'
+
+    @pytest.mark.parametrize("change", ["tenant", "policyHash", "ruleDrift"])
+    def test_complete_original_source_rejects_without_profile_receipt(complete_case, change):
+        store, _, _, body, admin, _ = complete_case
+        scope = SCOPE
+        if change == "tenant":
+            scope = TenantScope("dev-org", "dev-project")
+        elif change == "policyHash":
+            body = body.model_copy(update={"policy_ref": body.policy_ref.model_copy(update={"content_hash": "d" * 64})})
+        else:
+            body = body.model_copy(update={"gates": [body.gates[0].model_copy(update={"rule_ref": body.gates[0].rule_ref.model_copy(update={"content_hash": "d" * 64})}), *body.gates[1:]]})
+        with pytest.raises(ProductionContractDependencyBlocked):
+            store.register_media_gate_profile(scope, "fixture-source-maker", "complete-negative", body)
+>       assert admin.execute("SELECT count(*) AS n FROM public.aip_media_gate_profile_revision").fetchone()["n"] == 0
+E       assert 1 == 0
+
+services/aos-api/tests/asset_registry/test_qyh_complete_media_source_pg.py:141: AssertionError
+___ test_complete_original_source_rejects_without_profile_receipt[ruleDrift] ___
+
+complete_case = (<aos_api.aip_production_contract_store.AipProductionContractStore object at 0x11dbf7d90>, <function complete_case.<lo...490cd0>, installation_service=<aos_api.asset_registry.installation_service.InstallationService object at 0x11e62efd0>))
+change = 'ruleDrift'
+
+    @pytest.mark.parametrize("change", ["tenant", "policyHash", "ruleDrift"])
+    def test_complete_original_source_rejects_without_profile_receipt(complete_case, change):
+        store, _, _, body, admin, _ = complete_case
+        scope = SCOPE
+        if change == "tenant":
+            scope = TenantScope("dev-org", "dev-project")
+        elif change == "policyHash":
+            body = body.model_copy(update={"policy_ref": body.policy_ref.model_copy(update={"content_hash": "d" * 64})})
+        else:
+            body = body.model_copy(update={"gates": [body.gates[0].model_copy(update={"rule_ref": body.gates[0].rule_ref.model_copy(update={"content_hash": "d" * 64})}), *body.gates[1:]]})
+        with pytest.raises(ProductionContractDependencyBlocked):
+            store.register_media_gate_profile(scope, "fixture-source-maker", "complete-negative", body)
+>       assert admin.execute("SELECT count(*) AS n FROM public.aip_media_gate_profile_revision").fetchone()["n"] == 0
+E       assert 1 == 0
+
+services/aos-api/tests/asset_registry/test_qyh_complete_media_source_pg.py:141: AssertionError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/asset_registry/test_qyh_complete_media_source_pg.py::test_complete_original_source_rejects_without_profile_receipt[tenant]
+FAILED services/aos-api/tests/asset_registry/test_qyh_complete_media_source_pg.py::test_complete_original_source_rejects_without_profile_receipt[policyHash]
+FAILED services/aos-api/tests/asset_registry/test_qyh_complete_media_source_pg.py::test_complete_original_source_rejects_without_profile_receipt[ruleDrift]
+3 failed, 1 passed, 7 warnings in 10.84s

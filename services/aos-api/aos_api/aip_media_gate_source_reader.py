@@ -22,6 +22,7 @@ from aos_api.aip_production_contract_store import (
     AipProductionContractStore, ProductionContractDependencyBlocked, ProductionContractNotFound,
 )
 from aos_api.tenant_scope import TenantScope
+from aos_api.aip_bi_plan_issuer_connection import _ScopedBIIssuerConnection
 
 
 class _InvalidSourceDigest(ValueError):
@@ -43,6 +44,11 @@ class CompleteMediaGateSourceReader:
         self.policy_relative_path=policy_relative_path
 
     def __call__(self,conn,scope,body):
+        # The original write connector preserves tenant scope across Store
+        # commits with this exact wrapper. Inspect its same native transaction;
+        # keep all database identity/ACL checks below, without duck typing.
+        if type(conn) is _ScopedBIIssuerConnection:
+            conn = conn._raw
         if (not isinstance(conn,Connection) or type(scope) is not TenantScope
             or not isinstance(body,RegisterMediaGateProfileRequest)
             or conn.info.transaction_status != TransactionStatus.INTRANS

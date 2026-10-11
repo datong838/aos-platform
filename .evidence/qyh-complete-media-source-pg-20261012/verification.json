@@ -1,0 +1,35 @@
+{
+  "baseHead": "b4664563f7d4c807f7f2d8f431387c3d53089617",
+  "passed": 55,
+  "skipped": 0,
+  "warnings": 7,
+  "newNativeTests": 7,
+  "nativePositive": {
+    "originalSourceConnector": true,
+    "realLimitedLoginNoRuntimeMembership": true,
+    "originalTestSignaturesPublicationAndInstall": true,
+    "fourOriginalRuleRegistrationReceipts": true,
+    "signedPolicyArtifact": true,
+    "sameCallerTxidPreserved": true,
+    "originalProfileCommitAndReplay": true
+  },
+  "nativeNegative": [
+    "tenant",
+    "policy digest",
+    "request gate RuleRef mismatch",
+    "real publication revoke",
+    "runtime Source table write privilege",
+    "actual Rule receipts not visible through RLS"
+  ],
+  "testOnlyProtocolEvidence": true,
+  "fullPolicySemanticApproval": false,
+  "formalOidcPublisherConnected": false,
+  "productionRouterWired": false,
+  "currentDatabaseWrites": 0,
+  "currentApiChanged": false,
+  "fixtureRoleAbsentAfterTests": true,
+  "files": {
+    "services/aos-api/aos_api/aip_media_gate_source_reader.py": "79e633ccb4429dcbda0425bf5c2781bce155d0148ac13aef7d41a254ac08a02d",
+    "services/aos-api/tests/asset_registry/test_qyh_complete_media_source_pg.py": "e4163417112b8ceacf97193f794a231717ea7a0814dd3728830b4c83da5d88e5"
+  }
+}
