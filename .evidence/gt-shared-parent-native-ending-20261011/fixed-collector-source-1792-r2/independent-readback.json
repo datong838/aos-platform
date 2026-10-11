@@ -1,0 +1,31 @@
+{
+  "cluster": "7694680278363095064",
+  "xid_status": "aborted",
+  "other_clients": 0,
+  "track_override": null,
+  "probe": {
+    "symbol": "probe_fixed_collector",
+    "library": "/tmp/aos_fixed_collector_1757e9a5bc3c4c56946c973847019517.so",
+    "owner": "aos_app",
+    "security_definer": false,
+    "acl": "{aos_app=X/aos_app,aos_physical_capacity_occupation_owner=X/aos_app}"
+  },
+  "wrapper": "SELECT public.test_fixed_native_collector(p_plan,p_hash,p_xid,p_pid)",
+  "table_counts": {
+    "aos_shared_parent_admission_private.end_authority": 0,
+    "aos_shared_parent_admission_private.pending_origin": 0,
+    "aos_shared_parent_physical_private.complete_parent_risk": 0,
+    "aos_shared_parent_physical_private.complete_receipt_v2": 0,
+    "aos_shared_parent_physical_private.initial_call_authority": 0,
+    "aos_shared_parent_physical_private.initial_target_obligation": 0,
+    "aos_shared_parent_physical_private.initial_window_obligation": 0,
+    "aos_shared_parent_physical_private.judge_dependency": 0,
+    "aos_shared_parent_physical_private.target_intent": 0
+  },
+  "nodes": 8,
+  "full_native_ending": false,
+  "formal_root": false,
+  "execution_allowed": false,
+  "pytest_exit": 0,
+  "elapsed_seconds": 162.99
+}

@@ -1,0 +1,1 @@
+原Judge Task与NativeEnding Task同一owner、Lease有效且无重叠。原fixture要求Judge目录下新子目录，保持原检查不变。本次仅在fixed-collector-source-1792-r2子目录复制原三helper及保存新独立Judge材料，Native完整fixture及结果仍位于NativeEnding对应目录。不修改产品/Judge旧材料/权限。先前r1目录门失败且profile已恢复，不重放旧请求；r2新独立库/Source/审批。

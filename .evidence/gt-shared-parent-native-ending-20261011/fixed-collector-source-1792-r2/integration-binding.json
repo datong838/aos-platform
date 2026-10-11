@@ -1,0 +1,7 @@
+{
+  "original_trial_preserved_except_fixed_native_call": true,
+  "library": "/tmp/aos_fixed_collector_1757e9a5bc3c4c56946c973847019517.so",
+  "library_sha256": "9d8abfc5324d9f96639f3cfd84a2fa92a5deae86ed2f5dae3c09e72dbf09714a",
+  "fresh_source_not_replay": true,
+  "formal_root": false
+}

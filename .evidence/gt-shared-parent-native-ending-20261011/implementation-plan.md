@@ -144,3 +144,8 @@ r1错误按 proname 查询 C prosrc，止于只读预检；r2误用历史摘要�
 
 ## 固定完整collector隔离原生探针
 当前候选：完整collector真实身份下的native写/utility fence联验；独立包Root/lifecycle仍为后续必要候选。新增fixed-collector-probe-1792/probe.c、Dockerfile及构建证据；复用1754两个supported hooks，只允许固定read_shared_parent_complete_end_facts(uuid,text,xid8,integer)，无caller SQL/mode。拒绝管理员，要求原occupation session、runtime role、PhysicalOwner effective identity、原scope/serializable/readwrite/origin/UTC、当前topxid/pid及隔离库。不得改原Source/Receipt/七guard；hook恢复覆盖异常，返回jsonb在SPI释放前复制。先编译和身份负门，再接新独立完整Source fixture，不重发1788。此探针不drain、不arm、不承诺SELECT无副作用、不定义完整finalizer、不得生产部署或组件Delivery。
+
+### 固定collector完整Source新轮联验
+新增fixed-collector-source-1792目录，复用1788原完整fixture与独立边界短JWT，使用新独立测试库和新Source/审批/证书，不重用原请求。所有证据写本Task目录，包括judge-evidence子目录。仅把原test_owned_complete_end_facts包装的被调用函数替换为已hash核验的固定C探针，C为admin Owner/SECURITY INVOKER、仅PhysicalOwner可EXECUTE；原包装仍原PhysicalOwner/原session/runtime role，全部八节点/四证书/物理/latewriter/实际COMMIT拒绝断言保留。无TTL延长或产品修改。原profile统计仅新测试库启用并在finally恢复。明确测试Root不是正式Root；即使通过也仅证明这条完整collector在两hook内运行，不能证明任意SELECT无效果或完整nativeending。
+
+r1原fixture目录门明确终态失败，未到collector，profile恢复成功。r2只纠正证据落点：回读同owner原Judge Task/Lease有效且无重叠，在其唯一新子目录保留原三helper及新Judge材料。原目录安全门不改，原r1全量保留，新Source不重发旧结果。

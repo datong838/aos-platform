@@ -1,0 +1,7 @@
+# 固定原生collector完整Source联验
+
+原r1失败于Judge证据目录门，未到collector；原profile恢复。回读原Judge与NativeEnding同owner有效Lease后，r2使用全新独立测试库和新Source/审批/证书，保持原目录门及原短JWT边界。唯一调用改动为原PhysicalOwner包装转到固定C探针，未修改原Source/Receipt/预算算法或TTL。
+
+r2整轮1 passed/162.99秒，原四证书/两父风险/八节点/物理Receipt断言保留。原身份下native collector返回15.499028秒；late-writer后物理比较拒绝，原缺结束门实际COMMIT拒绝。独立回读XID65214 aborted，九表均0、其他client0、track_functions覆盖已清除；wrapper及C符号/库路径吻合。管理员与null拒绝另有identity-result证据。
+
+该结果只证明完整collector可在两个supported hooks内按原身份执行；SELECT函数副作用、动态加载、任意后续callback、事件/RI固定点、独立专用Root/不可变包和耐久截止及提交后unknown仍未闭合。探针不drain、不arm、不授业务权限，原完整Task保持ACTIVE，无组件Delivery。正式库和现有产品代码未改。
