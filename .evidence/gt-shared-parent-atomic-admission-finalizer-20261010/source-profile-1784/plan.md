@@ -1,0 +1,9 @@
+# 新鲜完整 Source 逐函数成本试验
+
+Rules231、Main1698完整合同；authority1784，原Main/Judge同owner Lease已正式续期且各自唯一无重叠。原1782试验已终态，原隔离库恢复核验已完成。
+
+精确新增本目录run.py/source_newjudge_native_trial_1606.py/catalog_fixture_restore.py/shared_identity_certificate_fixture.py与原fixture拷贝、统计、结果；Judge新source-profile-1784目录只存原fixture材料。无产品修改。
+
+复用原1782完整fixture，仅替换新目录标签和新试验数据库的track_functions观测配置。pytest_runtest_call已获得新独立库名后，由固定lab admin在该库设置track_functions=pl，记录数据库此前该项无覆盖；禁止ALTER SYSTEM/全局/旧库变更。在pytest整个原试验结束finally以原设置RESET同一新库，记录结果；异常不重发未知结果。原nativecaller新连接继承该设置，原同事务pg_stat_xact_user_functions采集schema/function/calls/total_time/self_time，不收集参数/packet/秘密。
+
+完整Source、两独立申请批准、四签名、八节点Receipt、collector、迟写负门、actual COMMIT/cleanup均保持原脚本；Source/审批/consumer原期限不变、不假clock，不以profile成功替代业务成功。检查统计实际可见，解释累计与独占time，误差仅本次观测。不基于静态调用数删除验证。结果readonly核原cluster/新库/九表/session/原文件hash，完整fixture任何RED均保留。

@@ -1,0 +1,2304 @@
+{
+  "status": "PROFILE_OBSERVED_FULL_FIXTURE_RED",
+  "pytest_exit": 1,
+  "call_error": "CAPACITY_CURRENT_SOURCE_EXPIRED",
+  "teardown_error": "CAPACITY_NATIVE_SIGNED_SUPPLIER_INPUTS_REQUIRED",
+  "all_nine_tables_zero": true,
+  "other_sessions_zero": true,
+  "function_statistics_restored": true,
+  "collector_positive_executed": false,
+  "product_modified": false,
+  "stages": [
+    {
+      "stage": "public.test_owned_versioned_origin",
+      "elapsed_seconds": 3.445882,
+      "outcome": "returned",
+      "error": null,
+      "deltas": [],
+      "limitation": "first snapshot includes prefix; rejected stage has no same-transaction after snapshot"
+    },
+    {
+      "stage": "public.test_owned_pending_origin",
+      "elapsed_seconds": 13.290021,
+      "outcome": "returned",
+      "error": null,
+      "deltas": [
+        {
+          "function": "aos_capacity_publication_private.require_original_fact_boundary",
+          "calls_delta": 264,
+          "self_ms_delta": 5976.181711,
+          "inclusive_ms_delta": 5976.181711
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_snapshot",
+          "calls_delta": 480,
+          "self_ms_delta": 1260.335212,
+          "inclusive_ms_delta": 1496.115254
+        },
+        {
+          "function": "aos_capacity_publication_private.require_current_source_installation",
+          "calls_delta": 48,
+          "self_ms_delta": 860.007971,
+          "inclusive_ms_delta": 5387.921211
+        },
+        {
+          "function": "aos_capacity_publication_private.canonical_signed_json",
+          "calls_delta": 281096,
+          "self_ms_delta": 819.873944,
+          "inclusive_ms_delta": 819.873944
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_withdrawal_boundary",
+          "calls_delta": 108,
+          "self_ms_delta": 654.794997,
+          "inclusive_ms_delta": 3252.489917
+        },
+        {
+          "function": "public.read_capacity_source_for_occupation",
+          "calls_delta": 20,
+          "self_ms_delta": 583.792721,
+          "inclusive_ms_delta": 12327.812879
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_evidence_boundary",
+          "calls_delta": 108,
+          "self_ms_delta": 526.266709,
+          "inclusive_ms_delta": 3098.130545
+        },
+        {
+          "function": "public.canonical_asset_registry_jsonb",
+          "calls_delta": 115544,
+          "self_ms_delta": 364.623593,
+          "inclusive_ms_delta": 364.623593
+        },
+        {
+          "function": "aos_capacity_publication_private.read_identifier",
+          "calls_delta": 12380,
+          "self_ms_delta": 335.421155,
+          "inclusive_ms_delta": 335.421155
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_epoch_pair_boundary",
+          "calls_delta": 216,
+          "self_ms_delta": 295.431375,
+          "inclusive_ms_delta": 5169.558756
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_fields",
+          "calls_delta": 12060,
+          "self_ms_delta": 255.342758,
+          "inclusive_ms_delta": 292.339503
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_time",
+          "calls_delta": 8400,
+          "self_ms_delta": 241.149045,
+          "inclusive_ms_delta": 241.149045
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_time_literal",
+          "calls_delta": 2880,
+          "self_ms_delta": 214.079866,
+          "inclusive_ms_delta": 214.079866
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_ref",
+          "calls_delta": 6200,
+          "self_ms_delta": 105.59656,
+          "inclusive_ms_delta": 126.674909
+        },
+        {
+          "function": "public.require_capacity_occupation_source_installation",
+          "calls_delta": 20,
+          "self_ms_delta": 93.833708,
+          "inclusive_ms_delta": 2373.922085
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_json",
+          "calls_delta": 20100,
+          "self_ms_delta": 72.700984,
+          "inclusive_ms_delta": 72.700984
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_field",
+          "calls_delta": 103280,
+          "self_ms_delta": 70.903816,
+          "inclusive_ms_delta": 70.903816
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_string",
+          "calls_delta": 25800,
+          "self_ms_delta": 56.652963,
+          "inclusive_ms_delta": 56.652963
+        },
+        {
+          "function": "aos_capacity_publication_private.read_origin_bootstrap",
+          "calls_delta": 440,
+          "self_ms_delta": 43.883117,
+          "inclusive_ms_delta": 305.936085
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_fact_evidence",
+          "calls_delta": 420,
+          "self_ms_delta": 42.264418,
+          "inclusive_ms_delta": 272.507295
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_provider",
+          "calls_delta": 1260,
+          "self_ms_delta": 39.508743,
+          "inclusive_ms_delta": 352.193732
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_capacity_application",
+          "calls_delta": 960,
+          "self_ms_delta": 38.146194,
+          "inclusive_ms_delta": 159.425114
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_ref",
+          "calls_delta": 3780,
+          "self_ms_delta": 30.302336,
+          "inclusive_ms_delta": 148.897407
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signed_time",
+          "calls_delta": 5140,
+          "self_ms_delta": 26.470106,
+          "inclusive_ms_delta": 26.470106
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_identifier_literal",
+          "calls_delta": 2880,
+          "self_ms_delta": 21.700176,
+          "inclusive_ms_delta": 21.700176
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signing_permit",
+          "calls_delta": 120,
+          "self_ms_delta": 21.073525,
+          "inclusive_ms_delta": 69.901375
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_equal",
+          "calls_delta": 6000,
+          "self_ms_delta": 20.914552,
+          "inclusive_ms_delta": 23.055985
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_exact_ref",
+          "calls_delta": 2040,
+          "self_ms_delta": 18.522435,
+          "inclusive_ms_delta": 67.185419
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_source_candidate",
+          "calls_delta": 480,
+          "self_ms_delta": 16.996343,
+          "inclusive_ms_delta": 99.866253
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signed_body",
+          "calls_delta": 1780,
+          "self_ms_delta": 15.76121,
+          "inclusive_ms_delta": 180.5987
+        },
+        {
+          "function": "aos_capacity_publication_private.original_evidence_fields",
+          "calls_delta": 720,
+          "self_ms_delta": 14.965747,
+          "inclusive_ms_delta": 65.850039
+        },
+        {
+          "function": "aos_capacity_publication_private.read_deployment_target",
+          "calls_delta": 740,
+          "self_ms_delta": 13.141657,
+          "inclusive_ms_delta": 31.839256
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_integer",
+          "calls_delta": 9540,
+          "self_ms_delta": 12.941603,
+          "inclusive_ms_delta": 12.941603
+        },
+        {
+          "function": "aos_capacity_publication_private.read_source_issuer_url",
+          "calls_delta": 140,
+          "self_ms_delta": 11.26809,
+          "inclusive_ms_delta": 66.345294
+        },
+        {
+          "function": "aos_capacity_publication_private.read_source_policy",
+          "calls_delta": 180,
+          "self_ms_delta": 11.191446,
+          "inclusive_ms_delta": 83.115504
+        },
+        {
+          "function": "aos_capacity_publication_private.read_supplier_attestation",
+          "calls_delta": 120,
+          "self_ms_delta": 10.902752,
+          "inclusive_ms_delta": 56.407157
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_capacity_basis",
+          "calls_delta": 480,
+          "self_ms_delta": 9.640248,
+          "inclusive_ms_delta": 106.372371
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_fact_provider",
+          "calls_delta": 180,
+          "self_ms_delta": 9.376304,
+          "inclusive_ms_delta": 376.538579
+        },
+        {
+          "function": "public.capacity_occupation_judge_fact",
+          "calls_delta": 8,
+          "self_ms_delta": 8.956747,
+          "inclusive_ms_delta": 4999.616877
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_time",
+          "calls_delta": 1560,
+          "self_ms_delta": 8.613254,
+          "inclusive_ms_delta": 62.525171
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_physical_account",
+          "calls_delta": 360,
+          "self_ms_delta": 6.921123,
+          "inclusive_ms_delta": 43.044876
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_owner",
+          "calls_delta": 300,
+          "self_ms_delta": 5.856414,
+          "inclusive_ms_delta": 5.856414
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_build_request",
+          "calls_delta": 300,
+          "self_ms_delta": 5.733896,
+          "inclusive_ms_delta": 59.413713
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_fact_request",
+          "calls_delta": 120,
+          "self_ms_delta": 5.463083,
+          "inclusive_ms_delta": 364.911543
+        },
+        {
+          "function": "public.capacity_occupation_eval_fact",
+          "calls_delta": 8,
+          "self_ms_delta": 4.98742,
+          "inclusive_ms_delta": 4928.71917
+        },
+        {
+          "function": "public.validate_shared_parent_admission_certificate_set",
+          "calls_delta": 2,
+          "self_ms_delta": 4.491457,
+          "inclusive_ms_delta": 13276.32534
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_identity",
+          "calls_delta": 720,
+          "self_ms_delta": 3.804204,
+          "inclusive_ms_delta": 3.804204
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_header",
+          "calls_delta": 840,
+          "self_ms_delta": 3.709565,
+          "inclusive_ms_delta": 17.628576
+        },
+        {
+          "function": "public.persist_shared_parent_admission_origin",
+          "calls_delta": 1,
+          "self_ms_delta": 2.502041,
+          "inclusive_ms_delta": 13288.362756
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_token_limit",
+          "calls_delta": 480,
+          "self_ms_delta": 2.178887,
+          "inclusive_ms_delta": 11.858093
+        },
+        {
+          "function": "public.build_shared_parent_admission_origin",
+          "calls_delta": 4,
+          "self_ms_delta": 2.007375,
+          "inclusive_ms_delta": 12378.898131
+        },
+        {
+          "function": "public.aos_capacity_evidence_epoch_lock",
+          "calls_delta": 60,
+          "self_ms_delta": 1.669625,
+          "inclusive_ms_delta": 1.669625
+        },
+        {
+          "function": "public.aos_capacity_withdrawal_epoch_lock",
+          "calls_delta": 120,
+          "self_ms_delta": 1.629043,
+          "inclusive_ms_delta": 1.629043
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_integer",
+          "calls_delta": 960,
+          "self_ms_delta": 1.575159,
+          "inclusive_ms_delta": 1.575159
+        },
+        {
+          "function": "public.capacity_occupation_plan_risk_fact",
+          "calls_delta": 8,
+          "self_ms_delta": 0.894583,
+          "inclusive_ms_delta": 9929.23063
+        },
+        {
+          "function": "public.verify_model_shared_parent_certificate_signature",
+          "calls_delta": 8,
+          "self_ms_delta": 0.791332,
+          "inclusive_ms_delta": 888.825375
+        },
+        {
+          "function": "aos_shared_parent_admission_private.check_pending_origin",
+          "calls_delta": 1,
+          "self_ms_delta": 0.370834,
+          "inclusive_ms_delta": 5.0365
+        },
+        {
+          "function": "public.capacity_occupation_source_fact",
+          "calls_delta": 4,
+          "self_ms_delta": 0.187416,
+          "inclusive_ms_delta": 2425.510793
+        },
+        {
+          "function": "public.read_shared_parent_admission_original_facts",
+          "calls_delta": 8,
+          "self_ms_delta": 0.059208,
+          "inclusive_ms_delta": 9929.289838
+        }
+      ],
+      "limitation": "delta between successful same-transaction snapshots; inclusive times overlap, do not sum"
+    },
+    {
+      "stage": "public.test_owned_end_authority",
+      "elapsed_seconds": 13.269925,
+      "outcome": "returned",
+      "error": null,
+      "deltas": [
+        {
+          "function": "aos_capacity_publication_private.require_original_fact_boundary",
+          "calls_delta": 264,
+          "self_ms_delta": 5992.411748,
+          "inclusive_ms_delta": 5992.411748
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_snapshot",
+          "calls_delta": 480,
+          "self_ms_delta": 1263.103521,
+          "inclusive_ms_delta": 1510.632751
+        },
+        {
+          "function": "aos_capacity_publication_private.require_current_source_installation",
+          "calls_delta": 48,
+          "self_ms_delta": 870.022329,
+          "inclusive_ms_delta": 5383.857962
+        },
+        {
+          "function": "aos_capacity_publication_private.canonical_signed_json",
+          "calls_delta": 281096,
+          "self_ms_delta": 804.460093,
+          "inclusive_ms_delta": 804.460093
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_withdrawal_boundary",
+          "calls_delta": 108,
+          "self_ms_delta": 644.202664,
+          "inclusive_ms_delta": 3234.075796
+        },
+        {
+          "function": "public.read_capacity_source_for_occupation",
+          "calls_delta": 20,
+          "self_ms_delta": 610.496089,
+          "inclusive_ms_delta": 12299.777379
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_evidence_boundary",
+          "calls_delta": 108,
+          "self_ms_delta": 520.613794,
+          "inclusive_ms_delta": 3126.456791
+        },
+        {
+          "function": "public.canonical_asset_registry_jsonb",
+          "calls_delta": 115618,
+          "self_ms_delta": 348.072387,
+          "inclusive_ms_delta": 348.072387
+        },
+        {
+          "function": "aos_capacity_publication_private.read_identifier",
+          "calls_delta": 12380,
+          "self_ms_delta": 328.571667,
+          "inclusive_ms_delta": 328.571667
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_epoch_pair_boundary",
+          "calls_delta": 216,
+          "self_ms_delta": 290.384964,
+          "inclusive_ms_delta": 5195.716129
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_fields",
+          "calls_delta": 12060,
+          "self_ms_delta": 257.514245,
+          "inclusive_ms_delta": 294.728026
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_time",
+          "calls_delta": 8400,
+          "self_ms_delta": 240.034418,
+          "inclusive_ms_delta": 240.034418
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_time_literal",
+          "calls_delta": 2880,
+          "self_ms_delta": 221.159771,
+          "inclusive_ms_delta": 221.159771
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_ref",
+          "calls_delta": 6200,
+          "self_ms_delta": 98.566741,
+          "inclusive_ms_delta": 113.271103
+        },
+        {
+          "function": "public.require_capacity_occupation_source_installation",
+          "calls_delta": 20,
+          "self_ms_delta": 92.926541,
+          "inclusive_ms_delta": 2314.708457
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_string",
+          "calls_delta": 25800,
+          "self_ms_delta": 65.405477,
+          "inclusive_ms_delta": 65.405477
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_field",
+          "calls_delta": 103280,
+          "self_ms_delta": 64.996159,
+          "inclusive_ms_delta": 64.996159
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_json",
+          "calls_delta": 20100,
+          "self_ms_delta": 63.478696,
+          "inclusive_ms_delta": 63.478696
+        },
+        {
+          "function": "aos_capacity_publication_private.read_origin_bootstrap",
+          "calls_delta": 440,
+          "self_ms_delta": 44.852917,
+          "inclusive_ms_delta": 307.147995
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_fact_evidence",
+          "calls_delta": 420,
+          "self_ms_delta": 41.039661,
+          "inclusive_ms_delta": 250.269838
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_provider",
+          "calls_delta": 1260,
+          "self_ms_delta": 39.4307,
+          "inclusive_ms_delta": 368.450752
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_capacity_application",
+          "calls_delta": 960,
+          "self_ms_delta": 38.027669,
+          "inclusive_ms_delta": 160.5427
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signed_time",
+          "calls_delta": 5140,
+          "self_ms_delta": 34.217555,
+          "inclusive_ms_delta": 34.217555
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_ref",
+          "calls_delta": 3780,
+          "self_ms_delta": 29.767465,
+          "inclusive_ms_delta": 164.624438
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_identifier_literal",
+          "calls_delta": 2880,
+          "self_ms_delta": 26.369459,
+          "inclusive_ms_delta": 26.369459
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_equal",
+          "calls_delta": 6000,
+          "self_ms_delta": 19.985145,
+          "inclusive_ms_delta": 22.13952
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_exact_ref",
+          "calls_delta": 2040,
+          "self_ms_delta": 18.143878,
+          "inclusive_ms_delta": 65.728865
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_source_candidate",
+          "calls_delta": 480,
+          "self_ms_delta": 17.416729,
+          "inclusive_ms_delta": 91.517591
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signed_body",
+          "calls_delta": 1780,
+          "self_ms_delta": 15.890711,
+          "inclusive_ms_delta": 172.994842
+        },
+        {
+          "function": "aos_capacity_publication_private.original_evidence_fields",
+          "calls_delta": 720,
+          "self_ms_delta": 14.730767,
+          "inclusive_ms_delta": 64.588336
+        },
+        {
+          "function": "aos_capacity_publication_private.read_deployment_target",
+          "calls_delta": 740,
+          "self_ms_delta": 13.048957,
+          "inclusive_ms_delta": 31.459875
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_integer",
+          "calls_delta": 9540,
+          "self_ms_delta": 13.004253,
+          "inclusive_ms_delta": 13.004253
+        },
+        {
+          "function": "aos_capacity_publication_private.read_source_issuer_url",
+          "calls_delta": 140,
+          "self_ms_delta": 11.376612,
+          "inclusive_ms_delta": 56.399585
+        },
+        {
+          "function": "aos_capacity_publication_private.read_supplier_attestation",
+          "calls_delta": 120,
+          "self_ms_delta": 11.363171,
+          "inclusive_ms_delta": 57.816658
+        },
+        {
+          "function": "aos_capacity_publication_private.read_source_policy",
+          "calls_delta": 180,
+          "self_ms_delta": 11.054177,
+          "inclusive_ms_delta": 73.513747
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_capacity_basis",
+          "calls_delta": 480,
+          "self_ms_delta": 9.622299,
+          "inclusive_ms_delta": 106.859536
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_fact_provider",
+          "calls_delta": 180,
+          "self_ms_delta": 9.406403,
+          "inclusive_ms_delta": 392.448163
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_time",
+          "calls_delta": 1560,
+          "self_ms_delta": 8.459827,
+          "inclusive_ms_delta": 56.297139
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signing_permit",
+          "calls_delta": 120,
+          "self_ms_delta": 7.573673,
+          "inclusive_ms_delta": 67.387996
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_physical_account",
+          "calls_delta": 360,
+          "self_ms_delta": 7.048009,
+          "inclusive_ms_delta": 43.085662
+        },
+        {
+          "function": "public.capacity_occupation_judge_fact",
+          "calls_delta": 8,
+          "self_ms_delta": 6.541418,
+          "inclusive_ms_delta": 4932.539502
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_owner",
+          "calls_delta": 300,
+          "self_ms_delta": 5.83771,
+          "inclusive_ms_delta": 5.83771
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_build_request",
+          "calls_delta": 300,
+          "self_ms_delta": 5.771596,
+          "inclusive_ms_delta": 48.828087
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_fact_request",
+          "calls_delta": 120,
+          "self_ms_delta": 5.548128,
+          "inclusive_ms_delta": 386.816502
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_identity",
+          "calls_delta": 720,
+          "self_ms_delta": 3.840713,
+          "inclusive_ms_delta": 3.840713
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_header",
+          "calls_delta": 840,
+          "self_ms_delta": 3.690533,
+          "inclusive_ms_delta": 17.295497
+        },
+        {
+          "function": "public.capacity_occupation_eval_fact",
+          "calls_delta": 8,
+          "self_ms_delta": 3.406419,
+          "inclusive_ms_delta": 4953.368877
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_token_limit",
+          "calls_delta": 480,
+          "self_ms_delta": 2.207589,
+          "inclusive_ms_delta": 11.84203
+        },
+        {
+          "function": "public.validate_shared_parent_admission_certificate_set",
+          "calls_delta": 2,
+          "self_ms_delta": 1.846376,
+          "inclusive_ms_delta": 13256.943423
+        },
+        {
+          "function": "public.read_shared_parent_pending_origin",
+          "calls_delta": 2,
+          "self_ms_delta": 1.737334,
+          "inclusive_ms_delta": 13266.557549
+        },
+        {
+          "function": "public.aos_capacity_evidence_epoch_lock",
+          "calls_delta": 60,
+          "self_ms_delta": 1.710584,
+          "inclusive_ms_delta": 1.710584
+        },
+        {
+          "function": "public.aos_capacity_withdrawal_epoch_lock",
+          "calls_delta": 120,
+          "self_ms_delta": 1.683622,
+          "inclusive_ms_delta": 1.683622
+        },
+        {
+          "function": "public.build_shared_parent_admission_origin",
+          "calls_delta": 4,
+          "self_ms_delta": 1.607788,
+          "inclusive_ms_delta": 12347.368838
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_integer",
+          "calls_delta": 960,
+          "self_ms_delta": 1.565359,
+          "inclusive_ms_delta": 1.565359
+        },
+        {
+          "function": "public.stage_shared_parent_end_authority",
+          "calls_delta": 1,
+          "self_ms_delta": 1.15929,
+          "inclusive_ms_delta": 13268.453798
+        },
+        {
+          "function": "public.capacity_occupation_plan_risk_fact",
+          "calls_delta": 8,
+          "self_ms_delta": 0.677751,
+          "inclusive_ms_delta": 9886.58613
+        },
+        {
+          "function": "public.verify_model_shared_parent_certificate_signature",
+          "calls_delta": 8,
+          "self_ms_delta": 0.619997,
+          "inclusive_ms_delta": 904.071083
+        },
+        {
+          "function": "aos_shared_parent_admission_private.check_end_authority",
+          "calls_delta": 1,
+          "self_ms_delta": 0.527,
+          "inclusive_ms_delta": 0.611875
+        },
+        {
+          "function": "public.capacity_occupation_source_fact",
+          "calls_delta": 4,
+          "self_ms_delta": 0.164501,
+          "inclusive_ms_delta": 2435.954044
+        },
+        {
+          "function": "public.read_shared_parent_admission_original_facts",
+          "calls_delta": 8,
+          "self_ms_delta": 0.058749,
+          "inclusive_ms_delta": 9886.644879
+        }
+      ],
+      "limitation": "delta between successful same-transaction snapshots; inclusive times overlap, do not sum"
+    },
+    {
+      "stage": "public.test_owned_complete_risk",
+      "elapsed_seconds": 13.206773,
+      "outcome": "returned",
+      "error": null,
+      "deltas": [
+        {
+          "function": "aos_capacity_publication_private.require_original_fact_boundary",
+          "calls_delta": 264,
+          "self_ms_delta": 5799.710331,
+          "inclusive_ms_delta": 5799.710331
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_snapshot",
+          "calls_delta": 480,
+          "self_ms_delta": 1281.154077,
+          "inclusive_ms_delta": 1505.604285
+        },
+        {
+          "function": "aos_capacity_publication_private.require_current_source_installation",
+          "calls_delta": 48,
+          "self_ms_delta": 950.054464,
+          "inclusive_ms_delta": 5364.149544
+        },
+        {
+          "function": "aos_capacity_publication_private.canonical_signed_json",
+          "calls_delta": 281096,
+          "self_ms_delta": 826.148822,
+          "inclusive_ms_delta": 826.148822
+        },
+        {
+          "function": "public.read_capacity_source_for_occupation",
+          "calls_delta": 20,
+          "self_ms_delta": 643.454269,
+          "inclusive_ms_delta": 12255.49209
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_withdrawal_boundary",
+          "calls_delta": 108,
+          "self_ms_delta": 608.739422,
+          "inclusive_ms_delta": 3164.29109
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_evidence_boundary",
+          "calls_delta": 108,
+          "self_ms_delta": 526.859169,
+          "inclusive_ms_delta": 2983.330046
+        },
+        {
+          "function": "public.canonical_asset_registry_jsonb",
+          "calls_delta": 117885,
+          "self_ms_delta": 367.547693,
+          "inclusive_ms_delta": 367.547693
+        },
+        {
+          "function": "aos_capacity_publication_private.read_identifier",
+          "calls_delta": 12380,
+          "self_ms_delta": 308.675897,
+          "inclusive_ms_delta": 308.675897
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_epoch_pair_boundary",
+          "calls_delta": 216,
+          "self_ms_delta": 302.000882,
+          "inclusive_ms_delta": 5012.022545
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_fields",
+          "calls_delta": 12060,
+          "self_ms_delta": 266.208253,
+          "inclusive_ms_delta": 304.004456
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_time",
+          "calls_delta": 8400,
+          "self_ms_delta": 222.410389,
+          "inclusive_ms_delta": 222.410389
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_time_literal",
+          "calls_delta": 2880,
+          "self_ms_delta": 202.232768,
+          "inclusive_ms_delta": 202.232768
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_ref",
+          "calls_delta": 6200,
+          "self_ms_delta": 103.922593,
+          "inclusive_ms_delta": 118.829676
+        },
+        {
+          "function": "public.require_capacity_occupation_source_installation",
+          "calls_delta": 20,
+          "self_ms_delta": 93.768834,
+          "inclusive_ms_delta": 2323.276377
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_json",
+          "calls_delta": 20100,
+          "self_ms_delta": 73.421368,
+          "inclusive_ms_delta": 73.421368
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_field",
+          "calls_delta": 103280,
+          "self_ms_delta": 65.775662,
+          "inclusive_ms_delta": 65.775662
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_string",
+          "calls_delta": 25800,
+          "self_ms_delta": 56.672653,
+          "inclusive_ms_delta": 56.672653
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_fact_evidence",
+          "calls_delta": 420,
+          "self_ms_delta": 46.937095,
+          "inclusive_ms_delta": 265.563374
+        },
+        {
+          "function": "aos_capacity_publication_private.read_origin_bootstrap",
+          "calls_delta": 440,
+          "self_ms_delta": 45.27448,
+          "inclusive_ms_delta": 312.599548
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_provider",
+          "calls_delta": 1260,
+          "self_ms_delta": 39.704311,
+          "inclusive_ms_delta": 362.955086
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_capacity_application",
+          "calls_delta": 960,
+          "self_ms_delta": 37.396985,
+          "inclusive_ms_delta": 157.820578
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signed_time",
+          "calls_delta": 5140,
+          "self_ms_delta": 32.371494,
+          "inclusive_ms_delta": 32.371494
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_ref",
+          "calls_delta": 3780,
+          "self_ms_delta": 30.524958,
+          "inclusive_ms_delta": 162.560572
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_identifier_literal",
+          "calls_delta": 2880,
+          "self_ms_delta": 22.21744,
+          "inclusive_ms_delta": 22.21744
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_equal",
+          "calls_delta": 6000,
+          "self_ms_delta": 20.618384,
+          "inclusive_ms_delta": 22.788234
+        },
+        {
+          "function": "aos_capacity_publication_private.read_source_policy",
+          "calls_delta": 180,
+          "self_ms_delta": 20.274646,
+          "inclusive_ms_delta": 84.260586
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_exact_ref",
+          "calls_delta": 2040,
+          "self_ms_delta": 18.447864,
+          "inclusive_ms_delta": 67.117128
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_source_candidate",
+          "calls_delta": 480,
+          "self_ms_delta": 17.582062,
+          "inclusive_ms_delta": 93.770381
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signed_body",
+          "calls_delta": 1780,
+          "self_ms_delta": 15.813154,
+          "inclusive_ms_delta": 185.662784
+        },
+        {
+          "function": "aos_capacity_publication_private.original_evidence_fields",
+          "calls_delta": 720,
+          "self_ms_delta": 15.045482,
+          "inclusive_ms_delta": 65.940973
+        },
+        {
+          "function": "aos_capacity_publication_private.read_deployment_target",
+          "calls_delta": 740,
+          "self_ms_delta": 13.294453,
+          "inclusive_ms_delta": 31.644372
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_integer",
+          "calls_delta": 9540,
+          "self_ms_delta": 13.208524,
+          "inclusive_ms_delta": 13.208524
+        },
+        {
+          "function": "aos_capacity_publication_private.read_supplier_attestation",
+          "calls_delta": 120,
+          "self_ms_delta": 11.391282,
+          "inclusive_ms_delta": 56.900799
+        },
+        {
+          "function": "aos_capacity_publication_private.read_source_issuer_url",
+          "calls_delta": 140,
+          "self_ms_delta": 10.840286,
+          "inclusive_ms_delta": 52.356043
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_capacity_basis",
+          "calls_delta": 480,
+          "self_ms_delta": 9.702462,
+          "inclusive_ms_delta": 105.44463
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_fact_provider",
+          "calls_delta": 180,
+          "self_ms_delta": 9.637293,
+          "inclusive_ms_delta": 387.078591
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_time",
+          "calls_delta": 1560,
+          "self_ms_delta": 8.600187,
+          "inclusive_ms_delta": 50.084268
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signing_permit",
+          "calls_delta": 120,
+          "self_ms_delta": 7.641344,
+          "inclusive_ms_delta": 56.29387
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_physical_account",
+          "calls_delta": 360,
+          "self_ms_delta": 7.041449,
+          "inclusive_ms_delta": 43.676831
+        },
+        {
+          "function": "public.capacity_occupation_judge_fact",
+          "calls_delta": 8,
+          "self_ms_delta": 6.689494,
+          "inclusive_ms_delta": 4796.461792
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_build_request",
+          "calls_delta": 300,
+          "self_ms_delta": 5.707605,
+          "inclusive_ms_delta": 47.940624
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_owner",
+          "calls_delta": 300,
+          "self_ms_delta": 5.702292,
+          "inclusive_ms_delta": 5.702292
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_fact_request",
+          "calls_delta": 120,
+          "self_ms_delta": 5.697162,
+          "inclusive_ms_delta": 383.866253
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_identity",
+          "calls_delta": 720,
+          "self_ms_delta": 3.855009,
+          "inclusive_ms_delta": 3.855009
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_header",
+          "calls_delta": 840,
+          "self_ms_delta": 3.724318,
+          "inclusive_ms_delta": 17.754669
+        },
+        {
+          "function": "public.capacity_occupation_eval_fact",
+          "calls_delta": 8,
+          "self_ms_delta": 3.410039,
+          "inclusive_ms_delta": 4880.850961
+        },
+        {
+          "function": "public.validate_shared_parent_admission_certificate_set",
+          "calls_delta": 2,
+          "self_ms_delta": 2.738834,
+          "inclusive_ms_delta": 13185.691506
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_token_limit",
+          "calls_delta": 480,
+          "self_ms_delta": 2.172704,
+          "inclusive_ms_delta": 11.94374
+        },
+        {
+          "function": "public.stage_shared_parent_complete_risk",
+          "calls_delta": 1,
+          "self_ms_delta": 2.16529,
+          "inclusive_ms_delta": 13205.781214
+        },
+        {
+          "function": "public.aos_capacity_evidence_epoch_lock",
+          "calls_delta": 60,
+          "self_ms_delta": 1.686248,
+          "inclusive_ms_delta": 1.686248
+        },
+        {
+          "function": "public.aos_capacity_withdrawal_epoch_lock",
+          "calls_delta": 120,
+          "self_ms_delta": 1.667624,
+          "inclusive_ms_delta": 1.667624
+        },
+        {
+          "function": "public.read_shared_parent_retained_origin",
+          "calls_delta": 2,
+          "self_ms_delta": 1.640335,
+          "inclusive_ms_delta": 13198.944049
+        },
+        {
+          "function": "public.build_shared_parent_admission_origin",
+          "calls_delta": 4,
+          "self_ms_delta": 1.627498,
+          "inclusive_ms_delta": 12308.347547
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_integer",
+          "calls_delta": 960,
+          "self_ms_delta": 1.568373,
+          "inclusive_ms_delta": 1.568373
+        },
+        {
+          "function": "public.read_shared_parent_pending_origin",
+          "calls_delta": 2,
+          "self_ms_delta": 1.512958,
+          "inclusive_ms_delta": 13195.061631
+        },
+        {
+          "function": "public.capacity_occupation_plan_risk_fact",
+          "calls_delta": 8,
+          "self_ms_delta": 0.738875,
+          "inclusive_ms_delta": 9678.051628
+        },
+        {
+          "function": "public.verify_model_shared_parent_certificate_signature",
+          "calls_delta": 8,
+          "self_ms_delta": 0.607914,
+          "inclusive_ms_delta": 870.783416
+        },
+        {
+          "function": "aos_shared_parent_physical_private.bind_complete_parent_risk",
+          "calls_delta": 1,
+          "self_ms_delta": 0.312876,
+          "inclusive_ms_delta": 3.136167
+        },
+        {
+          "function": "public.capacity_occupation_source_fact",
+          "calls_delta": 4,
+          "self_ms_delta": 0.163167,
+          "inclusive_ms_delta": 2600.31196
+        },
+        {
+          "function": "public.read_shared_parent_admission_original_facts",
+          "calls_delta": 8,
+          "self_ms_delta": 0.069418,
+          "inclusive_ms_delta": 9678.121046
+        }
+      ],
+      "limitation": "delta between successful same-transaction snapshots; inclusive times overlap, do not sum"
+    },
+    {
+      "stage": "public.test_owned_initial_obligation",
+      "elapsed_seconds": 13.159335,
+      "outcome": "returned",
+      "error": null,
+      "deltas": [
+        {
+          "function": "aos_capacity_publication_private.require_original_fact_boundary",
+          "calls_delta": 288,
+          "self_ms_delta": 5975.176836,
+          "inclusive_ms_delta": 5975.176836
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_snapshot",
+          "calls_delta": 528,
+          "self_ms_delta": 1393.052007,
+          "inclusive_ms_delta": 1640.160832
+        },
+        {
+          "function": "aos_capacity_publication_private.require_current_source_installation",
+          "calls_delta": 52,
+          "self_ms_delta": 967.001702,
+          "inclusive_ms_delta": 5492.960044
+        },
+        {
+          "function": "aos_capacity_publication_private.canonical_signed_json",
+          "calls_delta": 305396,
+          "self_ms_delta": 928.30695,
+          "inclusive_ms_delta": 928.30695
+        },
+        {
+          "function": "public.read_capacity_source_for_occupation",
+          "calls_delta": 22,
+          "self_ms_delta": 631.88925,
+          "inclusive_ms_delta": 12809.169213
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_withdrawal_boundary",
+          "calls_delta": 118,
+          "self_ms_delta": 571.989506,
+          "inclusive_ms_delta": 3178.590837
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_evidence_boundary",
+          "calls_delta": 118,
+          "self_ms_delta": 539.791869,
+          "inclusive_ms_delta": 3123.390791
+        },
+        {
+          "function": "public.canonical_asset_registry_jsonb",
+          "calls_delta": 125509,
+          "self_ms_delta": 400.56541,
+          "inclusive_ms_delta": 400.56541
+        },
+        {
+          "function": "aos_capacity_publication_private.read_identifier",
+          "calls_delta": 13618,
+          "self_ms_delta": 352.219979,
+          "inclusive_ms_delta": 352.219979
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_fields",
+          "calls_delta": 13266,
+          "self_ms_delta": 305.537183,
+          "inclusive_ms_delta": 347.459809
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_epoch_pair_boundary",
+          "calls_delta": 236,
+          "self_ms_delta": 303.120585,
+          "inclusive_ms_delta": 5190.200253
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_time_literal",
+          "calls_delta": 3168,
+          "self_ms_delta": 222.942771,
+          "inclusive_ms_delta": 222.942771
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_time",
+          "calls_delta": 9240,
+          "self_ms_delta": 173.046659,
+          "inclusive_ms_delta": 173.046659
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_ref",
+          "calls_delta": 6820,
+          "self_ms_delta": 108.738076,
+          "inclusive_ms_delta": 125.123061
+        },
+        {
+          "function": "public.require_capacity_occupation_source_installation",
+          "calls_delta": 22,
+          "self_ms_delta": 99.312877,
+          "inclusive_ms_delta": 2419.317919
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_json",
+          "calls_delta": 22110,
+          "self_ms_delta": 75.725872,
+          "inclusive_ms_delta": 75.725872
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_field",
+          "calls_delta": 113608,
+          "self_ms_delta": 72.647782,
+          "inclusive_ms_delta": 72.647782
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_string",
+          "calls_delta": 28380,
+          "self_ms_delta": 63.026743,
+          "inclusive_ms_delta": 63.026743
+        },
+        {
+          "function": "aos_capacity_publication_private.read_origin_bootstrap",
+          "calls_delta": 484,
+          "self_ms_delta": 52.251197,
+          "inclusive_ms_delta": 351.47759
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_provider",
+          "calls_delta": 1386,
+          "self_ms_delta": 47.863429,
+          "inclusive_ms_delta": 386.910354
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_fact_evidence",
+          "calls_delta": 462,
+          "self_ms_delta": 45.886604,
+          "inclusive_ms_delta": 296.738488
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_capacity_application",
+          "calls_delta": 1056,
+          "self_ms_delta": 41.902189,
+          "inclusive_ms_delta": 134.177277
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_ref",
+          "calls_delta": 4158,
+          "self_ms_delta": 33.572348,
+          "inclusive_ms_delta": 173.267106
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_exact_ref",
+          "calls_delta": 2244,
+          "self_ms_delta": 28.834679,
+          "inclusive_ms_delta": 86.493599
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signed_time",
+          "calls_delta": 5654,
+          "self_ms_delta": 28.49168,
+          "inclusive_ms_delta": 28.49168
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_identifier_literal",
+          "calls_delta": 3168,
+          "self_ms_delta": 24.166054,
+          "inclusive_ms_delta": 24.166054
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_equal",
+          "calls_delta": 6600,
+          "self_ms_delta": 23.374483,
+          "inclusive_ms_delta": 25.754277
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_source_candidate",
+          "calls_delta": 528,
+          "self_ms_delta": 19.226843,
+          "inclusive_ms_delta": 89.400905
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signed_body",
+          "calls_delta": 1958,
+          "self_ms_delta": 17.448777,
+          "inclusive_ms_delta": 215.284679
+        },
+        {
+          "function": "aos_capacity_publication_private.original_evidence_fields",
+          "calls_delta": 792,
+          "self_ms_delta": 16.531648,
+          "inclusive_ms_delta": 85.129611
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_integer",
+          "calls_delta": 10494,
+          "self_ms_delta": 14.424086,
+          "inclusive_ms_delta": 14.424086
+        },
+        {
+          "function": "aos_capacity_publication_private.read_deployment_target",
+          "calls_delta": 814,
+          "self_ms_delta": 14.378938,
+          "inclusive_ms_delta": 34.720764
+        },
+        {
+          "function": "aos_capacity_publication_private.read_source_policy",
+          "calls_delta": 198,
+          "self_ms_delta": 12.459637,
+          "inclusive_ms_delta": 87.747455
+        },
+        {
+          "function": "aos_capacity_publication_private.read_source_issuer_url",
+          "calls_delta": 154,
+          "self_ms_delta": 12.360193,
+          "inclusive_ms_delta": 60.911205
+        },
+        {
+          "function": "aos_capacity_publication_private.read_supplier_attestation",
+          "calls_delta": 132,
+          "self_ms_delta": 12.20071,
+          "inclusive_ms_delta": 63.300836
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_capacity_basis",
+          "calls_delta": 528,
+          "self_ms_delta": 10.500714,
+          "inclusive_ms_delta": 116.000548
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_fact_provider",
+          "calls_delta": 198,
+          "self_ms_delta": 10.335479,
+          "inclusive_ms_delta": 424.587128
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_time",
+          "calls_delta": 1716,
+          "self_ms_delta": 9.35307,
+          "inclusive_ms_delta": 36.768712
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signing_permit",
+          "calls_delta": 132,
+          "self_ms_delta": 8.315902,
+          "inclusive_ms_delta": 61.853912
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_physical_account",
+          "calls_delta": 396,
+          "self_ms_delta": 7.847197,
+          "inclusive_ms_delta": 49.332497
+        },
+        {
+          "function": "public.capacity_occupation_judge_fact",
+          "calls_delta": 8,
+          "self_ms_delta": 6.52563,
+          "inclusive_ms_delta": 4690.744338
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_owner",
+          "calls_delta": 330,
+          "self_ms_delta": 6.369366,
+          "inclusive_ms_delta": 6.369366
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_fact_request",
+          "calls_delta": 132,
+          "self_ms_delta": 6.271669,
+          "inclusive_ms_delta": 386.686708
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_build_request",
+          "calls_delta": 330,
+          "self_ms_delta": 6.07957,
+          "inclusive_ms_delta": 58.533795
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_identity",
+          "calls_delta": 792,
+          "self_ms_delta": 4.30322,
+          "inclusive_ms_delta": 4.30322
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_header",
+          "calls_delta": 924,
+          "self_ms_delta": 4.131726,
+          "inclusive_ms_delta": 19.768349
+        },
+        {
+          "function": "public.capacity_occupation_eval_fact",
+          "calls_delta": 9,
+          "self_ms_delta": 3.764794,
+          "inclusive_ms_delta": 5203.755086
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_token_limit",
+          "calls_delta": 528,
+          "self_ms_delta": 2.3617,
+          "inclusive_ms_delta": 13.108328
+        },
+        {
+          "function": "public.aos_capacity_withdrawal_epoch_lock",
+          "calls_delta": 132,
+          "self_ms_delta": 1.792614,
+          "inclusive_ms_delta": 1.792614
+        },
+        {
+          "function": "public.aos_capacity_evidence_epoch_lock",
+          "calls_delta": 66,
+          "self_ms_delta": 1.71863,
+          "inclusive_ms_delta": 1.71863
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_integer",
+          "calls_delta": 1056,
+          "self_ms_delta": 1.706343,
+          "inclusive_ms_delta": 1.706343
+        },
+        {
+          "function": "public.build_shared_parent_admission_origin",
+          "calls_delta": 4,
+          "self_ms_delta": 1.639876,
+          "inclusive_ms_delta": 11708.735714
+        },
+        {
+          "function": "public.prepare_capacity_parent_debit",
+          "calls_delta": 1,
+          "self_ms_delta": 1.573,
+          "inclusive_ms_delta": 572.481
+        },
+        {
+          "function": "public.validate_shared_parent_admission_certificate_set",
+          "calls_delta": 2,
+          "self_ms_delta": 1.503122,
+          "inclusive_ms_delta": 12568.642339
+        },
+        {
+          "function": "public.read_shared_parent_pending_origin",
+          "calls_delta": 2,
+          "self_ms_delta": 1.416459,
+          "inclusive_ms_delta": 12577.685339
+        },
+        {
+          "function": "public.prepare_shared_parent_initial_target_obligation",
+          "calls_delta": 1,
+          "self_ms_delta": 1.197833,
+          "inclusive_ms_delta": 13157.425589
+        },
+        {
+          "function": "public.capacity_occupation_plan_risk_fact",
+          "calls_delta": 8,
+          "self_ms_delta": 0.756163,
+          "inclusive_ms_delta": 9324.394212
+        },
+        {
+          "function": "public.verify_model_shared_parent_certificate_signature",
+          "calls_delta": 8,
+          "self_ms_delta": 0.620458,
+          "inclusive_ms_delta": 854.56925
+        },
+        {
+          "function": "public.capacity_occupation_source_fact",
+          "calls_delta": 5,
+          "self_ms_delta": 0.200667,
+          "inclusive_ms_delta": 2937.714169
+        },
+        {
+          "function": "public.prepare_capacity_occupation_account_guard",
+          "calls_delta": 1,
+          "self_ms_delta": 0.091542,
+          "inclusive_ms_delta": 578.476792
+        },
+        {
+          "function": "public.test_owned_initial_obligation",
+          "calls_delta": 1,
+          "self_ms_delta": 0.065,
+          "inclusive_ms_delta": 13157.490589
+        },
+        {
+          "function": "public.read_shared_parent_admission_original_facts",
+          "calls_delta": 8,
+          "self_ms_delta": 0.064293,
+          "inclusive_ms_delta": 9324.458505
+        }
+      ],
+      "limitation": "delta between successful same-transaction snapshots; inclusive times overlap, do not sum"
+    },
+    {
+      "stage": "public.test_owned_initial_call_authority",
+      "elapsed_seconds": 22.48981,
+      "outcome": "returned",
+      "error": null,
+      "deltas": [
+        {
+          "function": "aos_capacity_publication_private.require_original_fact_boundary",
+          "calls_delta": 468,
+          "self_ms_delta": 9754.404598,
+          "inclusive_ms_delta": 9754.404598
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_snapshot",
+          "calls_delta": 864,
+          "self_ms_delta": 2293.943354,
+          "inclusive_ms_delta": 2720.086255
+        },
+        {
+          "function": "aos_capacity_publication_private.require_current_source_installation",
+          "calls_delta": 84,
+          "self_ms_delta": 1501.42354,
+          "inclusive_ms_delta": 8836.93721
+        },
+        {
+          "function": "aos_capacity_publication_private.canonical_signed_json",
+          "calls_delta": 494544,
+          "self_ms_delta": 1447.588498,
+          "inclusive_ms_delta": 1447.588498
+        },
+        {
+          "function": "public.read_capacity_source_for_occupation",
+          "calls_delta": 36,
+          "self_ms_delta": 1066.282545,
+          "inclusive_ms_delta": 21093.364132
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_withdrawal_boundary",
+          "calls_delta": 192,
+          "self_ms_delta": 969.811127,
+          "inclusive_ms_delta": 5214.513426
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_evidence_boundary",
+          "calls_delta": 192,
+          "self_ms_delta": 865.74163,
+          "inclusive_ms_delta": 5126.679215
+        },
+        {
+          "function": "public.canonical_asset_registry_jsonb",
+          "calls_delta": 205968,
+          "self_ms_delta": 627.432781,
+          "inclusive_ms_delta": 627.432781
+        },
+        {
+          "function": "aos_capacity_publication_private.read_identifier",
+          "calls_delta": 22284,
+          "self_ms_delta": 593.766881,
+          "inclusive_ms_delta": 593.766881
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_epoch_pair_boundary",
+          "calls_delta": 384,
+          "self_ms_delta": 507.010246,
+          "inclusive_ms_delta": 8505.639884
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_fields",
+          "calls_delta": 21708,
+          "self_ms_delta": 491.357292,
+          "inclusive_ms_delta": 559.087838
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_time_literal",
+          "calls_delta": 5184,
+          "self_ms_delta": 384.567102,
+          "inclusive_ms_delta": 384.567102
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_time",
+          "calls_delta": 15120,
+          "self_ms_delta": 355.664053,
+          "inclusive_ms_delta": 355.664053
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_ref",
+          "calls_delta": 11160,
+          "self_ms_delta": 196.941159,
+          "inclusive_ms_delta": 223.70973
+        },
+        {
+          "function": "public.require_capacity_occupation_source_installation",
+          "calls_delta": 36,
+          "self_ms_delta": 164.19233,
+          "inclusive_ms_delta": 3943.639166
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_field",
+          "calls_delta": 185904,
+          "self_ms_delta": 118.035539,
+          "inclusive_ms_delta": 118.035539
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_json",
+          "calls_delta": 36180,
+          "self_ms_delta": 112.838409,
+          "inclusive_ms_delta": 112.838409
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_string",
+          "calls_delta": 46440,
+          "self_ms_delta": 108.663641,
+          "inclusive_ms_delta": 108.663641
+        },
+        {
+          "function": "aos_capacity_publication_private.read_origin_bootstrap",
+          "calls_delta": 792,
+          "self_ms_delta": 81.468108,
+          "inclusive_ms_delta": 553.59073
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_provider",
+          "calls_delta": 2268,
+          "self_ms_delta": 81.282784,
+          "inclusive_ms_delta": 653.153545
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_fact_evidence",
+          "calls_delta": 756,
+          "self_ms_delta": 79.92918,
+          "inclusive_ms_delta": 449.200071
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_capacity_application",
+          "calls_delta": 1728,
+          "self_ms_delta": 77.777287,
+          "inclusive_ms_delta": 257.627367
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_ref",
+          "calls_delta": 6804,
+          "self_ms_delta": 68.955469,
+          "inclusive_ms_delta": 289.446154
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signed_time",
+          "calls_delta": 9252,
+          "self_ms_delta": 48.154908,
+          "inclusive_ms_delta": 48.154908
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_identifier_literal",
+          "calls_delta": 5184,
+          "self_ms_delta": 41.575799,
+          "inclusive_ms_delta": 41.575799
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_equal",
+          "calls_delta": 10800,
+          "self_ms_delta": 36.739765,
+          "inclusive_ms_delta": 40.59443
+        },
+        {
+          "function": "aos_capacity_publication_private.original_evidence_fields",
+          "calls_delta": 1296,
+          "self_ms_delta": 33.584748,
+          "inclusive_ms_delta": 124.842402
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_exact_ref",
+          "calls_delta": 3672,
+          "self_ms_delta": 33.119964,
+          "inclusive_ms_delta": 123.397749
+        },
+        {
+          "function": "aos_capacity_publication_private.read_deployment_target",
+          "calls_delta": 1332,
+          "self_ms_delta": 31.29714,
+          "inclusive_ms_delta": 70.694611
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_source_candidate",
+          "calls_delta": 864,
+          "self_ms_delta": 31.082977,
+          "inclusive_ms_delta": 173.510634
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signed_body",
+          "calls_delta": 3204,
+          "self_ms_delta": 28.966807,
+          "inclusive_ms_delta": 325.851678
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_integer",
+          "calls_delta": 17172,
+          "self_ms_delta": 23.742177,
+          "inclusive_ms_delta": 23.742177
+        },
+        {
+          "function": "aos_capacity_publication_private.read_source_policy",
+          "calls_delta": 324,
+          "self_ms_delta": 20.764268,
+          "inclusive_ms_delta": 140.157959
+        },
+        {
+          "function": "aos_capacity_publication_private.read_source_issuer_url",
+          "calls_delta": 252,
+          "self_ms_delta": 20.616394,
+          "inclusive_ms_delta": 103.285911
+        },
+        {
+          "function": "aos_capacity_publication_private.read_supplier_attestation",
+          "calls_delta": 216,
+          "self_ms_delta": 18.69695,
+          "inclusive_ms_delta": 112.29166
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_capacity_basis",
+          "calls_delta": 864,
+          "self_ms_delta": 17.577738,
+          "inclusive_ms_delta": 215.711215
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_fact_provider",
+          "calls_delta": 324,
+          "self_ms_delta": 17.23217,
+          "inclusive_ms_delta": 697.329838
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_time",
+          "calls_delta": 2808,
+          "self_ms_delta": 15.320234,
+          "inclusive_ms_delta": 70.434194
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signing_permit",
+          "calls_delta": 216,
+          "self_ms_delta": 14.143422,
+          "inclusive_ms_delta": 115.733078
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_physical_account",
+          "calls_delta": 648,
+          "self_ms_delta": 12.965357,
+          "inclusive_ms_delta": 93.087571
+        },
+        {
+          "function": "public.capacity_occupation_judge_fact",
+          "calls_delta": 14,
+          "self_ms_delta": 11.681001,
+          "inclusive_ms_delta": 8280.202088
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_owner",
+          "calls_delta": 540,
+          "self_ms_delta": 10.533749,
+          "inclusive_ms_delta": 10.533749
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_fact_request",
+          "calls_delta": 216,
+          "self_ms_delta": 10.172425,
+          "inclusive_ms_delta": 651.432
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_build_request",
+          "calls_delta": 540,
+          "self_ms_delta": 9.840938,
+          "inclusive_ms_delta": 81.953473
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_identity",
+          "calls_delta": 1296,
+          "self_ms_delta": 7.216805,
+          "inclusive_ms_delta": 7.216805
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_header",
+          "calls_delta": 1512,
+          "self_ms_delta": 6.746246,
+          "inclusive_ms_delta": 47.69834
+        },
+        {
+          "function": "public.capacity_occupation_eval_fact",
+          "calls_delta": 16,
+          "self_ms_delta": 6.67475,
+          "inclusive_ms_delta": 9327.942002
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_token_limit",
+          "calls_delta": 864,
+          "self_ms_delta": 3.876489,
+          "inclusive_ms_delta": 23.835785
+        },
+        {
+          "function": "public.prepare_shared_parent_initial_intents",
+          "calls_delta": 2,
+          "self_ms_delta": 3.409167,
+          "inclusive_ms_delta": 16177.848091
+        },
+        {
+          "function": "public.aos_capacity_withdrawal_epoch_lock",
+          "calls_delta": 216,
+          "self_ms_delta": 3.064995,
+          "inclusive_ms_delta": 3.064995
+        },
+        {
+          "function": "public.aos_capacity_evidence_epoch_lock",
+          "calls_delta": 108,
+          "self_ms_delta": 2.991082,
+          "inclusive_ms_delta": 2.991082
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_integer",
+          "calls_delta": 1728,
+          "self_ms_delta": 2.822699,
+          "inclusive_ms_delta": 2.822699
+        },
+        {
+          "function": "public.validate_shared_parent_admission_certificate_set",
+          "calls_delta": 3,
+          "self_ms_delta": 2.470665,
+          "inclusive_ms_delta": 19003.155426
+        },
+        {
+          "function": "public.build_shared_parent_admission_origin",
+          "calls_delta": 6,
+          "self_ms_delta": 2.436751,
+          "inclusive_ms_delta": 17716.200301
+        },
+        {
+          "function": "public.read_shared_parent_pending_origin",
+          "calls_delta": 3,
+          "self_ms_delta": 2.179874,
+          "inclusive_ms_delta": 19017.078925
+        },
+        {
+          "function": "public.stage_shared_parent_initial_call_authority",
+          "calls_delta": 1,
+          "self_ms_delta": 1.969749,
+          "inclusive_ms_delta": 22487.926636
+        },
+        {
+          "function": "public.capacity_occupation_plan_risk_fact",
+          "calls_delta": 14,
+          "self_ms_delta": 1.374712,
+          "inclusive_ms_delta": 16465.978843
+        },
+        {
+          "function": "public.capacity_occupation_eval_case_fact",
+          "calls_delta": 2,
+          "self_ms_delta": 1.251625,
+          "inclusive_ms_delta": 1144.791584
+        },
+        {
+          "function": "public.verify_model_shared_parent_certificate_signature",
+          "calls_delta": 12,
+          "self_ms_delta": 0.947874,
+          "inclusive_ms_delta": 1273.71921
+        },
+        {
+          "function": "public.read_shared_parent_retained_origin",
+          "calls_delta": 1,
+          "self_ms_delta": 0.674042,
+          "inclusive_ms_delta": 6305.49142
+        },
+        {
+          "function": "aos_shared_parent_physical_private.bind_initial_call_authority",
+          "calls_delta": 1,
+          "self_ms_delta": 0.556292,
+          "inclusive_ms_delta": 1.558625
+        },
+        {
+          "function": "public.capacity_occupation_source_fact",
+          "calls_delta": 6,
+          "self_ms_delta": 0.262753,
+          "inclusive_ms_delta": 3525.13371
+        },
+        {
+          "function": "public.read_shared_parent_admission_original_facts",
+          "calls_delta": 14,
+          "self_ms_delta": 0.113582,
+          "inclusive_ms_delta": 16466.092425
+        }
+      ],
+      "limitation": "delta between successful same-transaction snapshots; inclusive times overlap, do not sum"
+    },
+    {
+      "stage": "public.test_owned_initial_window",
+      "elapsed_seconds": 15.824151,
+      "outcome": "returned",
+      "error": null,
+      "deltas": [
+        {
+          "function": "aos_capacity_publication_private.require_original_fact_boundary",
+          "calls_delta": 324,
+          "self_ms_delta": 6822.435543,
+          "inclusive_ms_delta": 6822.435543
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_snapshot",
+          "calls_delta": 600,
+          "self_ms_delta": 1606.917866,
+          "inclusive_ms_delta": 1902.816666
+        },
+        {
+          "function": "aos_capacity_publication_private.require_current_source_installation",
+          "calls_delta": 58,
+          "self_ms_delta": 1072.482899,
+          "inclusive_ms_delta": 6197.699249
+        },
+        {
+          "function": "aos_capacity_publication_private.canonical_signed_json",
+          "calls_delta": 341846,
+          "self_ms_delta": 990.701563,
+          "inclusive_ms_delta": 990.701563
+        },
+        {
+          "function": "public.read_capacity_source_for_occupation",
+          "calls_delta": 25,
+          "self_ms_delta": 780.656611,
+          "inclusive_ms_delta": 14897.793923
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_withdrawal_boundary",
+          "calls_delta": 133,
+          "self_ms_delta": 641.852131,
+          "inclusive_ms_delta": 3586.680429
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_evidence_boundary",
+          "calls_delta": 133,
+          "self_ms_delta": 630.411374,
+          "inclusive_ms_delta": 3688.809127
+        },
+        {
+          "function": "public.canonical_asset_registry_jsonb",
+          "calls_delta": 142322,
+          "self_ms_delta": 472.649829,
+          "inclusive_ms_delta": 472.649829
+        },
+        {
+          "function": "aos_capacity_publication_private.read_identifier",
+          "calls_delta": 15475,
+          "self_ms_delta": 424.494081,
+          "inclusive_ms_delta": 424.494081
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_epoch_pair_boundary",
+          "calls_delta": 266,
+          "self_ms_delta": 361.120045,
+          "inclusive_ms_delta": 6003.226051
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_fields",
+          "calls_delta": 15075,
+          "self_ms_delta": 351.541567,
+          "inclusive_ms_delta": 398.935041
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_time_literal",
+          "calls_delta": 3600,
+          "self_ms_delta": 267.75272,
+          "inclusive_ms_delta": 267.75272
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_time",
+          "calls_delta": 10500,
+          "self_ms_delta": 225.917746,
+          "inclusive_ms_delta": 225.917746
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_ref",
+          "calls_delta": 7750,
+          "self_ms_delta": 136.689962,
+          "inclusive_ms_delta": 158.665064
+        },
+        {
+          "function": "public.require_capacity_occupation_source_installation",
+          "calls_delta": 25,
+          "self_ms_delta": 133.42546,
+          "inclusive_ms_delta": 2833.190376
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_string",
+          "calls_delta": 32250,
+          "self_ms_delta": 91.925105,
+          "inclusive_ms_delta": 91.925105
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_json",
+          "calls_delta": 25125,
+          "self_ms_delta": 86.009439,
+          "inclusive_ms_delta": 86.009439
+        },
+        {
+          "function": "aos_capacity_publication_private.original_source_field",
+          "calls_delta": 129100,
+          "self_ms_delta": 85.808283,
+          "inclusive_ms_delta": 85.808283
+        },
+        {
+          "function": "aos_capacity_publication_private.read_origin_bootstrap",
+          "calls_delta": 550,
+          "self_ms_delta": 56.150945,
+          "inclusive_ms_delta": 385.124792
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_fact_evidence",
+          "calls_delta": 525,
+          "self_ms_delta": 55.070067,
+          "inclusive_ms_delta": 323.841516
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_capacity_application",
+          "calls_delta": 1200,
+          "self_ms_delta": 53.996308,
+          "inclusive_ms_delta": 176.666361
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_provider",
+          "calls_delta": 1575,
+          "self_ms_delta": 50.351286,
+          "inclusive_ms_delta": 464.463296
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_ref",
+          "calls_delta": 4725,
+          "self_ms_delta": 37.672432,
+          "inclusive_ms_delta": 228.009392
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signed_time",
+          "calls_delta": 6425,
+          "self_ms_delta": 33.60302,
+          "inclusive_ms_delta": 33.60302
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_exact_ref",
+          "calls_delta": 2550,
+          "self_ms_delta": 29.753959,
+          "inclusive_ms_delta": 91.478019
+        },
+        {
+          "function": "aos_capacity_publication_private.read_root_identifier_literal",
+          "calls_delta": 3600,
+          "self_ms_delta": 28.14608,
+          "inclusive_ms_delta": 28.14608
+        },
+        {
+          "function": "aos_capacity_publication_private.original_build_equal",
+          "calls_delta": 7500,
+          "self_ms_delta": 25.757834,
+          "inclusive_ms_delta": 28.472738
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_source_candidate",
+          "calls_delta": 600,
+          "self_ms_delta": 22.209217,
+          "inclusive_ms_delta": 120.691426
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signed_body",
+          "calls_delta": 2225,
+          "self_ms_delta": 20.521594,
+          "inclusive_ms_delta": 216.752808
+        },
+        {
+          "function": "aos_capacity_publication_private.original_evidence_fields",
+          "calls_delta": 900,
+          "self_ms_delta": 20.289459,
+          "inclusive_ms_delta": 84.770417
+        },
+        {
+          "function": "aos_capacity_publication_private.read_deployment_target",
+          "calls_delta": 925,
+          "self_ms_delta": 17.467236,
+          "inclusive_ms_delta": 40.809405
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_integer",
+          "calls_delta": 11925,
+          "self_ms_delta": 16.587708,
+          "inclusive_ms_delta": 16.587708
+        },
+        {
+          "function": "aos_capacity_publication_private.read_source_policy",
+          "calls_delta": 225,
+          "self_ms_delta": 14.620395,
+          "inclusive_ms_delta": 95.52403
+        },
+        {
+          "function": "aos_capacity_publication_private.read_source_issuer_url",
+          "calls_delta": 175,
+          "self_ms_delta": 14.403163,
+          "inclusive_ms_delta": 83.317457
+        },
+        {
+          "function": "aos_capacity_publication_private.read_supplier_attestation",
+          "calls_delta": 150,
+          "self_ms_delta": 13.149971,
+          "inclusive_ms_delta": 71.161036
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_fact_provider",
+          "calls_delta": 225,
+          "self_ms_delta": 12.245028,
+          "inclusive_ms_delta": 508.574158
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_capacity_basis",
+          "calls_delta": 600,
+          "self_ms_delta": 12.198077,
+          "inclusive_ms_delta": 135.644734
+        },
+        {
+          "function": "aos_capacity_publication_private.original_provider_time",
+          "calls_delta": 1950,
+          "self_ms_delta": 10.874404,
+          "inclusive_ms_delta": 42.921548
+        },
+        {
+          "function": "aos_capacity_publication_private.read_signing_permit",
+          "calls_delta": 150,
+          "self_ms_delta": 9.883878,
+          "inclusive_ms_delta": 76.491217
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_header",
+          "calls_delta": 1050,
+          "self_ms_delta": 9.773222,
+          "inclusive_ms_delta": 29.309071
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_physical_account",
+          "calls_delta": 450,
+          "self_ms_delta": 9.184174,
+          "inclusive_ms_delta": 69.060916
+        },
+        {
+          "function": "public.read_shared_parent_pending_origin",
+          "calls_delta": 2,
+          "self_ms_delta": 7.481168,
+          "inclusive_ms_delta": 12841.672881
+        },
+        {
+          "function": "public.capacity_occupation_judge_fact",
+          "calls_delta": 9,
+          "self_ms_delta": 7.459793,
+          "inclusive_ms_delta": 5354.734501
+        },
+        {
+          "function": "aos_capacity_publication_private.require_original_owner",
+          "calls_delta": 375,
+          "self_ms_delta": 7.341498,
+          "inclusive_ms_delta": 7.341498
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_fact_request",
+          "calls_delta": 150,
+          "self_ms_delta": 7.29302,
+          "inclusive_ms_delta": 449.399994
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_build_request",
+          "calls_delta": 375,
+          "self_ms_delta": 7.138023,
+          "inclusive_ms_delta": 62.863316
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_identity",
+          "calls_delta": 900,
+          "self_ms_delta": 5.050544,
+          "inclusive_ms_delta": 5.050544
+        },
+        {
+          "function": "public.capacity_occupation_eval_fact",
+          "calls_delta": 10,
+          "self_ms_delta": 4.254,
+          "inclusive_ms_delta": 5999.409838
+        },
+        {
+          "function": "aos_capacity_publication_private.read_original_token_limit",
+          "calls_delta": 600,
+          "self_ms_delta": 2.708755,
+          "inclusive_ms_delta": 16.30719
+        },
+        {
+          "function": "public.aos_capacity_evidence_epoch_lock",
+          "calls_delta": 75,
+          "self_ms_delta": 2.30921,
+          "inclusive_ms_delta": 2.30921
+        },
+        {
+          "function": "public.aos_capacity_withdrawal_epoch_lock",
+          "calls_delta": 150,
+          "self_ms_delta": 2.055786,
+          "inclusive_ms_delta": 2.055786
+        },
+        {
+          "function": "aos_capacity_publication_private.original_claim_integer",
+          "calls_delta": 1200,
+          "self_ms_delta": 1.994776,
+          "inclusive_ms_delta": 1.994776
+        },
+        {
+          "function": "public.validate_shared_parent_admission_certificate_set",
+          "calls_delta": 2,
+          "self_ms_delta": 1.628754,
+          "inclusive_ms_delta": 12826.104963
+        },
+        {
+          "function": "public.build_shared_parent_admission_origin",
+          "calls_delta": 4,
+          "self_ms_delta": 1.615332,
+          "inclusive_ms_delta": 11977.983254
+        },
+        {
+          "function": "public.stage_shared_parent_initial_window_obligation",
+          "calls_delta": 1,
+          "self_ms_delta": 1.483292,
+          "inclusive_ms_delta": 15823.218881
+        },
+        {
+          "function": "public.prepare_shared_parent_initial_intents",
+          "calls_delta": 1,
+          "self_ms_delta": 1.342,
+          "inclusive_ms_delta": 8223.718837
+        },
+        {
+          "function": "public.read_shared_parent_initial_call_authority",
+          "calls_delta": 1,
+          "self_ms_delta": 1.18696,
+          "inclusive_ms_delta": 14626.318715
+        },
+        {
+          "function": "aos_shared_parent_physical_private.bind_initial_window",
+          "calls_delta": 1,
+          "self_ms_delta": 0.95775,
+          "inclusive_ms_delta": 583.655875
+        },
+        {
+          "function": "public.capacity_occupation_plan_risk_fact",
+          "calls_delta": 9,
+          "self_ms_delta": 0.855667,
+          "inclusive_ms_delta": 10775.215214
+        },
+        {
+          "function": "public.capacity_occupation_eval_case_fact",
+          "calls_delta": 1,
+          "self_ms_delta": 0.625749,
+          "inclusive_ms_delta": 580.410541
+        },
+        {
+          "function": "public.verify_model_shared_parent_certificate_signature",
+          "calls_delta": 8,
+          "self_ms_delta": 0.618418,
+          "inclusive_ms_delta": 842.523126
+        },
+        {
+          "function": "public.read_shared_parent_retained_origin",
+          "calls_delta": 1,
+          "self_ms_delta": 0.569916,
+          "inclusive_ms_delta": 6399.326627
+        },
+        {
+          "function": "public.capacity_occupation_source_fact",
+          "calls_delta": 6,
+          "self_ms_delta": 0.264248,
+          "inclusive_ms_delta": 3569.205625
+        },
+        {
+          "function": "public.prepare_capacity_occupation_account_guard",
+          "calls_delta": 1,
+          "self_ms_delta": 0.204833,
+          "inclusive_ms_delta": 611.696541
+        },
+        {
+          "function": "public.read_shared_parent_admission_original_facts",
+          "calls_delta": 9,
+          "self_ms_delta": 0.077708,
+          "inclusive_ms_delta": 10775.292922
+        }
+      ],
+      "limitation": "delta between successful same-transaction snapshots; inclusive times overlap, do not sum"
+    },
+    {
+      "stage": "public.test_owned_receipt_v2",
+      "elapsed_seconds": 23.912469,
+      "outcome": "rejected",
+      "error": "CAPACITY_CURRENT_SOURCE_EXPIRED",
+      "deltas": [],
+      "limitation": "first snapshot includes prefix; rejected stage has no same-transaction after snapshot"
+    }
+  ],
+  "next_action": "Review original catalog boundary repeated reachability under existing catalog-profile Task, retain complete post-lock authority verification and original published SQL. No blind rerun, TTL extension, currentness cache or removal of checks."
+}

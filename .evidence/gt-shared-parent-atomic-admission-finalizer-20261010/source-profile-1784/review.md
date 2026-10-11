@@ -1,0 +1,7 @@
+# 完整试验统计结果复核
+
+新鲜完整fixture终态exit1：v2Receipt阶段CAPACITY_CURRENT_SOURCE_EXPIRED，清理CAPACITY_NATIVE_SIGNED_SUPPLIER_INPUTS_REQUIRED。collector正例未执行，整体准入无PASS/Delivery。
+
+本次pl统计实际生效：相邻成功快照差值显示pending/end-authority/complete-risk阶段各264次原require_original_fact_boundary，独占约5.8至6秒；initial obligation阶段288次。首快照含此前prefix，失败阶段没有after快照；禁止将静态点数或累计快照误作独立次数，inclusive重叠时间不能求和。完整差值含原函数名、次数、独占/包含耗时，供原catalog-profile Task精确复核。
+
+新试验库统计覆盖已RESET，独立新连接track_functions=none；原cluster一致、九表全0、其他会话0、产品与旧证据hash未变。原库卷及本次失败库全部保留，无重发、期限放宽或业务执行。下一步在既有catalog-profile Task复核原边界验证重复可达性，保持完整锁后权威核和原已发布SQL；不凭profile自动删除检查，不缩小native结束、正式Root及全Goal合同。
