@@ -1,0 +1,7 @@
+# 本波验证与复审
+
+r1目录门失败为明确终态，未进入Source；独立九表未安装，不能报零。r2为全新数据库和fixture，不重发旧请求，原150秒窗口不变。r2原Source/四证书/八节点测试call通过，保护源码hash未变。独立回读caller XID68440 aborted、九表0、其它client0、profiling reset。257纯数字类型记录，180函数OID；177可终态回读，3临时函数随回滚消失。43类型OID均可回读。完整native闭包、自然COMMIT、正式Root、栖月汇正式恢复仍未验收。
+
+路径适配只改变隔离证据helper，绑定本Task/Owner/authority/Lease/精确目录与三个原helperhash。拒绝父目录/邻居/相对路径已实测；existingResultRejectedByGuard字段只表示保留代码guard，未实际运行已有结果分支，不能作为该分支测试通过。原始artifact保持不改，本文纠正其解释。
+
+旧readback对197个观察OID全部必须存活的断言RED；改为明确保存3个回滚后缺失OID，不伪造目录绑定。改动范围仅本Task目录，未改产品源码、正式库、旧审批或业务权限；只读终态查询不会重放Source。下一项为在新隔离事务回滚前冻结临时函数目录身份，补齐3项缺口；正式恢复依赖现有独立publisher与OIDC来源信息继续保留。

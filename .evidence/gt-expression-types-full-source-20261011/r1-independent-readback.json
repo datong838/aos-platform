@@ -1,0 +1,25 @@
+{
+  "outcome": "FAILED_R1_EVIDENCE_PATH_GATE_INDEPENDENTLY_RECONCILED",
+  "database": "aos_test_ab0a1aed3ed9_ti4_test",
+  "cluster": "7694680278363095064",
+  "pytestExit": 1,
+  "failure": "fresh Judge evidence child directory required",
+  "callerSourcePhaseReached": false,
+  "typedRecords": 0,
+  "tableCounts": {
+    "aos_shared_parent_admission_private.end_authority": null,
+    "aos_shared_parent_admission_private.pending_origin": null,
+    "aos_shared_parent_physical_private.complete_parent_risk": null,
+    "aos_shared_parent_physical_private.complete_receipt_v2": null,
+    "aos_shared_parent_physical_private.initial_call_authority": null,
+    "aos_shared_parent_physical_private.initial_target_obligation": null,
+    "aos_shared_parent_physical_private.initial_window_obligation": null,
+    "aos_shared_parent_physical_private.judge_dependency": null,
+    "aos_shared_parent_physical_private.target_intent": null
+  },
+  "missingTablesAreNotClaimedZero": true,
+  "otherClients": 0,
+  "profileReset": true,
+  "unknownEffectsReplayed": false,
+  "executionAuthorized": false
+}

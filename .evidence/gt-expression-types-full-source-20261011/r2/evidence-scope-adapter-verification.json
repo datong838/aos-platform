@@ -1,0 +1,14 @@
+{
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "task": "gt-expression-types-full-source-20261011",
+  "exactPathAccepted": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-expression-types-full-source-20261011/r2/fresh-judge-evidence",
+  "outOfScopeRejected": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-expression-types-full-source-20261011/r2",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-expression-types-full-source-20261011",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/gt-expression-types-full-source-20261011/r2/neighbor",
+    "relative-attempt"
+  ],
+  "originalHelperHashesPreserved": true,
+  "existingResultRejectedByGuard": true,
+  "semanticSourceOrJudgeChecksChanged": false
+}

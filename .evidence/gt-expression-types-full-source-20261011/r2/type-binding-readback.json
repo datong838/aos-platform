@@ -1,0 +1,1783 @@
+{
+  "records": 257,
+  "function_oids": 180,
+  "retained_functions": [
+    {
+      "oid": 61,
+      "signature": "chareq(\"char\",\"char\")",
+      "prorettype": 16,
+      "declared_arg_types": "18 18",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 62,
+      "signature": "nameeq(name,name)",
+      "prorettype": 16,
+      "declared_arg_types": "19 19",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 63,
+      "signature": "int2eq(smallint,smallint)",
+      "prorettype": 16,
+      "declared_arg_types": "21 21",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 65,
+      "signature": "int4eq(integer,integer)",
+      "prorettype": 16,
+      "declared_arg_types": "23 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 66,
+      "signature": "int4lt(integer,integer)",
+      "prorettype": 16,
+      "declared_arg_types": "23 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 67,
+      "signature": "texteq(text,text)",
+      "prorettype": 16,
+      "declared_arg_types": "25 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 70,
+      "signature": "charne(\"char\",\"char\")",
+      "prorettype": 16,
+      "declared_arg_types": "18 18",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 84,
+      "signature": "boolne(boolean,boolean)",
+      "prorettype": 16,
+      "declared_arg_types": "16 16",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 144,
+      "signature": "int4ne(integer,integer)",
+      "prorettype": 16,
+      "declared_arg_types": "23 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 147,
+      "signature": "int4gt(integer,integer)",
+      "prorettype": 16,
+      "declared_arg_types": "23 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 157,
+      "signature": "textne(text,text)",
+      "prorettype": 16,
+      "declared_arg_types": "25 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 158,
+      "signature": "int24eq(smallint,integer)",
+      "prorettype": 16,
+      "declared_arg_types": "21 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 162,
+      "signature": "int24gt(smallint,integer)",
+      "prorettype": 16,
+      "declared_arg_types": "21 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 164,
+      "signature": "int24ne(smallint,integer)",
+      "prorettype": 16,
+      "declared_arg_types": "21 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 177,
+      "signature": "int4pl(integer,integer)",
+      "prorettype": 23,
+      "declared_arg_types": "23 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 184,
+      "signature": "oideq(oid,oid)",
+      "prorettype": 16,
+      "declared_arg_types": "26 26",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 185,
+      "signature": "oidne(oid,oid)",
+      "prorettype": 16,
+      "declared_arg_types": "26 26",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 240,
+      "signature": "nameeqtext(name,text)",
+      "prorettype": 16,
+      "declared_arg_types": "19 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 245,
+      "signature": "namenetext(name,text)",
+      "prorettype": 16,
+      "declared_arg_types": "19 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 247,
+      "signature": "texteqname(text,name)",
+      "prorettype": 16,
+      "declared_arg_types": "25 19",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 313,
+      "signature": "int4(smallint)",
+      "prorettype": 23,
+      "declared_arg_types": "21",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 390,
+      "signature": "array_ne(anyarray,anyarray)",
+      "prorettype": 16,
+      "declared_arg_types": "2277 2277",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 406,
+      "signature": "text(name)",
+      "prorettype": 25,
+      "declared_arg_types": "19",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 467,
+      "signature": "int8eq(bigint,bigint)",
+      "prorettype": 16,
+      "declared_arg_types": "20 20",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 468,
+      "signature": "int8ne(bigint,bigint)",
+      "prorettype": 16,
+      "declared_arg_types": "20 20",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 472,
+      "signature": "int8ge(bigint,bigint)",
+      "prorettype": 16,
+      "declared_arg_types": "20 20",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 474,
+      "signature": "int84eq(bigint,integer)",
+      "prorettype": 16,
+      "declared_arg_types": "20 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 475,
+      "signature": "int84ne(bigint,integer)",
+      "prorettype": 16,
+      "declared_arg_types": "20 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 477,
+      "signature": "int84gt(bigint,integer)",
+      "prorettype": 16,
+      "declared_arg_types": "20 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 478,
+      "signature": "int84le(bigint,integer)",
+      "prorettype": 16,
+      "declared_arg_types": "20 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 479,
+      "signature": "int84ge(bigint,integer)",
+      "prorettype": 16,
+      "declared_arg_types": "20 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 658,
+      "signature": "namege(name,name)",
+      "prorettype": 16,
+      "declared_arg_types": "19 19",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 659,
+      "signature": "namene(name,name)",
+      "prorettype": 16,
+      "declared_arg_types": "19 19",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 679,
+      "signature": "oidvectoreq(oidvector,oidvector)",
+      "prorettype": 16,
+      "declared_arg_types": "30 30",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 744,
+      "signature": "array_eq(anyarray,anyarray)",
+      "prorettype": 16,
+      "declared_arg_types": "2277 2277",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 861,
+      "signature": "current_database()",
+      "prorettype": 19,
+      "declared_arg_types": "",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 870,
+      "signature": "lower(text)",
+      "prorettype": 25,
+      "declared_arg_types": "25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 877,
+      "signature": "substr(text,integer,integer)",
+      "prorettype": 25,
+      "declared_arg_types": "25 23 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 885,
+      "signature": "btrim(text)",
+      "prorettype": 25,
+      "declared_arg_types": "25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 946,
+      "signature": "text(\"char\")",
+      "prorettype": 25,
+      "declared_arg_types": "18",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1067,
+      "signature": "generate_series(integer,integer)",
+      "prorettype": 23,
+      "declared_arg_types": "23 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1079,
+      "signature": "regclass(text)",
+      "prorettype": 2205,
+      "declared_arg_types": "25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1152,
+      "signature": "timestamptz_eq(timestamp with time zone,timestamp with time zone)",
+      "prorettype": 16,
+      "declared_arg_types": "1184 1184",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1154,
+      "signature": "timestamptz_lt(timestamp with time zone,timestamp with time zone)",
+      "prorettype": 16,
+      "declared_arg_types": "1184 1184",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1155,
+      "signature": "timestamptz_le(timestamp with time zone,timestamp with time zone)",
+      "prorettype": 16,
+      "declared_arg_types": "1184 1184",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1156,
+      "signature": "timestamptz_ge(timestamp with time zone,timestamp with time zone)",
+      "prorettype": 16,
+      "declared_arg_types": "1184 1184",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1157,
+      "signature": "timestamptz_gt(timestamp with time zone,timestamp with time zone)",
+      "prorettype": 16,
+      "declared_arg_types": "1184 1184",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1159,
+      "signature": "timezone(text,timestamp with time zone)",
+      "prorettype": 1114,
+      "declared_arg_types": "25 1184",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1165,
+      "signature": "interval_le(interval,interval)",
+      "prorettype": 16,
+      "declared_arg_types": "1186 1186",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1188,
+      "signature": "timestamptz_mi(timestamp with time zone,timestamp with time zone)",
+      "prorettype": 1186,
+      "declared_arg_types": "1184 1184",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1189,
+      "signature": "timestamptz_pl_interval(timestamp with time zone,interval)",
+      "prorettype": 1184,
+      "declared_arg_types": "1184 1186",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1254,
+      "signature": "textregexeq(text,text)",
+      "prorettype": 16,
+      "declared_arg_types": "25 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1256,
+      "signature": "textregexne(text,text)",
+      "prorettype": 16,
+      "declared_arg_types": "25 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1258,
+      "signature": "textcat(text,text)",
+      "prorettype": 25,
+      "declared_arg_types": "25 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1282,
+      "signature": "quote_ident(text)",
+      "prorettype": 25,
+      "declared_arg_types": "25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1288,
+      "signature": "int8(oid)",
+      "prorettype": 20,
+      "declared_arg_types": "26",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1317,
+      "signature": "length(text)",
+      "prorettype": 23,
+      "declared_arg_types": "25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1389,
+      "signature": "isfinite(timestamp with time zone)",
+      "prorettype": 16,
+      "declared_arg_types": "1184",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1620,
+      "signature": "ascii(text)",
+      "prorettype": 23,
+      "declared_arg_types": "25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1621,
+      "signature": "chr(integer)",
+      "prorettype": 25,
+      "declared_arg_types": "23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1624,
+      "signature": "mul_d_interval(double precision,interval)",
+      "prorettype": 1186,
+      "declared_arg_types": "701 1186",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1642,
+      "signature": "pg_get_userbyid(oid)",
+      "prorettype": 19,
+      "declared_arg_types": "26",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1643,
+      "signature": "pg_get_indexdef(oid)",
+      "prorettype": 25,
+      "declared_arg_types": "26",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1689,
+      "signature": "aclexplode(aclitem[])",
+      "prorettype": 2249,
+      "declared_arg_types": "1034",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1714,
+      "signature": "convert_from(bytea,name)",
+      "prorettype": 25,
+      "declared_arg_types": "17 19",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1716,
+      "signature": "pg_get_expr(pg_node_tree,oid)",
+      "prorettype": 25,
+      "declared_arg_types": "194 26",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1717,
+      "signature": "convert_to(text,name)",
+      "prorettype": 17,
+      "declared_arg_types": "25 19",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1718,
+      "signature": "numeric_eq(numeric,numeric)",
+      "prorettype": 16,
+      "declared_arg_types": "1700 1700",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1721,
+      "signature": "numeric_ge(numeric,numeric)",
+      "prorettype": 16,
+      "declared_arg_types": "1700 1700",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1723,
+      "signature": "numeric_le(numeric,numeric)",
+      "prorettype": 16,
+      "declared_arg_types": "1700 1700",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1740,
+      "signature": "\"numeric\"(integer)",
+      "prorettype": 1700,
+      "declared_arg_types": "23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1746,
+      "signature": "float8(numeric)",
+      "prorettype": 701,
+      "declared_arg_types": "1700",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1781,
+      "signature": "\"numeric\"(bigint)",
+      "prorettype": 1700,
+      "declared_arg_types": "20",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1898,
+      "signature": "int4and(integer,integer)",
+      "prorettype": 23,
+      "declared_arg_types": "23 23",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1925,
+      "signature": "has_table_privilege(oid,oid,text)",
+      "prorettype": 16,
+      "declared_arg_types": "26 26 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1946,
+      "signature": "encode(bytea,text)",
+      "prorettype": 25,
+      "declared_arg_types": "17 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1947,
+      "signature": "decode(text,text)",
+      "prorettype": 17,
+      "declared_arg_types": "25 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1948,
+      "signature": "byteaeq(bytea,bytea)",
+      "prorettype": 16,
+      "declared_arg_types": "17 17",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 1953,
+      "signature": "byteane(bytea,bytea)",
+      "prorettype": 16,
+      "declared_arg_types": "17 17",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2011,
+      "signature": "byteacat(bytea,bytea)",
+      "prorettype": 17,
+      "declared_arg_types": "17 17",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2026,
+      "signature": "pg_backend_pid()",
+      "prorettype": 23,
+      "declared_arg_types": "",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2049,
+      "signature": "to_char(timestamp without time zone,text)",
+      "prorettype": 25,
+      "declared_arg_types": "1114 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2077,
+      "signature": "current_setting(text)",
+      "prorettype": 25,
+      "declared_arg_types": "25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2107,
+      "signature": "sum(bigint)",
+      "prorettype": 1700,
+      "declared_arg_types": "20",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2143,
+      "signature": "min(timestamp with time zone)",
+      "prorettype": 1184,
+      "declared_arg_types": "1184",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2147,
+      "signature": "count(\"any\")",
+      "prorettype": 20,
+      "declared_arg_types": "2276",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2232,
+      "signature": "pg_get_function_identity_arguments(oid)",
+      "prorettype": 25,
+      "declared_arg_types": "26",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2253,
+      "signature": "has_database_privilege(oid,oid,text)",
+      "prorettype": 16,
+      "declared_arg_types": "26 26 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2259,
+      "signature": "has_function_privilege(oid,oid,text)",
+      "prorettype": 16,
+      "declared_arg_types": "26 26 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2271,
+      "signature": "has_schema_privilege(oid,oid,text)",
+      "prorettype": 16,
+      "declared_arg_types": "26 26 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2285,
+      "signature": "regexp_replace(text,text,text,text)",
+      "prorettype": 25,
+      "declared_arg_types": "25 25 25 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2331,
+      "signature": "unnest(anyarray)",
+      "prorettype": 2283,
+      "declared_arg_types": "2277",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2335,
+      "signature": "array_agg(anynonarray)",
+      "prorettype": 2277,
+      "declared_arg_types": "2776",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2508,
+      "signature": "pg_get_constraintdef(oid,boolean)",
+      "prorettype": 25,
+      "declared_arg_types": "26 16",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2517,
+      "signature": "bool_and(boolean)",
+      "prorettype": 16,
+      "declared_arg_types": "16",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2518,
+      "signature": "bool_or(boolean)",
+      "prorettype": 16,
+      "declared_arg_types": "16",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2649,
+      "signature": "clock_timestamp()",
+      "prorettype": 1184,
+      "declared_arg_types": "",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2803,
+      "signature": "count()",
+      "prorettype": 20,
+      "declared_arg_types": "",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 2956,
+      "signature": "uuid_eq(uuid,uuid)",
+      "prorettype": 16,
+      "declared_arg_types": "2950 2950",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3027,
+      "signature": "has_any_column_privilege(oid,oid,text)",
+      "prorettype": 16,
+      "declared_arg_types": "26 26 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3176,
+      "signature": "to_json(anyelement)",
+      "prorettype": 114,
+      "declared_arg_types": "2283",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3179,
+      "signature": "cardinality(anyarray)",
+      "prorettype": 23,
+      "declared_arg_types": "2277",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3207,
+      "signature": "jsonb_array_length(jsonb)",
+      "prorettype": 23,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3208,
+      "signature": "jsonb_each(jsonb)",
+      "prorettype": 2249,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3210,
+      "signature": "jsonb_typeof(jsonb)",
+      "prorettype": 25,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3214,
+      "signature": "jsonb_object_field_text(jsonb,text)",
+      "prorettype": 25,
+      "declared_arg_types": "3802 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3217,
+      "signature": "jsonb_extract_path(jsonb,text[])",
+      "prorettype": 3802,
+      "declared_arg_types": "3802 1009",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3219,
+      "signature": "jsonb_array_elements(jsonb)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3267,
+      "signature": "jsonb_agg(anyelement)",
+      "prorettype": 3802,
+      "declared_arg_types": "2283",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3271,
+      "signature": "jsonb_build_array(\"any\")",
+      "prorettype": 3802,
+      "declared_arg_types": "2276",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3273,
+      "signature": "jsonb_build_object(\"any\")",
+      "prorettype": 3802,
+      "declared_arg_types": "2276",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3277,
+      "signature": "array_position(anycompatiblearray,anycompatible)",
+      "prorettype": 23,
+      "declared_arg_types": "5078 5077",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3294,
+      "signature": "current_setting(text,boolean)",
+      "prorettype": 25,
+      "declared_arg_types": "25 16",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3301,
+      "signature": "jsonb_concat(jsonb,jsonb)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802 3802",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3343,
+      "signature": "jsonb_delete(jsonb,text[])",
+      "prorettype": 3802,
+      "declared_arg_types": "3802 1009",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3420,
+      "signature": "sha256(bytea)",
+      "prorettype": 17,
+      "declared_arg_types": "17",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3441,
+      "signature": "pg_control_system()",
+      "prorettype": 2249,
+      "declared_arg_types": "",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3478,
+      "signature": "jsonb_object_field(jsonb,text)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3479,
+      "signature": "to_regprocedure(text)",
+      "prorettype": 2202,
+      "declared_arg_types": "25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3495,
+      "signature": "to_regclass(text)",
+      "prorettype": 2205,
+      "declared_arg_types": "25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3538,
+      "signature": "string_agg(text,text)",
+      "prorettype": 25,
+      "declared_arg_types": "25 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3787,
+      "signature": "to_jsonb(anyelement)",
+      "prorettype": 3802,
+      "declared_arg_types": "2283",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3931,
+      "signature": "jsonb_object_keys(jsonb)",
+      "prorettype": 25,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3932,
+      "signature": "jsonb_each_text(jsonb)",
+      "prorettype": 2249,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3940,
+      "signature": "jsonb_extract_path_text(jsonb,text[])",
+      "prorettype": 25,
+      "declared_arg_types": "3802 1009",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3943,
+      "signature": "acldefault(\"char\",oid)",
+      "prorettype": 1034,
+      "declared_arg_types": "18 26",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3955,
+      "signature": "json_array_elements(json)",
+      "prorettype": 114,
+      "declared_arg_types": "114",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 3958,
+      "signature": "json_each(json)",
+      "prorettype": 2249,
+      "declared_arg_types": "114",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 4038,
+      "signature": "jsonb_ne(jsonb,jsonb)",
+      "prorettype": 16,
+      "declared_arg_types": "3802 3802",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 4043,
+      "signature": "jsonb_eq(jsonb,jsonb)",
+      "prorettype": 16,
+      "declared_arg_types": "3802 3802",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 4047,
+      "signature": "jsonb_exists(jsonb,text)",
+      "prorettype": 16,
+      "declared_arg_types": "3802 25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 4049,
+      "signature": "jsonb_exists_all(jsonb,text[])",
+      "prorettype": 16,
+      "declared_arg_types": "3802 1009",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 4093,
+      "signature": "to_regrole(text)",
+      "prorettype": 4096,
+      "declared_arg_types": "25",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 5059,
+      "signature": "pg_current_xact_id()",
+      "prorettype": 5069,
+      "declared_arg_types": "",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 5084,
+      "signature": "xid8eq(xid8,xid8)",
+      "prorettype": 16,
+      "declared_arg_types": "5069 5069",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 6202,
+      "signature": "\"extract\"(text,timestamp without time zone)",
+      "prorettype": 1700,
+      "declared_arg_types": "25 1114",
+      "prosecdef": false,
+      "language_oid": "12"
+    },
+    {
+      "oid": 16388,
+      "signature": "aos_ed25519.verify(bytea,bytea,bytea)",
+      "prorettype": 16,
+      "declared_arg_types": "17 17 17",
+      "prosecdef": false,
+      "language_oid": "13"
+    },
+    {
+      "oid": 5709248,
+      "signature": "digest(bytea,text)",
+      "prorettype": 17,
+      "declared_arg_types": "17 25",
+      "prosecdef": false,
+      "language_oid": "13"
+    },
+    {
+      "oid": 5709284,
+      "signature": "canonical_asset_registry_jsonb(jsonb)",
+      "prorettype": 25,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723244,
+      "signature": "aos_capacity_publication_private.read_root_snapshot(bytea)",
+      "prorettype": 2249,
+      "declared_arg_types": "17",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723354,
+      "signature": "aos_capacity_publication_private.canonical_signed_json(json,integer)",
+      "prorettype": 25,
+      "declared_arg_types": "114 23",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723356,
+      "signature": "aos_capacity_publication_private.read_identifier(jsonb)",
+      "prorettype": 25,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723359,
+      "signature": "aos_capacity_publication_private.read_deployment_target(bytea)",
+      "prorettype": 3802,
+      "declared_arg_types": "17",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723360,
+      "signature": "aos_capacity_publication_private.read_signed_time(jsonb)",
+      "prorettype": 1184,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723361,
+      "signature": "aos_capacity_publication_private.read_signing_permit(bytea)",
+      "prorettype": 3802,
+      "declared_arg_types": "17",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723362,
+      "signature": "aos_capacity_publication_private.read_origin_bootstrap(bytea)",
+      "prorettype": 3802,
+      "declared_arg_types": "17",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723372,
+      "signature": "aos_capacity_publication_private.read_source_policy(bytea)",
+      "prorettype": 3802,
+      "declared_arg_types": "17",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723373,
+      "signature": "aos_capacity_publication_private.read_supplier_attestation(bytea)",
+      "prorettype": 3802,
+      "declared_arg_types": "17",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723488,
+      "signature": "aos_capacity_publication_private.original_source_field(jsonb,text,text)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802 25 25",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723489,
+      "signature": "aos_capacity_publication_private.original_source_ref(jsonb,text)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802 25",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723490,
+      "signature": "aos_capacity_publication_private.original_source_time(jsonb)",
+      "prorettype": 2249,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723491,
+      "signature": "aos_capacity_publication_private.read_original_source_candidate(jsonb)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723492,
+      "signature": "aos_capacity_publication_private.read_original_capacity_application(jsonb)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723495,
+      "signature": "aos_capacity_publication_private.original_claim_identity(jsonb)",
+      "prorettype": 25,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723496,
+      "signature": "aos_capacity_publication_private.original_claim_integer(jsonb,bigint)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802 20",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723498,
+      "signature": "aos_capacity_publication_private.read_original_physical_account(jsonb)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723499,
+      "signature": "aos_capacity_publication_private.read_original_capacity_basis(jsonb)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723500,
+      "signature": "aos_capacity_publication_private.original_provider_string(jsonb,integer,boolean)",
+      "prorettype": 25,
+      "declared_arg_types": "3802 23 16",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723501,
+      "signature": "aos_capacity_publication_private.original_provider_integer(jsonb)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723504,
+      "signature": "aos_capacity_publication_private.read_original_provider(jsonb)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723505,
+      "signature": "aos_capacity_publication_private.original_build_exact_ref(jsonb)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723507,
+      "signature": "aos_capacity_publication_private.read_original_build_request(jsonb)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723508,
+      "signature": "aos_capacity_publication_private.original_build_json(jsonb)",
+      "prorettype": 25,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723510,
+      "signature": "aos_capacity_publication_private.original_build_equal(jsonb,jsonb)",
+      "prorettype": 16,
+      "declared_arg_types": "3802 3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723511,
+      "signature": "aos_capacity_publication_private.original_evidence_fields(jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)",
+      "prorettype": 16,
+      "declared_arg_types": "3802 3802 3802 3802 3802 3802 3802 3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723512,
+      "signature": "aos_capacity_publication_private.require_original_fact_boundary()",
+      "prorettype": 2278,
+      "declared_arg_types": "",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723516,
+      "signature": "aos_capacity_publication_private.require_original_epoch_pair_boundary()",
+      "prorettype": 2278,
+      "declared_arg_types": "",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723517,
+      "signature": "aos_capacity_publication_private.require_original_withdrawal_boundary()",
+      "prorettype": 2278,
+      "declared_arg_types": "",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723521,
+      "signature": "aos_capacity_publication_private.require_original_evidence_boundary()",
+      "prorettype": 2278,
+      "declared_arg_types": "",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723525,
+      "signature": "aos_capacity_publication_private.require_original_owner(text)",
+      "prorettype": 2278,
+      "declared_arg_types": "25",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723526,
+      "signature": "aos_capacity_publication_private.read_original_fact_provider(jsonb)",
+      "prorettype": 3802,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723527,
+      "signature": "aos_capacity_publication_private.require_original_fact_evidence(jsonb,boolean)",
+      "prorettype": 2278,
+      "declared_arg_types": "3802 16",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5723533,
+      "signature": "aos_capacity_publication_private.read_source_issuer_url(jsonb)",
+      "prorettype": 25,
+      "declared_arg_types": "3802",
+      "prosecdef": false,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5724479,
+      "signature": "verify_shared_parent_final_call_authority(uuid,text,xid8,integer)",
+      "prorettype": 3802,
+      "declared_arg_types": "2950 25 5069 23",
+      "prosecdef": true,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5724484,
+      "signature": "read_shared_parent_receipt_origin(uuid,text,xid8,integer)",
+      "prorettype": 3802,
+      "declared_arg_types": "2950 25 5069 23",
+      "prosecdef": true,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5724517,
+      "signature": "verify_shared_parent_final_physical(uuid,text,xid8,integer)",
+      "prorettype": 3802,
+      "declared_arg_types": "2950 25 5069 23",
+      "prosecdef": true,
+      "language_oid": "13666"
+    },
+    {
+      "oid": 5724518,
+      "signature": "read_shared_parent_complete_end_facts(uuid,text,xid8,integer)",
+      "prorettype": 3802,
+      "declared_arg_types": "2950 25 5069 23",
+      "prosecdef": true,
+      "language_oid": "13666"
+    }
+  ],
+  "missing_function_oids_after_rollback": [
+    5723978,
+    5723999,
+    5724004
+  ],
+  "observed_type_oids": 43,
+  "retained_types": [
+    {
+      "oid": 16,
+      "type_name": "boolean",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 17,
+      "type_name": "bytea",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 18,
+      "type_name": "\"char\"",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 19,
+      "type_name": "name",
+      "typtype": "b",
+      "typelem": 18,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 20,
+      "type_name": "bigint",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 21,
+      "type_name": "smallint",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 22,
+      "type_name": "int2vector",
+      "typtype": "b",
+      "typelem": 21,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 23,
+      "type_name": "integer",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 25,
+      "type_name": "text",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 26,
+      "type_name": "oid",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 28,
+      "type_name": "xid",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 30,
+      "type_name": "oidvector",
+      "typtype": "b",
+      "typelem": 26,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 114,
+      "type_name": "json",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 194,
+      "type_name": "pg_node_tree",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 701,
+      "type_name": "double precision",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 705,
+      "type_name": "unknown",
+      "typtype": "p",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 1002,
+      "type_name": "\"char\"[]",
+      "typtype": "b",
+      "typelem": 18,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 1003,
+      "type_name": "name[]",
+      "typtype": "b",
+      "typelem": 19,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 1005,
+      "type_name": "smallint[]",
+      "typtype": "b",
+      "typelem": 21,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 1007,
+      "type_name": "integer[]",
+      "typtype": "b",
+      "typelem": 23,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 1009,
+      "type_name": "text[]",
+      "typtype": "b",
+      "typelem": 25,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 1028,
+      "type_name": "oid[]",
+      "typtype": "b",
+      "typelem": 26,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 1034,
+      "type_name": "aclitem[]",
+      "typtype": "b",
+      "typelem": 1033,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 1114,
+      "type_name": "timestamp without time zone",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 1184,
+      "type_name": "timestamp with time zone",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 1186,
+      "type_name": "interval",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 1700,
+      "type_name": "numeric",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 2202,
+      "type_name": "regprocedure",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 2205,
+      "type_name": "regclass",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 2249,
+      "type_name": "record",
+      "typtype": "p",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 2278,
+      "type_name": "void",
+      "typtype": "p",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 2950,
+      "type_name": "uuid",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 3802,
+      "type_name": "jsonb",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 3807,
+      "type_name": "jsonb[]",
+      "typtype": "b",
+      "typelem": 3802,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 4096,
+      "type_name": "regrole",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 5069,
+      "type_name": "xid8",
+      "typtype": "b",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0
+    },
+    {
+      "oid": 5712377,
+      "type_name": "aip_action_proposal",
+      "typtype": "c",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 5712375
+    },
+    {
+      "oid": 5723252,
+      "type_name": "aos_capacity_publication_private.deployment_anchor",
+      "typtype": "c",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 5723250
+    },
+    {
+      "oid": 5723280,
+      "type_name": "aos_capacity_publication_private.origin",
+      "typtype": "c",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 5723278
+    },
+    {
+      "oid": 5723326,
+      "type_name": "aos_capacity_publication_private.registry_epoch",
+      "typtype": "c",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 5723324
+    },
+    {
+      "oid": 5723376,
+      "type_name": "aos_capacity_publication_private.document",
+      "typtype": "c",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 5723374
+    },
+    {
+      "oid": 5724039,
+      "type_name": "aos_physical_capacity_occupation_private.prepared_parent_debit",
+      "typtype": "c",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 5724037
+    },
+    {
+      "oid": 5724248,
+      "type_name": "aos_shared_parent_physical_private.initial_target_obligation",
+      "typtype": "c",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 5724246
+    }
+  ],
+  "missing_type_oids_after_rollback": [],
+  "records_sha256": "d15fd8a519b9227f2e42419775da82c09f076760f55249d3d7276f1d6990ef43",
+  "full_native_closure": false,
+  "formal_root_authorized": false,
+  "limits": [
+    "Expression args are planned expression types, not every native fmgr argument",
+    "Rollback removes temporary function and composite type identities; absent identities are not reconstructed",
+    "No proof of unvisited branches, implicit native callbacks, natural COMMIT or formal business acceptance"
+  ]
+}

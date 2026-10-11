@@ -1,0 +1,16 @@
+{
+  "authority": "AOS-001858",
+  "head": "ef7b87bbcec738fb9881f5c9542e595197aed040",
+  "observerLibrary": "/tmp/aos-type-observer-389f66b9d1b2cab31af375f9827b38165f560a34307c193054dc5b1e08701f87.so",
+  "observerLibraryHash": "389f66b9d1b2cab31af375f9827b38165f560a34307c193054dc5b1e08701f87",
+  "priorSourceFixture": ".evidence/gt-shared-parent-native-ending-20261011/planstate-source-1801",
+  "oldFixtureHashes": {
+    "run.py": "1f203446d709630528b4103a5f99cd06f61008250653105b1d905c1ceaee2f47",
+    "auth_boundary_fixture.py": "3ad1ae83e294ff90748522e7c5a0e2fc27661c73e27e094177b99731896ae65b",
+    "catalog_fixture_restore.py": "8f896c2b1a1c86238f6a17a9dbc16f7f261380de07a815fb8d53bb6e318f3278",
+    "shared_identity_certificate_fixture.py": "b7674e9ce6cb1a4ca0d3289b13defaf4b499b80398fa6edd3bd26977f02f4111",
+    "source_newjudge_native_trial_1606.py": "20805ec972872bb372209b512e3300682f9cf8fa0895df5d67afa42ef7b800d2"
+  },
+  "changes": "new evidence scope and label; exact library path; numeric typed notice capture only; original TTL/Source assertions retained",
+  "formalIdentityGranted": false
+}

@@ -1,0 +1,19 @@
+{
+  "plan.md": "1b53b804a459517c22e6fd20e22fb3757a1bcb972c800780ca186c1a26bd3694",
+  "fixture-provenance.json": "40761a5311585502c330d53774a1bdd3391f5208f8200508182e271d3f294c3d",
+  "result-r2.json": "452e7377166bd70ad250efccaeae0d05d56784fdd9b1c0abd547c383a6d135de",
+  "r1-independent-readback.json": "fde263c70b48c4608d1cc26954ba9f35ee097d7d78432ec29fb9353956145019",
+  "verification.md": "f2f14f0c629293073fca8cb8e7c6d2c9bf0d8b0bf1fcffa63c956b2de5adc0d0",
+  "r2/run.py": "5d20b9bac2090890478699470969957ea78626885a5be1b2e618d915214052bb",
+  "r2/isolated_evidence_scope_adapter.py": "19966d1a32dc4f4ed23b957ad2d3609e31cfede9512ac19cf2a8d7ac34b7fa73",
+  "r2/evidence-scope-adapter-verification.json": "2315569abede0f2479bba5a4793048ce2019cd355536f4082e1148ad68c038a0",
+  "r2/result-r2.json": "e2f09035ab5a302639f37446b6e6591d54a7a01b4a4f0388bd6fdd3f1ccdfca0",
+  "r2/typed-records.json": "d15fd8a519b9227f2e42419775da82c09f076760f55249d3d7276f1d6990ef43",
+  "r2/observed-oids.json": "facfaa611ba355e12c78095f5be526b741ff4cacedbf5dfe31183434e56b69e2",
+  "r2/cleanup-proof.json": "64713a31987e37093dfb2deb7af2c4b71751c5e78cd852eba42ddad92068aac3",
+  "r2/profile-config-reset.json": "bd644f8249cd774278f132d53add235f632cba0a7e1ae33880703c4b3c43fa57",
+  "r2/independent-readback.json": "a05c9e7b7bd9552f88ffb86af07abd4169225c134885edbe574d0ac9d3c682c2",
+  "r2/readback.py": "f71030b10679a5a8779b549ee30f4efc6f87812d7a1a8c87d9d34a71befe7438",
+  "r2/type_readback.py": "08877b9c20376f2a68e80387c87ea321f75380cdf230343c3cd704da1d6ef180",
+  "r2/type-binding-readback.json": "48055011baca903f1ef053e7ec9435574f9217b52c68f887d1274e6690d34fec"
+}
