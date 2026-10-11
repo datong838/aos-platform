@@ -1,0 +1,49 @@
+{
+  "after": {
+    "argv_sha256": "4cd8ae42f94933c4fa6fceeb4cda83e16c8940a1509321db6ef2f849bd771270",
+    "children": [
+      {
+        "argv_sha256": "d76592cffd7f6b7d2e96cda9fcb2b8bd908f96f5181122e60faa399aabea545e",
+        "pid": 19285,
+        "ppid": 19275,
+        "started": "Sun Oct 11 11:12:56 2026",
+        "uid": 501
+      }
+    ],
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform/apps/web",
+    "listener_ports": [
+      8434
+    ],
+    "pid": 19275,
+    "ppid": 1,
+    "started": "Sun Oct 11 11:12:56 2026",
+    "uid": 501
+  },
+  "api_bootstrap_used": false,
+  "at": "2026-10-11T03:12:57.534781+00:00",
+  "before": {
+    "argv_sha256": "4cd8ae42f94933c4fa6fceeb4cda83e16c8940a1509321db6ef2f849bd771270",
+    "children": [
+      {
+        "argv_sha256": "d76592cffd7f6b7d2e96cda9fcb2b8bd908f96f5181122e60faa399aabea545e",
+        "pid": 1158,
+        "ppid": 969,
+        "started": "Sun Oct 11 09:26:10 2026",
+        "uid": 501
+      }
+    ],
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform/apps/web",
+    "listener_ports": [
+      8434
+    ],
+    "pid": 969,
+    "ppid": 1,
+    "started": "Sun Oct 11 09:26:08 2026",
+    "uid": 501
+  },
+  "business_execution_authorized": false,
+  "http_status": 200,
+  "label": "com.aos.a0v-web-8434",
+  "new_pid": 19275,
+  "verified_restored": true
+}

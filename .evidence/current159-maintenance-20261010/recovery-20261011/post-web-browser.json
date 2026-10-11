@@ -1,0 +1,63 @@
+{
+  "at": "2026-10-11T03:13:26.569Z",
+  "results": [
+    {
+      "name": "cockpit",
+      "status": 200,
+      "denial": true,
+      "org": "org-org",
+      "project": "dev-project"
+    },
+    {
+      "name": "content-campaign",
+      "status": 200,
+      "denial": true,
+      "org": "org-org",
+      "project": "dev-project"
+    },
+    {
+      "name": "operations",
+      "status": 200,
+      "denial": true,
+      "org": "org-org",
+      "project": "dev-project"
+    },
+    {
+      "name": "creator-growth",
+      "status": 200,
+      "denial": true,
+      "org": "org-org",
+      "project": "dev-project"
+    },
+    {
+      "name": "media-studio",
+      "status": 200,
+      "denial": true,
+      "org": "org-org",
+      "project": "dev-project"
+    },
+    {
+      "name": "analyst",
+      "status": 200,
+      "denial": true,
+      "org": "org-org",
+      "project": "dev-project"
+    },
+    {
+      "name": "price-governance",
+      "status": 200,
+      "denial": true,
+      "org": "org-org",
+      "project": "dev-project"
+    },
+    {
+      "name": "customer",
+      "status": 200,
+      "denial": true,
+      "org": "org-org",
+      "project": "dev-project"
+    }
+  ],
+  "browser_retained": true,
+  "business_first_chain": false
+}

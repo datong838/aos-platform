@@ -23,3 +23,6 @@
 - `browser-refresh.json` SHA256 `e6738052c56a6b291bffa2c07b2d61e30d3c9da1ab26bf1c45f4708515f11f56`
 - `tenant-readonly-probe.json` SHA256 `6913a5c9a43d6c5adc5b640d53004f632aa75e41305cef7ca24a9032e12b04ce`
 - `startup-regression.log` SHA256 `c4d05229fd309c9b765f61b04828132774c8037ccd7a7a8a4243db511070dccb`
+
+## 后续已补齐：Web 后置启动与八页复验
+2026-10-11T03:12:57Z 原注册控制器精确停止969/helper1158并恢复新Web19275/helper19285；原plist/argv/cwd/UID/loopback8434匹配，新启动时间11:12:56。独占意图与终态保存在私有web-restart-1791目录，无重发；结果见web-restart-result.json。此次Web启动在本轮PG恢复与签名API启动之后，补齐上文所列Web后置启动缺口。03:13:26Z专用9244浏览器八路由实际重新导航，均200且原org-org/dev-project禁入DOM保持，见post-web-browser.json，浏览器保留。仍非实例激活、正向场景或自然首链；维护整体Delivery仍须原合同逐项复审。
