@@ -141,3 +141,6 @@ r1错误按 proname 查询 C prosrc，止于只读预检；r2误用历史摘要�
 
 ### 原隔离库实际锁与签名包装核查
 在原cluster7694680278363095064、aos_test_05f1a1dcd51f_ti4_test只读事务读取四个精确函数的定义/hash/Owner/语言/ACL及aos_ed25519.verify元数据；不调用业务或验证器。新增validator-closure-1792/native-functions.json，固定当前容器身份和cluster，失败不回退其他库。用于确认词法候选对应的真实函数，不作为新安装授权或全调用闭合证明。
+
+## 固定完整collector隔离原生探针
+当前候选：完整collector真实身份下的native写/utility fence联验；独立包Root/lifecycle仍为后续必要候选。新增fixed-collector-probe-1792/probe.c、Dockerfile及构建证据；复用1754两个supported hooks，只允许固定read_shared_parent_complete_end_facts(uuid,text,xid8,integer)，无caller SQL/mode。拒绝管理员，要求原occupation session、runtime role、PhysicalOwner effective identity、原scope/serializable/readwrite/origin/UTC、当前topxid/pid及隔离库。不得改原Source/Receipt/七guard；hook恢复覆盖异常，返回jsonb在SPI释放前复制。先编译和身份负门，再接新独立完整Source fixture，不重发1788。此探针不drain、不arm、不承诺SELECT无副作用、不定义完整finalizer、不得生产部署或组件Delivery。
