@@ -1,0 +1,3006 @@
+{
+  "outcome": "FIXED_VALIDATOR_DECLARED_TYPE_CALLBACK_CATALOG",
+  "database": "aos_test_5b8ce7041195_ti4_test",
+  "cluster": "7694680278363095064",
+  "functionBindings": [
+    {
+      "functionOid": 42,
+      "signature": "int4in(cstring)",
+      "inputTypes": [
+        2275
+      ],
+      "allArgumentTypes": null,
+      "returnType": 23
+    },
+    {
+      "functionOid": 46,
+      "signature": "textin(cstring)",
+      "inputTypes": [
+        2275
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 47,
+      "signature": "textout(text)",
+      "inputTypes": [
+        25
+      ],
+      "allArgumentTypes": null,
+      "returnType": 2275
+    },
+    {
+      "functionOid": 63,
+      "signature": "int2eq(smallint,smallint)",
+      "inputTypes": [
+        21,
+        21
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 65,
+      "signature": "int4eq(integer,integer)",
+      "inputTypes": [
+        23,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 67,
+      "signature": "texteq(text,text)",
+      "inputTypes": [
+        25,
+        25
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 144,
+      "signature": "int4ne(integer,integer)",
+      "inputTypes": [
+        23,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 162,
+      "signature": "int24gt(smallint,integer)",
+      "inputTypes": [
+        21,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 177,
+      "signature": "int4pl(integer,integer)",
+      "inputTypes": [
+        23,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 23
+    },
+    {
+      "functionOid": 184,
+      "signature": "oideq(oid,oid)",
+      "inputTypes": [
+        26,
+        26
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 406,
+      "signature": "text(name)",
+      "inputTypes": [
+        19
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 467,
+      "signature": "int8eq(bigint,bigint)",
+      "inputTypes": [
+        20,
+        20
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 474,
+      "signature": "int84eq(bigint,integer)",
+      "inputTypes": [
+        20,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 475,
+      "signature": "int84ne(bigint,integer)",
+      "inputTypes": [
+        20,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 478,
+      "signature": "int84le(bigint,integer)",
+      "inputTypes": [
+        20,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 659,
+      "signature": "namene(name,name)",
+      "inputTypes": [
+        19,
+        19
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 744,
+      "signature": "array_eq(anyarray,anyarray)",
+      "inputTypes": [
+        2277,
+        2277
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 877,
+      "signature": "substr(text,integer,integer)",
+      "inputTypes": [
+        25,
+        23,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 1067,
+      "signature": "generate_series(integer,integer)",
+      "inputTypes": [
+        23,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 23
+    },
+    {
+      "functionOid": 1150,
+      "signature": "timestamptz_in(cstring,oid,integer)",
+      "inputTypes": [
+        2275,
+        26,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 1184
+    },
+    {
+      "functionOid": 1154,
+      "signature": "timestamptz_lt(timestamp with time zone,timestamp with time zone)",
+      "inputTypes": [
+        1184,
+        1184
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 1156,
+      "signature": "timestamptz_ge(timestamp with time zone,timestamp with time zone)",
+      "inputTypes": [
+        1184,
+        1184
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 1258,
+      "signature": "textcat(text,text)",
+      "inputTypes": [
+        25,
+        25
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 1282,
+      "signature": "quote_ident(text)",
+      "inputTypes": [
+        25
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 1288,
+      "signature": "int8(oid)",
+      "inputTypes": [
+        26
+      ],
+      "allArgumentTypes": null,
+      "returnType": 20
+    },
+    {
+      "functionOid": 1317,
+      "signature": "length(text)",
+      "inputTypes": [
+        25
+      ],
+      "allArgumentTypes": null,
+      "returnType": 23
+    },
+    {
+      "functionOid": 1620,
+      "signature": "ascii(text)",
+      "inputTypes": [
+        25
+      ],
+      "allArgumentTypes": null,
+      "returnType": 23
+    },
+    {
+      "functionOid": 1643,
+      "signature": "pg_get_indexdef(oid)",
+      "inputTypes": [
+        26
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 1716,
+      "signature": "pg_get_expr(pg_node_tree,oid)",
+      "inputTypes": [
+        194,
+        26
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 1717,
+      "signature": "convert_to(text,name)",
+      "inputTypes": [
+        25,
+        19
+      ],
+      "allArgumentTypes": null,
+      "returnType": 17
+    },
+    {
+      "functionOid": 1740,
+      "signature": "\"numeric\"(integer)",
+      "inputTypes": [
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 1700
+    },
+    {
+      "functionOid": 1946,
+      "signature": "encode(bytea,text)",
+      "inputTypes": [
+        17,
+        25
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 1948,
+      "signature": "byteaeq(bytea,bytea)",
+      "inputTypes": [
+        17,
+        17
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 2026,
+      "signature": "pg_backend_pid()",
+      "inputTypes": [],
+      "allArgumentTypes": null,
+      "returnType": 23
+    },
+    {
+      "functionOid": 2077,
+      "signature": "current_setting(text)",
+      "inputTypes": [
+        25
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 2107,
+      "signature": "sum(bigint)",
+      "inputTypes": [
+        20
+      ],
+      "allArgumentTypes": null,
+      "returnType": 1700
+    },
+    {
+      "functionOid": 2219,
+      "signature": "regclassout(regclass)",
+      "inputTypes": [
+        2205
+      ],
+      "allArgumentTypes": null,
+      "returnType": 2275
+    },
+    {
+      "functionOid": 2232,
+      "signature": "pg_get_function_identity_arguments(oid)",
+      "inputTypes": [
+        26
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 2331,
+      "signature": "unnest(anyarray)",
+      "inputTypes": [
+        2277
+      ],
+      "allArgumentTypes": null,
+      "returnType": 2283
+    },
+    {
+      "functionOid": 2649,
+      "signature": "clock_timestamp()",
+      "inputTypes": [],
+      "allArgumentTypes": null,
+      "returnType": 1184
+    },
+    {
+      "functionOid": 2803,
+      "signature": "count()",
+      "inputTypes": [],
+      "allArgumentTypes": null,
+      "returnType": 20
+    },
+    {
+      "functionOid": 2953,
+      "signature": "uuid_out(uuid)",
+      "inputTypes": [
+        2950
+      ],
+      "allArgumentTypes": null,
+      "returnType": 2275
+    },
+    {
+      "functionOid": 2956,
+      "signature": "uuid_eq(uuid,uuid)",
+      "inputTypes": [
+        2950,
+        2950
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 3214,
+      "signature": "jsonb_object_field_text(jsonb,text)",
+      "inputTypes": [
+        3802,
+        25
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 3217,
+      "signature": "jsonb_extract_path(jsonb,text[])",
+      "inputTypes": [
+        3802,
+        1009
+      ],
+      "allArgumentTypes": [
+        3802,
+        1009
+      ],
+      "returnType": 3802
+    },
+    {
+      "functionOid": 3219,
+      "signature": "jsonb_array_elements(jsonb)",
+      "inputTypes": [
+        3802
+      ],
+      "allArgumentTypes": [
+        3802,
+        3802
+      ],
+      "returnType": 3802
+    },
+    {
+      "functionOid": 3267,
+      "signature": "jsonb_agg(anyelement)",
+      "inputTypes": [
+        2283
+      ],
+      "allArgumentTypes": null,
+      "returnType": 3802
+    },
+    {
+      "functionOid": 3273,
+      "signature": "jsonb_build_object(\"any\")",
+      "inputTypes": [
+        2276
+      ],
+      "allArgumentTypes": [
+        2276
+      ],
+      "returnType": 3802
+    },
+    {
+      "functionOid": 3294,
+      "signature": "current_setting(text,boolean)",
+      "inputTypes": [
+        25,
+        16
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 3301,
+      "signature": "jsonb_concat(jsonb,jsonb)",
+      "inputTypes": [
+        3802,
+        3802
+      ],
+      "allArgumentTypes": null,
+      "returnType": 3802
+    },
+    {
+      "functionOid": 3343,
+      "signature": "jsonb_delete(jsonb,text[])",
+      "inputTypes": [
+        3802,
+        1009
+      ],
+      "allArgumentTypes": [
+        3802,
+        1009
+      ],
+      "returnType": 3802
+    },
+    {
+      "functionOid": 3420,
+      "signature": "sha256(bytea)",
+      "inputTypes": [
+        17
+      ],
+      "allArgumentTypes": null,
+      "returnType": 17
+    },
+    {
+      "functionOid": 3478,
+      "signature": "jsonb_object_field(jsonb,text)",
+      "inputTypes": [
+        3802,
+        25
+      ],
+      "allArgumentTypes": null,
+      "returnType": 3802
+    },
+    {
+      "functionOid": 3787,
+      "signature": "to_jsonb(anyelement)",
+      "inputTypes": [
+        2283
+      ],
+      "allArgumentTypes": null,
+      "returnType": 3802
+    },
+    {
+      "functionOid": 3931,
+      "signature": "jsonb_object_keys(jsonb)",
+      "inputTypes": [
+        3802
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 3940,
+      "signature": "jsonb_extract_path_text(jsonb,text[])",
+      "inputTypes": [
+        3802,
+        1009
+      ],
+      "allArgumentTypes": [
+        3802,
+        1009
+      ],
+      "returnType": 25
+    },
+    {
+      "functionOid": 4043,
+      "signature": "jsonb_eq(jsonb,jsonb)",
+      "inputTypes": [
+        3802,
+        3802
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 5059,
+      "signature": "pg_current_xact_id()",
+      "inputTypes": [],
+      "allArgumentTypes": null,
+      "returnType": 5069
+    },
+    {
+      "functionOid": 5084,
+      "signature": "xid8eq(xid8,xid8)",
+      "inputTypes": [
+        5069,
+        5069
+      ],
+      "allArgumentTypes": null,
+      "returnType": 16
+    },
+    {
+      "functionOid": 5662815,
+      "signature": "canonical_asset_registry_jsonb(jsonb)",
+      "inputTypes": [
+        3802
+      ],
+      "allArgumentTypes": null,
+      "returnType": 25
+    },
+    {
+      "functionOid": 5678010,
+      "signature": "verify_shared_parent_final_call_authority(uuid,text,xid8,integer)",
+      "inputTypes": [
+        2950,
+        25,
+        5069,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 3802
+    },
+    {
+      "functionOid": 5678015,
+      "signature": "read_shared_parent_receipt_origin(uuid,text,xid8,integer)",
+      "inputTypes": [
+        2950,
+        25,
+        5069,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 3802
+    },
+    {
+      "functionOid": 5678048,
+      "signature": "verify_shared_parent_final_physical(uuid,text,xid8,integer)",
+      "inputTypes": [
+        2950,
+        25,
+        5069,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 3802
+    },
+    {
+      "functionOid": 5678049,
+      "signature": "read_shared_parent_complete_end_facts(uuid,text,xid8,integer)",
+      "inputTypes": [
+        2950,
+        25,
+        5069,
+        23
+      ],
+      "allArgumentTypes": null,
+      "returnType": 3802
+    },
+    {
+      "functionOid": 3994,
+      "signature": "generate_series_int4_support(internal)",
+      "inputTypes": [
+        2281
+      ],
+      "allArgumentTypes": null,
+      "returnType": 2281
+    },
+    {
+      "functionOid": 2746,
+      "signature": "int8_avg_accum(internal,bigint)",
+      "inputTypes": [
+        2281,
+        20
+      ],
+      "allArgumentTypes": null,
+      "returnType": 2281
+    },
+    {
+      "functionOid": 3388,
+      "signature": "numeric_poly_sum(internal)",
+      "inputTypes": [
+        2281
+      ],
+      "allArgumentTypes": null,
+      "returnType": 1700
+    },
+    {
+      "functionOid": 2785,
+      "signature": "int8_avg_combine(internal,internal)",
+      "inputTypes": [
+        2281,
+        2281
+      ],
+      "allArgumentTypes": null,
+      "returnType": 2281
+    },
+    {
+      "functionOid": 2786,
+      "signature": "int8_avg_serialize(internal)",
+      "inputTypes": [
+        2281
+      ],
+      "allArgumentTypes": null,
+      "returnType": 17
+    },
+    {
+      "functionOid": 2787,
+      "signature": "int8_avg_deserialize(bytea,internal)",
+      "inputTypes": [
+        17,
+        2281
+      ],
+      "allArgumentTypes": null,
+      "returnType": 2281
+    },
+    {
+      "functionOid": 3387,
+      "signature": "int8_avg_accum_inv(internal,bigint)",
+      "inputTypes": [
+        2281,
+        20
+      ],
+      "allArgumentTypes": null,
+      "returnType": 2281
+    },
+    {
+      "functionOid": 3996,
+      "signature": "array_unnest_support(internal)",
+      "inputTypes": [
+        2281
+      ],
+      "allArgumentTypes": null,
+      "returnType": 2281
+    },
+    {
+      "functionOid": 6236,
+      "signature": "int8inc_support(internal)",
+      "inputTypes": [
+        2281
+      ],
+      "allArgumentTypes": null,
+      "returnType": 2281
+    },
+    {
+      "functionOid": 1219,
+      "signature": "int8inc(bigint)",
+      "inputTypes": [
+        20
+      ],
+      "allArgumentTypes": null,
+      "returnType": 20
+    },
+    {
+      "functionOid": 463,
+      "signature": "int8pl(bigint,bigint)",
+      "inputTypes": [
+        20,
+        20
+      ],
+      "allArgumentTypes": null,
+      "returnType": 20
+    },
+    {
+      "functionOid": 3546,
+      "signature": "int8dec(bigint)",
+      "inputTypes": [
+        20
+      ],
+      "allArgumentTypes": null,
+      "returnType": 20
+    },
+    {
+      "functionOid": 3265,
+      "signature": "jsonb_agg_transfn(internal,anyelement)",
+      "inputTypes": [
+        2281,
+        2283
+      ],
+      "allArgumentTypes": null,
+      "returnType": 2281
+    },
+    {
+      "functionOid": 3266,
+      "signature": "jsonb_agg_finalfn(internal)",
+      "inputTypes": [
+        2281
+      ],
+      "allArgumentTypes": null,
+      "returnType": 3802
+    }
+  ],
+  "types": [
+    {
+      "oid": 16,
+      "schema": "pg_catalog",
+      "typname": "bool",
+      "typtype": "b",
+      "typlen": 1,
+      "typbyval": true,
+      "typalign": "c",
+      "typstorage": "p",
+      "typcategory": "B",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 1242,
+        "typoutput": 1243,
+        "typreceive": 2436,
+        "typsend": 2437,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 17,
+      "schema": "pg_catalog",
+      "typname": "bytea",
+      "typtype": "b",
+      "typlen": -1,
+      "typbyval": false,
+      "typalign": "i",
+      "typstorage": "x",
+      "typcategory": "U",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 1244,
+        "typoutput": 31,
+        "typreceive": 2412,
+        "typsend": 2413,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 18,
+      "schema": "pg_catalog",
+      "typname": "char",
+      "typtype": "b",
+      "typlen": 1,
+      "typbyval": true,
+      "typalign": "c",
+      "typstorage": "p",
+      "typcategory": "Z",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 1245,
+        "typoutput": 33,
+        "typreceive": 2434,
+        "typsend": 2435,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 19,
+      "schema": "pg_catalog",
+      "typname": "name",
+      "typtype": "b",
+      "typlen": 64,
+      "typbyval": false,
+      "typalign": "c",
+      "typstorage": "p",
+      "typcategory": "S",
+      "typelem": 18,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 950,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 34,
+        "typoutput": 35,
+        "typreceive": 2422,
+        "typsend": 2423,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 6180
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 20,
+      "schema": "pg_catalog",
+      "typname": "int8",
+      "typtype": "b",
+      "typlen": 8,
+      "typbyval": true,
+      "typalign": "d",
+      "typstorage": "p",
+      "typcategory": "N",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 460,
+        "typoutput": 461,
+        "typreceive": 2408,
+        "typsend": 2409,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 21,
+      "schema": "pg_catalog",
+      "typname": "int2",
+      "typtype": "b",
+      "typlen": 2,
+      "typbyval": true,
+      "typalign": "s",
+      "typstorage": "p",
+      "typcategory": "N",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 38,
+        "typoutput": 39,
+        "typreceive": 2404,
+        "typsend": 2405,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 23,
+      "schema": "pg_catalog",
+      "typname": "int4",
+      "typtype": "b",
+      "typlen": 4,
+      "typbyval": true,
+      "typalign": "i",
+      "typstorage": "p",
+      "typcategory": "N",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 42,
+        "typoutput": 43,
+        "typreceive": 2406,
+        "typsend": 2407,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 25,
+      "schema": "pg_catalog",
+      "typname": "text",
+      "typtype": "b",
+      "typlen": -1,
+      "typbyval": false,
+      "typalign": "i",
+      "typstorage": "x",
+      "typcategory": "S",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 100,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 46,
+        "typoutput": 47,
+        "typreceive": 2414,
+        "typsend": 2415,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 26,
+      "schema": "pg_catalog",
+      "typname": "oid",
+      "typtype": "b",
+      "typlen": 4,
+      "typbyval": true,
+      "typalign": "i",
+      "typstorage": "p",
+      "typcategory": "N",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 1798,
+        "typoutput": 1799,
+        "typreceive": 2418,
+        "typsend": 2419,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 194,
+      "schema": "pg_catalog",
+      "typname": "pg_node_tree",
+      "typtype": "b",
+      "typlen": -1,
+      "typbyval": false,
+      "typalign": "i",
+      "typstorage": "x",
+      "typcategory": "Z",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 100,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 195,
+        "typoutput": 196,
+        "typreceive": 197,
+        "typsend": 198,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 1009,
+      "schema": "pg_catalog",
+      "typname": "_text",
+      "typtype": "b",
+      "typlen": -1,
+      "typbyval": false,
+      "typalign": "i",
+      "typstorage": "x",
+      "typcategory": "A",
+      "typelem": 25,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 100,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 750,
+        "typoutput": 751,
+        "typreceive": 2400,
+        "typsend": 2401,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 3816,
+        "typsubscript": 6179
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 1184,
+      "schema": "pg_catalog",
+      "typname": "timestamptz",
+      "typtype": "b",
+      "typlen": 8,
+      "typbyval": true,
+      "typalign": "d",
+      "typstorage": "p",
+      "typcategory": "D",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 1150,
+        "typoutput": 1151,
+        "typreceive": 2476,
+        "typsend": 2477,
+        "typmodin": 2907,
+        "typmodout": 2908,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 1700,
+      "schema": "pg_catalog",
+      "typname": "numeric",
+      "typtype": "b",
+      "typlen": -1,
+      "typbyval": false,
+      "typalign": "i",
+      "typstorage": "m",
+      "typcategory": "N",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 1701,
+        "typoutput": 1702,
+        "typreceive": 2460,
+        "typsend": 2461,
+        "typmodin": 2917,
+        "typmodout": 2918,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 2205,
+      "schema": "pg_catalog",
+      "typname": "regclass",
+      "typtype": "b",
+      "typlen": 4,
+      "typbyval": true,
+      "typalign": "i",
+      "typstorage": "p",
+      "typcategory": "N",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 2218,
+        "typoutput": 2219,
+        "typreceive": 2452,
+        "typsend": 2453,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 2275,
+      "schema": "pg_catalog",
+      "typname": "cstring",
+      "typtype": "p",
+      "typlen": -2,
+      "typbyval": false,
+      "typalign": "c",
+      "typstorage": "p",
+      "typcategory": "P",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 2292,
+        "typoutput": 2293,
+        "typreceive": 2500,
+        "typsend": 2501,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 2276,
+      "schema": "pg_catalog",
+      "typname": "any",
+      "typtype": "p",
+      "typlen": 4,
+      "typbyval": true,
+      "typalign": "i",
+      "typstorage": "p",
+      "typcategory": "P",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 2294,
+        "typoutput": 2295,
+        "typreceive": 0,
+        "typsend": 0,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 2277,
+      "schema": "pg_catalog",
+      "typname": "anyarray",
+      "typtype": "p",
+      "typlen": -1,
+      "typbyval": false,
+      "typalign": "d",
+      "typstorage": "x",
+      "typcategory": "P",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 2296,
+        "typoutput": 2297,
+        "typreceive": 2502,
+        "typsend": 2503,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 2281,
+      "schema": "pg_catalog",
+      "typname": "internal",
+      "typtype": "p",
+      "typlen": 8,
+      "typbyval": true,
+      "typalign": "d",
+      "typstorage": "p",
+      "typcategory": "P",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 2304,
+        "typoutput": 2305,
+        "typreceive": 0,
+        "typsend": 0,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 2283,
+      "schema": "pg_catalog",
+      "typname": "anyelement",
+      "typtype": "p",
+      "typlen": 4,
+      "typbyval": true,
+      "typalign": "i",
+      "typstorage": "p",
+      "typcategory": "P",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 2312,
+        "typoutput": 2313,
+        "typreceive": 0,
+        "typsend": 0,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 2950,
+      "schema": "pg_catalog",
+      "typname": "uuid",
+      "typtype": "b",
+      "typlen": 16,
+      "typbyval": false,
+      "typalign": "c",
+      "typstorage": "p",
+      "typcategory": "U",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 2952,
+        "typoutput": 2953,
+        "typreceive": 2961,
+        "typsend": 2962,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 3802,
+      "schema": "pg_catalog",
+      "typname": "jsonb",
+      "typtype": "b",
+      "typlen": -1,
+      "typbyval": false,
+      "typalign": "i",
+      "typstorage": "x",
+      "typcategory": "U",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 3806,
+        "typoutput": 3804,
+        "typreceive": 3805,
+        "typsend": 3803,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 6098
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    },
+    {
+      "oid": 5069,
+      "schema": "pg_catalog",
+      "typname": "xid8",
+      "typtype": "b",
+      "typlen": 8,
+      "typbyval": true,
+      "typalign": "d",
+      "typstorage": "p",
+      "typcategory": "U",
+      "typelem": 0,
+      "typbasetype": 0,
+      "typrelid": 0,
+      "typcollation": 0,
+      "typnotnull": false,
+      "callbacks": {
+        "typinput": 5070,
+        "typoutput": 5081,
+        "typreceive": 5082,
+        "typsend": 5083,
+        "typmodin": 0,
+        "typmodout": 0,
+        "typanalyze": 0,
+        "typsubscript": 0
+      },
+      "ranges": [],
+      "enumCount": 0,
+      "enumMetadataHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "domainConstraints": []
+    }
+  ],
+  "typeEdges": [
+    {
+      "source": 19,
+      "kind": "typelem",
+      "target": 18
+    },
+    {
+      "source": 1009,
+      "kind": "typelem",
+      "target": 25
+    }
+  ],
+  "typeCallbackEdges": [
+    {
+      "sourceTypeOid": 2275,
+      "kind": "typinput",
+      "functionOid": 2292
+    },
+    {
+      "sourceTypeOid": 2275,
+      "kind": "typoutput",
+      "functionOid": 2293
+    },
+    {
+      "sourceTypeOid": 2275,
+      "kind": "typreceive",
+      "functionOid": 2500
+    },
+    {
+      "sourceTypeOid": 2275,
+      "kind": "typsend",
+      "functionOid": 2501
+    },
+    {
+      "sourceTypeOid": 23,
+      "kind": "typinput",
+      "functionOid": 42
+    },
+    {
+      "sourceTypeOid": 23,
+      "kind": "typoutput",
+      "functionOid": 43
+    },
+    {
+      "sourceTypeOid": 23,
+      "kind": "typreceive",
+      "functionOid": 2406
+    },
+    {
+      "sourceTypeOid": 23,
+      "kind": "typsend",
+      "functionOid": 2407
+    },
+    {
+      "sourceTypeOid": 25,
+      "kind": "typinput",
+      "functionOid": 46
+    },
+    {
+      "sourceTypeOid": 25,
+      "kind": "typoutput",
+      "functionOid": 47
+    },
+    {
+      "sourceTypeOid": 25,
+      "kind": "typreceive",
+      "functionOid": 2414
+    },
+    {
+      "sourceTypeOid": 25,
+      "kind": "typsend",
+      "functionOid": 2415
+    },
+    {
+      "sourceTypeOid": 21,
+      "kind": "typinput",
+      "functionOid": 38
+    },
+    {
+      "sourceTypeOid": 21,
+      "kind": "typoutput",
+      "functionOid": 39
+    },
+    {
+      "sourceTypeOid": 21,
+      "kind": "typreceive",
+      "functionOid": 2404
+    },
+    {
+      "sourceTypeOid": 21,
+      "kind": "typsend",
+      "functionOid": 2405
+    },
+    {
+      "sourceTypeOid": 16,
+      "kind": "typinput",
+      "functionOid": 1242
+    },
+    {
+      "sourceTypeOid": 16,
+      "kind": "typoutput",
+      "functionOid": 1243
+    },
+    {
+      "sourceTypeOid": 16,
+      "kind": "typreceive",
+      "functionOid": 2436
+    },
+    {
+      "sourceTypeOid": 16,
+      "kind": "typsend",
+      "functionOid": 2437
+    },
+    {
+      "sourceTypeOid": 26,
+      "kind": "typinput",
+      "functionOid": 1798
+    },
+    {
+      "sourceTypeOid": 26,
+      "kind": "typoutput",
+      "functionOid": 1799
+    },
+    {
+      "sourceTypeOid": 26,
+      "kind": "typreceive",
+      "functionOid": 2418
+    },
+    {
+      "sourceTypeOid": 26,
+      "kind": "typsend",
+      "functionOid": 2419
+    },
+    {
+      "sourceTypeOid": 19,
+      "kind": "typinput",
+      "functionOid": 34
+    },
+    {
+      "sourceTypeOid": 19,
+      "kind": "typoutput",
+      "functionOid": 35
+    },
+    {
+      "sourceTypeOid": 19,
+      "kind": "typreceive",
+      "functionOid": 2422
+    },
+    {
+      "sourceTypeOid": 19,
+      "kind": "typsend",
+      "functionOid": 2423
+    },
+    {
+      "sourceTypeOid": 19,
+      "kind": "typsubscript",
+      "functionOid": 6180
+    },
+    {
+      "sourceTypeOid": 20,
+      "kind": "typinput",
+      "functionOid": 460
+    },
+    {
+      "sourceTypeOid": 20,
+      "kind": "typoutput",
+      "functionOid": 461
+    },
+    {
+      "sourceTypeOid": 20,
+      "kind": "typreceive",
+      "functionOid": 2408
+    },
+    {
+      "sourceTypeOid": 20,
+      "kind": "typsend",
+      "functionOid": 2409
+    },
+    {
+      "sourceTypeOid": 2277,
+      "kind": "typinput",
+      "functionOid": 2296
+    },
+    {
+      "sourceTypeOid": 2277,
+      "kind": "typoutput",
+      "functionOid": 2297
+    },
+    {
+      "sourceTypeOid": 2277,
+      "kind": "typreceive",
+      "functionOid": 2502
+    },
+    {
+      "sourceTypeOid": 2277,
+      "kind": "typsend",
+      "functionOid": 2503
+    },
+    {
+      "sourceTypeOid": 1184,
+      "kind": "typinput",
+      "functionOid": 1150
+    },
+    {
+      "sourceTypeOid": 1184,
+      "kind": "typoutput",
+      "functionOid": 1151
+    },
+    {
+      "sourceTypeOid": 1184,
+      "kind": "typreceive",
+      "functionOid": 2476
+    },
+    {
+      "sourceTypeOid": 1184,
+      "kind": "typsend",
+      "functionOid": 2477
+    },
+    {
+      "sourceTypeOid": 1184,
+      "kind": "typmodin",
+      "functionOid": 2907
+    },
+    {
+      "sourceTypeOid": 1184,
+      "kind": "typmodout",
+      "functionOid": 2908
+    },
+    {
+      "sourceTypeOid": 194,
+      "kind": "typinput",
+      "functionOid": 195
+    },
+    {
+      "sourceTypeOid": 194,
+      "kind": "typoutput",
+      "functionOid": 196
+    },
+    {
+      "sourceTypeOid": 194,
+      "kind": "typreceive",
+      "functionOid": 197
+    },
+    {
+      "sourceTypeOid": 194,
+      "kind": "typsend",
+      "functionOid": 198
+    },
+    {
+      "sourceTypeOid": 17,
+      "kind": "typinput",
+      "functionOid": 1244
+    },
+    {
+      "sourceTypeOid": 17,
+      "kind": "typoutput",
+      "functionOid": 31
+    },
+    {
+      "sourceTypeOid": 17,
+      "kind": "typreceive",
+      "functionOid": 2412
+    },
+    {
+      "sourceTypeOid": 17,
+      "kind": "typsend",
+      "functionOid": 2413
+    },
+    {
+      "sourceTypeOid": 1700,
+      "kind": "typinput",
+      "functionOid": 1701
+    },
+    {
+      "sourceTypeOid": 1700,
+      "kind": "typoutput",
+      "functionOid": 1702
+    },
+    {
+      "sourceTypeOid": 1700,
+      "kind": "typreceive",
+      "functionOid": 2460
+    },
+    {
+      "sourceTypeOid": 1700,
+      "kind": "typsend",
+      "functionOid": 2461
+    },
+    {
+      "sourceTypeOid": 1700,
+      "kind": "typmodin",
+      "functionOid": 2917
+    },
+    {
+      "sourceTypeOid": 1700,
+      "kind": "typmodout",
+      "functionOid": 2918
+    },
+    {
+      "sourceTypeOid": 2205,
+      "kind": "typinput",
+      "functionOid": 2218
+    },
+    {
+      "sourceTypeOid": 2205,
+      "kind": "typoutput",
+      "functionOid": 2219
+    },
+    {
+      "sourceTypeOid": 2205,
+      "kind": "typreceive",
+      "functionOid": 2452
+    },
+    {
+      "sourceTypeOid": 2205,
+      "kind": "typsend",
+      "functionOid": 2453
+    },
+    {
+      "sourceTypeOid": 2283,
+      "kind": "typinput",
+      "functionOid": 2312
+    },
+    {
+      "sourceTypeOid": 2283,
+      "kind": "typoutput",
+      "functionOid": 2313
+    },
+    {
+      "sourceTypeOid": 2950,
+      "kind": "typinput",
+      "functionOid": 2952
+    },
+    {
+      "sourceTypeOid": 2950,
+      "kind": "typoutput",
+      "functionOid": 2953
+    },
+    {
+      "sourceTypeOid": 2950,
+      "kind": "typreceive",
+      "functionOid": 2961
+    },
+    {
+      "sourceTypeOid": 2950,
+      "kind": "typsend",
+      "functionOid": 2962
+    },
+    {
+      "sourceTypeOid": 3802,
+      "kind": "typinput",
+      "functionOid": 3806
+    },
+    {
+      "sourceTypeOid": 3802,
+      "kind": "typoutput",
+      "functionOid": 3804
+    },
+    {
+      "sourceTypeOid": 3802,
+      "kind": "typreceive",
+      "functionOid": 3805
+    },
+    {
+      "sourceTypeOid": 3802,
+      "kind": "typsend",
+      "functionOid": 3803
+    },
+    {
+      "sourceTypeOid": 3802,
+      "kind": "typsubscript",
+      "functionOid": 6098
+    },
+    {
+      "sourceTypeOid": 1009,
+      "kind": "typinput",
+      "functionOid": 750
+    },
+    {
+      "sourceTypeOid": 1009,
+      "kind": "typoutput",
+      "functionOid": 751
+    },
+    {
+      "sourceTypeOid": 1009,
+      "kind": "typreceive",
+      "functionOid": 2400
+    },
+    {
+      "sourceTypeOid": 1009,
+      "kind": "typsend",
+      "functionOid": 2401
+    },
+    {
+      "sourceTypeOid": 1009,
+      "kind": "typanalyze",
+      "functionOid": 3816
+    },
+    {
+      "sourceTypeOid": 1009,
+      "kind": "typsubscript",
+      "functionOid": 6179
+    },
+    {
+      "sourceTypeOid": 2276,
+      "kind": "typinput",
+      "functionOid": 2294
+    },
+    {
+      "sourceTypeOid": 2276,
+      "kind": "typoutput",
+      "functionOid": 2295
+    },
+    {
+      "sourceTypeOid": 5069,
+      "kind": "typinput",
+      "functionOid": 5070
+    },
+    {
+      "sourceTypeOid": 5069,
+      "kind": "typoutput",
+      "functionOid": 5081
+    },
+    {
+      "sourceTypeOid": 5069,
+      "kind": "typreceive",
+      "functionOid": 5082
+    },
+    {
+      "sourceTypeOid": 5069,
+      "kind": "typsend",
+      "functionOid": 5083
+    },
+    {
+      "sourceTypeOid": 2281,
+      "kind": "typinput",
+      "functionOid": 2304
+    },
+    {
+      "sourceTypeOid": 2281,
+      "kind": "typoutput",
+      "functionOid": 2305
+    },
+    {
+      "sourceTypeOid": 18,
+      "kind": "typinput",
+      "functionOid": 1245
+    },
+    {
+      "sourceTypeOid": 18,
+      "kind": "typoutput",
+      "functionOid": 33
+    },
+    {
+      "sourceTypeOid": 18,
+      "kind": "typreceive",
+      "functionOid": 2434
+    },
+    {
+      "sourceTypeOid": 18,
+      "kind": "typsend",
+      "functionOid": 2435
+    }
+  ],
+  "typeCallbackFunctions": [
+    {
+      "oid": 31,
+      "signature": "byteaout(bytea)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "0b88eddd31e197ab03530d9dd1600a42a07e1d2dd94b7001666742f35b853d2a"
+    },
+    {
+      "oid": 33,
+      "signature": "charout(\"char\")",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "cfa2a8c5f9420b643c71ddc46d9c1dfd3f9a979274a91db5b8e4bca289f4e7b9"
+    },
+    {
+      "oid": 34,
+      "signature": "namein(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "4224ec9e8e0344a010f54f48287ca4b896929bd7bfa56047c92c7ced71544e9f"
+    },
+    {
+      "oid": 35,
+      "signature": "nameout(name)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "a0e3d63e7b9ab4b6cd94eb56d1cccd1fb858d4da24d184fc6a1e2c40decabbc4"
+    },
+    {
+      "oid": 38,
+      "signature": "int2in(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "d3a895d1f4316a7e5522fc7cf2399296aced8b306e064082c5aec5adc0b7d9ed"
+    },
+    {
+      "oid": 39,
+      "signature": "int2out(smallint)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "815617ec17178be6871fc40f736a555955d37e2584e09066aee12907752dff58"
+    },
+    {
+      "oid": 42,
+      "signature": "int4in(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "22847e612949a149d1ab17a751adb24dd17e19985aacea85f55b69f5bc21b75c"
+    },
+    {
+      "oid": 43,
+      "signature": "int4out(integer)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "4857f092ee1f75b34be8802cfea4ac9e7eb2104d5ac21eb86ac392dfc1c69e31"
+    },
+    {
+      "oid": 46,
+      "signature": "textin(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "d5c4749aaccb566ec2c4dc3d3f76dc8a6ad9570655179289110f09dbbd158fcf"
+    },
+    {
+      "oid": 47,
+      "signature": "textout(text)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "0c11527480620e7ca48ee5dadd835c141014bf6a5cc9f08369c37759b4801e3e"
+    },
+    {
+      "oid": 195,
+      "signature": "pg_node_tree_in(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "20a84e0aeaae93808c692363e3a2b8a673cb2818ad8613b0348bad5aba9dc34f"
+    },
+    {
+      "oid": 196,
+      "signature": "pg_node_tree_out(pg_node_tree)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "c52cee24382d073331fd49dfaf9cd101e7534d014df3ae3eb4d4eee74bc3baa8"
+    },
+    {
+      "oid": 197,
+      "signature": "pg_node_tree_recv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "62af62957a8f9acc7002ce7c067b0c0189ab49c0ef574474b3dbb0ce17e2873b"
+    },
+    {
+      "oid": 198,
+      "signature": "pg_node_tree_send(pg_node_tree)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "3a3c31ecd8ec053e8e64fa358ebd05fb6971db73607b4501672b80fdb750fce1"
+    },
+    {
+      "oid": 460,
+      "signature": "int8in(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "8822d77c072c315f5fa029db8b55f2231e944dec25dcba4e2de4a0209fc1fa12"
+    },
+    {
+      "oid": 461,
+      "signature": "int8out(bigint)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "62fe94b27bb0aadbf6c4d91e558230e3aa92462e8a0cb1f0e7bff03923d7309d"
+    },
+    {
+      "oid": 750,
+      "signature": "array_in(cstring,oid,integer)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "11ce11dfb26b5de6acbfaf9fb609fcf406a865acb79e399ec618d2ec1a327a7b"
+    },
+    {
+      "oid": 751,
+      "signature": "array_out(anyarray)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "1692571fd1da706b4e694e4cc1a3880d9f5aa91fc195367c58970c221777f682"
+    },
+    {
+      "oid": 1150,
+      "signature": "timestamptz_in(cstring,oid,integer)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "e5f1ac6e7bee790f3d21c3259e7cd59720d074c0611fda56813597b87241ca7d"
+    },
+    {
+      "oid": 1151,
+      "signature": "timestamptz_out(timestamp with time zone)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "ced96992abc8227812d76098c440c84e4347309999a92fd34744e3637f8907fb"
+    },
+    {
+      "oid": 1242,
+      "signature": "boolin(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "49af934689fff99fbd0b12ef3ca58759e0cd9b0a635d249d4e987fa477fb4f87"
+    },
+    {
+      "oid": 1243,
+      "signature": "boolout(boolean)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "ccc76723120c5af1f93054b9f01a0f54e0e12b36661d3d44206a1fd810d6ad0a"
+    },
+    {
+      "oid": 1244,
+      "signature": "byteain(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "3849d5ed43ca94fb9aa0fddf9d5b1cb02a30df8eecf79e8446b5f531bb325644"
+    },
+    {
+      "oid": 1245,
+      "signature": "charin(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "030a60aff65f9338a5b3e15eb55df3eeb9d0f6138cd7d88d237c515947d1f82b"
+    },
+    {
+      "oid": 1701,
+      "signature": "numeric_in(cstring,oid,integer)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "398e7fa233e48593ff91e23b442e26b0eb102993ebf5f2118cd5d4996456ffe7"
+    },
+    {
+      "oid": 1702,
+      "signature": "numeric_out(numeric)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "d47ac59b6a3405b19ab27e2d230aae261af56c139e5cff38fc3297db5d0d526d"
+    },
+    {
+      "oid": 1798,
+      "signature": "oidin(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "224ad67e0e981dc9087629ceb0b5ef18b4c520ebe3355e80920581483741e85b"
+    },
+    {
+      "oid": 1799,
+      "signature": "oidout(oid)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "4f25d1d256e704fd073bd1e5e17927efa738e9f8b724bdd01035ddf7ad385771"
+    },
+    {
+      "oid": 2218,
+      "signature": "regclassin(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "da06be2e0847cfef8b9a6fdd4de7cd372b6b38cf01a24bc6c19d8589d0ba7010"
+    },
+    {
+      "oid": 2219,
+      "signature": "regclassout(regclass)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "561df66851728f1131e3a3980da3c9775e86c3ca02e4081bef4ab2538ef9ad96"
+    },
+    {
+      "oid": 2292,
+      "signature": "cstring_in(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "305e2924e5473734c0a3f2fbbbe1702fbddd0ce6a8da0543230ace5a7e846d3e"
+    },
+    {
+      "oid": 2293,
+      "signature": "cstring_out(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "48670ec0a15bf141da273810b26eda15f506a2834c1c31f3a315a23466aaaa54"
+    },
+    {
+      "oid": 2294,
+      "signature": "any_in(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "31fc37770e40c402b32b1c5ca94707ca531d8fc2a2f4d6cb7298441d32345e18"
+    },
+    {
+      "oid": 2295,
+      "signature": "any_out(\"any\")",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "620374538f8808bf97c4560f94198a06f62cf4b593ac5d463e4dd660c34719a7"
+    },
+    {
+      "oid": 2296,
+      "signature": "anyarray_in(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "7375afcf558cba5eab5a0fcc3ddfa0c8d79767cfef9376841f8b56e53d3d49f5"
+    },
+    {
+      "oid": 2297,
+      "signature": "anyarray_out(anyarray)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "da09356c310137995097c451a6cbed00f8089bf177a12eca196f3aee6cb2dcef"
+    },
+    {
+      "oid": 2304,
+      "signature": "internal_in(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "20837a4d5e83755921c4b1aebc06a4308cfa4a15c228ac0187723c1763571a68"
+    },
+    {
+      "oid": 2305,
+      "signature": "internal_out(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "717b1ecf618cc8f1a2949246268e7b3d72b31f9c9374a57127b847f0912f8254"
+    },
+    {
+      "oid": 2312,
+      "signature": "anyelement_in(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "d2e1a77d700845747cbf2c6fcf6df384a043802cf3ef709a53e3ecd15ec9b900"
+    },
+    {
+      "oid": 2313,
+      "signature": "anyelement_out(anyelement)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "05f9a2657a559d5fc5525ae212a29f79d8886f142c2e0d458057ad4b2abc151b"
+    },
+    {
+      "oid": 2400,
+      "signature": "array_recv(internal,oid,integer)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "251cc8704a18d4e824936e9167a65f9474deda7120b49eaf34852aa2bb38bd1b"
+    },
+    {
+      "oid": 2401,
+      "signature": "array_send(anyarray)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "2f451202848fd484dc404247db1e878894d314ea6409a5219b598e074af7b471"
+    },
+    {
+      "oid": 2404,
+      "signature": "int2recv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "ac4515d31a96a1075375acb3e4dbd3fa7aba76bdac65d0113858920a954fc6aa"
+    },
+    {
+      "oid": 2405,
+      "signature": "int2send(smallint)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "b3606df9b71187d907991cc5b1704b9ee3529d206fcaef5e7472dad03218a52a"
+    },
+    {
+      "oid": 2406,
+      "signature": "int4recv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "66c2b7fb111b7e14bfb732c8d51c64a31d93209c4a955aa4259df10d571715a7"
+    },
+    {
+      "oid": 2407,
+      "signature": "int4send(integer)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "a37828f862518eb263fe997d8698c843bc2c86364de4e6c49a0ee835d587c272"
+    },
+    {
+      "oid": 2408,
+      "signature": "int8recv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "3b5fa4d720a4cb097b23adcd0143ba7d9f96695a4e7b17affc6993251144629e"
+    },
+    {
+      "oid": 2409,
+      "signature": "int8send(bigint)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "28de9c861fb53676e4a2ebc39ae5155773ed7dce1c6dcddd2fc3fdbafac47d53"
+    },
+    {
+      "oid": 2412,
+      "signature": "bytearecv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "414b9a3ddb8072366334dca83893b7cda8596de725ad51ad8bb48a7dfddc0745"
+    },
+    {
+      "oid": 2413,
+      "signature": "byteasend(bytea)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "d89ce6ee6e076402180c18eb7d0097bf4b21ae9f9614006dd708282f4134b1ce"
+    },
+    {
+      "oid": 2414,
+      "signature": "textrecv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "a80fbe8085eb78444f0bbe2773f792612c317f045d39eb9450af8c68fe9eb9be"
+    },
+    {
+      "oid": 2415,
+      "signature": "textsend(text)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "be4001b74209d1bec5ae58d6c5758b9f3a6451af6298e8fe2e26290907be0904"
+    },
+    {
+      "oid": 2418,
+      "signature": "oidrecv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "6bf7d95092fd45575d6f603acb6d228e8b3b9b480db07c500485cde39667261b"
+    },
+    {
+      "oid": 2419,
+      "signature": "oidsend(oid)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "e1b2846502ba741557ef9d517bd45b3a0f348cc1fe3eff395c6bc8973e675678"
+    },
+    {
+      "oid": 2422,
+      "signature": "namerecv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "241190b810c52f2b937c3ab5d49e458db8c26eca7e5532d3444ac674a26849db"
+    },
+    {
+      "oid": 2423,
+      "signature": "namesend(name)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "83bc6f8419e901e1ea468b1e4ab94e445de5a3677af62ee39315a0f8e503fa61"
+    },
+    {
+      "oid": 2434,
+      "signature": "charrecv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "32d15c44a05af7130b4011d326ac9a84e826f5c9116443eb6ce23faec24fa815"
+    },
+    {
+      "oid": 2435,
+      "signature": "charsend(\"char\")",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "ff309ea4a7a79960917b489dc26edb91bdb919d9dc28f49c4ed96796feaf07f2"
+    },
+    {
+      "oid": 2436,
+      "signature": "boolrecv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "68cffa8a8830b742b615f72a017fd7bbbd828d1f219682743051edb6eb723802"
+    },
+    {
+      "oid": 2437,
+      "signature": "boolsend(boolean)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "83c30a4775f6fb90025cf61988c1b3aed28ab580de6bb2d4272c757dfa9ebd87"
+    },
+    {
+      "oid": 2452,
+      "signature": "regclassrecv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "d4007bbffbca2f118ec0602111e38063833b9243e7450887d9aa8e7c72b29603"
+    },
+    {
+      "oid": 2453,
+      "signature": "regclasssend(regclass)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "85d4a148cd51df4f699f98a3c01e162fe4d0e4f0db765172326bd3ebc34d98ba"
+    },
+    {
+      "oid": 2460,
+      "signature": "numeric_recv(internal,oid,integer)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "35d98606ef076cf79d66102c9124e70bcc748738c9e6912c3d11ce1f887dc58a"
+    },
+    {
+      "oid": 2461,
+      "signature": "numeric_send(numeric)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "3e293d8be70a1f96987ee971dd463638ca5e0da759b328d4afe4331f48885a21"
+    },
+    {
+      "oid": 2476,
+      "signature": "timestamptz_recv(internal,oid,integer)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "732325163841ee8cc53bae02498d99613497651aed66b63858a24cd343be11fd"
+    },
+    {
+      "oid": 2477,
+      "signature": "timestamptz_send(timestamp with time zone)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "48b2293c91575c7570b970571a3f85682cdeef29e0d24a5b0f69d76622ce5ad7"
+    },
+    {
+      "oid": 2500,
+      "signature": "cstring_recv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "18496ed8ad258b62ab266c08cbdd1e87c74b77e10df39051fedcd23be4266021"
+    },
+    {
+      "oid": 2501,
+      "signature": "cstring_send(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "c2b8695806011795300dd262d006e931032dd4067208e611863e2a0a4bc81bbd"
+    },
+    {
+      "oid": 2502,
+      "signature": "anyarray_recv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "0788db7068a23f693133217282ba4289f81b9a66d133a8788e2f03ab29501267"
+    },
+    {
+      "oid": 2503,
+      "signature": "anyarray_send(anyarray)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "d76342944634af1ed3fefd2267107cb167f6b9ba437e5263fb68c4d0d8cf992c"
+    },
+    {
+      "oid": 2907,
+      "signature": "timestamptztypmodin(cstring[])",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "44acd157b58fe2c70053375cde25fe1846bf938e8d1e632b68963b07faeb0c3e"
+    },
+    {
+      "oid": 2908,
+      "signature": "timestamptztypmodout(integer)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "b022577a83657c37166578459dd745dd4221f13d8532ca515267f903630aeb6b"
+    },
+    {
+      "oid": 2917,
+      "signature": "numerictypmodin(cstring[])",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "6c1fce88ff456be14490ac108bf8c512a4e47adc93ca7a12eecb2407bf5cd17d"
+    },
+    {
+      "oid": 2918,
+      "signature": "numerictypmodout(integer)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "d2a05da98870bd1eede6b24ac61319ac113ee30fa9c3e94437ad0daaea791ab8"
+    },
+    {
+      "oid": 2952,
+      "signature": "uuid_in(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "ddf3d52f0fbbc77edd4989f0e9fcc4d43e98ef17a4ec911408024e049405e7b1"
+    },
+    {
+      "oid": 2953,
+      "signature": "uuid_out(uuid)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "12a02f24298a254f481bb015f375240a462124acbd7df5eaa81f0756af240f65"
+    },
+    {
+      "oid": 2961,
+      "signature": "uuid_recv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "5bdc29174a808c4e951802fd715ebcf47ae98e74e262c39f90adb3bc1d78d190"
+    },
+    {
+      "oid": 2962,
+      "signature": "uuid_send(uuid)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "30393eee3961149c9077582429f631319c1517baf8e0b0c33400f17e73dfba76"
+    },
+    {
+      "oid": 3803,
+      "signature": "jsonb_send(jsonb)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "104f2d7139e4a0890f4e062b1b82dc64f837a65e0751838ace59143ca98d0d2e"
+    },
+    {
+      "oid": 3804,
+      "signature": "jsonb_out(jsonb)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "1df57baa08d31195d70174c051592573025966d4b56343393d641b2b9d56551b"
+    },
+    {
+      "oid": 3805,
+      "signature": "jsonb_recv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "e5f335a759dc3499df0e840c4f96f3b6dcaca1d57c74f2fa97c94e83007fe3df"
+    },
+    {
+      "oid": 3806,
+      "signature": "jsonb_in(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "f7afc7d275691fc2639f21d2343b6ef2b7be5a3dc558a43398d9161d4bf749fb"
+    },
+    {
+      "oid": 3816,
+      "signature": "array_typanalyze(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "08388abba9ea7253bb8ea8e4f7cc9694b3a57113b151e60c896ce4377e735146"
+    },
+    {
+      "oid": 5070,
+      "signature": "xid8in(cstring)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "6ea10ec3f4eb946dac81436e440f57661bda99ee5a587e69ef43a984c11c67d7"
+    },
+    {
+      "oid": 5081,
+      "signature": "xid8out(xid8)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "b51eb7988507cdbf5fd36e04fdadf4b9f69946ce24214020ccf5a894a1759d2a"
+    },
+    {
+      "oid": 5082,
+      "signature": "xid8recv(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "7a1ea218edb89dcac796f46f7e82aa56fca4a7d7fac8208a30df86c016e98a91"
+    },
+    {
+      "oid": 5083,
+      "signature": "xid8send(xid8)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "54da3865e910f9128485f745ca074365fc7dffe9a9478b1fe2e7a850331a64f5"
+    },
+    {
+      "oid": 6098,
+      "signature": "jsonb_subscript_handler(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "4de0902b6a055fc2397ba281c175aa6178217227aae20bd49f40ba358fb876c1"
+    },
+    {
+      "oid": 6179,
+      "signature": "array_subscript_handler(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "0b9b1421223821dbdb7595596ecda871a809ca5b09d15da5e5ead708ac75cb32"
+    },
+    {
+      "oid": 6180,
+      "signature": "raw_array_subscript_handler(internal)",
+      "probin": null,
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "support": 0,
+      "sourceHash": "d548eacb416f380818c7d565d8f724e8876c73efe3a9814abe0b001d7a94b0d3"
+    }
+  ],
+  "pseudoTypes": [
+    {
+      "oid": 2275,
+      "name": "cstring"
+    },
+    {
+      "oid": 2277,
+      "name": "anyarray"
+    },
+    {
+      "oid": 2283,
+      "name": "anyelement"
+    },
+    {
+      "oid": 2276,
+      "name": "any"
+    },
+    {
+      "oid": 2281,
+      "name": "internal"
+    }
+  ],
+  "nineTablesZero": true,
+  "databaseWrites": 0,
+  "businessFunctionsInvoked": 0,
+  "actualPolymorphicBindingsVerified": false,
+  "implicitCastExpressionClosureVerified": false,
+  "fullNativeClosure": false,
+  "executionAuthorized": false,
+  "independentConnectionsExact": true
+}

@@ -1,0 +1,50 @@
+{
+  "outcome": "DECLARED_TYPE_BOUNDARY_INDEPENDENTLY_VERIFIED",
+  "boundFunctions": 78,
+  "types": 22,
+  "declaredTypeCallbackFunctions": 90,
+  "callbackFunctionsAlsoInOld78": 6,
+  "additionalDeclaredCallbackFunctions": 84,
+  "pseudoTypes": [
+    {
+      "oid": 2275,
+      "name": "cstring"
+    },
+    {
+      "oid": 2277,
+      "name": "anyarray"
+    },
+    {
+      "oid": 2283,
+      "name": "anyelement"
+    },
+    {
+      "oid": 2276,
+      "name": "any"
+    },
+    {
+      "oid": 2281,
+      "name": "internal"
+    }
+  ],
+  "typeNamespaces": [
+    "pg_catalog"
+  ],
+  "callbackLanguages": [
+    "internal"
+  ],
+  "callbackSecurityDefinerCount": 0,
+  "independentConnectionsExact": true,
+  "nineTablesZero": true,
+  "databaseWrites": 0,
+  "businessFunctionCalls": 0,
+  "actualPolymorphicBindingsVerified": false,
+  "implicitCastClosureVerified": false,
+  "fullNativeClosure": false,
+  "executionAuthorized": false,
+  "sourceFiles": {
+    "plan.md": "aee88774be54d2eedcd2159dc4f54a9139bfa2f311959b9fab2700551a9f66b6",
+    "audit.py": "be32149c3b2043fd2914e4ce11b9e59bdbf5d46a04d477d72dbb2247fd7a143e",
+    "result.json": "d118fa50fc2b39999bb6114fceaeae4832bec3c46d4336076f9183b72c403bb5"
+  }
+}
