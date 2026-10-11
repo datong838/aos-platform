@@ -20,7 +20,7 @@ from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef,Growth
 from aos_api.ecommerce_analyst_authority_store import EcommerceAnalystAuthorityStore
 from aos_api.ecommerce_content_execution_journal import ContentExecutionConflict,ContentExecutionJournal
 from aos_api.ecommerce_content_execution_journal import _payload
-from aos_api.ecommerce_content_execution_worker import ContentExecutionWorker,PreparedContentInvocation
+from aos_api.ecommerce_content_execution_worker import ContentExecutionFailure,ContentExecutionWorker,PreparedContentInvocation
 from aos_api.ecommerce_content_result_consumer import ContentResultConsumer
 from aos_api.ecommerce_growth_host_ports import HostTransaction, LockedEcommerceGrowthHostPort
 from aos_api.ecommerce_growth_runtime_connection import connect_serializable
@@ -174,6 +174,11 @@ class CurrentContentRunner:
             except ContentExecutionConflict:
                 # A pre-submit authority conflict blocks this item, not the queue.
                 statuses.append({'reservationId':reservation_id,'status':'BLOCKED_CURRENT_AUTHORITY'})
+                continue
+            except ContentExecutionFailure:
+                # Submission may already have occurred. Keep the original hold
+                # and journal selector; never retry this item in the runner.
+                statuses.append({'reservationId':reservation_id,'status':'RECONCILE_REQUIRED'})
                 continue
             statuses.append({'reservationId':reservation_id,'status':result['status']})
         return statuses

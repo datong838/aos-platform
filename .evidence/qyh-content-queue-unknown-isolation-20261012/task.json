@@ -1,0 +1,22 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-content-queue-unknown-isolation-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001902",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_content_execution_composition.py",
+    "aos-platform/services/aos-api/tests/aip/test_content_queue_unknown_isolation.py",
+    "aos-platform/.evidence/qyh-content-queue-unknown-isolation-20261012",
+    "docs/palantier/20_tech/\u7535\u5546\u5e73\u53f0\u63a5\u5165/\u5fae\u5546\u57ce\u7535\u5546\u63a5\u5165\u65b9\u6848/D-waves/2026-10-12-QYH-\u5185\u5bb9\u961f\u5217\u672a\u77e5\u7ed3\u679c\u9694\u79bb\u65b9\u6848.md"
+  ],
+  "excluded_scope": [
+    "aos-platform/services/aos-api/aos_api/aip_budget_reservation_store.py",
+    "maintenance/current-database"
+  ],
+  "expected_outputs": [
+    "Original content runner isolates known ContentExecutionFailure to RECONCILE_REQUIRED and processes other independent pending items; no unknown resend, no generic exception suppression; RED/new focused plus existing native PG worker regression; preserve current data"
+  ],
+  "lease_expires_at": "2026-10-12T06:22:02.608304+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T02:22:02+08:00"
+}

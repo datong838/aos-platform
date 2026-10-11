@@ -1,0 +1,13 @@
+# QYH 内容队列未知结果隔离交付复核
+
+原Content Host→预算hold→原journal→worker提交→result/usage/artifact消费者已经存在，不重复写账本。仅CurrentContentRunner.run_pending精确捕获原ContentExecutionFailure，将该reservation报RECONCILE_REQUIRED，继续下个独立pending项；原提交事务、unknown落盘、占额、远程调用、selector和消费状态机未改。未经分类异常继续抛出，不能当完成。仍不自动对未知项目重发。
+
+RED新用例4失败/2通过，证明异常阻断独立项。最初相邻1失败/11通过，根因旧夹具用内部business requestHash冒充完整command hash；该逻辑在本波前已经存在，独立Task仅将夹具一行换成既有canonical_hash(item,prefixed=True)，生产exact校验不放宽。移除只靠fake scope断言的canary用例，改由实际PG队列验证canary不读到项目。
+
+最终29passed、0skip、7既有warnings。其中新5个参数化/单位场景加1个真实PG场景：Provider未知、unknown持久化失败、结果持久化失败不停止后项；不人工回填selector/重发；未归类错误显式抛出。新实际PG两条独立预留：第一个Timeout后unknown且actualMinor未定，第二个已提交后写入真实journal结果；两条request Receipt、没有释放unknown占额；下一轮pending为空，dev-org为空，invoke总数仍2。invoke为明确隔离测试回调，非真实Provider、正式审批或业务内容。
+
+真实PG使用18431隔离clone postgres库中的唯一ar2_budget_*测试schema，fixture创建/清理；标准autouse另建aos_test_*_ti4_test临时库。并非当前18446权威库，不把夹具审批/假remote答复当自然首链。该细节修正原计划泛称独立临时DB，失败证据全部保留。原预算writer已有用户改动：当前hash与上一波冻结hash完全一致，未编辑或暂存。
+
+当前恢复aos_meta_head@159/cluster7695302940039200809双scope只读核查：通用content_draft、电商ecommerce_content、Content execution command/result及原content.generate runtime Receipt都0，范围现已逐表核准。原647表与metadata前后不变，当前DB写0、worker未启动/Provider调用0。既有代码功能与当前业务行缺口分别描述，用户此前成果保留，不声称内容代码没做。
+
+无页面变更，本波浏览器不适用；未切API，运行服务仍为以前冻结版本，只有m1候选代码交付。OIDC/publisher、正式发布与安装配置、Host、自然新任务和八工作台实际验收仍待完整门。Task/Delivery只交付队列修复与夹具纠正，父Source Task/完整Goal active；不push、不动其他分支。下一项沿原Host ContentBudgetCommandOwner的当前配置→批准事件→capacity与预算→持久新command生产入口继续，独立正式身份不伪造。

@@ -1,0 +1,90 @@
+......F.....                                                             [100%]
+=================================== FAILURES ===================================
+_____ test_current_prepare_revalidates_before_creating_bounded_invocation ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11f0550d0>
+
+    def test_current_prepare_revalidates_before_creating_bounded_invocation(monkeypatch):
+        item=command();scope=TenantScope('org-org','dev-project');calls=[]
+        row={'request_hash':item['requestHash'],'response':{'state':'PENDING'},'runtime_revision':1}
+        class Conn:
+            def execute(self,query,params):
+                calls.append('runtime-row')
+                assert params[:2]==scope.key
+                return SimpleNamespace(fetchone=lambda:row)
+        snapshot=SimpleNamespace(runtime_revision=1,checked_at=datetime.now(UTC))
+        monkeypatch.setattr(CurrentContentPreparation,'_lock_dispatch',
+            staticmethod(lambda *_:calls.append('dispatch') or snapshot))
+        monkeypatch.setattr(ContentGenerateHostService,'verify_receipt',
+            lambda self,**kw:calls.append('receipt') or row['response'])
+        monkeypatch.setattr(ContentGenerateHostService,'revalidate',
+            lambda self,**kw:calls.append('host') or None)
+        monkeypatch.setattr(ReviewAdvanceHostService,'_revalidate_growth_plan',
+            staticmethod(lambda **kw:calls.append('plan') or SimpleNamespace(sales_weapon_method=method())))
+        route=item['authorityRefs']['model_route'];price=item['authorityRefs']['pricing']
+        resolution=ModelRouteResolution(tenant={'orgId':scope.org_id,'projectId':scope.project_id},
+            route={'assetType':'ModelRouteRevision','assetId':route['resourceId'],'revision':1,
+                'contentHash':route['contentHash'].removeprefix('sha256:')},
+            policy={'assetType':'RuntimePolicyRevision','assetId':'policy','revision':1,'contentHash':'a'*64},
+            readiness='ready',
+            selectedModel={'assetType':'RegisteredModelRevision','assetId':'model','revision':1,'contentHash':'a'*64},
+            selectedProvider={'assetType':'ProviderInstanceRevision','assetId':'provider','revision':1,'contentHash':'a'*64},
+            selectedPriceSnapshot={'assetType':'ModelPriceSnapshotRevision','assetId':price['resourceId'],
+                'revision':price['revision'],'contentHash':price['contentHash'].removeprefix('sha256:')},
+            resolvedAt=datetime.now(UTC))
+        monkeypatch.setattr(CurrentContentPreparation,'_resolve_route',
+            staticmethod(lambda *_:calls.append('route') or resolution))
+>       prepared=CurrentContentPreparation()(Conn(),scope,item)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_ecommerce_content_execution_composition.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <aos_api.ecommerce_content_execution_composition.CurrentContentPreparation object at 0x11f0c0f90>
+conn = <test_ecommerce_content_execution_composition.test_current_prepare_revalidates_before_creating_bounded_invocation.<locals>.Conn object at 0x11df82a50>
+scope = TenantScope(org_id='org-org', project_id='dev-project')
+command = {'operation': 'content.generate', 'authorityRefs': {'handoff': {'resourceType': 'HandoffReceipt', 'resourceId': 'hando...facts', 'revision': 1, 'contentHash': 'sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'}], ...}
+
+    def __call__(self, conn, scope, command):
+        parsed=_strict_content_generate_command(command)
+        row=self._runtime_row(conn,scope,command)
+        if (row is None or row['request_hash']!=_request_hash(command)
+            or type(row['response']) is not dict
+            or row['response'].get('state')!='PENDING'):
+>           raise ContentExecutionConflict('current content PENDING Receipt unavailable')
+E           aos_api.ecommerce_content_execution_journal.ContentExecutionConflict: current content PENDING Receipt unavailable
+
+services/aos-api/aos_api/ecommerce_content_execution_composition.py:114: ContentExecutionConflict
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_ecommerce_content_execution_composition.py::test_current_prepare_revalidates_before_creating_bounded_invocation
+1 failed, 11 passed, 7 warnings in 4.15s

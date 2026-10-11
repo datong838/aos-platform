@@ -56,7 +56,7 @@ def command():
 
 def test_current_prepare_revalidates_before_creating_bounded_invocation(monkeypatch):
     item=command();scope=TenantScope('org-org','dev-project');calls=[]
-    row={'request_hash':item['requestHash'],'response':{'state':'PENDING'},'runtime_revision':1}
+    row={'request_hash':canonical_hash(item,prefixed=True),'response':{'state':'PENDING'},'runtime_revision':1}
     class Conn:
         def execute(self,query,params):
             calls.append('runtime-row')

@@ -1,0 +1,18 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-content-prepare-fixture-hash-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001902",
+  "scope": [
+    "aos-platform/services/aos-api/tests/aip/test_ecommerce_content_execution_composition.py"
+  ],
+  "excluded_scope": [
+    "aos-platform/services/aos-api/aos_api"
+  ],
+  "expected_outputs": [
+    "Fix unit fixture to use canonical full command hash expected by existing receipt reader; do not change production validation"
+  ],
+  "lease_expires_at": "2026-10-12T06:25:03.511277+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T02:25:03+08:00"
+}

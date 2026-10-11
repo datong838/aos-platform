@@ -1,0 +1,21 @@
+{
+  "authority": "AOS-001902",
+  "task": "qyh-content-queue-unknown-isolation-20261012",
+  "testsPassed": 29,
+  "testsSkipped": 0,
+  "newNativeTwoItemUnknownIsolation": true,
+  "unknownNeverResubmitted": true,
+  "knownFailureDoesNotStopOtherItem": true,
+  "currentDatabaseWrites": 0,
+  "current647Unchanged": true,
+  "userBudgetWriterUnchanged": true,
+  "formalRestorationAccepted": false,
+  "workerStarted": false,
+  "sourceHashes": {
+    "services/aos-api/aos_api/ecommerce_content_execution_composition.py": "9de7dc992e5c43bfd902ef5be1b845c33bce52549c0996a0c8817bdba7c44628",
+    "services/aos-api/tests/aip/test_content_queue_unknown_isolation.py": "0682fe64ac3d64b778f1e5e6fa92e1b2370fb1f465325f49bc653ad060839664",
+    "services/aos-api/tests/aip/test_ecommerce_content_execution_composition.py": "7eea62c6cd6100a4f93e726f35c21ad5795964b46b17870128c2c79420e7bf7a"
+  },
+  "docPath": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/\u7535\u5546\u5e73\u53f0\u63a5\u5165/\u5fae\u5546\u57ce\u7535\u5546\u63a5\u5165\u65b9\u6848/D-waves/2026-10-12-QYH-\u5185\u5bb9\u961f\u5217\u672a\u77e5\u7ed3\u679c\u9694\u79bb\u65b9\u6848.md",
+  "docHash": "7e341be02235694cc43cb9218acee107c50a486d12ab2ec233395a5da185bca2"
+}

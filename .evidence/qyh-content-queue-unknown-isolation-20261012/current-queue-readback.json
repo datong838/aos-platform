@@ -1,0 +1,53 @@
+{
+  "authority": "AOS-001902",
+  "reads": [
+    {
+      "scope": [
+        "org-org",
+        "dev-project"
+      ],
+      "identity": {
+        "role": "aos_runtime",
+        "db": "aos_meta_head",
+        "cluster": "7695302940039200809",
+        "readonly": "on",
+        "isolation": "repeatable read"
+      },
+      "artifacts": [],
+      "commands": {
+        "count": 0
+      },
+      "results": {
+        "count": 0
+      },
+      "runtimeCommandStates": []
+    },
+    {
+      "scope": [
+        "dev-org",
+        "dev-project"
+      ],
+      "identity": {
+        "role": "aos_runtime",
+        "db": "aos_meta_head",
+        "cluster": "7695302940039200809",
+        "readonly": "on",
+        "isolation": "repeatable read"
+      },
+      "artifacts": [],
+      "commands": {
+        "count": 0
+      },
+      "results": {
+        "count": 0
+      },
+      "runtimeCommandStates": []
+    }
+  ],
+  "databaseWrites": 0,
+  "current647DataAndMetadataUnchanged": true,
+  "formalRestorationAccepted": false,
+  "workerStarted": false,
+  "providerInvocations": 0,
+  "scriptHash": "e3beb6f9fd8ef79b42bf1ca875c8f430ad02fffead84b051c77e5a55dfda63d0"
+}
