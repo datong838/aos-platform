@@ -1,0 +1,504 @@
+{
+  "head": "e3e9070ffde62be9d750ab6e1252156640bb636a",
+  "source_sha256": "cae91ea29333b6e7d3365cc6e320e6cf904565ce17d99b95889b8a990ae6dd6b",
+  "root": "public.read_shared_parent_complete_end_facts",
+  "reachable": {
+    "public.build_shared_parent_admission_origin": {
+      "sha256": "d0d68b8279f42bad607fb7db3f001bc2abeeb83a54a37a3b7739eea2a87566a0",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.capacity_occupation_source_fact",
+        "public.read_shared_parent_admission_original_facts"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "cases",
+        "convert_to",
+        "encode",
+        "jsonb_agg",
+        "jsonb_array_elements",
+        "jsonb_array_length",
+        "jsonb_build_array",
+        "jsonb_build_object",
+        "jsonb_typeof",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_admission_origin_statements"
+    },
+    "public.capacity_occupation_eval_case_fact": {
+      "sha256": "42ee6f0e55c210d35c48f24a10fccb4567789d60be8d636041cfc44ee869ef7a",
+      "qualified_candidates": [
+        "public.capacity_occupation_eval_fact"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "convert_from",
+        "encode",
+        "jsonb_agg",
+        "jsonb_array_elements",
+        "jsonb_array_length",
+        "jsonb_build_object",
+        "nullif",
+        "octet_length",
+        "sha256"
+      ],
+      "generator": "occupation_case_binding_statements"
+    },
+    "public.capacity_occupation_eval_fact": {
+      "sha256": "a93128593e3367b12e0531a7d3f36b83bf19b1e17f08b9e3b057feb365db301f",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.read_capacity_source_for_occupation"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "bool_and",
+        "clock_timestamp",
+        "convert_from",
+        "convert_to",
+        "count",
+        "current_setting",
+        "encode",
+        "jsonb_build_array",
+        "jsonb_build_object",
+        "jsonb_typeof",
+        "nullif",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256",
+        "to_jsonb"
+      ],
+      "generator": "occupation_eval_fact_statements"
+    },
+    "public.capacity_occupation_judge_fact": {
+      "sha256": "1367b021d283506c7122d6c14daeedd17e3d221937d4bfd72b8fafe03be34c89",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.read_capacity_source_for_occupation"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "bool_and",
+        "clock_timestamp",
+        "convert_from",
+        "convert_to",
+        "count",
+        "current_setting",
+        "encode",
+        "extract",
+        "jsonb_array_elements",
+        "jsonb_build_array",
+        "jsonb_build_object",
+        "jsonb_typeof",
+        "least",
+        "nullif",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256",
+        "str",
+        "to_char",
+        "to_jsonb"
+      ],
+      "generator": "occupation_judge_fact_statements"
+    },
+    "public.capacity_occupation_plan_risk_fact": {
+      "sha256": "3a5fd4c6054e575e84f4c4c63faadf252c34cea1b4184b4234ec4fe164571530",
+      "qualified_candidates": [
+        "public.capacity_occupation_eval_fact",
+        "public.capacity_occupation_judge_fact"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "count",
+        "jsonb_array_elements",
+        "jsonb_array_length",
+        "jsonb_build_object",
+        "jsonb_typeof"
+      ],
+      "generator": "occupation_plan_risk_statements"
+    },
+    "public.capacity_occupation_source_fact": {
+      "sha256": "849767d73ddac714abc1498309914fe5cc8f4dcf4f2ee83ca05678e754bf839c",
+      "qualified_candidates": [
+        "public.read_capacity_source_for_occupation"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "convert_from"
+      ],
+      "generator": "occupation_account_guard_statements"
+    },
+    "public.read_capacity_source_for_occupation": {
+      "sha256": "170238e1cbd2fd1fc010f43bf3887c7d49a2eb53d6b6aba53b14505dc1e82260",
+      "qualified_candidates": [
+        "aos_capacity_publication_private.canonical_signed_json",
+        "aos_capacity_publication_private.original_source_ref",
+        "aos_capacity_publication_private.original_source_time",
+        "aos_capacity_publication_private.read_identifier",
+        "aos_capacity_publication_private.read_origin_bootstrap",
+        "aos_capacity_publication_private.read_original_capacity_application",
+        "aos_capacity_publication_private.read_original_capacity_basis",
+        "aos_capacity_publication_private.read_original_fact_provider",
+        "aos_capacity_publication_private.read_original_fact_request",
+        "aos_capacity_publication_private.read_original_physical_account",
+        "aos_capacity_publication_private.read_original_source_candidate",
+        "aos_capacity_publication_private.read_root_snapshot",
+        "aos_capacity_publication_private.read_signed_body",
+        "aos_capacity_publication_private.read_signed_time",
+        "aos_capacity_publication_private.read_signing_permit",
+        "aos_capacity_publication_private.read_source_command_signed_facts",
+        "aos_capacity_publication_private.read_source_issuer_url",
+        "aos_capacity_publication_private.read_source_policy",
+        "aos_capacity_publication_private.read_supplier_attestation",
+        "aos_capacity_publication_private.require_current_source_installation",
+        "aos_capacity_publication_private.require_original_evidence_boundary",
+        "aos_capacity_publication_private.require_original_fact_evidence",
+        "aos_capacity_publication_private.require_original_owner",
+        "aos_capacity_publication_private.require_original_withdrawal_boundary",
+        "pg_catalog.clock_timestamp",
+        "pg_catalog.convert_to",
+        "pg_catalog.current_setting",
+        "pg_catalog.encode",
+        "pg_catalog.isfinite",
+        "pg_catalog.jsonb_array_elements",
+        "pg_catalog.jsonb_build_array",
+        "pg_catalog.jsonb_build_object",
+        "pg_catalog.jsonb_object_keys",
+        "pg_catalog.jsonb_typeof",
+        "pg_catalog.lower",
+        "pg_catalog.to_char",
+        "public.aos_capacity_evidence_epoch_lock",
+        "public.aos_capacity_withdrawal_epoch_lock",
+        "public.canonical_asset_registry_jsonb",
+        "public.digest",
+        "public.require_capacity_occupation_source_installation"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "aclexplode",
+        "ascii",
+        "clock_timestamp",
+        "convert_to",
+        "count",
+        "current_database",
+        "current_setting",
+        "decode",
+        "encode",
+        "extract",
+        "generate_series",
+        "greatest",
+        "jsonb_agg",
+        "jsonb_array_elements",
+        "jsonb_build_array",
+        "jsonb_build_object",
+        "jsonb_each",
+        "jsonb_object_keys",
+        "jsonb_typeof",
+        "least",
+        "length",
+        "min",
+        "pg_backend_pid",
+        "pg_control_system",
+        "pg_current_xact_id",
+        "refs",
+        "sha256",
+        "substr",
+        "to_jsonb",
+        "unnest",
+        "v"
+      ],
+      "generator": "occupation_source_statements"
+    },
+    "public.read_shared_parent_admission_original_facts": {
+      "sha256": "571b9f119ea10d069251e6feb93ced3fdad13278d94a21ed0928ccc6e83eb387",
+      "qualified_candidates": [
+        "public.capacity_occupation_plan_risk_fact"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "current_setting"
+      ],
+      "generator": "shared_parent_original_fact_statements"
+    },
+    "public.read_shared_parent_complete_end_facts": {
+      "sha256": "58f0fe100e24449b5b8249628f8230b531a152114bd3f44c0ff4ec840fa5d35e",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.read_shared_parent_receipt_origin",
+        "public.verify_shared_parent_final_call_authority",
+        "public.verify_shared_parent_final_physical"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "clock_timestamp",
+        "convert_to",
+        "current_setting",
+        "encode",
+        "jsonb_build_object",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_complete_end_fact_statements"
+    },
+    "public.read_shared_parent_pending_origin": {
+      "sha256": "49ee9ca6b9588ed48b72e25c72550e0ca9255af4a041f842c0d5ef7c7b2dfbb5",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.validate_shared_parent_admission_certificate_set"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "convert_from",
+        "convert_to",
+        "current_setting",
+        "encode",
+        "jsonb_build_object",
+        "octet_length",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_pending_origin_lookup_statements"
+    },
+    "public.read_shared_parent_receipt_origin": {
+      "sha256": "0574740dbff8dc9ceea7658245bbce7f2ef39a01e309b87286ea2550c8d71915",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.read_shared_parent_pending_origin"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "convert_from",
+        "convert_to",
+        "count",
+        "current_setting",
+        "encode",
+        "jsonb_build_object",
+        "jsonb_object_keys",
+        "jsonb_typeof",
+        "octet_length",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_complete_receipt_statements"
+    },
+    "public.read_shared_parent_retained_origin": {
+      "sha256": "e4e130142d602c7d15e7e0052f656b9e29a896912ed5de2cec247f60f65f7397",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.read_shared_parent_pending_origin"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "convert_from",
+        "convert_to",
+        "count",
+        "current_setting",
+        "encode",
+        "jsonb_build_object",
+        "jsonb_object_keys",
+        "jsonb_typeof",
+        "octet_length",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_end_authority_statements"
+    },
+    "public.read_shared_parent_unresolved_members": {
+      "sha256": "e553a5b8488e0293a679f50b03193d8eea700eeae68df346c012576e97a4cdb7",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "coalesce",
+        "convert_to",
+        "count",
+        "current_setting",
+        "encode",
+        "jsonb_agg",
+        "jsonb_build_object",
+        "sha256",
+        "sum",
+        "to_jsonb"
+      ],
+      "generator": "shared_parent_exact_receipt_statements"
+    },
+    "public.require_capacity_occupation_source_installation": {
+      "sha256": "6fbdf98e8725c65b17024c70f7874ab83902f4ca909c4b246f358c1f2486f526",
+      "qualified_candidates": [
+        "aos_capacity_publication_private.require_current_source_installation",
+        "public.read_capacity_source_for_occupation"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "acldefault",
+        "aclexplode",
+        "coalesce",
+        "convert_to",
+        "count",
+        "current_database",
+        "current_setting",
+        "encode",
+        "sha256"
+      ],
+      "generator": "occupation_source_statements"
+    },
+    "public.validate_shared_parent_admission_certificate_set": {
+      "sha256": "7b1ed2a532d3f765bc3b327f145ee78a5ef8d1f356bc0eb6ab23704bb07f43fa",
+      "qualified_candidates": [
+        "public.build_shared_parent_admission_origin",
+        "public.canonical_asset_registry_jsonb",
+        "public.verify_model_shared_parent_certificate_signature"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "chr",
+        "clock_timestamp",
+        "convert_from",
+        "convert_to",
+        "count",
+        "current_setting",
+        "decode",
+        "encode",
+        "jsonb_array_elements",
+        "jsonb_array_length",
+        "jsonb_build_object",
+        "jsonb_typeof",
+        "octet_length",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "replace",
+        "sha256"
+      ],
+      "generator": "shared_parent_admission_certificate_set_statements"
+    },
+    "public.verify_shared_parent_final_call_authority": {
+      "sha256": "9620ee390329b34a3ae3876da16d923ebf3c61f8ed48012cad25c6374f12e5e1",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.read_shared_parent_retained_origin",
+        "public.verify_shared_parent_final_intents"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "convert_from",
+        "convert_to",
+        "count",
+        "current_setting",
+        "encode",
+        "jsonb_build_object",
+        "jsonb_object_keys",
+        "jsonb_typeof",
+        "octet_length",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_final_call_validation_statements"
+    },
+    "public.verify_shared_parent_final_intents": {
+      "sha256": "b4accbb35852a209308ef3f6ddc78396094f9e0950d968c7b25f5d2cc1df9f72",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.capacity_occupation_eval_case_fact",
+        "public.read_shared_parent_admission_original_facts",
+        "public.read_shared_parent_pending_origin"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "clock_timestamp",
+        "convert_from",
+        "convert_to",
+        "current_setting",
+        "encode",
+        "jsonb_array_elements",
+        "jsonb_build_object",
+        "octet_length",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_final_intent_validation_statements"
+    },
+    "public.verify_shared_parent_final_physical": {
+      "sha256": "69f163b289d719fdb34deb4398707dc3aaa12ddff065cf211f2bbd6f3bc74562",
+      "qualified_candidates": [
+        "public.canonical_asset_registry_jsonb",
+        "public.read_shared_parent_unresolved_members"
+      ],
+      "direct_dml_tokens": [],
+      "unqualified_candidates": [
+        "convert_to",
+        "current_setting",
+        "encode",
+        "jsonb_array_elements",
+        "jsonb_build_object",
+        "jsonb_typeof",
+        "pg_backend_pid",
+        "pg_current_xact_id",
+        "sha256"
+      ],
+      "generator": "shared_parent_final_physical_comparison_statements"
+    }
+  },
+  "unresolved_qualified_candidates": [
+    "aos_capacity_publication_private.canonical_signed_json",
+    "aos_capacity_publication_private.original_source_ref",
+    "aos_capacity_publication_private.original_source_time",
+    "aos_capacity_publication_private.read_identifier",
+    "aos_capacity_publication_private.read_origin_bootstrap",
+    "aos_capacity_publication_private.read_original_capacity_application",
+    "aos_capacity_publication_private.read_original_capacity_basis",
+    "aos_capacity_publication_private.read_original_fact_provider",
+    "aos_capacity_publication_private.read_original_fact_request",
+    "aos_capacity_publication_private.read_original_physical_account",
+    "aos_capacity_publication_private.read_original_source_candidate",
+    "aos_capacity_publication_private.read_root_snapshot",
+    "aos_capacity_publication_private.read_signed_body",
+    "aos_capacity_publication_private.read_signed_time",
+    "aos_capacity_publication_private.read_signing_permit",
+    "aos_capacity_publication_private.read_source_command_signed_facts",
+    "aos_capacity_publication_private.read_source_issuer_url",
+    "aos_capacity_publication_private.read_source_policy",
+    "aos_capacity_publication_private.read_supplier_attestation",
+    "aos_capacity_publication_private.require_current_source_installation",
+    "aos_capacity_publication_private.require_original_evidence_boundary",
+    "aos_capacity_publication_private.require_original_fact_evidence",
+    "aos_capacity_publication_private.require_original_owner",
+    "aos_capacity_publication_private.require_original_withdrawal_boundary",
+    "pg_catalog.clock_timestamp",
+    "pg_catalog.convert_to",
+    "pg_catalog.current_setting",
+    "pg_catalog.encode",
+    "pg_catalog.isfinite",
+    "pg_catalog.jsonb_array_elements",
+    "pg_catalog.jsonb_build_array",
+    "pg_catalog.jsonb_build_object",
+    "pg_catalog.jsonb_object_keys",
+    "pg_catalog.jsonb_typeof",
+    "pg_catalog.lower",
+    "pg_catalog.to_char",
+    "public.aos_capacity_evidence_epoch_lock",
+    "public.aos_capacity_withdrawal_epoch_lock",
+    "public.canonical_asset_registry_jsonb",
+    "public.digest",
+    "public.verify_model_shared_parent_certificate_signature"
+  ],
+  "dependency_source_hashes": {
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_physical_capacity_occupation_authority.py": "086110f30a9f96b0b6f7493832fd586b6358abb6ea7cb8443ae83c04afa26b8f",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_provider_capacity_occupation_source.py": "704a1ece0e8c5e0c1579a4dac229fe7fac05244dcd43a5107bab96b0fddd255b"
+  },
+  "semantic_closure_proven": false,
+  "execution_authorized": false,
+  "limits": [
+    "lexical candidates include possible relation/type syntax",
+    "unqualified overloads/operators/casts/dynamic SQL and native callbacks are not resolved",
+    "no runtime installation/Owner/ACL verification"
+  ]
+}
