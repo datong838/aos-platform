@@ -14,3 +14,6 @@ Preflight159/signature4/bindings0 and full1554module import passed. Original dai
 
 ## Post-startup full readonly comparison
 Use original snapshot_all/snapshot_supplement and exact dependency QUERY in REPEATABLE READ READ ONLY against original cluster159. Compare base/supplement/bindings to prior after-canary-refresh-full159-readonly.json without normalization or ignored fields. Private0600 snapshot, public hashes/counts/categories only; no schema/data writes.
+
+## Post-startup full readonly comparison
+Use original snapshot_all/snapshot_supplement and exact dependency QUERY in REPEATABLE READ READ ONLY against original cluster159. Compare base/supplement/bindings to prior after-canary-refresh-full159-readonly.json without normalization or ignored fields. Private0600 snapshot, public hashes/counts/categories only; no schema/data writes.

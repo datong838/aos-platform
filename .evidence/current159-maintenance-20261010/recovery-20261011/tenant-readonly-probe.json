@@ -1,0 +1,74 @@
+{
+  "at": "2026-10-11T03:00:56.168739+00:00",
+  "identity_kind": "existing preview developer bearer; not formal business identity",
+  "configuration_changed": false,
+  "requests": "GET only",
+  "results": [
+    {
+      "org": "org-org",
+      "project": "dev-project",
+      "path": "/v1/ecommerce-workshop/modules",
+      "status": 200,
+      "response_keys": [
+        "count",
+        "dataCutoff",
+        "evaluatedAt",
+        "items",
+        "schemaVersion",
+        "tenant"
+      ],
+      "count": 0,
+      "items_empty": true,
+      "error_code": null
+    },
+    {
+      "org": "org-org",
+      "project": "dev-project",
+      "path": "/v1/runtime-workshop/modules",
+      "status": 200,
+      "response_keys": [
+        "count",
+        "dataCutoff",
+        "evaluatedAt",
+        "items",
+        "schemaVersion",
+        "tenant"
+      ],
+      "count": 0,
+      "items_empty": true,
+      "error_code": null
+    },
+    {
+      "org": "dev-org",
+      "project": "dev-project",
+      "path": "/v1/ecommerce-workshop/modules",
+      "status": 403,
+      "response_keys": [
+        "code",
+        "details",
+        "message",
+        "traceId"
+      ],
+      "count": null,
+      "items_empty": false,
+      "error_code": null
+    },
+    {
+      "org": "dev-org",
+      "project": "dev-project",
+      "path": "/v1/runtime-workshop/modules",
+      "status": 403,
+      "response_keys": [
+        "code",
+        "details",
+        "message",
+        "traceId"
+      ],
+      "count": null,
+      "items_empty": false,
+      "error_code": null
+    }
+  ],
+  "formal_identity_acceptance": false,
+  "browser_render_verified": false
+}
