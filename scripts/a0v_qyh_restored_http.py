@@ -34,6 +34,24 @@ LIMITED_PORT = 18080
 class RestorationBlocked(RuntimeError):
     pass
 
+
+class ReadOnlyManagementApp:
+    """Local inspection only; product authentication and tenant checks still run."""
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope['type'] == 'websocket':
+            await send({'type': 'websocket.close', 'code': 1008})
+            return
+        if scope['type'] == 'http' and scope['method'] not in {'GET', 'HEAD', 'OPTIONS'}:
+            body = b'{"code":"RESTORED_MANAGEMENT_READ_ONLY","message":"Management inspection is read only."}'
+            await send({'type': 'http.response.start', 'status': 405,
+                        'headers': [(b'content-type', b'application/json'), (b'cache-control', b'no-store')]})
+            await send({'type': 'http.response.body', 'body': body})
+            return
+        await self.app(scope, receive, send)
+
 def require_identity(observed, *, code_head):
     if any(observed.get(k) != v for k,v in EXPECTED.items()):
         raise RestorationBlocked('RESTORED_IDENTITY_DRIFT')
@@ -260,6 +278,43 @@ def serve_limited(**arguments):
     os.chdir(Path(environment['PYTHONPATH']).parents[1])
     os.execve(sys.executable, command, environment)
 
+
+def serve_management_readonly(*, identity_file, bundle_root, trust_roots_file, source_candidate):
+    """Attach preserved local management data without enabling formal execution."""
+    if not previous._port_free(LIMITED_PORT):
+        raise RestorationBlocked('RESTORED_HTTP_PORT_OCCUPIED')
+    source = require_api_source_candidate(source_candidate)
+    preflight(identity_file)
+    identity = _identity_parameters(identity_file)
+    from psycopg import connect
+    from psycopg.conninfo import make_conninfo
+    dsn = make_conninfo(host=identity['host'], port=identity['port'],
+        dbname=identity['dbname'], user=identity['user'],
+        options='-c default_transaction_read_only=on')
+    with connect(dsn, passfile=identity['pgpassFile']) as conn:
+        if conn.execute('SHOW transaction_read_only').fetchone() != ('on',):
+            raise RestorationBlocked('RESTORED_MANAGEMENT_DATABASE_NOT_READONLY')
+    # Never inherit separate protected command/owner/provider identities.
+    environment = {k: v for k, v in os.environ.items()
+                   if not k.startswith(('AOS_', 'PG')) and k not in {'PYTHONPATH', 'PYTHONHOME'}}
+    environment.update(previous.FLAGS)
+    environment.update({'AOS_AUTH_ALLOW_DEV': '1', 'AOS_AUTH_EXTERNAL_ONLY': '0',
+        'AOS_REST_CONNECTOR_MOCK': '0', 'PYTHONDONTWRITEBYTECODE': '1',
+        'PGPASSFILE': identity['pgpassFile'], 'AOS_DATABASE_URL': dsn,
+        'AOS_BUNDLE_ROOT': str(bundle_root.resolve(strict=True)),
+        'AOS_BUNDLE_TRUST_ROOTS_FILE': str(trust_roots_file.resolve(strict=True))})
+    os.environ.clear()
+    os.environ.update(environment)
+    sys.path.insert(0, str(source / 'services/aos-api'))
+    os.chdir(source)
+    from aos_api.main import app
+    import uvicorn
+    print(json.dumps({'outcome': 'RESTORED_LOCAL_MANAGEMENT_READONLY_STARTING',
+        'port': LIMITED_PORT, 'databaseReadOnly': True, 'mutationRequestsAllowed': False,
+        'formalIdentityVerified': False, 'runtimeAuthorized': False, 'eightPagesAccepted': False}), flush=True)
+    uvicorn.run(ReadOnlyManagementApp(app), host='127.0.0.1', port=LIMITED_PORT,
+                workers=1, access_log=False, log_level='warning')
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--api-identity-file',type=Path,required=True)
@@ -267,9 +322,17 @@ def main():
     parser.add_argument('--bundle-root',type=Path)
     parser.add_argument('--trust-roots-file',type=Path)
     parser.add_argument('--serve-limited', action='store_true')
+    parser.add_argument('--serve-management-readonly', action='store_true')
     parser.add_argument('--source-candidate', type=Path)
     args = parser.parse_args()
     values = (args.current_installation, args.bundle_root, args.trust_roots_file)
+    if args.serve_management_readonly:
+        if (args.serve_limited or args.current_installation is not None
+            or args.bundle_root is None or args.trust_roots_file is None or args.source_candidate is None):
+            parser.error('management inspection requires bundle root, trust roots, source candidate; no runtime installation or limited start')
+        serve_management_readonly(identity_file=args.api_identity_file, bundle_root=args.bundle_root,
+            trust_roots_file=args.trust_roots_file, source_candidate=args.source_candidate)
+        return
     if args.serve_limited:
         if any(value is None for value in values) or args.source_candidate is None:
             parser.error('limited start requires current installation, bundle root, trust roots and source candidate')

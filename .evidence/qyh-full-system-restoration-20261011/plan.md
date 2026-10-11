@@ -55,6 +55,14 @@ API准备独立候选：新增本Task证据目录freeze_current_api.py。从精�
 
 ## 当前恢复身份来源对账
 
+### 本机只读管理接入（2026-10-11增量）
+
+实际8080公开/v1/auth/oidc只支持dev，Web tenant.ts默认Bearer dev；方案132保留非生产登录。原restore脚本external-only仅适用于正式受限运行启动，不应阻止已授权的本机管理查看。新增明确管理只读模式，保留原serve-limited所有正式身份与四包门不变；不发token、不伪造publisher/Owner、不开放runtime目录或执行。
+
+修改仅scripts/a0v_qyh_restored_http.py及test_qyh_restored_http.py：显式--serve-management-readonly，同一精确恢复卷有限LOGIN、当前冻结API源码/表头预检；固定127.0.0.1:18080，不接管8080/8434。管理ASGI外层仅放行GET/HEAD/OPTIONS，拒绝所有mutation及WebSocket，在原鉴权之外加门；数据库options强制default_transaction_read_only=on，再核有限LOGIN的新连接实际SHOW transaction_read_only。清除继承AOS_*、PG*及PYTHONPATH/HOME，只白名单恢复worker全OFF、迁移disabled、mock0、dev非生产登录及公共包根，不继承其他专用发行/消费/Owner凭证。不可把数据库默认只读单独作为命令禁入，因此HTTP层拒绝所有写方法，执行worker也必须关闭。
+
+RED→GREEN验证写请求在鉴权/路由前拒绝、WS拒绝、读请求与lifespan正常传递；原formal start和签名/current source门累计不回退。实际只读PG核身份、事务只读，再冻结已提交API、单进程启动，GET组织/安装/运行状态，POST拒绝与canary隔离。全库不写、runtime不准入、原服务保留。管理入口成功只是全恢复中间步骤，正式登录/资源/八页仍待真实验收，不能替代用户完整目标。
+
 仅新增本Task evidence/identity_route_audit.py及脱敏result、verification、review；不修改产品/正式身份/数据库配置。候选一现有身份和启动配置的主线补齐，候选二已登记固定验证器语义闭合；先主线。白名单只读meta_membership结构与org-org/dev-project成员聚合，不读凭证、邮件或业务payload，不把成员记录当OIDC认证/发布授权。docker两现有context只取身份服务名称/镜像/状态/端口，既有supabase-auth停用不启动、不接管不相关账号。当前进程/已知plist/.env只查OIDC五项是否非空，不输出值或读取秘密存储。
 
 通过有限LOGIN固定目标预检，READ ONLY与原TenantScope核成员角色计数、dev与非dev主体计数和摘要；缺表/权限拒绝保留原错误，不提权绕过。独立新连接重复聚合证明一致，Source/Registry写为零。若真实publisher/OIDC仍不能确认，准确登记缺失入口，不发新token、换actor、伪造Root或强开Host。整Task仍未完成。

@@ -17,6 +17,59 @@ def baseline():
             'orgName': '栖月汇商贸有限公司', 'projectId': 'dev-project',
             'tables': 647}
 
+
+@pytest.mark.parametrize('method', ['POST', 'PUT', 'PATCH', 'DELETE', 'TRACE', 'CONNECT'])
+def test_management_readonly_blocks_mutations_before_product_app(entry, method):
+    from starlette.testclient import TestClient
+    async def product(scope, receive, send):
+        pytest.fail('management mutation reached product app')
+    response = TestClient(entry.ReadOnlyManagementApp(product)).request(method, '/v1/auth/token')
+    assert response.status_code == 405
+    assert response.json()['code'] == 'RESTORED_MANAGEMENT_READ_ONLY'
+
+
+def test_management_reads_delegate_without_fabricating_auth(entry):
+    from starlette.testclient import TestClient
+    observed = []
+    async def product(scope, receive, send):
+        observed.append(scope['method'])
+        await send({'type':'http.response.start','status':401,'headers':[]})
+        await send({'type':'http.response.body','body':b''})
+    client = TestClient(entry.ReadOnlyManagementApp(product))
+    for method in ['GET','HEAD','OPTIONS']:
+        assert client.request(method, '/v1/me').status_code == 401
+    assert observed == ['GET','HEAD','OPTIONS']
+
+
+def test_management_websocket_never_reaches_product(entry):
+    import asyncio
+    observed = []
+    async def product(*args):
+        pytest.fail('management WebSocket reached product')
+    async def send(event): observed.append(event)
+    asyncio.run(entry.ReadOnlyManagementApp(product)({'type':'websocket'}, None, send))
+    assert observed == [{'type':'websocket.close','code':1008}]
+
+
+def test_management_preserves_product_lifespan(entry):
+    import asyncio
+    calls = []
+    async def product(scope, receive, send):
+        calls.append(scope['type'])
+        await send({'type':'lifespan.startup.complete'})
+    async def send(event): calls.append(event['type'])
+    asyncio.run(entry.ReadOnlyManagementApp(product)({'type':'lifespan'}, None, send))
+    assert calls == ['lifespan', 'lifespan.startup.complete']
+
+
+def test_management_and_formal_runtime_start_are_mutually_exclusive(entry, monkeypatch, tmp_path):
+    monkeypatch.setattr('sys.argv', ['entry','--api-identity-file',str(tmp_path/'identity'),
+        '--serve-management-readonly','--serve-limited'])
+    monkeypatch.setattr(entry,'serve_management_readonly',lambda **kw:pytest.fail('ambiguous start accepted'))
+    with pytest.raises(SystemExit) as exc:
+        entry.main()
+    assert exc.value.code == 2
+
 @pytest.mark.parametrize('field,value', [
     ('database', 'aos_current_preview_20260927'), ('cluster', '7683855731447750695'),
     ('schema', 'a0v_092'), ('orgId', 'dev-org'), ('orgName', 'org-org'),
