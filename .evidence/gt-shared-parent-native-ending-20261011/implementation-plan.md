@@ -201,3 +201,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 聚合已初始化状态观察1806
 新增aggregate-state-1806/probe.c/Dockerfile，复习PG16.14 nodeAgg.h/execnodes.h；在已有ExecutorStart后观察AggState pertrans转换/序列化/反序列化OID、单列DISTINCT相等函数、排序操作符，peragg最终函数及Aggref表达式。不调用任何支持函数，不把状态OID视为native函数指针来源保证；保留Agg未审查标记。身份/三hook/原完整合同不变。先严格编译和身份负门，后新完整Source联验。
+
+## 聚合分组阶段观察1807
+新增aggregate-group-1807，复用1806，补AggState perhash各组已初始化hashfunctions.fn_oid/eqfuncoids，以及phases中sortnode排序键、aggnode分组比较操作符。PG16 nodeAgg.h字段为依据，零数项不解引用；只记录候选，不调用支持函数。保持Agg未审查标记及原身份/三hook/完整Source门。编译身份门后aggregate-group-source-1807全新完整联验并独立核清理。
