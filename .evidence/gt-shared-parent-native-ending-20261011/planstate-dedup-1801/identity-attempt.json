@@ -1,0 +1,1 @@
+{"image": "sha256:def91f3dfc34ef922a7507f3667b0945c98468e109cfc721db221a960f2afe47", "container": "aos-fixed-collector-d9dc2bbad2dd41b9977a461364f8eb01", "schema": "test_fixed_collector_d9dc2bbad2dd41b9977a461364f8eb01", "library": "/tmp/aos_fixed_collector_d9dc2bbad2dd41b9977a461364f8eb01.so", "source_sha256": "9835296d5d709b2e065bc66e8f5517db220b37bd07669b1cab9ec11559c0e8f7"}
