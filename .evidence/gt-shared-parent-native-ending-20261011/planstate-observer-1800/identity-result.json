@@ -1,0 +1,10 @@
+{
+  "admin_denied": true,
+  "null_denied": true,
+  "transaction_aborted": true,
+  "schema_absent": true,
+  "full_source_positive": false,
+  "execution_authorized": false,
+  "library_sha256": "3ac0ba96e5a40c14c0ecb835806a06833173b13d0f90a94c4634e2ec08f08320",
+  "xid": "65853"
+}

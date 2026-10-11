@@ -172,3 +172,10 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 函数管理器观察覆盖门1799
 候选一受支持fmgr hook补缓存路径；候选二完整已绑定包/执行计划表达式验证。先对原PG16.14冻结源码检查候选一，不部署探针。新增fmgr-coverage-1799/result.json/review.md，绑定archive/fmgr.c hash和关键源码行，核builtin fastpath在hook判定前return；据此拒将fmgr当全函数观察器。无函数/SQL/库修改。
+
+## 缓存执行计划观察1800
+新增planstate-observer-1800/probe.c/Dockerfile，沿用固定collector探针；在原ExecutorStart完成后用PG16 planstate_tree_walker遍历每节点targetlist/qual，以及Result、IndexScan/IndexOnly、BitmapHeap、FunctionScan、ValuesScan、Join、Limit附加表达式。其余节点记录未覆盖tag，不默认完整；所有PlanState节点tag记录，用于后续核验字段覆盖。此为执行前观察，不能阻止ExecutorStart内部初始化副作用，不能充当准入守卫；原两hook与planner观察保留。先编译和身份门，再完整新Source联验另行准备。正式库/产品不改。
+
+1800编译r2修正NestLoopParam必须逐paramval遍历；身份负门XID65853回滚。新增planstate-source-1800全新完整fixture，三notice前缀仅记录OID/tag数字，保留原Source/四证书/八节点/异常恢复/实际COMMIT拒绝；不宣称extra unreviewed节点已覆盖。
+
+1800完整r1明确RED141.64秒：collector内CURRENT_CONSUMER拒绝，XID回读aborted/九表0；临时函数随回滚消失，不能重读原body。保留probe-r1.c和r1hash。仅优化重复notice按每tag每调用一次，数据遍历不跳过、不改任何TTL/Source/校验逻辑；编译r3后需全新Source再验，未宣称修复完成。
