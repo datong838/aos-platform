@@ -1,0 +1,13 @@
+# 原来源锁保留的普通证据包撤销复审
+
+基线608824156/AOS-001885，先完善第六段方案再编码；同一ACTIVE Task及唯一施工写者，仅绑定ID/cluster/18431且无命名卷挂载的历史实验复制库。复用第三段实际非空构建的bundle exact ref，确认未撤销且无license issuance，不伪造Source发行或正式权限。当前权威库、原clone、服务源代码和当前API/Web未写入。
+
+固定Contract LOGIN非super/非BYPASS/NOINHERIT/无成员，仅四张业务依赖表的精确SELECT/INSERT与双租户policy，没有runtime成员或issuer/owner角色。7次原Source连接读回LOGIN/current_user一致。原Store在没有初始化锁EXECUTE时真实返回LICENSE_SOURCE_FENCE_DENIED，六张相关表计数不变；之后只直授精确初始化锁函数EXECUTE，原函数的双租户和exact ref检查源码不改，未授head锁函数、issuance写入或license head写入。
+
+6项检查通过：原缺权拒绝、hash漂移拒绝、dev-org隔离、被迫Receipt失败后event/初始化fence/Receipt等相关表计数相同、原普通未发行bundle revoke及幂等、请求漂移冲突。实际原Store生成一份撤销event及一份exact Receipt，bundle revision整行未改动。独立普通只读连接由原Store读取revoked=true，Receipt精确匹配bundle revision/hash，失败请求没有Receipt。
+
+首个独立只读脚本误断言初始化fence epoch为0，因此只读AssertionError；立即读回原a0v_139及数据库触发器，确认成功撤销AFTER INSERT应将初始化epoch推进到1，容量原a0v_149触发器也推进到1。只修正读回预期，保留失败记录，不重发业务。独立回读两类epoch均1、event只有一个，幂等和失败回滚未额外推进。两项原锁函数源码hash和ACL与演练前逐项一致，临时角色/授予/policy清理完成。
+
+当前栖月汇权威库与原完整clone全647表及六类原权限metadata仍精确一致。clone HBA为trust，实际独立LOGIN不代表SCRAM/OIDC/独立OS身份证明；普通未发行路径通过不代表已发行Source head fence、实际许可、正式启动或自然首链通过。
+
+30个Contract operation已有15个实际实验Receipt路径（披露仅拒绝决策），余15个及Plan/BI/successor/Content全部兼容仍未完成。下一已登记安全项：原generic Plan/BI/successor兼容与ImpactPreview的task/plan exact ref依赖；正式身份/publisher接入仍依赖既有配置来源，不用测试身份代替。长期Goal、当前Task保持ACTIVE，不提交Delivery完成声明。语法、源码hash绑定、秘密扫描、精确diff和方案自洽核验后精确提交，不push；没有新增独立模型PASS。

@@ -1,0 +1,59 @@
+{
+  "cases": [
+    "missing-exact-function-execute-original-fence-denied",
+    "ProductionContractDependencyBlocked",
+    "ProductionContractNotFound",
+    "RaiseException",
+    "original-unissued-bundle-revoke-and-replay-source-lock-kept",
+    "ProductionContractIdempotencyConflict"
+  ],
+  "connections": [
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    },
+    {
+      "login": "aos_contract_source_issuer",
+      "role": "aos_contract_source_issuer",
+      "db": "qyh_source_contract_20261011"
+    }
+  ],
+  "bundleRef": {
+    "resourceType": "EvidenceBundleRevision",
+    "resourceId": "evidence-bundle-19cf2b3207f645ad9035",
+    "revision": 1,
+    "contentHash": "9eff03ab37253ee058344ff34a79fb210c9960e37cb7ae9eb2daed2b3c78889c"
+  },
+  "functionHash": "5131ba906f62a6e89853a2ed78476a48ca54ba075a7e3f3d364045a78b3829b1",
+  "exactInitializationFunctionGrantOnly": true,
+  "headFunctionGrant": false,
+  "issuedSourcePathAccepted": false,
+  "bundleRevisionUnchanged": true,
+  "passwordOrOIDCAuthenticated": false
+}

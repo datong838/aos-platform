@@ -1,0 +1,17 @@
+{
+  "containerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "cluster": "7695416748450308141",
+  "database": "qyh_source_contract_20261011",
+  "role": "aos_contract_source_issuer",
+  "bundleRef": {
+    "resourceType": "EvidenceBundleRevision",
+    "resourceId": "evidence-bundle-19cf2b3207f645ad9035",
+    "revision": 1,
+    "contentHash": "9eff03ab37253ee058344ff34a79fb210c9960e37cb7ae9eb2daed2b3c78889c"
+  },
+  "unissuedSourceOnly": true,
+  "functionSignature": "public.aos_license_source_initialization_lock(text,text,text,bigint,text,boolean)",
+  "functionHash": "5131ba906f62a6e89853a2ed78476a48ca54ba075a7e3f3d364045a78b3829b1",
+  "currentDatabaseTouched": false,
+  "scriptHash": "a68b308186fe352517216fefe71b97ef5865c2e1e7ed3e7394ee83c7edd72c4b"
+}

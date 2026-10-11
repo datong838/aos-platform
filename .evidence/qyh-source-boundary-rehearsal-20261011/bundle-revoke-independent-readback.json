@@ -1,0 +1,15 @@
+{
+  "originalStoreReadRevoked": true,
+  "receiptExact": true,
+  "oneRevokeEventOnly": true,
+  "failedRequestsHaveNoReceipt": true,
+  "unissuedBundleInitializationFenceEpoch": 1,
+  "capacityEvidenceEpoch": 1,
+  "originalBothFunctionSourceAndACLUnchanged": true,
+  "temporaryRoleRemoved": true,
+  "sourceAndOriginalClone647DataExact": true,
+  "allOriginalMetadataExact": true,
+  "issuedSourcePathAccepted": false,
+  "fullRestorationAccepted": false,
+  "scriptHash": "a68b308186fe352517216fefe71b97ef5865c2e1e7ed3e7394ee83c7edd72c4b"
+}

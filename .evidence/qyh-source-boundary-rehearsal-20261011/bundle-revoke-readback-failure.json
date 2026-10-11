@@ -1,0 +1,9 @@
+{
+  "errorType": "AssertionError",
+  "phase": "independent read-only reconciliation",
+  "incorrectExpectation": "initialization fence epoch remains zero after successful revoke",
+  "actualEpoch": 1,
+  "rootCause": "Original aos_license_revoke_fence AFTER INSERT increments epoch once; original capacity trigger also increments its epoch once.",
+  "businessEffectRepeated": false,
+  "correction": "Keep original business result; reconcile epoch=1 and single event, including capacity evidence epoch."
+}
