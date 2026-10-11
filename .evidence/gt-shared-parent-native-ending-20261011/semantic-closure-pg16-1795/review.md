@@ -1,0 +1,5 @@
+# PG16匹配语法复核
+
+隔离安装pglast6.16，parser160001与server160014同major；项目venv依赖未改。首次项目venv无pip明确失败，转已有uv的独立target安装成功，制品文件hash已冻结。匹配版本后50函数候选保留，解析缺口4降2；value属于合法UNRESERVED_KEYWORD，限定单变量赋值token规则修正后降为1。六项字符串赋值符/引用变量/非保留词/复杂目标检查通过。
+
+剩余build_shared_parent_admission_origin的risk.immutable依赖实际数据库行类型，离线PLpgsql解析无目录绑定。不得改写函数体规避错误或将未解析路径排除。下一使用PG16服务端规划/执行表达式观察，处理真实重载OID、implicit cast/operator/函数内部及规划时效果；新图仍不是语义闭合或允许列表。完整Root、生命周期、固定点、耐久COMMIT/unknown仍未验收。只读隔离库，无产品/正式库写。

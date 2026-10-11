@@ -155,3 +155,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 实际安装函数语法依赖候选1794
 候选一固定验证器表达式闭合，候选二独立签名包/lifecycle bootstrap；先一。新增semantic-closure-1794/audit.py/result.json，只读原隔离cluster最新终态测试库，从固定collector出发读pg_get_functiondef/Owner/ACL/proconfig/bodyhash；用pglast解析PLpgSQL语句里的SQL/表达式，收集显式FuncCall/A_Expr/TypeCast与动态SQL。每个调用保留所有目录重载候选，不擅自按名称选择；解析失败、PG解析器版本差异、implicit cast/operator/native内部调用保留未闭合。不得将静态候选当执行轨迹或允许列表。无产品及DB写入。
+
+## PG16匹配语法复核1795
+新增semantic-closure-pg16-1795独立依赖目录和audit/result；使用已有uv安装pglast6系列到该目录，核返回parser major=16、实际server=16并固定制品版本。项目原venv不修改。重复原只读目录分析，针对四缺口读取确切语法并分辨离线PLpgsql变量解析限制；复杂赋值保持拒绝，不能以字符串猜测补全语义。此步不代替执行计划、隐式转换、native与生命周期闭合。

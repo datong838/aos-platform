@@ -1,0 +1,31 @@
+{
+  "pglast": "v6.16",
+  "parser_pg": 160001,
+  "assignment_checks_passed": 6,
+  "files": {
+    "pglast/error.py": "dda78307c433bc5169dc366e90695e0833df739af6dad54d234956285b6e6427",
+    "pglast/parser.cpython-311-darwin.so": "81f835357ca23afddcadaab2f70f31134bb7d59dc21e5f16663ada22813b5c85",
+    "pglast/visitors.py": "72e19b74b23ec53ccb1d5aabb64b825b7797597dfe581936c7e1e323b532550f",
+    "pglast/keywords.py": "bf66c42464c1b7bfaecd52144c27c8d8f38ec5de67d0c358ade3ba7aebba196f",
+    "pglast/__init__.py": "11177e6005810f9ad2a8263478e9aece3b5a0d0779be478b931767138fd1f0b0",
+    "pglast/stream.py": "b4cbf1e7d4e597543683b7760853e6f088107b03acb6e71dea2302a66a5991a4",
+    "pglast/ast.py": "7a20388a5eb9096eaa50882535cb730448bd40637820f48166d243c8de55697a",
+    "pglast/__main__.py": "2b0d5fe00c5b050510e276abf73937f4527ef1e8ae5a9aaa82504ed2f3d5fa2e",
+    "pglast/enums/primnodes.py": "b9aba630245a6c42610eee926718fe286f7e9a28d6fb6a36df012dbd19d642e8",
+    "pglast/enums/parsenodes.py": "2f9ace1172620ba4ae257c057d3abbc44f9a7b2e3fb1690828a7048838b87d96",
+    "pglast/enums/xml.py": "f9a546a29f519fb3cbae47275965332f3501f40f0e28c347805622d0f9b58dde",
+    "pglast/enums/__init__.py": "07220e7567b7329e4a811bafa0def9e14e0ebd285833c798af43a9dee6fa2a59",
+    "pglast/enums/pg_class.py": "b07a937e0097f70efa383d3148a9dd7f52365caf7ffcd5037ae0334832bd6e00",
+    "pglast/enums/pg_am.py": "34955b860711bb995f8a7acc27256689c062c540f8df1d5f6f7a590cbc7023e0",
+    "pglast/enums/lockoptions.py": "48cc9706f7f8ebe95b824808122e5d7322dcdfc68d36aaf2f60d6cc7e3497d60",
+    "pglast/enums/lockdefs.py": "776b8770faaf51aea3e703b896da74eb876c62bff5e49be81492af152890b259",
+    "pglast/enums/nodes.py": "75979a6c598b92b998f70f8fa730f06c70d0033d5fc8d407f47d2b70a3d50563",
+    "pglast/enums/pg_attribute.py": "e122d87ab195e1bb799f7367167c53d6309040bab826796f46b6320cbf1f8089",
+    "pglast/enums/pg_trigger.py": "fa07dd821ceb5ab7423d0e8e033d59d6558938be1bdbbd1dc2288ccb7157717d",
+    "pglast/printers/ddl.py": "1821a7b4ea61c113eafab024beada6e0a0687b1107c27479b571c17507efd199",
+    "pglast/printers/__init__.py": "9e383f11b65beda1d9319c04447557fa3c384c232ef58251cf88ee2ab6273e01",
+    "pglast/printers/dml.py": "e0f158c81d01e9f0c8af86dbff81ba52cee6c2232e3bb7f1a7ef70e24334528d",
+    "pglast/printers/sfuncs.py": "30c2ab76ee92165ae9bbadfc34d83090e484ada3d7b94e841b257c7cc4d1ecd6"
+  },
+  "project_dependencies_changed": false
+}

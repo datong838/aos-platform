@@ -1,0 +1,2145 @@
+{
+  "server_version_num": "160014",
+  "parser_version": "v6.16",
+  "parser_pg_version": 160001,
+  "cluster": "7694680278363095064",
+  "functions": [
+    {
+      "oid": 5551504,
+      "signature": "read_shared_parent_complete_end_facts(uuid,text,xid8,integer)",
+      "language": "plpgsql",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "af7fd9d52136cf70e28d55c98ad4788bc10d74a02d71304f49f1ab403402ef42",
+      "explicit_calls": [
+        {
+          "call": "clock_timestamp",
+          "candidates": [
+            "clock_timestamp()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "convert_to",
+          "candidates": [
+            "convert_to(text,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "current_setting",
+          "candidates": [
+            "current_setting(text)",
+            "current_setting(text,boolean)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "encode",
+          "candidates": [
+            "encode(bytea,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_build_object",
+          "candidates": [
+            "jsonb_build_object(\"any\")",
+            "jsonb_build_object()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_backend_pid",
+          "candidates": [
+            "pg_backend_pid()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_current_xact_id",
+          "candidates": [
+            "pg_current_xact_id()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.canonical_asset_registry_jsonb",
+          "candidates": [
+            "canonical_asset_registry_jsonb(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.read_shared_parent_receipt_origin",
+          "candidates": [
+            "read_shared_parent_receipt_origin(uuid,text,xid8,integer)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.verify_shared_parent_final_call_authority",
+          "candidates": [
+            "verify_shared_parent_final_call_authority(uuid,text,xid8,integer)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.verify_shared_parent_final_physical",
+          "candidates": [
+            "verify_shared_parent_final_physical(uuid,text,xid8,integer)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "sha256",
+          "candidates": [
+            "sha256(bytea)"
+          ],
+          "overload_resolved": false
+        }
+      ],
+      "operators": [
+        "#>",
+        "#>>",
+        "+",
+        "->",
+        "->>",
+        "<>",
+        "=",
+        "||"
+      ],
+      "casts": [
+        "jsonb",
+        "text"
+      ],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 2649,
+      "signature": "clock_timestamp()",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "a59ae724e96588d28a8825cf3c2d70304e5fb5ef12865b14979d554ecd6c2a34",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 1717,
+      "signature": "convert_to(text,name)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "s",
+      "probin": null,
+      "body_sha256": "af07fe48c5300d745a3f0b763f4f3be3c30f169a07a6cc6ad2ca643bf5527342",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 2077,
+      "signature": "current_setting(text)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "s",
+      "probin": null,
+      "body_sha256": "9977a9615782b453226ebcb230942b1bd56500c690c20ce00c6d5c8fd925708b",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 3294,
+      "signature": "current_setting(text,boolean)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "s",
+      "probin": null,
+      "body_sha256": "51c7d03bc682c20f62b0c72ffcd6a86f932b1f83a4d2a5ad4a3b150e3b8b0c5f",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 1946,
+      "signature": "encode(bytea,text)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "be713d6aeb8ec9087441696c491db9eaefd926c1309cab3448d0c28cb0fbdd7f",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 3273,
+      "signature": "jsonb_build_object(\"any\")",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "s",
+      "probin": null,
+      "body_sha256": "f88158c5e49171d16b355ea7fcc8717dbe2688ef6771b5fcf1e3169b261ad651",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 3274,
+      "signature": "jsonb_build_object()",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "s",
+      "probin": null,
+      "body_sha256": "9a4fb4de21ccb67ed4c7044d08726e294cc0bad57466d6ba5bd1e24ac700a4db",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 2026,
+      "signature": "pg_backend_pid()",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "s",
+      "probin": null,
+      "body_sha256": "098bddde5fbefd51655a893e803e011b19428a7a1f61f8f4136d968a773be021",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 5059,
+      "signature": "pg_current_xact_id()",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "s",
+      "probin": null,
+      "body_sha256": "80371d813b9ab845b215a597fc1a0856614caced1bdb5f1d1e8aa17fba2240ac",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 5536270,
+      "signature": "canonical_asset_registry_jsonb(jsonb)",
+      "language": "plpgsql",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "acl": "{=X/aos_app,aos_app=X/aos_app,aos_aip_binding_evaluator=X/aos_app}",
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "53880ca6a74d07d8bc39229b1f3c0e27a7c6c6e72d2417240f72806b4b6c71a0",
+      "explicit_calls": [
+        {
+          "call": "canonical_asset_registry_jsonb",
+          "candidates": [
+            "canonical_asset_registry_jsonb(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_array_elements",
+          "candidates": [
+            "jsonb_array_elements(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_each",
+          "candidates": [
+            "jsonb_each(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_typeof",
+          "candidates": [
+            "jsonb_typeof(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_catalog.position",
+          "candidates": [
+            "\"position\"(text,text)",
+            "\"position\"(bit,bit)",
+            "\"position\"(bytea,bytea)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "string_agg",
+          "candidates": [],
+          "overload_resolved": false
+        },
+        {
+          "call": "to_jsonb",
+          "candidates": [
+            "to_jsonb(anyelement)"
+          ],
+          "overload_resolved": false
+        }
+      ],
+      "operators": [
+        "=",
+        ">",
+        "||"
+      ],
+      "casts": [
+        "pg_catalog.float8",
+        "text"
+      ],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 5551470,
+      "signature": "read_shared_parent_receipt_origin(uuid,text,xid8,integer)",
+      "language": "plpgsql",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_model_eval_issuer_owner=X/aos_model_eval_issuer_owner,aos_physical_capacity_occupation_owner=X/aos_model_eval_issuer_owner}",
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "0b60dfbff883a72d9436a0ed50b0fef373db56c00bd574606627f4a4e6b21390",
+      "explicit_calls": [
+        {
+          "call": "convert_from",
+          "candidates": [
+            "convert_from(bytea,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "convert_to",
+          "candidates": [
+            "convert_to(text,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "count",
+          "candidates": [],
+          "overload_resolved": false
+        },
+        {
+          "call": "current_setting",
+          "candidates": [
+            "current_setting(text)",
+            "current_setting(text,boolean)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "encode",
+          "candidates": [
+            "encode(bytea,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_build_object",
+          "candidates": [
+            "jsonb_build_object(\"any\")",
+            "jsonb_build_object()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_object_keys",
+          "candidates": [
+            "jsonb_object_keys(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_typeof",
+          "candidates": [
+            "jsonb_typeof(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "octet_length",
+          "candidates": [
+            "octet_length(bytea)",
+            "octet_length(text)",
+            "octet_length(character)",
+            "octet_length(bit)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_backend_pid",
+          "candidates": [
+            "pg_backend_pid()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_current_xact_id",
+          "candidates": [
+            "pg_current_xact_id()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.canonical_asset_registry_jsonb",
+          "candidates": [
+            "canonical_asset_registry_jsonb(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.read_shared_parent_pending_origin",
+          "candidates": [
+            "read_shared_parent_pending_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "sha256",
+          "candidates": [
+            "sha256(bytea)"
+          ],
+          "overload_resolved": false
+        }
+      ],
+      "operators": [
+        "#>",
+        "-",
+        "->",
+        "->>",
+        "<>",
+        "=",
+        "NOT BETWEEN",
+        "||"
+      ],
+      "casts": [
+        "jsonb",
+        "text",
+        "uuid"
+      ],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 5551465,
+      "signature": "verify_shared_parent_final_call_authority(uuid,text,xid8,integer)",
+      "language": "plpgsql",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "cb6f3ecc56ca49a348c6ab01be0cc4d6db5fb8fa3dd2d561b0b0a940383669ac",
+      "explicit_calls": [
+        {
+          "call": "convert_from",
+          "candidates": [
+            "convert_from(bytea,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "convert_to",
+          "candidates": [
+            "convert_to(text,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "count",
+          "candidates": [],
+          "overload_resolved": false
+        },
+        {
+          "call": "current_setting",
+          "candidates": [
+            "current_setting(text)",
+            "current_setting(text,boolean)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "encode",
+          "candidates": [
+            "encode(bytea,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_build_object",
+          "candidates": [
+            "jsonb_build_object(\"any\")",
+            "jsonb_build_object()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_object_keys",
+          "candidates": [
+            "jsonb_object_keys(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_typeof",
+          "candidates": [
+            "jsonb_typeof(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "octet_length",
+          "candidates": [
+            "octet_length(bytea)",
+            "octet_length(text)",
+            "octet_length(character)",
+            "octet_length(bit)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_backend_pid",
+          "candidates": [
+            "pg_backend_pid()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_current_xact_id",
+          "candidates": [
+            "pg_current_xact_id()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.canonical_asset_registry_jsonb",
+          "candidates": [
+            "canonical_asset_registry_jsonb(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.read_shared_parent_retained_origin",
+          "candidates": [
+            "read_shared_parent_retained_origin(uuid,text,xid8,integer)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.verify_shared_parent_final_intents",
+          "candidates": [
+            "verify_shared_parent_final_intents(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text,text,bytea,bytea,uuid,uuid)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "sha256",
+          "candidates": [
+            "sha256(bytea)"
+          ],
+          "overload_resolved": false
+        }
+      ],
+      "operators": [
+        "#>",
+        "#>>",
+        "-",
+        "->",
+        "->>",
+        "<>",
+        "=",
+        "NOT BETWEEN",
+        "||"
+      ],
+      "casts": [
+        "jsonb",
+        "text",
+        "uuid"
+      ],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 5551503,
+      "signature": "verify_shared_parent_final_physical(uuid,text,xid8,integer)",
+      "language": "plpgsql",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "ebd3dcb3cb4cc51c0bdf67aca5f2337b07e3e12df2e080ba95d96b276a59758b",
+      "explicit_calls": [
+        {
+          "call": "convert_to",
+          "candidates": [
+            "convert_to(text,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "current_setting",
+          "candidates": [
+            "current_setting(text)",
+            "current_setting(text,boolean)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "encode",
+          "candidates": [
+            "encode(bytea,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_array_elements",
+          "candidates": [
+            "jsonb_array_elements(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_build_object",
+          "candidates": [
+            "jsonb_build_object(\"any\")",
+            "jsonb_build_object()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_typeof",
+          "candidates": [
+            "jsonb_typeof(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_backend_pid",
+          "candidates": [
+            "pg_backend_pid()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_current_xact_id",
+          "candidates": [
+            "pg_current_xact_id()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.canonical_asset_registry_jsonb",
+          "candidates": [
+            "canonical_asset_registry_jsonb(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.read_shared_parent_unresolved_members",
+          "candidates": [
+            "read_shared_parent_unresolved_members(uuid)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "sha256",
+          "candidates": [
+            "sha256(bytea)"
+          ],
+          "overload_resolved": false
+        }
+      ],
+      "operators": [
+        "#>>",
+        "->",
+        "->>",
+        "<>",
+        "=",
+        "||"
+      ],
+      "casts": [
+        "jsonb",
+        "text"
+      ],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 3420,
+      "signature": "sha256(bytea)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "c1f5ee49e4f529d103f3cd9fbf9d575196208b278e388f4c196101c7587afc29",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 3219,
+      "signature": "jsonb_array_elements(jsonb)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "6f94a15251f3d2bbf5f330d494dd917e34e853e4520c27d4516d5c00dfad5afc",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 3208,
+      "signature": "jsonb_each(jsonb)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "4c54b035677e67f2b1ec65c32afecdf7efa2a2cd3ca4511a99957e144b0ca6d9",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 3210,
+      "signature": "jsonb_typeof(jsonb)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "1133a38b17f7488574d7173918602f1fb1b417275878110a39da195e3d098e63",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 849,
+      "signature": "\"position\"(text,text)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "43a013fdf27c5941331f3b1b313227b430db8aa94b35a6ecf86c8400ce059c0d",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 1698,
+      "signature": "\"position\"(bit,bit)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "358ae997dd27ac688174e32f8271514fccb8177d01cb6be441a884d5fefc0d63",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 2014,
+      "signature": "\"position\"(bytea,bytea)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "53e6b169ea2eb1147631e74628fddbd3d7c8e59254debbacbe81d650ee6627a5",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 3787,
+      "signature": "to_jsonb(anyelement)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "s",
+      "probin": null,
+      "body_sha256": "fb95a1e7545445d14b7b4fad656b7ca64ef2647b28639cb14d10c05094ff83e7",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 1714,
+      "signature": "convert_from(bytea,name)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "s",
+      "probin": null,
+      "body_sha256": "3b639272f0c9b9f96d9a596fa2da7ee87a22a51085330134299fdc5ec2f7f0fa",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 3931,
+      "signature": "jsonb_object_keys(jsonb)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "2dc4dbdea60adf0b77e39c7f4b378c7ee719a772042e4e88e818342d739f581f",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 720,
+      "signature": "octet_length(bytea)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "cd56b9e0812bc1ff57743b7494cd31af253b923d43ebc98e7ce6a91b27069b1e",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 1374,
+      "signature": "octet_length(text)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "4c1abfec51c6575dee20965f9a14957af6dba905c38723c57de511c4df134d82",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 1375,
+      "signature": "octet_length(character)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "c30e4639145997fdc9691344e60b1e327cbbf30d5e88af3e69bb779b1ebd5770",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 1682,
+      "signature": "octet_length(bit)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "6b7e7f9d95a735abdcd9801d6cdac21108ed95a9edfac4ae2ce2c18d9604dae3",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 5551230,
+      "signature": "read_shared_parent_pending_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text)",
+      "language": "plpgsql",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_model_eval_issuer_owner=X/aos_model_eval_issuer_owner,aos_physical_capacity_occupation_owner=X/aos_model_eval_issuer_owner}",
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "64f0a4fc403417a0c1b15cfbc15b2df6e3e598248b553ec7e96cff0048a0f94d",
+      "explicit_calls": [
+        {
+          "call": "convert_from",
+          "candidates": [
+            "convert_from(bytea,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "convert_to",
+          "candidates": [
+            "convert_to(text,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "current_setting",
+          "candidates": [
+            "current_setting(text)",
+            "current_setting(text,boolean)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "encode",
+          "candidates": [
+            "encode(bytea,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_build_object",
+          "candidates": [
+            "jsonb_build_object(\"any\")",
+            "jsonb_build_object()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "octet_length",
+          "candidates": [
+            "octet_length(bytea)",
+            "octet_length(text)",
+            "octet_length(character)",
+            "octet_length(bit)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_backend_pid",
+          "candidates": [
+            "pg_backend_pid()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_current_xact_id",
+          "candidates": [
+            "pg_current_xact_id()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.canonical_asset_registry_jsonb",
+          "candidates": [
+            "canonical_asset_registry_jsonb(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.validate_shared_parent_admission_certificate_set",
+          "candidates": [
+            "validate_shared_parent_admission_certificate_set(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "sha256",
+          "candidates": [
+            "sha256(bytea)"
+          ],
+          "overload_resolved": false
+        }
+      ],
+      "operators": [
+        "#>",
+        "#>>",
+        "->",
+        "->>",
+        "<>",
+        "=",
+        "NOT BETWEEN",
+        "||"
+      ],
+      "casts": [
+        "jsonb",
+        "text"
+      ],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 5551356,
+      "signature": "read_shared_parent_retained_origin(uuid,text,xid8,integer)",
+      "language": "plpgsql",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_model_eval_issuer_owner=X/aos_model_eval_issuer_owner,aos_physical_capacity_occupation_owner=X/aos_model_eval_issuer_owner}",
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "50f2063e8e50ce16222fbf5e7291edb69b7091c7fbda8e8c54dd5025ff481667",
+      "explicit_calls": [
+        {
+          "call": "convert_from",
+          "candidates": [
+            "convert_from(bytea,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "convert_to",
+          "candidates": [
+            "convert_to(text,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "count",
+          "candidates": [],
+          "overload_resolved": false
+        },
+        {
+          "call": "current_setting",
+          "candidates": [
+            "current_setting(text)",
+            "current_setting(text,boolean)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "encode",
+          "candidates": [
+            "encode(bytea,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_build_object",
+          "candidates": [
+            "jsonb_build_object(\"any\")",
+            "jsonb_build_object()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_object_keys",
+          "candidates": [
+            "jsonb_object_keys(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_typeof",
+          "candidates": [
+            "jsonb_typeof(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "octet_length",
+          "candidates": [
+            "octet_length(bytea)",
+            "octet_length(text)",
+            "octet_length(character)",
+            "octet_length(bit)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_backend_pid",
+          "candidates": [
+            "pg_backend_pid()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_current_xact_id",
+          "candidates": [
+            "pg_current_xact_id()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.canonical_asset_registry_jsonb",
+          "candidates": [
+            "canonical_asset_registry_jsonb(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.read_shared_parent_pending_origin",
+          "candidates": [
+            "read_shared_parent_pending_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "sha256",
+          "candidates": [
+            "sha256(bytea)"
+          ],
+          "overload_resolved": false
+        }
+      ],
+      "operators": [
+        "#>",
+        "-",
+        "->",
+        "->>",
+        "<>",
+        "=",
+        "NOT BETWEEN",
+        "||"
+      ],
+      "casts": [
+        "jsonb",
+        "text",
+        "uuid"
+      ],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 5551461,
+      "signature": "verify_shared_parent_final_intents(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text,text,bytea,bytea,uuid,uuid)",
+      "language": "plpgsql",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "75450b1b6dd9c98ab3fda0796aa7929a08f868b412396c92691873e776516976",
+      "explicit_calls": [
+        {
+          "call": "clock_timestamp",
+          "candidates": [
+            "clock_timestamp()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "convert_from",
+          "candidates": [
+            "convert_from(bytea,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "convert_to",
+          "candidates": [
+            "convert_to(text,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "current_setting",
+          "candidates": [
+            "current_setting(text)",
+            "current_setting(text,boolean)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "encode",
+          "candidates": [
+            "encode(bytea,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_array_elements",
+          "candidates": [
+            "jsonb_array_elements(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_build_object",
+          "candidates": [
+            "jsonb_build_object(\"any\")",
+            "jsonb_build_object()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "octet_length",
+          "candidates": [
+            "octet_length(bytea)",
+            "octet_length(text)",
+            "octet_length(character)",
+            "octet_length(bit)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_backend_pid",
+          "candidates": [
+            "pg_backend_pid()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_current_xact_id",
+          "candidates": [
+            "pg_current_xact_id()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.canonical_asset_registry_jsonb",
+          "candidates": [
+            "canonical_asset_registry_jsonb(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.capacity_occupation_eval_case_fact",
+          "candidates": [],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.read_shared_parent_admission_original_facts",
+          "candidates": [
+            "read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.read_shared_parent_pending_origin",
+          "candidates": [
+            "read_shared_parent_pending_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "sha256",
+          "candidates": [
+            "sha256(bytea)"
+          ],
+          "overload_resolved": false
+        }
+      ],
+      "operators": [
+        "#>",
+        "#>>",
+        "->",
+        "->>",
+        "<",
+        "<>",
+        "=",
+        ">",
+        ">=",
+        "||"
+      ],
+      "casts": [
+        "jsonb",
+        "text",
+        "timestamptz"
+      ],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 5551469,
+      "signature": "read_shared_parent_unresolved_members(uuid)",
+      "language": "plpgsql",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "96141b8b8b6ec5987c0c2980e0501cbb1c4376aac6fae961b1c751ab138654a6",
+      "explicit_calls": [
+        {
+          "call": "convert_to",
+          "candidates": [
+            "convert_to(text,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "count",
+          "candidates": [],
+          "overload_resolved": false
+        },
+        {
+          "call": "current_setting",
+          "candidates": [
+            "current_setting(text)",
+            "current_setting(text,boolean)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "encode",
+          "candidates": [
+            "encode(bytea,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_agg",
+          "candidates": [],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_build_object",
+          "candidates": [
+            "jsonb_build_object(\"any\")",
+            "jsonb_build_object()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.canonical_asset_registry_jsonb",
+          "candidates": [
+            "canonical_asset_registry_jsonb(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "sha256",
+          "candidates": [
+            "sha256(bytea)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "sum",
+          "candidates": [],
+          "overload_resolved": false
+        },
+        {
+          "call": "to_jsonb",
+          "candidates": [
+            "to_jsonb(anyelement)"
+          ],
+          "overload_resolved": false
+        }
+      ],
+      "operators": [
+        "<=",
+        "<>",
+        "=",
+        "||"
+      ],
+      "casts": [
+        "jsonb",
+        "text"
+      ],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 5551203,
+      "signature": "validate_shared_parent_admission_certificate_set(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text,bytea)",
+      "language": "plpgsql",
+      "owner": "aos_model_eval_issuer_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_model_eval_issuer_owner=X/aos_model_eval_issuer_owner}",
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "7abd0412203b7631242a0d898ff47015d8c85f46019122cb9fdc1dedbc0fcc6d",
+      "explicit_calls": [
+        {
+          "call": "chr",
+          "candidates": [
+            "chr(integer)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "clock_timestamp",
+          "candidates": [
+            "clock_timestamp()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "convert_from",
+          "candidates": [
+            "convert_from(bytea,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "convert_to",
+          "candidates": [
+            "convert_to(text,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "count",
+          "candidates": [],
+          "overload_resolved": false
+        },
+        {
+          "call": "current_setting",
+          "candidates": [
+            "current_setting(text)",
+            "current_setting(text,boolean)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "decode",
+          "candidates": [
+            "decode(text,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "encode",
+          "candidates": [
+            "encode(bytea,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_array_elements",
+          "candidates": [
+            "jsonb_array_elements(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_array_length",
+          "candidates": [
+            "jsonb_array_length(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_build_object",
+          "candidates": [
+            "jsonb_build_object(\"any\")",
+            "jsonb_build_object()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_typeof",
+          "candidates": [
+            "jsonb_typeof(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "octet_length",
+          "candidates": [
+            "octet_length(bytea)",
+            "octet_length(text)",
+            "octet_length(character)",
+            "octet_length(bit)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_backend_pid",
+          "candidates": [
+            "pg_backend_pid()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_current_xact_id",
+          "candidates": [
+            "pg_current_xact_id()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.build_shared_parent_admission_origin",
+          "candidates": [
+            "build_shared_parent_admission_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.canonical_asset_registry_jsonb",
+          "candidates": [
+            "canonical_asset_registry_jsonb(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.verify_model_shared_parent_certificate_signature",
+          "candidates": [
+            "verify_model_shared_parent_certificate_signature(bytea,bytea,bytea)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "replace",
+          "candidates": [
+            "replace(text,text,text)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "sha256",
+          "candidates": [
+            "sha256(bytea)"
+          ],
+          "overload_resolved": false
+        }
+      ],
+      "operators": [
+        "#>",
+        "#>>",
+        "*",
+        "-",
+        "->",
+        "->>",
+        "<",
+        "<=",
+        "<>",
+        "=",
+        "NOT BETWEEN",
+        "||"
+      ],
+      "casts": [
+        "jsonb",
+        "oidvector",
+        "regtype",
+        "text",
+        "timestamptz"
+      ],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 5551196,
+      "signature": "read_shared_parent_admission_original_facts(bytea,jsonb,uuid,text,text,uuid,text,text)",
+      "language": "plpgsql",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner}",
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "65be8fedd3a834fe7442ad63f0bcf6980b84a156bbb65481f3019acbd03b5c60",
+      "explicit_calls": [
+        {
+          "call": "current_setting",
+          "candidates": [
+            "current_setting(text)",
+            "current_setting(text,boolean)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.capacity_occupation_plan_risk_fact",
+          "candidates": [
+            "capacity_occupation_plan_risk_fact(bytea,jsonb,uuid,text,text,uuid,text,text)"
+          ],
+          "overload_resolved": false
+        }
+      ],
+      "operators": [
+        "<>",
+        "="
+      ],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 1621,
+      "signature": "chr(integer)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "943723cd5955a5316f4364f750e309b0a9582e939128ce09800d56f126649efb",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 1947,
+      "signature": "decode(text,text)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "1108fc2f7a4d3cf0fdc2c44b698237edc5085e8a3c04802b0540625b146fc37c",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 3207,
+      "signature": "jsonb_array_length(jsonb)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "1c187e3a5ac3ae360aa44c2d466b14cc120784e2a082723f1ef45ca9e923f6c2",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 5551197,
+      "signature": "build_shared_parent_admission_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text)",
+      "language": "plpgsql",
+      "owner": "aos_physical_capacity_occupation_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_physical_capacity_occupation_owner=X/aos_physical_capacity_occupation_owner,aos_model_eval_issuer_owner=X/aos_physical_capacity_occupation_owner}",
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "c6d105c17699b5af46b7afc8d3607fb712c64bb2ee30a60daf066ffbf2cc4dee",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [
+        {
+          "phase": "plpgsql",
+          "error": "\"risk.immutable\" is not a known variable"
+        }
+      ],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 5551201,
+      "signature": "verify_model_shared_parent_certificate_signature(bytea,bytea,bytea)",
+      "language": "plpgsql",
+      "owner": "aos_capacity_publication_owner",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_capacity_publication_owner=X/aos_capacity_publication_owner,aos_model_eval_issuer_owner=X/aos_capacity_publication_owner}",
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "ba1dbea7be55ba37e4cd043061b1b84511b7820d1eac23d805a8486252bc4c46",
+      "explicit_calls": [
+        {
+          "call": "aos_capacity_publication_private.require_current_source_installation",
+          "candidates": [],
+          "overload_resolved": false
+        },
+        {
+          "call": "aos_ed25519.verify",
+          "candidates": [
+            "aos_ed25519.verify(bytea,bytea,bytea)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "chr",
+          "candidates": [
+            "chr(integer)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "convert_to",
+          "candidates": [
+            "convert_to(text,name)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "current_setting",
+          "candidates": [
+            "current_setting(text)",
+            "current_setting(text,boolean)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "octet_length",
+          "candidates": [
+            "octet_length(bytea)",
+            "octet_length(text)",
+            "octet_length(character)",
+            "octet_length(bit)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "pg_catalog.substring",
+          "candidates": [
+            "\"substring\"(text,integer,integer)",
+            "\"substring\"(text,integer)",
+            "\"substring\"(bit,integer,integer)",
+            "\"substring\"(bit,integer)",
+            "\"substring\"(bytea,integer,integer)",
+            "\"substring\"(bytea,integer)",
+            "\"substring\"(text,text)",
+            "\"substring\"(text,text,text)"
+          ],
+          "overload_resolved": false
+        }
+      ],
+      "operators": [
+        "<>",
+        "=",
+        "NOT BETWEEN",
+        "||"
+      ],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 2087,
+      "signature": "replace(text,text,text)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "b7423d62177e73aa6cb89eb72bb00ea1802aee89c4b9213fc8aca26de9ef2d81",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 5551172,
+      "signature": "capacity_occupation_plan_risk_fact(bytea,jsonb,uuid,text,text,uuid,text,text)",
+      "language": "plpgsql",
+      "owner": "aos_runtime",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "acl": "{aos_runtime=X/aos_runtime,aos_physical_capacity_occupation_owner=X/aos_runtime}",
+      "provolatile": "v",
+      "probin": null,
+      "body_sha256": "2ed10eb71464254b916b7117f9101dc73651f6560c666b2f16321059b4f8d129",
+      "explicit_calls": [
+        {
+          "call": "count",
+          "candidates": [],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_array_elements",
+          "candidates": [
+            "jsonb_array_elements(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_array_length",
+          "candidates": [
+            "jsonb_array_length(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_build_object",
+          "candidates": [
+            "jsonb_build_object(\"any\")",
+            "jsonb_build_object()"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "jsonb_typeof",
+          "candidates": [
+            "jsonb_typeof(jsonb)"
+          ],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.capacity_occupation_eval_fact",
+          "candidates": [],
+          "overload_resolved": false
+        },
+        {
+          "call": "public.capacity_occupation_judge_fact",
+          "candidates": [],
+          "overload_resolved": false
+        }
+      ],
+      "operators": [
+        "-",
+        "->",
+        "->>",
+        "<>",
+        "="
+      ],
+      "casts": [
+        "pg_catalog.int4"
+      ],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    },
+    {
+      "oid": 16388,
+      "signature": "aos_ed25519.verify(bytea,bytea,bytea)",
+      "language": "c",
+      "owner": "aos_ed25519_owner",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": "{aos_ed25519_owner=X/aos_ed25519_owner,aos_capacity_publication_owner=X/aos_ed25519_owner}",
+      "provolatile": "i",
+      "probin": "$libdir/aos_ed25519",
+      "body_sha256": "1caca9c86b135d3fea2cd71475d5bd027b40bc5376b4790f211c90753b8aee1e",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 936,
+      "signature": "\"substring\"(text,integer,integer)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "23de11c19cf64b5115ac52ec58ad2a91e63963bcee9e947ef91168ab6f4ba778",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 937,
+      "signature": "\"substring\"(text,integer)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "0f38a62016e8f73e63a463bd61b3d73bc5065a9db438f9ee4d449ca838d82e02",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 1680,
+      "signature": "\"substring\"(bit,integer,integer)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "772bda03f01f78ac097ec8090f5452087aba6a112a4ad7b3b1933bea869d1e76",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 1699,
+      "signature": "\"substring\"(bit,integer)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "3546320ea3e1674e50215bff1fae4908fb76c5ea869a8ee9e1fca39f5a344923",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 2012,
+      "signature": "\"substring\"(bytea,integer,integer)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "782e6bf425f00999dd1eb125ad8c90049f3b439fae9a67215de27cc00b7f4a8b",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 2013,
+      "signature": "\"substring\"(bytea,integer)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "92d2f7e5ca469aefea399dfe0476c9bc548253807454037b737ad662c1effdf0",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 2073,
+      "signature": "\"substring\"(text,text)",
+      "language": "internal",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "d33fffd751904d9f1a4930e0399abb0e8483417cb95ff19022a7277d58c3b583",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": true
+    },
+    {
+      "oid": 2074,
+      "signature": "\"substring\"(text,text,text)",
+      "language": "sql",
+      "owner": "aos_app",
+      "prosecdef": false,
+      "proconfig": null,
+      "acl": null,
+      "provolatile": "i",
+      "probin": null,
+      "body_sha256": "3f94b68025f02f7b2dc25ca37dbbbd4b0c7613294d2ee9fd4f2eba0f7816ba0a",
+      "explicit_calls": [],
+      "operators": [],
+      "casts": [],
+      "parse_errors": [],
+      "dynamic_statements": [],
+      "native_body_uninspected": false
+    }
+  ],
+  "function_count": 50,
+  "parse_error_count": 1,
+  "dynamic_statement_count": 0,
+  "semantic_closure_proved": false,
+  "runtime_allowlist": false,
+  "execution_allowed": false,
+  "limitations": [
+    "Parser major matched; offline PL/pgSQL catalog/type binding unproved",
+    "All overloads are candidates only",
+    "Implicit casts/operator resolution/planner/native internals unproved",
+    "Catalog snapshot does not prove immutable lifecycle"
+  ]
+}
