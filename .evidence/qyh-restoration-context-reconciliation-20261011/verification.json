@@ -1,0 +1,15 @@
+{
+  "outcome": "RESTORATION_CONTEXT_STALE_AUTHORITY_RECONCILED",
+  "before": {
+    ".evidence/qyh-durable-restoration-preparation-20261011/formal-implementation-plan.md": "bf2d6cbc240f18d428a757959319b9ec9098e5b63c45d6cd82a408188990cf17",
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-11-栖月汇历史实例恢复兼容清单.md": "37bfd9f9b982055d7867a4b1f7a2ce85f702b2923fe7c13c75d82158639d9a4d"
+  },
+  "after": {
+    ".evidence/qyh-durable-restoration-preparation-20261011/formal-implementation-plan.md": "2b8dfba29b31262172caf7c909736dc31643d0cc34d630a9e11bc11429a17a07",
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-11-栖月汇历史实例恢复兼容清单.md": "c6f911be1482c9891b08a7e76d343972b3addd7edd483a6b7dc25d39d16b3fbd"
+  },
+  "externalSnapshotExact": true,
+  "codeChanges": 0,
+  "databaseWrites": 0,
+  "fullRestorationAccepted": false
+}

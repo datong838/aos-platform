@@ -1,4 +1,17 @@
-# 正式恢复实施方案（待权限门与入口实现，未执行正式切换）
+# 正式恢复实施方案（整体恢复已获授权；当前安装与API八页面仍待实际验收）
+
+## 当前实施澄清（2026-10-11，AOS-001847）
+
+用户已明确授权今天恢复栖月汇租户、电商域全系统及数据卷，并纠正偏离域/租户的配置；之前“完整正式恢复待批准”的阶段记录已被本次授权取代，不再重复索要整体恢复授权。单写m1、保留旧库/卷/备份、未知结果不重发、旧12Run不回放等边界继续有效；独立发布账号、正式Owner/身份与运行审批预算不是被自动授予的权限。
+
+- 同一保留647表卷aos-qyh-history159-prepared-data-20261011/cluster7695302940039200809/aos_meta_head@a0v_159已加载于qyh-restored-pg-20261011/loopback18446，有限NOINHERIT LOGIN/SCRAM；原092与preview159仍保留，当前API仍指向preview，尚未切换。
+- 当前选定core1.4.3/platform1.23.2/Growth1.13.0/operations1.2.2；统一公共目录179文件精确，8模块签名解析、3实际缓存镜像与恢复库3schema receipts隔离诊断通过；3会话各2048heartbeat且清理独立确认。上述诊断不等于真实发布、安装或Host权限。
+- Core1.4.3/Growth1.13.0已在恢复库由原Registry create/validate，仍validated；同制作身份publish曾被职责分离门拒绝，未重发。保留两基础包仍published。647表除5个预期Registry表外其余642表精确保持。
+- 生产别名接线提交57e45d5ff；公共根134039493；混合诊断44fa0f202；当前安装只读入口60c7fc99d。入口复用真实发布/lock/签名校验，不使用诊断PUBLISHED投影冒充实库状态。
+- 当前入口34专项/相邻通过、9PG依赖测试明确跳过；另有先前控制接线权限测试桩失败已独立登记。实库三个叶均在org-org/dev-project：407/899仍Core1.4.2/Growth1.10.2，ef5仍Core1.4.0/Growth1.10.0，均不能当本次当前四包安装通过。
+- 全恢复Task仍ACTIVE。下一项：使用真实独立发布身份完成原Registry发布，按产品resolve/lock/approve/apply/verify/configure更新安装和有效八配置；核正式有限身份/OIDC、沿受支持入口PG→最新m1 API→Web、栖月汇八页面与只读交互/canary；Host/worker/Provider及自然首链另守当前正式权限门。
+
+实际证据：aos-platform/.evidence/qyh-full-system-restoration-20261011/plan.md、registry-two-validated-readonly-reconciliation.json、mixed-candidate-qualification-terminal.json、current-installation-entry-verification.md及current-installation-exact-lock-coordinates.json。下文保留早期阶段记录，仅用于历史审计，不作为当前等待整体授权或停止施工依据。
 
 ## 已准备且可审阅的目标
 原092和当前preview159均保留；候选aos-qyh-history159-prepared-20261011，独立aos-qyh-history159-prepared-data-20261011，数据库aos_meta_head，cluster7695302940039200809。全库647表、roles/membership/databaseACL、12序列精确对账；schema仅21处相邻AND括号重组逐项AST相同，其余行一致。备份两份，第二为校验副本，role密码未恢复。隔离networknone/noports；不是正式替换权威库。
