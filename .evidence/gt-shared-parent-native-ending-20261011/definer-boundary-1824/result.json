@@ -1,0 +1,166 @@
+{
+  "database": "aos_test_5b8ce7041195_ti4_test",
+  "cluster": "7694680278363095064",
+  "functions": [
+    {
+      "oid": 5678010,
+      "signature": "verify_shared_parent_final_call_authority(uuid,text,xid8,integer)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_physical_capacity_occupation_owner",
+      "schema": "public",
+      "source_sha256": "7cf524d8836a7afec21635e20425cdd8a5ba58399fdd00f4fd9f2dc31a2a5419",
+      "acl": [
+        {
+          "grantee": "aos_physical_capacity_occupation_owner",
+          "privilege_type": "EXECUTE",
+          "is_grantable": false
+        }
+      ],
+      "effective_execute": {
+        "aos_runtime": false,
+        "aos_physical_capacity_occupation_owner": true,
+        "aos_model_eval_issuer_owner": false
+      },
+      "schema_create": {
+        "aos_runtime": false,
+        "aos_physical_capacity_occupation_owner": false,
+        "aos_model_eval_issuer_owner": false
+      },
+      "owner_flags": {
+        "rolcanlogin": false,
+        "rolsuper": false,
+        "rolcreaterole": false,
+        "rolcreatedb": false,
+        "rolreplication": false,
+        "rolbypassrls": false
+      },
+      "owner_memberships": [],
+      "lexical_review_lines": []
+    },
+    {
+      "oid": 5678015,
+      "signature": "read_shared_parent_receipt_origin(uuid,text,xid8,integer)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_model_eval_issuer_owner",
+      "schema": "public",
+      "source_sha256": "93cbcf5619479047d29d18dd9c95121ac86f1e0064be1fdb172c538f300c6bb0",
+      "acl": [
+        {
+          "grantee": "aos_model_eval_issuer_owner",
+          "privilege_type": "EXECUTE",
+          "is_grantable": false
+        },
+        {
+          "grantee": "aos_physical_capacity_occupation_owner",
+          "privilege_type": "EXECUTE",
+          "is_grantable": false
+        }
+      ],
+      "effective_execute": {
+        "aos_runtime": false,
+        "aos_physical_capacity_occupation_owner": true,
+        "aos_model_eval_issuer_owner": true
+      },
+      "schema_create": {
+        "aos_runtime": false,
+        "aos_physical_capacity_occupation_owner": false,
+        "aos_model_eval_issuer_owner": false
+      },
+      "owner_flags": {
+        "rolcanlogin": false,
+        "rolsuper": false,
+        "rolcreaterole": false,
+        "rolcreatedb": false,
+        "rolreplication": false,
+        "rolbypassrls": false
+      },
+      "owner_memberships": [],
+      "lexical_review_lines": []
+    },
+    {
+      "oid": 5678048,
+      "signature": "verify_shared_parent_final_physical(uuid,text,xid8,integer)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_physical_capacity_occupation_owner",
+      "schema": "public",
+      "source_sha256": "cbe39674a1af8552798819c6a4bed84acfdcaae30eaf82a8c22715dbeeb7c28b",
+      "acl": [
+        {
+          "grantee": "aos_physical_capacity_occupation_owner",
+          "privilege_type": "EXECUTE",
+          "is_grantable": false
+        }
+      ],
+      "effective_execute": {
+        "aos_runtime": false,
+        "aos_physical_capacity_occupation_owner": true,
+        "aos_model_eval_issuer_owner": false
+      },
+      "schema_create": {
+        "aos_runtime": false,
+        "aos_physical_capacity_occupation_owner": false,
+        "aos_model_eval_issuer_owner": false
+      },
+      "owner_flags": {
+        "rolcanlogin": false,
+        "rolsuper": false,
+        "rolcreaterole": false,
+        "rolcreatedb": false,
+        "rolreplication": false,
+        "rolbypassrls": false
+      },
+      "owner_memberships": [],
+      "lexical_review_lines": []
+    },
+    {
+      "oid": 5678049,
+      "signature": "read_shared_parent_complete_end_facts(uuid,text,xid8,integer)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "owner": "aos_physical_capacity_occupation_owner",
+      "schema": "public",
+      "source_sha256": "1bb627e5494be5ddb405c34016ca724e5f315ddb700f2a51b273f8853bbcfc66",
+      "acl": [
+        {
+          "grantee": "aos_physical_capacity_occupation_owner",
+          "privilege_type": "EXECUTE",
+          "is_grantable": false
+        }
+      ],
+      "effective_execute": {
+        "aos_runtime": false,
+        "aos_physical_capacity_occupation_owner": true,
+        "aos_model_eval_issuer_owner": false
+      },
+      "schema_create": {
+        "aos_runtime": false,
+        "aos_physical_capacity_occupation_owner": false,
+        "aos_model_eval_issuer_owner": false
+      },
+      "owner_flags": {
+        "rolcanlogin": false,
+        "rolsuper": false,
+        "rolcreaterole": false,
+        "rolcreatedb": false,
+        "rolreplication": false,
+        "rolbypassrls": false
+      },
+      "owner_memberships": [],
+      "lexical_review_lines": []
+    }
+  ],
+  "read_only": true,
+  "full_reachable_closure": false,
+  "execution_authorized": false
+}

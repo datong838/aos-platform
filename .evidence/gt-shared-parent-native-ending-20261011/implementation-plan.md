@@ -252,3 +252,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## 原生入口实际角色边界1823
 候选一固定验证器闭合，候选二生命周期约束；先核第二项攻击路径是否对原正式Owner/runtime可达。新增native-role-boundary-1823/check.py/result.json。精确原隔离cluster/容器/测试库，随机临时schema仅事务内，Owner与runtime各自实际LOAD已核hash的1820观察库、设置dynamic_library_path、创建C函数（Owner自有schema）。逐项SAVEPOINT并要求42501，异常非预期保留；不调用新增函数、不授权权限、不运行helper页面/正式DB/Provider。每步回滚，终局确认schema消失/原reader不变；实际权限拒绝不证明既有SECURITY DEFINER或已加载可信模块闭合。
+
+## 固定验证器提权边界1824
+沿已登记fixed-validator闭合候选，绑定1807独立回读239持久函数中四个SECURITY DEFINER。只读原隔离terminal库REPEATABLE READ，核cluster/容器、四函数OID/签名/prosrcSHA/Owner/search_path，展开实际ACL与PUBLIC/runtime/physicalOwner执行权限及Owner登录/提权/成员关系。保存正文供方案审查，列EXECUTE/LOAD/set_config字面线索仅作检索不当解析证明。不调用函数/重放Source/修改库。结果用于定位后续精确调用闭合，不能把四函数元数据当完整表达式/所有分支证明。
