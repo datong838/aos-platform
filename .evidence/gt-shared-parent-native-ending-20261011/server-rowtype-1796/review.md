@@ -1,0 +1,5 @@
+# 原生行类型绑定验证
+
+在既有终态隔离库SERIALIZABLE READ ONLY读取原函数及prepared_plan_risk字段。实际PG160014内置plpgsql_validator在check_function_bodies=on下成功编译原安装函数，immutable=jsonb、content_hash/target_request/judge_request=text。函数body前后逐字不变，风险表前后0，事务rollback；未执行业务函数。
+
+最后一个离线语法缺口已定位为缺目录行类型，并非已证实产品语法错误。不能把编译通过说成所有SQL规划/所有分支执行通过；后续必须观察原固定collector的PG16真实规划表达式OID与隐式operator/cast，并结合独立包/lifecycle、固定点、耐久COMMIT/unknown完整验收。产品无需为适配离线parser改变函数体。

@@ -1,0 +1,60 @@
+{
+  "server_version_num": "160014",
+  "cluster": "7694680278363095064",
+  "signature": "public.build_shared_parent_admission_origin(bytea,jsonb,uuid,text,text,uuid,text,text,uuid,jsonb,text)",
+  "body_sha256": "c6d105c17699b5af46b7afc8d3607fb712c64bb2ee30a60daf066ffbf2cc4dee",
+  "fields": [
+    {
+      "attnum": 1,
+      "attname": "org_id",
+      "type": "text"
+    },
+    {
+      "attnum": 2,
+      "attname": "project_id",
+      "type": "text"
+    },
+    {
+      "attnum": 3,
+      "attname": "plan_id",
+      "type": "uuid"
+    },
+    {
+      "attnum": 4,
+      "attname": "target_request",
+      "type": "text"
+    },
+    {
+      "attnum": 5,
+      "attname": "judge_request",
+      "type": "text"
+    },
+    {
+      "attnum": 6,
+      "attname": "immutable",
+      "type": "jsonb"
+    },
+    {
+      "attnum": 7,
+      "attname": "content_hash",
+      "type": "text"
+    },
+    {
+      "attnum": 8,
+      "attname": "origin_xid",
+      "type": "xid8"
+    },
+    {
+      "attnum": 9,
+      "attname": "origin_pid",
+      "type": "integer"
+    }
+  ],
+  "native_plpgsql_compilation": true,
+  "business_function_invoked": false,
+  "rowtype_binding": true,
+  "expressions_planned": false,
+  "runtime_closure": false,
+  "formal_root": false,
+  "execution_allowed": false
+}

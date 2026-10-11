@@ -158,3 +158,6 @@ r1原fixture目录门明确终态失败，未到collector，profile恢复成功�
 
 ## PG16匹配语法复核1795
 新增semantic-closure-pg16-1795独立依赖目录和audit/result；使用已有uv安装pglast6系列到该目录，核返回parser major=16、实际server=16并固定制品版本。项目原venv不修改。重复原只读目录分析，针对四缺口读取确切语法并分辨离线PLpgsql变量解析限制；复杂赋值保持拒绝，不能以字符串猜测补全语义。此步不代替执行计划、隐式转换、native与生命周期闭合。
+
+## 原生行类型编译验证1796
+新增server-rowtype-1796/check.py/result.json。仅原隔离终态库SER READ ONLY，核container/cluster/server、原函数精确签名及hash、prepared_plan_risk字段与类型；使用PG16内置plpgsql_validator编译原安装函数，check_function_bodies局部on，无调用业务函数/DDL。该编译仅证明目录行类型可绑定，不证明所有SQL表达式已规划或运行，不消除operator/cast/native/生命周期未闭合。正式库不动。
