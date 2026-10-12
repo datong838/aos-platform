@@ -115,11 +115,30 @@ class _LazyRuntimeViewReader:
 def _current_a0v_host_preflight(*, signed_receipt: str, credential_reference: str,
                                 preparation_only: bool = False) -> bool:
     """Bind this API process to the current signed A0-V database before Host selection."""
-    if not Path(signed_receipt).is_absolute() or not Path(credential_reference).is_absolute():
+    if not Path(credential_reference).is_absolute():
         return False
     try:
+        restored_fields = ('AOS_CURRENT_RESTORED_API_IDENTITY_FILE',
+                           'AOS_CURRENT_RESTORED_INSTALLATION_ID')
+        restored_route = any(name in os.environ for name in restored_fields)
         command = [sys.executable, str(_REPOSITORY_ROOT / "scripts/a0v_current_runtime_host_preflight.py"),
-                   "--signed-receipt", signed_receipt, "--credential-file", credential_reference]
+                   "--credential-file", credential_reference]
+        if restored_route:
+            identity_reference, installation_id = (
+                os.getenv(name, '').strip() for name in restored_fields)
+            root = os.getenv('AOS_BUNDLE_ROOT', '').strip()
+            trust = os.getenv('AOS_BUNDLE_TRUST_ROOTS_FILE', '').strip()
+            if (preparation_only is not True or signed_receipt or not installation_id
+                    or any(not Path(path).is_absolute()
+                           for path in (identity_reference, root, trust))):
+                return False
+            command.extend(['--restored-api-identity', identity_reference,
+                '--restored-installation', installation_id, '--bundle-root', root,
+                '--trust-roots-file', trust])
+        else:
+            if not Path(signed_receipt).is_absolute():
+                return False
+            command.extend(['--signed-receipt', signed_receipt])
         if preparation_only:
             command.append("--preparation-only")
         result = subprocess.run(
@@ -136,10 +155,15 @@ def _current_a0v_host_preflight(*, signed_receipt: str, credential_reference: st
                 or report.get("admissionMode", "FULL")
                     != ("PREPARATION_ONLY" if preparation_only else "FULL")):
             return False
+        if restored_route and (report.get('installationId') != installation_id
+                               or report.get('database') != 'aos_meta_head'):
+            return False
         authority = report.get("databaseAuthority")
         if (type(authority) is not list or len(authority) != 3
                 or type(authority[0]) is not str or type(authority[1]) is not int
                 or type(authority[2]) is not str):
+            return False
+        if restored_route and authority[2] != 'aos_meta_head':
             return False
         if (Path(os.environ["AOS_BUNDLE_ROOT"]).resolve(strict=True)
                 != Path(report["signedRoot"]).resolve(strict=True)
@@ -205,7 +229,9 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
     preparation_only = enabled and admission_flag == "1"
     if enabled:
         signed_receipt = os.getenv("AOS_CURRENT_SIGNED_RECEIPT", "").strip()
-        if not credential_reference or not signed_receipt:
+        restored_route = any(name in os.environ for name in (
+            'AOS_CURRENT_RESTORED_API_IDENTITY_FILE', 'AOS_CURRENT_RESTORED_INSTALLATION_ID'))
+        if not credential_reference or (not signed_receipt and not restored_route):
             from aos_api.extension_runtime.production_runtime import RuntimeHostSelection
             return RuntimeHostSelection(None, "INACTIVE", "CURRENT_SIGNED_HOST_PREFLIGHT_REQUIRED")
         if not _current_a0v_host_preflight(

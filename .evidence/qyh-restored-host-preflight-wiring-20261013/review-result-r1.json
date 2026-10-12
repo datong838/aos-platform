@@ -1,0 +1,47 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-restored-host-preflight-wiring-20261013-r1",
+    "task_id": "qyh-restored-host-preflight-wiring-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "694e69799119300513e724ef3a288e2da9fde41d",
+      "authority_revision": "AOS-001991",
+      "files": {
+        ".evidence/qyh-restored-host-preflight-wiring-20261013/review-material-0.txt": "438b7ebe196cd82618de94b7ca4974b27c8cc98c023f3da6b55e68d27569e6d4",
+        ".evidence/qyh-restored-host-preflight-wiring-20261013/review-material-1.txt": "594cc4c9e6c6ec4b0d224f5578a73ec4f333153de7fff5c80c4004442c6d6de2",
+        ".evidence/qyh-restored-host-preflight-wiring-20261013/review-material-2.txt": "99fcc821adc9c2f3fc020fbe3a1e0603d31c6444fc37b8e8dfb4656e3bd8ff4d",
+        ".evidence/qyh-restored-host-preflight-wiring-20261013/review-material-3.txt": "d4d79d40aa14ae04da4fc42956162b083ada0aea87e626c633576faeeae537e5",
+        ".evidence/qyh-restored-host-preflight-wiring-20261013/review-material-4.txt": "500149ecfe834ea9b68ab21b4b20abb34cd8c9b7576ad563a4bb4561a1bad21e"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Explicit restored preparation routes the original builder to the original readonly preflight CLI without requiring a historical signed receipt.",
+        "evidence": "材料0 (control_wiring.py) _current_a0v_host_preflight: 当 AOS_CURRENT_RESTORED_API_IDENTITY_FILE/AOS_CURRENT_RESTORED_INSTALLATION_ID 任一存在时，进入 restored_route 分支，要求 preparation_only=True、signed_receipt 为空、身份/根/信任文件均为绝对路径，调用脚本 scripts/a0v_current_runtime_host_preflight.py 带 --restored-api-identity/--restored-installation/--bundle-root/--trust-roots-file/--preparation-only。build_production_runtime_host_selection 中 restored_route 存在时不要求 signed_receipt。材料1 测试 test_explicit_restored_route_dispatches_exact_original_cli 验证命令参数精确派发；test_original_builder_reaches_restored_preflight_without_historical_receipt 验证 builder 进入 gate 无需历史签名。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Incomplete, mixed, relative-path or FULL restored inputs fail closed without historical fallback.",
+        "evidence": "材料0 _current_a0v_host_preflight: restored_route 分支在 preparation_only is not True、signed_receipt 非空、installation_id 为空、或任一绝对路径检查失败时均 return False。build_production_runtime_host_selection: 当 credential_reference 缺失且 signed_receipt 和 restored_route 均为空时才报 CURRENT_SIGNED_HOST_PREFLIGHT_REQUIRED， restored_route 存在但 preflight 失败则报 CURRENT_SIGNED_HOST_PREFLIGHT_FAILED。材料1 测试 test_invalid_explicit_restored_route_has_no_subprocess_or_legacy_fallback: 覆盖 full(非 prep_only)、mixed(设置 signed_receipt)、missing-identity、empty-installation、relative-identity、relative-root 六种无效情形，均断言返回 False 且不启动子进程。test_restored_report_must_match_requested_installation_and_current_database 验证报告不匹配时拒绝。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Restored reports retain exact installation, current API physical database, signed root and credential-generation checks.",
+        "evidence": "材料0 _current_a0v_host_preflight: restored_route 成功时校验 report.installationId == installation_id、report.database == 'aos_meta_head'、databaseAuthority 三元素类型与恢复安装ID数据库一致、Path(AOS_BUNDLE_ROOT).resolve() == Path(report.signedRoot).resolve()、Path(AOS_BUNDLE_TRUST_ROOTS_FILE).resolve() == Path(report.trustRoots).resolve()，并通过 psycopg 只读连接查询实际 server_addr/server_port/database_name 与 authority 比对。最后调用 pin_runtime_file_generation 和 pin_verified_signed_release_root。材料1 测试 test_restored_success_keeps_original_api_authority_and_generation_pins: 验证 pins 包含 credential 和 generation，roots 包含 bundle root，数据库或 authority 不匹配时返回 False。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "This code change leaves live services and Host disabled and does not prove eight workbenches restored.",
+        "evidence": "材料4 元数据: runtimeHostEnabled=false、liveApiReloaded=false、eightWorkbenchesVerified=false、currentDatabaseWrites=false。材料2 RED说明: \"本波只做代码接线，不设置开启环境或重启服务\"、\"不会把 test 或 PASS 当八台已恢复\"。材料3 测试通过174个用例但均为 mocked routing/postcheck 测试，无真实隔离身份准入。材料4 limits 明确: \"Only mocked routing/postcheck tests; no real isolated identities admitted\"、\"Live management process remains prior frozen source\"。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前冻结状态，不激活 Host 或服务重启。如需推进激活，需独立满足正式 Owner/配置/预算门禁后再行评估。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

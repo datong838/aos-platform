@@ -1,0 +1,21 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-restored-host-preflight-wiring-20261013-r1",
+  "task_id": "qyh-restored-host-preflight-wiring-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "694e69799119300513e724ef3a288e2da9fde41d",
+    "authority_revision": "AOS-001991",
+    "files": {
+      ".evidence/qyh-restored-host-preflight-wiring-20261013/review-material-0.txt": "438b7ebe196cd82618de94b7ca4974b27c8cc98c023f3da6b55e68d27569e6d4",
+      ".evidence/qyh-restored-host-preflight-wiring-20261013/review-material-1.txt": "594cc4c9e6c6ec4b0d224f5578a73ec4f333153de7fff5c80c4004442c6d6de2",
+      ".evidence/qyh-restored-host-preflight-wiring-20261013/review-material-2.txt": "99fcc821adc9c2f3fc020fbe3a1e0603d31c6444fc37b8e8dfb4656e3bd8ff4d",
+      ".evidence/qyh-restored-host-preflight-wiring-20261013/review-material-3.txt": "d4d79d40aa14ae04da4fc42956162b083ada0aea87e626c633576faeeae537e5",
+      ".evidence/qyh-restored-host-preflight-wiring-20261013/review-material-4.txt": "500149ecfe834ea9b68ab21b4b20abb34cd8c9b7576ad563a4bb4561a1bad21e"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "a1e410d926017862d697d75e50fb07d141128800f315d8bc2352744cd815f98d",
+  "transport_sha256": "1d188ec08e8512f735cfe98a85509ecc7b4cc5e2e5c9369259794086a0c25c2a"
+}

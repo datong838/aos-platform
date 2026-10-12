@@ -1,0 +1,28 @@
+{
+  "outcome": "RESTORED_PREPARATION_ORIGINAL_BUILDER_CODE_GREEN_NOT_STARTED",
+  "red": {
+    "failed": 3,
+    "passed": 9
+  },
+  "initialAdjacentPass": 120,
+  "finalAdjacentPass": 174,
+  "currentDatabaseWrites": false,
+  "liveApiReloaded": false,
+  "runtimeHostEnabled": false,
+  "eightWorkbenchesVerified": false,
+  "files": {
+    "services/aos-api/aos_api/asset_registry/control_wiring.py": "438b7ebe196cd82618de94b7ca4974b27c8cc98c023f3da6b55e68d27569e6d4",
+    "services/aos-api/tests/extension_runtime/test_qyh_restored_host_wiring.py": "594cc4c9e6c6ec4b0d224f5578a73ec4f333153de7fff5c80c4004442c6d6de2"
+  },
+  "limits": [
+    "Only mocked routing/postcheck tests; no real isolated identities admitted",
+    "Live management process remains prior frozen source",
+    "Formal Owner/configuration/budget gates still required before activation"
+  ],
+  "independentReview": {
+    "verdict": "PASS",
+    "supportedClaims": 4,
+    "consumed": true,
+    "executionAuthorized": false
+  }
+}
