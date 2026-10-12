@@ -27,8 +27,16 @@ def _unique_pairs(items):
 
 
 def _identity_file() -> dict[str, str]:
+    return _read_identity_file(credential_file_env=_CREDENTIAL_FILE,
+        schema=_SCHEMA, role=_ROLE,
+        rejection='Eval writer identity reference is invalid')
+
+
+def _read_identity_file(*, credential_file_env: str, schema: str,
+                        role: str, rejection: str) -> dict[str, str]:
+    """Shared protected-file parsing; database identity is checked separately."""
     try:
-        reference = os.getenv(_CREDENTIAL_FILE, "").strip()
+        reference = os.getenv(credential_file_env, "").strip()
         path = Path(reference)
         if not reference or not path.is_absolute():
             raise ValueError("absolute identity reference required")
@@ -49,8 +57,8 @@ def _identity_file() -> dict[str, str]:
         if (
             type(value) is not dict
             or set(value) != {"schemaVersion", "dsn", "role"}
-            or value["schemaVersion"] != _SCHEMA
-            or value["role"] != _ROLE
+            or value["schemaVersion"] != schema
+            or value["role"] != role
             or type(value["dsn"]) is not str
             or not value["dsn"]
             or value["dsn"] != value["dsn"].strip()
@@ -59,7 +67,7 @@ def _identity_file() -> dict[str, str]:
             raise ValueError("Eval writer identity shape differs")
         return value
     except Exception:
-        raise RuntimeError("Eval writer identity reference is invalid") from None
+        raise RuntimeError(rejection) from None
 
 
 def _verify_identity(conn: psycopg.Connection, expected_database: str) -> None:
