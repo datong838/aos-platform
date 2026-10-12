@@ -1,0 +1,7 @@
+# 当前精确四包完整schema原安装Store协议验收
+
+已登记Task/Lease，同thread m1单写；原旧fullschema测试锁定Core1.4.0/platform1.23.0/ops1.2.0，不能作为当前四包证据。新增tests/extension_runtime/test_qyh_current_four_bundle_full_schema_pg.py与本evidence。复用原已有签名根179files/现有信任Root，不生成key或改包；原标准conftest在18431 newUUID fullschema161 DB，原RegistryService/PostgresRegistryStore/CompositionService/InstallationService/canonical create_approved_first_installation原接口完整COMMIT/readback，以fixtures actor/publisher roles限定到新空实验数据库，不伪称正式身份。
+
+路径：fixture组织org-org/dev-project、仅新fixture admin actor；四签名包原load/CreateBundle/CreateVersion/Validate/Publish各原API（仅testDB），精确当前四版本、原resolve锁3edges/8UI、原create/submit/independent approve→approved3，独立readback与原preparation template select/active resolver deny；canary无安装并拒绝select、missing trust拒绝、实际schema161且Root文件hash不变。无RuntimeLifecycle/Host/worker/OCI/Provider start，不手工business run_definition，不改SourceDB/真实Registry状态，不重放旧Run或unknowneffects。fixture批准和发布只用于协议兼容，不授现实权。
+
+先新增缺口case并运行，若原接口当前包fullschema失败先保存RED诊断，不猜测或降低版本。通过仅闭合当前无执行安装Store协议切片；实际publish/当前install/八配置/Owner/预算/自然首链仍正式登录及publisher身份等独立门。审查新case与旧参数固定版本差异，原code不改，专项与适用相邻不过度重复，产品页无更改无需浏览器虚验收。
