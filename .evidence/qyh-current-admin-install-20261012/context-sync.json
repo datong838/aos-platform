@@ -1,0 +1,11 @@
+{
+  "authority": "AOS-001976",
+  "strongProjections": 7,
+  "memoryValidation": "GREEN",
+  "GoalObserved": "active",
+  "existingUserTrackedChangesPreserved": 22,
+  "parentFullRestorationTaskStillActive": true,
+  "installation": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+  "state": "submitted",
+  "eightPagesAccepted": false
+}
