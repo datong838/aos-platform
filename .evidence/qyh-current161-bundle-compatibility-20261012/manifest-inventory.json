@@ -1,0 +1,53 @@
+{
+  "actualOwnedSchemaHead": "a0v_161",
+  "actualRealSchemaHead": "a0v_159",
+  "fourManifestInventory": [
+    {
+      "bundle": "domain.ecommerce.core/1.4.3",
+      "manifestSHA256": "0a7375f97fa5614c8de84ea425907cf1c9c12fed6d472e801b19924ed88b13da",
+      "manifestSections": [
+        "apiVersion",
+        "kind",
+        "metadata",
+        "spec"
+      ],
+      "declaredCompatibility": {}
+    },
+    {
+      "bundle": "platform.ecommerce.niushop/1.23.2",
+      "manifestSHA256": "b0c7f0604de5fb404dd3d546ad0bb854c59ab90be5d8bb6b5923ff751e622c37",
+      "manifestSections": [
+        "apiVersion",
+        "kind",
+        "metadata",
+        "spec"
+      ],
+      "declaredCompatibility": {}
+    },
+    {
+      "bundle": "solution.ecommerce.growth/1.13.0",
+      "manifestSHA256": "0449c7826af340ccd1ae23510898f1676eb033c892e71862f779c1150f997b0a",
+      "manifestSections": [
+        "apiVersion",
+        "kind",
+        "metadata",
+        "spec"
+      ],
+      "declaredCompatibility": {}
+    },
+    {
+      "bundle": "solution.ecommerce.operations-base/1.2.2",
+      "manifestSHA256": "bce4f6e76da8c7416352b7ce8b4149a6ab107e9e1d5da1bd6f27f8b24953e68c",
+      "manifestSections": [
+        "apiVersion",
+        "kind",
+        "metadata",
+        "spec"
+      ],
+      "declaredCompatibility": {}
+    }
+  ],
+  "signaturesRevalidatedThisWave": false,
+  "compatibilityAccepted": false,
+  "entityDatabaseWrites": 0
+}

@@ -1,0 +1,5 @@
+# 当前161与四签名包兼容复核
+
+注册只读Task/Lease，承接231 D-wave当前版本兼容门，不重建另一个业务目标。真实库仍159；最新真实副本原160/161已通过全量数据与窄ACL门。本目录实现原ManifestLoader+真实现有FileTrustRootProvider签名/ReleasePolicy再核，不建key/issuer/Owner；只读逐项提取四manifest/native requiredPlatformSchema并对照最新161原SchemaReceipt/ownedDB原表函数与签名制品ABI要求。禁止读外部商城、回放旧Run、人工execution、发布/安装/迁移或放宽兼容规则。
+
+现有四manifest声明清单已读取，manifest-inventory.json只作为定位，signature/compatibilityAccepted=false。后续复用原平台schema与运行时store readback，不将8模块metadata或health200当8页面验收。未知身份/Root/签名或schema缺口精确登记，继续已授权独立施工。
