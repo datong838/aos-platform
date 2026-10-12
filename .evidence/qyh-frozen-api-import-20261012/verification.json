@@ -1,0 +1,13 @@
+{
+  "sourceHead": "97b26e3481270618609bc0bd73a227affcb08900",
+  "originalSourceGatePassed": true,
+  "freshFactoryImport": true,
+  "sourceBoundApiModules": 1554,
+  "databaseAttempts": 0,
+  "networkAttempts": 0,
+  "lifespanCalled": false,
+  "serverStarted": false,
+  "currentServiceChanged": false,
+  "formalIdentityOrEightWorkbenchesVerified": false,
+  "scriptSha256": "ef6b0d669a311d52f923cb120d39e0aae3dcfc5f0d43a2301566b08a3258a29d"
+}

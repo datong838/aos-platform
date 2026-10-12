@@ -1,0 +1,9 @@
+# 原冻结应用fresh interpreter导入实测
+
+候选原receipt latest-api-skill-snapshot-20261012/source97b26保持，当前m1仅证据变化；调用原require_api_source_candidate真实通过。全新子进程cwd私密candidate、PYTHONPATH仅其API/scripts，原OFFFLAGS/迁移disabled/明确管理Dev模式，未继承AOS/PG/保护writer/private credentials。DBURL明确本地port1/unavailable且无凭证。原psycopg native connect/Async connect及socket connect/create_connection被fail-stop，任何尝试计数并抛错，不伪造成功。原management_app实际创建FastAPI/ReadOnlyManagementApp，1554 aos_api模块origin均在该candidateAPI路径，无工作树污染，database/network attempts0，exit0。
+
+无lifespan/server bind/HTTP/WS/模型/DB请求，未读取当前库/身份passfile、未触碰PG/API/Web生命周期。只验证启动前import，不能验证uvicorn生存、当前库readonly、Scope/八页面或Source权限。原Root/ModelRoute guard/认证和Source审批不因import被满足。原GraphWorkerflags仍OFF；由于不进lifespan不授Host/worker/Provider。
+
+无产品变更，纯originalfactory实测无需镜像代码的单测。既有22用户tracked变化不复制/不改变，冻结候选未改写，旧source保留。环境与stdout/stderr仅本受控进程，对log做secret-pattern检查；只提交public证据不提交private源码或manifest。
+
+下一已登记启动门需保持原aos职责独立与fullrestore parentOwner；核最新代码/冻结source/current volume/schema及未知操作，再原明确管理readonly模式的DB/PID/port/lifespan/目录/浏览器验收。正式OIDC/publisher与新合法signed Skill Eval writer/执行依赖仍待，不能把本import当八工作台或自然首链。Goal/fullrestore ACTIVE。
