@@ -1,0 +1,9 @@
+{
+  "oldCandidateHead": "e81d2b500fbcb93e5aeac8a7ee4579bbeb1e6068",
+  "committedSourceFilesChanged": 0,
+  "extraPythonCacheFiles": 433,
+  "strictCandidateAccepted": false,
+  "oldCandidatePreserved": true,
+  "serviceRestartAttempted": false,
+  "cause": "offline Alembic Python imports lacked PYTHONDONTWRITEBYTECODE"
+}

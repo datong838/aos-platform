@@ -198,7 +198,7 @@ def main():
     private.mkdir(mode=0o700)
     statements = []
     env = {k:v for k,v in os.environ.items() if k in ('PATH', 'HOME', 'TMPDIR', 'LANG')}
-    env.update({'AOS_DOTENV_DISABLED':'1','PYTHONPATH':str(source / 'services/aos-api')})
+    env.update({'AOS_DOTENV_DISABLED':'1','PYTHONDONTWRITEBYTECODE':'1','PYTHONPATH':str(source / 'services/aos-api')})
     for old, new in [('a0v_159', 'a0v_160'), ('a0v_160', 'a0v_161')]:
         code = "from alembic.config import Config;from alembic import command;from alembic.script import ScriptDirectory;import io;c=Config('alembic.ini',output_buffer=io.StringIO());c.set_main_option('script_location','alembic');c.set_main_option('sqlalchemy.url','postgresql://localhost/unused');assert ScriptDirectory.from_config(c).get_heads()==['a0v_161'];command.upgrade(c,'"+old+":"+new+"',sql=True);print(c.output_buffer.getvalue(),end='')"
         generated = subprocess.run([str(ROOT / 'services/aos-api/.venv/bin/python'), '-c', code],

@@ -1,0 +1,16 @@
+{
+  "currentHead": "0511cef862ea1638c706f0783a11e502ebbc177e",
+  "apiSourceHead": "0511cef862ea1638c706f0783a11e502ebbc177e",
+  "apiSource": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-0511cef862ea1638c706f0783a11e502ebbc177e",
+  "candidate": ".evidence/qyh-full-system-restoration-20261011/current161-preview-source-20261012.json",
+  "freshFrozenSourceAcceptedBeforeAndAfterOfflineImports": true,
+  "bytecodeGeneratedWithFixedEnvironment": 0,
+  "webFilesVerified": 758,
+  "webSource": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/web-source-r2-c17826e0eb53cd68ab84c5a566bc3471abe88294",
+  "oldApiPid": 61739,
+  "oldWebPid": 82853,
+  "oldSourceHead": "97b26e3481270618609bc0bd73a227affcb08900",
+  "sourceVersion": "a0v_161",
+  "formalIdentityVerified": false,
+  "restartPerformed": false
+}

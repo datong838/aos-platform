@@ -1,0 +1,5 @@
+Rules AGENTS/231/已批准栖月汇全恢复与aos06:14未完成重启门。本轮承接该独立重启职责，PG/API使用parent维护Lease，Web独立新Task/Lease；不是再次执行aos-2源迁移或增加写者。源161/650已真实迁移，原HBA/646数据/角色等门通过。
+当前管理API61739/18080旧冻结97b、Web82853/18434原冻结758文件；先核PID/cwd/源码/同卷CID/版本与强投影。Web实际758源码须与当前m1 Gitblob及Git当前完整Web/sdk集合匹配，protected22工作树不拷贝；若无需改Web代码复用准确冻结源码，使用原Vite/proxy入口。API只用已核e81冻结候选，原restored gate必须再次实际接受。
+只对精确Source container同卷执行一次PG restart，intent/terminal/新StartedAt/cluster/volume/161/650与全量数据指纹回读；未知结果仅读不重发。顺序PG健康→原已归属readonly API停止、端口空闲→最新代码readonly管理API启动（dev仅inspection，Host/worker/Provider OFF、DB readonly、POST405）→原管理Web停止、空闲→原Web同准确源重启。原8080/8434、其他分支或其他Docker profile不动。
+CDP9244原AOS专用浏览器仅读、独立tab/核心只读交互/8路径内容等，留tab，不提交/启用/发布/商源调用。formalOIDC/publisher缺来源、current安装/八配置/budget/Owner和自然首链仍pending；GET200/preview启动不作8台功能接受。已找到repo Keycloak dev fixture只有developer/admin无独立publisher，专用context无运行容器，其他daemon不可达/超时是观察，不自动重启或创造替代身份。
+候选e81原Git文件逐项hash未变，但offline Alembic import实际新增433个pyc及3个目录mode漂移；严格消费者拒绝，未重启。旧候选不删不修，原维护工具未来offline子进程显式PYTHONDONTWRITEBYTECODE=1（不重放维护）。按现HEAD另冻新候选、原gate消费；此为真实来源修复，不弱化manifest/mode要求。

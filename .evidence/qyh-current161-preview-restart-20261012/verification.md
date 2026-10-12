@@ -1,0 +1,9 @@
+# 栖月汇161禁入预览栈重启验收
+承接未完成aos2026-10-12T06:14:36.749Z，而非重复启动aos-2或第二写者。PG/API用parent维护Lease，Web独立本Task，原8080/8434与其他Docker环境未操作。
+原container84989681/volume/cluster7695302940039200809同一对象PG restart terminal0、StartedAt实际更新；初始pg_isready非0仅启动中，随后只读复核同对象ready，无再次restart。161/650原生全hash/count重启前后以及browser后相等，bindings disabled/fenced。
+原61739/旧97b管理API归属PID/cwd核验后SIGTERM/18080空闲，当前源码0511cef...原guarded readonly entry新PID55416/session32824/cwd原精确冻结源码回读。原PG限定LOGIN默认readonly on；HTTP200 health/me/两目录、POST405、formal principal403、dev-org读取栖月汇安装404，无正式权限放宽。
+Web原82853归属核验后SIGTERM/18434空闲，新PID与session24636实际StartedAt更新。原758冻结Web/sdk文件与当前Git完整集合（仅排除.env）及真实磁盘逐项hash相同，因此原准确冻结源可复用，不复制22个用户改动。原Vite/原proxy18080实际同入口重启。
+CDP9244既有AOS专用browser新独立tab，只导航8路径/实际重新读取目录GET与catalog实际租户org-org/dev-project，8次document/catalog200、栖月汇商贸有限公司可见，全部仍安装disabled/fenced空态；0 pageErrors/0mutationRequests，无mock/interception，tab保留。只能算preview重启和空态/只读边界验收，不能算正式8工作台功能或自然经营。
+修复：旧e81冻结目录被维护offline Python import新增433pyc/3目录mode污染，但8644原Git文件hash全保持；原strict gate拒绝，保留旧候选，不删缓存假修。原维护工具后续offline子进程增加PYTHONDONTWRITEBYTECODE=1；新051冻结原候选8644manifest同源，真实offline Alembic生成前后guard均接受、0pyc，实际新API请求后原guard仍接受。只做offline import验证，不再执行已完成源迁移。最初离线试验解释器路径resolve剥离venv导致config模块失败，采用原绝对venv入口后成功，无DB效果。代码/方案复核/native专项及相邻如上，无其他产品代码改动。
+现有repo Keycloak仅dev fixture/developer-admin无独立publisher；本机专用context无该服务，default不可达/Desktop观察timeout，不能认定全机无身份、更不能自动拉起测试身份代替。既有正式OIDC/publisher路径仍待答；当前四包正式发布/安装/八配置/Owner/预算、Host/worker/Provider与8台/自然首链/观察发布仍未完成。
+Goal本轮产品回读blocked，本轮没有调用update_goal；现有supported接口无法恢复active，已如实报告控件恢复需要。不改私有Goal、不造替代Goal，用户明确授权的在途重启安全收口完成。新heartbeat12:28到达时已有这波实际启动工具，未重复restart或并行夺锁。

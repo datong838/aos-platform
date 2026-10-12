@@ -1,0 +1,10 @@
+{
+  "pid": 55927,
+  "sessionId": 24636,
+  "port": 18434,
+  "startedAt": "Mon Oct 12 20:32:29 2026",
+  "all758CurrentGitWebFilesVerifiedBeforeRestart": true,
+  "apiTarget": "http://127.0.0.1:18080",
+  "documentHTTPStatus": 200,
+  "eightWorkbenchesFunctionallyAccepted": false
+}

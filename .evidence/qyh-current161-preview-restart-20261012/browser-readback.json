@@ -1,0 +1,114 @@
+{
+  "rows": [
+    {
+      "route": "cockpit",
+      "documentStatus": 200,
+      "qyhNameVisible": true,
+      "catalogStatus": 200,
+      "catalogTenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "catalogCount": 0,
+      "actualState": "UNAVAILABLE_DISABLED_OR_FENCED_INSTALLATIONS",
+      "catalogRefreshReadOnly": true
+    },
+    {
+      "route": "content-campaign",
+      "documentStatus": 200,
+      "qyhNameVisible": true,
+      "catalogStatus": 200,
+      "catalogTenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "catalogCount": 0,
+      "actualState": "UNAVAILABLE_DISABLED_OR_FENCED_INSTALLATIONS",
+      "catalogRefreshReadOnly": true
+    },
+    {
+      "route": "operations",
+      "documentStatus": 200,
+      "qyhNameVisible": true,
+      "catalogStatus": 200,
+      "catalogTenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "catalogCount": 0,
+      "actualState": "UNAVAILABLE_DISABLED_OR_FENCED_INSTALLATIONS",
+      "catalogRefreshReadOnly": true
+    },
+    {
+      "route": "creator-growth",
+      "documentStatus": 200,
+      "qyhNameVisible": true,
+      "catalogStatus": 200,
+      "catalogTenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "catalogCount": 0,
+      "actualState": "UNAVAILABLE_DISABLED_OR_FENCED_INSTALLATIONS",
+      "catalogRefreshReadOnly": true
+    },
+    {
+      "route": "media-studio",
+      "documentStatus": 200,
+      "qyhNameVisible": true,
+      "catalogStatus": 200,
+      "catalogTenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "catalogCount": 0,
+      "actualState": "UNAVAILABLE_DISABLED_OR_FENCED_INSTALLATIONS",
+      "catalogRefreshReadOnly": true
+    },
+    {
+      "route": "analyst",
+      "documentStatus": 200,
+      "qyhNameVisible": true,
+      "catalogStatus": 200,
+      "catalogTenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "catalogCount": 0,
+      "actualState": "UNAVAILABLE_DISABLED_OR_FENCED_INSTALLATIONS",
+      "catalogRefreshReadOnly": true
+    },
+    {
+      "route": "price-governance",
+      "documentStatus": 200,
+      "qyhNameVisible": true,
+      "catalogStatus": 200,
+      "catalogTenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "catalogCount": 0,
+      "actualState": "UNAVAILABLE_DISABLED_OR_FENCED_INSTALLATIONS",
+      "catalogRefreshReadOnly": true
+    },
+    {
+      "route": "customer",
+      "documentStatus": 200,
+      "qyhNameVisible": true,
+      "catalogStatus": 200,
+      "catalogTenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "catalogCount": 0,
+      "actualState": "UNAVAILABLE_DISABLED_OR_FENCED_INSTALLATIONS",
+      "catalogRefreshReadOnly": true
+    }
+  ],
+  "pageErrorTypes": [],
+  "mutationRequests": [],
+  "mockedResponses": false,
+  "requestInterception": false,
+  "eightWorkbenchesFunctionallyAccepted": false,
+  "tabRetained": true
+}

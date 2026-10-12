@@ -1,0 +1,74 @@
+{
+  "pid": 55416,
+  "sessionId": 32824,
+  "sourceHead": "0511cef862ea1638c706f0783a11e502ebbc177e",
+  "currentSourceCwdVerified": true,
+  "startedAt": "Mon Oct 12 20:28:13 2026",
+  "readonlyNativeConnectionVerified": true,
+  "checks": [
+    {
+      "path": "/v1/health",
+      "method": "GET",
+      "org": "org-org",
+      "status": 200,
+      "count": null,
+      "tenant": null
+    },
+    {
+      "path": "/v1/me",
+      "method": "GET",
+      "org": "org-org",
+      "status": 200,
+      "count": null,
+      "tenant": null
+    },
+    {
+      "path": "/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "org": "org-org",
+      "status": 200,
+      "count": 0,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      }
+    },
+    {
+      "path": "/v1/runtime-workshop/modules",
+      "method": "GET",
+      "org": "org-org",
+      "status": 200,
+      "count": 0,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      }
+    },
+    {
+      "path": "/v1/auth/token",
+      "method": "POST",
+      "org": "org-org",
+      "status": 405,
+      "count": null,
+      "tenant": null
+    },
+    {
+      "path": "/v1/auth/principal",
+      "method": "GET",
+      "org": "org-org",
+      "status": 403,
+      "count": null,
+      "tenant": null
+    },
+    {
+      "path": "/v1/bundle-runtime-installations/407059df-6f1f-4927-acd7-8e388692838e",
+      "method": "GET",
+      "org": "dev-org",
+      "status": 404,
+      "count": null,
+      "tenant": null
+    }
+  ],
+  "formalIdentityVerified": false,
+  "hostOrBusinessAuthorized": false
+}
