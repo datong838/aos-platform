@@ -1,0 +1,14 @@
+{
+  "all647TableDataHashesAndCountsMatch": true,
+  "fullSchemaSQLIncludingOwnersACLsEqual": true,
+  "sourceSchemaSHA256": "c33ac5e0306cc1e1eb86eb7c9ac65e9ccb0e6b89a34c0d34634f039b30d1cffa",
+  "restoredSchemaSHA256": "c33ac5e0306cc1e1eb86eb7c9ac65e9ccb0e6b89a34c0d34634f039b30d1cffa",
+  "sequencesEqual": true,
+  "sequenceCount": 12,
+  "nonSystemRoleFlagsAndUserMembershipGrantorsEqual": true,
+  "roleCount": 39,
+  "userMembershipCount": 12,
+  "source647TableFingerprintsUnchanged": true,
+  "actualRealMigration": false,
+  "formalIdentityAndEightWorkbenchesAccepted": false
+}
