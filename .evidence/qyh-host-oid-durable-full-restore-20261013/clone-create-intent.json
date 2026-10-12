@@ -1,0 +1,7 @@
+{
+  "name": "qyh-host-oid-durable-full-restore-20261013",
+  "volume": "qyh-host-oid-durable-full-restore-20261013",
+  "memoryBytes": 536870912,
+  "network": "none",
+  "originalBootstrap": "aos_app"
+}

@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-host-oid-durable-full-restore-20261013/rehearse.py", line 135, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-host-oid-durable-full-restore-20261013/rehearse.py", line 126, in main
+    assert restored==before and restored_meta==meta,'full restore mismatch: do not rebind'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: full restore mismatch: do not rebind

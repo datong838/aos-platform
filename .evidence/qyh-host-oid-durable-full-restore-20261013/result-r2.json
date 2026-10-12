@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-host-oid-durable-full-restore-20261013-r2",
+    "task_id": "qyh-host-oid-durable-full-restore-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "fc1e90ca45817344c3100c2924926babdd024455",
+      "authority_revision": "AOS-001998",
+      "files": {
+        ".evidence/qyh-host-oid-durable-full-restore-20261013/final-material-0.txt": "3129581a20346d52aba7d5f07f1c0cbc5b1186d64406db6433ca6f581ef6e74e",
+        ".evidence/qyh-host-oid-durable-full-restore-20261013/final-material-1.txt": "f9161a13b01906ab11122753d281380748636f51822e8dae63efb567c5da7871",
+        ".evidence/qyh-host-oid-durable-full-restore-20261013/final-material-2.txt": "8dc2f691cd30d771f1ebd4a83b17785efcef8c7e2971876e62c6fc6f0c9ed36c",
+        ".evidence/qyh-host-oid-durable-full-restore-20261013/final-material-3.txt": "33d5ae3819e918fd20430b95a3d7b1c4fffd5dc2d7608d04c8badfef6447d61b"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The original clone-only bind_host_identity CAS1 advanced to2 and preserved original history; exactly three host tables changed and other647 were identical.",
+        "evidence": "final-material-1.txt (rehearse.py续步脚本) 在读取原identity(revision=1, stored_oid!=current_oid)后执行bind_host_identity并断言返回'2'; 断言rebound['revision']==2且stored_oid==current_oid; 断言changed==['public.extension_runtime_host_command_receipt','public.extension_runtime_host_identity','public.extension_runtime_host_identity_revision']; final-material-2.txt outcome='DURABLE_FULL_RESTORE_AND_CLONE_HOST_OID_REBIND_GREEN', other647TablesUnchanged=true, historyPreserved=true。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Same request replay caused no append, stale CAS and conflicting hash were natively rejected; current source650 tables and schema/roles/sequences stayed equal.",
+        "evidence": "final-material-1.txt 对同一key/hash再次调用r.sql并断言返回'2'且fingerprint未变(sameRequestNoAppend); 对oldCAS与sameKeyDifferentHash分别调用并期望raise CalledProcessError，stderr含'revision conflict'与'idempotency conflict'，negatives=[oldCAS,sameKeyDifferentHash]; source指纹在clone后与before一致; final-material-3.txt fullRestoreProcessCompleted=true, source650TablesEqual=true, rolesMembershipsAndSequencesEqual=true。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Full restore passed with only two explicitly named associative CHECK regroupings; live current Host OID repair, formal credentials and eight visible workbenches remain pending.",
+        "evidence": "final-material-3.txt schemaEqualExceptExactTwoAndRegroupings=true, otherSchemaBytesEqual=true, acceptedRegroupings仅两条(aip_skill_eval_dispatch_case_id_check与aip_skill_eval_intent_idempotency_key_check); final-material-2.txt currentDatabaseWrites=false, hostActivated=false, eightWorkbenchesAccepted=false; final-material-0.txt明确'原库尚未repair、原Host仍OFF、八工作台尚不可见'与'该结果不是正式登录/Owner/三平面权限的替代'。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前clone容器与持久卷不销毁; 等待独立授权后开展正式库的Host OID repair与八工作台可见性验证, 此演练结果不作为业务恢复的既成授权。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

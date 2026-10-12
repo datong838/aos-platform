@@ -1,0 +1,13 @@
+{
+  "container": "f902948f700ad1d8c817007db96707fc6cc67fa61281c19970f38c8ac5e2b083",
+  "identity": {
+    "database_role": "aos_a0v_directory_20260912",
+    "host_id": "a0v-local-ecommerce-host-20260912",
+    "revision": 1,
+    "stored_oid": "203325",
+    "current_oid": "16385"
+  },
+  "idempotencyKey": "qyh-host-oid-durable-full-restore-20261013-rebind",
+  "requestHash": "sha256:e6a404a4213708dc0a127512a24a23fbb246324adb89aad9ac597492e18501ab",
+  "cloneOnly": true
+}

@@ -1,0 +1,31 @@
+{
+  "tableEquality": true,
+  "metadataDifferences": [
+    "schemaSHA256"
+  ],
+  "schemaDiff": [
+    "--- \n",
+    "+++ \n",
+    "@@ -32922,7 +32922,7 @@\n",
+    "     purpose text NOT NULL,",
+    "     input_hash text NOT NULL,",
+    "     created_at timestamp with time zone DEFAULT now() NOT NULL,",
+    "-    CONSTRAINT aip_skill_eval_dispatch_case_id_check CHECK ((((length(case_id) >= 1) AND (length(case_id) <= 160)) AND (case_id = btrim(case_id)))),",
+    "+    CONSTRAINT aip_skill_eval_dispatch_case_id_check CHECK (((length(case_id) >= 1) AND (length(case_id) <= 160) AND (case_id = btrim(case_id)))),",
+    "     CONSTRAINT aip_skill_eval_dispatch_input_hash_check CHECK ((input_hash ~ '^[0-9a-f]{64}$'::text)),",
+    "     CONSTRAINT aip_skill_eval_dispatch_purpose_check CHECK ((purpose = ANY (ARRAY['target'::text, 'judge'::text])))",
+    " );",
+    "@@ -32965,7 +32965,7 @@\n",
+    "     request_hash text NOT NULL,",
+    "     version bigint DEFAULT 1 NOT NULL,",
+    "     created_at timestamp with time zone DEFAULT now() NOT NULL,",
+    "-    CONSTRAINT aip_skill_eval_intent_idempotency_key_check CHECK ((((length(idempotency_key) >= 1) AND (length(idempotency_key) <= 160)) AND (idempotency_key = btrim(idempotency_key)))),",
+    "+    CONSTRAINT aip_skill_eval_intent_idempotency_key_check CHECK (((length(idempotency_key) >= 1) AND (length(idempotency_key) <= 160) AND (idempotency_key = btrim(idempotency_key)))),",
+    "     CONSTRAINT aip_skill_eval_intent_intent_id_check CHECK (((length(intent_id) >= 1) AND (length(intent_id) <= 160))),",
+    "     CONSTRAINT aip_skill_eval_intent_request_hash_check CHECK ((request_hash ~ '^[0-9a-f]{64}$'::text)),",
+    "     CONSTRAINT aip_skill_eval_intent_version_check CHECK ((version >= 1))"
+  ],
+  "restoreCompleted": true,
+  "rebindAttempted": false,
+  "sourceWrites": false
+}

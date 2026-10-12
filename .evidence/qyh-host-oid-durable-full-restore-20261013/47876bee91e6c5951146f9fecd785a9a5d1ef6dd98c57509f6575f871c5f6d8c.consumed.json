@@ -1,0 +1,20 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-host-oid-durable-full-restore-20261013-r1",
+  "task_id": "qyh-host-oid-durable-full-restore-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "fc1e90ca45817344c3100c2924926babdd024455",
+    "authority_revision": "AOS-001998",
+    "files": {
+      ".evidence/qyh-host-oid-durable-full-restore-20261013/material-0.txt": "9c157300fa54608a2fee286675631a1eb3456f2e6a36404bc84e15dcdf635667",
+      ".evidence/qyh-host-oid-durable-full-restore-20261013/material-1.txt": "c73eb170859d043efa94c9b99dedb24bfe00e69c3af1a366a33f066c95a795c1",
+      ".evidence/qyh-host-oid-durable-full-restore-20261013/material-2.txt": "33d5ae3819e918fd20430b95a3d7b1c4fffd5dc2d7608d04c8badfef6447d61b",
+      ".evidence/qyh-host-oid-durable-full-restore-20261013/material-3.txt": "70ed34f37c8545c7634c0648248161564f9d5481bbc3433fb1dd9d46476f70b8"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "5cc0b857a6fd39691666afca786e0803882c56744071209c8a6a221a39f8ae67",
+  "transport_sha256": "a496772a826bdb55736a17a7d6953c146d1324b15c9a3d4a51689d77091ae8ad"
+}

@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-host-oid-durable-full-restore-20261013/rehearse.py", line 119, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-host-oid-durable-full-restore-20261013/rehearse.py", line 85, in main
+    assert fingerprint(SOURCE,'aos_meta_head')==before and metadata(SOURCE,'aos_meta_head')==meta
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

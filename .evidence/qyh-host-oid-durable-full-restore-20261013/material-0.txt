@@ -1,0 +1,15 @@
+# 当前 Host OID 有界持久卷全库恢复演练
+
+Rules：aos-engineering-delivery、231-4恢复/历史审计、231-6串行交付、当前01/06与明确栖月汇恢复授权。唯一m1写者、原库只读、先方案后脚本、不push；新代码仅本目录rehearse.py，不修改产品或既有用户改动。
+
+已登记候选A：当前Host OID独立全恢复，依赖新鲜双备份、原bootstrap、资源余量、完整恢复及原维护CAS门；候选B：Source reader/Plan锁耦合隔离兼容，依赖恢复已归档Source实验数据。选择A，历史tmpfs失败不重放。
+
+新容器与同名命名卷qyh-host-oid-durable-full-restore-20261013；原CID84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c、volume aos-qyh-history159-prepared-data-20261011、cluster7695302940039200809、a0v_161/650表精确绑定。独立network none、无端口、不挂原卷，512MiB内存，shared_buffers16MB、maintenance_work_mem8MB、work_mem1MB、禁并行维护，实测可用>=1GiB才开始。持久卷避免256MiB tmpfs耗尽，不能认为内存余量本身是restore通过。
+
+原库650表逐表串行readonly repeatable snapshot，5s单语句超时，角色属性/成员/所有权ACL/schema与序列state快照。fresh custom dump与globals no-role-passwords各双份0600/private0700，SHA与archive目录/full decode一致，源指纹前后等。保留原aos_app bootstrap OID10，globals只跳过exact一次CREATE ROLE aos_app，原GRANTED BY保留。pg_restore --single-transaction --exit-on-error原完整schema/data/ownerACL；不放宽触发器，不在目标未恢复完整时启用Host。
+
+完整650表与schema/角色/成员/序列/ACL对等之后才clone-only原bind_host_identity expectedRevision1、新幂等键/hash，追加history/receipt，不直接UPDATE；验证同请求无追加、旧CAS与异hash拒绝、其他647表不变、源650表始终不变。全库恢复失败保留新容器/命名卷/备份，未知效果只读对账，不重复执行已有intent。正式当前库repair仍独立维护门，八台/自然首链未验收，不把此演练PASS当业务授权。
+
+实测RED：原库650表、角色和序列均未变，pg_dump16最新补丁默认生成随机\restrict/\unrestrict key，因此两次schema SHA不同；全部SQL schema行未见漂移。原生--restrict-key支持固定key，改用固定仅dump输出控制key，不过滤schema。第一轮双备份已完整导出/解码但未建立任何volume/clone。明确--resume-after-schema-key只允许原intent/失败对账、exact四个备份文件、完整decode与650表/roles/sequence匹配、原资源仍不存在时接续；不重导出、不重复未知操作。固定key schema两次读回精确一致作为新检查点。
+
+第二轮独立持久卷pg_restore单事务已正常完成，650表全值hash对等，roles/memberships/sequence一致；原schema精确比对发现仅两个具名CHECK将嵌套AND重解析成平坦AND，三项length范围/btrim比较完全相同。仅接受这两条整行一对一已证明AND结合律，其他schema字节必须相同，不宽泛去括号。先独立资料审阅再只继续尚未发生的clone rebind；不重跑dump/restore或原intent。保留原schemaSHA差异，不能宣称原字节完全一致。

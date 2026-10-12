@@ -1,0 +1,15 @@
+{
+  "sourceContainer": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "sourceVolume": "aos-qyh-history159-prepared-data-20261011",
+  "source": {
+    "cluster": "7695302940039200809",
+    "schema": "a0v_161",
+    "enabledBindings": 0,
+    "otherTransactions": 0
+  },
+  "clone": "qyh-host-oid-durable-full-restore-20261013",
+  "memoryAvailableKB": 1211644,
+  "task": "qyh-host-oid-durable-full-restore-20261013",
+  "authority": "AOS-001998",
+  "sourceWrites": false
+}

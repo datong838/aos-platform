@@ -1,0 +1,24 @@
+{
+  "fullRestoreProcessCompleted": true,
+  "source650TablesEqual": true,
+  "clone650TablesEqual": true,
+  "rolesMembershipsAndSequencesEqual": true,
+  "schemaEqualExceptExactTwoAndRegroupings": true,
+  "acceptedRegroupings": [
+    {
+      "constraint": "aip_skill_eval_dispatch_case_id_check",
+      "original": "    CONSTRAINT aip_skill_eval_dispatch_case_id_check CHECK ((((length(case_id) >= 1) AND (length(case_id) <= 160)) AND (case_id = btrim(case_id)))),",
+      "restored": "    CONSTRAINT aip_skill_eval_dispatch_case_id_check CHECK (((length(case_id) >= 1) AND (length(case_id) <= 160) AND (case_id = btrim(case_id)))),",
+      "proof": "Only associative AND regrouping; same three immutable operands, comparison operators and limits. SQL three-valued AND is associative."
+    },
+    {
+      "constraint": "aip_skill_eval_intent_idempotency_key_check",
+      "original": "    CONSTRAINT aip_skill_eval_intent_idempotency_key_check CHECK ((((length(idempotency_key) >= 1) AND (length(idempotency_key) <= 160)) AND (idempotency_key = btrim(idempotency_key)))),",
+      "restored": "    CONSTRAINT aip_skill_eval_intent_idempotency_key_check CHECK (((length(idempotency_key) >= 1) AND (length(idempotency_key) <= 160) AND (idempotency_key = btrim(idempotency_key)))),",
+      "proof": "Only associative AND regrouping; same three immutable operands, comparison operators and limits. SQL three-valued AND is associative."
+    }
+  ],
+  "otherSchemaBytesEqual": true,
+  "currentDatabaseWrites": false,
+  "rebindAttempted": false
+}

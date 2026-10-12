@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-host-oid-durable-full-restore-20261013-r1",
+    "task_id": "qyh-host-oid-durable-full-restore-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "fc1e90ca45817344c3100c2924926babdd024455",
+      "authority_revision": "AOS-001998",
+      "files": {
+        ".evidence/qyh-host-oid-durable-full-restore-20261013/material-0.txt": "9c157300fa54608a2fee286675631a1eb3456f2e6a36404bc84e15dcdf635667",
+        ".evidence/qyh-host-oid-durable-full-restore-20261013/material-1.txt": "c73eb170859d043efa94c9b99dedb24bfe00e69c3af1a366a33f066c95a795c1",
+        ".evidence/qyh-host-oid-durable-full-restore-20261013/material-2.txt": "33d5ae3819e918fd20430b95a3d7b1c4fffd5dc2d7608d04c8badfef6447d61b",
+        ".evidence/qyh-host-oid-durable-full-restore-20261013/material-3.txt": "70ed34f37c8545c7634c0648248161564f9d5481bbc3433fb1dd9d46476f70b8"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Fresh independent durable-volume full restore completed with 650 tables and roles/memberships/sequences equal; source untouched.",
+        "evidence": "material-0.txt 明确登记为独立持久卷演练（新容器与同名命名卷qyh-host-oid-durable-full-restore-20261013），第二轮pg_restore --single-transaction 正常完成；原库650表、角色和序列均未变。material-1.txt 的rehearse.py实现fingerprint/metadata，断言restored==before且restored_meta==meta，并记录sourceUnchanged:true。material-2.txt 中fullRestoreProcessCompleted:true、source650TablesEqual:true、clone650TablesEqual:true、rolesMembershipsAndSequencesEqual:true；material-3.txt archiveFullyDecoded:true且files双份SHA对等。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Exactly two named CHECK lines differ only by associative AND regrouping with identical three operands; every other schema byte equals.",
+        "evidence": "material-2.txt 的schemaEqualExceptExactTwoAndRegroupings:true、acceptedRegroupings含两条具名CHECK约束（aip_skill_eval_dispatch_case_id_check、aip_skill_eval_intent_idempotency_key_check），original/restored仅括号重排，三项length范围/btrim比较完全相同；otherSchemaBytesEqual:true。material-0.txt 说明pg_dump16默认随机\\restrict/\\unrestrict key导致schema-only SHA不同，因此改用固定key QyhReadonlySchemaComparison20261013两次读回精确一致作为检查点，先独立资料审阅再继续clone rebind。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Current database and business authority remain unchanged; clone-only native CAS/idempotency continuation is pending, with previous failed attempts retained and not replayed.",
+        "evidence": "material-2.txt 中currentDatabaseWrites:false、rebindAttempted:false。material-1.txt 记录source-after.json含source650Unchanged、sourceMetadataUnchanged、currentDatabaseWrites、hostStarted、eightWorkbenchesAccepted均为false。material-0.txt 声明历史tmpfs失败不重放、旧CAS与异hash拒绝，正式当前库repair仍独立维护门、八台/自然首链未验收，不重跑dump/restore或原intent。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前只读状态与持久卷快照（新容器/命名卷/双备份），由AOS-001998授权方继续审查clone-only CAS重绑定方案；不要启动Host、不要触发八台验收，也不要重放源端失败intent。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}
