@@ -1,0 +1,72 @@
+{
+  "authority": "AOS-001995",
+  "context": "colima-aos-extension",
+  "readOnly": true,
+  "runningQyhResourceMemory": [
+    {
+      "Name": "qyh-local-identity-20261013",
+      "ID": "db1446eed5db",
+      "MemUsage": "306.1MiB / 768MiB",
+      "MemPerc": "39.85%",
+      "PIDs": "34"
+    },
+    {
+      "Name": "qyh-source161-clean-maintenance-lab-20261012",
+      "ID": "52cc28f30197",
+      "MemUsage": "157.3MiB / 2.832GiB",
+      "MemPerc": "5.43%",
+      "PIDs": "6"
+    },
+    {
+      "Name": "qyh-source-boundary-clone-capacity-20261012",
+      "ID": "bb9c8b1ab46a",
+      "MemUsage": "630.7MiB / 2.832GiB",
+      "MemPerc": "21.75%",
+      "PIDs": "6"
+    },
+    {
+      "Name": "qyh-stage-transport-rehearsal-20261011-recovered-20261012",
+      "ID": "08dbf882d08a",
+      "MemUsage": "81.92MiB / 2.832GiB",
+      "MemPerc": "2.82%",
+      "PIDs": "6"
+    },
+    {
+      "Name": "qyh-stage-transport-rehearsal-r2-20261011-recovered-20261012",
+      "ID": "66bae5737e2d",
+      "MemUsage": "207.1MiB / 2.832GiB",
+      "MemPerc": "7.14%",
+      "PIDs": "6"
+    },
+    {
+      "Name": "qyh-source-writer-lab-20261011-recovered-20261012",
+      "ID": "73d28f492ab3",
+      "MemUsage": "145.3MiB / 2.832GiB",
+      "MemPerc": "5.01%",
+      "PIDs": "6"
+    },
+    {
+      "Name": "qyh-current159-exact-restore-20261012",
+      "ID": "3fb59cb46c8d",
+      "MemUsage": "162.3MiB / 2.832GiB",
+      "MemPerc": "5.60%",
+      "PIDs": "6"
+    },
+    {
+      "Name": "qyh-current159-restore-lab-20261012",
+      "ID": "951749982fad",
+      "MemUsage": "18.27MiB / 2.832GiB",
+      "MemPerc": "0.63%",
+      "PIDs": "6"
+    },
+    {
+      "Name": "qyh-restored-pg-20261011",
+      "ID": "84989681fb7d",
+      "MemUsage": "108.4MiB / 2.832GiB",
+      "MemPerc": "3.74%",
+      "PIDs": "6"
+    }
+  ],
+  "ownershipInference": "Names and memory usage do not prove Task ownership or safe stopping; reconcile exact existing receipts/backups before any release",
+  "resourcesStoppedByThisInventory": []
+}
