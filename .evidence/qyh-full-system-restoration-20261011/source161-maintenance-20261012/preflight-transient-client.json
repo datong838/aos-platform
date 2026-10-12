@@ -1,0 +1,7 @@
+{
+  "failure": "Read-only census observed an occupied window before intent/private-r2/HBA creation",
+  "reconciliation": "Subsequent native pg_stat_activity on same source found no clients",
+  "effectsProduced": false,
+  "unknownBackendsTerminated": false,
+  "nextAction": "One fresh preflight and window attempt; unknown effects not replayed"
+}

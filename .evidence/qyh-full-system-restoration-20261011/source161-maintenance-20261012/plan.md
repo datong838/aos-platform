@@ -13,3 +13,6 @@ Rules：AGENTS.md、231、用户批准的全量栖月汇恢复。parent Task/Lea
 ## 预实施审阅修订（尚未执行源围栏）
 首轮draft在HBA/源intent前比较角色失败：保留实验cluster40含前序160创建的aos_aip_eval_writer，真库159为39；无源副作用。独立clean Task已创建新network-none集群，39角色/12membership逐项真源匹配，旧实验保留。下一执行必须换新CID52cc28f30197cc4010bd0167139e849e239591d7d9c47023ebcb36ac06164e7c/cluster7695744911813242913/卷aos-qyh-source161-clean-maintenance-data-20261012。
 代码审阅同时确认原a160明确新增NOLOGIN/NOINHERIT canonical writer角色，并给旧aip_eval_run新增SELECT及唯一双tenant读取policy；因此原draft“迁移后所有39角色/647 ACL完全无变化”的断言并不符合原方案。必须修成精确允许这三个声明变更，原39角色与12成员不变、其余646表ACL/policy/所有old触发器/defaultACL不变，再完整副本原生验证；不能忽略或泛化权限差异。当前maintain.py仅未通过预实施审阅的draft，禁止直接再执行；source version/HBA不变，下一波先修执行器核对新declaredrole与单Run读policy的原生精确结构。
+
+## r2执行合同
+采用已交付clean39集群。仅允许原160声明新增canonical NOLOGIN/NOINHERIT角色，原39 flags/config/12memberships完全不变；旧Run ACL仅追加aos_aip_eval_writer=r/aos_app，策略仅追加skill_dispatch_writer_run_read且逐字段匹配原生PG16解析的双tenant SELECT策略；其余原647关系字段/defaultACL全部精确不变。输出改为明确old646其他表不变+单Run声明读权限变化，不宣称647 ACL全部不变。原draft初轮无sourceintent/HBA效果，私有准备文件保留；r2用独立private-r2，仍O_EXCL不重放任何已登记效果。先新完整恢复库生成160/161实际结果，所有门通过才执行Source，同SQL同窗。

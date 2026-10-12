@@ -1,0 +1,9 @@
+{
+  "sourceDatabase": "aos_meta_head",
+  "sourceCluster": "7695302940039200809",
+  "restoreDatabase": "qyh_source161_window_restore_20261012",
+  "originalHbaSHA256": "6271c5b7f587b243ce6597e6be526f0a36899a761db8cbaf9ec930d08ece4330",
+  "sourceMigrationCondition": "fresh independent full restore and exact sequential rehearsal under held fence",
+  "serviceRestart": false,
+  "formalExecution": false
+}

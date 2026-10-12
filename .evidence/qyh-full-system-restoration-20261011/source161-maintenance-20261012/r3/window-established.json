@@ -1,0 +1,10 @@
+{
+  "observedAt": "2026-10-12T11:51:00.103862+00:00",
+  "census": {
+    "clients": 0,
+    "prepared": 0,
+    "enabled": 0
+  },
+  "nativeTcpDenied": true,
+  "controlledLocalMaintenanceOnly": true
+}

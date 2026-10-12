@@ -1,0 +1,33 @@
+{
+  "full647RestoreExact": true,
+  "sequential160161": true,
+  "acl": [
+    {
+      "table": "aip_skill_eval_dispatch",
+      "forcedRLS": true,
+      "enabledRLS": true,
+      "runtimeRead": true,
+      "runtimeWrite": false,
+      "writerInsert": true,
+      "writerUpdate": false
+    },
+    {
+      "table": "aip_skill_eval_dispatch_observation",
+      "forcedRLS": true,
+      "enabledRLS": true,
+      "runtimeRead": true,
+      "runtimeWrite": false,
+      "writerInsert": true,
+      "writerUpdate": false
+    },
+    {
+      "table": "aip_skill_eval_intent",
+      "forcedRLS": true,
+      "enabledRLS": true,
+      "runtimeRead": true,
+      "runtimeWrite": false,
+      "writerInsert": true,
+      "writerUpdate": false
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"database": "qyh_source161_window_restore_r3_20261012", "role": "aos_runtime", "grant": "UPDATE on aip_skill_eval_intent", "originalAcl": "{aos_app=arwdDxt/aos_app,aos_aip_eval_writer=ar/aos_app,aos_runtime=r/aos_app}", "sourceWrites": false}

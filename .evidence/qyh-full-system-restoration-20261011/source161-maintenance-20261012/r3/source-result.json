@@ -1,0 +1,41 @@
+{
+  "version": "a0v_161",
+  "tableCount": 650,
+  "old646BusinessTablesUnchanged": true,
+  "oldCatalogOnlyDeclaredRunReaderAclPolicyAdded": true,
+  "defaultsAndSequencesUnchanged": true,
+  "original39RolesAnd12MembershipsUnchanged": true,
+  "declaredCanonicalNologinWriterAdded": true,
+  "acl": [
+    {
+      "table": "aip_skill_eval_dispatch",
+      "forcedRLS": true,
+      "enabledRLS": true,
+      "runtimeRead": true,
+      "runtimeWrite": false,
+      "writerInsert": true,
+      "writerUpdate": false
+    },
+    {
+      "table": "aip_skill_eval_dispatch_observation",
+      "forcedRLS": true,
+      "enabledRLS": true,
+      "runtimeRead": true,
+      "runtimeWrite": false,
+      "writerInsert": true,
+      "writerUpdate": false
+    },
+    {
+      "table": "aip_skill_eval_intent",
+      "forcedRLS": true,
+      "enabledRLS": true,
+      "runtimeRead": true,
+      "runtimeWrite": false,
+      "writerInsert": true,
+      "writerUpdate": false
+    }
+  ],
+  "actualSourceMigrated": true,
+  "serviceRestarted": false,
+  "eightWorkshopsAccepted": false
+}

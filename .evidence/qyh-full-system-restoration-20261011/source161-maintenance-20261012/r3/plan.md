@@ -1,0 +1,2 @@
+Rules AGENTS/231/parent恢复方案。前轮clone160/161已明确terminal0且源两步intent均不存在；源159、HBA精确原hash恢复。新r3目录、新restoreDB，不重放旧intent/restore/migration。精确允许已登记隔离canonicalwriter（原39角色/12memberships仍逐项保留）；同原a160/161生成SQL，先新双备份/完整restore/两步clone。Run只有新SELECT ACL、精确双tenantpolicy与原新intent FK声明的两个内部RI trigger允许增加，其他元数据精确不变。将完整restore前原生catalog私密落盘，避免进程失败丢失对账基线；新intent同时绑定同source与同lab精确CID。所有checks通过才同窗原迁移，finally恢复原HBA。不恢复/启用服务或Host/业务。
+补充native权限反例：仅r3隔离DB，对新journal临时GRANT runtime UPDATE，原verify161必须拒绝；finally精确REVOKE原先没有的UPDATE并原ACL全文回读一致、原verify161再通过。Source不写且原161/数据指纹前后相等，工具结果未知先读对账不重放。

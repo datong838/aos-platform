@@ -1,5 +1,6 @@
 """Exact preserved-volume maintenance; no automatic replay or service start."""
 import hashlib
+import copy
 import importlib.util
 import json
 import os
@@ -12,7 +13,7 @@ from datetime import datetime, timezone
 OUT = Path(__file__).resolve().parent
 ROOT = OUT.parents[2]
 SOURCE = 'qyh-restored-pg-20261011'
-LAB = 'qyh-current159-exact-restore-20261012'
+LAB = 'qyh-source161-clean-maintenance-lab-20261012'
 DB = 'aos_meta_head'
 CLONE_DB = 'qyh_source161_window_restore_20261012'
 DOCKER = ['docker', '--context', 'colima-aos-extension']
@@ -105,13 +106,49 @@ def migration(container, database, old, new, statement, private):
     assert sql(container, database, 'SELECT version_num FROM alembic_version;') == new
 
 
+def declared_roles(roles):
+    expected_roles = copy.deepcopy(roles)
+    assert not any(r['rolname']=='aos_aip_eval_writer' for r in roles['roles'])
+    expected_roles['roles'] = sorted(roles['roles'] + [{'rolname':'aos_aip_eval_writer',
+        'rolsuper':False,'rolinherit':False,'rolcreaterole':False,'rolcreatedb':False,
+        'rolcanlogin':False,'rolreplication':False,'rolbypassrls':False,'rolconnlimit':-1,
+        'rolvaliduntil':None,'rolconfig':None}], key=lambda r:r['rolname'])
+    return expected_roles
+
+
 def verify161(container, database, baseline, old_catalog, sequences, roles, helpers):
     current = fingerprints(container, database)
     assert {key for key in baseline if baseline[key] != current.get(key)} == {'public.alembic_version'}
     assert set(current) - set(baseline) == ADDED and all(current[k]['rows'] == 0 for k in ADDED)
-    assert catalog(container, database, helpers) == old_catalog
+    expected_catalog = copy.deepcopy(old_catalog)
+    run = next(r for r in expected_catalog['relations'] if r['schema']=='public' and r['name']=='aip_eval_run')
+    assert run['relacl'] == '{aos_app=arwdDxt/aos_app,aos_runtime=arwd/aos_app}'
+    run['relacl'] = '{aos_app=arwdDxt/aos_app,aos_runtime=arwd/aos_app,aos_aip_eval_writer=r/aos_app}'
+    policy = {'schemaname':'public','tablename':'aip_eval_run','policyname':'skill_dispatch_writer_run_read',
+        'permissive':'PERMISSIVE','roles':['aos_aip_eval_writer'],'cmd':'SELECT',
+        'qual':"((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",'with_check':None}
+    assert all(p['policyname'] != policy['policyname'] for p in (run['policies'] or []))
+    run['policies'] = sorted((run['policies'] or []) + [policy], key=lambda p:p['policyname'])
+    # The new intent FK adds two native RI triggers to its existing parent.
+    fk = json.loads(sql(container, database, "SELECT json_agg(json_build_object("
+        "'definition',pg_get_constraintdef(oid),'deferred',condeferred,'deferrable',condeferrable)) "
+        "FROM pg_constraint WHERE conrelid='aip_skill_eval_intent'::regclass AND contype='f' "
+        "AND confrelid='aip_eval_run'::regclass;"))
+    assert fk == [{'definition':'FOREIGN KEY (org_id, project_id, run_id) REFERENCES aip_eval_run(org_id, project_id, run_id)',
+        'deferred':False,'deferrable':False}]
+    triggers = json.loads(sql(container, database, "SELECT json_agg(json_build_object("
+        "'definition',pg_get_triggerdef(t.oid),'internal',t.tgisinternal,'enabled',t.tgenabled,"
+        "'function',p.proname,'type',t.tgtype) ORDER BY t.tgname) "
+        "FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid JOIN pg_constraint c ON c.oid=t.tgconstraint "
+        "WHERE t.tgrelid='aip_eval_run'::regclass AND c.conrelid='aip_skill_eval_intent'::regclass "
+        "AND c.confrelid='aip_eval_run'::regclass AND c.contype='f';"))
+    assert len(triggers)==2 and all(t['internal'] and t['enabled']=='O' for t in triggers)
+    assert {(t['function'],t['type']) for t in triggers} == {('RI_FKey_noaction_del',9),('RI_FKey_noaction_upd',17)}
+    run['triggers'] = sorted((run['triggers'] or []) + [t['definition'] for t in triggers])
+    assert catalog(container, database, helpers) == expected_catalog
     assert helpers.sequences(container, database) == sequences
-    assert helpers.roles(container) == roles
+    expected_roles = declared_roles(roles)
+    assert helpers.roles(container) == expected_roles
     acl = json.loads(sql(container, database, "SELECT json_agg(json_build_object("
         "'table',relname,'forcedRLS',relforcerowsecurity,'enabledRLS',relrowsecurity,"
         "'runtimeRead',has_table_privilege('aos_runtime',oid,'SELECT'),"
@@ -136,7 +173,7 @@ def main():
     assert datetime.fromisoformat(lease['lease_expires_at']) > datetime.now(timezone.utc)
     assert all(p['status'] == 'CURRENT' for p in m.memory_status()['projections'] if p['consistency'] == 'strong')
     for container, cid, volume in [(SOURCE, '84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c', 'aos-qyh-history159-prepared-data-20261011'),
-        (LAB, '3fb59cb46c8daeb402caee95bf9f2d9aefbb3aa42d87988811afe29418790687', 'aos-qyh-current159-exact-restore-20261012')]:
+        (LAB, '52cc28f30197cc4010bd0167139e849e239591d7d9c47023ebcb36ac06164e7c', 'aos-qyh-source161-clean-maintenance-data-20261012')]:
         meta = json.loads(subprocess.check_output(DOCKER + ['inspect', '--format',
             '{"id":{{json .Id}},"mounts":{{json .Mounts}},"network":{{json .HostConfig.NetworkMode}}}', container], text=True))
         assert meta['id'] == cid and [x['Name'] for x in meta['mounts']] == [volume]
@@ -144,19 +181,20 @@ def main():
             assert meta['network'] == 'none'
     assert sql(SOURCE, DB, 'SELECT system_identifier::text FROM pg_control_system();') == '7695302940039200809'
     assert sql(SOURCE, DB, 'SELECT version_num FROM alembic_version;') == 'a0v_159'
-    assert sql(LAB, 'postgres', 'SELECT system_identifier::text FROM pg_control_system();') == '7695620413173166120'
+    assert sql(LAB, 'postgres', 'SELECT system_identifier::text FROM pg_control_system();') == '7695744911813242913'
     assert sql(SOURCE, DB, 'SELECT count(*) FROM extension_runtime_binding WHERE enabled OR NOT operation_fence;') == '0'
     assert sql(SOURCE, DB, "SELECT count(*) FROM meta_schedule WHERE org_id='org-org' AND project_id='dev-project' AND enabled;") == '0'
     assert sql(LAB, 'postgres', "SELECT count(*) FROM pg_database WHERE datname='" + CLONE_DB + "';") == '0'
     window()
-    source = Path(json.loads((OUT.parent / 'latest-producer-source-20261012.json').read_text())['source'])
+    candidate = ROOT / '.evidence/qyh-full-system-restoration-20261011/latest-producer-source-20261012.json'
+    source = Path(json.loads(candidate.read_text())['source'])
     for filename in ['a0v_160_skill_eval_dispatch_intent.py', 'a0v_161_skill_dispatch_acl.py']:
         # Current committed migrations must match the frozen startup candidate.
         relative = Path('services/aos-api/alembic/versions') / filename
         if not (source / relative).exists():
             raise ValueError('Exact migration filename must be reconciled before any maintenance')
         assert (source / relative).read_bytes() == (ROOT / relative).read_bytes()
-    private = OUT / 'private'
+    private = OUT / 'private-r2'
     private.mkdir(mode=0o700)
     statements = []
     env = {k:v for k,v in os.environ.items() if k in ('PATH', 'HOME', 'TMPDIR', 'LANG')}
@@ -176,7 +214,16 @@ def main():
     old = catalog(SOURCE, DB, helpers)
     seq = helpers.sequences(SOURCE, DB)
     roles = helpers.roles(SOURCE)
-    assert helpers.roles(LAB) == roles
+    lab_roles = helpers.roles(LAB)
+    if lab_roles != roles:
+        # Only an explicitly reconciled prior isolated migration may retain this
+        # exact canonical role. Never permit an unknown role or membership delta.
+        prior = OUT.parent
+        assert json.loads((prior / 'clone-a0v_159-a0v_160-terminal.json').read_text())['exitCode']==0
+        assert json.loads((prior / 'clone-a0v_160-a0v_161-terminal.json').read_text())['exitCode']==0
+        assert json.loads((prior / 'hba-restored.json').read_text())['exact'] is True
+        assert not list(prior.glob('source-a0v*-intent.json'))
+        assert lab_roles == declared_roles(roles)
     hba = sql(SOURCE, 'postgres', 'SHOW hba_file;')
     assert hba == '/etc/qyh_pg_hba.conf'
     original = file_bytes(SOURCE, hba)
@@ -223,8 +270,14 @@ def main():
         assert result.returncode == 0
         assert fingerprints(LAB, CLONE_DB) == baseline
         assert schema(LAB, CLONE_DB, private / 'clone-before.sql') == before_schema
-        assert helpers.sequences(LAB, CLONE_DB) == seq and helpers.roles(LAB) == roles
+        assert helpers.sequences(LAB, CLONE_DB) == seq and helpers.roles(LAB) == lab_roles
         clone_catalog = catalog(LAB, CLONE_DB, helpers)
+        (private / 'source-before-catalog.json').write_text(json.dumps(old))
+        (private / 'clone-before-catalog.json').write_text(json.dumps(clone_catalog))
+        (private / 'original-roles.json').write_text(json.dumps(roles))
+        record('clone-full-restore.json', {'all647FingerprintsExact':True,'schemaOwnerAclDumpExact':True,
+            'sequencesExact':True,'original39RolesAnd12MembershipsExact':True,
+            'reconciledIsolatedCanonicalWriterPresent':lab_roles!=roles})
         for old_revision, new_revision, statement in statements:
             migration(LAB, CLONE_DB, old_revision, new_revision, statement, private)
         clone_acl = verify161(LAB, CLONE_DB, baseline, clone_catalog, seq, roles, helpers)
@@ -235,7 +288,8 @@ def main():
         source_acl = verify161(SOURCE, DB, baseline, old, seq, roles, helpers)
         window()
         record('source-result.json', {'version':'a0v_161','tableCount':650,'old646BusinessTablesUnchanged':True,
-            'old647CatalogAndDefaultsUnchanged':True,'sequencesAndRolesUnchanged':True,'acl':source_acl,
+            'oldCatalogOnlyDeclaredRunReaderAclPolicyAdded':True,'defaultsAndSequencesUnchanged':True,
+            'original39RolesAnd12MembershipsUnchanged':True,'declaredCanonicalNologinWriterAdded':True,'acl':source_acl,
             'actualSourceMigrated':True,'serviceRestarted':False,'eightWorkshopsAccepted':False})
     finally:
         observed = file_bytes(SOURCE, hba)

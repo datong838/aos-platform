@@ -1,0 +1,7 @@
+# 原栖月汇源卷161迁移验收
+原同CID/volume/cluster安全门、parent合法Lease与七strongCURRENT后，原HBA数据库限定围栏实际拒绝TCP，原维护local通道持续独占，未终止未知backend。首次无副作用client忙检查拒绝，原只读对账连接消失后才新尝试。首轮新clean39 fullrestore与160/161成功，但父Run新增intent FK两个native触发器在旧比较器中未计入，校验拒绝且finally HBA精确恢复；源未迁移，保留终态，不重放旧intent。
+r3新目录/新DB重新取得两份一致custom backup与无口令globals备份，独立完整647表hash/count、schema-owner-ACL原dump字节（只除随机restrict/unrestrict）、12序列与原39roleflags/12membership精确。前轮已明确canonicalwriter的隔离新增role保留，仅此固定NOLOGIN/NOINHERIT profile允许；无其他role或member差异。
+同冻结已提交原Alembic代码实际159→160→161 SQL依次在新clone执行，各intent+terminal0。新Run只允许原声明SELECT ACL、唯一双tenantSELECT policy及原intent FK两native内部触发器，FK结构/内部标记/触发函数/tgtype/enabled逐项核对；其余原关系/列ACL/RLS/触发器/defaultACL完全相同。原39角色flags/rolconfig、12memberships保持，仅声明canonical角色新增；没有LOGIN/publisher/Owner身份新增。
+这些门通过且同围栏仍持有后，同SQL对真正aos_meta_head逐步160/161终态0；所有646原业务表hash/count不变，三个新日志表为空，650表/161精确。12序列与原权限/成员满足上述精确差异合同，runtime三个表只SELECT，无任何表级写权；writer仅声明SELECT/INSERT和version列UPDATE，原Run无UPDATE。finally原HBA SHA6271c5b7...恢复exact，reload/解析0。原真实limited LOGIN经原restored preflight再次通过；保留管理API GET health/me/runtime目录200，目录仍0，没有重启或正式身份验收。
+专项相邻：r3隔离DB原verify161正向通过；实际临时GRANT runtime journal UPDATE反例被拒绝，finally REVOKE后ACL全文精确恢复、原verify再通过；真源650指纹不变。所有反例只有network-none隔离库。新脚本AST/实际diff/原migration声明逐项复审一致，已纠正早期错误的“全647 ACL不变”表述。21个PG全schema协议/此前现有native迁移测试作为前置，不替代本次真源证据。用户22既有tracked改动保留，不push。
+这是实际原卷迁移完成，非Goal完成。PG→当前m1 API→Web重启（aos职责）、独立入口review（格式未通过）、正式OIDC/独立publisher、当前四包正式安装/八配置/预算/Owner、八工作台页面/真实场景、自然首链/观察发布均未验收；Host/worker/Provider继续OFF。未知旧Run保持，未回放、未读商城、未人工Run、无230L0操作，无卷/备份删除。
