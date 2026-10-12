@@ -1,0 +1,20 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-bounded-readonly-fingerprint-review-20261013-r1",
+  "task_id": "qyh-bounded-readonly-fingerprint-review-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "1e7ff8d6dc0ad57548517426cfac07def5ce09ed",
+    "authority_revision": "AOS-001994",
+    "files": {
+      ".evidence/qyh-bounded-readonly-fingerprint-review-20261013/material-0.txt": "e4dadf700618368448e7deb661c8c14ed5f1b1678af22b04703f18ae3d42c89d",
+      ".evidence/qyh-bounded-readonly-fingerprint-review-20261013/material-1.txt": "15f23c03c6543951f047e65cc988fc4465ac1f4443b87cb65643f4204150f329",
+      ".evidence/qyh-bounded-readonly-fingerprint-review-20261013/material-2.txt": "075d9377e59e9b507a6f24fc7aa14388d4f26192c9cb8e1f66d913a3d39d27a7",
+      ".evidence/qyh-bounded-readonly-fingerprint-review-20261013/material-3.txt": "266a881b628c85c26d40b3abd315ac7e6c0013dd0e8f56d462bc71c9d898f451"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "ea3b4bfa769af96966a77fb9e08c421ee5c029104c0f512742ebf35bd0a0dfe7",
+  "transport_sha256": "4405c9731b51ff6b057e74c724a7fac23ad75282e27984fcab74884ac5b55392"
+}

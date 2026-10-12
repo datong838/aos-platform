@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-bounded-readonly-fingerprint-review-20261013-r1",
+    "task_id": "qyh-bounded-readonly-fingerprint-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "1e7ff8d6dc0ad57548517426cfac07def5ce09ed",
+      "authority_revision": "AOS-001994",
+      "files": {
+        ".evidence/qyh-bounded-readonly-fingerprint-review-20261013/material-0.txt": "e4dadf700618368448e7deb661c8c14ed5f1b1678af22b04703f18ae3d42c89d",
+        ".evidence/qyh-bounded-readonly-fingerprint-review-20261013/material-1.txt": "15f23c03c6543951f047e65cc988fc4465ac1f4443b87cb65643f4204150f329",
+        ".evidence/qyh-bounded-readonly-fingerprint-review-20261013/material-2.txt": "075d9377e59e9b507a6f24fc7aa14388d4f26192c9cb8e1f66d913a3d39d27a7",
+        ".evidence/qyh-bounded-readonly-fingerprint-review-20261013/material-3.txt": "266a881b628c85c26d40b3abd315ac7e6c0013dd0e8f56d462bc71c9d898f451"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The bounded reader runs all table hashes serially inside one repeatable-read read-only transaction, with per-statement limits and no runtime activation.",
+        "evidence": "material-0.txt (intent JSON): serial=True, repeatableRead=True, readOnly=True, workMem='1MB', maxParallelWorkersPerGather=0, perStatementTimeoutSeconds=5, queries=650. material-0.txt (query construction): queries begin with 'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;', then SET LOCAL work_mem='1MB'; / SET LOCAL max_parallel_workers_per_gather=0; / SET LOCAL statement_timeout='5s'; followed by one per-table SELECT inside the loop, then COMMIT;. material-1.txt: states '保留同一 row_to_jsonb→sha256→排序string_agg→sha256 指纹算法，只把650个聚合拆成同一个 REPEATABLE READ READ ONLY 事务中的逐表语句，work_mem1MB、禁并行、statement_timeout5s'.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The row fingerprint formula retains row jsonb SHA256, ordered concatenation of row hashes and outer SHA256.",
+        "evidence": "material-0.txt: subquery computes 'encode(sha256(convert_to(to_jsonb(t)::text,'UTF8')),'hex') AS h' for each row; outer query aggregates as 'coalesce(string_agg(h,'' ORDER BY h),'')' then applies encode(sha256(convert_to(...,'UTF8')),'hex') AS hash. material-1.txt confirms the formula is the retained one: 'row_to_jsonb→sha256→排序string_agg→sha256'.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The reader rejects incomplete or duplicate table output and does not claim historical equality or successful full restore rehearsal.",
+        "evidence": "material-0.txt assertions: 'assert lines[0]==tables and len(lines)==651' and 'assert len(fingerprints)==650' reject both incomplete and duplicate table outputs. material-0.txt output JSON fields: 'currentDatabaseWrites':False, 'historicalComparisonProven':False, 'fullRestoreRehearsalAccepted':False. material-2.txt outcome: CURRENT_650_TABLE_READONLY_SERIAL_SNAPSHOT_GREEN. material-3.txt: historicalComparison=false, fullRestoreAccepted=false.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "继续下一步验收任务：在现有650表只读快照文件保留于 .evidence/ 下、不改容器/卷/数据的前提下推进后续 restore 演练或对比计划；不要复用本次部分结果作为历史相等或演练通过结论。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

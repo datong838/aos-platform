@@ -1,0 +1,15 @@
+{
+  "source": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "native": {
+    "cluster": "7695302940039200809",
+    "schema": "a0v_161"
+  },
+  "memoryAvailableKB": 360284,
+  "queries": 650,
+  "serial": true,
+  "repeatableRead": true,
+  "readOnly": true,
+  "workMem": "1MB",
+  "maxParallelWorkersPerGather": 0,
+  "perStatementTimeoutSeconds": 5
+}

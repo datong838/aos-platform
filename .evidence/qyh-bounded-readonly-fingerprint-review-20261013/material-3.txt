@@ -1,0 +1,10 @@
+{
+  "snapshotSHA256": "c02a660e49bf22d467ab20a55b8618f8c064dd29520cc7a1bbe98a2237a3986d",
+  "tables": 650,
+  "postReadMemoryKB": {
+    "MemAvailable": 265896,
+    "Shmem": 1855908
+  },
+  "historicalComparison": false,
+  "fullRestoreAccepted": false
+}
