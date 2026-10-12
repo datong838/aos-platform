@@ -1,0 +1,17 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "refresh_source_candidate_after_producer_identity_code",
+  "exit_code": 0,
+  "input_files": {
+    "scripts/a0v_qyh_restored_http.py": "d440a9ac5d6d0664e1520dcb8e0daf598c99c7dc09f42a7d85f1a128c139aa68"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/latest-producer-source-20261012.json": "1864e914f530f45073b9f7c1eb4148baee1888ba4e7551229a7d90181c017106",
+    ".evidence/qyh-full-system-restoration-20261011/latest-producer-source-readback-20261012.json": "ed5125b140184f08a8f8cb418afb792915f2d7cc32c8b9036a6b528d292d2751"
+  },
+  "limitations": [
+    "Frozen committed source accepted only; no actual startup or formal execution authority"
+  ]
+}
