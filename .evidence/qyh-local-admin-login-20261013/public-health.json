@@ -1,0 +1,12 @@
+{
+  "containerId": "db1446eed5db48cf75e524827775b1822f859a5c14d300b2e5349df67454acfa",
+  "running": true,
+  "restartCount": 0,
+  "issuer": "http://127.0.0.1:18448/realms/qyh-local",
+  "publicDiscoveryPassed": true,
+  "publicRsaJwksPassed": true,
+  "humanAuthenticated": false,
+  "aosApiOidcIntegrated": false,
+  "runtimeActivated": false,
+  "eightPagesAccepted": false
+}

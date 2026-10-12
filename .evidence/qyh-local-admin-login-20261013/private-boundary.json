@@ -1,0 +1,8 @@
+{
+  "credentialDirectoryOutsideRepository": true,
+  "directoryMode": "0700",
+  "allCredentialFilesMode": "0600",
+  "publicEvidenceContainsPasswords": false,
+  "humanCredentialsUsedByAgentToLogin": false,
+  "humanInitialPasswordChangeRequired": true
+}

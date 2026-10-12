@@ -1,0 +1,5 @@
+{
+  "reason": "owned identity import directory created root-owned by failed host bind; nonroot server cannot rename empty bad JSON directory",
+  "serverRealmImportAttempted": false,
+  "next": "fixed one-shot permission repair on identity volume, then resume exact same stopped container"
+}

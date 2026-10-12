@@ -1,0 +1,10 @@
+{
+  "origin": "http://127.0.0.1:18448",
+  "loginPageVisible": true,
+  "usernameFieldVisible": true,
+  "passwordFieldVisible": true,
+  "title": "Sign in to 栖月汇 · 本机管理员登录",
+  "credentialsEntered": false,
+  "humanAuthenticated": false,
+  "aosApiIntegrated": false
+}

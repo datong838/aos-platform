@@ -1,0 +1,24 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-local-admin-login-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001983",
+  "scope": [
+    "aos-platform/.evidence/qyh-local-admin-login-20261013",
+    "aos-platform/maintenance/qiyuehui-local-identity-service"
+  ],
+  "excluded_scope": [
+    "authoritative AOS PostgreSQL data volume",
+    "Host worker Provider",
+    "mall source"
+  ],
+  "expected_outputs": [
+    "plan.md",
+    "bootstrap.py",
+    "image-intent.json",
+    "bootstrap-terminal.json"
+  ],
+  "lease_expires_at": "2026-10-12T19:21:50.692617+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-13T00:21:51+08:00"
+}

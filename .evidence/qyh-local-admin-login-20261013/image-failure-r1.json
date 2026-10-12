@@ -1,0 +1,10 @@
+{
+  "operation": "docker pull",
+  "image": "quay.io/keycloak/keycloak:26.0.2",
+  "context": "colima-aos-extension",
+  "exitCode": 1,
+  "failure": "quay.io DNS lookup on [::1]:53 refused",
+  "imageDownloaded": false,
+  "sourceVolumeMutation": false,
+  "retryRequires": "diagnose host/VM daemon DNS first"
+}

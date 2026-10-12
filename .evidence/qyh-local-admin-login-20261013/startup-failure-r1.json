@@ -1,0 +1,9 @@
+{
+  "containerId": "b0a84c88c2ed8ee3cd7551d3a7f80fd1a37ea86c44171977f2bfe08c592f5baa",
+  "restartCount": 17,
+  "reason": "Java build subprocess killed under VM memory pressure",
+  "vmTotalBytes": 3040776192,
+  "availableKb": 21568,
+  "privateCredentialsLogged": false,
+  "action": "stop own new identity instance, retain container and volume; no source PG restart"
+}

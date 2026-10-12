@@ -1,0 +1,10 @@
+{
+  "originalContainerId": "b0a84c88c2ed8ee3cd7551d3a7f80fd1a37ea86c44171977f2bfe08c592f5baa",
+  "originalContainerRetainedAs": "qyh-local-identity-20261013-startup-r1",
+  "volume": "qyh-local-identity-data-20261013",
+  "memory": "768m",
+  "javaHeap": "192m",
+  "restart": "no until health",
+  "sameCredentialsAndRealm": true,
+  "noSourcePgRestart": true
+}

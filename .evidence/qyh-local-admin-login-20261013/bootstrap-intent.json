@@ -1,0 +1,17 @@
+{
+  "context": "colima-aos-extension",
+  "name": "qyh-local-identity-20261013",
+  "volume": "qyh-local-identity-data-20261013",
+  "imageId": "sha256:ce7e0649199bf264502a2cb1b00e782b62a0197b01cc7aee7f27b75a4914a3c6",
+  "repoDigests": [
+    "quay.io/keycloak/keycloak@sha256:cde8d7fff48622d7bff959ea2a98e945ae8a7ccb0117b44858de77243b96231e"
+  ],
+  "port": 18448,
+  "tenant": "org-org/dev-project",
+  "humanUsername": "qyh-owner",
+  "humanIdentityId": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+  "userAuthenticated": false,
+  "aosApprovalAlreadyRecorded": true,
+  "secretDirectory": "/Users/ddt/.aos-local-identities/qyh-20261013",
+  "noAosDataVolumeMutation": true
+}

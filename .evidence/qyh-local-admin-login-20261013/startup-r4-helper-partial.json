@@ -1,0 +1,11 @@
+{
+  "helperTerminalExit": 1,
+  "badEmptyDirectoryRenamed": true,
+  "importDirectoryOwner": "501:0",
+  "importDirectoryMode": "750",
+  "copiedRealmFileOwner": "65534:65534",
+  "copiedRealmFileMode": "600",
+  "chownFailure": "Operation not permitted",
+  "scope": "identity volume only",
+  "next": "stream exact private Realm through stdin into native nonroot-owned file, preserve unmapped original"
+}

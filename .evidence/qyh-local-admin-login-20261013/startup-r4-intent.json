@@ -1,0 +1,7 @@
+{
+  "containerId": "db1446eed5db48cf75e524827775b1822f859a5c14d300b2e5349df67454acfa",
+  "helper": "qyh-identity-permission-fix-20261013",
+  "identityVolumeOnly": true,
+  "newRealmNotPreviouslyImported": true,
+  "resumeSameContainer": true
+}

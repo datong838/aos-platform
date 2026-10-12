@@ -1,0 +1,7 @@
+{
+  "oldContainerId": "7108f77dd1d8aea7b69704bb9f63f3fa6738ebc41ac248715fe9a24d2453b5ec",
+  "retainAs": "qyh-local-identity-20261013-startup-r2",
+  "sameIdentityVolumeAndCredentials": true,
+  "transfer": "docker cp -a",
+  "noAosDatabaseMutation": true
+}

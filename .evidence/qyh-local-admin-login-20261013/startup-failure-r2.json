@@ -1,0 +1,8 @@
+{
+  "reason": "Realm import source became a directory: host private path not shared into Colima VM",
+  "javaLowMemoryStartupPassed": true,
+  "identityDatabaseSchemaCreated": true,
+  "humanRealmImportPassed": false,
+  "externalBusinessEffects": false,
+  "fix": "Docker create then cp -a exact private realm into container; no host bind; retain empty prior directory"
+}
