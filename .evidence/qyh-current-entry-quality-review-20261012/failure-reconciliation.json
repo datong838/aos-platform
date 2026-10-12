@@ -1,0 +1,38 @@
+{
+  "returnCode": 0,
+  "toolExecutions": 0,
+  "assistantMessages": [
+    {
+      "stopReason": "stop",
+      "contentCharacters": 3249,
+      "contentSHA256": "aeaa883e96adc4ec1a5605eaf9cb96d71e28afaa959b59efd16791a3e920db37",
+      "validJSON": false,
+      "parseError": {
+        "kind": "JSONDecodeError",
+        "line": 36,
+        "column": 21,
+        "message": "Unterminated string starting at"
+      },
+      "usage": {
+        "input": 13996,
+        "output": 1157,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 15153,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    }
+  ],
+  "reviewAccepted": false,
+  "resultEnvelopeCreated": false,
+  "consumed": false,
+  "requestResent": false,
+  "goalChanged": false,
+  "executionAuthorized": false
+}
