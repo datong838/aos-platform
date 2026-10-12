@@ -5,7 +5,7 @@
   "task_id": "qyh-full-system-restoration-20261011",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "task_base_revision": "AOS-001842",
-  "authority_revision": "AOS-001970",
+  "authority_revision": "AOS-001971",
   "step": "establish_real_source_exclusive_window",
   "code_files": [
     "scripts/a0v_qyh_restored_http.py",
