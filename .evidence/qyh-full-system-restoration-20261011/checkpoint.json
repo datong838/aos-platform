@@ -5,7 +5,7 @@
   "task_id": "qyh-full-system-restoration-20261011",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "task_base_revision": "AOS-001842",
-  "authority_revision": "AOS-001985",
+  "authority_revision": "AOS-001986",
   "step": "formal_runtime_preparation_then_apply_verify_configure_eight_pages",
   "code_files": [
     "scripts/a0v_qyh_restored_http.py",
@@ -36,13 +36,15 @@
     ".evidence/qyh-full-system-restoration-20261011/source-writer-api-reload-20261012/browser.json",
     ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-api-20261012.json",
     ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-current-step-proof.json",
-    ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-preparation-readback.json"
+    ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-preparation-readback.json",
+    ".evidence/qyh-full-system-restoration-20261011/local-oidc-entry-verification-20261013.json"
   ],
   "steps": [
     {
       "id": "current_attachment_code_and_source_verified_locally",
-      "state": "VERIFIED_LOCAL",
-      "proof": ".evidence/qyh-full-system-restoration-20261011/current-code-step-proof.json"
+      "state": "PENDING",
+      "proof": ".evidence/qyh-full-system-restoration-20261011/current-code-step-proof.json",
+      "reason": "Historical proof retained; current entry code changed by explicit local OIDC integration. Revalidate current frozen source before activation."
     },
     {
       "id": "establish_real_source_exclusive_window",
@@ -51,8 +53,9 @@
     },
     {
       "id": "valid_independent_entry_quality_review",
-      "state": "VERIFIED_LOCAL",
-      "proof": ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/entry-quality-review-step-proof.json"
+      "state": "PENDING",
+      "proof": ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/entry-quality-review-step-proof.json",
+      "reason": "Historical proof retained; current entry code changed by explicit local OIDC integration. Revalidate current frozen source before activation."
     },
     {
       "id": "source_migration_and_aos_restart_acceptance",
@@ -70,8 +73,9 @@
     },
     {
       "id": "current_immutable_source_revalidated",
-      "state": "VERIFIED_LOCAL",
-      "proof": ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-current-step-proof.json"
+      "state": "PENDING",
+      "proof": ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-current-step-proof.json",
+      "reason": "Historical proof retained; current entry code changed by explicit local OIDC integration. Revalidate current frozen source before activation."
     },
     {
       "id": "actual_current161_preview_restart",
