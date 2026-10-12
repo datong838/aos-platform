@@ -1,0 +1,10 @@
+{
+  "observations": {
+    "current_heads": 1,
+    "current_active_effective_heads": 1
+  },
+  "twoReadsEqual": true,
+  "budgetOwnerAndApprovalVerified": false,
+  "payloadRead": false,
+  "metadataOnly": true
+}

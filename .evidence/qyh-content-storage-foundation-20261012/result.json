@@ -1,0 +1,46 @@
+{
+  "observedAt": "2026-10-12T15:25:08.293145+00:00",
+  "head": "8e8deef6c5df7ce216525affbd645d7d939149bb",
+  "scope": "org-org/dev-project",
+  "canonicalBudgetOwnerImplementationExists": true,
+  "budgetAggregates": {
+    "heads": 1,
+    "revisions": 1,
+    "active_rows": 1,
+    "active_effective_rows": 1,
+    "expired_windows": 0
+  },
+  "twoIndependentBudgetReadsEqual": true,
+  "budgetPayloadOrOwnerValuesRead": false,
+  "storageContextObservations": [
+    {
+      "context": "colima-aos-extension",
+      "observation": "READ_SUCCESS",
+      "matchingObjectStorageServices": []
+    },
+    {
+      "context": "colima-aos-a0v-test-only",
+      "observation": "DAEMON_QUERY_UNAVAILABLE",
+      "services": []
+    },
+    {
+      "context": "desktop-linux",
+      "observation": "TIMEOUT_UNKNOWN",
+      "services": []
+    },
+    {
+      "context": "default",
+      "observation": "DAEMON_QUERY_UNAVAILABLE",
+      "services": []
+    }
+  ],
+  "defaultOnlyS3ConfigReportsEnabled": true,
+  "offlineOnlyNoObjectNetworkRequests": true,
+  "configuredGovernedObjectOwnerVerified": false,
+  "canonicalArtifactIsBlobStore": false,
+  "productionVerifier": "UnavailableContentObjectVerifier",
+  "sourceSha256": "20b3e67bd16f30759e005a01bf22c45fd20e1b1771e0eda7dfe3e10975c820cc",
+  "writes": 0,
+  "objectBodiesRead": 0,
+  "GoalAccepted": false
+}
