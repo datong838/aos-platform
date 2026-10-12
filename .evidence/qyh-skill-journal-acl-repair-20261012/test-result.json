@@ -1,0 +1,8 @@
+{
+  "red": "15 failed, missing repair module; each fixture first reproduces actual default runtime INSERT rights",
+  "greenFirst": "15 passed",
+  "acceptanceFirst": "1 failed/1 passed/9 skipped/71 errors caused by confirmed tmpfs no-space and terminal PG; not counted as completion",
+  "acceptanceR2": "80 passed, zero skipped, 7 existing deprecation warnings,11.70s",
+  "experimentalClusterRecoveredFromRetainedVerifiedBackup": true,
+  "actualRealDatabaseMigration": false
+}
