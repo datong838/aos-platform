@@ -1,0 +1,18 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "current_immutable_source_revalidated",
+  "exit_code": 0,
+  "input_files": {
+    ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-api-20261012.json": "15701580d08d13ca59e5a142b48d5486e9f8a76a07cdd668558c86f6cdf70746",
+    "scripts/a0v_qyh_restored_http.py": "d440a9ac5d6d0664e1520dcb8e0daf598c99c7dc09f42a7d85f1a128c139aa68"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-preparation-readback.json": "0c31e633e793b9a1f855d6446521a5c47d0dd79b950cc6f15379493170534501"
+  },
+  "limitations": [
+    "New complete Git snapshot including added test accepted but not started; live production runtime source equals current m1",
+    "No deployment of Source identities/ACL, install approval or eight functional acceptance"
+  ]
+}

@@ -5,7 +5,7 @@
   "task_id": "qyh-full-system-restoration-20261011",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "task_base_revision": "AOS-001842",
-  "authority_revision": "AOS-001979",
+  "authority_revision": "AOS-001980",
   "step": "independent_installation_approval_then_apply_configure_eight_pages",
   "code_files": [
     "scripts/a0v_qyh_restored_http.py",
@@ -32,10 +32,11 @@
     ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/actual-preview-restart-verification.json",
     ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/entry-review-r4-copy-provenance.json",
     ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/entry-quality-review-step-proof.json",
-    ".evidence/qyh-full-system-restoration-20261011/source-writer-wiring-api-20261012.json",
-    ".evidence/qyh-full-system-restoration-20261011/source-writer-api-reload-20261012/current-source-step-proof.json",
     ".evidence/qyh-full-system-restoration-20261011/source-writer-api-reload-20261012/readback.json",
-    ".evidence/qyh-full-system-restoration-20261011/source-writer-api-reload-20261012/browser.json"
+    ".evidence/qyh-full-system-restoration-20261011/source-writer-api-reload-20261012/browser.json",
+    ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-api-20261012.json",
+    ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-current-step-proof.json",
+    ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-preparation-readback.json"
   ],
   "steps": [
     {
@@ -70,7 +71,7 @@
     {
       "id": "current_immutable_source_revalidated",
       "state": "VERIFIED_LOCAL",
-      "proof": ".evidence/qyh-full-system-restoration-20261011/source-writer-api-reload-20261012/current-source-step-proof.json"
+      "proof": ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-current-step-proof.json"
     },
     {
       "id": "actual_current161_preview_restart",
