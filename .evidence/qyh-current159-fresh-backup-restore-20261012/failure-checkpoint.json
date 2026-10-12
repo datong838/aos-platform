@@ -1,0 +1,24 @@
+{
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "task": "qyh-current159-fresh-backup-restore-20261012",
+  "backupTwoCopiesVerified": true,
+  "fullRestorePassed": false,
+  "failedOwnedLabs": {
+    "qyh-current159-exact-restore-20261012": {
+      "publicTables": 0,
+      "dataDatabases": 1
+    },
+    "qyh-current159-restore-lab-20261012": {
+      "publicTables": 0,
+      "dataDatabases": 0
+    }
+  },
+  "failure": "NO_SPACE_LEFT_ON_DEVICE",
+  "runtimeProfile": "aos-extension",
+  "dataDiskGiB": 20,
+  "rootDiskGiB": 20,
+  "usedPercent": 100,
+  "availableKiB": 33136,
+  "actualAuthorityMigrated": false,
+  "noRestoreResendAuthorizedByCheckpoint": true
+}

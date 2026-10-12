@@ -1,0 +1,4 @@
+# 备份成功、完整恢复失败的阶段记录
+当前真实159卷一致custom pg_dump16,085,331bytes及第二private0600副本SHA全同，pg_restore list结构可读。源647表SHA/rowcount baseline保留，未对真实库迁移/重启或重放Run。完整恢复未通过：原tmpfs 512MiB使用98%，COPY NoSpace且整事务rollback/public0表；独立磁盘lab后来也COPY NoSpace。当前aos-extension data盘vdb20GiB、root盘vda20GiB，Docker数据位于vdb/var/lib/docker/100000.100000，源容器同一底层盘100%、可用33136KiB。不得继续真实DDL。
+第一磁盘lab使用不同bootstrap，roles39flags匹配，但PG16显式GRANTED BY/admin-option失败；原DDL结果只读对账，未重放全部。原生系统builtin grantor差异不能当用户membership缺失，未改源。第二exact bootstrap=aos_app lab原roles全导入通过，完整dataRestore仍因容量失败，不宣称ROLE/ACL/sequence/data总验收完成。失败卷/库、所有备份都保留，两个lab network none、无端口，无应用/worker/Provider。
+原容量失败触发局部恢复待办，Task ACTIVE而非假complete；补充失败checkpoint不能被旧wake当合法施工checkpoint自动消费。下一独立aos重启职责Task需支持Colima现profile数据盘20→80GiB扩容，先核Host可用容量、当前全容器/服务和所有重叠Lease，再原colima支持stop/start保留卷，readback原权威cluster/name/schema。接续轮不得在容量修复前重发restore或当前库迁移；不削弱正式登录/发布/预算/8台/自然首链验收。

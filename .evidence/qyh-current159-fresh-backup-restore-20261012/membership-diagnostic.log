@@ -1,0 +1,2 @@
+ERROR:  permission denied to grant privileges as role "<identifier>"
+DETAIL:  The grantor must have the ADMIN option on role "<identifier>".

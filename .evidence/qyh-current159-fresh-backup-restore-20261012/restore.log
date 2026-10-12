@@ -1,0 +1,1 @@
+pg_restore: error: COPY failed for table "<identifier>": ERROR:  could not extend file "<identifier>": No space left on device

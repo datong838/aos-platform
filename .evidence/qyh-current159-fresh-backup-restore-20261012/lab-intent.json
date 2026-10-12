@@ -1,0 +1,10 @@
+{
+  "container": "qyh-current159-restore-lab-20261012",
+  "volume": "aos-qyh-current159-restore-lab-20261012",
+  "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+  "network": "none",
+  "ports": [],
+  "task": "qyh-current159-fresh-backup-restore-20261012",
+  "backupSHA256": "da795fb61c7a2ccdee1404949b0b6be21c39735655b8cd6fde2f7718c9aec815",
+  "actualAuthorityReplaced": false
+}

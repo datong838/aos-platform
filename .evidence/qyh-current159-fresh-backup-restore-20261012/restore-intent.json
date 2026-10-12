@@ -1,0 +1,6 @@
+{
+  "backupSHA256": "da795fb61c7a2ccdee1404949b0b6be21c39735655b8cd6fde2f7718c9aec815",
+  "ownedDatabase": "qyh_current159_restore_20261012",
+  "singleTransaction": true,
+  "replicaModeOnlyThisSubprocess": true
+}
