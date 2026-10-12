@@ -1,0 +1,7 @@
+# 原生独占维护围栏演练验收
+
+rehearse.py首次执行exit0；绑定CID/卷/network-none/模板159后只创建qyh_exclusive_window_20261012实验库。原生客户端保持连接时窗口拒绝（clients1）；关闭后clients0/prepared0。数据库级HBA围栏确实拒绝TCP superuser aos_app与本地runtime，原维护连接SELECT成功，保留模板仍可读。finally恢复原HBA精确SHA256并reload，解析error0；原完整模板647指纹和真库647指纹前后相同，其他数据库/角色未修改。原22个用户tracked改动保留。
+
+代码/方案一致性复核：新库和所有SQL限定实验；Docker上下文/容器CID/卷固定；无凭证读取、业务重放、Host/worker/Provider或真实卷写；intent独占创建拒绝重试未知结果，HBA恢复保留单独证据。实验库保留供对账，未删除原资源。新增的是维护演练执行器，无产品功能变更，不重复既有产品回归或浏览器验收。
+
+边界：local trust仅在受控Docker维护通道下工作，不能证明正式LOGIN身份；network-none实验不能证明真实系统连续零执行。prepared正向未演练，真实prepared数量只读为0；不能宣称全部故障恢复已验证。下一原卷窗口可复用精确规则与恢复步骤，但需parent维护权限和自身新鲜对账，不复用本intent或把旧12Run改为stopped。aos独立重启事件仍待实际执行。

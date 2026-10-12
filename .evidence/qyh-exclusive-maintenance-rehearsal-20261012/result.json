@@ -1,0 +1,36 @@
+{
+  "containerId": "3fb59cb46c8daeb402caee95bf9f2d9aefbb3aa42d87988811afe29418790687",
+  "newDatabase": "qyh_exclusive_window_20261012",
+  "occupiedWindowRefused": {
+    "clients": 1,
+    "prepared": 0
+  },
+  "testBackendClosed": 1655,
+  "emptyWindowCounts": {
+    "clients": 0,
+    "prepared": 0
+  },
+  "nativeDenials": [
+    {
+      "role": "aos_app",
+      "transport": "tcp",
+      "exitCode": 2,
+      "nativeHbaRejected": true
+    },
+    {
+      "role": "aos_runtime",
+      "transport": "local",
+      "exitCode": 2,
+      "nativeHbaRejected": true
+    }
+  ],
+  "localMaintenanceSucceeded": true,
+  "otherDatabaseStillReadable": true,
+  "hbaRestoredExactly": true,
+  "templateAndRealSource647Unchanged": true,
+  "preparedPositiveCaseExercised": false,
+  "realSourceWindowEstablished": false,
+  "realSourceMigration": false,
+  "restartPerformed": false,
+  "formalAuthenticationEstablished": false
+}

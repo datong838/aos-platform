@@ -1,0 +1,8 @@
+{
+  "containerId": "3fb59cb46c8daeb402caee95bf9f2d9aefbb3aa42d87988811afe29418790687",
+  "newDatabase": "qyh_exclusive_window_20261012",
+  "templateDatabase": "qyh_current159_full_restore_r2_20261012",
+  "originalHbaSHA256": "2366fa203f80a6b335fb103ef2d181e5f9d2cebdd27ae5cff1eb97d991f94ff0",
+  "realSourceWrites": false,
+  "restartAllowed": false
+}
