@@ -5,14 +5,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from aos_api import membership, orgs, tenant_catalog, workspaces_catalog
+from aos_api import membership, orgs, person_identity, tenant_catalog, workspaces_catalog
 
 
 @pytest.fixture
 def catalog(monkeypatch):
     monkeypatch.setattr(tenant_catalog, 'persistence_enabled', lambda: True)
     monkeypatch.setattr(tenant_catalog, '_catalog_tables_present', lambda: True)
-    for module, name in [(orgs, '_ORGS'), (workspaces_catalog, '_WS'), (membership, '_MEMBERS')]:
+    for module, name in [(orgs, '_ORGS'), (workspaces_catalog, '_WS'), (membership, '_MEMBERS'), (person_identity, '_PERSONS')]:
         monkeypatch.setattr(module, name, {})
     def forbidden(*args, **kwargs):
         raise AssertionError('read-only boot/query must not persist or run DDL')
@@ -28,6 +28,7 @@ def test_readonly_boot_preserves_existing_viewer_and_queries_never_write(catalog
         'meta_org': [dict(id='org-org', name='existing', kind='saas', join_policy='invite_only', discoverable=False)],
         'meta_workspace': [dict(org_id='org-org', project_id='dev-project', name='existing workspace', deletable=False, kind='custom')],
         'meta_membership': [dict(org_id='org-org', project_id='dev-project', subject='existing-user', role='viewer')],
+        'twa_person_profile': [dict(subject='existing-user', display_name='Existing viewer', email=None, phone=None, title=None)],
     }
     class Connection:
         def execute(self, sql):
@@ -40,8 +41,8 @@ def test_readonly_boot_preserves_existing_viewer_and_queries_never_write(catalog
     def connect(*, inherit_scope, platform_role):
         assert inherit_scope is False and platform_role is True
         yield Connection()
-    for module in (orgs, workspaces_catalog, membership):
-        catalog.setattr(module, 'connect_read_only', connect)
+    for module in (orgs, workspaces_catalog, membership, person_identity):
+        catalog.setattr(module, 'connect_read_only', connect, raising=False)
     # Execute the actual non-legacy startup branch, then the actual read routers.
     tree = ast.parse((Path(__file__).parents[2] / 'aos_api' / 'main.py').read_text())
     body = next(n for n in tree.body if isinstance(n, ast.AsyncFunctionDef) and n.name == '_lifespan_body')
@@ -49,9 +50,9 @@ def test_readonly_boot_preserves_existing_viewer_and_queries_never_write(catalog
     exec(compile(ast.Module(body=[branch], type_ignores=[]), '<actual startup branch>', 'exec'), {'legacy_bootstrap': False})
     from aos_api.routers.me import me, person
     from aos_api.routers.workspaces import list_workspaces
-    catalog.setattr(person, 'get_profile', lambda subject: {})
     principal = SimpleNamespace(org_id='org-org', project_id='dev-project', subject='existing-user', roles=['viewer'], markings=[], token_kind='test')
     assert me(principal)['orgName'] == 'existing'
+    assert me(principal)['displayName'] == 'Existing viewer'
     assert list_workspaces(principal)['items'][0]['name'] == 'existing workspace'
     membership.ensure_default_membership('org-org', 'dev-project', 'existing-user')
     assert membership.list_members('org-org', 'dev-project')[0]['role'] == 'viewer'

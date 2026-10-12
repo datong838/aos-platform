@@ -127,6 +127,9 @@ def boot_tenant_catalogs(*, read_only: bool = False) -> None:
         org_store.load_orgs_from_db(strict=True)
         ws_cat.load_workspaces_from_db(strict=True)
         mem.load_memberships_from_db(strict=True)
+        from aos_api.person_identity import load_profiles_from_db
+
+        load_profiles_from_db(strict=True)
     else:
         org_store.load_orgs_from_db()
         ws_cat.load_workspaces_from_db()

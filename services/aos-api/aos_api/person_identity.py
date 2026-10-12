@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from aos_api.db import connect_read_only
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.person-identity")
@@ -13,6 +14,42 @@ _PHONE_DIGITS = re.compile(r"[^\d+]")
 
 # subject -> profile
 _PERSONS: dict[str, dict[str, Any]] = {}
+
+
+def load_profiles_from_db(*, strict: bool = False) -> int:
+    """Hydrate existing profiles without legacy seeds or database writes."""
+    global _PERSONS
+    from aos_api.tenant_catalog import persistence_enabled
+
+    if not persistence_enabled():
+        return 0
+    try:
+        with connect_read_only(inherit_scope=False, platform_role=True) as conn:
+            rows = conn.execute(
+                "SELECT subject, email, phone, display_name, title "
+                "FROM twa_person_profile ORDER BY subject"
+            ).fetchall()
+        loaded = {}
+        for row in rows:
+            subject = row["subject"]
+            if not isinstance(subject, str) or not subject.strip():
+                raise ValueError("invalid persisted person subject")
+            loaded[subject] = {
+                "subject": subject,
+                "email": row["email"],
+                "phone": row["phone"],
+                "displayName": row["display_name"],
+                "title": row["title"],
+            }
+    except Exception:  # noqa: BLE001 — compatibility mode retains prior cache
+        if strict:
+            raise
+        log.warning("person_profile_load_fail", exc_info=True)
+        return 0
+    # Publish only after the complete read and validation succeeds.
+    _PERSONS = loaded
+    log.info("person_profile_load count=%s", len(loaded))
+    return len(loaded)
 
 
 def reset_person_store() -> None:

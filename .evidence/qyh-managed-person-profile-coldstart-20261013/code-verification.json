@@ -1,0 +1,22 @@
+{
+  "outcome": "MANAGED_READONLY_PERSON_PROFILE_COLDSTART_CODE_GREEN",
+  "files": {
+    "services/aos-api/aos_api/person_identity.py": "7aeaa84c491cd51cb6848f85a1db330b492fb20d560938d2cd440ea682061ece",
+    "services/aos-api/aos_api/tenant_catalog.py": "69171adb471083436fb3b0af0e9449b0f422ac5a49aa077a5625077c078ed801",
+    "services/aos-api/tests/tenant_isolation/test_tenant_catalog_readonly_startup.py": "10df6b9c8f427111df7f86d60813d8a0b525065b706e8b5d2e0d9733d79f096d",
+    "services/aos-api/tests/test_person_profile_cold_start.py": "bbe12fcad820f294d2d7d0386b1973f26e6b1c529426028a13b65083e721bfd5"
+  },
+  "red": {
+    "failed": 4,
+    "passed": 7
+  },
+  "adjacentGreen": 20,
+  "finalProfileTargetedGreen": 4,
+  "nativeColdProfileAndReadonlyObserved": true,
+  "atomicCacheAndFailurePreservationVerified": true,
+  "legacyAndMemoryBehaviorPreserved": true,
+  "currentDatabaseWrites": 0,
+  "liveApiReloaded": false,
+  "actualHumanDisplayNameAccepted": false,
+  "eightWorkbenchesAccepted": false
+}
