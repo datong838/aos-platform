@@ -1,0 +1,455 @@
+.FFF.FFFFF..                                                             [100%]
+=================================== FAILURES ===================================
+_____________ test_complete_ending_is_atomic_and_scoped[signature] _____________
+
+complete_source = ('user=aos_app dbname=aos_test_b05f2609e83e_ti4_test host=127.0.0.1 port=18431', 'user=skill_finisher_test_e640486b913...7a53', actor='test-only', created_at=datetime.datetime(2026, 10, 12, 9, 35, 51, 889909, tzinfo=datetime.timezone.utc)))
+scenario = 'signature'
+
+    @pytest.mark.parametrize('scenario',['commit','signature','input','intent-version','run-version','request','wrong-tenant','wide-acl','read-committed','autocommit','late-failure','caught-failure'])
+    def test_complete_ending_is_atomic_and_scoped(complete_source, scenario):
+        admin_dsn,dsn,report,pair,intent,event=complete_source
+        before=view(admin_dsn,intent);assert before==({'status':'running','version':2},[0,0,0],3,2)
+        if scenario in {'late-failure','caught-failure'}:
+            with psycopg.connect(admin_dsn) as admin:
+                admin.execute(sql.SQL('ALTER TABLE aip_eval_case_execution_proof ADD CONSTRAINT force_late_failure CHECK(report_id <> {})').format(sql.Literal(report.report_id)))
+        if scenario=='wide-acl':
+            with psycopg.connect(admin_dsn) as admin:admin.execute('GRANT UPDATE ON aip_eval_run TO aos_skill_eval_finisher')
+        if scenario=='signature':pair=replace(pair,judge_receipt=pair.judge_receipt.model_copy(update={'signature_base64':'invalid'}))
+        with psycopg.connect(dsn,row_factory=dict_row,autocommit=scenario=='autocommit') as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL '+('READ COMMITTED' if scenario=='read-committed' else 'SERIALIZABLE'))
+            conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",('dev-org' if scenario=='wrong-tenant' else SCOPE.org_id,SCOPE.project_id))
+            arguments=dict(expected_database=conn.info.dbname,scope=SCOPE,intent_id=intent,expected_intent_version=4 if scenario=='intent-version' else 3,request_hash='b'*64 if scenario=='request' else 'a'*64,event=event,expected_run_version=3 if scenario=='run-version' else 2,report=report,expected_input_hashes={'case-1':'f'*64 if scenario=='input' else INPUT_HASH},presented={'case-1':pair})
+            if scenario=='commit':
+                proof=finish_signed_skill_eval_with_connection(conn,**arguments);assert proof.report_hash==report.content_hash
+                assert view(admin_dsn,intent)==before,'internal helper committed'
+                conn.commit()
+            else:
+                expected_error = psycopg.errors.CheckViolation if scenario in {'late-failure','caught-failure'} else RuntimeError
+                with pytest.raises(expected_error):
+>                   finish_signed_skill_eval_with_connection(conn,**arguments)
+
+services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py:109:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:110: in finish_signed_skill_eval_with_connection
+    proof = _persist_signed_skill_eval_report_with_connection(conn,report=report,
+services/aos-api/aos_api/aip_eval_writer_atomic.py:65: in _persist_signed_skill_eval_report_with_connection
+    proof = preflight_skill_eval_writer_authority(
+services/aos-api/aos_api/aip_eval_writer_authority_preflight.py:220: in preflight_skill_eval_writer_authority
+    pair = verify_execution_pair(
+services/aos-api/aos_api/aip_eval_execution_authority.py:221: in verify_execution_pair
+    _verify_one(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+certificate = EvalExecutorCertificate(schema_version='aos.eval-executor-certificate/v1', identity_id='judge-identity', tenant=Tenant...zone.utc), signature_base64='j3/PwYFqZHtswlL83Bdg8armyjZdb8uj7Tf5K++vZ8YQNPyEO2L09tQws/c93mDm+fZMbMTcUKMk6XNNPntXDA==')
+receipt = EvalExecutionReceipt(schema_version='aos.eval-execution-receipt/v1', receipt_id='1e0a1f2e95fbaa17ae6d4724fec2f69969a27...curred_at=datetime.datetime(2026, 10, 12, 9, 35, 51, 879324, tzinfo=datetime.timezone.utc), signature_base64='invalid')
+root = EvalIssuerRoot(issuer_id='g2-eval-issuer', key_id='issuer-key-1', public_key=b'\x8eLHk\xab*\x15\xc0\xe6f%A\xac*UA\x07y...zone.utc), not_after=datetime.datetime(2026, 10, 13, 9, 35, 51, 818643, tzinfo=datetime.timezone.utc), revoked_at=None)
+revoked_identity_ids = frozenset()
+evaluated_at = datetime.datetime(2026, 10, 12, 9, 35, 51, 901226, tzinfo=datetime.timezone.utc)
+
+    def _verify_one(
+        certificate: EvalExecutorCertificate,
+        receipt: EvalExecutionReceipt,
+        *,
+        root: EvalIssuerRoot,
+        revoked_identity_ids: frozenset[str],
+        evaluated_at: datetime,
+    ) -> None:
+        if (
+            root.purpose != "eval-execution"
+            or root.issuer_id != certificate.issuer_id
+            or root.key_id != certificate.issuer_key_id
+            or certificate.identity_id in revoked_identity_ids
+            or not _valid_interval(evaluated_at, certificate.valid_from, certificate.valid_until)
+            or not _valid_interval(receipt.occurred_at, certificate.valid_from, certificate.valid_until)
+            or receipt.occurred_at > evaluated_at
+            or receipt.identity_id != certificate.identity_id
+            or receipt.certificate_hash != certificate_hash(certificate)
+            or receipt.tenant != certificate.tenant
+            or receipt.purpose != certificate.purpose
+            or receipt.executor_ref != certificate.executor_ref
+        ):
+            raise EvalExecutionRejected("Eval executor identity or receipt drifted")
+        if root.revoked_at is not None and root.revoked_at <= evaluated_at:
+            raise EvalExecutionRejected("Eval issuer root was revoked")
+        if not _valid_interval(evaluated_at, root.not_before, root.not_after):
+            raise EvalExecutionRejected("Eval issuer root is not current")
+        if not _valid_interval(receipt.occurred_at, root.not_before, root.not_after):
+            raise EvalExecutionRejected("Eval issuer root was not valid at execution")
+        issuer_root = TrustRoot(
+            publisher=root.issuer_id, key_id=root.key_id,
+            public_key=root.public_key,
+            revision="sha256:" + hashlib.sha256(root.public_key).hexdigest(),
+            not_before=root.not_before, not_after=root.not_after,
+            revoked_at=root.revoked_at,
+        )
+        if not verify_ed25519(
+            payload=canonical_certificate_bytes(certificate),
+            signature_b64=certificate.signature_base64,
+            publisher=root.issuer_id, key_id=root.key_id,
+            trust_roots=FrozenTrustRootProvider({(root.issuer_id, root.key_id): issuer_root}),
+            verified_at=evaluated_at,
+        ):
+            raise EvalExecutionRejected("Eval executor certificate signature is invalid")
+        try:
+            public_key = base64.b64decode(certificate.public_key_base64, validate=True)
+        except (ValueError, binascii.Error) as exc:
+            raise EvalExecutionRejected("Eval executor public key is invalid") from exc
+        if len(public_key) != 32:
+            raise EvalExecutionRejected("Eval executor public key length is invalid")
+        executor_root = TrustRoot(
+            publisher=certificate.identity_id, key_id=certificate.identity_id,
+            public_key=public_key,
+            revision="sha256:" + hashlib.sha256(public_key).hexdigest(),
+            not_before=certificate.valid_from, not_after=certificate.valid_until,
+        )
+        if not verify_ed25519(
+            payload=canonical_receipt_bytes(receipt),
+            signature_b64=receipt.signature_base64,
+            publisher=certificate.identity_id, key_id=certificate.identity_id,
+            trust_roots=FrozenTrustRootProvider({
+                (certificate.identity_id, certificate.identity_id): executor_root
+            }),
+            verified_at=evaluated_at,
+        ):
+>           raise EvalExecutionRejected("Eval execution receipt signature is invalid")
+E           aos_api.aip_eval_execution_authority.EvalExecutionRejected: Eval execution receipt signature is invalid
+
+services/aos-api/aos_api/aip_eval_execution_authority.py:166: EvalExecutionRejected
+_______________ test_complete_ending_is_atomic_and_scoped[input] _______________
+
+complete_source = ('user=aos_app dbname=aos_test_06d9101a9b74_ti4_test host=127.0.0.1 port=18431', 'user=skill_finisher_test_cd0ec5ecfa3...ddfb', actor='test-only', created_at=datetime.datetime(2026, 10, 12, 9, 35, 52, 152703, tzinfo=datetime.timezone.utc)))
+scenario = 'input'
+
+    @pytest.mark.parametrize('scenario',['commit','signature','input','intent-version','run-version','request','wrong-tenant','wide-acl','read-committed','autocommit','late-failure','caught-failure'])
+    def test_complete_ending_is_atomic_and_scoped(complete_source, scenario):
+        admin_dsn,dsn,report,pair,intent,event=complete_source
+        before=view(admin_dsn,intent);assert before==({'status':'running','version':2},[0,0,0],3,2)
+        if scenario in {'late-failure','caught-failure'}:
+            with psycopg.connect(admin_dsn) as admin:
+                admin.execute(sql.SQL('ALTER TABLE aip_eval_case_execution_proof ADD CONSTRAINT force_late_failure CHECK(report_id <> {})').format(sql.Literal(report.report_id)))
+        if scenario=='wide-acl':
+            with psycopg.connect(admin_dsn) as admin:admin.execute('GRANT UPDATE ON aip_eval_run TO aos_skill_eval_finisher')
+        if scenario=='signature':pair=replace(pair,judge_receipt=pair.judge_receipt.model_copy(update={'signature_base64':'invalid'}))
+        with psycopg.connect(dsn,row_factory=dict_row,autocommit=scenario=='autocommit') as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL '+('READ COMMITTED' if scenario=='read-committed' else 'SERIALIZABLE'))
+            conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",('dev-org' if scenario=='wrong-tenant' else SCOPE.org_id,SCOPE.project_id))
+            arguments=dict(expected_database=conn.info.dbname,scope=SCOPE,intent_id=intent,expected_intent_version=4 if scenario=='intent-version' else 3,request_hash='b'*64 if scenario=='request' else 'a'*64,event=event,expected_run_version=3 if scenario=='run-version' else 2,report=report,expected_input_hashes={'case-1':'f'*64 if scenario=='input' else INPUT_HASH},presented={'case-1':pair})
+            if scenario=='commit':
+                proof=finish_signed_skill_eval_with_connection(conn,**arguments);assert proof.report_hash==report.content_hash
+                assert view(admin_dsn,intent)==before,'internal helper committed'
+                conn.commit()
+            else:
+                expected_error = psycopg.errors.CheckViolation if scenario in {'late-failure','caught-failure'} else RuntimeError
+                with pytest.raises(expected_error):
+>                   finish_signed_skill_eval_with_connection(conn,**arguments)
+
+services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py:109:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:105: in finish_signed_skill_eval_with_connection
+    _observed_dispatches(conn,scope,intent_id,report,expected_input_hashes,presented)
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:59: in _observed_dispatches
+    _require(receipt.purpose==purpose and row['observed_at'] is not None
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+ok = False, reason = 'Skill ending observation or signed receipt drifted'
+
+    def _require(ok, reason):
+        if not ok:
+>           raise EvalExecutionRejected(reason)
+E           aos_api.aip_eval_execution_authority.EvalExecutionRejected: Skill ending observation or signed receipt drifted
+
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:14: EvalExecutionRejected
+__________ test_complete_ending_is_atomic_and_scoped[intent-version] ___________
+
+complete_source = ('user=aos_app dbname=aos_test_d6c183196830_ti4_test host=127.0.0.1 port=18431', 'user=skill_finisher_test_36e3f93452b...25cf', actor='test-only', created_at=datetime.datetime(2026, 10, 12, 9, 35, 52, 348674, tzinfo=datetime.timezone.utc)))
+scenario = 'intent-version'
+
+    @pytest.mark.parametrize('scenario',['commit','signature','input','intent-version','run-version','request','wrong-tenant','wide-acl','read-committed','autocommit','late-failure','caught-failure'])
+    def test_complete_ending_is_atomic_and_scoped(complete_source, scenario):
+        admin_dsn,dsn,report,pair,intent,event=complete_source
+        before=view(admin_dsn,intent);assert before==({'status':'running','version':2},[0,0,0],3,2)
+        if scenario in {'late-failure','caught-failure'}:
+            with psycopg.connect(admin_dsn) as admin:
+                admin.execute(sql.SQL('ALTER TABLE aip_eval_case_execution_proof ADD CONSTRAINT force_late_failure CHECK(report_id <> {})').format(sql.Literal(report.report_id)))
+        if scenario=='wide-acl':
+            with psycopg.connect(admin_dsn) as admin:admin.execute('GRANT UPDATE ON aip_eval_run TO aos_skill_eval_finisher')
+        if scenario=='signature':pair=replace(pair,judge_receipt=pair.judge_receipt.model_copy(update={'signature_base64':'invalid'}))
+        with psycopg.connect(dsn,row_factory=dict_row,autocommit=scenario=='autocommit') as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL '+('READ COMMITTED' if scenario=='read-committed' else 'SERIALIZABLE'))
+            conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",('dev-org' if scenario=='wrong-tenant' else SCOPE.org_id,SCOPE.project_id))
+            arguments=dict(expected_database=conn.info.dbname,scope=SCOPE,intent_id=intent,expected_intent_version=4 if scenario=='intent-version' else 3,request_hash='b'*64 if scenario=='request' else 'a'*64,event=event,expected_run_version=3 if scenario=='run-version' else 2,report=report,expected_input_hashes={'case-1':'f'*64 if scenario=='input' else INPUT_HASH},presented={'case-1':pair})
+            if scenario=='commit':
+                proof=finish_signed_skill_eval_with_connection(conn,**arguments);assert proof.report_hash==report.content_hash
+                assert view(admin_dsn,intent)==before,'internal helper committed'
+                conn.commit()
+            else:
+                expected_error = psycopg.errors.CheckViolation if scenario in {'late-failure','caught-failure'} else RuntimeError
+                with pytest.raises(expected_error):
+>                   finish_signed_skill_eval_with_connection(conn,**arguments)
+
+services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py:109:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:101: in finish_signed_skill_eval_with_connection
+    _require(intent is not None and type(expected_intent_version) is int
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+ok = False, reason = 'Skill ending intent version or request drifted'
+
+    def _require(ok, reason):
+        if not ok:
+>           raise EvalExecutionRejected(reason)
+E           aos_api.aip_eval_execution_authority.EvalExecutionRejected: Skill ending intent version or request drifted
+
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:14: EvalExecutionRejected
+______________ test_complete_ending_is_atomic_and_scoped[request] ______________
+
+complete_source = ('user=aos_app dbname=aos_test_38120c03637f_ti4_test host=127.0.0.1 port=18431', 'user=skill_finisher_test_3a8f49ea8ad...7618', actor='test-only', created_at=datetime.datetime(2026, 10, 12, 9, 35, 52, 710799, tzinfo=datetime.timezone.utc)))
+scenario = 'request'
+
+    @pytest.mark.parametrize('scenario',['commit','signature','input','intent-version','run-version','request','wrong-tenant','wide-acl','read-committed','autocommit','late-failure','caught-failure'])
+    def test_complete_ending_is_atomic_and_scoped(complete_source, scenario):
+        admin_dsn,dsn,report,pair,intent,event=complete_source
+        before=view(admin_dsn,intent);assert before==({'status':'running','version':2},[0,0,0],3,2)
+        if scenario in {'late-failure','caught-failure'}:
+            with psycopg.connect(admin_dsn) as admin:
+                admin.execute(sql.SQL('ALTER TABLE aip_eval_case_execution_proof ADD CONSTRAINT force_late_failure CHECK(report_id <> {})').format(sql.Literal(report.report_id)))
+        if scenario=='wide-acl':
+            with psycopg.connect(admin_dsn) as admin:admin.execute('GRANT UPDATE ON aip_eval_run TO aos_skill_eval_finisher')
+        if scenario=='signature':pair=replace(pair,judge_receipt=pair.judge_receipt.model_copy(update={'signature_base64':'invalid'}))
+        with psycopg.connect(dsn,row_factory=dict_row,autocommit=scenario=='autocommit') as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL '+('READ COMMITTED' if scenario=='read-committed' else 'SERIALIZABLE'))
+            conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",('dev-org' if scenario=='wrong-tenant' else SCOPE.org_id,SCOPE.project_id))
+            arguments=dict(expected_database=conn.info.dbname,scope=SCOPE,intent_id=intent,expected_intent_version=4 if scenario=='intent-version' else 3,request_hash='b'*64 if scenario=='request' else 'a'*64,event=event,expected_run_version=3 if scenario=='run-version' else 2,report=report,expected_input_hashes={'case-1':'f'*64 if scenario=='input' else INPUT_HASH},presented={'case-1':pair})
+            if scenario=='commit':
+                proof=finish_signed_skill_eval_with_connection(conn,**arguments);assert proof.report_hash==report.content_hash
+                assert view(admin_dsn,intent)==before,'internal helper committed'
+                conn.commit()
+            else:
+                expected_error = psycopg.errors.CheckViolation if scenario in {'late-failure','caught-failure'} else RuntimeError
+                with pytest.raises(expected_error):
+>                   finish_signed_skill_eval_with_connection(conn,**arguments)
+
+services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py:109:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:101: in finish_signed_skill_eval_with_connection
+    _require(intent is not None and type(expected_intent_version) is int
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+ok = False, reason = 'Skill ending intent version or request drifted'
+
+    def _require(ok, reason):
+        if not ok:
+>           raise EvalExecutionRejected(reason)
+E           aos_api.aip_eval_execution_authority.EvalExecutionRejected: Skill ending intent version or request drifted
+
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:14: EvalExecutionRejected
+___________ test_complete_ending_is_atomic_and_scoped[wrong-tenant] ____________
+
+complete_source = ('user=aos_app dbname=aos_test_93b8b932ff61_ti4_test host=127.0.0.1 port=18431', 'user=skill_finisher_test_079ce66c954...fea7', actor='test-only', created_at=datetime.datetime(2026, 10, 12, 9, 35, 52, 890397, tzinfo=datetime.timezone.utc)))
+scenario = 'wrong-tenant'
+
+    @pytest.mark.parametrize('scenario',['commit','signature','input','intent-version','run-version','request','wrong-tenant','wide-acl','read-committed','autocommit','late-failure','caught-failure'])
+    def test_complete_ending_is_atomic_and_scoped(complete_source, scenario):
+        admin_dsn,dsn,report,pair,intent,event=complete_source
+        before=view(admin_dsn,intent);assert before==({'status':'running','version':2},[0,0,0],3,2)
+        if scenario in {'late-failure','caught-failure'}:
+            with psycopg.connect(admin_dsn) as admin:
+                admin.execute(sql.SQL('ALTER TABLE aip_eval_case_execution_proof ADD CONSTRAINT force_late_failure CHECK(report_id <> {})').format(sql.Literal(report.report_id)))
+        if scenario=='wide-acl':
+            with psycopg.connect(admin_dsn) as admin:admin.execute('GRANT UPDATE ON aip_eval_run TO aos_skill_eval_finisher')
+        if scenario=='signature':pair=replace(pair,judge_receipt=pair.judge_receipt.model_copy(update={'signature_base64':'invalid'}))
+        with psycopg.connect(dsn,row_factory=dict_row,autocommit=scenario=='autocommit') as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL '+('READ COMMITTED' if scenario=='read-committed' else 'SERIALIZABLE'))
+            conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",('dev-org' if scenario=='wrong-tenant' else SCOPE.org_id,SCOPE.project_id))
+            arguments=dict(expected_database=conn.info.dbname,scope=SCOPE,intent_id=intent,expected_intent_version=4 if scenario=='intent-version' else 3,request_hash='b'*64 if scenario=='request' else 'a'*64,event=event,expected_run_version=3 if scenario=='run-version' else 2,report=report,expected_input_hashes={'case-1':'f'*64 if scenario=='input' else INPUT_HASH},presented={'case-1':pair})
+            if scenario=='commit':
+                proof=finish_signed_skill_eval_with_connection(conn,**arguments);assert proof.report_hash==report.content_hash
+                assert view(admin_dsn,intent)==before,'internal helper committed'
+                conn.commit()
+            else:
+                expected_error = psycopg.errors.CheckViolation if scenario in {'late-failure','caught-failure'} else RuntimeError
+                with pytest.raises(expected_error):
+>                   finish_signed_skill_eval_with_connection(conn,**arguments)
+
+services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py:109:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:86: in finish_signed_skill_eval_with_connection
+    _require(context['isolation']=='serializable' and context['readonly']=='off'
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+ok = False, reason = 'Skill ending tenant, event or transaction drifted'
+
+    def _require(ok, reason):
+        if not ok:
+>           raise EvalExecutionRejected(reason)
+E           aos_api.aip_eval_execution_authority.EvalExecutionRejected: Skill ending tenant, event or transaction drifted
+
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:14: EvalExecutionRejected
+_____________ test_complete_ending_is_atomic_and_scoped[wide-acl] ______________
+
+complete_source = ('user=aos_app dbname=aos_test_d73760967c33_ti4_test host=127.0.0.1 port=18431', 'user=skill_finisher_test_ca7b489eb5f...e616c', actor='test-only', created_at=datetime.datetime(2026, 10, 12, 9, 35, 53, 57413, tzinfo=datetime.timezone.utc)))
+scenario = 'wide-acl'
+
+    @pytest.mark.parametrize('scenario',['commit','signature','input','intent-version','run-version','request','wrong-tenant','wide-acl','read-committed','autocommit','late-failure','caught-failure'])
+    def test_complete_ending_is_atomic_and_scoped(complete_source, scenario):
+        admin_dsn,dsn,report,pair,intent,event=complete_source
+        before=view(admin_dsn,intent);assert before==({'status':'running','version':2},[0,0,0],3,2)
+        if scenario in {'late-failure','caught-failure'}:
+            with psycopg.connect(admin_dsn) as admin:
+                admin.execute(sql.SQL('ALTER TABLE aip_eval_case_execution_proof ADD CONSTRAINT force_late_failure CHECK(report_id <> {})').format(sql.Literal(report.report_id)))
+        if scenario=='wide-acl':
+            with psycopg.connect(admin_dsn) as admin:admin.execute('GRANT UPDATE ON aip_eval_run TO aos_skill_eval_finisher')
+        if scenario=='signature':pair=replace(pair,judge_receipt=pair.judge_receipt.model_copy(update={'signature_base64':'invalid'}))
+        with psycopg.connect(dsn,row_factory=dict_row,autocommit=scenario=='autocommit') as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL '+('READ COMMITTED' if scenario=='read-committed' else 'SERIALIZABLE'))
+            conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",('dev-org' if scenario=='wrong-tenant' else SCOPE.org_id,SCOPE.project_id))
+            arguments=dict(expected_database=conn.info.dbname,scope=SCOPE,intent_id=intent,expected_intent_version=4 if scenario=='intent-version' else 3,request_hash='b'*64 if scenario=='request' else 'a'*64,event=event,expected_run_version=3 if scenario=='run-version' else 2,report=report,expected_input_hashes={'case-1':'f'*64 if scenario=='input' else INPUT_HASH},presented={'case-1':pair})
+            if scenario=='commit':
+                proof=finish_signed_skill_eval_with_connection(conn,**arguments);assert proof.report_hash==report.content_hash
+                assert view(admin_dsn,intent)==before,'internal helper committed'
+                conn.commit()
+            else:
+                expected_error = psycopg.errors.CheckViolation if scenario in {'late-failure','caught-failure'} else RuntimeError
+                with pytest.raises(expected_error):
+>                   finish_signed_skill_eval_with_connection(conn,**arguments)
+
+services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py:109:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:94: in finish_signed_skill_eval_with_connection
+    _bounded_finisher(conn)
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:26: in _bounded_finisher
+    _require({r['attname'] for r in rows if r['finish_update']} ==
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+ok = False, reason = 'Skill finisher Run capabilities are not bounded'
+
+    def _require(ok, reason):
+        if not ok:
+>           raise EvalExecutionRejected(reason)
+E           aos_api.aip_eval_execution_authority.EvalExecutionRejected: Skill finisher Run capabilities are not bounded
+
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:14: EvalExecutionRejected
+__________ test_complete_ending_is_atomic_and_scoped[read-committed] ___________
+
+complete_source = ('user=aos_app dbname=aos_test_43e2767d82b5_ti4_test host=127.0.0.1 port=18431', 'user=skill_finisher_test_749f699e798...2d13', actor='test-only', created_at=datetime.datetime(2026, 10, 12, 9, 35, 53, 228172, tzinfo=datetime.timezone.utc)))
+scenario = 'read-committed'
+
+    @pytest.mark.parametrize('scenario',['commit','signature','input','intent-version','run-version','request','wrong-tenant','wide-acl','read-committed','autocommit','late-failure','caught-failure'])
+    def test_complete_ending_is_atomic_and_scoped(complete_source, scenario):
+        admin_dsn,dsn,report,pair,intent,event=complete_source
+        before=view(admin_dsn,intent);assert before==({'status':'running','version':2},[0,0,0],3,2)
+        if scenario in {'late-failure','caught-failure'}:
+            with psycopg.connect(admin_dsn) as admin:
+                admin.execute(sql.SQL('ALTER TABLE aip_eval_case_execution_proof ADD CONSTRAINT force_late_failure CHECK(report_id <> {})').format(sql.Literal(report.report_id)))
+        if scenario=='wide-acl':
+            with psycopg.connect(admin_dsn) as admin:admin.execute('GRANT UPDATE ON aip_eval_run TO aos_skill_eval_finisher')
+        if scenario=='signature':pair=replace(pair,judge_receipt=pair.judge_receipt.model_copy(update={'signature_base64':'invalid'}))
+        with psycopg.connect(dsn,row_factory=dict_row,autocommit=scenario=='autocommit') as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL '+('READ COMMITTED' if scenario=='read-committed' else 'SERIALIZABLE'))
+            conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",('dev-org' if scenario=='wrong-tenant' else SCOPE.org_id,SCOPE.project_id))
+            arguments=dict(expected_database=conn.info.dbname,scope=SCOPE,intent_id=intent,expected_intent_version=4 if scenario=='intent-version' else 3,request_hash='b'*64 if scenario=='request' else 'a'*64,event=event,expected_run_version=3 if scenario=='run-version' else 2,report=report,expected_input_hashes={'case-1':'f'*64 if scenario=='input' else INPUT_HASH},presented={'case-1':pair})
+            if scenario=='commit':
+                proof=finish_signed_skill_eval_with_connection(conn,**arguments);assert proof.report_hash==report.content_hash
+                assert view(admin_dsn,intent)==before,'internal helper committed'
+                conn.commit()
+            else:
+                expected_error = psycopg.errors.CheckViolation if scenario in {'late-failure','caught-failure'} else RuntimeError
+                with pytest.raises(expected_error):
+>                   finish_signed_skill_eval_with_connection(conn,**arguments)
+
+services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py:109:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:86: in finish_signed_skill_eval_with_connection
+    _require(context['isolation']=='serializable' and context['readonly']=='off'
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+ok = False, reason = 'Skill ending tenant, event or transaction drifted'
+
+    def _require(ok, reason):
+        if not ok:
+>           raise EvalExecutionRejected(reason)
+E           aos_api.aip_eval_execution_authority.EvalExecutionRejected: Skill ending tenant, event or transaction drifted
+
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:14: EvalExecutionRejected
+____________ test_complete_ending_is_atomic_and_scoped[autocommit] _____________
+
+complete_source = ('user=aos_app dbname=aos_test_9869fe29d9ca_ti4_test host=127.0.0.1 port=18431', 'user=skill_finisher_test_48782b29085...4c70', actor='test-only', created_at=datetime.datetime(2026, 10, 12, 9, 35, 53, 400767, tzinfo=datetime.timezone.utc)))
+scenario = 'autocommit'
+
+    @pytest.mark.parametrize('scenario',['commit','signature','input','intent-version','run-version','request','wrong-tenant','wide-acl','read-committed','autocommit','late-failure','caught-failure'])
+    def test_complete_ending_is_atomic_and_scoped(complete_source, scenario):
+        admin_dsn,dsn,report,pair,intent,event=complete_source
+        before=view(admin_dsn,intent);assert before==({'status':'running','version':2},[0,0,0],3,2)
+        if scenario in {'late-failure','caught-failure'}:
+            with psycopg.connect(admin_dsn) as admin:
+                admin.execute(sql.SQL('ALTER TABLE aip_eval_case_execution_proof ADD CONSTRAINT force_late_failure CHECK(report_id <> {})').format(sql.Literal(report.report_id)))
+        if scenario=='wide-acl':
+            with psycopg.connect(admin_dsn) as admin:admin.execute('GRANT UPDATE ON aip_eval_run TO aos_skill_eval_finisher')
+        if scenario=='signature':pair=replace(pair,judge_receipt=pair.judge_receipt.model_copy(update={'signature_base64':'invalid'}))
+        with psycopg.connect(dsn,row_factory=dict_row,autocommit=scenario=='autocommit') as conn:
+            conn.execute('SET TRANSACTION ISOLATION LEVEL '+('READ COMMITTED' if scenario=='read-committed' else 'SERIALIZABLE'))
+            conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",('dev-org' if scenario=='wrong-tenant' else SCOPE.org_id,SCOPE.project_id))
+            arguments=dict(expected_database=conn.info.dbname,scope=SCOPE,intent_id=intent,expected_intent_version=4 if scenario=='intent-version' else 3,request_hash='b'*64 if scenario=='request' else 'a'*64,event=event,expected_run_version=3 if scenario=='run-version' else 2,report=report,expected_input_hashes={'case-1':'f'*64 if scenario=='input' else INPUT_HASH},presented={'case-1':pair})
+            if scenario=='commit':
+                proof=finish_signed_skill_eval_with_connection(conn,**arguments);assert proof.report_hash==report.content_hash
+                assert view(admin_dsn,intent)==before,'internal helper committed'
+                conn.commit()
+            else:
+                expected_error = psycopg.errors.CheckViolation if scenario in {'late-failure','caught-failure'} else RuntimeError
+                with pytest.raises(expected_error):
+>                   finish_signed_skill_eval_with_connection(conn,**arguments)
+
+services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py:109:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:78: in finish_signed_skill_eval_with_connection
+    _require(conn.autocommit is False and conn.row_factory is dict_row,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+ok = False, reason = 'caller-owned Skill ending transaction required'
+
+    def _require(ok, reason):
+        if not ok:
+>           raise EvalExecutionRejected(reason)
+E           aos_api.aip_eval_execution_authority.EvalExecutionRejected: caller-owned Skill ending transaction required
+
+services/aos-api/aos_api/aip_skill_eval_atomic_finisher.py:14: EvalExecutionRejected
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py::test_complete_ending_is_atomic_and_scoped[signature]
+FAILED services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py::test_complete_ending_is_atomic_and_scoped[input]
+FAILED services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py::test_complete_ending_is_atomic_and_scoped[intent-version]
+FAILED services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py::test_complete_ending_is_atomic_and_scoped[request]
+FAILED services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py::test_complete_ending_is_atomic_and_scoped[wrong-tenant]
+FAILED services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py::test_complete_ending_is_atomic_and_scoped[wide-acl]
+FAILED services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py::test_complete_ending_is_atomic_and_scoped[read-committed]
+FAILED services/aos-api/tests/aip/test_skill_eval_atomic_finisher_pg.py::test_complete_ending_is_atomic_and_scoped[autocommit]
+8 failed, 4 passed, 7 warnings in 7.58s

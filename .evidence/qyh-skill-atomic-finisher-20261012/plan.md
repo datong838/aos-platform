@@ -1,0 +1,9 @@
+# Skill新producer受限原子终结
+
+Rules：AGENTS.md、231、已批准生命周期合同v1/D-wave第5项。复习当前writer仅一个角色且Run UPDATE全无、当前新producer两个角色图预检查已12native通过。候选一原卷维护（独立aos职责），候选二本项已登记完整终结，选择二。仅新增aip_skill_eval_atomic_finisher.py及test_skill_eval_atomic_finisher_pg.py；不修改旧writer/preflight/CAS算法、已发布迁移或现有数据。
+
+内部connection helper不启动任何执行器，无默认配置入口。caller必须独立未切角色LOGIN、两个精确NOINHERIT角色、SERIALIZABLE/非autocommit、同tenant；finisher只允许Run SELECT及4列status/version/started_at/finished_at UPDATE、event SELECT/INSERT，禁止旧writer或LOGIN直接Run UPDATE。身份不等于正式Owner/预算/审批准入，实际生产者必须先完成它们。
+
+在caller SAVEPOINT内固定public search_path，先writer锁intent，再完整核Run/request/version/case/purpose/input以及两observed结果对应signed receipt；后切finisher复用原_transition_eval_run_with_connection CAS/event成功状态，立即切回writer运行原全签名/当前root/Receipt/Report/sidecar登记；最后CAS intent version。所有原证据检查保留，不降低succeeded门。任何晚期失败rollback保存点，即使caller捕获后commit也不得留下虚假成功；角色恢复，caller独自commit/unknown只读对账，禁止自动retry/replay。
+
+隔离新完整测试数据库/独立签名夹具/新LOGIN和受限角色grant及RLS仅实验内。正向必须独立连接读回Run/event/Report/Receipt/proof/intent一体和原消费者全证；负向包括缺Judge/漂移input/错误签名/版本/tenant/role/ACL/事务mode/晚期写拒绝。表权限、数据库schema未正式迁移或授权；整个producer/init准入/真实外部执行/八台首链均不因本代码通过而完成。
