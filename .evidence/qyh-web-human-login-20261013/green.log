@@ -1,0 +1,5 @@
+$ vitest run -- src/api/passwordLogin.test.ts src/api/tenant.test.ts
+/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/node_modules/.bin/vitest: line 53: exec: node: not found
+/Users/ddt/work/projects/ai_agent/aos-platform/apps/web:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @aos/web@0.1.0 test: `vitest run -- src/api/passwordLogin.test.ts src/api/tenant.test.ts`
+spawn ENOENT

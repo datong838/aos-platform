@@ -1,4 +1,5 @@
 import { RuntimeWorkshopCatalogProvider } from './components/extensions/RuntimeWorkshopCatalog';
+import { LocalLoginGate } from './components/auth/LocalLoginGate';
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./shell/AppShell";
@@ -107,6 +108,7 @@ const S2_STUB_ROUTES = NAV_ITEMS.filter(isNavPage).filter(
 export function App() {
   return (
     <BrowserRouter>
+      <LocalLoginGate>
       <RuntimeWorkshopCatalogProvider>
       <EcommerceWorkshopCatalogProvider>
         <Routes>
@@ -344,6 +346,7 @@ export function App() {
         </Routes>
       </EcommerceWorkshopCatalogProvider>
       </RuntimeWorkshopCatalogProvider>
+      </LocalLoginGate>
     </BrowserRouter>
   );
 }
