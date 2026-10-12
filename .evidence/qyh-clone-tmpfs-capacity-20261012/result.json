@@ -1,0 +1,12 @@
+{
+  "currentName": "qyh-source-boundary-clone-capacity-20261012",
+  "currentId": "bb9c8b1ab46af632af36ee89c9f2686f06ace9bbd803040ce44cab057968d486",
+  "failedContainerRetained": "2a1aefd5b81edcca03ac773e7806b66a40e7ad358363f068f68a868879c2df09",
+  "cluster": "7695416748450308141",
+  "originalDatabaseSetExact": true,
+  "tmpfsLimitGiB": 1,
+  "imageEnvironmentPortPreserved": true,
+  "nativeManifestWalAndRecoveryPassed": true,
+  "failedTestFixtureChangesNotRecovered": true,
+  "realSourceVolumeUntouched": true
+}

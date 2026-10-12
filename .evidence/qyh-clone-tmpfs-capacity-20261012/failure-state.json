@@ -1,0 +1,10 @@
+{
+  "containerId": "2a1aefd5b81edcca03ac773e7806b66a40e7ad358363f068f68a868879c2df09",
+  "running": false,
+  "exitCode": 1,
+  "oomKilled": false,
+  "pid": 0,
+  "reason": "native pytest pg checkpoint and no-space failures, container now confirmed stopped",
+  "unknownBusinessEffects": false,
+  "sourceRolesAndBusinessReplaysNotInvoked": true
+}

@@ -1,0 +1,40 @@
+{
+  "head": "a162a791f0c1699fbf404b02c5061ea28f197194",
+  "ownedVersion": "a0v_161",
+  "allOldBusinessDataAndNewEmptyTablesUnchanged": true,
+  "all647OldTableACLColumnsPoliciesTriggersAndDefaultsUnchanged": true,
+  "all12SequencesAnd39RolesUnchanged": true,
+  "journalNativePermissionReadback": [
+    {
+      "table": "aip_skill_eval_intent",
+      "acl": "{aos_app=arwdDxt/aos_app,aos_aip_eval_writer=ar/aos_app,aos_runtime=r/aos_app}",
+      "runtimeRead": true,
+      "runtimeWrite": false,
+      "writerInsert": true,
+      "writerUpdate": false,
+      "forcedRLS": true
+    },
+    {
+      "table": "aip_skill_eval_dispatch",
+      "acl": "{aos_app=arwdDxt/aos_app,aos_aip_eval_writer=ar/aos_app,aos_runtime=r/aos_app}",
+      "runtimeRead": true,
+      "runtimeWrite": false,
+      "writerInsert": true,
+      "writerUpdate": false,
+      "forcedRLS": true
+    },
+    {
+      "table": "aip_skill_eval_dispatch_observation",
+      "acl": "{aos_app=arwdDxt/aos_app,aos_aip_eval_writer=ar/aos_app,aos_runtime=r/aos_app}",
+      "runtimeRead": true,
+      "runtimeWrite": false,
+      "writerInsert": true,
+      "writerUpdate": false,
+      "forcedRLS": true
+    }
+  ],
+  "realSourceAndFresh159TemplateUnchanged": true,
+  "actualSourceMigrated": false,
+  "signedBundleRuntimeCompatibilityAccepted": false,
+  "formalIdentityAndEightWorkshopsAccepted": false
+}

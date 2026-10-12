@@ -1,0 +1,5 @@
+# 当前最新真实源副本161修复复验
+
+原native160先捕获历史default ACL RED。代码a162a791f未改历史160/旧表/default权限；精确committed树私有冻结，原Alembic160:161生成完整事务SQL在同owned160新副本执行terminal0，第二连接version161。三新增表runtime SELECT true/所有表写false，writer INSERT true/整表UPDATE false，FORCE RLS保持；所有647旧表ACL/列类型/列ACL/owner/策略/trigger/defaultACL完整目录同事务前严格相等，12序列/39角色配置与用户members不变，所有旧业务及新空表数据只版本表预期变化。
+
+真实source159及完整fresh159模板647指纹再次相等，未迁移或新写true source。80原生专项与相邻测试在独立实验集群通过、0skip，临时盘故障独立恢复验收且不隐藏失败。新产品代码只三表窄SQL ACL，不影响旧正常表/业务，无页面变化，浏览器功能验收不适用。可以交付本副本/ACL修复Tasks；新head161的完整当前签名包兼容、正式登录与发布身份/安装配置、原current零执行迁移窗/真实迁移/API版本/八工作台及自然首链仍pending。
