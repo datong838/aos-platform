@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-skill-producer-route-audit-20261012/audit.py", line 50, in <module>
+    for node in ast.walk(ast.parse((ROOT/relative).read_text())):
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/ast.py", line 50, in parse
+    return compile(source, filename, mode, flags,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<unknown>", line 1
+    ﻿"""LLM Provider plugin registry — scheme 83 · 对齐 20 §3.1."""
+    ^
+SyntaxError: invalid non-printable character U+FEFF

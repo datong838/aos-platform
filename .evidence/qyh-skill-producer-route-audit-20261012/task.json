@@ -1,0 +1,19 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-skill-producer-route-audit-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001936",
+  "scope": [
+    "aos-platform/.evidence/qyh-skill-producer-route-audit-20261012"
+  ],
+  "excluded_scope": [
+    "DB/model/target/judge effects",
+    "run replay/issuer root creation/guard removal"
+  ],
+  "expected_outputs": [
+    "Original live Suite direct Skill Runner readonly refusal before callbacks/writes; exact writer caller AST audit and implementation dependency inventory"
+  ],
+  "lease_expires_at": "2026-10-12T04:45:06.711003+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T08:45:07+08:00"
+}

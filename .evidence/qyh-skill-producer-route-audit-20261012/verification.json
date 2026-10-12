@@ -1,0 +1,12 @@
+{
+  "originalSkillSuites": 8,
+  "originalRunnerDenials": 8,
+  "executionCallbacks": 0,
+  "tableCountsUnchanged": true,
+  "trackedNamedAtomicWriterCalls": 0,
+  "databaseWrites": 0,
+  "newProducerImplemented": false,
+  "identityAloneEnough": false,
+  "scope": "original experiment only",
+  "auditSha256": "77be86e03e3e886d13e85ce2ba6175f061b79fada1afe7853f152d95d32144d3"
+}

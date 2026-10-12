@@ -1,0 +1,11 @@
+# 原Skill生产入口拒绝及writer缺口核验
+
+复习原BG00u直接运行禁入及BG00ac原子证明方案，明确拒绝是有意保留的边界，不是应删除的障碍。本波先仅三个已知启动配置的公开字段存在性核查，OIDC/JWKS/audience和Evalwriterfile全空（未输出密钥、未读别处secret）；异步只请求此前登录配置入口/路径，非重复整体授权。正式配置是实际缺失，不伪造身份。
+
+原DB qyh_source_contract_20261011/RORR/aos_runtime读取已有8 SkillSuites，原AipEvalRunner.run实际formal Skill Eval executor authority unavailable拒绝；artifact/Target/Judge callback0，前后Run/Report/Proof/ContractReceipt数精确相同，不传旧RunID、不开始执行、不登记新对象或回放旧Run。tracked Git HEAD源码AST扫描原persist_signed_skill_eval_report直接调用数量0；此为明确名称调用扫描，不能排除未登记动态调用，但当前runner正向没有该接线。
+
+首轮AST因某源码UTF8 BOM U+FEFF失败，发生在只读探针之后、结果写入之前；改用git show HEAD:文件和UTF8-sig解析，避免扫描22用户worktree改动，保留失败日志。重新只读探针仍counts unchanged，无未知外部效果重发。原8SkillSuite拒绝并不证明无其他合法Logic或实验能力；不能扩大成整体Goal blocked。
+
+新实现Inventory明确独立签名Skill执行生产者、Root/目标Judge独立身份、新intent/未知对账、原atomicWriter逐case事务和原消费者条件。配置登录/技术writer本身不足以产生执行证明；写入器声明future formal defaultoff，只处理已签材料，不能补旧16Report或self签权威。此前快照兼容修复与最新管理API61739仍有对应真实证据，旧数据/22用户改动保留。当前问路径等待输入，同时可继续批准的隔离协议设计/验证，不静默改Goal。
+
+本Task只完成调查和实施清单，未编写新业务producer/移除Skill或Modelguard/调用模型Provider/改源库或当前API。当前八目录仍不可用，正式首链/身份/配置/8页不可算完成，Goal ACTIVE。

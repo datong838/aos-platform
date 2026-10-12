@@ -1,0 +1,64 @@
+{
+  "originalSuiteCount": 8,
+  "originalDenials": [
+    {
+      "suite_id": "ecommerce.skill.A02.contract.v1",
+      "revision": 1,
+      "reason": "formal Skill Eval executor authority unavailable"
+    },
+    {
+      "suite_id": "ecommerce.skill.C06.contract.v1",
+      "revision": 1,
+      "reason": "formal Skill Eval executor authority unavailable"
+    },
+    {
+      "suite_id": "ecommerce.skill.D01.contract.v1",
+      "revision": 1,
+      "reason": "formal Skill Eval executor authority unavailable"
+    },
+    {
+      "suite_id": "ecommerce.skill.D02.contract.v1",
+      "revision": 1,
+      "reason": "formal Skill Eval executor authority unavailable"
+    },
+    {
+      "suite_id": "ecommerce.skill.D03.contract.v1",
+      "revision": 1,
+      "reason": "formal Skill Eval executor authority unavailable"
+    },
+    {
+      "suite_id": "ecommerce.skill.G06.contract.v1",
+      "revision": 1,
+      "reason": "formal Skill Eval executor authority unavailable"
+    },
+    {
+      "suite_id": "ecommerce.skill.P01.contract.v1",
+      "revision": 1,
+      "reason": "formal Skill Eval executor authority unavailable"
+    },
+    {
+      "suite_id": "ecommerce.skill.S01.contract.v1",
+      "revision": 1,
+      "reason": "formal Skill Eval executor authority unavailable"
+    }
+  ],
+  "callbacks": [],
+  "countsBefore": {
+    "aip_eval_run": 40,
+    "aip_eval_report_revision": 40,
+    "aip_eval_case_execution_proof": 0,
+    "aip_production_contract_receipt": 92
+  },
+  "countsAfter": {
+    "aip_eval_run": 40,
+    "aip_eval_report_revision": 40,
+    "aip_eval_case_execution_proof": 0,
+    "aip_production_contract_receipt": 92
+  },
+  "trackedWriterCalls": [],
+  "databaseWrites": 0,
+  "oldRunReplay": false,
+  "newExecutionProduced": false,
+  "identityConfigurationAloneIsSufficient": false,
+  "formalRestoreAccepted": false
+}
