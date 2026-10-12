@@ -1,0 +1,37 @@
+{
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-97b26e3481270618609bc0bd73a227affcb08900",
+  "sourceHead": "97b26e3481270618609bc0bd73a227affcb08900",
+  "preflight": {
+    "outcome": "RESTORED_HTTP_ATTACHMENT_INVENTORY_ONLY",
+    "identity": {
+      "database": "aos_meta_head",
+      "cluster": "7695302940039200809",
+      "schema": "a0v_159",
+      "orgId": "org-org",
+      "orgName": "栖月汇商贸有限公司",
+      "projectId": "dev-project",
+      "tables": 647
+    },
+    "inventory": {
+      "installations": 135,
+      "configurations": 130,
+      "bindings": 126,
+      "enabledBindings": 0
+    },
+    "apiStartAuthorized": false,
+    "eightWorkbenchesVerified": false,
+    "runtimeHostEnabled": false,
+    "remainingGates": [
+      "current signed release and installation",
+      "current configuration and formal identity",
+      "API/Web restart and eight-page browser acceptance"
+    ],
+    "limitedLoginVerified": true,
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "databaseStartedAt": "2026-10-11T07:53:24.989993294Z"
+  },
+  "readonlyNativeConnectionVerified": true,
+  "parentLeaseValid": true,
+  "oldPid": 49734,
+  "oldSourceHead": "28f620202a708b34d26928efef772e8b14d145d7"
+}

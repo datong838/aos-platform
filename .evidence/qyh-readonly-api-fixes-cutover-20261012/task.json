@@ -1,0 +1,19 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-readonly-api-fixes-cutover-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001935",
+  "scope": [
+    "aos-platform/.evidence/qyh-readonly-api-fixes-cutover-20261012"
+  ],
+  "excluded_scope": [
+    "current DB/PG/Web restart",
+    "Host/worker/Provider or business authority"
+  ],
+  "expected_outputs": [
+    "Parent-owned restored managementAPI18080 latest97b source cutover exact PID intent/port/read-onlyDB/volume/tenant/browser, retain old source rollback and all original services"
+  ],
+  "lease_expires_at": "2026-10-12T04:26:07.662340+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T08:26:08+08:00"
+}

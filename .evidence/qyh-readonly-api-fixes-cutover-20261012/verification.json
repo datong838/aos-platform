@@ -1,0 +1,39 @@
+{
+  "newPid": 61739,
+  "sessionId": 89619,
+  "sourceHead": "97b26e3481270618609bc0bd73a227affcb08900",
+  "actualSourceCwdVerified": true,
+  "oldPidTerminalPortFreeBeforeStart": true,
+  "managementMode": "original readonly dev inspection",
+  "sameVolumeClusterSchemaInventory": true,
+  "postgresWebAndOriginalListenersUnchanged": true,
+  "nativeDatabaseReadOnlyVerified": true,
+  "httpStatuses": [
+    200,
+    200,
+    200,
+    403,
+    405,
+    404
+  ],
+  "browserPages": 8,
+  "allQiyuehuiNameVisible": true,
+  "allWorkbenchEntriesUnavailable": true,
+  "browserErrors": 0,
+  "browserMutationRequests": 0,
+  "tabRetained": true,
+  "currentRoleOrHostAuthorityGranted": false,
+  "formalIdentityConnected": false,
+  "databaseWrites": 0,
+  "eightWorkbenchesFunctionallyAccepted": false,
+  "screenshots": {
+    "analyst": "1ac38f839fe7d3d968bb8388d31a244e5d5650b0e679e88d64495f2f7c982814",
+    "content-campaign": "1ac38f839fe7d3d968bb8388d31a244e5d5650b0e679e88d64495f2f7c982814",
+    "creator-growth": "1ac38f839fe7d3d968bb8388d31a244e5d5650b0e679e88d64495f2f7c982814",
+    "customer": "1ac38f839fe7d3d968bb8388d31a244e5d5650b0e679e88d64495f2f7c982814",
+    "media-studio": "1ac38f839fe7d3d968bb8388d31a244e5d5650b0e679e88d64495f2f7c982814",
+    "price-governance": "1ac38f839fe7d3d968bb8388d31a244e5d5650b0e679e88d64495f2f7c982814",
+    "cockpit": "1ac38f839fe7d3d968bb8388d31a244e5d5650b0e679e88d64495f2f7c982814",
+    "operations": "1ac38f839fe7d3d968bb8388d31a244e5d5650b0e679e88d64495f2f7c982814"
+  }
+}

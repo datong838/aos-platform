@@ -1,0 +1,56 @@
+{
+  "pages": [
+    {
+      "route": "analyst",
+      "qyhName": true,
+      "entryUnavailable": true,
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-readonly-api-fixes-cutover-20261012/analyst.png"
+    },
+    {
+      "route": "content-campaign",
+      "qyhName": true,
+      "entryUnavailable": true,
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-readonly-api-fixes-cutover-20261012/content-campaign.png"
+    },
+    {
+      "route": "creator-growth",
+      "qyhName": true,
+      "entryUnavailable": true,
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-readonly-api-fixes-cutover-20261012/creator-growth.png"
+    },
+    {
+      "route": "customer",
+      "qyhName": true,
+      "entryUnavailable": true,
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-readonly-api-fixes-cutover-20261012/customer.png"
+    },
+    {
+      "route": "media-studio",
+      "qyhName": true,
+      "entryUnavailable": true,
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-readonly-api-fixes-cutover-20261012/media-studio.png"
+    },
+    {
+      "route": "price-governance",
+      "qyhName": true,
+      "entryUnavailable": true,
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-readonly-api-fixes-cutover-20261012/price-governance.png"
+    },
+    {
+      "route": "cockpit",
+      "qyhName": true,
+      "entryUnavailable": true,
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-readonly-api-fixes-cutover-20261012/cockpit.png"
+    },
+    {
+      "route": "operations",
+      "qyhName": true,
+      "entryUnavailable": true,
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-readonly-api-fixes-cutover-20261012/operations.png"
+    }
+  ],
+  "pageErrors": [],
+  "mutationRequests": [],
+  "tabRetained": true,
+  "workbenchesFunctionallyAccepted": false
+}
