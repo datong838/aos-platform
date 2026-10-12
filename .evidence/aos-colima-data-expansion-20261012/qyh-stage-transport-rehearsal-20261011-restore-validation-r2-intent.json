@@ -1,0 +1,9 @@
+{
+  "container": "aos-tmpfs-backup-verify-r2-20261012-5",
+  "originalContainerId": "adb100ba5a3c25a5274b62a4007b4eb64d2201a23eab2c42add0f97e08d7e683",
+  "archiveSHA256": "43bdaadf111863115f0c5e634d11eb3c04e2a3be2049db604c31cabc08dc9b29",
+  "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+  "network": "none",
+  "publishedPorts": [],
+  "runtimeStopIssued": false
+}

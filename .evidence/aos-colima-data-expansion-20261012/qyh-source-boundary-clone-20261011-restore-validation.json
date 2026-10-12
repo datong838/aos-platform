@@ -1,0 +1,10 @@
+{
+  "container": "qyh-source-boundary-clone-20261011",
+  "validationContainer": "aos-tmpfs-backup-verify-r2-20261012-2",
+  "archiveSHA256": "d867248bd22db0156776a9508eca8e60e9afdcb5bb4e8e7a4b60ef093b0b581b",
+  "nativeManifestAndWalVerified": true,
+  "physicalRecoveryStartedAndStopped": true,
+  "exactOriginalClusterAndDatabases": true,
+  "cluster": "7695416748450308141",
+  "runtimeStopIssued": false
+}

@@ -1,0 +1,17 @@
+{
+  "container": "aos-qyh-history-restore-20261011",
+  "containerId": "ccaaaa4655a86f0beba1bcbcce8891def8146abfd55b3561c5872be53791216e",
+  "cluster": "7695294217975042088",
+  "databases": [
+    "aos_app",
+    "aos_meta_head",
+    "postgres"
+  ],
+  "archivePath": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aos-colima-data-expansion-20261012/private/aos-qyh-history-restore-20261011-r2.tar",
+  "sha256": "98eaf97db61098dc906570aa1b4ad183478b3334c31ac783489f9ce4bbe1af66",
+  "bytes": 176316416,
+  "physicalControlAndWalIncluded": true,
+  "originalHbaRestored": true,
+  "overrideOriginalHbaBeforeRestoredStartup": true,
+  "restoreVerified": false
+}

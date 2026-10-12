@@ -1,0 +1,10 @@
+{
+  "container": "qyh-source-writer-lab-20261011",
+  "validationContainer": "aos-tmpfs-backup-verify-r2-20261012-3",
+  "archiveSHA256": "24775ccf333e1ace4bf377d5173fec750a9c72a614150b5b06ec1f463b6693e1",
+  "nativeManifestAndWalVerified": true,
+  "physicalRecoveryStartedAndStopped": true,
+  "exactOriginalClusterAndDatabases": true,
+  "cluster": "7695402775127154735",
+  "runtimeStopIssued": false
+}

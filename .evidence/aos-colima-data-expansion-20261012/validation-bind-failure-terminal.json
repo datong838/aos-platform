@@ -1,0 +1,7 @@
+{
+  "exitCode": 125,
+  "cause": "guest bind source absent",
+  "containerAbsentVerified": true,
+  "postgresNotStarted": true,
+  "retryUsedNewIntentAndStdin": true
+}

@@ -1,0 +1,17 @@
+{
+  "container": "qyh-stage-transport-rehearsal-r2-20261011",
+  "containerId": "f5e9055abb9512765470e9480afa31effb1a20aa661614baebed3c82b9018e0d",
+  "cluster": "7695393611042029608",
+  "databases": [
+    "aos_app",
+    "aos_meta_head",
+    "postgres"
+  ],
+  "archivePath": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aos-colima-data-expansion-20261012/private/qyh-stage-transport-rehearsal-r2-20261011-r2.tar",
+  "sha256": "185508f96a9cc3e2d1e8c1660c70f2cd1c71d782d7fbd2444381c34f75f2beb2",
+  "bytes": 176342016,
+  "physicalControlAndWalIncluded": true,
+  "originalHbaRestored": true,
+  "overrideOriginalHbaBeforeRestoredStartup": true,
+  "restoreVerified": false
+}

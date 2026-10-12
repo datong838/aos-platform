@@ -1,0 +1,13 @@
+{
+  "container": "qyh-source-writer-lab-20261011",
+  "containerId": "4bee3825bdea27ba232538a14152c3cf050050814ae90baa4acb8fec0af2c83c",
+  "cluster": "7695402775127154735",
+  "databases": [
+    "postgres"
+  ],
+  "sha256": "24775ccf333e1ace4bf377d5173fec750a9c72a614150b5b06ec1f463b6693e1",
+  "bytes": 55456256,
+  "physicalControlAndWalIncluded": true,
+  "privateMode": "0600",
+  "restoreVerified": false
+}

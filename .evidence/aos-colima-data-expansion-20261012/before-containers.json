@@ -1,0 +1,189 @@
+{
+  "qyh-current159-exact-restore-20261012": {
+    "Id": "3fb59cb46c8daeb402caee95bf9f2d9aefbb3aa42d87988811afe29418790687",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Tmpfs": null,
+    "Mounts": [
+      {
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "z",
+        "Name": "aos-qyh-current159-exact-restore-20261012",
+        "Propagation": "",
+        "RW": true,
+        "Source": "/var/lib/docker/100000.100000/volumes/aos-qyh-current159-exact-restore-20261012/_data",
+        "Type": "volume"
+      }
+    ],
+    "RestartPolicy": {
+      "MaximumRetryCount": 0,
+      "Name": "no"
+    },
+    "Running": true
+  },
+  "qyh-current159-restore-lab-20261012": {
+    "Id": "951749982fad112b99e59e028c60ec126024c3ea3b1ed6288a2d14cb2d644de2",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Tmpfs": null,
+    "Mounts": [
+      {
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "z",
+        "Name": "aos-qyh-current159-restore-lab-20261012",
+        "Propagation": "",
+        "RW": true,
+        "Source": "/var/lib/docker/100000.100000/volumes/aos-qyh-current159-restore-lab-20261012/_data",
+        "Type": "volume"
+      }
+    ],
+    "RestartPolicy": {
+      "MaximumRetryCount": 0,
+      "Name": "no"
+    },
+    "Running": true
+  },
+  "qyh-source-boundary-clone-20261011": {
+    "Id": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Tmpfs": {
+      "/var/lib/postgresql/data": "rw,nosuid,size=512m"
+    },
+    "Mounts": [],
+    "RestartPolicy": {
+      "MaximumRetryCount": 0,
+      "Name": "no"
+    },
+    "Running": true
+  },
+  "qyh-source-writer-lab-20261011": {
+    "Id": "4bee3825bdea27ba232538a14152c3cf050050814ae90baa4acb8fec0af2c83c",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Tmpfs": {
+      "/var/lib/postgresql/data": "rw,nosuid,size=512m"
+    },
+    "Mounts": [],
+    "RestartPolicy": {
+      "MaximumRetryCount": 0,
+      "Name": "no"
+    },
+    "Running": true
+  },
+  "qyh-stage-transport-rehearsal-r2-20261011": {
+    "Id": "f5e9055abb9512765470e9480afa31effb1a20aa661614baebed3c82b9018e0d",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Tmpfs": {
+      "/var/lib/postgresql/data": "rw,nosuid,size=512m"
+    },
+    "Mounts": [],
+    "RestartPolicy": {
+      "MaximumRetryCount": 0,
+      "Name": "no"
+    },
+    "Running": true
+  },
+  "qyh-stage-transport-rehearsal-20261011": {
+    "Id": "adb100ba5a3c25a5274b62a4007b4eb64d2201a23eab2c42add0f97e08d7e683",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Tmpfs": {
+      "/var/lib/postgresql/data": "rw,nosuid,size=512m"
+    },
+    "Mounts": [],
+    "RestartPolicy": {
+      "MaximumRetryCount": 0,
+      "Name": "no"
+    },
+    "Running": true
+  },
+  "qyh-restored-pg-20261011": {
+    "Id": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Tmpfs": null,
+    "Mounts": [
+      {
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "z",
+        "Name": "aos-qyh-history159-prepared-data-20261011",
+        "Propagation": "",
+        "RW": true,
+        "Source": "/var/lib/docker/100000.100000/volumes/aos-qyh-history159-prepared-data-20261011/_data",
+        "Type": "volume"
+      }
+    ],
+    "RestartPolicy": {
+      "MaximumRetryCount": 0,
+      "Name": "no"
+    },
+    "Running": true
+  },
+  "aos-qyh-history-restore-20261011": {
+    "Id": "ccaaaa4655a86f0beba1bcbcce8891def8146abfd55b3561c5872be53791216e",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Tmpfs": {
+      "/var/lib/postgresql/data": "rw,nosuid,size=1g"
+    },
+    "Mounts": [],
+    "RestartPolicy": {
+      "MaximumRetryCount": 0,
+      "Name": "no"
+    },
+    "Running": true
+  },
+  "aos-qyh-name-rehearsal-20261011-r3": {
+    "Id": "18cb27703a630e4de99ef03cf93194425a4ac0de62aa8a1730b1213e87293ac3",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Tmpfs": {
+      "/var/lib/postgresql/data": "rw,nosuid,size=512m"
+    },
+    "Mounts": [],
+    "RestartPolicy": {
+      "MaximumRetryCount": 0,
+      "Name": "no"
+    },
+    "Running": true
+  },
+  "aos-qyh-name-rehearsal-20261011": {
+    "Id": "8e7d4c6eedd716778a654470b579b01867a820bdcf5ed222aab68e850b71d24c",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Tmpfs": {
+      "/var/lib/postgresql/data": "rw,nosuid,size=512m"
+    },
+    "Mounts": [],
+    "RestartPolicy": {
+      "MaximumRetryCount": 0,
+      "Name": "no"
+    },
+    "Running": true
+  },
+  "aos-a0v-recovery-pg": {
+    "Id": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+    "Image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "Tmpfs": null,
+    "Mounts": [
+      {
+        "Destination": "/backup",
+        "Mode": "ro",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260910/backups",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "z",
+        "Name": "aos-a0v-recovery-pg-data",
+        "Propagation": "",
+        "RW": true,
+        "Source": "/var/lib/docker/100000.100000/volumes/aos-a0v-recovery-pg-data/_data",
+        "Type": "volume"
+      }
+    ],
+    "RestartPolicy": {
+      "MaximumRetryCount": 0,
+      "Name": "no"
+    },
+    "Running": true
+  }
+}

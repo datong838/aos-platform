@@ -1,0 +1,16 @@
+{
+  "container": "aos-qyh-name-rehearsal-20261011",
+  "containerId": "8e7d4c6eedd716778a654470b579b01867a820bdcf5ed222aab68e850b71d24c",
+  "cluster": "7695287750505340968",
+  "databases": [
+    "postgres",
+    "qyh_rehearsal_bootstrap"
+  ],
+  "archivePath": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aos-colima-data-expansion-20261012/private/aos-qyh-name-rehearsal-20261011-r2.tar",
+  "sha256": "80e993eaba184426e2568256ab003cc48eb9c7c344bdc0e3a22d7b5e5d9249c9",
+  "bytes": 48527360,
+  "physicalControlAndWalIncluded": true,
+  "originalHbaRestored": true,
+  "overrideOriginalHbaBeforeRestoredStartup": true,
+  "restoreVerified": false
+}

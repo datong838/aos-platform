@@ -1,0 +1,17 @@
+{
+  "container": "qyh-source-boundary-clone-20261011",
+  "containerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "cluster": "7695416748450308141",
+  "databases": [
+    "aos_meta_head",
+    "postgres",
+    "qyh_current159_restore_20261012",
+    "qyh_head160_rehearsal_20261012",
+    "qyh_source_contract_20261011"
+  ],
+  "sha256": "d867248bd22db0156776a9508eca8e60e9afdcb5bb4e8e7a4b60ef093b0b581b",
+  "bytes": 446466560,
+  "physicalControlAndWalIncluded": true,
+  "privateMode": "0600",
+  "restoreVerified": false
+}

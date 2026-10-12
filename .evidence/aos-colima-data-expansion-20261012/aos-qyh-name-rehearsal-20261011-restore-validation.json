@@ -1,0 +1,10 @@
+{
+  "container": "aos-qyh-name-rehearsal-20261011",
+  "validationContainer": "aos-tmpfs-backup-verify-r2-20261012-9",
+  "archiveSHA256": "80e993eaba184426e2568256ab003cc48eb9c7c344bdc0e3a22d7b5e5d9249c9",
+  "nativeManifestAndWalVerified": true,
+  "physicalRecoveryStartedAndStopped": true,
+  "exactOriginalClusterAndDatabases": true,
+  "cluster": "7695287750505340968",
+  "runtimeStopIssued": false
+}

@@ -1,0 +1,10 @@
+{
+  "container": "qyh-stage-transport-rehearsal-20261011",
+  "validationContainer": "aos-tmpfs-backup-verify-r2-20261012-5",
+  "archiveSHA256": "43bdaadf111863115f0c5e634d11eb3c04e2a3be2049db604c31cabc08dc9b29",
+  "nativeManifestAndWalVerified": true,
+  "physicalRecoveryStartedAndStopped": true,
+  "exactOriginalClusterAndDatabases": true,
+  "cluster": "7695392538922721319",
+  "runtimeStopIssued": false
+}

@@ -1,0 +1,51 @@
+{
+  "observedAt": "2026-10-12T04:34:38.288866+00:00",
+  "count": 7,
+  "rows": [
+    {
+      "container": "qyh-source-boundary-clone-20261011",
+      "originalContainerStillRunning": true,
+      "nativeManifestWalAndPhysicalRecovery": true,
+      "cluster": "7695416748450308141"
+    },
+    {
+      "container": "qyh-source-writer-lab-20261011",
+      "originalContainerStillRunning": true,
+      "nativeManifestWalAndPhysicalRecovery": true,
+      "cluster": "7695402775127154735"
+    },
+    {
+      "container": "qyh-stage-transport-rehearsal-r2-20261011",
+      "originalContainerStillRunning": true,
+      "nativeManifestWalAndPhysicalRecovery": true,
+      "cluster": "7695393611042029608"
+    },
+    {
+      "container": "qyh-stage-transport-rehearsal-20261011",
+      "originalContainerStillRunning": true,
+      "nativeManifestWalAndPhysicalRecovery": true,
+      "cluster": "7695392538922721319"
+    },
+    {
+      "container": "aos-qyh-history-restore-20261011",
+      "originalContainerStillRunning": true,
+      "nativeManifestWalAndPhysicalRecovery": true,
+      "cluster": "7695294217975042088"
+    },
+    {
+      "container": "aos-qyh-name-rehearsal-20261011-r3",
+      "originalContainerStillRunning": true,
+      "nativeManifestWalAndPhysicalRecovery": true,
+      "cluster": "7695288427045023785"
+    },
+    {
+      "container": "aos-qyh-name-rehearsal-20261011",
+      "originalContainerStillRunning": true,
+      "nativeManifestWalAndPhysicalRecovery": true,
+      "cluster": "7695287750505340968"
+    }
+  ],
+  "vmStopIssued": false,
+  "diskResizeIssued": false,
+  "businessRestored": false
+}
