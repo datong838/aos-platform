@@ -1,0 +1,86 @@
+{
+  "event": "2026-10-12T20:51:12.910Z",
+  "rules": [
+    "231 original reader",
+    "same parent Task/Lease",
+    "no writes or activation"
+  ],
+  "initialInvocation": {
+    "exitCode": 1,
+    "failure": "TrustRootConfigurationError: trust-root file path must be absolute",
+    "correctedBy": "absolute existing file paths; no code change"
+  },
+  "freshAbsolutePathInvocation": {
+    "exitCode": 0,
+    "stdout": {
+      "outcome": "RESTORED_CURRENT_INSTALLATION_EVIDENCE_ONLY",
+      "identity": {
+        "database": "aos_meta_head",
+        "cluster": "7695302940039200809",
+        "schema": "a0v_161",
+        "orgId": "org-org",
+        "orgName": "栖月汇商贸有限公司",
+        "projectId": "dev-project",
+        "tables": 650
+      },
+      "inventory": {
+        "installations": 136,
+        "configurations": 130,
+        "bindings": 126,
+        "enabledBindings": 0
+      },
+      "apiStartAuthorized": false,
+      "eightWorkbenchesVerified": false,
+      "runtimeHostEnabled": false,
+      "remainingGates": [
+        "current signed release and installation",
+        "current configuration and formal identity",
+        "API/Web restart and eight-page browser acceptance"
+      ],
+      "limitedLoginVerified": true,
+      "volume": "aos-qyh-history159-prepared-data-20261011",
+      "databaseStartedAt": "2026-10-12T12:25:24.538377567Z",
+      "currentInstallation": {
+        "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+        "installationRevision": 3,
+        "etagVersion": 3,
+        "growthVersion": "1.13.0",
+        "releases": [
+          {
+            "publisher": "aos",
+            "id": "domain.ecommerce.core",
+            "version": "1.4.3",
+            "contentHash": "sha256:e14e6af72dd7c89d5beb7fd002454029bbc64cf510e6b9849ae9df20ef7eba44"
+          },
+          {
+            "publisher": "aos",
+            "id": "platform.ecommerce.niushop",
+            "version": "1.23.2",
+            "contentHash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90"
+          },
+          {
+            "publisher": "aos",
+            "id": "solution.ecommerce.growth",
+            "version": "1.13.0",
+            "contentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669"
+          },
+          {
+            "publisher": "aos",
+            "id": "solution.ecommerce.operations-base",
+            "version": "1.2.2",
+            "contentHash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec"
+          }
+        ],
+        "authorization": "CURRENT_INSTALLATION_EVIDENCE_ONLY_NO_START",
+        "apiStartAuthorized": false,
+        "runtimeHostEnabled": false,
+        "currentConfigurationVerified": false,
+        "eightWorkbenchesVerified": false
+      }
+    },
+    "stderr": ""
+  },
+  "designCorrection": "Approved preparation reuses read_current_installation_release_evidence; active image reader is not an admission prerequisite before apply.",
+  "databaseWrites": false,
+  "hostActivated": false
+}

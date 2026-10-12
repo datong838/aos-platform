@@ -1,0 +1,6 @@
+{
+  "authorityRevision": "AOS-001991",
+  "validation": "GREEN",
+  "initialSyncFailure": "projection dict accessed as attribute; corrected to mapping access after readonly authority/lease reconciliation; did not replay Task completion or authority update",
+  "goalUpdated": false
+}

@@ -1,0 +1,62 @@
+{
+  "schema": "qyh-runtime-preparation-inventory/v1",
+  "rules": [
+    "231 original lifecycle",
+    "unique m1 writer",
+    "parent evidence scope",
+    "read-only current native authority",
+    "no Host or worker activation"
+  ],
+  "event": "2026-10-12T20:36:12.767Z",
+  "head": "a9a7cb68c86914532a791ad73674597d428d0a13",
+  "authority": "AOS-001990",
+  "native": {
+    "database": "aos_meta_head",
+    "schema": "a0v_161",
+    "assignment": [
+      {
+        "org_id": "org-org",
+        "project_id": "dev-project",
+        "state": "assigned",
+        "host_id": "a0v-local-ecommerce-host-20260912"
+      }
+    ],
+    "identity": [
+      {
+        "host_id": "a0v-local-ecommerce-host-20260912",
+        "database_role": "aos_a0v_directory_20260912",
+        "database_role_oid": "203325",
+        "enabled": true
+      }
+    ],
+    "enabledBindings": 0
+  },
+  "historicalPreflight": {
+    "database": "aos_current_preview_20260927",
+    "installation": "ccdcb0f0-1040-4bc6-aa0c-d045f5689813",
+    "selectedBy": "control_wiring._current_a0v_host_preflight",
+    "delegate": "a0v_current_runtime_host_preflight.signed_preflight -> a0v_current_preview_http.preflight",
+    "compatibleWithRestoredTarget": false
+  },
+  "currentInstallation": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+  "reuseDesignEntry": "a0v_current_preview_http.select_formal_current_release -> current_installation_release_evidence.read_current_runtime_image_evidence",
+  "effects": {
+    "databaseWrites": false,
+    "historicalPreflightExecuted": false,
+    "preparationRequested": false,
+    "hostActivated": false,
+    "goalUpdated": false
+  },
+  "limits": [
+    "assignment is a routing fact, not admission proof",
+    "preparation-only still requires isolated non-owner identities and signed current release",
+    "full runtime requires all formal owner/configuration/budget gates"
+  ],
+  "sourceHashes": {
+    "scripts/a0v_current_runtime_host_preflight.py": "5478706eab92d80def1e325c1d6ec09adb4a41234495edec38ed210150b7193b",
+    "scripts/a0v_current_preview_http.py": "5f684010ba7c6876a9e9718f1a48aeb44d3ac4f0bc6074b8c060b417ccd638b4",
+    "services/aos-api/aos_api/asset_registry/control_wiring.py": "de68ad249d4224d8a374b96a153d661d37f7d1709324da0430d3a6d2f22107a3",
+    "services/aos-api/aos_api/extension_runtime/runtime_connections.py": "492cdecb6877209e692c626b60109d738c65c8e269f6de56444fabf4c59a0ffb",
+    "services/aos-api/aos_api/extension_runtime/runtime_identity.py": "e5e95a4258f1eb2324e0e8078bd713741064adcdd2b976fdea40c835653d42a5"
+  }
+}
