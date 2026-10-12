@@ -1,0 +1,9 @@
+{
+  "latestSourceConsumed": true,
+  "sourceHead": "0eb498c0d114c0d7f1d8742409f84d774c4ce6e0",
+  "restoredEntrySHA256": "d440a9ac5d6d0664e1520dcb8e0daf598c99c7dc09f42a7d85f1a128c139aa68",
+  "staleCandidateRejected": "RESTORED_CURRENT_API_SOURCE_DRIFT",
+  "apiStarted": false,
+  "realSourceMigrated": false,
+  "parentRestorationComplete": false
+}
