@@ -18,9 +18,22 @@ def test_oidc_public_config(client):
 def test_jwt_login_non_dev_token(client):
     tok = issue_dev_token(subject="bob", org_id="org-b", project_id="prj-b")
     assert tok["tokenKind"] == "oidc"
+    headers = {"Authorization": f"Bearer {tok['accessToken']}"}
+    missing = client.get("/v1/me", headers=headers)
+    assert missing.status_code == 403
+    assert missing.json()["code"] == "AUTH_TENANT_UNKNOWN"
+    # A valid JWT cannot register a tenant. Provision only this disposable
+    # fixture's directory before checking its authenticated response.
+    from aos_api.db import connect
+    with connect() as conn:
+        database = conn.execute("SELECT current_database() AS name").fetchone()["name"]
+        assert database.startswith("aos_test_") and database.endswith("_ti4_test")
+        conn.execute("INSERT INTO twa_org(id,name) VALUES('org-b','OIDC isolated fixture')")
+        conn.execute("INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-b','prj-b','OIDC isolated workspace')")
+        conn.commit()
     r = client.get(
         "/v1/me",
-        headers={"Authorization": f"Bearer {tok['accessToken']}"},
+        headers=headers,
     )
     assert r.status_code == 200
     me = r.json()

@@ -47,6 +47,14 @@ def audience() -> str:
     return _env("AOS_OIDC_AUDIENCE", "aos-api")
 
 
+def clock_skew_seconds() -> int:
+    """Explicit small JWKS clock tolerance; omitted configuration stays strict."""
+    value = _env("AOS_OIDC_LEEWAY_SECONDS", "0")
+    if not value.isascii() or not value.isdecimal() or not 0 <= int(value) <= 5:
+        raise ValueError("OIDC clock tolerance must be an integer from 0 to 5 seconds")
+    return int(value)
+
+
 def dev_secret() -> str:
     return _env(
         "AOS_OIDC_DEV_SECRET",
@@ -279,6 +287,7 @@ def _verify_local_rs256(token: str) -> dict[str, Any]:
 
 def _verify_jwks(token: str) -> dict[str, Any]:
     assert jwt is not None
+    leeway = clock_skew_seconds()
     urls = jwks_urls()
     if not urls:
         raise ValueError("no JWKS URL configured")
@@ -295,6 +304,7 @@ def _verify_jwks(token: str) -> dict[str, Any]:
                 algorithms=["RS256", "ES256"],
                 audience=audience(),
                 issuer=issuers(),
+                leeway=leeway,
                 options={"require": ["exp", "sub", "iss", "aud"]} if external_only() else None,
             )
         except Exception as exc:  # noqa: BLE001

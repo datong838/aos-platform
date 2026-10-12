@@ -1,0 +1,25 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-oidc-clock-skew-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001984",
+  "scope": [
+    "aos-platform/.evidence/qyh-oidc-clock-skew-20261013",
+    "aos-platform/services/aos-api/aos_api/oidc.py",
+    "aos-platform/services/aos-api/tests/test_oidc_clock_skew.py"
+  ],
+  "excluded_scope": [
+    "all AOS database mutations",
+    "live API/Web restart",
+    "JWT signature or required-claim weakening"
+  ],
+  "expected_outputs": [
+    "plan.md",
+    "RED",
+    "clock_skew_seconds configuration",
+    "native RSA/JWKS focused and adjacent verification"
+  ],
+  "lease_expires_at": "2026-10-12T19:06:53.760275+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-13T01:06:54+08:00"
+}

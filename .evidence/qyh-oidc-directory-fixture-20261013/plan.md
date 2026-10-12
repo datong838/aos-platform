@@ -1,0 +1,5 @@
+# 原OIDC相邻测试已注册租户前提修复
+
+qyh-oidc-clock-skew专项16通过，相邻原test_jwt_login_non_dev_token403。独立进程exec当前HEAD原未改oidc.py后同例仍403，原response AUTH_TENANT_UNKNOWN/organization-workspace scope is not registered；不是时钟容差回归。原fixture mint bob/org-b/prj-b后未登记目录即预期200，违反当前原tenant_directory_service的合法签名不能创建tenant原则。
+
+仅tests/test_oidc_auth.py该例：先同一签名JWT在未注册目录下断言403/AUTH_TENANT_UNKNOWN；再明确仅aos_test_*_ti4_test独立UUID库写测试twa_org/twa_workspace两记录，不触Source真库，复验同JWT原成功主体/租户/marking结果。令牌仍原Dev签名非正式身份证明，org-b仅隔离fixture非QYH positive。不得改production目录门、mock目录、skip/xfail掩盖；保留前后两态证明原授权边界。专项原OIDC相邻全部35个实际结果必须全通过，原错误和baseline反证保留。

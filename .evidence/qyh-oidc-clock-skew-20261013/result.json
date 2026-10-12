@@ -1,0 +1,17 @@
+{
+  "realRed": {
+    "failed": 8,
+    "passed": 8
+  },
+  "finalCumulative": {
+    "passed": 35,
+    "failed": 0,
+    "skipped": 0
+  },
+  "defaultLeewaySeconds": 0,
+  "maximumConfiguredLeewaySeconds": 5,
+  "currentLocalProcessLeewaySeconds": 2,
+  "actualHumanCredentialOriginalVerifierPassed": true,
+  "liveApiReloaded": false,
+  "aosSourceDatabaseWrites": 0
+}

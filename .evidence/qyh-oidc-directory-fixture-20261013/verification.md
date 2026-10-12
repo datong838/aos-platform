@@ -1,0 +1,1 @@
+原未修改oidc.py独立baseline仍AUTH_TENANT_UNKNOWN403；不是新容差回归。旧fixture先验证未注册合法JWT仍拒绝，再仅标准独立UUID测试库明确注册org-b/prj-b，原合法JWT响应200。最终相邻累计35PASS0skip0fail。没有生产目录门修改或真实租户数据变化。

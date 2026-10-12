@@ -1,0 +1,22 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-oidc-directory-fixture-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001984",
+  "scope": [
+    "aos-platform/.evidence/qyh-oidc-directory-fixture-20261013",
+    "aos-platform/services/aos-api/tests/test_oidc_auth.py"
+  ],
+  "excluded_scope": [
+    "any production authorization change",
+    "authoritative AOS database"
+  ],
+  "expected_outputs": [
+    "plan.md",
+    "updated legacy fixture",
+    "full adjacent OIDC verification"
+  ],
+  "lease_expires_at": "2026-10-12T18:23:03.758824+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-13T01:23:04+08:00"
+}
