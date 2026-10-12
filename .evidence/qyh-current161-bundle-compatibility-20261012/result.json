@@ -1,0 +1,74 @@
+{
+  "candidateDiagnosticOnly": true,
+  "fourExactBundleSignaturesAndResolutionPass": true,
+  "packages": [
+    {
+      "id": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "contentHash": "sha256:e14e6af72dd7c89d5beb7fd002454029bbc64cf510e6b9849ae9df20ef7eba44",
+      "requirements": [
+        {
+          "packageId": "bundle-de982d07b154219ff69d3d3e8e3e1e172937bd5d403afada17bf898e2e372328",
+          "schemaVersion": "aos-platform-a0v-001",
+          "migrationHash": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee"
+        }
+      ]
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "contentHash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90",
+      "requirements": [
+        {
+          "packageId": "bundle-98d43bb435a5fa7b5d84d7861149d784f7147d25cb28101fe21e3b647d37d78d",
+          "schemaVersion": "aos-platform-a0v-001",
+          "migrationHash": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2"
+        }
+      ]
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "contentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+      "requirements": [
+        {
+          "packageId": "bundle-b88d3561086b0bbf1f2dc64e04020c26b662d6b18b876a668ab6e8b4398ac7df",
+          "schemaVersion": "aos-platform-a0v-001",
+          "migrationHash": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4"
+        }
+      ]
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "contentHash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec",
+      "requirements": []
+    }
+  ],
+  "nativeReadonlySchemaObservations": [
+    {
+      "database": "aos_meta_head",
+      "version": "a0v_159",
+      "role": "aos_runtime",
+      "readonly": true,
+      "threeExactNativeRequirementsPass": true,
+      "sameVersionWrongHashRejected": true
+    },
+    {
+      "database": "qyh_current160_fresh_rehearsal_20261012",
+      "version": "a0v_161",
+      "role": "aos_runtime",
+      "readonly": true,
+      "threeExactNativeRequirementsPass": true,
+      "sameVersionWrongHashRejected": true
+    }
+  ],
+  "all647OldTableColumnLayoutsEqual": true,
+  "oldFunctionCount": 461,
+  "allOldFunctionDefinitionsEqual": true,
+  "normalStoreWriteCompatibilityAccepted": false,
+  "actualRegistryPublicationAccepted": false,
+  "actualSourceMigrated": false,
+  "eightWorkshopsAccepted": false,
+  "businessEffects": 0
+}

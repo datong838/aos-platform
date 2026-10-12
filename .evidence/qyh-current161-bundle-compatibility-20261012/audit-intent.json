@@ -1,0 +1,8 @@
+{
+  "candidateDiagnosticOnly": true,
+  "packageSignaturesRechecked": 4,
+  "schemaRequirements": 3,
+  "actualSourceMigrated": false,
+  "registryPublishAllowed": false,
+  "businessCallsAllowed": false
+}

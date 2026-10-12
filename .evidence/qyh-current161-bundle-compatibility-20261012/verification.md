@@ -1,0 +1,9 @@
+# 当前161签名与schema条件检查点
+
+当前冻结161 API代码原ManifestLoader/FileTrustRootProvider重新验四包，contentHash与此前179文件冻结根相同；原ReleasePolicy/resolver诊断候选投影重新解析四包依赖及签名schema artifact，得到三精确packageId/version/migrationHash。此projection沿用原diagnostic逻辑，不是实际Registry发布，Core/Growth正式状态没有篡改。
+
+两个实际PostgreSQL backend分别BEGIN READONLY REPEATABLE READ/SET ROLE aos_runtime，原require_installed原SQL同backend执行，真实159和最新161副本三schema exact均通过；同version错hash原RuntimeConflict拒绝。事务状态仅在实际BEGIN和身份/readonly/隔离读回后声明，PID结尾再核相同，最终ROLLBACK/psql exit0；无fake响应、callbackTrue、并发写/DDL/应用业务调用。none-network访问用真实持久psql传输，私有日志0600。
+
+source159/clone161所有647原table columns名称/format_type/非空布局严格一致，所有461原非系统函数原pg_get_functiondef严格一致。不能只凭alembic版本号或不同OID误判。这里只证明签名/依赖/包schema receipt/原结构函数兼容；normalStore完整读写兼容、实际Registry发布/安装/配置/正式登录与publisher、真实当前零执行迁移窗/迁移/API最新切换/八台及自然经营首链仍待。本完整compatibility Task ACTIVE，不Delivery。源码AST/diff方案一致性通过，无页面变化。
+
+下个安全项：按storage-registry-inventory定位原签名storage约束和原平台Store操作矩阵，确定完整normalStore副本回归；诊断不能授Host/worker/Provider或篡改正式状态。真实root/entity数据无写，旧Run/商城源/manual未知重发均未操作，no push。
