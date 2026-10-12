@@ -220,7 +220,7 @@ def require_api_source_candidate(report_path):
     if git('branch', '--show-current').strip() != b'm1' or git('rev-parse', '--show-object-format').strip() != b'sha1':
         raise RestorationBlocked('RESTORED_API_SOURCE_BRANCH_OR_FORMAT_DRIFT')
     tree = git('ls-tree', '-rz', 'HEAD', '--', 'services/aos-api',
-               'scripts/a0v_current_preview_http.py')
+               'scripts/a0v_current_preview_http.py', 'scripts/a0v_qyh_restored_http.py')
     api_paths = set()
     for item in tree.split(b'\0'):
         if not item:

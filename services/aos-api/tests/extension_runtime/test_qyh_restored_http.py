@@ -258,7 +258,8 @@ def source_candidate(entry, monkeypatch, tmp_path):
             '-c','user.email=fixture@invalid',*args],cwd=root)
     git('init','-b','m1')
     files={'services/aos-api/aos_api/main.py': b'VALUE = 1\n',
-        'scripts/a0v_current_preview_http.py': Path(entry.previous.__file__).read_bytes()}
+        'scripts/a0v_current_preview_http.py': Path(entry.previous.__file__).read_bytes(),
+        'scripts/a0v_qyh_restored_http.py': Path(entry.__file__).read_bytes()}
     for name,data in files.items():
         path=root/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data)
     git('add','.');git('commit','-m','isolated source fixture')
@@ -284,10 +285,14 @@ def test_frozen_source_candidate_matches_committed_api_not_worktree(entry, sourc
     assert entry.require_api_source_candidate(report)==source
 
 
-@pytest.mark.parametrize('drift',['file','permissions','current-commit'])
+@pytest.mark.parametrize('drift',['file','permissions','current-commit','restored-entry-commit'])
 def test_frozen_source_candidate_rejects_drift_before_process_start(entry, source_candidate, drift):
     report,source,root,git=source_candidate
-    if drift=='current-commit':
+    if drift=='restored-entry-commit':
+        (root/'scripts/a0v_qyh_restored_http.py').write_text('CHANGED = True\n')
+        git('add','scripts/a0v_qyh_restored_http.py');git('commit','-m','isolated attachment entry change')
+        reason='RESTORED_CURRENT_API_SOURCE_DRIFT'
+    elif drift=='current-commit':
         (root/'services/aos-api/aos_api/main.py').write_text('CHANGED = True\n')
         git('add','services/aos-api/aos_api/main.py');git('commit','-m','isolated source change')
         reason='RESTORED_CURRENT_API_SOURCE_DRIFT'
