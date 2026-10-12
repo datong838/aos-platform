@@ -1,0 +1,24 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "source159_to161_original_volume_migration",
+  "exit_code": 0,
+  "input_files": {
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/maintain.py": "71106f627c41cc223ca96b63e16e3a7048e3c3e1c7ad6aa47b3a1812aa606877",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/continue-r3.py": "0f0d17097ae62444f4d97f78e066de51a4c9ae726ba3f417823119adf2423f62"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/source-result.json": "84e9445d00ac060314f1679c5504e6392c96028987169fbe9d5cf602fecf5418",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/hba-restored.json": "6e377d4397fe23f938d848c4b118e1e8acbf328563efeb00b1ad1813544ed736",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/clone-full-restore.json": "c3ec10fc104c7ff55e30eaeaa7e19f801fe36ffeb36aed2a0a2fade03b6a16e7",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/clone-rehearsal.json": "ce28e8d1cc669b6d916074fb708e79bd695942285312e240e6804f6f3fdde8b9",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/backup.json": "7b4ad2da4fa8ef8433da2cc0f909995ecd617183223365453cf10650e6b3766f",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/global-backup.json": "95f339c094ca1a6b2d47f81fd0297c50206c96dd2e04452288c00a0858969145",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/negative-acl-result.json": "d01bc083fb445d62d3ad2dbb56c237065cc64daf69d745256e07a01c041ff547"
+  },
+  "limitations": [
+    "Held actual source window closed after native migration verification; next mutation requires a new window",
+    "No service restart or formal identity/current installation/eight-workshop/business first-chain acceptance"
+  ]
+}

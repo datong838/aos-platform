@@ -5,8 +5,8 @@
   "task_id": "qyh-full-system-restoration-20261011",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "task_base_revision": "AOS-001842",
-  "authority_revision": "AOS-001974",
-  "step": "establish_real_source_exclusive_window",
+  "authority_revision": "AOS-001975",
+  "step": "source_migration_and_aos_restart_acceptance",
   "code_files": [
     "scripts/a0v_qyh_restored_http.py",
     "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py"
@@ -18,7 +18,15 @@
     ".evidence/qyh-full-system-restoration-20261011/current-code-step-proof.json",
     ".evidence/qyh-full-system-restoration-20261011/latest-producer-source-20261012.json",
     ".evidence/qyh-full-system-restoration-20261011/latest-producer-source-readback-20261012.json",
-    ".evidence/qyh-full-system-restoration-20261011/current-source-step-proof.json"
+    ".evidence/qyh-full-system-restoration-20261011/current-source-step-proof.json",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/source-migration-step-proof.json",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/source-result.json",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/hba-restored.json",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/clone-full-restore.json",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/clone-rehearsal.json",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/backup.json",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/global-backup.json",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/negative-acl-result.json"
   ],
   "steps": [
     {
@@ -46,6 +54,11 @@
     {
       "id": "formal_identity_current_installation_eight_workshops",
       "state": "PENDING"
+    },
+    {
+      "id": "source159_to161_original_volume_migration",
+      "state": "VERIFIED_LOCAL",
+      "proof": ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/source-migration-step-proof.json"
     }
   ]
 }
