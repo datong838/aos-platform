@@ -1,0 +1,8 @@
+{
+  "database": "qyh_current160_fresh_rehearsal_20261012",
+  "template": "qyh_current159_full_restore_r2_20261012",
+  "originalMigrationSHA256": "f4f493e28c43aa4228a9fff39f35c69aeb143b61005cd07cda862a191edb3eac",
+  "originalGeneratedSQLSHA256": "a874086c100904882743f6b677a816abdf1f85b017fccb23f4ebe862a22e55a8",
+  "actualSourceMigrated": false,
+  "offlineGenerationNativeTransactionalExecution": true
+}

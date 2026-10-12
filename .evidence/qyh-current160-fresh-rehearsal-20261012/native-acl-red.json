@@ -1,0 +1,36 @@
+{
+  "originalMigrationCommitted": true,
+  "ownedRehearsalVersion": "a0v_160",
+  "rootCause": "Source existing ALTER DEFAULT PRIVILEGES for aos_app/public grants aos_runtime SELECT INSERT UPDATE DELETE on future tables;160 never revokes these inherited initial grants",
+  "tables": [
+    {
+      "table": "aip_skill_eval_intent",
+      "runtimeInsert": true,
+      "runtimeUpdate": true,
+      "runtimeDelete": true,
+      "forcedRLS": true,
+      "acl": "{aos_app=arwdDxt/aos_app,aos_runtime=arwd/aos_app,aos_aip_eval_writer=ar/aos_app}"
+    },
+    {
+      "table": "aip_skill_eval_dispatch",
+      "runtimeInsert": true,
+      "runtimeUpdate": true,
+      "runtimeDelete": true,
+      "forcedRLS": true,
+      "acl": "{aos_app=arwdDxt/aos_app,aos_runtime=arwd/aos_app,aos_aip_eval_writer=ar/aos_app}"
+    },
+    {
+      "table": "aip_skill_eval_dispatch_observation",
+      "runtimeInsert": true,
+      "runtimeUpdate": true,
+      "runtimeDelete": true,
+      "forcedRLS": true,
+      "acl": "{aos_app=arwdDxt/aos_app,aos_runtime=arwd/aos_app,aos_aip_eval_writer=ar/aos_app}"
+    }
+  ],
+  "true159AndFresh159TemplateAll647FingerprintsUnchanged": true,
+  "646OwnedOldBusinessTablesUnchanged": true,
+  "newJournalTablesEmpty": true,
+  "formalMigrationAllowed": false,
+  "nextRepair": "Additive narrow repair; preserve old tables and default privileges"
+}

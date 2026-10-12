@@ -1,0 +1,7 @@
+# 最新真实副本160迁移演练 RED
+
+原已冻结源码a160与当前m1迁移字节相同，原Alembic159:160离线生成完整BEGIN/COMMIT事务SQL，经原psql在新独立network-none模板副本执行terminal0。646业务表指纹不变，三个日志表为空。正式最小ACL门RED：实际source ALTER DEFAULT PRIVILEGES FOR aos_app IN public授aos_runtime arwd，原a160 CREATE继承此历史defaultACL，后续GRANT SELECT没有收回INSERT/UPDATE/DELETE。三个表FORCE RLS仍在，writer无整表UPDATE；不能将RLS存在当SQL最小授权完成。
+
+原真实159及刚交付fresh159模板647全表再次相等，真实库未迁移/修改。原失败migration意图与terminal保留，不重跑原migration；仅读对账确认真实最小权限反例。Task仍ACTIVE，不Delivery。本目录native-acl-red.json是负门诊断，非允许正式执行。
+
+下一项：先新精确Task与方案登记增量a161，仅三个新增journal表REVOKE runtime INSERT/UPDATE/DELETE并保留SELECT，校验PUBLIC/其他role潜在默认授权、writer窄列权和旧647表ACL/defaultACL不变；新增原native defaultACL反例及相邻原journal测试。不得改旧a160历史migration或全局默认授权。signed package/正式身份/安装配置/八工作台及首链依然pending。
