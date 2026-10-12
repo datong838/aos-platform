@@ -1,0 +1,9 @@
+# Successor原发行兼容退出
+
+独立UUID全迁移数据库原fixture读回161，实际非owner固定Plan LOGIN/原私密Source config/原串行化连接。初始合法输入在original Store replay阶段42501，确认原Plan三Source权限清册缺Successor SELECT。仅一次性testDB补SELECT/INSERT(Successor)、SELECT(Resolution/TaskRun)及双tenant RLS。
+
+5原生case覆盖真实Successor与新PlanHead/Revision COMMIT、幂等相同回执、请求漂移拒绝、无依赖权限拒绝且零表变化、最后Successor INSERT异常使前两Plan写入完整ROLLBACK、跨org和project不可见。原API和新Source连接接线相邻累计43PASS0skip0fail，7既有warnings。首次同session重复种子PK冲突保留，改独立UUID种子，不更改业务逻辑或删除行制造通过。
+
+当前650源表指纹完全不变，固定临时Role和UUID testDB残留0。普通runtime真实Source权限、Host/worker/Provider不变；原22用户改动保留。仅新增测试，没有生产代码/页面改变，不重复浏览器空态来申报通过。
+
+风险/范围：frozen结构Source和resolved回执是隔离测试夹具，不是正式签名Root/current profile confirmation或真实Owner。既有Source reader正向、签名模板、完整37操作与Content治理对象/所有Contract发行、克隆切换/角色部署仍待。因此本权限增量只是必要兼容候选，不直接部署真实库。独立安装审批/当前预算8配置/八页面/自然首链仍pending。

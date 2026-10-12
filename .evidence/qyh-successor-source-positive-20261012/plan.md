@@ -1,0 +1,11 @@
+# Successor来源发行正向兼容
+
+原plan_restricted_issuer_case仅以非frozen Plan触发SOURCE_PLAN_NOT_EXACT_FROZEN，无合法Successor正向证明。当前Source Router已接plan factory，但完整Source权限部署必须覆盖原Successor独立Plan写入（不写共享Receipt）的真实事务。候选A该漏项隔离原生验证，候选B当前安装独立审批（依赖既有登录入口，已待答）。选A同轮RED/最小测试夹具补齐，不改生产业务或撤真实Runtime权限。
+
+新增文件：/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/extension_runtime/test_successor_source_issuer_pg.py；本Task证据plan/red/green/native.xml/verification。复用原protocol/source_case（真实原Source tables/37purpose SQL guard）和原aip13_001/w3_016迁移，不手造Successor表来规避FK/append-only/RLS。测试数据仅原隔离schema，frozen原Plan/无TaskRun/真实resolved receipt；目标“isolated-successor”不是业务身份。原AipResponsibilityAssignmentStore通过其plan_connect_factory和实际受限session user发行，用真实非autocommit事务验证COMMIT/replay、late rollback和tenant拒绝。
+
+先沿原Plan issuer最小权限（缺三依赖表）得到42501 RED。只对一次性测试schema补SELECT(TaskRun/Resolution)及SELECT,INSERT(Successor)和双租户RLS，不加入runtime角色、不授owner/super/BYPASS、不放宽普通runtime三Source权限。不改原Source sharedReceipt或原操作映射，也不伪造新审批预算、Template发布/Source签发或真实公司身份。
+
+如果合法Successor写入后当前Source reader因新版本profile/confirmation/merge依赖拒绝，必须如实登记为完整生产Source仍RED，不能复制旧审批强绿；本波只证明原Store/SQL兼容，不宣称consumer/八页面/首链。当前权威库650表与权限保持，测试临时角色/schema/UUID库前后清理。默认testDB18431/aos_app正确初始化，fixture隔离18432，禁用dotenv/Host/worker。业务和用户22改动不变。
+
+最终使用原标准session全schema（fixture独立读回a0v_161），不是此前拟复用的最小protocol schema。初始真实42501为Successor缺SELECT。测试schema添加三依赖权限与RLS后，真实COMMIT/幂等/漂移/晚失败ROLLBACK/跨组织工作区验证；fixture种子同session重复冲突已改每case新UUID，不删除任何历史行求绿。源码仅新增测试，不更改生产store、迁移、权限或API启动。签名Source reader/新profile确认等完整消费仍未正向验证，不从结构frozen fixture推导正式准入。

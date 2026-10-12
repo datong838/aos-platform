@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="2" failures="0" skipped="0" tests="3" time="4.571" timestamp="2026-10-12T22:53:48.832589+08:00" hostname="ddtdeMacBook-Pro.local"><testcase classname="tests.extension_runtime.test_successor_source_issuer_pg" name="test_original_successor_commits_and_replays_with_minimal_source_issuer" time="4.183" /><testcase classname="tests.extension_runtime.test_successor_source_issuer_pg" name="test_missing_successor_dependency_rejects_without_plan_changes" time="0.006"><error message="failed on setup with &quot;psycopg.errors.UniqueViolation: duplicate key value violates unique constraint &quot;aip_task_pkey&quot;&#10;DETAIL:  Key (org_id, project_id, task_id)=(org-org, dev-project, isolated-successor-task) already exists.&quot;">tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-123/test_missing_successor_depende0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x11ee6bc50&gt;
+
+    @pytest.fixture
+    def successor_case(tmp_path, monkeypatch):
+        dsn = get_dsn()
+        parts = conninfo_to_dict(dsn)
+        database = parts['dbname']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        assert (parts['host'], int(parts['port']), parts['user']) == ('127.0.0.1', 18431, 'aos_app')
+        with psycopg.connect(dsn, autocommit=True) as admin:
+            assert admin.execute('SELECT version_num FROM alembic_version').fetchone()[0] == 'a0v_161'
+            assert admin.execute('SELECT count(*) FROM pg_roles WHERE rolname=%s', (ROLE,)).fetchone()[0] == 0
+            admin.execute("INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','isolated successor') ON CONFLICT DO NOTHING")
+&gt;           admin.execute("INSERT INTO aip_task(org_id,project_id,task_id,task_type,title,status,idempotency_key,request_hash,created_by) VALUES('org-org','dev-project','isolated-successor-task','isolated','isolated successor','pending','isolated-seed','seed','isolated')")
+
+tests/extension_runtime/test_successor_source_issuer_pg.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;psycopg.Connection [BAD] at 0x11c8a4650&gt;
+query = "INSERT INTO aip_task(org_id,project_id,task_id,task_type,title,status,idempotency_key,request_hash,created_by) VALUES...','dev-project','isolated-successor-task','isolated','isolated successor','pending','isolated-seed','seed','isolated')"
+params = None, prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -&gt; Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+&gt;           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "aip_task_pkey"
+E           DETAIL:  Key (org_id, project_id, task_id)=(org-org, dev-project, isolated-successor-task) already exists.
+
+.venv/lib/python3.11/site-packages/psycopg/connection.py:300: UniqueViolation</error></testcase><testcase classname="tests.extension_runtime.test_successor_source_issuer_pg" name="test_late_successor_insert_failure_rolls_back_both_plan_tables" time="0.022"><error message="failed on setup with &quot;psycopg.errors.UniqueViolation: duplicate key value violates unique constraint &quot;aip_task_pkey&quot;&#10;DETAIL:  Key (org_id, project_id, task_id)=(org-org, dev-project, isolated-successor-task) already exists.&quot;">tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-123/test_late_successor_insert_fai0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x11efd0d90&gt;
+
+    @pytest.fixture
+    def successor_case(tmp_path, monkeypatch):
+        dsn = get_dsn()
+        parts = conninfo_to_dict(dsn)
+        database = parts['dbname']
+        assert database.startswith('aos_test_') and database.endswith('_ti4_test')
+        assert (parts['host'], int(parts['port']), parts['user']) == ('127.0.0.1', 18431, 'aos_app')
+        with psycopg.connect(dsn, autocommit=True) as admin:
+            assert admin.execute('SELECT version_num FROM alembic_version').fetchone()[0] == 'a0v_161'
+            assert admin.execute('SELECT count(*) FROM pg_roles WHERE rolname=%s', (ROLE,)).fetchone()[0] == 0
+            admin.execute("INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','isolated successor') ON CONFLICT DO NOTHING")
+&gt;           admin.execute("INSERT INTO aip_task(org_id,project_id,task_id,task_type,title,status,idempotency_key,request_hash,created_by) VALUES('org-org','dev-project','isolated-successor-task','isolated','isolated successor','pending','isolated-seed','seed','isolated')")
+
+tests/extension_runtime/test_successor_source_issuer_pg.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;psycopg.Connection [BAD] at 0x11efd9490&gt;
+query = "INSERT INTO aip_task(org_id,project_id,task_id,task_type,title,status,idempotency_key,request_hash,created_by) VALUES...','dev-project','isolated-successor-task','isolated','isolated successor','pending','isolated-seed','seed','isolated')"
+params = None, prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -&gt; Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+&gt;           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "aip_task_pkey"
+E           DETAIL:  Key (org_id, project_id, task_id)=(org-org, dev-project, isolated-successor-task) already exists.
+
+.venv/lib/python3.11/site-packages/psycopg/connection.py:300: UniqueViolation</error></testcase></testsuite></testsuites>

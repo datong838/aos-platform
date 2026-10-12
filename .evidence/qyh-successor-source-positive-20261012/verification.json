@@ -1,0 +1,13 @@
+{
+  "nativePositiveCases": 5,
+  "adjacentPassed": 43,
+  "skipped": 0,
+  "failures": 0,
+  "actualTestMigrationHead": "a0v_161",
+  "standardTestDatabaseAndTemporaryRoleRemaining": 0,
+  "all650SourceTablesUnchanged": true,
+  "productCodeChanged": false,
+  "formalSourceConsumerAccepted": false,
+  "runtimeAuthorized": false,
+  "eightPagesAccepted": false
+}
