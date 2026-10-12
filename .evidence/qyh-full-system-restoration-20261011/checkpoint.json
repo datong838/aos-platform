@@ -5,8 +5,8 @@
   "task_id": "qyh-full-system-restoration-20261011",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "task_base_revision": "AOS-001842",
-  "authority_revision": "AOS-001987",
-  "step": "formal_runtime_preparation_then_apply_verify_configure_eight_pages",
+  "authority_revision": "AOS-001988",
+  "step": "managed_person_profile_hydration_then_approved_installation_runtime_preparation",
   "code_files": [
     "scripts/a0v_qyh_restored_http.py",
     "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py"
@@ -37,7 +37,10 @@
     ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-api-20261012.json",
     ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-current-step-proof.json",
     ".evidence/qyh-full-system-restoration-20261011/successor-source-tests-preparation-readback.json",
-    ".evidence/qyh-full-system-restoration-20261011/local-oidc-entry-verification-20261013.json"
+    ".evidence/qyh-full-system-restoration-20261011/local-oidc-entry-verification-20261013.json",
+    ".evidence/qyh-full-system-restoration-20261011/actual-browser-human-login-20261013.json",
+    ".evidence/qyh-full-system-restoration-20261011/live-human-login-verification-20261013-r3.json",
+    ".evidence/qyh-full-system-restoration-20261011/human-login-live-data-and-source-readback-20261013.json"
   ],
   "steps": [
     {
