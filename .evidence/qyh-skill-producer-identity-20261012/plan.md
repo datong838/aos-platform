@@ -1,0 +1,7 @@
+# 独立生产者连接身份前置
+
+Rules：AGENTS.md、231、已批准Skill完整生命周期合同/D-wave第5项；原writer连接只许一个角色不可放宽。候选一原卷维护另aos职责，候选二完整producer原子终结，选择二的必要身份前置。产品scope仅新增aip_skill_eval_producer_identity.py及test_skill_eval_producer_identity_pg.py，不改原writer连接器。
+
+新连接检查只接受真实session_user=current_user、LOGIN/NOINHERIT/无super/bypass/createrole/createdb/replication、精确数据库；两个且仅两个可达NOLOGIN/NOINHERIT无特权角色为aos_aip_eval_writer和aos_skill_eval_finisher，无admin或inherit membership选项，必须可SET角色。裸role、runtime、管理员、额外/缺角色、错数据库或已经切角色均拒绝。原PG16隔离fixture创建唯一测试LOGIN和临时finisher role并完全清理；不会生成正式密钥或配置、授真库权限。
+
+先新增原生失败测试，再最小检查器；原writer原回归一起跑。本函数只核连接身份，绝不称Owner/预算/签名/终结事务/正式producer已准入。后续需受限finisher权限与原CAS/event/双签名、intent→Run锁顺序、晚期整体回滚及unknown只读消费完整接线。保持原Goal全范围active，不以本组件代替它。
