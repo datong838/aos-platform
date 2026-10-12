@@ -1,0 +1,12 @@
+{
+  "task": "qyh-full-system-restoration-20261011",
+  "head": "0d42192cda76a3a777457e64211cd54d6dd3c4a0",
+  "authority": "Human explicitly authorized local administrator account and existing restoration in current chat",
+  "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+  "tenant": "org-org/dev-project",
+  "role": "admin",
+  "existingRowsAbsent": true,
+  "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "serviceStart": false
+}

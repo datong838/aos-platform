@@ -1,0 +1,10 @@
+{"ts": "2026-10-12T18:11:24.380431+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-12T18:11:24.399461+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.twa-pg", "msg": "twa_pg_hydrate orgs=3 workspaces=4 members=10", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-12T18:11:29.447005+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-12T18:11:29.459017+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-12T18:11:29.477580+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-12T18:11:29.488082+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-12T18:11:29.499624+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.membership", "msg": "audit_append id=aud-5 action=membership.upsert org=org-org project=dev-project actor=qyh-user-authorized-account-maintainer-20261013", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-12T18:11:29.499709+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.membership", "msg": "membership_upsert org=org-org project=dev-project subject=6f31cfdc-a26c-4f1f-ad6b-95a8559cc657 role=admin actor=qyh-user-authorized-account-maintainer-20261013", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-12T18:11:29.499764+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+Actual human admin enrollment verified; other646 tables unchanged; runtime remains closed.
