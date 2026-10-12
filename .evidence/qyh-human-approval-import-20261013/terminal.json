@@ -1,0 +1,20 @@
+{
+  "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+  "state": "approved",
+  "etagVersion": 3,
+  "decisionId": "24de749e-d3bd-45a0-8ba7-f8a2a5303ac2",
+  "humanApprovalRecorded": true,
+  "actor": "human:conversation-owner:01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authenticatedOidcApproval": false,
+  "changedTables": [
+    "public.bundle_installation",
+    "public.bundle_installation_command",
+    "public.bundle_installation_decision",
+    "public.bundle_installation_event",
+    "public.bundle_installation_revision"
+  ],
+  "unchangedTables": 645,
+  "predecessorPreserved": true,
+  "runtimeActivated": false,
+  "eightPagesAccepted": false
+}

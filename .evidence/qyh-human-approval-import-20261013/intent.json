@@ -1,0 +1,18 @@
+{
+  "operation": "InstallationService.approve",
+  "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+  "tenant": {
+    "org_id": "org-org",
+    "project_id": "dev-project"
+  },
+  "expectedEtag": 2,
+  "actor": "human:conversation-owner:01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "actorSource": "explicit human conversation authorization; not OIDC",
+  "approvalSourceSha256": "780c68ebd1b6f5daef8732a05fa6138f31ebdbb8f87bc8b78dd3990c08f6647d",
+  "request": {
+    "lockHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+    "permissionDiffHash": "sha256:9f9c3df7067f6a31f2e1c03354daa1196efae776681977567c39420169dd35fe",
+    "migrationPlanHash": "sha256:9c790a19ae8d670812bcd5382cd9f49744650f9a7ca95da2f387b067705ec575",
+    "contributionDiffHash": "sha256:eddf54f305572ac8c4d2dfe5777663a5a6bb246c01cd41ee04f0ed3bb9d97e63"
+  }
+}

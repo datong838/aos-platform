@@ -1,0 +1,80 @@
+{
+  "statusCode": 200,
+  "responseEtag": "\"3\"",
+  "response": {
+    "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+    "displayName": "栖月汇 · 电商资产包与八工作台恢复",
+    "state": "approved",
+    "currentRevision": 3,
+    "activeRevision": null,
+    "previousActiveRevision": null,
+    "etagVersion": 3,
+    "createdAt": "2026-10-12T12:59:53.807026Z",
+    "updatedAt": "2026-10-12T16:15:37.868987Z",
+    "current": {
+      "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+      "revision": 3,
+      "parentRevision": 2,
+      "state": "approved",
+      "compositionId": "cf1e45cf-6255-420d-83c7-998751438053",
+      "lockRevision": 1,
+      "lockHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+      "permissionDiffHash": "sha256:9f9c3df7067f6a31f2e1c03354daa1196efae776681977567c39420169dd35fe",
+      "migrationPlanHash": "sha256:9c790a19ae8d670812bcd5382cd9f49744650f9a7ca95da2f387b067705ec575",
+      "contributionDiffHash": "sha256:eddf54f305572ac8c4d2dfe5777663a5a6bb246c01cd41ee04f0ed3bb9d97e63",
+      "overlayRevision": "qyh-ecommerce-restoration-20261012",
+      "requestedBy": "user:dev",
+      "decisionId": "24de749e-d3bd-45a0-8ba7-f8a2a5303ac2",
+      "createdAt": "2026-10-12T16:15:37.868987Z"
+    },
+    "decision": {
+      "decisionId": "24de749e-d3bd-45a0-8ba7-f8a2a5303ac2",
+      "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+      "submittedRevision": 2,
+      "decision": "approved",
+      "actor": "human:conversation-owner:01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+      "lockHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+      "permissionDiffHash": "sha256:9f9c3df7067f6a31f2e1c03354daa1196efae776681977567c39420169dd35fe",
+      "migrationPlanHash": "sha256:9c790a19ae8d670812bcd5382cd9f49744650f9a7ca95da2f387b067705ec575",
+      "contributionDiffHash": "sha256:eddf54f305572ac8c4d2dfe5777663a5a6bb246c01cd41ee04f0ed3bb9d97e63",
+      "reason": null,
+      "createdAt": "2026-10-12T16:15:37.868987Z"
+    },
+    "events": [
+      {
+        "sequence": 1,
+        "fromRevision": null,
+        "toRevision": 1,
+        "fromState": null,
+        "toState": "draft",
+        "actor": "user:dev",
+        "reason": null,
+        "evidence": null,
+        "createdAt": "2026-10-12T12:59:53.807026Z"
+      },
+      {
+        "sequence": 2,
+        "fromRevision": 1,
+        "toRevision": 2,
+        "fromState": "draft",
+        "toState": "submitted",
+        "actor": "user:dev",
+        "reason": null,
+        "evidence": null,
+        "createdAt": "2026-10-12T12:59:53.978689Z"
+      },
+      {
+        "sequence": 3,
+        "fromRevision": 2,
+        "toRevision": 3,
+        "fromState": "submitted",
+        "toState": "approved",
+        "actor": "human:conversation-owner:01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+        "reason": null,
+        "evidence": null,
+        "createdAt": "2026-10-12T16:15:37.868987Z"
+      }
+    ]
+  },
+  "authenticatedOidcApproval": false
+}

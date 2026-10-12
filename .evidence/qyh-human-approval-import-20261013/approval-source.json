@@ -1,0 +1,12 @@
+{
+  "channel": "current_codex_conversation_human_user",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "approvalKind": "explicit_user_manual_maintenance_approval",
+  "statements": [
+    "没有其他人了 就你开发 和我 及 督导，只有我是 真人 我授权和审批 ，你更新审批状态 即可吧",
+    "那样 虽然建立 本机管理员登录与审批入口 ，但是没必要 再审批一次 我已经授权",
+    "是的 ，你不用再等了 继续往下推进"
+  ],
+  "authenticatedOidcApproval": false,
+  "scope": "exact pending Qiyuehui ecommerce eight-workbench restoration installation; excludes runtime execution"
+}
