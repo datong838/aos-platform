@@ -1,0 +1,1 @@
+先保留当前D-wave原字节和hash；仅追加本轮实际成果和未完成审批/八页/自然首链，不改历史。精确文件：/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-12-栖月汇当前160迁移演练与正式门清单.md；同owner独立Doc Task。完成后CAS authority及七强投影同步，Codex私有memory不写。

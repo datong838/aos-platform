@@ -116,3 +116,5 @@ r2停止后只读对账：PID1已为postgres，业务aos_meta_head不存在，�
 两个已登记候选：A父Task原observer checkpoint实际证据对账（同owner ACTIVE scope，独立于审批）；B新安装正式独立approve/configure（整体恢复已获授权，依赖另一合法认证管理员，已询问现有入口）。选择A本轮落实。
 精确修改本目录checkpoint.json；新增checkpoint-reconciliation-20261012/plan-readback.md、原执行版本maintain-executed-fa8.py.txt、新proof和当前冻结源/重启/安装只读归档。原maintain.py后续禁字节码修改导致旧proof input hash不再匹配，必须从实际迁移提交fa8c36f25取精确旧源码并核旧hash，不把当前改后源码当实际执行。旧proof/旧污染snapshot均保留。
 复用当前原source consumer检查0511冻结源，保留真实child重启readbacks及新的Registry publish/安装submitted证据hash来源；只在父Task自有目录记录副本和provenance，不让foreignTask proof越界。每proof只证明对应本地步骤，原全系统/formal8/自然首链仍PENDING。cp绑定最新authority及原Task baseline，code_files仍原两个scoped代码，evidence_files上限32，原step导航和输入hash验证不弱化。最后直接调用原checkpoint_snapshot+原wake progress作合法性消费；不重启、不重发publish/install/迁移、无DB写、无造提交刷新代码年龄。
+
+当前安装审批等待期间补齐身份路径事实：新建本目录installation-admin-origin-audit-20261012.json，仅两独立READ ONLY读取org-org/dev-project的4个既有membership主体；与原canonical安装脚本公开maker/checker及本恢复维护actor作精确相等分类，输出匹配计数，不输出主体值、联系方式或凭据。此分类判断是否真的有可登录其他管理员，不能把元数据成员当身份认证，也不能造新actor。依据只登记下一真实登录/初始化缺口；不执行审批或变更成员。

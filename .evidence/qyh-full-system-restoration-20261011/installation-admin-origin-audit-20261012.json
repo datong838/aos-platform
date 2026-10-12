@@ -1,0 +1,13 @@
+{
+  "adminSubjects": 4,
+  "existingDevAdmin": true,
+  "matchesPublicHistoricalScriptActor": {
+    "canonical_installer": false,
+    "canonical_approver": false,
+    "restoration_maintenance": false
+  },
+  "unclassifiedNonDevAdmins": 3,
+  "matchedHistoricalActorsAreAuthenticated": false,
+  "subjectValuesEmitted": false,
+  "databaseWrites": 0
+}
