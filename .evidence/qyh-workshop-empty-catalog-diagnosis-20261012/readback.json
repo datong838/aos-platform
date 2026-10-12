@@ -1,0 +1,72 @@
+{
+  "observedAt": "2026-10-12T11:24:33.630717+00:00",
+  "head": "4cf9a01a247a44fab9de50639b72563fded7576d",
+  "authority": "AOS-001971",
+  "legacyCandidates": 0,
+  "runtimeBundleCandidates": 12,
+  "effectiveInstallationCount": 3,
+  "views": [
+    {
+      "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+      "httpStatus": 200,
+      "revision": 5,
+      "effectiveState": "needs_attention",
+      "enabled": false,
+      "operationFence": true,
+      "reasons": [
+        "运行实例保持禁入，当前操作已结束且运行资源存活证据不足；请完成恢复对账。"
+      ]
+    },
+    {
+      "installationId": "89975129-7e0f-4860-ac56-7a031ebe4a1a",
+      "httpStatus": 200,
+      "revision": 5,
+      "effectiveState": "disabled",
+      "enabled": false,
+      "operationFence": true,
+      "reasons": [
+        "运行实例已完成配置或停用，可调整配置后重新启用。"
+      ]
+    },
+    {
+      "installationId": "ef5bc0c3-1dbe-4659-b839-2350f70232bf",
+      "httpStatus": 200,
+      "revision": 5,
+      "effectiveState": "disabled",
+      "enabled": false,
+      "operationFence": true,
+      "reasons": [
+        "运行实例已完成配置或停用，可调整配置后重新启用。"
+      ]
+    }
+  ],
+  "httpCatalogs": [
+    {
+      "path": "/v1/ecommerce-workshop/modules",
+      "status": 200,
+      "count": 0,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      }
+    },
+    {
+      "path": "/v1/runtime-workshop/modules",
+      "status": 200,
+      "count": 0,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      }
+    }
+  ],
+  "codeHashes": {
+    "services/aos-api/aos_api/asset_registry/workshop_catalog_source.py": "3a370d3d93a676ff12572cd9ea154a74b26097030b968eb554331e09c5a02fb2",
+    "services/aos-api/aos_api/asset_registry/legacy_runtime_boundary.py": "799d72ee4fd36d83e8da3b3226255fb62e99c5969761601eb50b79881dcfa005",
+    "services/aos-api/aos_api/ecommerce_runtime_workshop_catalog.py": "b68be1e0ca1abe21c9746ecbd8486e059ca48b5eb694729ad7115797dcf189a8"
+  },
+  "databaseWrites": 0,
+  "activationAttempted": false,
+  "formalIdentityVerified": false,
+  "eightWorkbenchesRestored": false
+}
