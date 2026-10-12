@@ -1,0 +1,11 @@
+# 原生复验结论
+
+r1因测试postgres迁移身份导致160日志表owner不符161原要求，session初始化报错18，不计PASS；源650表不变、临时issuer0。原日志/JUnit保留。
+
+r2标准session使用已登记18431/aos_app及原Source-boundary-rehearsal租约；固定小schema fixture仍18432独立测试lab。18 passed/0 skip/0 xfail/0 failure/0 error，7既有warnings。三种Source连接的提交后scope重绑、RLS跨tenant、角色成员与提权反证、私密文件权限复核通过；协议37映射、原EvalContractStore配对Receipt/幂等/晚失败ROLLBACK通过。
+
+其中部分使用最小schema，不证明完整generic/BI/successor/Content/30Contract生产全路径或真实Source角色安装，也不证明Root/Owner/预算/八页/首链。标准session初始化成功，但没有保存已清理DB的migration-head独立读回，不将目标标签当作实际头验收。
+
+源650表前后相等，两个lab测试UUID库、临时issuer/schema和client残留0；产品及原测试hash未变，22用户改动保留。Source161实际两独立只读原预检仍false：三表普通runtime仍有写权限，stage ready=false。不能只撤权求绿。
+
+下一生产接线：现有ProductionContractStore支持plan/contract独立factory，ResponsibilityAssignmentStore支持plan factory，Content只有register写事务；三个router均未注入Source连接。应新增私密精确目标配置读取，复用SourceIssuerDatabaseConfig及原连接，不扩展数据库权限。默认None保留旧行为，显式配置错误必须拒绝、不能回落runtime。先RED覆盖wrong DB/private config/跨purpose不连接，再最小路由接线、专项/相邻/native验证。完整Source SQL权限、issuer正向全调用方及克隆切换仍另门。

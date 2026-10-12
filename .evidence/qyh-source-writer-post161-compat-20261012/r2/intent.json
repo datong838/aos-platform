@@ -1,0 +1,27 @@
+{
+  "head": "efcfa4f1e3a1af60297d8a6d3681e5b05a109016",
+  "authority": "AOS-001977",
+  "labContainerId": "73d28f492ab3c03ac0eb25f4fac5ba1db2a67941acfb1a860210ed57a657c9e7",
+  "labCluster": "7695402775127154735",
+  "sourceVersion": "a0v_161",
+  "sourceTables": 650,
+  "sourceManifestSha256": "4e659290fc3df1b9d39a7d7cc99aeb85cc208b8895013d6850ed83154221d4ef",
+  "currentFiles": {
+    "aos_api/aip_bi_plan_issuer_connection.py": "4e442aa85b791ed5b193b2881409421f02458faae7ef7674cf67a606dacaece2",
+    "aos_api/aip_source_issuer_connection.py": "107a4e6cc1c6e79a5bedcb9e638900949ffc910dad2ade67faa34a643a1ff1da",
+    "tests/aip/test_aip_source_issuer_connection_pg.py": "ff4ec898247c52705fab2fbf34a0166af552e4688f2e64c3adab6943c22849dd",
+    "tests/extension_runtime/test_plan_receipt_writer_protocol_pg.py": "e71929fdc2f43c5358f377d09d239a7d0d0b8cd93de34b15b0bf4a942d49dbc7",
+    "tests/conftest.py": "63e662d9e5dc4650cf5ec646717c49ffc503e1da1b6b06c62c5d1066b6f990a8"
+  },
+  "argv": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "tests/aip/test_aip_source_issuer_connection_pg.py",
+    "tests/extension_runtime/test_plan_receipt_writer_protocol_pg.py",
+    "-ra",
+    "--junitxml=/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-source-writer-post161-compat-20261012/r2/native-junit.xml"
+  ],
+  "testOnly": true,
+  "sourceMutationsAuthorized": false
+}

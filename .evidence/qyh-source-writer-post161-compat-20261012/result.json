@@ -1,0 +1,11 @@
+{
+  "returnCode": 1,
+  "all650SourceTablesUnchanged": true,
+  "temporaryIssuerRoles": 0,
+  "testSourceFilesUnchanged": true,
+  "sourcePrivilegesChanged": false,
+  "wholeProductionSourceReady": false,
+  "eightPagesAccepted": false,
+  "naturalFirstChainAccepted": false,
+  "observedAt": "2026-10-12T13:36:36.221679+00:00"
+}

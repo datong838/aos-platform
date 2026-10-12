@@ -1,0 +1,91 @@
+{
+  "migrationHead": "a0v_161",
+  "observations": {
+    "sourceAcl": [
+      {
+        "relname": "aip_production_contract_receipt",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owns": false,
+        "readable": true,
+        "insertable": true,
+        "updatable": false,
+        "deletable": true,
+        "truncatable": false
+      },
+      {
+        "relname": "aip_responsibility_plan_head",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owns": false,
+        "readable": true,
+        "insertable": true,
+        "updatable": true,
+        "deletable": true,
+        "truncatable": false
+      },
+      {
+        "relname": "aip_responsibility_plan_revision",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owns": false,
+        "readable": true,
+        "insertable": true,
+        "updatable": true,
+        "deletable": true,
+        "truncatable": false
+      }
+    ],
+    "fixedApiFunctions": [
+      {
+        "proname": "extension_configuration_stage_enqueue_a0v_037",
+        "prosecdef": true,
+        "stage_execute": true,
+        "runtime_execute": false
+      },
+      {
+        "proname": "extension_configuration_stage_lookup_a0v_038",
+        "prosecdef": true,
+        "stage_execute": true,
+        "runtime_execute": false
+      },
+      {
+        "proname": "extension_configuration_stage_query_a0v_037",
+        "prosecdef": true,
+        "stage_execute": true,
+        "runtime_execute": false
+      }
+    ],
+    "retainedTransportRole": {
+      "rolname": "aos_configuration_stage_transport_20260914",
+      "rolcanlogin": true,
+      "rolsuper": false,
+      "rolbypassrls": false,
+      "rolinherit": false
+    },
+    "sourceAclReady": false,
+    "originalStagePreflightReady": false,
+    "unsafeSourcePrivileges": {
+      "aip_production_contract_receipt": [
+        "insertable",
+        "deletable"
+      ],
+      "aip_responsibility_plan_head": [
+        "insertable",
+        "updatable",
+        "deletable"
+      ],
+      "aip_responsibility_plan_revision": [
+        "insertable",
+        "updatable",
+        "deletable"
+      ]
+    },
+    "sourceReadTransactionReadOnly": true
+  },
+  "twoIndependentReadOnlyReadsEqual": true,
+  "currentRoleDeploymentPending": true,
+  "formalSourcePermissionGranted": false,
+  "databaseWrites": 0,
+  "originalAuditSourceSha256": "373412962b9c819ef0619bb40af2388af01168c062e3b02b4fa3ec5ae42ad8a0"
+}
