@@ -1,0 +1,55 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "schema": "aos-material-review/v1",
+    "request_id": "qyh-human-login-quality-review-20261013-r4",
+    "task_id": "qyh-human-login-quality-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "f8cf3a41d754564cb4ff2f7e198ccf963bc8b049",
+      "authority_revision": "AOS-001987",
+      "files": {
+        ".evidence/qyh-human-login-quality-review-20261013/public-code-material-0.txt": "79977f32ef3645767ad4d674ac8acbf052a28e28a23926da351a8878f4ed312e",
+        ".evidence/qyh-human-login-quality-review-20261013/public-code-material-1.txt": "ba142f98fb73f0d2ce14a352d46e411bef77b49355d396d1a2702114f7d3b63e",
+        ".evidence/qyh-human-login-quality-review-20261013/public-code-material-2.txt": "3bfc5da326c5e3d4c0bc2ee8fa55b0c3758a2e0aa743ed36d666f03f19b2f1f5",
+        ".evidence/qyh-human-login-quality-review-20261013/public-code-material-3.txt": "f03a7bba97efa7401cc0d2316afe220f7e349ac1ac685c16017091aac1b5890d",
+        ".evidence/qyh-human-login-quality-review-20261013/public-code-material-4.txt": "7a94283b6a392fae46633e584e70727653242578700517102c6c885a0f209816",
+        ".evidence/qyh-human-login-quality-review-20261013/public-code-material-5.txt": "bc21327c1f70f69a27df8be7740b1e1e25897b6b4292e0d5d5a26f50bdfa1cbc",
+        ".evidence/qyh-human-login-quality-review-20261013/public-code-material-6.txt": "8689fa7ba37e804826d10bfb96c8a8b91360f92f1c3a5d668305c799cebea122",
+        ".evidence/qyh-human-login-quality-review-20261013/public-code-material-7.txt": "04fd6519f9f2a97524501ae89a8b08c58e8dcca5c398148de8d82d31a40430eb",
+        ".evidence/qyh-human-login-quality-review-20261013/app-integration.txt": "623e4b79ca8a647e19d3303ccd6e5e00c656fbe0fa2a388f2f84936e491c2f14",
+        ".evidence/qyh-human-login-quality-review-20261013/formal-entry-boundary-excerpt.txt": "83bc055dc259b6f3c028f6936c742b7fb08dd6134280d2d6d052789fbc5410ec",
+        ".evidence/qyh-human-login-quality-review-20261013/scope-clarification.txt": "9c22479a15022e0eeafe67a9eef5342a2ee3637dd2b94f7a5495571d80ac5226",
+        ".evidence/qyh-human-login-quality-review-20261013/public-policy-function-excerpt.txt": "3ed5c20f9e49ff48e3fd1af1e606dc87509d5cd77a7af33053bc2fc4a67b7bb9"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "Validated exact private local identity configuration opts into original authentication POST only while default readonly business boundaries remain closed.",
+        "evidence": "public-code-material-0.txt: load_management_oidc_config 严格验证私钥配置（权限0700/0600、字段完整性、大小限制）；management_app 以 allow_password_login=bool(config) 启用 ReadOnlyManagementApp，仅允许 POST /v1/auth/token，其余方法返回 405；environment 设置 AOS_AUTH_ALLOW_DEV=1、AOS_AUTH_EXTERNAL_ONLY=0；material-4.txt 报告 defaultReadonlyPreserved=true、businessMutationsAllowed=false",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Web password credentials and refresh tokens are not persisted or queued; access token is published only after original canonical me succeeds.",
+        "evidence": "public-code-material-2.txt: loginPassword 先 clearAccessToken，仅存储 access_token（内存），localStorage/SessionStorage 均无写入；fetch 调用 /v1/me 成功后才 setAccessToken；test: expect(localStorage.getItem(\"access_token\")).toBeNull(); expect(sessionStorage.getItem(\"refresh_token\")).toBeNull()",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Server login policy prevents unauthenticated external-only users mounting business catalog consumers and preserves explicitly enabled legacy development UI.",
+        "evidence": "public-code-material-1.txt: LocalLoginGate 读取 /v1/auth/oidc 策略，allowDevToken=true 直接渲染 children（legacy），否则显示登录表单并阻塞 children；app-integration.txt: App 组件中 LocalLoginGate 包裹 RuntimeWorkshopCatalogProvider 等所有业务 catalog；material-3.txt 测试：allowDevToken=true 时包含 \"business catalog\"，allowDevToken=false 时不包含",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Reported tests and enrollment are bounded code and metadata evidence; live login and eight workbench acceptance remain unproven.",
+        "evidence": "material-4.txt: liveApiIntegrated=false, eightWorkshopsAccepted=false；material-5.txt: liveApiOrWebReloaded=false, eightPagesAccepted=false；material-6.txt: businessRuntimeOpened=false, liveLoginAccepted=false；scope-clarification.txt 明确声明 review 不 claim 浏览器登录或八个 workbench 验收",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前冻结状态；如需推进，需在真实 OIDC 环境、实际浏览器会话下完成一次完整 password login + /v1/me 链路验证，并逐一访问八个工作bench页面确认可加载。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

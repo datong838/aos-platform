@@ -1,0 +1,28 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-human-login-quality-review-20261013-r4",
+  "task_id": "qyh-human-login-quality-review-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "f8cf3a41d754564cb4ff2f7e198ccf963bc8b049",
+    "authority_revision": "AOS-001987",
+    "files": {
+      ".evidence/qyh-human-login-quality-review-20261013/public-code-material-0.txt": "79977f32ef3645767ad4d674ac8acbf052a28e28a23926da351a8878f4ed312e",
+      ".evidence/qyh-human-login-quality-review-20261013/public-code-material-1.txt": "ba142f98fb73f0d2ce14a352d46e411bef77b49355d396d1a2702114f7d3b63e",
+      ".evidence/qyh-human-login-quality-review-20261013/public-code-material-2.txt": "3bfc5da326c5e3d4c0bc2ee8fa55b0c3758a2e0aa743ed36d666f03f19b2f1f5",
+      ".evidence/qyh-human-login-quality-review-20261013/public-code-material-3.txt": "f03a7bba97efa7401cc0d2316afe220f7e349ac1ac685c16017091aac1b5890d",
+      ".evidence/qyh-human-login-quality-review-20261013/public-code-material-4.txt": "7a94283b6a392fae46633e584e70727653242578700517102c6c885a0f209816",
+      ".evidence/qyh-human-login-quality-review-20261013/public-code-material-5.txt": "bc21327c1f70f69a27df8be7740b1e1e25897b6b4292e0d5d5a26f50bdfa1cbc",
+      ".evidence/qyh-human-login-quality-review-20261013/public-code-material-6.txt": "8689fa7ba37e804826d10bfb96c8a8b91360f92f1c3a5d668305c799cebea122",
+      ".evidence/qyh-human-login-quality-review-20261013/public-code-material-7.txt": "04fd6519f9f2a97524501ae89a8b08c58e8dcca5c398148de8d82d31a40430eb",
+      ".evidence/qyh-human-login-quality-review-20261013/app-integration.txt": "623e4b79ca8a647e19d3303ccd6e5e00c656fbe0fa2a388f2f84936e491c2f14",
+      ".evidence/qyh-human-login-quality-review-20261013/formal-entry-boundary-excerpt.txt": "83bc055dc259b6f3c028f6936c742b7fb08dd6134280d2d6d052789fbc5410ec",
+      ".evidence/qyh-human-login-quality-review-20261013/scope-clarification.txt": "9c22479a15022e0eeafe67a9eef5342a2ee3637dd2b94f7a5495571d80ac5226",
+      ".evidence/qyh-human-login-quality-review-20261013/public-policy-function-excerpt.txt": "3ed5c20f9e49ff48e3fd1af1e606dc87509d5cd77a7af33053bc2fc4a67b7bb9"
+    }
+  },
+  "status": "NEED_EVIDENCE",
+  "execution_authorized": false,
+  "result_sha256": "8cd2e73971920919f8b5456c0d4a5da15621652026860ad9b0814f1b6870504f",
+  "transport_sha256": "61f429288056e9908382f5c68f15df752d8b16b4dbc6063e65e9fc69536a8f3c"
+}

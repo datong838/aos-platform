@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/aos_review.py", line 251, in <module>
+    main()
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/aos_review.py", line 176, in main
+    validate_request(repo, request)
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/aos_review.py", line 119, in validate_request
+    scan_secrets(request)
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/memory/memoryctl.py", line 165, in scan_secrets
+    raise SecretDetected("potential credential detected; refusing shared-memory operation")
+memoryctl.SecretDetected: potential credential detected; refusing shared-memory operation

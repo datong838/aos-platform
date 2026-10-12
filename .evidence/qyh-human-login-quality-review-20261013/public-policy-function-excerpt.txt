@@ -1,0 +1,5 @@
+
+@router.get("/v1/auth/oidc")
+def oidc_public_config() -> dict[str, Any]:
+    return public_config()
+

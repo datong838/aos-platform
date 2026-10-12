@@ -1,0 +1,26 @@
+{
+  "outcome": "WEB_LOCAL_HUMAN_LOGIN_CODE_GREEN_LIVE_PENDING",
+  "files": {
+    "apps/web/src/App.tsx": "623e4b79ca8a647e19d3303ccd6e5e00c656fbe0fa2a388f2f84936e491c2f14",
+    "apps/web/src/components/auth/LocalLoginGate.tsx": "ba142f98fb73f0d2ce14a352d46e411bef77b49355d396d1a2702114f7d3b63e",
+    "apps/web/src/api/passwordLogin.ts": "3bfc5da326c5e3d4c0bc2ee8fa55b0c3758a2e0aa743ed36d666f03f19b2f1f5",
+    "apps/web/src/api/passwordLogin.test.ts": "f03a7bba97efa7401cc0d2316afe220f7e349ac1ac685c16017091aac1b5890d"
+  },
+  "webCumulativeTests": 2811,
+  "targetedTests": 13,
+  "productionBuildPassed": true,
+  "initialRed": "Environment ENOENT node; not feature RED. Preserved original failed log, corrected runtime PATH before verification.",
+  "serverTenantAuthorityPreserved": true,
+  "passwordOrTokenStorage": false,
+  "offlineLoginQueue": false,
+  "loginRetryAutomatic": false,
+  "canonicalMeRequired": true,
+  "liveApiOrWebReloaded": false,
+  "aosDatabaseWrites": 0,
+  "eightPagesAccepted": false,
+  "risks": [
+    "Reload requires a new login; refresh-token persistence not implemented.",
+    "Live API remains old source; actual canonical member enrollment and frozen API/Web deployment/browser acceptance remain pending.",
+    "Production build retains existing large chunk advisory."
+  ]
+}

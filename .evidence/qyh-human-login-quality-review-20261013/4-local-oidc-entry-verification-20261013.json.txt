@@ -1,0 +1,17 @@
+{
+  "outcome": "LOCAL_OIDC_READONLY_ENTRY_CODE_GREEN",
+  "tests": 97,
+  "failed": 0,
+  "files": {
+    "scripts/a0v_qyh_restored_http.py": "79977f32ef3645767ad4d674ac8acbf052a28e28a23926da351a8878f4ed312e",
+    "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py": "96c596b5885b20300cf33ce660efa576fb37ba2a159a99cb1da8b6dbd54d8863"
+  },
+  "logSha256": "b29699e63734a52d92d80734ae169221e895bd798f8ef48ca5ddcc161a6e430f",
+  "defaultReadonlyPreserved": true,
+  "optInLoginRoute": "POST /v1/auth/token",
+  "businessMutationsAllowed": false,
+  "liveApiIntegrated": false,
+  "eightWorkshopsAccepted": false,
+  "aosDatabaseWrites": 0,
+  "review": "Exact private config; original authentication and tenant verifier preserved; no secrets or global configuration; live source must be refrozen before activation."
+}

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/verify_live_human_login_20261013_r2.py", line 33, in <module>
+    assert me['tokenKind']=='oidc' and 'admin' in me['roles'] and me['displayName']=='datong838'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

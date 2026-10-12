@@ -1,0 +1,16 @@
+{
+  "rows": [
+    {
+      "idSha256": "e7dc33d6de1fcbdbb697c1cd8f2b2e141eb681155976f053f108e27d2f37a3a3",
+      "start": 1791829231000,
+      "clients": [
+        "aos-api"
+      ],
+      "username": "datong838",
+      "ipAddress": "172.17.0.1"
+    }
+  ],
+  "loginApiReturned200": true,
+  "firstLiveVerifierWrongEnvelope": true,
+  "sessionDeletion": false
+}

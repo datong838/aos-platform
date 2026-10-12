@@ -1,0 +1,28 @@
+{
+  "outcome": "WEB_ORIGINAL_HUMAN_LOGIN_AND_CANONICAL_QYH_BROWSER_GREEN",
+  "head": "d589cad90833c0f0165f3be6b4fd8f7a809a7dfb",
+  "files": {
+    "apps/web/src/App.tsx": "623e4b79ca8a647e19d3303ccd6e5e00c656fbe0fa2a388f2f84936e491c2f14",
+    "apps/web/src/components/auth/LocalLoginGate.tsx": "ba142f98fb73f0d2ce14a352d46e411bef77b49355d396d1a2702114f7d3b63e",
+    "apps/web/src/api/passwordLogin.ts": "e7a90b508f52ba1d00f7607e217a53be720a8a121951a05688e210f8f3e0c397",
+    "apps/web/src/api/passwordLogin.test.ts": "d61a88a28a51fb4b4d15ca9d6a2bfd07047dd346693e0f628fab2b35dc3a366b"
+  },
+  "originalEnvelopeRed": {
+    "failed": 1,
+    "passed": 6
+  },
+  "targetedGreen": 13,
+  "productionBuildPassed": true,
+  "browserEvidence": ".evidence/qyh-full-system-restoration-20261011/actual-browser-human-login-20261013.json",
+  "settledOrganization": "Organization button displays actual canonical Qiyuehui company name",
+  "negativeGateEvidence": ".evidence/qyh-full-system-restoration-20261011/live-human-login-verification-20261013-r3.json",
+  "all650TableFingerprintUnchanged": true,
+  "passwordOrTokensStored": false,
+  "independentQuality": "NEED_EVIDENCE; all4 scoped code claims supported, no full production/eight-page claim",
+  "remaining": [
+    "Managed startup person-profile cache not hydrated; canonical UUID used as display fallback although profile persisted.",
+    "Eight actual workbench runtime installation/configuration and natural first chain pending."
+  ],
+  "businessRuntimeEnabled": false,
+  "interactiveHumanLoginObserved": false
+}

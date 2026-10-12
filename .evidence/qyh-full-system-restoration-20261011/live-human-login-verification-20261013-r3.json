@@ -1,0 +1,29 @@
+{
+  "outcome": "LIVE_ORIGINAL_PASSWORD_AND_CANONICAL_QYH_ME_GREEN",
+  "credentialsAccepted": true,
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "orgName": "栖月汇商贸有限公司",
+    "projectId": "dev-project",
+    "workspaceName": "dev-project",
+    "roles": [
+      "admin"
+    ],
+    "tokenKind": "oidc",
+    "displayName": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657"
+  },
+  "orgListStatus": 200,
+  "negativeStatuses": {
+    "crossOrg": 403,
+    "crossProject": 403,
+    "devToken": 401,
+    "devGrant": 403,
+    "businessWrite": 405
+  },
+  "passwordOrTokensStored": false,
+  "profileCacheReady": false,
+  "interactiveHumanLoginObserved": false,
+  "eightWorkbenchesAccepted": false,
+  "businessExecutionAuthorized": false
+}

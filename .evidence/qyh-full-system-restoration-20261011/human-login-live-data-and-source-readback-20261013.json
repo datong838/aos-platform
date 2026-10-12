@@ -1,0 +1,9 @@
+{
+  "all650TablesUnchangedSinceAuthorizedEnrollment": true,
+  "samePgContainerVolumeAndStartTime": true,
+  "runtimeOpenBindings": 0,
+  "apiFrozenCommittedFilesMatchCurrentHead": true,
+  "webCommittedEnvelopeCorrectionLoaded": true,
+  "browserLoginVerified": true,
+  "fullEightWorkbenchAcceptance": false
+}

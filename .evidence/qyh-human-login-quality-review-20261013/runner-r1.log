@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/aos_review.py", line 251, in <module>
+    main()
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/aos_review.py", line 176, in main
+    validate_request(repo, request)
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/aos_review.py", line 108, in validate_request
+    file = exact_file(repo, relative, ('scripts', '.evidence'))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/aos_wake_progress.py", line 38, in exact_file
+    raise ValueError('sensitive file is not review material')
+ValueError: sensitive file is not review material

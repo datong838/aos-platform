@@ -1,0 +1,18 @@
+{
+  "outcome": "QYH_ACTUAL_LOCAL_HUMAN_MEMBERSHIP_PERSISTED",
+  "username": "datong838",
+  "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+  "tenant": "org-org/dev-project",
+  "role": "admin",
+  "changedTables": [
+    "public.twa_audit",
+    "public.twa_person_profile",
+    "public.twa_ws_member",
+    "public.meta_membership"
+  ],
+  "other646TablesUnchanged": true,
+  "originalServicesUsed": true,
+  "backupTwoCopiesValid": true,
+  "businessRuntimeOpened": false,
+  "liveLoginAccepted": false
+}

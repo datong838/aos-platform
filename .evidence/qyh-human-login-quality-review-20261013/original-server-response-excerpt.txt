@@ -1,0 +1,18 @@
+        log.warning("oidc_password_grant_fail err=%s", type(exc).__name__)
+        raise ValueError(f"IdP token failed: {exc}") from exc
+    access = raw.get("access_token")
+    if not access:
+        raise ValueError("IdP response missing access_token")
+    return {
+        "accessToken": access,
+        "tokenType": raw.get("token_type") or "Bearer",
+        "expiresIn": int(raw.get("expires_in") or 3600),
+        "issuer": issuer(),
+        "tokenKind": "oidc-keycloak",
+        "alg": "RS256",
+        "refreshToken": raw.get("refresh_token"),
+    }
+
+
+def issue_dev_token(
+    *,

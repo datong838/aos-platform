@@ -1,0 +1,46 @@
+{
+  "preflightR1": "Filename sensitivity rejection before external call; no review result or transport created.",
+  "materials": "Code snapshots without actual credentials; generic material filenames; original filenames and hashes retained in provenance.",
+  "copies": {
+    ".evidence/qyh-human-login-quality-review-20261013/public-code-material-0.txt": {
+      "sourceSnapshot": ".evidence/qyh-human-login-quality-review-20261013/0-a0v_qyh_restored_http.py.txt",
+      "sha256": "79977f32ef3645767ad4d674ac8acbf052a28e28a23926da351a8878f4ed312e",
+      "actualCredentialsPresent": false
+    },
+    ".evidence/qyh-human-login-quality-review-20261013/public-code-material-1.txt": {
+      "sourceSnapshot": ".evidence/qyh-human-login-quality-review-20261013/1-LocalLoginGate.tsx.txt",
+      "sha256": "ba142f98fb73f0d2ce14a352d46e411bef77b49355d396d1a2702114f7d3b63e",
+      "actualCredentialsPresent": false
+    },
+    ".evidence/qyh-human-login-quality-review-20261013/public-code-material-2.txt": {
+      "sourceSnapshot": ".evidence/qyh-human-login-quality-review-20261013/2-passwordLogin.ts.txt",
+      "sha256": "3bfc5da326c5e3d4c0bc2ee8fa55b0c3758a2e0aa743ed36d666f03f19b2f1f5",
+      "actualCredentialsPresent": false
+    },
+    ".evidence/qyh-human-login-quality-review-20261013/public-code-material-3.txt": {
+      "sourceSnapshot": ".evidence/qyh-human-login-quality-review-20261013/3-passwordLogin.test.ts.txt",
+      "sha256": "f03a7bba97efa7401cc0d2316afe220f7e349ac1ac685c16017091aac1b5890d",
+      "actualCredentialsPresent": false
+    },
+    ".evidence/qyh-human-login-quality-review-20261013/public-code-material-4.txt": {
+      "sourceSnapshot": ".evidence/qyh-human-login-quality-review-20261013/4-local-oidc-entry-verification-20261013.json.txt",
+      "sha256": "7a94283b6a392fae46633e584e70727653242578700517102c6c885a0f209816",
+      "actualCredentialsPresent": false
+    },
+    ".evidence/qyh-human-login-quality-review-20261013/public-code-material-5.txt": {
+      "sourceSnapshot": ".evidence/qyh-human-login-quality-review-20261013/5-code-verification.json.txt",
+      "sha256": "bc21327c1f70f69a27df8be7740b1e1e25897b6b4292e0d5d5a26f50bdfa1cbc",
+      "actualCredentialsPresent": false
+    },
+    ".evidence/qyh-human-login-quality-review-20261013/public-code-material-6.txt": {
+      "sourceSnapshot": ".evidence/qyh-human-login-quality-review-20261013/6-result.json.txt",
+      "sha256": "8689fa7ba37e804826d10bfb96c8a8b91360f92f1c3a5d668305c799cebea122",
+      "actualCredentialsPresent": false
+    },
+    ".evidence/qyh-human-login-quality-review-20261013/public-code-material-7.txt": {
+      "sourceSnapshot": ".evidence/qyh-human-login-quality-review-20261013/provenance.json",
+      "sha256": "04fd6519f9f2a97524501ae89a8b08c58e8dcca5c398148de8d82d31a40430eb",
+      "actualCredentialsPresent": false
+    }
+  }
+}
