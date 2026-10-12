@@ -1,0 +1,113 @@
+{
+  "observedAt": "2026-10-12T08:42:08.488873+00:00",
+  "head": "c241b9975ded1dcfb7d05ccd6f321a5c7695f078",
+  "container": {
+    "id": "3fb59cb46c8daeb402caee95bf9f2d9aefbb3aa42d87988811afe29418790687",
+    "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "network": "none"
+  },
+  "twoIndependentViewsEqual": true,
+  "nativeReadback": {
+    "cluster": "7695620413173166120",
+    "schema": "a0v_161",
+    "readOnly": "on",
+    "role": {
+      "login": false,
+      "inherit": false,
+      "super": false,
+      "bypass": false
+    },
+    "memberships": 0,
+    "tables": [
+      {
+        "name": "aip_eval_run",
+        "select": true,
+        "insert": false,
+        "update": false,
+        "columnUpdates": []
+      },
+      {
+        "name": "aip_eval_run_event",
+        "select": false,
+        "insert": false,
+        "update": false,
+        "columnUpdates": []
+      },
+      {
+        "name": "aip_eval_report_revision",
+        "select": false,
+        "insert": false,
+        "update": false,
+        "columnUpdates": []
+      },
+      {
+        "name": "aip_eval_execution_receipt",
+        "select": false,
+        "insert": false,
+        "update": false,
+        "columnUpdates": []
+      },
+      {
+        "name": "aip_eval_case_execution_proof",
+        "select": false,
+        "insert": false,
+        "update": false,
+        "columnUpdates": []
+      },
+      {
+        "name": "aip_skill_eval_intent",
+        "select": true,
+        "insert": true,
+        "update": false,
+        "columnUpdates": [
+          "version"
+        ]
+      },
+      {
+        "name": "aip_skill_eval_dispatch",
+        "select": true,
+        "insert": true,
+        "update": false,
+        "columnUpdates": []
+      },
+      {
+        "name": "aip_skill_eval_dispatch_observation",
+        "select": true,
+        "insert": true,
+        "update": false,
+        "columnUpdates": []
+      }
+    ]
+  },
+  "committedCode": {
+    "services/aos-api/aos_api/aip_eval_writer_authority_preflight.py": {
+      "sha256": "68082db40902647e6a14408da2604fc7a3970ffbe8b6d1e4d0a99b264c3030de",
+      "functions": [
+        "_require",
+        "preflight_skill_eval_writer_authority"
+      ]
+    },
+    "services/aos-api/aos_api/aip_eval_writer_atomic.py": {
+      "sha256": "c3eea5b1e8ed38f2e63e682e14f19b8fa369f00e9ecb986b35b3de4866b9ea35",
+      "functions": [
+        "persist_signed_skill_eval_report",
+        "_persist_signed_skill_eval_report_with_connection"
+      ]
+    },
+    "services/aos-api/aos_api/aip_signed_skill_eval_intent_store.py": {
+      "sha256": "0783a1f1cb82a396f4cfb19ba3850a3796d93fa641d56b5d219ca15da3553230",
+      "functions": [
+        "_context",
+        "get",
+        "create",
+        "claim",
+        "observations",
+        "observe"
+      ]
+    }
+  },
+  "databaseWrites": 0,
+  "roleChanges": 0,
+  "businessExecutions": 0,
+  "formalProducerImplemented": false
+}

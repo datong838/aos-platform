@@ -1,0 +1,7 @@
+# 当前161权限矩阵验收
+
+两个独立原生RR/READONLY快照相同，完整副本cluster7695620413173166120/schema161、原CID/network-none绑定。当前aos_aip_eval_writer存在，NOLOGIN/NOINHERIT/非super/非bypass；aip_eval_run SELECT有、INSERT/UPDATE无、任何列UPDATE也无。8个原表与列权限逐一读取。不是旧159实验缺角色结论，也不是正式issuer身份验证。
+
+当前原preflight明确只接受aos_aip_eval_writer且Run已succeeded，intent store同样精确角色、SERIALIZABLE及双tenant检查。原caller-bound helper不解除角色/当前授权检查。因此当前角色不能直接完成running→succeeded与登记同事务；单纯换新角色也不能通过原writer检查。下一已登记producer方案须显式组合受限终结权限与原writer认证，保留旧succeeded登记路径，不授普通runtime/旧writer全表Run UPDATE，不借fixture管理员冒充正式权限。须新的产品文件级Task/Lease及增量方案后才编码，本证据Task不修改产品。
+
+仅SELECT元数据、读取已提交源码AST/hash，无客户正文/凭证、Role/DDL/业务调用、旧Run重放；原库/API/Web未改。资料与原Skill生命周期合同及D-wave未完成项一致。此Task收口是当前权限依赖调查，不是完整producer、Source或八台恢复完成。
