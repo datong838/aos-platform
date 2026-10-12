@@ -1,0 +1,7 @@
+{
+  "originalContainerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "newContainerId": "fd460a0c53791e96b435b15d3562e0a695b1b35d12efeb84ff2adfe39c262c4c",
+  "name": "aos-physical-loader-probe-20261012-2",
+  "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+  "probeOnly": true
+}

@@ -1,0 +1,19 @@
+{
+  "originalContainerId": "4bee3825bdea27ba232538a14152c3cf050050814ae90baa4acb8fec0af2c83c",
+  "newContainerId": "73d28f492ab3c03ac0eb25f4fac5ba1db2a67941acfb1a860210ed57a657c9e7",
+  "name": "qyh-source-writer-lab-20261011-recovered-20261012",
+  "probeOnly": false,
+  "exactClusterAndDatabases": true,
+  "originalEnvironmentAndAuthenticationPreserved": true,
+  "originalImageVerified": true,
+  "normalStopVerified": false,
+  "hostPublishedPorts": {
+    "5432/tcp": [
+      {
+        "HostIp": "127.0.0.1",
+        "HostPort": "18432"
+      }
+    ]
+  },
+  "network": "bridge"
+}

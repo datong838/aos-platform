@@ -1,0 +1,12 @@
+{
+  "originalContainerId": "adb100ba5a3c25a5274b62a4007b4eb64d2201a23eab2c42add0f97e08d7e683",
+  "newContainerId": "08dbf882d08abdd6c0a25a1c164458a275b3b8ffacf978df7ceaea0b8f7cf2fa",
+  "name": "qyh-stage-transport-rehearsal-20261011-recovered-20261012",
+  "probeOnly": false,
+  "exactClusterAndDatabases": true,
+  "originalEnvironmentAndAuthenticationPreserved": true,
+  "originalImageVerified": true,
+  "normalStopVerified": false,
+  "hostPublishedPorts": {},
+  "network": "none"
+}

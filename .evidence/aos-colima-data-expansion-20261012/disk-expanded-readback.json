@@ -1,0 +1,8 @@
+{
+  "dataDiskGiB": 60,
+  "originalVolumeContainersRestored": true,
+  "originalVolumesAndContainerIdsPreserved": true,
+  "defaultDockerContextUnchanged": true,
+  "tmpfsRecoveryPending": true,
+  "actualSchemaMigration": false
+}

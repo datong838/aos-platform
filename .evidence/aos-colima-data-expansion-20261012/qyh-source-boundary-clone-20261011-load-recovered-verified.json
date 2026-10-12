@@ -1,0 +1,19 @@
+{
+  "originalContainerId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+  "newContainerId": "2a1aefd5b81edcca03ac773e7806b66a40e7ad358363f068f68a868879c2df09",
+  "name": "qyh-source-boundary-clone-20261011-recovered-20261012",
+  "probeOnly": false,
+  "exactClusterAndDatabases": true,
+  "originalEnvironmentAndAuthenticationPreserved": true,
+  "originalImageVerified": true,
+  "normalStopVerified": false,
+  "hostPublishedPorts": {
+    "5432/tcp": [
+      {
+        "HostIp": "127.0.0.1",
+        "HostPort": "18431"
+      }
+    ]
+  },
+  "network": "bridge"
+}

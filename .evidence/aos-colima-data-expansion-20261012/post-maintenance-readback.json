@@ -1,0 +1,101 @@
+{
+  "observedAt": "2026-10-12T04:45:36.525819+00:00",
+  "source": {
+    "cluster": "7695302940039200809",
+    "schema": "a0v_159",
+    "enabledBindings": 0
+  },
+  "all647DataFingerprintsEqual": true,
+  "containers": [
+    {
+      "originalName": "qyh-current159-exact-restore-20261012",
+      "currentName": "qyh-current159-exact-restore-20261012",
+      "originalId": "3fb59cb46c8daeb402caee95bf9f2d9aefbb3aa42d87988811afe29418790687",
+      "currentId": "3fb59cb46c8daeb402caee95bf9f2d9aefbb3aa42d87988811afe29418790687",
+      "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+      "originalVolumePreserved": true
+    },
+    {
+      "originalName": "qyh-current159-restore-lab-20261012",
+      "currentName": "qyh-current159-restore-lab-20261012",
+      "originalId": "951749982fad112b99e59e028c60ec126024c3ea3b1ed6288a2d14cb2d644de2",
+      "currentId": "951749982fad112b99e59e028c60ec126024c3ea3b1ed6288a2d14cb2d644de2",
+      "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+      "originalVolumePreserved": true
+    },
+    {
+      "originalName": "qyh-source-boundary-clone-20261011",
+      "currentName": "qyh-source-boundary-clone-20261011-recovered-20261012",
+      "originalId": "381ac0fd489c72a5cad26a962dd59ba749d027bb61ab779703d1eb4bdb197b93",
+      "currentId": "2a1aefd5b81edcca03ac773e7806b66a40e7ad358363f068f68a868879c2df09",
+      "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+      "originalVolumePreserved": false
+    },
+    {
+      "originalName": "qyh-source-writer-lab-20261011",
+      "currentName": "qyh-source-writer-lab-20261011-recovered-20261012",
+      "originalId": "4bee3825bdea27ba232538a14152c3cf050050814ae90baa4acb8fec0af2c83c",
+      "currentId": "73d28f492ab3c03ac0eb25f4fac5ba1db2a67941acfb1a860210ed57a657c9e7",
+      "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+      "originalVolumePreserved": false
+    },
+    {
+      "originalName": "qyh-stage-transport-rehearsal-r2-20261011",
+      "currentName": "qyh-stage-transport-rehearsal-r2-20261011-recovered-20261012",
+      "originalId": "f5e9055abb9512765470e9480afa31effb1a20aa661614baebed3c82b9018e0d",
+      "currentId": "66bae5737e2dcf3cafdebd85b6e810515f2c5c2c840d4263cce55786c934d323",
+      "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+      "originalVolumePreserved": false
+    },
+    {
+      "originalName": "qyh-stage-transport-rehearsal-20261011",
+      "currentName": "qyh-stage-transport-rehearsal-20261011-recovered-20261012",
+      "originalId": "adb100ba5a3c25a5274b62a4007b4eb64d2201a23eab2c42add0f97e08d7e683",
+      "currentId": "08dbf882d08abdd6c0a25a1c164458a275b3b8ffacf978df7ceaea0b8f7cf2fa",
+      "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+      "originalVolumePreserved": false
+    },
+    {
+      "originalName": "qyh-restored-pg-20261011",
+      "currentName": "qyh-restored-pg-20261011",
+      "originalId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+      "currentId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+      "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+      "originalVolumePreserved": true
+    },
+    {
+      "originalName": "aos-qyh-history-restore-20261011",
+      "currentName": "aos-qyh-history-restore-20261011-recovered-20261012",
+      "originalId": "ccaaaa4655a86f0beba1bcbcce8891def8146abfd55b3561c5872be53791216e",
+      "currentId": "bc8f0515b60bfc4c6d7d4d532aa0a49157f3aae39228ab4612b493481c84fa95",
+      "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+      "originalVolumePreserved": false
+    },
+    {
+      "originalName": "aos-qyh-name-rehearsal-20261011-r3",
+      "currentName": "aos-qyh-name-rehearsal-20261011-r3-recovered-20261012",
+      "originalId": "18cb27703a630e4de99ef03cf93194425a4ac0de62aa8a1730b1213e87293ac3",
+      "currentId": "31f103d0f233d9df067afa2694b10f3e6bd3bfd1c8e14e7b7e66297ad7dbd690",
+      "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+      "originalVolumePreserved": false
+    },
+    {
+      "originalName": "aos-qyh-name-rehearsal-20261011",
+      "currentName": "aos-qyh-name-rehearsal-20261011-recovered-20261012",
+      "originalId": "8e7d4c6eedd716778a654470b579b01867a820bdcf5ed222aab68e850b71d24c",
+      "currentId": "df621bc3358fc93ad67ea11deee4fc4ab7d0012bfb8407086524433a12eeebae",
+      "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+      "originalVolumePreserved": false
+    },
+    {
+      "originalName": "aos-a0v-recovery-pg",
+      "currentName": "aos-a0v-recovery-pg",
+      "originalId": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+      "currentId": "9cc6091c304b55f637987f1fb7ffff57d64cc5020e65f2912a18969df99e9cde",
+      "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+      "originalVolumePreserved": true
+    }
+  ],
+  "runningCount": 11,
+  "businessEightWorkbenchesRestored": false
+}

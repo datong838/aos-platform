@@ -1,0 +1,12 @@
+{
+  "originalContainerId": "ccaaaa4655a86f0beba1bcbcce8891def8146abfd55b3561c5872be53791216e",
+  "newContainerId": "bc8f0515b60bfc4c6d7d4d532aa0a49157f3aae39228ab4612b493481c84fa95",
+  "name": "aos-qyh-history-restore-20261011-recovered-20261012",
+  "probeOnly": false,
+  "exactClusterAndDatabases": true,
+  "originalEnvironmentAndAuthenticationPreserved": true,
+  "originalImageVerified": true,
+  "normalStopVerified": false,
+  "hostPublishedPorts": {},
+  "network": "none"
+}

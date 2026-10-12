@@ -1,0 +1,26 @@
+{
+  "rows": [
+    {
+      "port": 18080,
+      "path": "/v1/health",
+      "status": 200
+    },
+    {
+      "port": 8080,
+      "path": "/v1/health",
+      "status": 200
+    },
+    {
+      "port": 8434,
+      "path": "/",
+      "status": 200
+    },
+    {
+      "port": 18434,
+      "path": "/org/membership",
+      "status": 200
+    }
+  ],
+  "processesNotReplaced": true,
+  "formalLoginAndBusinessReadinessNotProven": true
+}

@@ -13,3 +13,9 @@ Rules231/用户全系统恢复授权/重启与接续职责分离，注册独立a
 恢复路径验证：新增verify_physical.py，仅本Task evidence目录。逐个使用原精确镜像、network none、无发布端口、rootfs只读、独立768MiB tmpfs，并只读挂载private档案目录。先核archive SHA/成员路径无逃逸和链接，再运行原生pg_verifybackup（包括CRC32C/SHA256与WAL）。验证后覆盖回保存的原HBA，使用原维护role启动隔离只读PG，核system_identifier与非模板DB集合严格相等，随后正常停止PG；保留container/日志/intent/result以便中断对账，不自动删除或重放。未全通过，不停止既有运行时。此项为备份可恢复性，不授予业务运行/正式发布身份或八工作台验收。
 
 验证入口修订：首个run exit125明确bind源不存在且inspect无container，尚无PG/容器外部效果。当前VM未提供宿主工程目录映射，改为stdin流式tar送入专用tmpfs，无共享挂载；保留原失败intent/log，新r2 intent。原HBA作为明确忽略的维护文件加入stream，原生验证后移回原HBA位置，文件不在运行时留存。禁止根据宿主存在推断VM路径存在。
+
+支持的恢复容器方案（替代无法由docker start覆盖原CMD的sameCID假设）：原七容器保留，维护后保持停止，绝不直接start自动initdb。新增load_physical.py通过支持的Docker Unix API创建新容器，完整原Config/HostConfig在private600读取、不输出Env；精确原image/角色认证/业务CMD/rootfs/安全选项保留，唯一启动前置为等待本Task上传原physical files，新增16MiB /bootstrap tmpfs只存ready/原HBA。先Docker exec stdin tar到空PGDATA，再ready，原生pg_verifybackup/WAL→原HBA覆盖→chown/chmod→exec原docker-entrypoint与CMD（PG_VERSION存在，不initdb）。原backup文件不删除，不写卷、不碰真实current159数据。未知create/start/upload/ready须inspect对账，逐动作intent先独占保存。
+
+先对全部七库使用network none/无端口的probe新容器演练同装载过程，逐个原cluster/数据库集合/认证SHA和配置对照，正常stop后保留。通过后才执行原profile停止及20→60扩容；维护后卷容器按原CID启动，tmpfs由新恢复容器保留原network/loopback ports，原容器不删除并保持停止。名称改为原名加-recovered-20261012，记录原→新映射，后续工具定位只认核验映射；不伪称CID不变。真实业务API/Web入口仍原端口、真实栖月汇库仍原命名卷/cluster，不因lab新CID改变租户或权限。
+
+装载负门：第三个隔离probe发现Docker cp返回成功但live tmpfs文件不存在；SHA核验拒绝，未停止原运行时。该network-none副本通过exec stdin恢复原HBA/reload/精确SHA并正常停止，失败副本保留。修复为原HBA也使用exec stdin上传且ready前独立SHA，首次已通过两项保留，其他使用新r2前缀/intent，不重放未知动作。

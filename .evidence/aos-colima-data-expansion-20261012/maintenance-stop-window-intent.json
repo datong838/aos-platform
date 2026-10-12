@@ -1,0 +1,22 @@
+{
+  "existingRunningContainers": [
+    "aos-a0v-recovery-pg",
+    "aos-qyh-history-restore-20261011",
+    "aos-qyh-name-rehearsal-20261011",
+    "aos-qyh-name-rehearsal-20261011-r3",
+    "qyh-current159-exact-restore-20261012",
+    "qyh-current159-restore-lab-20261012",
+    "qyh-restored-pg-20261011",
+    "qyh-source-boundary-clone-20261011",
+    "qyh-source-writer-lab-20261011",
+    "qyh-stage-transport-rehearsal-20261011",
+    "qyh-stage-transport-rehearsal-r2-20261011"
+  ],
+  "source647TableFingerprintsUnchanged": true,
+  "twoCurrentBackupCopiesSHAEqual": true,
+  "allDatabaseActiveClientAndPreparedCountsZero": true,
+  "physicalLoaderProbes": 7,
+  "defaultDockerContextBefore": "desktop-linux",
+  "volumeDeletionAllowed": false,
+  "actualSchemaMigration": false
+}

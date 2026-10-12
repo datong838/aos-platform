@@ -1,0 +1,12 @@
+{
+  "originalContainerId": "f5e9055abb9512765470e9480afa31effb1a20aa661614baebed3c82b9018e0d",
+  "newContainerId": "31f37a8d6a4441205ce2d075081f864174cdbbac3c67e0df4ef364290796cb84",
+  "name": "aos-physical-loader-probe-r2-20261012-4",
+  "probeOnly": true,
+  "exactClusterAndDatabases": true,
+  "originalEnvironmentAndAuthenticationPreserved": true,
+  "originalImageVerified": true,
+  "normalStopVerified": true,
+  "hostPublishedPorts": {},
+  "network": "none"
+}
