@@ -1,0 +1,12 @@
+{
+  "source": "Original current RuntimeInstallationView HTTPGET through authenticated application client",
+  "scope": "org-org/dev-project",
+  "view": {
+    "status": 401,
+    "code": "AUTH_INVALID"
+  },
+  "databaseMutation": false,
+  "preparationRequested": false,
+  "hostEnabled": false,
+  "reason": "Original preparation callback requires actual ACTIVE running RuntimeHost and exact lifecycle assignment; never replace with true."
+}

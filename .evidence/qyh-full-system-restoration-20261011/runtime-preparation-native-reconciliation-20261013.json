@@ -1,0 +1,14 @@
+{
+  "source": "Native current authority database read-only, exact target tenant and installation; original store join",
+  "current": {
+    "installation_id": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+    "current_revision": 3,
+    "active_revision": null,
+    "etag_version": 3,
+    "state": "approved"
+  },
+  "httpInspection401Preserved": true,
+  "preparationRequested": false,
+  "hostEnabled": false,
+  "next": "Current ACTIVE RuntimeHost and exact lifecycle assignment are required by original callback before accepting preparation; reconcile production preparation-only signed preflight dependencies without fake predicate."
+}
