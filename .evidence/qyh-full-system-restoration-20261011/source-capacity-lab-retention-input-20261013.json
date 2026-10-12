@@ -1,0 +1,34 @@
+{
+  "container": "bb9c8b1ab46af632af36ee89c9f2686f06ace9bbd803040ce44cab057968d486",
+  "native": {
+    "cluster": "7695416748450308141",
+    "databases": [
+      {
+        "name": "aos_meta_head",
+        "bytes": 125123607
+      },
+      {
+        "name": "postgres",
+        "bytes": 15522839
+      },
+      {
+        "name": "qyh_current159_restore_20261012",
+        "bytes": 11780623
+      },
+      {
+        "name": "qyh_head160_rehearsal_20261012",
+        "bytes": 125108751
+      },
+      {
+        "name": "qyh_source_contract_20261011",
+        "bytes": 125649423
+      }
+    ],
+    "otherClients": 0,
+    "roles": 54,
+    "loginRolesWithStoredCredential": 0
+  },
+  "tmpfsDatasetRequiresCheckpointBeforeStop": true,
+  "stopRequested": false,
+  "storedCredentialValuesReadOrExported": false
+}
