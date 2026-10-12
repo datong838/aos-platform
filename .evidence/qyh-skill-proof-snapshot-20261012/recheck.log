@@ -1,0 +1,1 @@
+{"verified": 0, "causePatterns": ["{\"chain\": [{\"reason\": \"formal Skill Eval executor authority unavailable\", \"sqlstate\": null, \"type\": \"AipReleaseGateRejected\"}, {\"reason\": \"persisted Skill Eval sidecars are incomplete\", \"sqlstate\": null, \"type\": \"EvalExecutionRejected\"}], \"verified\": false}"]}

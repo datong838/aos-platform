@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-skill-proof-snapshot-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001932",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/aip_skill_binding_readiness_service.py",
+    "aos-platform/services/aos-api/tests/aip/test_qyh_skill_proof_snapshot_pg.py",
+    "aos-platform/.evidence/qyh-skill-proof-snapshot-20261012"
+  ],
+  "excluded_scope": [
+    "DB/readiness writes/Provider or ModelRoute guard changes",
+    "real identity or current API activation"
+  ],
+  "expected_outputs": [
+    "Recheck original Skill proof with actual repeatable readonly snapshot and exact causes; native signed fixture through default readiness factory RED/minimalfix/positive proof; preserve injected factories and ModelRoute rejection"
+  ],
+  "lease_expires_at": "2026-10-12T03:57:07.959411+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T07:57:08+08:00"
+}

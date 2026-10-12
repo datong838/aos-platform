@@ -1,0 +1,315 @@
+{
+  "baseHead": "47070f9f3b83473dfa91defa5960eee0b9139761",
+  "passed": 11,
+  "skipped": 7,
+  "warnings": 7,
+  "nativeSignedProofAssemblyCasesPassed": 7,
+  "redReason": "Skill Eval tenant snapshot is unavailable",
+  "defaultReaderNow": "original repeatable read/read only aos_runtime scope",
+  "injectedFactoriesChanged": false,
+  "original16SkillRecheckWithRepeatableSnapshot": {
+    "rows": [
+      {
+        "bindingId": "a0v-model-successor-r3-skill-d03",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-model-successor-r3-skill-d02",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-model-successor-r3-skill-d01",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-firstchain-skill-d03",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-firstchain-skill-d02",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-firstchain-skill-d01",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-model-successor-r3-skill-s01",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-firstchain-skill-s01",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-model-successor-r3-skill-c06",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-firstchain-skill-c06",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-model-successor-r3-skill-p01",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-firstchain-skill-p01",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-model-successor-r3-skill-a02",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-firstchain-skill-a02",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-model-successor-r3-skill-g06",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      },
+      {
+        "bindingId": "a0v-firstchain-skill-g06",
+        "result": {
+          "verified": false,
+          "chain": [
+            {
+              "type": "AipReleaseGateRejected",
+              "reason": "formal Skill Eval executor authority unavailable",
+              "sqlstate": null
+            },
+            {
+              "type": "EvalExecutionRejected",
+              "reason": "persisted Skill Eval sidecars are incomplete",
+              "sqlstate": null
+            }
+          ]
+        }
+      }
+    ],
+    "twoViewsEqual": true,
+    "readOnly": true,
+    "isolation": "repeatable read"
+  },
+  "oldAuditInferenceCorrected": true,
+  "modelRouteUnsupportedGuardChanged": false,
+  "sidecarsBackfilled": false,
+  "currentDatabaseWrites": 0,
+  "currentApiChanged": false,
+  "realRestorationAccepted": false,
+  "sources": {
+    "services/aos-api/aos_api/aip_skill_binding_readiness_service.py": "053a11f7f7f51b7bfb10fed99c38bf9d5fa97f0286dab582cb09bc0ddcc8adab",
+    "services/aos-api/tests/aip/test_qyh_skill_proof_snapshot_pg.py": "0f3fb7852b3ace368c38ead6ac23192f129dbc6eff1c3d668204b0772698ef2f"
+  }
+}

@@ -24,7 +24,7 @@ from aos_api.aip_release_publication_service import (
     AipReleasePublicationError,
     AipReleasePublicationService,
 )
-from aos_api.db import connect as db_connect
+from aos_api.db import connect_read_only as db_connect
 from aos_api.tenant_scope import TenantScope
 
 
