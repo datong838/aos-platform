@@ -357,62 +357,83 @@ class AipEvalAuthorityStore:
         self._require_tenant(scope, event.tenant)
         try:
             with self._connect(scope) as conn:
-                row = self._run_row(conn, scope, event.run_id, for_update=True)
-                if row is None:
-                    raise AipEvalAuthorityNotFound("eval run not found")
-                current = EvalRunStatus(str(row["status"]))
-                version = int(row["version"])
-                if version != expected_version or event.from_status is not current:
-                    raise AipEvalAuthorityConflict(
-                        "eval run version or from_status changed"
-                    )
-                if event.to_status not in _ALLOWED_TRANSITIONS.get(
-                    current, frozenset()
-                ):
-                    raise AipEvalAuthorityTransitionBlocked(
-                        f"transition {current.value}->{event.to_status.value} is blocked"
-                    )
-                expected_sequence = self._next_run_sequence(conn, scope, event.run_id)
-                if event.sequence != expected_sequence:
-                    raise AipEvalAuthorityConflict("eval run event sequence changed")
-                self._insert_run_event(conn, scope, event)
-                terminal = event.to_status in {
-                    EvalRunStatus.SUCCEEDED,
-                    EvalRunStatus.FAILED,
-                    EvalRunStatus.CANCELLED,
-                }
-                updated = conn.execute(
-                    """UPDATE aip_eval_run
-                       SET status=%s,version=version+1,
-                           started_at=CASE
-                             WHEN %s='running' THEN COALESCE(started_at,%s)
-                             ELSE started_at END,
-                           finished_at=CASE WHEN %s THEN %s ELSE NULL END
-                       WHERE org_id=%s AND project_id=%s AND run_id=%s
-                         AND version=%s
-                       RETURNING *""",
-                    (
-                        event.to_status.value,
-                        event.to_status.value,
-                        event.created_at,
-                        terminal,
-                        event.created_at,
-                        scope.org_id,
-                        scope.project_id,
-                        event.run_id,
-                        expected_version,
-                    ),
-                ).fetchone()
-                if updated is None:
-                    raise AipEvalAuthorityConflict("eval run changed concurrently")
+                record = self._transition_eval_run_with_connection(
+                    conn, scope, event, expected_version=expected_version,
+                )
                 conn.commit()
-                return self._run_from_row(updated)
+                return record
         except AipEvalAuthorityError:
             raise
         except Exception as exc:
             raise AipEvalAuthorityPersistenceError(
                 "eval run transition failed"
             ) from exc
+
+    def _transition_eval_run_with_connection(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        event: EvalRunEvent,
+        *,
+        expected_version: int,
+    ) -> EvalRunAuthorityRecord:
+        """Compose the original CAS/event in a caller-owned transaction.
+
+        The caller owns commit/rollback and must supply its authorized scoped
+        connection. This helper confers no Skill execution or writer authority.
+        """
+        self._require_tenant(scope, event.tenant)
+        if getattr(conn, "autocommit", None) is not False:
+            raise AipEvalAuthorityConflict("caller-owned transaction is required")
+        row = self._run_row(conn, scope, event.run_id, for_update=True)
+        if row is None:
+            raise AipEvalAuthorityNotFound("eval run not found")
+        current = EvalRunStatus(str(row["status"]))
+        version = int(row["version"])
+        if version != expected_version or event.from_status is not current:
+            raise AipEvalAuthorityConflict(
+                "eval run version or from_status changed"
+            )
+        if event.to_status not in _ALLOWED_TRANSITIONS.get(
+            current, frozenset()
+        ):
+            raise AipEvalAuthorityTransitionBlocked(
+                f"transition {current.value}->{event.to_status.value} is blocked"
+            )
+        expected_sequence = self._next_run_sequence(conn, scope, event.run_id)
+        if event.sequence != expected_sequence:
+            raise AipEvalAuthorityConflict("eval run event sequence changed")
+        self._insert_run_event(conn, scope, event)
+        terminal = event.to_status in {
+            EvalRunStatus.SUCCEEDED,
+            EvalRunStatus.FAILED,
+            EvalRunStatus.CANCELLED,
+        }
+        updated = conn.execute(
+            """UPDATE aip_eval_run
+               SET status=%s,version=version+1,
+                   started_at=CASE
+                     WHEN %s='running' THEN COALESCE(started_at,%s)
+                     ELSE started_at END,
+                   finished_at=CASE WHEN %s THEN %s ELSE NULL END
+               WHERE org_id=%s AND project_id=%s AND run_id=%s
+                 AND version=%s
+               RETURNING *""",
+            (
+                event.to_status.value,
+                event.to_status.value,
+                event.created_at,
+                terminal,
+                event.created_at,
+                scope.org_id,
+                scope.project_id,
+                event.run_id,
+                expected_version,
+            ),
+        ).fetchone()
+        if updated is None:
+            raise AipEvalAuthorityConflict("eval run changed concurrently")
+        return self._run_from_row(updated)
 
     def append_release_gate(
         self, scope: TenantScope, decision: ReleaseGateDecision

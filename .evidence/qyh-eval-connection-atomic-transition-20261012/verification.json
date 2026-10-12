@@ -1,0 +1,21 @@
+{
+  "testsPassed": 32,
+  "newNativeTests": 9,
+  "adjacentTests": 23,
+  "skipped": 0,
+  "originalCASAndEventASTIdenticalAfterSQLWhitespaceNormalization": true,
+  "helperCommitsOrRollbacks": 0,
+  "lateDatabaseFailure": "UniqueViolation rolls back state and event",
+  "concurrency": "two independent connections one winner",
+  "automaticCommit": "rejected before writes",
+  "formalProducerCompleted": false,
+  "currentDatabaseChanged": false,
+  "codeSHA256": "557b5def4d47e8985d9a431f7e06832aa3fd90da23a2757ac69d76be60283bbb",
+  "originalLogSHA256": {
+    "red.log": "ef1aff31db088ec0c21072a690a55fd784f63fd68c787ad3c17e35d10dce39e3",
+    "autocommit-red.log": "a02d741f0d5f20704529a303e892c007590815e23ee4dd8dc08eba90470aaa7c",
+    "green.log": "d3cee2f743b4bfb6a872a98c3ff429f16db4bcfedf3ed42ace284c6391828e85",
+    "final-green.log": "5c4a73daaa37666d27fd6d77d94242696d828b0aeb38156cf39044eb681f1cd6"
+  },
+  "publicLogsTrailingWhitespaceTrimmed": true
+}
