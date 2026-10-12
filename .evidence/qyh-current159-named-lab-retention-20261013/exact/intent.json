@@ -1,0 +1,18 @@
+{
+  "originalOwner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "originalTask": "qyh-current159-fresh-backup-restore-20261012",
+  "container": "3fb59cb46c8daeb402caee95bf9f2d9aefbb3aa42d87988811afe29418790687",
+  "volume": "aos-qyh-current159-exact-restore-20261012",
+  "catalog": {
+    "cluster": "7695620413173166120",
+    "databases": [
+      "aos_meta_head",
+      "postgres",
+      "qyh_current159_full_restore_r2_20261012",
+      "qyh_current160_fresh_rehearsal_20261012",
+      "qyh_exclusive_window_20261012"
+    ],
+    "otherClients": 0
+  },
+  "failedOriginalLab": false
+}

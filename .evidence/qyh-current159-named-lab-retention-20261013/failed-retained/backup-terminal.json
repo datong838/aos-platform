@@ -1,0 +1,10 @@
+{
+  "archiveCount": 1,
+  "files": {
+    "postgres.dump": "0c10bf83413a6d87294cea0a622c41904f861eb2a30897b355330b3deadd6975",
+    "globals.sql": "a0af16e0f88a32736c275e847002cea895bc7df6ec699ef18ba737f7a0d2c489"
+  },
+  "secondCopiesEqual": true,
+  "archiveListsReadable": true,
+  "catalogUnchanged": true
+}

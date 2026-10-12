@@ -1,0 +1,31 @@
+{
+  "outcome": "TWO_OWNED_CURRENT159_NAMED_LABS_ARCHIVED_STOPPED",
+  "resources": [
+    {
+      "container": "3fb59cb46c8daeb402caee95bf9f2d9aefbb3aa42d87988811afe29418790687",
+      "originalVolumeRetained": "aos-qyh-current159-exact-restore-20261012",
+      "stopped": true,
+      "completeArchives": 5,
+      "backupHashesValid": true,
+      "failedLabPreservedNotAccepted": false
+    },
+    {
+      "container": "951749982fad112b99e59e028c60ec126024c3ea3b1ed6288a2d14cb2d644de2",
+      "originalVolumeRetained": "aos-qyh-current159-restore-lab-20261012",
+      "stopped": true,
+      "completeArchives": 1,
+      "backupHashesValid": true,
+      "failedLabPreservedNotAccepted": true
+    }
+  ],
+  "measuredVmAvailableKB": 535432,
+  "currentDatabaseTouched": false,
+  "currentServicesRestarted": false,
+  "fullRestoreRehearsalAccepted": false,
+  "goalUpdated": false,
+  "independentReview": {
+    "r1": "invalid next_safe_step missing; raw NEED_DECISION/contradicted preserved, not consumed",
+    "r2": "actual Task/Delivery/creation proofs/helper added; PASS3/3 consumed",
+    "executionAuthorized": false
+  }
+}

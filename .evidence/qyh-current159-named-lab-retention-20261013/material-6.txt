@@ -1,0 +1,20 @@
+{
+  "base_revision": "AOS-001945",
+  "created_at": "2026-10-12T11:00:41+08:00",
+  "excluded_scope": [
+    "aos-platform/services",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "当前真实159一致pg_dump/第二校验副本及独立新DB全恢复数据指纹对账，不迁移或重启真实库"
+  ],
+  "lease_expires_at": "2026-10-12T11:00:41.255668+00:00",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "schema": "aos-memory-task-receipt/v1",
+  "scope": [
+    "aos-platform/.evidence/qyh-current159-fresh-backup-restore-20261012",
+    "aos-platform/maintenance/qyh-current159-owned-restore"
+  ],
+  "status": "ACTIVE",
+  "task_id": "qyh-current159-fresh-backup-restore-20261012"
+}

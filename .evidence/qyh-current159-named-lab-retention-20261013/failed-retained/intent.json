@@ -1,0 +1,14 @@
+{
+  "originalOwner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "originalTask": "qyh-current159-fresh-backup-restore-20261012",
+  "container": "951749982fad112b99e59e028c60ec126024c3ea3b1ed6288a2d14cb2d644de2",
+  "volume": "aos-qyh-current159-restore-lab-20261012",
+  "catalog": {
+    "cluster": "7695614347269738536",
+    "databases": [
+      "postgres"
+    ],
+    "otherClients": 0
+  },
+  "failedOriginalLab": true
+}

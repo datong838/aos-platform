@@ -1,0 +1,27 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-current159-named-lab-retention-20261013-r2",
+  "task_id": "qyh-current159-named-lab-retention-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "e3bb1ed1d69521307d6aa2ba48bd7e5972703131",
+    "authority_revision": "AOS-001996",
+    "files": {
+      ".evidence/qyh-current159-named-lab-retention-20261013/material-0.txt": "d348c0d440e6f3e090aaef7c582a1809f74e813ce95e811efe1705814e41a8ad",
+      ".evidence/qyh-current159-named-lab-retention-20261013/material-1.txt": "9cf049627cb78677dc281863d8743c77f70240d4b88306d33dd3fff5bcff58e6",
+      ".evidence/qyh-current159-named-lab-retention-20261013/material-2.txt": "f5d62818053b04f0db9a923fb80b8e6fcb29f94e7384331daeaed32a0e79a592",
+      ".evidence/qyh-current159-named-lab-retention-20261013/material-3.txt": "927c2a3db19da552a50c7e21d822f53ef4507c02f1941ba3d4ca7678cebc1f60",
+      ".evidence/qyh-current159-named-lab-retention-20261013/material-4.txt": "9ec830011187714cfa5b4668fbe1ea19b94609045326b9038bd111fb4fa2b758",
+      ".evidence/qyh-current159-named-lab-retention-20261013/material-5.txt": "177a80f0af7529b742fa73808d5c6e6ee671c116c646695600bf7a059400de5a",
+      ".evidence/qyh-current159-named-lab-retention-20261013/material-6.txt": "c558b75c53265c2cfe4afcdd5447d950f930e381b974edd0745afc3612b8f109",
+      ".evidence/qyh-current159-named-lab-retention-20261013/material-7.txt": "261e64fcdb0de19e98453f50a7f9222e1c26090ecc502920bbab8fb7c460abf9",
+      ".evidence/qyh-current159-named-lab-retention-20261013/material-8.txt": "70e1f2605ca2d6818f08b4d6e3df0493b5526c7d54ec87dc29a7ee0e6671ce75",
+      ".evidence/qyh-current159-named-lab-retention-20261013/material-9.txt": "433fbb1f5957ad81062bd46044149f5918a855cfebd9f2e850241d9d327d8043",
+      ".evidence/qyh-current159-named-lab-retention-20261013/material-10.txt": "a018ba1edb6cea0780475a4e8dfd8b4c2f45d60294ec757358268ed1981c421d"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "54accf60c04f80cdc195568ece90122164ee8c3272a0cf2b83d9f82c663ff9e4",
+  "transport_sha256": "701e4d45e28b6dc93fd24fe2bddfa39b10286b26b5cdd125b8eb191dcfea223d"
+}

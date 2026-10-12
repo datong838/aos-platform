@@ -1,0 +1,14 @@
+{
+  "archiveCount": 5,
+  "files": {
+    "aos_meta_head.dump": "876bd6cabe6d5b0bb05bbc2fe0338356e25f84a96acbadd831588c8d92f0ba6e",
+    "postgres.dump": "60a3d500a4fde46ac51266afd310222533a26e84bab291999989a8a2d783f3b7",
+    "qyh_current159_full_restore_r2_20261012.dump": "828bff67b9b1707ff97674802580410a9ce75f0fb58cda0f9341b9ad8e417980",
+    "qyh_current160_fresh_rehearsal_20261012.dump": "72c186785c4026609d5ecb06560ded3a87e288787f4b4904559debcaf01ba6b4",
+    "qyh_exclusive_window_20261012.dump": "b0881fcf33311bbf6fb538bf2461f2943d0b29cce1f5d0a8ad2a55e569c024cd",
+    "globals.sql": "c3b0ac18b0a179bc7877a7d932df3bdb04a50a5f6282e326ce9814361c4df2b9"
+  },
+  "secondCopiesEqual": true,
+  "archiveListsReadable": true,
+  "catalogUnchanged": true
+}

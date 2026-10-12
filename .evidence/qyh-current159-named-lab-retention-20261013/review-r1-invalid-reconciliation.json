@@ -1,0 +1,12 @@
+{
+  "transportExit": 0,
+  "terminalKnown": true,
+  "validationError": "review requires findings and next step",
+  "rawVerdict": "NEED_DECISION",
+  "firstAssessment": "contradicted",
+  "nextSafeStepMissing": true,
+  "consumed": false,
+  "originalAttemptNotResent": true,
+  "newR2MaterialChange": "actual historical Task/Delivery, creation proofs and shared helper source included; no new business authorization requested",
+  "goalUpdated": false
+}

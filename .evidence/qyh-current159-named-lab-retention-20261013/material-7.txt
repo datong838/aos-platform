@@ -1,0 +1,32 @@
+{
+  "base_revision": "AOS-001945",
+  "blockers": [],
+  "changed_files": [
+    "aos-platform/.evidence/qyh-current159-fresh-backup-restore-20261012/full-restore-r2-comparison.json",
+    "aos-platform/.evidence/qyh-current159-fresh-backup-restore-20261012/full-restore-r2-created.json",
+    "aos-platform/.evidence/qyh-current159-fresh-backup-restore-20261012/full-restore-r2-intent.json",
+    "aos-platform/.evidence/qyh-current159-fresh-backup-restore-20261012/full-restore-r2-terminal.json",
+    "aos-platform/.evidence/qyh-current159-fresh-backup-restore-20261012/plan-r2.md",
+    "aos-platform/.evidence/qyh-current159-fresh-backup-restore-20261012/restore-r2.py",
+    "aos-platform/.evidence/qyh-current159-fresh-backup-restore-20261012/verification-r2.md"
+  ],
+  "commits": [
+    "04d0df92fb49621375cb1f7fec5f0fb60caab818",
+    "56a1517e6db5d78418adfc8ab41ba13dc5520614"
+  ],
+  "completed_at": "2026-10-12T12:53:33+08:00",
+  "completed_revision": "AOS-001948",
+  "result": "FRESH_TRUE159_FULL_NATIVE_RESTORE_DATA_SCHEMA_ACL_SEQUENCES_AND_ROLES_EQUAL",
+  "risks": [
+    "Continuous formal zero-execution migration window and signed bundle schema compatibility remain separate",
+    "No actual migration/formal identity/current install/eight pages/business first chain"
+  ],
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "qyh-current159-fresh-backup-restore-20261012",
+  "verification": [
+    "New isolated network-none owned DB native single-transaction restore exit0; earlier empty rollback retained",
+    "All647 table row counts/SHA equal and true source unchanged",
+    "Complete native schema-only owner/ACL SQL byte-equal after only pg_dump random restriction token removal",
+    "12 sequence value/called equal;39 role flags/config and12 member grantors/options equal"
+  ]
+}
