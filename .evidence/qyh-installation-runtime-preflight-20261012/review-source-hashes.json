@@ -1,0 +1,10 @@
+{
+  "head": "5093dfc50b5e5e2ee3585333b7161b6e95adffd5",
+  "files": {
+    "services/aos-api/aos_api/asset_registry/installation_service.py": "99b15c63d573728ade9b0cfe57d43c9764e58d378258e37f2eca308016a12eb7",
+    "services/aos-api/aos_api/asset_registry/installation_revalidation.py": "ce42f41bf4df02528ac17d8e79a44613cd4a2fc08e2a4af4d9084aba92390d3e",
+    "services/aos-api/aos_api/asset_registry/installation_store.py": "fdfa5785104a22b0baaa28ecb700caf7e591014a38249a2118c3f6ac12550d4d",
+    "services/aos-api/aos_api/extension_runtime/lifecycle_service.py": "9048036f41a6d732cca437caaeb0e350f7e23ccae28e2a4945b03f8938e62c5a",
+    "services/aos-api/aos_api/extension_runtime/release_revalidation.py": "c5f6355108d8ecf54221ecf108b8273059ec920c73af58e4f7f6c8152906daf4"
+  }
+}

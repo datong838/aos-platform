@@ -1,0 +1,21 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-installation-runtime-preflight-20261012",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001981",
+  "scope": [
+    "aos-platform/.evidence/qyh-installation-runtime-preflight-20261012"
+  ],
+  "excluded_scope": [
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "plan.md",
+    "audit.py",
+    "result.json",
+    "verification.md"
+  ],
+  "lease_expires_at": "2026-10-12T17:55:15.063264+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T23:55:16+08:00"
+}

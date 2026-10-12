@@ -1,0 +1,9 @@
+# 当前安装运行只读预检结论
+
+当前真实161/650表上，原RuntimeReleaseRevalidator实际通过四精确版本当前签名/证据/状态检查。冻结锁含8UI/3边；三个runtime成员均含backend claim，operations-base为纯贡献包。请求submitted/revision2，前驱407 active revision5保留，所有runtime binding disabled/fenced。连接default_transaction_read_only=on且事务SHOW确认；没有approve/apply/verify或Host/worker/Provider动作。
+
+原InstallationService普通apply的InstallationRevalidator明确拒绝runtime包；必须独立审批后走RuntimeLifecycleService的preparation、运行apply/verify。原request_preparation还要求当前正式Host准备指派，单独管理员审批不证明配置、运行资源或八页验收。未执行假准备、未制造第二身份。
+
+第一次审计将information_schema的当前角色可见public表数量误作全库物理表数量，断言失败；未重发任何写操作。纠正为既有source_fingerprint同一pg_class非系统实体表口径后真实650通过，不改数据库求通过。复核audit.py范围仅只读源/原Store/原revalidator/本目录证据，符合plan.md；没有产品代码改动或八台通过结论。
+
+后续主线：既有独立管理员认证→原approve→当前正式准备身份与Owner/预算/八配置/资源→专用runtime apply/verify→目录8台与核心真实交互→自然首链。未回答登录/治理存储信息只限制相应动作，整个Goal active。

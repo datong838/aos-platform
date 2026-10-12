@@ -1,0 +1,45 @@
+{
+  "observedAt": "2026-10-12T15:57:14.949805+00:00",
+  "tenant": {
+    "org_id": "org-org",
+    "project_id": "dev-project"
+  },
+  "databaseHead": "a0v_161",
+  "tableCount": 650,
+  "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+  "state": "submitted",
+  "etagVersion": 2,
+  "lockHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+  "uiContributionCount": 8,
+  "runtimeMembers": [
+    "domain.ecommerce.core",
+    "platform.ecommerce.niushop",
+    "solution.ecommerce.growth"
+  ],
+  "backendClaimCount": 3,
+  "selected": [
+    {
+      "id": "domain.ecommerce.core",
+      "version": "1.4.3"
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "version": "1.23.2"
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "version": "1.13.0"
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "version": "1.2.2"
+    }
+  ],
+  "predecessorActiveRevision": 5,
+  "unfencedOrEnabledBindings": 0,
+  "databaseWrites": 0,
+  "releaseCheckPassed": true,
+  "independentApprovalPassed": false,
+  "runtimePreparationPassed": false,
+  "eightPagesAccepted": false
+}
