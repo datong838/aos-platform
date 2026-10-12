@@ -41,6 +41,73 @@ def test_management_reads_delegate_without_fabricating_auth(entry):
     assert observed == ['GET','HEAD','OPTIONS']
 
 
+def test_explicit_password_login_delegates_only_original_auth_endpoint(entry):
+    from starlette.testclient import TestClient
+    observed = []
+    async def product(scope, receive, send):
+        observed.append((scope['method'], scope['path']))
+        await send({'type':'http.response.start','status':401,'headers':[]})
+        await send({'type':'http.response.body','body':b''})
+    client = TestClient(entry.ReadOnlyManagementApp(product, allow_password_login=True))
+    assert client.post('/v1/auth/token', json={'grantType':'password'}).status_code == 401
+    for path in ['/v1/auth/token/other', '/v1/auth/token/', '/v1/bundle-installations/x/approve']:
+        assert client.post(path).status_code == 405
+    assert client.put('/v1/auth/token').status_code == 405
+    assert observed == [('POST', '/v1/auth/token')]
+
+
+def test_owned_exact_local_oidc_config(entry, tmp_path):
+    import json
+    tmp_path.chmod(0o700)
+    value = {'schemaVersion':'aos.local-management-oidc/v1',
+        'issuer':'http://127.0.0.1:18448/realms/qyh-local', 'audience':'aos-api', 'clientId':'aos-api',
+        'jwksUrl':'http://127.0.0.1:18448/realms/qyh-local/protocol/openid-connect/certs',
+        'tokenUrl':'http://127.0.0.1:18448/realms/qyh-local/protocol/openid-connect/token',
+        'clockSkewSeconds':2}
+    p = tmp_path / 'oidc.json'; p.write_text(json.dumps(value)); p.chmod(0o600)
+    assert entry.load_management_oidc_config(p)['AOS_AUTH_ALLOW_DEV'] == '0'
+    assert entry.load_management_oidc_config(p)['AOS_OIDC_LEEWAY_SECONDS'] == '2'
+    for key, bad in [('issuer','http://other-host/realms/qyh-local'), ('clockSkewSeconds',True),
+                     ('clockSkewSeconds',6), ('audience','other'), ('tokenUrl','http://127.0.0.1:18448/other')]:
+        p.write_text(json.dumps({**value, key:bad}))
+        with pytest.raises(entry.RestorationBlocked): entry.load_management_oidc_config(p)
+    p.write_text(json.dumps(value)); p.chmod(0o644)
+    with pytest.raises(entry.RestorationBlocked): entry.load_management_oidc_config(p)
+
+
+def test_local_oidc_rejects_duplicate_symlink_fifo_and_extra_fields(entry, tmp_path):
+    import json, os
+    tmp_path.chmod(0o700)
+    value = {'schemaVersion':'aos.local-management-oidc/v1',
+        'issuer':'http://127.0.0.1:18448/realms/qyh-local', 'audience':'aos-api', 'clientId':'aos-api',
+        'jwksUrl':'http://127.0.0.1:18448/realms/qyh-local/protocol/openid-connect/certs',
+        'tokenUrl':'http://127.0.0.1:18448/realms/qyh-local/protocol/openid-connect/token',
+        'clockSkewSeconds':2}
+    p = tmp_path / 'config.json'; p.write_text(json.dumps(value)); p.chmod(0o600)
+    alias = tmp_path / 'alias.json'; alias.symlink_to(p)
+    with pytest.raises(entry.RestorationBlocked): entry.load_management_oidc_config(alias)
+    fifo = tmp_path / 'fifo'; os.mkfifo(fifo, 0o600)
+    with pytest.raises(entry.RestorationBlocked): entry.load_management_oidc_config(fifo)
+    p.write_text(json.dumps({**value,'password':'must-not-be-configured-here'}))
+    with pytest.raises(entry.RestorationBlocked): entry.load_management_oidc_config(p)
+    p.write_text(json.dumps(value)[:-1] + ',"clockSkewSeconds":0}')
+    with pytest.raises(entry.RestorationBlocked): entry.load_management_oidc_config(p)
+
+
+def test_login_optin_does_not_accept_truthy_nonboolean(entry):
+    from starlette.testclient import TestClient
+    async def product(*args): pytest.fail('truthy flag enabled a write')
+    client = TestClient(entry.ReadOnlyManagementApp(product, allow_password_login='true'))
+    assert client.post('/v1/auth/token').status_code == 405
+
+
+def test_local_login_config_requires_management_start(entry, monkeypatch, tmp_path):
+    monkeypatch.setattr('sys.argv',['entry','--api-identity-file',str(tmp_path/'identity'),
+        '--management-oidc-config',str(tmp_path/'oidc')])
+    with pytest.raises(SystemExit) as exc: entry.main()
+    assert exc.value.code == 2
+
+
 def test_management_websocket_never_reaches_product(entry):
     import asyncio
     observed = []

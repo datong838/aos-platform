@@ -38,16 +38,66 @@ class RestorationBlocked(RuntimeError):
     pass
 
 
+def load_management_oidc_config(path):
+    """Private exact local identity routing; never accept credentials here."""
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            if key in value:
+                raise ValueError('duplicate key')
+            value[key] = item
+        return value
+    try:
+        path = Path(path)
+        parent = path.parent.lstat()
+        if (not path.is_absolute() or not stat.S_ISDIR(parent.st_mode)
+                or parent.st_uid != os.geteuid() or stat.S_IMODE(parent.st_mode) != 0o700):
+            raise ValueError('private parent required')
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(fd, 'rb') as source:
+            before = os.fstat(source.fileno())
+            if (not stat.S_ISREG(before.st_mode) or before.st_uid != os.geteuid()
+                    or stat.S_IMODE(before.st_mode) != 0o600 or not 0 < before.st_size <= 16384):
+                raise ValueError('private ordinary configuration required')
+            raw = source.read(16385)
+            after = os.fstat(source.fileno())
+        if len(raw) > 16384 or (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
+            raise ValueError('configuration changed')
+        value = json.loads(raw, object_pairs_hook=unique)
+        fields = {'schemaVersion','issuer','audience','clientId','jwksUrl','tokenUrl','clockSkewSeconds'}
+        issuer = 'http://127.0.0.1:18448/realms/qyh-local'
+        if (type(value) is not dict or set(value) != fields
+                or value['schemaVersion'] != 'aos.local-management-oidc/v1'
+                or value['issuer'] != issuer or value['audience'] != 'aos-api'
+                or value['clientId'] != 'aos-api'
+                or value['jwksUrl'] != issuer + '/protocol/openid-connect/certs'
+                or value['tokenUrl'] != issuer + '/protocol/openid-connect/token'
+                or type(value['clockSkewSeconds']) is not int
+                or not 0 <= value['clockSkewSeconds'] <= 5):
+            raise ValueError('exact local identity contract required')
+        return {'AOS_AUTH_ALLOW_DEV':'0', 'AOS_AUTH_EXTERNAL_ONLY':'1',
+            'AOS_OIDC_ISSUER':issuer, 'AOS_OIDC_AUDIENCE':'aos-api',
+            'AOS_OIDC_CLIENT_ID':'aos-api', 'AOS_OIDC_JWKS_URL':value['jwksUrl'],
+            'AOS_OIDC_ISSUERS':'', 'AOS_OIDC_JWKS_URLS':'',
+            'AOS_OIDC_TOKEN_URL':value['tokenUrl'], 'AOS_OIDC_TOKEN_ALG':'RS256',
+            'AOS_OIDC_LEEWAY_SECONDS':str(value['clockSkewSeconds'])}
+    except (OSError, ValueError, TypeError, KeyError):
+        raise RestorationBlocked('RESTORED_LOCAL_OIDC_PRIVATE_EXACT_CONFIG_REQUIRED') from None
+
+
 class ReadOnlyManagementApp:
     """Local inspection only; product authentication and tenant checks still run."""
-    def __init__(self, app):
+    def __init__(self, app, *, allow_password_login=False):
         self.app = app
+        self.allow_password_login = allow_password_login is True
 
     async def __call__(self, scope, receive, send):
         if scope['type'] == 'websocket':
             await send({'type': 'websocket.close', 'code': 1008})
             return
-        if scope['type'] == 'http' and scope['method'] not in {'GET', 'HEAD', 'OPTIONS'}:
+        login = (self.allow_password_login and scope['type'] == 'http'
+                 and scope['method'] == 'POST' and scope['path'] == '/v1/auth/token')
+        if scope['type'] == 'http' and scope['method'] not in {'GET', 'HEAD', 'OPTIONS'} and not login:
             body = b'{"code":"RESTORED_MANAGEMENT_READ_ONLY","message":"Management inspection is read only."}'
             await send({'type': 'http.response.start', 'status': 405,
                         'headers': [(b'content-type', b'application/json'), (b'cache-control', b'no-store')]})
@@ -286,11 +336,13 @@ def serve_limited(**arguments):
     os.execve(sys.executable, command, environment)
 
 
-def serve_management_readonly(*, identity_file, bundle_root, trust_roots_file, source_candidate):
+def serve_management_readonly(*, identity_file, bundle_root, trust_roots_file, source_candidate,
+                              management_oidc_config=None):
     """Attach preserved local management data without enabling formal execution."""
     if not previous._port_free(LIMITED_PORT):
         raise RestorationBlocked('RESTORED_HTTP_PORT_OCCUPIED')
     source = require_api_source_candidate(source_candidate)
+    oidc_environment = load_management_oidc_config(management_oidc_config) if management_oidc_config is not None else None
     preflight(identity_file)
     identity = _identity_parameters(identity_file)
     from psycopg import connect
@@ -311,8 +363,12 @@ def serve_management_readonly(*, identity_file, bundle_root, trust_roots_file, s
         'AOS_BUNDLE_ROOT': str(bundle_root.resolve(strict=True)),
         'AOS_BUNDLE_TRUST_ROOTS_FILE': str(trust_roots_file.resolve(strict=True))})
     environment['PYTHONPATH'] = os.pathsep.join([str(source / 'services/aos-api'), str(source / 'scripts')])
+    if oidc_environment is not None:
+        environment.update(oidc_environment)
+        environment['AOS_LOCAL_MANAGEMENT_OIDC_CONFIG'] = str(management_oidc_config)
     print(json.dumps({'outcome': 'RESTORED_LOCAL_MANAGEMENT_READONLY_STARTING',
         'port': LIMITED_PORT, 'databaseReadOnly': True, 'mutationRequestsAllowed': False,
+        'passwordLoginRequestsAllowed': oidc_environment is not None,
         'formalIdentityVerified': False, 'runtimeAuthorized': False, 'eightPagesAccepted': False}), flush=True)
     os.chdir(source)
     command = management_command()
@@ -328,11 +384,14 @@ def management_command():
 
 
 def management_app():
+    config = os.environ.get('AOS_LOCAL_MANAGEMENT_OIDC_CONFIG')
+    if config:
+        os.environ.update(load_management_oidc_config(config))
     from aos_api.main import app
     api_file = Path(sys.modules['aos_api.main'].__file__).resolve()
     if api_file != Path.cwd() / 'services/aos-api/aos_api/main.py':
         raise RestorationBlocked('RESTORED_MANAGEMENT_SOURCE_IMPORT_DRIFT')
-    return ReadOnlyManagementApp(app)
+    return ReadOnlyManagementApp(app, allow_password_login=bool(config))
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -342,15 +401,19 @@ def main():
     parser.add_argument('--trust-roots-file',type=Path)
     parser.add_argument('--serve-limited', action='store_true')
     parser.add_argument('--serve-management-readonly', action='store_true')
+    parser.add_argument('--management-oidc-config', type=Path)
     parser.add_argument('--source-candidate', type=Path)
     args = parser.parse_args()
+    if args.management_oidc_config is not None and not args.serve_management_readonly:
+        parser.error('local management OIDC requires explicit management readonly serving')
     values = (args.current_installation, args.bundle_root, args.trust_roots_file)
     if args.serve_management_readonly:
         if (args.serve_limited or args.current_installation is not None
             or args.bundle_root is None or args.trust_roots_file is None or args.source_candidate is None):
             parser.error('management inspection requires bundle root, trust roots, source candidate; no runtime installation or limited start')
         serve_management_readonly(identity_file=args.api_identity_file, bundle_root=args.bundle_root,
-            trust_roots_file=args.trust_roots_file, source_candidate=args.source_candidate)
+            trust_roots_file=args.trust_roots_file, source_candidate=args.source_candidate,
+            management_oidc_config=args.management_oidc_config)
         return
     if args.serve_limited:
         if any(value is None for value in values) or args.source_candidate is None:
