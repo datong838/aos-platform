@@ -26,6 +26,9 @@ IMAGE = 'sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd
 EXPECTED = {'database': 'aos_meta_head', 'cluster': '7695302940039200809',
     'schema': 'a0v_159', 'orgId': 'org-org', 'orgName': '栖月汇商贸有限公司',
     'projectId': 'dev-project', 'tables': 647}
+# Physical contracts for independently rehearsed migrations of this preserved
+# cluster. Unknown revisions must be reviewed before the attachment gate opens.
+SCHEMA_TABLE_COUNTS = {'a0v_159': 647, 'a0v_160': 650, 'a0v_161': 650}
 SELECTED_VERSIONS = {'domain.ecommerce.core': '1.4.3',
     'platform.ecommerce.niushop': '1.23.2', 'solution.ecommerce.growth': '1.13.0',
     'solution.ecommerce.operations-base': '1.2.2'}
@@ -53,7 +56,11 @@ class ReadOnlyManagementApp:
         await self.app(scope, receive, send)
 
 def require_identity(observed, *, code_head):
-    if any(observed.get(k) != v for k,v in EXPECTED.items()):
+    if any(observed.get(k) != v for k,v in EXPECTED.items()
+           if k not in {'schema', 'tables'}):
+        raise RestorationBlocked('RESTORED_IDENTITY_DRIFT')
+    tables = SCHEMA_TABLE_COUNTS.get(observed.get('schema'))
+    if tables is None or observed.get('tables') != tables:
         raise RestorationBlocked('RESTORED_IDENTITY_DRIFT')
     if observed['schema'] != code_head:
         raise RestorationBlocked('RESTORED_CODE_SCHEMA_DRIFT')

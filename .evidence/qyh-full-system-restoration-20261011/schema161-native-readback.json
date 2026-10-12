@@ -1,0 +1,20 @@
+{
+  "actualIsolatedReadback": {
+    "schema": "a0v_161",
+    "tables": 650,
+    "database": "qyh_current160_fresh_rehearsal_20261012",
+    "cluster": "7695620413173166120",
+    "orgId": "org-org",
+    "orgName": "栖月汇商贸有限公司",
+    "projectId": "dev-project"
+  },
+  "actualCloneIdentityRejected": true,
+  "native161SchemaFieldsPassWithExplicitTestIdentityProjection": true,
+  "projectedFields": [
+    "database",
+    "cluster"
+  ],
+  "realSourceSchema": "a0v_159",
+  "realSourceMigrated": false,
+  "startAuthorized": false
+}

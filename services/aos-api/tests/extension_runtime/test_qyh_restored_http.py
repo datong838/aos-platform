@@ -92,6 +92,32 @@ def test_schema_must_match_current_code(entry):
     with pytest.raises(entry.RestorationBlocked, match='RESTORED_CODE_SCHEMA_DRIFT'):
         entry.require_identity(baseline(), code_head='a0v_160')
 
+
+@pytest.mark.parametrize('schema', ['a0v_160', 'a0v_161'])
+def test_migrated_preserved_cluster_matches_current_code(entry, schema):
+    observed = {**baseline(), 'schema': schema, 'tables': 650}
+    entry.require_identity(observed, code_head=schema)
+
+
+@pytest.mark.parametrize('schema,tables', [
+    ('a0v_159', 650), ('a0v_160', 647), ('a0v_161', 647),
+    ('a0v_161', 649), ('a0v_161', 651), ('a0v_162', 650),
+])
+def test_unknown_or_partial_migration_never_attaches(entry, schema, tables):
+    with pytest.raises(entry.RestorationBlocked, match='RESTORED_IDENTITY_DRIFT'):
+        entry.require_identity({**baseline(), 'schema': schema, 'tables': tables},
+            code_head=schema)
+
+
+@pytest.mark.parametrize('field,value', [
+    ('database', 'other'), ('cluster', 'other'), ('orgId', 'dev-org'),
+    ('orgName', 'org-org'), ('projectId', 'other'),
+])
+def test_migrated_schema_keeps_original_tenant_and_volume_identity(entry, field, value):
+    observed = {**baseline(), 'schema': 'a0v_161', 'tables': 650, field: value}
+    with pytest.raises(entry.RestorationBlocked, match='RESTORED_IDENTITY_DRIFT'):
+        entry.require_identity(observed, code_head='a0v_161')
+
 def test_preserved_data_does_not_grant_start_or_workshop_readiness(entry):
     entry.require_identity(baseline(), code_head='a0v_159')
     report = entry.inventory_report(baseline(), {'bindings': 126, 'installations': 135,
