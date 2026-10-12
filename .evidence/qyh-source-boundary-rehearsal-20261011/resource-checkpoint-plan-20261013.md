@@ -7,3 +7,7 @@ Rules：沿本已登记Source Task/Lease和用户批准隔离实现；唯一写�
 下一执行须再次核本Task合法Lease、精确CID/cluster/端口/无卷、全部5库目录/角色与原私密配置引用、无其他连接和足够256MiB读取余量。每库native READ ONLY repeatable snapshot、serial650表级原算法指纹（1MB work_mem、禁并行、5s statement_timeout），pg_dump完整schema/data/owner/ACL及所有globals --no-role-passwords，新private700文件600，两份SHA；除了pg_restore --list，还须pg_restore --file=/dev/null完整解码全部archive（不连接DB、不执行SQL、不输出原行）。源Lab角色仅0已存LOGIN凭据才允许无口令globals保留；若变化则拒绝且不读取/输出凭据。
 
 目录/roles/序列及各库前后全表指纹无变化、archive完整解码和两份一致后保存独立checkpoint manifest，绑定Task/thread/repo/authority、精确资源及恢复命令/原bootstrap、全部数据和配置文件hash。必须明确未来新Role oid变化通过原维护门处理、私密身份文件仍保留、当前步骤没有业务执行。只读确认0clients后再独立freeze review（新鲜review Task必要时只持材料scope）及stop intent；没有完整恢复证据则保留限制，不能把文件SHA叫正式全库restore通过。停止tmpfs意味着只能从archive恢复实验数据；原clone容器和双备份保留、不删除现库卷、不修改旧Source业务结果、不重发任何已有unknown操作。
+
+实际排障：首个aos_meta_head完整archive及前后指纹/全部解码已终态成功。第二个postgres库没有业务表，json_agg空结果为SQL NULL，psql输出空行，原解析拒绝；尚未导出postgres或其他库/角色、未stop。修复将两类空聚合明确coalesce为JSON[]。新增明确resume-after-empty-catalog，仅允许原intent/首库terminal/首库两个archive的精确文件集合和SHA一致，复用已成功首库terminal不重导出，只读再取其指纹，继续其余从未执行阶段；保留失败日志，不允许任意resume或覆盖历史。
+
+续轮全部5库实际导出、两份SHA、全archive解码、序列及表指纹前后对等和完整metadata回读通过，manifest落盘，仍未stop。新增本目录resource_stop.py，仅在当前独立冻结审阅通过并消费、review request绑定同一manifest精确hash，原Source Lease仍合法、所有双备份/原私密配置/快照完整、当前native metadata与archive私密metadata相同且0clients时执行新stop意图。停止只释放已归档tmpfs实例；旧容器保留、实验数据需原独立restore恢复，不触碰真库卷/原服务，不更改Source Task或长期Goal为paused/blocked/complete。任何门拒绝不stop；已存在stop意图仅只读对账。

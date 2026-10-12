@@ -1,0 +1,7 @@
+{
+  "transportExit": 0,
+  "error": "model output not strict JSON; unconsumed",
+  "terminalKnown": true,
+  "runtimeEffects": false,
+  "goalUpdated": false
+}

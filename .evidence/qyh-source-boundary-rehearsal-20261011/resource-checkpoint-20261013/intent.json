@@ -1,0 +1,9 @@
+{
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authorityRevision": "AOS-001997",
+  "container": "bb9c8b1ab46af632af36ee89c9f2686f06ace9bbd803040ce44cab057968d486",
+  "cluster": "7695416748450308141",
+  "memoryAvailableKB": 574444,
+  "writesOrStopAuthorizedByThisScript": false
+}

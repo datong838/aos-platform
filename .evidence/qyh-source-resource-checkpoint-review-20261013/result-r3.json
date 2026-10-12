@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-source-resource-checkpoint-review-20261013-r3",
+    "task_id": "qyh-source-resource-checkpoint-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "ef0c65a0e4935d13c7a27f5e88532c62b7b0c90f",
+      "authority_revision": "AOS-001997",
+      "files": {
+        ".evidence/qyh-source-resource-checkpoint-review-20261013/material-0.txt": "a1388d3719370eb30c929f413fed1accff9a22bf468023f3f08d3b0e7c7d59ac",
+        ".evidence/qyh-source-resource-checkpoint-review-20261013/material-1.txt": "db06b4860b995f328e60e473ddf2633e830730264de1c7796bd71d79f3dde330",
+        ".evidence/qyh-source-resource-checkpoint-review-20261013/material-2.txt": "a51c0b4edf423a78eeafd68464a94f1ecca42497b80f84bcad854ffd2eb915d3",
+        ".evidence/qyh-source-resource-checkpoint-review-20261013/material-3.txt": "376542c537ad12d6e9645767a0f4a6adca03e60046e2534be7480b3dd0c0b15b"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The checkpoint binds the exact owned Source lab, active Task lease, original bootstrap and five native database archives without database writes or stopping the lab.",
+        "evidence": "material-0.txt 中记录：OWNER='codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2'，TASK='qyh-source-boundary-rehearsal-20261011'，CID='bb9c8b1ab46af632af36ee89c9f2686f06ace9bbd803040ce44cab057968d486'。代码通过 assert task in leases and task['owner']==OWNER 与 assert datetime.fromisoformat(task['lease_expires_at'])>datetime.now(timezone.utc) 校验活跃 Lease；bootstrap 固定为 'aos_app'；manifest.json (material-2.txt) 字段 labStopped=false、currentDatabaseTouched=false；material-3.txt 打印 FIVE_DATABASE_SOURCE_LAB_RECOVERY_ARCHIVES_VERIFIED_NOT_STOPPED；manifest 含 databaseCount: 5 与 5 个 .dump 文件哈希。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The workflow verifies second-copy hashes, full archive decoding without execution, unchanged before/after table and sequence fingerprints and unchanged role/membership metadata.",
+        "evidence": "material-0.txt 对每个库执行：shutil.copyfile 生成 .dump.second 后 assert 两份 SHA 相等；循环对每个 options in [('--list',),('--file=/dev/null',)] 调用 pg_restore 且 assert fingerprints(db)==before；metadata() 在首尾各取一次并 assert metadata()==initial，其中含 roles 与 memberships。material-2.txt manifest 中全部ArchivesFullyDecoded=true、beforeAfterFingerprintsEqual=true、rolesAndMembershipsUnchanged=true、nativeOwnerACLSequenceArchives=true。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The checkpoint explicitly distinguishes archive verification from a real full restore and retains existing private configuration files; no runtime or Goal completion is claimed.",
+        "evidence": "material-2.txt manifest.fullRestoreRehearsalPassed=false；limitations 字段明确 'Archive decoding is not an actual restore. Before future formal use, restore to independent owned lab, compare full hashes...'。material-0.txt 通过 rglob 收集 .evidence/.../private 下配置文件哈希并在 manifest.configurationFilesRetainedHashes 保留；material-1.txt 明确‘没有业务执行’与‘不能把文件SHA叫正式全库restore通过’。material-2.txt 无任何 Goal 字段，仅绑定 task/thread/repo/authority。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前资源检查点与 manifest，继续执行 material-1.txt 描述的下一步：再次核验 Task 合法 Lease、精确 CID/cluster/端口、5 库目录与角色、0 其他 client 与 ≥256MiB 内存后，再进入独立 freeze review；不要修改归属、不恢复 Lease、不修改目标或执行 stop。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

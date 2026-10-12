@@ -1,0 +1,12 @@
+{
+  "outcome": "ARCHIVED_SOURCE_LAB_PROCESS_STOPPED_BACKUPS_RETAINED",
+  "container": "bb9c8b1ab46af632af36ee89c9f2686f06ace9bbd803040ce44cab057968d486",
+  "containerDeleted": false,
+  "databaseArchives": 5,
+  "allBackupHashesValid": true,
+  "measuredVmAvailableKB": 1210404,
+  "currentServicesRestarted": false,
+  "fullRestoreRehearsalAccepted": false,
+  "sourceTaskCompleted": false,
+  "goalUpdated": false
+}

@@ -1,0 +1,9 @@
+{
+  "previousTerminalKnown": true,
+  "previousFormatRejected": true,
+  "delaySeconds": 32,
+  "externalRuntimeEffects": false,
+  "retryCount": 1,
+  "modelRoleUnchanged": "approved tools-disabled agnes reviewer",
+  "oldAttemptResent": false
+}

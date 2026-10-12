@@ -1,0 +1,35 @@
+{
+  "schema": "qyh-source-lab-recovery-checkpoint/v1",
+  "task": "qyh-source-boundary-rehearsal-20261011",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "authorityRevision": "AOS-001997",
+  "taskBaseRevision": "AOS-001880",
+  "container": "bb9c8b1ab46af632af36ee89c9f2686f06ace9bbd803040ce44cab057968d486",
+  "cluster": "7695416748450308141",
+  "databaseCount": 5,
+  "files": {
+    "aos_meta_head.dump": "a2772da064210aeab629ff5ec1982f1cdec62495cca91f7c12a7aa548e5b855c",
+    "postgres.dump": "bf655db22ff8f8b9d58249502582524a27a0ebb956db632d72cd43dd06171b74",
+    "qyh_current159_restore_20261012.dump": "b812c626e795852649149db0e89bb9cbcad656cdcb870088f107e6e1dc100b3e",
+    "qyh_head160_rehearsal_20261012.dump": "e8a660ac06a68d5ccaa2ff39fce3f729e6bc4101589bf3ce13fc4983843794d4",
+    "qyh_source_contract_20261011.dump": "9f1739d8b68591c1b6548bcaf461d038ab6abb25a4ed1ffb2e52c6a14dc91209",
+    "globals.sql": "d3f1212696ebbcfa381bd60cb298cfdbd9b738f3659e309d976521334bffd417"
+  },
+  "configurationFilesRetainedHashes": {
+    ".evidence/qyh-source-boundary-rehearsal-20261011/private/plan-identity/plan.pgpass": "01851ceefaee8d00a0f1052e4baa506e65104effb17a572d0654b679c9dcb674",
+    ".evidence/qyh-source-boundary-rehearsal-20261011/private/contract-identity/contract.pgpass": "03466c3df439c6bd7affddc9cfdccea8b9bd20a8c1ab8e4cca7343e46e10f2c7"
+  },
+  "bootstrap": "aos_app",
+  "nativeOwnerACLSequenceArchives": true,
+  "allArchivesFullyDecoded": true,
+  "beforeAfterFingerprintsEqual": true,
+  "rolesAndMembershipsUnchanged": true,
+  "labStopped": false,
+  "fullRestoreRehearsalPassed": false,
+  "currentDatabaseTouched": false,
+  "limitations": [
+    "Archive decoding is not an actual restore. Before future formal use, restore to independent owned lab, compare full hashes and handle role OID drift by original maintenance contract."
+  ]
+}
