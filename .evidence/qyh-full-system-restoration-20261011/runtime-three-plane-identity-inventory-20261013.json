@@ -1,0 +1,61 @@
+{
+  "authority": "AOS-001992",
+  "rules": [
+    "parent authorized evidence scope",
+    "native BEGIN READ ONLY",
+    "role metadata only; no secrets",
+    "no historical credential fallback or rotation"
+  ],
+  "database": "aos_meta_head",
+  "roles": [
+    {
+      "rolname": "aos_a0v_directory_20260912",
+      "oid": "16385",
+      "rolcanlogin": true,
+      "rolsuper": false,
+      "rolbypassrls": false,
+      "rolinherit": false,
+      "directory_member": true,
+      "runtime_member": false
+    },
+    {
+      "rolname": "aos_a0v_installation_20260912",
+      "oid": "16386",
+      "rolcanlogin": true,
+      "rolsuper": false,
+      "rolbypassrls": false,
+      "rolinherit": false,
+      "directory_member": false,
+      "runtime_member": false
+    },
+    {
+      "rolname": "aos_a0v_runtime_20260912",
+      "oid": "16387",
+      "rolcanlogin": true,
+      "rolsuper": false,
+      "rolbypassrls": false,
+      "rolinherit": false,
+      "directory_member": false,
+      "runtime_member": true
+    },
+    {
+      "rolname": "aos_a0v_web_20260912",
+      "oid": "16388",
+      "rolcanlogin": true,
+      "rolsuper": false,
+      "rolbypassrls": false,
+      "rolinherit": false,
+      "directory_member": false,
+      "runtime_member": false
+    }
+  ],
+  "parentPrivateIdentityFileNamesOnly": [
+    "restored-identity.json"
+  ],
+  "limits": [
+    "No protected current three-plane credential file was established by this inventory",
+    "Metadata flags do not prove actual login, identity isolation or non-owner relation access",
+    "No Host activation or current database writes"
+  ],
+  "next": "Reconcile original registered credential ownership/current-target recovery contract; keep safe independent Source clone mainline available"
+}
