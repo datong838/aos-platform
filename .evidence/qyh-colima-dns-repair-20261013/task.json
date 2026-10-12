@@ -1,0 +1,24 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-colima-dns-repair-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001983",
+  "scope": [
+    "aos-platform/.evidence/qyh-colima-dns-repair-20261013",
+    "aos-platform/maintenance/colima-aos-extension/dns"
+  ],
+  "excluded_scope": [
+    "authority PostgreSQL named volume",
+    "VM/PG/API/Web restart",
+    "Host worker Provider"
+  ],
+  "expected_outputs": [
+    "plan.md",
+    "before.json",
+    "after.json",
+    "verification.md"
+  ],
+  "lease_expires_at": "2026-10-12T17:25:15.932827+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-13T00:25:17+08:00"
+}

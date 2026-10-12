@@ -1,0 +1,14 @@
+{
+  "context": "colima-aos-extension",
+  "resolvRegularFile": true,
+  "content": "nameserver 223.5.5.5\noptions timeout:2 attempts:2\n",
+  "originalSymlinkBackup": "/etc/resolv.conf.aos-before-qyh-20261013",
+  "originalSymlinkTarget": "../run/systemd/resolve/stub-resolv.conf",
+  "vmQuayDnsResolved": true,
+  "aosCurrentMeTenant": "org-org/dev-project",
+  "aosServiceRestart": false,
+  "aosDataVolumeMutation": false,
+  "imagePullAcceptance": "same exact quay.io/keycloak/keycloak:26.0.2 pull completed",
+  "repoDigest": "sha256:cde8d7fff48622d7bff959ea2a98e945ae8a7ccb0117b44858de77243b96231e",
+  "sourcePgStartedAtUnchanged": "2026-10-12T12:25:24.538377567Z"
+}

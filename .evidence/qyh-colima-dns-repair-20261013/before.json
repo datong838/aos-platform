@@ -1,0 +1,9 @@
+{
+  "context": "colima-aos-extension",
+  "resolvSymlink": "../run/systemd/resolve/stub-resolv.conf",
+  "targetExists": false,
+  "resolvedUnit": "not-found",
+  "hostNameserver": "223.5.5.5",
+  "originalPullExit": 1,
+  "aosRestart": false
+}
