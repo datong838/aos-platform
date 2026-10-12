@@ -1,0 +1,59 @@
+
+ RUN  v2.1.9 /Users/ddt/work/projects/ai_agent/aos-platform/apps/web
+
+stdout | src/api/passwordLogin.test.ts > human password login > uses original grant and canonical me before publishing memory session
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+
+stdout | src/api/passwordLogin.test.ts > human password login > does not retry rejected credentials or publish a session
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+
+stdout | src/api/passwordLogin.test.ts > human password login > rejects incomplete token responses before fetching identity
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+
+stdout | src/api/passwordLogin.test.ts > human password login > does not expose an unverified session when canonical me fails
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+
+stdout | src/api/passwordLogin.test.ts > server login policy gate > preserves the explicitly enabled legacy development UI
+[aos-tenant] { event: 'access_token_set', present: false }
+
+stdout | src/api/passwordLogin.test.ts > server login policy gate > requires human login before mounting business consumers
+[aos-tenant] { event: 'access_token_set', present: false }
+
+ ❯ src/api/passwordLogin.test.ts (7 tests | 1 failed) 25ms
+   × human password login > uses original grant and canonical me before publishing memory session 4ms
+     → 登录失败，请核对账号、密码及工作区访问权限后重试。
+stdout | src/api/passwordLogin.test.ts > server login policy gate > fails closed for unreadable or unsupported login configuration
+[aos-tenant] { event: 'access_token_set', present: false }
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/api/passwordLogin.test.ts > human password login > uses original grant and canonical me before publishing memory session
+Error: 登录失败，请核对账号、密码及工作区访问权限后重试。
+ ❯ Module.loginPassword src/api/passwordLogin.ts:28:11
+     26|   } catch {
+     27|     clearAccessToken();
+     28|     throw new Error("登录失败，请核对账号、密码及工作区访问权限后重试…
+       |           ^
+     29|   }
+     30| }
+ ❯ src/api/passwordLogin.test.ts:14:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  02:21:22
+   Duration  557ms (transform 33ms, setup 0ms, collect 55ms, tests 25ms, environment 267ms, prepare 37ms)
+
+undefined
+/Users/ddt/work/projects/ai_agent/aos-platform/apps/web:
+[ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL] Command failed with exit code 1: vitest run src/api/passwordLogin.test.ts

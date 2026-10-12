@@ -1,0 +1,65 @@
+
+ RUN  v2.1.9 /Users/ddt/work/projects/ai_agent/aos-platform/apps/web
+
+stdout | src/api/tenant.test.ts > TWA.2 tenant context > defaults to 默认工作区 / dev-project
+[aos-tenant] { orgId: 'org-org', projectId: 'dev-project', workspaceName: '默认工作区' }
+
+stdout | src/api/tenant.test.ts > TWA.2 tenant context > auth headers come from context not literals scattered
+[aos-tenant] { orgId: 'org-org', projectId: 'dev-project', workspaceName: '默认工作区' }
+[aos-tenant] { orgId: 'org-x', projectId: 'prj-y', workspaceName: 'Y' }
+
+stdout | src/api/tenant.test.ts > TWA.2 tenant context > applyMeToTenant maps workspaceName
+[aos-tenant] { orgId: 'org-org', projectId: 'dev-project', workspaceName: '默认工作区' }
+[aos-tenant] { orgId: 'dev-org', projectId: 'dev-project', workspaceName: '默认工作区' }
+
+stdout | src/api/tenant.test.ts > TWA.2 tenant context > persists across getTenant
+[aos-tenant] { orgId: 'org-org', projectId: 'dev-project', workspaceName: '默认工作区' }
+[aos-tenant] { orgId: 'o1', projectId: 'p1', workspaceName: 'W1' }
+
+stdout | src/api/tenant.test.ts > TWA.2 tenant context > TWA.3 switch updates headers for subsequent calls
+[aos-tenant] { orgId: 'org-org', projectId: 'dev-project', workspaceName: '默认工作区' }
+[aos-tenant] { orgId: 'dev-org', projectId: 'prj-ops', workspaceName: '生产运营工作区' }
+
+ ✓ src/api/tenant.test.ts (6 tests) 4ms
+stdout | src/api/tenant.test.ts > TWA.2 tenant context > TWC.3 access token override changes Authorization
+[aos-tenant] { orgId: 'org-org', projectId: 'dev-project', workspaceName: '默认工作区' }
+[aos-tenant] { event: 'access_token_set', present: true }
+[aos-tenant] { event: 'access_token_set', present: false }
+
+stdout | src/api/passwordLogin.test.ts > human password login > uses original grant and canonical me before publishing memory session
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { orgId: 'org-org', projectId: 'dev-project', workspaceName: '真实工作区' }
+[aos-tenant] { event: 'access_token_set', present: true }
+[aos-tenant] { event: 'access_token_set', present: false }
+
+stdout | src/api/passwordLogin.test.ts > human password login > does not retry rejected credentials or publish a session
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+
+stdout | src/api/passwordLogin.test.ts > human password login > rejects incomplete token responses before fetching identity
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+
+stdout | src/api/passwordLogin.test.ts > human password login > does not expose an unverified session when canonical me fails
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+[aos-tenant] { event: 'access_token_set', present: false }
+
+stdout | src/api/passwordLogin.test.ts > server login policy gate > preserves the explicitly enabled legacy development UI
+[aos-tenant] { event: 'access_token_set', present: false }
+
+stdout | src/api/passwordLogin.test.ts > server login policy gate > requires human login before mounting business consumers
+[aos-tenant] { event: 'access_token_set', present: false }
+
+ ✓ src/api/passwordLogin.test.ts (7 tests) 26ms
+stdout | src/api/passwordLogin.test.ts > server login policy gate > fails closed for unreadable or unsupported login configuration
+[aos-tenant] { event: 'access_token_set', present: false }
+
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  02:22:03
+   Duration  591ms (transform 47ms, setup 0ms, collect 75ms, tests 30ms, environment 557ms, prepare 68ms)
+

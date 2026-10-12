@@ -8,7 +8,7 @@ import { LocalLoginGate } from "../components/auth/LocalLoginGate";
 afterEach(() => { vi.unstubAllGlobals(); clearAccessToken(); });
 describe("human password login", () => {
   it("uses original grant and canonical me before publishing memory session", async () => {
-    const fetch = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ access_token: "signed", refresh_token: "discard" })))
+    const fetch = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "signed", refreshToken: "discard" })))
       .mockResolvedValueOnce(new Response(JSON.stringify({ subject: "human", orgId: "org-org", projectId: "dev-project", workspaceName: "真实工作区", roles: ["admin"], markings: [], tokenKind: "oidc" })));
     vi.stubGlobal("fetch", fetch);
     await loginPassword("user", "private");
@@ -33,7 +33,7 @@ describe("human password login", () => {
     expect(fetch).toHaveBeenCalledTimes(1); expect(getAccessToken()).toBeNull();
   });
   it("does not expose an unverified session when canonical me fails", async () => {
-    const fetch = vi.fn().mockResolvedValueOnce(new Response('{"access_token":"signed"}'))
+    const fetch = vi.fn().mockResolvedValueOnce(new Response('{"accessToken":"signed"}'))
       .mockResolvedValueOnce(new Response("{}", { status: 403 })); vi.stubGlobal("fetch", fetch);
     await expect(loginPassword("user", "private")).rejects.toThrow("登录失败");
     expect(getAccessToken()).toBeNull();
