@@ -1,0 +1,11 @@
+# 最新源码候选原门禁复审
+
+原fullrestoreTask/Lease同owner一致且有效，原source/intent/output不存在预检后原freeze_current_api.py只执行一次--receipt-stem latest-api-skill-snapshot-20261012。97b26已提交API/scripts/bundles Gitarchive8627文件，保留22未提交用户修改、无.env/credential复制，原private0700/0600及exact manifest全部核验。原require_api_source_candidate真实通过、全部API Python AST解析通过，6行原Source wrapper兼容与1行Skill default repeatable readonly修复字节同m1一致。旧source保留，可供原独立重启流程按正式门使用。
+
+首次验证辅助导入没有将scripts加入sys.path，ModuleNotFoundError发生在原验证器调用前；未重放freezer/启动。随后补充scripts导入路径，原验证器通过，未改原业务源码。首次后续gitadd因缺verification文件失败，没有staging或commit；再次按依赖逐项执行收口。
+
+定位生产者边界：原persist_signed_skill_eval_report默认需configured_eval_writer_connection/独立AOS_AIP_EVAL_WRITER_CREDENTIAL_FILE，其功能是校验并登记已有签名目标/judge结果，不是执行器、批准或自动创建可信Issuer根。不能将当前原16旧报告缺sidecar用该函数追溯补签；新合法评测依赖实际当前Source/独立身份和Root/目标Judge执行。未读取未授权secret位置/伪造身份，未调用writer或模型。正式OIDC/publisher入口已询问待答，未伪称配置完成。
+
+该candidate不启动API/PG/Web/Host，不修改当前进程/数据，旧28f sourceAPI管理服务未触碰（不凭intent验证本轮存活），首链/八页未完成。源码冻结不是业务验收；重启职责保持原aos，后续需原具体PID/port/启动intent/源门/数据库role/read-only/租户与浏览器门，不因候选就自动开放。Freezer启动flags是保守模板，实际管理/正式入口沿原两种明确模式。
+
+风险：本文提交的变动只有证据；候选sourceHead97b26，后续API更改会使候选过期，下一切换须重核Git committed API hashes。Source artifact/intent/receipt属于原parent范围，不放入child交付文件，不提交private源码或manifest；child只验证及原path指向。fullrestore/Goal ACTIVE。

@@ -1,0 +1,19 @@
+{
+  "sourceHead": "97b26e3481270618609bc0bd73a227affcb08900",
+  "exactFileCount": 8627,
+  "apiPythonAstParsed": 5215,
+  "manifestSha256": "a549236c73eefa9813c4ce5239f84a85b71db8ed68d3f79c658e65e74ca7634c",
+  "originalSourceGatePassed": true,
+  "acceptedFixBytesMatch": {
+    "services/aos-api/aos_api/aip_media_gate_source_reader.py": "79e633ccb4429dcbda0425bf5c2781bce155d0148ac13aef7d41a254ac08a02d",
+    "services/aos-api/aos_api/aip_skill_binding_readiness_service.py": "053a11f7f7f51b7bfb10fed99c38bf9d5fa97f0286dab582cb09bc0ddcc8adab"
+  },
+  "uncommittedChangesCopied": false,
+  "credentialsCopied": false,
+  "apiStarted": false,
+  "workerOrHostEnabled": false,
+  "databaseWrites": 0,
+  "formalIdentityConfigured": false,
+  "eightWorkbenchRestorationAccepted": false,
+  "receiptPath": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/latest-api-skill-snapshot-20261012.json"
+}

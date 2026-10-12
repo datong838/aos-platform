@@ -1,0 +1,19 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-latest-api-snapshot-candidate-20261012",
+  "owner": "codex-thread-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "base_revision": "AOS-001933",
+  "scope": [
+    "aos-platform/.evidence/qyh-latest-api-snapshot-candidate-20261012"
+  ],
+  "excluded_scope": [
+    "service restart or database write",
+    "original parent owns frozen private source files"
+  ],
+  "expected_outputs": [
+    "Original parent freezer freezes current exact committed API fixes for supported restart; all API AST compile, original startup OFF guard/source hash validation, no service change"
+  ],
+  "lease_expires_at": "2026-10-12T04:12:12.401503+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-12T08:12:13+08:00"
+}

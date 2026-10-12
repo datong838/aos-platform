@@ -1,0 +1,14 @@
+{
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "activeLeaseVerified": true,
+  "scope": [
+    "aos-platform/.evidence/qyh-full-system-restoration-20261011",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume",
+    "aos-platform/maintenance/qiyuehui-restored-api",
+    "aos-platform/scripts/a0v_qyh_restored_http.py",
+    "aos-platform/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py"
+  ],
+  "head": "97b26e3481270618609bc0bd73a227affcb08900",
+  "destinationAndIntentAbsent": true
+}
