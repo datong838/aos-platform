@@ -1,0 +1,22 @@
+{
+  "passed": 60,
+  "newNativeProofTransactionTests": 9,
+  "adjacentTests": 51,
+  "skipped": 0,
+  "originalPreflightAndInsertASTIdenticalAfterSQLWhitespaceNormalization": true,
+  "helperOpensConnectionOrCommitsOrRollsBack": false,
+  "realIndependentLoginPublicWrapperVerified": true,
+  "beforeCommitIndependentView": "running v2 / receipts-report-proof 0 / intent v2 / events2",
+  "afterCommitIndependentView": "succeeded v3 / 2-1-1 / intent v3 / events3",
+  "signatureAndLateSQLFailure": "full caller rollback",
+  "formalCompoundProducerIdentityAvailable": false,
+  "TargetJudgeExecutions": 0,
+  "currentDatabaseChanged": false,
+  "codeSHA256": "c3eea5b1e8ed38f2e63e682e14f19b8fa369f00e9ecb986b35b3de4866b9ea35",
+  "originalLogSHA256": {
+    "red.log": "c9bbc89e580599cd2bbcfb8a4755165375ac4f7632b2298829b87814e3319140",
+    "green.log": "c923ece79b9bbbba9e68340890c2a334d0b028b663f4e47154f6487692532f2d",
+    "acceptance.log": "8e8696145268725783f747417462daf458d65acca1aa7aafbb09d36c2115196b",
+    "acceptance2.log": "3dbb208c7f9a06640c65f29b833d706520d57f85ffa008e44723c55b531a0533"
+  }
+}

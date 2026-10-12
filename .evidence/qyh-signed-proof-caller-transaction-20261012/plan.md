@@ -1,0 +1,11 @@
+# 原完整双签名登记参与 caller 事务
+
+依d77c3a093完整producer合同第3/4步、5c91a7a67原Run helper和7d7e1eb6f持久intent。修改 aip_eval_writer_atomic.py：仅提取原transaction_timestamp→preflight→双Receipt/Report/sidecar INSERT到内部 _persist_signed_skill_eval_report_with_connection；新helper无连接/commit/retry，拒绝autocommit；原公共接口仍通过配置独立writer原身份校验，设置SERIALIZABLE/role/tenant并在原with transaction提交后返回，默认off不变。preflight仍要求succeeded Run及完整真实双方签名，不降为running、不跳过Scope/Source/root/currentness校验。
+
+新增 test_qyh_signed_proof_transaction_pg.py：在18431精确cluster上pytest新fullschema库的二次独立临时DB准备原signed_pair/Source fixture，不在历史库补签。只测试新的隔离Run及intent/dispatch fixture；同一native caller事务先原connection Run成功CAS/event，再切fixture writer角色用新helper验原签名并登记，最后intent版本CAS（不是正式完成receipt）；外部独立readonly快照在commit前见旧状态/0proof；晚期sidecarSQL拒绝、签名错/跨scope/read-committed拒绝时state/event/Receipt/Report/sidecar/intent版本全rollback；commit后原runtime proof reader全量消费。
+
+fixture在新临时DB以test-only admin/bootstrap权限准备原root/不同Target+Judge Ed25519签名和Role/RLS，只有此fixture能切Runtime/Writer两角色。正式独立writer无Run更新权限，不能把该测试当正式复合身份；完整producer应另完成受限终结权限、当前Owner/预算/审批及派发真实执行，未接通前不自动调用helper。无新migration、无现有服务重启/真库写、无Target/Judge/Provider调用。当前正式入口defaultoff专项保留。
+
+RED方法缺失，GREEN专项+原消费/Run/runner与dispatch相邻；字节/AST（只规范SQL空白）对比原preflight和INSERT，不复制签名权威。无页面/API更改，无浏览器正式完成宣称；精确文件commit/Delivery/CAS/7strong；完整Goal仍未完成。
+
+专项增量：9新native包括公开wrapper真实独立NOINHERIT login/0600临时配置检查；身份仅测试，撤销后drop。错误role/READ COMMITTED/自动提交在写前拒绝；全部先前caller状态随事务rollback。累计60PASS0skip。

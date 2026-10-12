@@ -1,0 +1,5 @@
+# 复审
+原transaction_timestamp/preflight和所有完整双Receipt/Report/sidecar登记AST，只有SQL空白归一化后与helper一致；新helper无连接、commit、rollback、retry，拒绝自动提交。公开wrapper保留原配置独立login校验、SERIALIZABLE/role/scope/事务和异常封装，缺身份仍默认关闭。9新native+51相邻=60PASS0skip，7原warning。
+隔离新Run/intent同caller成功路径提交前外部只读连接看running2/0proof/intent2/event2，提交后succeeded3/2Receipt1Report1sidecar/intent3/event3；原runtime消费者全量验证双签名通过。晚期sidecar唯一约束失败、签名错误、跨scope、错role、READ COMMITTED均整事务rollback；自动提交在写前拒绝。另创建新test-only NOINHERIT独立login和0600临时配置，实际原wrapper身份校验及登记成功，fixture精确撤销membership/drop login，密码不进入日志或提交。
+这不是已发生真实Target/Judge执行的证明，root/签名/状态输入均明确为新隔离fixture。原独立writer无Run UPDATE权，正式调用方复合权限与完整intent终结receipt仍未实现；不能照搬fixture管理员切role为正式生产路径。旧数据/旧12Run不改，不降低preflight的succeeded要求，也不自动publish/start。
+候选代码尚未部署原冻结97b API；无HTTP/页面变更、不宣称浏览器8台正式通过。后续完整producer必须当前Owner/预算/审批+独立双签发和受限数据库终结权限，未知效果仍只读对账。
