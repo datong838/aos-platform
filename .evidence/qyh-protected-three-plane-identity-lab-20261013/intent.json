@@ -1,0 +1,8 @@
+{
+  "container": "f902948f700ad1d8c817007db96707fc6cc67fa61281c19970f38c8ac5e2b083",
+  "volume": "qyh-host-oid-durable-full-restore-20261013",
+  "task": "qyh-protected-three-plane-identity-lab-20261013",
+  "authority": "AOS-002000",
+  "currentDatabaseWrites": false,
+  "hostActivated": false
+}

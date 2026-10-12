@@ -1,0 +1,30 @@
+{
+  "hostRules": [
+    {
+      "type": "host",
+      "auth_method": "scram-sha-256",
+      "error": null
+    },
+    {
+      "type": "host",
+      "auth_method": "scram-sha-256",
+      "error": null
+    },
+    {
+      "type": "host",
+      "auth_method": "scram-sha-256",
+      "error": null
+    },
+    {
+      "type": "host",
+      "auth_method": "scram-sha-256",
+      "error": null
+    },
+    {
+      "type": "host",
+      "auth_method": "scram-sha-256",
+      "error": null
+    }
+  ],
+  "currentDatabaseChanged": false
+}

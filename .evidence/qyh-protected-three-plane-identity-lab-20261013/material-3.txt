@@ -1,0 +1,61 @@
+{
+  "outcome": "ISOLATED_THREE_PLANE_NATIVE_SCRAM_AND_ORIGINAL_IDENTITY_GATES_GREEN",
+  "container": "f902948f700ad1d8c817007db96707fc6cc67fa61281c19970f38c8ac5e2b083",
+  "actualSCRAM": true,
+  "nativeIdentities": {
+    "directory": {
+      "sessionUser": "aos_a0v_directory_20260912",
+      "roleOid": "16385",
+      "authority": [
+        "127.0.0.1/32",
+        5432,
+        "qyh_oid_full_restore"
+      ],
+      "directoryMember": true,
+      "runtimeMember": false,
+      "privileged": false,
+      "ownsProtectedRelation": false
+    },
+    "runtime": {
+      "sessionUser": "aos_a0v_runtime_20260912",
+      "roleOid": "16387",
+      "authority": [
+        "127.0.0.1/32",
+        5432,
+        "qyh_oid_full_restore"
+      ],
+      "directoryMember": false,
+      "runtimeMember": true,
+      "privileged": false,
+      "ownsProtectedRelation": false
+    },
+    "web": {
+      "sessionUser": "aos_a0v_web_20260912",
+      "roleOid": "16388",
+      "authority": [
+        "127.0.0.1/32",
+        5432,
+        "qyh_oid_full_restore"
+      ],
+      "directoryMember": false,
+      "runtimeMember": false,
+      "privileged": false,
+      "ownsProtectedRelation": false
+    }
+  },
+  "negativeGates": [
+    "wrongSecretNativeSCRAMRejected",
+    "duplicatePrincipal",
+    "crossPlaneMembership",
+    "relativePath",
+    "symlink",
+    "wrongMode",
+    "changedGeneration"
+  ],
+  "all650TablesUnchanged": true,
+  "schemaRolesMembershipSequencesUnchanged": true,
+  "currentDatabaseWrites": false,
+  "hostActivated": false,
+  "eightWorkbenchesAccepted": false,
+  "secretsPrinted": false
+}

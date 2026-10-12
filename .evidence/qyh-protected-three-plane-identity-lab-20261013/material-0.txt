@@ -1,0 +1,7 @@
+# 三平面身份真实SCRAM隔离验证
+
+Rules：沿parent current-three-plane-protected-identity-plan与用户恢复授权；原完整独立restore副本归属相同thread，前Task已有Delivery，现在独立新Task/Lease精确接管仅lab维护scope，不改current、不动其他分支。新增代码本目录lab.py；parent未来代码尚未实现。候选A本角色SCRAM与原探针，候选B Source锁兼容（需恢复原Source归档），选A。
+
+原exact container/命名卷qyh-host-oid-durable-full-restore-20261013从creation intent与原verification回读CID，network none/无端口/原digest。保存650表及schema/roles/memberships/sequence，private journal0700/0600。仅lab三个既有nonprivileged角色设置各独立随机secret，原SQLidentifier/literal转义；不授角色、Membership或业务执行。原hba所有host trust规则只改scram-sha-256，local原规则保留，exact新hba内容/fileSHA+nativepg_hba_file_rules回读、仅pg_reload_conf不重启。任何未知step原intent拒绝重跑，失败记录不含query/password。
+
+Docker内psql真实TCP SCRAM以protected.pgpass路径登录，每次独立原生transaction read only。复用production runtime_identity原probe与require_isolated，不复制判定；薄连接适配器只传原probe SQL到原生TCP psql/read-only事务，返回实际jsonrow，未持久连接因此开始idle。错误secret实际密码门拒绝；同主体重复/跨平面/不同physical target用原require拒绝；原loader原生负门：相对路径、symlink、0644、wrongshape/重复principal/文件generation变化。全650表/schema/roles/sequence前后不变、bindings0、本loop current源不写。检查点复审明确这不是current正式身份，也不是八台/自然首链。
