@@ -1,0 +1,33 @@
+{
+  "aosOriginalEvent": "2026-10-12T06:14:36.749Z",
+  "postgresSameVolumeRestartVerified": true,
+  "sourceVersion": "a0v_161",
+  "all650DataFingerprintsUnchanged": true,
+  "apiCurrentCommittedSourceVerified": "0511cef862ea1638c706f0783a11e502ebbc177e",
+  "apiPid": 55416,
+  "apiSessionId": 32824,
+  "webPid": 55927,
+  "webSessionId": 24636,
+  "webAll758CurrentGitFilesVerified": true,
+  "browserEightRoutesVisited": 8,
+  "browserErrors": 0,
+  "browserMutationRequests": 0,
+  "allRoutesQiyuehuiNameVisible": true,
+  "allRoutesStillUnavailable": true,
+  "formalIdentityVerified": false,
+  "currentInstallationAccepted": false,
+  "eightWorkshopsFunctionallyAccepted": false,
+  "naturalFirstChainAccepted": false,
+  "currentGoalReadback": "blocked",
+  "updateGoalBlockedCalledByThisTurn": false,
+  "screenshots": {
+    "cockpit": "46a11c1a266821694624814e7c9b8b8fb7fff6b662a811ff1869bd3fa1079404",
+    "content-campaign": "46a11c1a266821694624814e7c9b8b8fb7fff6b662a811ff1869bd3fa1079404",
+    "operations": "e65e53ceeb82372658b9121da9910abed2f62a7e45a7a486bfd0cfa374b84840",
+    "creator-growth": "e65e53ceeb82372658b9121da9910abed2f62a7e45a7a486bfd0cfa374b84840",
+    "media-studio": "46a11c1a266821694624814e7c9b8b8fb7fff6b662a811ff1869bd3fa1079404",
+    "analyst": "46a11c1a266821694624814e7c9b8b8fb7fff6b662a811ff1869bd3fa1079404",
+    "price-governance": "e65e53ceeb82372658b9121da9910abed2f62a7e45a7a486bfd0cfa374b84840",
+    "customer": "e65e53ceeb82372658b9121da9910abed2f62a7e45a7a486bfd0cfa374b84840"
+  }
+}

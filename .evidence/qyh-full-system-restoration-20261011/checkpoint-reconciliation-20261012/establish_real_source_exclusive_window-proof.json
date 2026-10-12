@@ -1,0 +1,17 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "establish_real_source_exclusive_window",
+  "exit_code": 0,
+  "input_files": {
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/maintain-executed-fa8.py.txt": "71106f627c41cc223ca96b63e16e3a7048e3c3e1c7ad6aa47b3a1812aa606877"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/window-established.json": "fa5c355b011286f35790ca2bd63fc793692c8ff8c80e0791da2363bd3d667cd1",
+    ".evidence/qyh-full-system-restoration-20261011/source161-maintenance-20261012/r3/hba-restored.json": "6e377d4397fe23f938d848c4b118e1e8acbf328563efeb00b1ad1813544ed736"
+  },
+  "limitations": [
+    "Historical actual held window now closed; any new source mutation requires a fresh window"
+  ]
+}

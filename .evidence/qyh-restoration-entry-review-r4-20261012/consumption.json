@@ -1,0 +1,20 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-restoration-entry-current-r4-20261012",
+  "task_id": "qyh-restoration-entry-review-r4-20261012",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "e36f8b9f3a1bb5e4c2273e25c28090155e9253f5",
+    "authority_revision": "AOS-001976",
+    "files": {
+      ".evidence/qyh-restoration-entry-review-r4-20261012/entry.py.txt": "d440a9ac5d6d0664e1520dcb8e0daf598c99c7dc09f42a7d85f1a128c139aa68",
+      ".evidence/qyh-restoration-entry-review-r4-20261012/preview.py.txt": "5f684010ba7c6876a9e9718f1a48aeb44d3ac4f0bc6074b8c060b417ccd638b4",
+      ".evidence/qyh-restoration-entry-review-r4-20261012/native-readback.json": "1a1c88f58b219b19fefeca7105765de1955c1428c93872aa7529d3a2ab5042e8",
+      ".evidence/qyh-restoration-entry-review-r4-20261012/provenance.json": "874d010f83aed6e85ea8dd51c170aa07956d9b2f79b21b095b678acbbf792264"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "c6e28dedf703d141c571aed78d1d1fb1eec5c5f58d4b663d92019158a2064689",
+  "transport_sha256": "8cb035fad0aea825b7d92619afa68416a13637d9a3b20a4c5356a97c6371c86f"
+}

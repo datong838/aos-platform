@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-restoration-entry-current-r4-20261012",
+    "task_id": "qyh-restoration-entry-review-r4-20261012",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "e36f8b9f3a1bb5e4c2273e25c28090155e9253f5",
+      "authority_revision": "AOS-001976",
+      "files": {
+        ".evidence/qyh-restoration-entry-review-r4-20261012/entry.py.txt": "d440a9ac5d6d0664e1520dcb8e0daf598c99c7dc09f42a7d85f1a128c139aa68",
+        ".evidence/qyh-restoration-entry-review-r4-20261012/preview.py.txt": "5f684010ba7c6876a9e9718f1a48aeb44d3ac4f0bc6074b8c060b417ccd638b4",
+        ".evidence/qyh-restoration-entry-review-r4-20261012/native-readback.json": "1a1c88f58b219b19fefeca7105765de1955c1428c93872aa7529d3a2ab5042e8",
+        ".evidence/qyh-restoration-entry-review-r4-20261012/provenance.json": "874d010f83aed6e85ea8dd51c170aa07956d9b2f79b21b095b678acbbf792264"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "管理只读模式拒绝写HTTP及WebSocket请求。",
+        "evidence": "entry.py.txt 第 47-59 行 ReadOnlyManagementApp.__call__ 方法；第 53-56 行对 scope['type'] == 'websocket' 直接返回 1008 close；第 57-61 行对 http 且 method 不在 {'GET', 'HEAD', 'OPTIONS'} 的请求返回 405 并 body code='RESTORED_MANAGEMENT_READ_ONLY'；第 189-192 行 serve_management_readonly 输出 'mutationRequestsAllowed': False；第 224-227 行 management_app 校验 import 源 drift",
+        "assessment": "supported"
+      },
+      {
+        "claim": "源码候选校验覆盖实际加载的恢复入口与API源码。",
+        "evidence": "entry.py.txt 第 137-192 行 require_api_source_candidate：校验 report.outcome='CURRENT_M1_API_SOURCE_CANDIDATE_FROZEN_NO_START'、source 目录存在、manifest sha256、每文件权限（文件 0o600/目录 0o700）、内容 sha256 与 manifest 一致、git branch=m1/sha1 format、git ls-tree HEAD 下 services/aos-api 等三路径 blob mode+oid 匹配、previous.__file__ 与 source 内脚本 bytes 相同",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前局部代码与探活证据没有证明正式八工作台或经营首链完成。",
+        "evidence": "native-readback.json：runtimeAuthorityGranted=false, eightPagesAccepted=false；entry.py.txt 第 82-93 行 inventory_report 强制 'eightWorkbenchesVerified': False 与 'apiStartAuthorized': False，remainingGates 包含 current signed release/installation、formal identity、API/Web restart + eight-page browser acceptance；preview.py.txt FLAGS 禁用全部 workers 与 runtime host",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前 RESTORED_HTTP_ATTACHMENT_INVENTORY_ONLY / RESTORED_CURRENT_INSTALLATION_EVIDENCE_ONLY 只读状态，继续等待 OIDC/formal identity/browser acceptance 门禁完成后再推进 API/Host 启动；不要修改 entry.py/preview.py 权限或尝试绕过 ReadOnlyManagementApp 拒写逻辑"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

@@ -1,0 +1,18 @@
+{
+  ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/entry-review-r4-result.json": {
+    "sourcePath": ".evidence/qyh-restoration-entry-review-r4-20261012/result.json",
+    "sha256": "28986a64c597fb238f65693c5a80d65461a339681392daee4adad50a3f296de6"
+  },
+  ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/entry-review-r4-consumption.json": {
+    "sourcePath": ".evidence/qyh-restoration-entry-review-r4-20261012/consumption.json",
+    "sha256": "29f9ac99e871b6d6436ddd5cab2633155e893083606e2725b7500f345c8e49d7"
+  },
+  ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/entry-review-r4-review.md": {
+    "sourcePath": ".evidence/qyh-restoration-entry-review-r4-20261012/review.md",
+    "sha256": "5fb2f6ebb3f68619a0b543b892a7d5744f37af0be808f4401242a2aa90ce80da"
+  },
+  ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/entry-review-r4-provenance.json": {
+    "sourcePath": ".evidence/qyh-restoration-entry-review-r4-20261012/provenance.json",
+    "sha256": "874d010f83aed6e85ea8dd51c170aa07956d9b2f79b21b095b678acbbf792264"
+  }
+}

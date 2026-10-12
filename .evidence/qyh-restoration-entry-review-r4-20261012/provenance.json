@@ -1,0 +1,14 @@
+{
+  ".evidence/qyh-restoration-entry-review-r4-20261012/entry.py.txt": {
+    "originalPath": "scripts/a0v_qyh_restored_http.py",
+    "sha256": "d440a9ac5d6d0664e1520dcb8e0daf598c99c7dc09f42a7d85f1a128c139aa68"
+  },
+  ".evidence/qyh-restoration-entry-review-r4-20261012/preview.py.txt": {
+    "originalPath": "scripts/a0v_current_preview_http.py",
+    "sha256": "5f684010ba7c6876a9e9718f1a48aeb44d3ac4f0bc6074b8c060b417ccd638b4"
+  },
+  ".evidence/qyh-restoration-entry-review-r4-20261012/native-readback.json": {
+    "originalPath": ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/current-source-and-live-readback.json",
+    "sha256": "1a1c88f58b219b19fefeca7105765de1955c1428c93872aa7529d3a2ab5042e8"
+  }
+}

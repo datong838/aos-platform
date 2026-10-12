@@ -1,0 +1,26 @@
+{
+  "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+  "state": "submitted",
+  "etagVersion": 2,
+  "moduleCount": 8,
+  "versions": {
+    "domain.ecommerce.core": "1.4.3",
+    "platform.ecommerce.niushop": "1.23.2",
+    "solution.ecommerce.growth": "1.13.0",
+    "solution.ecommerce.operations-base": "1.2.2"
+  },
+  "predecessorPreserved": true,
+  "independentApprovalPending": true,
+  "runtimeEnabled": false,
+  "eightPagesAccepted": false,
+  "observation": "Native resolve/create/submit committed; post-comparison rejected only misnamed expected receipt table. Original store uses bundle_installation_command; no retry or replay performed.",
+  "actualChangedTables": [
+    "public.bundle_installation",
+    "public.bundle_composition",
+    "public.bundle_composition_lock",
+    "public.bundle_installation_event",
+    "public.bundle_installation_revision",
+    "public.bundle_installation_command"
+  ],
+  "sourceScriptSha256": "559164adee9acf6123c3cf868f341666bc5c9f1da507e036a192a0a8be65f660"
+}

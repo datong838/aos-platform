@@ -1,0 +1,18 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "current_immutable_source_revalidated",
+  "exit_code": 0,
+  "input_files": {
+    "scripts/a0v_qyh_restored_http.py": "d440a9ac5d6d0664e1520dcb8e0daf598c99c7dc09f42a7d85f1a128c139aa68",
+    "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py": "5b0fdaad431a3381e4cfc109081e896475caf6a98a190b8d0ed392ededa776ce",
+    ".evidence/qyh-full-system-restoration-20261011/current161-preview-source-20261012.json": "d8565762002ee88edb06b676a9c351c74bf7e6dec3abaa96372e98631d221000"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/current-source-and-live-readback.json": "1a1c88f58b219b19fefeca7105765de1955c1428c93872aa7529d3a2ab5042e8"
+  },
+  "limitations": [
+    "0511 immutable candidate currently accepted; previous cache-contaminated candidates retained; no formal start permission"
+  ]
+}

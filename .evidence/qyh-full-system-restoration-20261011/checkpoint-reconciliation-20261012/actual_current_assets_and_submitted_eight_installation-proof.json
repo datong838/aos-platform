@@ -1,0 +1,18 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "actual_current_assets_and_submitted_eight_installation",
+  "exit_code": 0,
+  "input_files": {
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/copy-provenance.json": "a39b52571c33dcab845d6363ee6ab778d994bfbf60c368103e4727235c1949fe"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/actual-submitted-installation.json": "503091591862a7f45aa83fc8c1115c45fe96cfdb476f10849454ecb0522272a2",
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/actual-current-published-assets.json": "0af10f04cb2a882c9d1b2476a7bbdfebef39fd54b8f397fd69f6c569f465a61c",
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/actual-installation-browser.json": "d5bbe98441316d763607a47a2b485c20e5afabeab148a16194380de1c9ba6aea"
+  },
+  "limitations": [
+    "Native publication and submitted installation only; independent approval/current configuration/resource gates and eight functional pages pending"
+  ]
+}

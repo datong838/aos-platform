@@ -1,0 +1,22 @@
+{
+  ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/actual-preview-restart-verification.json": {
+    "sourcePath": ".evidence/qyh-current161-preview-restart-20261012/verification.json",
+    "sourceSha256": "c8d72d2753d691ac51249a7aef8b6d6a67adaf5322efe8511c36f0739721ae11",
+    "copiedSha256": "c8d72d2753d691ac51249a7aef8b6d6a67adaf5322efe8511c36f0739721ae11"
+  },
+  ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/actual-submitted-installation.json": {
+    "sourcePath": ".evidence/qyh-current-admin-install-20261012/installation-reconciliation.json",
+    "sourceSha256": "503091591862a7f45aa83fc8c1115c45fe96cfdb476f10849454ecb0522272a2",
+    "copiedSha256": "503091591862a7f45aa83fc8c1115c45fe96cfdb476f10849454ecb0522272a2"
+  },
+  ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/actual-current-published-assets.json": {
+    "sourcePath": ".evidence/qyh-current-admin-install-20261012/result.json",
+    "sourceSha256": "0af10f04cb2a882c9d1b2476a7bbdfebef39fd54b8f397fd69f6c569f465a61c",
+    "copiedSha256": "0af10f04cb2a882c9d1b2476a7bbdfebef39fd54b8f397fd69f6c569f465a61c"
+  },
+  ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/actual-installation-browser.json": {
+    "sourcePath": ".evidence/qyh-current-admin-install-20261012/browser-installation.json",
+    "sourceSha256": "d5bbe98441316d763607a47a2b485c20e5afabeab148a16194380de1c9ba6aea",
+    "copiedSha256": "d5bbe98441316d763607a47a2b485c20e5afabeab148a16194380de1c9ba6aea"
+  }
+}

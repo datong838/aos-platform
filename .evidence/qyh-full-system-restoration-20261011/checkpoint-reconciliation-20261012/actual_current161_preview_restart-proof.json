@@ -1,0 +1,16 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "actual_current161_preview_restart",
+  "exit_code": 0,
+  "input_files": {
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/copy-provenance.json": "a39b52571c33dcab845d6363ee6ab778d994bfbf60c368103e4727235c1949fe"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/actual-preview-restart-verification.json": "c8d72d2753d691ac51249a7aef8b6d6a67adaf5322efe8511c36f0739721ae11"
+  },
+  "limitations": [
+    "Actual same-volume PG/API/Web preview restart only; eight runtime pages unavailable; historical blocked goal observation superseded by current official active readback"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "outcome": "CURRENT_FOUR_PUBLISHED_EXISTING_ADMIN",
+  "changedTables": [
+    "public.asset_bundle_version",
+    "public.asset_bundle_version_event"
+  ],
+  "unchangedTables": 648,
+  "publishedVersions": [
+    {
+      "id": "domain.ecommerce.core",
+      "version": "1.4.3",
+      "contentHash": "sha256:e14e6af72dd7c89d5beb7fd002454029bbc64cf510e6b9849ae9df20ef7eba44"
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "version": "1.23.2",
+      "contentHash": "sha256:052214c06f08bd930daea552f7ade0ee49313abde9e3292fdaa8d071d41a8c90"
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "version": "1.13.0",
+      "contentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669"
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "version": "1.2.2",
+      "contentHash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec"
+    }
+  ],
+  "hostProviderWorkerEnabled": false,
+  "installationCompleted": false,
+  "eightPagesAccepted": false,
+  "formalIdentityVerified": false
+}

@@ -1,0 +1,7 @@
+# 实际消费与局部限制
+
+新请求绑定HEAD e36f8b9f3、AOS-001976、当前Task/Lease和四个完整冻结材料hash。原aos_review.py以现有Prime身份、agnes-2.5-flash、所有工具关闭真实返回合法JSON，三个claims为supported/verdict PASS；原consume读取实际transport后CONSUMED_MATERIAL_REVIEW，execution_authorized=false。旧请求、旧attempt和旧格式失败均不重发、不篡改。
+
+我独立复核原代码：ReadOnlyManagementApp在真实41/46行，拒绝WS1008和非GET/HEAD/OPTIONS HTTP405；require_api_source_candidate真实187行开始，逐文件hash/private权限及当前git/API/两个入口一致；inventory_report真实68行明确八页与启动未验收。源consumer当前真实接受0511冻结源、18080/18434健康与QYH名称可读。
+
+模型材料判断符合三条局部claims，但其若干行号不精确（例如将source gate写成137–192，实际187开始）；不把这些行号当精确引用，不宣称模型稳定性或全质量通过。模型下一步建议泛化等待OIDC，不自动执行；现有dev管理员合法Registry发布已完成，独立安装审批仍保留。PASS是局部资料复核，不授Owner/运行/预算/审批或整体Goal完成。

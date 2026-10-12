@@ -1,0 +1,13 @@
+{
+  "observedAt": "2026-10-12T13:10:17.613164+00:00",
+  "sourceHead": "0511cef862ea1638c706f0783a11e502ebbc177e",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-0511cef862ea1638c706f0783a11e502ebbc177e",
+  "originalSourceConsumerAccepted": true,
+  "health": {
+    "18080/v1/health": 200,
+    "18080/v1/me": 200,
+    "18434/": 200
+  },
+  "runtimeAuthorityGranted": false,
+  "eightPagesAccepted": false
+}

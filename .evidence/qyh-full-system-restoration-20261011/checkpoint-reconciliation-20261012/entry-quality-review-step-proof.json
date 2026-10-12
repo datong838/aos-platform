@@ -1,0 +1,21 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "valid_independent_entry_quality_review",
+  "exit_code": 0,
+  "input_files": {
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/entry-review-r4-copy-provenance.json": "a3874023851f2d26ffe9d55f3a0f3261ea3264141ce85fc5715078bbd88fcdfd",
+    "scripts/a0v_qyh_restored_http.py": "d440a9ac5d6d0664e1520dcb8e0daf598c99c7dc09f42a7d85f1a128c139aa68"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/entry-review-r4-result.json": "28986a64c597fb238f65693c5a80d65461a339681392daee4adad50a3f296de6",
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/entry-review-r4-consumption.json": "29f9ac99e871b6d6436ddd5cab2633155e893083606e2725b7500f345c8e49d7",
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/entry-review-r4-review.md": "5fb2f6ebb3f68619a0b543b892a7d5744f37af0be808f4401242a2aa90ce80da",
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/entry-review-r4-provenance.json": "874d010f83aed6e85ea8dd51c170aa07956d9b2f79b21b095b678acbbf792264"
+  },
+  "limitations": [
+    "Exact original tools-disabled material result consumed; no business execution authority",
+    "Model line citations partly inaccurate; independently verified source behavior; no total model-quality acceptance"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "authority_revision": "AOS-001976",
+  "step": "independent_installation_approval_then_apply_configure_eight_pages",
+  "fingerprint": "1d9fb69c82d4764c386b3e52772aed09938b8e9ee990483c3ef31a0d95fd77aa",
+  "task_base_revision": "AOS-001842",
+  "next_step": "REVIEW_STEP:valid_independent_entry_quality_review"
+}

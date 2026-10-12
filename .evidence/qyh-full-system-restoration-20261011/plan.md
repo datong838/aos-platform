@@ -111,3 +111,8 @@ r2停止后只读对账：PID1已为postgres，业务aos_meta_head不存在，�
 
 ## 继任正式只读源码冻结（2026-10-12，AOS-001917）
 最新继任四包固定Core1.4.4/platform1.23.3/Growth1.13.1/operations1.2.2（旧selected保留不覆盖）。HEAD28f620202含原只读principal路由及继任formal HTTP入口。原fullTask同owner显式Leaserenew后执行原freeze_current_api.py，不动旧snapshot/liveAPI；child qyh-successor-source-freeze-20261012独立核原source gate与五启动files/AST。凭据、未提交用户改动不复制。formal serve保持缺企业OIDC/真实publisher/currentinstallation不启动。冻结只为恢复候选，不算8页面或自然首链。
+
+## 接续检查点证据修复（2026-10-12当前安装请求已提交后）
+两个已登记候选：A父Task原observer checkpoint实际证据对账（同owner ACTIVE scope，独立于审批）；B新安装正式独立approve/configure（整体恢复已获授权，依赖另一合法认证管理员，已询问现有入口）。选择A本轮落实。
+精确修改本目录checkpoint.json；新增checkpoint-reconciliation-20261012/plan-readback.md、原执行版本maintain-executed-fa8.py.txt、新proof和当前冻结源/重启/安装只读归档。原maintain.py后续禁字节码修改导致旧proof input hash不再匹配，必须从实际迁移提交fa8c36f25取精确旧源码并核旧hash，不把当前改后源码当实际执行。旧proof/旧污染snapshot均保留。
+复用当前原source consumer检查0511冻结源，保留真实child重启readbacks及新的Registry publish/安装submitted证据hash来源；只在父Task自有目录记录副本和provenance，不让foreignTask proof越界。每proof只证明对应本地步骤，原全系统/formal8/自然首链仍PENDING。cp绑定最新authority及原Task baseline，code_files仍原两个scoped代码，evidence_files上限32，原step导航和输入hash验证不弱化。最后直接调用原checkpoint_snapshot+原wake progress作合法性消费；不重启、不重发publish/install/迁移、无DB写、无造提交刷新代码年龄。
