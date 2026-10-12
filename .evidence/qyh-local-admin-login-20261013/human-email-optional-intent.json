@@ -1,0 +1,7 @@
+{
+  "realm": "qyh-local",
+  "field": "email.required",
+  "change": "optional for username/password local login",
+  "noInventedEmail": true,
+  "otherProfileFieldsPreserved": true
+}

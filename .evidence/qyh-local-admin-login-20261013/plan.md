@@ -17,3 +17,24 @@ r3在启动Keycloak前对原空错误JSON目录改名被root-owned父目录拒�
 
 ## r4复制UID失配到r5原生写入
 精确metadata读回原import父目录修复成功501:0/750；docker cp -a复制文件却实际为65534:65534/600，root helper的chown也被该文件UID映射拒绝。保留部分结果，不重跑helper。r5只用同新身份卷的501:0一次helper，将原不可读文件精确改名保留为非.json文件，再通过Docker受支持stdin stream把本机私密Realm写入umask077/当前501新文件，不把密钥放参数/env/输出。该helper退出后同一stopped服务器start一次；源AOS仍不挂载/不变更。
+
+## 用户指定账号配置
+用户直接指定本机真人登录名datong838与密码，并允许配置本机系统数据。沿同一已创建human UUID/realm，不新造第二真人、不重批恢复请求。用既有bootstrap管理账号的真实本机Keycloak管理API，将同user UUID用户名改为datong838，设置用户提供的密码并取消首次临时密码动作。用户密码只由仓库外0600私密输入文件读取；不得写命令/环境/日志/公开证据/Git。管理token仅在进程内，GET精确user ID/tenant/admin角色与client scope先验、PUT用户名/原reset-password接口，各有排他intent并失败后先GET对账，不假称本人登录。保留当前scope/org/project和角色、first/lastName，不改审批或AOS当前数据卷。原login handoff私密文件同步为用户指定账号；当前Public健康与页面验收后继续原AOS接线。
+
+## 账号实际前检发现Tenant属性未纳入UserProfile
+真实Keycloak GET原human UUID无attributes，当前默认UserProfile忽略未声明自定义字段；不能冒称token带正确scope或用allowDev回退。账号修改前停止，无用户名/密码写intent。修复仅本机qyh-local Realm：先GET原users/profile保留全部既有字段，新增org_id/project_id/markings的admin-only view/edit声明（用户账户页不能修改tenant），保留unmanaged禁用；验证该realm仅预期human账号，再原profile PUT/GET精确回读，原User PUT填固定org-org/dev-project/public+restricted并保持全其他profile与角色。每个profile/属性变更有排他intent/terminal，不重发未知状态。之后继续原用户名/密码配置，不改原AOS数据库/审批/业务运行。
+
+## 原用户名编辑策略与精确续接
+原UserProfile/tenant属性已经实际落账，用户名PUT明确400；密码reset尚未发出，不重跑已有intents。将纯HTTP帮助函数保留、主入口加main守卫供单次续接复用。先只读原realm.editUsernameAllowed和同human UUID；若原false且username仍qyh-owner，排他intent临时允许原username修改，原User PUT只改username，立即finally恢复原false，再原password reset与要求动作回读。不能扩大注册权限/增加管理员/人类用户，不改人类UUID/原审批/AOS库。每一步独立intent与终态回读，未知则仅对账。
+
+## 用户指定凭据实际登录与原验证器自测
+用户名/密码已由原Keycloak API精确落账，用户授权建立并测试本机登录。只在独立自测进程设置原OIDC验证器的公开issuer/JWKS/audience/client/tokenURL（不含密钥），读取仓库外0600用户凭据，原issue_password_token取得一次实际JWT；不打印/写token/password。原resolve_principal必须验证实际签名/固定org-org/dev-project/admin/public+restricted、sub同已建human UUID。跨org/project header和dev token均原函数拒绝；此证明凭据/原验证器能接通，不证明live API已接线或本人互动登录。测试后的原session仅用本次refresh_token logout，不登出其他会话；所有auth token仅进程内、不写AOS真库、Host/worker/Provider不启动。
+
+## 用户名密码模式实际自测400与可选邮箱
+原password grant明确400且无Token返回。真实GET user无requiredActions、姓名已填、邮箱未提供；原profile默认email对user必填，导入阶段忽略该约束不能证明登录。该本机唯一真人按用户要求仅用户名密码登录，不虚构邮箱或再索邮箱批准；仅qyh-local用户profile的email移除required，保留email格式validator和全部其他字段/tenant admin-only权限、注册关闭。原profile PUT/GET差异只允许email.required，之后新的r2排他login自测intent使用原函数，r1实际未获得session不重发未知结果。AOS源库/审批不改变。
+
+## 实际AOS验证器所需sub claim修复
+r2实际密码登录已获Token，原AOS必需sub校验拒绝；r2测试refresh session已原接口logout，不重发未知会话。仓库旧realm模板aos-api默认scope缺当前Keycloak basic，不能改JWT校验要求/手工补sub。只GET当前aos-api client与built-in basic scope，原默认scope精确添加basic并回读，其余scopes与admin限制不变。新r3自测意图与原签名/tenant/canary/dev拒绝/特定session退出必须全过；不影响live AOS配置。
+
+## 显式有限时钟容差接线自测
+r3实际签名Token缺陷已修复，仅被原iat拒绝，测试session确已logout。测得VM领先主机1.365s/NTP offset1.495s，独立qyh-oidc-clock-skew-20261013 Task实施原JWKS仅显式0..5/default0，原签名/必需claims/租户不放宽，当前本机自测显式2；新r4独立intent再次验证真实原登录/签名/claim/tenant/admin/markings与跨scope/dev拒绝，并仅登出此次会话。AOSlive配置未变，不修改系统钟或Source/Budget授权时间。

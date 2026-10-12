@@ -1,0 +1,9 @@
+{
+  "humanUserId": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+  "newUsername": "datong838",
+  "sameHumanIdentity": true,
+  "authorizationSource": "explicit current human user instruction",
+  "operatorIdentity": "existing identity-bootstrap machine administrator",
+  "humanAuthenticatedByAgent": false,
+  "passwordIncludedInEvidence": false
+}

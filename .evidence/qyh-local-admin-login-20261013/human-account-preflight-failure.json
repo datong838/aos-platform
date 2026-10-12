@@ -1,0 +1,7 @@
+{
+  "failure": "existing Keycloak human user has no attributes field; imported unmanaged tenant attributes ignored by current user profile policy",
+  "beforeUsernameOrPasswordIntent": true,
+  "humanUsernameNotYetChanged": true,
+  "aosDatabaseUnchanged": true,
+  "fix": "declare org_id/project_id/markings as admin-only profile attributes, validate sole existing human user, then exact tenant attributes and requested credentials"
+}

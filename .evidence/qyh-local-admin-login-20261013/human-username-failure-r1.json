@@ -1,0 +1,7 @@
+{
+  "operation": "human username PUT",
+  "responseHttp": 400,
+  "profileAndTenantAttributesAlreadyRecorded": true,
+  "passwordResetNotAttempted": true,
+  "next": "read exact current realm/user; temporary username edit policy only if required; same user UUID; restore policy afterwards"
+}

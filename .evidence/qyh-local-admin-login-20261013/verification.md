@@ -9,3 +9,6 @@
 限制：这是独立本机身份服务与真人登录页，不是AOS登录/权限操作完整验收；AOS仍原只读dev预览，登录与API配置/操作界面需下一独立文件级接线。仅一真人新账号及固定tenant claims，不复用原alice或默认样例密码，范围固定AOSorigin且admin明确scopeMapping。没有把这次过程称八台可见、配置通过或经营首链。
 
 下一主线：原AOS OIDC验证器精确接入当前本机公钥/issuer/audience、前端实际登录/退出/tenant读取、本人管理员权限的受支持Enrollment及受限控制入口；先方案/Task/Lease/RED，保留原默认正常功能和用户22改动。已有人工审批不重复索取。随后current runtime preparation/apply/verify/配置/资源→八页→自然首链。全Goal持续active。
+
+## 用户指定账号实际配置与自测闭环
+用户指定datong838及密码，仅本机仓库外0600文件读取，原Keycloak admin API在同一human UUID下更新；tenant profile声明admin-only、原email仅本机可选而非虚构邮箱、用户名immutable策略临时恢复原false、原reset-password204、admin角色保留。旧模板client漏basic使sub丢失，原built-in basic配置补齐，不放宽JWT必需字段。测得VM/host1.365s偏差，独立生产容差Task显式2/default0边界测试35PASS；实际r4真实token与原AOS verifier签名/sub/admin/markings/双tenant正向及cross/dev负门通过，单次自测sessionlogout。仅凭据自测，不声称本人互动登录。AOS API/Web接线仍未完成；原approved3不变、不重批，秘密和tokens未进公开证据/Git。

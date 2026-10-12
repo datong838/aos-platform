@@ -1,0 +1,14 @@
+{
+  "clientId": "aos-api",
+  "clientUuid": "690dc228-f9c5-4f3b-881c-ab4874ac7ef5",
+  "builtInScope": "basic",
+  "scopeId": "384f2dde-248a-4fc1-9276-120606ef07a4",
+  "beforeDefaultScopes": [
+    "acr",
+    "email",
+    "profile",
+    "roles",
+    "web-origins"
+  ],
+  "jwtRequiredSubUnchanged": true
+}

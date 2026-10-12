@@ -1,0 +1,16 @@
+{
+  "realm": "qyh-local",
+  "humanUserId": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+  "attributeNames": [
+    "org_id",
+    "project_id",
+    "markings"
+  ],
+  "permissions": "admin-only",
+  "preservedOriginalFieldNames": [
+    "email",
+    "firstName",
+    "lastName",
+    "username"
+  ]
+}
