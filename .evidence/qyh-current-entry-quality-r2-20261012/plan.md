@@ -1,0 +1,1 @@
+Rules: AGENTS.md/231/已批准栖月汇恢复。候选一原维护入口最新独立质量复核，候选二真实独占维护窗口（需新鲜双备份、完整恢复与已演练版本）；本轮先一。原aos_review.py/现有Prime身份，无工具、SDK自动重试/压缩/refine/遥测关闭且仅临时项目。旧r1 known invalid JSON留存，不消费，不重发；本请求绑定最新HEAD/Task/authority与新冻结资料。资料PASS不授权DB维护、身份、Host或业务运行。

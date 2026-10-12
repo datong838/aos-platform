@@ -1,0 +1,12 @@
+{
+  "transportExit": 0,
+  "assistantStopReason": "stop",
+  "toolEvents": 0,
+  "responseChars": 1677,
+  "rawResponseSHA256": "416d4b7ae224927411dffdb7b575b6e3914cf3d39d65a91ddf944bd840d44867",
+  "rawJsonAccepted": false,
+  "resultProduced": false,
+  "resultConsumed": false,
+  "failure": "Raw response begins with Markdown JSON fence; original strict JSON parser rejected",
+  "unknownExternalEffectsReplayed": false
+}

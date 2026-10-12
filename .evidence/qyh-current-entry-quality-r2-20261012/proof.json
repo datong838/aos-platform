@@ -1,0 +1,20 @@
+{
+  "entryHash": "d440a9ac5d6d0664e1520dcb8e0daf598c99c7dc09f42a7d85f1a128c139aa68",
+  "sourceProof": {
+    "head": "e81d2b500fbcb93e5aeac8a7ee4579bbeb1e6068",
+    "actualFrozenConsumerAccepted": true,
+    "oldFrozenConsumerRejected": "RESTORED_CURRENT_API_SOURCE_DRIFT",
+    "parsedPythonFiles": 5232,
+    "alembicHead": "a0v_161",
+    "finisherBootstrapIsExplicitNonAutomaticPrototype": true,
+    "uncommittedChangesCopied": false,
+    "sourceMigrated": false,
+    "apiStarted": false,
+    "formalIdentityVerified": false,
+    "eightWorkshopsVerified": false
+  },
+  "limitations": [
+    "Frozen source proof is dated and preparatory; source remains159, no real API startup/full restoration proven",
+    "Only review entry logic, not whole maintenance plan or real authentication"
+  ]
+}
