@@ -1,0 +1,1 @@
+Rules: AGENTS.md/231/current Skill D-wave. Append verified identity+atomic ending only; preserve historical facts and formal4-7 pending. Exact document hash CAS, no product changes or authority claims.
