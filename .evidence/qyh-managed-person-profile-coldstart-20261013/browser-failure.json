@@ -1,0 +1,6 @@
+{
+  "errorClass": "Error",
+  "path": "http://127.0.0.1:18434/settings/profile",
+  "noAutomaticResend": true,
+  "credentialsEmitted": false
+}

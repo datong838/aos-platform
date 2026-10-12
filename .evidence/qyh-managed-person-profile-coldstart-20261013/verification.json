@@ -1,0 +1,20 @@
+{
+  "outcome": "ACTUAL_MANAGED_PERSON_PROFILE_RESTORATION_READONLY_GREEN",
+  "nativeCumulativeTests": 20,
+  "finalTargetedTests": 4,
+  "independentReview": "PASS scoped code claims4/4; no execution authority",
+  "actualBrowser": ".evidence/qyh-managed-person-profile-coldstart-20261013/browser-result-r2.json",
+  "humanDisplayName": "datong838",
+  "canonicalTenant": "org-org/dev-project",
+  "profileVisible": true,
+  "currentDatabaseWrites": 0,
+  "all650TableFingerprintsUnchanged": true,
+  "samePgContainerVolumeAndStartedAt": true,
+  "apiPid": 3057,
+  "apiStarted": "Tue Oct 13 03:57:14 2026",
+  "frozenHead": "a283becd94ceabda033b0fcc43e45ba28998fe5e",
+  "runtimeOpenBindings": 0,
+  "eightPagesAccepted": false,
+  "businessFirstChainAccepted": false,
+  "firstBrowserObserver": "Pre-login401 captured by overly broad observer; preserved and reconciled same logged-in task tab readonly; no credential resend."
+}

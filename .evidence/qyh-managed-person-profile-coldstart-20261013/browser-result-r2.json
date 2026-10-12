@@ -1,0 +1,22 @@
+{
+  "outcome": "ACTUAL_MANAGED_COLDSTART_PROFILE_AND_BROWSER_GREEN",
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "displayName": "datong838",
+    "orgId": "org-org",
+    "orgName": "栖月汇商贸有限公司",
+    "projectId": "dev-project",
+    "tokenKind": "oidc",
+    "roles": [
+      "admin"
+    ]
+  },
+  "visibleProfileName": true,
+  "browserKeptOpen": true,
+  "sameTaskTabResumedReadonly": true,
+  "credentialResubmitted": false,
+  "firstObserverCapturedPreloginMe401": true,
+  "tokenOrPasswordRecorded": false,
+  "interactiveHumanLoginObserved": false,
+  "eightPagesAccepted": false
+}

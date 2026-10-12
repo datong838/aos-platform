@@ -1,0 +1,33 @@
+{
+  "headings": [
+    "我的资料"
+  ],
+  "fields": [
+    {
+      "type": "search",
+      "placeholder": "搜索资源…",
+      "value": ""
+    },
+    {
+      "type": "text",
+      "placeholder": "例如 本机开发者",
+      "value": "datong838"
+    },
+    {
+      "type": "text",
+      "placeholder": "name@company.com",
+      "value": ""
+    },
+    {
+      "type": "text",
+      "placeholder": "13800138000",
+      "value": ""
+    },
+    {
+      "type": "text",
+      "placeholder": "例如 本机登录账号",
+      "value": ""
+    }
+  ],
+  "credentialResubmitted": false
+}

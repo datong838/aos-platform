@@ -1,0 +1,48 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-managed-person-profile-coldstart-20261013-r1",
+    "task_id": "qyh-managed-person-profile-coldstart-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "a283becd94ceabda033b0fcc43e45ba28998fe5e",
+      "authority_revision": "AOS-001988",
+      "files": {
+        ".evidence/qyh-managed-person-profile-coldstart-20261013/review-material-0.txt": "7aeaa84c491cd51cb6848f85a1db330b492fb20d560938d2cd440ea682061ece",
+        ".evidence/qyh-managed-person-profile-coldstart-20261013/review-material-1.txt": "69171adb471083436fb3b0af0e9449b0f422ac5a49aa077a5625077c078ed801",
+        ".evidence/qyh-managed-person-profile-coldstart-20261013/review-material-2.txt": "bbe12fcad820f294d2d7d0386b1973f26e6b1c529426028a13b65083e721bfd5",
+        ".evidence/qyh-managed-person-profile-coldstart-20261013/review-material-3.txt": "10df6b9c8f427111df7f86d60813d8a0b525065b706e8b5d2e0d9733d79f096d",
+        ".evidence/qyh-managed-person-profile-coldstart-20261013/review-material-4.txt": "f57788ab70aff233e1ac9268871c617e4ef19db1dc4c3ccfa7e95c4d4703cdd1",
+        ".evidence/qyh-managed-person-profile-coldstart-20261013/review-material-5.txt": "23a667c4ab1144b4399214307c5a4adce0cfb725c3e5001f620200a6cdd8ddd2"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The added person loader reads persisted profiles through a readonly platform transaction without legacy seed or database writes.",
+        "evidence": "review-material-0.txt, function `load_profiles_from_db` in `person_identity.py`: uses `connect_read_only(inherit_scope=False, platform_role=True)` and only executes a SELECT. The `seed_dev_persons` helper is present in the same module but is not invoked by this loader. No INSERT/UPDATE/DDL occurs within the load path.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The complete profile cache is published only after successful read and validation; connection or invalid-row failures preserve prior cache.",
+        "evidence": "review-material-0.txt, `load_profiles_from_db` assigns `_PERSONS = loaded` only after the full try block succeeds; exceptions log a warning and return 0 without mutating `_PERSONS`. review-material-2.txt, `test_persisted_profile_survives_cold_cache_with_native_readonly_connection` confirms non-strict load preserves cache on failure; `test_invalid_row_never_publishes_a_partial_profile_cache` confirms strict mode preserves prior cache on invalid rows.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Managed readonly catalog boot adds strict profile hydration while retaining canonical org/workspace/membership and unchanged legacy and memory branches.",
+        "evidence": "review-material-1.txt, `boot_tenant_catalogs(read_only=True)` calls `load_profiles_from_db(strict=True)` after canonical org/workspace/membership loaders. review-material-3.txt, `test_readonly_boot_preserves_existing_viewer_and_queries_never_write` validates merged behavior; `test_missing_tables_refuses_without_ddl` validates strict refusal; `test_memory_boot_keeps_existing_cache_and_never_connects` and `test_legacy_boot_keeps_original_loader_contract` confirm preserved branches.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "These code and isolated-test findings do not prove actual live display-name restoration or eight runtime workbench acceptance.",
+        "evidence": "review-material-5.txt JSON: `liveApiReloaded` is false, `actualHumanDisplayNameAccepted` is false, `eightWorkbenchesAccepted` is false.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前独立测试结果与 PASS 结论；如需推进到实际显示或八工作bench验收，需在已授权的真实数据库/宿主环境下执行 live API 重载与端到端浏览器检查。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

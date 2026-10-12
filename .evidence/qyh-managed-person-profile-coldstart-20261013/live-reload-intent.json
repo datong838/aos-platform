@@ -1,0 +1,9 @@
+{
+  "oldPid": 96843,
+  "oldStarted": "Tue Oct 13 02:18:59 2026",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-a283becd94ceabda033b0fcc43e45ba28998fe5e",
+  "sameApiPort": 18080,
+  "personCacheReadOnly": true,
+  "databaseRestart": false,
+  "runtimeEnabled": false
+}
