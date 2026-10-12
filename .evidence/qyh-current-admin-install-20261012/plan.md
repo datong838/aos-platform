@@ -1,0 +1,11 @@
+# 栖月汇现有管理员安装恢复
+
+用户本轮明确要求安装电商资产包及八工作台并查看页面。沿既有132非生产开发登录和当前原产品控制面，不新造主体、不将开发身份包装为企业认证。原方案关于所有Registry发布必须等待企业OIDC的判断应纠正：原auth.resolve_principal允许既有dev管理员且asset_publishers含aos；Registry发布允许admin，但必须与持久化creator/validator不同。
+
+本波文件仅 /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-current-admin-install-20261012/plan.md、execute.py及脱敏证据。父Task仍独占当前权威卷维保；子Task独占本目录。代码产品及旧用户改动不变。
+
+先真实API读取当前principal/tenant；原签名加载器和发布策略核当前四包及当前Registry记录，检查user:dev确与历史创建/验证actor不同。在精确原卷/cluster/a0v_161、Host全部关闭、当前650表快照下新建完整一致备份及第二校验副本，再以原RegistryService及现有有限LOGIN/原aos_runtime权限发布两个已validated坐标。每动作O_EXCL intent，结果未知只读对账；禁止换actor或重复旧请求。只允许Registry状态及事件记录变化，其他650表保持。发布失败先保留诊断，不绕过权限。
+
+随后原安装服务查现有请求和审批状态；install create/submit/approve/apply/verify必须沿原租户、CAS、幂等和maker-checker，缺独立合法身份不能假造审批。当前runtime配置、资源和enabled/fence条件与目录门保留。能完成的安装阶段继续，页面未验收不得宣称安装完成。Host/worker/Provider关闭，不读商城源、不执行业务、不覆盖老版本、不删除历史。
+
+发布两坐标已实际成功，650表只有asset_bundle_version及asset_bundle_version_event变化。继续同波原CompositionService resolve→InstallationService create→submit，绑定407历史Canonical安装revision5/lock/overlay作为唯一待替换基线，四包显式精确版本、3依赖边、8UI贡献。请求主体只取实际GET /me现有user:dev；绝不自动approve同一主体，禁止伪造第二认证者。每操作新的幂等键/O_EXCL意图、原CAS；再新全备份及第二副本。仅安装控制面、composition与command receipts可变化，原650业务表、runtime binding和canary保持。独立真实管理员接入后才能后续approve/apply/verify/配置及页面，不将submitted说成installed。

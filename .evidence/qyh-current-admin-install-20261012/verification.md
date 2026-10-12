@@ -1,0 +1,11 @@
+# 实际结果与边界
+
+既有实际GET /me的user:dev管理员身份与原resolve_principal一致，开发登录已有aos publisher scope；原RegistryService发布职责分离和签名策略均通过。两个validated版本已真实publish，四当前包均published、共八UI定义；650表只有两个Registry表变化，其余648表保持，完整一致备份及第二校验副本保留。
+
+原CompositionService resolve和InstallationService create/submit已真实提交，installation ab2fd72f-d81c-400d-bbbc-e1589a159d6b，目标org-org/dev-project，四精确版本、三依赖边、八工作台、407 revision5作为替换基线保留。新请求状态submitted，并非installed/active。后置对账断言误用asset_control_command_receipt，原store实际写bundle_installation_command；失败未重发，单独只读回读submitted和原407 activeRevision5，六实际变化均为原控制面表。保留原失败脚本和独立reconciliation，不伪称原命令全部成功。
+
+没有改产品代码、授权规则或用户既有改动；没有制造第二认证主体、执行独立审批、开启runtime binding、Host/worker/Provider、读取商城源、执行旧Run。审批原文 installation_store.append_approval_in_transaction：installation requester cannot approve the same plan。当前只有user:dev实际认证；保留的其他三admin成员记录不是可借用凭据。已请求现有登录入口，未重复要求全恢复授权。
+
+真实浏览器资产Registry页面四包来自真实API，栖月汇名称可见；安装管理页应显示实际新请求。八工作台运行目录仍需独立审批、应用、核验和完整配置/资源准备，尚未验收。当前服务保持原只读guard，因此本轮通过原服务函数和有限现有连接维护，未修改服务防护或开启写API。
+
+Review：原发布身份门过严已纠正，但不能由该修正推导取消安装maker-checker。老安装、不可变旧发布、数据卷、所有备份不删除。当前Goal官方读回active；不将之前产品blocked状态当继续工作依据。

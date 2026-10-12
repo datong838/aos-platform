@@ -1,0 +1,15 @@
+{
+  "action": "RegistryService.publish",
+  "actorKind": "existing-dev-admin",
+  "tenant": "org-org/dev-project",
+  "version": {
+    "id": "domain.ecommerce.core",
+    "version": "1.4.3",
+    "status": "validated",
+    "contentHash": "sha256:e14e6af72dd7c89d5beb7fd002454029bbc64cf510e6b9849ae9df20ef7eba44",
+    "moduleCount": 0,
+    "publishPending": true
+  },
+  "sourceCluster": "7695302940039200809",
+  "runtimeEnabled": false
+}

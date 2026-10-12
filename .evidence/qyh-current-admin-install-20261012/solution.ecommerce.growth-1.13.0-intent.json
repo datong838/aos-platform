@@ -1,0 +1,15 @@
+{
+  "action": "RegistryService.publish",
+  "actorKind": "existing-dev-admin",
+  "tenant": "org-org/dev-project",
+  "version": {
+    "id": "solution.ecommerce.growth",
+    "version": "1.13.0",
+    "status": "validated",
+    "contentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+    "moduleCount": 7,
+    "publishPending": true
+  },
+  "sourceCluster": "7695302940039200809",
+  "runtimeEnabled": false
+}

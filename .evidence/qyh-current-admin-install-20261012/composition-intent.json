@@ -1,0 +1,20 @@
+{
+  "tenant": {
+    "org_id": "org-org",
+    "project_id": "dev-project"
+  },
+  "versions": {
+    "domain.ecommerce.core": "1.4.3",
+    "platform.ecommerce.niushop": "1.23.2",
+    "solution.ecommerce.growth": "1.13.0",
+    "solution.ecommerce.operations-base": "1.2.2"
+  },
+  "predecessor": {
+    "installationId": "407059df-6f1f-4927-acd7-8e388692838e",
+    "revision": 5,
+    "lockHash": "sha256:820eb34977f56544428e3ecde4fbbca637d6a8ad9cdbd66d223cbf35d58f7380",
+    "overlayRevision": "a0v-canonical-ecommerce-v1"
+  },
+  "actorKind": "existing-dev-admin",
+  "snapshotHash": "sha256:82d5a6259d71e74ecef76131db9323559898ee803064b6fc126cbfba06480d27"
+}

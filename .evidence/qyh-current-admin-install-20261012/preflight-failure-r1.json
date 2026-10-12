@@ -1,0 +1,1 @@
+{"phase":"readonly-before-intent","reason":"incorrect binding table name","databaseWrites":0,"correctedToOriginalContract":"extension_runtime_binding.operation_fence"}
