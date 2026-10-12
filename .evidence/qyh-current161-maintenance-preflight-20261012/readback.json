@@ -1,0 +1,60 @@
+{
+  "observedAt": "2026-10-12T06:09:11.394287+00:00",
+  "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "volume": [
+    "aos-qyh-history159-prepared-data-20261011"
+  ],
+  "ports": {
+    "5432/tcp": [
+      {
+        "HostIp": "127.0.0.1",
+        "HostPort": "18446"
+      }
+    ]
+  },
+  "source": {
+    "cluster": "7695302940039200809",
+    "schema": "a0v_159",
+    "orgName": "栖月汇商贸有限公司",
+    "enabledBindings": 0,
+    "preparedXacts": 0,
+    "otherActiveClients": 0
+  },
+  "current647FingerprintsMatchBackedUpAndFullyRestoredSource": true,
+  "api": [
+    {
+      "path": "/v1/health",
+      "status": 200,
+      "detail": {
+        "successfulReadonlyGET": true
+      }
+    },
+    {
+      "path": "/v1/auth/oidc",
+      "status": 200,
+      "detail": {
+        "externalJwksConfigured": false
+      }
+    },
+    {
+      "path": "/v1/me",
+      "status": 200,
+      "detail": {
+        "orgId": "org-org",
+        "projectId": "dev-project",
+        "orgName": "栖月汇商贸有限公司",
+        "tokenKind": "dev"
+      }
+    },
+    {
+      "path": "/v1/ecommerce-workshop/modules",
+      "status": 200,
+      "detail": {
+        "successfulReadonlyGET": true
+      }
+    }
+  ],
+  "continuousZeroExecutionWindowProven": false,
+  "actualMigrationAllowed": false,
+  "formalIdentityEstablished": false
+}
