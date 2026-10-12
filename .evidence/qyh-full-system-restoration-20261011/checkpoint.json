@@ -5,8 +5,8 @@
   "task_id": "qyh-full-system-restoration-20261011",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "task_base_revision": "AOS-001842",
-  "authority_revision": "AOS-001988",
-  "step": "managed_person_profile_hydration_then_approved_installation_runtime_preparation",
+  "authority_revision": "AOS-001989",
+  "step": "approved_installation_runtime_preparation_dependency_reconciliation",
   "code_files": [
     "scripts/a0v_qyh_restored_http.py",
     "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py"
