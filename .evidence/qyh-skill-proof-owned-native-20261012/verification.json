@@ -1,0 +1,60 @@
+{
+  "pytestExit": 0,
+  "originalTestSha256Before": "5a83e2c0215adc55fdc986f458be2d74b5bca99e5985eb10d98552d65becb2ab",
+  "originalTestSha256After": "5a83e2c0215adc55fdc986f458be2d74b5bca99e5985eb10d98552d65becb2ab",
+  "originalTestsByteUnchanged": true,
+  "endpointOnlyAdaptations": [
+    {
+      "fixture": "connection",
+      "endpointConstantsAdapted": 2,
+      "testModuleSha256": "5a83e2c0215adc55fdc986f458be2d74b5bca99e5985eb10d98552d65becb2ab",
+      "database": "aos_test_5e205ed2f97b_ti4_test",
+      "port": 18431
+    },
+    {
+      "fixture": "connection",
+      "endpointConstantsAdapted": 2,
+      "testModuleSha256": "5a83e2c0215adc55fdc986f458be2d74b5bca99e5985eb10d98552d65becb2ab",
+      "database": "aos_test_5e205ed2f97b_ti4_test",
+      "port": 18431
+    },
+    {
+      "fixture": "connection",
+      "endpointConstantsAdapted": 2,
+      "testModuleSha256": "5a83e2c0215adc55fdc986f458be2d74b5bca99e5985eb10d98552d65becb2ab",
+      "database": "aos_test_5e205ed2f97b_ti4_test",
+      "port": 18431
+    },
+    {
+      "fixture": "connection",
+      "endpointConstantsAdapted": 2,
+      "testModuleSha256": "5a83e2c0215adc55fdc986f458be2d74b5bca99e5985eb10d98552d65becb2ab",
+      "database": "aos_test_5e205ed2f97b_ti4_test",
+      "port": 18431
+    },
+    {
+      "fixture": "connection",
+      "endpointConstantsAdapted": 2,
+      "testModuleSha256": "5a83e2c0215adc55fdc986f458be2d74b5bca99e5985eb10d98552d65becb2ab",
+      "database": "aos_test_5e205ed2f97b_ti4_test",
+      "port": 18431
+    },
+    {
+      "fixture": "connection",
+      "endpointConstantsAdapted": 2,
+      "testModuleSha256": "5a83e2c0215adc55fdc986f458be2d74b5bca99e5985eb10d98552d65becb2ab",
+      "database": "aos_test_5e205ed2f97b_ti4_test",
+      "port": 18431
+    },
+    {
+      "fixture": "connection",
+      "endpointConstantsAdapted": 2,
+      "testModuleSha256": "5a83e2c0215adc55fdc986f458be2d74b5bca99e5985eb10d98552d65becb2ab",
+      "database": "aos_test_5e205ed2f97b_ti4_test",
+      "port": 18431
+    }
+  ],
+  "historical5433Connected": false,
+  "currentDatabaseChanged": false,
+  "formalSourceAuthorityAccepted": false
+}

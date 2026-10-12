@@ -1,0 +1,12 @@
+{
+  "passed": 18,
+  "skipped": 0,
+  "warnings": 7,
+  "nativeCases": 14,
+  "unitCases": 4,
+  "previouslySkippedOriginalCasesNowRun": 7,
+  "originalTestFileUnchanged": true,
+  "endpointOnlyAdapterSha256": "143caa7c69a4959c677a65fe338b259a0e1168ee3d68da998313833fafd34d22",
+  "currentDatabaseWrites": 0,
+  "formalProducerImplemented": false
+}

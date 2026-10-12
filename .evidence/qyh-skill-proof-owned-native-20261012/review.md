@@ -1,0 +1,11 @@
+# 原7固定端口Skill证明测试已在owned clone补验
+
+核原release publication service默认derive/publish使用原connect_serializable，未发现需修改默认快照的问题，不做多余产品修改。选择上一波7专用BG00AF测试缺授权资源的实际验证缺口，原ownedclone18431 cluster7695416748450308141，在pytest原conftest新fullschema DB执行。
+
+原test_aip_eval_report_proof_reader.connection fixture由本session pytest tryfirst hook仅在内存改两个原Const（专库名->当前aos_test_*_ti4_test、5433->18431），同函数其他逻辑不改；提供的BG00AF env仅指向该临时库。原7测试目标/judge签名/root/Report/case sidecar/error引用、撤回、跨scope、错误输入等逻辑完整执行，无SourceTrue/更改期望错误/改变系统API逻辑。fixtureDef执行原RR/每例rollback、conftest删除ownDB，不连接历史5433库或改旧测试文件。原文件SHA before==after，七次exact2 endpoint适配记录保留。
+
+实际18PASS0skip7既有warning：7原固定测试+6原persisted assembly native+4原readiness unit+1新default signedSnapshot native；14native/4unit，本轮是补验，不声称18新增或模型执行收益。新native fixture仍独立第二ownedDB全schema/清理，保护固定fixtureID；原suite/report seeds仅测试新库，绝非旧业务12Run回放或真库补签。
+
+所有negative维持原Reader：report/sidecar缺失、input/hash/result drift、tenant、revocation的失败仍为失败；通过只证明协议实现，不能将测试issuer/root/证书当正式Root/Owner身份。用户当前登录配置路径问题仍待回复，未复制secret/改用户配置。当前API61739/source97b的readonly模式与当前数据不触碰，22tracked用户改动保留。
+
+本Task只验证已实现的证明消费边界，没有实现新签名Skill生产者或Model完整Report，首链/八工作台仍未完成。下一原声明清单继续freeze目标Judge独立执行/授权/可信Root和原atomicWriter完整装配，显式defaultoff、未知结果只读对账和无guard绕过。Goal ACTIVE。
