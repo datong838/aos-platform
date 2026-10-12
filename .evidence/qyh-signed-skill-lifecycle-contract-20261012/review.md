@@ -1,0 +1,4 @@
+# 本波复审与限制
+方案与原BG00u/BG00ac一致：保留旧guard和消费证明、不补签旧Run、不用测试权限授正式权。已复核代码hash/函数调用及两个独立只读快照；新增缺口是原普通 Run转态内部commit与登记preflight已成功前置条件的组合，必须独立connection-bound终结接口。实验库缺writer角色，不能复用原临时pytest角色。
+首次脚本命名inspect.py遮蔽Python标准库，导入失败且未连库；重命名lifecycle_audit.py。随后原角色查询UndefinedObject，事务只读无写，改为先查询role存在并明确记录缺项。两次失败均无外部执行/写入；未重发未知效果。
+本波仅方案调查，不宣称RED修复/生产者已实现/正式身份已接入。下一实现必须登记精确迁移revision和角色/连接协议，再做新独立PG RED及生产代码，不让纯报告assembly替代完整链。

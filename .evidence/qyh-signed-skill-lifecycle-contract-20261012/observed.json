@@ -1,0 +1,92 @@
+{
+  "head": "c4edfa5298a48f7fc18739aca8ffef7fe1c06b41",
+  "code": {
+    "aip_eval_runner.py": {
+      "sha256": "3b4c54d1e2f12dd320d15aafaf25daa1b92893b9e8114e1d241c548ed1f9d3cf",
+      "functions": [
+        {
+          "function": "run",
+          "line": 151,
+          "calls": [
+            {
+              "name": "transition_eval_run",
+              "line": 255
+            },
+            {
+              "name": "_append_report",
+              "line": 312
+            },
+            {
+              "name": "transition_eval_run",
+              "line": 316
+            },
+            {
+              "name": "transition_eval_run",
+              "line": 323
+            }
+          ]
+        }
+      ]
+    },
+    "aip_eval_writer_atomic.py": {
+      "sha256": "52926cb0717a48180bd7afc8ccae3c1e368db6cf1a75260049d8c778ad7e0efe",
+      "functions": [
+        {
+          "function": "persist_signed_skill_eval_report",
+          "line": 18,
+          "calls": [
+            {
+              "name": "preflight_skill_eval_writer_authority",
+              "line": 41
+            }
+          ]
+        }
+      ]
+    },
+    "aip_eval_writer_authority_preflight.py": {
+      "sha256": "68082db40902647e6a14408da2604fc7a3970ffbe8b6d1e4d0a99b264c3030de",
+      "functions": [
+        {
+          "function": "preflight_skill_eval_writer_authority",
+          "line": 38,
+          "calls": []
+        }
+      ]
+    },
+    "aip_eval_authority_store.py": {
+      "sha256": "66c4add1125262e4e4f06e527a32066bcf1cad6730a997cfb6f6e22b9f292298",
+      "functions": [
+        {
+          "function": "create_eval_run",
+          "line": 246,
+          "calls": [
+            {
+              "name": "commit",
+              "line": 330
+            }
+          ]
+        },
+        {
+          "function": "transition_eval_run",
+          "line": 350,
+          "calls": [
+            {
+              "name": "commit",
+              "line": 408
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "writerTablePrivileges": {
+    "rolePresent": false,
+    "tablePrivileges": null
+  },
+  "twoViewsEqual": true,
+  "databaseReadOnly": true,
+  "isolation": "repeatable read",
+  "businessExecutions": 0,
+  "currentDatabaseChanged": false,
+  "formalProducerImplemented": false
+}
