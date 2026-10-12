@@ -1,0 +1,13 @@
+{
+  "completeDatabaseArchives": 3,
+  "secondCopiesEqual": true,
+  "archiveListReadable": true,
+  "catalogUnchanged": true,
+  "files": {
+    "postgres.dump": "06f9ec497fac2f6ebd49e185f6eaf74bb13bfec109fcf9bc6342dc06bc8509e1",
+    "qyh_source161_window_restore_20261012.dump": "b66e05fe96a65072056af6e9384f53c7ba9d71db7328a331bfb4e5d650b7ffbc",
+    "qyh_source161_window_restore_r3_20261012.dump": "fe01b38e8b657354a0fb03bc1ce1878e98345dfb753f847754603b60e1d7568f",
+    "globals.sql": "01fb60b516bb4f077ecb9c31d4dd60f16ae2f4334844e1bd6b30735803dc0d6d"
+  },
+  "volumeRetained": true
+}

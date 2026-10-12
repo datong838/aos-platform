@@ -1,0 +1,44 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-completed-named-lab-resource-retention-20261013-r1",
+    "task_id": "qyh-completed-named-lab-resource-retention-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "374ebc56ccad02dcac2120b785bef5040bcd095e",
+      "authority_revision": "AOS-001995",
+      "files": {
+        ".evidence/qyh-completed-named-lab-resource-retention-20261013/material-0.txt": "a018ba1edb6cea0780475a4e8dfd8b4c2f45d60294ec757358268ed1981c421d",
+        ".evidence/qyh-completed-named-lab-resource-retention-20261013/material-1.txt": "96cda3dae5d0698f008b75768ec28a6ddad6bc84eed65fb9d1ca269513e11f9b",
+        ".evidence/qyh-completed-named-lab-resource-retention-20261013/material-2.txt": "e3f8bd0705e20a780b25bd7577e8eae445af21354ebe5ce44e8730b5901b71a9",
+        ".evidence/qyh-completed-named-lab-resource-retention-20261013/material-3.txt": "3a0bf1d5f5dc7981b92aa099efb429139ec0dd4f08443d630c40d5b4f9032edd",
+        ".evidence/qyh-completed-named-lab-resource-retention-20261013/material-4.txt": "62bc481dde3b6b9cfc76b9ecbcf23ecc90ce0051ba191d5fef1bb463fa813d7f",
+        ".evidence/qyh-completed-named-lab-resource-retention-20261013/material-5.txt": "b50844d95b443b16cf3f926ba3fefc3cde4124463f6427813a480461a8d6bb51",
+        ".evidence/qyh-completed-named-lab-resource-retention-20261013/material-6.txt": "8d44cd8debed8e1fbb73561c60fecf2f79821a66037d99f1630194138adcfc64"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The retention script checks the completed same-owner Task, exact container and named volume, native cluster and no other clients before its stop action.",
+        "evidence": "material-0.txt: 导入并断言 owner 与 task['owner'] == OWNER；通过 RECEIPTS 读取 tasks/qyh-source161-clean-maintenance-lab-20261012.json 与 deliveries/qyh-source161-clean-maintenance-lab-20261012.json，assert delivery['task_id']==task['task_id']。加载原始容器 inspect，要求 original['Id']==CID、original['State']['Running']、original['Name']=='/qyh-source161-clean-maintenance-lab-20261012'、original['HostConfig']['NetworkMode']=='none'、且无 PortBindings；唯一 Mounts 且 original['Mounts'][0]['Name']==VOLUME 与 Type=='volume'。catalog() SQL 查询 pg_control_system().system_identifier 与 pg_stat_activity WHERE pid<>pg_backend_pid() AND backend_type='client backend'，断言 otherClients==0、cluster=='7695744911813242913'。stop 发生在 record('intent.json') 之后、docker('stop','--time','10',CID) 之前",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The retention workflow records complete database archives, two-copy checksums and retained named volume while touching only its exact owned lab container.",
+        "evidence": "material-0.txt: 遍历 before['databases'] 生成命令数组 commands，包含每个库的 pg_dump ... -Fc 以及 pg_dumpall --globals-only --no-role-passwords；对每条命令 O_EXCL 新建 private/{filename}，shutil.copyfile(path, path+'.second')，两次 sha256 hexdigest 相等断言，调用 pg_restore --list 验证可读性，之后 assert catalog()==before。record('backup-terminal.json') 包含 completeDatabaseArchives=3、secondCopiesEqual=true、archiveListReadable=true、catalogUnchanged=true、files 中 postgres.dump/qyh_source161_window_restore_20261012.dump/qyh_source161_window_restore_r3_20261012.dump/globals.sql 四个 SHA 及 volumeRetained=true（material-3.txt）。stop 后 inspected stopped 要求 State.Running=false、Id==CID；inspected volume 要求 Name==VOLUME；再次验证所有 archive/second 哈希不变。material-5.txt outcome=COMPLETED_OWNED_NAMED_LAB_STOPPED_DATA_RETAINED、volumeStillExists=true、allBackupHashesValid=true。整段脚本未对其他 CID/container 发出 docker 指令（仅一次 cat /proc/meminfo 读取 VM 内存信息），且 record('stop-intent.json') 显式 removeVolume=false",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The recorded result does not claim full restore rehearsal, current runtime activation or Goal completion.",
+        "evidence": "material-5.txt 中 fullRestoreRehearsalPassed=false、currentServicesRestarted=false、goalUpdated=false；material-0.txt 直接赋值这两个字段为 False 且不触发任何恢复演练、服务重启或 Goal 写入。material-1.txt 文字明确“停止不等于演练所有业务完成；原命名卷保留全部实验数据，备份保留，无其他container/卷/原服务/Goal变更”。material-6.txt 终端输出仅为 COMPLETED_OWNED_NAMED_LAB_STOPPED_DATA_RETAINED 与内存字节数，无恢复/激活/目标完成字样",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前保留状态；如需继续推进栖月汇恢复，应另开新任务并在合同内重新获取同 owner 的 Task/Lease 并对目标 PG 容器做一次完整还原演练与 Goal 更新。本次审阅仅对已提供的保留证据判定通过，不扩展至恢复或当前业务激活。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}
