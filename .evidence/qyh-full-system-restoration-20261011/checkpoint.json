@@ -1,0 +1,43 @@
+{
+  "schema": "aos-engineering-checkpoint/v1",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "task_base_revision": "AOS-001842",
+  "authority_revision": "AOS-001962",
+  "step": "establish_real_source_exclusive_window",
+  "code_files": [
+    "scripts/a0v_qyh_restored_http.py",
+    "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py"
+  ],
+  "evidence_files": [
+    ".evidence/qyh-full-system-restoration-20261011/current-entry-freeze-green.log",
+    ".evidence/qyh-full-system-restoration-20261011/current-entry-source-consumption-20261012.json",
+    ".evidence/qyh-full-system-restoration-20261011/current-entry-source-20261012.json",
+    ".evidence/qyh-full-system-restoration-20261011/current-code-step-proof.json"
+  ],
+  "steps": [
+    {
+      "id": "current_attachment_code_and_source_verified_locally",
+      "state": "VERIFIED_LOCAL",
+      "proof": ".evidence/qyh-full-system-restoration-20261011/current-code-step-proof.json"
+    },
+    {
+      "id": "establish_real_source_exclusive_window",
+      "state": "PENDING"
+    },
+    {
+      "id": "valid_independent_entry_quality_review",
+      "state": "PENDING"
+    },
+    {
+      "id": "source_migration_and_aos_restart_acceptance",
+      "state": "PENDING"
+    },
+    {
+      "id": "formal_identity_current_installation_eight_workshops",
+      "state": "PENDING"
+    }
+  ]
+}

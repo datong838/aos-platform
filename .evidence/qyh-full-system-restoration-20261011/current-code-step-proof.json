@@ -1,0 +1,19 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "current_attachment_code_and_source_verified_locally",
+  "exit_code": 0,
+  "input_files": {
+    "scripts/a0v_qyh_restored_http.py": "d440a9ac5d6d0664e1520dcb8e0daf598c99c7dc09f42a7d85f1a128c139aa68",
+    "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py": "5b0fdaad431a3381e4cfc109081e896475caf6a98a190b8d0ed392ededa776ce"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/current-entry-freeze-green.log": "348c124d5a5592c9d523aff482b17d099c1155e6a9e0fa640bb1846965db2a16",
+    ".evidence/qyh-full-system-restoration-20261011/current-entry-source-consumption-20261012.json": "dd241314d9b9a11976e230e6a3f37e3bdd35f289223751a4f8f8782508bffe18",
+    ".evidence/qyh-full-system-restoration-20261011/current-entry-source-20261012.json": "cec10f12a1b8dc2a6a19ab35f3f2635519753e6c10db29ba458c0f09edc6df91"
+  },
+  "limitations": [
+    "Code tests and frozen-source checks only; no source migration or startup authority"
+  ]
+}
