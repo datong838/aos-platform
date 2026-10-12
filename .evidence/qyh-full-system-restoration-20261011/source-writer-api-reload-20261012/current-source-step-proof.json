@@ -1,0 +1,19 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "current_immutable_source_revalidated",
+  "exit_code": 0,
+  "input_files": {
+    ".evidence/qyh-full-system-restoration-20261011/source-writer-wiring-api-20261012.json": "09b48ce8e042c5479d536ed18dc2f4e371980f8ae4b35b92f8a68eb0c3e6344e",
+    "scripts/a0v_qyh_restored_http.py": "d440a9ac5d6d0664e1520dcb8e0daf598c99c7dc09f42a7d85f1a128c139aa68"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/source-writer-api-reload-20261012/readback.json": "c4fda0c812144e3fac977818b8e2b395b7db3469332e168c1648bf7ea50a9312",
+    ".evidence/qyh-full-system-restoration-20261011/source-writer-api-reload-20261012/browser.json": "2380ddd13eace454d442f64c3d6b4eda31eaa73854b4c985b2d7823ac5eb7e84"
+  },
+  "limitations": [
+    "New current committed code loaded into readonly management API; Source private configs not activated",
+    "Independent approval/Source ACL/configuration/eight functional pages and business first-chain remain pending"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "oldPid": 55416,
+  "oldSourceHead": "0511cef862ea1638c706f0783a11e502ebbc177e",
+  "newSourceHead": "6f93c7a9b7909ec151551ae9df2e93cefd2d039f",
+  "observedAt": "2026-10-12T14:28:37.058404+00:00",
+  "mode": "management-readonly",
+  "port": 18080,
+  "sourceCredentialsActivated": false,
+  "databaseOrWebRestarted": false,
+  "runtimeAuthorized": false
+}
