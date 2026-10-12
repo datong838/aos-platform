@@ -21,6 +21,8 @@ from aos_api.aip_eval_runner import compute_eval_report_hash
 from aos_api.aip_eval_writer_reconcile import reconcile_signed_skill_eval_intent
 from aos_api.aip_signed_skill_eval_intent_store import SignedSkillEvalIntentStore
 from aos_api.aip_skill_eval_atomic_finisher import finish_signed_skill_eval_with_connection
+from aos_api.aip_skill_eval_finisher_bootstrap import install_skill_finisher_permissions
+from aos_api.tenant_scope import TenantScope
 from test_aip_eval_execution_authority import INPUT_HASH, _signed_pair
 from test_aip_eval_persisted_authority_reader import _seed
 from test_aip_eval_writer_atomic import _seed_source, _source_objects
@@ -41,7 +43,6 @@ def complete_source():
         new_role = admin.execute("SELECT 1 FROM pg_roles WHERE rolname='aos_skill_eval_finisher'").fetchone() is None
         if new_role: admin.execute('CREATE ROLE aos_skill_eval_finisher NOLOGIN NOINHERIT')
         admin.execute(sql.SQL('CREATE ROLE {} LOGIN NOINHERIT').format(sql.Identifier(login)))
-        admin.execute(sql.SQL('GRANT aos_aip_eval_writer,aos_skill_eval_finisher TO {}').format(sql.Identifier(login)))
         admin.execute(sql.SQL('CREATE DATABASE {} TEMPLATE {}').format(sql.Identifier(database), sql.Identifier(parts['dbname'])))
         dsn = make_conninfo(**{**parts, 'dbname': database})
         try:
@@ -55,11 +56,12 @@ def complete_source():
                 conn.execute('UPDATE aip_eval_run SET target_ref=%s,dataset_ref=%s,judge_ref=%s WHERE run_id=%s',
                     (Jsonb(base.target.model_dump(mode='json',by_alias=True)), Jsonb(base.dataset.model_dump(mode='json',by_alias=True)), Jsonb(base.judge.model_dump(mode='json',by_alias=True)),base.run_id))
                 _grant_isolated(conn)
-                for table in ['aip_eval_run', 'aip_eval_run_event']:
-                    conn.execute('CREATE POLICY finisher_fixture ON '+table+" TO aos_skill_eval_finisher USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true)) WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))")
-                conn.execute('GRANT SELECT,UPDATE(status,version,started_at,finished_at) ON aip_eval_run TO aos_skill_eval_finisher')
-                conn.execute('GRANT SELECT,INSERT ON aip_eval_run_event TO aos_skill_eval_finisher')
                 conn.commit()
+                conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+                cluster=conn.execute('SELECT system_identifier::text AS id FROM pg_control_system()').fetchone()['id']
+                install_skill_finisher_permissions(conn,expected_database=database,expected_cluster=cluster)
+                conn.commit()
+                admin.execute(sql.SQL('GRANT aos_aip_eval_writer,aos_skill_eval_finisher TO {}').format(sql.Identifier(login)))
                 conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE'); scope_role(conn,'aos_aip_eval_writer')
                 intent = store.create(conn,SCOPE,run_id=base.run_id,idempotency_key='new-finisher-fixture',request_hash='a'*64)
                 conn.execute('RESET ROLE')
@@ -158,3 +160,21 @@ def test_two_native_finishers_have_one_commit_without_retry(complete_source):
         results=list(pool.map(lambda _:finish_once(),range(2)))
     assert sorted(results)==['committed','conflict']
     assert view(admin_dsn,intent)==({'status':'succeeded','version':3},[2,1,1],4,3)
+
+
+def test_deployed_restrictive_scope_survives_public_permissive_policy(complete_source):
+    admin_dsn,dsn,report,pair,intent,event=complete_source
+    before=view(admin_dsn,intent)
+    with psycopg.connect(admin_dsn) as admin:
+        for table in ['aip_eval_run','aip_eval_run_event']:
+            admin.execute('CREATE POLICY fixture_public_wide ON '+table+' TO PUBLIC USING(true) WITH CHECK(true)')
+    for scope,expected in [(SCOPE,(1,2)),(TenantScope('dev-org','dev-project'),(0,0))]:
+        with psycopg.connect(dsn,row_factory=dict_row) as conn:
+            scope_role(conn,'aos_skill_eval_finisher',scope)
+            rows=tuple(conn.execute('SELECT count(*) AS n FROM '+table).fetchone()['n'] for table in ['aip_eval_run','aip_eval_run_event'])
+            assert rows==expected
+            if scope!=SCOPE:
+                changed=conn.execute("UPDATE aip_eval_run SET status='succeeded' WHERE run_id=%s RETURNING run_id",(report.run_id,)).fetchall()
+                assert changed==[]
+            conn.rollback()
+    assert view(admin_dsn,intent)==before
