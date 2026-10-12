@@ -1,0 +1,63 @@
+{
+  "nativeCandidates": [
+    {
+      "name": "qyh-stage-transport-rehearsal-20261011-recovered-20261012",
+      "container": "08dbf882d08abdd6c0a25a1c164458a275b3b8ffacf978df7ceaea0b8f7cf2fa",
+      "running": true,
+      "mounts": [],
+      "network": "none",
+      "ports": {}
+    },
+    {
+      "name": "qyh-stage-transport-rehearsal-r2-20261011-recovered-20261012",
+      "container": "66bae5737e2dcf3cafdebd85b6e810515f2c5c2c840d4263cce55786c934d323",
+      "running": true,
+      "mounts": [],
+      "network": "none",
+      "ports": {}
+    },
+    {
+      "name": "qyh-source-writer-lab-20261011-recovered-20261012",
+      "container": "73d28f492ab3c03ac0eb25f4fac5ba1db2a67941acfb1a860210ed57a657c9e7",
+      "running": true,
+      "mounts": [],
+      "network": "bridge",
+      "ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18432"
+          }
+        ]
+      }
+    },
+    {
+      "name": "qyh-current159-exact-restore-20261012",
+      "container": "3fb59cb46c8daeb402caee95bf9f2d9aefbb3aa42d87988811afe29418790687",
+      "running": true,
+      "mounts": [
+        {
+          "name": "aos-qyh-current159-exact-restore-20261012",
+          "type": "volume"
+        }
+      ],
+      "network": "none",
+      "ports": {}
+    },
+    {
+      "name": "qyh-current159-restore-lab-20261012",
+      "container": "951749982fad112b99e59e028c60ec126024c3ea3b1ed6288a2d14cb2d644de2",
+      "running": true,
+      "mounts": [
+        {
+          "name": "aos-qyh-current159-restore-lab-20261012",
+          "type": "volume"
+        }
+      ],
+      "network": "none",
+      "ports": {}
+    }
+  ],
+  "ownershipAndBackupNotYetReconciled": true,
+  "stopRequested": false
+}
