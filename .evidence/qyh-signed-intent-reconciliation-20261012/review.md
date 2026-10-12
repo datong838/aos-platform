@@ -1,0 +1,5 @@
+# 复审
+12新native +60相邻=72PASS0skip，7原warning。旧Report reconciliation AST完全不变，新入口原样复用完整Scope/RR/READONLY/currentRoot/revocation/双签名/Report/sidecar核对，再核intent/versions及全部case两purpose派发、签名摘要与因果时间。仅3个SELECT，不建连接/不commit/不rollback/不重发，不改数据库。
+Native反例先证旧Report为COMPLETE，再证新整体UNKNOWN：缺Judge、观察unknown、派发input漂移、签名早于dispatch、Judge先于Target观察；错request/hash/versions/id与读写或canary均UNKNOWN。原input协议双方receipt.input_hash=Suite输入，Judge.actual_hash另绑定Target输出，不能把input_hash直接改成Target输出摘要。
+首次fixture失败是host报告UTC比PG事务UTC晚3.539ms，精确读回诊断。新fixture签名/报告用PG clock_timestamp，保留原生产时间校验，无增加等待或放宽cutoff；其后12真正RED均新入口AttributeError。所有记录/签名都是新独立test-only DB fixture，实际executor调用0，不等于真实Target/Judge或正式经营首链。
+COMPLETE仅当前只读snapshot的证明登记+因果日志结论，不能授Owner/预算/外部执行/发布权限。正式producer受限终结身份/完成receipt/配置仍未接，旧12Run和真实库不改。无UI/API路由变化，无浏览器正式验收宣称；代码未部署冻结97b服务。

@@ -1,0 +1,11 @@
+# 新 Skill intent 全证据只读对账
+
+复习231/BG00u/BG00ac及d77完整合同第5/F步，7d7持久intent/dispatch，cbd同caller证明登记。当前1942真实八台/Owner/独立producer未齐，本波推进已登记中断恢复组件，不重发任何未知外部结果。
+
+修改 aip_eval_writer_reconcile.py：新增reconcile_signed_skill_eval_intent，返回原EvalWriterReconciliation对象。首先调用原Report完整proof reconcile（runtime/双scope、RR或SER、READ ONLY、current root/revocation、Report/Receipt/sidecar）；其COMPLETE只代表Report证明登记，本新入口还要求intent.id/Run/requestHash/intentVersion/runVersion精确匹配。派发集合必须等于report全cases×target/judge，每条input_hash与原双签名case input相同（原协议双方receipt.input_hash绑定suite输入，Judge.actual_hash绑定Target.output_hash），每条result_observed.result_hash等于其signed receipt.output_hash；时间dispatch.created_at≤receipt.occurred_at≤observation.observed_at≤report.created_at，target观察≤Judge派发（防先Judge后Target）。任一缺项或错序为UNKNOWN，无写入/重试/预算释放或重执行。返回COMPLETE仅本新登记对账范围，不授业务首链/发布/恢复权限。
+
+新增 test_qyh_signed_intent_reconciliation_pg.py：18431精确cluster，pytest新fullschema库复制的二次独立DB准备原Root/Source/signed pair fixture；原Run/intent创建、真实target/judge两次dispatch日志提交，再用各自测试私钥在dispatch后真实重签OccurredAt并观察，再原同caller proof登记；scope/签名均原逻辑。0实际Target/Judge外部调用。反例刻意让旧Report reconcile为COMPLETE而新整体UNKNOWN：少Judge派发、观察仍unknown、input漂移、Target签名早于dispatch、Judge先于Target观察、request/version漂移；canary/READ WRITE拒绝。Native只读检查前后数据数量/版本不变。
+
+无需新表/迁移/身份，原公开Report reconcile保持兼容，无HTTP或浏览器行为变化。真实恢复库和旧12Run保持原样；模型/网络失败仅局部待重试，UNKNOWN不重放。方案先写、RED缺新入口、专项与相邻累计及代码复审/精确commit/Delivery/CAS/Prime7强投影，Goal不宣称完成。
+
+诊断增量：首次fixture host/PG时钟3.539ms差异使原Report时间检查拒绝；新测试统一使用PG clock_timestamp生成签名OccurredAt及Report时间。未改生产时效校验；真正RED新入口缺失12项，GREEN72无skip。

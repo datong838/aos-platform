@@ -1,0 +1,34 @@
+{
+  "passed": 72,
+  "newNativeIntentReconciliationTests": 12,
+  "adjacentTests": 60,
+  "skipped": 0,
+  "legacyReportReconciliationASTUnchanged": true,
+  "newSQLStatements": 3,
+  "newSQLAllSelect": true,
+  "newConnectionsOrCommitsOrRollbacks": 0,
+  "reportOnlyCompleteButJournalUnknownCases": [
+    "missing_judge",
+    "unknown_judge",
+    "wrong_input",
+    "backdated_target",
+    "judge_before_target"
+  ],
+  "isolatedTimingDiagnostic": {
+    "hostReportAt": "2026-10-12T01:56:04.155436+00:00",
+    "databaseTransactionAt": "2026-10-12T01:56:04.151897+00:00",
+    "fixtureUsesDatabaseClockAfterDiagnosis": true,
+    "productionTimeChecksRelaxed": false
+  },
+  "countsUnchangedDuringReadonlyChecks": true,
+  "actualTargetJudgeExecutions": 0,
+  "currentDatabaseChanged": false,
+  "formalProducerCompleted": false,
+  "codeSHA256": "8f9ef1e8e591d70dd9dda8c5d7007b3741e99c9e9527bba2aba6e73473ef790e",
+  "originalLogSHA256": {
+    "red.log": "f44e4178c453739a5a99a16de6774d2568abb4ae054c0fcdc34f9547b8d17a34",
+    "setup-diagnostic.log": "300003f9d108124e5f836591687411bd71cbf9795bbb344dc87d78bcea321d0e",
+    "entry-red.log": "9f692af5e98d4672e60d4ec1cd832b386f63fd8ad0b648b2de7c6367deee4637",
+    "green.log": "813783b5295e3cf495ae9a13ad577b35a9f18a270a54cbb0c934eef5cb98a230"
+  }
+}
