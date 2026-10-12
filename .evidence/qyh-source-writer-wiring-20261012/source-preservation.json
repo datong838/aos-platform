@@ -1,0 +1,8 @@
+{
+  "all650SourceTablesUnchanged": true,
+  "comparedWith": "qyh-source-writer-post161-compat-20261012/r2/private/before-source.json",
+  "sourceRolePrivilegesChanged": false,
+  "realSourceIssuerCredentialsProvisioned": false,
+  "newRouterConfigEnabledOnLiveApi": false,
+  "fullSourceAccepted": false
+}

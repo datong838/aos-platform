@@ -23,6 +23,7 @@ from aos_api.aip_responsibility_assignment_store import (
     ResponsibilityAssignmentNotFound,
 )
 from aos_api.auth import Principal, require_principal
+from aos_api.aip_source_issuer_wiring import configured_source_issuer_factory
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
 
@@ -30,7 +31,9 @@ router = APIRouter(
     prefix="/v1/aip/responsibility-assignments",
     tags=["aip-responsibility-assignments"],
 )
-_STORE = AipResponsibilityAssignmentStore()
+_STORE = AipResponsibilityAssignmentStore(
+    plan_connect_factory=configured_source_issuer_factory('plan'),
+)
 
 
 def get_responsibility_assignment_store() -> AipResponsibilityAssignmentStore:

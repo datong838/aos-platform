@@ -70,6 +70,7 @@ from aos_api.aip_production_contracts import (
     SelectArtifactFamilyCandidateRequest,
 )
 from aos_api.auth import Principal, require_principal
+from aos_api.aip_source_issuer_wiring import configured_source_issuer_factory
 from aos_api.ecommerce_business_investigation_aip_authority import (
     SignedBIPlanAdmissionReader, SignedBIPlanAdmissionSnapshot,
     SignedBIPlanActiveRebindService, SignedBIPlanPreparationService,
@@ -80,6 +81,8 @@ from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/production-contracts", tags=["aip-production-contracts"])
 _STORE = AipProductionContractStore(
+    plan_connect_factory=configured_source_issuer_factory('plan'),
+    contract_connect_factory=configured_source_issuer_factory('contract'),
     responsibility_template_resolver=resolve_responsibility_template,
     stage_template_source_resolver=resolve_stage_template_source,
 )

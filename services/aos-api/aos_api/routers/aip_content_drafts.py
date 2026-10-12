@@ -14,12 +14,13 @@ from aos_api.aip_content_draft_store import (
     ContentDraftRegistrationConflict,
 )
 from aos_api.auth import Principal, require_principal
+from aos_api.aip_source_issuer_wiring import configured_source_issuer_factory
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/content/drafts", tags=["aip-content-drafts"])
 _SERVICE = AipContentDraftReadinessService()
-_STORE = AipContentDraftStore()
+_STORE = AipContentDraftStore(connect_factory=configured_source_issuer_factory('content'))
 
 
 def get_content_draft_readiness_service() -> AipContentDraftReadinessService:

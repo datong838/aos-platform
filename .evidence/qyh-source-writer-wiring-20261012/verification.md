@@ -1,0 +1,11 @@
+# Source生产路由可选接线验证
+
+原三Source连接和Store事务不重写。新增purpose私密配置入口并对三个router注入原factory；无配置返回None，沿原构造器兼容正常行为。显式配置只允许固定purpose/精确当前App DB host-port-name、owner私密非symlink常规JSON及原passfile校验；错误不回落runtime。无caller/Owner/预算/运行权限扩张。
+
+RED初始新功能不存在，collection ImportError。测试初始化默认5433不可用的错误不计逻辑RED/GREEN。新命名管道场景独立2秒超时真实RED；最小O_NONBLOCK修复后拒绝非普通文件。原相邻测试相对alembic路径错误只修正执行工作目录，不改旧测试。
+
+最终原API工作目录/独立testDSN18431/aos_app：60PASS0skip0fail0error，8既有warnings。包含新配置/目的/错误DB/非私密/symlink/重复字段/FIFO反证、三个真实router构造器factory接线、三purpose真实18432隔离Role登录/事务COMMIT/scope重绑，以及原BI连接、Content/API、Contract/API、Successor行为回归。前一58PASS1相对路径失败完整保留。
+
+Source650表前后指纹完全一致，真实DB角色/ACL不修改、不配置新的Source密钥或凭据；实际运行API仍旧冻结源，尚未加载新代码。全部22用户修改原样保留。本改动没有页面变化，浏览器仍沿真实submitted安装/8目录禁入证据；代码交付后必须原冻结器刷新、原source consumer验证，再按父Task维护范围受控重载和浏览器读验，不能拿测试代替实际加载。
+
+Review：严格六字段/purpose与原SourceIssuerDatabaseConfig相符，所有实际连接复用原Role/serializable/RLS/scope重绑。新factory仅技术接线；完整生产SQL权限和generic/BI/successor/Content/全部Contract正向全链、克隆切换/部署仍待，不只撤权求绿。原独立安装审批/当前预算及8页面/自然首链仍未完成，Source bridge未让它们变成已通过。
