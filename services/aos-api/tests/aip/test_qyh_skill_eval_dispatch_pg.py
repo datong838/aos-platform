@@ -248,3 +248,41 @@ def test_native_immutable_trigger_blocks_privileged_drift(dispatch_schema, inten
         with psycopg.connect(dsn) as conn:
             conn.execute(sql.SQL('SET search_path TO {}').format(sql.Identifier(schema)))
             conn.execute(statement)
+
+
+@pytest.mark.parametrize('scenario',['missing_target','unobserved','unknown','wrong_case','wrong_input'])
+def test_judge_requires_matching_observed_target_before_claim(dispatch_schema,intent,scenario):
+    version=1
+    if scenario!='missing_target':
+        with writer(dispatch_schema) as conn:
+            target=STORE.claim(conn,SCOPE,intent_id=intent['intent_id'],expected_version=1,
+                case_id='case-1',purpose='target',input_hash='c'*64)
+            if scenario not in {'unobserved'}:
+                STORE.observe(conn,SCOPE,dispatch_id=target,
+                    state='unknown' if scenario=='unknown' else 'result_observed',
+                    result_hash=None if scenario=='unknown' else 'd'*64)
+            conn.commit()
+        version=2
+    with pytest.raises(SkillEvalIntentConflict,match='observed Target'):
+        with writer(dispatch_schema) as conn:
+            STORE.claim(conn,SCOPE,intent_id=intent['intent_id'],expected_version=version,
+                case_id='case-2' if scenario=='wrong_case' else 'case-1',purpose='judge',
+                input_hash='f'*64 if scenario=='wrong_input' else 'c'*64)
+    with writer(dispatch_schema) as conn:
+        assert STORE.get(conn,SCOPE,intent['intent_id'])['version']==version
+        assert conn.execute("SELECT count(*) AS n FROM aip_skill_eval_dispatch WHERE intent_id=%s AND purpose='judge'",(intent['intent_id'],)).fetchone()['n']==0
+
+
+def test_judge_after_observed_target_claims_once(dispatch_schema,intent):
+    with writer(dispatch_schema) as conn:
+        target=STORE.claim(conn,SCOPE,intent_id=intent['intent_id'],expected_version=1,
+            case_id='case-1',purpose='target',input_hash='c'*64)
+        STORE.observe(conn,SCOPE,dispatch_id=target,state='result_observed',result_hash='d'*64)
+        judge=STORE.claim(conn,SCOPE,intent_id=intent['intent_id'],expected_version=2,
+            case_id='case-1',purpose='judge',input_hash='c'*64)
+        assert judge is not None
+        conn.commit()
+    with writer(dispatch_schema) as conn:
+        assert STORE.claim(conn,SCOPE,intent_id=intent['intent_id'],expected_version=3,
+            case_id='case-1',purpose='judge',input_hash='c'*64) is None
+        assert STORE.get(conn,SCOPE,intent['intent_id'])['version']==3

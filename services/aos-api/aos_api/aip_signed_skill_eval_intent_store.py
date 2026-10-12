@@ -60,6 +60,15 @@ class SignedSkillEvalIntentStore:
             if existing['input_hash'] != input_hash:
                 raise SkillEvalIntentConflict('Skill dispatch input drifted')
             return None  # Recorded dispatch is NEVER permission to resend.
+        if purpose == 'judge':
+            target = conn.execute("""SELECT d.input_hash FROM aip_skill_eval_dispatch d
+              JOIN aip_skill_eval_dispatch_observation o
+              ON o.org_id=d.org_id AND o.project_id=d.project_id AND o.dispatch_id=d.dispatch_id
+              WHERE d.org_id=%s AND d.project_id=%s AND d.intent_id=%s
+                AND d.case_id=%s AND d.purpose='target' AND o.state='result_observed'""",
+              (*scope.key, intent_id, case_id)).fetchone()
+            if target is None or target['input_hash'] != input_hash:
+                raise SkillEvalIntentConflict('Judge requires matching observed Target result')
         dispatch_id = 'skill-dispatch-' + uuid4().hex
         conn.execute("""INSERT INTO aip_skill_eval_dispatch
           (org_id,project_id,dispatch_id,intent_id,case_id,purpose,input_hash)

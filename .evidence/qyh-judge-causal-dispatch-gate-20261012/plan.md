@@ -1,0 +1,9 @@
+# Judge 派发前因果门最小修复
+
+231/完整producer合同C/F与1943全intent对账已证明旧正常claim能先Judge后Target观察，仅事后reconcile拒绝不足。候选1为此已登记派发前门；候选2正式Owner/预算/发布身份接入依赖用户请求的既有配置路径，继续保留未齐，不用测试身份授权。先候选1最小修复。
+
+修改 aip_signed_skill_eval_intent_store.py 的claim：现有SERIALIZABLE/独立writer/double scope/intent锁/version/runrunning与既有dispatch不重发规则全部保留。新Judge记录INSERT之前，读取同tenant/intent/case的Target dispatch JOIN result_observed，要求存在且同原Suite input_hash。无Target/无观察/unknown/不同case/input则抛SkillEvalIntentConflict，无Judge INSERT或version更新。Target记录和旧重复派发规则不变。该门仅应用服务入口因果条件，观察不是已验证签名；正式callback仍需当前Owner、双签发、预算、审批、网络及原证据核验。当前独立writer若直接SQL仍能写错误日志，1943消费者必须保持拒绝；不把应用门宣称数据库不可绕过门或正式权限。
+
+新增原native dispatch测试5反例与正向/replay，先RED；独立事务确认Judge计数0/版本保持旧值。reconciliation历史错误反例judge_before_target不能用新的正常claim制造，改为明确新owned DB内test-only SQL插入旧格式错误记录并同步其测试版本，保留新消费者拒绝验证，不放宽生产门，不涉及旧业务数据。其他clock/签名fixture原样保留。
+
+无迁移/新角色GRANT/正式库动作/Provider或Target Judge实际调用。专项与1943相邻累计、编译/diff及方案代码复审；精确commit/Delivery/Dwave/CAS7strong，8台和完整producer仍未完成。

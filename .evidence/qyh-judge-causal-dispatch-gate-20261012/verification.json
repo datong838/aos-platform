@@ -1,0 +1,27 @@
+{
+  "passed": 78,
+  "newNativeJudgeGateTests": 6,
+  "adjacentTests": 72,
+  "skipped": 0,
+  "redFailuresMissingGate": 5,
+  "judgeRejectedBeforeInsert": [
+    "missing_target",
+    "unobserved",
+    "unknown",
+    "wrong_case",
+    "wrong_input"
+  ],
+  "versionAndJudgeCountUnchangedAfterDenial": true,
+  "normalJudgeAndReplayPass": true,
+  "legacyBadJournalReaderNegativePreserved": true,
+  "gateIsApplicationScopeNotDatabaseConstraint": true,
+  "observedResultIsNotVerifiedSignature": true,
+  "actualTargetJudgeCalls": 0,
+  "currentDatabaseChanged": false,
+  "formalProducerCompleted": false,
+  "codeSHA256": "0783a1f1cb82a396f4cfb19ba3850a3796d93fa641d56b5d219ca15da3553230",
+  "originalLogSHA256": {
+    "red.log": "0775fe4f29d294a4832c019aa1d2603939fcf6ca99fd47e129b432b836025667",
+    "green.log": "7601b684a50c219e0da4ef76be0c7a07c2bd81924ca87e382bf20d388ea74be1"
+  }
+}

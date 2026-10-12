@@ -78,15 +78,20 @@ def journal(request):
                 target_dispatch = store.claim(conn,SCOPE,intent_id=intent['intent_id'],expected_version=1,
                     case_id='case-1',purpose='target',input_hash='f'*64 if variant=='wrong_input' else INPUT_HASH)
                 if variant=='judge_before_target':
-                    judge_dispatch = store.claim(conn,SCOPE,intent_id=intent['intent_id'],expected_version=2,
-                        case_id='case-1',purpose='judge',input_hash=INPUT_HASH)
+                    # New isolated fixture models a legacy incorrect row. The
+                    # current application claim now rejects this order; retain
+                    # the consumer's native refusal without disabling that gate.
+                    judge_dispatch='test-only-legacy-judge-'+uuid4().hex
+                    conn.execute('INSERT INTO aip_skill_eval_dispatch(org_id,project_id,dispatch_id,intent_id,case_id,purpose,input_hash) VALUES(%s,%s,%s,%s,%s,%s,%s)',
+                        (*SCOPE.key,judge_dispatch,intent['intent_id'],'case-1','judge',INPUT_HASH))
+                    conn.execute('UPDATE aip_skill_eval_intent SET version=version+1 WHERE intent_id=%s',(intent['intent_id'],))
                 conn.commit()
             target_receipt = resign(target[1],target[2],target[1].occurred_at if variant=='backdated_target' else database_clock(dsn))
             with connection(dsn) as conn:
                 store.observe(conn,SCOPE,dispatch_id=target_dispatch,state='result_observed',result_hash=target_receipt.output_hash)
                 if variant not in {'missing_judge','judge_before_target'}:
                     judge_dispatch = store.claim(conn,SCOPE,intent_id=intent['intent_id'],expected_version=2,
-                        case_id='case-1',purpose='judge',input_hash=INPUT_HASH)
+                        case_id='case-1',purpose='judge',input_hash='f'*64 if variant=='wrong_input' else INPUT_HASH)
                 conn.commit()
             judge_receipt = resign(judge[1],judge[2],database_clock(dsn))
             if variant!='missing_judge':
