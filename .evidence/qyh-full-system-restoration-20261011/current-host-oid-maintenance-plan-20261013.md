@@ -7,3 +7,5 @@ Rules：用户已批准恢复/可修复漂移，231-4审计与恢复、原Task q
 当前identity exactRole aos_a0v_directory_20260912与host a0v-local-ecommerce-host-20260912，expectedRevision1，原storedOID203325与liveOID16385漂移。原extension_runtime_bind_host_identity(name,text,boolean,bigint,text,text,text)权限/Owner以及正式维护channel必须真实核验。维护actor记为已授权本线程恢复执行者，不能冒充人类Owner/审批人。新idem key/hash绑定当前identity和备份SHA，先exclusive intent，原受支持函数CAS事务提交；任何未知结果只读查receipt/history，不重发。
 
 完成必须currentroleOID回读一致、原revision1历史保留、仅三张Host表变化、其余647表全hash不变、序列与schema/roles unchanged；绑定仍disabled、HostOFF。后续独立正式三平面身份配置、最新m1API准备接线部署与原installation apply/verify门继续，不能称八台已恢复。
+
+实际维护完成：新备份全部decode/SHA通过，当前原functionOwner/currentUser aos_app且0其他session/0enabledbindings，execution前r2冻结资料PASS3/3消费；原维护CAS1→2，storedOID16385等于liveOID，revision1历史保留，原650表仅三张Host表变化，其他647表及schema/roles/sequence不变，独立只读再次回读全650最终指纹通过。原库进程/卷保持，HostOFF、八台未验收。后复审r3三项assessment全部supported，但verdict NEED_DECISION建议再确认接受结果或继续身份/安装；这是模型额外流程建议，已有人工继续授权覆盖，无需重复审批。原NEED_DECISION及消费状态保留，不称后审PASS；scope事实据原生结果收口，全目标未收口。

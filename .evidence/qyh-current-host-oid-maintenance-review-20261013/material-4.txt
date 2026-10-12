@@ -1,0 +1,2 @@
+这是执行前方案/代码/备份资格资料复审，不是维护完成验收。尚未执行current写入，execute-intent不存在；不能要求未来execute结果或本review自己尚不存在的consumption作为执行前条件。原模型PASS不授执行权限，execution_authorized=false是正确固定语义。已授权来源是用户原文：“今天肯定要恢复栖月汇租户下的AOS全系统重启包括数据卷加载”“没有其他人了 就你开发和我及督导，只有我是 真人 我授权和审批”“没必要再审批一次 我已经授权”“你不用再等了 继续往下推进”。审批是既有人工授权，不是模型签发。原parent Task/Lease已有current卷维护scope，当前functionOwner/currentUser原aos_app EXECUTE已实际核验。
+Review只判断准备方案/脚本是否保留原nativeCAS、审批与history门、备份/完整restore、精准三表影响和不启用Host；执行后才进行真实postreview。原独立restore已实际完成，以下native回读是本轮实际校验，而非产品完成声明。

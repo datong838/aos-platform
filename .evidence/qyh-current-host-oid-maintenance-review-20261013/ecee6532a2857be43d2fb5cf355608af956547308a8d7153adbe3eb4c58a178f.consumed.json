@@ -1,0 +1,23 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-current-host-oid-maintenance-review-20261013-r2",
+  "task_id": "qyh-current-host-oid-maintenance-review-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "b5a2741e28e41e35f451ee4a83255e065fa7ca46",
+    "authority_revision": "AOS-001999",
+    "files": {
+      ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-0.txt": "e948f552157b9f98d99102eda7a443c3cce493516db1d749ddb151e6c24278fb",
+      ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-1.txt": "89d4fcb315a2982e441acf6d56f73fef2d8ee805721f4f4571d8035362addeaf",
+      ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-2.txt": "aa395a1ac53b2b7a498c266151dbae62c9a04dc47064dd38f69eb7e447405e01",
+      ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-3.txt": "8dc2f691cd30d771f1ebd4a83b17785efcef8c7e2971876e62c6fc6f0c9ed36c",
+      ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-4.txt": "0fe7dae0fb906c3931e9015b5f747085deca16711a8c1c28540d9b6876337d4d",
+      ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-5.txt": "28ca0343de8973f6b77ff2c856bb252ce0bbfeae627b65837d1e61c06ad0635d",
+      ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-6.txt": "0133002954c3141a5b98abd6aa4acea38bbbbb8dd7deba8dee65d31dac8c8dd4"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "00ddfb759dbb35dc52ee86c38b5bd0bc9540cd31535cb4e274ce501b7df754cd",
+  "transport_sha256": "9bdad3287506295d5b498e9db1649ea6eac2cbb71b809b5f16db3ad037e17765"
+}

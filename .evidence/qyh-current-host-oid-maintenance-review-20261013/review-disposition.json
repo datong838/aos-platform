@@ -1,0 +1,8 @@
+{
+  "preExecutionReview": "r2 PASS3/3 consumed",
+  "postExecutionReview": "r3 findings supported3/3, verdict NEED_DECISION retained; not PASS",
+  "suggestedDecision": "Accept scope result or continue credentials/runtime verification",
+  "disposition": "User already authorized continued restoration. Treat model suggestion as advisory, no repeat approval request; retain native scoped completion and unfinished eight-workbench/runtime goal.",
+  "executionAuthorizationFromModel": false,
+  "goalStatusModified": false
+}

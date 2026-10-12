@@ -1,0 +1,22 @@
+{
+  "task": "qyh-full-system-restoration-20261011",
+  "authority": "AOS-001999",
+  "source": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "sourceVolume": "aos-qyh-history159-prepared-data-20261011",
+  "native": {
+    "cluster": "7695302940039200809",
+    "schema": "a0v_161",
+    "enabled": 0,
+    "otherSessions": 0,
+    "owner": "aos_app",
+    "currentUser": "aos_app"
+  },
+  "identity": {
+    "database_role": "aos_a0v_directory_20260912",
+    "host_id": "a0v-local-ecommerce-host-20260912",
+    "revision": 1,
+    "stored_oid": "203325",
+    "current_oid": "16385"
+  },
+  "writes": false
+}

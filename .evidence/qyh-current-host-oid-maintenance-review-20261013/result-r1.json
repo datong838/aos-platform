@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-host-oid-maintenance-review-20261013-r1",
+    "task_id": "qyh-current-host-oid-maintenance-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "b5a2741e28e41e35f451ee4a83255e065fa7ca46",
+      "authority_revision": "AOS-001999",
+      "files": {
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-0.txt": "e948f552157b9f98d99102eda7a443c3cce493516db1d749ddb151e6c24278fb",
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-1.txt": "89d4fcb315a2982e441acf6d56f73fef2d8ee805721f4f4571d8035362addeaf",
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-2.txt": "aa395a1ac53b2b7a498c266151dbae62c9a04dc47064dd38f69eb7e447405e01",
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-3.txt": "8dc2f691cd30d771f1ebd4a83b17785efcef8c7e2971876e62c6fc6f0c9ed36c"
+      }
+    },
+    "verdict": "NEED_DECISION",
+    "findings": [
+      {
+        "claim": "User approved current Qiyuehui recovery; maintenance uses original bind_host_identity native CAS1 and fresh idempotency key, with no direct historical UPDATE and no Host activation.",
+        "evidence": "material-0.txt Rules声明用户已批准、执行用原extension_runtime_bind_host_identity CAS；material-1.txt guards/execute引用consumption['execution_authorized']为False、idempotencyKey=fresh、不启用Host、不重启；material-3.txt verification.json outcome=DURABLE_FULL_RESTORE_AND_CLONE_HOST_OID_REBIND_GREEN且hostActivated=false。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "Fresh two-copy decoded archives and source650 fingerprints/roles/schema/sequences match the independently full-restored baseline; prepared artifact hash binds every exact source table fingerprint.",
+        "evidence": "material-1.txt prepare阶段double-copy写current.dump/globals.sql（EXCL|O_WRONLY 0o600）、两次hash相等断言；fingerprints/metadata先于备份与source-fixed-key-before.json比对。material-2.txt文件四SHA256成对一致、tables=650、priorIndependentFullRestoreVerified/newBackupFullyDecoded=true、sourceWrites=false。material-3.txt independent baseline source650Unchanged/schema metadata equal。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "Execution fails closed on exact source identity, current authority, parent active lease, zero enabled bindings/other sessions, frozen consumed review and fresh native equality; only three Host tables may change, other647 and originalhistory remain verified.",
+        "evidence": "material-1.txt execute调用链：authority==AOS-001999、parent lease active、source volume唯一、native cluster/schema/owner/currentUser/enabled/otherSessions校验；consumption-r1已CONSUMED_MATERIAL_REVIEW且execution_authorized=False；source指纹/元数据与prepared.json前后一致；CAS返回'2'、rebound revision=2 stored_oid=current_oid=16385；history按revision拼接为[1:203325, 2:16385]；enabled计数=0；source StartAt不变。material-3.txt originalHistoryPreserved/sameRequestNoAppend/changedCloneTables只三张Host表/other647TablesUnchanged。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "提供可独立验证的硬证据：(1) reviews/目录下consumption-r1.json原文及已审阅material内容，确认execution_authorized=False与baseline SHA匹配；(2) 上一步task qyh-host-oid-durable-full-restore-20261013的verification.json/prepare.json完整内容与当前material-3/source-fixed-key-before.json的实际diff与SHA；(3) execute结果verification.json全文及原始receipt/history行SELECT输出；(4) 当前容器r.CID inspect与source指纹/metadata对照。无上述材料前不应视为维护完成或继续接线部署。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-host-oid-maintenance-review-20261013-r3",
+    "task_id": "qyh-current-host-oid-maintenance-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "b5a2741e28e41e35f451ee4a83255e065fa7ca46",
+      "authority_revision": "AOS-001999",
+      "files": {
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/post-material-0.txt": "e948f552157b9f98d99102eda7a443c3cce493516db1d749ddb151e6c24278fb",
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/post-material-1.txt": "89d4fcb315a2982e441acf6d56f73fef2d8ee805721f4f4571d8035362addeaf",
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/post-material-2.txt": "164fcc0d9db38e33ee8882f44ed775b276d74f1371a248796606dfdee798f429",
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/post-material-3.txt": "7a4c2db4a0d845d80244d1b4ad0d79646cf9870ed6e872fc67f4d5cc0d989d1d"
+      }
+    },
+    "verdict": "NEED_DECISION",
+    "findings": [
+      {
+        "claim": "Current authorized native Host CAS1 to2 completed, stored OID now matches live16385, originalhistory revision1 retained; only3 host tables changed and other647 stayed identical.",
+        "evidence": "post-material-1.txt execute() 函数调用 extension_runtime_bind_host_identity 并断言结果 '2'；identityAfter 中 revision=2, stored_oid='16385', current_oid='16385'；changedTables 仅包含三张表；verification.json 中 other647TablesUnchanged=true；历史保留：history==[{'revision':1,'database_role_oid':'203325'},{'revision':2,'database_role_oid':'16385'}]",
+        "assessment": "supported"
+      },
+      {
+        "claim": "A separate native readback rechecked all650 final fingerprints and schema/roles/sequences equality; execution bindings remain disabled, original current volume/process retained.",
+        "evidence": "post-material-1.txt guards() 中 assertion native['enabled']==0, native['currentUser']=='aos_app'; source volume mount 检查通过; post-material-2.txt enabledBindings=0, databaseRestarted=false, hostActivated=false; post-material-3.txt bindingsEnabled=0, schemaRolesSequencesStillEqual=true, unchangedOtherTables=647",
+        "assessment": "supported"
+      },
+      {
+        "claim": "This is scoped current Host OID repair only; formal three-plane credentials, installation runtime lifecycle, eight visible workbenches and natural business first-chain remain pending. No old Run replay or Host/Provider activation.",
+        "evidence": "post-material-0.txt 明确声明: '后续独立正式三平面身份配置、最新m1API准备接线部署与原installation apply/verify门继续，不能称八台已恢复'; post-material-2.txt eightWorkbenchesAccepted=false; post-material-3.txt unknownOriginalRunsReplayed=false, hostActivated=false",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "建议确认是否接受当前 Host OID 维护结果作为最终状态，或是否需要继续进行三平面凭证配置与安装运行时生命周期验证。当前变更已安全隔离且未激活任何执行绑定。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

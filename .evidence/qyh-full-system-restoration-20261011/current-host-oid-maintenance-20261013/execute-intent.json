@@ -1,0 +1,8 @@
+{
+  "container": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "commandFunction": "extension_runtime_bind_host_identity",
+  "expectedRevision": 1,
+  "idempotencyKey": "qyh-current-host-oid-maintenance-20261013",
+  "requestHash": "sha256:36617b1055b1732fe5ea8c60f28baf9ccba34a114d69d025e3f1317b7342c0de",
+  "hostActivation": false
+}

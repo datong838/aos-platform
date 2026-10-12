@@ -1,0 +1,22 @@
+{
+  "preparedFileSHA256": "f14709cc78e68e3584df40e454dbed7f08f30d57b50e8a0b6ad360f69f8b9afc",
+  "identity": {
+    "database_role": "aos_a0v_directory_20260912",
+    "host_id": "a0v-local-ecommerce-host-20260912",
+    "revision": 1,
+    "stored_oid": "203325",
+    "current_oid": "16385"
+  },
+  "files": {
+    "current.dump": "9a2f8761811f7084bf7741e204d52cda8b8b9e429126bcdc96399e8ea611c9a8",
+    "current.dump.second": "9a2f8761811f7084bf7741e204d52cda8b8b9e429126bcdc96399e8ea611c9a8",
+    "globals.sql": "e0906daf5ea275d199ccc0a8fc4bc59cbcc46037323424e9696c7d15a4ae0578",
+    "globals.sql.second": "e0906daf5ea275d199ccc0a8fc4bc59cbcc46037323424e9696c7d15a4ae0578"
+  },
+  "idempotencyKey": "qyh-current-host-oid-maintenance-20261013",
+  "requestHash": "sha256:36617b1055b1732fe5ea8c60f28baf9ccba34a114d69d025e3f1317b7342c0de",
+  "tables": 650,
+  "priorIndependentFullRestoreVerified": true,
+  "newBackupFullyDecoded": true,
+  "sourceWrites": false
+}

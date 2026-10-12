@@ -1,0 +1,44 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-host-oid-maintenance-review-20261013-r2",
+    "task_id": "qyh-current-host-oid-maintenance-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "b5a2741e28e41e35f451ee4a83255e065fa7ca46",
+      "authority_revision": "AOS-001999",
+      "files": {
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-0.txt": "e948f552157b9f98d99102eda7a443c3cce493516db1d749ddb151e6c24278fb",
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-1.txt": "89d4fcb315a2982e441acf6d56f73fef2d8ee805721f4f4571d8035362addeaf",
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-2.txt": "aa395a1ac53b2b7a498c266151dbae62c9a04dc47064dd38f69eb7e447405e01",
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-3.txt": "8dc2f691cd30d771f1ebd4a83b17785efcef8c7e2971876e62c6fc6f0c9ed36c",
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-4.txt": "0fe7dae0fb906c3931e9015b5f747085deca16711a8c1c28540d9b6876337d4d",
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-5.txt": "28ca0343de8973f6b77ff2c856bb252ce0bbfeae627b65837d1e61c06ad0635d",
+        ".evidence/qyh-current-host-oid-maintenance-review-20261013/material-6.txt": "0133002954c3141a5b98abd6aa4acea38bbbbb8dd7deba8dee65d31dac8c8dd4"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The pre-execution maintenance plan relies on existing explicit human recovery authorization and exact parent current-volume scope; model review never grants execution authority.",
+        "evidence": "material-0.txt 明确规则：'维护actor记为已授权本线程恢复执行者，不能冒充人类Owner/审批人'；依赖 '用户已批准恢复' 且原 Task qyh-full-system-restoration-20261011 scope 为 'aos-platform/maintenance/qiyuehui-restored-data-volume'。material-4.txt 重申：'原模型PASS不授执行权限，execution_authorized=false是正确固定语义'，授权来源为用户原文。material-5.txt 确认 'executeIntentAbsent': true。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Fresh backup qualification is prepared and native current650 fingerprints/schema/roles/sequences were independently rechecked equal; the prior full restore and native clone CAS rehearsal passed. This claim is about preparation, not current write completion.",
+        "evidence": "material-1.txt prepare() 中 guard 核对了 authority=AOS-001999、parent Task Lease owner 和 scope、容器 CID/Image/Mount 匹配、native cluster/schema/enabled/owner/currentUser 精确等于预期值。读取 identity stored_oid=203325, current_oid=16385。material-2.txt prepared.json 包含 prepareFileSHA256=f14709cc... 及 newBackupFullyDecoded=true, priorIndependentFullRestoreVerified=true。material-3.txt 显示 prior restoration outcome=DURABLE_FULL_RESTORE_AND_CLONE_HOST_OID_REBIND_GREEN, source650Unchanged=true。material-5.txt 确认 current650AndSchemaRolesSequencesEqualPrepared=true 且 executeIntentAbsent=true。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The proposed execute script guards exact identity/lease/frozen consumed materials and original nativeCAS, then checks only3table changes/history/647 unaffected and noHost activation. No execute-intent or current mutation has happened yet.",
+        "evidence": "material-1.txt execute() 代码包含严格的 guard 链：校验 mc.load_authority() 版本、Lease task_id/owner/expiration/scope、source 容器状态及挂载、native 属性、identity 漂移现状；校验 consumption-r1.json 的 CONSUMED_MATERIAL_REVIEW 状态与 execution_authorized=false，以及 baseline 全部 SHA256 一致；调用 extension_runtime_bind_host_identity 原生 CAS 函数。当前状态 material-5.txt 明确 'executeIntentAbsent': true, 'hostActivated': false。执行尚未发生，脚本为待审方案。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留本 PASS 结论，等待用户发起正式 execute 步骤；届时需生成独立的 execute-postreview 以核验 CAS 提交结果、三表变更、history 追加及 Host 未激活的真实状态。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

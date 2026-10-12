@@ -1,0 +1,21 @@
+{
+  "identity": {
+    "database_role": "aos_a0v_directory_20260912",
+    "host_id": "a0v-local-ecommerce-host-20260912",
+    "revision": 2,
+    "stored_oid": "16385",
+    "current_oid": "16385"
+  },
+  "650AfterFingerprintsVerified": true,
+  "unchangedOtherTables": 647,
+  "onlyThreeHostTablesChanged": [
+    "public.extension_runtime_host_command_receipt",
+    "public.extension_runtime_host_identity",
+    "public.extension_runtime_host_identity_revision"
+  ],
+  "schemaRolesSequencesStillEqual": true,
+  "bindingsEnabled": 0,
+  "unknownOriginalRunsReplayed": false,
+  "hostActivated": false,
+  "eightWorkbenchesAccepted": false
+}
