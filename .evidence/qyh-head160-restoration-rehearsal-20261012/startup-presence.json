@@ -1,0 +1,32 @@
+{
+  "observations": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/aos-platform/.env",
+      "exists": true,
+      "configuredKeyPresence": {
+        "AOS_OIDC_JWKS_URLS": false,
+        "AOS_OIDC_JWKS_URL": false,
+        "AOS_OIDC_ISSUERS": false,
+        "AOS_OIDC_ISSUER": false,
+        "AOS_OIDC_AUDIENCE": false,
+        "AOS_AIP_EVAL_WRITER_CREDENTIAL_FILE": false
+      }
+    },
+    {
+      "path": "/Users/ddt/Library/LaunchAgents/com.aos.a0v-api-daily0900.plist",
+      "exists": true,
+      "configuredKeyPresence": {
+        "AOS_OIDC_JWKS_URLS": false,
+        "AOS_OIDC_JWKS_URL": false,
+        "AOS_OIDC_ISSUERS": false,
+        "AOS_OIDC_ISSUER": false,
+        "AOS_OIDC_AUDIENCE": false,
+        "AOS_AIP_EVAL_WRITER_CREDENTIAL_FILE": false
+      }
+    }
+  ],
+  "moduleListCounts": {
+    "items": 0
+  },
+  "secretValuesCaptured": false
+}

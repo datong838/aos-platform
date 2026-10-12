@@ -1,0 +1,15 @@
+{
+  "head": "a0v_160",
+  "newTableCounts": {
+    "intent": 0,
+    "dispatch": 0,
+    "observation": 0
+  },
+  "writerFlags": {
+    "rolcanlogin": false,
+    "rolinherit": false,
+    "rolsuper": false,
+    "rolbypassrls": false
+  },
+  "readOnly": true
+}

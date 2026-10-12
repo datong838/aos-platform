@@ -1,0 +1,22 @@
+{
+  "database": {
+    "schema": "a0v_159",
+    "cluster": "7695302940039200809",
+    "orgName": "栖月汇商贸有限公司",
+    "installations": 135,
+    "enabledBindings": 0
+  },
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "oidcStatus": 200,
+  "externalJwksPresent": false,
+  "meStatus": 200,
+  "tokenKind": "dev",
+  "principalStatus": 403,
+  "modulesStatus": 200,
+  "httpTenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "orgName": "栖月汇商贸有限公司"
+  },
+  "actualDatabaseWrites": 0
+}

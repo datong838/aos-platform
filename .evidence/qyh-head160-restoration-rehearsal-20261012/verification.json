@@ -1,0 +1,19 @@
+{
+  "currentTenantCorrect": true,
+  "historicalInstallations": 135,
+  "currentSchema": "a0v_159",
+  "exactCommittedSourceHead": "e17d4fc4a658321759cc1b5180ff0ac4a55bc336",
+  "frozenManifestHash": "c2d2ccf4c6c511ea06c816ff2e713610ee0d0fd181e115e6dc9955447120740c",
+  "rehearsedSchema": "a0v_160",
+  "oldTableCount": 647,
+  "oldDataTablesUnchanged": 646,
+  "versionTableExpectedChange": true,
+  "newTablesEmpty": true,
+  "templateAllHashesUnchanged": true,
+  "independentReadback": true,
+  "writerRunUpdateDenied": true,
+  "actualDatabaseMigrated": false,
+  "formalLoginProven": false,
+  "currentServicesRestarted": false,
+  "GoalComplete": false
+}

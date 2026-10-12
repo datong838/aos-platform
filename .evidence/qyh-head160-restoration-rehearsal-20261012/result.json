@@ -1,0 +1,20 @@
+{
+  "head": "e17d4fc4a658321759cc1b5180ff0ac4a55bc336",
+  "candidateManifestHash": "c2d2ccf4c6c511ea06c816ff2e713610ee0d0fd181e115e6dc9955447120740c",
+  "oldTables": 647,
+  "oldTableDataUnchangedExceptVersion": true,
+  "addedTables": [
+    "public.aip_skill_eval_dispatch",
+    "public.aip_skill_eval_dispatch_observation",
+    "public.aip_skill_eval_intent"
+  ],
+  "allNewTablesEmpty": true,
+  "sourceTemplateUnchanged": true,
+  "rehearsedDatabase": "qyh_head160_rehearsal_20261012",
+  "rehearsedVersion": "a0v_160",
+  "writerCanUpdateRun": false,
+  "actualDatabaseVersion": "a0v_159",
+  "actualDatabaseMigrated": false,
+  "formalLoginProven": false,
+  "eightWorkshopsRestored": false
+}
