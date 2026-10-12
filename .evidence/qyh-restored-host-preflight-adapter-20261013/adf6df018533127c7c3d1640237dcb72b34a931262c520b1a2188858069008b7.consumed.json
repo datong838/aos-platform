@@ -1,0 +1,20 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-restored-host-preflight-adapter-20261013-r1",
+  "task_id": "qyh-restored-host-preflight-adapter-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "a9a7cb68c86914532a791ad73674597d428d0a13",
+    "authority_revision": "AOS-001990",
+    "files": {
+      ".evidence/qyh-restored-host-preflight-adapter-20261013/review-material-0.txt": "7918751d9976f45997768c9aa7b66ca7b974ba10e5775056bc25b18ca39839eb",
+      ".evidence/qyh-restored-host-preflight-adapter-20261013/review-material-1.txt": "b4a5258bc8889586deeb69885432194add97c8f1a7e4614f8327ab8b500ec91c",
+      ".evidence/qyh-restored-host-preflight-adapter-20261013/review-material-2.txt": "3b2044197c4b55874fb706b116c6820f20c1938fe5281319351b262148c20e1a",
+      ".evidence/qyh-restored-host-preflight-adapter-20261013/review-material-3.txt": "76c1fe7b3dfc6604262a07ffe9f27655d8dc397d2426c4c232159ce967b9717a"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "a69c8db05a4cc10b7581aad5b10df46a68cdec4c40d36ee973b47eca682b8498",
+  "transport_sha256": "8a353e8623680056084ed33199e6381c6d2072f9ed2fd5a3ab332504b1b85a55"
+}

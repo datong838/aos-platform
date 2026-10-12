@@ -1,0 +1,27 @@
+{
+  "outcome": "RESTORED_PREPARATION_PREFLIGHT_CODE_TESTED_NOT_LIVE",
+  "red": {
+    "failed": 7,
+    "passed": 13
+  },
+  "initialAdjacentPass": 90,
+  "finalAdjacentPass": 108,
+  "originalHistoricalTestsIncluded": true,
+  "currentDatabaseWrites": false,
+  "liveApiReloaded": false,
+  "productionWiringChanged": false,
+  "hostEnabled": false,
+  "eightWorkbenchesVerified": false,
+  "reviewPending": false,
+  "files": {
+    "scripts/a0v_current_runtime_host_preflight.py": "7918751d9976f45997768c9aa7b66ca7b974ba10e5775056bc25b18ca39839eb",
+    "services/aos-api/tests/extension_runtime/test_a0v_current_runtime_host_preflight.py": "b4a5258bc8889586deeb69885432194add97c8f1a7e4614f8327ab8b500ec91c"
+  },
+  "next": "Original control_wiring explicit restored preparation-only selection and separate formal identity preflight; do not enable Host from this code/test result",
+  "independentReview": {
+    "verdict": "PASS",
+    "claimsSupported": 4,
+    "consumed": true,
+    "executionAuthorized": false
+  }
+}

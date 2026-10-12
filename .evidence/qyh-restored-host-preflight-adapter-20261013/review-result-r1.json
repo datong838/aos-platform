@@ -1,0 +1,46 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-restored-host-preflight-adapter-20261013-r1",
+    "task_id": "qyh-restored-host-preflight-adapter-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "a9a7cb68c86914532a791ad73674597d428d0a13",
+      "authority_revision": "AOS-001990",
+      "files": {
+        ".evidence/qyh-restored-host-preflight-adapter-20261013/review-material-0.txt": "7918751d9976f45997768c9aa7b66ca7b974ba10e5775056bc25b18ca39839eb",
+        ".evidence/qyh-restored-host-preflight-adapter-20261013/review-material-1.txt": "b4a5258bc8889586deeb69885432194add97c8f1a7e4614f8327ab8b500ec91c",
+        ".evidence/qyh-restored-host-preflight-adapter-20261013/review-material-2.txt": "3b2044197c4b55874fb706b116c6820f20c1938fe5281319351b262148c20e1a",
+        ".evidence/qyh-restored-host-preflight-adapter-20261013/review-material-3.txt": "76c1fe7b3dfc6604262a07ffe9f27655d8dc397d2426c4c232159ce967b9717a"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Restored preparation explicitly reuses the existing exact installation reader and the shared isolated identity gate.",
+        "evidence": "review-material-0.txt 中 preflight_restored 调用 restored.select_current_installation(...) 并通过 _load_restored_preflight 加载 a0v_qyh_restored_http；随后调用共享函数 _preflight_identities(parameters=..., signed=..., credential_file=..., preparation_only=True)。review-material-1.txt 中 test_restored_preflight_reuses_exact_selector_and_shared_identity_gate 验证 restored 选择器被精确调用且进入共享 identity gate。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Historical signed preflight behavior remains delegated to the same original signed reader and identity checks.",
+        "evidence": "review-material-0.txt 中 preflight 函数调用 signed_preflight(signed_receipt=signed_receipt) 后同样进入 _preflight_identities。review-material-1.txt 中 test_green_report_carries_exact_physical_authority_and_signed_paths 验证历史路径完整走过 signed_preflight、_runtime_file_dsns、probe_runtime_database_identity、require_current_identities 和 require_current_host_and_candidates。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Explicit invalid or mixed restored inputs do not fall back to the historical route or admit FULL mode.",
+        "evidence": "review-material-0.txt 中 preflight_restored 在 preparation_only is not True 时抛出 RESTORED_PREPARATION_ONLY_REQUIRED；参数类型/绝对路径校验失败时抛出 RESTORED_PREFLIGHT_INPUT_INVALID；selector 失败时抛出 RESTORED_INSTALLATION_INVALID 且无 legacy fallback。review-material-1.txt 中 test_restored_preflight_never_admits_full_mode 验证 preparation_only=False 被拒；test_restored_preflight_requires_absolute_inputs 验证相对路径被拒；test_restored_selector_failure_has_no_legacy_fallback_or_identity_probe 验证失败不回落 signed_preflight；test_cli_rejects_partial_mixed_or_nonpreparation_restored_route 验证混合/残缺输入由 CLI 拒绝且不触发 legacy fallback。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "This patch provides readonly preflight only and neither wires production startup nor proves eight workbenches restored.",
+        "evidence": "review-material-0.txt 所有连接设置 read_only=True，green 报告 authorization 为 PREFLIGHT_ONLY_NO_RUNTIME_START，admissionMode 为 PREPARATION_ONLY。review-material-2.txt 明确说明“本轮仅只读预检，不启用 Host/worker/Provider”、“当前八工作台仍未恢复”。review-material-3.txt 显示 108 passed，无生产启动相关测试。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前 PASS 结论；下一步按 review-material-2.txt 所述以独立计划接入 control_wiring，不得将本预检通过视为运行就绪。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

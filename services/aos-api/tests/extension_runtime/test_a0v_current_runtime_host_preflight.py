@@ -9,6 +9,115 @@ from aos_api.extension_runtime.runtime_identity import RuntimeDatabaseIdentity
 SCRIPT = Path(__file__).resolve().parents[4] / "scripts/a0v_current_runtime_host_preflight.py"
 
 
+def restored_arguments():
+    return dict(identity_file=Path('/protected/restored.json'),
+                installation_id='ab2fd72f-d81c-400d-bbbc-e1589a159d6b',
+                bundle_root=Path('/signed/restored'),
+                trust_roots_file=Path('/signed/roots.json'),
+                credential_file=Path('/protected/planes.json'), preparation_only=True)
+
+
+def test_restored_preflight_never_admits_full_mode(gate):
+    args = restored_arguments()
+    args['preparation_only'] = False
+    with pytest.raises(gate.HostPreflightBlocked, match='RESTORED_PREPARATION_ONLY_REQUIRED'):
+        gate.preflight_restored(**args)
+
+
+@pytest.mark.parametrize('field', ['identity_file', 'bundle_root', 'trust_roots_file', 'credential_file'])
+def test_restored_preflight_requires_absolute_inputs(gate, field):
+    args = restored_arguments()
+    args[field] = Path('relative.json')
+    with pytest.raises(gate.HostPreflightBlocked, match='RESTORED_PREFLIGHT_INPUT_INVALID'):
+        gate.preflight_restored(**args)
+
+
+def test_restored_preflight_reuses_exact_selector_and_shared_identity_gate(gate, monkeypatch, tmp_path):
+    args = restored_arguments()
+    args['bundle_root'] = tmp_path / 'signed'
+    args['bundle_root'].mkdir()
+    args['trust_roots_file'] = tmp_path / 'roots.json'
+    args['trust_roots_file'].write_text('{}')
+    calls = []
+    class Restored:
+        @staticmethod
+        def select_current_installation(**kwargs):
+            calls.append(kwargs)
+            return {'identity': {'database': 'aos_meta_head'},
+                    'currentInstallation': {'installationId': args['installation_id'],
+                        'authorization': 'CURRENT_INSTALLATION_EVIDENCE_ONLY_NO_START',
+                        'runtimeHostEnabled': False, 'apiStartAuthorized': False}}
+        @staticmethod
+        def _identity_parameters(path):
+            assert path == args['identity_file']
+            return {'host': '127.0.0.1', 'port': 18446, 'dbname': 'aos_meta_head',
+                    'user': 'limited', 'pgpassFile': '/protected/passfile'}
+    monkeypatch.setattr(gate, '_load_restored_preflight', lambda: Restored)
+    def identities(**kwargs):
+        assert kwargs['parameters']['passfile'] == '/protected/passfile'
+        assert 'pgpassFile' not in kwargs['parameters']
+        assert kwargs['signed'] == {'database': 'aos_meta_head',
+            'installationId': args['installation_id'], 'signedRoot': str(args['bundle_root']),
+            'trustRoots': str(args['trust_roots_file'])}
+        assert kwargs['credential_file'] == args['credential_file']
+        assert kwargs['preparation_only'] is True
+        return {'outcome': 'CURRENT_SIGNED_HOST_READONLY_PREFLIGHT_GREEN'}
+    monkeypatch.setattr(gate, '_preflight_identities', identities)
+    assert gate.preflight_restored(**args)['outcome'] == 'CURRENT_SIGNED_HOST_READONLY_PREFLIGHT_GREEN'
+    assert calls == [{k: args[k] for k in ('identity_file', 'installation_id', 'bundle_root', 'trust_roots_file')}]
+
+
+def test_restored_selector_failure_has_no_legacy_fallback_or_identity_probe(gate, monkeypatch):
+    class Restored:
+        @staticmethod
+        def select_current_installation(**_):
+            raise ValueError('sensitive failure details')
+    monkeypatch.setattr(gate, '_load_restored_preflight', lambda: Restored)
+    monkeypatch.setattr(gate, 'signed_preflight', lambda **_: pytest.fail('legacy fallback'))
+    monkeypatch.setattr(gate, '_runtime_file_dsns', lambda *_a, **_k: pytest.fail('identity probe'))
+    with pytest.raises(gate.HostPreflightBlocked, match='RESTORED_INSTALLATION_INVALID') as exc:
+        gate.preflight_restored(**restored_arguments())
+    assert 'sensitive' not in str(exc.value)
+
+
+@pytest.mark.parametrize('change', ['database', 'installation', 'authorization', 'start'])
+def test_restored_rejects_altered_reader_authority_before_identity_probe(gate, monkeypatch, change):
+    args = restored_arguments()
+    class Restored:
+        @staticmethod
+        def select_current_installation(**_):
+            result = {'identity': {'database': 'aos_meta_head'},
+                'currentInstallation': {'installationId': args['installation_id'],
+                    'authorization': 'CURRENT_INSTALLATION_EVIDENCE_ONLY_NO_START',
+                    'runtimeHostEnabled': False, 'apiStartAuthorized': False}}
+            if change == 'database': result['identity']['database'] = 'other_database'
+            if change == 'installation': result['currentInstallation']['installationId'] = 'other'
+            if change == 'authorization': result['currentInstallation']['authorization'] = 'START'
+            if change == 'start': result['currentInstallation']['runtimeHostEnabled'] = True
+            return result
+    monkeypatch.setattr(gate, '_load_restored_preflight', lambda: Restored)
+    monkeypatch.setattr(gate, '_runtime_file_dsns', lambda *_a, **_k: pytest.fail('identity probe'))
+    with pytest.raises(gate.HostPreflightBlocked, match='RESTORED_INSTALLATION_INVALID'):
+        gate.preflight_restored(**args)
+
+
+@pytest.mark.parametrize('argv', [
+    ['--restored-api-identity', '/protected/restored.json'],
+    ['--signed-receipt', '/signed/receipt', '--restored-api-identity', '/protected/restored.json'],
+    ['--restored-api-identity', '/protected/restored.json', '--restored-installation', 'current',
+     '--bundle-root', '/signed/root', '--trust-roots-file', '/signed/roots',
+     '--credential-file', '/protected/planes'],
+])
+def test_cli_rejects_partial_mixed_or_nonpreparation_restored_route(gate, monkeypatch, argv):
+    import sys
+    monkeypatch.setattr(sys, 'argv', ['gate', *argv])
+    monkeypatch.setattr(gate, 'preflight', lambda **_: pytest.fail('legacy fallback'))
+    monkeypatch.setattr(gate, 'preflight_restored', lambda **_: pytest.fail('restored called'))
+    with pytest.raises(SystemExit) as exc:
+        gate.main()
+    assert exc.value.code == 2
+
+
 @pytest.fixture
 def gate():
     spec = importlib.util.spec_from_file_location("a0v_current_runtime_host_preflight", SCRIPT)

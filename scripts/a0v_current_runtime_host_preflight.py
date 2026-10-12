@@ -50,6 +50,49 @@ def _load_signed_preflight():
 signed_preflight = _load_signed_preflight()
 
 
+def _load_restored_preflight():
+    # Use the existing preserved-volume and exact signed release reader, not the
+    # active-generation image reader: preparation precedes installation apply.
+    sys.path.insert(0, str(ROOT / 'scripts'))
+    import a0v_qyh_restored_http
+    return a0v_qyh_restored_http
+
+
+def preflight_restored(*, identity_file: Path, installation_id: str,
+                      bundle_root: Path, trust_roots_file: Path,
+                      credential_file: Path, preparation_only: bool = False):
+    if preparation_only is not True:
+        raise HostPreflightBlocked('RESTORED_PREPARATION_ONLY_REQUIRED')
+    if (any(not isinstance(path, Path) or not path.is_absolute() for path in
+            (identity_file, bundle_root, trust_roots_file, credential_file))
+            or type(installation_id) is not str or not installation_id):
+        raise HostPreflightBlocked('RESTORED_PREFLIGHT_INPUT_INVALID')
+    try:
+        restored = _load_restored_preflight()
+        report = restored.select_current_installation(
+            identity_file=identity_file, installation_id=installation_id,
+            bundle_root=bundle_root, trust_roots_file=trust_roots_file)
+        selected = report['currentInstallation']
+        if (report['identity']['database'] != 'aos_meta_head'
+                or selected['installationId'] != installation_id
+                or selected['authorization'] != 'CURRENT_INSTALLATION_EVIDENCE_ONLY_NO_START'
+                or selected['runtimeHostEnabled'] is not False
+                or selected['apiStartAuthorized'] is not False):
+            raise ValueError('current restored evidence differs')
+        identity = restored._identity_parameters(identity_file)
+        parameters = {key: identity[key] for key in ('host', 'port', 'dbname', 'user')}
+        parameters['passfile'] = identity['pgpassFile']
+        if parameters['dbname'] != report['identity']['database']:
+            raise ValueError('current restored database differs')
+        signed = {'database': parameters['dbname'], 'installationId': selected['installationId'],
+                  'signedRoot': str(bundle_root.resolve(strict=True)),
+                  'trustRoots': str(trust_roots_file.resolve(strict=True))}
+    except Exception:
+        raise HostPreflightBlocked('RESTORED_INSTALLATION_INVALID') from None
+    return _preflight_identities(parameters=parameters, signed=signed,
+                                credential_file=credential_file, preparation_only=True)
+
+
 def require_current_dsn_targets(dsns: dict[str, str], target: str) -> None:
     if set(dsns) != {"directory", "runtime", "web"}:
         raise HostPreflightBlocked("CREDENTIAL_FILE_INVALID")
@@ -116,6 +159,12 @@ def preflight(*, signed_receipt: Path, credential_file: Path | None,
         parameters, signed = signed_preflight(signed_receipt=signed_receipt)
     except Exception:
         raise HostPreflightBlocked("SIGNED_INSTALLATION_INVALID") from None
+    return _preflight_identities(parameters=parameters, signed=signed,
+                                credential_file=credential_file, preparation_only=preparation_only)
+
+
+def _preflight_identities(*, parameters, signed, credential_file, preparation_only):
+    """One unchanged database identity/admission gate for either signed reader."""
     try:
         dsns, credential_generation = _runtime_file_dsns(
             credential_file, with_generation=True)
@@ -172,14 +221,32 @@ def preflight(*, signed_receipt: Path, credential_file: Path | None,
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--signed-receipt", type=Path, required=True)
+    parser.add_argument("--signed-receipt", type=Path)
     parser.add_argument("--credential-file", type=Path)
     parser.add_argument("--preparation-only", action="store_true")
+    parser.add_argument('--restored-api-identity', type=Path)
+    parser.add_argument('--restored-installation')
+    parser.add_argument('--bundle-root', type=Path)
+    parser.add_argument('--trust-roots-file', type=Path)
     args = parser.parse_args()
+    restored_values = (args.restored_api_identity, args.restored_installation,
+                       args.bundle_root, args.trust_roots_file)
+    if any(value is not None for value in restored_values):
+        if (args.signed_receipt is not None or any(value is None for value in restored_values)
+                or args.credential_file is None or not args.preparation_only):
+            parser.error('restored preparation requires all exact inputs and no historical signed receipt')
+    elif args.signed_receipt is None:
+        parser.error('signed receipt or explicit restored preparation inputs required')
     try:
-        result = preflight(signed_receipt=args.signed_receipt,
-                           credential_file=args.credential_file,
-                           preparation_only=args.preparation_only)
+        if args.restored_api_identity is not None:
+            result = preflight_restored(identity_file=args.restored_api_identity,
+                installation_id=args.restored_installation, bundle_root=args.bundle_root,
+                trust_roots_file=args.trust_roots_file, credential_file=args.credential_file,
+                preparation_only=args.preparation_only)
+        else:
+            result = preflight(signed_receipt=args.signed_receipt,
+                               credential_file=args.credential_file,
+                               preparation_only=args.preparation_only)
         print(json.dumps(result, sort_keys=True))
         return 0
     except HostPreflightBlocked as exc:
