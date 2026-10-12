@@ -1,0 +1,111 @@
+{
+  "rules": [
+    "AGENTS.md",
+    "231 eight-step delivery",
+    "approved Qiyuehui restoration plan"
+  ],
+  "observedAt": "2026-10-12T06:51:24.695189+00:00",
+  "heartbeat": "2026-10-12T06:48:06.931Z",
+  "goalReadback": "blocked",
+  "goalChangedByThisTurn": false,
+  "sourceReadonlyCensus": {
+    "schema": "a0v_159",
+    "cluster": "7695302940039200809",
+    "preparedTransactions": 0,
+    "enabledBindings": 0,
+    "scheduleSummary": {
+      "total": 12,
+      "enabled": 0
+    },
+    "runStopEvidence": {
+      "total": 65,
+      "stopUnproven": 12
+    },
+    "clients": [],
+    "loginRoleCounts": {
+      "login": 10,
+      "superuserLogin": 1,
+      "bypassLogin": 1
+    }
+  },
+  "runningContainers": [
+    {
+      "name": "qyh-source-boundary-clone-capacity-20261012",
+      "image": "7e7dbab8d3b4",
+      "ports": "127.0.0.1:18431->5432/tcp"
+    },
+    {
+      "name": "aos-qyh-name-rehearsal-20261011-recovered-20261012",
+      "image": "7e7dbab8d3b4",
+      "ports": ""
+    },
+    {
+      "name": "aos-qyh-name-rehearsal-20261011-r3-recovered-20261012",
+      "image": "7e7dbab8d3b4",
+      "ports": ""
+    },
+    {
+      "name": "aos-qyh-history-restore-20261011-recovered-20261012",
+      "image": "7e7dbab8d3b4",
+      "ports": ""
+    },
+    {
+      "name": "qyh-stage-transport-rehearsal-20261011-recovered-20261012",
+      "image": "7e7dbab8d3b4",
+      "ports": ""
+    },
+    {
+      "name": "qyh-stage-transport-rehearsal-r2-20261011-recovered-20261012",
+      "image": "7e7dbab8d3b4",
+      "ports": ""
+    },
+    {
+      "name": "qyh-source-writer-lab-20261011-recovered-20261012",
+      "image": "7e7dbab8d3b4",
+      "ports": "127.0.0.1:18432->5432/tcp"
+    },
+    {
+      "name": "qyh-current159-exact-restore-20261012",
+      "image": "7e7dbab8d3b4",
+      "ports": ""
+    },
+    {
+      "name": "qyh-current159-restore-lab-20261012",
+      "image": "7e7dbab8d3b4",
+      "ports": ""
+    },
+    {
+      "name": "qyh-restored-pg-20261011",
+      "image": "7e7dbab8d3b4",
+      "ports": "127.0.0.1:18446->5432/tcp"
+    },
+    {
+      "name": "aos-a0v-recovery-pg",
+      "image": "postgres:16-alpine",
+      "ports": "127.0.0.1:18435->5432/tcp"
+    }
+  ],
+  "candidates": [
+    {
+      "registeredTask": "qyh-current161-maintenance-preflight-20261012",
+      "action": "read-only maintenance-window and executor reconciliation",
+      "authorized": true,
+      "dependency": "no source DDL or restart in this Task"
+    },
+    {
+      "registeredTask": "qyh-full-system-restoration-20261011",
+      "action": "source159-to161 migration and latest services restart",
+      "authorizedByUser": true,
+      "dependencies": [
+        "exclusive zero-execution maintenance window",
+        "fresh verified backup plus full restore and exact rehearsal",
+        "same original volume"
+      ]
+    }
+  ],
+  "selected": "read-only maintenance-window and executor reconciliation",
+  "continuousZeroExecutionWindowProven": false,
+  "databaseWrites": 0,
+  "replayedOldRuns": 0,
+  "restartPerformed": false
+}
