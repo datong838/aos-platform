@@ -1,0 +1,7 @@
+# 原存储入口161相邻回归
+
+当前真实四个签名包无storage-registry，存在原schema-compatibility，不能新造声明。已登记Task/Lease，原测试代码不改，新增日志/原生现场只在本目录及原fixture创建的新UUID DB/schema。primary18431已恢复1GiB cluster769541...供原conftest从161完整迁移；dedicated18432原postgres实验库55MiB物理保留，原模型PG opt-in true；仅原test fixture SQL/独立Role/schema/DB生命周期，无新Host进程、Provider或旧Run。
+
+运行原test_ecommerce_growth_runtime_store_pg（同tenant exact invocation receipts/重放/并发/隔离/旧receipt）、test_schema_registry_pg/test_schema_conditions_pg（精确version/hash/publisher物理schema）、test_ecommerce_growth_host_ports_pg（原HostTransaction原子锁/Receipt兼容，fixture不是正式Host授权）。全部0skip且原fixture清理完成才记通过；失败/未知先readonly reconcile，不能清理非fixture库/卷/备份。
+
+compatibility主Task另用原a0v_ecommerce_schema_receipts.verify_physical对已验签三compatibility artifact在source159/owned161实际只读事务和161原Alembic祖先图核验，不执行apply_once/写回schemaReceipt。正常Store完整真实操作与正式身份/发布/安装/API八页/自然首链不由fixture自动满足，边界分别记录。

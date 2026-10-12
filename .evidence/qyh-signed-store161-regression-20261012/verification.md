@@ -1,0 +1,5 @@
+# 原Store接口回归
+
+原代码不改，原test_ecommerce_growth_runtime_store_pg/schema_registry_pg/schema_conditions_pg/ecommerce_growth_host_ports_pg共21PASS0skip/7既有deprecated warnings/6.65s。primary conftest fullhead161由18431同实验cluster承载；实际Storefixture在独立18432原postgres实验实例，创建新UUID DB/schema/Role并cleanup正常结束。覆盖精确invocation Receipt、同hash回放/changedhash拒绝、并发单写、双tenant隔离、旧receipt保留、schema精确原publisher/version/hash和HostTransaction锁/Receipt原子兼容。
+
+fixture绑定enabled/ready和host role/receipt是隔离协议输入，非真实正式Owner/Host启动或历史Run重放；没有实际Provider/商城/服务启动，当前真实卷未写。临时18432使用14%/余452916KiB，未重复512MiB故障。SQLfixture不是当前完整161四包所有业务路径/正式安装配置/8页面/首链验收，分级报告不可归为全系统通过。AST/diff方案一致性复核完成，无产品代码修改或页面变化。

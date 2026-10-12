@@ -7,3 +7,10 @@
 source159/clone161所有647原table columns名称/format_type/非空布局严格一致，所有461原非系统函数原pg_get_functiondef严格一致。不能只凭alembic版本号或不同OID误判。这里只证明签名/依赖/包schema receipt/原结构函数兼容；normalStore完整读写兼容、实际Registry发布/安装/配置/正式登录与publisher、真实当前零执行迁移窗/迁移/API最新切换/八台及自然经营首链仍待。本完整compatibility Task ACTIVE，不Delivery。源码AST/diff方案一致性通过，无页面变化。
 
 下个安全项：按storage-registry-inventory定位原签名storage约束和原平台Store操作矩阵，确定完整normalStore副本回归；诊断不能授Host/worker/Provider或篡改正式状态。真实root/entity数据无写，旧Run/商城源/manual未知重发均未操作，no push。
+
+
+## 2026-10-12 原physical verifier补验
+
+三个签名schema-compatibility artifact用原ManifestLoader.read_verified_artifact精确digest读取，原a0v_ecommerce_schema_receipts.verify_physical对真实159及owned161共6项通过，原161 Alembic祖先图证明声明a0v_001已安装，所有声明13个relations实际存在；6个缺关系反例ValueError拒绝。无apply_once/schemaReceipt/entity写。补全了旧检查点只比表列和schema回执的限制。
+
+当前包无storage-registry.json（空inventory并非声明缺失），原有增长运行Store和schema/host事务入口在独立原fixture21PG回归0skip通过；这些是原接口协议/最小schema验证，不声称最新完整schema四包所有业务方法/正式Host已执行。完整compatibility Task尚保留fullschema normalStore整链范围，未自动从两种局部通过推出真实源迁移或安装许可。

@@ -1,0 +1,9 @@
+{
+  "nativeTestsPassed": 21,
+  "skipped": 0,
+  "existingWarnings": 7,
+  "elapsedSeconds": 6.65,
+  "sourceEntityWrites": 0,
+  "formalHostStarted": false,
+  "fullCurrentSchemaEveryBusinessOperationAccepted": false
+}

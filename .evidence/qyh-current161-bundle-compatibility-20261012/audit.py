@@ -38,6 +38,7 @@ def save(name, value):
 class NativeRows:
     def __init__(self, rows): self.rows = rows
     def fetchone(self): return self.rows[0] if self.rows else None
+    def fetchall(self): return self.rows
 
 
 class NativeReadTransaction:
