@@ -1,0 +1,13 @@
+{
+  "sourceRoleCount": 39,
+  "cloneRoleCount": 40,
+  "sourceOnlyRoles": [],
+  "cloneOnlyRoles": [
+    "aos_aip_eval_writer"
+  ],
+  "changedRoleFields": {},
+  "membersEqual": true,
+  "sourceMaintenanceIntentCreated": false,
+  "sourceHbaChanged": false,
+  "sourceMigrationAttempted": false
+}

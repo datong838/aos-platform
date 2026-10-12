@@ -1,0 +1,1 @@
+Rules AGENTS.md/231/批准全恢复。原窗口执行器角色比较RED发生在源intent/HBA前，source0writes。新network-none独立named volume/无ports/原image/aos_app bootstrap，原pg_dumpall --globals-only --no-role-passwords只跳过唯一已存在CREATE ROLE aos_app，原ALTER/GRANT含grantor/admin/inherit/set原样执行。实际39角色与12membership精确比较；旧40角色实验资源不修改/删除。属于独立恢复实验，不是正式业务身份。新Task唯一writer，O_EXCL intent，未知创建失败仅读对账不重发。

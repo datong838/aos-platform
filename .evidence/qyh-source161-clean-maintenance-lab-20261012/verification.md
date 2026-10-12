@@ -1,0 +1,1 @@
+新独立named volume集群实际PG16 ready，原aos_app bootstrap使PG16 GRANTED BY身份精确；唯一已存在CREATE ROLE aos_app跳过，其余原globals包含原ALTER/GRANT逐项执行terminal0。真实源39角色flags/rolconfig与12membership grantor/admin/inherit/set全等，源前后不变；network-none/no ports/新CID与cluster读回。旧40角色实验集群未改，源HBA/DB无写；不是正式登录或业务身份、不代表全库已恢复。供下一连续零执行窗口fresh fullrestore及原160新增canonicalNOLOGIN角色真实演练。

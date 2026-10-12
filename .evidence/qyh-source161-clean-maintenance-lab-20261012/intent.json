@@ -1,0 +1,8 @@
+{
+  "container": "qyh-source161-clean-maintenance-lab-20261012",
+  "volume": "aos-qyh-source161-clean-maintenance-data-20261012",
+  "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+  "network": "none",
+  "hostPorts": [],
+  "sourceWrites": false
+}

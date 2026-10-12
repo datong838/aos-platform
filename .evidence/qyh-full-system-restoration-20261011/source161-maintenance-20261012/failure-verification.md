@@ -1,0 +1,1 @@
+原maintain.py首轮退出AssertionError，角色门发生在source intent/HBA之前；role-drift-diagnosis.json证明source39/clone40，只多canonicalwriter、其他flags和12memberships相同。新独立cleancluster已真39/12匹配。静态复核原160声明还发现post比较器不当要求新role/旧Run读ACL/policy不变；本draft不得继续执行，未伪称源窗口/备份/迁移通过。真实源未写、旧Lab未改、所有private准备SQL/schema保留不提交；用户22既有改动保留。
