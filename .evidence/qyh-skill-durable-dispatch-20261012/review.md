@@ -1,0 +1,5 @@
+# 复审
+21新native +32原Run事务/Authority/runner相邻=53PASS0skip，7原warning。RED缺模块；首轮晚期失败反例实际ForeignKeyViolation而期望CheckViolation，改为非法state精确验证晚期CheckViolation回滚；隔离级别反例在已取快照后SET被PG拒绝，改为连接开始即READ COMMITTED，原store拒绝通过。未放宽产品检查。4原生管理员漂移反例证不可变触发器拒绝。
+角色最小权限，RLS双scope，Source/root/Run写权未授。原conftest升级head已在新临时publicschema应用160并创建NOLOGIN role，fixture起点role已存在所以未擅自删除；测试结束原实验库新intent表仍不存在，role flags全false/数据库依赖0/membership0。第一次收尾角色不存在断言失败即停止无提交；诊断conftest第112行后按真实role状态更正证据，不把role存在称正式身份。真实恢复集群/库未连接或迁移，只有自有tmpfs实验集群metadata变化。
+create/claim/observe均无commit无retry；claim新ID只为事务内预留，确认提交与全量正式准入后才可执行，commit未知不重发。request hash须由后续producer冻结上下文，普通result hash不是Verified proof。intent→Run锁顺序终结需后续复用，不允许凭日志派发旧业务Run。
+完整producer/Owner/预算/独立Target Judge签发、原子签名终结与正式恢复未完成；本波是持久派发组件，不降低原目标。旧Logic/媒体路径与Skill/Model guard未变，无API加载、无外部effect、未部署，53测试不等于首链。下波完整双签名与Run/helper+intent/report/Receipt/sidecar同事务终结，复用原preflight，禁止改旧报告。

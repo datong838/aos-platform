@@ -1,0 +1,34 @@
+{
+  "passed": 53,
+  "newNativeDispatchTests": 21,
+  "adjacentTests": 32,
+  "skipped": 0,
+  "codeSHA256": {
+    "services/aos-api/aos_api/aip_signed_skill_eval_intent_store.py": "69b7364350e72bc6a878cc6c033e5081be3cdb095877cfb0118e83c0f3b52b47",
+    "services/aos-api/alembic/versions/a0v_160_skill_eval_dispatch_intent.py": "f4f493e28c43aa4228a9fff39f35c69aeb143b61005cd07cda862a191edb3eac",
+    "services/aos-api/tests/aip/test_qyh_skill_eval_dispatch_pg.py": "fdc92f0891df79a4c4106044be74d89e9f86b22df3af757301ba3d350b0f4154"
+  },
+  "originalLogsSHA256": {
+    "red.log": "0447dfd1f6642c42a78d73cf4cf54193200dc1591d353f9af069321dc38aa8ec",
+    "green.log": "6c4ef7807a309b0cf6867a25ffbbd370ac6621589b83af7342670f1a71fe1530",
+    "final-green.log": "25b08689800f4bfff7fe02e54407eee62e1d594fd461dc13870dedbdaaeb9b3a",
+    "final-green2.log": "77cc2f1044d3570b93fd4cbd1f90c13563cdcd2b828578410d61dee3ca3124b9",
+    "acceptance.log": "af84a16181a8abe6966e99b507721e0595b49e70a596ebb98dd7eef5e7401d04"
+  },
+  "originalExperimentalIntentTableAbsentAfterTests": true,
+  "isolatedClusterWriterRolePresent": true,
+  "writerRoleFlagsAllFalse": [
+    false,
+    false,
+    false,
+    false
+  ],
+  "writerRoleDependencies": 0,
+  "writerRoleMemberships": 0,
+  "nativeRoleRLSAndTriggersVerified": true,
+  "candidateAlembicHead": "a0v_160",
+  "actualAuthorityMigrationApplied": false,
+  "TargetJudgeExecutions": 0,
+  "formalProducerCompleted": false,
+  "currentDatabaseChanged": false
+}

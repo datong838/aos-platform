@@ -1,0 +1,11 @@
+# 栖月汇 Skill 持久意图和不可重派发记录
+
+依据签名执行完整合同第2/C/F步，前波Run connection-bound CAS已完成。当前HEAD5c91a7a67和迁移唯一头a0v159。新增intent store、a0v160迁移、原生PG测试，范围见Task。当前正式卷/API/旧Run均不改。候选二正式OIDC/独立发布依赖用户已请求配置路径，保持待资料；先安全实现本波持久派发基础。
+
+intent绑定tenant+key唯一、Run唯一、requestHash和随机稳定intentId；create只允许已有queued/version1 Skill测试/正式新Run，现有同key精确重复读回，否则冲突。requestHash由后续producer绑定完整合同/cases/预算/当前授权，不能代替准入证明。派发前持久唯一intent/case/purpose/inputHash及随机dispatchId；caller必须确认事务提交成功后才调用。旧已派发重复只能返回记录、禁止二次执行。并发采用SERIALIZABLE+锁intent+version CAS，数据库冲突传播，不内部重试。
+
+新表intent可更新version，不可改frozen identity；dispatch/observation只追加，禁止更新、删除、truncate。observation状态仅unknown/result_observed，后者存收到的结果摘要，不是已验证签名或成功终态。unknown后可记录同一原派发收到的结果；任意状态不删除原派发或给重发许可。复用原writer独立角色，migration新角色仅NOLOGIN/NOINHERIT/NOSUPERUSER/NOBYPASSRLS且无membership；最小权限：intent SELECT/INSERT及version列UPDATE，dispatch/observation SELECT/INSERT，原Run仅SELECT及scopepolicy，runtime三个新表只SELECT，RLS FORCE。无Run UPDATE、无root/identity写权限。migration不创造登录配置，已存角色须安全flags检查。
+
+测试在18431/cluster7695416748450308141上pytest新临时DB的独立schema执行原migration SQL，使用原pg连接及SET ROLE验证权限；fixture若创建全局NOLOGIN角色只在所有自有schema删除后精确DROP该新角色，不使用DROP OWNED、不触碰旧库。RED缺模块；GREEN新建意图重读/错合同冲突、同key并发、一case最多一派发、stale version、unknown保留、late失败全rollback、跨租户及runtime写拒绝、直接UPDATE/DELETE/TRUNCATE拒绝、autocommit/isolation/role拒绝。原迁移头核对/相邻原Run tests；不宣称正式签名执行/8台自然首链已完成。
+
+复审补充：claim要求Run实际running，新terminal接续必须锁intent再锁Run；所有外部调用前另走正式准入/fence，此日志不授执行权。obs只是收到结果摘要，签名证明另验。原conftest第112行在新临时库upgrade head，因此160还在该新临时public schema执行并建立集群级NOLOGIN角色，不能宣称仅scratchschema/角色必然删除。全部pytest库删除后角色保持NOLOGIN/NOINHERIT/NOSUPERUSER/NOBYPASSRLS、membership0、数据库依赖0；fixture只删自身创建角色，不夺取已有角色。不改原实验库表或真实库。
