@@ -1,0 +1,33 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-investigation-null-receipt-parser-20261013-r2",
+    "task_id": "qyh-investigation-null-receipt-parser-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "7b65fa24f3fb4f452080e324f28d25595521336f",
+      "authority_revision": "AOS-002020",
+      "files": {
+        ".evidence/qyh-investigation-null-receipt-parser-20261013/review-package-r1.txt": "f3264e9eb37db6da7fbb6409a2917350958ddc50232f9f450c758e0c6da6cb55"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "生产代码仅ref一处表达式把显式null和undefined都解释为没有可选Receipt，输出不包含receiptId，不生成Receipt或ACK。全文件逐字替换证明其他代码不变，原exact/类型/revision/hash/非null字符串边界/tenant/schema/priorRef/命令投影及后端强制Receipt条件保留。",
+        "evidence": "在.evidence/qyh-investigation-null-receipt-parser-20261013/review-package-r1.txt中的EXACT PRODUCTION DIFF显示仅修改parser.ts中一行：将raw.receiptId === undefined改为raw.receiptId === undefined || raw.receiptId === null。compatibility.json确认entireFileExactlyOneExpressionChange为true，contractsAndBackendUnchanged为true。后端contracts.ts验证receipt_id为Optional，且强制条件保留（_fail_closed中source_readiness_ref.receipt_id is None时抛出）。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "RED3失败17通过后，parser/client/Tab相邻46通过，类型检查退出0；nullable Case/Run/View可读，UNKNOWN及canonical commands/externalfalse保持，非法非nullReceipt/未知字段/hash/跨tenant仍拒绝。当前实际Web未更新，真实2Case显示和经营链待验证。",
+        "evidence": "红色文档显示原始测试RED3失败3个。兼容性JSON显示修复后测试46通过，类型检查退出码0。GREEN SUMMARY证明BusinessInvestigationTab.test.tsx 16个测试通过。测试代码验证了null处理、非法非null拒绝、未知字段、hash验证、tenant漂移和canonical命令投影保留。兼容性JSON中businessComplete标记为false，表明生产验证尚未完成。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "部署前端更新到生产环境并观察实际Case渲染与运行链表现，同时建立监控以捕获可能的下一阶段合同缺口"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

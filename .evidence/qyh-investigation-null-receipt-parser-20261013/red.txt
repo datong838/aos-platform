@@ -1,0 +1,69 @@
+
+ RUN  v2.1.9 /Users/ddt/work/projects/ai_agent/aos-platform/apps/web
+
+ ❯ src/api/ecommerceInvestigation/parser.test.ts (20 tests | 3 failed) 15ms
+   × backend optional Receipt wire representation > accepts canonical optional null in successor Case refs as no Receipt 3ms
+     → case.priorRef.receiptId 必须是非空有界字符串
+   × backend optional Receipt wire representation > supports null in Run references without changing unknown control 0ms
+     → run.caseRef.receiptId 必须是非空有界字符串
+   × backend optional Receipt wire representation > keeps canonical commands and external-effect gate with null View refs 0ms
+     → view.caseRef.receiptId 必须是非空有界字符串
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/api/ecommerceInvestigation/parser.test.ts > backend optional Receipt wire representation > accepts canonical optional null in successor Case refs as no Receipt
+TypeError: case.priorRef.receiptId 必须是非空有界字符串
+ ❯ text src/api/ecommerceInvestigation/parser.ts:52:105
+     50| }
+     51| function text(value: unknown, label: string, max = 500): string {
+     52|   if (typeof value !== "string" || !value.trim() || value !== value.tr…
+       |                                                                                                         ^
+     53|   return value;
+     54| }
+ ❯ ref src/api/ecommerceInvestigation/parser.ts:83:63
+ ❯ nullableRef src/api/ecommerceInvestigation/parser.ts:86:139
+ ❯ parseCase src/api/ecommerceInvestigation/parser.ts:118:20
+ ❯ src/api/ecommerceInvestigation/parser.ts:165:41
+ ❯ Module.parseInvestigationCaseList src/api/ecommerceInvestigation/parser.ts:165:27
+ ❯ src/api/ecommerceInvestigation/parser.test.ts:91:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/api/ecommerceInvestigation/parser.test.ts > backend optional Receipt wire representation > supports null in Run references without changing unknown control
+TypeError: run.caseRef.receiptId 必须是非空有界字符串
+ ❯ text src/api/ecommerceInvestigation/parser.ts:52:105
+     50| }
+     51| function text(value: unknown, label: string, max = 500): string {
+     52|   if (typeof value !== "string" || !value.trim() || value !== value.tr…
+       |                                                                                                         ^
+     53|   return value;
+     54| }
+ ❯ ref src/api/ecommerceInvestigation/parser.ts:83:63
+ ❯ parseRunRecord src/api/ecommerceInvestigation/parser.ts:135:19
+ ❯ parseRun src/api/ecommerceInvestigation/parser.ts:157:21
+ ❯ src/api/ecommerceInvestigation/parser.ts:173:41
+ ❯ Module.parseInvestigationRunList src/api/ecommerceInvestigation/parser.ts:173:27
+ ❯ src/api/ecommerceInvestigation/parser.test.ts:119:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/api/ecommerceInvestigation/parser.test.ts > backend optional Receipt wire representation > keeps canonical commands and external-effect gate with null View refs
+TypeError: view.caseRef.receiptId 必须是非空有界字符串
+ ❯ text src/api/ecommerceInvestigation/parser.ts:52:105
+     50| }
+     51| function text(value: unknown, label: string, max = 500): string {
+     52|   if (typeof value !== "string" || !value.trim() || value !== value.tr…
+       |                                                                                                         ^
+     53|   return value;
+     54| }
+ ❯ ref src/api/ecommerceInvestigation/parser.ts:83:63
+ ❯ Module.parseInvestigationWorkbenchView src/api/ecommerceInvestigation/parser.ts:287:19
+ ❯ src/api/ecommerceInvestigation/parser.test.ts:127:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 17 passed (20)
+   Start at  21:46:04
+   Duration  703ms (transform 131ms, setup 0ms, collect 145ms, tests 15ms, environment 303ms, prepare 50ms)
+

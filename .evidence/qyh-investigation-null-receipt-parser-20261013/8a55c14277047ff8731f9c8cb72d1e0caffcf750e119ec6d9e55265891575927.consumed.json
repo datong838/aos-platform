@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-investigation-null-receipt-parser-20261013-r2",
+  "task_id": "qyh-investigation-null-receipt-parser-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "7b65fa24f3fb4f452080e324f28d25595521336f",
+    "authority_revision": "AOS-002020",
+    "files": {
+      ".evidence/qyh-investigation-null-receipt-parser-20261013/review-package-r1.txt": "f3264e9eb37db6da7fbb6409a2917350958ddc50232f9f450c758e0c6da6cb55"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "ff69a48005bb6ae97ade854ef50c8b11aef4e757898b3ad4a7fdddda5a200d7f",
+  "transport_sha256": "c074c613d32a3f27c9fa0135962436784acbfe8b582423a0fae1c5de07b488fd"
+}

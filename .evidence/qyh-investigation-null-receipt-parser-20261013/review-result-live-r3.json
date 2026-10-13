@@ -1,0 +1,33 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-investigation-null-receipt-parser-20261013-live-r3",
+    "task_id": "qyh-investigation-null-receipt-parser-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "2bd40b939554423a1cef4fd02f2459cb0fb4bc56",
+      "authority_revision": "AOS-002020",
+      "files": {
+        ".evidence/qyh-investigation-null-receipt-parser-20261013/review-live-package-r3.txt": "46e214fa97a5df31c7b6004b9b41fff5e138896bba041eaa40e843765fd502ea"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "代码r2独立PASS合法消费、46相邻通过/typecheck0后，精确旧WebPID/cwd/port/child/source/Lease与PASS/hash核验，冻结仅已提交Git源码排除dirty/私有配置，仅Web81203更新7590/2bd40b939，API1234及原PG未重启，不是新全面重启或业务执行。",
+        "evidence": "verification-live.json: codeReviewR2PassConsumed=true; typecheckExit0=true; originalAndNew46Pass=true; web.pid=7590(注:脚本终止旧81203并生成newWebPid,head已更新至2bd40b939); web.head=2bd40b939554423a1cef4fd02f2459cb0fb4bc56; web.apiPgChromeTouched=false; web.webOnlyNotFullRestart=true; api1234AndPgUntouched=true; same650Fingerprints=true; samePgStartedAt=true; bindings0=true. 冻结源码从git archive提取，排除.env/dirty/私有配置。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "真实原owned normalOIDC token/me200，Cases2002已渲染，原错误消失；只读Case选择后Run列表0及1、view200，既有Run仍PREPARING/CANCELLED/0波，stageReview409/SourceReadinessfailed保留，不续跑/评审/交接。原650指纹一致/bindings0，原记录显示不是新自然Case或经营链完成。",
+        "evidence": "verification-live.json/browser-readback.json: auth/token=200, auth/me=200; normalLoginSubmitOnce=true; caseOptions=2; caseReadFailureGone=true; reads[case]=200 count=2 item=2; reads[runs]<record>=200 count=0; reads[runs]<record>=200 count=1 item=1; reads[stage-review]=409 BUSINESS_INVESTIGATION_CONFLICT; reads[view]=200; currentRunCancelled=true; sourceReadinessFailed=true; stageReview409Observed=true; readonlyMode=true; realSourceNotRead=true; noBusinessCommandsClicked=true; rawCustomerRowsPersisted=false; businessComplete=false; same650Fingerprints=true; bindings0=true.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "继续只读保留当前状态(PREPARING/CANCELLED run、stageReview 409、SourceReadiness failed)，如需恢复新Case需解除conflict或选择另一Case并等待源就绪；严禁点击业务命令或修改PG/Lease归属。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

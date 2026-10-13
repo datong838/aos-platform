@@ -1,0 +1,12 @@
+{
+  "head": "7b65fa24f3fb4f452080e324f28d25595521336f",
+  "oldSha256": "0b4de7696e460374e1ab40717b89fda024cc58f99bfb129c8cf0641a5b8024c5",
+  "newSha256": "4eb87f79565e625a3c0561e0c4fcd7b95f9d452635503cd79e5b0c1e15c9c5b1",
+  "entireFileExactlyOneExpressionChange": true,
+  "contractsAndBackendUnchanged": true,
+  "tests": "46passes original parser/client/Tab;typecheck process exit0",
+  "fullGreenLogSha256": "40415c576c1e6df970f0c6dc51956a37ac9eec3a4c7c2f6e94a03eed6534b0e2",
+  "greenLogBytes": 283717,
+  "fullLogsRetained": true,
+  "businessComplete": false
+}

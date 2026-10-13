@@ -4,7 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "qyh-investigation-null-receipt-parser-20261013",
   "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
-  "authority_revision": "AOS-002020",
+  "authority_revision": "AOS-002021",
   "task_base_revision": "AOS-002020",
-  "step": "1/8 registered exact frontend2file scope/plan;next existing contracts/tests review before RED"
+  "step": "8/8 oneexpression optionalnull fix/46PASS/typecheck0/code r2/live r3 PASS;real2Case/runs0+1/view200/cancelled0waves/sourcefailed/review409 preserved;scope Delivery only",
+  "codeHead": "2bd40b939554423a1cef4fd02f2459cb0fb4bc56",
+  "nextTask": "qyh-current-investigation-read-gates-20261013"
 }

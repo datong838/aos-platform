@@ -29,3 +29,5 @@ Media辅助GET候选54原完整隔离PG通过；独立r5原始JSON/exactbaseline
 Media r8独立PASS已合法消费。新增media_reviewed_r8_api_reload.py在信号前assert verdict=PASS/CONSUMED_MATERIAL_REVIEW/原消费合同canonical envelope SHA，再TaskLease/cwd/18080/sourceguard/onceintent；第一次保护性检查误用原始filebytes SHA已在无效果前拒绝，现严格按原consumer json.dumps(sort_keys=True)合同核对。仅本机readonly API-only95538→新source，不授生产发布/业务执行，不作为新full重启；后续真实OIDC/原owned页/650/live独立复审。
 
 Analyst唯一learning辅助GET33验证/独立code r5 PASS合法消费，原当前普通OIDC root200/learning404已证更新前缺口。新controller沿用verdict/消费status/canonicalSHA/TaskLease/sourceguard/oldPIDcwd/port/onceintent，全量scope不扩大；仅API-only98070→新source，原PG/Web/Chrome不重启，不是生产/知识写入授权。之后真实页及原650/live独立复审。
+
+Optionalnull parser2bd approved code r2 PASS consumed,oneexpression/46tests/typecheck0。维护parent新onceintent parser_null_web_update.py核PASS/status/canonicalSHA及old81203 cwd/port/esbuild child/source manifest、API1234 sourceguard/lease，Git archive排.env和dirty、freezeSDK/UIkit/原node_moduleslink，仅Web81203→7590。原API/PG/Chrome未信号，不当新fullrestart。实际normalOIDC2Case/runs0+1/view200，oldcancelled0waves/review409/sourcefailed保留，原650不变，live r3PASS消费。后继只读诊断阻断，不恢复旧Run。

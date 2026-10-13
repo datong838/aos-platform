@@ -1,0 +1,318 @@
+
+FILE plan.md
+# Investigation可选Receipt null表征兼容与真实Case显示
+Rules：用户AGENTS/AOS工程交付/231及BI-W4-06现有技术合同；唯一m1写者/先方案TaskLease RED后最小编码/保护dirty/原650表只读/Host worker Provider OFF/未知与旧12Run不重放。Authority2020，前诊断独立PASS消费，只确诊不已修复。
+已证据：原普通API身份native CaseStore2 valid，正常OIDC HTTP2002；原前端TypeError case.priorRef.receiptId。metadata-only证明explicitnull，后端InvestigationExactRef receipt_id OptionalNone(min1/max240)，前端type receiptId可选string但ref对null调用text拒绝。不是缺记录/权限不足，不改原数据/seed/跳坏行。
+文件计划：apps/web/src/api/ecommerceInvestigation/parser.ts的ref仅把null同undefined归一为absence，其他字段exact/类型/revision/hash/receipt非null文本边界/租户/原schema/priorRef关系不改；parser.test.ts追加后端canonical nullable引用及absence/nonempty/empty/数值/对象/越界/未知字段/原tenant negative验证，复习现有Case/Run/workbench tests保留mandatory Receipt专门门。contracts.ts及backend不改；不生成Receipt、不伪ACK、不改ready/approval/budget/dispatch/Run控制。
+步骤：产品技术合同复习→RED真实fieldnull失败→最小修复→parser/Client/Tab相邻与typecheck适用验证→代码精确Prime PASS消费→维护parent精确最新source/Web或完整同原卷更新(不重放旧intent，保护81203及API1234)，真实OIDC Case2渲染/原Run状态只读，不点任何命令→原650保持/livePrime PASS→准确Delivery/Authority+AOS/Prime→下一生产前置。每日aos最新原卷完整PG/API/Web职责不变，若仅Web更新准确标记局部更新。
+风险：common ref覆盖Case/Run/view引用，需完整相邻而非只一个priorRef；nullable absence不能变成mandatoryReceipt成立；新前端可能暴露下一级Run/view合同缺口，逐项记录/另scope，不以空集合/示例隐藏。全部自然firstchain/Source/预算/八台/观察发布仍待。
+
+FILE red.txt
+
+ RUN  v2.1.9 /Users/ddt/work/projects/ai_agent/aos-platform/apps/web
+
+ ❯ src/api/ecommerceInvestigation/parser.test.ts (20 tests | 3 failed) 15ms
+   × backend optional Receipt wire representation > accepts canonical optional null in successor Case refs as no Receipt 3ms
+     → case.priorRef.receiptId 必须是非空有界字符串
+   × backend optional Receipt wire representation > supports null in Run references without changing unknown control 0ms
+     → run.caseRef.receiptId 必须是非空有界字符串
+   × backend optional Receipt wire representation > keeps canonical commands and external-effect gate with null View refs 0ms
+     → view.caseRef.receiptId 必须是非空有界字符串
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/api/ecommerceInvestigation/parser.test.ts > backend optional Receipt wire representation > accepts canonical optional null in successor Case refs as no Receipt
+TypeError: case.priorRef.receiptId 必须是非空有界字符串
+ ❯ text src/api/ecommerceInvestigation/parser.ts:52:105
+     50| }
+     51| function text(value: unknown, label: string, max = 500): string {
+     52|   if (typeof value !== "string" || !value.trim() || value !== value.tr…
+       |                                                                                                         ^
+     53|   return value;
+     54| }
+ ❯ ref src/api/ecommerceInvestigation/parser.ts:83:63
+ ❯ nullableRef src/api/ecommerceInvestigation/parser.ts:86:139
+ ❯ parseCase src/api/ecommerceInvestigation/parser.ts:118:20
+ ❯ src/api/ecommerceInvestigation/parser.ts:165:41
+ ❯ Module.parseInvestigationCaseList src/api/ecommerceInvestigation/parser.ts:165:27
+ ❯ src/api/ecommerceInvestigation/parser.test.ts:91:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/api/ecommerceInvestigation/parser.test.ts > backend optional Receipt wire representation > supports null in Run references without changing unknown control
+TypeError: run.caseRef.receiptId 必须是非空有界字符串
+ ❯ text src/api/ecommerceInvestigation/parser.ts:52:105
+     50| }
+     51| function text(value: unknown, label: string, max = 500): string {
+     52|   if (typeof value !== "string" || !value.trim() || value !== value.tr…
+       |                                                                                                         ^
+     53|   return value;
+     54| }
+ ❯ ref src/api/ecommerceInvestigation/parser.ts:83:63
+ ❯ parseRunRecord src/api/ecommerceInvestigation/parser.ts:135:19
+ ❯ parseRun src/api/ecommerceInvestigation/parser.ts:157:21
+ ❯ src/api/ecommerceInvestigation/parser.ts:173:41
+ ❯ Module.parseInvestigationRunList src/api/ecommerceInvestigation/parser.ts:173:27
+ ❯ src/api/ecommerceInvestigation/parser.test.ts:119:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/api/ecommerceInvestigation/parser.test.ts > backend optional Receipt wire representation > keeps canonical commands and external-effect gate with null View refs
+TypeError: view.caseRef.receiptId 必须是非空有界字符串
+ ❯ text src/api/ecommerceInvestigation/parser.ts:52:105
+     50| }
+     51| function text(value: unknown, label: string, max = 500): string {
+     52|   if (typeof value !== "string" || !value.trim() || value !== value.tr…
+       |                                                                                                         ^
+     53|   return value;
+     54| }
+ ❯ ref src/api/ecommerceInvestigation/parser.ts:83:63
+ ❯ Module.parseInvestigationWorkbenchView src/api/ecommerceInvestigation/parser.ts:287:19
+ ❯ src/api/ecommerceInvestigation/parser.test.ts:127:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 17 passed (20)
+   Start at  21:46:04
+   Duration  703ms (transform 131ms, setup 0ms, collect 145ms, tests 15ms, environment 303ms, prepare 50ms)
+
+
+FILE compatibility.json
+{
+  "head": "7b65fa24f3fb4f452080e324f28d25595521336f",
+  "oldSha256": "0b4de7696e460374e1ab40717b89fda024cc58f99bfb129c8cf0641a5b8024c5",
+  "newSha256": "4eb87f79565e625a3c0561e0c4fcd7b95f9d452635503cd79e5b0c1e15c9c5b1",
+  "entireFileExactlyOneExpressionChange": true,
+  "contractsAndBackendUnchanged": true,
+  "tests": "46passes original parser/client/Tab;typecheck process exit0",
+  "fullGreenLogSha256": "40415c576c1e6df970f0c6dc51956a37ac9eec3a4c7c2f6e94a03eed6534b0e2",
+  "greenLogBytes": 283717,
+  "fullLogsRetained": true,
+  "businessComplete": false
+}
+
+GREEN SUMMARY (full warning log retained separately)
+ ✓ src/components/workshop/BusinessInvestigationTab.test.tsx (16 tests) 218ms
+stderr | src/components/workshop/BusinessInvestigationTab.test.tsx > BusinessInvestigationTab > Handoff 编译失败后不显示签发、接收或假成功入口
+Warning: The current testing environment is not configured to support act(...)
+
+
+ Test Files  3 passed (3)
+      Tests  46 passed (46)
+   Start at  21:48:16
+   Duration  961ms (transform 286ms, setup 0ms, collect 553ms, tests 239ms, environment 818ms, prepare 122ms)
+
+TYPECHECK exit0, empty diagnostics
+
+ACTUAL PRODUCTION REF FUNCTION
+function ref(value: unknown, label: string, expectedType?: string): InvestigationExactRef {
+  const raw = record(value, label);
+  const allowed = raw.receiptId === undefined ? ["resourceType", "resourceId", "revision", "contentHash"] : ["resourceType", "resourceId", "revision", "contentHash", "receiptId"];
+  exact(raw, allowed, label);
+  const resourceType = text(raw.resourceType, `${label}.resourceType`, 120);
+  if (expectedType && resourceType !== expectedType) throw new TypeError(`${label} 必须引用 ${expectedType}`);
+  const revision = typeof raw.revision === "number" ? integer(raw.revision, `${label}.revision`, 1) : text(raw.revision, `${label}.revision`, 160);
+  const contentHash = text(raw.contentHash, `${label}.contentHash`, 71);
+  if (!HASH.test(contentHash)) throw new TypeError(`${label}.contentHash 非法`);
+  const receiptId = raw.receiptId === undefined || raw.receiptId === null ? undefined : text(raw.receiptId, `${label}.receiptId`, 240);
+  return { resourceType, resourceId: text(raw.resourceId, `${label}.resourceId`, 240), revision, contentHash, ...(receiptId ? { receiptId } : {}) };
+}
+
+EXACT PRODUCTION DIFF
+diff --git a/apps/web/src/api/ecommerceInvestigation/parser.ts b/apps/web/src/api/ecommerceInvestigation/parser.ts
+index 03017fa45..c8cf530e6 100644
+--- a/apps/web/src/api/ecommerceInvestigation/parser.ts
++++ b/apps/web/src/api/ecommerceInvestigation/parser.ts
+@@ -80,7 +80,7 @@ function ref(value: unknown, label: string, expectedType?: string): Investigatio
+   const revision = typeof raw.revision === "number" ? integer(raw.revision, `${label}.revision`, 1) : text(raw.revision, `${label}.revision`, 160);
+   const contentHash = text(raw.contentHash, `${label}.contentHash`, 71);
+   if (!HASH.test(contentHash)) throw new TypeError(`${label}.contentHash 非法`);
+-  const receiptId = raw.receiptId === undefined ? undefined : text(raw.receiptId, `${label}.receiptId`, 240);
++  const receiptId = raw.receiptId === undefined || raw.receiptId === null ? undefined : text(raw.receiptId, `${label}.receiptId`, 240);
+   return { resourceType, resourceId: text(raw.resourceId, `${label}.resourceId`, 240), revision, contentHash, ...(receiptId ? { receiptId } : {}) };
+ }
+ function nullableRef(value: unknown, label: string, expectedType?: string): InvestigationExactRef | null { return value === null ? null : ref(value, label, expectedType); }
+
+ALL ORIGINAL AND NEW PARSER TESTS
+import { describe, expect, it } from "vitest";
+import { parseInvestigationCaseList, parseInvestigationHandoffCompile, parseInvestigationRunList, parseInvestigationWorkbenchView } from "./parser";
+
+const hash = `sha256:${"a".repeat(64)}`; const tenant = { orgId: "org-org", projectId: "dev-project" };
+const ref = (resourceType: string, resourceId: string, revision = 1) => ({ resourceType, resourceId, revision, contentHash: hash });
+const caseItem = { schemaVersion: "aos.ecommerce.business-investigation-case/v1", tenant, caseId: "case-1", revision: 1, version: 1, priorRef: null, contentHash: hash, lifecycle: "ACTIVE", analysisType: "initial_store_analysis", title: "首次全店经营分析", purposeCode: "business.investigation.initial", channelRef: ref("ChannelRevision", "private-mall"), businessEntityRef: ref("BusinessEntityRevision", "store-1"), entityChannelBindingRef: ref("BusinessEntityChannelBindingRevision", "binding-1"), investigationProfileRef: ref("InvestigationProfileRevision", "profile-1"), scopeRef: ref("InvestigationScopeRevision", "scope-1"), schedulePolicyRef: null, createdBy: "user-1", createdAt: "2026-08-26T08:00:00Z" };
+const runItem = { authority: { schemaVersion: "aos.ecommerce.business-investigation-run/v1", tenant, runId: "run-1", version: 1, contentHash: hash, caseRef: ref("BusinessInvestigationCaseRevision", "case-1"), analysisType: "initial_store_analysis", triggerKind: "manual", triggerKey: "manual:run-1", lifecycle: "PREPARING", control: "RUNNING", createdBy: "user-1", createdAt: "2026-08-26T08:01:00Z" }, state: { schemaVersion: "aos.ecommerce.business-investigation-run-state/v1", tenant, runId: "run-1", version: 1, priorRef: null, lifecycle: "PREPARING", control: "RUNNING", eventSequence: 1, contentHash: hash, pendingRequirementRef: null, uncertainCommand: null, createdBy: "user-1", createdAt: "2026-08-26T08:01:00Z" } };
+const resourceRef = (resourceType: string, resourceId: string) => ({ resourceType, resourceId, revision: "1", authority: "test-authority" });
+const view = { schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v3", tenant, projectionHash: hash, sourceWatermark: { caseRevision: 1, runVersion: 1, stateVersion: 1, bindingHashes: [], runtimeHash: hash, contentHash: hash }, observedAt: "2026-08-26T08:10:00Z", caseRef: ref("BusinessInvestigationCaseRevision", "case-1"), runRef: ref("BusinessInvestigationRun", "run-1"), stateRef: ref("BusinessInvestigationRunStateRevision", "run-1"), caseEnvelope: { title: "首次全店经营分析", analysisType: "initial_store_analysis", lifecycle: "ACTIVE", channelRef: ref("ChannelRevision", "private-mall"), businessEntityRef: ref("BusinessEntityRevision", "store-1"), investigationProfileRef: ref("InvestigationProfileRevision", "profile-1"), scopeRef: ref("InvestigationScopeRevision", "scope-1"), schedulePolicyRef: null, createdBy: "user-1", createdAt: "2026-08-26T08:00:00Z" }, lifecycle: "DIAGNOSIS", control: "RUNNING", pendingRequirementRef: null, uncertainCommand: null, runtime: { bindingStatus: "bound", taskId: "task-1", planRef: ref("PlanRevision", "plan-1"), taskRunRef: { resourceType: "TaskRun", resourceId: "task-run-1", version: 3 }, taskRunStatus: "running", checkpoint: { checkpointId: "checkpoint-1", sequence: 1, stepKey: "diagnosis", stateHash: "a".repeat(64), createdAt: "2026-08-26T08:09:00Z" }, stages: [{ stageId: "portrait", title: "经营画像", status: "completed", stepRunId: "step-1", attempt: 1 }, { stageId: "diagnosis", title: "问题与机会", status: "running", stepRunId: "step-2", attempt: 1 }, { stageId: "solution-design", title: "方案设计", status: "not_started", stepRunId: null, attempt: null }], completed: 1, total: 3, currentStageId: "diagnosis" }, currentWorkspace: { stageId: "diagnosis", title: "问题与机会", question: "哪些问题与机会被证据支持，哪些替代解释仍需保留？", status: "running", responsibilitySlotIds: ["slot-diagnosis"], assigneeRefs: [resourceRef("AgentInstance", "data-advisor")], inputRefs: [resourceRef("EvidenceBundleRevision", "evidence-1")], outputRefs: [], areas: [{ area: "known", title: "已知与可回链输入", status: "reference_only", summary: "仅确认存在可回链输入；其内容尚不能自动声称为经营事实。", resourceRefs: [resourceRef("EvidenceBundleRevision", "evidence-1")], exactRefs: [] }, { area: "unknown", title: "未知与缺口", status: "present", summary: "当前阶段运行中，未形成专门权威的内容仍保持未知。", resourceRefs: [], exactRefs: [] }, { area: "assumption", title: "关键假设", status: "unknown", summary: "尚无专门的假设 authority。", resourceRefs: [], exactRefs: [] }, { area: "counter_evidence", title: "反证与替代解释", status: "unknown", summary: "尚无专门的反证 authority。", resourceRefs: [], exactRefs: [] }], nonClaims: ["可回链输入不等于已确认经营事实。", "当前阶段状态不代表方案已执行。", "不展示模型私有过程。"] }, artifacts: ["BusinessDossierRevision", "ProblemMapRevision", "SolutionSetRevision", "DecisionReportRevision"].map((artifactType) => ({ artifactType, status: "missing", artifactRef: null, bindingId: null, bindingHash: null, selectionRevision: null, dataCutoff: null, lineageRef: null })) };
+const viewV4 = { ...view, schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v4", artifacts: ["BusinessDossierRevision", "ProblemMapRevision", "OpportunityMapRevision", "SolutionPortfolioRevision"].map((artifactType) => ({ artifactType, status: "missing", artifactRef: null, bindingId: null, bindingHash: null, selectionRevision: null, dataCutoff: null, lineageRef: null })), evidence: { status: "exact", exactRefs: [ref("EvidenceBundleRevision", "evidence-1")], locatorRefs: [resourceRef("EvidenceBundleRevision", "evidence-1")] }, timeline: [
+  { eventId: "case:case-1:r1", eventType: "case_revision", title: "Case revision 建立", occurredAt: "2026-08-26T08:00:00Z", exactRef: ref("BusinessInvestigationCaseRevision", "case-1"), relatedRef: null },
+  { eventId: "run:run-1:v1", eventType: "run_created", title: "Run 建立", occurredAt: "2026-08-26T08:01:00Z", exactRef: ref("BusinessInvestigationRun", "run-1"), relatedRef: null },
+  { eventId: "state:run-1:v1", eventType: "state_revision", title: "Run state revision", occurredAt: "2026-08-26T08:02:00Z", exactRef: ref("BusinessInvestigationRunStateRevision", "run-1"), relatedRef: null },
+] };
+const viewV5 = { ...viewV4, schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v5", commandProjection: { expectedStateVersion: 1, allowedCommands: ["PAUSE_RUN", "CANCEL_RUN"], externalEffectsAllowed: false } };
+
+describe("ecommerceInvestigation strict parser", () => {
+  it("解析 tenant-scoped Case 与 Run canonical 列表", () => {
+    expect(parseInvestigationCaseList({ tenant, items: [caseItem], count: 1 }, tenant).items[0]?.channelRef.resourceId).toBe("private-mall");
+    expect(parseInvestigationRunList({ tenant, items: [runItem], count: 1 }, "case-1", tenant).items[0]?.state.control).toBe("RUNNING");
+  });
+  it("拒绝未知字段、非法 hash、count 与 tenant 漂移", () => {
+    expect(() => parseInvestigationCaseList({ tenant, items: [caseItem], count: 1, tenantOverride: true })).toThrow(/字段漂移/);
+    expect(() => parseInvestigationCaseList({ tenant, items: [{ ...caseItem, contentHash: "sha256:bad" }], count: 1 })).toThrow(/contentHash/);
+    expect(() => parseInvestigationCaseList({ tenant, items: [caseItem], count: 0 })).toThrow(/不守恒/);
+    expect(() => parseInvestigationCaseList({ tenant, items: [caseItem], count: 1 }, { orgId: "dev-org", projectId: "dev-project" })).toThrow(/tenant 漂移/);
+  });
+  it("拒绝 Run 跨 Case、重复 ID 与状态 revision 漂移", () => {
+    expect(() => parseInvestigationRunList({ tenant, items: [runItem], count: 1 }, "other-case")).toThrow(/caseRef 漂移/);
+    expect(() => parseInvestigationRunList({ tenant, items: [runItem, runItem], count: 2 }, "case-1")).toThrow(/identity 不守恒/);
+    expect(() => parseInvestigationRunList({ tenant, items: [{ ...runItem, state: { ...runItem.state, eventSequence: 2 } }], count: 1 }, "case-1")).toThrow(/eventSequence/);
+  });
+  it("解析服务端 StageRail 并拒绝进度、顺序与 Run identity 漂移", () => {
+    const parsed = parseInvestigationWorkbenchView(view, "run-1", tenant);
+    expect(parsed.runtime.completed).toBe(1);
+    expect(parsed.currentWorkspace.areas.map((item) => item.area)).toEqual(["known", "unknown", "assumption", "counter_evidence"]);
+    expect(parsed.currentWorkspace.inputRefs[0]?.resourceId).toBe("evidence-1");
+    expect(() => parseInvestigationWorkbenchView({ ...view, runtime: { ...view.runtime, completed: 2 } }, "run-1")).toThrow(/进度不守恒/);
+    expect(() => parseInvestigationWorkbenchView({ ...view, runtime: { ...view.runtime, stages: [...view.runtime.stages].reverse() } }, "run-1")).toThrow(/顺序或标题/);
+    expect(() => parseInvestigationWorkbenchView(view, "other-run")).toThrow(/Run identity/);
+  });
+  it("拒绝工作区未知字段、重复 ref 与四区错序", () => {
+    expect(() => parseInvestigationWorkbenchView({ ...view, currentWorkspace: { ...view.currentWorkspace, reasoningChain: "private" } }, "run-1")).toThrow(/字段漂移/);
+    expect(() => parseInvestigationWorkbenchView({ ...view, currentWorkspace: { ...view.currentWorkspace, inputRefs: [resourceRef("EvidenceBundleRevision", "evidence-1"), resourceRef("EvidenceBundleRevision", "evidence-1")] } }, "run-1")).toThrow(/必须唯一/);
+    expect(() => parseInvestigationWorkbenchView({ ...view, currentWorkspace: { ...view.currentWorkspace, areas: [...view.currentWorkspace.areas].reverse() } }, "run-1")).toThrow(/顺序漂移/);
+  });
+  it("解析 v4 Evidence/Artifact/Timeline 并保留 v3 诚实兼容", () => {
+    const parsed = parseInvestigationWorkbenchView(viewV4, "run-1", tenant);
+    expect(parsed.drilldownVersion).toBe("canonical-v4");
+    expect(parsed.evidence.exactRefs[0]?.resourceId).toBe("evidence-1");
+    expect(parsed.artifacts.map((item) => item.artifactType)).toEqual(["BusinessDossierRevision", "ProblemMapRevision", "OpportunityMapRevision", "SolutionPortfolioRevision"]);
+    expect(parsed.timeline.map((item) => item.eventType)).toEqual(["case_revision", "run_created", "state_revision"]);
+    const legacy = parseInvestigationWorkbenchView(view, "run-1", tenant);
+    expect(legacy).toMatchObject({ drilldownVersion: "legacy-v3", evidence: { status: "missing", exactRefs: [] }, timeline: [], commandProjection: null });
+  });
+  it("只消费 v5 服务端 canonical allowedCommands 并拒绝本地推演空间", () => {
+    expect(parseInvestigationWorkbenchView(viewV5, "run-1", tenant).commandProjection).toEqual({ expectedStateVersion: 1, allowedCommands: ["PAUSE_RUN", "CANCEL_RUN"], externalEffectsAllowed: false });
+    expect(() => parseInvestigationWorkbenchView({ ...viewV5, commandProjection: { ...viewV5.commandProjection, allowedCommands: ["RESUME_RUN"] } }, "run-1", tenant)).toThrow(/Run 状态不一致/);
+    expect(() => parseInvestigationWorkbenchView({ ...viewV5, commandProjection: { ...viewV5.commandProjection, expectedStateVersion: 2 } }, "run-1", tenant)).toThrow(/authority 漂移/);
+    expect(() => parseInvestigationWorkbenchView({ ...viewV5, commandProjection: { ...viewV5.commandProjection, externalEffectsAllowed: true } }, "run-1", tenant)).toThrow(/authority 漂移/);
+  });
+  it("拒绝伪 exact Evidence、Timeline 乱序与重复事件", () => {
+    expect(() => parseInvestigationWorkbenchView({ ...viewV4, evidence: { ...viewV4.evidence, status: "missing" } }, "run-1")).toThrow(/evidence status/);
+    expect(() => parseInvestigationWorkbenchView({ ...viewV4, timeline: [...viewV4.timeline].reverse() }, "run-1")).toThrow(/timeline 非 canonical/);
+    expect(() => parseInvestigationWorkbenchView({ ...viewV4, timeline: [viewV4.timeline[0], viewV4.timeline[0], viewV4.timeline[2]] }, "run-1")).toThrow(/timeline 非 canonical/);
+  });
+  it("解析 BI Handoff 的批准方案、四产物与 contentHash，并拒绝缺失 exact hash", () => {
+    const rawHash = "a".repeat(64); const artifactTypes = ["BusinessDossierRevision", "ProblemMapRevision", "OpportunityMapRevision", "SolutionPortfolioRevision"];
+    const issueCommand = { handoffId: "handoff-1", envelope: { taskRef: { resourceType: "Task", resourceId: "task-1", revision: "1", authority: "aip-task-runtime" }, runRef: { resourceType: "TaskRun", resourceId: "task-run-1", revision: "2", authority: "aip-task-runtime" }, senderInstance: { assetType: "AgentInstance", assetId: "analyst-1", revision: 1, contentHash: rawHash }, receiverInstance: { assetType: "AgentInstance", assetId: "cockpit-1", revision: 2, contentHash: rawHash }, objectRefs: [{ resourceType: "GrowthPlanRevision", resourceId: "growth-plan-1", revision: "2", authority: "ecommerce-analyst", contentHash: hash }], artifactRefs: artifactTypes.map((resourceType, index) => ({ resourceType, resourceId: `artifact-${index + 1}`, revision: "1", authority: "business-investigation-artifact", contentHash: hash })), evidenceRefs: [], context: {}, allowedContextFields: [], markings: ["INTERNAL"], expiresAt: "2026-08-27T08:15:00Z" } };
+    const handoff = { schemaVersion: "aos.ecommerce-workshop.module-handoff-compile/v1", tenant, runId: "task-run-1", taskId: "task-1", evaluatedAt: "2026-08-27T08:00:00Z", responsibilityPlanRef: { resourceType: "ResponsibilityPlanRevision", resourceId: "responsibility-1", revision: 1, contentHash: rawHash }, sourceModuleId: "ecommerce.analyst", targetModuleId: "ecommerce.task-cockpit", sourceSlotId: "slot-analyst", targetSlotId: "slot-cockpit", readiness: "ready", blockers: [], issueCommand, sideEffects: { handoffsIssued: 0, tokensMinted: 0, decisionsCreated: 0, agentRunsStarted: 0 } };
+    const payload = { schemaVersion: "aos.ecommerce.business-investigation-handoff-compile/v1", tenant, runRef: ref("BusinessInvestigationRun", "run-1"), approvedPlanRef: { resourceType: "GrowthPlanRevision", resourceId: "growth-plan-1", revision: 2, contentHash: rawHash }, compilationReceiptRef: ref("BusinessInvestigationCompilationReceipt", "compile-1"), artifactRefs: artifactTypes.map((resourceType, index) => ref(resourceType, `artifact-${index + 1}`)), handoff };
+    const parsed = parseInvestigationHandoffCompile(payload, "run-1", tenant);
+    expect(parsed.approvedPlanRef).toMatchObject({ resourceId: "growth-plan-1", revision: 2 }); expect(parsed.artifactRefs).toHaveLength(4); expect(parsed.artifactRefs[0]?.resourceType).toBe("BusinessDossierRevision"); expect(parsed.handoff.issueCommand?.envelope.objectRefs[0]?.contentHash).toBe(hash);
+    expect(() => parseInvestigationHandoffCompile({ ...payload, handoff: { ...handoff, issueCommand: { ...issueCommand, envelope: { ...issueCommand.envelope, objectRefs: [{ ...issueCommand.envelope.objectRefs[0], contentHash: undefined }] } } } }, "run-1", tenant)).toThrow(/contentHash|字段漂移/);
+  });
+});
+
+describe("backend optional Receipt wire representation", () => {
+  const successor = {
+    ...caseItem, revision: 2, version: 2,
+    priorRef: { ...ref("BusinessInvestigationCaseRevision", "case-1"), receiptId: null },
+    channelRef: { ...caseItem.channelRef, receiptId: null },
+    businessEntityRef: { ...caseItem.businessEntityRef, receiptId: null },
+    entityChannelBindingRef: { ...caseItem.entityChannelBindingRef, receiptId: null },
+    investigationProfileRef: { ...caseItem.investigationProfileRef, receiptId: null },
+    scopeRef: { ...caseItem.scopeRef, receiptId: null },
+    schedulePolicyRef: { ...ref("SchedulePolicyRevision", "schedule-1"), receiptId: null },
+  };
+
+  it("accepts canonical optional null in successor Case refs as no Receipt", () => {
+    const parsed = parseInvestigationCaseList({ tenant, items: [successor], count: 1 }, tenant).items[0]!;
+    for (const value of [parsed.priorRef, parsed.channelRef, parsed.businessEntityRef, parsed.entityChannelBindingRef, parsed.investigationProfileRef, parsed.scopeRef, parsed.schedulePolicyRef]) {
+      expect(value).not.toBeNull();
+      expect(value).not.toHaveProperty("receiptId");
+      expect(value?.contentHash).toBe(hash);
+    }
+    expect(parsed.revision).toBe(2);
+    expect(parsed.priorRef?.revision).toBe(1);
+  });
+
+  it("preserves absent and valid non-null Receipt references", () => {
+    const parsed = parseInvestigationCaseList({ tenant, items: [{ ...caseItem, channelRef: { ...caseItem.channelRef, receiptId: "receipt-1" } }], count: 1 }, tenant).items[0]!;
+    expect(parsed.channelRef.receiptId).toBe("receipt-1");
+    expect(parsed.scopeRef).not.toHaveProperty("receiptId");
+  });
+
+  it.each(["", " ", "x".repeat(241), 0, false, {}])("rejects malformed non-null Receipt %j", (receiptId) => {
+    expect(() => parseInvestigationCaseList({ tenant, items: [{ ...caseItem, channelRef: { ...caseItem.channelRef, receiptId } }], count: 1 }, tenant)).toThrow(/receiptId/);
+  });
+
+  it("does not relax unknown fields, hashes or tenant with null Receipt", () => {
+    expect(() => parseInvestigationCaseList({ tenant, items: [{ ...successor, priorRef: { ...successor.priorRef, approved: true } }], count: 1 }, tenant)).toThrow(/字段漂移/);
+    expect(() => parseInvestigationCaseList({ tenant, items: [{ ...successor, priorRef: { ...successor.priorRef, contentHash: "sha256:bad" } }], count: 1 }, tenant)).toThrow(/contentHash/);
+    expect(() => parseInvestigationCaseList({ tenant, items: [successor], count: 1 }, { orgId: "dev-org", projectId: "dev-project" })).toThrow(/tenant 漂移/);
+  });
+
+  it("supports null in Run references without changing unknown control", () => {
+    const raw = { ...runItem, authority: { ...runItem.authority, caseRef: { ...runItem.authority.caseRef, receiptId: null } }, state: { ...runItem.state, version: 2, eventSequence: 2, priorRef: { ...ref("BusinessInvestigationRunStateRevision", "run-1"), receiptId: null }, control: "UNKNOWN", uncertainCommand: { commandId: "command-1", operation: "data.request", requestHash: hash } } };
+    const parsed = parseInvestigationRunList({ tenant, items: [raw], count: 1 }, "case-1", tenant).items[0]!;
+    expect(parsed.authority.caseRef).not.toHaveProperty("receiptId");
+    expect(parsed.state.control).toBe("UNKNOWN");
+    expect(parsed.state.uncertainCommand?.commandId).toBe("command-1");
+  });
+
+  it("keeps canonical commands and external-effect gate with null View refs", () => {
+    const raw = { ...viewV5, caseRef: { ...viewV5.caseRef, receiptId: null }, runRef: { ...viewV5.runRef, receiptId: null }, stateRef: { ...viewV5.stateRef, receiptId: null } };
+    expect(parseInvestigationWorkbenchView(raw, "run-1", tenant).commandProjection).toEqual(viewV5.commandProjection);
+    expect(() => parseInvestigationWorkbenchView({ ...raw, commandProjection: { ...viewV5.commandProjection, externalEffectsAllowed: true } }, "run-1", tenant)).toThrow(/authority 漂移/);
+  });
+});
+
+ORIGINAL BACKEND NULLABLE/REQUIRED RECEIPT CONTRACT
+35: class InvestigationExactRef(AipContractModel):
+36:     resource_type: str = Field(min_length=1, max_length=120)
+37:     resource_id: str = Field(min_length=1, max_length=240)
+38:     revision: StrictInt | StrictStr
+39:     content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+40:     receipt_id: str | None = Field(default=None, min_length=1, max_length=240)
+41: 
+42:     @field_validator("resource_type", "resource_id")
+43:     @classmethod
+44:     def _trim_identity(cls, value: str) -> str:
+45:         cleaned = value.strip()
+46:         if not cleaned:
+47:             raise ValueError("exact ref identity must not be empty")
+48:         return cleaned
+49: 
+50:     @field_validator("revision")
+51:     @classmethod
+52:     def _valid_revision(cls, value: StrictInt | StrictStr) -> StrictInt | StrictStr:
+53:         if isinstance(value, int):
+54:             if value < 1:
+55:                 raise ValueError("exact ref integer revision must be >= 1")
+56:             return value
+57:         cleaned = value.strip()
+58:         if not cleaned or len(cleaned) > 160:
+59:             raise ValueError("exact ref string revision must be non-empty and bounded")
+60:         return cleaned
+61: 
+62: 
+
+ORIGINAL BACKEND NULLABLE/REQUIRED RECEIPT CONTRACT
+158:     status: InvestigationReadinessStatus
+159:     source_readiness_ref: InvestigationExactRef | None = None
+160:     coverage: InvestigationCoverage
+161:     freshness: InvestigationFreshness
+162:     blockers: list[InvestigationBlocker] = Field(default_factory=list, max_length=50)
+163: 
+164:     @model_validator(mode="after")
+165:     def _fail_closed(self) -> Self:
+166:         if self.source_readiness_ref is not None:
+167:             _require_type(
+168:                 self.source_readiness_ref,
+169:                 {"SourceReadinessEnvelope"},
+170:                 "sourceReadinessRef",
+171:             )
+172:             if self.source_readiness_ref.receipt_id is None:
+173:                 raise ValueError("sourceReadinessRef requires receiptId")
+174:         if self.status is InvestigationReadinessStatus.READY:
+175:             complete = (
+176:                 self.source_readiness_ref is not None

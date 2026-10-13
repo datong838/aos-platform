@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/aos_review.py", line 251, in <module>
+    main()
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/aos_review.py", line 237, in main
+    result = parse_response(proc.stdout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/long-task-watchdog/aos_review.py", line 141, in parse_response
+    raise ValueError('no assistant review returned')
+ValueError: no assistant review returned

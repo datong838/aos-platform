@@ -1,0 +1,108 @@
+{
+  "frontendHead": "2bd40b939554423a1cef4fd02f2459cb0fb4bc56",
+  "authority": "AOS-002020",
+  "codeReviewR2PassConsumed": true,
+  "typecheckExit0": true,
+  "originalAndNew46Pass": true,
+  "web": {
+    "pid": 7590,
+    "head": "2bd40b939554423a1cef4fd02f2459cb0fb4bc56",
+    "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013/private/web-source-2bd40b939554423a1cef4fd02f2459cb0fb4bc56",
+    "port": 18434,
+    "terminalVerified": false,
+    "apiPgChromeTouched": false,
+    "webOnlyNotFullRestart": true
+  },
+  "webOnlyNotFullRestart": true,
+  "api1234AndPgUntouched": true,
+  "same650Fingerprints": true,
+  "samePgStartedAt": true,
+  "bindings0": true,
+  "browser": {
+    "frontendHead": "2bd40b939554423a1cef4fd02f2459cb0fb4bc56",
+    "authority": "AOS-002020",
+    "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+    "url": "http://127.0.0.1:18434/workshop/analyst",
+    "auth": [
+      {
+        "path": "/api/v1/auth/token",
+        "status": 200
+      },
+      {
+        "path": "/api/v1/me",
+        "status": 200
+      }
+    ],
+    "normalLoginSubmitOnce": true,
+    "caseOptions": 2,
+    "caseReadFailureGone": true,
+    "normalCaseSelectionOnly": true,
+    "reads": [
+      {
+        "path": "/api/v1/ecommerce/investigations/cases",
+        "status": 200,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "count": 2,
+        "itemCount": 2
+      },
+      {
+        "path": "/api/v1/ecommerce/investigations/cases",
+        "status": 200,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "count": 2,
+        "itemCount": 2
+      },
+      {
+        "path": "/api/v1/ecommerce/investigations/cases/<record>/runs",
+        "status": 200,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "count": 0,
+        "itemCount": 0
+      },
+      {
+        "path": "/api/v1/ecommerce/investigations/cases/<record>/runs",
+        "status": 200,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "count": 1,
+        "itemCount": 1
+      },
+      {
+        "path": "/api/v1/ecommerce/investigations/runs/<record>/stage-review",
+        "status": 409,
+        "code": "BUSINESS_INVESTIGATION_CONFLICT",
+        "itemCount": null
+      },
+      {
+        "path": "/api/v1/ecommerce/investigations/runs/<record>/view",
+        "status": 200,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "itemCount": null
+      }
+    ],
+    "currentRunCancelled": true,
+    "sourceReadinessFailed": true,
+    "stageReview409Observed": true,
+    "readonlyMode": true,
+    "realSourceNotRead": true,
+    "noBusinessCommandsClicked": true,
+    "rawCustomerRowsPersisted": false,
+    "businessComplete": false
+  },
+  "businessComplete": false,
+  "nextGaps": "existing cancelledRun preserved;stageReview409 and SourceReadinessfailed remain;no oldRun replay/newsource/business effects"
+}
